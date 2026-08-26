@@ -332,7 +332,9 @@ $Global:I18N = @{
     }
 }
 
-function Msg {
+$Global:CurrentLang = "ru"
+
+function global:Msg {
     param(
         [Parameter(Mandatory = $true)]
         [string]$Key,
@@ -351,7 +353,7 @@ function Msg {
     return $template
 }
 
-function Select-InstallerLanguage {
+function global:Select-InstallerLanguage {
     param([string]$DefaultLang = "ru")
     
     $culture = (Get-Culture).TwoLetterISOLanguageName.ToLower()

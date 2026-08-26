@@ -45,9 +45,9 @@ if ($i18nScript -and (Test-Path $i18nScript)) {
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
         $webI18n = Invoke-RestMethod -Uri $rawI18nUrl -UseBasicParsing
-        [ScriptBlock]::Create($webI18n).Invoke()
+        . ([ScriptBlock]::Create($webI18n))
     } catch {
-        Write-Host "[ERROR] Failed to load I18n module." -ForegroundColor Red
+        Write-Host "[ERROR] Failed to load I18n module: $_" -ForegroundColor Red
         exit 1
     }
 }
@@ -70,7 +70,7 @@ if ($dirScript -and (Test-Path $dirScript)) {
 } else {
     $rawDirUrl = "https://raw.githubusercontent.com/hypo69/AI-Breadboard/master/install/Install-Directory.ps1"
     $webDir = Invoke-RestMethod -Uri $rawDirUrl -UseBasicParsing
-    $targetDir = [ScriptBlock]::Create($webDir).Invoke($config, $runningScriptDir)
+    $targetDir = & ([ScriptBlock]::Create($webDir)) -Config $config -SourceDir $runningScriptDir
 }
 
 if (-not $targetDir) {
