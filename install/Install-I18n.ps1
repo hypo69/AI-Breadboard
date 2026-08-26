@@ -356,10 +356,24 @@ function global:Msg {
 function global:Select-InstallerLanguage {
     param([string]$DefaultLang = "en")
     
-    $culture = (Get-Culture).TwoLetterISOLanguageName.ToLower()
-    if ($Global:I18N.ContainsKey($culture)) {
-        $DefaultLang = $culture
-    }
+    $systemLangs = @()
+    try {
+        $cultureName = (Get-Culture).TwoLetterISOLanguageName.ToLower()
+        if ($cultureName) { $systemLangs += $cultureName }
+        $uiCultureName = [System.Globalization.CultureInfo]::CurrentUICulture.TwoLetterISOLanguageName.ToLower()
+        if ($uiCultureName -and ($systemLangs -notcontains $uiCultureName)) { $systemLangs += $uiCultureName }
+    } catch {}
+    try {
+        if (Get-Command Get-WinUserLanguageList -ErrorAction SilentlyContinue) {
+            $userLangs = Get-WinUserLanguageList -ErrorAction SilentlyContinue
+            if ($userLangs) {
+                foreach ($ul in $userLangs) {
+                    $c = $ul.LanguageTag.Split('-')[0].ToLower()
+                    if ($c -and ($systemLangs -notcontains $c)) { $systemLangs += $c }
+                }
+            }
+        }
+    } catch {}
 
     $languages = @("en", "ru", "es", "he")
     $defaultIndex = [array]::IndexOf($languages, $DefaultLang) + 1
@@ -376,8 +390,13 @@ function global:Select-InstallerLanguage {
         $code = $languages[$i]
         $name = $Global:I18N[$code]["lang_name"]
         $num = $i + 1
-        if ($num -eq $defaultIndex) {
+        $isDefault = ($num -eq $defaultIndex)
+        $isSystem = ($systemLangs -contains $code)
+
+        if ($isDefault) {
             Write-Host "    [$num] $name ($code) [Default]" -ForegroundColor Green
+        } elseif ($isSystem) {
+            Write-Host "    [$num] $name ($code) [System]" -ForegroundColor Cyan
         } else {
             Write-Host "    [$num] $name ($code)" -ForegroundColor Gray
         }
