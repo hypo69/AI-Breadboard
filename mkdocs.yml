@@ -1,0 +1,170 @@
+# MkDocs configuration for the AI Breadboard project.
+# Site documentation build settings, navigation,
+# theme settings, and enabled extensions.
+# Documentation is used to store user
+# and developer instructions in a unified accessible format.
+# =============================================================================
+# Project: AI Breadboard
+# Description: Interactive AI Model Testbench & Breadboard
+# =============================================================================
+
+site_name: AI Breadboard
+site_description: Interactive AI Model Testbench & Breadboard
+site_url: https://hypo69.github.io/AI-Breadboard/
+repo_url: https://github.com/hypo69/AI-Breadboard
+edit_uri: edit/master/docs/
+
+# Theme
+theme:
+  name: material
+  language: ru
+  palette:
+    primary: indigo
+    accent: indigo
+  favicon: assets/favicon.png
+  logo: assets/logo.png
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - toc.integrate
+    - content.code.copy
+    - content.tabs.link
+
+# Navigation
+nav:
+  - Welcome:
+      - index.md
+      - quickstart.md
+      - Installation:
+          - Overview: installation.md
+          - Russian (RU): installation.ru.md
+          - English (EN): installation.en.md
+          - Español (ES): installation.es.md
+          - עברית (HE): installation.he.md
+      - features.md
+  - 📚 Документация на русском (RU):
+      - 🧭 Главный портал (RU): ru/index.md
+      - 📘 Учебная книга (AI Breadboard Book):
+          - Обзор и манифест: ru/book/index.md
+          - "Глава 1. Архитектура макетной платы и среда": ru/book/ch01_philosophy.md
+          - "Глава 2. Оркестратор моделей и отказоустойчивость": ru/book/ch02_orchestration.md
+          - "Глава 3. Локальный инференс (HF и DirectML)": ru/book/ch03_local_inference.md
+          - "Глава 4. Архитектура RAG и векторный поиск": ru/book/ch04_rag_architecture.md
+          - "Глава 5. Оптимизация, экспорт и Fine-Tuning": ru/book/ch05_optimization_finetuning.md
+          - "Глава 6. ReAct-агенты, MCP и мультимодальность": ru/book/ch06_agents_and_mcp.md
+          - "Глава 7. Создание и управление навыками (Skills)": ru/book/ch07_skills_management.md
+          - "Глава 8. Практикум — 10 лабораторных работ": ru/book/ch08_laboratory_practicum.md
+      - "⚙️ Документация модулей и кода (docs/ru/code)":
+          - Каталог и навигация: ru/code/index.md
+          - "Ядро системы (core)": ru/code/core/README.md
+          - "AI Orchestrator (core.ai)": ru/code/core/ai/README.md
+          - Google Gemini SDK: ru/code/core/ai/gemini/README.MD
+          - "Подсистема RAG-First (core.rag)": ru/code/core/rag/README.md
+          - FastAPI и WebSockets: ru/code/core/fastapi/README.md
+          - Менеджер секретов и ключей: ru/code/core/secrets/README.md
+          - "Реестр навыков (core.skills)": ru/code/core/skills/README.md
+          - "Синтез речи TTS (core.tts)": ru/code/core/tts/README.md
+          - "Логирование (core.logger)": ru/code/core/logger/README.MD
+          - "Веб-интерфейс (webinterface)": ru/code/webinterface/README.md
+          - "Установка и окружение (install)": ru/code/install/README.md
+          - "Инструменты разработчика (scripts)": ru/code/scripts/README.md
+          - "Тестовый набор (tests)": ru/code/tests/README.md
+  - User Guide:
+      - user/getting-started.md
+      - user/player.md
+      - user/remote-control.md
+      - user/telegram.md
+      - user/admin-panel.md
+  - Developer Guide:
+      - dev/getting-started.md
+      - dev/localhost_vs_tunnel.md
+      - dev/architecture.md
+      - dev/api-reference.md
+      - dev/plugins.md
+      - dev/development.md
+      - dev/deployment.md
+      - dev/project_overview.md
+      - dev/MODEL_SCRIPT_EXECUTION_GUIDE.md
+      - dev/legacy_project_knowledge.md
+      - skills.md
+  - API: api.md
+  - Modules:
+      - modules/agents.md
+      - modules/ai.md
+      - modules/logger.md
+      - modules/plugins.md
+      - modules/api.md
+  - Integrations:
+      - integrations/mcp.md
+      - integrations/gemini.md
+      - integrations/tgmini.md
+      - integrations/rc.md
+  - QA Guide:
+      - qa/index.md
+      - qa/testing-strategy.md
+      - qa/test-cases.md
+      - qa/api-testing.md
+      - qa/integration-testing.md
+      - qa/qa-checklist.md
+      - qa/qa-tools.md
+  - Troubleshooting:
+      - troubleshooting.md
+      - changelog.md
+
+# Plugins
+plugins:
+  - search:
+      lang:
+        - ru
+        - en
+        - es
+  - mkdocstrings:
+      handlers:
+        python:
+          setup_commands:
+            - "import sys"
+            - "sys.path.insert(0, 'core')"
+
+# Extra
+extra:
+  version: 1.0.0
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/hypo69/AI-Breadboard
+
+# Copyright
+copyright: Copyright © 2026 hypo69. Licensed under MIT.
+
+# Markdown Extensions
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - fenced_code
+
+# Custom CSS
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - js/chat.js
+
+# Site metadata
+extra:
+  authors:
+    - hypo69
+  license: MIT
+  repository: github
+
+# Validation
+strict: false

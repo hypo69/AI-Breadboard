@@ -1,0 +1,2 @@
+# Тестовые зависимости проекта ai-assistant
+-r req/requirements-test.txt

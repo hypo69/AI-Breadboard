@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="title">Эксперименты с TTS (Синтез речи)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/html/css/main.css?v=20260818_youtube_online" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/i18next@23.11.5/i18next.min.js"></script>
+  <style>
+    /* Custom styles for TTS page */
+    :root {
+      --tts-nav-bg: #161b22;
+    }
+
+    body {
+      background: #0d1117;
+      color: #c9d1d9;
+      min-height: 100vh;
+    }
+
+    .tts-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .tts-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      color: #c9d1d9;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: #8b949e;
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+
+    .form-label {
+      color: #8b949e;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+      background: #0d1117;
+      border-color: #58a6ff;
+      color: #c9d1d9;
+      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.25);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 120px;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .btn-tts {
+      background: #1f6feb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.85rem 1.5rem;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .btn-tts:hover {
+      background: #388bfd;
+      color: #fff;
+    }
+
+    .btn-tts:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-apply {
+      background: #238636;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.85rem 1.5rem;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .btn-apply:hover {
+      background: #2ea043;
+      color: #fff;
+    }
+
+    .btn-apply:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .active-badge {
+      background: rgba(35, 134, 54, 0.15);
+      border: 1px solid rgba(35, 134, 54, 0.3);
+      color: #56d364;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .audio-player-container {
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid #30363d;
+      display: none;
+    }
+
+    audio {
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      color: #8b949e;
+      margin-top: 1rem;
+    }
+
+    .spinner-border {
+      width: 1rem;
+      height: 1rem;
+      border-width: 0.15em;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 0.95rem;
+      margin-top: 2rem;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: #58a6ff;
+    }
+
+    /* Dark theme audio player controls */
+    audio::-webkit-media-controls-panel {
+      background-color: rgba(13, 17, 23, 0.9);
+    }
+
+    audio::-webkit-media-controls-current-time-display,
+    audio::-webkit-media-controls-time-remaining-display {
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+
+<div class="tts-container">
+  <div class="tts-card">
+    <h1><i class="bi bi-mic"></i> <span data-i18n="title">Эксперименты с TTS (Синтез речи)</span></h1>
+    <p class="subtitle" data-i18n="subtitle">Сравните качество синтеза речи различных моделей: Web Speech, Google, Edge и Silero.</p>
+
+    <div id="active-voice-container" class="mb-3" style="display: none;">
+      <span class="active-badge">
+        <i class="bi bi-check-circle-fill"></i>
+        <span><span data-i18n="label_active_voice">Активный голос:</span> <strong id="active-voice-name">...</strong></span>
+      </span>
+    </div>
+
+    <form id="tts-form">
+      <div class="mb-4">
+        <label for="tts-text" class="form-label" data-i18n="form.label_text">Текст для озвучки</label>
+        <textarea id="tts-text" class="form-control" placeholder data-i18n-placeholder="form.placeholder">Привет! Это демонстрация работы различных систем синтеза речи. Какая из них звучит лучше всего?</textarea>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-4">
+          <label for="tts-engine" class="form-label" data-i18n="form.label_engine">Система синтеза</label>
+          <select id="tts-engine" class="form-select">
+            <option value="browser" data-i18n="options.browser">Web Speech API (Браузерная)</option>
+            <option value="gtts" data-i18n="options.gtts">Google TTS (Базовая)</option>
+            <option value="edge-tts" selected data-i18n="options.edge-tts">Microsoft Edge TTS (Нейросетевая)</option>
+            <option value="silero" data-i18n="options.silero">Silero TTS (Локальная оффлайн)</option>
+          </select>
+        </div>
+
+        <div class="col-md-6 mb-4" id="voice-select-container">
+          <label for="tts-voice" class="form-label" data-i18n="form.label_voice">Голос / Спикер</label>
+          <select id="tts-voice" class="form-select">
+            <!-- Populated dynamically via JS -->
+          </select>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-tts flex-grow-1" id="btn-speak" data-i18n="button_speak">Озвучить текст</button>
+        <button type="button" class="btn btn-apply" id="btn-save-default" data-i18n="button_apply">Применить изменения</button>
+      </div>
+
+      <div class="status-badge" id="tts-status" style="display: none;">
+        <div class="spinner-border text-success" role="status"></div>
+        <span id="status-text" data-i18n="status_generating">Генерация аудиофайла на сервере...</span>
+      </div>
+    </form>
+
+    <div class="audio-player-container" id="player-container">
+      <label class="form-label" data-i18n="label_result">Результат генерации</label>
+      <audio id="audio-player" controls></audio>
+    </div>
+  </div>
+
+  <a href="/" class="back-link">
+    <i class="bi bi-arrow-left"></i>
+    <span data-i18n="back_link">Вернуться в медиатеку</span>
+  </a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { initI18n, switchLang, applyTranslations } from '/html/js/i18n.js';
+
+  window.switchLang = switchLang;
+  window.applyTranslations = applyTranslations;
+
+  // Initialize i18n
+  const savedLang = localStorage.getItem('app_language') || 'ru';
+  await initI18n(savedLang);
+
+  const engineSelect = document.getElementById('tts-engine');
+  const voiceSelect = document.getElementById('tts-voice');
+  const voiceContainer = document.getElementById('voice-select-container');
+  const ttsForm = document.getElementById('tts-form');
+  const btnSpeak = document.getElementById('btn-speak');
+  const ttsStatus = document.getElementById('tts-status');
+  const statusText = document.getElementById('status-text');
+  const playerContainer = document.getElementById('player-container');
+  const audioPlayer = document.getElementById('audio-player');
+  const activeVoiceContainer = document.getElementById('active-voice-container');
+  const activeVoiceName = document.getElementById('active-voice-name');
+
+  function getFriendlyVoiceName(system, voice) {
+    if (system === 'edge-tts') {
+      if (voice === 'ru-RU-DmitryNeural') return 'Дмитрий (Microsoft Edge)';
+      if (voice === 'ru-RU-SvetlanaNeural') return 'Светлана (Microsoft Edge)';
+      return `Edge (${voice})`;
+    }
+    if (system === 'silero') {
+      const names = {
+        eugene: 'Евгений (Silero)',
+        aidar: 'Айдар (Silero)',
+        baya: 'Бая (Silero)',
+        kseniya: 'Ксения (Silero)',
+        xenia: 'Ксения v2 (Silero)',
+        random: 'Рандомный (Silero)'
+      };
+      return names[voice] || `Silero (${voice})`;
+    }
+    if (system === 'gtts') {
+      return 'Google TTS (Базовый)';
+    }
+    if (system === 'browser') {
+      return `Браузерный (${voice || 'По умолчанию'})`;
+    }
+    return `${system} — ${voice}`;
+  }
+
+  function updateActiveBadge(system, voice) {
+    if (system && voice) {
+      activeVoiceName.textContent = getFriendlyVoiceName(system, voice);
+      activeVoiceContainer.style.display = 'block';
+    } else {
+      activeVoiceContainer.style.display = 'none';
+    }
+  }
+
+  // Available voices dictionary with translated labels
+  const voiceMap = {
+    'browser': [], // Populated dynamically from window.speechSynthesis
+    'gtts': [
+      { value: 'ru', labelKey: 'voices.ru_standard' }
+    ],
+    'edge-tts': [
+      { value: 'ru-RU-DmitryNeural', labelKey: 'voices.dmitry' },
+      { value: 'ru-RU-SvetlanaNeural', labelKey: 'voices.svetlana' }
+    ],
+    'silero': [
+      { value: 'eugene', labelKey: 'voices.eugene' },
+      { value: 'aidar', labelKey: 'voices.aidar' },
+      { value: 'baya', labelKey: 'voices.baya' },
+      { value: 'kseniya', labelKey: 'voices.kseniya' },
+      { value: 'xenia', labelKey: 'voices.xenia' },
+      { value: 'random', labelKey: 'voices.random' }
+    ]
+  };
+
+  // Translate voice labels
+  function translateVoiceLabel(labelKey) {
+    return i18next?.t(labelKey) || labelKey;
+  }
+
+  // Load browser native voices
+  function loadBrowserVoices() {
+    if ('speechSynthesis' in window) {
+      const voices = window.speechSynthesis.getVoices();
+      voiceMap['browser'] = voices
+        .filter(v => v.lang.startsWith('ru'))
+        .map(v => ({ value: v.name, labelKey: `voices.${v.name.replace(/\s+/g, '_')}` }));
+      
+      // Fallback if no Russian voices found in browser
+      if (voiceMap['browser'].length === 0) {
+        voiceMap['browser'].push({ value: 'default', labelKey: 'voices.default' });
+      }
+      
+      if (engineSelect.value === 'browser') {
+        updateVoiceSelect();
+      }
+    }
+  }
+
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = loadBrowserVoices;
+    loadBrowserVoices();
+  }
+
+  function updateVoiceSelect() {
+    const engine = engineSelect.value;
+    const voices = voiceMap[engine] || [];
+    
+    voiceSelect.innerHTML = '';
+    
+    if (voices.length === 0) {
+      voiceContainer.style.display = 'none';
+    } else {
+      voiceContainer.style.display = 'block';
+      voices.forEach(voice => {
+        const opt = document.createElement('option');
+        opt.value = voice.value;
+        opt.textContent = translateVoiceLabel(voice.labelKey);
+        voiceSelect.appendChild(opt);
+      });
+    }
+  }
+
+  engineSelect.addEventListener('change', updateVoiceSelect);
+  updateVoiceSelect(); // Initial populate
+
+  // On page load, fetch current settings to pre-select saved voice/engine
+  try {
+    const settingsResponse = await fetch('/auth/settings');
+    if (settingsResponse.ok) {
+      const settings = await settingsResponse.json();
+      if (settings.tts_system) {
+        engineSelect.value = settings.tts_system;
+        updateVoiceSelect();
+      }
+      if (settings.tts_voice) {
+        voiceSelect.value = settings.tts_voice;
+      }
+      updateActiveBadge(settings.tts_system, settings.tts_voice);
+    }
+  } catch (e) {
+    console.error('Failed to load user settings:', e);
+  }
+
+  // Update translations when language changes
+  const originalSwitchLang = window.switchLang;
+  window.switchLang = async function(lang) {
+    await originalSwitchLang(lang);
+    updateVoiceSelect();
+  };
+
+  ttsForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = document.getElementById('tts-text').value.trim();
+    if (!text) return;
+
+    const engine = engineSelect.value;
+    const voice = voiceSelect.value;
+
+    // 1. Browser Web Speech synthesis
+    if (engine === 'browser') {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_`#]/g, '');
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'ru-RU';
+        
+        const voices = window.speechSynthesis.getVoices();
+        const selectedVoice = voices.find(v => v.name === voice);
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+        }
+        
+        ttsStatus.style.display = 'inline-flex';
+        statusText.textContent = i18next?.t('status_generating') || 'Воспроизведение речи браузером...';
+        
+        utterance.onend = () => {
+          ttsStatus.style.display = 'none';
+        };
+        utterance.onerror = () => {
+          ttsStatus.style.display = 'none';
+        };
+        
+        window.speechSynthesis.speak(utterance);
+        playerContainer.style.display = 'none';
+      } else {
+        alert(i18next?.t('errors.no_api') || 'Ваш браузер не поддерживает Web Speech API.');
+      }
+      return;
+    }
+
+    // 2. Server-side TTS synthesis (gtts, edge-tts, silero)
+    ttsStatus.style.display = 'inline-flex';
+    statusText.textContent = i18next?.t('status_generating') || 'Генерация аудиофайла на сервере...';
+    btnSpeak.disabled = true;
+    playerContainer.style.display = 'none';
+
+    try {
+      const queryParams = new URLSearchParams({
+        text: text,
+        system: engine,
+        voice: voice
+      });
+
+      // Load audio stream from server
+      const audioUrl = `/api/tts/synthesize?${queryParams.toString()}`;
+      
+      // Force preload of the audio
+      audioPlayer.src = audioUrl;
+      audioPlayer.load();
+
+      audioPlayer.oncanplaythrough = () => {
+        ttsStatus.style.display = 'none';
+        btnSpeak.disabled = false;
+        playerContainer.style.display = 'block';
+        audioPlayer.play();
+      };
+
+      audioPlayer.onerror = (err) => {
+        console.error(err);
+        statusText.textContent = i18next?.t('errors.server_error') || 'Ошибка синтеза речи на сервере';
+        btnSpeak.disabled = false;
+        setTimeout(() => { ttsStatus.style.display = 'none'; }, 3000);
+      };
+
+    } catch (err) {
+      console.error(err);
+      statusText.textContent = i18next?.t('errors.network_error') || 'Сбой сети при запросе к серверу';
+      btnSpeak.disabled = false;
+      setTimeout(() => { ttsStatus.style.display = 'none'; }, 3000);
+    }
+  });
+
+  const btnSaveDefault = document.getElementById('btn-save-default');
+  btnSaveDefault.addEventListener('click', async () => {
+    const engine = engineSelect.value;
+    const voice = voiceSelect.value;
+    
+    btnSaveDefault.disabled = true;
+    try {
+      const payload = {
+        tts_enabled: 1,
+        tts_system: engine,
+        tts_voice: voice
+      };
+      
+      const response = await fetch('/auth/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      if (response.ok) {
+        updateActiveBadge(engine, voice);
+        alert('Изменения успешно применены! Этот голос теперь установлен по умолчанию.');
+      } else {
+        alert('Не удалось сохранить настройки. Убедитесь, что вы вошли в систему.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Ошибка подключения к серверу при сохранении настроек.');
+    } finally {
+      btnSaveDefault.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

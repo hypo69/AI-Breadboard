@@ -1,0 +1,220 @@
+<!-- Web Search MCP Providers Management Tab -->
+<div class="container-fluid py-3">
+  <!-- Header -->
+  <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 shadow-sm">
+    <div>
+      <h5 class="mb-1"><i class="bi bi-globe2 me-2"></i>🌐 Провайдеры веб-поиска (MCP)</h5>
+      <p class="mb-0 small text-secondary">Управление серверами интернет-поиска, алгоритмами извлечения и тестирование выдачи.</p>
+    </div>
+    <div class="input-group input-group-sm" style="max-width: 440px;">
+      <span class="input-group-text fw-bold">Активный движок поиска:</span>
+      <select class="form-select" id="search-tab-engine-selector">
+        <option value="playwright">🎭 Playwright MCP</option>
+        <option value="langchain">🦜 LangChain MCP</option>
+        <option value="gemini">♊ Google Gemini (Grounding)</option>
+        <option value="gemini_cli">💻 Google Gemini CLI</option>
+        <option value="agy">🚀 Antigravity (AGY)</option>
+      </select>
+      <button class="btn btn-primary" id="btn-save-search-tab-engine">
+        <i class="bi bi-check-circle me-1"></i> Сохранить
+      </button>
+    </div>
+  </div>
+
+  <!-- Reference Info Block (Collapse, matching RAG tab style) -->
+  <div class="card mb-4 border-0 shadow-sm bg-light">
+    <div class="card-body p-3">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-info-circle-fill text-primary fs-5"></i>
+          <span class="fw-bold">Справка: архитектура и принципы работы 5 серверов веб-поиска</span>
+        </div>
+        <button class="btn btn-sm btn-link text-decoration-none p-0 text-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#searchArchCollapse" aria-expanded="true" aria-controls="searchArchCollapse">
+          <i class="bi bi-chevron-down"></i> Развернуть / Скрыть
+        </button>
+      </div>
+      <div class="collapse show" id="searchArchCollapse">
+        <div class="row g-3 mt-2 pt-2 border-top">
+          <!-- 1. Playwright -->
+          <div class="col-xl col-md-6">
+            <div class="p-3 border rounded bg-white h-100 shadow-sm">
+              <div class="fw-bold text-primary mb-1">
+                🎭 Playwright MCP
+              </div>
+              <div class="small text-muted mb-2">
+                Прямой headless-браузер (Chromium).
+              </div>
+              <ul class="small text-secondary mb-0 ps-3">
+                <li>Поиск в DuckDuckGo, Bing и Google.</li>
+                <li>Глубокий сбор DOM-структуры и текста сайтов.</li>
+                <li><strong>Плюс:</strong> не расходует токены ИИ на сбор данных.</li>
+                <li><strong>Особенность:</strong> требует запущенного Playwright.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 2. LangChain -->
+          <div class="col-xl col-md-6">
+            <div class="p-3 border rounded bg-white h-100 shadow-sm">
+              <div class="fw-bold text-success mb-1">
+                🦜 LangChain MCP
+              </div>
+              <div class="small text-muted mb-2">
+                Автономный ReAct-агент Breadboard.
+              </div>
+              <ul class="small text-secondary mb-0 ps-3">
+                <li>Инструменты: веб-поиск, RAG, Python-вычисления.</li>
+                <li>Агент сам принимает решение о вызове инструментов.</li>
+                <li><strong>Плюс:</strong> гибкое решение комплексных задач.</li>
+                <li><strong>Особенность:</strong> многошаговый reasoning-цикл.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 3. Gemini Grounding -->
+          <div class="col-xl col-md-6">
+            <div class="p-3 border rounded bg-white h-100 shadow-sm">
+              <div class="fw-bold text-info mb-1">
+                ♊ Google Gemini Grounding
+              </div>
+              <div class="small text-muted mb-2">
+                Официальный Google Search Grounding.
+              </div>
+              <ul class="small text-secondary mb-0 ps-3">
+                <li>Прямой поиск в реальном индексе Google Search.</li>
+                <li>Автоматическая ротация пула ключей при ошибках 429.</li>
+                <li><strong>Плюс:</strong> проверенная точность фактов и цитаты.</li>
+                <li><strong>Особенность:</strong> требует валидных API-ключей.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 4. Gemini CLI -->
+          <div class="col-xl col-md-6">
+            <div class="p-3 border rounded bg-white h-100 shadow-sm">
+              <div class="fw-bold text-primary mb-1">
+                💻 Google Gemini CLI
+              </div>
+              <div class="small text-muted mb-2">
+                Локальный терминальный агент Google.
+              </div>
+              <ul class="small text-secondary mb-0 ps-3">
+                <li>Прямое выполнение через CLI подпроцесс.</li>
+                <li>Встроенные агентные инструменты веб-поиска.</li>
+                <li><strong>Плюс:</strong> автономный агент, модель по умолчанию flash-lite.</li>
+                <li><strong>Особенность:</strong> требует установленной утилиты gemini CLI.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 5. Antigravity AGY -->
+          <div class="col-xl col-md-6">
+            <div class="p-3 border rounded bg-white h-100 shadow-sm">
+              <div class="fw-bold text-warning mb-1">
+                🚀 Antigravity (AGY)
+              </div>
+              <div class="small text-muted mb-2">
+                Мультиагентный поиск платформы Google.
+              </div>
+              <ul class="small text-secondary mb-0 ps-3">
+                <li>Инструменты <code>SEARCH_WEB</code> и <code>READ_URL_CONTENT</code>.</li>
+                <li>Глубокий ресерч и синтез сложных многоходовок.</li>
+                <li><strong>Плюс:</strong> автономный агентный цикл.</li>
+                <li><strong>Особенность:</strong> использует Antigravity SDK / CLI.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Provider Settings & Live Search Tester -->
+  <div class="row g-4 mb-4">
+    <!-- LEFT: Provider Detailed Settings -->
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-dark text-white fw-bold">
+          <i class="bi bi-sliders me-1"></i> Параметры поисковых модулей
+        </div>
+        <div class="card-body">
+          <!-- Gemini Grounding Settings -->
+          <div class="mb-4 p-3 border rounded bg-light">
+            <h6 class="fw-bold text-info mb-2"><i class="bi bi-stars me-1"></i> Gemini Grounding</h6>
+            <div class="mb-2">
+              <label class="form-label small text-muted fw-bold">Модель для поиска Grounding (динамически из SDK):</label>
+              <select class="form-select form-select-sm" id="search-gemini-model">
+                <option value="">Загрузка доступных моделей через Google GenAI SDK...</option>
+              </select>
+            </div>
+            <div class="small text-muted">
+              Ключи автоматически считываются из вкладки «Модели и API» и ротируются по кругу.
+            </div>
+          </div>
+
+          <!-- Gemini CLI Settings -->
+          <div class="mb-4 p-3 border rounded bg-light">
+            <h6 class="fw-bold text-primary mb-2"><i class="bi bi-terminal-fill me-1"></i> Google Gemini CLI</h6>
+            <div class="mb-2">
+              <label class="form-label small text-muted fw-bold">Модель Gemini CLI (динамически из инструмента):</label>
+              <select class="form-select form-select-sm" id="search-gemini-cli-model">
+                <option value="">Загрузка доступных моделей через Gemini CLI...</option>
+              </select>
+            </div>
+            <div class="small text-muted">
+              Использует локальную утилиту <code>gemini</code> с автоматическим вызовом поисковых инструментов.
+            </div>
+          </div>
+
+          <!-- Antigravity AGY Settings -->
+          <div class="mb-4 p-3 border rounded bg-light">
+            <h6 class="fw-bold text-warning mb-2"><i class="bi bi-rocket-takeoff me-1"></i> Antigravity (AGY) Search</h6>
+            <div class="mb-2">
+              <label class="form-label small text-muted fw-bold">Модель агента Antigravity (динамически из SDK):</label>
+              <select class="form-select form-select-sm" id="search-agy-model">
+                <option value="">Загрузка доступных моделей через Antigravity SDK...</option>
+              </select>
+            </div>
+            <div class="small text-muted">
+              Использует встроенные агентные инструменты <code>SEARCH_WEB</code> и <code>READ_URL_CONTENT</code>.
+            </div>
+          </div>
+
+          <div class="d-grid">
+            <button class="btn btn-success fw-bold" id="btn-save-search-params">
+              <i class="bi bi-floppy me-1"></i> Сохранить настройки модулей
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Live Interactive Search Tester -->
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+          <span class="fw-bold"><i class="bi bi-terminal me-1"></i> Интерактивный тест поиска</span>
+          <span class="badge bg-primary" id="test-search-engine-badge">playwright</span>
+        </div>
+        <div class="card-body d-flex flex-column">
+          <div class="mb-3">
+            <label class="form-label small text-muted fw-bold">Тестовый поисковый запрос:</label>
+            <div class="input-group">
+              <input type="text" class="form-control form-control-sm" id="test-search-query-input" placeholder="Например: последние новости марсохода 2026">
+              <button class="btn btn-primary btn-sm px-3" id="btn-run-test-search">
+                <i class="bi bi-search me-1"></i> Искать
+              </button>
+            </div>
+          </div>
+
+          <div class="flex-grow-1 d-flex flex-column">
+            <label class="form-label small text-muted fw-bold">Результат работы провайдера:</label>
+            <div id="test-search-output-container" class="border rounded p-3 bg-light flex-grow-1 font-monospace" style="min-height: 230px; max-height: 350px; overflow-y: auto; font-size: 0.82rem; white-space: pre-wrap;">
+              <span class="text-muted">Введите запрос и нажмите «Искать» для проверки выбранного провайдера.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

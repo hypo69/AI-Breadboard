@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Медиа Плейер - Пульт ДУ</title>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+  
+  <!-- Telegram Web Apps SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <style>
+    :root {
+      --tg-theme-bg-color: #0d1117;
+      --tg-theme-text-color: #c9d1d9;
+      --tg-theme-hint-color: #8b949e;
+      --tg-theme-secondary-bg-color: #161b22;
+      --primary-gradient: linear-gradient(135deg, #1f6feb 0%, #094cb5 100%);
+      --accent-gradient: linear-gradient(135deg, #ff7b00 0%, #ffae00 100%);
+      --success-gradient: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+    }
+    
+    body {
+      background: var(--tg-theme-bg-color);
+      color: var(--tg-theme-text-color);
+      font-family: system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+    }
+    
+    .rc-container, .auth-container, .scan-container {
+      width: 100%;
+      max-width: 480px;
+      padding: 2px;
+    }
+    
+    .card-rc, .card-auth, .card-scan {
+      background-color: var(--tg-theme-secondary-bg-color);
+      border: 1px solid #30363d;
+      border-radius: 16px;
+      padding: 1px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+    }
+    
+    .btn-circle-lg {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-circle-xl {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .track-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #58a6ff;
+    }
+    
+    .playlist-box {
+      max-height: 200px;
+      overflow-y: auto;
+      border-radius: 8px;
+      background: #0d1117;
+    }
+    
+    .list-group-item-action:hover {
+      background-color: #21262d !important;
+    }
+    
+    .btn-carousel {
+      background: var(--accent-gradient);
+      border: none;
+      color: #000;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 123, 0, 0.3);
+    }
+    .btn-carousel:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 123, 0, 0.5);
+      background: linear-gradient(135deg, #ffae00 0%, #ff7b00 100%);
+      color: #000;
+    }
+    .btn-carousel:active {
+      transform: translateY(1px);
+    }
+    .btn-carousel:hover i {
+      display: inline-block;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Chat bubbles styling */
+    .chat-msg {
+      display: flex;
+      flex-direction: column;
+      max-width: 85%;
+      margin-bottom: 8px;
+    }
+    .chat-msg.user {
+      align-self: flex-end;
+    }
+    .chat-msg.ai, .chat-msg.system {
+      align-self: flex-start;
+    }
+    .chat-msg.user .msg-bubble {
+      background: var(--primary-gradient);
+      color: #fff;
+      border-radius: 12px 12px 0 12px;
+      box-shadow: 0 2px 8px rgba(31, 111, 235, 0.2);
+    }
+    .chat-msg.ai .msg-bubble {
+      background-color: #21262d;
+      color: #c9d1d9;
+      border-radius: 12px 12px 12px 0;
+      border: 1px solid #30363d;
+    }
+    .chat-msg.system .msg-bubble {
+      background-color: rgba(255, 255, 255, 0.05);
+      color: #8b949e;
+      border-radius: 8px;
+      border-left: 3px solid #58a6ff;
+    }
+    .msg-bubble {
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      word-break: break-word;
+    }
+    .msg-time {
+      font-size: 0.7rem;
+      color: #8b949e;
+      margin-top: 2px;
+      padding: 0 4px;
+    }
+    .chat-msg.user .msg-time {
+      text-align: right;
+    }
+    .animate-pulse {
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.15); opacity: 0.7; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    .search-result-card {
+      background: rgba(88, 166, 255, 0.07);
+      border: 1px solid rgba(88, 166, 255, 0.2);
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+    .search-result-card:hover {
+      background: rgba(88, 166, 255, 0.12);
+      border-color: rgba(88, 166, 255, 0.4);
+    }
+
+    /* Auth panel specific */
+    .form-control {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+    }
+    .form-control:focus {
+      background: #0d1117;
+      border-color: #388bfd;
+      color: #c9d1d9;
+      box-shadow: 0 0 0 2px rgba(56,139,253,0.3);
+    }
+    .btn-auth-primary {
+      background: var(--primary-gradient);
+      border: none;
+      color: #fff;
+    }
+    .btn-auth-success {
+      background: var(--success-gradient);
+      border: none;
+      color: #fff;
+    }
+
+    /* Scanning styles */
+    .scan-radar {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      border: 2px solid rgba(88, 166, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .scan-radar::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px solid #58a6ff;
+      animation: radar-ping 2s infinite linear;
+    }
+    @keyframes radar-ping {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+    .player-list-item {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+    .player-list-item:hover {
+      border-color: #58a6ff;
+      background: rgba(88, 166, 255, 0.05);
+    }
+    
+    /* Theme toggle button */
+    .theme-toggle-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      z-index: 1000;
+    }
+    .theme-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Light theme styles */
+    .theme-light .card-rc,
+    .theme-light .card-auth,
+    .theme-light .card-scan {
+      background-color: #ffffff;
+      border-color: #d0d7de;
+    }
+    .theme-light .track-title {
+      color: #0969da;
+    }
+    .theme-light .form-control {
+      background: #ffffff;
+      border-color: #d0d7de;
+      color: #24292f;
+    }
+    .theme-light .form-control:focus {
+      background: #ffffff;
+      border-color: #0969da;
+    }
+    .theme-light .btn-primary {
+      background: #2da44e;
+      border-color: #2da44e;
+    }
+    .theme-light .btn-primary:hover {
+      background: #2da44e;
+    }
+    .theme-light .btn-outline-light {
+      color: #24292f;
+      border-color: #d0d7de;
+    }
+    .theme-light .btn-outline-light:hover {
+      background: #f6f8fa;
+    }
+    .theme-light .btn-circle-lg {
+      background: #ffffff;
+      border-color: #d0d7de;
+      color: #24292f;
+    }
+    .theme-light .btn-circle-lg:hover {
+      background: #f6f8fa;
+    }
+    .theme-light .text-muted {
+      color: #6e7781 !important;
+    }
+    .theme-light .chat-msg.user .msg-bubble {
+      background: #0969da;
+    }
+    .theme-light .chat-msg.ai .msg-bubble {
+      background-color: #f6f8fa;
+      color: #24292f;
+    }
+    .theme-light .chat-msg.system .msg-bubble {
+      background-color: #f6f8fa;
+      color: #6e7781;
+    }
+    .theme-light .player-list-item {
+      background: #ffffff;
+      border-color: #d0d7de;
+    }
+    .theme-light .player-list-item:hover {
+      background: #f6f8fa;
+    }
+    .theme-light .list-group-item {
+      background: #ffffff;
+      border-color: #d0d7de;
+      color: #24292f;
+    }
+    .theme-light .list-group-item:hover {
+      background: #f6f8fa;
+    }
+    .theme-light .form-range {
+      color-scheme: light;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. AUTHENTICATION PANEL -->
+  <div class="auth-container" id="auth-panel">
+    <div class="card-auth">
+      <div class="text-center mb-4">
+        <i class="bi bi-shield-lock-fill fs-1 text-primary"></i>
+        <h4 class="mt-2 text-white">Вход в пульт ДУ</h4>
+        <p class="text-muted small">Пожалуйста, войдите в аккаунт для продолжения</p>
+      </div>
+
+      <div id="auth-alert" class="alert alert-danger d-none" role="alert"></div>
+
+      <!-- Login Form -->
+      <div id="auth-form-login">
+        <form id="form-login">
+          <div class="mb-3">
+            <label for="login-email" class="form-label text-muted small">Email</label>
+            <input type="email" class="form-control" id="login-email" required>
+          </div>
+          <div class="mb-3">
+            <label for="login-password" class="form-label text-muted small">Пароль</label>
+            <input type="password" class="form-control" id="login-password" required>
+          </div>
+          <button type="submit" class="btn btn-auth-primary w-100 py-2.5 rounded-pill mb-3">Войти</button>
+          <p class="text-center small mb-0">Нет аккаунта? <a href="#" id="go-to-register" class="text-info">Зарегистрироваться</a></p>
+        </form>
+      </div>
+
+      <!-- Register Form -->
+      <div id="auth-form-register" class="d-none">
+        <form id="form-register">
+          <div class="mb-3">
+            <label for="register-name" class="form-label text-muted small">Имя</label>
+            <input type="text" class="form-control" id="register-name" required>
+          </div>
+          <div class="mb-3">
+            <label for="register-email" class="form-label text-muted small">Email</label>
+            <input type="email" class="form-control" id="register-email" required>
+          </div>
+          <div class="mb-3">
+            <label for="register-password" class="form-label text-muted small">Пароль</label>
+            <input type="password" class="form-control" id="register-password" required>
+          </div>
+          <button type="submit" class="btn btn-auth-success w-100 py-2.5 rounded-pill mb-3">Зарегистрироваться</button>
+          <p class="text-center small mb-0">Уже есть аккаунт? <a href="#" id="go-to-login" class="text-info">Войти</a></p>
+        </form>
+      </div>
+
+      <!-- Verify Form -->
+      <div id="auth-form-verify" class="d-none">
+        <p class="text-center small">На вашу почту отправлен 6-значный код подтверждения. Пожалуйста, введите его ниже.</p>
+        <form id="form-verify">
+          <div class="mb-3">
+            <label for="verify-code" class="form-label text-muted small">Код подтверждения</label>
+            <input type="text" class="form-control text-center fs-3 py-2" id="verify-code" maxlength="6" placeholder="XXXXXX" required>
+          </div>
+          <button type="submit" class="btn btn-info w-100 py-2.5 text-white rounded-pill mb-3">Подтвердить</button>
+          <p class="text-center small mb-0"><a href="#" id="verify-cancel" class="text-info">Назад к входу</a></p>
+        </form>
+      </div>
+
+      <div class="my-4 text-center position-relative">
+        <hr class="border-secondary">
+        <span class="px-2 text-muted position-absolute top-50 start-50 translate-middle small" style="background-color: var(--tg-theme-secondary-bg-color);">Или войти через</span>
+      </div>
+
+      <div class="d-flex flex-column gap-2 align-items-center">
+        <button id="google-signin-btn" class="btn btn-outline-light w-100 rounded-pill d-flex align-items-center justify-content-center gap-2 py-2">
+          <i class="bi bi-google text-danger"></i>
+          <span>Google</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. PLAYER DISCOVERY SCANNER PANEL -->
+  <div class="scan-container d-none" id="scan-panel">
+    <div class="card-scan text-center">
+      <div class="scan-radar">
+        <i class="bi bi-tv fs-2 text-primary"></i>
+      </div>
+      <h4 class="text-white" id="scan-title">Поиск активных плееров</h4>
+      <p class="text-muted small" id="scan-status">Сканируем сеть на наличие запущенных устройств...</p>
+      
+      <div id="discovered-players-list" class="mt-4 text-start"></div>
+
+      <button id="btn-retry-scan" class="btn btn-outline-primary w-100 py-2.5 rounded-pill mt-3 d-none">
+        <i class="bi bi-arrow-clockwise"></i> Обновить поиск
+      </button>
+      
+      <button id="btn-scan-logout" class="btn btn-sm btn-outline-danger w-100 mt-2 py-2 border-0 small">
+        <i class="bi bi-box-arrow-right"></i> Выйти из аккаунта
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. REMOTE CONTROL MAIN PANEL -->
+  <div class="rc-container d-none" id="rc-app-container">
+    <div class="card-rc">
+      <!-- Status Badge & User info -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="badge bg-secondary" id="ws-status"><i class="bi bi-wifi-off"></i> Подключение...</span>
+        <div class="d-flex gap-2 align-items-center">
+          <button class="theme-toggle-btn" id="theme-toggle-btn" title="Переключить тему">
+            <i class="bi bi-brightness-high"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-secondary py-1 px-2 border-secondary small" id="btn-change-player" title="Сменить плеер">
+            <i class="bi bi-arrow-left-right"></i> <span id="room-info">Комната: default</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Now Playing Info -->
+      <div class="text-center my-3 p-3 rounded bg-dark bg-opacity-25">
+        <i class="bi bi-music-note-beamed fs-1 text-primary mb-3 d-block"></i>
+        <div id="track-title" class="track-title mb-1 text-truncate">Файл не выбран</div>
+        <small id="time-display" class="text-muted">00:00 / 00:00</small>
+        
+        <!-- Progress Bar -->
+        <div class="mt-3">
+          <input type="range" class="form-range" id="seek-slider" min="0" max="100" value="0">
+        </div>
+      </div>
+
+      <!-- Central Controls -->
+      <div class="d-flex justify-content-center align-items-center gap-3 my-4">
+        <button class="btn btn-outline-light btn-circle-lg" id="btn-prev" title="Предыдущий"><i class="bi bi-skip-start-fill fs-3"></i></button>
+        <button class="btn btn-primary btn-circle-xl" id="btn-playtoggle" title="Воспроизведение/Пауза"><i class="bi bi-play-fill fs-1" id="play-icon"></i></button>
+        <button class="btn btn-outline-light btn-circle-lg" id="btn-next" title="Следующий"><i class="bi bi-skip-end-fill fs-3"></i></button>
+      </div>
+
+      <!-- Carousel / Random Movie Control -->
+      <div class="my-3 px-2">
+        <button class="btn btn-carousel w-100 py-2.5 rounded-pill d-flex align-items-center justify-content-center gap-2" id="btn-carousel" title="Случайный фильм">
+          <i class="bi bi-arrow-repeat fs-5"></i>
+          <span>Карусель</span>
+        </button>
+      </div>
+
+      <!-- Volume Controls -->
+      <div class="d-flex align-items-center gap-3 my-3 px-2">
+        <i class="bi bi-volume-down-fill text-muted fs-4"></i>
+        <input type="range" class="form-range" id="volume-slider" min="0" max="1" step="0.05" value="1">
+        <i class="bi bi-volume-up-fill text-muted fs-4"></i>
+      </div>
+
+      <!-- Voice Search & AI Chat -->
+      <div class="mt-4 p-3 rounded border border-secondary bg-dark bg-opacity-25">
+        <h6 class="text-center mb-3"><i class="bi bi-mic"></i> Голосовой Ассистент</h6>
+        
+        <!-- Status -->
+        <div class="text-muted small text-center mb-3" id="voice-status">Готов к работе</div>
+        
+        <!-- Control buttons -->
+        <div class="d-flex flex-column gap-3 align-items-center">
+          <button class="btn btn-outline-danger btn-circle-xl" id="btn-mic" title="Нажмите, чтобы говорить">
+            <i class="bi bi-mic-fill fs-1" id="mic-icon"></i>
+          </button>
+          
+          <!-- Language Selection -->
+          <div class="btn-group w-100 mt-2" role="group">
+            <input type="radio" class="btn-check" name="lang-radio" id="lang-ru" value="ru-RU" autocomplete="off" checked>
+            <label class="btn btn-outline-secondary" for="lang-ru">RU</label>
+
+            <input type="radio" class="btn-check" name="lang-radio" id="lang-en" value="en-US" autocomplete="off">
+            <label class="btn btn-outline-secondary" for="lang-en">EN</label>
+
+            <input type="radio" class="btn-check" name="lang-radio" id="lang-he" value="he-IL" autocomplete="off">
+            <label class="btn btn-outline-secondary" for="lang-he">HE</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Playlist Picker -->
+      <div class="mt-4">
+        <h6 class="border-bottom border-secondary pb-2"><i class="bi bi-collection-play"></i> Список воспроизведения плеера</h6>
+        <div class="list-group list-group-flush playlist-box" id="playlist-items">
+          <div class="text-muted small p-3 text-center">Ожидание подключения к плееру...</div>
+        </div>
+      </div>
+
+      <!-- User Manual (Read & Listen) -->
+      <div class="mt-4 p-3 rounded border border-secondary bg-dark bg-opacity-25">
+        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-2 mb-2">
+          <h6 class="m-0"><i class="bi bi-info-circle"></i> Инструкция пользователя</h6>
+          <button class="btn btn-outline-info btn-sm d-flex align-items-center gap-1" id="btn-read-manual" title="Прослушать инструкцию">
+            <i class="bi bi-volume-up-fill" id="read-manual-icon"></i> <span>Прослушать</span>
+          </button>
+        </div>
+        <div id="user-manual-text" class="small text-muted" style="line-height: 1.5; text-align: justify;">
+          Для дистанционного управления сначала откройте Медиаплеер на вашем компьютере или телевизоре. 
+          Данный пульт автоматически подключится к нему через сервер. 
+          Вы можете нажимать кнопки для запуска файлов, переключения треков, перемотки или изменения громкости. 
+          Также доступно голосовое управление кнопкой микрофона. 
+          Простые команды: «пауза», «плей», «громче», «тише», «вперед» и «назад» сработают мгновенно. 
+          А любые другие фразы будут отправлены вашему AI-ассистенту Gemini для помощи в выборе фильма или ответа на вопросы.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // API Module
+    const api = {
+      async fetch(url, options = {}) {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+          let msg = response.statusText;
+          try {
+            const data = await response.json();
+            msg = data.detail || msg;
+          } catch {}
+          throw new Error(msg);
+        }
+        return response.json();
+      },
+      auth: {
+        async check() {
+          try {
+            const response = await fetch('/auth/check');
+            return await response.json();
+          } catch {
+            return { authenticated: false };
+          }
+        },
+        async register(email, password, name) {
+          return api.fetch('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, name })
+          });
+        },
+        async verify(email, code) {
+          return api.fetch('/auth/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code })
+          });
+        },
+        async loginEmail(email, password) {
+          return api.fetch('/auth/login/email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+        },
+        async logout() {
+          return api.fetch('/auth/logout', { method: 'POST' });
+        }
+      }
+    };
+
+    // Panels state
+    const authPanel = document.getElementById('auth-panel');
+    const scanPanel = document.getElementById('scan-panel');
+    const rcAppContainer = document.getElementById('rc-app-container');
+
+    const authFormLogin = document.getElementById('auth-form-login');
+    const authFormRegister = document.getElementById('auth-form-register');
+    const authFormVerify = document.getElementById('auth-form-verify');
+    const authAlert = document.getElementById('auth-alert');
+
+    let currentVerifyEmail = '';
+    let currentRoomName = '';
+    let ws = null;
+    let isSeeking = false;
+    let playerState = { duration: 0, currentTime: 0, isPlaying: false, volume: 1 };
+
+    // Toggle panels helpers
+    function showPanel(panelId) {
+      authPanel.classList.add('d-none');
+      scanPanel.classList.add('d-none');
+      rcAppContainer.classList.add('d-none');
+
+      if (panelId === 'auth') authPanel.classList.remove('d-none');
+      else if (panelId === 'scan') scanPanel.classList.remove('d-none');
+      else if (panelId === 'rc') rcAppContainer.classList.remove('d-none');
+    }
+
+    // ── AUTH PANEL LOGIC ──────────────────────────────────────────────────
+    document.getElementById('go-to-register').addEventListener('click', (e) => {
+      e.preventDefault();
+      authAlert.classList.add('d-none');
+      authFormLogin.classList.add('d-none');
+      authFormRegister.classList.remove('d-none');
+    });
+
+    document.getElementById('go-to-login').addEventListener('click', (e) => {
+      e.preventDefault();
+      authAlert.classList.add('d-none');
+      authFormRegister.classList.add('d-none');
+      authFormLogin.classList.remove('d-none');
+    });
+
+    document.getElementById('verify-cancel').addEventListener('click', (e) => {
+      e.preventDefault();
+      authAlert.classList.add('d-none');
+      authFormVerify.classList.add('d-none');
+      authFormLogin.classList.remove('d-none');
+    });
+
+    document.getElementById('google-signin-btn').addEventListener('click', () => {
+      window.location.href = '/auth/google?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+    });
+
+    // Login Form Submit
+    document.getElementById('form-login').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      authAlert.classList.add('d-none');
+      const email = document.getElementById('login-email').value;
+      const pass = document.getElementById('login-password').value;
+      
+      try {
+        await api.auth.loginEmail(email, pass);
+        checkAndInit();
+      } catch (err) {
+        authAlert.textContent = err.message || 'Ошибка входа';
+        authAlert.classList.remove('d-none');
+      }
+    });
+
+    // Register Form Submit
+    document.getElementById('form-register').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      authAlert.classList.add('d-none');
+      const name = document.getElementById('register-name').value;
+      const email = document.getElementById('register-email').value;
+      const pass = document.getElementById('register-password').value;
+
+      try {
+        const res = await api.auth.register(email, pass, name);
+        currentVerifyEmail = email;
+        authFormRegister.classList.add('d-none');
+        authFormVerify.classList.remove('d-none');
+      } catch (err) {
+        authAlert.textContent = err.message || 'Ошибка регистрации';
+        authAlert.classList.remove('d-none');
+      }
+    });
+
+    // Verify Form Submit
+    document.getElementById('form-verify').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      authAlert.classList.add('d-none');
+      const code = document.getElementById('verify-code').value;
+
+      try {
+        await api.auth.verify(currentVerifyEmail, code);
+        // After verify, try to log in
+        authFormVerify.classList.add('d-none');
+        authFormLogin.classList.remove('d-none');
+        authAlert.className = 'alert alert-success';
+        authAlert.textContent = 'Почта успешно подтверждена. Теперь войдите.';
+        authAlert.classList.remove('d-none');
+      } catch (err) {
+        authAlert.textContent = err.message || 'Неверный код';
+        authAlert.classList.remove('d-none');
+      }
+    });
+
+    // ── PLAYER DISCOVERY LOGIC ──────────────────────────────────────────
+    async function scanForPlayers() {
+      showPanel('scan');
+      document.getElementById('scan-title').textContent = 'Поиск активных плееров';
+      document.getElementById('scan-status').textContent = 'Сканируем сеть на наличие запущенных устройств...';
+      document.getElementById('btn-retry-scan').classList.add('d-none');
+      
+      const listDiv = document.getElementById('discovered-players-list');
+      listDiv.innerHTML = '<div class="text-center p-3"><span class="spinner-border spinner-border-sm text-primary"></span></div>';
+
+      try {
+        const response = await fetch('/api/control/active_players');
+        const data = await response.json();
+        const players = data.players || [];
+        const currentUserEmail = data.user_email;
+
+        const mappedPlayers = players.map(p => {
+          if (p.includes('@')) {
+            return { room: p, name: 'kino.davidka.net.tv' };
+          }
+          return { room: p, name: p === 'default' ? 'Основное устройство (default)' : p };
+        });
+
+        if (mappedPlayers.length === 0) {
+          listDiv.innerHTML = `
+            <div class="alert alert-warning text-center small mb-0">
+              <i class="bi bi-exclamation-circle-fill"></i> Активные плееры не обнаружены.<br>
+              Пожалуйста, откройте Медиаплеер на вашем ТВ или компьютере.
+            </div>`;
+          document.getElementById('scan-title').textContent = 'Плееры не найдены';
+          document.getElementById('btn-retry-scan').classList.remove('d-none');
+        } else if (mappedPlayers.length === 1) {
+          // Exactly one player found - connect automatically
+          listDiv.innerHTML = `<div class="alert alert-success text-center small">Обнаружен плеер "${mappedPlayers[0].name}". Подключаемся...</div>`;
+          setTimeout(() => {
+            initStream(mappedPlayers[0].room);
+          }, 800);
+        } else {
+          // Multiple players found - ask user to select one
+          document.getElementById('scan-title').textContent = 'Куда стримить?';
+          document.getElementById('scan-status').textContent = 'Обнаружено несколько плееров. Выберите один:';
+          
+          listDiv.innerHTML = mappedPlayers.map(p => `
+            <div class="player-list-item">
+              <div>
+                <i class="bi bi-tv-fill text-primary me-2"></i>
+                <strong>${p.name}</strong>
+              </div>
+              <button class="btn btn-sm btn-primary rounded-pill px-3" onclick="selectPlayer('${p.room}')">Выбрать</button>
+            </div>
+          `).join('');
+          document.getElementById('btn-retry-scan').classList.remove('d-none');
+        }
+      } catch (err) {
+        listDiv.innerHTML = `<div class="alert alert-danger text-center small">Ошибка сканирования: ${err.message}</div>`;
+        document.getElementById('btn-retry-scan').classList.remove('d-none');
+      }
+    }
+
+    window.selectPlayer = function(room) {
+      initStream(room);
+    };
+
+    document.getElementById('btn-retry-scan').addEventListener('click', scanForPlayers);
+    
+    document.getElementById('btn-change-player').addEventListener('click', () => {
+      // Disconnect current stream
+      if (ws) {
+        ws.close();
+        ws = null;
+      }
+      scanForPlayers();
+    });
+
+    document.getElementById('btn-scan-logout').addEventListener('click', async () => {
+      await api.auth.logout();
+      showPanel('auth');
+    });
+
+    // ── MAIN TELEGRAM / WEB APP ROOM SETUP ────────────────────────────────
+    function getRoomNameFromQuery() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('room') || '';
+    }
+
+    // Initialize Telegram WebApp if available
+    if (window.Telegram && window.Telegram.WebApp) {
+      const tg = window.Telegram.WebApp;
+      tg.ready();
+      tg.expand();
+      
+      // Apply theme
+      function applyTgTheme() {
+        if (tg.themeParams.bg_color) {
+          document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color);
+        }
+        if (tg.themeParams.text_color) {
+          document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color);
+        }
+        if (tg.themeParams.secondary_bg_color) {
+          document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color);
+        }
+        if (tg.themeParams.hint_color) {
+          document.documentElement.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color);
+        }
+      }
+      applyTgTheme();
+      tg.onEvent('themeChanged', applyTgTheme);
+      
+      // Haptic feedback function
+      window.triggerTgHaptic = function() {
+        if (tg.HapticFeedback) {
+          tg.HapticFeedback.impactOccurred('light');
+        }
+      };
+    } else {
+      window.triggerTgHaptic = function() {};
+    }
+
+    const statusBadge = document.getElementById('ws-status');
+    const trackTitle = document.getElementById('track-title');
+    const timeDisplay = document.getElementById('time-display');
+    const seekSlider = document.getElementById('seek-slider');
+    const volumeSlider = document.getElementById('volume-slider');
+    const playIcon = document.getElementById('play-icon');
+    const playlistContainer = document.getElementById('playlist-items');
+
+    function formatTime(seconds) {
+      if (!seconds || isNaN(seconds)) return '00:00';
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    // Connect to WebSocket with Selected Room (Strictly One Stream)
+    function initStream(room) {
+      currentRoomName = room;
+      showPanel('rc');
+      
+      const roomInfoElement = document.getElementById('room-info');
+      if (roomInfoElement) {
+        const displayRoom = room.includes('@') ? 'kino.davidka.net.tv' : room;
+        roomInfoElement.textContent = `Плеер: ${displayRoom}`;
+      }
+
+      // Close previous connection to satisfy "Strictly One Stream" requirement
+      if (ws) {
+        ws.close();
+      }
+
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/api/control/ws?role=remote&room=${encodeURIComponent(currentRoomName)}`;
+      
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        statusBadge.className = 'badge bg-success';
+        statusBadge.innerHTML = '<i class="bi bi-wifi"></i> Подключено';
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.event === 'status_update') {
+            updateUI(msg);
+          } else if (msg.event === 'playlist_update') {
+            updatePlaylist(msg.files || []);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+
+      ws.onclose = (e) => {
+        // Stop speech queue when connection drops
+        if (currentSpeechQueue) {
+          try {
+            currentSpeechQueue.stop();
+            currentSpeechQueue = null;
+          } catch(err) {}
+        }
+        if (currentSpeechAudio) {
+          try {
+            currentSpeechAudio.pause();
+            currentSpeechAudio.src = "";
+            currentSpeechAudio = null;
+          } catch(err) {}
+        }
+
+        // If we deliberately closed it to switch player, don't auto-reconnect
+        if (currentRoomName !== room) return;
+
+        statusBadge.className = 'badge bg-warning text-dark';
+        statusBadge.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Переподключение...';
+        setTimeout(() => {
+          if (currentRoomName === room) {
+            initStream(room);
+          }
+        }, 3000);
+      };
+    }
+
+    function sendCommand(action, payload = {}) {
+      window.triggerTgHaptic();
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ action, ...payload }));
+      }
+    }
+
+    function updateUI(data) {
+      playerState = { ...playerState, ...data };
+      trackTitle.textContent = data.fileName || 'Файл не выбран';
+      timeDisplay.textContent = `${formatTime(data.currentTime)} / ${formatTime(data.duration)}`;
+
+      if (!isSeeking && data.duration > 0) {
+        seekSlider.max = Math.floor(data.duration);
+        seekSlider.value = Math.floor(data.currentTime);
+      }
+
+      if (typeof data.volume === 'number') {
+        volumeSlider.value = data.volume;
+      }
+
+      if (data.isPlaying) {
+        playIcon.className = 'bi bi-pause-fill fs-1';
+      } else {
+        playIcon.className = 'bi bi-play-fill fs-1';
+      }
+    }
+
+    function updatePlaylist(files) {
+      window.playlistFiles = files;
+      if (!files.length) {
+        playlistContainer.innerHTML = '<div class="text-muted small p-3 text-center">Плейлист пуст</div>';
+        return;
+      }
+
+      playlistContainer.innerHTML = files.map((f, i) => `
+        <button class="list-group-item list-group-item-action bg-transparent text-white border-secondary py-2 px-3 small d-flex justify-content-between align-items-center" onclick="playFile(${i})">
+          <span class="text-truncate">${i + 1}. ${f.name}</span>
+          <span class="badge bg-secondary ms-2">${f.type === 'series' ? 'Сериал' : 'Фильм'}</span>
+        </button>
+      `).join('');
+    }
+
+    window.playFile = (index) => {
+      sendCommand('play_file', { index });
+    };
+
+    // ── VOICE CONTROL & SEARCH CHAT MODULE ────────────────────────────────────────────────
+    let recognition = null;
+    let isListening = false;
+    let rcAbortController = null;
+    let rcHistory = [];
+
+
+
+    function tryParseMovieCard(text) {
+      const trimmed = text.trim();
+      if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+        try {
+          const data = JSON.parse(trimmed);
+          if (data.title || data.title_ru) return data;
+        } catch (e) {}
+      }
+      const match = text.match(/\{[\s\S]*?\}/);
+      if (match) {
+        try {
+          const data = JSON.parse(match[0]);
+          if (data.title || data.title_ru) return data;
+        } catch (e) {}
+      }
+      return null;
+    }
+
+    function renderMovieCardHtml(card) {
+      const title = card.title_ru || card.title;
+      const subtitle = card.title_orig || '';
+      const year = card.year || '';
+      const category = card.main_category || '';
+      const genres = card.genres ? card.genres.join(', ') : '';
+      const directors = card.directors ? card.directors.join(', ') : '';
+      const cast = card.cast ? card.cast.slice(0, 5).join(', ') : '';
+      const plot = card.plot || '';
+      const whyWatch = card.why_watch || '';
+      
+      let ratingHtml = '';
+      if (card.rating) {
+        if (card.rating.imdb) ratingHtml += `<span class="badge bg-warning text-dark me-1">IMDb: ${card.rating.imdb}</span>`;
+        if (card.rating.кинопоиск) ratingHtml += `<span class="badge bg-danger text-white me-1">КП: ${card.rating.кинопоиск}</span>`;
+        if (card.rating.tmdb) ratingHtml += `<span class="badge bg-primary text-white">TMDB: ${card.rating.tmdb}</span>`;
+      }
+
+      return `
+        <div class="p-3 text-white" style="border-radius: 10px; background: rgba(88, 166, 255, 0.08); border: 1px solid rgba(88, 166, 255, 0.2);">
+          <h5 class="mb-1 text-info">${title}</h5>
+          <div class="small text-muted mb-2">${subtitle} ${year ? `(${year})` : ''}</div>
+          <div class="mb-2">${ratingHtml}</div>
+          ${category ? `<div class="small text-muted mb-1" style="font-size: 0.8rem;"><strong>Категория:</strong> ${category}</div>` : ''}
+          ${genres ? `<div class="small text-muted mb-1" style="font-size: 0.8rem;"><strong>Жанры:</strong> ${genres}</div>` : ''}
+          ${directors ? `<div class="small text-muted mb-1" style="font-size: 0.8rem;"><strong>Режиссер:</strong> ${directors}</div>` : ''}
+          ${cast ? `<div class="small text-muted mb-2" style="font-size: 0.8rem;"><strong>В ролях:</strong> ${cast}...</div>` : ''}
+          ${plot ? `<p class="small text-secondary mb-2" style="font-size: 0.85rem; line-height: 1.4;">${plot}</p>` : ''}
+          ${whyWatch ? `<div class="small text-info mb-2" style="font-size: 0.8rem;"><strong>Рекомендация:</strong> ${whyWatch}</div>` : ''}
+          <div class="d-flex justify-content-end mt-2">
+            <button class="btn btn-sm btn-primary rounded-pill px-3" onclick="playMovieDirect('${title.replace(/'/g, "\\'")}')">
+              <i class="bi bi-play-fill"></i> Запустить фильм
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    window.playMovieDirect = (title) => {
+      if (!window.playlistFiles) return;
+      const cleanT = title.toLowerCase();
+      const foundIdx = window.playlistFiles.findIndex(f => (f.name || '').toLowerCase().includes(cleanT));
+      if (foundIdx !== -1) {
+        playFile(foundIdx);
+        speakText(`Запускаю ${window.playlistFiles[foundIdx].name}`);
+      } else {
+        speakText(`Фильм не найден в плейлисте`);
+      }
+    };
+
+    async function processChatMessage(text) {
+      if (!text || !text.trim()) return;
+      const query = text.trim();
+      
+      stopAudio(); // <--- STOP AUDIO IMMEDIATELY
+      
+      // 1. Check local control commands first
+      if (handleLocalVoiceCommand(query.toLowerCase())) {
+        speakText('Команда выполнена');
+        return;
+      }
+      
+      // 2. Perform search in playlist
+      const cleanQ = query.toLowerCase().replace(/^(найди|поиск|включи|запусти|покажи|фильм|сериал)\s+/i, '').trim();
+      let matches = [];
+      if (window.playlistFiles && cleanQ.length > 1) {
+        matches = window.playlistFiles.map((f, idx) => ({ ...f, index: idx })).filter(f => {
+          const name = (f.name || '').toLowerCase();
+          const type = (f.type || '').toLowerCase();
+          return name.includes(cleanQ) || (f.year && f.year.toString().includes(cleanQ));
+        });
+      }
+      
+      if (matches.length > 0) {
+        speakText(`Найдено совпадений: ${matches.length}`);
+        
+        const queryLower = query.toLowerCase();
+        if (matches.length === 1 && (queryLower.includes('включи') || queryLower.includes('запусти') || queryLower.includes('плей') || queryLower.includes('играй'))) {
+          playFile(matches[0].index);
+          speakText(`Запускаю ${matches[0].name}`);
+        }
+        return;
+      }
+      
+      // 3. Forward to AI Chat API with Streaming
+      if (rcAbortController) {
+        try { rcAbortController.abort(); } catch(e) {}
+      }
+      rcAbortController = new AbortController();
+
+      const voiceStatus = document.getElementById('voice-status');
+      voiceStatus.textContent = 'Обработка запроса моделью...';
+      
+      let fullReply = '';
+      let started = false;
+      
+      try {
+        const payload = {
+          message: query,
+          history: rcHistory,
+          generation_config: { is_rc: true }
+        };
+        
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: rcAbortController.signal
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Ошибка HTTP ${response.status}`);
+        }
+        
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+        let voiceReply = '';
+        
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+          
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            if (trimmed.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(trimmed.substring(6));
+                if (data.error) {
+                  throw new Error(data.error);
+                }
+                if (data.status) {
+                  voiceStatus.textContent = data.status;
+                }
+                if (data.voice) {
+                  voiceReply += data.voice;
+                }
+                if (data.text) {
+                  fullReply += data.text;
+                }
+              } catch (e) {
+                console.error(e);
+              }
+            }
+          }
+        }
+        
+        voiceStatus.textContent = 'Готов к работе';
+        
+        // ── Обработка тегов <film> из ответа AI ─────────────────────────────
+        const filmMatches = [...fullReply.matchAll(/<film>(.*?)<\/film>/gi)];
+        if (filmMatches.length > 0) {
+          const filmTitle = filmMatches[0][1].trim();
+          try {
+            const mediaResp = await fetch('/api/media/by-title', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ title: filmTitle })
+            });
+            if (mediaResp.ok) {
+              const mediaData = await mediaResp.json();
+              const filmPath = mediaData.path;
+              if (filmPath) {
+                sendCommand('play_file_by_path', { path: filmPath });
+                voiceStatus.textContent = `▶ Запускаю: ${filmTitle}`;
+              }
+            }
+          } catch(e) {
+            console.error('Ошибка поиска пути фильма:', e);
+          }
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
+        const card = tryParseMovieCard(fullReply);
+        if (card) {
+          speakText(`Найдена карточка фильма ${card.title_ru || card.title}. ${card.why_watch || card.plot || ''}`);
+        } else {
+          speakText(voiceReply || fullReply);
+        }
+        
+        rcHistory.push({ role: 'user', parts: [query] });
+        rcHistory.push({ role: 'model', parts: [fullReply] });
+        if (rcHistory.length > 20) {
+          rcHistory = rcHistory.slice(-20);
+        }
+        
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+        voiceStatus.textContent = 'Ошибка AI: ' + err.message;
+      }
+    }
+
+    function initVoiceControl() {
+      const btnMic = document.getElementById('btn-mic');
+      const micIcon = document.getElementById('mic-icon');
+      const voiceStatus = document.getElementById('voice-status');
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        voiceStatus.textContent = 'Голосовой ввод не поддерживается вашим браузером.';
+        if (btnMic) btnMic.disabled = true;
+      } else {
+        recognition = new SpeechRecognition();
+        
+        // Dynamically get selected language
+        const getSelectedLang = () => {
+          const selected = document.querySelector('input[name="lang-radio"]:checked');
+          return selected ? selected.value : 'ru-RU';
+        };
+        
+        recognition.lang = getSelectedLang();
+        
+        // Update language if radio button changes
+        document.querySelectorAll('input[name="lang-radio"]').forEach(radio => {
+          radio.addEventListener('change', () => {
+            recognition.lang = getSelectedLang();
+          });
+        });
+        
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+          isListening = true;
+          if (btnMic) btnMic.className = 'btn btn-danger btn-circle-lg flex-shrink-0';
+          if (micIcon) micIcon.className = 'bi bi-mic-fill fs-3 animate-pulse';
+          voiceStatus.textContent = 'Слушаю...';
+        };
+
+        recognition.onend = () => {
+          isListening = false;
+          if (btnMic) btnMic.className = 'btn btn-outline-danger btn-circle-lg flex-shrink-0';
+          if (micIcon) micIcon.className = 'bi bi-mic-fill fs-3';
+          voiceStatus.textContent = 'Готов к работе';
+        };
+
+        recognition.onerror = (e) => {
+          voiceStatus.textContent = `Ошибка ввода: ${e.error}`;
+        };
+
+        recognition.onresult = async (event) => {
+          const text = event.results[0][0].transcript;
+          if (text) {
+            processChatMessage(text);
+          }
+        };
+
+        if (btnMic) {
+          btnMic.addEventListener('click', () => {
+            window.triggerTgHaptic();
+            // Unlock SpeechSynthesis for mobile devices
+            if ('speechSynthesis' in window) {
+              const silentUtterance = new SpeechSynthesisUtterance(' ');
+              silentUtterance.volume = 0;
+              window.speechSynthesis.speak(silentUtterance);
+            }
+            if (isListening) {
+              recognition.stop();
+            } else {
+              recognition.start();
+            }
+          });
+        }
+      }
+    }
+
+    let currentSpeechAudio = null;
+    let currentSpeechQueue = null;
+
+    class AudioQueuePlayer {
+      constructor(chunks, userSettings) {
+        this.chunks = chunks;
+        this.userSettings = userSettings;
+        this.currentIndex = 0;
+        this.isPlaying = false;
+        this.audioElements = new Map();
+        this.activeAudio = null;
+        this._prefetch(0);
+        this._prefetch(1);
+      }
+
+      _prefetch(index) {
+        if (index >= this.chunks.length || this.audioElements.has(index)) return;
+        const text = this.chunks[index];
+        const queryParams = new URLSearchParams({
+          text: text,
+          system: this.userSettings.tts_system,
+          voice: this.userSettings.tts_voice
+        });
+        const audioUrl = `/api/tts/synthesize?${queryParams.toString()}`;
+        const audio = new Audio(audioUrl);
+        audio.load();
+        this.audioElements.set(index, audio);
+      }
+
+      async play() {
+        this.isPlaying = true;
+        while (this.currentIndex < this.chunks.length && this.isPlaying) {
+          this._prefetch(this.currentIndex);
+          this._prefetch(this.currentIndex + 1);
+          this._prefetch(this.currentIndex + 2);
+          
+          const audio = this.audioElements.get(this.currentIndex);
+          if (!audio) {
+            this.currentIndex++;
+            continue;
+          }
+
+          this.activeAudio = audio;
+          currentSpeechAudio = audio;
+          
+            const playPromise = new Promise((resolve) => {
+              audio.onended = () => resolve();
+              audio.onerror = (e) => {
+                console.error(`Audio error for chunk ${this.currentIndex}:`, e);
+                this.stop(); // Останавливаем всю очередь при ошибке загрузки
+                resolve();
+              };
+            });
+
+          try {
+            await audio.play();
+            await playPromise;
+          } catch (err) {
+            console.error("Audio playback interrupted/failed:", err);
+          }
+          this.currentIndex++;
+        }
+        this.isPlaying = false;
+      }
+
+      stop() {
+        this.isPlaying = false;
+        if (this.activeAudio) {
+          try {
+            this.activeAudio.pause();
+            this.activeAudio.src = "";
+          } catch (e) {}
+        }
+        this.audioElements.clear();
+      }
+    }
+
+    function stopAudio() {
+      if (currentSpeechQueue) {
+        try {
+          currentSpeechQueue.stop();
+          currentSpeechQueue = null;
+        } catch (e) {
+          console.error("Error stopping currentSpeechQueue:", e);
+        }
+      }
+      if (currentSpeechAudio) {
+        try {
+          currentSpeechAudio.pause();
+          currentSpeechAudio.src = "";
+          currentSpeechAudio = null;
+        } catch (e) {
+          console.error("Error stopping currentSpeechAudio:", e);
+        }
+      }
+      if ('speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {
+          console.error("Error cancelling SpeechSynthesis:", e);
+        }
+      }
+    }
+
+    async function speakText(text) {
+      if (!text) return;
+
+      // Stop any currently playing audio
+      stopAudio();
+      // Remove markdown or HTML tags if any from voice output
+      const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_`#]/g, '').trim();
+      if (!cleanText) return;
+
+      // Try backend TTS first
+      try {
+        const response = await fetch('/auth/settings');
+        if (response.ok) {
+          const userSettings = await response.json();
+          if (userSettings.tts_enabled === 1 && userSettings.tts_system && userSettings.tts_system !== 'browser') {
+            const paragraphs = cleanText
+              .split(/\n+/)
+              .map(p => p.trim())
+              .filter(p => p.length > 0);
+            
+            let chunks = [];
+            for (const para of paragraphs) {
+              const sentences = para.match(/[^.!?]+[.!?]*/g) || [para];
+              let currentChunk = "";
+              for (const sentence of sentences) {
+                const trimmedSentence = sentence.trim();
+                if (!trimmedSentence) continue;
+                if ((currentChunk + " " + trimmedSentence).length > 200) {
+                  chunks.push(currentChunk.trim());
+                  currentChunk = trimmedSentence;
+                } else {
+                  currentChunk = (currentChunk + " " + trimmedSentence).trim();
+                }
+              }
+              if (currentChunk) {
+                chunks.push(currentChunk.trim());
+              }
+            }
+            chunks = chunks.filter(c => c.length > 0);
+
+            if (chunks.length > 0) {
+              currentSpeechQueue = new AudioQueuePlayer(chunks, userSettings);
+              await currentSpeechQueue.play();
+            }
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to speak using backend TTS, falling back to browser:', e);
+      }
+
+      // Fallback to browser SpeechSynthesis
+      if ('speechSynthesis' in window) {
+        window.currentUtterance = new SpeechSynthesisUtterance(cleanText);
+        window.currentUtterance.lang = 'ru-RU';
+        window.speechSynthesis.speak(window.currentUtterance);
+      }
+    }
+
+    function handleLocalVoiceCommand(text) {
+      const t = text.toLowerCase();
+      if (t.includes('пауз') || t.includes('стоп')) {
+        sendCommand('pause');
+        return true;
+      }
+      if (t.includes('продолж') || t.includes('плей') || t.includes('играй') || t.includes('старт')) {
+        sendCommand('play');
+        return true;
+      }
+      if (t.includes('громче') || t.includes('прибавь звук')) {
+        const targetVol = Math.min(1, playerState.volume + 0.2);
+        sendCommand('set_volume', { level: targetVol });
+        return true;
+      }
+      if (t.includes('тише') || t.includes('убавь звук')) {
+        const targetVol = Math.max(0, playerState.volume - 0.2);
+        sendCommand('set_volume', { level: targetVol });
+        return true;
+      }
+      if (t.includes('следующ') || t.includes('вперед')) {
+        sendCommand('next');
+        return true;
+      }
+      if (t.includes('предыдущ') || t.includes('назад')) {
+        sendCommand('prev');
+        return true;
+      }
+      if (t.includes('карусель') || t.includes('случайн') || t.includes('рандом')) {
+        sendCommand('play_random_movie');
+        return true;
+      }
+      return false;
+    }
+
+    async function sendToAiModel(message) {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, generation_config: { is_rc: true } })
+      });
+      if (!response.ok) {
+        throw new Error('Не удалось получить ответ от AI');
+      }
+      const data = await response.json();
+      return data.response || data.message || 'Модель не ответила';
+    }
+
+    // Set listeners
+    document.getElementById('btn-playtoggle').addEventListener('click', () => sendCommand('toggle_play'));
+    document.getElementById('btn-prev').addEventListener('click', () => sendCommand('prev'));
+    document.getElementById('btn-next').addEventListener('click', () => sendCommand('next'));
+    document.getElementById('btn-carousel').addEventListener('click', () => sendCommand('play_random_movie'));
+
+    seekSlider.addEventListener('mousedown', () => { isSeeking = true; });
+    seekSlider.addEventListener('touchstart', () => { isSeeking = true; });
+    seekSlider.addEventListener('change', (e) => {
+      isSeeking = false;
+      sendCommand('seek', { seconds: parseFloat(e.target.value) });
+    });
+
+    volumeSlider.addEventListener('change', (e) => {
+      sendCommand('set_volume', { level: parseFloat(e.target.value) });
+    });
+
+    // ── USER MANUAL AUDIO READER ────────────────────────────────────────────
+    let isSpeakingManual = false;
+    const btnRead = document.getElementById('btn-read-manual');
+    const readIcon = document.getElementById('read-manual-icon');
+    const readTextSpan = btnRead ? btnRead.querySelector('span') : null;
+
+    if (btnRead) {
+      btnRead.addEventListener('click', () => {
+        window.triggerTgHaptic();
+        const text = document.getElementById('user-manual-text').innerText;
+        
+        if (isSpeakingManual) {
+          window.speechSynthesis.cancel();
+          isSpeakingManual = false;
+          if (readIcon) readIcon.className = 'bi bi-volume-up-fill';
+          if (readTextSpan) readTextSpan.textContent = 'Прослушать';
+          btnRead.className = 'btn btn-outline-info btn-sm d-flex align-items-center gap-1';
+        } else {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'ru-RU';
+          
+          utterance.onend = () => {
+            isSpeakingManual = false;
+            if (readIcon) readIcon.className = 'bi bi-volume-up-fill';
+            if (readTextSpan) readTextSpan.textContent = 'Прослушать';
+            btnRead.className = 'btn btn-outline-info btn-sm d-flex align-items-center gap-1';
+          };
+
+          utterance.onerror = () => {
+            isSpeakingManual = false;
+            if (readIcon) readIcon.className = 'bi bi-volume-up-fill';
+            if (readTextSpan) readTextSpan.textContent = 'Прослушать';
+            btnRead.className = 'btn btn-outline-info btn-sm d-flex align-items-center gap-1';
+          };
+
+          window.speechSynthesis.speak(utterance);
+          isSpeakingManual = true;
+          if (readIcon) readIcon.className = 'bi bi-stop-fill';
+          if (readTextSpan) readTextSpan.textContent = 'Остановить';
+          btnRead.className = 'btn btn-info btn-sm text-dark d-flex align-items-center gap-1';
+        }
+      });
+    }
+
+    // Theme toggle function
+    function toggleTheme() {
+      const body = document.body;
+      const currentTheme = body.classList.contains('theme-light') ? 'light' : 'dark';
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      
+      if (newTheme === 'light') {
+        body.classList.add('theme-light');
+      } else {
+        body.classList.remove('theme-light');
+      }
+    }
+
+    // Set theme toggle listener
+    document.getElementById('theme-toggle-btn')?.addEventListener('click', toggleTheme);
+
+    // ── AUTH CHECK INITIALIZER ──────────────────────────────────────────
+    async function checkAndInit() {
+      const authState = await api.auth.check();
+      if (authState.authenticated) {
+        // If a room parameter is present in URL, connect directly to it
+        const queryRoom = getRoomNameFromQuery();
+        if (queryRoom) {
+          initStream(queryRoom);
+        } else {
+          // Otherwise, scan for open players
+          scanForPlayers();
+        }
+      } else {
+        showPanel('auth');
+      }
+    }
+
+    // Run on startup
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAndInit();
+      initVoiceControl();
+    });
+
+  </script>
+</body>
+</html>

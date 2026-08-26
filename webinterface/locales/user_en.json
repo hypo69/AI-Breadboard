@@ -1,0 +1,27 @@
+{
+  "tabs": {
+    "player": "Player",
+    "chat": "Chat",
+    "cabinet": "Cabinet",
+    "settings": "Settings",
+    "tts": "Configure TTS"
+  },
+  "player": {
+    "noFiles": "No files",
+    "loadError": "Failed to load files",
+    "prev": "⏮ Previous",
+    "next": "Next ⏭",
+    "nowPlaying": "Now playing:"
+  },
+  "chat": {
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "startPrompt": "Start a conversation with AI",
+    "error": "Error",
+    "typing": "Typing..."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error"
+  }
+}

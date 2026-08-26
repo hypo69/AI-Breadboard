@@ -1,0 +1,47 @@
+{
+  "user_id": "1",
+  "created_at": 1784699246.0380464,
+  "updated_at": 1787763284.785889,
+  "watch_history": {
+    "/test/path.mp4": {
+      "name": "test.mp4",
+      "last_position": 120.5,
+      "duration": 7200.0,
+      "updated_at": 1787763284.785862,
+      "completed": false
+    }
+  },
+  "last_watched": {
+    "path": "/test/path.mp4",
+    "name": "test.mp4",
+    "position": 120.5
+  },
+  "search_history": [
+    {
+      "query": "Счастливое число Слевина",
+      "timestamp": 1784703796.793723
+    },
+    {
+      "query": "Во все тяжкие",
+      "timestamp": 1785678750.0196009
+    },
+    {
+      "query": "Во все тяжкие",
+      "timestamp": 1785678760.1824048
+    },
+    {
+      "query": "Во все тяжкие",
+      "timestamp": 1785678803.9565752
+    },
+    {
+      "query": "А зори здесь тихие",
+      "timestamp": 1785679738.3672965
+    }
+  ],
+  "preferences": {
+    "liked_titles": [],
+    "disliked_titles": [],
+    "favorite_genres": {},
+    "favorite_categories": {}
+  }
+}

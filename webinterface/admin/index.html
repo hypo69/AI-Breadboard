@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Assistant - Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/html/css/main.css?v=20260825_user_settings" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/i18next@23.11.5/i18next.min.js"></script>
+</head>
+<body>
+<!-- Password Protection Modal -->
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title" id="passwordModalLabel"><i class="bi bi-lock-fill"></i> Вход в админку</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="closePasswordModal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <p class="text-muted">Введите пароль для доступа к администраторскому интерфейсу:</p>
+        <div class="mb-3">
+          <input type="password" class="form-control bg-dark text-white border-secondary" id="admin-password" placeholder="••••••" autofocus>
+        </div>
+        <div id="password-error" class="alert alert-danger d-none">Неверный пароль</div>
+        <button type="button" class="btn btn-primary w-100" id="login-btn">Войти</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid mt-2" id="admin-interface">
+
+  <div class="d-flex align-items-center justify-content-between mb-3 main-nav-container rounded px-2 py-1">
+    <ul class="nav nav-tabs flex-nowrap overflow-x-auto flex-grow-1 border-0 me-2" id="mainTabs">
+      <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-chat" data-i18n="tabs.chat">💬 Чат</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-plugins" data-i18n="tabs.plugins">🔌 Плагины</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-admin" data-i18n="tabs.admin">⚙️ Управление</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-users" data-i18n="tabs.users">👥 Пользователи</button>
+      </li>
+      <li class="nav-item" data-plugin-tab="rag">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-rag" data-plugin="rag" data-i18n="tabs.rag">🧠 RAG</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-models" data-i18n="tabs.models">🤖 Модели и API</button>
+      </li>
+      <li class="nav-item" data-plugin-tab="langchain_media">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-agents" data-plugin="langchain_media" data-i18n="tabs.agents">🧩 Агенты ИИ</button>
+      </li>
+      <li class="nav-item" data-plugin-tab="web_search">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-search" data-plugin="web_search" data-i18n="tabs.search">🌐 Веб-поиск</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-tts" data-i18n="tabs.tts">🗣️ Настройка TTS</button>
+      </li>
+      <li class="nav-item" data-plugin-tab="movie_search_sources">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-sources" data-plugin="movie_search_sources" data-i18n="tabs.sources">📑 Источники</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-logs" data-i18n="tabs.logs">📋 Логи</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-help" data-i18n="tabs.help">📚 Справочник</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-instructions" data-i18n="tabs.instructions">📝 Системные инструкции</button>
+      </li>
+    </ul>
+
+    <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-auto pb-1" id="nav-auth-container">
+      <!-- Google OAuth Register / Sign-in Button (Shown when not logged in) -->
+      <button class="btn btn-sm btn-light text-dark fw-semibold d-flex align-items-center gap-2 px-3 py-1 shadow-sm rounded-pill btn-google-login" id="nav-google-btn" title="Войти или зарегистрироваться через Google" data-i18n-title="auth.googleSignInTitle" style="border: 1px solid rgba(0,0,0,0.15);">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+        <span data-i18n="auth.googleSignUp">Регистрация через Google</span>
+      </button>
+
+      <!-- Authenticated User Profile Pill (Shown when logged in) -->
+      <button class="btn btn-sm btn-outline-secondary d-none align-items-center gap-2 px-2 py-1 rounded-pill" id="user-settings-btn" data-bs-toggle="modal" data-bs-target="#userSettingsModal" title="Профиль и настройки" data-i18n-title="userSettings.title">
+        <img id="nav-user-avatar" src="" class="rounded-circle d-none" width="22" height="22" style="object-fit: cover;">
+        <i class="bi bi-person-gear" id="nav-user-icon"></i>
+        <span id="nav-user-label" class="small fw-semibold" data-i18n="userSettings.button">User Settings</span>
+      </button>
+
+      <!-- Quick Settings Gear Button -->
+      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center p-0 rounded-circle" id="user-settings-gear-btn" data-bs-toggle="modal" data-bs-target="#userSettingsModal" title="Настройки" style="width: 32px; height: 32px;" data-i18n-title="userSettings.title">
+        <i class="bi bi-gear-fill"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="tab-content">
+    <!-- Chat Tab -->
+    <div id="tab-chat" class="tab-pane fade show active">
+      <div class="chat-window mb-2" id="chat-window"></div>
+
+      <!-- Media Controls -->
+      <div class="media-controls mb-2 d-none" id="media-controls">
+        <div class="card">
+          <div class="card-body p-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-muted small" data-i18n="mediaControls.nowPlaying">▶️ Сейчас играет:</span>
+              <strong id="now-playing-title">—</strong>
+              <button class="btn btn-sm btn-outline-primary ms-auto" id="btn-open-player" data-i18n="mediaControls.openPlayer">Открыть плеер</button>
+              <button class="btn btn-sm btn-outline-secondary" id="btn-close-player" data-i18n="mediaControls.close">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <input type="text" class="form-control" id="message-input" data-i18n-placeholder="chat.placeholder" placeholder="Введите сообщение...">
+        <button class="btn btn-primary" id="send-button" data-i18n="chat.send">Отправить</button>
+      </div>
+    </div>
+
+    <!-- Plugins Tab -->
+    <div id="tab-plugins" class="tab-pane fade"></div>
+
+    <!-- Admin Tab -->
+    <div id="tab-admin" class="tab-pane fade"></div>
+
+    <!-- Users Tab -->
+    <div id="tab-users" class="tab-pane fade"></div>
+
+    <!-- RAG Tab -->
+    <div id="tab-rag" class="tab-pane fade"></div>
+
+    <!-- Models Tab -->
+    <div id="tab-models" class="tab-pane fade"></div>
+
+    <!-- Agents Tab -->
+    <div id="tab-agents" class="tab-pane fade"></div>
+
+    <!-- Search Tab -->
+    <div id="tab-search" class="tab-pane fade"></div>
+
+    <!-- TTS Tab -->
+    <div id="tab-tts" class="tab-pane fade"></div>
+
+    <!-- Sources Tab -->
+    <div id="tab-sources" class="tab-pane fade"></div>
+
+    <!-- Logs Tab -->
+    <div id="tab-logs" class="tab-pane fade"></div>
+
+    <!-- Help Tab -->
+    <div id="tab-help" class="tab-pane fade"></div>
+
+    <!-- Instructions Tab -->
+    <div id="tab-instructions" class="tab-pane fade"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/html/js/chatService.js?v=20260825_cleanup_tabs"></script>
+<script type="module" src="/html/admin/main.js?v=20260825_navbar_fix"></script>
+
+<!-- HELP Modal -->
+<div class="modal fade modal-help" id="help-modal" tabindex="-1" aria-labelledby="help-modal-label" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="help-modal-label" data-i18n="helpModal.title">Помощь</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="help-modal-content">
+        <p data-i18n="common.loading">Загрузка...</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="helpModal.close">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Prompt Preview Modal -->
+<div class="modal fade" id="prompt-preview-modal" tabindex="-1" aria-labelledby="prompt-preview-modal-label" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="prompt-preview-modal-label">Предпросмотр промта</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="prompt-preview-content">
+        <p>Загрузка...</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chat Logic & RAG Architecture Modal -->
+<div class="modal fade" id="chat-logic-modal" tabindex="-1" aria-labelledby="chat-logic-modal-label" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary d-flex justify-content-between align-items-center">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="chat-logic-modal-label">
+          <i class="bi bi-diagram-3-fill text-info"></i> 🧠 Архитектура и алгоритм диспетчеризации ответов чата
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <a href="/html/assets/chat_and_rag_logic.svg" target="_blank" class="btn btn-sm btn-outline-info" title="Открыть SVG в новой вкладке">
+            <i class="bi bi-arrows-fullscreen"></i> SVG
+          </a>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+      </div>
+      <div class="modal-body p-3">
+        <!-- Tabs for Schema vs Documentation -->
+        <ul class="nav nav-pills mb-3" id="chatLogicTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="chat-logic-svg-tab" data-bs-toggle="pill" data-bs-target="#chat-logic-svg-pane" type="button" role="tab">📊 Интерактивная блок-схема</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="chat-logic-doc-tab" data-bs-toggle="pill" data-bs-target="#chat-logic-doc-pane" type="button" role="tab">📑 Описание алгоритма и сценариев</button>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="chatLogicTabContent">
+          <!-- SVG Diagram Tab -->
+          <div class="tab-pane fade show active text-center" id="chat-logic-svg-pane" role="tabpanel">
+            <div class="p-2 border border-secondary rounded bg-black d-flex justify-content-center align-items-center" style="overflow-x: auto; min-height: 520px;">
+              <img src="/html/assets/chat_and_rag_logic.svg?v=20260817_1" alt="Схема логики чата" style="max-width: 100%; height: auto; border-radius: 6px;">
+            </div>
+          </div>
+
+          <!-- Documentation Text Tab -->
+          <div class="tab-pane fade" id="chat-logic-doc-pane" role="tabpanel">
+            <div class="p-3 bg-black rounded border border-secondary text-light small">
+              <h6 class="text-info fw-bold mb-2">⚙️ Режимы работы (config.json &rarr; rag.mode)</h6>
+              <ul class="mb-3">
+                <li><strong class="text-success">rag+model (Гибридный / Основной):</strong> Сначала проверяется локальная медиатека. Если фильм найден — LLM красиво рассказывает о нём со ссылкой на наличие в медиатеке. Если фильм отсутствует — LLM обращается к веб-поиску (MCP/Grounding) и рассказывает о фильме с кнопкой загрузки <code>&lt;film&gt;</code>.</li>
+                <li><strong class="text-warning">rag (Строгий локальный):</strong> Работает только по базе <code>media.db</code>. При отсутствии тайтла выдаёт чёткое <em>«В локальной базе не найдено»</em> без ложных подстановок.</li>
+                <li><strong class="text-primary">model (Без базы):</strong> Прямой ответ LLM и веб-поиск без обращения к дискам.</li>
+              </ul>
+
+              <h6 class="text-info fw-bold mb-2">📊 Сценарии обработки</h6>
+              <div class="table-responsive mb-3">
+                <table class="table table-dark table-bordered table-sm small">
+                  <thead>
+                    <tr class="table-secondary text-dark">
+                      <th>Сценарий</th>
+                      <th>Пример</th>
+                      <th>Алгоритм</th>
+                      <th>Результат</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="fw-bold text-success">Фильм есть в базе</td>
+                      <td><em>«Расскажи о фильме А зори здесь тихие»</em></td>
+                      <td>Точный поиск в <code>media.db</code> (Score 1.0) / FAISS &ge; 0.60 &rarr; контекст в LLM</td>
+                      <td>LLM сообщает, что фильм <strong>доступен в медиатеке</strong>, описывает сюжет и тегирует <code>&lt;film&gt;</code>.</td>
+                    </tr>
+                    <tr>
+                      <td class="fw-bold text-danger">Фильма нет в базе</td>
+                      <td><em>«Расскажи о сериале Сваты»</em></td>
+                      <td>Локальный RAG даёт 0 совпадений &rarr; Fallback на Web Search (MCP)</td>
+                      <td>LLM рассказывает о сериале, указывает, что его <strong>нет на дисках</strong>, тегирует <code>&lt;film&gt;</code> для торрентов.</td>
+                    </tr>
+                    <tr>
+                      <td class="fw-bold text-info">Команда запуска</td>
+                      <td><em>«Включи А зори здесь тихие»</em></td>
+                      <td>Проверка пути на диске &rarr; WebSocket <code>play_file_by_path</code></td>
+                      <td>Мгновенный старт в плеере (Direct Play).</td>
+                    </tr>
+                    <tr>
+                      <td class="fw-bold text-primary">Подборка / Настроение</td>
+                      <td><em>«Найди боевик на вечер»</em></td>
+                      <td>Извлечение подходящих жанров &rarr; LLM формирует диалоговую подборку</td>
+                      <td>Живая рекомендация с обоснованием «почему стоит посмотреть».</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h6 class="text-info fw-bold mb-1">🎯 Порог косинусного сходства (Cosine Similarity)</h6>
+              <p class="text-muted mb-0">Для исключения ложных срабатываний порог в <code>rag_search_tool</code> установлен на <strong>0.60</strong>. Запросы с более низким сходством считаются отсутствующими в локальной базе и корректно перенаправляются в интернет-поиск.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- User Settings Modal -->
+<div class="modal fade" id="userSettingsModal" tabindex="-1" aria-labelledby="userSettingsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow border-secondary-subtle">
+      <div class="modal-header border-secondary-subtle">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="userSettingsModalLabel">
+          <i class="bi bi-person-gear text-primary"></i>
+          <span data-i18n="userSettings.title">Пользовательские настройки</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3">
+        <!-- User Account & Google OAuth Card -->
+        <div class="card bg-body-tertiary border-secondary-subtle mb-3 p-3" id="user-settings-auth-card">
+          <div class="d-flex align-items-center gap-3">
+            <img id="user-settings-avatar" src="" class="rounded-circle border border-2 border-primary" width="48" height="48" style="object-fit: cover;">
+            <div class="flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center gap-2">
+                <strong id="user-settings-name" class="text-truncate">Пользователь</strong>
+                <span id="user-settings-role-badge" class="badge bg-primary">User</span>
+              </div>
+              <div id="user-settings-email" class="small text-muted text-truncate">email@gmail.com</div>
+              <div id="user-settings-google-badge" class="small mt-1 text-muted">
+                <i class="bi bi-google text-danger me-1"></i>Google OAuth
+              </div>
+            </div>
+            <button type="button" class="btn btn-outline-danger btn-sm btn-user-logout" title="Выйти">
+              <i class="bi bi-box-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Guest / Connect Google OAuth Card -->
+        <div class="card bg-body-tertiary border-secondary-subtle mb-3 p-3 text-center d-none" id="user-settings-guest-card">
+          <div class="text-muted small mb-2">
+            <i class="bi bi-shield-lock me-1"></i> Авторизация и синхронизация аккаунта
+          </div>
+          <button type="button" class="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-2 btn-google-login">
+            <i class="bi bi-google"></i>
+            <span>Войти через Google (OAuth)</span>
+          </button>
+          <div class="small text-muted mt-2" style="font-size: 0.75rem;">
+            Синхронизация с Google Drive, Docs, Calendar и Contacts
+          </div>
+        </div>
+
+        <!-- Language Selection -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold small d-flex align-items-center gap-2" for="modal-lang-selector">
+            <i class="bi bi-translate text-info"></i>
+            <span data-i18n="userSettings.language">Язык интерфейса</span>
+          </label>
+          <select class="form-select lang-selector" id="modal-lang-selector">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+            <option value="he">עברית</option>
+          </select>
+        </div>
+
+        <!-- Theme Selection -->
+        <div class="mb-2">
+          <label class="form-label fw-semibold small d-flex align-items-center gap-2" for="modal-theme-selector">
+            <i class="bi bi-palette text-warning"></i>
+            <span data-i18n="userSettings.theme">Тема оформления</span>
+          </label>
+          <select class="form-select theme-selector" id="modal-theme-selector">
+            <option value="light" data-i18n="userSettings.themeLight">☀️ Светлая</option>
+            <option value="dark" data-i18n="userSettings.themeDark">🌙 Тёмная</option>
+            <option value="system" data-i18n="userSettings.themeSystem">🌓 Системная</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer border-secondary-subtle py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" data-i18n="userSettings.close">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

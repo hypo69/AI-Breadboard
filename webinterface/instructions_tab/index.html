@@ -1,0 +1,114 @@
+<!-- Instructions Tab -->
+<div class="container-fluid p-3">
+  <div class="alert alert-info">
+    <h5 class="mb-1"><i class="bi bi-gear"></i> Редактор системных инструкций</h5>
+    <p class="mb-0 small">Управление системными инструкциями AI: чат и Narrator режимы, версионирование, проверка в модели.</p>
+  </div>
+
+  <!-- Mode Switcher -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="text-muted">Режим:</span>
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-outline-primary active" id="mode-chat" onclick="switchMode('chat')">
+            <i class="bi bi-chat-text"></i> Chat
+          </button>
+          <button type="button" class="btn btn-outline-secondary" id="mode-narrator" onclick="switchMode('narrator')">
+            <i class="bi bi-mic"></i> Narrator
+          </button>
+        </div>
+        <small class="text-muted ms-2">Активный файл: <code id="active-file-info">—</code></small>
+        <div class="ms-auto d-flex gap-2">
+          <button type="button" class="btn btn-success" id="btn-check-model" onclick="checkInModel()">
+            <i class="bi bi-check-circle"></i> Проверить в модели
+          </button>
+          <button type="button" class="btn btn-primary" id="btn-save" onclick="saveInstruction()">
+            <i class="bi bi-save"></i> Сохранить версию
+          </button>
+          <button type="button" class="btn btn-warning" id="btn-preview" onclick="previewPrompt()">
+            <i class="bi bi-eye"></i> Предпросмотр
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Editor Area -->
+  <div class="card mb-3">
+    <div class="card-header">
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="fw-bold">Редактор — <span id="editor-mode-label">💬 Chat</span></span>
+        <small class="text-muted">Markdown поддерживается</small>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <textarea id="instruction-editor" class="form-control border-0 rounded-0" rows="18"
+        placeholder="Введите системную инструкцию..." spellcheck="false"
+        style="font-family: 'Courier New', monospace; font-size: 0.9rem; resize: vertical;"></textarea>
+    </div>
+  </div>
+
+  <!-- Versions Panel -->
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span class="fw-bold"><i class="bi bi-clock-history"></i> История версий</span>
+      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshVersions()">
+        <i class="bi bi-arrow-clockwise"></i> Обновить
+      </button>
+    </div>
+    <div class="card-body p-0">
+      <div id="versions-list" class="list-group list-group-flush">
+        <div class="list-group-item text-muted">Загрузка версий...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Token Counter -->
+  <div class="card">
+    <div class="card-header">
+      <span class="fw-bold"><i class="bi bi-calculator"></i> Статистика</span>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded text-center">
+            <div class="h3 mb-0" id="char-count">0</div>
+            <div class="small text-muted">Символов</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded text-center">
+            <div class="h3 mb-0" id="word-count">0</div>
+            <div class="small text-muted">Слов</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded text-center">
+            <div class="h3 mb-0" id="token-estimate">~0</div>
+            <div class="small text-muted">Токенов (оценка)</div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-3 small text-muted border rounded p-2" id="token-preview" style="min-height:2rem;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Prompt Preview Modal -->
+<div class="modal fade" id="prompt-preview-modal" tabindex="-1" aria-labelledby="prompt-preview-modal-label" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="prompt-preview-modal-label">Предпросмотр инструкции</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="prompt-preview-content">
+        <p>Загрузка...</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>

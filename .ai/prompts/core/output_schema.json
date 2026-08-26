@@ -1,0 +1,239 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "title", "title_ru", "title_orig",
+    "type", "main_category",
+    "year", "country", "language", "age_rating",
+    "genres", "directors", "cast",
+    "ids", "rating",
+    "why_watch", "recommended_for",
+    "plot", "atmosphere", "mood_tags", "keywords",
+    "poster", "backdrop", "trailer",
+    "available_on",
+    "spoilers", "quote", "facts", "similar",
+    "review",
+    "franchise", "based_on", "budget", "box_office"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Полное название: «Название (Orig Title) (год или год–год)»"
+    },
+    "title_ru": {
+      "type": "string",
+      "description": "Русскоязычное название без года"
+    },
+    "title_orig": {
+      "type": "string",
+      "description": "Оригинальное название на языке производства"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["Фильм", "Сериал", "Сезон", "Эпизод"]
+    },
+    "main_category": {
+      "type": "string",
+      "description": "Одна из разрешённых категорий из categories.md"
+    },
+    "year": {
+      "type": "integer",
+      "description": "Год выхода первого сезона или фильма"
+    },
+    "year_end": {
+      "type": ["integer", "null"],
+      "description": "Год завершения для сериалов. null для продолжающихся или фильмов"
+    },
+    "country": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "language": {
+      "type": "string"
+    },
+    "age_rating": {
+      "type": "string",
+      "examples": ["0+", "6+", "12+", "16+", "18+"]
+    },
+    "genres": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "directors": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "cast": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Список основных актёров (3–7 человек)"
+    },
+    "num_of_seasons": {
+      "type": ["integer", "null"],
+      "description": "Только для сериалов"
+    },
+    "episodes_per_season": {
+      "type": ["array", "null"],
+      "items": { "type": "integer" },
+      "description": "Количество эпизодов по сезонам. Только для сериалов"
+    },
+    "episode_runtime": {
+      "type": ["integer", "null"],
+      "description": "Средняя длительность эпизода в минутах"
+    },
+    "runtime": {
+      "type": ["integer", "null"],
+      "description": "Длительность фильма в минутах"
+    },
+    "status": {
+      "type": ["string", "null"],
+      "enum": ["завершён", "продолжается", "анонсирован", null]
+    },
+    "ids": {
+      "type": "object",
+      "properties": {
+        "imdb": { "type": ["string", "null"] },
+        "tmdb": { "type": ["integer", "null"] },
+        "kinopoisk": { "type": ["integer", "null"] }
+      }
+    },
+    "rating": {
+      "type": "object",
+      "properties": {
+        "imdb": { "type": ["number", "null"] },
+        "tmdb": { "type": ["number", "null"] },
+        "kinopoisk": { "type": ["number", "null"] }
+      }
+    },
+    "awards": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "why_watch": {
+      "type": "object",
+      "required": ["short", "tts", "full"],
+      "properties": {
+        "short": { "type": "string", "description": "1 предложение" },
+        "tts": { "type": "string", "description": "Версия для голосового ассистента" },
+        "full": { "type": "string", "description": "2–3 предложения" }
+      }
+    },
+    "recommended_for": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Теги контекста просмотра: «вечер», «семья», «настроение»"
+    },
+    "plot": {
+      "type": "object",
+      "required": ["short", "tts", "full"],
+      "properties": {
+        "short": { "type": "string", "description": "1 предложение, суть без спойлеров" },
+        "tts": { "type": "string", "description": "Версия для TTS, 120–150 слов, только русский" },
+        "full": { "type": "string", "description": "100–150 слов, без местоимения «это» в начале" }
+      }
+    },
+    "atmosphere": {
+      "type": "string",
+      "description": "~15 слов. Настроение и тональность произведения"
+    },
+    "mood_tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Теги настроения: «напряжённый», «уютный», «романтичный»"
+    },
+    "keywords": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "poster": { "type": ["string", "null"] },
+    "backdrop": { "type": ["string", "null"] },
+    "trailer": { "type": ["string", "null"] },
+    "available_on": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "seasons": {
+      "type": ["array", "null"],
+      "description": "Только для сериалов",
+      "items": {
+        "type": "object",
+        "required": ["season_number", "release_year", "rating", "description", "episodes", "final_verdict"],
+        "properties": {
+          "season_number": { "type": "integer" },
+          "release_year": { "type": "integer" },
+          "rating": {
+            "type": "object",
+            "properties": {
+              "imdb": { "type": ["number", "null"] },
+              "tmdb": { "type": ["number", "null"] },
+              "kinopoisk": { "type": ["number", "null"] }
+            }
+          },
+          "description": { "type": "string" },
+          "episodes": {
+            "type": "array",
+            "description": "Пустой [] для длинных сериалов (>15 сезонов или >100 эпизодов)",
+            "items": {
+              "type": "object",
+              "required": ["episode_number", "title", "runtime", "begins", "ends"],
+              "properties": {
+                "episode_number": { "type": "integer" },
+                "title": { "type": ["string", "null"] },
+                "runtime": { "type": ["integer", "null"] },
+                "begins": { "type": "string", "description": "С чего начинается эпизод" },
+                "ends": { "type": "string", "description": "Чем заканчивается эпизод" }
+              }
+            }
+          },
+          "final_verdict": {
+            "type": "string",
+            "description": "Итог сезона. TTS: строго 70–80 слов"
+          }
+        }
+      }
+    },
+    "episode_scan_skipped": {
+      "type": ["boolean", "null"],
+      "description": "Устанавливается системой в true для длинных сериалов"
+    },
+    "spoilers": {
+      "type": "object",
+      "properties": {
+        "ending": { "type": ["string", "null"] },
+        "can_stop_at": { "type": ["string", "null"] }
+      }
+    },
+    "quote": { "type": ["string", "null"] },
+    "facts": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "similar": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "review": {
+      "type": "object",
+      "properties": {
+        "rating": {
+          "type": "string",
+          "enum": ["excellent", "good", "average", "poor"]
+        },
+        "liked": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Каждый элемент: 10–20 слов"
+        },
+        "disliked": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Каждый элемент: 10–20 слов"
+        }
+      }
+    },
+    "franchise": { "type": ["string", "null"] },
+    "based_on": { "type": ["string", "null"] },
+    "budget": { "type": ["string", "null"] },
+    "box_office": { "type": ["string", "null"] }
+  }
+}

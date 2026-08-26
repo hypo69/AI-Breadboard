@@ -1,0 +1,38 @@
+{
+  "defaults": {
+    "language": "ru",
+    "install_dir": "%LOCALAPPDATA%\\aibreadboard",
+    "venv_dir": "venv",
+    "python_min_version": "3.10",
+    "python_preferred_versions": ["3.13", "3.12", "3.11", "3.10"],
+    "repo_url": "https://github.com/hypo69/AI-Breadboard",
+    "repo_zip_url": "https://github.com/hypo69/AI-Breadboard/archive/refs/heads/master.zip",
+    "deps_choice": "1"
+  },
+  "paths": {
+    "certs_dir": "%USERPROFILE%\\.certs",
+    "cert_file": "localhost+2.pem",
+    "key_file": "localhost+2-key.pem",
+    "ssl_script": "install_ssl_cert.ps1",
+    "secrets_dir": "core\\secrets",
+    "gemini_keys_file": "core\\secrets\\gemini_keys.json",
+    "env_file": ".env",
+    "config_file": "config.json",
+    "requirements_main": "requirements.txt",
+    "requirements_core": "req\\requirements-core.txt",
+    "requirements_ai": "req\\requirements-ai.txt",
+    "requirements_test": "req\\requirements-test.txt",
+    "requirements_docs": "req\\requirements-docs.txt",
+    "local_bin": "%USERPROFILE%\\.local\\bin",
+    "assist_ps1": "assist.ps1",
+    "assist_cmd": "assist.cmd"
+  },
+  "env_vars": {
+    "AIBREADBOARD_DIR": "",
+    "ASSIST_DIR": ""
+  },
+  "verify": {
+    "modules": ["fastapi", "uvicorn", "dotenv", "pydantic", "aiohttp", "cryptography"]
+  },
+  "supported_languages": ["ru", "en", "es", "he"]
+}

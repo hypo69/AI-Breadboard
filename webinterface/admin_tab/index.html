@@ -1,0 +1,166 @@
+<!-- System Admin Tab -->
+<div class="container-fluid py-2">
+  <div class="alert alert-dark d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 shadow-sm border-secondary">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fs-4">⚙️</span>
+      <div>
+        <h5 class="mb-0 fw-bold">Центральное управление системой</h5>
+        <p class="mb-0 small text-muted">Мониторинг ядра, системные сервисы, провайдеры моделей и глобальное администрирование</p>
+      </div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn btn-outline-info btn-sm" onclick="rescanStorageDrives()">
+        <i class="bi bi-hdd-network"></i> Пересканировать диски
+      </button>
+      <button class="btn btn-outline-primary btn-sm" onclick="actualizeAiModels()">
+        <i class="bi bi-cpu"></i> Обновить модели ИИ
+      </button>
+    </div>
+  </div>
+
+  <!-- System Health & Status Cards -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-3 col-sm-6">
+      <div class="card shadow-sm border-secondary-subtle h-100">
+        <div class="card-body p-3">
+          <div class="text-muted small text-uppercase fw-semibold mb-1">Сервер / Режим</div>
+          <div class="d-flex align-items-center justify-content-between">
+            <h5 class="mb-0 fw-bold text-primary" id="sys-server-mode">FastAPI (DEV)</h5>
+            <span class="badge bg-success-subtle text-success">Online</span>
+          </div>
+          <small class="text-muted" id="sys-server-host">0.0.0.0:3000</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="card shadow-sm border-secondary-subtle h-100">
+        <div class="card-body p-3">
+          <div class="text-muted small text-uppercase fw-semibold mb-1">AI Провайдеры</div>
+          <div class="d-flex align-items-center justify-content-between">
+            <h5 class="mb-0 fw-bold text-info" id="sys-ai-providers">Gemini / AGY / Foundry</h5>
+            <i class="bi bi-robot fs-4 text-info"></i>
+          </div>
+          <small class="text-muted">Актуализированный пул</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="card shadow-sm border-secondary-subtle h-100">
+        <div class="card-body p-3">
+          <div class="text-muted small text-uppercase fw-semibold mb-1">Подключено дисков</div>
+          <div class="d-flex align-items-center justify-content-between">
+            <h5 class="mb-0 fw-bold text-warning" id="sys-drives-count">Загрузка...</h5>
+            <i class="bi bi-device-hdd fs-4 text-warning"></i>
+          </div>
+          <small class="text-muted" id="sys-drives-list">CONNECTED_DRIVES</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="card shadow-sm border-secondary-subtle h-100">
+        <div class="card-body p-3">
+          <div class="text-muted small text-uppercase fw-semibold mb-1">Подключаемые плагины</div>
+          <div class="d-flex align-items-center justify-content-between">
+            <h5 class="mb-0 fw-bold text-success" id="sys-plugins-count">Загрузка...</h5>
+            <a href="javascript:void(0)" onclick="switchToTab('plugins')" class="badge bg-primary text-decoration-none">Управление ➔</a>
+          </div>
+          <small class="text-muted" id="sys-plugins-active-count">Реестр модулей</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fast Navigation Hub to Core Subsystems -->
+  <h6 class="fw-bold mb-3 text-uppercase small text-muted"><i class="bi bi-grid-fill me-1"></i> Системные подсистемы</h6>
+  <div class="row g-3 mb-4">
+    <div class="col-lg-4 col-md-6">
+      <div class="card shadow-sm border-secondary-subtle h-100 p-3 hover-shadow" style="cursor: pointer;" onclick="switchToTab('plugins')">
+        <div class="d-flex align-items-center gap-3">
+          <span class="fs-1">🔌</span>
+          <div>
+            <h6 class="fw-bold mb-1">Подключатель плагинов (Hub)</h6>
+            <p class="small text-muted mb-0">Управление модулями (web_search, rag, langchain_media и др.), включение/отключение и их органы настройки.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6">
+      <div class="card shadow-sm border-secondary-subtle h-100 p-3 hover-shadow" style="cursor: pointer;" onclick="switchToTab('users')">
+        <div class="d-flex align-items-center gap-3">
+          <span class="fs-1">👥</span>
+          <div>
+            <h6 class="fw-bold mb-1">Управление пользователями</h6>
+            <p class="small text-muted mb-0">Создание аккаунтов, назначение ролей (admin/user), пароли, активность и права доступа.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6">
+      <div class="card shadow-sm border-secondary-subtle h-100 p-3 hover-shadow" style="cursor: pointer;" onclick="switchToTab('models')">
+        <div class="d-flex align-items-center gap-3">
+          <span class="fs-1">🤖</span>
+          <div>
+            <h6 class="fw-bold mb-1">Модели и API-ключи</h6>
+            <p class="small text-muted mb-0">Конфигурация Google Gemini, Antigravity, Ollama и AI Foundry, пул ротации ключей.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6">
+      <div class="card shadow-sm border-secondary-subtle h-100 p-3 hover-shadow" style="cursor: pointer;" onclick="switchToTab('instructions')">
+        <div class="d-flex align-items-center gap-3">
+          <span class="fs-1">📝</span>
+          <div>
+            <h6 class="fw-bold mb-1">Системные инструкции</h6>
+            <p class="small text-muted mb-0">Редактирование системных промптов чата, стилей диктора и версионирование инструкций.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6">
+      <div class="card shadow-sm border-secondary-subtle h-100 p-3 hover-shadow" style="cursor: pointer;" onclick="switchToTab('logs')">
+        <div class="d-flex align-items-center gap-3">
+          <span class="fs-1">📋</span>
+          <div>
+            <h6 class="fw-bold mb-1">Системные логи</h6>
+            <p class="small text-muted mb-0">Просмотр журнала событий uvicorn, ошибок FastAPI, истории запросов и аудита.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6">
+      <div class="card shadow-sm border-secondary-subtle h-100 p-3 hover-shadow" style="cursor: pointer;" onclick="switchToTab('agents')">
+        <div class="d-flex align-items-center gap-3">
+          <span class="fs-1">🧩</span>
+          <div>
+            <h6 class="fw-bold mb-1">Агенты ИИ</h6>
+            <p class="small text-muted mb-0">Конфигурация автономных ReAct агентов, тулов поиска и параметров инференса.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Storage & Disks Management Section -->
+  <div class="card shadow-sm border-secondary-subtle mb-3">
+    <div class="card-header bg-body-tertiary d-flex flex-wrap justify-content-between align-items-center py-2 gap-2">
+      <span class="fw-bold"><i class="bi bi-hdd-network text-warning me-2"></i>💾 Управление дисками и накопителями</span>
+      <button class="btn btn-outline-info btn-sm" onclick="rescanStorageDrives()">
+        <i class="bi bi-arrow-clockwise me-1"></i> Пересканировать диски
+      </button>
+    </div>
+    <div class="card-body p-3">
+      <div id="sys-drives-detailed-container" class="row g-3">
+        <div class="col-12 text-muted small">Загрузка информации о накопителях...</div>
+      </div>
+    </div>
+  </div>
+</div>

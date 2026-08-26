@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Warn on Token in File",
+      "trigger": "PostFileSave",
+      "description": "Warn when saving files that might contain tokens",
+      "matcher": "PostFileSave",
+      "action": {
+        "type": "command",
+        "command": "powershell -ExecutionPolicy Bypass -File .kiro/hooks/warn-on-save.ps1"
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "tabs": {
+    "player": "נגן",
+    "chat": "צ'אט",
+    "cabinet": "ממשק משתמש",
+    "settings": "הגדרות",
+    "tts": "הגדרות TTS"
+  },
+  "player": {
+    "noFiles": "אין קבצים",
+    "loadError": "נכשל בטעינת קבצים",
+    "prev": "⏮ précédent",
+    "next": "הבא ⏭",
+    "nowPlaying": "מנגן עכשיו:"
+  },
+  "chat": {
+    "placeholder": "הקלידו הודעה...",
+    "send": "שלח",
+    "startPrompt": "התחל שיחה עם AI",
+    "error": "שגיאה",
+    "typing": "מקליד..."
+  },
+  "common": {
+    "loading": "טוען...",
+    "error": "שגיאה"
+  }
+}

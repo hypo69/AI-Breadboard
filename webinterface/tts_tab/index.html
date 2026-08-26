@@ -1,0 +1,88 @@
+<!-- TTS Settings Tab -->
+<div class="container-fluid">
+  <div class="alert alert-info">
+    <h5 data-i18n="tts.title">🗣️ Настройка TTS (Синтез речи)</h5>
+    <p data-i18n="tts.description">Установите голос и движок по умолчанию для озвучки описания медиафайлов, а также протестируйте их звучание.</p>
+  </div>
+
+  <div class="row g-3">
+    <!-- LEFT: Settings Configuration -->
+    <div class="col-5">
+      <div class="card mb-3">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+          <span>⚙️ Параметры озвучки</span>
+        </div>
+        <div class="card-body">
+          <form id="admin-tts-form" onsubmit="event.preventDefault();">
+            <!-- Active Voice Badge -->
+            <div id="admin-active-voice-container" class="mb-3" style="display: none;">
+              <span class="badge bg-success d-inline-flex align-items-center gap-1 p-2">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>Активный голос: <strong id="admin-active-voice-name">...</strong></span>
+              </span>
+            </div>
+
+            <!-- Engine Selection -->
+            <div class="mb-3">
+              <label for="admin-tts-engine" class="form-label small fw-bold">Система синтеза:</label>
+              <select id="admin-tts-engine" class="form-select form-select-sm">
+                <option value="browser">Web Speech API (Браузерная)</option>
+                <option value="gtts">Google TTS (Базовая)</option>
+                <option value="edge-tts" selected>Microsoft Edge TTS (Нейросетевая)</option>
+                <option value="silero">Silero TTS (Локальная оффлайн)</option>
+              </select>
+            </div>
+
+            <!-- Voice Selection -->
+            <div class="mb-3" id="admin-voice-select-container">
+              <label for="admin-tts-voice" class="form-label small fw-bold">Голос / Спикер:</label>
+              <select id="admin-tts-voice" class="form-select form-select-sm">
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+
+            <!-- Save Default Button -->
+            <div class="d-grid">
+              <button type="button" class="btn btn-success btn-sm" id="btn-admin-tts-save">
+                <i class="bi bi-floppy"></i> Применить по умолчанию
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Text to Speech Playground -->
+    <div class="col-7">
+      <div class="card">
+        <div class="card-header bg-dark text-white">
+          <span>🎯 Тестирование озвучки</span>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label for="admin-tts-text" class="form-label small fw-bold">Текст для проверки:</label>
+            <textarea id="admin-tts-text" class="form-control form-control-sm" rows="5">Привет! Это проверка работы модульной системы синтеза речи. Выберите систему и голос слева, затем нажмите кнопку «Озвучить» для воспроизведения.</textarea>
+          </div>
+
+          <div class="d-flex align-items-center gap-3">
+            <button type="button" class="btn btn-primary btn-sm px-4" id="btn-admin-tts-speak">
+              <i class="bi bi-play-fill"></i> Озвучить текст
+            </button>
+
+            <!-- Loading Spinner -->
+            <div class="status-badge small text-muted d-none" id="admin-tts-status">
+              <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+              <span id="admin-status-text" class="ms-1">Генерация аудио...</span>
+            </div>
+          </div>
+
+          <!-- Audio Player Container -->
+          <div class="mt-4 border-top pt-3 d-none" id="admin-tts-player-container">
+            <label class="form-label small fw-bold">Результат генерации:</label>
+            <audio id="admin-tts-audio-player" class="w-100" controls></audio>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

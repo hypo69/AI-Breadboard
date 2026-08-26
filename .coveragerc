@@ -1,0 +1,39 @@
+; Настройки для coverage.py.
+; Этот файл задаёт, какие каталоги проекта учитываются при подсчёте покрытия
+; тестами, а какие файлы и каталоги исключаются из отчёта.
+; Например, сюда включены основные исходники проекта (src, plugins, scripts),
+; а временные файлы, кэш, тесты и локальные env-файлы не учитываются.
+; Такой набор позволяет получать корректный процент покрытия именно
+; рабочего кода проекта, без "шума" от служебных файлов.
+
+[run]
+source = 
+    core
+    plugins
+    scripts
+branch = True
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    pass
+    raise ImportError
+    except ImportError
+    if False:
+    if __name__ == .__main__:
+omit =
+    */__pycache__/*
+    */venv/*
+    */tests/*
+    */migrations/*
+    */node_modules/*
+    *.pyc
+    .env
+    .env.*
+
+[html]
+directory = htmlcov

@@ -1,0 +1,37 @@
+{
+  "title": "TTS Experiments (Text-to-Speech)",
+  "subtitle": "Compare the quality of speech synthesis of different models: Web Speech, Google, Edge and Silero.",
+  "form": {
+    "label_text": "Text for speech synthesis",
+    "placeholder": "Enter Russian text to generate speech...",
+    "label_engine": "Synthesis system",
+    "label_voice": "Voice / Speaker"
+  },
+  "options": {
+    "browser": "Web Speech API (Browser-based)",
+    "gtts": "Google TTS (Basic)",
+    "edge-tts": "Microsoft Edge TTS (Neural)",
+    "silero": "Silero TTS (Local offline)"
+  },
+  "voices": {
+    "ru_standard": "Russian (Standard)",
+    "dmitry": "Dmitry (Male)",
+    "svetlana": "Svetlana (Female)",
+    "eugene": "Eugene (Male)",
+    "aidar": "Aidar (Male)",
+    "baya": "Baya (Female)",
+    "kseniya": "Ksenia (Female)",
+    "xenia": "Ksenia v2 (Female)",
+    "random": "Random (Random voice)",
+    "default": "Default system voice"
+  },
+  "button_speak": "Synthesize speech",
+  "status_generating": "Generating audio file on server...",
+  "label_result": "Generation result",
+  "back_link": "Back to media library",
+  "errors": {
+    "no_api": "Your browser does not support Web Speech API.",
+    "server_error": "Speech synthesis error on server",
+    "network_error": "Network error when requesting server"
+  }
+}

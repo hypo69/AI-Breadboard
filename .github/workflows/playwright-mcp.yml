@@ -1,0 +1,31 @@
+name: "Playwright MCP - Build"
+
+on:
+  push:
+    paths:
+      - '.mcp/playwright/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install deps
+      working-directory: .mcp/playwright
+      run: npm ci
+
+    - name: Build
+      working-directory: .mcp/playwright
+      run: npm run build
+
+    - name: Run tests (none)
+      run: echo "No tests configured"

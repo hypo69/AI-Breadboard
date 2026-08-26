@@ -1,0 +1,245 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="100%" height="100%" style="background:#0b0f19; font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;">
+  <defs>
+    <!-- Linear Gradients -->
+    <linearGradient id="grad-admin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="grad-builder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ec4899" />
+      <stop offset="100%" stop-color="#be185d" />
+    </linearGradient>
+    <linearGradient id="grad-api" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#4338ca" />
+    </linearGradient>
+    <linearGradient id="grad-pool" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0369a1" />
+    </linearGradient>
+    <linearGradient id="grad-gemini" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#6d28d9" />
+    </linearGradient>
+    <linearGradient id="grad-tools" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <linearGradient id="grad-sandbox" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+    <linearGradient id="grad-card" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <!-- Filters -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.6" />
+    </filter>
+    <filter id="glow-builder" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#ec4899" flood-opacity="0.5" />
+    </filter>
+
+    <!-- Markers for arrows -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
+    </marker>
+    <marker id="arrow-pink" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#ec4899" />
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
+    </marker>
+  </defs>
+
+  <!-- Title & Subtitle -->
+  <text x="600" y="48" font-size="24" font-weight="bold" fill="#f8fafc" text-anchor="middle" letter-spacing="1">
+    🧩 АРХИТЕКТУРА ИИ-АГЕНТОВ MEDITEKA
+  </text>
+  <text x="600" y="76" font-size="13" fill="#94a3b8" text-anchor="middle">
+    Конструирование с помощью AI • Пул моделей проекта • Каталог инструментов • Sandbox
+  </text>
+
+  <!-- ================= LEVEL 1: USER INTERFACE ================= -->
+  <g id="ui-layer">
+    <!-- UI Container Box -->
+    <rect x="40" y="105" width="1120" height="155" rx="12" fill="#131d31" stroke="#2563eb" stroke-width="1.5" filter="url(#shadow)" />
+    <text x="60" y="132" font-size="13" font-weight="bold" fill="#60a5fa" letter-spacing="0.5">
+      🖥️ ВЕБ-ИНТЕРФЕЙС АДМИНИСТРАТОРА (Вкладка «🧩 Агенты ИИ»)
+    </text>
+
+    <!-- UI Block 1: Agent Catalog -->
+    <rect x="60" y="148" width="330" height="95" rx="8" fill="url(#grad-card)" stroke="#334155" stroke-width="1" />
+    <circle cx="85" cy="175" r="14" fill="#1e3a8a" />
+    <text x="85" y="180" font-size="13" text-anchor="middle">📋</text>
+    <text x="110" y="172" font-size="13" font-weight="bold" fill="#e2e8f0">Каталог агентов</text>
+    <text x="110" y="190" font-size="11" fill="#94a3b8">Статусы (On/Off), привязка моделей,</text>
+    <text x="110" y="205" font-size="11" fill="#94a3b8">список инструментов, быстрый запуск</text>
+
+    <!-- UI Block 2: AI Agent Builder -->
+    <rect x="420" y="148" width="360" height="95" rx="8" fill="url(#grad-card)" stroke="#be185d" stroke-width="1.5" filter="url(#glow-builder)" />
+    <circle cx="445" cy="175" r="14" fill="#831843" />
+    <text x="445" y="180" font-size="13" text-anchor="middle">✨</text>
+    <text x="470" y="172" font-size="13" font-weight="bold" fill="#f472b6">AI Agent Builder (Генератор)</text>
+    <text x="470" y="190" font-size="11" fill="#fbcfe8">Генерация промпта и настроек через</text>
+    <text x="470" y="205" font-size="11" fill="#fbcfe8">выбранную модель из пула по описанию</text>
+
+    <!-- UI Block 3: Agent Sandbox -->
+    <rect x="810" y="148" width="330" height="95" rx="8" fill="url(#grad-card)" stroke="#b45309" stroke-width="1" />
+    <circle cx="835" cy="175" r="14" fill="#78350f" />
+    <text x="835" y="180" font-size="13" text-anchor="middle">🧪</text>
+    <text x="860" y="172" font-size="13" font-weight="bold" fill="#fcd34d">Интерактивная песочница</text>
+    <text x="860" y="190" font-size="11" fill="#94a3b8">Тестирование агента в реальном времени,</text>
+    <text x="860" y="205" font-size="11" fill="#94a3b8">лог шагов ReAct и вызовы Tool Calls</text>
+  </g>
+
+  <!-- Connectors UI -> API -->
+  <line x1="225" y1="243" x2="225" y2="295" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrow-blue)" />
+  <line x1="600" y1="243" x2="600" y2="295" stroke="#ec4899" stroke-width="2" marker-end="url(#arrow-pink)" />
+  <line x1="975" y1="243" x2="975" y2="295" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrow)" />
+
+  <!-- ================= LEVEL 2: BACKEND & API ================= -->
+  <g id="api-layer">
+    <!-- API Container Box -->
+    <rect x="40" y="300" width="1120" height="150" rx="12" fill="#111827" stroke="#4f46e5" stroke-width="1.5" filter="url(#shadow)" />
+    <text x="60" y="325" font-size="13" font-weight="bold" fill="#818cf8" letter-spacing="0.5">
+      ⚙️ FASTAPI BACKEND (/api/agents &amp; router_agents.py)
+    </text>
+
+    <!-- API Block 1: CRUD & Config -->
+    <rect x="60" y="340" width="250" height="90" rx="8" fill="url(#grad-card)" stroke="#334155" stroke-width="1" />
+    <text x="80" y="365" font-size="12" font-weight="bold" fill="#e2e8f0">CRUD Реестр агентов</text>
+    <text x="80" y="385" font-size="11" fill="#94a3b8">GET /api/agents</text>
+    <text x="80" y="400" font-size="11" fill="#94a3b8">POST / PUT / DELETE</text>
+    <text x="80" y="415" font-size="10" fill="#64748b">Синхронизация в config.json</text>
+
+    <!-- API Block 2: AI Prompt Generator -->
+    <rect x="340" y="340" width="250" height="90" rx="8" fill="url(#grad-card)" stroke="#ec4899" stroke-width="1.2" />
+    <text x="360" y="365" font-size="12" font-weight="bold" fill="#f472b6">POST /generate-prompt</text>
+    <text x="360" y="385" font-size="11" fill="#94a3b8">Формирование системного</text>
+    <text x="360" y="400" font-size="11" fill="#94a3b8">промпта через модель пула</text>
+    <text x="360" y="415" font-size="10" fill="#ec4899">JSON-спецификация агента</text>
+
+    <!-- API Block 3: Tool Catalog & Model Pool Info -->
+    <rect x="620" y="340" width="250" height="90" rx="8" fill="url(#grad-card)" stroke="#334155" stroke-width="1" />
+    <text x="640" y="365" font-size="12" font-weight="bold" fill="#e2e8f0">Каталог инструментов и пула</text>
+    <text x="640" y="385" font-size="11" fill="#94a3b8">GET /api/agents/tools</text>
+    <text x="640" y="400" font-size="11" fill="#94a3b8">GET /api/agents/providers</text>
+    <text x="640" y="415" font-size="10" fill="#64748b">Описания, иконки, параметры</text>
+
+    <!-- API Block 4: Sandbox Execution -->
+    <rect x="900" y="340" width="240" height="90" rx="8" fill="url(#grad-card)" stroke="#f59e0b" stroke-width="1" />
+    <text x="920" y="365" font-size="12" font-weight="bold" fill="#fcd34d">POST /api/agents/test</text>
+    <text x="920" y="385" font-size="11" fill="#94a3b8">Изолированный запуск ReAct,</text>
+    <text x="920" y="400" font-size="11" fill="#94a3b8">трассировка Thought &amp; Action,</text>
+    <text x="920" y="415" font-size="10" fill="#f59e0b">профайлинг задержек (ms)</text>
+  </g>
+
+  <!-- Connectors API -> Layers 3 & 4 -->
+  <line x1="465" y1="430" x2="300" y2="495" stroke="#ec4899" stroke-width="2" marker-end="url(#arrow-pink)" />
+  <line x1="745" y1="430" x2="900" y2="495" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-green)" />
+  <line x1="1020" y1="430" x2="1020" y2="495" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- ================= LEVEL 3: MODEL POOL & PROVIDERS ================= -->
+  <g id="model-pool-layer">
+    <!-- Model Pool Box -->
+    <rect x="40" y="500" width="540" height="350" rx="12" fill="#0f172a" stroke="#0284c7" stroke-width="1.5" filter="url(#shadow)" />
+    <text x="60" y="525" font-size="13" font-weight="bold" fill="#38bdf8" letter-spacing="0.5">
+      🤖 ПУЛ МОДЕЛЕЙ И ПРОВАЙДЕРОВ (Model Pool)
+    </text>
+
+    <!-- Provider 1: Google Gemini -->
+    <rect x="60" y="540" width="500" height="65" rx="8" fill="url(#grad-card)" stroke="#8b5cf6" stroke-width="1" />
+    <circle cx="85" cy="572" r="14" fill="#4c1d95" />
+    <text x="85" y="577" font-size="13" text-anchor="middle">✨</text>
+    <text x="110" y="565" font-size="12" font-weight="bold" fill="#c084fc">Google Gemini (GenAI SDK)</text>
+    <text x="110" y="582" font-size="11" fill="#cbd5e1">Модели: gemini-2.5-flash, gemini-2.5-pro, gemini-2.0-flash</text>
+    <text x="110" y="596" font-size="10" fill="#a855f7">Пул ротации API-ключей (Round-Robin) при ошибках 429</text>
+
+    <!-- Provider 2: Antigravity AGY -->
+    <rect x="60" y="615" width="500" height="65" rx="8" fill="url(#grad-card)" stroke="#eab308" stroke-width="1" />
+    <circle cx="85" cy="647" r="14" fill="#713f12" />
+    <text x="85" y="652" font-size="13" text-anchor="middle">🚀</text>
+    <text x="110" y="640" font-size="12" font-weight="bold" fill="#fde047">Google Antigravity (AGY)</text>
+    <text x="110" y="657" font-size="11" fill="#cbd5e1">Модели: agy-flash, agy-gemma-4-26b-a4b-it, agy-pro</text>
+    <text x="110" y="671" font-size="10" fill="#eab308">Встроенные агентные инструменты search_web / read_url</text>
+
+    <!-- Provider 3: Microsoft Foundry -->
+    <rect x="60" y="690" width="500" height="65" rx="8" fill="url(#grad-card)" stroke="#06b6d4" stroke-width="1" />
+    <circle cx="85" cy="722" r="14" fill="#164e63" />
+    <text x="85" y="727" font-size="13" text-anchor="middle">⚙️</text>
+    <text x="110" y="715" font-size="12" font-weight="bold" fill="#67e8f9">Microsoft Foundry (Local Agents)</text>
+    <text x="110" y="732" font-size="11" fill="#cbd5e1">Модели: qwen2.5-1.5b-instruct-generic-cpu, deepseek-r1</text>
+    <text x="110" y="746" font-size="10" fill="#06b6d4">Локальный инференс без передачи данных во внешнюю сеть</text>
+
+    <!-- Provider 4: Ollama -->
+    <rect x="60" y="765" width="500" height="65" rx="8" fill="url(#grad-card)" stroke="#64748b" stroke-width="1" />
+    <circle cx="85" cy="797" r="14" fill="#334155" />
+    <text x="85" y="802" font-size="13" text-anchor="middle">🦙</text>
+    <text x="110" y="790" font-size="12" font-weight="bold" fill="#94a3b8">Ollama (Self-Hosted)</text>
+    <text x="110" y="807" font-size="11" fill="#cbd5e1">Модели: qwen2.5:7b, llama3.1:8b, mistral</text>
+    <text x="110" y="821" font-size="10" fill="#94a3b8">Прямой REST API локального сервера Ollama</text>
+  </g>
+
+  <!-- ================= LEVEL 4: TOOL REGISTRY & PLUGINS ================= -->
+  <g id="tool-registry-layer">
+    <!-- Tool Registry Box -->
+    <rect x="620" y="500" width="540" height="350" rx="12" fill="#062e24" stroke="#10b981" stroke-width="1.5" filter="url(#shadow)" />
+    <text x="640" y="525" font-size="13" font-weight="bold" fill="#34d399" letter-spacing="0.5">
+      🛠️ КАТАЛОГ ИНСТРУМЕНТОВ И MCP (Tool Registry)
+    </text>
+
+    <!-- Tool 1: TMDb Metadata -->
+    <rect x="640" y="540" width="240" height="65" rx="8" fill="url(#grad-card)" stroke="#059669" stroke-width="1" />
+    <text x="655" y="563" font-size="12" font-weight="bold" fill="#6ee7b7">🎬 TMDb API</text>
+    <text x="655" y="580" font-size="10" fill="#94a3b8">Метаданные, постеры,</text>
+    <text x="655" y="594" font-size="10" fill="#94a3b8">рейтинги, даты релизов</text>
+
+    <!-- Tool 2: Torrent Trackers -->
+    <rect x="900" y="540" width="240" height="65" rx="8" fill="url(#grad-card)" stroke="#059669" stroke-width="1" />
+    <text x="915" y="563" font-size="12" font-weight="bold" fill="#6ee7b7">🧲 Торрент-трекеры</text>
+    <text x="915" y="580" font-size="10" fill="#94a3b8">Rutracker, NNMClub</text>
+    <text x="915" y="594" font-size="10" fill="#94a3b8">через Playwright-парсер</text>
+
+    <!-- Tool 3: Web Search Grounding -->
+    <rect x="640" y="615" width="240" height="65" rx="8" fill="url(#grad-card)" stroke="#059669" stroke-width="1" />
+    <text x="655" y="638" font-size="12" font-weight="bold" fill="#6ee7b7">🌐 Веб-поиск (MCP)</text>
+    <text x="655" y="655" font-size="10" fill="#94a3b8">Google Grounding, AGY,</text>
+    <text x="655" y="669" font-size="10" fill="#94a3b8">DuckDuckGo, Bing</text>
+
+    <!-- Tool 4: qBittorrent Downloader -->
+    <rect x="900" y="615" width="240" height="65" rx="8" fill="url(#grad-card)" stroke="#059669" stroke-width="1" />
+    <text x="915" y="638" font-size="12" font-weight="bold" fill="#6ee7b7">📥 qBittorrent API</text>
+    <text x="915" y="655" font-size="10" fill="#94a3b8">Добавление торрентов,</text>
+    <text x="915" y="669" font-size="10" fill="#94a3b8">мониторинг загрузок</text>
+
+    <!-- Tool 5: RAG Knowledge Base -->
+    <rect x="640" y="690" width="240" height="65" rx="8" fill="url(#grad-card)" stroke="#059669" stroke-width="1" />
+    <text x="655" y="713" font-size="12" font-weight="bold" fill="#6ee7b7">🧠 База знаний RAG</text>
+    <text x="655" y="730" font-size="10" fill="#94a3b8">Поиск по документам,</text>
+    <text x="655" y="744" font-size="10" fill="#94a3b8">истории и правилам</text>
+
+    <!-- Tool 6: Media Player & Stream -->
+    <rect x="900" y="690" width="240" height="65" rx="8" fill="url(#grad-card)" stroke="#059669" stroke-width="1" />
+    <text x="915" y="713" font-size="12" font-weight="bold" fill="#6ee7b7">📺 CosmicPlayer URL</text>
+    <text x="915" y="730" font-size="10" fill="#94a3b8">Генерация embed-ссылок</text>
+    <text x="915" y="744" font-size="10" fill="#94a3b8">и стриминг-источников</text>
+
+    <!-- Tool 7: Speech Synthesis (TTS) -->
+    <rect x="640" y="765" width="240" height="65" rx="8" fill="url(#grad-card)" stroke="#059669" stroke-width="1" />
+    <text x="655" y="788" font-size="12" font-weight="bold" fill="#6ee7b7">🗣️ Озвучка (TTS)</text>
+    <text x="655" y="805" font-size="10" fill="#94a3b8">Edge-TTS, Silero,</text>
+    <text x="655" y="819" font-size="10" fill="#94a3b8">синтез голосовых реплик</text>
+
+    <!-- Tool 8: Media Organizer & Filesystem -->
+    <rect x="900" y="765" width="240" height="65" rx="8" fill="url(#grad-card)" stroke="#059669" stroke-width="1" />
+    <text x="915" y="788" font-size="12" font-weight="bold" fill="#6ee7b7">📁 Медиатека / Файлы</text>
+    <text x="915" y="805" font-size="10" fill="#94a3b8">Сканирование дисков,</text>
+    <text x="915" y="819" font-size="10" fill="#94a3b8">переименование и теги</text>
+  </g>
+</svg>

@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Block Tokens in Chat",
+      "trigger": "UserPromptSubmit",
+      "description": "Block prompts containing potential tokens or secrets",
+      "action": {
+        "type": "command",
+        "command": "powershell -ExecutionPolicy Bypass -File .kiro/hooks/check-tokens.ps1"
+      }
+    }
+  ]
+}

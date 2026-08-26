@@ -1,0 +1,52 @@
+<!-- Reference documentation for the project -->
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-header bg-primary text-white" data-i18n="help.title">
+          📚 Справочник
+        </div>
+        <div class="list-group list-group-flush" id="help-nav">
+          <a class="list-group-item list-group-item-action" data-target="overview">
+            <strong data-i18n="help.overview">📋 Обзор проекта</strong>
+            <button class="btn btn-sm btn-outline-primary float-end" onclick="showHelpModal('overview')">?</button>
+          </a>
+          <a class="list-group-item list-group-item-action" data-target="code_rules">
+            <strong data-i18n="help.codeRules">⚙️ Правила кодирования (CODE_RULES)</strong>
+            <button class="btn btn-sm btn-outline-primary float-end" onclick="showHelpModal('code_rules')">?</button>
+          </a>
+          <a class="list-group-item list-group-item-action" data-target="architecture">
+            <strong data-i18n="help.architecture">🏗️ Архитектура</strong>
+            <button class="btn btn-sm btn-outline-primary float-end" onclick="showHelpModal('architecture')">?</button>
+          </a>
+          <a class="list-group-item list-group-item-action" data-target="fastapi">
+            <strong data-i18n="help.fastapi">🚀 FastAPI</strong>
+            <button class="btn btn-sm btn-outline-primary float-end" onclick="showHelpModal('fastapi')">?</button>
+          </a>
+          <a class="list-group-item list-group-item-action" data-target="gemini">
+            <strong data-i18n="help.gemini">🧠 Gemini AI</strong>
+            <button class="btn btn-sm btn-outline-primary float-end" onclick="showHelpModal('gemini')">?</button>
+          </a>
+          <a class="list-group-item list-group-item-action" data-target="configuration">
+            <strong data-i18n="help.configuration">⚙️ Конфигурация</strong>
+            <button class="btn btn-sm btn-outline-primary float-end" onclick="showHelpModal('configuration')">?</button>
+          </a>
+          <a class="list-group-item list-group-item-action" data-target="cli_commands">
+            <strong data-i18n="help.cliCommands">⌨️ CLI команды</strong>
+            <button class="btn btn-sm btn-outline-primary float-end" onclick="showHelpModal('cli_commands')">?</button>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-9">
+      <div class="card">
+        <div class="card-header bg-secondary text-white">
+          <span id="help-title" data-i18n="help.title">Добро пожаловать в справочник</span>
+        </div>
+        <div class="card-body" id="help-content" style="max-height:600px;overflow-y:auto;">
+          <p class="lead" data-i18n="help.welcome">Выберите раздел справочника слева для просмотра информации.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

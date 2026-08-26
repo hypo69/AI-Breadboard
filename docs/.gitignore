@@ -1,0 +1,24 @@
+#mkdocs build output
+site/
+
+# mkdocs temp files
+*.pyc
+__pycache__/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+
+# Environment
+.venv/
+venv/
+env/

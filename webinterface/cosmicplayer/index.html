@@ -1,0 +1,115 @@
+<!-- Link CosmicPlayer custom style -->
+<link rel="stylesheet" href="/html/cosmicplayer/styles.css">
+<!-- HLS.js library for streaming M3U8 inside custom HTML5 video player -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<div class="cosmic-player-tab">
+    <!-- Sidebar: Video URL list / Library / Settings -->
+    <aside class="cosmic-sidebar">
+        <div class="logo">
+            <span class="logo-icon">🪐</span>
+            <h2>CosmicPlayer</h2>
+        </div>
+
+        <!-- Paste link panel -->
+        <div class="url-input-section">
+            <h3>Вставить ссылку</h3>
+            <form id="stream-form">
+                <input type="url" id="stream-url" placeholder="Ссылка (YouTube, VK, RuTube, Rezka...)" required>
+                <button type="submit" class="btn btn-glow">Загрузить видео</button>
+            </form>
+        </div>
+
+        <!-- Supported sources badges -->
+        <div class="sources-panel">
+            <h4>Совместимые источники</h4>
+            <div class="sources-grid">
+                <span class="badge" data-provider="youtube">YouTube</span>
+                <span class="badge" data-provider="vk">VK Video</span>
+                <span class="badge" data-provider="rutube">RuTube</span>
+                <span class="badge" data-provider="hdrezka">HDRezka</span>
+                <span class="badge" data-provider="seasonvar">SeasonVar</span>
+                <span class="badge" data-provider="kinogo">Kinogo</span>
+                <span class="badge" data-provider="direct">Direct HLS/MP4</span>
+            </div>
+        </div>
+
+        <!-- History List -->
+        <div class="history-section">
+            <div class="section-header">
+                <h4>История воспроизведения</h4>
+                <button id="clear-history" class="btn-text">Очистить</button>
+            </div>
+            <div id="history-list" class="history-list">
+                <div class="empty-state">Нет недавно проигранных видео</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area: Player and Description -->
+    <main class="main-content">
+        <!-- Movie Screen and Ambience -->
+        <div class="player-container" id="player-container">
+            <!-- Background Ambient Glow -->
+            <div class="ambient-glow" id="ambient-glow"></div>
+            
+            <!-- Display Iframe (for embeds) -->
+            <iframe id="embed-player" class="player-element hidden" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+
+            <!-- Custom HTML5 Player (for direct video feeds) -->
+            <div id="html5-player-wrapper" class="player-element hidden">
+                <video id="html5-video" class="html5-video-el"></video>
+                <!-- Custom Player Skin -->
+                <div class="custom-controls">
+                    <div class="progress-container" id="progress-container">
+                        <div class="progress-bar" id="progress-bar">
+                            <div class="progress-hover"></div>
+                        </div>
+                    </div>
+                    <div class="controls-row">
+                        <div class="controls-left">
+                            <button class="ctrl-btn" id="play-pause-btn">▶</button>
+                            <button class="ctrl-btn" id="stop-btn">◼</button>
+                            <div class="time-display">
+                                <span id="current-time">0:00</span> / <span id="duration-time">0:00</span>
+                            </div>
+                        </div>
+                        <div class="controls-right">
+                            <div class="volume-container">
+                                <button class="ctrl-btn" id="mute-btn">🔊</button>
+                                <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1">
+                            </div>
+                            <select id="speed-select" class="speed-dropdown">
+                                <option value="0.5">0.5x</option>
+                                <option value="1" selected>1.0x</option>
+                                <option value="1.5">1.5x</option>
+                                <option value="2">2.0x</option>
+                            </select>
+                            <button class="ctrl-btn" id="fullscreen-btn">⛶</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Initial Empty State -->
+            <div id="player-placeholder" class="player-placeholder">
+                <div class="placeholder-content">
+                    <span class="play-icon">🎬</span>
+                    <h3>Видео не загружено</h3>
+                    <p>Вставьте ссылку на видео или выберите один из демонстрационных источников слева.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Video Information -->
+        <div class="video-info-card glass-card">
+            <div class="info-header">
+                <span class="provider-tag" id="current-provider-tag">Offline</span>
+                <h3 id="video-title">Добро пожаловать в CosmicPlayer</h3>
+            </div>
+            <div class="info-body">
+                <p id="video-source-url">Пожалуйста, введите URL видео для воспроизведения.</p>
+            </div>
+        </div>
+    </main>
+</div>
