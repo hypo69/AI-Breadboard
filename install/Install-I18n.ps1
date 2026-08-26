@@ -383,7 +383,7 @@ function global:Select-InstallerLanguage {
     Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
     Write-Host " INSTALLATION WIZARD" -ForegroundColor Yellow
     Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-    Write-Host "Select language:" -ForegroundColor White
+    Write-Host "Select installation wizard language:" -ForegroundColor White
     Write-Host ""
 
     for ($i = 0; $i -lt $languages.Length; $i++) {
