@@ -74,6 +74,16 @@ if (-not $targetDir) {
 $InstallDir = $targetDir
 $installedModulesDir = Join-Path $InstallDir "install"
 
+# 5. Инициализация логирования установки в tmp/logs/install.log
+$tmpLogsDir = Join-Path $InstallDir "tmp\logs"
+if (-not (Test-Path $tmpLogsDir)) {
+    New-Item -ItemType Directory -Force -Path $tmpLogsDir | Out-Null
+}
+$installLogFile = Join-Path $tmpLogsDir "install.log"
+try {
+    Start-Transcript -Path $installLogFile -Append -Force -ErrorAction SilentlyContinue | Out-Null
+} catch {}
+
 # Перезагружаем config.json из целевой директории, если он там появился
 if (Test-Path (Join-Path $installedModulesDir "install.json")) {
     try {
@@ -107,3 +117,8 @@ $cliScript = Join-Path $installedModulesDir "Install-Cli.ps1"
 # 11. Модуль верификации и финализации
 $verifyScript = Join-Path $installedModulesDir "Install-Verify.ps1"
 & $verifyScript -InstallDir $InstallDir -PythonPath $PythonPath -Config $config
+
+# Завершение логирования установки
+try {
+    Stop-Transcript -ErrorAction SilentlyContinue | Out-Null
+} catch {}

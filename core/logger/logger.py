@@ -181,7 +181,7 @@ class Logger(metaclass=SingletonMeta):
     ):
 
         timestamp = datetime.datetime.now().strftime("%d%m%y%H%M")
-        self.log_files_path: Path =  __root__ / 'logs'
+        self.log_files_path: Path = __root__ / 'tmp' / 'logs'
         self.info_log_path = self.log_files_path / (info_log_path or "info.log")
         self.debug_log_path = self.log_files_path / (debug_log_path or "debug.log")
         self.errors_log_path = self.log_files_path / (errors_log_path or "errors.log")
