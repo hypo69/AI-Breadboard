@@ -99,7 +99,7 @@ The entire installation subsystem is driven by [`install.json`](./install.json).
   * `-SourceDir` *(string)*: Directory where the installer was launched from (if local).
 * **Behavior:**
   1. Displays active development stability explanation:
-     > *"Because aibreadboard is under active development, to ensure stability, seamless updates, and reliable tool binding, using the default directory (`%LOCALAPPDATA%\aibreadboard`) is strongly recommended."*
+     > *"Because aibreadboard is under active development, to ensure stability, seamless updates, and reliable tool binding, using the default directory (`%LOCALAPPDATA%\AI Breadboard`) is strongly recommended."*
   2. Prompts user: `[1] Default [Recommended]` or `[2] Custom Path`.
   3. Expands environment tokens (e.g. `%USERPROFILE%`, `%LOCALAPPDATA%`) and validates destination path.
   4. If destination lacks repository files (`header.py`, `config.json`):
@@ -242,4 +242,4 @@ def set_project_root(marker_files=('__root__', '.git')) -> Path:
 | `Python not found` | No Python 3.10+ in PATH or `py` launcher | Install Python from python.org or winget: `winget install Python.Python.3.13` with PATH enabled |
 | `SSL Certificate missing` | Port 443 / 8000 HTTPS errors | Run `.\install_ssl_cert.ps1` from project root |
 | `assist command unrecognized` | New terminal hasn't reloaded PATH | Restart PowerShell or run `$env:PATH = [System.Environment]::GetEnvironmentVariable('Path', 'User')` |
-| `Target directory write denied` | Permissions error on custom folder | Default to `%LOCALAPPDATA%\aibreadboard` which is always writable without UAC elevation |
+| `Target directory write denied` | Permissions error on custom folder | Default to `%LOCALAPPDATA%\AI Breadboard` which is always writable without UAC elevation |

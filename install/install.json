@@ -1,7 +1,7 @@
 {
   "defaults": {
     "language": "en",
-    "install_dir": "%LOCALAPPDATA%\\aibreadboard",
+    "install_dir": "%LOCALAPPDATA%\\AI Breadboard",
     "venv_dir": "venv",
     "python_min_version": "3.10",
     "python_preferred_versions": ["3.13", "3.12", "3.11", "3.10"],

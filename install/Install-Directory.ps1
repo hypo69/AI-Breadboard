@@ -2,7 +2,7 @@
 .SYNOPSIS
     Модуль выбора и подготовки целевой директории установки AI Breadboard.
 .DESCRIPTION
-    Определяет стандартное предпочтительное расположение (%LOCALAPPDATA%\aibreadboard),
+    Определяет стандартное предпочтительное расположение (%LOCALAPPDATA%\AI Breadboard),
     выводит мультиязычное разъяснение о стабильности стандартного пути при активной разработке,
     запрашивает подтверждение/путь у пользователя, создает директорию и при необходимости
     развертывает файлы репозитория через Git или скачивание архива ZIP.
@@ -16,13 +16,14 @@ param (
 Write-Host (Msg "dir_step_title") -ForegroundColor Cyan
 Write-Host ''
 
-$defaultInstallDir = Join-Path $env:LOCALAPPDATA 'aibreadboard'
-if (-not $env:LOCALAPPDATA) {
-    $defaultInstallDir = Join-Path $env:USERPROFILE 'AppData\Local\aibreadboard'
-}
-if ($Config -and $Config.defaults -and $Config.defaults.install_dir) {
-    $rawDefault = $Config.defaults.install_dir
-    $defaultInstallDir = [System.Environment]::ExpandEnvironmentVariables($rawDefault)
+$defaultInstallDir = if ($SourceDir -and (Test-Path (Join-Path $SourceDir "header.py"))) {
+    $SourceDir
+} elseif ($Config -and $Config.defaults -and $Config.defaults.install_dir) {
+    [System.Environment]::ExpandEnvironmentVariables($Config.defaults.install_dir)
+} elseif ($env:LOCALAPPDATA) {
+    Join-Path $env:LOCALAPPDATA 'AI Breadboard'
+} else {
+    Join-Path $env:USERPROFILE 'AppData\Local\AI Breadboard'
 }
 
 Write-Host "┌─────────────────────────────────────────────────────────────┐" -ForegroundColor Yellow

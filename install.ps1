@@ -3,7 +3,7 @@
     Главный оркестратор установки AI Breadboard с модульной архитектурой и поддержкой i18n (RU, EN, ES, HE).
 .DESCRIPTION
     Загружает конфигурацию из install/install.json, подключает модули интернационализации,
-    выбора директории (%LOCALAPPDATA%\aibreadboard или пользовательский путь),
+    выбора директории (%LOCALAPPDATA%\AI Breadboard или пользовательский путь),
     создания venv, установки зависимостей, генерации SSL и регистрации AIBREADBOARD_DIR.
 .EXAMPLE
     irm https://raw.githubusercontent.com/hypo69/AI-Breadboard/master/install.ps1 | iex
@@ -68,7 +68,7 @@ if ($dirScript -and (Test-Path $dirScript)) {
 }
 
 if (-not $targetDir) {
-    $targetDir = Join-Path $env:LOCALAPPDATA 'aibreadboard'
+    $targetDir = Join-Path $env:LOCALAPPDATA 'AI Breadboard'
 }
 
 $InstallDir = $targetDir
