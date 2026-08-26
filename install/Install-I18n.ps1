@@ -354,22 +354,22 @@ function global:Msg {
 }
 
 function global:Select-InstallerLanguage {
-    param([string]$DefaultLang = "ru")
+    param([string]$DefaultLang = "en")
     
     $culture = (Get-Culture).TwoLetterISOLanguageName.ToLower()
     if ($Global:I18N.ContainsKey($culture)) {
         $DefaultLang = $culture
     }
 
-    $languages = @("ru", "en", "es", "he")
+    $languages = @("en", "ru", "es", "he")
     $defaultIndex = [array]::IndexOf($languages, $DefaultLang) + 1
     if ($defaultIndex -le 0) { $defaultIndex = 1 }
 
     Write-Host ""
     Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-    Write-Host " aibreadboard — INSTALLATION WIZARD / МАСТЕР УСТАНОВКИ" -ForegroundColor Yellow
+    Write-Host " INSTALLATION WIZARD" -ForegroundColor Yellow
     Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-    Write-Host "Select language / Выберите язык установки:" -ForegroundColor White
+    Write-Host "Select language:" -ForegroundColor White
     Write-Host ""
 
     for ($i = 0; $i -lt $languages.Length; $i++) {
@@ -377,14 +377,14 @@ function global:Select-InstallerLanguage {
         $name = $Global:I18N[$code]["lang_name"]
         $num = $i + 1
         if ($num -eq $defaultIndex) {
-            Write-Host "    [$num] $name ($code) [Default / По умолчанию]" -ForegroundColor Green
+            Write-Host "    [$num] $name ($code) [Default]" -ForegroundColor Green
         } else {
             Write-Host "    [$num] $name ($code)" -ForegroundColor Gray
         }
     }
     Write-Host ""
 
-    $userChoice = Read-Host "  Language / Язык [$defaultIndex]"
+    $userChoice = Read-Host "  Language [$defaultIndex]"
     $userChoice = $userChoice.Trim()
     if (-not $userChoice) { $userChoice = [string]$defaultIndex }
 

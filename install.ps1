@@ -53,7 +53,7 @@ if ($i18nScript -and (Test-Path $i18nScript)) {
 }
 
 # 3. Выбор языка пользователем
-$defaultLang = if ($config -and $config.defaults -and $config.defaults.language) { $config.defaults.language } else { "ru" }
+$defaultLang = if ($config -and $config.defaults -and $config.defaults.language) { $config.defaults.language } else { "en" }
 Select-InstallerLanguage -DefaultLang $defaultLang
 
 # 4. Вывод заставки

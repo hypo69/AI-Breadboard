@@ -1,6 +1,6 @@
 {
   "defaults": {
-    "language": "ru",
+    "language": "en",
     "install_dir": "%LOCALAPPDATA%\\aibreadboard",
     "venv_dir": "venv",
     "python_min_version": "3.10",
