@@ -56,13 +56,7 @@ if ($i18nScript -and (Test-Path $i18nScript)) {
 $defaultLang = if ($config -and $config.defaults -and $config.defaults.language) { $config.defaults.language } else { "en" }
 Select-InstallerLanguage -DefaultLang $defaultLang
 
-# 4. Вывод заставки
-Write-Host '╔═══════════════════════════════════════════════════════════════╗' -ForegroundColor Cyan
-Write-Host (Msg "banner_title") -ForegroundColor Cyan
-Write-Host '╚═══════════════════════════════════════════════════════════════╝' -ForegroundColor Cyan
-Write-Host ''
-
-# 5. Модуль выбора директории
+# 4. Модуль выбора директории
 $dirScript = if ($localInstallDir) { Join-Path $localInstallDir "Install-Directory.ps1" } else { "" }
 $targetDir = ""
 if ($dirScript -and (Test-Path $dirScript)) {
