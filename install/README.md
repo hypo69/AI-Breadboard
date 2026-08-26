@@ -1,8 +1,8 @@
-# 📦 aibreadboard Modular Installation Architecture (`install/`)
+# 📦 AI Breadboard Modular Installation Architecture (`install/`)
 
 ## 1. Architectural Overview & Philosophy
 
-The `install/` subsystem is an enterprise-grade, modular setup and lifecycle bootstrapping framework designed for the **`aibreadboard`** interactive AI platform.
+The `install/` subsystem is an enterprise-grade, modular setup and lifecycle bootstrapping framework designed for the **`AI Breadboard`** interactive AI platform.
 
 ### Core Architectural Principles
 1. **Configuration over Hardcode (`install.json`):** No paths, version targets, or repository URLs are hardcoded inside script logic. All operational boundaries are defined in [`install.json`](./install.json).

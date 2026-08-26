@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Модуль интернационализации (I18N) мастера установки aibreadboard.
+    Модуль интернационализации (I18N) мастера установки AI Breadboard.
 .DESCRIPTION
     Содержит словари локализации (RU, EN, ES, HE) и функции форматирования сообщений и выбора языка.
 #>
@@ -8,17 +8,17 @@
 $Global:I18N = @{
     ru = @{
         lang_name             = "Русский (Russian)"
-        select_lang_header    = "aibreadboard — МАСТЕР УСТАНОВКИ / INSTALLATION WIZARD"
+        select_lang_header    = "AI Breadboard — МАСТЕР УСТАНОВКИ"
         select_lang_prompt    = "Выберите язык установки / Select installation language:"
         lang_default_suffix   = "[По умолчанию]"
         lang_choice_prompt    = "Язык / Language [{0}]"
         lang_selected         = "-> Выбран язык: {0}"
         
-        banner_title          = "              aibreadboard — МАСТЕР УСТАНОВКИ                       "
+        banner_title          = "              AI Breadboard — МАСТЕР УСТАНОВКИ                      "
         
         dir_step_title        = "[1/7] Выбор директории установки..."
         dir_notice_header     = "  ВАЖНОЕ ПРИМЕЧАНИЕ О ДИРЕКТОРИИ УСТАНОВКИ:"
-        dir_stability_warn    = "  Поскольку проект aibreadboard находится в активной разработке, для стабильной`n  работы, автоматических обновлений и корректной привязки внутренних и внешних`n  инструментов настоятельно рекомендуется использовать стандартную директорию."
+        dir_stability_warn    = "  Поскольку проект AI Breadboard находится в активной разработке, для стабильной`n  работы, автоматических обновлений и корректной привязки внутренних и внешних`n  инструментов настоятельно рекомендуется использовать стандартную директорию."
         dir_opt_default       = "  [1] Стандартная директория (Рекомендуется): {0}"
         dir_opt_custom        = "  [2] Указать другой каталог вручную"
         dir_choice_prompt     = "  Ваш выбор [Enter = 1]"
@@ -83,23 +83,23 @@ $Global:I18N = @{
         step_7_py_path        = "    [OK] Python интерпретатор: {0}"
         step_7_warn           = "    [WARN] Результат проверки: {0}"
         
-        finish_banner_1       = "║         УСТАНОВКА aibreadboard УСПЕШНО ЗАВЕРШЕНА!                 ║"
+        finish_banner_1       = "║         УСТАНОВКА AI Breadboard УСПЕШНО ЗАВЕРШЕНА!                ║"
         finish_banner_2       = "║  Запуск сервера:  assist start  или  ./run.ps1                ║"
         finish_hint           = "  Глобальные команды: assist start | assist status | assist providers | assist stop"
     }
     en = @{
         lang_name             = "English"
-        select_lang_header    = "aibreadboard — INSTALLATION WIZARD / МАСТЕР УСТАНОВКИ"
+        select_lang_header    = "AI Breadboard — INSTALLATION WIZARD"
         select_lang_prompt    = "Select installation language / Выберите язык установки:"
         lang_default_suffix   = "[Default]"
         lang_choice_prompt    = "Language / Язык [{0}]"
         lang_selected         = "-> Selected language: {0}"
         
-        banner_title          = "              aibreadboard — INSTALLATION WIZARD                    "
+        banner_title          = "              AI Breadboard — INSTALLATION WIZARD                   "
         
         dir_step_title        = "[1/7] Selecting installation directory..."
         dir_notice_header     = "  IMPORTANT NOTE ABOUT INSTALLATION DIRECTORY:"
-        dir_stability_warn    = "  Since aibreadboard is under active development, to ensure stability,`n  smooth automatic updates, and proper tool binding, it is strongly`n  recommended to use the default installation directory."
+        dir_stability_warn    = "  Since AI Breadboard is under active development, to ensure stability,`n  smooth automatic updates, and proper tool binding, it is strongly`n  recommended to use the default installation directory."
         dir_opt_default       = "  [1] Default directory (Recommended): {0}"
         dir_opt_custom        = "  [2] Specify custom directory manually"
         dir_choice_prompt     = "  Your choice [Enter = 1]"
@@ -164,23 +164,23 @@ $Global:I18N = @{
         step_7_py_path        = "    [OK] Python interpreter: {0}"
         step_7_warn           = "    [WARN] Verification result: {0}"
         
-        finish_banner_1       = "║         aibreadboard INSTALLATION COMPLETED SUCCESSFULLY!         ║"
+        finish_banner_1       = "║         AI Breadboard INSTALLATION COMPLETED SUCCESSFULLY!        ║"
         finish_banner_2       = "║  Start server:   assist start  or  ./run.ps1                  ║"
         finish_hint           = "  Global commands: assist start | assist status | assist providers | assist stop"
     }
     es = @{
         lang_name             = "Español (Spanish)"
-        select_lang_header    = "aibreadboard — ASISTENTE DE INSTALACIÓN / WIZARD"
+        select_lang_header    = "AI Breadboard — ASISTENTE DE INSTALACIÓN"
         select_lang_prompt    = "Seleccione el idioma de instalación / Select language:"
         lang_default_suffix   = "[Predeterminado]"
         lang_choice_prompt    = "Idioma / Language [{0}]"
         lang_selected         = "-> Idioma seleccionado: {0}"
         
-        banner_title          = "              aibreadboard — ASISTENTE DE INSTALACIÓN               "
+        banner_title          = "              AI Breadboard — ASISTENTE DE INSTALACIÓN              "
         
         dir_step_title        = "[1/7] Selección del directorio de instalación..."
         dir_notice_header     = "  NOTA IMPORTANTE SOBRE EL DIRECTORIO DE INSTALACIÓN:"
-        dir_stability_warn    = "  Dado que aibreadboard se encuentra en desarrollo activo, para garantizar`n  la estabilidad, actualizaciones automáticas y el correcto funcionamiento`n  de las herramientas, se recomienda encarecidamente usar la ruta predeterminada."
+        dir_stability_warn    = "  Dado que AI Breadboard se encuentra en desarrollo activo, para garantizar`n  la estabilidad, actualizaciones automáticas y el correcto funcionamiento`n  de las herramientas, se recomienda encarecidamente usar la ruta predeterminada."
         dir_opt_default       = "  [1] Directorio predeterminado (Recomendado): {0}"
         dir_opt_custom        = "  [2] Especificar otro directorio manualmente"
         dir_choice_prompt     = "  Su elección [Enter = 1]"
@@ -235,7 +235,7 @@ $Global:I18N = @{
         step_5_not_found      = "    [INFO] Certificados SSL no encontrados. Iniciando asistente..."
         step_5_missing_script = "    [WARN] Script {0} no encontrado. El servidor se ejecutará sin SSL."
         
-        step_6                = "[7/7] Registrando rutas del sistema y comandos assist..."
+        step_6                = "[7/7] Registrando rutas del sistema и comandos assist..."
         step_6_env_ok         = "    [OK] Variable de entorno AIBREADBOARD_DIR establecida: {0}"
         step_6_path_ok        = "    [OK] Rutas añadidas a la variable de entorno PATH"
         step_6_prof_ok        = "    [OK] Función assist registrada en perfiles PowerShell"
@@ -245,23 +245,23 @@ $Global:I18N = @{
         step_7_py_path        = "    [OK] Intérprete Python: {0}"
         step_7_warn           = "    [WARN] Resultado de la verificación: {0}"
         
-        finish_banner_1       = "║         ¡INSTALACIÓN DE aibreadboard COMPLETADA CON ÉXITO!        ║"
+        finish_banner_1       = "║        ¡INSTALACIÓN DE AI Breadboard COMPLETADA CON ÉXITO!        ║"
         finish_banner_2       = "║  Iniciar servidor: assist start  o  ./run.ps1                 ║"
         finish_hint           = "  Comandos globales: assist start | assist status | assist providers | assist stop"
     }
     he = @{
         lang_name             = "עברית (Hebrew)"
-        select_lang_header    = "aibreadboard — אשף ההתקנה / INSTALLATION WIZARD"
+        select_lang_header    = "AI Breadboard — אשף ההתקנה"
         select_lang_prompt    = "בחר שפת התקנה / Select installation language:"
         lang_default_suffix   = "[ברירת מחדל]"
         lang_choice_prompt    = "שפה / Language [{0}]"
         lang_selected         = "-> שפה שנבחרה: {0}"
         
-        banner_title          = "              aibreadboard — אשף ההתקנה                              "
+        banner_title          = "              AI Breadboard — אשף ההתקנה                             "
         
         dir_step_title        = "[1/7] בחירת תיקיית התקנה..."
         dir_notice_header     = "  הערה חשובה לגבי תיקיית ההתקנה:"
-        dir_stability_warn    = "  מכיוון ש-aibreadboard נמצא בפיתוח פעיל, למען יציבות מרבית,`n  עדכונים אוטומטיים חלקים וקישור מדויק של כלי המערכת,`n  מומלץ מאוד להשתמש בתיקיית ברירת המחדל."
+        dir_stability_warn    = "  מכיוון ש-AI Breadboard נמצא בפיתוח פעיל, למען יציבות מרבית,`n  עדכונים אוטומטיים חלקים וקישור מדויק של כלי המערכת,`n  מומלץ מאוד להשתמש בתיקיית ברירת המחדל."
         dir_opt_default       = "  [1] ספריית ברירת מחדל (מומלץ): {0}"
         dir_opt_custom        = "  [2] ציין תיקייה אחרת באופן ידני"
         dir_choice_prompt     = "  הבחירה שלך [Enter = 1]"
@@ -326,7 +326,7 @@ $Global:I18N = @{
         step_7_py_path        = "    [OK] מפרש Python: {0}"
         step_7_warn           = "    [WARN] תוצאת הבדיקה: {0}"
         
-        finish_banner_1       = "║         התקנת aibreadboard הושלמה בהצלחה!                         ║"
+        finish_banner_1       = "║         התקנת AI Breadboard הושלמה בהצלחה!                        ║"
         finish_banner_2       = "║  הפעלת השרת:     assist start  או  ./run.ps1                  ║"
         finish_hint           = "  פקודות גלובליות: assist start | assist status | assist providers | assist stop"
     }

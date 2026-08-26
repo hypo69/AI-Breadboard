@@ -27,7 +27,7 @@ try {
 $assistPs1Content = @"
 <#
 .SYNOPSIS
-    CLI ассистент для управления проектом aibreadboard.
+    CLI ассистент для управления проектом AI Breadboard.
 .DESCRIPTION
     Передает команды в scripts.dev.assist_cli с жесткой фиксацией путей проекта.
 .EXAMPLE

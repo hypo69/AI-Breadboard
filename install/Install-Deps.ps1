@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Модуль установки зависимостей aibreadboard.
+    Модуль установки зависимостей AI Breadboard.
 .DESCRIPTION
     Предоставляет меню выбора профиля установки (Full, Core, Core+AI, Dev, Skip)
     и запускает установку через pip.
