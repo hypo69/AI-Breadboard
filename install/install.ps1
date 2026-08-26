@@ -281,11 +281,6 @@ function Select-InstallerLanguage {
 # ============================================================
 Select-InstallerLanguage
 
-Write-Host '╔═══════════════════════════════════════════════════════════════╗' -ForegroundColor Cyan
-Write-Host "║$(Msg 'banner_title')║" -ForegroundColor Cyan
-Write-Host '╚═══════════════════════════════════════════════════════════════╝' -ForegroundColor Cyan
-Write-Host ''
-
 # ============================================================
 # [1/6] Снятие Mark of the Web со всего проекта
 # ============================================================
