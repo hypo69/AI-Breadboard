@@ -98,46 +98,190 @@ User Request → UnifiedChatModel._get_active_model(model_name)
 
 ---
 
-### 📦 Installation
+## 📦 Installation Workflow
 
-#### Option 1: Quick One-Liner (PowerShell, Recommended on Windows)
+### Overview
+
+AI Breadboard provides **three installation methods**:
+1. **One-Liner Script** - Automatic installation (recommended for Windows)
+2. **Interactive Installer** - Step-by-step guided setup with language selection
+3. **Manual Installation** - Full control over every step
+
+All methods create a virtual environment, install dependencies, generate SSL certificates, and register the global `assist` command.
+
+---
+
+### Option 1: One-Liner Script (PowerShell, Recommended on Windows)
 
 ```powershell
 irm https://raw.githubusercontent.com/hypo69/AI-Breadboard/master/install.ps1 | iex
 ```
 
-#### Option 2: Clone & Run `install.cmd` (Windows)
+This command:
+- Downloads the installer script from GitHub
+- Runs the full automated installation workflow
+- Creates `%USERPROFILE%\AppData\Local\AI-Breadboard` with `venv`
+- Installs all dependencies from `requirements.txt`
+- Generates SSL certificates for local HTTPS
+- Registers `assist` global command in PowerShell and PATH
 
-```cmd
-git clone https://github.com/hypo69/AI-Breadboard.git C:\aibreadboard
-cd C:\aibreadboard
-install.cmd
-```
-
-The installer interactively selects UI language, sets up `%USERPROFILE%\AppData\Local\AI Breadboard` (or custom path), registers `AIBREADBOARD_DIR`, creates `venv`, installs dependencies, generates SSL certificates via mkcert, and binds the global `assist` command.
-
-#### Option 3: Manual Installation
-
-```bash
-# Windows
-py -3.13 -m venv venv
-.\venv\Scripts\pip install -r requirements.txt
-
-# Linux / macOS
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-```
+**After installation**, run `./run.ps1` to start the server.
 
 ---
 
-### 📁 Dependency Structure (`req/`)
+### Option 2: Interactive Installer (Web-Based GUI)
 
-- `req/requirements-core.txt` — FastAPI, Uvicorn, Pydantic, JWT, aiohttp, httpx
-- `req/requirements-ai.txt` — LangChain, LangGraph, Google GenAI, FAISS, ChromaDB, MCP
-- `req/requirements-media.txt` — Edge-TTS, gTTS, PyDub
-- `req/requirements-utils.txt` — Pandas, Pillow, BeautifulSoup4
-- `req/requirements-test.txt` — pytest, pytest-asyncio, coverage
-- `req/requirements-docs.txt` — MkDocs, Material theme
+#### Step-by-Step Process
+
+1. **Clone the repository:**
+   ```powershell
+   git clone https://github.com/hypo69/AI-Breadboard.git
+   cd AI-Breadboard
+   ```
+
+2. **Run the installer:**
+   ```powershell
+   .\install.ps1
+   ```
+
+3. **Installation wizard guide:**
+
+   **Step 0: Language Selection**
+   - Choose installation interface language: Russian (RU), English (EN), Spanish (ES), or Hebrew (HE)
+   - Selection is saved to `config.json` for future sessions
+
+   **Step 1: File Unblocking**
+   - Removes Windows "Mark of the Web" from all project files
+   - Required for PowerShell script execution on Windows
+
+   **Step 2: Virtual Environment Setup**
+   - Searches for Python 3.10+ via `py` launcher, `python`, or `python3` commands
+   - Skips Windows Store Python stubs
+   - Creates clean `venv` directory or uses existing valid environment
+   - Python version and path are saved to `config.json`
+
+   **Step 3: Package Upgrades**
+   - Upgrades `pip`, `setuptools`, and `wheel` to latest versions
+   - Ensures modern tooling for dependency installation
+
+   **Step 4: Dependency Installation**
+   ```
+   [1] Full installation (Core + AI + Utils) — RECOMMENDED
+   [2] Core server only
+   [3] Core + AI modules
+   [4] Full installation + Tests & Docs (Dev)
+   [5] Skip dependency installation
+   ```
+   - Installs from `requirements-core.txt`, `requirements-ai.txt`, and `requirements-utils.txt`
+   - Creates `requirements.txt` with combined dependencies
+   - Can be customized for production vs development needs
+
+   **Step 5: SSL Certificate Generation**
+   - Checks for `%USERPROFILE%\.certs\localhost+2.pem` and `localhost+2-key.pem`
+   - If not found, runs `install_ssl_cert.ps1` to generate local SSL certificates
+   - Enables HTTPS access to `http://localhost:3000`
+
+   **Step 6: Global Command Registration**
+   - Creates `assist.ps1`, `assist.cmd`, and `assist` (bash) scripts
+   - Installs to `%USERPROFILE%\.local\bin\` (or `~/.local/bin/` on Linux/macOS)
+   - Adds path to `PATH` environment variable
+   - Registers `assist` function in PowerShell profiles (`$PROFILE`)
+
+   **Step 7: Final Verification**
+   - Tests imports of core modules: `fastapi`, `uvicorn`, `pydantic`, `aiofiles`, `cryptography`
+   - Logs results to console
+   - Saves installation status to `config.json`
+
+4. **Completion Message:**
+   ```
+   ╔═══════════════════════════════════════════════════════════════╗
+   ║         УСТАНОВКА ai-breadboard УСПЕШНО ЗАВЕРШЕНА!                 ║
+   ║  Запуск сервера:  ./run.ps1                                   ║
+   ╚═══════════════════════════════════════════════════════════════╝
+   ```
+
+---
+
+### Option 3: Manual Installation
+
+#### Step 1: Clone Repository
+
+```bash
+# Windows
+git clone https://github.com/hypo69/AI-Breadboard.git C:\aibreadboard
+cd C:\aibreadboard
+
+# Linux / macOS
+git clone https://github.com/hypo69/AI-Breadboard.git ~/aibreadboard
+cd ~/aibreadboard
+```
+
+#### Step 2: Create Virtual Environment
+
+```powershell
+# Windows
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+```bash
+# Linux / macOS
+python3 -m venv venv
+source venv/bin/activate
+```
+
+#### Step 3: Upgrade Package Tools
+
+```bash
+pip install --upgrade pip setuptools wheel
+```
+
+#### Step 4: Install Dependencies
+
+```bash
+# Full installation (recommended)
+pip install -r requirements.txt
+
+# Or select subsets
+pip install -r req/requirements-core.txt
+pip install -r req/requirements-ai.txt
+pip install -r req/requirements-utils.txt
+```
+
+#### Step 5: Generate SSL Certificates
+
+```powershell
+# Windows
+.\install_ssl_cert.ps1
+
+# Or manually with mkcert
+mkcert -install
+mkcert localhost 127.0.0.1 ::1
+```
+
+The certificates will be saved to `%USERPROFILE%\.certs\`.
+
+#### Step 6: Register Global `assist` Command
+
+```powershell
+# Windows
+.\assist.ps1 install-profile
+```
+
+This creates `~\.local\bin\assist.ps1` and registers it in PowerShell profiles.
+
+---
+
+### Dependency Structure (`req/`)
+
+| File | Contents | Use Case |
+|---|---|---|
+| `requirements-core.txt` | FastAPI, Uvicorn, Pydantic, JWT, aiohttp, httpx | Minimal server functionality |
+| `requirements-ai.txt` | LangChain, LangGraph, Google GenAI, FAISS, ChromaDB, MCP | AI/ML features |
+| `requirements-utils.txt` | Pandas, Pillow, BeautifulSoup4 | Utility functions |
+| `requirements-test.txt` | pytest, pytest-asyncio, coverage | Development testing |
+| `requirements-docs.txt` | MkDocs, Material theme | Documentation building |
+| `requirements.txt` | Combined all | Full installation |
 
 ---
 
@@ -154,7 +298,82 @@ cp .env.example .env
 ```
 ```ini
 GEMINI_API_KEY=your_gemini_api_key_here
+JWT_SECRET=your_super_secret_jwt_key
 ```
+
+---
+
+## 🎯 Post-Installation Setup
+
+### Global `assist` Command
+
+After installation, the `assist` command is available globally:
+
+| Command | Description |
+|---|---|
+| `assist start` | Start main server (`run.ps1`) |
+| `assist start unicorn` | Start via FastAPI/Uvicorn |
+| `assist start light` | Start lightweight server |
+| `assist start foundry` | Start local AI Foundry |
+| `assist stop` | Stop server and free port 3000 |
+| `assist restart` | Quick server restart |
+| `assist status` | Check server status and ports |
+| `assist providers` | List AI providers and models |
+| `assist logs [N]` | View last N log lines (default: 40) |
+| `assist config show` | Display current `config.json` |
+| `assist config get <key>` | Get config value |
+| `assist config set <key> <val>` | Set config value |
+| `assist test` | Run pytest suite |
+
+### Web Interface Access
+
+- **Main Dashboard:** `http://localhost:3000/`
+- **API Documentation:** `http://localhost:3000/docs`
+- **Redoc Documentation:** `http://localhost:3000/redoc`
+
+---
+
+## 🔍 Troubleshooting
+
+### Execution Policy Error
+
+If PowerShell shows "running scripts is disabled":
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
+```
+
+### Port 3000 Already in Use
+
+```powershell
+# Kill process on port 3000
+netstat -ano | findstr :3000
+taskkill /PID <PID> /F
+
+# Or use assist
+assist stop
+```
+
+### Python Not Found
+
+Install Python 3.10+ from [python.org](https://www.python.org/downloads/), ensuring **"Add python.exe to PATH"** is checked during installation.
+
+### SSL Certificate Warning
+
+Browser warns about self-signed certificate:
+1. Click "Advanced" → "Proceed to localhost (unsafe)"
+2. Or install certificate into Windows Trusted Root CA:
+   ```powershell
+   certutil -addstore -f "Root" $env:USERPROFILE\.certs\localhost+2.pem
+   ```
+
+### Log Files
+
+Check logs in `logs/` directory:
+- `fastapi.log` — FastAPI request routing
+- `info.log` — System events
+- `errors.log` — Error logs
+- `uvicorn_*.log` — Server console output
 
 ---
 

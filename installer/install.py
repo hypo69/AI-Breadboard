@@ -149,6 +149,11 @@ Examples:
     try:
         import uvicorn
         
+        # Add installer directory to path so server module can be found
+        installer_dir = Path(__file__).parent
+        parent_dir = installer_dir.parent
+        sys.path.insert(0, str(parent_dir))
+        
         print(f"\n{'=' * 60}")
         print(f"  AI Breadboard Installer v2.0.0")
         print(f"{'=' * 60}\n")
@@ -163,16 +168,27 @@ Examples:
         
         # Start server in background thread
         import threading
+        import os
         
         def run_server():
-            uvicorn.run(
-                "server.main:app",
-                host=args.host,
-                port=args.port,
-                log_level="debug" if args.verbose else "info",
-                reload=False,
-                access_log=args.verbose
-            )
+            # Change to installer directory so server module can be found
+            original_cwd = os.getcwd()
+            os.chdir(installer_dir)
+            try:
+                # Ensure parent directory is in sys.path for importing installer package
+                parent_dir = installer_dir.parent
+                if str(parent_dir) not in sys.path:
+                    sys.path.insert(0, str(parent_dir))
+                uvicorn.run(
+                    "server.main:app",
+                    host=args.host,
+                    port=args.port,
+                    log_level="debug" if args.verbose else "info",
+                    reload=False,
+                    access_log=args.verbose
+                )
+            finally:
+                os.chdir(original_cwd)
         
         server_thread = threading.Thread(target=run_server, daemon=True)
         server_thread.start()

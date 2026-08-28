@@ -99,13 +99,15 @@ nav:
           - "Chapter 6. ReAct Agents & MCP": en/book/ch06_agents_and_mcp.md
           - "Chapter 7. Skills Management": en/book/ch07_skills_management.md
           - "Chapter 8. Practicum": en/book/ch08_laboratory_practicum.md
-      - "\U0001F6E0 AI Breadboard":
+      - "\U0001F9EA AI Breadboard":
+          - "Cookbook":
+              - Overview: "en/cook book/index.md"
           - "Dev Guide":
-              - Overview: "en/AI Breadboard/dev/index.md"
+              - Overview: "en/developer/index.md"
           - "User Guide":
-              - Overview: "en/AI Breadboard/user/index.md"
+              - Overview: "en/user/index.md"
           - "Test Guide":
-              - Overview: "en/AI Breadboard/test/index.md"
+              - Overview: "en/tester/index.md"
 
   - "\U0001F1EE\U0001F1F1 \u05E2\u05D1\u05E8\u05D9\u05EA":
       - he/index.md

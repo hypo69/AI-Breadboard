@@ -71,7 +71,7 @@ _GEMINI_CLI_PRIORITY_ORDER: List[str] = [
 
 
 def _normalize_model_name(name: str) -> str:
-    """Нормализация идентификатора модели для единообразного сравнения."""
+    """Normalize model identifier for consistent comparison."""
     res: str = name.strip()
     if res.startswith("models/"):
         res = res[len("models/") :]
@@ -79,14 +79,14 @@ def _normalize_model_name(name: str) -> str:
 
 
 def load_unsupported_models(provider: str = "gemini") -> Set[str]:
-    """Загрузка списка неподдерживаемых моделей из файлов конфигурации.
+    """Load list of unsupported models from configuration files.
 
     Args:
-        provider (str): Имя провайдера ('gemini', 'gemini_cli', 'agy', 'foundry', 'ollama').
-                        Значение по умолчанию: 'gemini'.
+        provider (str): Provider name ('gemini', 'gemini_cli', 'agy', 'foundry', 'ollama').
+                        Default: 'gemini'.
 
     Returns:
-        Set[str]: Множество нормализованных имен неподдерживаемых моделей.
+        Set[str]: Set of normalized names of unsupported models.
 
     Examples:
         >>> from core.ai.model_manager import load_unsupported_models
@@ -124,18 +124,18 @@ def load_unsupported_models(provider: str = "gemini") -> Set[str]:
 
 
 def add_unsupported_model(provider: str = "gemini", model_name: str = "", reason: str = "") -> bool:
-    """Добавление неподдерживаемой модели в файл конфигурации и удаление из кэша.
+    """Add unsupported model to configuration file and remove from cache.
 
     Args:
-        provider (str): Имя провайдера ('gemini', 'gemini_cli', 'agy', 'foundry', 'ollama').
-                        Значение по умолчанию: 'gemini'.
-        model_name (str): Имя модели для исключения.
-                          Значение по умолчанию: ''.
-        reason (str): Причина исключения для протоколирования в логах.
-                      Значение по умолчанию: ''.
+        provider (str): Provider name ('gemini', 'gemini_cli', 'agy', 'foundry', 'ollama').
+                        Default: 'gemini'.
+        model_name (str): Model name to exclude.
+                          Default: ''.
+        reason (str): Reason for exclusion to log.
+                      Default: ''.
 
     Returns:
-        bool: Флаг успешного сохранения в конфигурацию.
+        bool: Flag indicating successful save to configuration.
 
     Examples:
         >>> from core.ai.model_manager import add_unsupported_model
@@ -198,7 +198,7 @@ def add_unsupported_model(provider: str = "gemini", model_name: str = "", reason
 
 
 def _fetch_gemini_models_from_sdk(api_key: str = "") -> List[str]:
-    """Получение моделей Gemini напрямую через Google GenAI SDK с фильтрацией."""
+    """Fetch Gemini models directly via Google GenAI SDK with filtering."""
     api_keys_to_try: List[str] = []
     if api_key:
         api_keys_to_try.append(api_key)
@@ -253,7 +253,7 @@ def _fetch_gemini_models_from_sdk(api_key: str = "") -> List[str]:
 
 
 def _fetch_foundry_models_sync(base_url: str = "") -> List[str]:
-    """Синхронное получение списка моделей от локального Foundry сервера."""
+    """Synchronously fetch list of models from local Foundry server."""
     from core.config import ai_cfg
     url: str = base_url or (getattr(ai_cfg, "foundry_base_url", "http://localhost:54837") if ai_cfg else "http://localhost:54837")
     fallback_id: str = getattr(ai_cfg, "foundry_model_id", "qwen2.5-1.5b-instruct-generic-cpu:4") if ai_cfg else "qwen2.5-1.5b-instruct-generic-cpu:4"
@@ -280,7 +280,7 @@ def _fetch_foundry_models_sync(base_url: str = "") -> List[str]:
 
 
 def _fetch_ollama_models_sync(base_url: str = "") -> List[str]:
-    """Синхронное получение списка моделей от сервера Ollama."""
+    """Synchronously fetch list of models from Ollama server."""
     from core.config import ai_cfg
     url: str = base_url or (getattr(ai_cfg, "ollama_base_url", "http://localhost:11434") if ai_cfg else "http://localhost:11434")
     fallback_id: str = getattr(ai_cfg, "ollama_model_id", "llama3.1") if ai_cfg else "llama3.1"
@@ -307,7 +307,7 @@ def _fetch_ollama_models_sync(base_url: str = "") -> List[str]:
 
 
 def _fetch_gemini_cli_models_sync() -> List[str]:
-    """Синхронное получение списка моделей для Gemini CLI с фильтрацией."""
+    """Synchronously fetch list of models for Gemini CLI with filtering."""
     unsupported: Set[str] = load_unsupported_models("gemini_cli")
     pool: List[str] = [m for m in _DEFAULT_GEMINI_CLI_FALLBACK if m not in unsupported]
     if not pool:
@@ -316,7 +316,7 @@ def _fetch_gemini_cli_models_sync() -> List[str]:
 
 
 def _fetch_hf_models_sync() -> List[str]:
-    """Синхронное получение списка кэшированных моделей HuggingFace."""
+    """Synchronously fetch list of cached HuggingFace models."""
     unsupported: Set[str] = load_unsupported_models("hf")
     try:
         from core.ai.hf_chat import hf_client
@@ -336,7 +336,7 @@ def _fetch_hf_models_sync() -> List[str]:
 
 
 def _fetch_onnx_models_sync() -> List[str]:
-    """Синхронное получение списка моделей ONNX."""
+    """Synchronously fetch list of ONNX models."""
     unsupported: Set[str] = load_unsupported_models("onnx")
     try:
         from core.ai.onnx_chat import onnx_client
@@ -355,7 +355,7 @@ def _fetch_onnx_models_sync() -> List[str]:
 
 
 def _fetch_openai_compat_models_sync() -> List[str]:
-    """Синхронное получение списка моделей OpenAI-совместимых провайдеров."""
+    """Synchronously fetch list of OpenAI-compatible provider models."""
     unsupported: Set[str] = load_unsupported_models("openai")
     global_cfg: Dict[str, Any] = j_loads(_GLOBAL_CONFIG_PATH)
     models: List[str] = []
@@ -380,21 +380,21 @@ def get_available_models(
     api_key: str = "",
     force_refresh: bool = False,
 ) -> List[str]:
-    """Получение списка актуальных доступных моделей для заданного провайдера.
+    """Get list of current available models for given provider.
 
-    Использует разовое получение через SDK/API с последующим кэшированием в памяти
-    на весь жизненный цикл приложения. Исключает неподдерживаемые модели из config.json.
+    Uses single fetch via SDK/API with subsequent caching in memory
+    for the entire application lifecycle. Excludes unsupported models from config.json.
 
     Args:
-        provider (str): Имя провайдера ('gemini', 'gemini_cli', 'agy', 'foundry', 'ollama', 'hf', 'onnx', 'openai').
-                        Значение по умолчанию: 'gemini'.
-        api_key (str): Опциональный API ключ для Gemini.
-                       Значение по умолчанию: ''.
-        force_refresh (bool): Принудительный сброс кэша и повторный запрос к провайдеру.
-                              Значение по умолчанию: False.
+        provider (str): Provider name ('gemini', 'gemini_cli', 'agy', 'foundry', 'ollama', 'hf', 'onnx', 'openai').
+                        Default: 'gemini'.
+        api_key (str): Optional API key for Gemini.
+                       Default: ''.
+        force_refresh (bool): Force cache reset and re-query provider.
+                              Default: False.
 
     Returns:
-        List[str]: Список доступных идентификаторов моделей.
+        List[str]: List of available model identifiers.
 
     Examples:
         >>> from core.ai.model_manager import get_available_models
@@ -459,16 +459,16 @@ def get_available_models(
 
 
 async def actualize_all_models(force_refresh: bool = True) -> Dict[str, List[str]]:
-    """Асинхронная актуализация и прогрев кэша моделей для всех активных провайдеров.
+    """Asynchronously actualize and warm up model caches for all active providers.
 
-    Выполняется однократно при запуске серверного приложения.
+    Executes once at server application startup.
 
     Args:
-        force_refresh (bool): Принудительный запрос к SDK/API провайдеров.
-                              Значение по умолчанию: True.
+        force_refresh (bool): Force query to provider SDK/API.
+                              Default: True.
 
     Returns:
-        Dict[str, List[str]]: Словарь со списками доступных моделей по провайдерам.
+        Dict[str, List[str]]: Dictionary with lists of available models by provider.
 
     Examples:
         >>> import asyncio

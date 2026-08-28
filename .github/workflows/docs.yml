@@ -34,12 +34,13 @@ jobs:
     - name: Build docs
       run: mkdocs build
 
-    - name: Deploy to GitHub Pages
+    - name: Deploy to Read the Docs
       if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./site
-        publish_branch: gh-pages
-        user_name: github-actions[bot]
-        user_email: 41898282+github-actions[bot]@users.noreply.github.com
+      run: |
+        echo "Documentation will be automatically built and deployed by Read the Docs"
+        echo "Triggering Read the Docs build via webhook..."
+        curl -X POST https://readthedocs.org/api/v2/webhook/ai-breadboard/12345/ \
+          -H "Content-Type: application/json" \
+          -d '{"push": true}'
+      env:
+        RTD_WEBHOOK_SECRET: ${{ secrets.RTD_WEBHOOK_SECRET }}

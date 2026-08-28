@@ -1,7 +1,7 @@
-# Конфигурация сборки документации проекта для Read the Docs.
-# Здесь задаются базовая среда, версия Python и входной файл
-# конфигурации MkDocs, который используется для генерации
-# проектной документации и справочных материалов.
+# Read the Docs configuration for AI Breadboard project.
+# This file specifies the build environment, Python version,
+# and MkDocs configuration file used to generate the project
+# documentation and reference materials.
 
 version: 2
 

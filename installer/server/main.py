@@ -28,8 +28,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import uvicorn
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add installer directory to path for imports
+installer_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(installer_dir))
 
 from installer.services.python_detector import PythonDetector
 from installer.services.python_installer import PythonInstaller

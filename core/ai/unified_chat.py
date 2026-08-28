@@ -20,7 +20,7 @@ from core.logger import logger
 
 class UnifiedChatModel:
     """
-    Класс-обертка для прозрачного роутинга между моделями Gemini и Foundry.
+    Wrapper class for transparent routing between Gemini and Foundry models.
     """
     def __init__(
         self,
@@ -74,7 +74,7 @@ class UnifiedChatModel:
 
 
     def update_system_instruction(self, new_instruction: str) -> None:
-        """Динамическое обновление системной инструкции для всех инициализированных моделей."""
+        """Dynamically update system instruction for all initialized models."""
         self.system_instruction = new_instruction
         if hasattr(self, 'gemini_model') and self.gemini_model:
             self.gemini_model.system_instruction = new_instruction
