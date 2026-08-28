@@ -1,0 +1,44 @@
+{
+  "installer": {
+    "version": "2.0.0",
+    "name": "AI Breadboard Installer",
+    "description": "Modern web-based installer for AI Breadboard",
+    "backend": {
+      "host": "127.0.0.1",
+      "port": 8000,
+      "auto_open": true,
+      "log_level": "info"
+    },
+    "web": {
+      "index_file": "web/index.html",
+      "static_dir": "web"
+    },
+    "python": {
+      "preferred_versions": ["3.13", "3.12", "3.11", "3.10"],
+      "min_version": "3.10"
+    },
+    "installation": {
+      "default_dir": "%LOCALAPPDATA%\\AI Breadboard",
+      "create_venv": true,
+      "install_deps": true,
+      "add_to_path": true
+    }
+  },
+  "api": {
+    "endpoints": {
+      "python_versions": "/api/python/versions",
+      "install": "/api/install",
+      "status": "/api/install/status/{task_id}",
+      "venv_create": "/api/venv/create",
+      "packages_install": "/api/packages/install"
+    }
+  },
+  "dependencies": {
+    "python_packages": [
+      "fastapi>=0.104.0",
+      "uvicorn[standard]>=0.24.0",
+      "pydantic>=2.5.0",
+      "aiofiles>=23.2.0"
+    ]
+  }
+}
