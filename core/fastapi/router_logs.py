@@ -8,7 +8,7 @@
 #             POST /api/logs/analyze, GET /api/logs/reports
 #
 # File: src/fastapi/router_logs.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.fastapi
 # Author: hypo69
 # Copyright: © 2026 hypo69

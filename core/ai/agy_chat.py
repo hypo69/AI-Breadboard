@@ -7,7 +7,7 @@
 #   Поддерживает потоковую генерацию (chat_stream) и одиночные запросы (ask).
 #
 # File: agy_chat.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.ai
 # Class: AgyChatBase
 # Author: hypo69

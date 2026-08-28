@@ -7,7 +7,7 @@
 #   Подключается к Playwright MCP через langchain-mcp-adapters.
 #
 # File: mcp_client.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.ai
 # Author: hypo69
 # Copyright: © 2026 hypo69

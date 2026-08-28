@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Установщик проекта ai-assistant с поддержкой мультиязычности (i18n).
+    Установщик проекта ai-breadboard с поддержкой мультиязычности (i18n).
 .DESCRIPTION
     Инициализирует кодировку UTF-8, запрашивает язык установки (RU/EN/HE),
     разблокирует файлы, создает виртуальное окружение, обновляет pip,
@@ -23,13 +23,13 @@ $PythonPath = Join-Path $VenvDir 'Scripts\python.exe'
 $I18N = @{
     ru = @{
         lang_name             = "Русский"
-        select_lang_header    = "ai-assistant — МАСТЕР УСТАНОВКИ / INSTALLATION WIZARD"
+        select_lang_header    = "ai-breadboard — МАСТЕР УСТАНОВКИ / INSTALLATION WIZARD"
         select_lang_prompt    = "Выберите язык установки / Select language:"
         lang_default_suffix   = "[По умолчанию]"
         lang_choice_prompt    = "Язык / Language [{0}]"
         lang_selected         = "-> Выбран язык: {0}"
         
-        banner_title          = "              ai-assistant — МАСТЕР УСТАНОВКИ                      "
+        banner_title          = "              ai-breadboard — МАСТЕР УСТАНОВКИ                      "
         
         step_1                = "[1/6] Снятие блокировки Windows (Unblock-File)..."
         step_1_ok             = "    [OK] Файлы разблокированы"
@@ -78,18 +78,18 @@ $I18N = @{
         step_6_py_path        = "    [OK] Python интерпретатор: {0}"
         step_6_warn           = "    [WARN] Результат проверки: {0}"
         
-        finish_banner_1       = "║         УСТАНОВКА ai-assistant УСПЕШНО ЗАВЕРШЕНА!                 ║"
+        finish_banner_1       = "║         УСТАНОВКА ai-breadboard УСПЕШНО ЗАВЕРШЕНА!                 ║"
         finish_banner_2       = "║  Запуск сервера:  ./run.ps1                                   ║"
     }
     en = @{
         lang_name             = "English"
-        select_lang_header    = "ai-assistant — INSTALLATION WIZARD / МАСТЕР УСТАНОВКИ"
+        select_lang_header    = "ai-breadboard — INSTALLATION WIZARD / МАСТЕР УСТАНОВКИ"
         select_lang_prompt    = "Select installation language / Выберите язык установки:"
         lang_default_suffix   = "[Default]"
         lang_choice_prompt    = "Language / Язык [{0}]"
         lang_selected         = "-> Selected language: {0}"
         
-        banner_title          = "              ai-assistant — INSTALLATION WIZARD                    "
+        banner_title          = "              ai-breadboard — INSTALLATION WIZARD                    "
         
         step_1                = "[1/6] Unblocking Windows files (Unblock-File)..."
         step_1_ok             = "    [OK] Files unblocked"
@@ -138,18 +138,18 @@ $I18N = @{
         step_6_py_path        = "    [OK] Python interpreter: {0}"
         step_6_warn           = "    [WARN] Verification output: {0}"
         
-        finish_banner_1       = "║         ai-assistant INSTALLATION COMPLETED SUCCESSFULLY!         ║"
+        finish_banner_1       = "║         ai-breadboard INSTALLATION COMPLETED SUCCESSFULLY!         ║"
         finish_banner_2       = "║  Start server:   ./run.ps1                                    ║"
     }
     he = @{
         lang_name             = "עברית (Hebrew)"
-        select_lang_header    = "ai-assistant — אשף ההתקנה / INSTALLATION WIZARD"
+        select_lang_header    = "ai-breadboard — אשף ההתקנה / INSTALLATION WIZARD"
         select_lang_prompt    = "בחר שפת התקנה / Select installation language:"
         lang_default_suffix   = "[ברירת מחדל]"
         lang_choice_prompt    = "שפה / Language [{0}]"
         lang_selected         = "-> שפה שנבחרה: {0}"
         
-        banner_title          = "              ai-assistant — אשף ההתקנה                              "
+        banner_title          = "              ai-breadboard — אשף ההתקנה                              "
         
         step_1                = "[1/6] שחרור חסימת קבצים של Windows (Unblock-File)..."
         step_1_ok             = "    [OK] חסימת הקבצים הוסרה בהצלחה"
@@ -198,7 +198,7 @@ $I18N = @{
         step_6_py_path        = "    [OK] מפרש Python: {0}"
         step_6_warn           = "    [WARN] תוצאת הבדיקה: {0}"
         
-        finish_banner_1       = "║         התקנת ai-assistant הושלמה בהצלחה!                          ║"
+        finish_banner_1       = "║         התקנת ai-breadboard הושלמה בהצלחה!                          ║"
         finish_banner_2       = "║  הפעלת השרת:     ./run.ps1                                    ║"
     }
 }
@@ -245,7 +245,7 @@ function Select-InstallerLanguage {
 
     Write-Host ""
     Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-    Write-Host "║              ai-assistant — LANGUAGE / ЯЗЫК                   ║" -ForegroundColor Cyan
+    Write-Host "║              ai-breadboard — LANGUAGE / ЯЗЫК                   ║" -ForegroundColor Cyan
     Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "  Select language / Выберите язык установки:" -ForegroundColor White

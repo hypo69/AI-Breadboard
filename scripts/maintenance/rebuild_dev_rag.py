@@ -8,7 +8,7 @@
 #   набора директорий, обеспечивая актуальность поиска по кодовой базе.
 #
 # File: rebuild_dev_rag.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================

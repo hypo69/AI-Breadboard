@@ -9,7 +9,7 @@
 #   - RAGEngine (engine.py): поиск по базе знаний, проверка threshold, fallback к LLM
 #
 # File: test_core_rag.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69

@@ -14,7 +14,7 @@
 #     - Выполнение тяжелых операций через asyncio executor
 #
 # File: core/ai/hf_chat.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: core.ai
 # Module: HFChat
 # Author: hypo69
@@ -77,8 +77,8 @@ class HFClient:
 
         from huggingface_hub import snapshot_download
 
-        hf_token = token or os.getenv("HF_TOKEN", "") or os.getenv("HUGGINGFACE_TOKEN", "")
-        save_dir = HF_MODELS_DIR / model_id.replace("/", "--")
+        hf_token: str = token or os.getenv("HF_TOKEN", "") or os.getenv("HUGGINGFACE_TOKEN", "")
+        save_dir: Path = HF_MODELS_DIR / model_id.replace("/", "--")
         save_dir.mkdir(parents=True, exist_ok=True)
 
         logger.info(f"[HFClient] Скачивание модели {model_id} -> {save_dir}")
@@ -109,8 +109,8 @@ class HFClient:
             import torch
             from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
-            local_path = ""
-            local_files_only = False
+            local_path: str = ""
+            local_files_only: bool = False
 
             try:
                 from huggingface_hub import snapshot_download as _sd
@@ -135,11 +135,11 @@ class HFClient:
                             break
 
             model_path = local_path or model_id
-            hf_token = "" if local_files_only else (os.getenv("HF_TOKEN", "") or os.getenv("HUGGINGFACE_TOKEN", ""))
+            hf_token: str = "" if local_files_only else (os.getenv("HF_TOKEN", "") or os.getenv("HUGGINGFACE_TOKEN", ""))
 
             logger.info(f"[HFClient] Загрузка весов {model_id} из {model_path}")
 
-            torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+            torch_dtype: torch.dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
             tokenizer = AutoTokenizer.from_pretrained(
                 model_path,
@@ -238,7 +238,7 @@ class HFClient:
         try:
             from huggingface_hub import scan_cache_dir
             results: List[Dict[str, Any]] = []
-            seen: set = set()
+            seen: set[str] = set()
 
             for cache_dir in {HF_MODELS_DIR, HF_CACHE_DIR}:
                 if not cache_dir.exists():
@@ -253,7 +253,7 @@ class HFClient:
                         continue
                     seen.add(repo.repo_id)
 
-                    path = str(cache_dir)
+                    path: str = str(cache_dir)
                     try:
                         revisions = sorted(repo.revisions, key=lambda r: r.last_modified, reverse=True)
                         if revisions and revisions[0].snapshot_path:
@@ -282,7 +282,7 @@ class HFClient:
             for d in base.iterdir():
                 if not d.is_dir() or not d.name.startswith("models--"):
                     continue
-                model_id = d.name[len("models--"):].replace("--", "/", 1)
+                model_id: str = d.name[len("models--"):].replace("--", "/", 1)
                 items.append({
                     "id": model_id,
                     "path": str(d),
@@ -303,7 +303,7 @@ hf_client = HFClient()
 class HFChatBase:
     """Обертка чата для локальных моделей HuggingFace."""
 
-    def __init__(self, model_id: str, system_prompt: str = ""):
+    def __init__(self, model_id: str, system_prompt: str = "") -> None:
         self.model_id = model_id
         self.system_prompt = system_prompt
         self.client = hf_client

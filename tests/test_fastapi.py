@@ -8,7 +8,7 @@
 #   запросов. Обеспечивает покрытие основных endpoint-ов API-сервера.
 #
 # File: tests/test_fastapi.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69

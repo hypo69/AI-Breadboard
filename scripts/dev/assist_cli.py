@@ -18,7 +18,7 @@
 #   - assist install-profile
 #
 # File: scripts/dev/assist_cli.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -117,6 +117,8 @@ def cmd_start(args: argparse.Namespace) -> int:
 
     script_path = __root__ / script_name
     if not script_path.exists():
+        script_path = __root__ / "launchers" / script_name
+    if not script_path.exists():
         print(f"{C_RED}❌ Скрипт не найден: {script_path}{C_RESET}")
         return 1
 
@@ -155,7 +157,9 @@ def cmd_stop(args: argparse.Namespace) -> int:
             print(f"{C_GRAY}Порт {port} свободен (FastAPI сервер не запущен){C_RESET}")
 
     if target in ("foundry", "all"):
-        foundry_script = __root__ / "Run-Foundry.ps1"
+        foundry_script = __root__ / "launchers" / "Run-Foundry.ps1"
+        if not foundry_script.exists():
+            foundry_script = __root__ / "Run-Foundry.ps1"
         if foundry_script.exists():
             print(f"{C_YELLOW}⏹ Остановка службы Foundry...{C_RESET}")
             subprocess.run(["powershell", "-ExecutionPolicy", "Bypass", "-File", str(foundry_script), "-Action", "stop"], cwd=str(__root__))

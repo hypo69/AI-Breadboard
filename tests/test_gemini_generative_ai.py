@@ -8,7 +8,7 @@
 #   Error Scenarios и Regression в строгом соответствии с CODE_RULES.md §8.3.
 #
 # File: tests/test_gemini_generative_ai.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69

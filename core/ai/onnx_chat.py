@@ -7,7 +7,7 @@
 #   Использует optimum.onnxruntime для инференса и токенизации без внешних сервисов.
 #
 # File: core/ai/onnx_chat.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: core.ai
 # Module: ONNXChat
 # Author: hypo69
@@ -58,7 +58,7 @@ class ONNXClient:
 
             logger.info(f"[ONNXClient] Загрузка ONNX модели из {model_path} с {execution_provider}")
 
-            providers = [execution_provider, "CPUExecutionProvider"]
+            providers: List[str] = [execution_provider, "CPUExecutionProvider"]
             model = ORTModelForCausalLM.from_pretrained(
                 model_path,
                 provider=execution_provider,
@@ -126,7 +126,7 @@ class ONNXClient:
 
             def _infer() -> str:
                 inputs = tokenizer(inputs_text, return_tensors="pt")
-                do_sample = temperature > 0.0
+                do_sample: bool = temperature > 0.0
                 gen_kwargs: Dict[str, Any] = {
                     "max_new_tokens": max_new_tokens,
                     "do_sample": do_sample,

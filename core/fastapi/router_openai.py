@@ -8,11 +8,11 @@
 #     - POST /v1/chat/completions
 #
 #   Поддерживает потоковую (SSE) и обычную генерацию ответов,
-#   маршрутизируя запросы ко всем внутренним провайдерам ai-assistant
+#   маршрутизируя запросы ко всем внутренним провайдерам ai-breadboard
 #   (Gemini, Gemini CLI, AGY, Foundry, Ollama, Hugging Face, ONNX, OpenAI Compat).
 #
 # File: core/fastapi/router_openai.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: core.fastapi
 # Author: hypo69
 # Copyright: © 2026 hypo69

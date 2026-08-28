@@ -7,7 +7,7 @@
 #   Reads from src/ai/gemini/secrets.json, stores status in src/secrets/gemini_keys.json.
 #
 # File: router_keys.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.fastapi
 # Author: hypo69
 # Copyright: © 2026 hypo69

@@ -7,7 +7,7 @@
 #   и управления пулом моделей в model_manager.
 #
 # File: test_gemini_cli_chat.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69

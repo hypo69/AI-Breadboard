@@ -7,7 +7,7 @@
 #   (OpenAI, DeepSeek, Groq, Together AI, LM Studio, LocalAI, vLLM).
 #
 # File: core/ai/openai_compat_chat.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: core.ai
 # Module: OpenAICompatChat
 # Author: hypo69

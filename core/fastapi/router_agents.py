@@ -8,7 +8,7 @@
 #   AI Prompt & Agent Architect генератор и интерактивная песочница (Sandbox).
 #
 # File: router_agents.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.fastapi
 # Author: hypo69
 # Copyright: © 2026 hypo69
@@ -311,7 +311,7 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
         tool_desc = "\n".join([f"- {t['id']}: {t['name']} ({t['description']})" for t in _AVAILABLE_TOOLS])
 
         prompt_architect_query = f"""Ты опытный архитектор ИИ-агентов (AI Agent Architect).
-Пользователь хочет создать специализированного агента для платформы ai-assistant.
+Пользователь хочет создать специализированного агента для платформы ai-breadboard.
 
 Задача агента от пользователя:
 "{req.task_description}"
@@ -377,7 +377,7 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
                 'data': {
                     'name': req.agent_name or 'Пользовательский агент',
                     'description': req.task_description[:100],
-                    'system_prompt': f"Ты специализированный агент ai-assistant.\nТвоя задача: {req.task_description}\nИспользуй предоставленные инструменты при необходимости и давай чёткие ответы.",
+                    'system_prompt': f"Ты специализированный агент ai-breadboard.\nТвоя задача: {req.task_description}\nИспользуй предоставленные инструменты при необходимости и давай чёткие ответы.",
                     'recommended_tools': ['web_search'],
                     'temperature': 0.3,
                     'max_steps': 10

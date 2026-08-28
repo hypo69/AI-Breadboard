@@ -8,7 +8,7 @@
 #   результаты с указанием пути к файлу и показателем релевантности (Score).
 #
 # File: search_code.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================

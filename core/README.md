@@ -1,7 +1,7 @@
 # `core` Module — System Core Architecture
 
 ## Purpose
-The `core` directory hosts backend service components and subsystems powering the `ai-assistant` / `AI Breadboard` application:
+The `core` directory hosts backend service components and subsystems powering the `ai-breadboard` / `AI Breadboard` application:
 
 - **AI Model Orchestration** (`core.ai`): Unified multi-provider model switches, Gemini SDK pooling, Microsoft AI Foundry, ONNX, Hugging Face, AGY, Ollama, and LangChain agents.
 - **FastAPI Routing & WebSockets** (`core.fastapi`): Modular API routers, streaming endpoints, authentication, and WebSocket gateways.

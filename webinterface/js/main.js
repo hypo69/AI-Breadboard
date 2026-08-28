@@ -147,7 +147,7 @@ async function initHelpContent() {
   // Overview
   window.HELP_CONTENT['overview'] = `
     <h4>📋 Обзор проекта</h4>
-    <p>ai-assistant — это интегрированная платформа персонального AI-ассистента с поддержкой Google Gemini, Antigravity, Foundry, Ollama, RAG и системного управления.</p>
+    <p>ai-breadboard — это интегрированная платформа персонального AI-ассистента с поддержкой Google Gemini, Antigravity, Foundry, Ollama, RAG и системного управления.</p>
     <h5>Основные возможности</h5>
     <ul>
       <li><strong>Чат</strong> — диалог и выполнение команд через AI (Gemini, AGY, Foundry, Ollama)</li>

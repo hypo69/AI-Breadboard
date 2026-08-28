@@ -333,7 +333,7 @@ async function loadTabContent(tabName, url, jsOverrideSrc) {
 // Initialize HELP content
 function initHelpContent() {
   window.HELP_CONTENT = {
-    'overview': `<h4>📋 Обзор проекта</h4><p>ai-assistant — интегрированная среда для работы с AI, RAG и системным управлением.</p>`,
+    'overview': `<h4>📋 Обзор проекта</h4><p>ai-breadboard — интегрированная среда для работы с AI, RAG и системным управлением.</p>`,
     'rag': `<h4>🧠 RAG-индекс (Векторный поиск)</h4>
 <p><strong>1. База RAG:</strong> Индексирует системные базы знаний, системные инструкции и документы.</p>
 <p><strong>2. Загрузка документов («➕ JSON»):</strong> Позволяет загрузить внешние <code>.json</code>, <code>.txt</code>, <code>.md</code> файлы или сканировать директории напрямую в RAG-индекс.</p>

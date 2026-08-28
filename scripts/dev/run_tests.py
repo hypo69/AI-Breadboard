@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Скрипт для запуска тестов ai-assistant
+Скрипт для запуска тестов ai-breadboard
 """
 
 import subprocess
@@ -50,7 +50,7 @@ def show_coverage():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Запуск тестов ai-ai-assistant")
+    parser = argparse.ArgumentParser(description="Запуск тестов ai-ai-breadboard")
     parser.add_argument("--coverage", "-c", action="store_true", help="С покрытием")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose вывод")
     parser.add_argument("--markers", "-m", type=str, help="Маркеры pytest (unit, integration, slow)")

@@ -8,7 +8,7 @@
 #   и обновления состояния воспроизведения в реальном времени.
 #
 # File: router_control.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.fastapi
 # Author: hypo69
 # Copyright: © 2026 hypo69

@@ -7,7 +7,7 @@
  *   Keeps model and developer controls outside the focused user interface.
  *
  * File: main.js
- * Project: ai-assistant
+ * Project: ai-breadboard
  * Module: Simple Assistant
  * Author: hypo69
  * Copyright: (C) 2026 hypo69

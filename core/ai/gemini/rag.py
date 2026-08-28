@@ -8,7 +8,7 @@
 #   Не требует внешних СУБД — только FAISS и JSON.
 #
 # File: rag.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69

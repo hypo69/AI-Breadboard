@@ -7,7 +7,7 @@
 #   из файла config.json через модуль core.config.
 #
 # File: tests/test_qbittorrent_config.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69

@@ -7,7 +7,7 @@
 #   save_text_file, read_text_file, get_filenames, remove_bom.
 #
 # File: tests/test_utils_file.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69

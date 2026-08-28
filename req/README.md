@@ -1,6 +1,6 @@
 # Modular Dependencies (`req/`)
 
-This directory contains modular Python dependency requirement files partitioned by subsystem for `ai-assistant` / `AI Breadboard`.
+This directory contains modular Python dependency requirement files partitioned by subsystem for `ai-breadboard` / `AI Breadboard`.
 
 ---
 

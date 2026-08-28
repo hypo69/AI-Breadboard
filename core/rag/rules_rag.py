@@ -7,7 +7,7 @@
 #   Позволяет динамически включать в системный промпт модели только релевантные блоки.
 #
 # File: rules_rag.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: core.rag
 # Author: hypo69
 # Copyright: © 2026 hypo69

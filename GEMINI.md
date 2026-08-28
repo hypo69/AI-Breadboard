@@ -29,16 +29,17 @@ All developments must strictly adhere to the principles described in `.ai_instru
 
 ## 🚀 Launchers and Service Startup
 
-**Rule:** All launchers (`Run-*.ps1`) are located in the repository **root** directory.
+**Rule:** The main launcher `run.ps1` is located in the repository **root** directory, while individual service launchers are located in the `launchers/` directory.
 
 | Launcher | Purpose |
 |----------|--------- |
 | `run.ps1` | Main launcher (FastAPI + Foundry) |
-| `Run-Unicorn.ps1` | FastAPI server |
-| `Run-Foundry.ps1` | AI Foundry |
-| `Run-LightServer.ps1` | HTTP server |
-| `Run-GeminiCli.ps1` | Google Gemini CLI agent |
-| `Run-Agy.ps1` | Google Antigravity (AGY) agent |
+| `launchers/Run-Unicorn.ps1` | FastAPI server |
+| `launchers/Run-Foundry.ps1` | AI Foundry |
+| `launchers/Run-LightServer.ps1` | HTTP server |
+| `launchers/Run-GeminiCli.ps1` | Google Gemini CLI agent |
+| `launchers/Run-Agy.ps1` | Google Antigravity (AGY) agent |
+| `launchers/run_tests.ps1` | Test runner |
 
 See more: `.ai_instructions/knowledge/LAUNCHER_GUIDE.md`
 

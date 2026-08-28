@@ -7,7 +7,7 @@
 #   json2csv, json2ns, json2xml, json2xls.
 #
 # File: tests/test_utils_convertors_json.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69

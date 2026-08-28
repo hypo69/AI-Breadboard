@@ -1,1 +1,1 @@
-# Тесты проекта ai-assistant
+# Тесты проекта ai-breadboard

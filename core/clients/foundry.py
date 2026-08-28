@@ -8,7 +8,7 @@
 #   моделей на сервере, управление сессиями и обработку ошибок API.
 #
 # File: foundry.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.clients
 # =============================================================================
 

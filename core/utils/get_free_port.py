@@ -26,9 +26,11 @@ from core.logger import logger
 
 def _is_port_in_use(host: str, port: int) -> bool:
     """Проверка занятости порта на хосте."""
+    target_host = "127.0.0.1" if host in ("localhost", "") else host
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
-            sock.bind((host, port))
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind((target_host, port))
             return False  # Порт свободен
         except OSError:
             return True  # Порт занят

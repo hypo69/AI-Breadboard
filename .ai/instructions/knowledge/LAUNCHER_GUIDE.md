@@ -8,17 +8,20 @@
 ---
 
 ## 📍 Где находятся лончеры
-
-**Все лончеры (`Run-*.ps1`) расположены в КОРНЕ проекта (`$env:AIBREADBOARD_DIR` или рабочая директория):**
+ 
+- Главный лончер `run.ps1` расположен в КОРНЕ проекта (`$env:AIBREADBOARD_DIR` или рабочая директория).
+- Все специализированные лончеры (`Run-*.ps1` и `run_tests.ps1`) расположены в поддиректории `launchers/`.
 
 ```
 <project_root>\
-├── run.ps1                   ← ГЛАВНЫЙ лончер (запускает всё)
-├── Run-Unicorn.ps1           ← FastAPI сервер (uvicorn)
-├── Run-Foundry.ps1           ← Azure AI Foundry (локальная LLM)
-├── Run-LightServer.ps1       ← Лёгкий HTTP-сервер
-├── Run-GeminiCli.ps1         ← Google Gemini CLI агент
-└── Run-Agy.ps1               ← Google Antigravity (AGY) агент
+├── run.ps1                       ← ГЛАВНЫЙ лончер (запускает всё)
+└── launchers/
+    ├── Run-Unicorn.ps1           ← FastAPI сервер (uvicorn)
+    ├── Run-Foundry.ps1           ← Azure AI Foundry (локальная LLM)
+    ├── Run-LightServer.ps1       ← Лёгкий HTTP-сервер
+    ├── Run-GeminiCli.ps1         ← Google Gemini CLI агент
+    ├── Run-Agy.ps1               ← Google Antigravity (AGY) агент
+    └── run_tests.ps1             ← Запуск тестов
 ```
 
 ---
@@ -28,11 +31,12 @@
 | Лончер | Сервис | Что запускает | Параметры |
 |--------|--------|--------------|-----------|
 | `run.ps1` | Всё (Интерактивный) | Foundry + uvicorn | `-Host 0.0.0.0\|127.0.0.1`, `-Port 8000`, `-NonInteractive` |
-| `Run-Unicorn.ps1` | FastAPI | `uvicorn main:app` на порту из `config.json` | `-Host 0.0.0.0\|127.0.0.1`, `-Port 8000` |
-| `Run-Foundry.ps1` | AI Foundry | Локальная LLM-служба | `-Action start\|stop\|status` |
-| `Run-LightServer.ps1` | FastAPI / Uvicorn | Лёгкий сервер (1 воркер, без туннелей) | `-mode 0.0.0.0\|localhost` (по умолчанию `0.0.0.0`), `-port 8000` |
-| `Run-GeminiCli.ps1` | Gemini CLI | Google Gemini CLI агент | `-Action check\|install\|chat\|version`, `-Prompt "..."` |
-| `Run-Agy.ps1` | Antigravity AGY | Google Antigravity CLI агент | `-Action check\|chat\|models\|update\|version`, `-Prompt "..."` |
+| `launchers/Run-Unicorn.ps1` | FastAPI | `uvicorn main:app` на порту из `config.json` | `-Host 0.0.0.0\|127.0.0.1`, `-Port 8000` |
+| `launchers/Run-Foundry.ps1` | AI Foundry | Локальная LLM-служба | `-Action start\|stop\|status` |
+| `launchers/Run-LightServer.ps1` | FastAPI / Uvicorn | Лёгкий сервер (1 воркер, без туннелей) | `-mode 0.0.0.0\|localhost` (по умолчанию `0.0.0.0`), `-port 8000` |
+| `launchers/Run-GeminiCli.ps1` | Gemini CLI | Google Gemini CLI агент | `-Action check\|install\|chat\|version`, `-Prompt "..."` |
+| `launchers/Run-Agy.ps1` | Antigravity AGY | Google Antigravity CLI агент | `-Action check\|chat\|models\|update\|version`, `-Prompt "..."` |
+| `launchers/run_tests.ps1` | Pytest Runner | Запуск модульных и интеграционных тестов | `-Coverage`, `-Verbose`, `-Markers` |
 
 ---
 
@@ -41,11 +45,14 @@
 ### Базовый синтаксис
 
 ```powershell
-# Из корня проекта
-.\Run-<ServiceName>.ps1
+# Главный лончер из корня проекта
+.\run.ps1
+
+# Специализированные лончеры
+.\launchers\Run-<ServiceName>.ps1
 
 # Через переменную окружения AIBREADBOARD_DIR
-& "$env:AIBREADBOARD_DIR\Run-<ServiceName>.ps1"
+& "$env:AIBREADBOARD_DIR\launchers\Run-<ServiceName>.ps1"
 ```
 
 ### Примеры
@@ -55,12 +62,12 @@
 .\run.ps1
 
 # Только FastAPI сервер
-.\Run-Unicorn.ps1
+.\launchers\Run-Unicorn.ps1
 
 # Foundry с параметром действия
-.\Run-Foundry.ps1 -Action start
-.\Run-Foundry.ps1 -Action stop
-.\Run-Foundry.ps1 -Action status
+.\launchers\Run-Foundry.ps1 -Action start
+.\launchers\Run-Foundry.ps1 -Action stop
+.\launchers\Run-Foundry.ps1 -Action status
 ```
 
 ### Проверка состояния

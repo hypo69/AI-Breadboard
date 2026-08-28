@@ -88,6 +88,15 @@ export PYTHONUTF8=1
 export AIBREADBOARD_DIR="$($InstallDir -replace '\\', '/')"
 export ASSIST_DIR="$($InstallDir -replace '\\', '/')"
 export PYTHONPATH="`$AIBREADBOARD_DIR:`$PYTHONPATH"
+
+# CLI aliases for manage_tools.py
+rag() { python "`$AIBREADBOARD_DIR/manage_tools.py" rag "`$@"; }
+skills() { python "`$AIBREADBOARD_DIR/manage_tools.py" skills "`$@"; }
+knowledge() { python "`$AIBREADBOARD_DIR/manage_tools.py" knowledge "`$@"; }
+docs() { python "`$AIBREADBOARD_DIR/manage_tools.py" docs "`$@"; }
+assist() { python -m scripts.dev.assist_cli "`$@"; }
+
+# Main command dispatcher
 if [ -f "`$AIBREADBOARD_DIR/venv/Scripts/python.exe" ]; then
     "`$AIBREADBOARD_DIR/venv/Scripts/python.exe" -m scripts.dev.assist_cli "`$@"
 else
@@ -119,11 +128,28 @@ $profileDirs = @(
 $fnSnippet = @"
 
 # ==========================================
-# AIBREADBOARD CLI GLOBAL ALIAS
+# AIBREADBOARD CLI GLOBAL ALIASES
 # ==========================================
 `$env:AIBREADBOARD_DIR = "$InstallDir"
+
 function assist {
     & "$InstallDir\assist.ps1" @args
+}
+
+function rag {
+    python "$InstallDir\manage_tools.py" rag @args
+}
+
+function skills {
+    python "$InstallDir\manage_tools.py" skills @args
+}
+
+function knowledge {
+    python "$InstallDir\manage_tools.py" knowledge @args
+}
+
+function docs {
+    python "$InstallDir\manage_tools.py" docs @args
 }
 "@
 
@@ -132,7 +158,7 @@ foreach ($pDir in $profileDirs) {
         if (-not (Test-Path $pDir)) { New-Item -ItemType Directory -Force -Path $pDir | Out-Null }
         $profFile = Join-Path $pDir 'Microsoft.PowerShell_profile.ps1'
         $existing = if (Test-Path $profFile) { Get-Content $profFile -Raw } else { '' }
-        if ($existing -notmatch 'function assist') {
+        if ($existing -notmatch 'function rag') {
             Add-Content -Path $profFile -Value $fnSnippet -Encoding UTF8
         }
     } catch {}

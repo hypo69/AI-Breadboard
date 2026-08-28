@@ -7,7 +7,7 @@
 #   with full ExtendedKeyUsage (SERVER_AUTH) and SAN for localhost and local IPs.
 #
 # File: generate_ssl_certs.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: scripts.maintenance
 # Author: hypo69
 # Copyright: © 2026 hypo69

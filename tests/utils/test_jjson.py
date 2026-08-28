@@ -6,7 +6,7 @@
 #   Тестирование функций загрузки и сохранения JSON данных.
 #
 # File: tests/utils/test_jjson.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69

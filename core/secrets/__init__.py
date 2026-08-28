@@ -6,7 +6,7 @@
 #   Package for managing API keys, tokens, credentials, and their runtime states.
 #
 # File: __init__.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: core.secrets
 # Author: hypo69
 # Copyright: © 2026 hypo69

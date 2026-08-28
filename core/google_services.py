@@ -7,7 +7,7 @@
 #   Поддерживает автоматическое обновление access_token через refresh_token.
 #
 # File: google_services.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: core
 # Author: hypo69
 # Copyright: © 2026 hypo69

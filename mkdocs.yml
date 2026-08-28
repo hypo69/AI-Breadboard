@@ -40,77 +40,108 @@ nav:
           - Overview: installation.md
           - Russian (RU): installation.ru.md
           - English (EN): installation.en.md
-          - Español (ES): installation.es.md
-          - עברית (HE): installation.he.md
+          - "Español (ES)": installation.es.md
+          - "\u05E2\u05D1\u05E8\u05D9\u05EA (HE)": installation.he.md
       - features.md
-  - 📚 Документация на русском (RU):
-      - 🧭 Главный портал (RU): ru/index.md
-      - 📘 Учебная книга (AI Breadboard Book):
-          - Обзор и манифест: ru/book/index.md
-          - "Глава 1. Архитектура макетной платы и среда": ru/book/ch01_philosophy.md
-          - "Глава 2. Оркестратор моделей и отказоустойчивость": ru/book/ch02_orchestration.md
-          - "Глава 3. Локальный инференс (HF и DirectML)": ru/book/ch03_local_inference.md
-          - "Глава 4. Архитектура RAG и векторный поиск": ru/book/ch04_rag_architecture.md
-          - "Глава 5. Оптимизация, экспорт и Fine-Tuning": ru/book/ch05_optimization_finetuning.md
-          - "Глава 6. ReAct-агенты, MCP и мультимодальность": ru/book/ch06_agents_and_mcp.md
-          - "Глава 7. Создание и управление навыками (Skills)": ru/book/ch07_skills_management.md
-          - "Глава 8. Практикум — 10 лабораторных работ": ru/book/ch08_laboratory_practicum.md
-      - "⚙️ Документация модулей и кода (docs/ru/code)":
-          - Каталог и навигация: ru/code/index.md
-          - "Ядро системы (core)": ru/code/core/README.md
-          - "AI Orchestrator (core.ai)": ru/code/core/ai/README.md
-          - Google Gemini SDK: ru/code/core/ai/gemini/README.MD
-          - "Подсистема RAG-First (core.rag)": ru/code/core/rag/README.md
-          - FastAPI и WebSockets: ru/code/core/fastapi/README.md
-          - Менеджер секретов и ключей: ru/code/core/secrets/README.md
-          - "Реестр навыков (core.skills)": ru/code/core/skills/README.md
-          - "Синтез речи TTS (core.tts)": ru/code/core/tts/README.md
-          - "Логирование (core.logger)": ru/code/core/logger/README.MD
-          - "Веб-интерфейс (webinterface)": ru/code/webinterface/README.md
-          - "Установка и окружение (install)": ru/code/install/README.md
-          - "Инструменты разработчика (scripts)": ru/code/scripts/README.md
-          - "Тестовый набор (tests)": ru/code/tests/README.md
-  - User Guide:
-      - user/getting-started.md
-      - user/player.md
-      - user/remote-control.md
-      - user/telegram.md
-      - user/admin-panel.md
-  - Developer Guide:
-      - dev/getting-started.md
-      - dev/localhost_vs_tunnel.md
-      - dev/architecture.md
-      - dev/api-reference.md
-      - dev/plugins.md
-      - dev/development.md
-      - dev/deployment.md
-      - dev/project_overview.md
-      - dev/MODEL_SCRIPT_EXECUTION_GUIDE.md
-      - dev/legacy_project_knowledge.md
-      - skills.md
-  - API: api.md
-  - Modules:
-      - modules/agents.md
-      - modules/ai.md
-      - modules/logger.md
-      - modules/plugins.md
-      - modules/api.md
-  - Integrations:
-      - integrations/mcp.md
-      - integrations/gemini.md
-      - integrations/tgmini.md
-      - integrations/rc.md
-  - QA Guide:
-      - qa/index.md
-      - qa/testing-strategy.md
-      - qa/test-cases.md
-      - qa/api-testing.md
-      - qa/integration-testing.md
-      - qa/qa-checklist.md
-      - qa/qa-tools.md
-  - Troubleshooting:
       - troubleshooting.md
       - changelog.md
+
+  - "\U0001F1F7\U0001F1FA \u0420\u0443\u0441\u0441\u043A\u0438\u0439":
+      - ru/index.md
+      - "\U0001F4D8 \u041A\u043D\u0438\u0433\u0430":
+          - "\u041E\u0431\u0437\u043E\u0440": ru/book/index.md
+          - "\u0413\u043B\u0430\u0432\u0430 1. \u0410\u0440\u0445\u0438\u0442\u0435\u043A\u0442\u0443\u0440\u0430 \u0438 \u0441\u0440\u0435\u0434\u0430": ru/book/ch01_philosophy.md
+          - "\u0413\u043B\u0430\u0432\u0430 2. \u041E\u0440\u043A\u0435\u0441\u0442\u0440\u0430\u0442\u043E\u0440 \u043C\u043E\u0434\u0435\u043B\u0435\u0439": ru/book/ch02_orchestration.md
+          - "\u0413\u043B\u0430\u0432\u0430 3. \u041B\u043E\u043A\u0430\u043B\u044C\u043D\u044B\u0439 \u0438\u043D\u0444\u0435\u0440\u0435\u043D\u0441": ru/book/ch03_local_inference.md
+          - "\u0413\u043B\u0430\u0432\u0430 4. \u0410\u0440\u0445\u0438\u0442\u0435\u043A\u0442\u0443\u0440\u0430 RAG": ru/book/ch04_rag_architecture.md
+          - "\u0413\u043B\u0430\u0432\u0430 5. \u041E\u043F\u0442\u0438\u043C\u0438\u0437\u0430\u0446\u0438\u044F \u0438 Fine-Tuning": ru/book/ch05_optimization_finetuning.md
+          - "\u0413\u043B\u0430\u0432\u0430 6. ReAct-\u0430\u0433\u0435\u043D\u0442\u044B \u0438 MCP": ru/book/ch06_agents_and_mcp.md
+          - "\u0413\u043B\u0430\u0432\u0430 7. \u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u043D\u0430\u0432\u044B\u043A\u0430\u043C\u0438": ru/book/ch07_skills_management.md
+          - "\u0413\u043B\u0430\u0432\u0430 8. \u041F\u0440\u0430\u043A\u0442\u0438\u043A\u0443\u043C": ru/book/ch08_laboratory_practicum.md
+      - "\U0001F6E0 AI Breadboard":
+          - "Dev Guide":
+              - "\u041E\u0431\u0437\u043E\u0440": "ru/AI Breadboard/dev/index.md"
+              - "\u041D\u0430\u0447\u0430\u043B\u043E \u0440\u0430\u0431\u043E\u0442\u044B": "ru/AI Breadboard/dev/getting-started.md"
+              - "\u0410\u0440\u0445\u0438\u0442\u0435\u043A\u0442\u0443\u0440\u0430": "ru/AI Breadboard/dev/architecture.md"
+              - "API Reference": "ru/AI Breadboard/dev/api-reference.md"
+              - "\u041F\u043B\u0430\u0433\u0438\u043D\u044B": "ru/AI Breadboard/dev/plugins.md"
+              - "\u0420\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u043A\u0430": "ru/AI Breadboard/dev/development.md"
+              - "\u0420\u0430\u0437\u0432\u0451\u0440\u0442\u044B\u0432\u0430\u043D\u0438\u0435": "ru/AI Breadboard/dev/deployment.md"
+              - "\u041E\u0431\u0437\u043E\u0440 \u043F\u0440\u043E\u0435\u043A\u0442\u0430": "ru/AI Breadboard/dev/project_overview.md"
+              - "Localhost vs Tunnel": "ru/AI Breadboard/dev/localhost_vs_tunnel.md"
+              - "\u0417\u0430\u043F\u0443\u0441\u043A \u0441\u043A\u0440\u0438\u043F\u0442\u043E\u0432": "ru/AI Breadboard/dev/MODEL_SCRIPT_EXECUTION_GUIDE.md"
+              - "\u0410\u0440\u0445\u0438\u0432 \u0437\u043D\u0430\u043D\u0438\u0439": "ru/AI Breadboard/dev/legacy_project_knowledge.md"
+          - "User Guide":
+              - "\u041E\u0431\u0437\u043E\u0440": "ru/AI Breadboard/user/index.md"
+              - "\u041D\u0430\u0447\u0430\u043B\u043E \u0440\u0430\u0431\u043E\u0442\u044B": "ru/AI Breadboard/user/getting-started.md"
+              - "\u041F\u043B\u0435\u0435\u0440": "ru/AI Breadboard/user/player.md"
+              - "\u041F\u0443\u043B\u044C\u0442 \u0414\u0423": "ru/AI Breadboard/user/remote-control.md"
+              - "Telegram": "ru/AI Breadboard/user/telegram.md"
+              - "\u041F\u0430\u043D\u0435\u043B\u044C \u0430\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u0430": "ru/AI Breadboard/user/admin-panel.md"
+          - "Test Guide":
+              - "\u041E\u0431\u0437\u043E\u0440": "ru/AI Breadboard/test/index.md"
+              - "\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044F \u0442\u0435\u0441\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F": "ru/AI Breadboard/test/testing-strategy.md"
+              - "\u0422\u0435\u0441\u0442-\u043A\u0435\u0439\u0441\u044B": "ru/AI Breadboard/test/test-cases.md"
+              - "API \u0442\u0435\u0441\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435": "ru/AI Breadboard/test/api-testing.md"
+              - "\u0418\u043D\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u043E\u043D\u043D\u043E\u0435 \u0442\u0435\u0441\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435": "ru/AI Breadboard/test/integration-testing.md"
+              - "\u0427\u0435\u043A\u043B\u0438\u0441\u0442 QA": "ru/AI Breadboard/test/qa-checklist.md"
+              - "\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u044B QA": "ru/AI Breadboard/test/qa-tools.md"
+
+  - "\U0001F1EC\U0001F1E7 English":
+      - en/index.md
+      - "\U0001F4D8 Book":
+          - Overview: en/book/index.md
+          - "Chapter 1. Architecture & Setup": en/book/ch01_philosophy.md
+          - "Chapter 2. Model Orchestration": en/book/ch02_orchestration.md
+          - "Chapter 3. Local Inference": en/book/ch03_local_inference.md
+          - "Chapter 4. RAG Architecture": en/book/ch04_rag_architecture.md
+          - "Chapter 5. Optimization & Fine-Tuning": en/book/ch05_optimization_finetuning.md
+          - "Chapter 6. ReAct Agents & MCP": en/book/ch06_agents_and_mcp.md
+          - "Chapter 7. Skills Management": en/book/ch07_skills_management.md
+          - "Chapter 8. Practicum": en/book/ch08_laboratory_practicum.md
+      - "\U0001F6E0 AI Breadboard":
+          - "Dev Guide":
+              - Overview: "en/AI Breadboard/dev/index.md"
+          - "User Guide":
+              - Overview: "en/AI Breadboard/user/index.md"
+          - "Test Guide":
+              - Overview: "en/AI Breadboard/test/index.md"
+
+  - "\U0001F1EE\U0001F1F1 \u05E2\u05D1\u05E8\u05D9\u05EA":
+      - he/index.md
+      - "\U0001F4D8 \u05E1\u05E4\u05E8":
+          - "\u05E1\u05E7\u05D9\u05E8\u05D4": he/book/index.md
+      - "\U0001F6E0 AI Breadboard":
+          - "Dev Guide":
+              - "\u05E1\u05E7\u05D9\u05E8\u05D4": "he/AI Breadboard/dev/index.md"
+          - "User Guide":
+              - "\u05E1\u05E7\u05D9\u05E8\u05D4": "he/AI Breadboard/user/index.md"
+          - "Test Guide":
+              - "\u05E1\u05E7\u05D9\u05E8\u05D4": "he/AI Breadboard/test/index.md"
+
+  - "\U0001F1EA\U0001F1F8 Espa\u00F1ol":
+      - es/index.md
+      - "\U0001F4D8 Libro":
+          - Resumen: es/book/index.md
+      - "\U0001F6E0 AI Breadboard":
+          - "Dev Guide":
+              - Resumen: "es/AI Breadboard/dev/index.md"
+          - "User Guide":
+              - Resumen: "es/AI Breadboard/user/index.md"
+          - "Test Guide":
+              - Resumen: "es/AI Breadboard/test/index.md"
+
+  - "\U0001F1F8\U0001F1E6 \u0627\u0644\u0639\u0631\u0628\u064A\u0629":
+      - ar/index.md
+      - "\U0001F4D8 \u0643\u062A\u0627\u0628":
+          - "\u0646\u0638\u0631\u0629 \u0639\u0627\u0645\u0629": ar/book/index.md
+      - "\U0001F6E0 AI Breadboard":
+          - "Dev Guide":
+              - "\u0646\u0638\u0631\u0629 \u0639\u0627\u0645\u0629": "ar/AI Breadboard/dev/index.md"
+          - "User Guide":
+              - "\u0646\u0638\u0631\u0629 \u0639\u0627\u0645\u0629": "ar/AI Breadboard/user/index.md"
+          - "Test Guide":
+              - "\u0646\u0638\u0631\u0629 \u0639\u0627\u0645\u0629": "ar/AI Breadboard/test/index.md"
 
 # Plugins
 plugins:
@@ -125,14 +156,6 @@ plugins:
           setup_commands:
             - "import sys"
             - "sys.path.insert(0, 'core')"
-
-# Extra
-extra:
-  version: 1.0.0
-  generator: false
-  social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/hypo69/AI-Breadboard
 
 # Copyright
 copyright: Copyright © 2026 hypo69. Licensed under MIT.
@@ -161,10 +184,15 @@ extra_javascript:
 
 # Site metadata
 extra:
+  version: 1.0.0
+  generator: false
   authors:
     - hypo69
   license: MIT
   repository: github
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/hypo69/AI-Breadboard
 
 # Validation
 strict: false

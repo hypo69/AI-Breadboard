@@ -7,7 +7,7 @@
 #   Индексация файлов документации (.md) и исходного кода (.py).
 #
 # File: dev_rag.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.ai
 # Author: hypo69
 # Copyright: © 2026 hypo69

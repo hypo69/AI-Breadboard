@@ -8,7 +8,7 @@
 #   Запускается через Run-Unicorn.ps1 параллельно с uvicorn --workers.
 #
 # File: bot_runner.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Проверка, генерация и установка локальных SSL-сертификатов для ai-assistant.
+    Проверка, генерация и установка локальных SSL-сертификатов для ai-breadboard.
 
 .DESCRIPTION
     1. Проверяет наличие сертификатов в $env:USERPROFILE\.certs (localhost+2.pem, localhost+2-key.pem).
@@ -26,7 +26,7 @@ if (-not (Test-Path $certsDir)) {
 
 Write-Host ""
 Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║              ai-assistant — НАСТРОЙКА SSL СЕРТИФИКАТОВ            ║" -ForegroundColor Cyan
+Write-Host "║              ai-breadboard — НАСТРОЙКА SSL СЕРТИФИКАТОВ            ║" -ForegroundColor Cyan
 Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
 

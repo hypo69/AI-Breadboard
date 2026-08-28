@@ -13,7 +13,7 @@
 import os
 import inspect
 import asyncio
-from typing import Optional, List, Dict, Any
+from typing import Any, AsyncIterator, Dict, List, Optional
 from core.ai.gemini import GoogleGenerativeAI
 from core.ai.foundry_chat import FoundryChatBase
 from core.logger import logger
@@ -24,7 +24,7 @@ class UnifiedChatModel:
     """
     def __init__(
         self,
-        api_key_names: list[str],
+        api_key_names: List[str],
         system_instruction: str,
         foundry_model_id: str,
         use_foundry: bool = False,
@@ -73,7 +73,7 @@ class UnifiedChatModel:
         
 
 
-    def update_system_instruction(self, new_instruction: str):
+    def update_system_instruction(self, new_instruction: str) -> None:
         """Динамическое обновление системной инструкции для всех инициализированных моделей."""
         self.system_instruction = new_instruction
         if hasattr(self, 'gemini_model') and self.gemini_model:
@@ -135,7 +135,7 @@ class UnifiedChatModel:
         if hasattr(self, 'gemini_model') and self.gemini_model:
             self.gemini_model.system_instruction = val
 
-    def _get_active_model(self, model_name: Optional[str] = ""):
+    def _get_active_model(self, model_name: Optional[str] = "") -> tuple[Any, str]:
         active_name = model_name or self._model_name
         
         if active_name.startswith("gemini_cli:") or active_name.startswith("gemini-cli-"):
@@ -211,7 +211,7 @@ class UnifiedChatModel:
     async def chat(
         self,
         q: str,
-        history: Optional[List[Dict]] = [],
+        history: Optional[List[Dict[str, Any]]] = None,
         system_instruction: Optional[str] = "",
         attempts: int = 15,
         model_name: Optional[str] = "",
@@ -255,7 +255,7 @@ class UnifiedChatModel:
         self,
         q: str,
         attempts: int = 15,
-        generation_config: dict = {},
+        generation_config: Dict[str, Any] = None,
         model_name: Optional[str] = "",
         temperature: Optional[float] = 0.0,
         max_tokens: Optional[int] = 0,
@@ -297,15 +297,15 @@ class UnifiedChatModel:
     async def chat_stream(
         self,
         q: str,
-        history: Optional[List[Dict]] = [],
+        history: Optional[List[Dict[str, Any]]] = None,
         system_instruction: Optional[str] = "",
         attempts: int = 15,
         model_name: Optional[str] = "",
         temperature: Optional[float] = 0.0,
         max_tokens: Optional[int] = 0,
-        generation_config: dict = {},
+        generation_config: Dict[str, Any] = None,
         **kwargs
-    ):
+    ) -> AsyncIterator[str]:
         model_instance, active_name = self._get_active_model(model_name)
         logger.info(f"[UnifiedChatModel] chat_stream: prompt={repr(q[:100])}... using model={active_name}")
         
@@ -343,13 +343,13 @@ class UnifiedChatModel:
     async def ask_with_tools_stream(
         self,
         q: str,
-        tools: list,
-        tool_dispatcher,
+        tools: List[Any],
+        tool_dispatcher: Any,
         system_instruction: Optional[str] = "",
         model_name: Optional[str] = "",
-        history: Optional[List[Dict]] = [],
+        history: Optional[List[Dict[str, Any]]] = None,
         **kwargs
-    ):
+    ) -> AsyncIterator[str]:
         model_instance, active_name = self._get_active_model(model_name)
         logger.info(f"[UnifiedChatModel] ask_with_tools_stream: prompt={repr(q[:100])}... using model={active_name}")
         

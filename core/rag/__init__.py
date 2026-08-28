@@ -10,7 +10,7 @@
 #   - UserRAG: управление базой знаний и историей ответов пользователя
 #
 # File: __init__.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: core.rag
 # Author: hypo69
 # Copyright: © 2026 hypo69

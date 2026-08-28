@@ -7,7 +7,7 @@
 #   в измененных файлах проекта.
 #
 # File: update_docs.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # =============================================================================
 
 import os

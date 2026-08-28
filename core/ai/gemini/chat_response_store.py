@@ -8,7 +8,7 @@
 #   rebuild_chat_rag.py строит FAISS-индекс.
 #
 # File: chat_response_store.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69

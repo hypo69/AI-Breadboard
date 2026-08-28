@@ -26,7 +26,10 @@ from core.logger import logger
 mcp = FastMCP("Unicorn-Manager")
 
 # Путь к скрипту запуска
-_UNICORN_SCRIPT = Path(__file__).resolve().parent.parent / "Run-Unicorn.ps1"
+_ROOT = Path(__file__).resolve().parent.parent
+_UNICORN_SCRIPT = _ROOT / "launchers" / "Run-Unicorn.ps1"
+if not _UNICORN_SCRIPT.exists():
+    _UNICORN_SCRIPT = _ROOT / "Run-Unicorn.ps1"
 
 
 @mcp.tool()

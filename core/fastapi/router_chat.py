@@ -8,7 +8,7 @@
 #   прямой вызов AI-модели и автоматическая индексация диалога в User RAG.
 #
 # File: router_chat.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.fastapi
 # Author: hypo69
 # Copyright: © 2026 hypo69

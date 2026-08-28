@@ -1,4 +1,4 @@
-# ai-assistant — Основные зависимости проекта
+# ai-breadboard — Основные зависимости проекта
 -r req/requirements-core.txt
 -r req/requirements-ai.txt
 -r req/requirements-media.txt

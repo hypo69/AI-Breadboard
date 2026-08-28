@@ -413,15 +413,21 @@ rag/documents.json
 # =============================================================================
 # 🎬 MEDIA ORGANIZER — генерируемые данные
 # =============================================================================
+
 plugins/media_organizer/data/*.faiss
 plugins/media_organizer/data/generated_plots_cache.json
-src/plugins/media_organizer/data/*.faiss
-src/plugins/media_organizer/data/generated_plots_cache.json
-src/ai/gemini/secrets.json
+
 core/ai/gemini/secrets.json
 core/ai/gemini/secrets*.json
 **/secrets.json
 **/secrets*.json
 **/secrets*.yaml
 
+# Пул API для gemini
 gemini_keys.json
+
+# На других языках
+docs
+docs\es
+docs\fr
+docs\it

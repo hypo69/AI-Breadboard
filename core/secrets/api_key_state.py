@@ -7,7 +7,7 @@
 #   quota exhaustion cooldowns, and runtime state persistence.
 #
 # File: api_key_state.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: core.secrets
 # Author: hypo69
 # Copyright: © 2026 hypo69

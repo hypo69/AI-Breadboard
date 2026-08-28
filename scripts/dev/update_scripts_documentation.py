@@ -177,7 +177,7 @@ def generate_documentation():
     md_content = []
     
     # Заголовок
-    md_content.append(f"# 📚 Документация по скриптам проекта ai-assistant\n")
+    md_content.append(f"# 📚 Документация по скриптам проекта ai-breadboard\n")
     md_content.append(f"**Версия:** 1.0  \n")
     md_content.append(f"**Дата обновления:** {datetime.now().strftime('%d %B %Y')}  \n")
     md_content.append(f"**Статус:** Актуально (автоматически обновляется)\n")
@@ -243,7 +243,7 @@ def generate_documentation():
     
     # Информация о проекте
     md_content.append("\n## 📞 Контакты и поддержка\n")
-    md_content.append(f"**Проект:** ai-assistant  \n")
+    md_content.append(f"**Проект:** ai-breadboard  \n")
     md_content.append(f"**Дата последнего обновления:** {datetime.now().strftime('%d %B %Y %H:%M')}  \n")
     md_content.append(f"**Скрипт обновления:** `update_scripts_documentation.py`  \n")
     md_content.append("\n*Документация автоматически обновляется при изменениях в репозитории.*\n")

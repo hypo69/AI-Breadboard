@@ -7,7 +7,7 @@
 #   Покрытие: прямые тесты, граничные условия, регрессионные сценарии.
 #
 # File: tests/utils/test_get_free_port.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69

@@ -1,6 +1,6 @@
-# Добро пожаловать в ai-assistant
+# Добро пожаловать в ai-breadboard
 
-**ai-assistant** — это многофункциональная платформа с веб-интерфейсом, которая объединяет:
+**ai-breadboard** — это многофункциональная платформа с веб-интерфейсом, которая объединяет:
 
 - 🤖 **ИИ-ассистент** на основе Google Gemini
 - 🎬 **Умный медиаплеер** с управлением через Telegram
@@ -46,8 +46,8 @@
 
 ```bash
 # Клонируйте репозиторий
-git clone https://github.com/hypo69/ai-assistant.git
-cd ai-assistant
+git clone https://github.com/hypo69/ai-breadboard.git
+cd ai-breadboard
 
 # Установите зависимости
 pip install -r requirements.txt

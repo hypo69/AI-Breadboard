@@ -8,7 +8,7 @@
 #   история версий — в prompts/{mode}/versions/.
 #
 # File: router_admin.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.fastapi
 # Author: hypo69
 # Copyright: © 2026 hypo69

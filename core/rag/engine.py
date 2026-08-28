@@ -9,7 +9,7 @@
 #   3. Если прямого ответа нет -> формирование обогащенного RAG-контекста для LLM.
 #
 # File: engine.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: core.rag
 # Author: hypo69
 # Copyright: © 2026 hypo69

@@ -7,7 +7,7 @@
 #   html2escape, escape2html, html2dict, html2ns.
 #
 # File: tests/test_utils_convertors_html.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69

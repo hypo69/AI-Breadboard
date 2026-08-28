@@ -14,7 +14,7 @@
 #     - target_func()  → реальное имя функции
 #
 # File: tests/TEST_TEMPLATE.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69

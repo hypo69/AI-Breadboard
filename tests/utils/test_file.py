@@ -7,7 +7,7 @@
 #   Покрытие: save_text_file, read_text_file, и другие вспомогательные функции.
 #
 # File: tests/utils/test_file.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69

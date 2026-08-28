@@ -7,7 +7,7 @@
 #   uvicorn server startup with Telegram bot support.
 #
 # File: main.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -246,7 +246,7 @@ def get_remote_latest_version() -> str | None:
     Authenticated requests are used when GITHUB_TOKEN or GH_TOKEN env var is present.
     """
     def _headers() -> dict:
-        headers = {'User-Agent': 'ai-assistant-version-check'}
+        headers = {'User-Agent': 'ai-breadboard-version-check'}
         token = _cfg_get('github_token', None) or os.getenv('GITHUB_TOKEN') or os.getenv('GH_TOKEN') or os.getenv('GITHUB_API_TOKEN')
         if token:
             headers['Authorization'] = f'token {token}'
@@ -277,7 +277,7 @@ def get_remote_latest_version() -> str | None:
         # Fallback: get tags and pick the highest semver-like tag
         try:
                 # Optionally fetch tags from remote to ensure local tag refs are up-to-date
-                fetch_tags_enabled = _cfg_get_bool('fetch_tags', ['FETCH_TAGS', 'ai-assistant_FETCH_TAGS', 'FETCH_REMOTE_TAGS'], False)
+                fetch_tags_enabled = _cfg_get_bool('fetch_tags', ['FETCH_TAGS', 'ai-breadboard_FETCH_TAGS', 'FETCH_REMOTE_TAGS'], False)
                 if fetch_tags_enabled:
                     try:
                         logger.info('Fetching remote tags (git fetch --tags origin)')
@@ -303,7 +303,7 @@ def get_remote_latest_version() -> str | None:
                     # Prefer stable releases unless prerelease is explicitly allowed
                     allow_prerelease = _cfg_get('allow_prerelease', None)
                     if allow_prerelease is None:
-                        allow_prerelease = str(os.getenv('ALLOW_PRERELEASE') or os.getenv('ai-assistant_ALLOW_PRERELEASE') or '').lower() in ('1', 'true', 'yes')
+                        allow_prerelease = str(os.getenv('ALLOW_PRERELEASE') or os.getenv('ai-breadboard_ALLOW_PRERELEASE') or '').lower() in ('1', 'true', 'yes')
 
                     best = choose_best_tag(tags, allow_prerelease=bool(allow_prerelease), debug=bool(debug_enabled))
                     if debug_enabled:
@@ -336,7 +336,7 @@ def get_remote_latest_version() -> str | None:
 
                 allow_prerelease = _cfg_get('allow_prerelease', None)
                 if allow_prerelease is None:
-                    allow_prerelease = str(os.getenv('ALLOW_PRERELEASE') or os.getenv('ai-assistant_ALLOW_PRERELEASE') or '').lower() in ('1', 'true', 'yes')
+                    allow_prerelease = str(os.getenv('ALLOW_PRERELEASE') or os.getenv('ai-breadboard_ALLOW_PRERELEASE') or '').lower() in ('1', 'true', 'yes')
 
                 best = choose_best_tag(tags, allow_prerelease=bool(allow_prerelease), debug=bool(debug_enabled))
                 if debug_enabled:
@@ -359,7 +359,7 @@ def prompt_and_perform_update(branch: str = 'main') -> None:
     try:
         auto_update = _cfg_get('auto_update', None)
         if auto_update is None:
-            auto_update_env = os.getenv('AUTO_UPDATE') or os.getenv('ai-assistant_AUTO_UPDATE')
+            auto_update_env = os.getenv('AUTO_UPDATE') or os.getenv('ai-breadboard_AUTO_UPDATE')
             auto_update = str(auto_update_env or '').lower() in ('1', 'true', 'yes')
         else:
             auto_update = bool(auto_update)

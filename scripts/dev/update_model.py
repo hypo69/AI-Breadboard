@@ -2,7 +2,7 @@ import sqlite3
 import sys
 
 try:
-    conn = sqlite3.connect('C:/ai-assistant/src/user_manager/users.db')
+    conn = sqlite3.connect('C:/ai-breadboard/src/user_manager/users.db')
     cursor = conn.cursor()
     cursor.execute("UPDATE user_settings SET model = 'gemini-2.0-flash'")
     conn.commit()

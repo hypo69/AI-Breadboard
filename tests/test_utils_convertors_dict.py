@@ -7,7 +7,7 @@
 #   dict2ns, replace_key_in_dict.
 #
 # File: tests/test_utils_convertors_dict.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69

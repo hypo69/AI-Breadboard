@@ -1,2 +1,2 @@
-# Тестовые зависимости проекта ai-assistant
+# Тестовые зависимости проекта ai-breadboard
 -r req/requirements-test.txt

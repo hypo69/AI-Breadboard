@@ -12,7 +12,7 @@
 #   >>> response = await ai.ask("Привет!")
 #
 # File: generative_ai.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.ai.gemini
 # Module: Core
 # Class: GoogleGenerativeAI

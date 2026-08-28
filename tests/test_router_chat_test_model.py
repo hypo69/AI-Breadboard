@@ -11,7 +11,7 @@
 #   pytest tests/test_router_chat_test_model.py -v
 #
 # File: test_router_chat_test_model.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: tests
 # Module: Tests
 # Author: hypo69

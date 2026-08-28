@@ -1,13 +1,13 @@
 {
   "user_id": "1",
   "created_at": 1784699246.0380464,
-  "updated_at": 1787763284.785889,
+  "updated_at": 1787929541.8877344,
   "watch_history": {
     "/test/path.mp4": {
       "name": "test.mp4",
       "last_position": 120.5,
       "duration": 7200.0,
-      "updated_at": 1787763284.785862,
+      "updated_at": 1787929541.887714,
       "completed": false
     }
   },

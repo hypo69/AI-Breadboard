@@ -14,7 +14,7 @@
 #   'v1.0.1'
 #
 # File: versioning.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: core.utils
 # Module: Versioning
 # Author: hypo69

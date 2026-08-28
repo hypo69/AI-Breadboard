@@ -7,7 +7,7 @@
 #   RAG-поиска и маршрутизации запросов RAG-First.
 #
 # File: models.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: core.rag
 # Author: hypo69
 # Copyright: © 2026 hypo69

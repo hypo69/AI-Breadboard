@@ -15,7 +15,7 @@
 import asyncio
 import logging
 import time
-from typing import Optional, List, Dict, Any
+from typing import Any, AsyncIterator, Dict, List, Optional
 
 from core.logger.logger import logger
 
@@ -90,19 +90,19 @@ class FoundryChatBase:
         """Устанавливает системную инструкцию."""
         self.system_prompt = val
 
-    async def _get_client(self):
+    async def _get_client(self) -> Any:
         """Lazy initialization of FoundryClient."""
         if not self._client:
             from ..clients.foundry import FoundryClient
             self._client = FoundryClient(base_url=self._api_url)
         return self._client
 
-    async def close(self):
+    async def close(self) -> None:
         """Close client session."""
         if self._client:
             await self._client.close()
 
-    def clear_history(self):
+    def clear_history(self) -> None:
         """Очищает историю чата."""
         self._history = []
         logger.debug("Chat history cleared")
@@ -115,7 +115,7 @@ class FoundryChatBase:
         attempts: int = 15,
         temperature: Optional[float] = 0.0,
         max_tokens: Optional[int] = 0,
-        **kwargs,
+        **kwargs: Any,
     ) -> Optional[str]:
         """
         Отправляет текстовый запрос модели и возвращает ответ.
@@ -210,14 +210,14 @@ class FoundryChatBase:
     async def chat(
         self,
         q: str,
-        history: Optional[List[Dict]] = [],
+        history: Optional[List[Dict[str, Any]]] = None,
         save_history: bool = True,
         temperature: Optional[float] = 0.0,
         max_tokens: Optional[int] = 0,
         system_instruction: Optional[str] = "",
         attempts: int = 15,
         flag: str = "save_chat",
-        **kwargs,
+        **kwargs: Any,
     ) -> Optional[str]:
         """
         Обрабатывает чат-запрос с историей.
@@ -318,16 +318,16 @@ class FoundryChatBase:
     async def chat_stream(
         self,
         q: str,
-        history: Optional[List[Dict]] = [],
+        history: Optional[List[Dict[str, Any]]] = None,
         save_history: bool = True,
         temperature: Optional[float] = 0.0,
         max_tokens: Optional[int] = 0,
         system_instruction: Optional[str] = "",
         attempts: int = 15,
         model_name: Optional[str] = "",
-        generation_config: dict = {},
-        **kwargs,
-    ):
+        generation_config: Dict[str, Any] = None,
+        **kwargs: Any,
+    ) -> AsyncIterator[str]:
         """
         Стриминговый интерфейс для чата (возвращает генератор с чанк-ответом).
         """

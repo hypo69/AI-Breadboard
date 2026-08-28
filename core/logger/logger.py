@@ -9,7 +9,7 @@
 #   паттерн Singleton для единого экземпляра логгера по всему приложению.
 #
 # File: src/logger/logger.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.logger
 # Author: hypo69
 # Copyright: © 2026 hypo69

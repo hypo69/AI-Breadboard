@@ -243,3 +243,140 @@ def set_project_root(marker_files=('__root__', '.git')) -> Path:
 | `SSL Certificate missing` | Port 443 / 8000 HTTPS errors | Run `.\install_ssl_cert.ps1` from project root |
 | `assist command unrecognized` | New terminal hasn't reloaded PATH | Restart PowerShell or run `$env:PATH = [System.Environment]::GetEnvironmentVariable('Path', 'User')` |
 | `Target directory write denied` | Permissions error on custom folder | Default to `%LOCALAPPDATA%\AI Breadboard` which is always writable without UAC elevation |
+---
+
+## 8. Global CLI Commands (`manage_tools.py`)
+
+After installation, the following commands become globally available from any terminal:
+
+### 8.1 Command Overview
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `rag` | RAG index operations | `rag rebuild`, `rag status` |
+| `skills` | AI skills catalog management | `skills list`, `skills search media` |
+| `knowledge` | Knowledge base management | `knowledge extract --file chat.md` |
+| `docs` | Documentation updates | `docs update` |
+| `assist` | Assistant process control | `assist start`, `assist stop`, `assist status` |
+
+### 8.2 RAG Commands
+
+```powershell
+# Rebuild RAG index from scratch
+rag rebuild
+
+# Rebuild with verbose output
+rag rebuild --verbose
+
+# Check index status
+rag status
+
+# Validate index integrity
+rag validate
+
+# Incremental reindex
+rag reindex
+```
+
+### 8.3 Skills Commands
+
+```powershell
+# List all discovered skills
+skills list
+
+# Search skills by name or description
+skills search media
+skills search "database"
+
+# Show full skill prompt/instructions
+skills show media-manager
+
+# Export skill as portable JSON contract
+skills export db-inspector
+skills export db-inspector --without-instructions  # Without markdown
+```
+
+### 8.4 Knowledge Commands
+
+```powershell
+# Extract knowledge from chat files
+knowledge extract --file chat.md
+knowledge extract --dir ./chats --recursive
+
+# Add new knowledge entry
+knowledge add "New Topic Name"
+
+# Initialize knowledge registry
+knowledge init
+```
+
+### 8.5 Docs Commands
+
+```powershell
+# Update documentation
+docs update
+```
+
+### 8.6 Assistant Commands
+
+```powershell
+# Process management
+assist start          # Start assistant in background
+assist stop           # Stop running assistant
+assist status         # Check assistant status
+assist providers      # List configured AI providers
+```
+
+---
+
+## 9. Shell Aliases (Installed Automatically)
+
+The installer registers the following aliases in your shell profile:
+
+### Windows PowerShell (`Microsoft.PowerShell_profile.ps1`)
+
+```powershell
+$env:AIBREADBOARD_DIR = "C:\Path\To\AI-Breadboard"
+
+function assist { & "$InstallDir\assist.ps1" @args }
+function rag { python "$InstallDir\manage_tools.py" rag @args }
+function skills { python "$InstallDir\manage_tools.py" skills @args }
+function knowledge { python "$InstallDir\manage_tools.py" knowledge @args }
+function docs { python "$InstallDir\manage_tools.py" docs @args }
+```
+
+### Linux/macOS/WSL (`~/.local/bin/assist`)
+
+```bash
+export AIBREADBOARD_DIR="/home/user/AI-Breadboard"
+
+rag() { python "$AIBREADBOARD_DIR/manage_tools.py" rag "$@"; }
+skills() { python "$AIBREADBOARD_DIR/manage_tools.py" skills "$@"; }
+knowledge() { python "$AIBREADBOARD_DIR/manage_tools.py" knowledge "$@"; }
+docs() { python "$AIBREADBOARD_DIR/manage_tools.py" docs "$@"; }
+assist() { python -m scripts.dev.assist_cli "$@"; }
+```
+
+### Manual Installation (if not using installer)
+
+Add to your shell profile:
+
+**PowerShell** (`~/.config/powershell/Microsoft.PowerShell_profile.ps1`):
+```powershell
+function rag { python "$env:AIBREADBOARD_DIR\manage_tools.py" rag @args }
+function skills { python "$env:AIBREADBOARD_DIR\manage_tools.py" skills @args }
+function knowledge { python "$env:AIBREADBOARD_DIR\manage_tools.py" knowledge @args }
+function docs { python "$env:AIBREADBOARD_DIR\manage_tools.py" docs @args }
+```
+
+**Bash/Zsh** (`~/.bashrc` or `~/.zshrc`):
+```bash
+rag() { python "$AIBREADBOARD_DIR/manage_tools.py" rag "$@"; }
+skills() { python "$AIBREADBOARD_DIR/manage_tools.py" skills "$@"; }
+knowledge() { python "$AIBREADBOARD_DIR/manage_tools.py" knowledge "$@"; }
+docs() { python "$AIBREADBOARD_DIR/manage_tools.py" docs "$@"; }
+```
+
+After adding to profile, reload:
+- PowerShell: `. $PROFILE` or restart terminal
+- Bash/Zsh: `source ~/.bashrc` or restart terminal

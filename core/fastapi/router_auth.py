@@ -7,7 +7,7 @@
 #   Поддержка GET/POST endpoints для OAuth flow.
 #
 # File: router_auth.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.fastapi
 # Author: hypo69
 # Copyright: © 2026 hypo69

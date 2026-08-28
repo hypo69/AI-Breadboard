@@ -23,8 +23,8 @@
 #### Клонирование репозитория
 
 ```bash
-git clone https://github.com/hypo69/ai-assistant.git
-cd ai-assistant
+git clone https://github.com/hypo69/ai-breadboard.git
+cd ai-breadboard
 ```
 
 ### 2. Создание виртуального окружения

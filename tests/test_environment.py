@@ -8,7 +8,7 @@
 #   и наличие всех необходимых переменных для корректной работы приложения.
 #
 # File: tests/test_environment.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69

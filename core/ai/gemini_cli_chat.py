@@ -8,7 +8,7 @@
 #   Поддерживает прямое выполнение команд (ask, chat) и потоковую передачу (chat_stream).
 #
 # File: gemini_cli_chat.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.ai
 # Class: GeminiCliChatBase
 # Author: hypo69

@@ -8,7 +8,7 @@
 #   поисковые запросы, оценки (лайки/дизлайки), любимые категории и жанры.
 #
 # File: user_profile.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.user_manager
 # Author: hypo69
 # Copyright: © 2026 hypo69

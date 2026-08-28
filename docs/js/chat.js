@@ -1,4 +1,4 @@
-// Chat Widget for ai-assistant Documentation
+// Chat Widget for ai-breadboard Documentation
 (function() {
   document.addEventListener('DOMContentLoaded', () => {
     // 1. Create and inject chat elements
@@ -17,7 +17,7 @@
         </div>
         <div class="chat-popup-messages" id="chat-popup-messages">
           <div class="chat-popup-msg bot">
-            <strong>Code Helper</strong>: Привет! Я ассистент разработчика ai-assistant. Задайте мне вопрос по коду или документации проекта.
+            <strong>Code Helper</strong>: Привет! Я ассистент разработчика ai-breadboard. Задайте мне вопрос по коду или документации проекта.
           </div>
         </div>
         <div class="chat-popup-input-area">

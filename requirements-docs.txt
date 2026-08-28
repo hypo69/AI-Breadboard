@@ -1,2 +1,2 @@
-# Документация проекта ai-assistant
+# Документация проекта ai-breadboard
 -r req/requirements-docs.txt

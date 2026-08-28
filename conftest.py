@@ -1,5 +1,5 @@
 """
-Test configuration for ai-assistant.
+Test configuration for ai-breadboard.
 Provides fixtures and settings for all tests.
 """
 

@@ -11,7 +11,7 @@
 #   >>> model = GoogleGenerativeAI()
 #
 # File: __init__.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69

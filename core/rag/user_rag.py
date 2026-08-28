@@ -7,7 +7,7 @@
 #   пользователя и его профилю предпочтений.
 #
 # File: user_rag.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: core.rag
 # Author: hypo69
 # Copyright: © 2026 hypo69

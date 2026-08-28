@@ -8,7 +8,7 @@
 #   Использует optimum[onnxruntime] для экспорта через HuggingFace Transformers.
 #
 # File: core/ai/converter/gguf_to_onnx.py
-# Project: ai-assistant
+# Project: ai-breadboard
 # Package: core.ai.converter
 # Author: hypo69
 # Copyright: © 2026 hypo69
