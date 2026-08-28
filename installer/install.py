@@ -159,15 +159,46 @@ Examples:
         print(f"  Log:      {'verbose' if args.verbose else 'info'}")
         print()
         
-        # Start server
-        uvicorn.run(
-            "server.main:app",
-            host=args.host,
-            port=args.port,
-            log_level="debug" if args.verbose else "info",
-            reload=False,
-            access_log=args.verbose
-        )
+        server_url = f"http://{args.host}:{args.port}"
+        
+        # Start server in background thread
+        import threading
+        
+        def run_server():
+            uvicorn.run(
+                "server.main:app",
+                host=args.host,
+                port=args.port,
+                log_level="debug" if args.verbose else "info",
+                reload=False,
+                access_log=args.verbose
+            )
+        
+        server_thread = threading.Thread(target=run_server, daemon=True)
+        server_thread.start()
+        
+        # Give server time to start
+        import time
+        time.sleep(2)
+        
+        # Open browser if not disabled
+        if not args.no_open:
+            print("Opening browser...")
+            try:
+                webbrowser.open(server_url)
+            except Exception as e:
+                print(f"Could not open browser: {e}")
+                print(f"Please open manually: {server_url}")
+        else:
+            print("Browser not opened. Use --no-open to disable")
+        
+        print()
+        print(f"  Web UI available at: {server_url}")
+        print(f"  Press Ctrl+C to stop")
+        print()
+        
+        # Keep main thread alive
+        server_thread.join()
         
     except KeyboardInterrupt:
         print("\n\nInstaller stopped by user")

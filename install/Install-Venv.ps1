@@ -84,12 +84,37 @@ if (-not $venvOk) {
     }
     
     Write-Host (Msg "step_2_creating" @($VenvDir)) -ForegroundColor Cyan
-    & $sysPython -m venv $VenvDir
+    
+    try {
+        $venvResult = & $sysPython -m venv $VenvDir 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host (Msg "step_2_create_fail") -ForegroundColor Red
+            Write-Host "Error details: $venvResult" -ForegroundColor Yellow
+            exit 1
+        }
+    } catch {
+        Write-Host (Msg "step_2_create_fail") -ForegroundColor Red
+        Write-Host "Exception: $_" -ForegroundColor Yellow
+        exit 1
+    }
     
     if (-not (Test-Path $PythonPath)) {
         Write-Host (Msg "step_2_create_fail") -ForegroundColor Red
         exit 1
     }
+    
+    # Verify venv python works
+    try {
+        $pyVer = & $PythonPath --version 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host (Msg "step_2_create_fail") -ForegroundColor Red
+            exit 1
+        }
+    } catch {
+        Write-Host (Msg "step_2_create_fail") -ForegroundColor Red
+        exit 1
+    }
+    
     Write-Host (Msg "step_2_created_ok") -ForegroundColor Green
 }
 
