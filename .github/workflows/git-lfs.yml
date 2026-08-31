@@ -50,31 +50,31 @@ jobs:
       name: Check required LFS patterns
       run: |
         python - <<'PY'
-import sys
-required = [
-  'plugins/media_organizer/data/media_rag.json',
-  'plugins/media_organizer/data/*',
-  'src/ai/gemini/user_rags/*.faiss',
-  'src/ai/gemini/user_rags/*.json',
-  'src/**/user_rag_*.faiss',
-  'src/**/user_rag_*.json'
-]
-try:
-  with open('.gitattributes','r') as f:
-    g = f.read()
-except FileNotFoundError:
-  g = ''
-miss = [p for p in required if p not in g]
-missing_flag = 'true' if miss else 'false'
-print(f"missing={missing_flag}", file=open('/github/output','w')) if False else None
-print(f"::set-output name=missing::{missing_flag}")
-if miss:
-  print('Missing patterns:', miss)
-  # dump missing list for later steps
-  with open('.github/missing-lfs-patterns','w') as o:
-    o.write('\n'.join(miss))
-sys.exit(0)
-PY
+        import sys
+        required = [
+          'plugins/media_organizer/data/media_rag.json',
+          'plugins/media_organizer/data/*',
+          'src/ai/gemini/user_rags/*.faiss',
+          'src/ai/gemini/user_rags/*.json',
+          'src/**/user_rag_*.faiss',
+          'src/**/user_rag_*.json'
+        ]
+        try:
+          with open('.gitattributes','r') as f:
+            g = f.read()
+        except FileNotFoundError:
+          g = ''
+        miss = [p for p in required if p not in g]
+        missing_flag = 'true' if miss else 'false'
+        print(f"missing={missing_flag}", file=open('/github/output','w')) if False else None
+        print(f"::set-output name=missing::{missing_flag}")
+        if miss:
+          print('Missing patterns:', miss)
+          # dump missing list for later steps
+          with open('.github/missing-lfs-patterns','w') as o:
+            o.write('\n'.join(miss))
+        sys.exit(0)
+        PY
 
     - name: Append missing LFS patterns and push branch
       if: steps.check-patterns.outputs.missing == 'true'
