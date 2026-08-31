@@ -211,15 +211,6 @@ PY
       uses: peter-evans/create-pull-request@v5
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        branch: 'chore/lfs-migration-notice-${{ github.run_id }}'
-        title: 'chore: notify LFS migration'
-        body: |
-          This workflow performed a Git LFS migration. The repository history was rewritten and force-pushed to main.
-          Please review the migration and verify that large files are now tracked by Git LFS.
-        labels: automated,git-lfs
-        committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: 'chore: migrated large files to git-lfs (automated)'
         branch: 'chore/lfs-migration-notes-${{ github.run_id }}'
         title: 'chore: Git LFS migration performed'
@@ -235,5 +226,6 @@ PY
 
           Please review and coordinate with collaborators.
         labels: automated,git-lfs
+        committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
         assignees: ''
 
