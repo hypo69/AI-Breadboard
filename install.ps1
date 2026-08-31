@@ -118,6 +118,10 @@ $cliScript = Join-Path $installedModulesDir "Install-Cli.ps1"
 $verifyScript = Join-Path $installedModulesDir "Install-Verify.ps1"
 & $verifyScript -InstallDir $InstallDir -PythonPath $PythonPath -Config $config
 
+# 12. Модуль выбора и скачивания моделей
+$modelsScript = Join-Path $installedModulesDir "Install-Models.ps1"
+& $modelsScript -InstallDir $InstallDir -Config $config
+
 # Завершение логирования установки
 try {
     Stop-Transcript -ErrorAction SilentlyContinue | Out-Null

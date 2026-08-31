@@ -7,7 +7,8 @@
     "python_preferred_versions": ["3.13", "3.12", "3.11", "3.10"],
     "repo_url": "https://github.com/hypo69/AI-Breadboard",
     "repo_zip_url": "https://github.com/hypo69/AI-Breadboard/archive/refs/heads/master.zip",
-    "deps_choice": "1"
+    "deps_choice": "1",
+    "default_models": "llama3.1,qwen2.5-1.5b-instruct-generic-cpu:4"
   },
   "paths": {
     "certs_dir": "%USERPROFILE%\\.certs",
@@ -19,10 +20,10 @@
     "env_file": ".env",
     "config_file": "config.json",
     "requirements_main": "requirements.txt",
-    "requirements_core": "req\\requirements-core.txt",
-    "requirements_ai": "req\\requirements-ai.txt",
-    "requirements_test": "req\\requirements-test.txt",
-    "requirements_docs": "req\\requirements-docs.txt",
+    "requirements_core": "install\\req\\requirements-core.txt",
+    "requirements_ai": "install\\req\\requirements-ai.txt",
+    "requirements_test": "install\\req\\requirements-test.txt",
+    "requirements_docs": "install\\req\\requirements-docs.txt",
     "local_bin": "%USERPROFILE%\\.local\\bin",
     "assist_ps1": "assist.ps1",
     "assist_cmd": "assist.cmd"

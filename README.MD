@@ -1,4 +1,4 @@
-# aibreadboard — Interactive Breadboard for AI Language Models
+# Interactive `Breadboard` for exploring different AI Language Models
 
 [![Documentation Status](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://hypo69.github.io/aibreadboard/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -134,7 +134,7 @@ irm https://raw.githubusercontent.com/hypo69/AI-Breadboard/master/install.ps1 | 
 This command:
 - Downloads the installer script from GitHub
 - Runs the full automated installation workflow
-- Creates `%USERPROFILE%\AppData\Local\AI-Breadboard` with `venv`
+- Creates `%LOCALAPPDATA%\AI-Breadboard` with `venv`
 - Installs all dependencies from `requirements.txt`
 - Generates SSL certificates for local HTTPS
 - Registers `assist` global command in PowerShell and PATH
@@ -340,6 +340,54 @@ After installation, the `assist` command is available globally:
 | `assist config get <key>` | Get config value |
 | `assist config set <key> <val>` | Set config value |
 | `assist test` | Run pytest suite |
+
+### Model Selection & Download (New in v2.0)
+
+After installation, you can select and download models for local providers:
+
+**Step-by-step:**
+
+1. **Run the interactive installer** (or re-run `install.ps1`):
+   ```powershell
+   .\install.ps1
+   ```
+
+2. **Select local providers models** at step 8:
+   - Script fetches available models from Ollama, Foundry, ONNX
+   - Choose models to download by number(s) or range (e.g., `1-3`)
+   - Models are downloaded via their native commands
+
+3. **Supported local providers:**
+   | Provider | Command | Model Prefix |
+   |---|---|---|
+   | Ollama | `ollama pull` | `ollama:<model_id>` |
+   | Foundry | Auto-download | `foundry:<model_id>` |
+   | ONNX | Auto-download (Transformers) | `onnx:<model_id>` |
+   | HuggingFace | Auto-download (Transformers) | `hf:<model_id>` |
+
+4. **Start the server:**
+   ```powershell
+   ./run.ps1
+   ```
+
+**Example session:**
+```
+[8/8] Selecting and downloading models for local providers...
+
+Available models for Ollama:
+  [1] llama3.1
+  [2] qwen2.5-1.5b-instruct-generic-cpu:4
+  [3] mistral-small
+
+Select models to download (numbers separated by comma or range 1-3) [Enter = skip]: 1,2
+
+Downloading model Ollama (llama3.1)...
+[OK] Model llama3.1 downloaded successfully
+
+Downloading model Foundry (qwen2.5-1.5b-instruct-generic-cpu:4)...
+[INFO] Foundry downloads models automatically on first use
+[OK] Model qwen2.5-1.5b-instruct-generic-cpu:4 downloaded successfully
+```
 
 ### Web Interface Access
 
