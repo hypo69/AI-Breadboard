@@ -144,27 +144,27 @@ jobs:
     - name: Fail if any non-LFS file exceeds 90MB (portable check)
       run: |
         python - <<'PY'
-import os, subprocess
-files = subprocess.check_output(['git','ls-files']).decode().splitlines()
-big=[]
-for f in files:
-  if os.path.isfile(f):
-    size = os.path.getsize(f)
-    if size > 90*1024*1024:
-      # check if tracked by LFS
-      try:
-        out = subprocess.check_output(['git','lfs','ls-files','--name-only']).decode().splitlines()
-      except subprocess.CalledProcessError:
-        out = []
-      if f not in out:
-        big.append((f,size))
-if big:
-  print('Found large non-LFS files:')
-  for f,s in big:
-    print(f, s)
-  raise SystemExit(1)
-print('No offending large files found')
-PY
+        import os, subprocess
+        files = subprocess.check_output(['git','ls-files']).decode().splitlines()
+        big=[]
+        for f in files:
+          if os.path.isfile(f):
+            size = os.path.getsize(f)
+            if size > 90*1024*1024:
+              # check if tracked by LFS
+              try:
+                out = subprocess.check_output(['git','lfs','ls-files','--name-only']).decode().splitlines()
+              except subprocess.CalledProcessError:
+                out = []
+              if f not in out:
+                big.append((f,size))
+        if big:
+          print('Found large non-LFS files:')
+          for f,s in big:
+            print(f, s)
+          raise SystemExit(1)
+        print('No offending large files found')
+        PY
 
   migrate-history:
     name: Migrate history to Git LFS (dangerous)
