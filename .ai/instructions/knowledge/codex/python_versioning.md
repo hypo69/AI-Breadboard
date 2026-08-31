@@ -2,23 +2,23 @@
 
 ## Назначение
 
-Модуль `core/utils/versioning.py` предоставляет утилиты разбора, сравнения и выбора версий по стандарту [SemVer 2.0](https://semver.org/). Используется в `main.py` и других компонентах для выбора актуального тега при обновлениях.
+Module `core/utils/versioning.py` предоставляет утилиты разбора, сравнения и выбора версий по стандарту [SemVer 2.0](https://semver.org/). Используется в `main.py` и других компонентах для выбора актуального тега при обновлениях.
 
 ## Публичный API
 
-| Функция | Сигнатура | Описание |
+| Function | Сигнатура | Описание |
 |---|---|---|
-| `parse_semver` | `(v: str) -> Tuple` | Разбор строки в кортеж `(major, minor, patch, prerelease[])`. Возвращает `()` при невалидной строке. |
+| `parse_semver` | `(v: str) -> Tuple` | Разбор строки в tuple `(major, minor, patch, prerelease[])`. Returns `()` при невалидной строке. |
 | `compare_versions` | `(a: str, b: str) -> int` | Сравнение двух версий: `-1`, `0`, `1`. |
-| `choose_best_tag` | `(tags, allow_prerelease, debug) -> str` | Выбор наибольшей версии из списка. Возвращает `''` при пустом списке. |
+| `choose_best_tag` | `(tags, allow_prerelease, debug) -> str` | Выбор наибольшей версии из списка. Returns `''` при пустом списке. |
 
 ## Правила использования
 
-- Функции **не возвращают `None`** — при отсутствии результата возвращается пустое значение типа (`()` или `''`).
+- Функции **не возвращают `None`** — при отсутствии результата Returnsся пустое значение типа (`()` или `''`).
 - `debug=True` в `choose_best_tag` выводит информацию через `core.logger.logger`, **не через `print()`**.
 - Пре-релизный тег (`1.2.3-alpha`) считается **меньше** стабильного (`1.2.3`) согласно SemVer §11.
 
-## Примеры
+## Examples
 
 ```python
 from core.utils.versioning import compare_versions, choose_best_tag
@@ -40,7 +40,7 @@ choose_best_tag(['v1.0.0', 'v1.1.0-alpha', 'v1.0.1'], allow_prerelease=True)
 ## Расположение
 
 ```
-core/utils/versioning.py   ← основной модуль
+core/utils/versioning.py   ← основной Module
 tests/test_versioning.py   ← тесты (4 сценария, 100% pass)
 ```
 

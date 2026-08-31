@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Gemini Web Search MCP Server
+# Process Name: Выполнить веб-поиск в Google через Gemini Search G
 # =============================================================================
-# Описание:
+# Description:
 #   MCP-сервер на базе FastMCP, предоставляющий доступ к веб-поиску Google
-#   Search Grounding через официальный google-genai SDK с автоматической
-#   ротацией API-ключей (Round-Robin) при исчерпании лимитов.
 #
 # File: gemini_search_mcp_server.py
-# Project: ai-assistant
-# Package: .mcp
+# Project: ai-breadboard
+# Package: root
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -29,16 +27,14 @@ except ImportError:
     FastMCP = None
     mcp = None
 
-
 async def _run_gemini_search(query: str, model: str = "gemini-2.5-flash") -> str:
     try:
         searcher = GeminiWebSearcher()
         result_markdown = await searcher.search_and_extract(query=query, model=model)
         return result_markdown
     except Exception as e:
-        logger.error(f"[gemini_search_mcp_server] Ошибка поиска: {e}")
+        logger.error(f"[gemini_search_mcp_server] Error поиска: {e}")
         return json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False)
-
 
 def _run_key_pool_status() -> str:
     try:
@@ -49,24 +45,20 @@ def _run_key_pool_status() -> str:
             "active_key_masked": f"...{pool._current_key[-6:]}" if len(pool._current_key) >= 6 else "***"
         }, ensure_ascii=False)
     except Exception as e:
-        logger.error(f"[gemini_search_mcp_server] Ошибка статуса пула ключей: {e}")
+        logger.error(f"[gemini_search_mcp_server] Error статуса пула ключей: {e}")
         return json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False)
-
 
 async def gemini_web_search(query: str, model: str = "gemini-2.5-flash") -> str:
     """Выполнить веб-поиск в Google через Gemini Search Grounding."""
     return await _run_gemini_search(query=query, model=model)
 
-
 def gemini_key_pool_status() -> str:
-    """Получить статус пула API-ключей Gemini и активного ключа."""
+    """Получить status пула API-ключей Gemini и активного ключа."""
     return _run_key_pool_status()
-
 
 if mcp:
     mcp.tool()(gemini_web_search)
     mcp.tool()(gemini_key_pool_status)
-
 
 if __name__ == "__main__":
     if mcp:

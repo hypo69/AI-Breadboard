@@ -1,22 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: HuggingFace Local Model Client & Chat Wrapper
+# Process Name: Получение директории кэша моделей HuggingFace.
 # =============================================================================
-# Описание:
+# Description:
 #   Клиент для локальных моделей HuggingFace.
-#   Поддерживает скачивание весов через huggingface_hub, загрузку в RAM/VRAM
-#   и инференс через transformers.pipeline в неблокирующем потоке.
 #
-#   Архитектура:
-#     - In-process инференс без внешних демонов
-#     - scan_cache_dir() для официального поиска кэшированных моделей
-#     - apply_chat_template() для автоматической адаптации диалоговых моделей
-#     - Выполнение тяжелых операций через asyncio executor
-#
-# File: core/ai/hf_chat.py
+# File: hf_chat.py
 # Project: ai-breadboard
 # Package: core.ai
-# Module: HFChat
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -28,7 +19,6 @@ from typing import Any, AsyncIterator, Callable, Dict, List
 
 from core.logger.logger import logger
 
-
 def _get_models_dir() -> Path:
     """Получение директории кэша моделей HuggingFace."""
     raw = os.environ.get("HF_MODELS_DIR", "")
@@ -36,31 +26,27 @@ def _get_models_dir() -> Path:
         return Path(raw).expanduser()
     return Path.home() / ".cache" / "huggingface" / "hub"
 
-
 HF_MODELS_DIR = _get_models_dir()
 HF_CACHE_DIR = Path.home() / ".cache" / "huggingface" / "hub"
 
 # Локальный кэш загруженных в память моделей: {model_id: {"pipeline": pipe, "tokenizer": tokenizer}}
 _loaded_models: Dict[str, Dict[str, Any]] = {}
 
-
 def _check_transformers() -> bool:
-    """Проверка наличия библиотеки transformers."""
+    """Check наличия библиотеки transformers."""
     try:
         import transformers  # noqa: F401
         return True
     except ImportError:
         return False
 
-
 def _check_huggingface_hub() -> bool:
-    """Проверка наличия библиотеки huggingface_hub."""
+    """Check наличия библиотеки huggingface_hub."""
     try:
         import huggingface_hub  # noqa: F401
         return True
     except ImportError:
         return False
-
 
 class HFClient:
     """Клиент управления локальными моделями HuggingFace."""
@@ -90,15 +76,15 @@ class HFClient:
                 token=hf_token or "",
                 ignore_patterns=["*.msgpack", "*.h5", "flax_model*", "tf_model*"],
             )
-            logger.info(f"[HFClient] Модель {model_id} успешно скачана: {path}")
+            logger.info(f"[HFClient] Модель {model_id} successfully скачана: {path}")
             return {"success": True, "model_id": model_id, "path": path}
         except Exception as e:
             err = str(e)
-            logger.error(f"[HFClient] Ошибка скачивания {model_id}: {err}")
+            logger.error(f"[HFClient] Error скачивания {model_id}: {err}")
             return {"success": False, "error": err}
 
     def load_model(self, model_id: str, device: str = "auto") -> Dict[str, Any]:
-        """Загрузка модели в память (RAM / VRAM) для инференса."""
+        """Loading модели в память (RAM / VRAM) для инференса."""
         if not _check_transformers():
             return {"success": False, "error": "transformers не установлен"}
 
@@ -137,7 +123,7 @@ class HFClient:
             model_path = local_path or model_id
             hf_token: str = "" if local_files_only else (os.getenv("HF_TOKEN", "") or os.getenv("HUGGINGFACE_TOKEN", ""))
 
-            logger.info(f"[HFClient] Загрузка весов {model_id} из {model_path}")
+            logger.info(f"[HFClient] Loading весов {model_id} из {model_path}")
 
             torch_dtype: torch.dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
@@ -162,7 +148,7 @@ class HFClient:
             return {"success": True, "model_id": model_id, "device": actual_device}
 
         except Exception as e:
-            logger.error(f"[HFClient] Ошибка при загрузке модели {model_id}: {e}")
+            logger.error(f"[HFClient] Error при загрузке модели {model_id}: {e}")
             return {"success": False, "error": str(e)}
 
     def unload_model(self, model_id: str) -> Dict[str, Any]:
@@ -179,7 +165,7 @@ class HFClient:
             logger.info(f"[HFClient] Модель {model_id} выгружена из памяти")
             return {"success": True, "model_id": model_id}
         except Exception as e:
-            logger.error(f"[HFClient] Ошибка при выгрузке модели {model_id}: {e}")
+            logger.error(f"[HFClient] Error при выгрузке модели {model_id}: {e}")
             return {"success": False, "error": str(e)}
 
     async def generate(
@@ -230,7 +216,7 @@ class HFClient:
             return {"success": True, "content": content, "model": model_id}
 
         except Exception as e:
-            logger.error(f"[HFClient] Ошибка инференса модели {model_id}: {e}")
+            logger.error(f"[HFClient] Error инференса модели {model_id}: {e}")
             return {"success": False, "error": str(e)}
 
     def list_downloaded(self) -> List[Dict[str, Any]]:
@@ -293,12 +279,10 @@ class HFClient:
         return items
 
     def list_loaded(self) -> List[Dict[str, Any]]:
-        """Список моделей, удерживаемых в оперативной памяти."""
+        """List моделей, удерживаемых в оперативной памяти."""
         return [{"id": k, "status": "loaded"} for k in _loaded_models]
 
-
 hf_client = HFClient()
-
 
 class HFChatBase:
     """Обертка чата для локальных моделей HuggingFace."""

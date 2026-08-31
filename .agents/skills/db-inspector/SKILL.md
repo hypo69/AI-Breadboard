@@ -9,9 +9,9 @@ description: Инструментарий для анализа, проверк�
 
 Используйте этот навык для работы с `media.db`.
 
-- **Проверка структуры БД:**
+- **Check структуры БД:**
   `python get_schema.py`
-- **Проверка данных:**
+- **Check данных:**
   `python check_db.py`
 - **Поиск неполных записей:**
   `python find_incomplete_records.py`

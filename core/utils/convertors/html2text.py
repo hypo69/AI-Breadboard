@@ -1,7 +1,16 @@
-## \file /src/utils/convertors/html2text.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: html2text: Turn HTML into equivalent Markdown-stru
+# =============================================================================
+# Description:
+#   html2text: Turn HTML into equivalent Markdown-structured text."""
+#
+# File: html2text.py
+# Project: ai-breadboard
+# Package: core.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module:: src.utils.convertors.html2text 
@@ -29,14 +38,12 @@ def has_key(x, y):
     if hasattr(x, 'has_key'): return x.has_key(y)
     else: return y in x
 
-
 import html.entities as htmlentitydefs
 import urllib.parse as urlparse
 import html.parser as HTMLParser
 import urllib.request as urllib
 import optparse, re, sys, codecs, types
 from textwrap import wrap
-
 
 # Use Unicode characters instead of their ascii psuedo-replacements
 UNICODE_SNOB = 0

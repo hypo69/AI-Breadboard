@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: # ================================================
+# =============================================================================
+# Description:
+#   Клиент для работы с Ollama."""
+#
+# File: ollama.py
+# Project: ai-breadboard
+# Package: core.clients
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 import os
 import aiohttp
 import logging
@@ -10,7 +23,7 @@ class OllamaClient:
     """Клиент для работы с Ollama."""
     
     def __init__(self, base_url: Optional[str] = "") -> None:
-        """Инициализация клиента."""
+        """Initialization клиента."""
         self.base_url = base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
         self.session: Any = False
         logger.info(f"OllamaClient initialized with base_url={self.base_url}")
@@ -65,6 +78,6 @@ class OllamaClient:
             return {"success": False, "error": str(e)}
 
     async def close(self) -> None:
-        """Закрытие сессии клиента."""
+        """Closing сессии клиента."""
         if self.session and not self.session.closed:
             await self.session.close()

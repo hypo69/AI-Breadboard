@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: FastAPI-роутер панели управления логами
+# Process Name: Returns путь к файлу логов после проверки безопасн
 # =============================================================================
-# Описание:
+# Description:
 #   API-эндпоинты для просмотра, чтения, очистки и AI-анализа лог-файлов.
-#   Маршруты: GET /api/logs/files, GET /api/logs/read, DELETE /api/logs/clear,
-#             POST /api/logs/analyze, GET /api/logs/reports
 #
-# File: src/fastapi/router_logs.py
+# File: router_logs.py
 # Project: ai-breadboard
-# Package: src.fastapi
+# Package: core.fastapi
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -18,6 +16,7 @@ from __future__ import annotations
 
 import datetime
 import os
+import tempfile
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -27,15 +26,14 @@ from pydantic import BaseModel
 from header import __root__
 from core.logger import logger
 
-LOG_DIR = __root__ / 'tmp' / 'logs'
-REPORTS_DIR = __root__ / 'tmp' / 'reports'
+LOG_DIR = Path(tempfile.gettempdir()) / 'ai-breadboard' / 'logs'
+REPORTS_DIR = Path(tempfile.gettempdir()) / 'ai-breadboard' / 'reports'
 
-# Список разрешённых имён файлов (whitelist)
+# List разрешённых имён файлов (whitelist)
 _ALLOWED_EXTENSIONS = {'.log', '.json', '.md', '.txt'}
 
-
 def _safe_log_path(filename: str) -> Path:
-    """Возвращает путь к файлу логов после проверки безопасности."""
+    """Returns путь к файлу логов после проверки безопасности."""
     path = (LOG_DIR / filename).resolve()
     if not str(path).startswith(str(LOG_DIR.resolve())):
         raise HTTPException(status_code=400, detail='Недопустимый путь к файлу')
@@ -43,9 +41,8 @@ def _safe_log_path(filename: str) -> Path:
         raise HTTPException(status_code=400, detail='Недопустимое расширение файла')
     return path
 
-
 def _safe_report_path(filename: str) -> Path:
-    """Возвращает путь к файлу отчёта после проверки безопасности."""
+    """Returns путь к файлу отчёта после проверки безопасности."""
     path = (REPORTS_DIR / filename).resolve()
     if not str(path).startswith(str(REPORTS_DIR.resolve())):
         raise HTTPException(status_code=400, detail='Недопустимый путь к файлу')
@@ -53,9 +50,8 @@ def _safe_report_path(filename: str) -> Path:
         raise HTTPException(status_code=400, detail='Недопустимое расширение файла')
     return path
 
-
 def _file_info(p: Path) -> dict:
-    """Возвращает метаданные файла."""
+    """Returns метаданные файла."""
     stat = p.stat()
     return {
         'name': p.name,
@@ -64,20 +60,18 @@ def _file_info(p: Path) -> dict:
         'modified': datetime.datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S'),
     }
 
-
 class AnalyzeRequest(BaseModel):
     filename: str
-
 
 def init_router(prefix: str = '/api/logs') -> APIRouter:
     router = APIRouter(prefix=prefix, tags=['logs'])
 
     # ------------------------------------------------------------------
-    # GET /api/logs/files — список лог-файлов
+    # GET /api/logs/files — list лог-файлов
     # ------------------------------------------------------------------
     @router.get('/files')
     async def list_log_files() -> dict:
-        """Возвращает список доступных лог-файлов с их метаданными."""
+        """Returns list доступных лог-файлов с их метаданными."""
         LOG_DIR.mkdir(parents=True, exist_ok=True)
         files = []
         for p in sorted(LOG_DIR.iterdir()):
@@ -90,7 +84,7 @@ def init_router(prefix: str = '/api/logs') -> APIRouter:
     # ------------------------------------------------------------------
     @router.get('/read')
     async def read_log_file(filename: str, tail: int = 500) -> dict:
-        """Возвращает последние `tail` строк лог-файла."""
+        """Returns последние `tail` строк лог-файла."""
         path = _safe_log_path(filename)
         if not path.exists():
             raise HTTPException(status_code=404, detail=f'Файл не найден: {filename}')
@@ -99,7 +93,7 @@ def init_router(prefix: str = '/api/logs') -> APIRouter:
             with open(path, 'r', encoding='utf-8', errors='replace') as f:
                 lines = f.readlines()
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f'Ошибка чтения файла: {e}')
+            raise HTTPException(status_code=500, detail=f'Error чтения файла: {e}')
 
         total = len(lines)
         sliced = lines[-tail:] if tail > 0 else lines
@@ -115,7 +109,7 @@ def init_router(prefix: str = '/api/logs') -> APIRouter:
     # ------------------------------------------------------------------
     @router.delete('/clear')
     async def clear_log_file(filename: str) -> dict:
-        """Очищает содержимое лог-файла (обнуляет, не удаляет)."""
+        """Очищает содержимое лог-файла (обнуляет, не deletes)."""
         path = _safe_log_path(filename)
         if not path.exists():
             raise HTTPException(status_code=404, detail=f'Файл не найден: {filename}')
@@ -125,7 +119,7 @@ def init_router(prefix: str = '/api/logs') -> APIRouter:
                 f.truncate(0)
             logger.info(f'Лог-файл очищен вручную: {filename}')
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f'Ошибка при очистке: {e}')
+            raise HTTPException(status_code=500, detail=f'Error при очистке: {e}')
 
         return {'status': 'ok', 'message': f'Файл {filename} очищен'}
 
@@ -162,15 +156,15 @@ def init_router(prefix: str = '/api/logs') -> APIRouter:
             return {'status': 'started', 'message': f'Анализ файла {body.filename} запущен в фоне'}
 
         except Exception as e:
-            logger.error(f'Ошибка запуска AI-анализа для {body.filename}', e)
-            raise HTTPException(status_code=500, detail=f'Ошибка: {e}')
+            logger.error(f'Error запуска AI-анализа для {body.filename}', e)
+            raise HTTPException(status_code=500, detail=f'Error: {e}')
 
     # ------------------------------------------------------------------
-    # GET /api/logs/reports — список AI-отчётов
+    # GET /api/logs/reports — list AI-отчётов
     # ------------------------------------------------------------------
     @router.get('/reports')
     async def list_reports() -> dict:
-        """Возвращает список AI-отчётов из папки logs/reports/."""
+        """Returns list AI-отчётов из папки logs/reports/."""
         if not REPORTS_DIR.exists():
             return {'reports': [], 'count': 0}
 
@@ -185,7 +179,7 @@ def init_router(prefix: str = '/api/logs') -> APIRouter:
     # ------------------------------------------------------------------
     @router.get('/report')
     async def read_report(filename: str) -> dict:
-        """Возвращает содержимое AI-отчёта."""
+        """Returns содержимое AI-отчёта."""
         path = _safe_report_path(filename)
         if not path.exists():
             raise HTTPException(status_code=404, detail=f'Отчёт не найден: {filename}')
@@ -193,7 +187,7 @@ def init_router(prefix: str = '/api/logs') -> APIRouter:
         try:
             content = path.read_text(encoding='utf-8', errors='replace')
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f'Ошибка чтения отчёта: {e}')
+            raise HTTPException(status_code=500, detail=f'Error чтения отчёта: {e}')
 
         return {
             'filename': filename,
@@ -206,7 +200,7 @@ def init_router(prefix: str = '/api/logs') -> APIRouter:
     # ------------------------------------------------------------------
     @router.get('/stats')
     async def log_stats() -> dict:
-        """Возвращает сводную статистику по лог-файлам."""
+        """Returns сводную статистику по лог-файлам."""
         LOG_DIR.mkdir(parents=True, exist_ok=True)
         stats = {
             'total_size_bytes': 0,

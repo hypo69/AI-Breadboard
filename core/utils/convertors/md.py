@@ -1,12 +1,21 @@
-## \file /src/utils/convertors/md2dict.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: Markdown to dictionary conversion utilities
+# =============================================================================
+# Description:
+#   Converts Markdown strings to structured dictionaries including extraction
+#   of JSON content if present. Supports structured parsing of markdown documents.
+#
+# File: md.py
+# Project: ai-breadboard
+# Package: core.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
-.. module:: src.utils.convertors.md2dict 
-	:platform: Windows, Unix
-	:synopsis: Модуль для конвертации строки Markdown в структурированный словарь, включая извлечение JSON содержимого, если оно присутствует.
+Markdown to dictionary conversion module.
+Provides parsing functions for converting markdown strings to structured format.
 """
 
 import re
@@ -14,15 +23,13 @@ from typing import Dict, List, Any
 from markdown2 import markdown
 from core.logger.logger import logger
 
-
-
 def md2html(md_string: str, extras: List[str] = None) -> str:
      """
      Конвертирует строку Markdown в HTML.
 
      Args:
-         md_string (str): Строка Markdown для конвертации.
-         extras (list, optional): Список расширений markdown2. Defaults to None.
+         md_string (str): String Markdown для конвертации.
+         extras (list, optional): List расширений markdown2. Defaults to None.
 
      Returns:
          str: HTML-представление Markdown.
@@ -32,17 +39,16 @@ def md2html(md_string: str, extras: List[str] = None) -> str:
             return markdown(md_string)
          return markdown(md_string, extras=extras)
      except Exception as ex:
-        logger.error("Ошибка при преобразовании Markdown в HTML.", exc_info=True)
+        logger.error("Error при преобразовании Markdown в HTML.", exc_info=True)
         return ""
-
 
 def md2dict(md_string: str, extras: List[str] = None) -> Dict[str, list[str]]:
     """
-    Конвертирует строку Markdown в структурированный словарь.
+    Конвертирует строку Markdown в структурированный dictionary.
 
     Args:
-        md_string (str): Строка Markdown для конвертации.
-        extras (list, optional): Список расширений markdown2 для md2html. Defaults to None.
+        md_string (str): String Markdown для конвертации.
+        extras (list, optional): List расширений markdown2 для md2html. Defaults to None.
 
     Returns:
          Dict[str, list[str]]: Структурированное представление Markdown содержимого.
@@ -72,5 +78,5 @@ def md2dict(md_string: str, extras: List[str] = None) -> Dict[str, list[str]]:
         return sections
 
     except Exception as ex:
-        logger.error("Ошибка при парсинге Markdown в структурированный словарь.", exc_info=True)
+        logger.error("Error при парсинге Markdown в структурированный dictionary.", exc_info=True)
         return {}

@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Module
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: scan_headers.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 import os
 import re
 from pathlib import Path
@@ -8,7 +21,7 @@ def count_words(text):
     return len(words)
 
 def extract_description(header_text):
-    desc_match = re.search(r'# Описание:(.*?)(?=\s*# (?:File|Project|Author|Copyright|\$))', header_text, re.DOTALL)
+    desc_match = re.search(r'# Description:(.*?)(?=\s*# (?:File|Project|Author|Copyright|\$))', header_text, re.DOTALL)
     if desc_match:
         desc_lines = desc_match.group(1).strip()
         lines = [line.strip().lstrip('#').strip() for line in desc_lines.split('\n')]
@@ -39,7 +52,7 @@ def check_header(filepath):
         
     header_text = '\n'.join(header_lines)
     has_nazvanie = bool(re.search(r'#\s*Название\s*(?:процесса|модуля):', header_text))
-    has_opisanie = bool(re.search(r'#\s*Описание:', header_text))
+    has_opisanie = bool(re.search(r'#\s*Description:', header_text))
     has_file = bool(re.search(r'#\s*File:', header_text))
     has_project = bool(re.search(r'#\s*Project:', header_text))
     has_author = bool(re.search(r'#\s*Author:', header_text))
@@ -70,4 +83,4 @@ if __name__ == '__main__':
             if status['has_header'] == 'no':
                 print(f"❌ {pf.relative_to(root_dir)} — заголовок отсутствует или некорректен")
         except Exception as e:
-            print(f"⚠️ Ошибка обработки {pf}: {e}")
+            print(f"⚠️ Error обработки {pf}: {e}")

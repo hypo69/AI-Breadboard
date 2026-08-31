@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: FastAPI-роутер чата
+# Process Name: Dynamically construct/retrieve the appropriate AI 
 # =============================================================================
-# Описание:
+# Description:
 #   Обработка POST-запросов к /api/chat.
-#   Последовательный опрос плагинов, извлечение контекста из пользовательского RAG,
-#   прямой вызов AI-модели и автоматическая индексация диалога в User RAG.
 #
 # File: router_chat.py
 # Project: ai-breadboard
-# Package: src.fastapi
+# Package: core.fastapi
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -28,7 +26,6 @@ from core.ai.gemini.user_query_rag import index_user_query, search_user_context
 
 router = APIRouter(prefix='/api/chat', tags=['chat'])
 
-
 # Короткие слова-продолжения диалога, которые сами по себе не содержат медиа-ключевых слов
 _CONTEXT_CONTINUATION_WORDS = {
     'да', 'нет', 'yes', 'no', 'ок', 'ok', 'хочу', 'конечно',
@@ -36,25 +33,21 @@ _CONTEXT_CONTINUATION_WORDS = {
     'want', 'check', 'find', 'show', 'okay',
 }
 
-
 class ChatRequest(BaseModel):
     message: str
     history: list[dict] = []
     generation_config: dict = {}
-
 
 class SaveRagRequest(BaseModel):
     query: str
     chat_text: str
     voice_text: str
 
-
 class TestModelRequest(BaseModel):
     model: str = ""
     provider: str = ""
     message: str = "Привет! Назови свою модель и провайдера, и подтверди готовность к работе."
     system_instruction: str = ""
-
 
 def get_chat_model(selected_model_name: str, system_instruction: str = ""):
     """Dynamically construct/retrieve the appropriate AI model instance."""
@@ -139,7 +132,6 @@ def get_chat_model(selected_model_name: str, system_instruction: str = ""):
             system_prompt=system_instruction or "You are a helpful AI assistant.",
         )
 
-
 async def _extract_user_auth(fastapi_req: Request) -> tuple[str, str, str, dict]:
     """Извлекает идентификатор пользователя, системную инструкцию, модель и настройки из JWT/IP."""
     user_identifier = ""
@@ -168,7 +160,6 @@ async def _extract_user_auth(fastapi_req: Request) -> tuple[str, str, str, dict]
 
     return user_identifier, system_instruction, selected_model, settings
 
-
 def _get_voice_gender_rule(settings: dict) -> str:
     """Определяет гендерное правило для ответов ассистента на основе настроек голоса TTS."""
     default_voice = getattr(tts_cfg, "default_voice", "ru-RU-DmitryNeural") if tts_cfg else "ru-RU-DmitryNeural"
@@ -182,18 +173,17 @@ def _get_voice_gender_rule(settings: dict) -> str:
         return "ВАЖНОЕ ПРАВИЛО: Отвечай от женского лица (например: 'Я нашла', 'Я подобрала')."
     return ""
 
-
 def _clean_chat_history(history: list[dict]) -> list[dict]:
     """Очищает историю сообщений перед передачей в модель."""
     if not history:
         return []
     _ERROR_PATTERNS = (
-        '❌', 'Ошибка', 'Error', 'TypeError', 'AttributeError', 'Traceback',
-        '[Ошибка]', 'Не удалось найти', 'В локальной базе ничего не найдено',
+        '❌', 'Error', 'Error', 'TypeError', 'AttributeError', 'Traceback',
+        '[Error]', 'Не удалось найти', 'В локальной базе ничего не найдено',
         'DEBUG MODE', 'DEBUG:', '[DEBUG'
     )
     _STATUS_PREFIXES = (
-        '🔍', '🌐', '🤖', '🛠️', '🎡', '📡', 'Вызов плагина', 'Генерация', 'Проверка',
+        '🔍', '🌐', '🤖', '🛠️', '🎡', '📡', 'Вызов плагина', 'Генерация', 'Check',
         'DEBUG MODE:', 'DEBUG:'
     )
 
@@ -253,7 +243,6 @@ def _clean_chat_history(history: list[dict]) -> list[dict]:
 
     return cleaned_entries[-10:]
 
-
 def _build_debug_prompt(request: ChatRequest, user_context_str: str, voice_gender_rule: str) -> str:
     """Формирует текстовый дамп полного промпта для отладочного режима."""
     full_prompt_parts = []
@@ -275,11 +264,8 @@ def _build_debug_prompt(request: ChatRequest, user_context_str: str, voice_gende
     full_prompt_parts.append(f"── USER MESSAGE ──\n{request.message}")
     return "\n\n".join(full_prompt_parts)
 
-
-
-
 def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
-    """Инициализация роутера чата с привязкой моделей (chat и narrator)."""
+    """Initialization роутера чата с привязкой моделей (chat и narrator)."""
     if hasattr(narrator_model, 'gemini_model') and narrator_model.gemini_model:
         narrator_model.gemini_model.save_history_chat = False
 
@@ -388,7 +374,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                 'duration_ms': duration_ms
             }
         except Exception as exc:
-            logger.error(f"[ChatRouter] Ошибка проверочного запроса к модели {target_model}: {exc}", exc_info=True)
+            logger.error(f"[ChatRouter] Error проверочного запроса к модели {target_model}: {exc}", exc_info=True)
             duration_ms = round((time.perf_counter() - start_time) * 1000, 1)
             return {
                 'status': 'error',
@@ -409,11 +395,11 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                 user_identifier, request.query, request.chat_text, request.voice_text
             )
             if save_success:
-                return {"status": "success", "message": "Успешно сохранено для последующей компиляции RAG"}
+                return {"status": "success", "message": "Successfully сохранено для последующей компиляции RAG"}
             else:
-                raise HTTPException(status_code=500, detail="Ошибка сохранения ответа")
+                raise HTTPException(status_code=500, detail="Error сохранения ответа")
         except Exception as e:
-            logger.error("Ошибка при ручном сохранении ответа", e)
+            logger.error("Error при ручном сохранении ответа", e)
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.post('/save-rag-instant')
@@ -435,13 +421,13 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
             )
 
             if save_success and rag_success:
-                return {"status": "success", "message": "Успешно сохранено в архив и проиндексировано в RAG"}
+                return {"status": "success", "message": "Successfully сохранено в архив и проиндексировано в RAG"}
             elif save_success:
-                return {"status": "success", "message": "Сохранено в архив, но произошла ошибка при индексации в RAG"}
+                return {"status": "success", "message": "Сохранено в архив, но произошла Error при индексации в RAG"}
             else:
-                raise HTTPException(status_code=500, detail="Ошибка сохранения ответа")
+                raise HTTPException(status_code=500, detail="Error сохранения ответа")
         except Exception as e:
-            logger.error("Ошибка при мгновенном сохранении в RAG", e)
+            logger.error("Error при мгновенном сохранении в RAG", e)
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.post('')
@@ -564,7 +550,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                     ))
 
             except Exception as ex:
-                logger.error('Ошибка обработки чат-запроса', ex)
+                logger.error('Error обработки чат-запроса', ex)
                 yield f"data: {json.dumps({'error': str(ex)})}\n\n"
 
         return StreamingResponse(event_generator(), media_type="text/event-stream")

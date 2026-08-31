@@ -1,9 +1,22 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: # ================================================
+# =============================================================================
+# Description:
+#   Тесты универсального реестра навыков."""
+#
+# File: test_skill_registry.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """Тесты универсального реестра навыков."""
 
 from pathlib import Path
 
 from core.skills import SkillRegistry
-
 
 def _write_skill(root: Path, name: str, description: str, body: str) -> None:
     skill_dir = root / name
@@ -12,7 +25,6 @@ def _write_skill(root: Path, name: str, description: str, body: str) -> None:
         f"---\nname: {name}\ndescription: {description}\n---\n\n{body}\n",
         encoding="utf-8",
     )
-
 
 def test_registry_discovers_gemini_and_agent_skill_roots(tmp_path: Path) -> None:
     gemini_root = tmp_path / ".gemini" / "skills"
@@ -27,7 +39,6 @@ def test_registry_discovers_gemini_and_agent_skill_roots(tmp_path: Path) -> None
     assert [skill.name for skill in registry.discover()] == ["db-inspector", "media-manager"]
     assert registry.get("MEDIA-MANAGER").prompt() == "Запускай аудит."
 
-
 def test_registry_returns_empty_search_and_rejects_unknown_skill(tmp_path: Path) -> None:
     registry = SkillRegistry(tmp_path)
 
@@ -35,10 +46,9 @@ def test_registry_returns_empty_search_and_rejects_unknown_skill(tmp_path: Path)
     try:
         registry.get("missing")
     except KeyError as error:
-        assert "missing" in str(error), "Ошибка должна содержать имя отсутствующего навыка"
+        assert "missing" in str(error), "Error должна содержать имя отсутствующего навыка"
     else:
         raise AssertionError("Неизвестный навык должен приводить к KeyError")
-
 
 def test_registry_prefers_json_contract_and_exports_portable_json(tmp_path: Path) -> None:
     skills_root = tmp_path / ".gemini" / "skills"

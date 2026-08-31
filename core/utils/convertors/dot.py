@@ -1,7 +1,16 @@
-## \file /src/utils/convertors/dot.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: .. module:: src.utils.convertors.dot
+# =============================================================================
+# Description:
+#   Converts a DOT file to a PNG image.
+#
+# File: dot.py
+# Project: ai-breadboard
+# Package: core.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module:: src.utils.convertors.dot 
@@ -9,7 +18,6 @@
 	:synopsis: converts DOT files into PNG images using the Graphviz library
 
 """
-
 
 import sys
 from graphviz import Source
@@ -65,7 +73,6 @@ def dot2png(dot_file: str, png_file: str) -> None:
     except Exception as e:
         print(f"An error occurred during the conversion: {e}")
         raise e
-
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

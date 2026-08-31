@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тесты модуля core/utils/convertors/json
+# Process Name: Class для тестирования функций модуля json.py.
 # =============================================================================
-# Описание:
-#   Исчерпывающее тестирование функций модуля json.py: 
-#   json2csv, json2ns, json2xml, json2xls.
+# Description:
+#   Исчерпывающее тестирование функций модуля json.py:
 #
-# File: tests/test_utils_convertors_json.py
+# File: test_utils_convertors_json.py
 # Project: ai-breadboard
 # Package: tests
 # Author: hypo69
@@ -20,7 +19,7 @@ from types import SimpleNamespace
 from core.utils.convertors.json import json2csv, json2ns, json2xml, json2xls
 
 class TestJsonUtils:
-    """Класс для тестирования функций модуля json.py."""
+    """Class для тестирования функций модуля json.py."""
 
     def test_json2ns_happy_path(self):
         """Тестирование конвертации JSON в SimpleNamespace."""
@@ -30,7 +29,7 @@ class TestJsonUtils:
         # --- Выполнение (Act) ---
         result = json2ns(data)
         
-        # --- Проверка (Assert) ---
+        # --- Check (Assert) ---
         assert isinstance(result, SimpleNamespace)
         assert result.a == 1
         assert result.b == 2
@@ -43,7 +42,7 @@ class TestJsonUtils:
         # --- Выполнение (Act) ---
         result = json2xml(data)
 
-        # --- Проверка (Assert) ---
+        # --- Check (Assert) ---
         # Проверяем результат как строку (decode bytes if necessary)
         if isinstance(result, bytes):
             result = result.decode('utf-8')
@@ -64,6 +63,6 @@ class TestJsonUtils:
         # --- Выполнение (Act) ---
         result = json2xls(data, xls_file)
 
-        # --- Проверка (Assert) ---
+        # --- Check (Assert) ---
         assert result is True
         assert xls_file.exists()

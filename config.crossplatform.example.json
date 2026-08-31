@@ -1,0 +1,119 @@
+{
+  "_comment": "Example конфигурации AI Breadboard для Windows, Linux и macOS. Все пути автоматически определяются системой через scripts/cli/paths.py",
+  "_paths_info": {
+    "_windows": {
+      "data_dir": "%LOCALAPPDATA%\\AI-Breadboard",
+      "config_dir": "%LOCALAPPDATA%\\AI-Breadboard\\config",
+      "cache_dir": "%LOCALAPPDATA%\\AI-Breadboard\\Cache",
+      "certs_dir": "%USERPROFILE%\\.certs",
+      "bin_dir": "%USERPROFILE%\\.local\\bin",
+      "venv_python": "venv\\Scripts\\python.exe"
+    },
+    "_linux": {
+      "data_dir": "~/.local/share/AI-Breadboard",
+      "config_dir": "~/.config/AI-Breadboard",
+      "cache_dir": "~/.cache/AI-Breadboard",
+      "certs_dir": "~/.local/share/ca-certificates",
+      "bin_dir": "~/.local/bin",
+      "venv_python": "venv/bin/python"
+    },
+    "_macos": {
+      "data_dir": "~/Library/Application Support/AI-Breadboard",
+      "config_dir": "~/Library/Preferences/AI-Breadboard",
+      "cache_dir": "~/Library/Caches/AI-Breadboard",
+      "certs_dir": "~/Library/Certs",
+      "bin_dir": "~/.local/bin",
+      "venv_python": "venv/bin/python"
+    }
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "workers": 1,
+    "reload": true,
+    "use_ssl": true,
+    "mode": "DEV",
+    "debug": true,
+    "auto_launch": {
+      "enabled": false,
+      "delay_seconds": 5
+    },
+    "auto_start_assist_cli": false
+  },
+  "ai": {
+    "use_foundry": true,
+    "foundry_base_url": "http://localhost:54837",
+    "foundry_model_id": "qwen2.5-1.5b-instruct-generic-cpu:4",
+    "preload_silero": false,
+    "use_agy": false,
+    "agy_model_id": "agy-gemini-3.5-flash-lite",
+    "use_gemini_cli": true,
+    "gemini_cli_model_id": "gemini-3.1-flash-lite"
+  },
+  "huggingface": {
+    "enabled": true,
+    "default_model": "Qwen/Qwen2.5-0.5B-Instruct",
+    "cache_dir": ""
+  },
+  "onnx": {
+    "enabled": true,
+    "execution_provider": "DirectMLExecutionProvider"
+  },
+  "openai_compat": {
+    "providers": {
+      "openai": {
+        "base_url": "https://api.openai.com/v1",
+        "models": [
+          "gpt-4o",
+          "gpt-4o-mini"
+        ]
+      },
+      "deepseek": {
+        "base_url": "https://api.deepseek.com/v1",
+        "models": [
+          "deepseek-chat",
+          "deepseek-reasoner"
+        ]
+      },
+      "lmstudio": {
+        "base_url": "http://localhost:1234/v1",
+        "models": []
+      }
+    }
+  },
+  "langchain": {
+    "enabled": true,
+    "default_llm": "gemini",
+    "gemini_model": "gemini-2.5-flash",
+    "ollama_model": "qwen2.5:7b",
+    "ollama_base_url": "http://localhost:11434",
+    "mcp_servers": {
+      "playwright": {
+        "command": "npx",
+        "args": [
+          "@playwright/mcp@latest"
+        ],
+        "transport": "stdio"
+      }
+    },
+    "max_agent_steps": 15,
+    "search_timeout_seconds": 60
+  },
+  "logging": {
+    "enable_log_analyzer": false,
+    "max_size_mb": 10.0
+  },
+  "rag": {
+    "mode": "rag+model"
+  },
+  "web_search": {
+    "engine": "gemini_cli",
+    "gemini_model": "gemini-2.5-flash",
+    "gemini_cli_model": "gemini-3.1-flash-lite",
+    "agy_model": "agy-flash",
+    "fallback_on_rag_not_found": true
+  },
+  "user_settings": {
+    "language": "en"
+  }
+}

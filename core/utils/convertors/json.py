@@ -1,12 +1,20 @@
-## \file /src/utils/convertors/json.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: JSON format conversion utilities
+# =============================================================================
+# Description:
+#   Converts JSON data into various formats: CSV, SimpleNamespace, XML, and XLS.
+#   Provides flexible serialization methods for different output formats.
+#
+# File: json.py
+# Project: ai-breadboard
+# Package: core.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
-.. module:: src.utils.convertors.json 
-	:platform: Windows, Unix
-	:synopsis: convert JSON data into various formats: CSV, SimpleNamespace, XML, and XLS
+JSON data conversion module.
 
 Functions:
     - `json2csv`: Convert JSON data to CSV format.
@@ -26,7 +34,6 @@ from core.utils.jjson import j_dumps
 from core.utils.xls import save_xls_file
 from core.utils.convertors.dict import dict2xml
 from core.logger.logger import logger
-
 
 def json2csv(json_data: str | list | dict | Path, csv_file_path: str | Path) -> bool:
     """
@@ -63,7 +70,6 @@ def json2csv(json_data: str | list | dict | Path, csv_file_path: str | Path) -> 
         logger.error(f"json2csv failed", ex, True)
         ...
 
-
 def json2ns(json_data: str | dict | Path) -> SimpleNamespace:
     """
     Convert JSON data or JSON file to SimpleNamespace object.
@@ -93,7 +99,6 @@ def json2ns(json_data: str | dict | Path) -> SimpleNamespace:
     except Exception as ex:
         logger.error(f"json2ns failed", ex, True)
 
-
 def json2xml(json_data: str | dict | Path, root_tag: str = "root") -> str:
     """
     Convert JSON data or JSON file to XML format.
@@ -110,7 +115,6 @@ def json2xml(json_data: str | dict | Path, root_tag: str = "root") -> str:
         Exception: If unable to parse JSON or convert to XML.
     """
     return dict2xml(json_data)
-
 
 def json2xls(json_data: str | list | dict | Path, xls_file_path: str | Path) -> bool:
     """

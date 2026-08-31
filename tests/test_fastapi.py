@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тесты модуля core/fastapi
+# Process Name: Тесты модуля core/fastapi
 # =============================================================================
-# Описание:
-#   Модуль содержит тесты для модуля FastAPI API сервера. Проверяет создание
-#   тестового клиента, настройки CORS, маршрутизацию и базовую логику обработки
-#   запросов. Обеспечивает покрытие основных endpoint-ов API-сервера.
+# Description:
+#   Module содержит тесты для модуля FastAPI API сервера. Checks создание
 #
-# File: tests/test_fastapi.py
+# File: test_fastapi.py
 # Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
+
 """
 Тесты модуля core/fastapi
 """
@@ -20,7 +19,6 @@
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from fastapi.testclient import TestClient
-
 
 @pytest.fixture
 def app_client():
@@ -38,7 +36,6 @@ def app_client():
     )
     
     return app
-
 
 class TestRouterAuth:
     """Тесты router_auth.py."""
@@ -100,7 +97,6 @@ class TestRouterAuth:
                 assert "search_engine" in res
                 assert res["search_engine"] in ["gemini_cli", "gemini", "agy", "langchain", "playwright"]
 
-
 class TestRouterChat:
     """Тесты router_chat.py."""
 
@@ -140,7 +136,7 @@ class TestRouterChat:
 
     @pytest.mark.asyncio
     async def test_chat_stream_excludes_search_engine_for_model(self):
-        """Тест проверяет, что search_engine из generation_config не попадает в chat_stream модели."""
+        """Тест checks, что search_engine из generation_config не попадает в chat_stream модели."""
         from core.fastapi.router_chat import init_router, ChatRequest
         from fastapi import Request
 
@@ -177,7 +173,6 @@ class TestRouterChat:
         assert "search_engine" not in called_kwargs, "Параметр search_engine не должен передаваться в chat_stream модели"
         assert len(chunks) > 0
 
-
 class TestRouterTTS:
     """Тесты router_tts.py."""
 
@@ -189,7 +184,6 @@ class TestRouterTTS:
         
         assert router is not None
         assert router.prefix == '/api/tts'
-
 
 class TestRouterControl:
     """Тесты router_control.py."""

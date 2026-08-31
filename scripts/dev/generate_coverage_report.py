@@ -1,5 +1,17 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: # ================================================
+# =============================================================================
+# Description:
+#   Генерация отчета о покрытии."""
+#
+# File: generate_coverage_report.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Генерация отчета о покрытии кода
 """
@@ -8,7 +20,6 @@ import os
 import sys
 from pathlib import Path
 import json
-
 
 def generate_coverage_report():
     """Генерация отчета о покрытии."""
@@ -42,9 +53,8 @@ def generate_coverage_report():
         print(f"ERROR: Oshibka geneneracii otcheta: {e}")
         return 1
 
-
 def check_coverage_threshold(threshold=80):
-    """Проверка порога покрытия."""
+    """Check порога покрытия."""
     try:
         import coverage
         
@@ -67,7 +77,6 @@ def check_coverage_threshold(threshold=80):
         print("ERROR: coverage ne ustanovlen")
         return 1
 
-
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Genneracia otcheta o pokrytii")
@@ -88,7 +97,6 @@ def main():
     report_result = generate_coverage_report()
     
     return max(check_result, report_result)
-
 
 if __name__ == "__main__":
     sys.exit(main())

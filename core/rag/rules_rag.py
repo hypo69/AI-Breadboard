@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: RAG системных правил и промптов (Rules RAG)
+# Process Name: Результат поиска по индексу правил.
 # =============================================================================
-# Описание:
-#   Индексация и семантический поиск по модульным промптам и правилам из prompts/.
-#   Позволяет динамически включать в системный промпт модели только релевантные блоки.
+# Description:
+#   Индексация и семантический поиск по Moduleным промптам и правилам из prompts/.
 #
 # File: rules_rag.py
 # Project: ai-breadboard
@@ -17,6 +16,7 @@ from __future__ import annotations
 
 import json
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
@@ -26,7 +26,7 @@ from header import __root__
 
 _AI_PROMPTS_ROOT: Path = __root__ / ".ai" / "prompts"
 _PROMPTS_ROOT: Path = _AI_PROMPTS_ROOT if _AI_PROMPTS_ROOT.exists() else (__root__ / "prompts")
-_TMP_RAG_DIR: Path = __root__ / "tmp" / "rag"
+_TMP_RAG_DIR: Path = Path(tempfile.gettempdir()) / 'ai-breadboard' / 'rag'
 _DEFAULT_INDEX_PATH: Path = _TMP_RAG_DIR / "rules.index"
 _DEFAULT_DOCUMENTS_PATH: Path = _TMP_RAG_DIR / "documents.json"
 
@@ -38,7 +38,6 @@ _MODEL_NAME: str = "sentence-transformers/all-MiniLM-L6-v2"
 _TARGET_GLOBS: List[str] = ["**/*.md", "**/*.json"]
 _EXCLUDE_NAMES: set[str] = {"README.md"}
 
-
 @dataclass
 class RulesSearchResult:
     """Результат поиска по индексу правил."""
@@ -46,7 +45,6 @@ class RulesSearchResult:
     path: str
     text: str
     score: float
-
 
 def collect_prompt_documents(prompts_root: Path = _PROMPTS_ROOT) -> List[Dict[str, str]]:
     """
@@ -57,7 +55,7 @@ def collect_prompt_documents(prompts_root: Path = _PROMPTS_ROOT) -> List[Dict[st
         prompts_root (Path): Корневой каталог файлов промптов.
 
     Returns:
-        List[Dict[str, str]]: Список документов формата {"file": str, "path": str, "text": str}.
+        List[Dict[str, str]]: List документов формата {"file": str, "path": str, "text": str}.
     """
     documents: List[Dict[str, str]] = []
     if not prompts_root.exists():
@@ -84,14 +82,13 @@ def collect_prompt_documents(prompts_root: Path = _PROMPTS_ROOT) -> List[Dict[st
             })
     return documents
 
-
 def build_rules_index(
     prompts_root: Path = _PROMPTS_ROOT,
     output_dir: Path = _TMP_RAG_DIR,
 ) -> Tuple[Path, Path]:
     """
     ## hypo69 docblock
-    Строит FAISS-индекс по файлам промптов и сохраняет документы и индекс.
+    Строит FAISS-индекс по файлам промптов и saves документы и индекс.
 
     Args:
         prompts_root (Path): Путь к каталогу prompts.
@@ -126,15 +123,13 @@ def build_rules_index(
     index.add(vectors.astype(np.float32))
 
     faiss.write_index(index, str(index_path))
-    logger.info(f"[RulesRAG] Индекс успешно построен: {index_path} ({len(documents)} документов)")
+    logger.info(f"[RulesRAG] Индекс successfully построен: {index_path} ({len(documents)} документов)")
     return index_path, docs_path
-
 
 _ALWAYS_INCLUDE: List[str] = [
     "identity.md",
     "categories.md",
 ]
-
 
 class RulesRAG:
     """
@@ -145,7 +140,7 @@ class RulesRAG:
     def __init__(self, index_path: Path = _DEFAULT_INDEX_PATH, docs_path: Path = _DEFAULT_DOCUMENTS_PATH) -> None:
         """
         ## hypo69 docblock
-        Инициализирует и загружает индекс правил и корпус документов.
+        Инициализирует и loads индекс правил и корпус документов.
         """
         # Поиск индекса: сначала в tmp/rag, затем в fallback путях
         resolved_index = index_path
@@ -180,14 +175,14 @@ class RulesRAG:
     def search(self, query: str, top_k: int = 4) -> List[RulesSearchResult]:
         """
         ## hypo69 docblock
-        Выполняет семантический поиск по корпусу правил.
+        Performs семантический поиск по корпусу правил.
 
         Args:
             query (str): Запрос на естественном языке.
             top_k (int): Число возвращаемых результатов.
 
         Returns:
-            List[RulesSearchResult]: Список релевантных модулей промптов.
+            List[RulesSearchResult]: List релевантных модулей промптов.
         """
         if not query.strip():
             return []

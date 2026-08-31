@@ -1,3 +1,17 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Module
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: search_media.py
+# Project: ai-breadboard
+# Package: .gemini.skills.rag-search-manager.scripts
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 import argparse
 import sys
 from pathlib import Path
@@ -11,7 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from core.ai.gemini.user_query_rag import search_user_context
 from plugins.web_search import WebSearchPlugin
 
-# Загрузка .env
+# Loading .env
 load_dotenv(Path(__file__).resolve().parents[3] / '.env')
 
 async def search_media(query):
@@ -33,12 +47,12 @@ async def search_media(query):
             else:
                 print("ℹ️ В RAG ничего не найдено.")
     except Exception as e:
-        print(f"⚠️ Ошибка при поиске в RAG: {e}")
+        print(f"⚠️ Error при поиске в RAG: {e}")
     
     # 2. Если не найдено, поиск в интернете
     print("🌐 RAG не дал результатов. Ищу в интернете...")
     try:
-        # Инициализация плагина поиска
+        # Initialization плагина поиска
         search_plugin = WebSearchPlugin()
         
         # Выполнение поиска (используем движок по умолчанию из конфига)
@@ -49,7 +63,7 @@ async def search_media(query):
         else:
             print("❌ В интернете ничего не найдено.")
     except Exception as e:
-        print(f"⚠️ Ошибка при поиске в интернете: {e}")
+        print(f"⚠️ Error при поиске в интернете: {e}")
 
 if __name__ == "__main__":
     import asyncio

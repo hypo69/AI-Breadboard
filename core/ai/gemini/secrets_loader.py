@@ -1,20 +1,32 @@
 # -*- coding: utf-8 -*-
-"""Модуль загрузки API ключей Gemini из secrets.json."""
+# =============================================================================
+# Process Name: Loading Gemini API keys from secrets.json file
+# =============================================================================
+# Description:
+#   Loads and manages Google Gemini API authentication keys from local secrets.json.
+#   Provides functions to retrieve all keys, get keys by name, and load active keys
+#   with proper filtering by status and quota restrictions.
+#
+# File: secrets_loader.py
+# Project: ai-breadboard
+# Package: core.ai.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 import json
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-# Путь к файлу secrets.json относительно корня проекта
+# Path to secrets.json file relative to module directory
 _SECRETS_FILE = Path(__file__).parent / 'secrets.json'
-
 
 def load_secrets() -> Dict[str, str]:
     """
-    Загружает API ключи из secrets.json.
-    
+    Loading API keys from secrets.json file.
+
     Returns:
-        Dict[str, str]: Словарь email -> API_key
+        Dict[str, str]: Dictionary mapping email addresses to API keys.
     """
     if not _SECRETS_FILE.exists():
         return {}
@@ -23,64 +35,60 @@ def load_secrets() -> Dict[str, str]:
         content = _SECRETS_FILE.read_text(encoding='utf-8')
         return json.loads(content)
     except Exception as ex:
-        print(f"Ошибка загрузки secrets.json: {ex}")
+        print(f"Error loading secrets.json: {ex}")
         return {}
-
 
 def get_all_keys() -> List[str]:
     """
-    Возвращает список всех API ключей.
-    
+    Returns list of all API keys.
+
     Returns:
-        List[str]: Список API ключей
+        List[str]: List of API key values.
     """
     secrets = load_secrets()
     return list(secrets.values())
 
-
 def get_all_key_names() -> List[str]:
     """
-    Возвращает список всех имён ключей (email).
-    
+    Returns list of all key names (email addresses).
+
     Returns:
-        List[str]: Список имён ключей
+        List[str]: List of key identifiers (email addresses).
     """
     secrets = load_secrets()
     return list(secrets.keys())
 
-
 def get_key_by_name(name: str) -> str | None:
     """
-    Возвращает API ключ по имени.
-    
+    Returns API key by name.
+
     Args:
-        name: Имя ключа (email)
-        
+        name: Key identifier (email address).
+
     Returns:
-        str | None: API ключ или None если не найден
+        str | None: API key value or None if not found.
     """
     secrets = load_secrets()
     return secrets.get(name)
 
-
 def load_api_keys(names: List[str] = []) -> Tuple[List[str], List[str], List[str]]:
     """
-    Возвращает (api_keys, key_names, key_names) отсортированные по last_run.
-    Фильтрует: только status == 'active' и не забаненные (дневная квота).
-    
+    Loading API keys sorted by last_run timestamp.
+    Filters keys: only active status and not banned (daily quota).
+
     Args:
-        names: Опциональный список имён; если None — берёт все из файла.
-        
+        names: Optional list of key names; if empty, loads all from file.
+
     Returns:
         Tuple[List[str], List[str], List[str]]: (api_keys, key_names, key_names)
     """
     from core.secrets.api_key_state import load_api_keys as state_load_api_keys
     
-    # Используем существующую функцию, но передаём имена из secrets.json
+    # Using existing function with names from secrets.json
     all_names = get_all_key_names()
     
     if names:
-        # Фильтруем только имена, которые есть в secrets.json
+        # Filter only names that exist in secrets.json
         names = [n for n in names if n in all_names]
     
     return state_load_api_keys(names)

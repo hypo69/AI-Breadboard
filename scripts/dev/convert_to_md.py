@@ -1,3 +1,17 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Module
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: convert_to_md.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 import json
 from pathlib import Path
 from header import __root__

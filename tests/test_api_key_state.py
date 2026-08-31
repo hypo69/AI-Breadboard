@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Unit Tests for core.secrets.api_key_state
+# Process Name: Test saving an API key and loading it back.
 # =============================================================================
 # Description:
 #   Validates API key loading, priority merging, rotation, 24-hour quota
-#   exhaustion tracking, and status retrieval.
 #
 # File: test_api_key_state.py
 # Project: ai-breadboard
@@ -27,7 +26,6 @@ from core.secrets.api_key_state import (
     update_last_run,
 )
 
-
 def test_save_and_load_api_key(tmp_path):
     """Test saving an API key and loading it back."""
     keys_file = tmp_path / 'gemini_keys.json'
@@ -44,7 +42,6 @@ def test_save_and_load_api_key(tmp_path):
         assert 'test_main' in names
         assert len(states) == 1
         assert states[0]['status'] == 'active'
-
 
 def test_mark_exhausted_and_cooldown(tmp_path):
     """Test marking key exhausted and calculating cooldown."""
@@ -69,7 +66,6 @@ def test_mark_exhausted_and_cooldown(tmp_path):
         # Cooldown should be > 0 and <= 86400
         wait_time = next_available_in()
         assert 0 < wait_time <= 86400
-
 
 def test_update_last_run(tmp_path):
     """Test updating last_run timestamp."""

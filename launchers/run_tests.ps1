@@ -1,6 +1,29 @@
 <#
 .SYNOPSIS
-    PowerShell скрипт для запуска тестов ai-breadboard / AI Breadboard.
+    PowerShell script for running ai-breadboard / AI Breadboard tests.
+
+.DESCRIPTION
+    Test runner script for executing pytest with optional coverage reporting,
+    verbose output, marker filtering, and automatic HTML coverage report opening.
+    Supports virtual environment activation and cross-platform execution.
+
+.PARAMETER Coverage
+    Enable code coverage reporting (generates HTML and XML reports).
+
+.PARAMETER Verbose
+    Display verbose test output (-v flag).
+
+.PARAMETER Markers
+    Run only tests matching specified pytest markers.
+
+.PARAMETER OpenCoverage
+    Automatically open HTML coverage report in browser after tests complete.
+
+.EXAMPLE
+    .\run_tests.ps1
+    .\run_tests.ps1 -Coverage -OpenCoverage
+    .\run_tests.ps1 -Verbose -Markers "unit"
+    .\run_tests.ps1 -Coverage -Verbose
 #>
 
 param(
@@ -13,7 +36,7 @@ param(
 $scriptDir = $PSScriptRoot
 if ([string]::IsNullOrEmpty($scriptDir)) { $scriptDir = (Get-Location).Path }
 
-# Определение корня проекта (если скрипт находится в директории launchers/)
+# Project root detection (if script is in launchers/ directory)
 $projectRoot = $scriptDir
 if ((Split-Path -Leaf $projectRoot) -eq "launchers" -or -not (Test-Path (Join-Path $projectRoot "main.py"))) {
     $parent = Split-Path -Parent $projectRoot
@@ -23,25 +46,25 @@ if ((Split-Path -Leaf $projectRoot) -eq "launchers" -or -not (Test-Path (Join-Pa
 }
 Set-Location $projectRoot
 
-# Путь к Python
+# Path to Python
 $python = Join-Path $projectRoot "venv\Scripts\python.exe"
 if (-not (Test-Path $python)) {
     $python = "python"
 }
 
-# Проверка наличия Python
+# Checking for Python
 if (-not (Get-Command $python -ErrorAction SilentlyContinue) -and -not (Test-Path $python)) {
-    Write-Error "Python не найден. Установите Python 3.10+"
+    Write-Error "Python not found. Install Python 3.10+"
     exit 1
 }
 
-# Активация venv если есть
+# Activating venv if available
 $venvActivate = Join-Path $projectRoot "venv\Scripts\Activate.ps1"
 if (Test-Path $venvActivate) {
     . $venvActivate
 }
 
-# Запуск pytest
+# Running pytest
 $pytestExe = Join-Path $projectRoot "venv\Scripts\pytest.exe"
 $pytestCmd = if (Test-Path $pytestExe) { $pytestExe } else { "pytest" }
 $cmdArgs = @()
@@ -60,17 +83,17 @@ if ($Markers) {
     $cmdArgs += "-m", $Markers
 }
 
-Write-Host "Запуск тестов: $pytestCmd $($cmdArgs -join ' ')" -ForegroundColor Cyan
+Write-Host "Running tests: $pytestCmd $($cmdArgs -join ' ')" -ForegroundColor Cyan
 & $pytestCmd @cmdArgs
 
-# Результат
+# Result
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "`n✓ Все тесты пройдены успешно!" -ForegroundColor Green
+    Write-Host "`n✓ All tests passed successfully!" -ForegroundColor Green
 } else {
-    Write-Host "`n✗ Тесты провалились (exit code: $LASTEXITCODE)" -ForegroundColor Red
+    Write-Host "`n✗ Tests failed (exit code: $LASTEXITCODE)" -ForegroundColor Red
 }
 
-# Открытие отчета
+# Opening report
 if ($Coverage -and (Test-Path (Join-Path $projectRoot "htmlcov\index.html"))) {
     if ($OpenCoverage) {
         Start-Process (Join-Path $projectRoot "htmlcov\index.html")

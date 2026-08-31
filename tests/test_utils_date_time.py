@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: # ================================================
+# =============================================================================
+# Description:
+#   Тесты метода interval."""
+#
+# File: test_utils_date_time.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Тесты модуля core/utils/date_time.py
 """
@@ -7,7 +20,6 @@ import pytest
 from datetime import time
 from unittest.mock import patch, Mock
 from core.utils.date_time import TimeoutCheck
-
 
 class TestTimeoutCheckInterval:
     """Тесты метода interval."""
@@ -78,7 +90,6 @@ class TestTimeoutCheckInterval:
             
             assert checker.result is True
 
-
 class TestTimeoutCheckIntervalWithTimeout:
     """Тесты метода interval_with_timeout."""
 
@@ -116,12 +127,11 @@ class TestTimeoutCheckIntervalWithTimeout:
             
             assert result is True  # 1:00 входит в 23:00-6:00
 
-
 class TestTimeoutCheckInput:
     """Тесты методов ввода."""
 
     def test_get_input_sets_attribute(self):
-        """Тест что get_input устанавливает атрибут."""
+        """Тест что get_input sets атрибут."""
         checker = TimeoutCheck()
         
         with patch('builtins.input', return_value='test input'):
@@ -147,7 +157,6 @@ class TestTimeoutCheckInput:
             result = checker.input_with_timeout(timeout=5)
             
             assert result == ''
-
 
 class TestTimeoutCheckEdgeCases:
     """Тесты граничных случаев."""

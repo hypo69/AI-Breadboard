@@ -1,3 +1,17 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: # ================================================
+# =============================================================================
+# Description:
+#   Tests for manage_tools.py CLI interface."""
+#
+# File: test_manage_tools.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """Tests for manage_tools.py CLI interface."""
 
 import subprocess
@@ -10,7 +24,6 @@ import pytest
 # Test data directory
 TEST_DATA_DIR = Path(__file__).parent / "data" / "test_manage_tools"
 TEST_DATA_DIR.mkdir(parents=True, exist_ok=True)
-
 
 class TestManageToolsHelp:
     """Test help output and argument parsing."""
@@ -70,7 +83,6 @@ class TestManageToolsHelp:
         assert "add" in result.stdout
         assert "init" in result.stdout
 
-
 class TestSkillsCommand:
     """Test skills command functionality."""
 
@@ -105,7 +117,6 @@ class TestSkillsCommand:
         assert result.returncode == 1
         assert "Error" in result.stdout or "Error" in result.stderr
 
-
 class TestRagCommand:
     """Test rag command functionality."""
 
@@ -129,7 +140,6 @@ class TestRagCommand:
         )
         assert result.returncode == 1
 
-
 class TestKnowledgeCommand:
     """Test knowledge command functionality."""
 
@@ -142,7 +152,6 @@ class TestKnowledgeCommand:
             cwd=Path(__file__).parent.parent
         )
         assert result.returncode == 1
-
 
 class TestDocsCommand:
     """Test docs command functionality."""
@@ -157,7 +166,6 @@ class TestDocsCommand:
         )
         assert result.returncode == 1
 
-
 class TestUnknownCommand:
     """Test handling of unknown main commands."""
 
@@ -170,7 +178,6 @@ class TestUnknownCommand:
             cwd=Path(__file__).parent.parent
         )
         assert result.returncode == 1
-
 
 class TestAssistCommand:
     """Test assist command forwarding."""
@@ -185,7 +192,6 @@ class TestAssistCommand:
         )
         # assist_cli may return 0 (help) or exit before processing
         assert result.returncode in (0, 2)  # 2 is argparse error code
-
 
 class TestRunScript:
     """Test _run_script helper function."""
@@ -207,7 +213,6 @@ class TestRunScript:
 
         assert result == 0
 
-
 @pytest.fixture
 def mock_skill_registry(monkeypatch):
     """Create a mock SkillRegistry for testing."""
@@ -223,7 +228,6 @@ def mock_skill_registry(monkeypatch):
     mock_registry.export_json.return_value = '{"name": "test-skill"}'
 
     return mock_registry
-
 
 class TestIntegration:
     """Integration tests for full CLI workflow."""
@@ -247,7 +251,6 @@ class TestIntegration:
             cwd=Path(__file__).parent.parent
         )
         assert result.returncode == 0
-
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

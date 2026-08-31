@@ -1,3 +1,17 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Test configuration for ai-breadboard.
+# =============================================================================
+# Description:
+#   Module for conftest.py in ai-breadboard project.
+#
+# File: conftest.py
+# Project: ai-breadboard
+# Package: root
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Test configuration for ai-breadboard.
 Provides fixtures and settings for all tests.
@@ -35,12 +49,10 @@ except Exception:
             return ctx
     ssl.create_default_context = _safe_create_default_context
 
-
 @pytest.fixture(scope='session')
 def test_data_dir():
     """Path to test data."""
     return ROOT / 'tests' / 'data'
-
 
 @pytest.fixture
 def mock_ai_model():
@@ -54,7 +66,6 @@ def mock_ai_model():
     mock.upload_file = AsyncMock()
     mock.clear_history = Mock()
     return mock
-
 
 @pytest.fixture
 def mock_db():
@@ -71,7 +82,6 @@ def mock_db():
     mock.delete_record = Mock(return_value=True)
     return mock
 
-
 @pytest.fixture
 def mock_qbt_client():
     """Mock for QBittorrentClient."""
@@ -83,12 +93,10 @@ def mock_qbt_client():
     mock.set_location = Mock(return_value=True)
     return mock
 
-
 @pytest.fixture
 def temp_db_path(tmp_path):
     """Temporary database path for tests."""
     return tmp_path / 'test_media.db'
-
 
 @pytest.fixture
 def sample_media_records():
@@ -122,7 +130,6 @@ def sample_media_records():
         },
     ]
 
-
 @pytest.fixture
 def sample_torrents():
     """Example torrents for tests."""
@@ -136,7 +143,6 @@ def sample_torrents():
             'save_path': 'E:/Downloads',
         },
     ]
-
 
 @pytest.fixture(autouse=True)
 def setup_env():

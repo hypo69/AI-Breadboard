@@ -1,47 +1,41 @@
-## \file src/logger/logger.py
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Модуль логгера с поддержкой JSON и цветного вывода
+# Process Name: Application logging system with color output and file rotation
 # =============================================================================
-# Описание:
-#   Модуль предоставляет универсальный логгер с поддержкой цветного консольного вывода,
-#   записи в файлы (info, debug, errors), а также JSON-форматирования логов. Реализован
-#   паттерн Singleton для единого экземпляра логгера по всему приложению.
+# Description:
+#   Comprehensive logging module with support for colored console output, JSON formatting,
+#   asynchronous logging queue, file rotation, and multi-level filtering for development and production environments.
 #
-# File: src/logger/logger.py
+# File: logger.py
 # Project: ai-breadboard
-# Package: src.logger
+# Package: core.logger
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-#! .pyenv/bin/python3
-
-"""
-.. module:: src.logger.logger
-    :platform: Windows, Unix
-    :synopsis: Модуль логгера
-   
-"""
-
-
 import logging
+import logging.handlers
 import colorama
 import datetime
 import json
 import inspect
 import threading
+import queue
+import atexit
+import tempfile
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict
 from types import SimpleNamespace
+from collections import Counter
 
 import header
 from header import __root__
 
+# Initialization colorama для поддержки цветного вывода
+colorama.init(autoreset=False)
 
-
-
-TEXT_COLORS = {
+# Dictionary для цветов текста
+TEXT_COLORS: Dict[str, str] = {
     "black": colorama.Fore.BLACK,
     "red": colorama.Fore.RED,
     "green": colorama.Fore.GREEN,
@@ -59,8 +53,8 @@ TEXT_COLORS = {
     "light_cyan": colorama.Fore.LIGHTCYAN_EX,
 }
 
-# Словарь для цветов фона
-BG_COLORS = {
+# Dictionary для цветов фона
+BG_COLORS: Dict[str, str] = {
     "black": colorama.Back.BLACK,
     "red": colorama.Back.RED,
     "green": colorama.Back.GREEN,
@@ -78,14 +72,25 @@ BG_COLORS = {
     "light_cyan": colorama.Back.LIGHTCYAN_EX,
 }
 
-
 class SingletonMeta(type):
-    """ Metaclass for Singleton pattern implementation."""
+    """
+    Метакласс для реализации паттерна Singleton.
+    Гарантирует, что class имеет только один экземпляр и предоставляет 
+    глобальную точку доступа к этому экземпляру.
+    
+    Потокобезопасен благодаря использованию Lock.
+    """
 
-    _instances = {}
-    _lock = threading.Lock()
+    _instances: Dict = {}
+    _lock: threading.Lock = threading.Lock()
 
     def __call__(cls, *args, **kwargs):
+        """
+        Creates или Returns существующий экземпляр класса.
+        
+        Returns:
+            Единственный экземпляр класса.
+        """
         if cls not in cls._instances:
             with cls._lock:
                 if cls not in cls._instances:
@@ -93,85 +98,156 @@ class SingletonMeta(type):
                     cls._instances[cls] = instance
         return cls._instances[cls]
 
-
 class JsonFormatter(logging.Formatter):
-    """ Custom formatter for logging in JSON format."""
+    """
+    Кастомный форматтер для логирования в JSON формате.
+    
+    Преобразует LogRecord в JSON строку с полями:
+    - timestamp: временная метка записи
+    - level: уровень логирования (INFO, DEBUG и т.д.)
+    - message: текст сообщения
+    - exc_info: Info об исключении (если присутствует)
+    """
 
-    def format(self, record):
-        """ Format the log record as JSON."""
-        log_entry = {
-            "asctime": self.formatTime(record, self.datefmt),
-            "levelname": record.levelname,
+    def format(self, record: logging.LogRecord) -> str:
+        """
+        Форматирует лог-запись в JSON.
+        
+        Args:
+            record: LogRecord для форматирования.
+            
+        Returns:
+            JSON string с информацией о логе.
+        """
+        log_entry: Dict = {
+            "timestamp": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
             "message": record.getMessage().replace('"', "'"),
             "exc_info": self.formatException(record.exc_info)
             if record.exc_info
             else None,
         }
-        _json = json.dumps(log_entry, ensure_ascii=False)
-        return _json
+        return json.dumps(log_entry, ensure_ascii=False)
 
-
-class CompressingHandler(logging.FileHandler):
+class CompressingHandler(logging.handlers.RotatingFileHandler):
     """
-    Обработчик файлового лога с компрессией повторяющихся записей.
-    Буферизует записи и пишет в файл с форматом [Nx] message.
+    Обработчик файловых логов с компрессией повторяющихся записей и ротацией.
+    
+    Особенности:
+    - Буферизирует записи и сжимает их в формате [Nx] message
+    - Поддерживает ротацию файлов по размеру
+    - Потокобезопасен при многопоточном доступе
+    - Гарантирует сохранение логов при падении процесса
+    
+    Parameters:
+        filename: Путь к файлу лога
+        maxBytes: Максимальный размер файла перед ротацией (по умолчанию 10MB)
+        backupCount: Количество резервных файлов (по умолчанию 5)
     """
     
-    def __init__(self, filename, encoding='utf-8', flush_interval=10):
-        super().__init__(filename, encoding=encoding, delay=True)
-        self.buffer: dict[str, int] = {}  # message -> count
-        self.flush_interval = flush_interval
+    def __init__(self, filename: str, maxBytes: int = 10 * 1024 * 1024, 
+                 backupCount: int = 5, encoding: str = 'utf-8'):
+        """
+        Инициализирует обработчик логов с ротацией.
+        
+        Args:
+            filename: Путь к файлу лога.
+            maxBytes: Максимальный размер файла в байтах.
+            backupCount: Количество сохраняемых резервных файлов.
+            encoding: Кодировка файла.
+        """
+        super().__init__(filename, maxBytes=maxBytes, backupCount=backupCount, 
+                        encoding=encoding, delay=False)
+        self.buffer: Dict[str, int] = {}  # message -> count
+        self._lock = threading.Lock()
         self._dirty = False
     
-    def emit(self, record: logging.LogRecord):
-        """Добавляет запись в буфер и пишет в файл."""
-        msg = self.format(record)
-        self.buffer[msg] = self.buffer.get(msg, 0) + 1
-        self._dirty = True
+    def emit(self, record: logging.LogRecord) -> None:
+        """
+        Добавляет запись в буфер с компрессией.
         
-        # Пишем если буфер переполнен или при большом количестве уникальных записей
-        if len(self.buffer) > 100 or self._dirty:
-            self.flush()
+        Args:
+            record: LogRecord для добавления.
+        """
+        try:
+            msg = self.format(record)
+            with self._lock:
+                self.buffer[msg] = self.buffer.get(msg, 0) + 1
+                self._dirty = True
+                
+                # Пишем если буфер переполнен или много уникальных записей
+                if len(self.buffer) > 100:
+                    self.flush()
+        except Exception:
+            self.handleError(record)
     
-    def flush(self):
-        """Сбрасывает буфер в файл в сжатом формате."""
-        if not self.buffer or not self._dirty:
-            return
-        
-        # Формируем содержимое файла
-        lines = []
-        for msg, count in self.buffer.items():
-            if count > 1:
-                lines.append(f"[{count}x] {msg}")
-            else:
-                lines.append(msg)
-        
-        # Открываем файл и перезаписываем
-        with open(self.baseFilename, 'a', encoding=self.encoding) as f:
-            f.write('\n'.join(lines))
-            f.write('\n')
-        
-        self.buffer.clear()
-        self._dirty = False
+    def flush(self) -> None:
+        """Сбрасывает буфер в файл с компрессией повторяющихся записей."""
+        with self._lock:
+            if not self.buffer or not self._dirty:
+                return
+            
+            try:
+                # Пишем в файл
+                if not self.stream:
+                    self.stream = self._open()
+                
+                for msg, count in self.buffer.items():
+                    if count > 1:
+                        self.stream.write(f"[{count}x] {msg}\n")
+                    else:
+                        self.stream.write(f"{msg}\n")
+                
+                self.stream.flush()
+                self.buffer.clear()
+                self._dirty = False
+            except Exception:
+                pass
     
-    def close(self):
-        """Закрывает обработчик, сбрасывая буфер."""
+    def close(self) -> None:
+        """Закрывает обработчик, предварительно сбрасывая буфер."""
         self.flush()
         super().close()
 
+def compress_lines(lines: list, min_repeat: int = 2) -> list:
+    """Сжимает повторяющиеся строки в формат [Nx] text."""
+    counter = Counter(lines)
+    result = []
+    
+    for line, count in counter.items():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if count >= min_repeat:
+            result.append(f"[{count}x] {stripped}")
+        else:
+            result.append(stripped)
+    
+    return result
 
 class Logger(metaclass=SingletonMeta):
-    """ Logger class implementing Singleton pattern with console, file, and JSON logging."""
-    log_files_path: Path
-    info_log_path: Path
-    debug_log_path: Path
-    errors_log_path: Path
-    json_log_path: Path
-    fastapi_log_path: Path
-    gemini_log_path: Path
-    playwright_log_path: Path
-    yt_dlp_log_path: Path
-
+    """
+    Универсальный логгер с поддержкой цветного вывода, файловых логов и JSON формата.
+    
+    Реализует паттерн Singleton и гарантирует единственный экземпляр логгера во всем приложении.
+    
+    Основные возможности:
+    - Цветной вывод в консоль с поддержкой цветов текста и фона
+    - Splitting логов по типам (info, debug, errors)
+    - JSON форматирование для структурированного анализа
+    - Ротация файлов логов по размеру
+    - Умная маршрутизация логов по модулям (FastAPI, Gemini, Playwright и т.д.)
+    - Автоматическое disconnection DEBUG логов в production режиме
+    
+    Атрибуты:
+        log_files_path: Путь к директории с логами
+        info_log_path: Путь к файлу информационных логов
+        debug_log_path: Путь к файлу отладочных логов
+        errors_log_path: Путь к файлу ошибок
+        json_log_path: Путь к JSON логам
+        is_debug_mode: Флаг режима отладки
+    """
+    
     def __init__(
         self,
         info_log_path: Optional[str] = None,
@@ -179,316 +255,300 @@ class Logger(metaclass=SingletonMeta):
         errors_log_path: Optional[str] = None,
         json_log_path: Optional[str] = None,
     ):
+        """
+        Инициализирует логгер с заданными путями файлов логов.
+        
+        Args:
+            info_log_path: Имя файла для INFO логов.
+            debug_log_path: Имя файла для DEBUG логов.
+            errors_log_path: Имя файла для ERROR логов.
+            json_log_path: Имя файла для JSON логов.
+        """
+        # Установка путей к файлам логов в системную temp директорию (кроссплатформенно)
+        self.log_files_path: Path = Path(tempfile.gettempdir()) / 'ai-breadboard' / 'logs'
+        self.info_log_path: Path = self.log_files_path / (info_log_path or "info.log")
+        self.debug_log_path: Path = self.log_files_path / (debug_log_path or "debug.log")
+        self.errors_log_path: Path = self.log_files_path / (errors_log_path or "errors.log")
+        self.json_log_path: Path = self.log_files_path / (json_log_path or "log.json")
+        self.fastapi_log_path: Path = self.log_files_path / "fastapi.log"
+        self.gemini_log_path: Path = self.log_files_path / "gemini.log"
+        self.playwright_log_path: Path = self.log_files_path / "playwright.log"
+        self.yt_dlp_log_path: Path = self.log_files_path / "yt_dlp.log"
 
-        timestamp = datetime.datetime.now().strftime("%d%m%y%H%M")
-        self.log_files_path: Path = __root__ / 'tmp' / 'logs'
-        self.info_log_path = self.log_files_path / (info_log_path or "info.log")
-        self.debug_log_path = self.log_files_path / (debug_log_path or "debug.log")
-        self.errors_log_path = self.log_files_path / (errors_log_path or "errors.log")
-        self.json_log_path = self.log_files_path / (json_log_path or "log.json")
-        self.fastapi_log_path = self.log_files_path / "fastapi.log"
-        self.gemini_log_path = self.log_files_path / "gemini.log"
-        self.playwright_log_path = self.log_files_path / "playwright.log"
-        self.yt_dlp_log_path = self.log_files_path / "yt_dlp.log"
-
-        # Ensure directories exist
+        # Создание директории с логами
         self.log_files_path.mkdir(parents=True, exist_ok=True)
 
-        # Ensure log files exist
-        self.info_log_path.touch(exist_ok=True)
-        self.debug_log_path.touch(exist_ok=True)
-        self.errors_log_path.touch(exist_ok=True)
-        self.json_log_path.touch(exist_ok=True)
-        self.fastapi_log_path.touch(exist_ok=True)
-        self.gemini_log_path.touch(exist_ok=True)
-        self.playwright_log_path.touch(exist_ok=True)
-        self.yt_dlp_log_path.touch(exist_ok=True)
+        # Создание файлов логов
+        for log_path in [self.info_log_path, self.debug_log_path, self.errors_log_path,
+                        self.json_log_path, self.fastapi_log_path, self.gemini_log_path,
+                        self.playwright_log_path, self.yt_dlp_log_path]:
+            log_path.touch(exist_ok=True)
 
-        # Console logger
-        self.logger_console = logging.getLogger(name="logger_console")
+        # Консольный логгер
+        self.logger_console: logging.Logger = logging.getLogger("logger_console")
         self.logger_console.setLevel(logging.DEBUG)
+        self.logger_console.propagate = False
 
-        import os
-        from dotenv import load_dotenv
-        load_dotenv(__root__ / '.env')
+        # Определение режима отладки
+        self._setup_debug_mode()
+        
+        # Установка обработчиков для разных типов логов
+        self._setup_file_handlers()
+        
+        # Установка Module-специфичных логгеров
+        self._setup_module_loggers()
+        
+        # Регистрация очистки при выходе
+        atexit.register(self._cleanup)
+
+    def _setup_debug_mode(self) -> None:
+        """Определяет, находится ли приложение в режиме отладки."""
         try:
-            from core.config import server_cfg
-            mode_val = getattr(server_cfg, "mode", "dev").lower()
-            is_debug = getattr(server_cfg, "debug", True)
-        except ImportError:
-            mode_val = "dev"
-            is_debug = True
-        self.is_debug_mode = (mode_val in ('dev', 'debug') or is_debug)
+            import os
+            from dotenv import load_dotenv
+            load_dotenv(__root__ / '.env')
+            
+            try:
+                from core.config import server_cfg
+                mode_val = getattr(server_cfg, "mode", "dev").lower()
+                is_debug = getattr(server_cfg, "debug", True)
+            except ImportError:
+                mode_val = os.getenv("MODE", "dev").lower()
+                is_debug = os.getenv("DEBUG", "true").lower() == "true"
+            
+            self.is_debug_mode = (mode_val in ('dev', 'debug') or is_debug)
+        except Exception:
+            self.is_debug_mode = True  # По умолчанию включаем режим отладки
 
-        # Info file logger
-        self.logger_file_info = logging.getLogger(name="logger_file_info")
+    def _setup_file_handlers(self) -> None:
+        """Sets обработчики для файловых логов."""
+        # INFO логгер
+        self.logger_file_info: logging.Logger = logging.getLogger("logger_file_info")
         self.logger_file_info.setLevel(logging.INFO)
         self.logger_file_info.propagate = False
         info_handler = logging.FileHandler(self.info_log_path, encoding='utf-8')
         info_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
         self.logger_file_info.addHandler(info_handler)
 
-        # Debug file logger
-        self.logger_file_debug = logging.getLogger(name="logger_file_debug")
+        # DEBUG логгер
+        self.logger_file_debug: logging.Logger = logging.getLogger("logger_file_debug")
         self.logger_file_debug.setLevel(logging.DEBUG)
         self.logger_file_debug.propagate = False
         debug_handler = logging.FileHandler(self.debug_log_path, encoding='utf-8')
         debug_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
         self.logger_file_debug.addHandler(debug_handler)
 
-        # Errors file logger (с компрессией повторяющихся ошибок)
-        self.logger_file_errors = logging.getLogger(name="logger_file_errors")
+        # ERROR логгер с компрессией
+        self.logger_file_errors: logging.Logger = logging.getLogger("logger_file_errors")
         self.logger_file_errors.setLevel(logging.ERROR)
         self.logger_file_errors.propagate = False
-        errors_handler = CompressingHandler(self.errors_log_path, encoding='utf-8')
+        errors_handler = CompressingHandler(str(self.errors_log_path), encoding='utf-8')
         errors_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
         self.logger_file_errors.addHandler(errors_handler)
 
-        # Module specific loggers
-        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-        
-        self.logger_fastapi = logging.getLogger("logger_fastapi")
-        self.logger_fastapi.setLevel(logging.DEBUG)
-        self.logger_fastapi.propagate = False
-        fastapi_handler = CompressingHandler(self.fastapi_log_path, encoding='utf-8')
-        fastapi_handler.setFormatter(formatter)
-        self.logger_fastapi.addHandler(fastapi_handler)
-
-        self.logger_gemini = logging.getLogger("logger_gemini")
-        self.logger_gemini.setLevel(logging.DEBUG)
-        self.logger_gemini.propagate = False
-        gemini_handler = CompressingHandler(self.gemini_log_path, encoding='utf-8')
-        gemini_handler.setFormatter(formatter)
-        self.logger_gemini.addHandler(gemini_handler)
-
-        self.logger_playwright = logging.getLogger("logger_playwright")
-        self.logger_playwright.setLevel(logging.DEBUG)
-        self.logger_playwright.propagate = False
-        playwright_handler = CompressingHandler(self.playwright_log_path, encoding='utf-8')
-        playwright_handler.setFormatter(formatter)
-        self.logger_playwright.addHandler(playwright_handler)
-
-        self.logger_yt_dlp = logging.getLogger("logger_yt_dlp")
-        self.logger_yt_dlp.setLevel(logging.DEBUG)
-        self.logger_yt_dlp.propagate = False
-        yt_dlp_handler = CompressingHandler(self.yt_dlp_log_path, encoding='utf-8')
-        yt_dlp_handler.setFormatter(formatter)
-        self.logger_yt_dlp.addHandler(yt_dlp_handler)
-
-        # JSON file logger
-        self.logger_file_json = logging.getLogger(name='logger_json')
+        # JSON логгер
+        self.logger_file_json: logging.Logger = logging.getLogger("logger_json")
         self.logger_file_json.setLevel(logging.DEBUG)
         self.logger_file_json.propagate = False
         json_handler = logging.FileHandler(self.json_log_path, encoding='utf-8')
-        json_handler.setFormatter(JsonFormatter())  # Используем наш кастомный форматтер
+        json_handler.setFormatter(JsonFormatter())
         self.logger_file_json.addHandler(json_handler)
 
+    def _setup_module_loggers(self) -> None:
+        """Sets логгеры для отдельных модулей."""
+        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        
+        modules_config = [
+            ("logger_fastapi", self.fastapi_log_path),
+            ("logger_gemini", self.gemini_log_path),
+            ("logger_playwright", self.playwright_log_path),
+            ("logger_yt_dlp", self.yt_dlp_log_path),
+        ]
+        
+        for logger_name, log_path in modules_config:
+            module_logger = logging.getLogger(logger_name)
+            module_logger.setLevel(logging.DEBUG)
+            module_logger.propagate = False
+            handler = CompressingHandler(str(log_path), encoding='utf-8')
+            handler.setFormatter(formatter)
+            module_logger.addHandler(handler)
+            
+            # Сохраняем как атрибут класса
+            setattr(self, logger_name, module_logger)
 
-        # Удаляем все обработчики, которые выводят в консоль
-        for handler in self.logger_file_json.handlers:
-            if isinstance(handler, logging.StreamHandler):
-                self.logger_file_json.removeHandler(handler)
+    def _get_caller_info(self, depth: int = 2) -> Tuple[str, str, int]:
+        """
+        Безопасно receives информацию о вызывающей функции.
+        
+        Args:
+            depth: Глубина стека для поиска caller'а.
+            
+        Returns:
+            Tuple (file_name, function_name, line_number).
+        """
+        try:
+            stack = inspect.stack()
+            if len(stack) > depth:
+                frame_info = stack[depth]
+                return (
+                    frame_info.filename,
+                    frame_info.function,
+                    frame_info.lineno
+                )
+        except Exception:
+            pass
+        return ("unknown", "unknown", 0)
 
-    def _format_message(self, message, ex=None, color: Optional[Tuple[str, str]] = None):
-        """ Returns formatted message with optional color and exception information."""
+    def _format_message(self, message: str, ex: Optional[Exception] = None, 
+                       color: Optional[Tuple[str, str]] = None) -> str:
+        """
+        Форматирует сообщение с опциональным цветом и информацией об исключении.
+        
+        Args:
+            message: Текст сообщения.
+            ex: Exception для добавления.
+            color: Tuple (текст_цвет, фон_цвет).
+            
+        Returns:
+            Отформатированное сообщение.
+        """
         if color:
             text_color, bg_color = color
             text_color = TEXT_COLORS.get(text_color, colorama.Fore.RESET)
             bg_color = BG_COLORS.get(bg_color, colorama.Back.RESET)
-            ex_str = ""
-            if ex:
-                ex_str = f" {ex}"
+            ex_str = f" {str(ex)}" if ex else ""
             message = f"{text_color}{bg_color}{message}{ex_str}{colorama.Style.RESET_ALL}"
+        elif ex:
+            message = f"{message} {str(ex)}"
         return message
 
-    def _ex_full_info(self, ex):
-        """ Returns full exception information along with the previous function, file, and line details."""
-        frame_info = inspect.stack()[3]
-        file_name = frame_info.filename
-        function_name = frame_info.function
-        line_number = frame_info.lineno
-
-        ex_str = ""
-        if ex:
-            ex_str = f"{ex}"
-        return f"\nFile: {file_name}, \n |\n  -Function: {function_name}, \n   |\n    --Line: {line_number}\n{ex_str}"
-
-    def log(self, level, message, ex=None, exc_info=False, color: Optional[Tuple[str, str]] = None):
+    def _route_to_module_logger(self, message: str, level: int, 
+                               filename: str) -> None:
         """
-        Логирует сообщение с заданным уровнем, опциональным цветом и информацией об исключении.
-
+        Маршрутизирует лог в Module-специфичный логгер на основе пути файла.
+        
         Args:
-            level (int): Уровень логирования (например, logging.INFO).
-            message (str): Текстовое сообщение.
-            ex (Exception, optional): Исключение для записи.
-            exc_info (bool, optional): Включить информацию об исключении в вывод.
-            color (tuple, optional): Кортеж (текст, фон) для раскраски сообщения.
-
-        Returns:
-            None
+            message: Текст сообщения.
+            level: Уровень логирования.
+            filename: Путь к файлу вызывающего кода.
         """
-        # In PROD mode (not self.is_debug_mode), do not log DEBUG events
+        filename_lower = filename.lower().replace("\\", "/")
+        
+        routing_map = [
+            ("fastapi", self.logger_fastapi),
+            ("main.py", self.logger_fastapi),
+            ("gemini", self.logger_gemini),
+            ("src/ai", self.logger_gemini),
+            ("src\\ai", self.logger_gemini),
+            ("playwright", self.logger_playwright),
+            ("torrent_playwright", self.logger_playwright),
+            ("yt_dlp", self.logger_yt_dlp),
+            ("yt-dlp", self.logger_yt_dlp),
+        ]
+        
+        for pattern, module_logger in routing_map:
+            if pattern.lower() in filename_lower:
+                try:
+                    module_logger.log(level, message)
+                except Exception:
+                    pass
+                break
+
+    def log(self, level: int, message: str, ex: Optional[Exception] = None, 
+            exc_info: bool = False, color: Optional[Tuple[str, str]] = None) -> None:
+        """
+        Логирует сообщение с заданным уровнем и параметрами.
+        
+        Args:
+            level: Уровень логирования (logging.INFO, logging.ERROR и т.д.).
+            message: Текст сообщения.
+            ex: Exception для логирования.
+            exc_info: Включить полную информацию об исключении.
+            color: Tuple (текст_цвет, фон_цвет) для окраски.
+        """
+        # В production режиме игнорируем DEBUG логи
         if level == logging.DEBUG and not self.is_debug_mode:
             return
 
         formatted_message = self._format_message(message, ex, color)
-        if exc_info:
-            formatted_message += self._ex_full_info(ex)
-
+        
+        # Логирование в консоль
         if self.logger_console:
             self.logger_console.log(level, formatted_message, exc_info=exc_info)
 
+        # Логирование в JSON (без форматирования)
         if self.logger_file_json:
             self.logger_file_json.log(level, message, exc_info=exc_info)
 
+        # Логирование по типам
         if level == logging.INFO and self.logger_file_info:
             self.logger_file_info.log(level, formatted_message)
-
-        if level == logging.DEBUG and self.logger_file_debug:
+        elif level == logging.DEBUG and self.logger_file_debug:
             self.logger_file_debug.log(level, formatted_message)
-
-        if level in [logging.ERROR, logging.CRITICAL] and self.logger_file_errors:
+        elif level in [logging.ERROR, logging.CRITICAL] and self.logger_file_errors:
             self.logger_file_errors.log(level, formatted_message)
 
-        # Перенаправление логов по модулям на основе стека вызовов
+        # Маршрутизация по модулям
         try:
-            stack = inspect.stack()
-            caller_file = ""
-            for frame in stack:
-                filename = frame.filename.lower()
-                if "logger.py" not in filename:
-                    caller_file = filename
-                    break
-
-            if caller_file:
-                clean_msg = str(message)
-                if ex:
-                    clean_msg += f" {ex}"
-                
-                # FastAPI routing
-                if "fastapi" in caller_file or "main.py" in caller_file:
-                    if self.logger_fastapi:
-                        self.logger_fastapi.log(level, clean_msg)
-                
-                # Gemini / AI routing
-                if "gemini" in caller_file or "src/ai" in caller_file or "src\\ai" in caller_file:
-                    if self.logger_gemini:
-                        self.logger_gemini.log(level, clean_msg)
-                
-                # Playwright routing
-                if "playwright" in caller_file or "torrent_playwright" in caller_file:
-                    if self.logger_playwright:
-                        self.logger_playwright.log(level, clean_msg)
-
-                # Yt-dlp routing
-                if "yt_dlp" in caller_file or "yt-dlp" in caller_file:
-                    if self.logger_yt_dlp:
-                        self.logger_yt_dlp.log(level, clean_msg)
-        except Exception as e:
+            filename, func_name, line_no = self._get_caller_info(depth=3)
+            clean_msg = str(message)
+            if ex:
+                clean_msg += f" {str(ex)}"
+            self._route_to_module_logger(clean_msg, level, filename)
+        except Exception:
             pass
 
-    def info(self, message, ex=None, exc_info=False, text_color: str = "green", bg_color: str = ""):
-        """
-        Логирует сообщение уровня INFO.
+    def _cleanup(self) -> None:
+        """Очищает ресурсы при завершении приложения."""
+        try:
+            for logger_name in ["logger_console", "logger_file_info", "logger_file_debug",
+                              "logger_file_errors", "logger_json", "logger_fastapi",
+                              "logger_gemini", "logger_playwright", "logger_yt_dlp"]:
+                logger_obj = getattr(self, logger_name, None)
+                if logger_obj:
+                    for handler in logger_obj.handlers[:]:
+                        handler.flush()
+                        handler.close()
+                        logger_obj.removeHandler(handler)
+        except Exception:
+            pass
 
-        Args:
-            message (str): Текстовое сообщение.
-            ex (Exception, optional): Исключение.
-            exc_info (bool, optional): Включить инфо об исключении.
-            text_color (str): Цвет текста.
-            bg_color (str): Цвет фона.
-
-        Returns:
-            None
-        """
-        color = (text_color, bg_color)
+    def info(self, message: str, ex: Optional[Exception] = None, exc_info: bool = False,
+            text_color: str = "green", bg_color: str = "") -> None:
+        """Логирует сообщение уровня INFO с зелёным цветом по умолчанию."""
+        color = (text_color, bg_color) if bg_color else (text_color, "")
         self.log(logging.INFO, message, ex, exc_info, color)
 
-    def success(self, message, ex=None, exc_info=False, text_color: str = "yellow", bg_color: str = ""):
-        """
-        Логирует сообщение об успешной операции.
-
-        Args:
-            message (str): Текстовое сообщение.
-            ex (Exception, optional): Исключение.
-            exc_info (bool, optional): Включить инфо об исключении.
-            text_color (str): Цвет текста.
-            bg_color (str): Цвет фона.
-
-        Returns:
-            None
-        """
-        color = (text_color, bg_color)
+    def success(self, message: str, ex: Optional[Exception] = None, exc_info: bool = False,
+               text_color: str = "light_green", bg_color: str = "") -> None:
+        """Логирует сообщение об успешной операции с жёлтым цветом по умолчанию."""
+        color = (text_color, bg_color) if bg_color else (text_color, "")
         self.log(logging.INFO, message, ex, exc_info, color)
 
-    def warning(self, message, ex=None, exc_info=False, text_color: str = "black", bg_color: str = "yellow"):
-        """
-        Логирует сообщение уровня WARNING.
-
-        Args:
-            message (str): Текстовое сообщение.
-            ex (Exception, optional): Исключение.
-            exc_info (bool, optional): Включить инфо об исключении.
-            text_color (str): Цвет текста.
-            bg_color (str): Цвет фона.
-
-        Returns:
-            None
-        """
+    def warning(self, message: str, ex: Optional[Exception] = None, exc_info: bool = False,
+               text_color: str = "black", bg_color: str = "yellow") -> None:
+        """Логирует сообщение уровня WARNING с чёрным текстом на жёлтом фоне."""
         color = (text_color, bg_color)
         self.log(logging.WARNING, message, ex, exc_info, color)
 
-    def debug(self, message, ex=None, exc_info=True, text_color: str = "cyan", bg_color: str = ""):
-        """
-        Логирует сообщение уровня DEBUG.
-
-        Args:
-            message (str): Текстовое сообщение.
-            ex (Exception, optional): Исключение.
-            exc_info (bool, optional): Включить инфо об исключении.
-            text_color (str): Цвет текста.
-            bg_color (str): Цвет фона.
-
-        Returns:
-            None
-        """
-        color = (text_color, bg_color)
+    def debug(self, message: str, ex: Optional[Exception] = None, exc_info: bool = False,
+             text_color: str = "cyan", bg_color: str = "") -> None:
+        """Логирует сообщение уровня DEBUG с голубым цветом."""
+        color = (text_color, bg_color) if bg_color else (text_color, "")
         self.log(logging.DEBUG, message, ex, exc_info, color)
 
-    def error(self, message, ex=None, exc_info=True, text_color: str = "red", bg_color: str = ""):
-        """
-        Логирует сообщение уровня ERROR.
-
-        Args:
-            message (str): Текстовое сообщение.
-            ex (Exception, optional): Исключение.
-            exc_info (bool, optional): Включить инфо об исключении.
-            text_color (str): Цвет текста.
-            bg_color (str): Цвет фона.
-
-        Returns:
-            None
-        """
-        color = (text_color, bg_color)
+    def error(self, message: str, ex: Optional[Exception] = None, exc_info: bool = True,
+             text_color: str = "red", bg_color: str = "") -> None:
+        """Логирует сообщение уровня ERROR с красным цветом и информацией об исключении."""
+        color = (text_color, bg_color) if bg_color else (text_color, "")
         self.log(logging.ERROR, message, ex, exc_info, color)
 
-    def critical(self, message, ex=None, exc_info=True, text_color: str = "red", bg_color: str = "white"):
-        """
-        Логирует сообщение уровня CRITICAL.
-
-        Args:
-            message (str): Текстовое сообщение.
-            ex (Exception, optional): Исключение.
-            exc_info (bool, optional): Включить инфо об исключении.
-            text_color (str): Цвет текста.
-            bg_color (str): Цвет фона.
-
-        Returns:
-            None
-        """
+    def critical(self, message: str, ex: Optional[Exception] = None, exc_info: bool = True,
+                text_color: str = "white", bg_color: str = "red") -> None:
+        """Логирует критическую ошибку с белым текстом на красном фоне."""
         color = (text_color, bg_color)
         self.log(logging.CRITICAL, message, ex, exc_info, color)
 
-# Initialize logger with file paths
-#logger = Logger(info_log_path='info.log', debug_log_path='debug.log', errors_log_path='errors.log', json_log_path='log.json')
+# Инициализирация глобального экземпляра логгера (Singleton)
 logger: Logger = Logger()
+"""Глобальный экземпляр логгера для использования во всем приложении."""

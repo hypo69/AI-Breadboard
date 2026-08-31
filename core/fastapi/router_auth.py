@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: FastAPI-роутер авторизации
+# Process Name: Данные токена авторизации.
 # =============================================================================
-# Описание:
+# Description:
 #   Обработка Google OAuth авторизации через Google Sign-In.
-#   Поддержка GET/POST endpoints для OAuth flow.
 #
 # File: router_auth.py
 # Project: ai-breadboard
-# Package: src.fastapi
+# Package: core.fastapi
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -35,7 +34,6 @@ load_dotenv()
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 
-
 class TokenData:
     """Данные токена авторизации."""
     
@@ -45,12 +43,11 @@ class TokenData:
         self.picture = picture
         self.id = id
 
-
 def load_google_oauth_config() -> dict:
-    """Загрузка конфигурации Google OAuth из secrets файла или .env.
+    """Loading конфигурации Google OAuth из secrets файла или .env.
     
     Returns:
-        dict: Конфигурация с client_id, client_secret, redirect_uri.
+        dict: Configuration с client_id, client_secret, redirect_uri.
     """
     # Сначала пробуем загрузить из .env
     env_client_id = os.getenv('GOOGLE_CLIENT_ID')
@@ -84,13 +81,12 @@ def load_google_oauth_config() -> dict:
         'redirect_uri': env_redirect_uri or default_redirect
     }
 
-
-# Конфигурация JWT
+# Configuration JWT
 JWT_SECRET = os.getenv('JWT_SECRET', 'your-secret-key-change-in-production')
 JWT_ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 часа
 
-# Конфигурация Google OAuth (загружаем из .env или secrets)
+# Configuration Google OAuth (загружаем из .env или secrets)
 _oauth_config = load_google_oauth_config()
 GOOGLE_CLIENT_ID = _oauth_config['client_id']
 GOOGLE_CLIENT_SECRET = _oauth_config['client_secret']
@@ -110,9 +106,8 @@ def create_jwt_token(data: TokenData) -> str:
     to_encode.update({'exp': expire})
     return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-
 def verify_jwt_token(token: str) -> Optional[TokenData]:
-    """Проверка JWT токена.
+    """Check JWT токена.
     
     Args:
         token: JWT токен для проверки.
@@ -131,10 +126,8 @@ def verify_jwt_token(token: str) -> Optional[TokenData]:
     except jwt.PyJWTError:
         return None
 
-
 # Хранилище for OAuth state (in production use Redis or similar)
 oauth_states: dict[str, datetime] = {}
-
 
 def generate_state_token() -> str:
     """Генерация state token для защиты от CSRF атак."""
@@ -142,9 +135,8 @@ def generate_state_token() -> str:
     oauth_states[state] = datetime.utcnow() + timedelta(minutes=10)
     return state
 
-
 def validate_state_token(state: str) -> bool:
-    """Валидация state token."""
+    """Validation state token."""
     if state not in oauth_states:
         return False
     # Clean up expired states
@@ -154,16 +146,15 @@ def validate_state_token(state: str) -> bool:
         return False
     return True
 
-
 @router.get('/login')
 async def login(request: Request) -> dict:
-    """Проверка статуса авторизации пользователя.
+    """Check статуса авторизации пользователя.
     
     Args:
         request: FastAPI request object.
         
     Returns:
-        dict: Статус авторизации и данные пользователя.
+        dict: Status авторизации и данные пользователя.
     """
     token = request.cookies.get('auth_token')
     if not token:
@@ -180,7 +171,6 @@ async def login(request: Request) -> dict:
         'picture': user_data.picture
     }
 
-
 GOOGLE_SCOPES = [
     'openid',
     'https://www.googleapis.com/auth/userinfo.email',
@@ -190,7 +180,6 @@ GOOGLE_SCOPES = [
     'https://www.googleapis.com/auth/calendar',
     'https://www.googleapis.com/auth/contacts',
 ]
-
 
 @router.get('/google')
 async def google_login(request: Request, next: str = '/') -> RedirectResponse:
@@ -243,7 +232,6 @@ async def google_login(request: Request, next: str = '/') -> RedirectResponse:
     response.set_cookie('next_redirect', next, httponly=True, max_age=600)
     
     return response
-
 
 @router.get('/google/callback')
 async def google_callback(request: Request, code: str, state: str) -> RedirectResponse:
@@ -314,7 +302,7 @@ async def google_callback(request: Request, code: str, state: str) -> RedirectRe
             logger.error('Failed to get email from Google userinfo:', userinfo)
             raise HTTPException(status_code=500, detail='Не удалось получить email от Google')
         
-        # Интеграция с UserManager
+        # Integration с UserManager
         from core.user_manager import user_manager
         db_user = user_manager.get_user_by_email(user_email)
         if not db_user:
@@ -354,12 +342,11 @@ async def google_callback(request: Request, code: str, state: str) -> RedirectRe
         
     except requests.exceptions.RequestException as e:
         logger.error('Google OAuth request failed:', e, False)
-        raise HTTPException(status_code=500, detail='Ошибка связи с Google OAuth')
-
+        raise HTTPException(status_code=500, detail='Error связи с Google OAuth')
 
 @router.get('/google/status')
 async def google_auth_status(request: Request) -> dict:
-    """Проверка наличия и валидности токенов Google OAuth у текущего пользователя."""
+    """Check наличия и валидности токенов Google OAuth у текущего пользователя."""
     token = request.cookies.get('auth_token', '')
     if not token:
         return {'connected': False, 'reason': 'unauthorized'}
@@ -378,8 +365,6 @@ async def google_auth_status(request: Request) -> dict:
         'expires_at': tokens.get('expires_at', '')
     }
 
-
-
 @router.post('/logout')
 async def logout(response: Response) -> dict:
     """Выход пользователя из системы.
@@ -394,16 +379,15 @@ async def logout(response: Response) -> dict:
     response.delete_cookie('oauth_state')
     return {'message': 'Успешный выход'}
 
-
 @router.get('/check')
 async def check_auth(request: Request) -> dict:
-    """Проверка текущей авторизации.
+    """Check текущей авторизации.
     
     Args:
         request: FastAPI request object.
         
     Returns:
-        dict: Статус авторизации.
+        dict: Status авторизации.
     """
     token = request.cookies.get('auth_token', '')
     if not token:
@@ -430,7 +414,6 @@ async def check_auth(request: Request) -> dict:
         'is_admin': is_admin,
         'has_google': has_google
     }
-
 
 from pydantic import BaseModel
 
@@ -479,7 +462,6 @@ def send_verification_email(email: str, code: str):
         except Exception as e:
             logger.error(f"Failed to send email to {email}:", e, False)
 
-
 @router.post('/register')
 async def register(data: EmailRegisterRequest):
     from core.user_manager import user_manager
@@ -498,7 +480,6 @@ async def register(data: EmailRegisterRequest):
     
     return {'message': 'Код подтверждения отправлен на почту', 'email': email}
 
-
 @router.post('/verify')
 async def verify(data: EmailVerifyRequest):
     from core.user_manager import user_manager
@@ -506,8 +487,7 @@ async def verify(data: EmailVerifyRequest):
     success = user_manager.verify_email_code(email, data.code)
     if not success:
         raise HTTPException(status_code=400, detail='Неверный или истекший код подтверждения')
-    return {'message': 'Почта успешно подтверждена'}
-
+    return {'message': 'Почта successfully подтверждена'}
 
 @router.post('/login/email')
 async def login_email(data: EmailLoginRequest, response: Response):
@@ -538,7 +518,6 @@ async def login_email(data: EmailLoginRequest, response: Response):
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
     )
     return {'message': 'Успешный вход', 'user': {'email': db_user['email'], 'name': db_user['name']}}
-
 
 @router.get('/telegram/callback')
 async def telegram_callback(
@@ -626,7 +605,6 @@ class SettingsUpdateRequest(BaseModel):
     tts_voice: Optional[str] = ""
     search_engine: Optional[str] = ""
 
-
 # ===========================================
 # Admin User Management API
 # ===========================================
@@ -657,17 +635,16 @@ async def list_users(request: Request):
     from core.user_manager import user_manager
     db_user = user_manager.get_user_by_email(user_data.email)
     
-    # Проверка прав администратора
+    # Check прав администратора
     if not db_user or not db_user.get('is_admin', 0):
-        raise HTTPException(status_code=403, detail='Только администраторы могут просматривать список пользователей')
+        raise HTTPException(status_code=403, detail='Только администраторы могут просматривать list пользователей')
     
     users = user_manager.get_all_users(active_only=False)
     return {'users': users}
 
-
 @router.put('/admin/users/{user_id}')
 async def update_user(user_id: int, data: UserUpdateRequest, request: Request):
-    """Обновление данных пользователя (только для администраторов)."""
+    """Update данных пользователя (только для администраторов)."""
     token = request.cookies.get('auth_token')
     if not token:
         raise HTTPException(status_code=401, detail='Не авторизован')
@@ -679,11 +656,11 @@ async def update_user(user_id: int, data: UserUpdateRequest, request: Request):
     from core.user_manager import user_manager
     db_user = user_manager.get_user_by_email(user_data.email)
     
-    # Проверка прав администратора
+    # Check прав администратора
     if not db_user or not db_user.get('is_admin', 0):
         raise HTTPException(status_code=403, detail='Только администраторы могут редактировать пользователей')
     
-    # Обновление пользователя
+    # Update пользователя
     updates = {}
     if data.name is not None:
         updates['name'] = data.name
@@ -701,7 +678,6 @@ async def update_user(user_id: int, data: UserUpdateRequest, request: Request):
     
     return {'status': 'ok', 'user_id': user_id}
 
-
 @router.delete('/admin/users/{user_id}')
 async def delete_user(user_id: int, request: Request):
     """Удаление пользователя (только для администраторов)."""
@@ -716,7 +692,7 @@ async def delete_user(user_id: int, request: Request):
     from core.user_manager import user_manager
     db_user = user_manager.get_user_by_email(user_data.email)
     
-    # Проверка прав администратора
+    # Check прав администратора
     if not db_user or not db_user.get('is_admin', 0):
         raise HTTPException(status_code=403, detail='Только администраторы могут удалять пользователей')
     
@@ -729,8 +705,6 @@ async def delete_user(user_id: int, request: Request):
         raise HTTPException(status_code=404, detail='Пользователь не найден')
     
     return {'status': 'ok', 'message': 'Пользователь удалён'}
-
-
 
 @router.get('/cabinet')
 async def get_cabinet(request: Request) -> dict:
@@ -758,7 +732,6 @@ async def get_cabinet(request: Request) -> dict:
         'is_admin': db_user['is_admin']
     }
 
-
 @router.post('/link-token')
 async def get_link_token(request: Request) -> dict:
     """Генерация временного токена для привязки Telegram-аккаунта."""
@@ -776,7 +749,6 @@ async def get_link_token(request: Request) -> dict:
         
     link_token = user_manager.generate_link_token(db_user['id'])
     return {'token': link_token}
-
 
 @router.get('/settings')
 async def get_settings(request: Request) -> dict:
@@ -810,10 +782,9 @@ async def get_settings(request: Request) -> dict:
 
     return settings
 
-
 @router.post('/settings')
 async def update_settings(request: Request, data: SettingsUpdateRequest) -> dict:
-    """Обновление настроек текущего пользователя."""
+    """Update настроек текущего пользователя."""
     token = request.cookies.get('auth_token')
     if not token:
         raise HTTPException(status_code=401, detail='Не авторизован')
@@ -840,9 +811,8 @@ async def update_settings(request: Request, data: SettingsUpdateRequest) -> dict
         raise HTTPException(status_code=500, detail='Не удалось сохранить настройки')
     return {'status': 'ok'}
 
-
 def init_router() -> APIRouter:
-    """Инициализация роутера авторизации.
+    """Initialization роутера авторизации.
 
     Returns:
         APIRouter: Настроенный роутер FastAPI.

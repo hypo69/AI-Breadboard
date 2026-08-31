@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Модели данных подсистемы RAG
+# Process Name: Тип решения маршрутизатора RAG.
 # =============================================================================
-# Описание:
+# Description:
 #   Датаклассы и перечисления для универсального доменно-независимого
-#   RAG-поиска и маршрутизации запросов RAG-First.
 #
 # File: models.py
 # Project: ai-breadboard
@@ -19,12 +18,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List
 
-
 class RAGDecisionType(str, Enum):
     """Тип решения маршрутизатора RAG."""
     DIRECT_ANSWER = "direct_answer"
     LLM_FALLBACK = "llm_fallback"
-
 
 @dataclass
 class RAGSearchResult:
@@ -35,7 +32,6 @@ class RAGSearchResult:
     text: str = ""
     score: float = 0.0
     metadata: Dict[str, Any] = field(default_factory=dict)
-
 
 @dataclass
 class RAGRouteDecision:

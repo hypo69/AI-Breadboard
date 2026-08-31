@@ -1,6 +1,19 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Module для интеграции адаптивного TTS-конвейера в 
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: tg_tts_handler.py
+# Project: ai-breadboard
+# Package: core.clients
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
-Модуль для интеграции адаптивного TTS-конвейера в Telegram-бота.
+Module для интеграции адаптивного TTS-конвейера в Telegram-бота.
 Использует библиотеку python-telegram-bot или любой аналогичный фреймворк.
 """
 import io
@@ -18,9 +31,9 @@ async def handle_telegram_voiceover_request(update, context, media_id: int, fiel
     Обработчик запроса озвучки в Telegram.
     Реализует конвейер:
     1. Генерирует адаптированные куски текста с помощью Gemini.
-    2. Отправляет в чат текстовую строку "Готовим озвучку...".
-    3. Для каждого готового чанка делает запрос к TTS, скачивает mp3 
-       и мгновенно отправляет его пользователю в виде голосового сообщения (Voice Message).
+    2. Sends в чат текстовую строку "Готовим озвучку...".
+    3. Для каждого готового чанка делает запрос к TTS, downloads mp3 
+       и мгновенно sends его пользователю в виде голосового сообщения (Voice Message).
     """
     query = update.callback_query if update.callback_query else None
     chat_id = update.effective_chat.id
@@ -72,7 +85,7 @@ async def handle_telegram_voiceover_request(update, context, media_id: int, fiel
                     )
                 else:
                     logger.error(f"TTS API returned error code {response.status_code}")
-                    await context.bot.send_message(chat_id=chat_id, text=f"❌ Ошибка озвучки части {idx}")
+                    await context.bot.send_message(chat_id=chat_id, text=f"❌ Error озвучки части {idx}")
             
             idx += 1
             await asyncio.sleep(0.5) # Небольшая пауза между отправкой частей
@@ -88,5 +101,5 @@ async def handle_telegram_voiceover_request(update, context, media_id: int, fiel
         logger.error(f"Error in TG voiceover handler: {e}")
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"❌ Произошла ошибка при озвучке: {str(e)}"
+            text=f"❌ Произошла Error при озвучке: {str(e)}"
         )

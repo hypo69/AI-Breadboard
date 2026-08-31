@@ -1,7 +1,16 @@
-## \file /src/utils/convertors/ns.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: .. module:: src.utils.convertors.ns
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: ns.py
+# Project: ai-breadboard
+# Package: core.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module:: src.utils.convertors.ns 
@@ -25,7 +34,6 @@ from core.utils.convertors import xml2dict
 from core.utils.csv import save_csv_file
 from core.utils.xls import save_xls_file
 from core.logger.logger import logger
-
 
 from types import SimpleNamespace
 from typing import Any, Dict
@@ -60,8 +68,6 @@ def ns2dict(ns_obj: SimpleNamespace) -> Dict[str, Any]:
 
     return convert(ns_obj)
 
-
-
 def ns2csv(ns_obj: SimpleNamespace, csv_file_path: str | Path) -> bool:
     """
     Convert SimpleNamespace object to CSV format.
@@ -80,9 +86,6 @@ def ns2csv(ns_obj: SimpleNamespace, csv_file_path: str | Path) -> bool:
     except Exception as ex:
         logger.error(f"ns2csv failed", ex, True)
 
-
-
-
 def ns2xml(ns_obj: SimpleNamespace, root_tag: str = "root") -> str:
     """
     Convert SimpleNamespace object to XML format.
@@ -99,7 +102,6 @@ def ns2xml(ns_obj: SimpleNamespace, root_tag: str = "root") -> str:
         return xml2dict(data)
     except Exception as ex:
         logger.error(f"ns2xml failed", ex, True)
-
 
 def ns2xls(data: SimpleNamespace, xls_file_path: str | Path) -> bool:
     """

@@ -1,5 +1,17 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Скрипт для автоматического обновления документации
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: update_scripts_documentation.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Скрипт для автоматического обновления документации по скриптам проекта.
 Запускается регулярно для поддержания актуальности SCRIPTS_DOCUMENTATION.md.
@@ -30,7 +42,7 @@ SCRIPT_CATEGORIES = {
     },
     'media_processing': {
         'name': 'Обработка медиатеки',
-        'description': 'Работа с медиатекой, классификация, обновление БД',
+        'description': 'Работа с медиатекой, классификация, update БД',
         'patterns': ['audit_*.py', 'generate_*.py', 'complete_*.py', 'fill_*.py', 'update_media_*.py'],
         'priority': '✅ Важные'
     },
@@ -42,7 +54,7 @@ SCRIPT_CATEGORIES = {
     },
     'diagnostics': {
         'name': 'Проверки и диагностика',
-        'description': 'Проверка состояния системы',
+        'description': 'Check состояния системы',
         'patterns': ['check_*.py', 'debug_*.py'],
         'priority': '🔶 Полезные'
     },
@@ -131,7 +143,7 @@ def get_script_info(script_path):
                             info['dependencies'].append(module)
         
     except Exception as e:
-        info['purpose'] = f"Ошибка чтения: {str(e)}"
+        info['purpose'] = f"Error чтения: {str(e)}"
     
     return info
 
@@ -169,7 +181,7 @@ def generate_documentation():
         script_info = get_script_info(script_path)
         categorized_scripts[category].append(script_info)
     
-    # Сортировка внутри категорий
+    # Sorting внутри категорий
     for category in categorized_scripts:
         categorized_scripts[category].sort(key=lambda x: x['name'].lower())
     
@@ -180,11 +192,11 @@ def generate_documentation():
     md_content.append(f"# 📚 Документация по скриптам проекта ai-breadboard\n")
     md_content.append(f"**Версия:** 1.0  \n")
     md_content.append(f"**Дата обновления:** {datetime.now().strftime('%d %B %Y')}  \n")
-    md_content.append(f"**Статус:** Актуально (автоматически обновляется)\n")
+    md_content.append(f"**Status:** Актуально (автоматически обновляется)\n")
     
     # Статистика
     md_content.append("## 📊 Общая статистика\n")
-    md_content.append("| Категория | Количество | Статус |")
+    md_content.append("| Категория | Количество | Status |")
     md_content.append("|-----------|------------|--------|")
     
     total_scripts = 0
@@ -204,8 +216,8 @@ def generate_documentation():
             
         category_info = SCRIPT_CATEGORIES[category_id]
         md_content.append(f"\n## 🚀 {category_info['name']}\n")
-        md_content.append(f"**Описание:** {category_info['description']}  \n")
-        md_content.append(f"**Статус:** {category_info['priority']}\n")
+        md_content.append(f"**Description:** {category_info['description']}  \n")
+        md_content.append(f"**Status:** {category_info['priority']}\n")
         
         for script in scripts:
             md_content.append(f"\n### **{script['name']}**")
@@ -220,9 +232,9 @@ def generate_documentation():
             md_content.append(f"**Изменен:** {script['modified'].strftime('%Y-%m-%d %H:%M')}  \n")
             md_content.append(f"**Назначение:** {script['purpose']}\n")
             
-            # Примеры использования для основных скриптов
+            # Examples использования для основных скриптов
             if script['name'] in ['run.ps1', 'manage_tools.py']:
-                md_content.append(f"**Примеры использования:**\n")
+                md_content.append(f"**Examples использования:**\n")
                 
                 if script['name'] == 'run.ps1':
                     md_content.append(f"```bash\n.\\run.ps1\n```\n")
@@ -231,17 +243,17 @@ def generate_documentation():
     
     # Принципы обслуживания
     md_content.append("\n## 📋 Принципы обслуживания\n")
-    md_content.append("### 1. Регулярное обновление документации\n")
+    md_content.append("### 1. Регулярное update документации\n")
     md_content.append("- Эта документация обновляется автоматически при запуске `update_scripts_documentation.py`\n")
-    md_content.append("- Рекомендуется запускать обновление после добавления или удаления скриптов\n")
+    md_content.append("- Рекомендуется запускать update после добавления или удаления скриптов\n")
     
-    md_content.append("\n### 2. Автоматическое обновление\n")
+    md_content.append("\n### 2. Автоматическое update\n")
     md_content.append("```bash\n# Обновить документацию\npython update_scripts_documentation.py\n```\n")
     
     md_content.append("\n### 3. Анализ зависимостей\n")
     md_content.append("```bash\n# Проанализировать зависимости между скриптами\npython analyze_dependencies.py\n```\n")
     
-    # Информация о проекте
+    # Info о проекте
     md_content.append("\n## 📞 Контакты и поддержка\n")
     md_content.append(f"**Проект:** ai-breadboard  \n")
     md_content.append(f"**Дата последнего обновления:** {datetime.now().strftime('%d %B %Y %H:%M')}  \n")
@@ -282,7 +294,7 @@ def create_summary(categorized_scripts):
     print(f"📋 Краткая сводка сохранена в {summary_file}")
 
 def main():
-    """Основная функция."""
+    """Основная function."""
     print("=" * 60)
     print("ОБНОВЛЕНИЕ ДОКУМЕНТАЦИИ ПО СКРИПТАМ")
     print("=" * 60)
@@ -310,7 +322,7 @@ def main():
         print("=" * 60)
         
     except Exception as e:
-        print(f"\n❌ Ошибка при обновлении документации: {e}")
+        print(f"\n❌ Error при обновлении документации: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

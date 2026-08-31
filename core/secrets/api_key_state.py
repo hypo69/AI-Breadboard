@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: API Key State and Quota Management
+# Process Name: Ensure that the secrets directory exists on the fi
 # =============================================================================
 # Description:
 #   Manages Google Gemini and AI provider API keys, rotation pools,
-#   quota exhaustion cooldowns, and runtime state persistence.
 #
 # File: api_key_state.py
 # Project: ai-breadboard
@@ -30,14 +29,12 @@ _LEGACY_SECRETS_FILE: Path = __root__ / 'core' / 'ai' / 'gemini' / 'secrets.json
 _ENV_FILE: Path = __root__ / '.env'
 _DAY_SECONDS: float = 86400.0
 
-
 def _ensure_secrets_dir() -> None:
     """Ensure that the secrets directory exists on the filesystem."""
     try:
         _SECRETS_DIR.mkdir(parents=True, exist_ok=True)
     except Exception as ex:
         logger.error(f'Failed to create secrets directory: {ex}')
-
 
 def _now_iso() -> str:
     """Get current UTC timestamp in ISO 8601 string format.
@@ -47,7 +44,6 @@ def _now_iso() -> str:
     """
     return datetime.now(timezone.utc).isoformat()
 
-
 def _now_ts() -> float:
     """Get current UTC timestamp as Unix epoch float.
 
@@ -55,7 +51,6 @@ def _now_ts() -> float:
         float: Unix timestamp in seconds.
     """
     return datetime.now(timezone.utc).timestamp()
-
 
 def _iso_to_ts(iso_str: str) -> float:
     """Convert ISO formatted string into Unix timestamp.
@@ -73,7 +68,6 @@ def _iso_to_ts(iso_str: str) -> float:
         return datetime.fromisoformat(cleaned).timestamp()
     except Exception:
         return 0.0
-
 
 def _load_json_file(file_path: Path) -> Dict[str, Any]:
     """Safely load JSON object from file path.
@@ -97,7 +91,6 @@ def _load_json_file(file_path: Path) -> Dict[str, Any]:
         logger.warning(f'Error reading JSON file {file_path}: {ex}')
     return {}
 
-
 def _save_json_file(file_path: Path, data: Dict[str, Any]) -> bool:
     """Safely save dictionary as formatted JSON to file.
 
@@ -116,7 +109,6 @@ def _save_json_file(file_path: Path, data: Dict[str, Any]) -> bool:
     except Exception as ex:
         logger.error(f'Failed to save JSON to {file_path}: {ex}')
         return False
-
 
 def _read_env_keys() -> Dict[str, str]:
     """Read API keys defined in environment variables and .env file.
@@ -165,7 +157,6 @@ def _read_env_keys() -> Dict[str, str]:
             logger.warning(f'Could not read .env file for keys: {ex}')
 
     return keys_found
-
 
 def _get_merged_keys_data() -> Dict[str, Dict[str, Any]]:
     """Load and merge keys from all storage locations and environment.
@@ -226,7 +217,6 @@ def _get_merged_keys_data() -> Dict[str, Dict[str, Any]]:
             }
 
     return merged
-
 
 def load_api_keys(
     names: Optional[List[str]] = [],
@@ -312,7 +302,6 @@ def load_api_keys(
 
     return result_keys, result_names, result_states
 
-
 def mark_exhausted(key_name: str) -> None:
     """Mark an API key as quota exhausted and start 24h cooldown timer.
 
@@ -346,7 +335,6 @@ def mark_exhausted(key_name: str) -> None:
     _save_json_file(_KEYS_FILE, keys_data)
     logger.warning(f'API key "{target_name}" marked as exhausted (24h cooldown initiated).')
 
-
 def update_last_run(key_name: str) -> None:
     """Update last executed timestamp for specified API key.
 
@@ -368,7 +356,6 @@ def update_last_run(key_name: str) -> None:
     if target_name in keys_data:
         keys_data[target_name]['last_run'] = _now_iso()
         _save_json_file(_KEYS_FILE, keys_data)
-
 
 def next_available_in() -> float:
     """Calculate remaining seconds until the earliest exhausted key becomes available.
@@ -400,7 +387,6 @@ def next_available_in() -> float:
             min_wait = remaining
 
     return min_wait if found_exhausted else 0.0
-
 
 def get_status(names: Optional[List[str]] = []) -> Dict[str, Any]:
     """Retrieve detailed runtime status for all or selected keys.
@@ -437,7 +423,6 @@ def get_status(names: Optional[List[str]] = []) -> Dict[str, Any]:
         }
 
     return statuses
-
 
 def save_api_key(name: str, api_key: str, status: str = 'active') -> bool:
     """Save or update an API key in persistent storage.

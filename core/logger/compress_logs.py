@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Сжимает повторяющиеся строки в формат [Nx] text.""
+# =============================================================================
+# Description:
+#   Сжимает повторяющиеся строки в формат [Nx] text."""
+#
+# File: compress_logs.py
+# Project: ai-breadboard
+# Package: scripts.maintenance
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Скрипт для сжатия логов — объединяет повторяющиеся строки.
 Запуск: python scripts/compress_logs.py
@@ -8,7 +21,6 @@ import sys
 from collections import Counter
 from pathlib import Path
 from typing import List, Tuple
-
 
 def compress_lines(lines: List[str], min_repeat: int = 2) -> List[str]:
     """Сжимает повторяющиеся строки в формат [Nx] text."""
@@ -26,7 +38,6 @@ def compress_lines(lines: List[str], min_repeat: int = 2) -> List[str]:
             result.append(stripped)
     
     return result
-
 
 def compress_log_file(input_path: Path, output_path: Path = None, min_repeat: int = 2) -> Tuple[int, int]:
     """
@@ -54,7 +65,6 @@ def compress_log_file(input_path: Path, output_path: Path = None, min_repeat: in
     
     return original_count, len(compressed)
 
-
 def main():
     from core.logger import logger
     
@@ -74,10 +84,9 @@ def main():
     for log_file in log_files:
         original, compressed = compress_log_file(log_file)
         if original > 0:
-            logger.info(f"{log_file.name}: {original} → {compressed} строк (сжатие {100 - compressed*100//original}%)")
+            logger.info(f"{log_file.name}: {original} → {compressed} строк (compression {100 - compressed*100//original}%)")
         else:
-            logger.info(f"{log_file.name}: пустой файл")
-
+            logger.info(f"{log_file.name}: empty файл")
 
 if __name__ == "__main__":
     main()

@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: # ================================================
+# =============================================================================
+# Description:
+#   Тесты функции extract_url_params."""
+#
+# File: test_utils_url.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Тесты модуля core/utils/url.py
 """
@@ -6,7 +19,6 @@
 import pytest
 from unittest.mock import patch, Mock
 from core.utils.url import extract_url_params, is_url, url_shortener
-
 
 class TestExtractUrlParams:
     """Тесты функции extract_url_params."""
@@ -63,7 +75,6 @@ class TestExtractUrlParams:
         assert result is not None
         assert 'query' in result
 
-
 class TestIsUrl:
     """Тесты функции is_url."""
 
@@ -111,7 +122,6 @@ class TestIsUrl:
         result = is_url("http://192.168.1.1:8080")
         assert result is True
 
-
 class TestUrlShortener:
     """Тесты функции url_shortener."""
 
@@ -143,7 +153,7 @@ class TestUrlShortener:
             assert result is None
 
     def test_shortener_calls_correct_api(self):
-        """Тест что вызывается правильный API."""
+        """Тест что Raisesся правильный API."""
         long_url = "https://example.com"
         
         with patch('core.utils.url.requests.get') as mock_get:
@@ -157,7 +167,6 @@ class TestUrlShortener:
             # Проверяем что URL содержит tinyurl
             call_args = mock_get.call_args
             assert 'tinyurl.com' in call_args[0][0]
-
 
 class TestUrlEdgeCases:
     """Тесты граничных случаев."""

@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Одноразовый скрипт для анализа логов.
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: analyze_logs.py
+# Project: ai-breadboard
+# Package: scripts.maintenance
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Одноразовый скрипт для анализа логов.
 Запускать вручную: python scripts/analyze_logs.py
@@ -16,7 +29,6 @@ sys.path.insert(0, str(project_root))
 from core.logger.log_analyzer import analyze_log_file, LOG_DIR, get_max_size_bytes
 from core.ai import GoogleGenerativeAI
 from core.logger import logger
-
 
 async def main():
     logger.info("=" * 60)
@@ -66,7 +78,6 @@ async def main():
     logger.info("=" * 60)
     logger.info("АНАЛИЗ ЛОГОВ ЗАВЕРШЁН")
     logger.info("=" * 60)
-
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -10,12 +10,12 @@ description: Управление подключенными хранилища�
 ## Рабочие процессы
 
 ### 1. Сканирование дисков
-Если нужно обновить список доступных дисков:
+Если нужно обновить list доступных дисков:
 `python -m plugins.media_organizer.core.drive_scanner`
 
 ### 2. Получение текущих дисков
 Для получения строки с дисками в формате `S:\,N:\`:
 `python -c "import os; print(os.environ.get('CONNECTED_DRIVES', ''))"`
 
-### 3. Интеграция
+### 3. Integration
 Этот навык используется при запуске серверов (run.ps1, Run-LightServer.ps1) и доступен через FastAPI эндпоинт `/api/control/rescan`.

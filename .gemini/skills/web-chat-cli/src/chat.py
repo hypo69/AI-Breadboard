@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Интерактивный чат-клиент CLI
+# Process Name: Фиктивный объект модели для инициализации плагина.
 # =============================================================================
-# Описание:
+# Description:
 #   Консольный интерфейс для взаимодействия с RAG-системой медиатеки.
 #
-# File: src/chat.py
-# Project: ai-assistant
-# Package: src
+# File: chat.py
+# Project: ai-breadboard
+# Package: .gemini.skills.web-chat-cli.src
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -49,7 +49,7 @@ async def chat_loop(args: argparse.Namespace) -> None:
     """
     print(f"Web Chat CLI запущен (Модель: {args.model}). Введите 'exit' для выхода.")
     
-    # Инициализация плагина
+    # Initialization плагина
     ai_model = FakeAIModel()
     rag_plugin = RAGPlugin(ai_model)
     
@@ -80,7 +80,7 @@ async def chat_loop(args: argparse.Namespace) -> None:
             print("\nВыход...")
             break
         except Exception as e:
-            print(f"Ошибка: {e}")
+            print(f"Error: {e}")
 
 if __name__ == '__main__':
     args = parse_arguments()

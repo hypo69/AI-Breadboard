@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Gemini CLI Web Search MCP Server
+# Process Name: Выполнение поиска через GeminiCliWebSearcher.
 # =============================================================================
-# Описание:
+# Description:
 #   MCP-сервер на базе FastMCP, предоставляющий доступ к веб-поиску
-#   через локальный терминальный агент Google Gemini CLI.
 #
 # File: gemini_cli_search_mcp_server.py
-# Project: ai-assistant
-# Package: .mcp
+# Project: ai-breadboard
+# Package: root
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -32,7 +31,6 @@ if FastMCP:
 else:
     mcp = None
 
-
 async def _run_gemini_cli_search(query: str, model: str = "gemini-3.1-flash-lite") -> str:
     """Выполнение поиска через GeminiCliWebSearcher."""
     try:
@@ -40,9 +38,8 @@ async def _run_gemini_cli_search(query: str, model: str = "gemini-3.1-flash-lite
         result_markdown = await searcher.search_and_extract(query=query, model=model)
         return result_markdown
     except Exception as e:
-        logger.error(f"[gemini_cli_search_mcp_server] Ошибка поиска: {e}")
+        logger.error(f"[gemini_cli_search_mcp_server] Error поиска: {e}")
         return json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False)
-
 
 async def gemini_cli_web_search(query: str, model: str = "gemini-3.1-flash-lite") -> str:
     """Выполнить веб-поиск через локальный терминальный агент Google Gemini CLI.
@@ -53,10 +50,8 @@ async def gemini_cli_web_search(query: str, model: str = "gemini-3.1-flash-lite"
     """
     return await _run_gemini_cli_search(query=query, model=model)
 
-
 if mcp:
     mcp.tool()(gemini_cli_web_search)
-
 
 if __name__ == "__main__":
     if mcp:

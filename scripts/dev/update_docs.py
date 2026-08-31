@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Автоматическая валидация актуальности документации
+# Process Name: Returns list измененных файлов .py в git репозитор
 # =============================================================================
-# Описание:
-#   Скрипт проверяет наличие и заполненность документации (README.md, docstrings)
-#   в измененных файлах проекта.
+# Description:
+#   Скрипт checks наличие и заполненность документации (README.md, docstrings)
 #
 # File: update_docs.py
 # Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
 # =============================================================================
 
 import os
@@ -17,7 +19,7 @@ from pathlib import Path
 from typing import List
 
 def get_modified_python_files() -> List[Path]:
-    """Возвращает список измененных файлов .py в git репозитории."""
+    """Returns list измененных файлов .py в git репозитории."""
     modified_files = []
     try:
         res = subprocess.check_output(
@@ -32,16 +34,16 @@ def get_modified_python_files() -> List[Path]:
                 if filepath.suffix == ".py" and filepath.exists():
                     modified_files.append(filepath)
     except Exception:
-        # Если git недоступен, вернем пустой список
+        # Если git недоступен, вернем empty list
         pass
     return modified_files
 
 def validate_docblocks(files: List[Path]) -> bool:
-    """Проверяет наличие docstring в измененных файлах."""
+    """Checks наличие docstring в измененных файлах."""
     all_valid = True
     for f in files:
         content = f.read_text(encoding="utf-8")
-        # Простая проверка на наличие тройных кавычек (docstrings)
+        # Простая check на наличие тройных кавычек (docstrings)
         if '"""' not in content and "'''" not in content:
             print(f"⚠️  Файл {f.name} изменен, но не содержит docstring!")
             all_valid = False
@@ -52,7 +54,7 @@ def main() -> int:
     
     modified = get_modified_python_files()
     if not modified:
-        print("✅ Измененных файлов Python в Git не найдено. Дополнительная валидация не требуется.")
+        print("✅ Измененных файлов Python в Git не найдено. Дополнительная validation не требуется.")
         return 0
         
     print(f"Обнаружено измененных файлов: {len(modified)}")

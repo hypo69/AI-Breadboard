@@ -10,7 +10,7 @@
 3. 📡 **Дистанционное управление** — голосовой пульт ДУ с TTS/STT
 4. 📱 **Telegram Mini App** — удалённый доступ из Telegram
 5. 🧠 **RAG-поиск** — семантический поиск по медиатеке с функцией Function Calling
-6. 🧩 **Плагинная архитектура** — 11 модульных плагинов для разных задач
+6. 🧩 **Плагинная архитектура** — 11 Moduleных плагинов для разных задач
 7. 📁 **Полный цикл медиа** — от поиска торрентов до автоматической организации
 8. 🤖 **Управление агентами** — система настройки и тестирования AI агентов
 
@@ -64,12 +64,12 @@
 ### 1. FastAPI Backend (`core/fastapi/`)
 Обновленная маршрутизация с 10 роутерами:
 
-| Модуль | Описание | Эндпоинты |
+| Module | Описание | Эндпоинты |
 |--------|----------|-----------|
 | `router_chat.py` | Основной чат AI | `/api/chat` (веб-сокет, SSE) |
 | `router_qbittorrent.py` | Управление торрентами | `/api/torrents/`, `/api/torrents/search`, `/api/torrents/add` |
 | `router_media.py` | Медиа-управление | `/api/media/`, `/api/media-admin/` (админ) |
-| `router_auth.py` | Аутентификация | `/auth/google`, `/auth/logout`, `/auth/me` |
+| `router_auth.py` | Authentication | `/auth/google`, `/auth/logout`, `/auth/me` |
 | `router_control.py` | Веб-сокет управление | WebSocket `/ws/control` |
 | `router_tts.py` | Текст в речь | `/api/tts/synthesize`, `/api/tts/voices` |
 | `router_logs.py` | Логирование | `/api/logs/`, `/api/logs/analyze` |
@@ -80,7 +80,7 @@
 ### 2. AI Модель (`core/ai/`)
 Архитектура: UnifiedChatModel с поддержкой 4 провайдеров
 
-| Модуль | Описание | Префикс |
+| Module | Описание | Префикс |
 |--------|----------|---------|
 | `unified_chat.py` | `UnifiedChatModel` — единый интерфейс | Роутинг по префиксу |
 | `foundry_chat.py` | Клиент Microsoft AI Foundry | `foundry:` |
@@ -88,7 +88,7 @@
 | `agy_chat.py` | AGY SDK (Gemini через прокси) | `agy-*` |
 | `ollama_chat.py` | Ollama локальные модели | `ollama:` |
 | `model_manager.py` | Менеджер моделей и конфигураций | - |
-| `langchain_agent.py` | LangChain интеграция | - |
+| `langchain_agent.py` | LangChain Integration | - |
 
 **Правила выбора модели:**
 - `foundry:qwen3-one` → Microsoft AI Foundry
@@ -102,21 +102,21 @@
 | Плагин | Триггеры | Назначение | Особенности |
 |--------|----------|-----------|-------------|
 | `media_organizer` | — (Function Calling) | Управление медиатекой, RAG | Предоставляет Function Calling API |
-| `rag` | "фильм", "сериал", "кино", "посоветуй" | Семантический поиск медиа | Интеграция с RAG, случайная "карусель" |
+| `rag` | "фильм", "сериал", "кино", "посоветуй" | Семантический поиск медиа | Integration с RAG, случайная "карусель" |
 | `media_layer` | "фильм", "сериал" | Простой медиа-слой | Чтение из БД без сканирования |
 | `web_search` | "поищи в интернете", "погугли" | Веб-поиск через Playwright | Асинхронный поиск с AI-анализом |
-| `torrent_playwright` | "торрент", "скачать" | Поиск торрентов | Rutracker + NNMClub, AI фильтрация |
+| `torrent_playwright` | "торрент", "скачать" | Поиск торрентов | Rutracker + NNMClub, AI filtering |
 | `movie_search_sources` | "где посмотреть", "плеер" | Поиск источников для просмотра | Каталог streaming-сервисов |
 | `qbittorrent` | "добавь торрент", "категории" | Управление qBittorrent | Категории, теги, поиск |
 | `telegram_bot` | — (отдельный процесс) | Telegram Mini App | Удалённое управление |
 | `user_manager_tool` | `!list_users`, `!user_activity` | Управление пользователями | SQLite users.db |
 | `yt_dlp` | "скачай", "youtube", "mp3" | Скачивание видео/аудио | Поддержка yt-dlp |
-| `langchain_media` | "лангчейн", "агент" | LangChain медиа-инструменты | Интеграция с LangChain |
+| `langchain_media` | "лангчейн", "агент" | LangChain медиа-инструменты | Integration с LangChain |
 
 
-**Загрузка плагинов:**
+**Loading плагинов:**
 ```python
-# plugins/__init__.py — динамическая загрузка всех плагинов
+# plugins/__init__.py — динамическая Loading всех плагинов
 # Отключаемые через DISABLED_PLUGINS в .env
 def load_plugins(ai_model) -> dict[str, BasePlugin]
 ```
@@ -182,7 +182,7 @@ id, username, email, created_at, last_login, preferences
 **Обновлённый стек:**
 1. **Gemini Embeddings API** — векторное представление
 2. **SQLite + FAISS** — хранение и поиск векторов
-3. **Function Calling** — интеграция с AI-моделями
+3. **Function Calling** — Integration с AI-моделями
 4. **Streaming статусы** — отображение прогресса в UI
 
 **Процесс RAG-поиска:**
@@ -215,7 +215,7 @@ yield {"text": "Найдены результаты..."}
 | Медиа | qBittorrent API, yt-dlp, TMDB API | QBittorrent 4.6+ |
 | Поиск | Playwright, DuckDuckGo, Rutracker | Playwright 1.45+ |
 | Голос | Silero TTS, Web Speech API | Silero v4 |
-| LangChain | LangChain интеграция | LangChain 0.1+ |
+| LangChain | LangChain Integration | LangChain 0.1+ |
 | Деплой | PowerShell scripts, SSL/TLS | Windows |
 
 ---
@@ -270,7 +270,7 @@ ai-assistant/
 ├── main.py                    # Точка входа (FastAPI)
 ├── requirements.txt           # Зависимости
 ├── .env                       # Переменные окружения
-├── pytest.ini                 # Конфигурация тестов
+├── pytest.ini                 # Configuration тестов
 ├── conftest.py                # Фикстуры pytest
 └── mkdocs.yml                 # Документация MkDocs
 ```
@@ -286,7 +286,7 @@ ai-assistant/
 | `core/fastapi/config.json` | Настройки FastAPI | Важно |
 | `plugins/media_organizer/config.json` | Настройки медиатеки | Важно |
 | `plugins/qbittorrent/config.json` | Настройки qBittorrent | Важно |
-| `core/ai/model_manager.py` | Конфигурация AI моделей | Критично |
+| `core/ai/model_manager.py` | Configuration AI моделей | Критично |
 
 **Новые переменные окружения (.env):**
 ```env
@@ -303,7 +303,7 @@ DISABLED_PLUGINS=plugin1,plugin2
 
 ---
 
-## Примеры использования плагинов 2026
+## Examples использования плагинов 2026
 
 1. **RAG-поиск фильма:**
    ```
@@ -323,7 +323,7 @@ DISABLED_PLUGINS=plugin1,plugin2
    ```
    "найди торрент фильма Начало"
    → Плагин: torrent_playwright
-   → Процесс: Playwright поиск → AI-фильтрация → HTML-список
+   → Процесс: Playwright поиск → AI-filtering → HTML-list
    ```
 
 4. **LangChain медиа-анализ:**
@@ -351,21 +351,21 @@ DISABLED_PLUGINS=plugin1,plugin2
 
 ### 2. **Расширенная система плагинов**
 - 11 плагинов вместо 10
-- Динамическая загрузка и управление
-- Интеграция с LangChain
+- Динамическая Loading и управление
+- Integration с LangChain
 - Плагин для управления плагинами
 
 ### 3. **Управление агентами**
 - REST API для создания и настройки агентов
-- Тестирование и валидация конфигураций
-- Интеграция с существующей архитектурой
+- Тестирование и validation конфигураций
+- Integration с существующей архитектурой
 
 ### 4. **Улучшенный RAG с Function Calling**
-- Интеграция с UnifiedChatModel
+- Integration с UnifiedChatModel
 - Поддержка потокового вывода
-- Автоматическое обновление индексов
+- Автоматическое update индексов
 
-### 5. **Полная конфигурация AI моделей**
+### 5. **Полная Configuration AI моделей**
 - Поддержка Foundry, AGY, Ollama
 - Централизованное управление ключами
 - Настройки через веб-интерфейс
@@ -382,8 +382,8 @@ DISABLED_PLUGINS=plugin1,plugin2
 1. **UnifiedChatModel** — основной интерфейс для всех AI операций
 2. **10 роутеров FastAPI** — добавлен `router_agents.py`
 3. **11 плагинов** — добавлены `langchain_media` и улучшена система управления
-4. **Конфигурация через веб-интерфейс** — настройки Foundry, Ollama, AGY
-5. **Автоматическое обновление документации** — через инструменты в `tools/ai/`
+4. **Configuration через веб-интерфейс** — настройки Foundry, Ollama, AGY
+5. **Автоматическое update документации** — через инструменты в `tools/ai/`
 
 ---
 
@@ -394,7 +394,7 @@ DISABLED_PLUGINS=plugin1,plugin2
 | Роутеры | 9 | 10 (+agents) |
 | Плагины | 10 | 11 |
 | AI Модели | Gemini + Foundry | UnifiedChatModel (4 провайдера) |
-| Конфигурация | Статическая | Веб-интерфейс + API |
+| Configuration | Статическая | Веб-интерфейс + API |
 | Управление | Ручное | Агенты + автоматизация |
 | База данных | media.db | media.db + users + история |
 
@@ -426,5 +426,5 @@ python main.py
 
 ---
 
-**Последнее обновление: август 2026**  
+**Последнее update: август 2026**  
 *Актуализировано после расширения архитектуры до 11 плагинов, добавления UnifiedChatModel и системы управлен��я агентами.*

@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Universal OpenAI-Compatible API Client & Chat Wrapper
+# Process Name: Универсальный чат-клиент для любого OpenAI-совмест
 # =============================================================================
-# Описание:
+# Description:
 #   Универсальный клиент для любых внешних и локальных OpenAI-совместимых сервисов
-#   (OpenAI, DeepSeek, Groq, Together AI, LM Studio, LocalAI, vLLM).
 #
-# File: core/ai/openai_compat_chat.py
+# File: openai_compat_chat.py
 # Project: ai-breadboard
 # Package: core.ai
-# Module: OpenAICompatChat
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -55,7 +53,6 @@ _KNOWN_PROVIDERS: Dict[str, Dict[str, str]] = {
     },
 }
 
-
 class OpenAICompatChat:
     """Универсальный чат-клиент для любого OpenAI-совместимого эндпоинта.
     
@@ -72,12 +69,12 @@ class OpenAICompatChat:
         api_key: Optional[str] = "",
         base_url: Optional[str] = "",
     ) -> "OpenAICompatChat":
-        """Фабричный метод для инициализации клиента под конкретного провайдера."""
+        """Фабричный method для инициализации клиента под конкретного провайдера."""
         prov = provider_name.lower().strip()
         resolved_url = base_url or ""
         resolved_key = api_key or ""
 
-        # 1. Попытка извлечь параметры из config.json
+        # 1. Попытка извлечь Parameters из config.json
         if not resolved_url or not resolved_key:
             try:
                 cfg = j_loads(_GLOBAL_CONFIG_PATH)
@@ -193,7 +190,7 @@ class OpenAICompatChat:
                     async with session.post(url, headers=self._headers(), json=payload) as resp:
                         if resp.status != 200:
                             err_text = await resp.text()
-                            logger.warning(f"[OpenAICompat] Попытка {attempt}/{attempts} ошибка HTTP {resp.status} от {url}: {err_text[:120]}")
+                            logger.warning(f"[OpenAICompat] Попытка {attempt}/{attempts} Error HTTP {resp.status} от {url}: {err_text[:120]}")
                             last_error = f"HTTP {resp.status}: {err_text}"
                             if resp.status in (401, 403, 404):
                                 # Ошибки аутентификации или отсутствия модели не повторяем
@@ -209,7 +206,7 @@ class OpenAICompatChat:
                         return ""
             except Exception as e:
                 last_error = str(e)
-                logger.warning(f"[OpenAICompat] Попытка {attempt}/{attempts} исключение для {url}: {e}")
+                logger.warning(f"[OpenAICompat] Попытка {attempt}/{attempts} exception для {url}: {e}")
                 if attempt < attempts:
                     await asyncio.sleep(min(2 ** attempt, 8))
 
@@ -236,7 +233,7 @@ class OpenAICompatChat:
         if sys_prompt:
             messages.append({"role": "system", "content": sys_prompt})
 
-        # Интеграция переданной истории
+        # Integration переданной истории
         source_history = history if history else self._history
         for item in source_history:
             role = item.get("role", "user")
@@ -397,5 +394,5 @@ class OpenAICompatChat:
                         except json.JSONDecodeError:
                             continue
         except Exception as e:
-            logger.error(f"[OpenAICompat] Ошибка в потоке генерации: {e}")
+            logger.error(f"[OpenAICompat] Error в потоке генерации: {e}")
             yield f"[Stream error: {e}]"

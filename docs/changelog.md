@@ -36,7 +36,7 @@
 - FastAPI backend
 - WebSocket для реального времени
 - SQLite база данных
-- JSON конфигурация
+- JSON Configuration
 - Docker поддержка
 - GitHub Actions CI/CD
 

@@ -19,7 +19,7 @@
   },
   "movieSearch": {
     "title": "🔍 Поиск фильмов на трекерах",
-    "placeholder": "Введите название фильма или сериала (например, Матрица 1080p)...",
+    "placeholder": "Введите name фильма или сериала (например, Матрица 1080p)...",
     "btnSearch": "Найти",
     "sourceFilter": "Фильтр источника:",
     "allTrackers": "Все трекеры",
@@ -29,7 +29,7 @@
     "sortSizeAsc": "По размеру (меньше)",
     "welcomeText": "Введите запрос выше, чтобы начать поиск раздач.",
     "activeDownloads": "📥 Активные закачки в qBittorrent",
-    "noDownloads": "Нет активных закачек в данный момент"
+    "noDownloads": "No активных закачек в данный момент"
   },
   "chat": {
     "placeholder": "Введите сообщение...",
@@ -41,12 +41,12 @@
   "torrents": {
     "missingFiles": "Утерянные файлы",
     "missingCount": "0",
-    "noMissing": "Утерянных торрентов нет ✅",
+    "noMissing": "Утерянных торрентов no ✅",
     "refresh": "🔄",
     "autoSearch": "Автоматический поиск файлов",
     "searchFolders": "Папки поиска",
     "selectAll": "выбрать все",
-    "noFolders": "Нет сохранённых папок",
+    "noFolders": "No сохранённых папок",
     "addFolderPlaceholder": "D:\\NewFolder — добавить папку",
     "addFolder": "+",
     "findAndRelocate": "Найти и переместить",
@@ -60,14 +60,14 @@
     "allTorrents": "Все торренты",
     "missing": "Утерянные",
     "all": "Все",
-    "name": "Название",
+    "name": "Name",
     "state": "Статус",
     "progress": "Прогресс",
     "size": "Размер"
   },
   "media": {
     "scanPaths": "Пути сканирования",
-    "noPaths": "Нет путей",
+    "noPaths": "No путей",
     "addPathPlaceholder": "D:\\Series",
     "addPath": "+",
     "scanSeries": "Сканировать сериалы",
@@ -75,7 +75,7 @@
     "seasons": "Сезонов",
     "episodes": "Эпизодов",
     "size": "Размер",
-    "noData": "Нет данных. Запустите сканирование.",
+    "noData": "No данных. Запустите сканирование.",
     "duplicates": "Дубликаты сезонов",
     "check": "Проверить",
     "integrity": "Целостность",
@@ -113,7 +113,7 @@
     "description": "Полный функционал: полное сканирование, аудит, восстановление из JSON, RAG-индекс.",
     "disk": "Диск",
     "paths": "Пути",
-    "noPaths": "Нет путей",
+    "noPaths": "No путей",
     "addPathPlaceholder": "D:\\Series",
     "fullScan": "Полное сканирование",
     "dbAudit": "Аудит БД",
@@ -125,7 +125,7 @@
     "semanticSearch": "Семантический поиск",
     "searchPlaceholder": "Поиск...",
     "aiModelTitle": "🤖 AI Модель",
-    "aiModelHint": "Выберите модель по умолчанию для общения с ассистентом"
+    "aiModelHint": "Выберите модель default для общения с ассистентом"
   },
   "help": {
     "title": "Справочник",
@@ -137,12 +137,12 @@
     "media": "Медиатека",
     "qbittorrent": "qBittorrent",
     "gemini": "Gemini AI",
-    "configuration": "Конфигурация",
+    "configuration": "Configuration",
     "cliCommands": "CLI команды"
   },
   "common": {
-    "loading": "Загрузка...",
-    "error": "Ошибка",
+    "loading": "Loading...",
+    "error": "Error",
     "success": "Успешно",
     "cancel": "Отмена",
     "close": "Закрыть",
@@ -151,8 +151,8 @@
     "save": "Сохранить",
     "delete": "Удалить",
     "search": "Поиск",
-    "yes": "Да",
-    "no": "Нет"
+    "yes": "Yes",
+    "no": "No"
   },
   "mediaControls": {
     "nowPlaying": "Сейчас играет:",
@@ -170,8 +170,8 @@
     "system": "Системная"
   },
   "userSettings": {
-    "button": "Настройки",
-    "title": "Пользовательские настройки",
+    "button": "Settings",
+    "title": "Пользовательские settings",
     "language": "Язык интерфейса",
     "theme": "Тема оформления",
     "themeLight": "☀️ Светлая",

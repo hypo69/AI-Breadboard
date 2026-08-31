@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Unified Chat Interface
+# Process Name: Wrapper class for transparent routing between Gemi
 # =============================================================================
 # Description:
 #   A wrapper model class that aggregates GoogleGenerativeAI and FoundryChatBase
-#   under a unified interface, dynamically routing requests depending on the model selected.
 #
-# File: src/ai/unified_chat.py
-# Project: mediateka
+# File: unified_chat.py
+# Project: ai-breadboard
+# Package: core.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
 # =============================================================================
 
 import os
@@ -72,7 +74,6 @@ class UnifiedChatModel:
         self._model_name = self.default_model
         
 
-
     def update_system_instruction(self, new_instruction: str) -> None:
         """Dynamically update system instruction for all initialized models."""
         self.system_instruction = new_instruction
@@ -88,7 +89,7 @@ class UnifiedChatModel:
             self.gemini_cli_model.system_prompt = new_instruction
         import logging
         logger = logging.getLogger(__name__)
-        logger.info("[UnifiedChatModel] Системная инструкция успешно обновлена")
+        logger.info("[UnifiedChatModel] Системная инструкция successfully обновлена")
         
     @property
     def model_name(self) -> str:

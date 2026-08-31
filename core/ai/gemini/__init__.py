@@ -1,35 +1,35 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Модуль интеграции с моделями Google Gemini
+# Process Name: Google Generative AI Main Module
 # =============================================================================
-# Описание:
-#   Предоставление основного интерфейса GoogleGenerativeAI для работы с моделями
-#   семейства Gemini в рамках подсистемы искусственного интеллекта проекта.
-#
-# Примеры:
-#   >>> from core.ai.gemini import GoogleGenerativeAI
-#   >>> model = GoogleGenerativeAI()
+# Description:
+#   Main module for Google Generative AI integration.
+#   Exports the unified GoogleGenerativeAI class.
 #
 # File: __init__.py
 # Project: ai-breadboard
-# Package: src.ai.gemini
+# Package: core.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
-"""Пакет интеграции с Google Gemini."""
 
-from core.ai.gemini.generative_ai import (
-    GoogleGenerativeAI,
-    add_unsupported_model,
-    load_unsupported_models,
-    normalize_text,
-    remove_html_blocks,
-)
+from .api import GoogleGenerativeAI
+from .core import GoogleGenerativeAICore, load_unsupported_models, add_unsupported_model
+from .config import normalize_text, remove_html_blocks
+from .embeddings import GoogleGenerativeAIEmbeddingsMixin
+from .errors import GoogleGenerativeAIErrorMixin
+from .history import GoogleGenerativeAIHistoryMixin
+from .images import GoogleGenerativeAIImagesMixin
 
-__all__: list[str] = [
+__all__ = [
     'GoogleGenerativeAI',
-    'add_unsupported_model',
+    'GoogleGenerativeAICore',
     'load_unsupported_models',
+    'add_unsupported_model',
     'normalize_text',
     'remove_html_blocks',
+    'GoogleGenerativeAIEmbeddingsMixin',
+    'GoogleGenerativeAIErrorMixin',
+    'GoogleGenerativeAIHistoryMixin',
+    'GoogleGenerativeAIImagesMixin',
 ]

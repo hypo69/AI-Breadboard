@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Unicorn Manager MCP Server
+# Process Name: Запуск сервиса Run-Unicorn.ps1 в фоновом режиме.
 # =============================================================================
-# Описание:
+# Description:
 #   MCP-сервер на базе FastMCP для управления сервисом Uvicorn / Unicorn
-#   (запуск, остановка, проверка статуса процессов).
 #
 # File: unicorn_mcp_server.py
-# Project: ai-assistant
-# Package: .mcp
+# Project: ai-breadboard
+# Package: root
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -22,7 +21,7 @@ from mcp.server.fastmcp import FastMCP
 
 from core.logger import logger
 
-# Инициализация FastMCP сервера
+# Initialization FastMCP сервера
 mcp = FastMCP("Unicorn-Manager")
 
 # Путь к скрипту запуска
@@ -30,7 +29,6 @@ _ROOT = Path(__file__).resolve().parent.parent
 _UNICORN_SCRIPT = _ROOT / "launchers" / "Run-Unicorn.ps1"
 if not _UNICORN_SCRIPT.exists():
     _UNICORN_SCRIPT = _ROOT / "Run-Unicorn.ps1"
-
 
 @mcp.tool()
 async def unicorn_start() -> str:
@@ -43,11 +41,10 @@ async def unicorn_start() -> str:
             shell=True,
         )
         logger.info("[unicorn_mcp_server] Запущен процесс Run-Unicorn.ps1")
-        return "Сервис Unicorn успешно запущен в фоновом режиме."
+        return "Сервис Unicorn successfully запущен в фоновом режиме."
     except Exception as e:
-        logger.error(f"[unicorn_mcp_server] Ошибка запуска unicorn_start: {e}")
-        return f"Ошибка при запуске Unicorn: {e}"
-
+        logger.error(f"[unicorn_mcp_server] Error запуска unicorn_start: {e}")
+        return f"Error при запуске Unicorn: {e}"
 
 @mcp.tool()
 async def unicorn_stop() -> str:
@@ -57,13 +54,12 @@ async def unicorn_stop() -> str:
         logger.info("[unicorn_mcp_server] Выполнена команда остановки процессов uvicorn.exe")
         return "Команда остановки процесса Unicorn выполнена."
     except Exception as e:
-        logger.error(f"[unicorn_mcp_server] Ошибка остановки unicorn_stop: {e}")
-        return f"Ошибка при остановке Unicorn: {e}"
-
+        logger.error(f"[unicorn_mcp_server] Error остановки unicorn_stop: {e}")
+        return f"Error при остановке Unicorn: {e}"
 
 @mcp.tool()
 async def unicorn_status() -> str:
-    """Проверка текущего статуса работы процесса Unicorn (uvicorn.exe)."""
+    """Check текущего статуса работы процесса Unicorn (uvicorn.exe)."""
     try:
         result = subprocess.run(
             ["tasklist", "/FI", "IMAGENAME eq uvicorn.exe"],
@@ -74,9 +70,8 @@ async def unicorn_status() -> str:
             return "Сервис Unicorn (uvicorn.exe) активен и работает."
         return "Сервис Unicorn (uvicorn.exe) не запущен."
     except Exception as e:
-        logger.error(f"[unicorn_mcp_server] Ошибка unicorn_status: {e}")
-        return f"Ошибка проверки статуса: {e}"
-
+        logger.error(f"[unicorn_mcp_server] Error unicorn_status: {e}")
+        return f"Error проверки статуса: {e}"
 
 if __name__ == "__main__":
     logger.info("[unicorn_mcp_server] Запуск Unicorn FastMCP сервера...")

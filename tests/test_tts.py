@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тесты модуля core/tts
+# Process Name: Тесты модуля core/tts
 # =============================================================================
-# Описание:
-#   Модуль содержит тесты для модуля синтеза речи (Text-to-Speech). Проверяет
-#   функции синтеза для обоих движков: edge-tts и gtts. Обеспечивает покрытие
-#   основных сценариев использования и проверку существования необходимых функций.
+# Description:
+#   Module содержит тесты для модуля синтеза речи (Text-to-Speech). Checks
 #
-# File: tests/test_tts.py
+# File: test_tts.py
 # Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
+
 """
 Тесты модуля core/tts
 """
@@ -22,13 +21,11 @@ import asyncio
 from unittest.mock import Mock, patch, AsyncMock
 from pathlib import Path
 
-
 try:
     import torch
     has_torch = True
 except ImportError:
     has_torch = False
-
 
 class TestTTSEdge:
     """Тесты edge.py TTS."""
@@ -39,9 +36,8 @@ class TestTTSEdge:
         from core.tts.edge import synthesize
         
         with patch('core.tts.edge') as mock_tts:
-            # Проверка что функция существует
+            # Check что function существует
             assert callable(synthesize)
-
 
 class TestTTSGTTS:
     """Тесты gtts.py TTS."""
@@ -54,7 +50,6 @@ class TestTTSGTTS:
         with patch('core.tts.gtts') as mock_tts:
             assert callable(synthesize)
 
-
 @pytest.mark.skipif(not has_torch, reason="torch is not installed")
 class TestTTSSilero:
     """Тесты silero.py TTS."""
@@ -62,7 +57,7 @@ class TestTTSSilero:
     def test_get_silero_model(self):
         """Тест загрузки модели Silero."""
         try:
-            # Проверяем что модуль можно импортировать
+            # Проверяем что Module можно импортировать
             from core.tts.silero import get_silero_model
             assert callable(get_silero_model)
         except ModuleNotFoundError as e:
@@ -81,7 +76,6 @@ class TestTTSSilero:
                 pytest.skip("pyaudioop module not available")
             raise
 
-
 class TestTTSInit:
     """Тесты __init__.py TTS."""
 
@@ -90,9 +84,8 @@ class TestTTSInit:
         """Тест синтеза речи (обертка)."""
         from core.tts import synthesize_speech
         
-        # Проверка что функция существует
+        # Check что function существует
         assert callable(synthesize_speech)
-
 
 class TestTTSIntegration:
     """Интеграционные тесты TTS."""

@@ -1,5 +1,17 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: # ================================================
+# =============================================================================
+# Description:
+#   Запуск тестов."""
+#
+# File: run_tests.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Скрипт для запуска тестов ai-breadboard
 """
@@ -8,7 +20,6 @@ import subprocess
 import sys
 import argparse
 from pathlib import Path
-
 
 def run_tests(coverage=False, verbose=False, markers=None):
     """Запуск тестов."""
@@ -38,7 +49,6 @@ def run_tests(coverage=False, verbose=False, markers=None):
     result = subprocess.run(cmd, capture_output=False)
     return result.returncode
 
-
 def show_coverage():
     """Показ отчета о покрытии."""
     html_path = Path("htmlcov") / "index.html"
@@ -47,7 +57,6 @@ def show_coverage():
         webbrowser.open(f"file://{html_path.absolute()}")
     else:
         print("HTML отчет не найден. Запустите тесты с --coverage")
-
 
 def main():
     parser = argparse.ArgumentParser(description="Запуск тестов ai-ai-breadboard")
@@ -69,12 +78,11 @@ def main():
     )
     
     if exit_code == 0:
-        print("\n✓ Все тесты пройдены успешно!")
+        print("\n✓ Все тесты пройдены successfully!")
     else:
         print(f"\n✗ Тесты провалились (exit code: {exit_code})")
     
     sys.exit(exit_code)
-
 
 if __name__ == "__main__":
     main()

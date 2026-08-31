@@ -1,0 +1,24 @@
+[Unit]
+Description=AI Breadboard Microsoft Foundry Service
+Documentation=https://github.com/hypo69/AI-Breadboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=%u
+WorkingDirectory=%h/AI-Breadboard
+Environment="PATH=%h/AI-Breadboard/venv/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PYTHONPATH=%h/AI-Breadboard"
+Environment="AIBREADBOARD_DIR=%h/AI-Breadboard"
+ExecStart=%h/AI-Breadboard/venv/bin/python %h/AI-Breadboard/launchers/run_foundry.py start
+Restart=on-failure
+RestartSec=10
+
+# Логирование
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=aibreadboard-foundry
+
+[Install]
+WantedBy=default.target

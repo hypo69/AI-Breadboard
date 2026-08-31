@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тестирование роутера управления и создания агентов ИИ
+# Process Name: Тестирование CRUD и вспомогательных эндпоинтов /ap
+# =============================================================================
+# Description:
+#   Module for test_router_agents.py in ai-breadboard project.
+#
+# File: test_router_agents.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
 # =============================================================================
 
 import json
@@ -13,7 +22,6 @@ from core.fastapi.router_agents import _get_agents_list, _save_agents_list
 
 client = TestClient(app)
 
-
 class TestAgentsRouter:
     """Тестирование CRUD и вспомогательных эндпоинтов /api/agents."""
 
@@ -25,7 +33,7 @@ class TestAgentsRouter:
         _save_agents_list(self.original_agents)
 
     def test_list_agents(self):
-        """Проверка получения списка всех агентов."""
+        """Check получения списка всех агентов."""
         response = client.get("/api/agents")
         assert response.status_code == 200
         agents = response.json()
@@ -37,7 +45,7 @@ class TestAgentsRouter:
         assert "web_search_gemini_cli" in ids
 
     def test_list_tools(self):
-        """Проверка получения каталога инструментов."""
+        """Check получения каталога инструментов."""
         response = client.get("/api/agents/tools")
         assert response.status_code == 200
         tools = response.json()
@@ -48,7 +56,7 @@ class TestAgentsRouter:
         assert "python_eval" in tool_ids
 
     def test_list_providers(self):
-        """Проверка получения списка провайдеров и моделей из пула."""
+        """Check получения списка провайдеров и моделей из пула."""
         response = client.get("/api/agents/providers")
         assert response.status_code == 200
         providers = response.json()
@@ -83,12 +91,12 @@ class TestAgentsRouter:
         assert data.get("agent", {}).get("id") == "test_research_agent"
         assert data.get("agent", {}).get("is_system") is False
 
-        # 2. Проверка в списке
+        # 2. Check в списке
         list_res = client.get("/api/agents")
         agent_ids = [a.get("id") for a in list_res.json()]
         assert "test_research_agent" in agent_ids
 
-        # 3. Обновление
+        # 3. Update
         updated_agent = dict(new_agent)
         updated_agent["name"] = "Updated Research Assistant"
         updated_agent["enabled"] = False
@@ -102,19 +110,19 @@ class TestAgentsRouter:
         assert del_res.status_code == 200
         assert del_res.json().get("deleted_id") == "test_research_agent"
 
-        # 5. Проверка отсутствия
+        # 5. Check отсутствия
         list_after = client.get("/api/agents")
         agent_ids_after = [a.get("id") for a in list_after.json()]
         assert "test_research_agent" not in agent_ids_after
 
     def test_prevent_delete_system_agent(self):
-        """Проверка запрета удаления системных агентов."""
+        """Check запрета удаления системных агентов."""
         del_res = client.delete("/api/agents/web_search_gemini")
         assert del_res.status_code == 403
         assert "Системных агентов нельзя удалять" in del_res.json().get("detail", "")
 
     def test_prevent_duplicate_agent_id(self):
-        """Проверка ошибки при создании дублирующегося ID."""
+        """Check ошибки при создании дублирующегося ID."""
         dup_agent = {
             "id": "web_search_gemini",  # Уже существует
             "name": "Duplicate Agent",
@@ -138,7 +146,7 @@ class TestAgentsRouter:
         mock_llm = MagicMock()
         mock_llm.ask = AsyncMock(return_value=json.dumps({
             "name": "Аналитик данных",
-            "description": "Анализирует данные и выполняет расчеты",
+            "description": "Анализирует данные и performs расчеты",
             "system_prompt": "Ты аналитик данных.",
             "recommended_tools": ["python_eval", "web_search"],
             "temperature": 0.4,

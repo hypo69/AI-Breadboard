@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тесты модуля core/utils/get_free_port
+# Process Name: Тестирование получения первого доступного порта (б
 # =============================================================================
-# Описание:
+# Description:
 #   Исчерпывающее тестирование всех публичных функций модуля get_free_port.
-#   Покрытие: прямые тесты, граничные условия, регрессионные сценарии.
 #
-# File: tests/utils/test_get_free_port.py
+# File: test_get_free_port.py
 # Project: ai-breadboard
-# Package: tests
+# Package: tests.utils
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -19,7 +18,7 @@ from core.utils.get_free_port import get_free_port
 def test_get_free_port_first_available():
     """Тестирование получения первого доступного порта (без диапазона).
     
-    Проверка: функция должна вернуть целое число, начиная с 1024.
+    Check: function должна вернуть integer, начиная с 1024.
     """
     # --- Подготовка (Arrange) ---
     # Хост localhost — стандарт для локальной проверки.
@@ -29,8 +28,8 @@ def test_get_free_port_first_available():
     # Поиск первого свободного порта без ограничений.
     port: int = get_free_port(host)
     
-    # --- Проверка (Assert) ---
-    # Проверка: порт должен быть >= 1024.
+    # --- Check (Assert) ---
+    # Check: порт должен быть >= 1024.
     assert port >= 1024, f"Порт должен быть >= 1024, получено: {port}"
 
 def test_get_free_port_in_range():
@@ -42,7 +41,7 @@ def test_get_free_port_in_range():
     # --- Выполнение (Act) ---
     port: int = get_free_port(host, port_range)
     
-    # --- Проверка (Assert) ---
+    # --- Check (Assert) ---
     assert 3000 <= port <= 5000, f"Порт {port} вне диапазона {port_range}"
 
 def test_get_free_port_invalid_range():
@@ -51,6 +50,6 @@ def test_get_free_port_invalid_range():
     host: str = 'localhost'
     port_range: str = 'invalid'
     
-    # --- Выполнение (Act) & Проверка (Assert) ---
+    # --- Выполнение (Act) & Check (Assert) ---
     with pytest.raises(ValueError):
         get_free_port(host, port_range)

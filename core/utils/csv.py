@@ -1,7 +1,16 @@
-# \file hypotez/src/utils/csv.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: .. module::  src.utils.csv
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: csv.py
+# Project: ai-breadboard
+# Package: core.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module::  src.utils.csv
@@ -16,7 +25,6 @@ from types import SimpleNamespace
 from typing import List, Dict, Union
 import pandas as pd
 from core.logger.logger import logger
-
 
 def save_csv_file(
     data: List[Dict[str, str]],
@@ -56,7 +64,6 @@ def save_csv_file(
     except Exception as e:
         logger.error(f"Failed to save CSV to {file_path}", exc_info=exc_info)
         return False
-
 
 def read_csv_file(file_path: Union[str, Path], exc_info: bool = True) -> List[Dict[str, str]] | None:
     """Reads CSV content as a list of dictionaries.
@@ -103,7 +110,6 @@ def read_csv_as_json(csv_file_path: Union[str, Path], json_file_path: Union[str,
         logger.error(f"Failed to convert CSV to JSON at {json_file_path}", exc_info=exc_info)
         return False
 
-
 def read_csv_as_dict(csv_file: Union[str, Path]) -> dict | None:
     """
     Convert CSV content to a dictionary.
@@ -120,7 +126,6 @@ def read_csv_as_dict(csv_file: Union[str, Path]) -> dict | None:
     except Exception as ex:
         logger.error("Failed to read CSV as dictionary", exc_info=True)
         return None
-
 
 def read_csv_as_ns(file_path: Union[str, Path]) -> List[dict]:
     """Load CSV data into a list of dictionaries using Pandas.

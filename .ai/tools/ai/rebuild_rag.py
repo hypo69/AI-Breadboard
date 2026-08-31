@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Скрипт быстрого запуска переиндексации RAG
+# Process Name: Запуск переиндексации Core RAG индекса.
 # =============================================================================
-# Описание:
-#   Импортирует и выполняет функцию перестроения RAG-индекса.
+# Description:
+#   Импортирует и performs функцию перестроения RAG-индекса.
 #
 # File: rebuild_rag.py
-# Project: ai-assistant
-# Author: Antigravity
+# Project: ai-breadboard
+# Package: .ai.tools.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
 # =============================================================================
 
 import argparse
 from core.rag import build_rules_index
-
 
 def main() -> None:
     """Запуск переиндексации Core RAG индекса."""
@@ -22,8 +23,7 @@ def main() -> None:
 
     print(f"Запуск переиндексации Core RAG правил (fresh={args.fresh})...")
     index_path, docs_path = build_rules_index()
-    print(f"Успешно сгенерирован RAG индекс: {index_path}, {docs_path}")
-
+    print(f"Successfully сгенерирован RAG индекс: {index_path}, {docs_path}")
 
 if __name__ == '__main__':
     main()

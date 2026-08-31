@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Инструменты LangChain AI Breadboard
+# Process Name: Поиск актуальной информации в интернете через поис
 # =============================================================================
-# Описание:
+# Description:
 #   Набор нативных LangChain-инструментов для AI-агентов.
-#   Включает веб-поиск, семантический RAG-поиск, вычисления Python и работу с файлами.
 #
 # File: langchain_tools.py
-# Project: aibreadboard
-# Package: src.ai
+# Project: ai-breadboard
+# Package: core.ai
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -47,7 +46,6 @@ except ImportError:
 from core.logger import logger
 from header import __root__
 
-
 @tool
 async def web_search(query: str) -> str:
     """Поиск актуальной информации в интернете через поисковые адаптеры.
@@ -61,9 +59,8 @@ async def web_search(query: str) -> str:
         response = await model.ask(f"Найди в интернете актуальную информацию по запросу: {query}")
         return response
     except Exception as e:
-        logger.error(f"[langchain_tools] Ошибка веб-поиска: {e}")
+        logger.error(f"[langchain_tools] Error веб-поиска: {e}")
         return json.dumps({"error": str(e)}, ensure_ascii=False)
-
 
 @tool
 async def rag_search(query: str, top_k: int = 5) -> str:
@@ -78,9 +75,8 @@ async def rag_search(query: str, top_k: int = 5) -> str:
         results = await rag_manager.search(query=query, limit=top_k)
         return json.dumps(results, ensure_ascii=False)
     except Exception as e:
-        logger.error(f"[langchain_tools] Ошибка RAG-поиска: {e}")
+        logger.error(f"[langchain_tools] Error RAG-поиска: {e}")
         return json.dumps([], ensure_ascii=False)
-
 
 @tool
 def python_eval(code: str) -> str:
@@ -94,8 +90,7 @@ def python_eval(code: str) -> str:
         result = eval(code, allowed_globals, {})
         return str(result)
     except Exception as e:
-        return f"Ошибка вычисления: {e}"
-
+        return f"Error вычисления: {e}"
 
 @tool
 def file_read(file_path: str) -> str:
@@ -112,8 +107,7 @@ def file_read(file_path: str) -> str:
             return f"Файл не найден: {file_path}"
         return p.read_text(encoding="utf-8", errors="replace")[:10000]
     except Exception as e:
-        return f"Ошибка чтения файла: {e}"
-
+        return f"Error чтения файла: {e}"
 
 # --- Заглушки для обратной совместимости ---
 
@@ -122,24 +116,20 @@ async def search_torrents(query: str) -> str:
     """Устаревший инструмент (артефакт удален)."""
     return json.dumps([], ensure_ascii=False)
 
-
 @tool
 async def get_movie_metadata(title: str) -> str:
     """Устаревший инструмент (артефакт удален)."""
     return json.dumps({}, ensure_ascii=False)
-
 
 @tool
 def get_streaming_sources(title: str) -> str:
     """Устаревший инструмент (артефакт удален)."""
     return json.dumps({}, ensure_ascii=False)
 
-
 @tool
 def build_player_url(url: str, provider: str = "") -> str:
     """Устаревший инструмент (артефакт удален)."""
     return json.dumps({}, ensure_ascii=False)
-
 
 @tool
 async def add_torrent_download(url: str, source: str = "", title: str = "") -> str:

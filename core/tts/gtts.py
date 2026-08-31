@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Synthesizes text to a file using Google TTS (gTTS)
+# =============================================================================
+# Description:
+#   Synthesizes text to a file using Google TTS (gTTS)."""
+#
+# File: gtts.py
+# Project: ai-breadboard
+# Package: core.tts
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Module for Google Translator TTS system (gTTS).
 """

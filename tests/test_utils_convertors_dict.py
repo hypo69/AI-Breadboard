@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тесты модуля core/utils/convertors/dict
+# Process Name: Class для тестирования функций модуля dict.py.
 # =============================================================================
-# Описание:
-#   Исчерпывающее тестирование функций модуля dict.py: 
-#   dict2ns, replace_key_in_dict.
+# Description:
+#   Исчерпывающее тестирование функций модуля dict.py:
 #
-# File: tests/test_utils_convertors_dict.py
+# File: test_utils_convertors_dict.py
 # Project: ai-breadboard
 # Package: tests
 # Author: hypo69
@@ -18,7 +17,7 @@ from types import SimpleNamespace
 from core.utils.convertors.dict import dict2ns, replace_key_in_dict
 
 class TestDictUtils:
-    """Класс для тестирования функций модуля dict.py."""
+    """Class для тестирования функций модуля dict.py."""
 
     def test_dict2ns_happy_path(self):
         """Тестирование нормального сценария конвертации dict в SimpleNamespace."""
@@ -28,7 +27,7 @@ class TestDictUtils:
         # --- Выполнение (Act) ---
         result = dict2ns(data)
         
-        # --- Проверка (Assert) ---
+        # --- Check (Assert) ---
         assert isinstance(result, SimpleNamespace)
         assert result.a == 1
         assert result.b.c == 2
@@ -41,6 +40,6 @@ class TestDictUtils:
         # --- Выполнение (Act) ---
         result = replace_key_in_dict(data, "old", "new")
         
-        # --- Проверка (Assert) ---
+        # --- Check (Assert) ---
         assert result == {"new": 1, "nested": {"new": 2}}
         

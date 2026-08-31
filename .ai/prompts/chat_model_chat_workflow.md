@@ -13,8 +13,8 @@
 │     └──> /api/chat (POST)                                                    │
 │     └──> ChatRequest (message, history, generation_config)                   │
 │                                                                              │
-│  2. Проверка режима отладки                                                  │
-│     └──> debug_mode == true → формирование полного промпта                   │
+│  2. Check режима отладки                                                  │
+│     └──> debug_mode == true → formation полного промпта                   │
 │     └──> debug_mode == false → стандартная обработка                         │
 │                                                                              │
 │  3. Получение данных пользователя                                           │
@@ -22,25 +22,25 @@
 │     └──> anon_<IP> для гостевых пользователей                                │
 │     └──> Настройки пользователя (model, system_instruction, tts_voice)       │
 │                                                                              │
-│  4. Загрузка контекста через RAG                                            │
+│  4. Loading контекста через RAG                                            │
 │     └──> search_user_context(user_id, api_key, query, top_k=3, threshold=0.4)│
 │     └──> Поиск похожих запросов в истории пользователя                       │
-│     └──> Формирование user_context_str из найденных фрагментов               │
+│     └──> Formation user_context_str из найденных фрагментов               │
 │                                                                              │
-│  5. Загрузка профиля предпочтений                                           │
+│  5. Loading профиля предпочтений                                           │
 │     └──> get_recommendation_context(user_id)                                 │
 │     └──> Получение истории просмотров и предпочтений                         │
 │                                                                              │
-│  6. Формирование финального системного инструкта                            │
+│  6. Formation финального системного инструкта                            │
 │     └──> system_instruction (из настроек)                                    │
 │     └──> voice_gender_instruction (коррекция рода по голосу)                 │
 │     └──> user_context_str (из RAG)                                           │
 │     └──> pref_context (из профиля)                                           │
 │                                                                              │
 │  7. Маршрутизация плагинов                                                  │
-│     └──> Проверка media-запросов (_is_media_query)                           │
+│     └──> Check media-запросов (_is_media_query)                           │
 │     └──> Извлечение chat_mode (story/download)                              │
-│     └──> Последовательная проверка плагинов                                  │
+│     └──> Последовательная check плагинов                                  │
 │                                                                              │
 │  8. Обработка плагинами                                                     │
 │     └──> plugin.can_handle(request.message)                                  │
@@ -70,7 +70,7 @@
 **Request Body:**
 ```json
 {
-  "message": "Строка запроса пользователя",
+  "message": "String запроса пользователя",
   "history": [
     {"role": "user", "parts": ["Предыдущий вопрос"]},
     {"role": "model", "parts": ["Предыдущий ответ"]}
@@ -83,7 +83,7 @@
 }
 ```
 
-### 2. Проверка режима отладки
+### 2. Check режима отладки
 
 Если `debug_mode == true`:
 - Формируется полный промпт со всеми инструкциями
@@ -100,9 +100,9 @@
   - `system_instruction` — пользовательская инструкция
   - `tts_voice` — голос для озвучки
 
-### 4. Загрузка контекста через RAG
+### 4. Loading контекста через RAG
 
-**Функция:** `search_user_context(user_id, api_key, query, top_k=3, threshold=0.4)`
+**Function:** `search_user_context(user_id, api_key, query, top_k=3, threshold=0.4)`
 
 **Путь:** `src/ai/gemini/user_query_rag.py`
 
@@ -110,7 +110,7 @@
 1. Получение RAG-базы пользователя: `get_user_rag(user_id, api_key)`
 2. Вычисление эмбеддинга запроса через Gemini API
 3. Поиск по FAISS-индексу: top_k=3, threshold=0.4
-4. Формирование `user_context_str` из найденных фрагментов
+4. Formation `user_context_str` из найденных фрагментов
 
 **Формат документа в RAG:**
 ```
@@ -118,18 +118,18 @@
 Ответ модели: {response}
 ```
 
-### 5. Загрузка профиля предпочтений
+### 5. Loading профиля предпочтений
 
-**Функция:** `get_recommendation_context(user_id)`
+**Function:** `get_recommendation_context(user_id)`
 
 **Источники:**
 - История просмотров медиа
 - Предпочтения в жанрах
 - Лайки/дизлайки
 
-**Формат:** Строка с описанием предпочтений пользователя
+**Формат:** String с описанием предпочтений пользователя
 
-### 6. Формирование системного инструкта
+### 6. Formation системного инструкта
 
 **Составные части:**
 ```python
@@ -204,12 +204,12 @@ response_2 = await active_model.chat_stream(q2, generation_config={'response_typ
 
 ### 10. Индексация ответа
 
-**Функция:** `index_user_query(user_id, api_key, query, response)`
+**Function:** `index_user_query(user_id, api_key, query, response)`
 
 **Путь:** `src/ai/gemini/user_query_rag.py`
 
 **Процесс:**
-1. Проверка длины запроса (> 10 символов)
+1. Check длины запроса (> 10 символов)
 2. Прореживание при переполнении (> 500 документов)
 3. Добавление документа в RAG-базу
 4. Fire-and-forget (не блокирует ответ)
@@ -241,10 +241,10 @@ api_key = _get_gemini_api_key()
 ```
 
 **Роутер ключей:**
-- `GET /api/keys` — список всех ключей
+- `GET /api/keys` — list всех ключей
 - `POST /api/keys` — добавление ключа
 - `DELETE /api/keys/{name}` — удаление ключа
-- `PATCH /api/keys/{name}` — обновление статуса
+- `PATCH /api/keys/{name}` — update статуса
 - `POST /api/keys/{name}/reset-quota` — сброс квоты
 
 ### Пути к файлам
@@ -296,7 +296,7 @@ api_key = _get_gemini_api_key()
    - Exponential backoff (2^attempt)
 
 4. **Ошибки авторизации (401):**
-   - Проверка ключа
+   - Check ключа
    - Перек��ючение на следующий ключ
 
 ---
@@ -314,4 +314,4 @@ stats = get_user_rag_stats(user_id, api_key)
 - `src.logger.logger` — все важные события
 - `logger.error()` — ошибки
 - `logger.warning()` — предупреждения
-- `logger.info()` — информация
+- `logger.info()` — Info

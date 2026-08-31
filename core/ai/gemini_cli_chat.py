@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Интеграция Google Gemini CLI
+# Process Name: Адаптер взаимодействия с Google Gemini CLI через н
 # =============================================================================
-# Описание:
+# Description:
 #   Адаптер для взаимодействия с локальным агентом Google Gemini CLI
-#   (gemini-3.1-flash-lite, gemini-2.5-flash, gemini-2.5-pro и др.).
-#   Поддерживает прямое выполнение команд (ask, chat) и потоковую передачу (chat_stream).
 #
 # File: gemini_cli_chat.py
 # Project: ai-breadboard
-# Package: src.ai
-# Class: GeminiCliChatBase
+# Package: core.ai
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -22,7 +19,6 @@ import asyncio
 from typing import List, Dict, AsyncGenerator
 
 from core.logger.logger import logger
-
 
 class GeminiCliChatBase:
     """Адаптер взаимодействия с Google Gemini CLI через неинтерактивный режим подпроцесса.
@@ -47,7 +43,7 @@ class GeminiCliChatBase:
             force_refresh (bool): Флаг принудительного обновления кэша.
 
         Returns:
-            List[str]: Список доступных идентификаторов моделей.
+            List[str]: List доступных идентификаторов моделей.
         """
         from core.ai.model_manager import get_available_models as _mgr_get_available_models
         return _mgr_get_available_models(provider="gemini_cli", force_refresh=force_refresh)
@@ -95,7 +91,7 @@ class GeminiCliChatBase:
             if resolved:
                 return resolved
 
-        # Проверка стандартного пути npm global на Windows
+        # Check стандартного пути npm global на Windows
         if sys.platform == "win32":
             npm_appdata = os.path.expandvars(r"%APPDATA%\npm\gemini.cmd")
             if os.path.exists(npm_appdata):
@@ -104,7 +100,7 @@ class GeminiCliChatBase:
         return "gemini"
 
     def __init__(self, model_id: str = "", system_prompt: str = "", executable_path: str = "") -> None:
-        """Инициализация клиента Gemini CLI.
+        """Initialization клиента Gemini CLI.
 
         Args:
             model_id (str): Идентификатор модели.
@@ -142,7 +138,7 @@ class GeminiCliChatBase:
         self.history = []
 
     def _build_full_prompt(self, q: str, history: List[Dict[str, str]] = [], system_instruction: str = "") -> str:
-        """Формирование полного контекста запроса с историей и системной инструкцией."""
+        """Formation полного контекста запроса с историей и системной инструкцией."""
         sys_inst = system_instruction or self.system_prompt or ""
         parts: List[str] = []
 
@@ -168,7 +164,7 @@ class GeminiCliChatBase:
         lines = cleaned.splitlines()
         filtered_lines: List[str] = []
         for line in lines:
-            # Исключение служебных баннеров или предупреждений CLI
+            # Exception служебных баннеров или предупреждений CLI
             if line.startswith("YOLO mode is enabled") or line.startswith("Loaded extension:"):
                 continue
             filtered_lines.append(line)
@@ -191,7 +187,7 @@ class GeminiCliChatBase:
             max_tokens (Optional[int]): Максимальное количество токенов (0 по умолчанию).
 
         Returns:
-            str: Ответ модели или пустая строка при ошибке.
+            str: Ответ модели или пустая string при ошибке.
         """
         if not q or not q.strip():
             return ""
@@ -220,7 +216,7 @@ class GeminiCliChatBase:
             max_tokens (Optional[int]): Максимальное количество токенов (0 по умолчанию).
 
         Returns:
-            str: Ответ модели или пустая строка при сбое.
+            str: Ответ модели или пустая string при сбое.
         """
         if not q or not q.strip():
             return ""
@@ -299,7 +295,7 @@ class GeminiCliChatBase:
                 err_msg = stderr_bytes.decode("utf-8", errors="replace").strip()
                 logger.warning(f"[GeminiCliChat] Процесс завершился с кодом {proc.returncode}: {err_msg}")
         except Exception as ex:
-            logger.error(f"[GeminiCliChat] Ошибка потокового выполнения: {ex}")
+            logger.error(f"[GeminiCliChat] Error потокового выполнения: {ex}")
             yield f"\n[Gemini CLI Error: {str(ex)}]"
         finally:
             if save_history and full_response:
@@ -344,5 +340,5 @@ class GeminiCliChatBase:
             logger.error(f"[GeminiCliChat] Исполняемый файл '{self.executable_path}' не найден в системе")
             return "[Gemini CLI Error]: Executable 'gemini' not found in system PATH."
         except Exception as ex:
-            logger.error(f"[GeminiCliChat] Непредвиденная ошибка запуска CLI: {ex}")
+            logger.error(f"[GeminiCliChat] Непредвиденная Error запуска CLI: {ex}")
             return f"[Gemini CLI Error]: {str(ex)}"

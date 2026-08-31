@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: FastAPI-роутер управления системными инструкциями и источниками
+# Process Name: Check прав администратора. Бросает HTTPException е
 # =============================================================================
-# Описание:
+# Description:
 #   CRUD для файлов системных инструкций.
-#   Файловое версионирование: активные файлы хранятся в prompts/{mode}/,
-#   история версий — в prompts/{mode}/versions/.
 #
 # File: router_admin.py
 # Project: ai-breadboard
-# Package: src.fastapi
+# Package: core.fastapi
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -46,13 +44,12 @@ _VERSIONS_DIRS: Dict[str, Path] = {
 
 _SOURCES_FILE = __root__ / 'plugins' / 'movie_search_sources' / 'sources.json'
 
-
 # ============================================================================
 # Helper functions
 # ============================================================================
 
 def _check_admin(request: Request) -> bool:
-    """Проверка прав администратора. Бросает HTTPException если нет доступа."""
+    """Check прав администратора. Бросает HTTPException если нет доступа."""
     from core.fastapi.router_auth import verify_jwt_token
     token: str = request.cookies.get('auth_token', '')
     if not token:
@@ -85,23 +82,20 @@ def _check_admin(request: Request) -> bool:
 
     raise HTTPException(status_code=401, detail='Не авторизован')
 
-
 def _get_active_file(mode: str) -> Path:
-    """Возвращает путь к активному файлу инструкции по режиму."""
+    """Returns путь к активному файлу инструкции по режиму."""
     path = _INSTRUCTION_FILES.get(mode)
     if not path:
         raise HTTPException(status_code=400, detail=f'Неизвестный режим: {mode}. Допустимые: chat, narrator')
     return path
 
-
 def _get_versions_dir(mode: str) -> Path:
-    """Возвращает путь к папке версий и создаёт её если нет."""
+    """Returns путь к папке версий и creates её если нет."""
     path = _VERSIONS_DIRS.get(mode)
     if not path:
         raise HTTPException(status_code=400, detail=f'Неизвестный режим: {mode}')
     path.mkdir(parents=True, exist_ok=True)
     return path
-
 
 def _next_version_number(versions_dir: Path) -> int:
     """Вычисляет следующий номер версии на основе файлов в папке."""
@@ -113,28 +107,25 @@ def _next_version_number(versions_dir: Path) -> int:
             numbers.append(int(m.group(1)))
     return max(numbers, default=0) + 1
 
-
 def _load_sources_raw() -> str:
-    """Загружает сырой текст из sources.json."""
+    """Loads сырой текст из sources.json."""
     if _SOURCES_FILE.exists():
         try:
             return _SOURCES_FILE.read_text(encoding='utf-8')
         except Exception as ex:
-            logger.error('Ошибка чтения sources.json', ex)
+            logger.error('Error чтения sources.json', ex)
     return '{}'
 
-
 def _save_sources_raw(content: str) -> None:
-    """Сохраняет сырой текст в sources.json."""
+    """Saves сырой текст в sources.json."""
     try:
         json.loads(content)
         _SOURCES_FILE.write_text(content, encoding='utf-8')
     except json.JSONDecodeError as ex:
         raise HTTPException(status_code=400, detail=f'Неверный формат JSON: {ex}')
     except Exception as ex:
-        logger.error('Ошибка записи sources.json', ex)
+        logger.error('Error записи sources.json', ex)
         raise HTTPException(status_code=500, detail='Не удалось сохранить источники')
-
 
 # ============================================================================
 # Pydantic Models
@@ -143,20 +134,16 @@ def _save_sources_raw(content: str) -> None:
 class SystemInstructionUpdate(BaseModel):
     content: str
 
-
 class RawSourcesUpdate(BaseModel):
     content: str
-
 
 class InstructionRoleUpdate(BaseModel):
     mode: str   # 'chat' | 'narrator'
     content: str
 
-
 class InstructionActivateRequest(BaseModel):
     mode: str       # 'chat' | 'narrator'
     filename: str   # имя файла из папки versions/, например 'v2_2026-08-07.md'
-
 
 # ============================================================================
 # Legacy System Instruction Endpoints (backward compat)
@@ -171,13 +158,12 @@ async def get_system_instruction(request: Request) -> Dict[str, str]:
         content = active_file.read_text(encoding='utf-8') if active_file.exists() else ''
         return {'content': content}
     except Exception as ex:
-        logger.error('Ошибка чтения system_instruction', ex)
+        logger.error('Error чтения system_instruction', ex)
         raise HTTPException(status_code=500, detail='Не удалось прочитать системную инструкцию')
-
 
 @router.post('/system_instruction')
 async def update_system_instruction(request: Request, data: SystemInstructionUpdate) -> Dict[str, str]:
-    """Обновление текста системной инструкции чата (legacy endpoint)."""
+    """Update текста системной инструкции чата (legacy endpoint)."""
     _check_admin(request)
     active_file = _get_active_file('chat')
     try:
@@ -186,11 +172,10 @@ async def update_system_instruction(request: Request, data: SystemInstructionUpd
         if hasattr(request.app.state, 'chat_model') and request.app.state.chat_model:
             request.app.state.chat_model.update_system_instruction(data.content)
         logger.info('System instruction updated via admin panel (legacy endpoint)')
-        return {'status': 'ok', 'message': 'Системная инструкция успешно сохранена'}
+        return {'status': 'ok', 'message': 'Системная инструкция successfully сохранена'}
     except Exception as ex:
-        logger.error('Ошибка записи system_instruction', ex)
+        logger.error('Error записи system_instruction', ex)
         raise HTTPException(status_code=500, detail='Не удалось сохранить системную инструкцию')
-
 
 # ============================================================================
 # Instructions Endpoints (файловое версионирование)
@@ -205,13 +190,12 @@ async def get_instruction(request: Request, mode: str = 'chat') -> Dict[str, str
         content = active_file.read_text(encoding='utf-8') if active_file.exists() else ''
         return {'content': content, 'mode': mode, 'file': str(active_file.name)}
     except Exception as ex:
-        logger.error(f'Ошибка чтения инструкции mode={mode}', ex)
+        logger.error(f'Error чтения инструкции mode={mode}', ex)
         raise HTTPException(status_code=500, detail='Не удалось прочитать инструкцию')
-
 
 @router.post('/instructions/save')
 async def save_instruction(request: Request, data: InstructionRoleUpdate) -> Dict[str, str]:
-    """Сохранение новой версии инструкции в файл и обновление активного файла."""
+    """Сохранение новой версии инструкции в файл и update активного файла."""
     _check_admin(request)
     active_file = _get_active_file(data.mode)
     versions_dir = _get_versions_dir(data.mode)
@@ -245,9 +229,8 @@ async def save_instruction(request: Request, data: InstructionRoleUpdate) -> Dic
             'version': version_filename
         }
     except Exception as ex:
-        logger.error(f'Ошибка сохранения инструкции mode={data.mode}', ex)
+        logger.error(f'Error сохранения инструкции mode={data.mode}', ex)
         raise HTTPException(status_code=500, detail='Не удалось сохранить инструкцию')
-
 
 @router.get('/instructions/versions')
 async def get_instruction_versions(request: Request, mode: str = 'chat') -> Dict[str, Any]:
@@ -282,9 +265,8 @@ async def get_instruction_versions(request: Request, mode: str = 'chat') -> Dict
 
         return {'versions': versions, 'mode': mode}
     except Exception as ex:
-        logger.error(f'Ошибка чтения версий mode={mode}', ex)
+        logger.error(f'Error чтения версий mode={mode}', ex)
         raise HTTPException(status_code=500, detail='Не удалось прочитать версии')
-
 
 @router.post('/instructions/activate')
 async def activate_instruction(request: Request, data: InstructionActivateRequest) -> Dict[str, str]:
@@ -314,13 +296,12 @@ async def activate_instruction(request: Request, data: InstructionActivateReques
         logger.info(f'Activated instruction version {safe_filename} for mode={data.mode}')
         return {'status': 'ok', 'message': f'Версия {safe_filename} активирована', 'version': safe_filename}
     except Exception as ex:
-        logger.error(f'Ошибка активации версии {safe_filename}', ex)
+        logger.error(f'Error активации версии {safe_filename}', ex)
         raise HTTPException(status_code=500, detail='Не удалось активировать версию')
-
 
 @router.post('/instructions/check')
 async def check_instruction_in_model(request: Request, data: Dict[str, Any]) -> Dict[str, Any]:
-    """Временная проверка инструкции в модели без сохранения."""
+    """Временная check инструкции в модели без сохранения."""
     _check_admin(request)
     try:
         from core.ai.unified_chat import UnifiedChatModel
@@ -352,9 +333,8 @@ async def check_instruction_in_model(request: Request, data: Dict[str, Any]) -> 
             'token_count': total_tokens
         }
     except Exception as ex:
-        logger.error('Ошибка проверки инструкции в модели', ex)
-        raise HTTPException(status_code=500, detail=f'Ошибка проверки: {ex}')
-
+        logger.error('Error проверки инструкции в модели', ex)
+        raise HTTPException(status_code=500, detail=f'Error проверки: {ex}')
 
 # ============================================================================
 # Sources Endpoints
@@ -367,15 +347,13 @@ async def get_sources_raw(request: Request) -> Dict[str, str]:
     content = _load_sources_raw()
     return {'content': content}
 
-
 @router.post('/sources/raw')
 async def update_sources_raw(request: Request, data: RawSourcesUpdate) -> Dict[str, str]:
-    """Обновление сырого JSON-текста источников."""
+    """Update сырого JSON-текста источников."""
     _check_admin(request)
     _save_sources_raw(data.content)
     logger.info('Sources JSON updated via admin panel')
     return {'status': 'ok'}
-
 
 # ============================================================================
 # Plugin Manager Endpoints
@@ -390,20 +368,17 @@ class PluginConfigUpdate(BaseModel):
 class PluginActionRequest(BaseModel):
     params: Dict[str, Any] = {}
 
-
 @router.get('/plugins')
 async def get_all_plugins(request: Request) -> Dict[str, Any]:
-    """Возвращает пустой реестр (плагины отключены)."""
+    """Returns empty реестр (плагины отключены)."""
     _check_admin(request)
     return {'plugins': {}, 'count': 0}
 
-
 @router.get('/plugins/{plugin_name}')
 async def get_plugin_details(plugin_name: str, request: Request) -> Dict[str, Any]:
-    """Возвращает 404 (плагины отключены)."""
+    """Returns 404 (плагины отключены)."""
     _check_admin(request)
     raise HTTPException(status_code=404, detail=f"Плагин '{plugin_name}' не найден")
-
 
 @router.post('/plugins/{plugin_name}/toggle')
 async def toggle_plugin(plugin_name: str, data: PluginStateUpdate, request: Request) -> Dict[str, Any]:
@@ -411,13 +386,11 @@ async def toggle_plugin(plugin_name: str, data: PluginStateUpdate, request: Requ
     _check_admin(request)
     raise HTTPException(status_code=404, detail=f"Плагин '{plugin_name}' не найден")
 
-
 @router.post('/plugins/{plugin_name}/config')
 async def save_plugin_config(plugin_name: str, data: PluginConfigUpdate, request: Request) -> Dict[str, Any]:
     """Плагины отключены."""
     _check_admin(request)
     raise HTTPException(status_code=404, detail=f"Плагин '{plugin_name}' не найден")
-
 
 @router.post('/plugins/{plugin_name}/action/{action_name}')
 async def call_plugin_action(plugin_name: str, action_name: str, data: PluginActionRequest, request: Request) -> Dict[str, Any]:
@@ -425,17 +398,15 @@ async def call_plugin_action(plugin_name: str, action_name: str, data: PluginAct
     _check_admin(request)
     raise HTTPException(status_code=404, detail=f"Плагин '{plugin_name}' не найден")
 
-
 @router.get('/plugin/{plugin_name}/status')
 async def get_plugin_status(plugin_name: str, request: Request):
     """Плагины отключены."""
     _check_admin(request)
     raise HTTPException(status_code=404, detail='Плагин не найден')
 
-
 @router.post('/plugin/{plugin_name}/status')
 async def update_plugin_status(plugin_name: str, data: PluginStateUpdate, request: Request):
-    """Обновление статуса плагина (обратная совместимость)."""
+    """Update статуса плагина (обратная совместимость)."""
     _check_admin(request)
     plugins_dict = getattr(request.app.state, 'plugins', {})
     plugin = plugins_dict.get(plugin_name)
@@ -445,8 +416,6 @@ async def update_plugin_status(plugin_name: str, data: PluginStateUpdate, reques
     plugin.update_config({'enabled': data.enabled})
     logger.info(f'Plugin {plugin_name} enabled state changed to {data.enabled}')
     return {'name': plugin_name, 'enabled': plugin.enabled}
-
-
 
 # ============================================================================
 # RAG Endpoints
@@ -467,7 +436,7 @@ async def get_rag_config(request: Request):
                 cfg = json.load(f)
                 mode = cfg.get("rag", {}).get("mode", "rag+model")
         except Exception as e:
-            logger.error("Ошибка чтения config.json", e)
+            logger.error("Error чтения config.json", e)
     return {"mode": mode}
 
 @router.post('/rag/config')
@@ -492,9 +461,8 @@ async def set_rag_config(request: Request, data: RagConfigRequest):
             
         return {"status": "ok", "mode": data.mode}
     except Exception as e:
-        logger.error("Ошибка записи config.json", e)
-        raise HTTPException(status_code=500, detail="Ошибка сохранения конфигурации RAG")
-
+        logger.error("Error записи config.json", e)
+        raise HTTPException(status_code=500, detail="Error сохранения конфигурации RAG")
 
 class WebSearchConfigRequest(BaseModel):
     engine: str
@@ -521,7 +489,7 @@ async def get_web_search_config(request: Request):
                 gemini_cli_model = ws.get("gemini_cli_model", "gemini-3.1-flash-lite")
                 agy_model = ws.get("agy_model", "agy-flash")
         except Exception as e:
-            logger.error("Ошибка чтения config.json для web_search", e)
+            logger.error("Error чтения config.json для web_search", e)
     return {
         "engine": engine,
         "gemini_model": gemini_model,
@@ -560,9 +528,8 @@ async def set_web_search_config(request: Request, data: WebSearchConfigRequest):
             "agy_model": data.agy_model
         }
     except Exception as e:
-        logger.error("Ошибка записи config.json для web_search", e)
-        raise HTTPException(status_code=500, detail="Ошибка сохранения конфигурации веб-поиска")
-
+        logger.error("Error записи config.json для web_search", e)
+        raise HTTPException(status_code=500, detail="Error сохранения конфигурации веб-поиска")
 
 class WebSearchTestRequest(BaseModel):
     query: str
@@ -592,7 +559,7 @@ async def test_web_search(request: Request, data: WebSearchTestRequest):
                 gemini_cli_model = ws.get("gemini_cli_model", "gemini-3.1-flash-lite")
                 agy_model = ws.get("agy_model", "agy-flash")
         except Exception as e:
-            logger.error("Ошибка чтения config.json для web_search", e)
+            logger.error("Error чтения config.json для web_search", e)
 
     if not engine:
         engine = "playwright"
@@ -600,11 +567,8 @@ async def test_web_search(request: Request, data: WebSearchTestRequest):
     try:
         return {"status": "ok", "engine": engine, "result": f"Поиск '{query}' выполнен."}
     except Exception as e:
-        logger.error(f"Ошибка тестового поиска {engine}", e)
+        logger.error(f"Error тестового поиска {engine}", e)
         return {"status": "error", "engine": engine, "message": str(e)}
-
-
-
 
 # ============================================================================
 # User Management Models and Endpoints
@@ -619,7 +583,6 @@ class AdminUserCreateRequest(BaseModel):
     is_active: int = 1
     is_email_verified: int = 1
 
-
 class AdminUserUpdateRequest(BaseModel):
     name: str = ''
     email: str = ''
@@ -628,10 +591,8 @@ class AdminUserUpdateRequest(BaseModel):
     is_active: int = 1
     is_email_verified: int = 1
 
-
 class AdminUserPasswordRequest(BaseModel):
     password: str
-
 
 @router.get('/users')
 async def list_admin_users(
@@ -684,7 +645,6 @@ async def list_admin_users(
         }
     }
 
-
 @router.post('/users')
 async def create_admin_user(request: Request, data: AdminUserCreateRequest) -> Dict[str, Any]:
     """Создание нового пользователя администратором."""
@@ -710,13 +670,12 @@ async def create_admin_user(request: Request, data: AdminUserCreateRequest) -> D
         is_email_verified=data.is_email_verified
     )
     if not user_id:
-        raise HTTPException(status_code=500, detail='Ошибка создания пользователя')
+        raise HTTPException(status_code=500, detail='Error создания пользователя')
 
     created = user_manager.get_user_by_id(user_id)
     sanitized = {k: v for k, v in created.items() if k != 'password_hash'}
     sanitized['has_password'] = bool(created.get('password_hash'))
     return {'status': 'ok', 'user': sanitized}
-
 
 @router.get('/users/{user_id}')
 async def get_admin_user_details(user_id: int, request: Request) -> Dict[str, Any]:
@@ -739,10 +698,9 @@ async def get_admin_user_details(user_id: int, request: Request) -> Dict[str, An
         'permissions': permissions
     }
 
-
 @router.put('/users/{user_id}')
 async def update_admin_user(user_id: int, data: AdminUserUpdateRequest, request: Request) -> Dict[str, Any]:
-    """Обновление данных пользователя."""
+    """Update данных пользователя."""
     _check_admin(request)
     from core.user_manager import user_manager
     user = user_manager.get_user_by_id(user_id)
@@ -767,13 +725,12 @@ async def update_admin_user(user_id: int, data: AdminUserUpdateRequest, request:
 
     success = user_manager.update_user(user_id, **updates)
     if not success:
-        raise HTTPException(status_code=500, detail='Ошибка обновления пользователя')
+        raise HTTPException(status_code=500, detail='Error обновления пользователя')
 
     updated = user_manager.get_user_by_id(user_id)
     sanitized = {k: v for k, v in updated.items() if k != 'password_hash'}
     sanitized['has_password'] = bool(updated.get('password_hash'))
     return {'status': 'ok', 'user': sanitized}
-
 
 @router.post('/users/{user_id}/password')
 async def set_admin_user_password(user_id: int, data: AdminUserPasswordRequest, request: Request) -> Dict[str, Any]:
@@ -790,10 +747,9 @@ async def set_admin_user_password(user_id: int, data: AdminUserPasswordRequest, 
 
     success = user_manager.set_user_password(user_id, new_password)
     if not success:
-        raise HTTPException(status_code=500, detail='Ошибка установки пароля')
+        raise HTTPException(status_code=500, detail='Error установки пароля')
 
-    return {'status': 'ok', 'message': 'Пароль успешно обновлён'}
-
+    return {'status': 'ok', 'message': 'Пароль successfully обновлён'}
 
 @router.post('/users/{user_id}/toggle-active')
 async def toggle_admin_user_active(user_id: int, request: Request) -> Dict[str, Any]:
@@ -810,10 +766,9 @@ async def toggle_admin_user_active(user_id: int, request: Request) -> Dict[str, 
     new_status = 0 if user.get('is_active', 1) == 1 else 1
     success = user_manager.update_user(user_id, is_active=new_status)
     if not success:
-        raise HTTPException(status_code=500, detail='Ошибка изменения статуса')
+        raise HTTPException(status_code=500, detail='Error изменения статуса')
 
     return {'status': 'ok', 'is_active': new_status}
-
 
 @router.post('/users/{user_id}/toggle-role')
 async def toggle_admin_user_role(user_id: int, request: Request) -> Dict[str, Any]:
@@ -839,10 +794,9 @@ async def toggle_admin_user_role(user_id: int, request: Request) -> Dict[str, An
 
     success = user_manager.update_user(user_id, role=new_role, is_admin=new_is_admin)
     if not success:
-        raise HTTPException(status_code=500, detail='Ошибка изменения роли')
+        raise HTTPException(status_code=500, detail='Error изменения роли')
 
     return {'status': 'ok', 'role': new_role, 'is_admin': new_is_admin}
-
 
 @router.delete('/users/{user_id}')
 async def delete_admin_user(user_id: int, request: Request) -> Dict[str, Any]:
@@ -858,15 +812,14 @@ async def delete_admin_user(user_id: int, request: Request) -> Dict[str, Any]:
 
     success = user_manager.delete_user(user_id)
     if not success:
-        raise HTTPException(status_code=500, detail='Ошибка удаления пользователя')
+        raise HTTPException(status_code=500, detail='Error удаления пользователя')
 
     return {'status': 'ok', 'message': f'Пользователь ID {user_id} удалён'}
-
 
 # ============================================================================
 # Initialization
 # ============================================================================
 
 def init_router() -> APIRouter:
-    """Инициализация роутера управления системными инструкциями и источниками."""
+    """Initialization роутера управления системными инструкциями и источниками."""
     return router

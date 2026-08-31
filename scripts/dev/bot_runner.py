@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Автономный запуск Telegram-бота
+# Process Name: Запуск Telegram-бота с полным набором плагинов и A
 # =============================================================================
-# Описание:
+# Description:
 #   Запускает Telegram-бота в отдельном процессе, независимо от uvicorn.
-#   Использует те же плагины и AI-модель, что и основной сервер.
-#   Запускается через Run-Unicorn.ps1 параллельно с uvicorn --workers.
 #
 # File: bot_runner.py
 # Project: ai-breadboard
+# Package: scripts.dev
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -32,7 +31,6 @@ from core.utils.jjson import j_loads_ns
 from core.logger import logger
 
 from core.config import server_cfg, ai_cfg, tts_cfg, logging_cfg
-
 
 async def _run_bot() -> None:
     """Запуск Telegram-бота с полным набором плагинов и AI-модели."""
@@ -82,7 +80,6 @@ async def _run_bot() -> None:
     finally:
         await tg_plugin.stop()
         logger.info('Telegram-бот остановлен')
-
 
 if __name__ == '__main__':
     asyncio.run(_run_bot())

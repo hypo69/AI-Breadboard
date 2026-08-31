@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: MCP клиент-менеджер
+# Process Name: Manager for MCP client lifecycle.
 # =============================================================================
-# Описание:
+# Description:
 #   Обёртка для управления жизненным циклом MCP-серверов.
-#   Подключается к Playwright MCP через langchain-mcp-adapters.
 #
 # File: mcp_client.py
 # Project: ai-breadboard
-# Package: src.ai
+# Package: core.ai
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
-
 
 import asyncio
 from pathlib import Path

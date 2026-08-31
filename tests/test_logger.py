@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тесты модуля core/logger
+# Process Name: Тесты модуля core/logger
 # =============================================================================
-# Описание:
-#   Модуль содержит тесты для модуля логгера core/logger. Проверяет форматирование
-#   логов в JSON-формате, поведение singleton-паттерна и основные методы логгера.
-#   Обеспечивает покрытие ключевых функций логирования для стабильности системы.
+# Description:
+#   Module содержит тесты для модуля логгера core/logger. Checks форматирование
 #
-# File: tests/test_logger.py
+# File: test_logger.py
 # Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
+
 """
 Тесты модуля core/logger
 """
@@ -21,7 +20,6 @@ import pytest
 import json
 from unittest.mock import Mock
 from pathlib import Path
-
 
 class TestJsonFormatter:
     """Тесты JsonFormatter."""
@@ -42,7 +40,6 @@ class TestJsonFormatter:
         record.msecs = 123.0 # float для форматирования мс
         record.exc_info = None # Добавлено: чтобы форматтер не падал
 
-
         
         result = formatter.format(record)
         
@@ -50,7 +47,6 @@ class TestJsonFormatter:
         log_data = json.loads(result)
         assert log_data['levelname'] == 'INFO'
         assert log_data['message'] == 'Test message'
-
 
 class TestLogger:
     """Тесты Logger."""
@@ -70,7 +66,7 @@ class TestLogger:
         
         logger = Logger()
         
-        # Проверка что методы существуют
+        # Check что методы существуют
         assert hasattr(logger, 'info')
         assert hasattr(logger, 'error')
         assert hasattr(logger, 'warning')
@@ -81,10 +77,9 @@ class TestLogger:
         """Тест логирования."""
         from core.logger.logger import logger
         
-        # Проверка что глобальный logger доступен
+        # Check что глобальный logger доступен
         assert logger is not None
         assert hasattr(logger, 'info')
-
 
 class TestLogAnalyzer:
     """Тесты log_analyzer.py."""

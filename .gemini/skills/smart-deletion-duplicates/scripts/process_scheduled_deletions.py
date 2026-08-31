@@ -1,3 +1,17 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Module
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: process_scheduled_deletions.py
+# Project: ai-breadboard
+# Package: .gemini.skills.smart-deletion-duplicates.scripts
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 import sqlite3
 import os
 import argparse
@@ -18,7 +32,7 @@ def process_deletions(execute=False):
     print(f"Найдено {len(candidates)} кандидатов на удаление.")
     
     for id, path in candidates:
-        # Проверка существования файла
+        # Check существования файла
         if os.path.exists(path):
             if execute:
                 try:
@@ -28,7 +42,7 @@ def process_deletions(execute=False):
                     cursor.execute("DELETE FROM media WHERE id = ?", (id,))
                     print(f"Запись {id} удалена из БД.")
                 except Exception as e:
-                    print(f"Ошибка при удалении {path}: {e}")
+                    print(f"Error при удалении {path}: {e}")
             else:
                 print(f"[DRY RUN] Файл доступен для удаления: {path}")
         else:

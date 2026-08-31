@@ -1,0 +1,41 @@
+================================================================================
+OTHER FORMATS TRANSLATOR (JSON, YAML, etc.)
+================================================================================
+
+[DRY RUN] Scanning for Russian text in other formats...
+Would translate: config.crossplatform.example.json
+Would translate: install\install.json
+Would translate: webinterface\locales\he.json
+Would translate: webinterface\locales\ru.json
+Would translate: webinterface\locales\user_ru.json
+Would translate: webinterface\user_tts\locales\user_ru.json
+Would translate: core\ai\gemini\user_rags\user_profile_1.json
+Would translate: core\ai\gemini\user_rags\user_rag_1.json
+Would translate: core\ai\gemini\user_rags\user_rag_2.json
+Would translate: .ai\prompts\core\output_schema.json
+Would translate: .ai\prompts\examples\series_example.json
+Would translate: pytest.ini
+
+Would process: 12 files
+
+Proceed with translation? (yes/no): 
+[PROCESSING] Translating files...
+Translated: config.crossplatform.example.json
+Translated: install\install.json
+Translated: webinterface\locales\he.json
+Translated: webinterface\locales\ru.json
+Translated: webinterface\locales\user_ru.json
+Translated: webinterface\user_tts\locales\user_ru.json
+Translated: core\ai\gemini\user_rags\user_profile_1.json
+Translated: core\ai\gemini\user_rags\user_rag_1.json
+Translated: core\ai\gemini\user_rags\user_rag_2.json
+Translated: .ai\prompts\core\output_schema.json
+Translated: .ai\prompts\examples\series_example.json
+Translated: pytest.ini
+
+================================================================================
+SUMMARY
+================================================================================
+Translated: 12
+Skipped:    64
+Errors:     0

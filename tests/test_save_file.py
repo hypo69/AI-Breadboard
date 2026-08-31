@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тесты модуля save_file
+# Process Name: Тестирование нормальных (ожидаемых) сценариев рабо
 # =============================================================================
-# Описание:
+# Description:
 #   Исчерпывающее тестирование всех публичных функций и классов модуля.
-#   Покрытие: прямые тесты, граничные условия, регрессионные сценарии.
 #
-# File: tests/test_save_file.py
+# File: test_save_file.py
 # Project: ai-breadboard
 # Package: tests
 # Author: hypo69
@@ -23,7 +22,7 @@ class TestSaveFile_HappyPath:
     def test_save_file_success(self, tmp_path):
         """Тестирование сохранения файла с корректными данными.
         
-        Проверка: файл создается и содержимое записывается корректно.
+        Check: файл создается и содержимое записывается корректно.
         """
         # --- Подготовка (Arrange) ---
         # Временная директория для теста.
@@ -37,7 +36,7 @@ class TestSaveFile_HappyPath:
         # Вызов функции сохранения.
         result = save_file(str(test_file), content)
         
-        # --- Проверка (Assert) ---
+        # --- Check (Assert) ---
         # Файл должен быть создан и возвращено True.
         assert result is True, "save_file должна вернуть True для корректного ввода"
         assert test_file.exists(), "Файл должен быть создан"
@@ -49,20 +48,20 @@ class TestSaveFile_EdgeCases:
     def test_save_file_empty_content(self, tmp_path):
         """Тестирование сохранения пустого содержимого.
         
-        Проверка: пустая строка записывается в файл без ошибок.
+        Check: пустая string записывается в файл без ошибок.
         """
         # --- Подготовка (Arrange) ---
         # Путь к временному файлу.
         test_file = tmp_path / "empty.txt"
-        # Пустая строка как контент.
+        # Пустая string как контент.
         content = ""
         
         # --- Выполнение (Act) ---
         # Вызов функции.
         result = save_file(str(test_file), content)
         
-        # --- Проверка (Assert) ---
-        # Функция должна вернуть True и создать пустой файл.
+        # --- Check (Assert) ---
+        # Function должна вернуть True и создать empty файл.
         assert result is True, "Должно быть возвращено True для пустого контента"
         assert test_file.exists(), "Файл должен быть создан"
         assert test_file.read_text(encoding='utf-8') == "", "Содержимое файла должно быть пустым"
@@ -73,7 +72,7 @@ class TestSaveFile_ErrorScenarios:
     def test_save_file_invalid_path(self):
         """Тестирование сохранения в недоступный путь.
         
-        Проверка: при ошибке записи функция должна вернуть False.
+        Check: при ошибке записи function должна вернуть False.
         """
         # --- Подготовка (Arrange) ---
         # Использование пути, который невозможно создать (на Windows).
@@ -83,6 +82,6 @@ class TestSaveFile_ErrorScenarios:
         # Вызов функции с неверным путем.
         result = save_file(invalid_path, "content")
         
-        # --- Проверка (Assert) ---
-        # Функция должна корректно обработать исключение и вернуть False.
+        # --- Check (Assert) ---
+        # Function должна корректно обработать exception и вернуть False.
         assert result is False, "save_file должна вернуть False при ошибке записи"

@@ -1,24 +1,21 @@
-## prompt_loader.py
-## Сборщик системных промптов из модульных файлов.
-##
-## Два режима работы:
-##   1. Статический (load_chat_prompt_static / load_narrator_prompt_static):
-##      загружает все модули напрямую из файлов. Используется как резерв.
-##
-##   2. RAG (load_chat_prompt / load_narrator_prompt):
-##      выполняет семантический поиск по FAISS-индексу и включает
-##      только релевантные модули. Требует предварительного запуска
-##      rag/build_rules_index.py.
-##
-## Использование:
-##   from core.prompt_loader import load_chat_prompt, load_narrator_prompt
-##   system_prompt = load_chat_prompt("Описание сериала про войну")
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: ## hypo69 docblock
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: prompt_loader.py
+# Project: ai-breadboard
+# Package: core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-
 
 ## Базовые пути
 _PROMPTS_ROOT: Path = Path(__file__).resolve().parent.parent / "prompts"
@@ -54,22 +51,20 @@ _EXAMPLE_MODULE: str = "examples/series_example.json"
 _SCHEMA_MODULE: str = "core/output_schema.json"
 
 ## Файлы, которые всегда включаются в RAG-промпт (независимо от поиска).
-## Только маленькие базовые модули — схема и примеры подтягиваются через FAISS.
+## Только маленькие базовые модули — схема и Examples подтягиваются через FAISS.
 _ALWAYS_INCLUDE: list[str] = [
     "identity.md",
     "categories.md",
 ]
 
-
 ## ---------------------------------------------------------------------------
 ## Вспомогательные функции
 ## ---------------------------------------------------------------------------
 
-
 def _read_file(relative_path: str) -> str:
     """
     ## hypo69 docblock
-    Читает файл из директории промптов.
+    Reads файл из директории промптов.
 
     Args:
         relative_path (str): Путь относительно _PROMPTS_ROOT.
@@ -82,17 +77,16 @@ def _read_file(relative_path: str) -> str:
     """
     full_path: Path = _PROMPTS_ROOT / relative_path
     if not full_path.exists():
-        raise FileNotFoundError(f"Модуль промпта не найден: {full_path}")
+        raise FileNotFoundError(f"Module промпта не найден: {full_path}")
     return full_path.read_text(encoding="utf-8")
-
 
 def _load_modules(module_paths: list[str]) -> str:
     """
     ## hypo69 docblock
-    Загружает и конкатенирует несколько модулей промпта.
+    Loads и конкатенирует несколько модулей промпта.
 
     Args:
-        module_paths (list[str]): Список относительных путей к модулям.
+        module_paths (list[str]): List относительных путей к модулям.
 
     Returns:
         str: Объединённое содержимое всех модулей.
@@ -100,37 +94,34 @@ def _load_modules(module_paths: list[str]) -> str:
     parts: list[str] = [_read_file(p).strip() for p in module_paths]
     return "\n\n---\n\n".join(parts)
 
-
 def _load_schema_block() -> str:
     """
     ## hypo69 docblock
-    Загружает JSON-схему и оборачивает в markdown-блок.
+    Loads JSON-схему и оборачивает в markdown-блок.
 
     Returns:
-        str: Строка с JSON-схемой в markdown-обёртке.
+        str: String с JSON-схемой в markdown-обёртке.
     """
     raw: str = _read_file(_SCHEMA_MODULE)
     parsed: dict = json.loads(raw)
     formatted: str = json.dumps(parsed, ensure_ascii=False, indent=2)
     return f"## JSON Schema ответа\n\n```json\n{formatted}\n```"
 
-
 def _load_example_block() -> str:
     """
     ## hypo69 docblock
-    Загружает пример JSON и оборачивает в markdown-блок.
+    Loads пример JSON и оборачивает в markdown-блок.
 
     Returns:
-        str: Строка с примером в markdown-обёртке.
+        str: String с примером в markdown-обёртке.
     """
     raw: str = _read_file(_EXAMPLE_MODULE)
     parsed: dict = json.loads(raw)
     formatted: str = json.dumps(parsed, ensure_ascii=False, indent=2)
     return f"## Пример заполненного ответа (сериал)\n\n```json\n{formatted}\n```"
 
-
 ## ---------------------------------------------------------------------------
-## RulesRAG — класс семантического поиска
+## RulesRAG — class семантического поиска
 ## ---------------------------------------------------------------------------
 
 from core.rag.rules_rag import RulesRAG, RulesSearchResult
@@ -138,11 +129,9 @@ from core.rag.rules_rag import RulesRAG, RulesSearchResult
 # Алиас для обратной совместимости
 SearchResult = RulesSearchResult
 
-
 ## ---------------------------------------------------------------------------
 ## Публичные функции сборки промптов (RAG-режим)
 ## ---------------------------------------------------------------------------
-
 
 def load_chat_prompt(query: str = "Создать описание медиа для чата") -> str:
     """
@@ -160,7 +149,6 @@ def load_chat_prompt(query: str = "Создать описание медиа д
     context: str = rag.build_context(query, top_k=4)
     return context
 
-
 def load_narrator_prompt(query: str = "Подготовить текст для голосового диктора TTS") -> str:
     """
     ## hypo69 docblock
@@ -177,11 +165,9 @@ def load_narrator_prompt(query: str = "Подготовить текст для 
     context: str = rag.build_context(query, top_k=4)
     return context
 
-
 ## ---------------------------------------------------------------------------
 ## Резервные статические функции (без FAISS)
 ## ---------------------------------------------------------------------------
-
 
 def load_chat_prompt_static() -> str:
     """
@@ -201,7 +187,6 @@ def load_chat_prompt_static() -> str:
     ]
     return "\n\n---\n\n".join(sections)
 
-
 def load_narrator_prompt_static() -> str:
     """
     ## hypo69 docblock
@@ -220,11 +205,9 @@ def load_narrator_prompt_static() -> str:
     ]
     return "\n\n---\n\n".join(sections)
 
-
 ## ---------------------------------------------------------------------------
-## Точка входа — быстрая проверка
+## Точка входа — быстрая check
 ## ---------------------------------------------------------------------------
-
 
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")

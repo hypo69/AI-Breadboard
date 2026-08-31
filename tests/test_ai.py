@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тесты модуля core/ai
+# Process Name: Тесты модуля core/ai
 # =============================================================================
-# Описание:
-#   Модуль содержит тесты для модуля искусственного интеллекта core/ai.
-#   Проверяет основные методы взаимодействия с AI-моделями Gemini, включая
-#   синхронные запросы, потоковую генерацию и работу с моками.
+# Description:
+#   Module содержит тесты для модуля искусственного интеллекта core/ai.
 #
-# File: tests/test_ai.py
+# File: test_ai.py
 # Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
+
 """
 Тесты модуля core/ai
 """
@@ -20,7 +19,6 @@
 import pytest
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from pathlib import Path
-
 
 class TestGoogleGenerativeAI:
     """Тесты класса GoogleGenerativeAI."""
@@ -67,7 +65,6 @@ class TestGoogleGenerativeAI:
         
         assert result == "Test answer"
 
-
 class TestRAGFunctions:
     """Тесты функций RAG."""
 
@@ -76,11 +73,11 @@ class TestRAGFunctions:
         """Тест существования функции build_dev_rag."""
         from core.ai.dev_rag import build_dev_rag
         
-        # Проверяем что функция существует и вызывается без ошибок
+        # Проверяем что function существует и Raisesся без ошибок
         # (без реального API ключа она может вернуть None или ошибку, но не должна падать)
         try:
             result = build_dev_rag("test_api_key")
-            # Функция может вернуть None если нет API ключа, это нормально
+            # Function может вернуть None если нет API ключа, это нормально
             assert result is None or hasattr(result, 'search')
         except Exception:
             # Если нет API ключа, это тоже нормально для теста
@@ -91,9 +88,8 @@ class TestRAGFunctions:
         """Тест сигнатуры функции rag_search_tool."""
         from core.ai.dev_rag import rag_search_tool
         
-        # Проверяем что функция существует
+        # Проверяем что function существует
         assert callable(rag_search_tool)
-
 
 class TestFoundryChat:
     """Тесты FoundryChatBase."""
@@ -111,7 +107,6 @@ class TestFoundryChat:
         assert chat is not None
         assert chat.model_id == "test-model"
         assert chat.system_instruction == "Test system prompt"
-
 
 class TestAgyChat:
     """Тесты AgyChatBase."""
@@ -141,13 +136,12 @@ class TestAgyChat:
         chat2 = AgyChatBase(model_id="agy-gemini-2.0-flash")
         assert chat2.model_id == "gemini-2.0-flash"
 
-
 class TestUserRAG:
     """Тесты пользовательского RAG."""
 
     @pytest.mark.asyncio
     async def test_get_user_rag_path_structure(self):
-        """Тест получения пути к user RAG - проверка структуры пути."""
+        """Тест получения пути к user RAG - check структуры пути."""
         from core.ai.gemini.user_query_rag import _get_user_rag_path
         
         result = _get_user_rag_path(1)
@@ -159,7 +153,7 @@ class TestUserRAG:
 
     @pytest.mark.asyncio
     async def test_make_doc_id_structure(self):
-        """Тест создания doc_id - проверка структуры."""
+        """Тест создания doc_id - check структуры."""
         from core.ai.gemini.user_query_rag import _make_doc_id
         
         result = _make_doc_id(1, "test query")
@@ -189,7 +183,6 @@ class TestUserRAG:
         assert is_garbage_query("sdfghjklqwrtzcxvb")  # keyboard mash (без гласных)
         assert is_garbage_query("!!!!!!!!!!!")  # знаки препинания без букв/цифр
         assert is_garbage_query("спасибо большое")  # благодарность
-
 
 class TestModelManager:
     """Тесты единого менеджера моделей ИИ (ModelManager)."""
@@ -229,7 +222,7 @@ class TestModelManager:
             assert "gemini-2.0-flash" not in models
             assert "text-embedding-004" not in models
 
-            # Проверка, что результат сохранен в кэше
+            # Check, что результат сохранен в кэше
             assert "gemini" in _CACHED_MODELS
             assert "gemini-flash-latest" in _CACHED_MODELS["gemini"]
 

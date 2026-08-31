@@ -1,7 +1,16 @@
-## \file /src/utils/convertors/base64.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: .. module:: src.utils.convertors.base64
+# =============================================================================
+# Description:
+#   This module provides a function to decode Base64 encoded content and write it to a temporary file wi
+#
+# File: base64.py
+# Project: ai-breadboard
+# Package: core.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module:: src.utils.convertors.base64 
@@ -9,7 +18,6 @@
 	:synopsis: Convert Base64 encoded content to a temporary file
 
 """
-
 
 """ This module provides a function to decode Base64 encoded content and write it to a temporary file with the specified extension.
 

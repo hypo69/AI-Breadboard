@@ -1,10 +1,11 @@
 <#
 .SYNOPSIS
-    Запуск и управление локальным сервером Microsoft Foundry.
+    Microsoft Foundry local server launcher and management.
 
 .DESCRIPTION
-    Скрипт для проверки, запуска и управления локальной службой Microsoft AI Foundry.
-    Использует CLI команду 'foundry server start' и определяет активный порт.
+    Script for checking, running and managing local Microsoft AI Foundry service.
+    Uses CLI command 'foundry server start' and detects active port.
+    Supports cross-platform execution with automatic environment configuration.
 
 .PARAMETER Action
     start | stop | restart | status
@@ -13,6 +14,10 @@
     .\Run-Foundry.ps1
     .\Run-Foundry.ps1 -Action restart
     .\Run-Foundry.ps1 -Action stop
+
+.NOTES
+    Ported from legacy batch scripts for Windows PowerShell execution.
+    Automatically updates FOUNDRY_BASE_URL in .env file on startup.
 #>
 
 [CmdletBinding()]
@@ -34,7 +39,7 @@ if ([string]::IsNullOrEmpty($scriptDir)) {
     $scriptDir = (Get-Location).Path
 }
 
-# Определение корня проекта (если скрипт находится в директории launchers/)
+# Project root detection (if script is in launchers/ directory)
 $projectRoot = $scriptDir
 if ((Split-Path -Leaf $projectRoot) -eq "launchers" -or -not (Test-Path (Join-Path $projectRoot "main.py"))) {
     $parent = Split-Path -Parent $projectRoot
@@ -51,7 +56,7 @@ Write-Host "║              MICROSOFT AI FOUNDRY LOCAL SERVICE               �
 Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
 
-# Проверка наличия CLI
+# Checking for CLI presence
 function Test-FoundryCli {
     try {
         Get-Command foundry -ErrorAction Stop | Out-Null
@@ -61,7 +66,7 @@ function Test-FoundryCli {
     }
 }
 
-# Определение порта
+# Port detection
 function Get-FoundryPort {
     try {
         $output = foundry server status 2>&1 | Out-String
@@ -81,24 +86,24 @@ function Get-FoundryPort {
 }
 
 if (-not (Test-FoundryCli)) {
-    Write-Error "Foundry CLI ('foundry') не найден в вашей переменной PATH."
-    Write-Host "Пожалуйста, установите Microsoft AI Foundry Local CLI." -ForegroundColor Yellow
+    Write-Error "Foundry CLI ('foundry') not found in your PATH variable."
+    Write-Host "Please install Microsoft AI Foundry Local CLI." -ForegroundColor Yellow
     exit 1
 }
 
 if ($Action -eq 'stop') {
-    Write-Host "🛑 Останавливаем службу Microsoft AI Foundry..." -ForegroundColor Yellow
+    Write-Host "🛑 Stopping Microsoft AI Foundry service..." -ForegroundColor Yellow
     try {
         foundry server stop 2>&1 | Out-Host
-        Write-Host "✅ Служба успешно остановлена." -ForegroundColor Green
+        Write-Host "✅ Service stopped successfully." -ForegroundColor Green
     } catch {
-        Write-Error "Не удалось остановить Foundry: $_"
+        Write-Error "Failed to stop Foundry: $_"
     }
     exit 0
 }
 
 if ($Action -eq 'restart') {
-    Write-Host "🔄 Перезапускаем службу Microsoft AI Foundry..." -ForegroundColor Yellow
+    Write-Host "🔄 Restarting Microsoft AI Foundry service..." -ForegroundColor Yellow
     try {
         foundry server stop 2>&1 | Out-Host
         Start-Sleep -Seconds 2
@@ -110,20 +115,20 @@ $port = Get-FoundryPort
 
 if ($Action -eq 'status') {
     if ($port) {
-        Write-Host "✅ Foundry запущен на порту $port" -ForegroundColor Green
+        Write-Host "✅ Foundry running on port $port" -ForegroundColor Green
         Write-Host "Base URL: http://localhost:$port/v1/" -ForegroundColor Gray
     } else {
-        Write-Host "❌ Foundry не запущен." -ForegroundColor Red
+        Write-Host "❌ Foundry is not running." -ForegroundColor Red
     }
     exit 0
 }
 
 if ($Action -eq 'start') {
     if ($port) {
-        Write-Host "✅ Foundry уже запущен на порту $port" -ForegroundColor Green
+        Write-Host "✅ Foundry already running on port $port" -ForegroundColor Green
         Write-Host "Base URL: http://localhost:$port/v1/" -ForegroundColor Gray
     } else {
-        Write-Host "🚀 Запуск локальной службы Microsoft AI Foundry..." -ForegroundColor Cyan
+        Write-Host "🚀 Starting Microsoft AI Foundry local service..." -ForegroundColor Cyan
         try {
             $logsDir = Join-Path $projectRoot "logs"
             if (-not (Test-Path $logsDir)) {
@@ -138,12 +143,12 @@ if ($Action -eq 'start') {
                 $port = Get-FoundryPort
                 if ($port) {
                     Write-Host ""
-                    Write-Host "✅ Foundry успешно запущен!" -ForegroundColor Green
-                    Write-Host "Порт:     $port" -ForegroundColor Gray
+                    Write-Host "✅ Foundry started successfully!" -ForegroundColor Green
+                    Write-Host "Port:     $port" -ForegroundColor Gray
                     Write-Host "Base URL: http://localhost:$port/v1/" -ForegroundColor Green
                     Write-Host ""
                     
-                    # Записываем FOUNDRY_BASE_URL в .env для автоматической настройки
+                    # Writing FOUNDRY_BASE_URL to .env for automatic configuration
                     $envFile = Join-Path $projectRoot ".env"
                     if (Test-Path $envFile) {
                         $content = Get-Content $envFile
@@ -161,17 +166,17 @@ if ($Action -eq 'start') {
                             $newContent += "FOUNDRY_BASE_URL=http://localhost:$port"
                         }
                         $newContent | Set-Content $envFile
-                        Write-Host "📝 Обновлен FOUNDRY_BASE_URL в файле .env" -ForegroundColor Gray
+                        Write-Host "📝 Updated FOUNDRY_BASE_URL in .env file" -ForegroundColor Gray
                     }
                     break
                 }
-                Write-Host "⏳ Ожидание запуска Foundry... ($i/15)" -ForegroundColor Gray
+                Write-Host "⏳ Waiting for Foundry startup... ($i/15)" -ForegroundColor Gray
             }
             if (-not $port) {
-                Write-Error "Таймаут запуска службы Foundry. Проверьте логи через 'foundry server status'"
+                Write-Error "Foundry service startup timeout. Check logs using 'foundry server status'"
             }
         } catch {
-            Write-Error "Критическая ошибка при запуске Foundry: $_"
+            Write-Error "Critical error during Foundry startup: $_"
         }
     }
 }

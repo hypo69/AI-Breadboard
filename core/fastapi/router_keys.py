@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: FastAPI Router for API Key Management
+# Process Name: Load all keys from secrets.json (email -> api_key)
 # =============================================================================
 # Description:
 #   CRUD operations for Gemini API keys.
-#   Reads from src/ai/gemini/secrets.json, stores status in src/secrets/gemini_keys.json.
 #
 # File: router_keys.py
 # Project: ai-breadboard
-# Package: src.fastapi
+# Package: core.fastapi
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -31,7 +30,6 @@ _SECRETS_FILE = Path(__file__).parent.parent / 'ai' / 'gemini' / 'secrets.json'
 _KEYS_FILE = Path(__file__).parent.parent / 'secrets' / 'gemini_keys.json'
 _DAY_SECONDS = 86400
 
-
 # ============================================================================
 # Pydantic Models
 # ============================================================================
@@ -42,22 +40,18 @@ class KeyEntry(BaseModel):
     last_run: Optional[str] = None
     exhausted_at: Optional[str] = None
 
-
 class KeyCreateRequest(BaseModel):
     name: str
     api_key: str
     status: str = 'active'
 
-
 class KeyUpdateRequest(BaseModel):
     status: Optional[str] = None
     name: Optional[str] = None
 
-
 class KeyListResponse(BaseModel):
     keys: List[Dict]
     total: int
-
 
 class KeyStatusResponse(BaseModel):
     name: str
@@ -66,7 +60,6 @@ class KeyStatusResponse(BaseModel):
     exhausted_at: Optional[str]
     exhausted: bool
     reset_in_seconds: Optional[int]
-
 
 # ============================================================================
 # Internal Helper Functions
@@ -82,7 +75,6 @@ def _load_secrets() -> Dict[str, str]:
             raise HTTPException(status_code=500, detail='Failed to load secrets.json')
     return {}
 
-
 def _save_secrets(data: Dict[str, str]) -> None:
     """Save keys to secrets.json."""
     try:
@@ -90,7 +82,6 @@ def _save_secrets(data: Dict[str, str]) -> None:
     except Exception as ex:
         logger.error('Failed to save secrets.json', ex)
         raise HTTPException(status_code=500, detail='Failed to save secrets.json')
-
 
 def _load_keys_data() -> Dict:
     """Load status data from gemini_keys.json."""
@@ -102,7 +93,6 @@ def _load_keys_data() -> Dict:
             raise HTTPException(status_code=500, detail='Failed to load keys data')
     return {}
 
-
 def _save_keys_data(data: Dict) -> None:
     """Save status data to gemini_keys.json."""
     try:
@@ -111,11 +101,9 @@ def _save_keys_data(data: Dict) -> None:
         logger.error('Failed to save keys data', ex)
         raise HTTPException(status_code=500, detail='Failed to save keys data')
 
-
 def _now_iso() -> str:
     """Return current UTC time in ISO format."""
     return datetime.now(timezone.utc).isoformat()
-
 
 def _iso_to_ts(iso: str) -> float:
     """Convert ISO string to timestamp."""
@@ -123,7 +111,6 @@ def _iso_to_ts(iso: str) -> float:
         return datetime.fromisoformat(iso).timestamp()
     except Exception:
         return 0.0
-
 
 def _check_exhaustion(name: str) -> tuple[bool, Optional[int]]:
     """Check if key is exhausted and return seconds until reset."""
@@ -141,18 +128,15 @@ def _check_exhaustion(name: str) -> tuple[bool, Optional[int]]:
         return True, int(remaining)
     return False, None
 
-
 def _now_ts() -> float:
     """Return current Unix timestamp."""
     return datetime.now(timezone.utc).timestamp()
-
 
 def _mask_key(api_key: str) -> str:
     """Mask API key for display: keep first 8 and last 4 chars."""
     if len(api_key) < 12:
         return '*' * len(api_key)
     return f"{api_key[:8]}...{api_key[-4:]}"
-
 
 # ============================================================================
 # API Endpoints
@@ -184,7 +168,6 @@ async def list_keys() -> KeyListResponse:
     
     return KeyListResponse(keys=keys, total=len(keys))
 
-
 @router.get('/{key_name}', response_model=KeyStatusResponse)
 async def get_key_status(key_name: str) -> KeyStatusResponse:
     """Get detailed status for a specific key from secrets.json."""
@@ -205,7 +188,6 @@ async def get_key_status(key_name: str) -> KeyStatusResponse:
         exhausted=exhausted,
         reset_in_seconds=reset_in
     )
-
 
 @router.post('', status_code=201)
 async def create_key(request: KeyCreateRequest) -> Dict[str, str]:
@@ -235,7 +217,6 @@ async def create_key(request: KeyCreateRequest) -> Dict[str, str]:
     
     return {'message': f'Key "{request.name}" added successfully'}
 
-
 @router.delete('/{key_name}')
 async def delete_key(key_name: str) -> Dict[str, str]:
     """Delete an API key from secrets.json."""
@@ -257,7 +238,6 @@ async def delete_key(key_name: str) -> Dict[str, str]:
     logger.info(f'Deleted key: {key_name}')
     
     return {'message': f'Key "{key_name}" deleted successfully'}
-
 
 @router.patch('/{key_name}')
 async def update_key(key_name: str, request: KeyUpdateRequest) -> Dict[str, str]:
@@ -293,7 +273,6 @@ async def update_key(key_name: str, request: KeyUpdateRequest) -> Dict[str, str]
     
     return {'message': f'Key "{key_name}" updated successfully'}
 
-
 @router.post('/reset-all')
 async def reset_all_quotas() -> Dict[str, str]:
     """Reset daily quota exhaustion for all API keys."""
@@ -308,10 +287,9 @@ async def reset_all_quotas() -> Dict[str, str]:
     if reset_count > 0:
         _save_keys_data(keys_data)
         logger.info(f'Reset quota for {reset_count} keys')
-        return {'message': f'Успешно сброшены квоты для {reset_count} ключей'}
+        return {'message': f'Successfully сброшены квоты для {reset_count} ключей'}
         
     return {'message': 'Нет заблокированных ключей для сброса'}
-
 
 @router.post('/{key_name}/reset-quota')
 async def reset_quota(key_name: str) -> Dict[str, str]:
@@ -328,7 +306,6 @@ async def reset_quota(key_name: str) -> Dict[str, str]:
         return {'message': f'Quota reset for key "{key_name}"'}
     
     return {'message': f'Key "{key_name}" is not exhausted'}
-
 
 # ============================================================================
 # Initialization Function

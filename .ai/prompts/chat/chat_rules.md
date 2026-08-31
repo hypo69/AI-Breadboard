@@ -29,7 +29,7 @@
 - `downloading` — скачивается
 - `seeding` — раздаётся
 - `missing_files` — файлы отсутствуют
-- `error` — ошибка
+- `error` — Error
 
 ## После обработки медиа
 
@@ -38,7 +38,7 @@
 ```bash
 py manage_tools.py torrents assign   # сопоставление категорий
 py manage_tools.py torrents ids      # привязка торрентов к медиа
-py manage_tools.py db sizes          # обновление размеров файлов
+py manage_tools.py db sizes          # update размеров файлов
 ```
 
 Полный справочник команд: `.ai_instructions/knowledge/scripts_tools.md`

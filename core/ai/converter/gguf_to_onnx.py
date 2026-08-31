@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Конвертация GGUF / HF моделей в ONNX и оптимизация
+# Process Name: Результат конвертации и оптимизации модели.
 # =============================================================================
-# Описание:
-#   Модуль конвертации локальных моделей в формат ONNX
-#   с последующей оптимизацией через onnxruntime-tools / Microsoft Olive passes.
-#   Использует optimum[onnxruntime] для экспорта через HuggingFace Transformers.
+# Description:
+#   Module конвертации локальных моделей в формат ONNX
 #
-# File: core/ai/converter/gguf_to_onnx.py
+# File: gguf_to_onnx.py
 # Project: ai-breadboard
 # Package: core.ai.converter
 # Author: hypo69
@@ -37,7 +35,6 @@ try:
 except ImportError:
     pass
 
-
 @dataclass
 class ConversionResult:
     """Результат конвертации и оптимизации модели."""
@@ -46,7 +43,6 @@ class ConversionResult:
     optimized_path: str = ""
     error: str = ""
     chunks_info: Dict[str, Any] = field(default_factory=dict)
-
 
 class GGUFConverter:
     """Конвертер моделей в формат ONNX с опциональной оптимизацией."""
@@ -99,11 +95,11 @@ class GGUFConverter:
                     )
                     result.optimized_path = opt_path
 
-            logger.info(f"[GGUFConverter] Конвертация завершена успешно: {out}")
+            logger.info(f"[GGUFConverter] Конвертация завершена successfully: {out}")
             return result
 
         except Exception as e:
-            logger.error(f"[GGUFConverter] Ошибка конвертации {model_path}: {e}")
+            logger.error(f"[GGUFConverter] Error конвертации {model_path}: {e}")
             return ConversionResult(success=False, error=str(e))
 
     def _export(self, model_path: str, output_dir: str, opset: int) -> ConversionResult:
@@ -112,7 +108,7 @@ class GGUFConverter:
             from transformers import AutoTokenizer
             from optimum.onnxruntime import ORTModelForCausalLM
 
-            logger.info(f"[GGUFConverter] Загрузка токенизатора из {model_path}")
+            logger.info(f"[GGUFConverter] Loading токенизатора из {model_path}")
             tokenizer = AutoTokenizer.from_pretrained(model_path)
 
             logger.info("[GGUFConverter] Экспорт в ONNX через ORTModelForCausalLM...")
@@ -141,7 +137,7 @@ class GGUFConverter:
             )
 
         except Exception as e:
-            logger.error(f"[GGUFConverter] Ошибка экспорта {model_path}: {e}")
+            logger.error(f"[GGUFConverter] Error экспорта {model_path}: {e}")
             return ConversionResult(success=False, error=str(e))
 
     def _optimize(self, onnx_path: str, model_type: str) -> str:
@@ -160,11 +156,10 @@ class GGUFConverter:
 
     @staticmethod
     def is_available() -> Dict[str, bool]:
-        """Проверка доступности инструментов конвертации."""
+        """Check доступности инструментов конвертации."""
         return {
             "converter": CONVERTER_AVAILABLE,
             "optimizer": OPTIMIZER_AVAILABLE,
         }
-
 
 gguf_converter = GGUFConverter()

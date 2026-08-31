@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Входящий OpenAI-совместимый API роутер
+# Process Name: Conversion внутреннего идентификатора модели в фор
 # =============================================================================
-# Описание:
+# Description:
 #   Предоставляет стандартные эндпоинты спецификации OpenAI для внешних клиентов:
-#     - GET  /v1/models
-#     - POST /v1/chat/completions
 #
-#   Поддерживает потоковую (SSE) и обычную генерацию ответов,
-#   маршрутизируя запросы ко всем внутренним провайдерам ai-breadboard
-#   (Gemini, Gemini CLI, AGY, Foundry, Ollama, Hugging Face, ONNX, OpenAI Compat).
-#
-# File: core/fastapi/router_openai.py
+# File: router_openai.py
 # Project: ai-breadboard
 # Package: core.fastapi
 # Author: hypo69
@@ -32,24 +26,21 @@ from core.logger.logger import logger
 
 router = APIRouter(tags=["openai"])
 
-
 def map_to_openai_id(provider_prefixed_id: str) -> str:
-    """Преобразование внутреннего идентификатора модели в формат OpenAI."""
+    """Conversion внутреннего идентификатора модели в формат OpenAI."""
     if "::" in provider_prefixed_id:
         return provider_prefixed_id.replace("::", "-", 1)
     if ":" in provider_prefixed_id:
         return provider_prefixed_id.replace(":", "-", 1)
     return provider_prefixed_id
 
-
 def map_from_openai_id(openai_id: str) -> str:
-    """Преобразование OpenAI ID обратно во внутренний формат с префиксом."""
+    """Conversion OpenAI ID обратно во внутренний формат с префиксом."""
     for provider in ("foundry", "ollama", "hf", "onnx", "openai", "gemini_cli", "agy"):
         prefix = f"{provider}-"
         if openai_id.startswith(prefix):
             return f"{provider}:{openai_id[len(prefix):]}"
     return openai_id
-
 
 def _collect_all_models_sync() -> List[Dict[str, Any]]:
     """Сбор всех моделей по всем провайдерам для OpenAPI каталога."""
@@ -75,18 +66,16 @@ def _collect_all_models_sync() -> List[Dict[str, Any]]:
 
     return models_list
 
-
 @router.get("/v1/models")
 @router.get("/models")
 async def list_models() -> Dict[str, Any]:
-    """Список всех доступных моделей в формате OpenAI API."""
+    """List всех доступных моделей в формате OpenAI API."""
     loop = asyncio.get_running_loop()
     data = await loop.run_in_executor(None, _collect_all_models_sync)
     return {
         "object": "list",
         "data": data,
     }
-
 
 @router.post("/v1/chat/completions")
 @router.post("/chat/completions")
@@ -137,7 +126,7 @@ async def chat_completions(request: Request) -> Any:
     try:
         chat_model = get_chat_model(internal_model, system_instruction=system_instruction)
     except Exception as e:
-        logger.error(f"[RouterOpenAI] Ошибка инициализации модели {internal_model}: {e}")
+        logger.error(f"[RouterOpenAI] Error инициализации модели {internal_model}: {e}")
         raise HTTPException(status_code=502, detail=f"Model initialization error: {e}")
 
     if stream:
@@ -190,7 +179,7 @@ async def chat_completions(request: Request) -> Any:
                 yield f"data: {json.dumps(final_data, ensure_ascii=False)}\n\n"
                 yield "data: [DONE]\n\n"
             except Exception as exc:
-                logger.error(f"[RouterOpenAI] Ошибка в SSE стриме: {exc}")
+                logger.error(f"[RouterOpenAI] Error в SSE стриме: {exc}")
                 yield f"data: {json.dumps({'error': str(exc)}, ensure_ascii=False)}\n\n"
                 yield "data: [DONE]\n\n"
 
@@ -219,5 +208,5 @@ async def chat_completions(request: Request) -> Any:
             },
         }
     except Exception as e:
-        logger.error(f"[RouterOpenAI] Ошибка генерации для модели {internal_model}: {e}")
+        logger.error(f"[RouterOpenAI] Error генерации для модели {internal_model}: {e}")
         raise HTTPException(status_code=502, detail=f"Generation failed: {e}")

@@ -1,21 +1,25 @@
-## \file /src/utils/printer.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: Pretty printing and text formatting utilities
+# =============================================================================
+# Description:
+#   Utility functions for pretty printing and text styling with support for
+#   color, background, and font styles. Provides human-readable formatted output.
+#
+# File: printer.py
+# Project: ai-breadboard
+# Package: core.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
-.. module::  src.utils
-    :platform: Windows, Unix
-    :synopsis: Utility functions for pretty printing and text styling.
-
-This module provides functions to print data in a human-readable format with optional text styling, including color, background, and font styles.
+Pretty printing and text formatting module.
 
 Functions:
-    - :func:`_color_text`
-    - :func:`pprint`
+    - `_color_text`: Apply color and style to text
+    - `pprint`: Pretty print data in human-readable format
 """
-
-
 
 import json
 import csv
@@ -59,8 +63,6 @@ BG_COLORS = {
     "bg_light_blue": "\033[104m",
     "bg_light_yellow": "\033[103m",
 }
-
-
 
 FONT_STYLES = {
     "bold": "\033[1m",

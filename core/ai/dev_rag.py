@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: RAG-индексация кодовой базы и документации
+# Process Name: Извлечение текста из файла для векторизации.
 # =============================================================================
-# Описание:
+# Description:
 #   Построение RAG-индекса для технического контекста разработки.
-#   Индексация файлов документации (.md) и исходного кода (.py).
 #
 # File: dev_rag.py
 # Project: ai-breadboard
-# Package: src.ai
+# Package: core.ai
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -35,7 +34,7 @@ def _file_to_text(file_path: Path) -> str:
         content = file_path.read_text(encoding='utf-8')
         return f"Файл: {file_path.name}\nПуть: {file_path}\nСодержимое:\n{content}"
     except Exception as e:
-        logger.error(f"Ошибка чтения файла {file_path}: {e}")
+        logger.error(f"Error чтения файла {file_path}: {e}")
         return ""
 
 def build_dev_rag(api_key: str) -> GeminiRAG:
@@ -84,7 +83,7 @@ def rag_search_tool(query: str, top_k: int = 3, api_key: str = '') -> str:
         api_key (str): Ключ Gemini API.
 
     Returns:
-        str: JSON-строка со списком найденных файлов.
+        str: JSON-string со списком найденных файлов.
     """
     rag = get_dev_rag(api_key)
     if rag.count() == 0:

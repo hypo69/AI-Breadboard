@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Returns list доступных моделей для Ollama через ед
+# =============================================================================
+# Description:
+#   Returns list доступных моделей для Ollama через единый менеджер моделей."""
+#
+# File: ollama_chat.py
+# Project: ai-breadboard
+# Package: core.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 import asyncio
 import logging
 import time
@@ -10,12 +23,12 @@ logger = logging.getLogger(__name__)
 
 class OllamaChatBase:
     """
-    Базовый класс для чат-интерфейса с Ollama моделями.
+    Базовый class для чат-интерфейса с Ollama моделями.
     """
 
     @classmethod
     def get_available_models(cls, force_refresh: bool = False) -> List[str]:
-        """Возвращает список доступных моделей для Ollama через единый менеджер моделей."""
+        """Returns list доступных моделей для Ollama через единый менеджер моделей."""
         from core.ai.model_manager import get_available_models as _mgr_get_available_models
         return _mgr_get_available_models(provider="ollama", force_refresh=force_refresh)
 
@@ -42,12 +55,12 @@ class OllamaChatBase:
 
     @property
     def system_instruction(self) -> str:
-        """Возвращает системную инструкцию."""
+        """Returns системную инструкцию."""
         return self.system_prompt
 
     @system_instruction.setter
     def system_instruction(self, val: str) -> None:
-        """Устанавливает системную инструкцию."""
+        """Sets системную инструкцию."""
         self.system_prompt = val
 
     async def _get_client(self):

@@ -1,20 +1,21 @@
-## \file /src/utils/convertors/dict.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: Dictionary and SimpleNamespace conversion utilities
+# =============================================================================
+# Description:
+#   Converts between dictionaries and SimpleNamespace objects recursively.
+#   Provides export functions to various formats (XML, CSV, JSON, XLS, HTML, PDF)
+#   for flexible data serialization and format conversion.
+#
+# File: dict.py
+# Project: ai-breadboard
+# Package: core.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
-.. module:: src.utils.convertors.dict 
-	:platform: Windows, Unix
-	:synopsis: Converter for converting between dict and SimpleNamespace objects
-
-"""
-
-
-
-
-""" This module contains functions to recursively convert dictionaries to SimpleNamespace
-objects and vice versa, as well as exporting data to various formats.
+Converter for converting between dict and SimpleNamespace objects.
 
 Functions:
     - `dict2ns`: Recursively convert dictionaries to SimpleNamespace objects.
@@ -25,7 +26,6 @@ Functions:
     - `dict2html`: Generate an HTML table string from a dictionary or SimpleNamespace object.
     - `dict2pdf`: Save dictionary data as a PDF file.
 """
-
 
 import json
 from types import SimpleNamespace
@@ -87,7 +87,6 @@ def replace_key_in_dict(data, old_key, new_key) -> dict:
             replace_key_in_dict(item, old_key, new_key)
     
     return data
-
 
 def dict2pdf(data: dict | SimpleNamespace, file_path: str | Path) -> None:
     """
@@ -327,5 +326,4 @@ def dict2html(data: dict | SimpleNamespace, encoding: str = 'UTF-8') -> str:
     
     html_content = dict_to_html_table(data)
     return f'<!DOCTYPE html>\n<html>\n<head>\n<meta charset="{encoding}">\n<title>Dictionary to HTML</title>\n</head>\n<body>\n{html_content}\n</body>\n</html>'
-
 

@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Foundry Chat Interface
+# Process Name: Базовый class для чат-интерфейса с Foundry моделям
 # =============================================================================
 # Description:
 #   Parent class for Foundry model chat interactions.
-#   Provides ask() and chat() methods with retry logic and model switching.
-#   Follows Gemini pattern: model selection at initialization, error handling.
-#   Integrated with RAG semantic movie database index.
 #
-# File: src/ai/foundry_chat.py
-# Project: mediateka
+# File: foundry_chat.py
+# Project: ai-breadboard
+# Package: core.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
 # =============================================================================
 
 import asyncio
@@ -21,10 +21,9 @@ from core.logger.logger import logger
 
 logger = logging.getLogger(__name__)
 
-
 class FoundryChatBase:
     """
-    Базовый класс для чат-интерфейса с Foundry моделями.
+    Базовый class для чат-интерфейса с Foundry моделями.
     
     Паттерн инициализации:
         ai = FoundryChatBase(model_id="qwen3-0.6b-generic-cpu:4")
@@ -42,7 +41,7 @@ class FoundryChatBase:
 
     @classmethod
     def get_available_models(cls, force_refresh: bool = False) -> List[str]:
-        """Возвращает список доступных моделей для Foundry через единый менеджер моделей."""
+        """Returns list доступных моделей для Foundry через единый менеджер моделей."""
         from core.ai.model_manager import get_available_models as _mgr_get_available_models
         return _mgr_get_available_models(provider="foundry", force_refresh=force_refresh)
 
@@ -82,12 +81,12 @@ class FoundryChatBase:
 
     @property
     def system_instruction(self) -> str:
-        """Возвращает системную инструкцию."""
+        """Returns системную инструкцию."""
         return self.system_prompt
 
     @system_instruction.setter
     def system_instruction(self, val: str) -> None:
-        """Устанавливает системную инструкцию."""
+        """Sets системную инструкцию."""
         self.system_prompt = val
 
     async def _get_client(self) -> Any:
@@ -118,8 +117,8 @@ class FoundryChatBase:
         **kwargs: Any,
     ) -> Optional[str]:
         """
-        Отправляет текстовый запрос модели и возвращает ответ.
-        Не сохраняет историю между вызовами.
+        Sends текстовый запрос модели и Returns ответ.
+        Не saves историю между вызовами.
         
         Args:
             q: Текст запроса
@@ -220,7 +219,7 @@ class FoundryChatBase:
         **kwargs: Any,
     ) -> Optional[str]:
         """
-        Обрабатывает чат-запрос с историей.
+        Processes чат-запрос с историей.
         
         Args:
             q: Текст запроса
@@ -329,7 +328,7 @@ class FoundryChatBase:
         **kwargs: Any,
     ) -> AsyncIterator[str]:
         """
-        Стриминговый интерфейс для чата (возвращает генератор с чанк-ответом).
+        Стриминговый интерфейс для чата (Returns генератор с чанк-ответом).
         """
         response = await self.chat(
             q=q,
@@ -353,19 +352,18 @@ class FoundryChatBase:
 
     @property
     def history(self) -> List[Dict[str, str]]:
-        """Возвращает текущую историю чата (без system prompt)."""
+        """Returns текущую историю чата (без system prompt)."""
         return list(self._history)
 
     @property
     def last_error(self) -> str:
-        """Возвращает последнюю ошибку."""
+        """Returns последнюю ошибку."""
         return self._last_error
 
     @property
     def error_count(self) -> int:
-        """Возвращает количество последовательных ошибок."""
+        """Returns количество последовательных ошибок."""
         return self._error_count
-
 
 # ── Простой чат-интерфейс (с одним экземпляром клиента) ──────────────────────
 
@@ -383,19 +381,17 @@ class FoundrySimpleChat(FoundryChatBase):
         super().__init__(model_id, **kwargs)
         logger.info(f"FoundrySimpleChat initialized: model={model_id}")
 
-
-# ── Модульный уровень (для быстрого старта) ──────────────────────────────────
+# ── Moduleный уровень (для быстрого старта) ──────────────────────────────────
 
 # Глобальный экземпляр (один на весь процесс)
 _default_chat: Any = False
 
-
 def get_foundry_chat(model_id: Optional[str] = "") -> FoundryChatBase:
     """
-    Возвращает глобальный экземпляр чата.
+    Returns глобальный экземпляр чата.
     
     Args:
-        model_id: Если указан, создаёт новый экземпляр с этой моделью
+        model_id: Если указан, creates новый экземпляр с этой моделью
         
     Returns:
         FoundryChatBase: Экземпляр чата
@@ -410,13 +406,11 @@ def get_foundry_chat(model_id: Optional[str] = "") -> FoundryChatBase:
     
     return _default_chat
 
-
 def set_foundry_chat(chat: FoundryChatBase):
-    """Устанавливает глобальный экземпляр чата."""
+    """Sets глобальный экземпляр чата."""
     global _default_chat
     _default_chat = chat
     logger.info("Global FoundryChat instance set")
-
 
 # ── Импорт совместимости ─────────────────────────────────────────────────────
 

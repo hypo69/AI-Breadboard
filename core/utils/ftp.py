@@ -1,7 +1,16 @@
-## \file /src/utils/ftp.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: .. module:: src.utils
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: ftp.py
+# Project: ai-breadboard
+# Package: core.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module:: src.utils 

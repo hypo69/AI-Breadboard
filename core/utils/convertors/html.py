@@ -1,19 +1,27 @@
-## \file /src/utils/convertors/html.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: HTML conversion and parsing utilities
+# =============================================================================
+# Description:
+#   HTML conversion utilities for transforming HTML content to escape sequences,
+#   dictionaries, and SimpleNamespace objects. Includes parsing functions for
+#   HTML to structured data format conversions.
+#
+# File: html.py
+# Project: ai-breadboard
+# Package: core.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
-.. module:: src.utils.convertors.html 
-	:platform: Windows, Unix
-	:synopsis: HTML conversion utilities
+HTML conversion utilities.
+
 Functions:
     - `html2escape`: Convert HTML to escape sequences.
     - `escape2html`: Convert escape sequences to HTML.
     - `html2dict`: Convert HTML to dictionaries.
     - `html2ns`: Convert HTML to SimpleNamespace objects.
-    https://stackoverflow.com/questions/73599970/how-to-solve-wkhtmltopdf-reported-an-error-exit-with-code-1-due-to-network-err
-https://chatgpt.com/share/672266a3-0048-800d-a97b-c38f647d496b
 """
 
 import re
@@ -162,9 +170,6 @@ def html2ns(html_str: str) -> SimpleNamespace:
 #     else:
 #         return True
 
-
-
-
 def html2pdf(html_str: str, pdf_file: str | Path) -> bool | None:
     """Converts HTML content to a PDF file using WeasyPrint."""
     try:
@@ -173,6 +178,4 @@ def html2pdf(html_str: str, pdf_file: str | Path) -> bool | None:
     except Exception as e:
         print(f"Error during PDF generation: {e}")
         return
-
-
 

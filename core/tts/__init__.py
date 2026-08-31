@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Synthesizes speech to a file using the selected TT
+# =============================================================================
+# Description:
+#   Synthesizes speech to a file using the selected TTS system and voice."""
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: core.tts
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Unified interface for all TTS systems (Microsoft Edge, Google, Silero).
 """

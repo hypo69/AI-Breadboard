@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тестирование интеграции Google Gemini CLI
+# Process Name: Тестирование класса GeminiCliChatBase.
 # =============================================================================
-# Описание:
+# Description:
 #   Unit-тесты для адаптера GeminiCliChatBase, маршрутизации UnifiedChatModel
-#   и управления пулом моделей в model_manager.
 #
 # File: test_gemini_cli_chat.py
 # Project: ai-breadboard
@@ -22,12 +21,11 @@ from core.ai.model_manager import get_available_models, load_unsupported_models,
 from core.ai.unified_chat import UnifiedChatModel
 from core.fastapi.router_chat import get_chat_model
 
-
 class TestGeminiCliChat:
     """Тестирование класса GeminiCliChatBase."""
 
     def test_normalize_model_id_defaults(self):
-        """Проверка нормализации идентификатора модели по умолчанию."""
+        """Check нормализации идентификатора модели по умолчанию."""
         assert GeminiCliChatBase.normalize_model_id("") == "gemini-3.1-flash-lite"
         assert GeminiCliChatBase.normalize_model_id("gemini_cli:gemini-3.1-flash-lite") == "gemini-3.1-flash-lite"
         assert GeminiCliChatBase.normalize_model_id("gemini-cli-gemini-2.5-flash") == "gemini-2.5-flash"
@@ -82,12 +80,11 @@ class TestGeminiCliChat:
             assert chunks[0] == "Chunk 1\n"
             assert chunks[1] == "Chunk 2\n"
 
-
 class TestModelManagerGeminiCli:
     """Тестирование управления моделями Gemini CLI в model_manager."""
 
     def test_get_available_models_gemini_cli(self):
-        """Проверка получения списка моделей Gemini CLI."""
+        """Check получения списка моделей Gemini CLI."""
         models = get_available_models(provider="gemini_cli", force_refresh=True)
         assert isinstance(models, list)
         assert len(models) > 0
@@ -95,28 +92,26 @@ class TestModelManagerGeminiCli:
         assert models[0] == "gemini-3.1-flash-lite"
 
     def test_unsupported_models_filter(self):
-        """Проверка фильтрации неподдерживаемых моделей."""
+        """Check фильтрации неподдерживаемых моделей."""
         unsupported = load_unsupported_models("gemini_cli")
         assert isinstance(unsupported, set)
-
 
 class TestRouterChatGeminiCliIntegration:
     """Тестирование фабрики роутера get_chat_model."""
 
     def test_get_chat_model_gemini_cli(self):
-        """Проверка создания экземпляра GeminiCliChatBase через get_chat_model."""
+        """Check создания экземпляра GeminiCliChatBase через get_chat_model."""
         model = get_chat_model("gemini_cli:gemini-3.1-flash-lite", system_instruction="Test")
         assert isinstance(model, GeminiCliChatBase)
         assert model.model_id == "gemini-3.1-flash-lite"
         assert model.system_instruction == "Test"
-
 
 class TestUnifiedChatGeminiCliIntegration:
     """Тестирование роутинга в UnifiedChatModel."""
 
     @pytest.mark.asyncio
     async def test_unified_chat_gemini_cli_dispatch(self):
-        """Проверка перенаправления запросов к Gemini CLI через UnifiedChatModel."""
+        """Check перенаправления запросов к Gemini CLI через UnifiedChatModel."""
         unified = UnifiedChatModel(
             api_key_names=[],
             system_instruction="Default system",

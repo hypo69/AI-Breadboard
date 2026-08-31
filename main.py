@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: AI Assistant Web Server Startup
+# Process Name: FastAPI application initialization and web server startup
 # =============================================================================
 # Description:
-#   FastAPI application initialization, router connection,
-#   uvicorn server startup with Telegram bot support.
+#   Main entry point for FastAPI web application with router initialization,
+#   CORS middleware configuration, and uvicorn server startup with Telegram bot integration
+#   and Windows asyncio event loop noise suppression for production stability.
 #
 # File: main.py
 # Project: ai-breadboard
+# Package: root
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -20,7 +22,7 @@ import signal
 import sys
 from pathlib import Path
 
-# Suppress Windows asyncio system noise (WinError 10054 on client connection resets)
+# Suppression of Windows asyncio system noise (WinError 10054 on client connection resets)
 if sys.platform == 'win32':
     try:
         from asyncio.proactor_events import _ProactorBasePipeTransport
@@ -38,7 +40,6 @@ if sys.platform == 'win32':
         _ProactorBasePipeTransport._call_connection_lost = _silence_connection_lost
     except Exception:
         pass
-
 
 import uvicorn
 from dotenv import load_dotenv
@@ -61,6 +62,7 @@ from core.fastapi import (
     init_agents_router,
     router_openai,
 )
+from core.fastapi.router_version import init_router as init_version_router
 from core.logger import logger
 from core.utils.file import read_text_file
 from core.utils.jjson import j_loads_ns
@@ -82,7 +84,6 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
-
 
 # Auto login local user to user_id=1
 @app.middleware("http")
@@ -149,7 +150,6 @@ async def auto_login_local_user(request: Request, call_next):
                 logger.error(f"Error in auto_login_local_user middleware: {e}")
     return await call_next(request)
 
-
 # Mount static files
 webinterface_dir = __root__ / 'webinterface'
 webinterface_dir.mkdir(parents=True, exist_ok=True)
@@ -157,7 +157,6 @@ app.mount('/webinterface', StaticFiles(directory=webinterface_dir), name='webint
 app.mount('/html', StaticFiles(directory=webinterface_dir), name='html')
 simple_assistant_dir = __root__ / 'SANDBOX' / 'AI Assistant' / 'Simple Assistant'
 app.mount('/simple-assistant', StaticFiles(directory=simple_assistant_dir, html=True), name='simple-assistant')
-
 
 def _parse_version(v: str) -> list[int]:
     """Legacy simple numeric parser kept for backward compatibility.
@@ -167,7 +166,6 @@ def _parse_version(v: str) -> list[int]:
         return [0, 0, 0]
     parts = re.findall(r"(\d+)", v)
     return [int(p) for p in parts]
-
 
 def _cfg_get(key: str, default=None):
     try:
@@ -188,7 +186,6 @@ def _cfg_get(key: str, default=None):
     except Exception:
         return default
 
-
 def _cfg_get_bool(key: str, env_names: list[str], default: bool = False) -> bool:
     val = _cfg_get(key, None)
     if val is not None:
@@ -198,7 +195,6 @@ def _cfg_get_bool(key: str, env_names: list[str], default: bool = False) -> bool
         if ev is not None:
             return str(ev).lower() in ('1', 'true', 'yes')
     return default
-
 
 def get_local_version() -> str:
     """Try to read version from setup.cfg [metadata] section. Fallback to 0.0.0."""
@@ -213,7 +209,6 @@ def get_local_version() -> str:
         pass
     return '0.0.0'
 
-
 def _get_git_origin_remote() -> str | None:
     """Return origin remote URL or None."""
     try:
@@ -222,7 +217,6 @@ def _get_git_origin_remote() -> str | None:
         return url
     except Exception:
         return None
-
 
 def _parse_github_owner_repo(remote_url: str) -> tuple[str, str] | None:
     """Parse GitHub owner and repo from remote URL.
@@ -235,7 +229,6 @@ def _parse_github_owner_repo(remote_url: str) -> tuple[str, str] | None:
     if m:
         return m.group('owner'), m.group('repo')
     return None
-
 
 def get_remote_latest_version() -> str | None:
     """Query GitHub API for the latest version.
@@ -347,14 +340,14 @@ def get_remote_latest_version() -> str | None:
     except Exception:
         return None
 
-
 def _is_interactive() -> bool:
     return sys.stdin.isatty() and sys.stdout.isatty()
-
 
 def prompt_and_perform_update(branch: str = 'main') -> None:
     """If a newer remote version exists, prompt the user and, on consent, run git pull --ff-only.
     This function is conservative and skips the check in non-interactive environments.
+    
+    Использует новый VersionManager для автоматического резервного копирования и восстановления.
     """
     try:
         auto_update = _cfg_get('auto_update', None)
@@ -368,45 +361,113 @@ def prompt_and_perform_update(branch: str = 'main') -> None:
             logger.debug('Non-interactive shell and AUTO_UPDATE not enabled: skipping version check')
             return
 
-        local_v = get_local_version()
-        remote_v = get_remote_latest_version()
-        if not remote_v:
-            logger.debug('Could not determine remote version')
-            return
-
-        cmp = _compare_versions(local_v, remote_v)
-        if cmp >= 0:
-            logger.info(f'Local version {local_v} is up-to-date (remote {remote_v})')
-            return
-
-        logger.info(f'A newer version is available: {remote_v} (local: {local_v}).')
-
-        do_update = auto_update
-        if not do_update:
-            # interactive prompt
-            try:
-                resp = input('Do you want to update the code from origin and restart? [y/N]: ').strip().lower()
-                do_update = resp in ('y', 'yes')
-            except Exception:
-                do_update = False
-
-        if not do_update:
-            logger.info('User declined update or update not approved')
-            return
-
-        # run git fetch + merge --ff-only origin/<branch>
+        # Используем новый VersionManager для проверки обновлений
         try:
-            logger.info(f'Pulling latest changes from origin/{branch}...')
-            subprocess.check_call(['git', 'fetch', 'origin', branch], cwd=str(__root__))
-            subprocess.check_call(['git', 'merge', '--ff-only', f'origin/{branch}'], cwd=str(__root__))
-            logger.info('Update pulled successfully. You should restart the process to apply changes.')
-            print('Update pulled successfully. Please restart the application to apply changes.')
-        except subprocess.CalledProcessError as e:
-            logger.error(f'Failed to update repository: {e}')
-            print('Failed to update repository. See logs for details.')
+            from core.version_manager import get_version_manager
+            vm = get_version_manager(__root__)
+            
+            check_result = vm.check_updates()
+            if check_result.get("status") == "error":
+                logger.warning(f"Version check failed: {check_result.get('message')}")
+                return
+            
+            if not check_result.get("is_update_available"):
+                logger.info(f"Application is up-to-date: {check_result.get('current_version')}")
+                return
+            
+            current = check_result.get('current_version', 'unknown')
+            remote = check_result.get('remote_version', 'unknown')
+            logger.info(f'A newer version is available: {remote} (current: {current})')
+
+            do_update = auto_update
+            if not do_update:
+                # interactive prompt
+                try:
+                    resp = input(
+                        f'Доступно update {remote} (текущая версия {current}). '
+                        'Обновить код и перезагрузиться? [y/N]: '
+                    ).strip().lower()
+                    do_update = resp in ('y', 'yes')
+                except Exception:
+                    do_update = False
+
+            if not do_update:
+                logger.info('User declined update or update not approved')
+                return
+
+            # Выполняем update с автоматическим резервным копированием
+            logger.info(f'Starting update from {current} to {remote}...')
+            
+            # Создаём резервную копию перед обновлением
+            backup_path = vm.backup_files()
+            if not backup_path:
+                logger.warning('Failed to create backup, update cancelled')
+                return
+
+            # Скачиваем обновления
+            if not vm.fetch_updates():
+                logger.error('Failed to fetch updates')
+                vm.restore_from_backup(backup_path)
+                print('Failed to fetch updates. Restored from backup.')
+                return
+
+            # Объединяем обновления
+            merge_ok, merge_msg = vm.merge_updates(branch)
+            if not merge_ok:
+                logger.error(f'Failed to merge updates: {merge_msg}')
+                vm.restore_from_backup(backup_path)
+                print(f'Failed to merge updates: {merge_msg}. Restored from backup.')
+                return
+
+            logger.success(f'Update completed: {current} → {remote}')
+            logger.info(f'Backup saved at: {backup_path}')
+            print(f'Update completed successfully: {current} → {remote}')
+            print('You should restart the application to apply changes.')
+            
+            # Очистка старых резервных копий
+            vm.cleanup_old_backups(keep_count=5)
+            
+        except ImportError:
+            # Fallback to legacy implementation if version_manager import fails
+            logger.debug('Using legacy version check (version_manager not available)')
+            local_v = get_local_version()
+            remote_v = get_remote_latest_version()
+            if not remote_v:
+                logger.debug('Could not determine remote version')
+                return
+
+            cmp = _compare_versions(local_v, remote_v)
+            if cmp >= 0:
+                logger.info(f'Local version {local_v} is up-to-date (remote {remote_v})')
+                return
+
+            logger.info(f'A newer version is available: {remote_v} (local: {local_v}).')
+
+            do_update = auto_update
+            if not do_update:
+                # interactive prompt
+                try:
+                    resp = input('Do you want to update the code from origin and restart? [y/N]: ').strip().lower()
+                    do_update = resp in ('y', 'yes')
+                except Exception:
+                    do_update = False
+
+            if not do_update:
+                logger.info('User declined update or update not approved')
+                return
+
+            # run git fetch + merge --ff-only origin/<branch>
+            try:
+                logger.info(f'Pulling latest changes from origin/{branch}...')
+                subprocess.check_call(['git', 'fetch', 'origin', branch], cwd=str(__root__))
+                subprocess.check_call(['git', 'merge', '--ff-only', f'origin/{branch}'], cwd=str(__root__))
+                logger.info('Update pulled successfully. You should restart the process to apply changes.')
+                print('Update pulled successfully. Please restart the application to apply changes.')
+            except subprocess.CalledProcessError as e:
+                logger.error(f'Failed to update repository: {e}')
+                print('Failed to update repository. See logs for details.')
     except Exception as e:
         logger.error(f'Error during version check/update: {e}')
-
 
 _api_key_names: list[str] = [n.strip() for n in os.getenv('GEMINI_API_KEY_NAMES', '').split(',') if n.strip()]
 
@@ -452,8 +513,8 @@ app.include_router(init_logs_router())
 app.include_router(init_keys_router())
 app.include_router(init_admin_router())
 app.include_router(init_agents_router())
+app.include_router(init_version_router())
 app.include_router(router_openai)
-
 
 @app.on_event("startup")
 async def startup_event():
@@ -469,6 +530,22 @@ async def startup_event():
     # from core.logger.log_analyzer import start_log_analyzer
     # start_log_analyzer()
     
+    # Check обновлений при старте приложения
+    try:
+        from core.version_manager import get_version_manager
+        vm = get_version_manager(__root__)
+        check_result = vm.check_updates()
+        if check_result.get("is_update_available"):
+            logger.warning(
+                f"Доступно update: {check_result.get('remote_version')} "
+                f"(текущая версия: {check_result.get('current_version')}). "
+                f"Запустите приложение с флагом --check-update для обновления."
+            )
+        else:
+            logger.info(f"Приложение актуально: версия {check_result.get('current_version')}")
+    except Exception as e:
+        logger.debug(f"Failed to check updates on startup: {e}")
+    
     if ai_cfg and getattr(ai_cfg, 'preload_silero', False):
         from core.tts.silero import get_silero_model
         logger.info("Pre-loading Silero TTS model...")
@@ -477,9 +554,6 @@ async def startup_event():
             logger.info("Silero TTS model pre-loaded successfully.")
         except Exception as e:
             logger.error(f"Failed to pre-load Silero TTS model: {e}")
-
-
-
 
 @app.get('/', response_class=HTMLResponse)
 async def root(request: Request) -> HTMLResponse:
@@ -492,7 +566,6 @@ async def root(request: Request) -> HTMLResponse:
         raise HTTPException(status_code=500, detail='Failed to read admin index page')
     return HTMLResponse(content=content)
 
-
 @app.get('/tgmini', response_class=HTMLResponse)
 async def tgmini_interface() -> HTMLResponse:
     """Serving of Telegram Mini App HTML page."""
@@ -500,7 +573,6 @@ async def tgmini_interface() -> HTMLResponse:
     if not content:
         raise HTTPException(status_code=500, detail='Failed to read Telegram Mini App index page')
     return HTMLResponse(content=content)
-
 
 @app.get('/tgmini/{full_path:path}', response_class=HTMLResponse)
 async def tgmini_static(full_path: str) -> HTMLResponse:
@@ -510,7 +582,6 @@ async def tgmini_static(full_path: str) -> HTMLResponse:
         raise HTTPException(status_code=404, detail='File not found')
     return HTMLResponse(content=content)
 
-
 @app.get('/rc', response_class=HTMLResponse)
 async def rc_interface() -> HTMLResponse:
     """Serving of Remote Control HTML page."""
@@ -518,7 +589,6 @@ async def rc_interface() -> HTMLResponse:
     if not content:
         raise HTTPException(status_code=500, detail='Failed to read Remote Control page')
     return HTMLResponse(content=content)
-
 
 @app.get('/rc/{full_path:path}', response_class=HTMLResponse)
 async def rc_static(full_path: str) -> HTMLResponse:
@@ -528,7 +598,6 @@ async def rc_static(full_path: str) -> HTMLResponse:
         raise HTTPException(status_code=404, detail='File not found')
     return HTMLResponse(content=content)
 
-
 @app.get('/user_tts', response_class=HTMLResponse)
 async def user_tts_interface() -> HTMLResponse:
     """Serving of User TTS experimental page."""
@@ -537,7 +606,6 @@ async def user_tts_interface() -> HTMLResponse:
         raise HTTPException(status_code=500, detail='Failed to read User TTS page')
     return HTMLResponse(content=content)
 
-
 @app.get('/user_tts/{full_path:path}', response_class=HTMLResponse)
 async def user_tts_static(full_path: str) -> HTMLResponse:
     """Serving User TTS static files."""
@@ -545,8 +613,6 @@ async def user_tts_static(full_path: str) -> HTMLResponse:
     if not content:
         raise HTTPException(status_code=404, detail='File not found')
     return HTMLResponse(content=content)
-
-
 
 ADMIN_LOGIN_HTML = """<!DOCTYPE html>
 <html lang="ru">
@@ -775,9 +841,8 @@ ADMIN_LOGIN_HTML = """<!DOCTYPE html>
 </html>
 """
 
-
 def check_admin_auth(request: Request):
-    """Проверка прав доступа к панели администратора с Google OAuth."""
+    """Check прав доступа к панели администратора с Google OAuth."""
     from fastapi.responses import RedirectResponse, HTMLResponse
     from core.fastapi.router_auth import verify_jwt_token
     from core.user_manager import user_manager
@@ -817,7 +882,6 @@ def check_admin_auth(request: Request):
 
     return RedirectResponse(url='/auth/google?next=' + request.url.path, status_code=303)
 
-
 @app.get('/admin')
 async def admin_interface(request: Request):
     """Display the main admin panel page."""
@@ -828,7 +892,6 @@ async def admin_interface(request: Request):
     if not content:
         raise HTTPException(status_code=500, detail='Failed to read admin index page')
     return HTMLResponse(content=content)
-
 
 @app.post('/admin')
 async def admin_interface_post(request: Request):
@@ -843,9 +906,6 @@ async def admin_interface_post(request: Request):
     else:
         return RedirectResponse(url='/admin', status_code=303)
 
-
-
-
 @app.get('/admin/{full_path:path}')
 async def admin_static(full_path: str, request: Request):
     """Serving admin static files with security verification."""
@@ -857,7 +917,6 @@ async def admin_static(full_path: str, request: Request):
         raise HTTPException(status_code=404, detail='File not found')
     return HTMLResponse(content=content)
 
-
 @app.get('/tv', response_class=HTMLResponse)
 async def tv_interface() -> HTMLResponse:
     """Serving of TV Player HTML page."""
@@ -865,7 +924,6 @@ async def tv_interface() -> HTMLResponse:
     if not content:
         raise HTTPException(status_code=500, detail='Failed to read TV index page')
     return HTMLResponse(content=content)
-
 
 @app.get('/tv/{full_path:path}', response_class=HTMLResponse)
 async def tv_static(full_path: str) -> HTMLResponse:
@@ -875,13 +933,11 @@ async def tv_static(full_path: str) -> HTMLResponse:
         raise HTTPException(status_code=404, detail='File not found')
     return HTMLResponse(content=content)
 
-
 @app.get('/logs')
 async def logs_interface():
     """Redirect to admin dashboard logs tab."""
     from fastapi.responses import RedirectResponse
     return RedirectResponse(url='/admin#tab-logs', status_code=303)
-
 
 from pydantic import BaseModel
 
@@ -943,7 +999,6 @@ async def save_foundry_config(data: FoundryConfigRequest):
     
     return {"status": "ok"}
 
-
 @app.get('/api/ollama/config')
 async def get_ollama_config():
     return {
@@ -980,7 +1035,6 @@ async def save_ollama_config(data: OllamaConfigRequest):
         ai_cfg.ollama_model_id = data.model
     
     return {"status": "ok"}
-
 
 class AgyConfigRequest(BaseModel):
     enabled: bool
@@ -1030,9 +1084,6 @@ async def save_agy_config(data: AgyConfigRequest):
         ai_cfg.agy_model_id = data.model
     
     return {"status": "ok"}
-
-
-
 
 if __name__ == '__main__':
     try:

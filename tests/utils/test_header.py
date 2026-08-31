@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тесты модуля core/utils/header
+# Process Name: Тестирование успешного нахождения корня проекта.
 # =============================================================================
-# Описание:
+# Description:
 #   Исчерпывающее тестирование всех публичных функций модуля header.
-#   Покрытие: прямые тесты, граничные условия, регрессионные сценарии.
 #
-# File: tests/utils/test_header.py
+# File: test_header.py
 # Project: ai-breadboard
-# Package: tests
+# Package: tests.utils
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -20,7 +19,7 @@ from core.utils.header import set_project_root
 def test_set_project_root_success():
     """Тестирование успешного нахождения корня проекта.
     
-    Проверка: функция должна найти директорию с маркером '__root__'.
+    Check: function должна найти директорию с маркером '__root__'.
     """
     # --- Подготовка (Arrange) ---
     expected_root = Path(__file__).resolve().parents[2]
@@ -28,7 +27,7 @@ def test_set_project_root_success():
     # --- Выполнение (Act) ---
     root = set_project_root()
     
-    # --- Проверка (Assert) ---
+    # --- Check (Assert) ---
     assert root == expected_root, f"Корень проекта не найден, ожидалось {expected_root}, получено {root}"
 
 def test_set_project_root_nonexistent_marker():
@@ -40,6 +39,6 @@ def test_set_project_root_nonexistent_marker():
     # --- Выполнение (Act) ---
     root = set_project_root(marker_files=marker)
     
-    # --- Проверка (Assert) ---
-    # Поведение функции: если не найдено, возвращает директорию скрипта.
+    # --- Check (Assert) ---
+    # Поведение функции: если не найдено, Returns директорию скрипта.
     assert isinstance(root, Path), "Результат должен быть объектом Path"

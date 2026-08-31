@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Интеграция с сервисами Google (Docs, Calendar, Contacts)
+# Process Name: Update access_token с использованием refresh_token
 # =============================================================================
-# Описание:
-#   Модуль для взаимодействия с Google APIs с использованием OAuth токенов.
-#   Поддерживает автоматическое обновление access_token через refresh_token.
+# Description:
+#   Module для взаимодействия с Google APIs с использованием OAuth токенов.
 #
 # File: google_services.py
 # Project: ai-breadboard
@@ -24,15 +23,14 @@ import requests
 from core.logger import logger
 from core.user_manager import user_manager
 
-
 def refresh_google_access_token(user_id: int) -> str:
-    """Обновление access_token с использованием refresh_token.
+    """Update access_token с использованием refresh_token.
 
     Args:
         user_id (int): Идентификатор пользователя.
 
     Returns:
-        str: Новый access_token или пустая строка при ошибке.
+        str: Новый access_token или пустая string при ошибке.
     """
     token_record = user_manager.get_google_tokens(user_id)
     refresh_token = token_record.get('refresh_token', '')
@@ -69,13 +67,12 @@ def refresh_google_access_token(user_id: int) -> str:
                 expires_in=int(expires_in),
                 scope=scope
             )
-            logger.info(f'Успешно обновлен access_token для user_id={user_id}')
+            logger.info(f'Successfully обновлен access_token для user_id={user_id}')
             return new_access_token
         return ''
     except Exception as ex:
-        logger.error(f'Ошибка обновления Google access token для user_id={user_id}:', ex, False)
+        logger.error(f'Error обновления Google access token для user_id={user_id}:', ex, False)
         return ''
-
 
 def get_valid_google_access_token(user_id: int) -> str:
     """Получение действующего access_token с проверкой срока жизни.
@@ -84,7 +81,7 @@ def get_valid_google_access_token(user_id: int) -> str:
         user_id (int): Идентификатор пользователя.
 
     Returns:
-        str: Валидный access_token или пустая строка.
+        str: Valid access_token или пустая string.
     """
     token_record = user_manager.get_google_tokens(user_id)
     if not token_record:
@@ -111,9 +108,8 @@ def get_valid_google_access_token(user_id: int) -> str:
 
     return access_token
 
-
 def get_google_headers(user_id: int) -> Dict[str, str]:
-    """Формирование заголовков авторизации для Google API.
+    """Formation заголовков авторизации для Google API.
 
     Args:
         user_id (int): Идентификатор пользователя.
@@ -129,7 +125,6 @@ def get_google_headers(user_id: int) -> Dict[str, str]:
         'Accept': 'application/json',
     }
 
-
 # =============================================================================
 # Google Calendar API
 # =============================================================================
@@ -143,7 +138,7 @@ def get_google_calendar_events(user_id: int, time_min: str = '', max_results: in
         max_results (int): Максимальное количество событий.
 
     Returns:
-        List[Dict[str, Any]]: Список событий.
+        List[Dict[str, Any]]: List событий.
     """
     headers = get_google_headers(user_id)
     if not headers:
@@ -165,9 +160,8 @@ def get_google_calendar_events(user_id: int, time_min: str = '', max_results: in
         resp.raise_for_status()
         return resp.json().get('items', [])
     except Exception as ex:
-        logger.error(f'Ошибка получения событий Google Calendar для user_id={user_id}:', ex, False)
+        logger.error(f'Error получения событий Google Calendar для user_id={user_id}:', ex, False)
         return []
-
 
 # =============================================================================
 # Google Contacts API (People API)
@@ -181,7 +175,7 @@ def get_google_contacts(user_id: int, page_size: int = 50) -> List[Dict[str, Any
         page_size (int): Количество контактов на страницу.
 
     Returns:
-        List[Dict[str, Any]]: Список контактов.
+        List[Dict[str, Any]]: List контактов.
     """
     headers = get_google_headers(user_id)
     if not headers:
@@ -198,9 +192,8 @@ def get_google_contacts(user_id: int, page_size: int = 50) -> List[Dict[str, Any
         resp.raise_for_status()
         return resp.json().get('connections', [])
     except Exception as ex:
-        logger.error(f'Ошибка получения контактов Google для user_id={user_id}:', ex, False)
+        logger.error(f'Error получения контактов Google для user_id={user_id}:', ex, False)
         return []
-
 
 # =============================================================================
 # Google Drive & Docs API
@@ -214,7 +207,7 @@ def list_google_documents(user_id: int, page_size: int = 20) -> List[Dict[str, A
         page_size (int): Количество документов.
 
     Returns:
-        List[Dict[str, Any]]: Список файлов Google Docs.
+        List[Dict[str, Any]]: List файлов Google Docs.
     """
     headers = get_google_headers(user_id)
     if not headers:
@@ -232,9 +225,8 @@ def list_google_documents(user_id: int, page_size: int = 20) -> List[Dict[str, A
         resp.raise_for_status()
         return resp.json().get('files', [])
     except Exception as ex:
-        logger.error(f'Ошибка получения списка Google Docs для user_id={user_id}:', ex, False)
+        logger.error(f'Error получения списка Google Docs для user_id={user_id}:', ex, False)
         return []
-
 
 def get_google_document_content(user_id: int, document_id: str) -> Dict[str, Any]:
     """Получение содержимого конкретного Google Документа.
@@ -244,7 +236,7 @@ def get_google_document_content(user_id: int, document_id: str) -> Dict[str, Any
         document_id (str): Идентификатор документа Google Docs.
 
     Returns:
-        Dict[str, Any]: Структура документа или пустой словарь.
+        Dict[str, Any]: Структура документа или empty dictionary.
     """
     headers = get_google_headers(user_id)
     if not headers:
@@ -256,5 +248,5 @@ def get_google_document_content(user_id: int, document_id: str) -> Dict[str, Any
         resp.raise_for_status()
         return resp.json()
     except Exception as ex:
-        logger.error(f'Ошибка чтения Google Document {document_id}:', ex, False)
+        logger.error(f'Error чтения Google Document {document_id}:', ex, False)
         return {}

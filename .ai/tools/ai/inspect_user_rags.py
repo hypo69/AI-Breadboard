@@ -1,3 +1,17 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Module
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: inspect_user_rags.py
+# Project: ai-breadboard
+# Package: .ai.tools.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 import sqlite3
 
 for dbpath in [

@@ -1,6 +1,6 @@
 ---
 name: torrent-controller
-description: Инструментарий для управления qBittorrent: синхронизация путей, назначение категорий и проверка целостности торрентов. Используйте для управления состоянием скачиваний и связки торрентов с медиатекой.
+description: Инструментарий для управления qBittorrent: синхронизация путей, назначение категорий и check целостности торрентов. Используйте для управления состоянием скачиваний и связки торрентов с медиатекой.
 ---
 
 # Torrent Controller
@@ -13,7 +13,7 @@ description: Инструментарий для управления qBittorren
   `python assign_torrents_ids.py`
 - **Синхронизация путей:**
   `python update_torrents_path.py`
-- **Проверка целостности (recheck):**
+- **Check целостности (recheck):**
   `python update_torrent_state.py`
 - **Очистка метаданных:**
   `python clear_torrents_meta.py`

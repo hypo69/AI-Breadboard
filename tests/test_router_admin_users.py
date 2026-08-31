@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тестирование API управления пользователями в админке
+# Process Name: Тестирование эндпоинтов управления пользователями 
 # =============================================================================
-# Описание:
-#   Модуль содержит тесты для REST API эндпоинтов /api/admin/users/*
-#   и вспомогательных методов UserManager.
+# Description:
+#   Module содержит тесты для REST API эндпоинтов /api/admin/users/*
 #
-# File: tests/test_router_admin_users.py
+# File: test_router_admin_users.py
 # Project: ai-breadboard
 # Package: tests
 # Author: hypo69
@@ -20,7 +19,6 @@ from main import app
 from core.user_manager import user_manager
 
 client = TestClient(app)
-
 
 class TestAdminUsersAPI:
     """Тестирование эндпоинтов управления пользователями в панели администратора."""
@@ -48,7 +46,7 @@ class TestAdminUsersAPI:
                 user_manager.delete_user(u["id"])
 
     def test_list_users_and_stats(self):
-        """Проверка получения списка пользователей и статистики."""
+        """Check получения списка пользователей и статистики."""
         response = client.get("/api/admin/users")
         assert response.status_code == 200
         data = response.json()
@@ -68,7 +66,7 @@ class TestAdminUsersAPI:
             assert "has_password" in u
 
     def test_create_user(self):
-        """Проверка создания нового пользователя через API."""
+        """Check создания нового пользователя через API."""
         payload = {
             "email": "test_user_admin_1@test.com",
             "name": "Тестовый Пользователь",
@@ -89,12 +87,12 @@ class TestAdminUsersAPI:
         assert created["role"] == "user"
         assert created["has_password"] is True
 
-        # Проверка валидации дубликата
+        # Check валидации дубликата
         duplicate_response = client.post("/api/admin/users", json=payload)
         assert duplicate_response.status_code == 400
 
     def test_get_user_details(self):
-        """Проверка получения детальной информации о пользователе и его настройках."""
+        """Check получения детальной информации о пользователе и его настройках."""
         user_id = user_manager.create_user_admin(
             email="test_user_admin_2@test.com",
             name="Детальный Пользователь",
@@ -112,7 +110,7 @@ class TestAdminUsersAPI:
         assert "permissions" in data
 
     def test_update_user(self):
-        """Проверка редактирования пользователя."""
+        """Check редактирования пользователя."""
         user_id = user_manager.create_user_admin(
             email="test_user_admin_1@test.com",
             name="Старое Имя",
@@ -137,7 +135,7 @@ class TestAdminUsersAPI:
         assert data["user"]["is_admin"] == 1
 
     def test_set_user_password(self):
-        """Проверка установки/смены пароля."""
+        """Check установки/смены пароля."""
         user_id = user_manager.create_user_admin(
             email="test_user_admin_1@test.com",
             name="Парольный Пользователь"
@@ -152,14 +150,14 @@ class TestAdminUsersAPI:
         data = response.json()
         assert data["status"] == "ok"
 
-        # Проверка валидности хеша пароля
+        # Check валидности хеша пароля
         db_user = user_manager.get_user_by_id(user_id)
         assert db_user.get("password_hash")
         assert user_manager.verify_password("NewSecretPassword2026!", db_user["password_hash"])
         assert not user_manager.verify_password("WrongPassword", db_user["password_hash"])
 
     def test_toggle_active(self):
-        """Проверка переключения статуса активности."""
+        """Check переключения статуса активности."""
         user_id = user_manager.create_user_admin(
             email="test_user_admin_1@test.com",
             name="Статусный Пользователь",
@@ -182,7 +180,7 @@ class TestAdminUsersAPI:
         assert resp_root.status_code == 400
 
     def test_toggle_role(self):
-        """Проверка переключения роли (User <-> Admin)."""
+        """Check переключения роли (User <-> Admin)."""
         user_id = user_manager.create_user_admin(
             email="test_user_admin_1@test.com",
             name="Ролевой Пользователь",
@@ -208,7 +206,7 @@ class TestAdminUsersAPI:
         assert resp_root.status_code == 400
 
     def test_delete_user(self):
-        """Проверка удаления пользователя и защиты ID 1."""
+        """Check удаления пользователя и защиты ID 1."""
         user_id = user_manager.create_user_admin(
             email="test_user_admin_1@test.com",
             name="Удаляемый Пользователь"
@@ -219,15 +217,15 @@ class TestAdminUsersAPI:
         assert response.status_code == 200
         assert response.json()["status"] == "ok"
 
-        # Проверка, что пользователь удален
+        # Check, что пользователь удален
         assert not user_manager.get_user_by_id(user_id)
 
-        # Проверка защиты root ID 1
+        # Check защиты root ID 1
         root_del = client.delete("/api/admin/users/1")
         assert root_del.status_code == 400
 
     def test_search_and_filter_users(self):
-        """Проверка фильтрации и поиска пользователей."""
+        """Check фильтрации и поиска пользователей."""
         u1_id = user_manager.create_user_admin(
             email="searchable_unique@test.com",
             name="Алексей Уникальный",

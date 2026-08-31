@@ -1,23 +1,34 @@
-## \file tests/test_launchers.py
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Тесты лончеров проекта (run.ps1 и launchers/Run-*.
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: test_launchers.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Тесты лончеров проекта (run.ps1 и launchers/Run-*.ps1).
 
-Проверяет что:
+Checks что:
 - Главный лончер run.ps1 находится в корне проекта
 - Специализированные лончеры находятся в директории launchers/
 - Скрипты следуют конвенции именования Run-<ServiceName>.ps1
 - Содержат .SYNOPSIS (валидная PowerShell документация)
 - Читают .env файл и определяют корень проекта
 - Не содержат жёстко заданных путей к другим проектам
-- run.ps1 корректно вызывает дочерние лончеры из директории launchers/
+- run.ps1 корректно Raises дочерние лончеры из директории launchers/
 
 Документация: .ai_instructions/knowledge/LAUNCHER_GUIDE.md
 """
 
 import pytest
 from pathlib import Path
-
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 LAUNCHERS_DIR = PROJECT_ROOT / "launchers"
@@ -51,9 +62,8 @@ FORBIDDEN_PATHS = [
     "c:\\mediateka",
 ]
 
-
 class TestLaunchersStructure:
-    """Проверяет корректность файловой структуры лончеров."""
+    """Checks корректность файловой структуры лончеров."""
 
     def test_launchers_dir_exists(self):
         """Директория launchers/ должна существовать в проекте."""
@@ -77,9 +87,8 @@ class TestLaunchersStructure:
         path = LAUNCHERS_DIR / launcher
         assert path.is_file(), f"Лончер {launcher} не найден в {LAUNCHERS_DIR}"
 
-
 class TestLauncherNamingConvention:
-    """Проверяет конвенцию именования лончеров."""
+    """Checks конвенцию именования лончеров."""
 
     def test_no_launchers_in_tools_dir(self):
         """В tools/ не должно быть Run-*.ps1 файлов."""
@@ -105,9 +114,8 @@ class TestLauncherNamingConvention:
             service = name[4:]  # убираем "Run-"
             assert service[0].isupper(), f"Имя сервиса в {launcher.name} должно начинаться с заглавной буквы"
 
-
 class TestLauncherContent:
-    """Проверяет содержимое и корректность логики лончеров."""
+    """Checks содержимое и корректность логики лончеров."""
 
     def test_run_ps1_has_synopsis(self):
         """run.ps1 должен содержать .SYNOPSIS."""
@@ -162,9 +170,8 @@ class TestLauncherContent:
             f"{launcher} должен определять корень проекта через projectRoot"
         )
 
-
 class TestLauncherAccessibility:
-    """Проверяет доступность и документацию лончеров."""
+    """Checks доступность и документацию лончеров."""
 
     def test_launchers_only_in_launchers_directory(self):
         """Лончеры Run-*.ps1 должны быть только в директории launchers/."""

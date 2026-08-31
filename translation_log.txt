@@ -1,0 +1,485 @@
+================================================================================
+RUSSIAN TO ENGLISH TRANSLATOR
+================================================================================
+
+[DRY RUN] Scanning for Russian text...
+Would translate: fix_headers_and_translate.py
+Would translate: main.py
+Would translate: translate_documentation.py
+Would translate: .mcp\agy_search_mcp_server.py
+Would translate: .mcp\auto_commits.py
+Would translate: .mcp\config_helper.py
+Would translate: .mcp\example_mcp_server.py
+Would translate: .mcp\fastapi_mcp_server.py
+Would translate: .mcp\gemini_cli_search_mcp_server.py
+Would translate: .mcp\gemini_search_mcp_server.py
+Would translate: .mcp\langchain_mcp_server.py
+Would translate: .mcp\unicorn_mcp_server.py
+Would translate: core\config.py
+Would translate: core\google_services.py
+Would translate: core\prompt_loader.py
+Would translate: core\version_manager.py
+Would translate: launchers\run.py
+Would translate: launchers\run_foundry.py
+Would translate: launchers\run_light_server.py
+Would translate: launchers\run_unicorn.py
+Would translate: tests\test_ai.py
+Would translate: tests\test_core_rag.py
+Would translate: tests\test_environment.py
+Would translate: tests\test_fastapi.py
+Would translate: tests\test_fastapi_router_keys.py
+Would translate: tests\test_fastapi_router_logs.py
+Would translate: tests\test_gemini_cli_chat.py
+Would translate: tests\test_gemini_generative_ai.py
+Would translate: tests\test_integration_api.py
+Would translate: tests\test_launchers.py
+Would translate: tests\test_logger.py
+Would translate: tests\test_logger_enhanced.py
+Would translate: tests\test_openai_hf_onnx_providers.py
+Would translate: tests\test_qbittorrent_config.py
+Would translate: tests\test_router_admin_users.py
+Would translate: tests\test_router_agents.py
+Would translate: tests\test_router_chat_test_model.py
+Would translate: tests\test_save_file.py
+Would translate: tests\test_skill_registry.py
+Would translate: tests\TEST_TEMPLATE.py
+Would translate: tests\test_tools_structure.py
+Would translate: tests\test_tts.py
+Would translate: tests\test_user_manager.py
+Would translate: tests\test_utils_convertors_dict.py
+Would translate: tests\test_utils_convertors_html.py
+Would translate: tests\test_utils_convertors_json.py
+Would translate: tests\test_utils_date_time.py
+Would translate: tests\test_utils_file.py
+Would translate: tests\test_utils_ftp.py
+Would translate: tests\test_utils_jjson.py
+Would translate: tests\test_utils_url.py
+Would translate: tests\utils\test_file.py
+Would translate: tests\utils\test_get_free_port.py
+Would translate: tests\utils\test_header.py
+Would translate: tests\utils\test_jjson.py
+Would translate: scripts\cli\assist.py
+Would translate: scripts\cli\config.py
+Would translate: scripts\cli\installer.py
+Would translate: scripts\cli\paths.py
+Would translate: scripts\cli\utils.py
+Would translate: scripts\dev\analyze_dependencies.py
+Would translate: scripts\dev\assist_cli.py
+Would translate: scripts\dev\bot_runner.py
+Would translate: scripts\dev\generate_coverage_report.py
+Would translate: scripts\dev\package_skill.py
+Would translate: scripts\dev\run_tests.py
+Would translate: scripts\dev\save_file.py
+Would translate: scripts\dev\scan_headers.py
+Would translate: scripts\dev\search_code.py
+Would translate: scripts\dev\update_docs.py
+Would translate: scripts\dev\update_scripts_documentation.py
+Would translate: scripts\maintenance\compress_logs.py
+Would translate: scripts\maintenance\rebuild_dev_rag.py
+Would translate: core\ai\agy_chat.py
+Would translate: core\ai\dev_rag.py
+Would translate: core\ai\foundry_chat.py
+Would translate: core\ai\gemini_cli_chat.py
+Would translate: core\ai\hf_chat.py
+Would translate: core\ai\langchain_agent.py
+Would translate: core\ai\langchain_prompts.py
+Would translate: core\ai\langchain_tools.py
+Would translate: core\ai\mcp_client.py
+Would translate: core\ai\model_manager.py
+Would translate: core\ai\ollama_chat.py
+Would translate: core\ai\onnx_chat.py
+Would translate: core\ai\openai_compat_chat.py
+Would translate: core\ai\unified_chat.py
+Would translate: core\ai\voice_pipeline.py
+Would translate: core\clients\foundry.py
+Would translate: core\clients\ollama.py
+Would translate: core\clients\tg_tts_handler.py
+Would translate: core\fastapi\router_admin.py
+Would translate: core\fastapi\router_agents.py
+Would translate: core\fastapi\router_auth.py
+Would translate: core\fastapi\router_chat.py
+Would translate: core\fastapi\router_control.py
+Would translate: core\fastapi\router_keys.py
+Would translate: core\fastapi\router_logs.py
+Would translate: core\fastapi\router_openai.py
+Would translate: core\fastapi\router_tts.py
+Would translate: core\fastapi\router_version.py
+Would translate: core\fastapi\__init__.py
+Would translate: core\logger\conftest.py
+Would translate: core\logger\header.py
+Would translate: core\logger\logger.py
+Would translate: core\logger\log_analyzer.py
+Would translate: core\logger\test_header.py
+Would translate: core\logger\test_logger.py
+Would translate: core\logger\test_log_analyzer.py
+Would translate: core\rag\engine.py
+Would translate: core\rag\models.py
+Would translate: core\rag\rules_rag.py
+Would translate: core\rag\user_rag.py
+Would translate: core\rag\__init__.py
+Would translate: core\skills\registry.py
+Would translate: core\user_manager\user_profile.py
+Would translate: core\user_manager\__init__.py
+Would translate: core\utils\get_free_port.py
+Would translate: core\utils\header.py
+Would translate: core\utils\jjson.py
+Would translate: core\utils\pdf.py
+Would translate: core\utils\url.py
+Would translate: core\utils\versioning.py
+Would translate: core\utils\convertors\md.py
+Would translate: core\utils\convertors\unicode.py
+Would translate: core\ai\converter\gguf_to_onnx.py
+Would translate: core\ai\gemini\chat_response_store.py
+Would translate: core\ai\gemini\generative_ai.py
+Would translate: core\ai\gemini\header.py
+Would translate: core\ai\gemini\rag.py
+Would translate: core\ai\gemini\secrets_loader.py
+Would translate: core\ai\gemini\user_query_rag.py
+Would translate: core\ai\gemini\__init__.py
+Would translate: .gemini\skills\web-chat-cli\src\chat.py
+Would translate: .gemini\skills\smart-deletion-duplicates\scripts\delete_media.py
+Would translate: .gemini\skills\smart-deletion-duplicates\scripts\process_scheduled_deletions.py
+Would translate: .gemini\skills\skill-factory\scripts\pack.py
+Would translate: .gemini\skills\rag-search-manager\scripts\search_media.py
+Would translate: .ai\tools\ai\package_skill.py
+Would translate: .ai\tools\ai\rebuild_dev_rag.py
+Would translate: .ai\tools\ai\rebuild_rag.py
+Would translate: .ai\tools\ai\search_code.py
+Would translate: .ai\tools\ai\update_docs.py
+Would translate: .ai\tools\ai\validate_rag_files.py
+Would translate: .ai\tools\setup\analyze_dependencies.py
+Would translate: .ai\tools\setup\scan_headers.py
+Would translate: .agents\skills\web-chat-cli\src\chat.py
+Would translate: .agents\skills\smart-deletion-duplicates\scripts\delete_media.py
+Would translate: .agents\skills\smart-deletion-duplicates\scripts\process_scheduled_deletions.py
+Would translate: .agents\skills\skill-factory\scripts\pack.py
+Would translate: .agents\skills\rag-search-manager\scripts\search_media.py
+Would translate: CHANGES.md
+Would translate: CONFIG.md
+Would translate: CROSSPLATFORM_LOGGING_AND_UPDATE_GUIDE.md
+Would translate: DOCUMENTATION_INDEX.md
+Would translate: GEMINI.md
+Would translate: IMPLEMENTATION_SUMMARY.md
+Would translate: INSTALL_LINUX.md
+Would translate: MIGRATION_TO_LINUX.md
+Would translate: PORTING_SUMMARY.md
+Would translate: PROJECT_COMPLETION_SUMMARY.md
+Would translate: QUICK_START.md
+Would translate: QUICK_START_VERSION_MANAGEMENT.md
+Would translate: README.ru.md
+Would translate: VERIFICATION_CHECKLIST.md
+Would translate: .mcp\README.md
+Would translate: docs\changelog.md
+Would translate: systemd\README.md
+Would translate: scripts\cli\INSTALLER_README.md
+Would translate: scripts\cli\README.md
+Would translate: docs\ru\ARCHITECTURE.md
+Would translate: docs\ru\index.md
+Would translate: docs\ru\ported.md
+Would translate: docs\ru\code\cli-commands.md
+Would translate: docs\ru\code\start-engine.md
+Would translate: docs\ru\cook-book\ch01_philosophy.md
+Would translate: docs\ru\cook-book\ch02_orchestration.md
+Would translate: docs\ru\cook-book\ch03_local_inference.md
+Would translate: docs\ru\cook-book\ch04_rag_architecture.md
+Would translate: docs\ru\cook-book\ch05_optimization_finetuning.md
+Would translate: docs\ru\cook-book\ch06_agents_and_mcp.md
+Would translate: docs\ru\cook-book\ch07_skills_management.md
+Would translate: docs\ru\cook-book\ch08_laboratory_practicum.md
+Would translate: docs\ru\cook-book\index.md
+Would translate: .gemini\skills\db-inspector\SKILL.md
+Would translate: .gemini\skills\skill-factory\SKILL.md
+Would translate: .gemini\skills\smart-deletion-duplicates\SKILL.md
+Would translate: .gemini\skills\storage-controller\SKILL.md
+Would translate: .gemini\skills\storage-tool\SKILL.md
+Would translate: .gemini\skills\tdd-doc-gen\SKILL.md
+Would translate: .gemini\skills\torrent-controller\SKILL.md
+Would translate: .gemini\skills\web-chat-cli\SKILL.md
+Would translate: .amazonq\rules\skills.md
+Would translate: .ai\prompts\chat_model_chat_workflow.md
+Would translate: .ai\prompts\chat\chat_rules.md
+Would translate: .ai\prompts\chat\system_instruction.md
+Would translate: .ai\prompts\core\categories.md
+Would translate: .ai\prompts\media_organizer\prompt_research.md
+Would translate: .ai\prompts\media_organizer\prompt_tts.md
+Would translate: .ai\prompts\media_organizer\system_instruction.md
+Would translate: .ai\prompts\narrator\narrator_style.md
+Would translate: .ai\prompts\narrator\tts_rules.md
+Would translate: .ai\prompts\narrator\versions\v1_2026-08-07.md
+Would translate: .ai\prompts\narrator\versions\v2_2026-08-11.md
+Would translate: .ai\prompts\narrator\versions\v3_2026-08-18.md
+Would translate: .ai\instructions\knowledge\api_documentation.md
+Would translate: .ai\instructions\knowledge\chat.md
+Would translate: .ai\instructions\knowledge\INSTALLATION_GUIDE.md
+Would translate: .ai\instructions\knowledge\LAUNCHER_GUIDE.md
+Would translate: .ai\instructions\knowledge\legacy_project_knowledge.md
+Would translate: .ai\instructions\knowledge\media_organizer_workflow.md
+Would translate: .ai\instructions\knowledge\MODEL_SCRIPT_EXECUTION_GUIDE.md
+Would translate: .ai\instructions\knowledge\plugins_documentation.md
+Would translate: .ai\instructions\knowledge\project_overview.md
+Would translate: .ai\instructions\knowledge\scripts_tools.md
+Would translate: .ai\instructions\knowledge\UI_DOCUMENTATION_SUMMARY.md
+Would translate: .ai\instructions\knowledge\UI_INTERFACES.md
+Would translate: .ai\instructions\rules\CODE_RULES.md
+Would translate: .ai\instructions\rules\DOCS_RULES.md
+Would translate: .ai\instructions\knowledge\codex\chat_architecture.md
+Would translate: .ai\instructions\knowledge\codex\engineering-rules.md
+Would translate: .ai\instructions\knowledge\codex\js_versioning.md
+Would translate: .ai\instructions\knowledge\codex\media-organizer.md
+Would translate: .ai\instructions\knowledge\codex\media_organizer_tools.md
+Would translate: .ai\instructions\knowledge\codex\project.md
+Would translate: .ai\instructions\knowledge\codex\python_versioning.md
+Would translate: .agents\skills\db-inspector\SKILL.md
+Would translate: .agents\skills\skill-factory\SKILL.md
+Would translate: .agents\skills\smart-deletion-duplicates\SKILL.md
+Would translate: .agents\skills\storage-controller\SKILL.md
+Would translate: .agents\skills\storage-tool\SKILL.md
+Would translate: .agents\skills\tdd-doc-gen\SKILL.md
+Would translate: .agents\skills\torrent-controller\SKILL.md
+Would translate: .agents\skills\web-chat-cli\SKILL.md
+
+Would process: 234 files
+
+Proceed with translation? (yes/no): 
+[PROCESSING] Translating files...
+Translated: fix_headers_and_translate.py
+Translated: main.py
+Translated: translate_documentation.py
+Translated: .mcp\agy_search_mcp_server.py
+Translated: .mcp\auto_commits.py
+Translated: .mcp\config_helper.py
+Translated: .mcp\example_mcp_server.py
+Translated: .mcp\fastapi_mcp_server.py
+Translated: .mcp\gemini_cli_search_mcp_server.py
+Translated: .mcp\gemini_search_mcp_server.py
+Translated: .mcp\langchain_mcp_server.py
+Translated: .mcp\unicorn_mcp_server.py
+Translated: core\config.py
+Translated: core\google_services.py
+Translated: core\prompt_loader.py
+Translated: core\version_manager.py
+Translated: launchers\run.py
+Translated: launchers\run_foundry.py
+Translated: launchers\run_light_server.py
+Translated: launchers\run_unicorn.py
+Translated: tests\test_ai.py
+Translated: tests\test_core_rag.py
+Translated: tests\test_environment.py
+Translated: tests\test_fastapi.py
+Translated: tests\test_fastapi_router_keys.py
+Translated: tests\test_fastapi_router_logs.py
+Translated: tests\test_gemini_cli_chat.py
+Translated: tests\test_gemini_generative_ai.py
+Translated: tests\test_integration_api.py
+Translated: tests\test_launchers.py
+Translated: tests\test_logger.py
+Translated: tests\test_logger_enhanced.py
+Translated: tests\test_openai_hf_onnx_providers.py
+Translated: tests\test_qbittorrent_config.py
+Translated: tests\test_router_admin_users.py
+Translated: tests\test_router_agents.py
+Translated: tests\test_router_chat_test_model.py
+Translated: tests\test_save_file.py
+Translated: tests\test_skill_registry.py
+Translated: tests\TEST_TEMPLATE.py
+Translated: tests\test_tools_structure.py
+Translated: tests\test_tts.py
+Translated: tests\test_user_manager.py
+Translated: tests\test_utils_convertors_dict.py
+Translated: tests\test_utils_convertors_html.py
+Translated: tests\test_utils_convertors_json.py
+Translated: tests\test_utils_date_time.py
+Translated: tests\test_utils_file.py
+Translated: tests\test_utils_ftp.py
+Translated: tests\test_utils_jjson.py
+Translated: tests\test_utils_url.py
+Translated: tests\utils\test_file.py
+Translated: tests\utils\test_get_free_port.py
+Translated: tests\utils\test_header.py
+Translated: tests\utils\test_jjson.py
+Translated: scripts\cli\assist.py
+Translated: scripts\cli\config.py
+Translated: scripts\cli\installer.py
+Translated: scripts\cli\paths.py
+Translated: scripts\cli\utils.py
+Translated: scripts\dev\analyze_dependencies.py
+Translated: scripts\dev\assist_cli.py
+Translated: scripts\dev\bot_runner.py
+Translated: scripts\dev\generate_coverage_report.py
+Translated: scripts\dev\package_skill.py
+Translated: scripts\dev\run_tests.py
+Translated: scripts\dev\save_file.py
+Translated: scripts\dev\scan_headers.py
+Translated: scripts\dev\search_code.py
+Translated: scripts\dev\update_docs.py
+Translated: scripts\dev\update_scripts_documentation.py
+Translated: scripts\maintenance\compress_logs.py
+Translated: scripts\maintenance\rebuild_dev_rag.py
+Translated: core\ai\agy_chat.py
+Translated: core\ai\dev_rag.py
+Translated: core\ai\foundry_chat.py
+Translated: core\ai\gemini_cli_chat.py
+Translated: core\ai\hf_chat.py
+Translated: core\ai\langchain_agent.py
+Translated: core\ai\langchain_prompts.py
+Translated: core\ai\langchain_tools.py
+Translated: core\ai\mcp_client.py
+Translated: core\ai\model_manager.py
+Translated: core\ai\ollama_chat.py
+Translated: core\ai\onnx_chat.py
+Translated: core\ai\openai_compat_chat.py
+Translated: core\ai\unified_chat.py
+Translated: core\ai\voice_pipeline.py
+Translated: core\clients\foundry.py
+Translated: core\clients\ollama.py
+Translated: core\clients\tg_tts_handler.py
+Translated: core\fastapi\router_admin.py
+Translated: core\fastapi\router_agents.py
+Translated: core\fastapi\router_auth.py
+Translated: core\fastapi\router_chat.py
+Translated: core\fastapi\router_control.py
+Translated: core\fastapi\router_keys.py
+Translated: core\fastapi\router_logs.py
+Translated: core\fastapi\router_openai.py
+Translated: core\fastapi\router_tts.py
+Translated: core\fastapi\router_version.py
+Translated: core\fastapi\__init__.py
+Translated: core\logger\conftest.py
+Translated: core\logger\header.py
+Translated: core\logger\logger.py
+Translated: core\logger\log_analyzer.py
+Translated: core\logger\test_header.py
+Translated: core\logger\test_logger.py
+Translated: core\logger\test_log_analyzer.py
+Translated: core\rag\engine.py
+Translated: core\rag\models.py
+Translated: core\rag\rules_rag.py
+Translated: core\rag\user_rag.py
+Translated: core\rag\__init__.py
+Translated: core\skills\registry.py
+Translated: core\user_manager\user_profile.py
+Translated: core\user_manager\__init__.py
+Translated: core\utils\get_free_port.py
+Translated: core\utils\header.py
+Translated: core\utils\jjson.py
+Translated: core\utils\pdf.py
+Translated: core\utils\url.py
+Translated: core\utils\versioning.py
+Translated: core\utils\convertors\md.py
+Translated: core\utils\convertors\unicode.py
+Translated: core\ai\converter\gguf_to_onnx.py
+Translated: core\ai\gemini\chat_response_store.py
+Translated: core\ai\gemini\generative_ai.py
+Translated: core\ai\gemini\header.py
+Translated: core\ai\gemini\rag.py
+Translated: core\ai\gemini\secrets_loader.py
+Translated: core\ai\gemini\user_query_rag.py
+Translated: core\ai\gemini\__init__.py
+Translated: .gemini\skills\web-chat-cli\src\chat.py
+Translated: .gemini\skills\smart-deletion-duplicates\scripts\delete_media.py
+Translated: .gemini\skills\smart-deletion-duplicates\scripts\process_scheduled_deletions.py
+Translated: .gemini\skills\skill-factory\scripts\pack.py
+Translated: .gemini\skills\rag-search-manager\scripts\search_media.py
+Translated: .ai\tools\ai\package_skill.py
+Translated: .ai\tools\ai\rebuild_dev_rag.py
+Translated: .ai\tools\ai\rebuild_rag.py
+Translated: .ai\tools\ai\search_code.py
+Translated: .ai\tools\ai\update_docs.py
+Translated: .ai\tools\ai\validate_rag_files.py
+Translated: .ai\tools\setup\analyze_dependencies.py
+Translated: .ai\tools\setup\scan_headers.py
+Translated: .agents\skills\web-chat-cli\src\chat.py
+Translated: .agents\skills\smart-deletion-duplicates\scripts\delete_media.py
+Translated: .agents\skills\smart-deletion-duplicates\scripts\process_scheduled_deletions.py
+Translated: .agents\skills\skill-factory\scripts\pack.py
+Translated: .agents\skills\rag-search-manager\scripts\search_media.py
+Translated: CHANGES.md
+Translated: CONFIG.md
+Translated: CROSSPLATFORM_LOGGING_AND_UPDATE_GUIDE.md
+Translated: DOCUMENTATION_INDEX.md
+Translated: GEMINI.md
+Translated: IMPLEMENTATION_SUMMARY.md
+Translated: INSTALL_LINUX.md
+Translated: MIGRATION_TO_LINUX.md
+Translated: PORTING_SUMMARY.md
+Translated: PROJECT_COMPLETION_SUMMARY.md
+Translated: QUICK_START.md
+Translated: QUICK_START_VERSION_MANAGEMENT.md
+Translated: README.ru.md
+Translated: VERIFICATION_CHECKLIST.md
+Translated: .mcp\README.md
+Translated: docs\changelog.md
+Translated: systemd\README.md
+Translated: scripts\cli\INSTALLER_README.md
+Translated: scripts\cli\README.md
+Translated: docs\ru\ARCHITECTURE.md
+Translated: docs\ru\index.md
+Translated: docs\ru\ported.md
+Translated: docs\ru\code\cli-commands.md
+Translated: docs\ru\code\start-engine.md
+Translated: docs\ru\cook-book\ch01_philosophy.md
+Translated: docs\ru\cook-book\ch02_orchestration.md
+Translated: docs\ru\cook-book\ch03_local_inference.md
+Translated: docs\ru\cook-book\ch04_rag_architecture.md
+Translated: docs\ru\cook-book\ch05_optimization_finetuning.md
+Translated: docs\ru\cook-book\ch06_agents_and_mcp.md
+Translated: docs\ru\cook-book\ch07_skills_management.md
+Translated: docs\ru\cook-book\ch08_laboratory_practicum.md
+Translated: docs\ru\cook-book\index.md
+Translated: .gemini\skills\db-inspector\SKILL.md
+Translated: .gemini\skills\skill-factory\SKILL.md
+Translated: .gemini\skills\smart-deletion-duplicates\SKILL.md
+Translated: .gemini\skills\storage-controller\SKILL.md
+Translated: .gemini\skills\storage-tool\SKILL.md
+Translated: .gemini\skills\tdd-doc-gen\SKILL.md
+Translated: .gemini\skills\torrent-controller\SKILL.md
+Translated: .gemini\skills\web-chat-cli\SKILL.md
+Translated: .amazonq\rules\skills.md
+Translated: .ai\prompts\chat_model_chat_workflow.md
+Translated: .ai\prompts\chat\chat_rules.md
+Translated: .ai\prompts\chat\system_instruction.md
+Translated: .ai\prompts\core\categories.md
+Translated: .ai\prompts\media_organizer\prompt_research.md
+Translated: .ai\prompts\media_organizer\prompt_tts.md
+Translated: .ai\prompts\media_organizer\system_instruction.md
+Translated: .ai\prompts\narrator\narrator_style.md
+Translated: .ai\prompts\narrator\tts_rules.md
+Translated: .ai\prompts\narrator\versions\v1_2026-08-07.md
+Translated: .ai\prompts\narrator\versions\v2_2026-08-11.md
+Translated: .ai\prompts\narrator\versions\v3_2026-08-18.md
+Translated: .ai\instructions\knowledge\api_documentation.md
+Translated: .ai\instructions\knowledge\chat.md
+Translated: .ai\instructions\knowledge\INSTALLATION_GUIDE.md
+Translated: .ai\instructions\knowledge\LAUNCHER_GUIDE.md
+Translated: .ai\instructions\knowledge\legacy_project_knowledge.md
+Translated: .ai\instructions\knowledge\media_organizer_workflow.md
+Translated: .ai\instructions\knowledge\MODEL_SCRIPT_EXECUTION_GUIDE.md
+Translated: .ai\instructions\knowledge\plugins_documentation.md
+Translated: .ai\instructions\knowledge\project_overview.md
+Translated: .ai\instructions\knowledge\scripts_tools.md
+Translated: .ai\instructions\knowledge\UI_DOCUMENTATION_SUMMARY.md
+Translated: .ai\instructions\knowledge\UI_INTERFACES.md
+Translated: .ai\instructions\rules\CODE_RULES.md
+Translated: .ai\instructions\rules\DOCS_RULES.md
+Translated: .ai\instructions\knowledge\codex\chat_architecture.md
+Translated: .ai\instructions\knowledge\codex\engineering-rules.md
+Translated: .ai\instructions\knowledge\codex\js_versioning.md
+Translated: .ai\instructions\knowledge\codex\media-organizer.md
+Translated: .ai\instructions\knowledge\codex\media_organizer_tools.md
+Translated: .ai\instructions\knowledge\codex\project.md
+Translated: .ai\instructions\knowledge\codex\python_versioning.md
+Translated: .agents\skills\db-inspector\SKILL.md
+Translated: .agents\skills\skill-factory\SKILL.md
+Translated: .agents\skills\smart-deletion-duplicates\SKILL.md
+Translated: .agents\skills\storage-controller\SKILL.md
+Translated: .agents\skills\storage-tool\SKILL.md
+Translated: .agents\skills\tdd-doc-gen\SKILL.md
+Translated: .agents\skills\torrent-controller\SKILL.md
+Translated: .agents\skills\web-chat-cli\SKILL.md
+
+================================================================================
+SUMMARY
+================================================================================
+Translated: 234
+Skipped:    170
+Errors:     0

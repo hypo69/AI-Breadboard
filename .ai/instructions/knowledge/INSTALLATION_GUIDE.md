@@ -51,31 +51,31 @@ flowchart TD
     A[Запуск install.ps1] --> B[0. Выбор языка: RU / EN / ES / HE]
     B --> C[1. Снятие блокировки файлов Windows]
     C --> D[2. Поиск Python и создание изолированного venv]
-    D --> E[3. Обновление pip, setuptools, wheel]
+    D --> E[3. Update pip, setuptools, wheel]
     E --> F[4. Выбор профиля зависимостей: Full / Core / AI / Dev]
-    F --> G[5. Проверка и генерация SSL-сертификатов]
+    F --> G[5. Check и генерация SSL-сертификатов]
     G --> H[6. Регистрация глобальных команд assist в PATH и $PROFILE]
-    H --> I[7. Проверка модулей и сохранение настроек]
+    H --> I[7. Check модулей и сохранение настроек]
     I --> J[Готово к работе: assist start]
 ```
 
 * **[0] Язык мастера:** Поддерживает **Русский (RU)**, **English (EN)**, **Español (ES)**, **עברית (HE)** с автоматическим определением локали системы.
 * **[1/7] Снятие блокировки (Unblock-File):** Разблокирует загруженные скрипты PowerShell в Windows.
-* **[2/7] Виртуальное окружение:** Находит оптимальный Python (через `py` launcher, `python`, `python3`), исключает заглушки Windows Store и создает чистое окружение `venv`.
-* **[3/7] Обновление pip:** Обновляет базовые утилиты сборки (`pip`, `setuptools`, `wheel`).
+* **[2/7] Виртуальное окружение:** Находит оптимальный Python (через `py` launcher, `python`, `python3`), исключает заглушки Windows Store и creates чистое окружение `venv`.
+* **[3/7] Update pip:** Обновляет базовые утилиты сборки (`pip`, `setuptools`, `wheel`).
 * **[4/7] Профили зависимостей:** Позволяет выбрать профиль установки:
   1. *Полная установка (Core + AI + Utils)* — рекомендуется
   2. *Только базовый сервер (Core)*
   3. *Сервер + AI модули (Core + AI)*
   4. *Полная установка + Dev (Тесты и Документация)*
   5. *Пропустить установку*
-* **[5/7] SSL-сертификаты:** Проверяет наличие локальных сертификатов для безопасного HTTPS (`localhost+2.pem`) или запускает генератор `install_ssl_cert.ps1`.
-* **[6/7] Глобальная интеграция (assist):**
+* **[5/7] SSL-сертификаты:** Checks наличие локальных сертификатов для безопасного HTTPS (`localhost+2.pem`) или запускает генератор `install_ssl_cert.ps1`.
+* **[6/7] Глобальная Integration (assist):**
   * Генерирует `assist.ps1`, `assist.cmd` и bash-скрипт `assist`.
   * Размещает их в каталоге `%USERPROFILE%\.local\bin\`.
   * Добавляет пути в системную переменную `PATH`.
   * Регистрирует функцию `assist` в профилях PowerShell 7 и Windows PowerShell.
-* **[7/7] Финальная проверка:** Тестирует импорт ключевых модулей (`fastapi`, `uvicorn`, `dotenv`, `pydantic`, `cryptography`) и сохраняет выбранный язык в `config.json`.
+* **[7/7] Финальная check:** Тестирует импорт ключевых модулей (`fastapi`, `uvicorn`, `dotenv`, `pydantic`, `cryptography`) и saves выбранный язык в `config.json`.
 
 ---
 
@@ -140,7 +140,7 @@ TMDB_API_KEY=...
 ```
 
 ### 4.2. Несекретные настройки (`config.json`)
-Все параметры сервера, модели ИИ, плагины и режимы хранятся в `config.json`:
+Все Parameters сервера, модели ИИ, плагины и режимы хранятся в `config.json`:
 
 ```json
 {
@@ -179,8 +179,8 @@ TMDB_API_KEY=...
 | `assist start foundry` | Запуск локальной службы Microsoft AI Foundry |
 | `assist stop` | Остановка сервера и освобождение порта `3000` |
 | `assist restart` | Быстрый перезапуск сервера |
-| `assist status` | Проверка состояния процессов, открытых портов и статуса служб |
-| `assist providers` | Инспекция и список всех подключенных AI-провайдеров и моделей |
+| `assist status` | Check состояния процессов, открытых портов и статуса служб |
+| `assist providers` | Инспекция и list всех подключенных AI-провайдеров и моделей |
 | `assist logs [N]` | Просмотр последних $N$ строк системных логов (по умолчанию 40) |
 | `assist config show` | Просмотр текущей конфигурации `config.json` |
 | `assist config get <key>` | Получить значение параметра (например: `assist config get server.port`) |
@@ -193,16 +193,18 @@ TMDB_API_KEY=...
 
 Все лончеры расположены в корне проекта и могут вызываться напрямую:
 
-* **[`run.ps1`](file:///c:/Users/onela/AppData/Local/AI%20Breadboard/run.ps1)** — Главный оркестратор: проверка venv, зависимостей, освобождение порта, старт Foundry и запуск Unicorn.
-* **[`Run-Unicorn.ps1`](file:///c:/Users/onela/AppData/Local/AI%20Breadboard/Run-Unicorn.ps1)** — Запуск FastAPI сервера с автоматическим открытием браузера по готовности порта и записью в `logs/`.
-* **[`Run-LightServer.ps1`](file:///c:/Users/onela/AppData/Local/AI%20Breadboard/Run-LightServer.ps1)** — Облегченный режим (параметры `-mode 0.0.0.0|localhost` и `-port`).
-* **[`Run-Foundry.ps1`](file:///c:/Users/onela/AppData/Local/AI%20Breadboard/Run-Foundry.ps1)** — Управление локальной службой Microsoft AI Foundry (`-Action start|stop|status`).
+* **[`run.ps1`](../../../run.ps1)** — Главный оркестратор: check venv, зависимостей, освобождение порта, старт Foundry и запуск Unicorn.
+* **[`Run-Unicorn.ps1`](../../../launchers/Run-Unicorn.ps1)** — Запуск FastAPI сервера с автоматическим открытием браузера по готовности порта и записью в `logs/`.
+* **[`Run-LightServer.ps1`](../../../launchers/Run-LightServer.ps1)** — Облегченный режим (Parameters `-mode 0.0.0.0|localhost` и `-port`).
+* **[`Run-Foundry.ps1`](../../../launchers/Run-Foundry.ps1)** — Управление локальной службой Microsoft AI Foundry (`-Action start|stop|status`).
+
+Подробнее: [`LAUNCHER_GUIDE.md`](LAUNCHER_GUIDE.md)
 
 ---
 
 ## 7. Устранение неполадок (Troubleshooting)
 
-### 7.1. Ошибка выполнения скриптов PowerShell (`ExecutionPolicy`)
+### 7.1. Error выполнения скриптов PowerShell (`ExecutionPolicy`)
 Если при запуске скриптов PowerShell выводит `running scripts is disabled on this system`:
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
@@ -214,10 +216,10 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
 assist stop
 ```
 
-### 7.3. Предупреждение браузера о самоподписанном SSL сертификате
+### 7.3. Warning браузера о самоподписанном SSL сертификате
 Сертификаты генерируются для доменов `localhost`, `127.0.0.1` и локального сетевого IP. При первом входе в браузере нажмите **"Дополнительно" -> "Перейти на сайт localhost (небезопасно)"**, либо добавьте сертификат в доверенные корневые центры сертификации Windows.
 
-### 7.4. Проверка логов
+### 7.4. Check логов
 Все логи сохраняются в каталоге `logs/`:
 * `logs/fastapi.log` — запросы и маршрутизация FastAPI
 * `logs/info.log` — общие события системы

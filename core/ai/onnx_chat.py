@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Microsoft Olive / ONNX Runtime Client & Chat Wrapper
+# Process Name: Check наличия optimum и onnxruntime.
 # =============================================================================
-# Описание:
+# Description:
 #   Прямой запуск оптимизированных моделей ONNX с поддержкой DirectML / CPU / CUDA.
-#   Использует optimum.onnxruntime для инференса и токенизации без внешних сервисов.
 #
-# File: core/ai/onnx_chat.py
+# File: onnx_chat.py
 # Project: ai-breadboard
 # Package: core.ai
-# Module: ONNXChat
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -22,9 +20,8 @@ from core.logger.logger import logger
 
 _loaded_onnx_models: Dict[str, Dict[str, Any]] = {}
 
-
 def _check_onnx_runtime() -> bool:
-    """Проверка наличия optimum и onnxruntime."""
+    """Check наличия optimum и onnxruntime."""
     try:
         import onnxruntime  # noqa: F401
         from optimum.onnxruntime import ORTModelForCausalLM  # noqa: F401
@@ -32,7 +29,6 @@ def _check_onnx_runtime() -> bool:
         return True
     except ImportError:
         return False
-
 
 class ONNXClient:
     """Клиент локального инференса моделей ONNX."""
@@ -42,7 +38,7 @@ class ONNXClient:
         model_path: str,
         execution_provider: str = "DirectMLExecutionProvider",
     ) -> Dict[str, Any]:
-        """Загрузка ONNX модели в память с выбранным провайдером исполнения."""
+        """Loading ONNX модели в память с выбранным провайдером исполнения."""
         if not _check_onnx_runtime():
             return {
                 "success": False,
@@ -56,7 +52,7 @@ class ONNXClient:
             from optimum.onnxruntime import ORTModelForCausalLM
             from transformers import AutoTokenizer
 
-            logger.info(f"[ONNXClient] Загрузка ONNX модели из {model_path} с {execution_provider}")
+            logger.info(f"[ONNXClient] Loading ONNX модели из {model_path} с {execution_provider}")
 
             providers: List[str] = [execution_provider, "CPUExecutionProvider"]
             model = ORTModelForCausalLM.from_pretrained(
@@ -70,11 +66,11 @@ class ONNXClient:
                 "tokenizer": tokenizer,
                 "provider": execution_provider,
             }
-            logger.info(f"[ONNXClient] ONNX модель {model_path} успешно загружена")
+            logger.info(f"[ONNXClient] ONNX модель {model_path} successfully загружена")
             return {"success": True, "model_path": model_path, "provider": execution_provider}
 
         except Exception as e:
-            logger.error(f"[ONNXClient] Ошибка при загрузке ONNX модели {model_path}: {e}")
+            logger.error(f"[ONNXClient] Error при загрузке ONNX модели {model_path}: {e}")
             return {"success": False, "error": str(e)}
 
     def unload_model(self, model_path: str) -> Dict[str, Any]:
@@ -88,7 +84,7 @@ class ONNXClient:
             logger.info(f"[ONNXClient] ONNX модель {model_path} выгружена")
             return {"success": True, "model_path": model_path}
         except Exception as e:
-            logger.error(f"[ONNXClient] Ошибка выгрузки ONNX модели {model_path}: {e}")
+            logger.error(f"[ONNXClient] Error выгрузки ONNX модели {model_path}: {e}")
             return {"success": False, "error": str(e)}
 
     async def generate(
@@ -144,16 +140,14 @@ class ONNXClient:
             return {"success": True, "content": content, "model": model_path}
 
         except Exception as e:
-            logger.error(f"[ONNXClient] Ошибка инференса ONNX {model_path}: {e}")
+            logger.error(f"[ONNXClient] Error инференса ONNX {model_path}: {e}")
             return {"success": False, "error": str(e)}
 
     def list_loaded(self) -> List[Dict[str, Any]]:
-        """Список загруженных ONNX моделей."""
+        """List загруженных ONNX моделей."""
         return [{"id": k, "provider": v.get("provider", "")} for k, v in _loaded_onnx_models.items()]
 
-
 onnx_client = ONNXClient()
-
 
 class ONNXChatBase:
     """Обертка чата для ONNX моделей."""

@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: # ================================================
+# =============================================================================
+# Description:
+#   Тесты внутренних функций router_keys."""
+#
+# File: test_fastapi_router_keys.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Тесты модуля core/fastapi/router_keys.py
 """
@@ -9,7 +22,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch, Mock
 from fastapi.testclient import TestClient
-
 
 class TestRouterKeysHelpers:
     """Тесты внутренних функций router_keys."""
@@ -67,14 +79,13 @@ class TestRouterKeysHelpers:
         assert result == 0.0
 
     def test_now_ts_returns_float(self):
-        """Тест что _now_ts возвращает float."""
+        """Тест что _now_ts Returns float."""
         from core.fastapi.router_keys import _now_ts
         
         result = _now_ts()
         
         assert isinstance(result, float)
         assert result > 1700000000  # Reasonable timestamp for 2024
-
 
 class TestRouterKeysEndpoints:
     """Тесты API эндпоинтов."""
@@ -177,7 +188,6 @@ class TestRouterKeysEndpoints:
         assert entry.status == "active"
         assert entry.last_run is None
         assert entry.exhausted_at is None
-
 
 class TestRouterKeysLogic:
     """Тесты бизнес-логики."""

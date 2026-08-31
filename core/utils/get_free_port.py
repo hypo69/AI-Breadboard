@@ -1,20 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Определение свободного сетевого порта
+# Process Name: Check занятости порта на хосте.
 # =============================================================================
-# Описание:
+# Description:
 #   Поиск и выделение свободного TCP-порта в заданном диапазоне для запуска
-#   локальных сетевых сервисов и процессов мониторинга.
-#
-# Примеры:
-#   >>> port = get_free_port(host='localhost', port_range='3000-3005')
-#   >>> print(f'Свободный порт: {port}')
 #
 # File: get_free_port.py
-# Project: Наш интеллектуальный помощник
-# Package: Utils
-# Module: Network
-# Function: get_free_port
+# Project: ai-breadboard
+# Package: core.utils
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -25,7 +18,7 @@ from typing import List, Tuple, Union
 from core.logger import logger
 
 def _is_port_in_use(host: str, port: int) -> bool:
-    """Проверка занятости порта на хосте."""
+    """Check занятости порта на хосте."""
     target_host = "127.0.0.1" if host in ("localhost", "") else host
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
@@ -40,18 +33,18 @@ def _parse_port_range(port_range_str: str) -> Tuple[int, int]:
     try:
         parts = port_range_str.split('-')
         if len(parts) != 2 or not parts[0] or not parts[1]:
-            raise ValueError(f'Некорректный формат диапазона: {port_range_str}')
+            raise ValueError(f'Incorrect формат диапазона: {port_range_str}')
         
         min_port = int(parts[0])
         max_port = int(parts[1])
 
         if min_port >= max_port:
-            raise ValueError(f'Некорректный диапазон: {port_range_str}')
+            raise ValueError(f'Incorrect диапазон: {port_range_str}')
         return min_port, max_port
 
     except ValueError as e:
-        logger.error(f'Ошибка парсинга диапазона: {port_range_str}')
-        raise ValueError(f'Ошибка парсинга диапазона: {port_range_str}') from e
+        logger.error(f'Error парсинга диапазона: {port_range_str}')
+        raise ValueError(f'Error парсинга диапазона: {port_range_str}') from e
 
 def get_free_port(host: str, port_range: Union[str, List[str]] = '') -> int:
     """
@@ -61,14 +54,14 @@ def get_free_port(host: str, port_range: Union[str, List[str]] = '') -> int:
 
     Args:
         host (str): Адрес хоста для проверки доступности порта.
-        port_range (Union[str, List[str]]): Диапазон(ы) портов ("min-max" или список строк).
+        port_range (Union[str, List[str]]): Диапазон(ы) портов ("min-max" или list строк).
                Значение по умолчанию: '' (поиск первого доступного).
 
     Returns:
         int: Номер свободного порта.
 
     Exceptions:
-        ValueError: Ошибка, если свободный порт не найден или диапазон задан некорректно.
+        ValueError: Error, если свободный порт не найден или диапазон задан некорректно.
 
     Examples:
         >>> port = get_free_port(host='localhost', port_range='3000-3005')
@@ -95,7 +88,7 @@ def get_free_port(host: str, port_range: Union[str, List[str]] = '') -> int:
 
             raise ValueError(f'Свободный порт в диапазонах {port_range} не найден')
         else:
-            raise ValueError(f'Некорректный тип диапазона: {type(port_range)}')
+            raise ValueError(f'Incorrect тип диапазона: {type(port_range)}')
     else:
         # Поиск первого доступного порта начиная с 1024
         port = 1024

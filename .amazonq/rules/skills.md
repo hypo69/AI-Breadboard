@@ -7,22 +7,22 @@
 ## 🔄 Правило автосинхронизации навыков
 
 В начале КАЖДОГО диалога:
-1. Прочитать список директорий `.gemini/skills/`
+1. Прочитать list директорий `.gemini/skills/`
 2. Сравнить с навыками, перечисленными в этом файле (секции `## skill: *`)
 3. Если найден новый навык (есть папка в `.gemini/skills/`, но нет секции здесь) — прочитать его `SKILL.md` и добавить новую секцию в этот файл
 4. Сообщить пользователю: «Обнаружен новый навык `<name>`, добавлен в `.amazonq/rules/skills.md`»
 
-Текущий эталонный список навыков (обновляется автоматически):
+Текущий эталонный list навыков (обновляется автоматически):
 `db-inspector`, `file-saver`, `media-card-builder`, `media-data-collector`, `media-manager`, `rag-search-manager`, `skill-factory`, `smart-deletion-duplicates`, `storage-controller`, `storage-tool`, `tdd-doc-gen`, `torrent-controller`, `web-chat-cli`
 
 ---
 
 ## skill: db-inspector
-**Когда использовать:** анализ, проверка или модификация `media.db`.
+**Когда использовать:** анализ, check или модификация `media.db`.
 
 - Перед ЛЮБЫМ изменением `media.db` — создать резервную копию: `media.db.MMDD-HHMMSSS`
-- Проверка структуры: `python get_schema.py`
-- Проверка данных: `python check_db.py`
+- Check структуры: `python get_schema.py`
+- Check данных: `python check_db.py`
 - Поиск неполных записей: `python find_incomplete_records.py`
 - Инспекция RAG: `python inspect_user_rags.py`
 
@@ -92,7 +92,7 @@
 **Когда использовать:** создание и упаковка новых навыков.
 
 - Упаковка: `python .gemini/skills/skill-factory/scripts/pack.py <путь_к_навыку>`
-- Скрипт создаёт `dist/` внутри папки навыка
+- Скрипт creates `dist/` внутри папки навыка
 
 ---
 
@@ -104,7 +104,7 @@
 1. Подготовить CSV со списком путей в колонке `to_delete`
 2. `python scripts/delete_media.py --file <csv> --execute`
 
-Скрипт: удаляет файл с диска (`os.remove`), затем запись из БД (`DELETE FROM media WHERE path = ?`).
+Скрипт: deletes файл с диска (`os.remove`), затем запись из БД (`DELETE FROM media WHERE path = ?`).
 
 ---
 
@@ -121,7 +121,7 @@
 **Когда использовать:** аудит и мониторинг хранилища.
 
 - Аудит наличия файлов: `python audit_disk.py`
-- Обновление размеров в БД: `python update_media_sizes.py`
+- Update размеров в БД: `python update_media_sizes.py`
 - Статистика по дискам: `python view_storage.py`
 
 ---
@@ -149,7 +149,7 @@
 
 - Назначение ID/категорий: `python assign_torrents_ids.py`
 - Синхронизация путей: `python update_torrents_path.py`
-- Проверка целостности: `python update_torrent_state.py`
+- Check целостности: `python update_torrent_state.py`
 - Очистка метаданных: `python clear_torrents_meta.py`
 
 ---

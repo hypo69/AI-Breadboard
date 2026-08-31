@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: FastAPI WebSocket Роутер дистанционного управления плеером
+# Process Name: Менеджер WebSocket соединений для пульта и плеера.
 # =============================================================================
-# Описание:
+# Description:
 #   Управление WebSocket-соединениями между плеером (веб-интерфейс)
-#   и пультом (Telegram Mini App). Поддержка ретрансляции команд
-#   и обновления состояния воспроизведения в реальном времени.
 #
 # File: router_control.py
 # Project: ai-breadboard
-# Package: src.fastapi
+# Package: core.fastapi
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -21,7 +19,6 @@ from typing import Dict, List, Optional
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Request, HTTPException
 from core.logger import logger
 from core.fastapi.router_auth import verify_jwt_token
-
 
 class ControlConnectionManager:
     """Менеджер WebSocket соединений для пульта и плеера."""
@@ -35,7 +32,7 @@ class ControlConnectionManager:
         self.room_playlists: Dict[str, list] = {}
 
     async def connect(self, websocket: WebSocket, room_id: str, role: str):
-        """Подключение клиента с ролью 'player' или 'remote' в комнату."""
+        """Connection клиента с ролью 'player' или 'remote' в комнату."""
         await websocket.accept()
         if room_id not in self.rooms:
             self.rooms[room_id] = {"player": [], "remote": []}
@@ -46,7 +43,7 @@ class ControlConnectionManager:
         self.rooms[room_id][role].append(websocket)
         logger.info(f"WebSocket connected: room={room_id}, role={role}")
 
-        # Если подключается remote и у нас есть сохраненное состояние, сразу отправляем его
+        # Если подключается remote и у нас есть сохраненное state, сразу отправляем его
         if role == "remote":
             if room_id in self.room_states:
                 try:
@@ -63,7 +60,7 @@ class ControlConnectionManager:
                     logger.warning(f"Error sending playlist on connect to remote: {e}")
 
     def disconnect(self, websocket: WebSocket, room_id: str, role: str):
-        """Отключение клиента из комнаты."""
+        """Disconnection клиента из комнаты."""
         if room_id in self.rooms and role in self.rooms[room_id]:
             if websocket in self.rooms[room_id][role]:
                 self.rooms[room_id][role].remove(websocket)
@@ -92,10 +89,8 @@ class ControlConnectionManager:
         for ws in disconnected:
             self.disconnect(ws, room_id, target_role)
 
-
 manager = ControlConnectionManager()
 router = APIRouter(prefix="/api/control", tags=["control"])
-
 
 def get_room_id(token: Optional[str], room: Optional[str]) -> str:
     """Определение идентификатора комнаты на основе JWT токена или параметров."""
@@ -106,7 +101,6 @@ def get_room_id(token: Optional[str], room: Optional[str]) -> str:
         if token_data and token_data.email:
             return token_data.email.strip().lower()
     return "default"
-
 
 @router.websocket("/ws")
 async def websocket_control_endpoint(
@@ -134,10 +128,10 @@ async def websocket_control_endpoint(
                 continue
 
             if role == "remote":
-                # Пульт отправляет команды плееру
+                # Пульт sends команды плееру
                 await manager.broadcast_to_role(room_id, "player", data)
             elif role == "player":
-                # Плеер обновляет свой статус или плейлист для пульта
+                # Плеер обновляет свой status или плейлист для пульта
                 event_type = data.get("event")
                 if event_type == "status_update":
                     manager.room_states[room_id] = data
@@ -152,10 +146,9 @@ async def websocket_control_endpoint(
         logger.error(f"WebSocket error in room {room_id}: {e}")
         manager.disconnect(websocket, room_id, role)
 
-
 @router.get("/status")
 async def get_control_status(request: Request, token: Optional[str] = None, room: Optional[str] = None):
-    """Получить текущее состояние комнаты по HTTP."""
+    """Получить текущее state комнаты по HTTP."""
     cookie_token = request.cookies.get("auth_token")
     if cookie_token and not token:
         token = cookie_token
@@ -169,10 +162,9 @@ async def get_control_status(request: Request, token: Optional[str] = None, room
         "playlist_count": len(manager.room_playlists.get(room_id, []))
     }
 
-
 @router.get("/active_players")
 async def get_active_players(request: Request):
-    """Получить список комнат с активными плеерами."""
+    """Получить list комнат с активными плеерами."""
     token = request.cookies.get("auth_token")
     user_email = None
     if token:
@@ -188,11 +180,10 @@ async def get_active_players(request: Request):
     logger.info(f"active_players endpoint called: token={token}, user_email={user_email}, active_rooms={active}")
     return {"players": active, "user_email": user_email}
 
-
 @router.get("/rescan")
 async def rescan_storage(request: Request):
     """Принудительное пересканирование доступных хранилищ."""
-    # Проверка прав администратора
+    # Check прав администратора
     token = request.cookies.get("auth_token")
     if not token:
         raise HTTPException(status_code=403)
@@ -239,9 +230,8 @@ async def rescan_storage(request: Request):
             })
     return {"status": "success", "drives": drives, "details": drives_details}
 
-
 def init_router() -> APIRouter:
-    """Инициализация роутера управления.
+    """Initialization роутера управления.
     Returns:
         APIRouter: Настроенный роутер FastAPI.
     """

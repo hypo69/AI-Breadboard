@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: # ================================================
+# =============================================================================
+# Description:
+#   Тесты безопасных путей."""
+#
+# File: test_fastapi_router_logs.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Тесты модуля core/fastapi/router_logs.py
 """
@@ -8,7 +21,6 @@ import json
 from pathlib import Path
 from unittest.mock import patch, Mock
 from fastapi.testclient import TestClient
-
 
 class TestRouterLogsSafePaths:
     """Тесты безопасных путей."""
@@ -67,12 +79,11 @@ class TestRouterLogsSafePaths:
             with pytest.raises(HTTPException):
                 _safe_report_path("report.exe")
 
-
 class TestRouterLogsFileInfo:
     """Тесты функции _file_info."""
 
     def test_file_info_returns_dict(self):
-        """Тест что _file_info возвращает словарь."""
+        """Тест что _file_info Returns dictionary."""
         from core.fastapi.router_logs import _file_info
         import datetime
         
@@ -112,7 +123,6 @@ class TestRouterLogsFileInfo:
         # Check format is YYYY-MM-DD HH:MM:SS
         assert result['modified'].startswith("2024-01-")
 
-
 class TestRouterLogsEndpoints:
     """Тесты API эндпоинтов."""
 
@@ -130,7 +140,7 @@ class TestRouterLogsEndpoints:
         return log_dir, reports_dir
 
     def test_list_log_files_empty(self, tmp_path):
-        """Тест списка файлов при пустой директории."""
+        """Тест списка файлов при empty директории."""
         from core.fastapi.router_logs import init_router
         
         with patch('core.fastapi.router_logs.LOG_DIR', tmp_path), \
@@ -189,12 +199,11 @@ class TestRouterLogsEndpoints:
         assert '.txt' in _ALLOWED_EXTENSIONS
         assert '.exe' not in _ALLOWED_EXTENSIONS
 
-
 class TestRouterLogsStats:
     """Тесты статистики."""
 
     def test_log_stats_empty(self, tmp_path):
-        """Тест статистики при пустой директории."""
+        """Тест статистики при empty директории."""
         from core.fastapi.router_logs import init_router
         
         log_dir = tmp_path / 'logs'
@@ -249,7 +258,6 @@ class TestRouterLogsStats:
             assert data['report_count'] == 1
             assert data['total_size_bytes'] == 2048
             assert data['total_size_kb'] == 2.0
-
 
 class TestRouterLogsIntegration:
     """Интеграционные тесты."""

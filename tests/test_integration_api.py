@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Интеграционные тесты API endpoints
+# Process Name: Интеграционные тесты API endpoints
 # =============================================================================
-# Описание:
-#   Модуль содержит интеграционные тесты для всех API endpoint-ов приложения.
-#   Проверяет корректность обработки запросов, взаимодействие с плагинами и
-#   AI-моделью, а также работу промежуточного ПО (middleware). Обеспечивает
-#   покрытие основных сценариев использования API.
+# Description:
+#   Module содержит интеграционные тесты для всех API endpoint-ов приложения.
 #
-# File: tests/test_integration_api.py
+# File: test_integration_api.py
 # Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
+
 """
 Интеграционные тесты API endpoints
 """
@@ -21,7 +19,6 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
 from unittest.mock import Mock, AsyncMock, patch
-
 
 class TestChatAPI:
     """Интеграционные тесты /api/chat endpoints."""
@@ -54,7 +51,6 @@ class TestChatAPI:
                 )
                 assert response.status_code == 200
 
-
 class TestAuthAPI:
     """Интеграционные тесты /api/auth endpoints."""
 
@@ -74,7 +70,6 @@ class TestAuthAPI:
             data = response.json()
             assert 'models' in data
 
-
 class TestControlAPI:
     """Интеграционные тесты WebSocket control endpoints."""
 
@@ -90,7 +85,6 @@ class TestControlAPI:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get('/api/control/status')
             assert response.status_code == 200
-
 
 class TestTTSAPI:
     """Интеграционные тесты /api/tts endpoints."""
@@ -110,7 +104,6 @@ class TestTTSAPI:
                 json={'text': 'Привет мир', 'voice': 'ru-RU-DmitryNeural', 'system': 'edge-tts'}
             )
             assert response.status_code in [200, 404, 405, 500]
-
 
 class TestAdminAPI:
     """Интеграционные тесты админских endpoints."""

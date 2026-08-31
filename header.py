@@ -1,6 +1,16 @@
-## \file header.py
 # -*- coding: utf-8 -*-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: .. module:: .header
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: header.py
+# Project: ai-breadboard
+# Package: root
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module:: .header
@@ -42,7 +52,6 @@ def set_project_root(marker_files=('__root__','.git')) -> Path:
     if str(__root__) not in sys.path:
         sys.path.insert(0, str(__root__))
     return __root__
-
 
 # Get the root directory of the project
 __root__: Path = set_project_root()

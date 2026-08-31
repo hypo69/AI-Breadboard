@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Интеграция Antigravity SDK
+# Process Name: Обеспечение соединения и маршрутизации запросов к 
 # =============================================================================
-# Описание:
+# Description:
 #   Адаптер для взаимодействия с моделями Antigravity SDK (agy-flash, agy-pro).
-#   Поддерживает потоковую генерацию (chat_stream) и одиночные запросы (ask).
 #
 # File: agy_chat.py
 # Project: ai-breadboard
-# Package: src.ai
-# Class: AgyChatBase
+# Package: core.ai
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -20,7 +18,6 @@ from typing import Optional, List, Dict, AsyncGenerator
 
 from core.logger.logger import logger
 from core.secrets.api_key_state import load_api_keys
-
 
 class AgyChatBase:
     """Обеспечение соединения и маршрутизации запросов к моделям Antigravity SDK.
@@ -37,7 +34,7 @@ class AgyChatBase:
 
     @classmethod
     def get_available_models(cls, force_refresh: bool = False) -> List[str]:
-        """Возвращает список доступных моделей для AGY через единый менеджер моделей."""
+        """Returns list доступных моделей для AGY через единый менеджер моделей."""
         from core.ai.model_manager import get_available_models as _mgr_get_available_models
         return _mgr_get_available_models(provider="agy", force_refresh=force_refresh)
 
@@ -56,7 +53,7 @@ class AgyChatBase:
         return actual
 
     def __init__(self, model_id: str, system_prompt: str = "") -> None:
-        """Инициализация объекта подключения к AGY SDK."""
+        """Initialization объекта подключения к AGY SDK."""
         self._model_id: str = self.normalize_model_id(model_id)
         self.system_prompt: str = system_prompt
         self.history: List[Dict[str, str]] = []
@@ -76,22 +73,22 @@ class AgyChatBase:
 
     @property
     def model_id(self) -> str:
-        """Возвращает нормализованный идентификатор модели."""
+        """Returns нормализованный идентификатор модели."""
         return self._model_id
 
     @model_id.setter
     def model_id(self, val: str) -> None:
-        """Устанавливает и нормализует идентификатор модели."""
+        """Sets и нормализует идентификатор модели."""
         self._model_id = self.normalize_model_id(val)
 
     @property
     def system_instruction(self) -> str:
-        """Возвращает текущую системную инструкцию."""
+        """Returns текущую системную инструкцию."""
         return self.system_prompt
 
     @system_instruction.setter
     def system_instruction(self, val: str) -> None:
-        """Устанавливает системную инструкцию."""
+        """Sets системную инструкцию."""
         self.system_prompt = val
 
     def _clean_output(self, text: str) -> str:
@@ -150,7 +147,7 @@ class AgyChatBase:
                 from core.ai.model_manager import add_unsupported_model
                 add_unsupported_model('agy', self.model_id, reason=err_str)
                 add_unsupported_model('gemini', self.model_id, reason=err_str)
-            logger.error("Ошибка в AgyChatBase.ask", e, exc_info=True)
+            logger.error("Error в AgyChatBase.ask", e, exc_info=True)
             return ""
 
     async def chat(
@@ -210,7 +207,7 @@ class AgyChatBase:
 
         sys_prompt = system_instruction or self.system_prompt or ""
         
-        # Интеграция истории в контекст
+        # Integration истории в контекст
         context = ""
         if history:
             for msg in history:
@@ -243,6 +240,6 @@ class AgyChatBase:
                 from core.ai.model_manager import add_unsupported_model
                 add_unsupported_model('agy', self.model_id, reason=err_str)
                 add_unsupported_model('gemini', self.model_id, reason=err_str)
-            err_msg = f"Ошибка Antigravity SDK: {err_str}"
+            err_msg = f"Error Antigravity SDK: {err_str}"
             logger.error(err_msg, e, exc_info=True)
             yield err_msg

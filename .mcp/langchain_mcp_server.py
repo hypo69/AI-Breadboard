@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: LangChain Breadboard MCP Server
+# Process Name: Выполнить автономный поиск и решение задачи через 
 # =============================================================================
-# Описание:
+# Description:
 #   MCP-сервер на базе FastMCP, предоставляющий доступ к ReAct-агенту AI Breadboard
-#   и отдельным инструментам LangChain (веб-поиск, RAG, вычисления Python).
 #
 # File: langchain_mcp_server.py
-# Project: aibreadboard
-# Package: .mcp
+# Project: ai-breadboard
+# Package: root
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -29,12 +28,11 @@ from core.ai.langchain_tools import (
     file_read,
 )
 
-# Инициализация FastMCP сервера
+# Initialization FastMCP сервера
 mcp = FastMCP("LangChain-Breadboard-Agent")
 
 # Путь к конфигурации
 _CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"
-
 
 @mcp.tool()
 async def agent_query(query: str) -> str:
@@ -48,9 +46,8 @@ async def agent_query(query: str) -> str:
         result = await agent.search(query)
         return json.dumps(result, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.error(f"[langchain_mcp_server] Ошибка agent_query: {e}")
+        logger.error(f"[langchain_mcp_server] Error agent_query: {e}")
         return json.dumps({"action": "error", "message": str(e)}, ensure_ascii=False)
-
 
 @mcp.tool()
 async def agent_web_search(query: str) -> str:
@@ -62,9 +59,8 @@ async def agent_web_search(query: str) -> str:
     try:
         return await web_search.ainvoke(query)
     except Exception as e:
-        logger.error(f"[langchain_mcp_server] Ошибка agent_web_search: {e}")
+        logger.error(f"[langchain_mcp_server] Error agent_web_search: {e}")
         return json.dumps({"error": str(e)}, ensure_ascii=False)
-
 
 @mcp.tool()
 async def agent_rag_search(query: str, top_k: int = 5) -> str:
@@ -77,9 +73,8 @@ async def agent_rag_search(query: str, top_k: int = 5) -> str:
     try:
         return await rag_search.ainvoke({"query": query, "top_k": top_k})
     except Exception as e:
-        logger.error(f"[langchain_mcp_server] Ошибка agent_rag_search: {e}")
+        logger.error(f"[langchain_mcp_server] Error agent_rag_search: {e}")
         return json.dumps([], ensure_ascii=False)
-
 
 @mcp.tool()
 def agent_python_eval(code: str) -> str:
@@ -91,9 +86,8 @@ def agent_python_eval(code: str) -> str:
     try:
         return python_eval.invoke(code)
     except Exception as e:
-        logger.error(f"[langchain_mcp_server] Ошибка agent_python_eval: {e}")
-        return f"Ошибка: {e}"
-
+        logger.error(f"[langchain_mcp_server] Error agent_python_eval: {e}")
+        return f"Error: {e}"
 
 if __name__ == "__main__":
     logger.info("[langchain_mcp_server] Запуск LangChain Breadboard FastMCP сервера...")

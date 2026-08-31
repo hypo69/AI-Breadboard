@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
-
-"""
-.. module:: src.utils
-    :platform: Windows, Unix
-    :synopsis: Image Processing Utilities
-
-This module provides asynchronous functions for downloading, saving, and manipulating images.
-It includes functionalities such as saving images from URLs, saving image data to files,
-retrieving image data, finding random images within directories, adding watermarks, resizing,
-and converting image formats.
-"""
+# =============================================================================
+# Process Name: Image processing utilities for asynchronous file operations
+# =============================================================================
+# Description:
+#   Provides asynchronous functions for downloading, saving, and manipulating images.
+#   Supports operations such as URL image downloads, image file saving, random image retrieval,
+#   watermark addition, resizing, and format conversion using PIL and aiohttp libraries.
+#
+# File: image.py
+# Project: ai-breadboard
+# Package: core.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 import aiohttp
 import aiofiles
@@ -23,15 +26,13 @@ from PIL import Image, ImageDraw, ImageFont
 
 from core.logger.logger import logger
 
-
 class ImageError(Exception):
     """Custom exception for image-related errors."""
     pass
 
-
 async def save_image_from_url(image_url: str, filename: Union[str, Path]) -> Optional[str]:
     """
-    Downloads an image from a URL and saves it locally asynchronously.
+    Asynchronous download of image from URL and save to local file.
 
     Args:
         image_url (str): The URL to download the image from.
@@ -40,7 +41,7 @@ async def save_image_from_url(image_url: str, filename: Union[str, Path]) -> Opt
     Returns:
         Optional[str]: The path to the saved file, or None if the operation failed.
 
-    Raises:
+    Exceptions:
         ImageError: If the image download or save operation fails.
     """
     try:
@@ -54,10 +55,9 @@ async def save_image_from_url(image_url: str, filename: Union[str, Path]) -> Opt
 
     return await save_image(image_data, filename)
 
-
 async def save_image(image_data: bytes, file_name: Union[str, Path], format: str = 'PNG') -> Optional[str]:
     """
-    Saves image data to a file in the specified format asynchronously.
+    Asynchronous saving of image data to file in specified format.
 
     Args:
         image_data (bytes): The binary image data.
@@ -67,13 +67,13 @@ async def save_image(image_data: bytes, file_name: Union[str, Path], format: str
     Returns:
         Optional[str]: The path to the saved file, or None if the operation failed.
 
-    Raises:
+    Exceptions:
         ImageError: If the file cannot be created, saved, or if the saved file is empty.
     """
     file_path = Path(file_name)
 
     try:
-        file_path.parent.mkdir(parents=True, exist_ok=True)  # Create parent directories if they don't exist
+        file_path.parent.mkdir(parents=True, exist_ok=True)  # Creation of parent directories if they don't exist
         async with aiofiles.open(file_path, "wb") as file:
             await file.write(image_data)
 
@@ -94,7 +94,6 @@ async def save_image(image_data: bytes, file_name: Union[str, Path], format: str
         logger.critical(f"Failed to save file {file_path}", exc_info=True)
         raise ImageError(f"Failed to save file {file_path}") from ex
 
-
 def get_image_bytes(image_path: Path, raw: bool = True) -> Optional[Union[BytesIO, bytes]]:
     """
     Reads an image using Pillow and returns its bytes in JPEG format.
@@ -114,7 +113,6 @@ def get_image_bytes(image_path: Path, raw: bool = True) -> Optional[Union[BytesI
     except Exception as ex:
         logger.error("Error reading image with Pillow:", exc_info=True)
         return None
-
 
 def get_raw_image_data(file_name: Union[str, Path]) -> Optional[bytes]:
     """
@@ -138,7 +136,6 @@ def get_raw_image_data(file_name: Union[str, Path]) -> Optional[bytes]:
         logger.error(f"Error reading file {file_path}", exc_info=True)
         return None
 
-
 def random_image(root_path: Union[str, Path]) -> Optional[str]:
     """
     Recursively searches for a random image in the specified directory.
@@ -159,7 +156,6 @@ def random_image(root_path: Union[str, Path]) -> Optional[str]:
         return None
 
     return str(random.choice(image_files))
-
 
 def add_text_watermark(image_path: Union[str, Path], watermark_text: str, output_path: Optional[Union[str, Path]] = None) -> Optional[str]:
     """
@@ -207,7 +203,6 @@ def add_text_watermark(image_path: Union[str, Path], watermark_text: str, output
     except Exception as ex:
         logger.error(f"Failed to add watermark to {image_path}", exc_info=True)
         return None
-
 
 def add_image_watermark(input_image_path: Path, watermark_image_path: Path, output_image_path: Optional[Path] = None) -> Optional[Path]:
     """
@@ -266,7 +261,6 @@ def add_image_watermark(input_image_path: Path, watermark_image_path: Path, outp
         logger.error(f"Failed to add watermark to {input_image_path}: {ex}", exc_info=True)
         return None
 
-
 def resize_image(image_path: Union[str, Path], size: Tuple[int, int], output_path: Optional[Union[str, Path]] = None) -> Optional[str]:
     """
     Resizes an image to the specified dimensions.
@@ -293,7 +287,6 @@ def resize_image(image_path: Union[str, Path], size: Tuple[int, int], output_pat
         logger.error(f"Failed to resize image {image_path}", exc_info=True)
         return None
 
-
 def convert_image(image_path: Union[str, Path], format: str, output_path: Optional[Union[str, Path]] = None) -> Optional[str]:
     """
     Converts an image to the specified format.
@@ -318,7 +311,6 @@ def convert_image(image_path: Union[str, Path], format: str, output_path: Option
         logger.error(f"Failed to convert image {image_path}", exc_info=True)
         return None
 
-
 def process_images_with_watermark(folder_path: Path, watermark_path: Path) -> None:
     """
     Processes all images in the specified folder by adding a watermark and saving them in an "output" directory.
@@ -340,7 +332,6 @@ def process_images_with_watermark(folder_path: Path, watermark_path: Path) -> No
         if file_path.is_file() and file_path.suffix.lower() in ['.png', '.jpg', '.jpeg']:
             output_image_path = output_dir / file_path.name
             add_image_watermark(file_path, watermark_path, output_image_path)
-
 
 # Example usage
 if __name__ == "__main__":

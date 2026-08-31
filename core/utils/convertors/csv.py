@@ -1,7 +1,16 @@
-## \file /src/utils/convertors/csv.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: .. module:: src.utils.convertors.csv
+# =============================================================================
+# Description:
+#   Functions:
+#
+# File: csv.py
+# Project: ai-breadboard
+# Package: core.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module:: src.utils.convertors.csv 
@@ -9,7 +18,6 @@
 	:synopsis: CSV and JSON conversion utilities
 
 """
-
 
 """ Functions:
     - `csv2dict`: Convert CSV data to a dictionary.

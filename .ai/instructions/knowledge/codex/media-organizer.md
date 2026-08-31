@@ -6,7 +6,7 @@
 
 1. `media_scanner.py` обходит медиафайлы и запрашивает TMDB.
 2. `genre_classifier.py` обогащает и категоризирует записи через TMDB/Gemini.
-3. `database.py` сохраняет записи в SQLite.
+3. `database.py` saves записи в SQLite.
 4. `report_generator.py` формирует JSON/Markdown-отчёты.
 5. `media_rag.py` строит RAG-индекс, а `media_rag_functions.py` предоставляет инструменты Function Calling.
 6. `media_auditor.py`, `media_tracker.py` и `media_rebuild.py` обслуживают аудит, торрент-связи и восстановление.
@@ -15,12 +15,12 @@
 
 - основная БД: `plugins/media_organizer/data/media.db`;
 - RAG БД: `plugins/media_organizer/data/media_rag.db`;
-- конфигурация: `plugins/media_organizer/config/`;
+- Configuration: `plugins/media_organizer/config/`;
 - отчёты: `plugins/media_organizer/reports/`.
 
 ## SQLite
 
-`MediaDatabase` в `plugins/media_organizer/core/database.py` создаёт таблицы `media` и `duplicates`, а также триггер `trg_check_duplicates`. Уникальность `media` обеспечивается по `path`.
+`MediaDatabase` в `plugins/media_organizer/core/database.py` creates таблицы `media` и `duplicates`, а также триггер `trg_check_duplicates`. Уникальность `media` обеспечивается по `path`.
 
 Ключевые группы полей `media`:
 
@@ -31,7 +31,7 @@
 
 Несколько значений хранятся сериализованными JSON-строками: например `genres`, `directors`, `cast`, `facts`, `similar`, `rating`.
 
-Основные методы: поиск по пути/торренту, `save_media`, получение записи, экспорт всей БД или диска, поиск/консолидация дубликатов, сводка по сериалам и назначение номеров. `normalize_disk_name()` удаляет числовой префикс до первой точки для сопоставления имён дисков.
+Основные методы: поиск по пути/торренту, `save_media`, получение записи, экспорт всей БД или диска, поиск/консолидация дубликатов, сводка по сериалам и назначение номеров. `normalize_disk_name()` deletes числовой префикс до первой точки для сопоставления имён дисков.
 
 ## RAG и Gemini tools
 
@@ -39,7 +39,7 @@
 
 Внутренние промпты классификатора сейчас частично заданы строковыми константами `_PROMPT_*` в `plugins/media_organizer/core/__init__.py`; файл `plugins/media_organizer/config/instruction.md` используется при построении `SYSTEM_INSTRUCTION`. Требование из плана Kiro — вынести **все** промпты во внешние файлы и перечитывать их на каждом запросе — ещё не реализовано.
 
-## Интеграция с плеером
+## Integration с плеером
 
 Для будущей разметки ответа `<film>Название</film>` уже есть серверная точка `POST /api/media/by-title`, которая находит путь по русскому, оригинальному или основному названию. Не хватает: инструкции модели о тегах, безопасного разбора нескольких тегов в UI и запуска найденного файла в существующем `playFile()`.
 

@@ -1,34 +1,14 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Universal CLI for Project Tools Management
+# Process Name: Execution of an external Python script as a subpro
 # =============================================================================
 # Description:
 #   Single entry point for all utility scripts and plugins:
-#   - Knowledge and RAG management (knowledge, rag) -> plugins.rag.tools
-#   - Documentation and development (docs, dev) -> scripts.dev
-#   - Skills registry for AI agents (.agents/skills, .gemini/skills)
-#   - Assistant process control via assist CLI
 #
-# Usage:
-#   py manage_tools.py <command> [<subcommand>] [<args>]
-#
-# Commands:
-#   rag         - RAG index operations (rebuild, status, validate, reindex)
-#   knowledge   - Knowledge base management (extract, add, init)
-#   docs        - Documentation updates (update)
-#   skills      - Skills catalog for AI agents (list, search, show, export)
-#   assist      - Assistant process management (start, stop, status, etc.)
-#
-# Examples:
-#   py manage_tools.py rag rebuild                      # Full rebuild of RAG index
-#   py manage_tools.py rag rebuild --force --verbose    # With extra arguments
-#   py manage_tools.py rag status                       # Check index status
-#   py manage_tools.py knowledge extract --file chat.md # Extract knowledge
-#   py manage_tools.py skills list                      # List all skills
-#   py manage_tools.py skills search media              # Search skills
-#   py manage_tools.py assist start                     # Start assistant
-#
+# File: manage_tools.py
+# Project: ai-breadboard
+# Package: root
+# Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
 
@@ -64,7 +44,6 @@ if hasattr(sys.stderr, 'reconfigure'):
 # This allows secure storage of API keys and sensitive configuration.
 
 load_dotenv(__root__ / '.env')
-
 
 def _run_script(script_rel_path: str, extra_args: list[str] = []) -> int:
     """Execution of an external Python script as a subprocess.
@@ -103,7 +82,6 @@ def _run_script(script_rel_path: str, extra_args: list[str] = []) -> int:
     result = subprocess.run(cmd, cwd=str(__root__))
     return result.returncode
 
-
 def run_knowledge_command(args: argparse.Namespace) -> int:
     """Delegation of knowledge base management commands to the dedicated tool.
 
@@ -132,7 +110,6 @@ def run_knowledge_command(args: argparse.Namespace) -> int:
 
     print(f"Unknown knowledge subcommand: {sub}")
     return 1
-
 
 def run_rag_command(args: argparse.Namespace) -> int:
     """Management of Retrieval-Augmented Generation (RAG) index operations.
@@ -185,7 +162,6 @@ def run_rag_command(args: argparse.Namespace) -> int:
     print(f"Unknown rag subcommand: {sub}")
     return 1
 
-
 def run_docs_command(args: argparse.Namespace) -> int:
     """Delegation of documentation management operations to external scripts.
 
@@ -211,7 +187,6 @@ def run_docs_command(args: argparse.Namespace) -> int:
 
     print(f"Unknown docs subcommand: {sub}")
     return 1
-
 
 def run_skills_command(args: argparse.Namespace) -> int:
     """Unified skills catalog management for AI agents.
@@ -266,7 +241,6 @@ def run_skills_command(args: argparse.Namespace) -> int:
 
     print(f"Unknown skills subcommand: {sub}")
     return 1
-
 
 def main() -> int:
     """Primary entry point for the universal CLI management system.
@@ -406,7 +380,6 @@ Examples:
         return 1
 
     return handler(args)
-
 
 if __name__ == '__main__':
     sys.exit(main())

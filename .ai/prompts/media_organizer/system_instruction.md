@@ -1,4 +1,4 @@
-# Системная инструкция: AI-модуль медиатеки
+# Системная инструкция: AI-Module медиатеки
 
 > Этот файл — точка сборки. Подробные правила вынесены в отдельные модули.
 
@@ -50,7 +50,7 @@
 ```bash
 py manage_tools.py torrents assign   # сопоставление категорий торрентов
 py manage_tools.py torrents ids      # привязка торрентов к медиа
-py manage_tools.py db sizes          # обновление размеров файлов
+py manage_tools.py db sizes          # update размеров файлов
 ```
 
 Полный справочник: `knowledge/scripts_tools.md`

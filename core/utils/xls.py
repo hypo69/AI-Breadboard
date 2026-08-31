@@ -1,7 +1,16 @@
-## \file /src/utils/xls.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: .. module:: src.utils
+# =============================================================================
+# Description:
+#   This module provides functions to convert Excel files to JSON format, handle multiple sheets, and sa
+#
+# File: xls.py
+# Project: ai-breadboard
+# Package: core.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module:: src.utils 
@@ -9,7 +18,6 @@
 	:synopsis: Converter for Excel (`xls`) to JSON and JSON to Excel (`xls`)
 
 """
-
 
 """ This module provides functions to convert Excel files to JSON format, handle multiple sheets, and save JSON data back to Excel files.
 
@@ -41,7 +49,6 @@ import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
 
 def read_xls_as_dict(
     xls_file: str,
@@ -78,7 +85,6 @@ def read_xls_as_dict(
                 logging.error(f"Error processing sheet '{sheet_name}': {e}")
                 return False
 
-
         if json_file:
             with open(json_file, 'w', encoding='utf-8') as f:
                 json.dump(data_dict, f, ensure_ascii=False, indent=4)
@@ -92,7 +98,6 @@ def read_xls_as_dict(
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         return False
-
 
 def save_xls_file(data: Dict[str, List[Dict]], file_path: str) -> bool:
     """Saves JSON data to an Excel file. Handles errors gracefully."""

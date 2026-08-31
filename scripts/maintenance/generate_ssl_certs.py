@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Local SSL Certificate & Root CA Generator
+# Process Name: Generate Root CA and server leaf certificate for l
 # =============================================================================
 # Description:
 #   Generates a dedicated local Root CA and an end-entity SSL server certificate
-#   with full ExtendedKeyUsage (SERVER_AUTH) and SAN for localhost and local IPs.
 #
 # File: generate_ssl_certs.py
 # Project: ai-breadboard
@@ -27,7 +26,6 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
-
 
 def generate_certificates(certs_dir: Path | None = None, extra_ips: list[str] | None = None) -> tuple[Path, Path, Path]:
     """Generate Root CA and server leaf certificate for localhost.
@@ -158,7 +156,6 @@ def generate_certificates(certs_dir: Path | None = None, extra_ips: list[str] | 
             pass
 
     return cert_path, key_path, ca_cert_path
-
 
 if __name__ == '__main__':
     extra = sys.argv[1:]

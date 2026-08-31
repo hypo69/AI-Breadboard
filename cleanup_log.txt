@@ -1,0 +1,25 @@
+C:\Users\onela\AppData\Local\AI-Breadboard\cleanup_duplicate_headers.py:54: SyntaxWarning: "\*" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\*"? A raw string is also an option.
+  if line.startswith('# -\*- coding') and skip_next_encoding:
+C:\Users\onela\AppData\Local\AI-Breadboard\cleanup_duplicate_headers.py:57: SyntaxWarning: "\*" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\*"? A raw string is also an option.
+  if line.startswith('# -\*- coding'):
+C:\Users\onela\AppData\Local\AI-Breadboard\cleanup_duplicate_headers.py:105: SyntaxWarning: "\*" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\*"? A raw string is also an option.
+  if '# -\*- coding' not in content:
+================================================================================
+CLEANUP: Duplicate Headers Fixer
+================================================================================
+
+[DRY RUN] Scanning for duplicate headers...
+Cleaned duplicate headers: cleanup_duplicate_headers.py
+
+Would fix: 1 files
+
+Proceed with cleanup? (yes/no): 
+[PROCESSING] Fixing duplicate headers...
+Cleaned duplicate headers: cleanup_duplicate_headers.py
+
+================================================================================
+SUMMARY
+================================================================================
+Fixed:   1
+Skipped: 202
+Errors:  0

@@ -1,21 +1,21 @@
 <#
 .SYNOPSIS
-    Запускает FastAPI-сервер через uvicorn (Unicorn) для проекта ai-breadboard.
+    Launch FastAPI server via uvicorn (Unicorn) for ai-breadboard project.
 
 .DESCRIPTION
-    Активирует виртуальное окружение, загружает параметры из config.json и .env,
-    освобождает порт, применяет SSL при необходимости и запускает
-    FastAPI-сервер в текущем окне PowerShell.
+    Activates virtual environment, loads parameters from config.json and .env,
+    frees port, applies SSL if needed and runs FastAPI server in current
+    PowerShell window.
 
 .PARAMETER HostAddress
-    IP-адрес привязки (например: 0.0.0.0 или 127.0.0.1).
-    Алиасы: -Host, -Address, -IP, -Host_.
+    IP address for binding (e.g.: 0.0.0.0 or 127.0.0.1).
+    Aliases: -Host, -Address, -IP, -Host_.
 
 .PARAMETER Port
-    TCP-порт сервера (например: 8000).
+    TCP port for server (e.g.: 8000).
 
 .PARAMETER Help
-    Отображение справки по использованию скрипта (-Help, -h, --help).
+    Display usage help for script (-Help, -h, --help).
 
 .EXAMPLE
     .\Run-Unicorn.ps1
@@ -38,14 +38,14 @@ param (
 if ($Help) {
     Write-Host ""
     Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-    Write-Host "║           Run-Unicorn.ps1 — СПРАВКА И ПАРАМЕТРЫ               ║" -ForegroundColor Cyan
+    Write-Host "║           Run-Unicorn.ps1 — HELP AND PARAMETERS               ║" -ForegroundColor Cyan
     Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "НАЗНАЧЕНИЕ:" -ForegroundColor Yellow
-    Write-Host "  Запуск FastAPI-сервера через uvicorn."
+    Write-Host "PURPOSE:" -ForegroundColor Yellow
+    Write-Host "  Launch FastAPI server via uvicorn."
     Write-Host ""
-    Write-Host "СИНТАКСИС:" -ForegroundColor Yellow
-    Write-Host "  .\Run-Unicorn.ps1 [-Host <0.0.0.0|127.0.0.1>] [-Port <порт>]"
+    Write-Host "SYNTAX:" -ForegroundColor Yellow
+    Write-Host "  .\Run-Unicorn.ps1 [-Host <0.0.0.0|127.0.0.1>] [-Port <port>]"
     Write-Host "  .\Run-Unicorn.ps1 --help"
     Write-Host ""
     exit 0
@@ -81,27 +81,27 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 Write-Host ""
 Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║              ЗАПУСК FastAPI СЕРВЕРА                           ║" -ForegroundColor Cyan
+Write-Host "║              LAUNCHING FastAPI SERVER                         ║" -ForegroundColor Cyan
 Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
 
 # ============================================
-# АКТИВАЦИЯ ВИРТУАЛЬНОГО ОКРУЖЕНИЯ
+# ACTIVATING VIRTUAL ENVIRONMENT
 # ============================================
-Write-Host "[1/4] Проверка виртуального окружения..." -ForegroundColor Cyan
+Write-Host "[1/4] Checking virtual environment..." -ForegroundColor Cyan
 if (Test-Path $venvActivate) {
     . $venvActivate
-    Write-Host "    [OK] venv активирован: $venvPython" -ForegroundColor Green
+    Write-Host "    [OK] venv activated: $venvPython" -ForegroundColor Green
 } else {
     $venvPython = (Get-Command python -ErrorAction Stop).Source
-    Write-Host "    [WARN] venv не найден, используется: $venvPython" -ForegroundColor Yellow
+    Write-Host "    [WARN] venv not found, using: $venvPython" -ForegroundColor Yellow
 }
 
 # ============================================
-# ЗАГРУЗКА КОНФИГУРАЦИИ
+# LOADING CONFIGURATION
 # ============================================
 Write-Host ""
-Write-Host "[2/4] Загрузка конфигурации..." -ForegroundColor Cyan
+Write-Host "[2/4] Loading configuration..." -ForegroundColor Cyan
 $configPath = Join-Path $projectRoot "config.json"
 $envFile    = Join-Path $projectRoot ".env"
 $cfgHost    = "0.0.0.0"
@@ -133,7 +133,7 @@ if (Test-Path $configPath) {
     $reload = $true
 }
 
-# Чтение .env
+# Reading .env
 if (Test-Path $envFile) {
     Get-Content $envFile | ForEach-Object {
         $line = $_.Trim()
@@ -149,7 +149,7 @@ if (Test-Path $envFile) {
 $host_ = if ($HostAddress) { $HostAddress } else { $cfgHost }
 $port  = if ($Port)        { [string]$Port }   else { [string]$cfgPort }
 
-# Проверка наличия API-ключа Gemini
+# Check for Gemini API key
 $hasApiKey = $false
 if ($env:GEMINI_API_KEY -or $env:GOOGLE_API_KEY -or $env:AGY_API_KEY) { $hasApiKey = $true }
 $geminiKeysFile = Join-Path $projectRoot "core\secrets\gemini_keys.json"
@@ -164,41 +164,41 @@ if (-not $hasApiKey -and (Test-Path $geminiKeysFile)) {
 
 Write-Host "    Host:       $host_" -ForegroundColor Gray
 Write-Host "    Port:       $port"  -ForegroundColor Gray
-Write-Host "    AI Keys:    $(if ($hasApiKey) { 'ОБНАРУЖЕНЫ' } else { 'НЕ НАСТРОЕНЫ (https://aistudio.google.com/app/apikey)' })" -ForegroundColor $(if ($hasApiKey) { 'Green' } else { 'Yellow' })
-Write-Host "    Autoreload: $(if ($reload) { 'ВКЛЮЧЁН (config.json)' } else { 'ВЫКЛЮЧЕН (config.json)' })" -ForegroundColor $(if ($reload) { 'Green' } else { 'Yellow' })
+Write-Host "    AI Keys:    $(if ($hasApiKey) { 'FOUND' } else { 'NOT CONFIGURED (https://aistudio.google.com/app/apikey)' })" -ForegroundColor $(if ($hasApiKey) { 'Green' } else { 'Yellow' })
+Write-Host "    Autoreload: $(if ($reload) { 'ENABLED (config.json)' } else { 'DISABLED (config.json)' })" -ForegroundColor $(if ($reload) { 'Green' } else { 'Yellow' })
 if (-not $reload) {
     Write-Host "    Workers:    $workers" -ForegroundColor Gray
 }
 
 # ============================================
-# ОСВОБОЖДЕНИЕ ПОРТА
+# FREEING PORT
 # ============================================
 Write-Host ""
-Write-Host "[3/4] Освобождение порта $port..." -ForegroundColor Cyan
+Write-Host "[3/4] Freeing port $port..." -ForegroundColor Cyan
 try {
     $conns = Get-NetTCPConnection -LocalPort ([int]$port) -ErrorAction SilentlyContinue
     if ($conns) {
         $pids = $conns.OwningProcess | Select-Object -Unique
-        Write-Host "    [WARN] Порт занят. Завершение PID: $pids" -ForegroundColor Yellow
+        Write-Host "    [WARN] Port occupied. Terminating PID: $pids" -ForegroundColor Yellow
         $pids | Where-Object { $_ -gt 0 } | ForEach-Object {
             Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue
         }
         Start-Sleep -Seconds 2
     } else {
-        Write-Host "    [OK] Порт свободен" -ForegroundColor Green
+        Write-Host "    [OK] Port is free" -ForegroundColor Green
     }
 } catch {
-    Write-Host "    [WARN] Не удалось проверить порт: $_" -ForegroundColor Yellow
+    Write-Host "    [WARN] Failed to check port: $_" -ForegroundColor Yellow
 }
 
 # ============================================
-# ЗАПУСК UVICORN
+# LAUNCHING UVICORN
 # ============================================
 Write-Host ""
 if ($reload) {
-    Write-Host "[4/4] Запуск uvicorn в режиме AUTORELOAD..." -ForegroundColor Cyan
+    Write-Host "[4/4] Launching uvicorn in AUTORELOAD mode..." -ForegroundColor Cyan
 } else {
-    Write-Host "[4/4] Запуск uvicorn с $workers воркерами..." -ForegroundColor Cyan
+    Write-Host "[4/4] Launching uvicorn with $workers workers..." -ForegroundColor Cyan
 }
 
 $uvicornArgs = @(
@@ -212,7 +212,7 @@ $uvicornArgs = @(
 if ($reload) {
     $uvicornArgs += "--reload"
     $uvicornArgs += "--reload-dir", $projectRoot
-    Write-Host "    [MODE] Autoreload активен (отслеживание изменений файлов в $projectRoot)" -ForegroundColor Green
+    Write-Host "    [MODE] Autoreload active (tracking file changes in $projectRoot)" -ForegroundColor Green
 } else {
     if ($workers -gt 1) {
         $uvicornArgs += "--workers", [string]$workers
@@ -233,26 +233,26 @@ if ($useSsl) {
     $keyFile  = Join-Path $certsDir "localhost+2-key.pem"
     if ((Test-Path $certFile) -and (Test-Path $keyFile)) {
         $uvicornArgs += "--ssl-certfile", $certFile, "--ssl-keyfile", $keyFile
-        Write-Host "    SSL: включён ($certFile)" -ForegroundColor Green
+        Write-Host "    SSL: enabled ($certFile)" -ForegroundColor Green
     } else {
-        Write-Host "    [WARN] Сертификаты не найдены — запуск без SSL" -ForegroundColor Yellow
+        Write-Host "    [WARN] Certificates not found — running without SSL" -ForegroundColor Yellow
     }
 }
 
-Write-Host "    Команда: $venvPython $($uvicornArgs -join ' ')" -ForegroundColor Gray
+Write-Host "    Command: $venvPython $($uvicornArgs -join ' ')" -ForegroundColor Gray
 Write-Host ""
 if ($reload) {
     Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Green
-    Write-Host "║  AUTORELOAD: ВКЛЮЧЁН (авто-перезапуск при изменении кода)      ║" -ForegroundColor Green
+    Write-Host "║  AUTORELOAD: ENABLED (auto-restart on code changes)           ║" -ForegroundColor Green
     Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Green
 } else {
     Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-    Write-Host "║  ЗАПУЩЕНО $workers ВОРКЕРОВ — Ctrl+C для остановки              ║" -ForegroundColor Cyan
+    Write-Host "║  RUNNING $workers WORKERS — Ctrl+C to stop                    ║" -ForegroundColor Cyan
     Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 }
 Write-Host ""
 
-# Запуск в текущем окне PowerShell
+# Running in current PowerShell window
 $argStr = ($uvicornArgs | ForEach-Object { "`"$_`"" }) -join " "
 $logsDir = Join-Path $projectRoot "logs"
 if (-not (Test-Path $logsDir)) {
@@ -260,7 +260,7 @@ if (-not (Test-Path $logsDir)) {
 }
 $timestamp = (Get-Date).ToString("yyyyMMdd_HHmmss")
 $logFilePath = Join-Path $logsDir "uvicorn_${timestamp}.log"
-# Фоновый watcher: ждет готовности TCP-порта и мгновенно открывает браузер
+# Background watcher: waits for TCP port readiness and instantly opens browser
 $lanIp = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
     Where-Object { $_.IPAddress -notmatch '^(169\.254|127\.)' -and $_.InterfaceAlias -notmatch 'Loopback' } |
     Select-Object -ExpandProperty IPAddress -First 1)
@@ -290,11 +290,9 @@ Start-Job -ScriptBlock {
     }
 } -ArgumentList ([int]$port), $browserUrl | Out-Null
 
-Write-Host "[INFO] Сервер запускается. Браузер откроется автоматически: $browserUrl" -ForegroundColor Green
-Write-Host "[INFO] Запуск uvicorn в текущем окне..." -ForegroundColor Green
+Write-Host "[INFO] Server starting. Browser will open automatically: $browserUrl" -ForegroundColor Green
+Write-Host "[INFO] Launching uvicorn in current window..." -ForegroundColor Green
 Push-Location $projectRoot
 $cmdToRun = "set CONNECTED_DRIVES=$env:CONNECTED_DRIVES && `"$venvPython`" $argStr 2>&1"
 cmd /c $cmdToRun | Tee-Object -FilePath $logFilePath
 Pop-Location
-
-

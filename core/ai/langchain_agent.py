@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: LangChain Breadboard Agent
+# Process Name: Агент для автономной работы и рассуждений через La
 # =============================================================================
-# Описание:
+# Description:
 #   Основной агент платформы AI Breadboard на базе ReAct-архитектуры.
-#   Использует нативные инструменты (веб-поиск, RAG, Python-вычисления, чтение файлов).
-#   Поддерживает Gemini и Ollama как LLM-бэкенды.
 #
 # File: langchain_agent.py
-# Project: aibreadboard
-# Package: src.ai
+# Project: ai-breadboard
+# Package: core.ai
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -38,7 +36,6 @@ from core.ai.langchain_tools import (
     file_read,
 )
 
-
 class MediaSearchAgent:
     """Агент для автономной работы и рассуждений через LangChain + ReAct.
 
@@ -50,7 +47,7 @@ class MediaSearchAgent:
     """
 
     def __init__(self, config_path: Path = Path('config.json'), ai_model=...):
-        """Инициализация агента.
+        """Initialization агента.
 
         Args:
             config_path: Путь к config.json с секцией langchain.
@@ -64,7 +61,7 @@ class MediaSearchAgent:
         self.max_steps = getattr(langchain_cfg, 'max_agent_steps', 15)
         self.timeout = getattr(langchain_cfg, 'search_timeout_seconds', 60)
 
-        # Ленивая инициализация LLM (при первом вызове search)
+        # Ленивая initialization LLM (при первом вызове search)
         self._llm = ''
         self._langchain_cfg = langchain_cfg
 
@@ -128,7 +125,7 @@ class MediaSearchAgent:
         ])
 
     async def search(self, query: str) -> dict:
-        """Выполняет автономный поиск по запросу пользователя.
+        """Performs автономный поиск по запросу пользователя.
 
         Args:
             query: Текстовый запрос пользователя (напр. 'найди фильм Интерстеллар 1080p').
@@ -136,7 +133,7 @@ class MediaSearchAgent:
         Returns:
             dict с ключами:
             - action: 'player' | 'torrent' | 'info' | 'error'
-            - data: словарь с результатами, зависящий от action
+            - data: dictionary с результатами, зависящий от action
         """
         try:
             import re
@@ -216,7 +213,7 @@ class MediaSearchAgent:
             logger.error(f'[MediaSearchAgent] Таймаут ({self.timeout}с) при поиске: "{query}"')
             return {'action': 'error', 'data': {'message': f'Превышено время ожидания ({self.timeout}с)'}}
         except Exception as e:
-            logger.error(f'[MediaSearchAgent] Ошибка при поиске: {e}')
+            logger.error(f'[MediaSearchAgent] Error при поиске: {e}')
             return {'action': 'error', 'data': {'message': str(e)}}
 
     async def search_stream(self, query: str) -> AsyncIterator[dict]:
@@ -240,13 +237,13 @@ class MediaSearchAgent:
             elif action == 'player':
                 yield {'status': '▶️ Найден источник для просмотра!'}
             elif action == 'info':
-                yield {'status': '📋 Получена информация о фильме'}
+                yield {'status': '📋 Получена Info о фильме'}
             else:
-                yield {'status': '⚠️ Поиск завершён с ошибками'}
+                yield {'status': '⚠️ Поиск завершён с Errorми'}
 
             yield {'result': result}
 
         except Exception as e:
-            logger.error(f'[MediaSearchAgent] Ошибка в потоковом поиске: {e}')
-            yield {'status': f'❌ Ошибка: {e}'}
+            logger.error(f'[MediaSearchAgent] Error в потоковом поиске: {e}')
+            yield {'status': f'❌ Error: {e}'}
             yield {'result': {'action': 'error', 'data': {'message': str(e)}}}

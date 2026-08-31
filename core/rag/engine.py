@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Универсальный RAG-движок (Core RAG Engine)
+# Process Name: ## hypo69 docblock
 # =============================================================================
-# Описание:
+# Description:
 #   Реализует чистый доменно-независимый алгоритм RAG-First:
-#   1. Поиск по базе знаний и истории ответов.
-#   2. Если найден точный/высокорелевантный ответ (Score >= threshold) -> возврат ответа напрямую.
-#   3. Если прямого ответа нет -> формирование обогащенного RAG-контекста для LLM.
 #
 # File: engine.py
 # Project: ai-breadboard
@@ -24,7 +21,6 @@ from core.logger import logger
 from core.rag.models import RAGDecisionType, RAGRouteDecision, RAGSearchResult
 from core.rag.user_rag import search_user_history, get_user_preferences_context
 
-
 class RAGEngine:
     """
     ## hypo69 docblock
@@ -34,7 +30,7 @@ class RAGEngine:
     def __init__(self, direct_threshold: float = 0.85) -> None:
         """
         ## hypo69 docblock
-        Инициализация RAG-движка.
+        Initialization RAG-движка.
 
         Args:
             direct_threshold (float): Порог уверенности для прямого возврата ответа без вызова LLM.
@@ -120,14 +116,12 @@ class RAGEngine:
             status_message="Генерация ответа...",
         )
 
-
 _engine_instance: Optional[RAGEngine] = None
-
 
 def get_rag_engine() -> RAGEngine:
     """
     ## hypo69 docblock
-    Возвращает синглтон RAGEngine.
+    Returns синглтон RAGEngine.
     """
     global _engine_instance
     if not _engine_instance:

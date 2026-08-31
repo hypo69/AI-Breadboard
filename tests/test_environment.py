@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тесты конфигурации и окружения
+# Process Name: Тесты конфигурации и окружения
 # =============================================================================
-# Описание:
-#   Модуль содержит тесты для проверки конфигурации окружения и доступности
-#   обязательных переменных из .env файлов. Проверяет структуру конфигурации
-#   и наличие всех необходимых переменных для корректной работы приложения.
+# Description:
+#   Module содержит тесты для проверки конфигурации окружения и доступности
 #
-# File: tests/test_environment.py
+# File: test_environment.py
 # Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
+
 """
 Тесты конфигурации и окружения
 """
@@ -21,7 +20,6 @@ import os
 import pytest
 from pathlib import Path
 from dotenv import load_dotenv
-
 
 class TestEnvConfig:
     """Тесты конфигурации окружения."""
@@ -41,7 +39,7 @@ class TestEnvConfig:
         
         content = env_example_path.read_text(encoding='utf-8')
         
-        # Проверка обязательных переменных
+        # Check обязательных переменных
         required_vars = [
             'GOOGLE_CLIENT_ID',
             'GOOGLE_CLIENT_SECRET',
@@ -62,7 +60,6 @@ class TestEnvConfig:
         
         for var in critical_vars:
             assert var in os.environ, f"Критичная переменная {var} не установлена"
-
 
 class TestConfigFiles:
     """Тесты конфигурационных файлов."""
@@ -91,12 +88,11 @@ class TestConfigFiles:
             config = json.load(f)
         
         server_cfg = config.get('server', config)
-        # Проверка значений
+        # Check значений
         assert server_cfg['host'] == '0.0.0.0'
         assert isinstance(server_cfg['port'], int)
         assert server_cfg['port'] > 0
         assert server_cfg['workers'] > 0
-
 
     def test_github_workflows_exist(self):
         """Тест наличия GitHub workflows."""
@@ -106,7 +102,6 @@ class TestConfigFiles:
         
         workflow_files = list(workflows_dir.glob('*.yml'))
         assert len(workflow_files) > 0
-
 
 class TestDocumentation:
     """Тесты документации."""
@@ -129,7 +124,7 @@ class TestDocumentation:
         
         assert docs_dir.exists()
         
-        # Проверка обязательных файлов
+        # Check обязательных файлов
         required_files = [
             'index.md',
             'quickstart.md',
@@ -172,7 +167,6 @@ class TestDocumentation:
         for file in required_files:
             assert (docs_dev_dir / file).exists()
 
-
 class TestRequirements:
     """Тесты зависимостей."""
 
@@ -207,7 +201,6 @@ class TestRequirements:
         
         for package in required_packages:
             assert package in content
-
 
 class TestDirectoryStructure:
     """Тесты структуры директорий."""

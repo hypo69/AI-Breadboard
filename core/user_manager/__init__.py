@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Управление авторизованными пользователями
+# Process Name: Управление авторизованными пользователями.
 # =============================================================================
-# Описание:
-#   Модуль обеспечивает управление авторизованными пользователями системы.
-#   Реализует хранение пользовательских данных, управление сессиями, проверку
-#   прав доступа, логирование активности и аудит важных операций. Поддерживает
-#   email и Telegram авторизацию, системы ролей и разрешений.
+# Description:
+#   Module обеспечивает управление авторизованными пользователями системы.
 #
-# File: user_manager.py
+# File: __init__.py
 # Project: ai-breadboard
-# Package: src.user_manager
+# Package: core.user_manager
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -21,24 +18,22 @@ from typing import Dict, List
 
 from core.logger import logger
 
-
 # =============================================================================
-# Класс управления пользователями
+# Class управления пользователями
 # =============================================================================
-
 
 class UserManager:
     """Управление авторизованными пользователями.
 
     Хранение пользовательских данных, управление сессиями,
-    проверка прав доступа и логирование активности.
+    check прав доступа и логирование активности.
 
     Attributes:
         db_path (Path): Путь к файлу базы данных.
     """
 
     def __init__(self, db_path: Path) -> None:
-        """Инициализация менеджера пользователей.
+        """Initialization менеджера пользователей.
 
         Args:
             db_path (Path): Путь к файлу SQLite базы данных.
@@ -48,7 +43,7 @@ class UserManager:
         self._init_db()
 
     def _init_db(self) -> None:
-        """Инициализация схемы таблиц управления пользователями."""
+        """Initialization схемы таблиц управления пользователями."""
         with sqlite3.connect(self.db_path) as conn:
             # Создание таблицы users для управления авторизованными пользователями
             conn.execute("""
@@ -117,7 +112,6 @@ class UserManager:
                 conn.execute("ALTER TABLE user_settings ADD COLUMN tts_voice TEXT DEFAULT 'ru-RU-DmitryNeural'")
             except sqlite3.OperationalError:
                 pass
-
 
             # Создание таблицы временных токенов линковки Telegram
             conn.execute("""
@@ -303,12 +297,11 @@ class UserManager:
                 VALUES (1, 'admin@localhost', 'Admin', 1, 'admin')
             """)
 
-
     def _get_connection(self) -> sqlite3.Connection:
         """Получение подключения к базе данных.
 
         Returns:
-            sqlite3.Connection: Подключение к SQLite.
+            sqlite3.Connection: Connection к SQLite.
         """
         return sqlite3.connect(self.db_path)
 
@@ -341,7 +334,7 @@ class UserManager:
                 return 0
 
     def update_user(self, user_id: int, **kwargs) -> bool:
-        """Обновление данных пользователя.
+        """Update данных пользователя.
 
         Args:
             user_id (int): ID пользователя.
@@ -372,7 +365,7 @@ class UserManager:
                 conn.commit()
                 return cursor.rowcount > 0
             except Exception as e:
-                logger.error(f'Ошибка обновления пользователя {user_id}:', e, False)
+                logger.error(f'Error обновления пользователя {user_id}:', e, False)
                 return False
 
     def create_user_admin(
@@ -418,7 +411,7 @@ class UserManager:
                 logger.error(f'Пользователь с email {email_clean} уже существует')
                 return 0
             except Exception as e:
-                logger.error(f'Ошибка создания пользователя {email_clean}:', e, False)
+                logger.error(f'Error создания пользователя {email_clean}:', e, False)
                 return 0
 
     def set_user_password(self, user_id: int, password: str) -> bool:
@@ -443,7 +436,7 @@ class UserManager:
             user_id (int): ID пользователя.
 
         Returns:
-            Dict: Данные пользователя или пустой словарь.
+            Dict: Данные пользователя или empty dictionary.
         """
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
@@ -460,7 +453,7 @@ class UserManager:
             email (str): Email пользователя.
 
         Returns:
-            Dict: Данные пользователя или пустой словарь.
+            Dict: Данные пользователя или empty dictionary.
         """
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
@@ -477,7 +470,7 @@ class UserManager:
             active_only (bool): Фильтровать только активных пользователей.
 
         Returns:
-            List[Dict]: Список пользователей.
+            List[Dict]: List пользователей.
         """
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
@@ -509,11 +502,11 @@ class UserManager:
                 conn.commit()
                 return cursor.rowcount > 0
             except Exception as e:
-                logger.error(f'Ошибка у��аления пользователя {user_id}:', e, False)
+                logger.error(f'Error у��аления пользователя {user_id}:', e, False)
                 return False
 
     def user_exists(self, email: str) -> bool:
-        """Проверка существования пользователя.
+        """Check существования пользователя.
 
         Args:
             email (str): Email пользователя.
@@ -529,7 +522,7 @@ class UserManager:
             return row is not None
 
     def is_user_active(self, user_id: int) -> bool:
-        """Проверка активности пользователя.
+        """Check активности пользователя.
 
         Args:
             user_id (int): ID пользователя.
@@ -541,7 +534,7 @@ class UserManager:
         return bool(user.get('is_active', 0))
 
     def is_admin(self, user_id: int) -> bool:
-        """Проверка прав администратора.
+        """Check прав администратора.
 
         Args:
             user_id (int): ID пользователя.
@@ -594,7 +587,7 @@ class UserManager:
                 conn.commit()
                 return cursor.rowcount > 0
             except Exception as e:
-                logger.error('Ошибка отзыва сессии:', e, False)
+                logger.error('Error отзыва сессии:', e, False)
                 return False
 
     def create_session_token(self, user_id: int, token_hash: str, expires_at: str, ip_address: str = '', user_agent: str = '') -> bool:
@@ -622,11 +615,11 @@ class UserManager:
                 conn.commit()
                 return True
             except Exception as e:
-                logger.error('Ошибка создания сессии:', e, False)
+                logger.error('Error создания сессии:', e, False)
                 return False
 
     def is_session_valid(self, token_hash: str) -> bool:
-        """Проверка валидности сессии.
+        """Check валидности сессии.
 
         Args:
             token_hash (str): Хеш токена.
@@ -673,7 +666,7 @@ class UserManager:
                 conn.commit()
                 return True
             except Exception as e:
-                logger.error('Ошибка логирования активности:', e, False)
+                logger.error('Error логирования активности:', e, False)
                 return False
 
     def log_audit(self, user_id: int, action: str, target_type: str = '', target_id: int = 0, old_values: str = '', new_values: str = '', ip_address: str = '') -> bool:
@@ -703,11 +696,11 @@ class UserManager:
                 conn.commit()
                 return True
             except Exception as e:
-                logger.error('Ошибка аудита:', e, False)
+                logger.error('Error аудита:', e, False)
                 return False
 
     def has_permission(self, user_id: int, permission: str) -> bool:
-        """Проверка наличия разрешения у пользователя.
+        """Check наличия разрешения у пользователя.
 
         Args:
             user_id (int): ID пользователя.
@@ -721,7 +714,7 @@ class UserManager:
             return True
 
         with self._get_connection() as conn:
-            # Проверка через permission_grants
+            # Check через permission_grants
             row = conn.execute(
                 '''
                 SELECT 1 FROM permission_grants
@@ -734,7 +727,7 @@ class UserManager:
             if row:
                 return True
 
-            # Проверка через роли
+            # Check через роли
             row = conn.execute(
                 '''
                 SELECT r.permissions FROM roles r
@@ -761,7 +754,7 @@ class UserManager:
             user_id (int): ID пользователя.
 
         Returns:
-            List[str]: Список разрешений.
+            List[str]: List разрешений.
         """
         permissions = []
 
@@ -824,7 +817,7 @@ class UserManager:
                     )
                     conn.commit()
                 except Exception as e:
-                    logger.error(f'Ошибка вставки настроек по умолчанию для {user_id}:', e, False)
+                    logger.error(f'Error вставки настроек по умолчанию для {user_id}:', e, False)
                 row = conn.execute(
                     'SELECT * FROM user_settings WHERE user_id = ? LIMIT 1',
                     (user_id,)
@@ -832,7 +825,7 @@ class UserManager:
             return dict(row) if row else {'user_id': user_id, 'theme': 'dark', 'language': 'ru', 'tts_enabled': 1, 'system_instruction': None, 'model': None, 'tts_system': 'edge-tts', 'tts_voice': 'ru-RU-DmitryNeural'}
 
     def update_user_settings(self, user_id: int, **kwargs) -> bool:
-        """Обновление настроек пользователя."""
+        """Update настроек пользователя."""
         allowed_fields = {'theme', 'language', 'tts_enabled', 'system_instruction', 'model', 'tts_system', 'tts_voice'}
         updates = {k: v for k, v in kwargs.items() if k in allowed_fields and v is not None}
         if not updates:
@@ -848,7 +841,7 @@ class UserManager:
                 conn.commit()
                 return True
             except Exception as e:
-                logger.error(f'Ошибка обновления настроек {user_id}:', e, False)
+                logger.error(f'Error обновления настроек {user_id}:', e, False)
                 return False
 
     def generate_link_token(self, user_id: int) -> str:
@@ -898,7 +891,7 @@ class UserManager:
                 conn.commit()
                 return True
             except Exception as e:
-                logger.error(f'Ошибка линковки аккаунта {user_id}:', e, False)
+                logger.error(f'Error линковки аккаунта {user_id}:', e, False)
                 return False
 
     @staticmethod
@@ -912,7 +905,7 @@ class UserManager:
 
     @staticmethod
     def verify_password(password: str, hashed: str) -> bool:
-        """Проверка пароля по его хешу."""
+        """Check пароля по его хешу."""
         if not hashed or '$' not in hashed:
             return False
         import hashlib
@@ -945,7 +938,7 @@ class UserManager:
                     conn.commit()
                     return db_user['id']
                 except Exception as e:
-                    logger.error(f'Ошибка обновления при регистрации {email}:', e, False)
+                    logger.error(f'Error обновления при регистрации {email}:', e, False)
                     return 0
             else:
                 # Создаем новый аккаунт (unverified)
@@ -979,7 +972,7 @@ class UserManager:
         return code
 
     def verify_email_code(self, email: str, code: str) -> bool:
-        """Проверка кода подтверждения email."""
+        """Check кода подтверждения email."""
         from datetime import datetime
         email = email.lower().strip()
         code = code.strip()
@@ -1007,14 +1000,14 @@ class UserManager:
             return True
 
     def save_google_tokens(self, user_id: int, access_token: str, refresh_token: str = '', expires_in: int = 3600, scope: str = '') -> bool:
-        """Сохранение или обновление токенов Google OAuth.
+        """Сохранение или update токенов Google OAuth.
 
         Args:
             user_id: Идентификатор пользователя.
             access_token: Токен доступа Google.
             refresh_token: Токен обновления Google.
             expires_in: Время жизни токена в секундах.
-            scope: Список разрешений (scopes).
+            scope: List разрешений (scopes).
 
         Returns:
             bool: True в случае успешного сохранения.
@@ -1049,7 +1042,7 @@ class UserManager:
                 logger.info(f'Токены Google OAuth сохранены для пользователя ID={user_id}')
                 return True
             except Exception as e:
-                logger.error(f'Ошибка сохранения токенов Google OAuth для user_id={user_id}:', e, False)
+                logger.error(f'Error сохранения токенов Google OAuth для user_id={user_id}:', e, False)
                 return False
 
     def get_google_tokens(self, user_id: int) -> dict:
@@ -1059,7 +1052,7 @@ class UserManager:
             user_id: Идентификатор пользователя.
 
         Returns:
-            dict: Словарь с данными токенов или пустой словарь.
+            dict: Dictionary с данными токенов или empty dictionary.
         """
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
@@ -1070,7 +1063,7 @@ class UserManager:
             return dict(row) if row else {}
 
     def has_google_auth(self, user_id: int) -> bool:
-        """Проверка наличия токенов Google OAuth у пользователя.
+        """Check наличия токенов Google OAuth у пользователя.
 
         Args:
             user_id: Идентификатор пользователя.
@@ -1080,8 +1073,6 @@ class UserManager:
         """
         tokens = self.get_google_tokens(user_id)
         return bool(tokens and tokens.get('access_token'))
-
-
 
 from header import __root__
 db_path = __root__ / 'core' / 'user_manager' / 'users.db'

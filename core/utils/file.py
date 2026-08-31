@@ -1,16 +1,23 @@
-## \file /src/utils/file.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: File system operations and text file utilities
+# =============================================================================
+# Description:
+#   Module for file operations including saving, reading, and searching text files.
+#   Provides utilities for directory traversal and file pattern matching.
+#
+# File: file.py
+# Project: ai-breadboard
+# Package: core.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
-.. module:: src.utils 
-	:platform: Windows, Unix
-	:synopsis:  Module for file operations
+File system operations and text file utilities.
 
+Provides functions for file manipulation, reading, writing, and searching.
 """
-
-
 
 import os
 import json
@@ -18,7 +25,6 @@ import fnmatch
 from pathlib import Path
 from typing import List, Optional, Union, Generator
 from core.logger.logger import logger
-
 
 def save_text_file(
     data: str | list[str] | dict,
@@ -302,13 +308,11 @@ def traverse_and_clean(directory: Union[str, Path]) -> None:
     for file in recursively_get_files(directory, "*.py"):
         remove_bom(file)
 
-
 def main() -> None:
     """Entry point for BOM removal in Python files."""
     root_dir = Path("..", "src")
     logger.info(f"Starting BOM removal in {root_dir}")
     traverse_and_clean(root_dir)
-
 
 if __name__ == "__main__":
     main()

@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тесты модуля core/utils/ftp
+# Process Name: Тестирование нормальных (ожидаемых) сценариев рабо
 # =============================================================================
-# Описание:
+# Description:
 #   Исчерпывающее тестирование всех функций модуля core/utils/ftp.
-#   Покрытие: прямые тесты, граничные условия, регрессионные сценарии.
 #
-# File: tests/test_utils_ftp.py
+# File: test_utils_ftp.py
 # Project: ai-breadboard
 # Package: tests
 # Author: hypo69
@@ -18,7 +17,7 @@ from unittest.mock import Mock, patch, mock_open
 from core.utils.ftp import write, read, delete
 
 # =============================================================================
-# РАЗДЕЛ 1: Happy Path — нормальные сценарии
+# Section: Happy Path — Normal Scenarios
 # =============================================================================
 
 class TestFtp_HappyPath:
@@ -36,7 +35,7 @@ class TestFtp_HappyPath:
             # --- Выполнение (Act) ---
             result = write('test.txt', '/remote', 'test.txt')
             
-            # --- Проверка (Assert) ---
+            # --- Check (Assert) ---
             assert result is True
             mock_session.cwd.assert_called_with('/remote')
             mock_session.storbinary.assert_called()
@@ -52,7 +51,7 @@ class TestFtp_HappyPath:
             # --- Выполнение (Act) ---
             result = read('test.txt', '/remote', 'test.txt')
             
-            # --- Проверка (Assert) ---
+            # --- Check (Assert) ---
             assert result is not None
             mock_session.cwd.assert_called_with('/remote')
             mock_session.retrbinary.assert_called()
@@ -67,13 +66,13 @@ class TestFtp_HappyPath:
         # --- Выполнение (Act) ---
         result = delete('test.txt', '/remote', 'test.txt')
         
-        # --- Проверка (Assert) ---
+        # --- Check (Assert) ---
         assert result is True
         mock_session.cwd.assert_called_with('/remote')
         mock_session.delete.assert_called_with('test.txt')
 
 # =============================================================================
-# РАЗДЕЛ 2: Edge Cases — граничные значения
+# Section: Edge Cases — Edge Cases
 # =============================================================================
 
 # Add more tests as needed per tdd-doc-gen requirements (empty inputs, etc.)

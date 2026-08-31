@@ -1,7 +1,16 @@
-## \file /src/utils/video.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: .. module:: src.utils
+# =============================================================================
+# Description:
+#   This module provides asynchronous functions for downloading and saving video files, as well as retri
+#
+# File: video.py
+# Project: ai-breadboard
+# Package: core.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module:: src.utils 
@@ -9,7 +18,6 @@
 	:synopsis: Video Saving Utilities
 
 """
-
 
 """ This module provides asynchronous functions for downloading and saving video files, as well as retrieving video data.  It includes error handling and logging for robust operation.
 
@@ -37,7 +45,6 @@ from pathlib import Path
 from typing import Optional
 import asyncio
 from core.logger.logger import logger
-
 
 async def save_video_from_url(
     url: str,
@@ -72,7 +79,6 @@ async def save_video_from_url(
                             break
                         await file.write(chunk)
 
-
         # Crucial checks after saving
         if not save_path.exists():
             logger.error(f"File {save_path} not saved successfully.")
@@ -90,7 +96,6 @@ async def save_video_from_url(
     except Exception as e:
         logger.error(f"Error saving video {save_path}: {e}", exc_info=True)
         return None
-
 
 def get_video_data(file_name: str) -> Optional[bytes]:
     """Retrieve binary data of a video file if it exists.
@@ -113,7 +118,6 @@ def get_video_data(file_name: str) -> Optional[bytes]:
     except Exception as e:
         logger.error(f"Error reading file {file_name}: {e}", exc_info=True)
         return None
-
 
 def main():
     url = "https://example.com/video.mp4"  # Replace with a valid URL!

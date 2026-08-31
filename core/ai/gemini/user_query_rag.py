@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Пользовательский RAG на основе истории чата
+# Process Name: Return path to user-specific RAG database
 # =============================================================================
-# Описание:
-#   Каждый запрос пользователя (вопрос + ответ модели) индексируется
-#   в персональную SQLite-базу с Gemini-эмбеддингами.
-#   Позволяет модели «помнить» предпочтения и прошлые запросы пользователя.
+# Description:
+#   Each user query (question + model response) is indexed.
+#   Provides semantic search over user's personal query history.
 #
 # File: user_query_rag.py
-# Project: ai-mediteka
-# Package: src.ai.gemini
+# Project: ai-breadboard
+# Package: core.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -25,62 +24,58 @@ from typing import Optional
 from core.ai.gemini.rag import GeminiRAG
 from core.logger import logger
 
-# Директория для хранения пользовательских RAG-баз
+# Directory for storing user RAG databases
 _USER_RAGS_DIR = Path(__file__).parent / "user_rags"
 _USER_RAGS_DIR.mkdir(exist_ok=True)
 
-# Максимальное количество документов в одной базе (старые вытесняются)
+# Maximum documents per database (old ones are evicted)
 _MAX_DOCS_PER_USER = 500
 
-# Минимальная длина запроса для индексации (исключаем "да", "нет" и т.п.)
+# Minimum query length for indexing (exclude "yes", "no", etc)
 _MIN_QUERY_LEN = 10
 
-
 def _get_user_rag_path(user_id) -> Path:
-    """Возвращает путь к RAG-базе конкретного пользователя."""
+    """Return path to RAG database for specific user."""
     safe_id = str(user_id).replace(".", "_").replace("/", "_").replace("\\", "_")
     return _USER_RAGS_DIR / f"user_rag_{safe_id}.db"
 
-
 def _make_doc_id(user_id, query: str) -> str:
-    """Генерирует стабильный уникальный ID документа (дедупликация по запросу)."""
+    """Generate stable unique document ID (deduplication by query)."""
     key = f"{user_id}_{query.strip().lower()}"
     return f"{user_id}_{hashlib.md5(key.encode('utf-8')).hexdigest()}"
 
-
 def get_user_rag(user_id, api_key: str) -> GeminiRAG:
-    """Возвращает RAG-индекс для конкретного пользователя.
+    """Return RAG index for specific user.
 
-    Создаёт базу если её нет. Не перестраивает существующую.
+    Creates database if it doesn't exist. Does not rebuild existing one.
 
     Args:
-        user_id: ID пользователя (int из БД или строка "anon_<IP>").
-        api_key: Ключ Gemini API для эмбеддингов.
+        user_id: User ID (int from DB or string "anon_<IP>").
+        api_key: Gemini API key for embeddings.
 
     Returns:
-        GeminiRAG: Экземпляр пользовательского RAG-индекса.
+        GeminiRAG: Instance of user RAG index.
     """
     db_path = _get_user_rag_path(user_id)
     return GeminiRAG(api_key=api_key, db_path=db_path)
 
-
 def is_garbage_query(query: str) -> bool:
-    """Определяет, является ли запрос мусорным (не несущим полезной смысловой нагрузки)."""
+    """Determine if query is garbage (contains no useful semantic content)."""
     q = query.strip().lower()
     
-    # 1. Слишком короткие запросы
+    # 1. Too short queries
     if len(q) < _MIN_QUERY_LEN:
         return True
         
-    # 2. Повторяющиеся символы (например, "aaaaaa" или "ыыыыы")
+    # 2. Repeating characters (e.g., "aaaaaa")
     if re.search(r'(.)\1{4,}', q):
         return True
         
-    # 3. Чистый шум (только знаки препинания, спецсимволы или пробелы)
+    # 3. Pure noise (only punctuation, special chars or spaces)
     if not re.search(r'[a-zA-Zа-яА-Я0-9]', q):
         return True
         
-    # 4. Простые разговорные фразы / приветствия / благодарности / слова-заполнители
+    # 4. Simple conversational phrases / greetings / thanks / filler words
     garbage_words = {
         'привет', 'здравствуй', 'здравствуйте', 'добрый', 'день', 'вечер', 'утро',
         'пока', 'свидания', 'встречи', 'прощай', 'спасибо', 'благодарю', 'пожалуйста',
@@ -89,26 +84,24 @@ def is_garbage_query(query: str) -> bool:
         'please', 'bye', 'goodbye', 'how', 'are', 'whats', 'up', 'ok', 'ок', 'ладно', 'как',
         'большое', 'не', 'за', 'что', 'да', 'нет', 'угу'
     }
-    # Убираем знаки препинания для анализа слов
+    # Remove punctuation for word analysis
     clean_q = re.sub(r'[^\w\s]', '', q).strip()
     words = clean_q.split()
     if words and all(w in garbage_words for w in words):
         return True
         
-    # 5. Keyboard mash (бессмысленный набор букв)
-    # Если в слове длиной более 6 символов нет ни одной гласной (для русского и английского)
+    # 5. Keyboard mash (nonsensical character strings)
+    # If word longer than 6 chars has no vowels (Russian/English)
     for w in words:
         if len(w) > 6:
-            # Для русского языка гласные: аеёиоуыэюя
-            # Для английского: aeiouy
+            # Russian vowels: аеёиоуыэюя, English: aeiouy
             if not re.search(r'[aeiouyаеёиоуыэюя]', w):
                 return True
 
     return False
 
-
 def _format_compact_summary(text: str, max_chars: int = 150) -> str:
-    """Формирует ультра-компактное резюме текста для минимизации расхода токенов."""
+    """Format ultra-compact text summary to minimize token usage."""
     import re
     clean = re.sub(r'<film>(.*?)</film>', r'«\1»', text, flags=re.IGNORECASE)
     clean = re.sub(r'#+\s*', '', clean)
@@ -120,55 +113,54 @@ def _format_compact_summary(text: str, max_chars: int = 150) -> str:
         clean = clean[:max_chars].rsplit(' ', 1)[0] + '...'
     return clean
 
-
 def index_user_query(
     user_id,
     api_key: str,
     query: str,
     response: str,
 ) -> bool:
-    """Индексирует пару (запрос пользователя + ответ модели) в персональный RAG.
+    """Index pair (user query + model response) into personal RAG.
 
-    Пропускает слишком короткие/мусорные запросы и дубликаты (по хешу).
-    При переполнении (> _MAX_DOCS_PER_USER) удаляет старейшие записи.
+    Skips too short/garbage queries and duplicates (by hash).
+    On overflow (> _MAX_DOCS_PER_USER) deletes oldest records.
 
     Args:
-        user_id: ID пользователя или строка "anon_<IP>".
-        api_key: Ключ Gemini API.
-        query: Текст запроса пользователя.
-        response: Ответ модели.
+        user_id: User ID or string "anon_<IP>".
+        api_key: Gemini API key.
+        query: User query text.
+        response: Model response.
 
     Returns:
-        bool: True если документ был добавлен/обновлён, False если пропущен.
+        bool: True if document added/updated, False if skipped.
     """
     if not query or not response:
         return False
 
-    # Фильтруем мусорные запросы
+    # Filter garbage queries
     if is_garbage_query(query):
-        logger.info(f"UserRAG [{user_id}]: запрос отфильтрован как мусорный: '{query}'")
+        logger.info(f"UserRAG [{user_id}]: query filtered as garbage: '{query}'")
         return False
 
-    # Фильтруем ответы, являющиеся сырым JSON, служебными логами или ошибками
+    # Filter responses that are raw JSON, service logs or errors
     resp_stripped = response.strip()
     if resp_stripped.startswith('{') and ('"title"' in resp_stripped or '"error"' in resp_stripped or '"results"' in resp_stripped):
-        logger.info(f"UserRAG [{user_id}]: ответ отфильтрован как сырой JSON: '{resp_stripped[:60]}...'")
+        logger.info(f"UserRAG [{user_id}]: response filtered as raw JSON: '{resp_stripped[:60]}...'")
         return False
-    if any(resp_stripped.startswith(pfx) for pfx in ('❌', 'Ошибка', 'Error', 'DEBUG', 'Traceback', '[DIRECT PLAY', '[DIRECT RAG')):
-        logger.info(f"UserRAG [{user_id}]: ответ отфильтрован как служебное/ошибочное сообщение")
+    if any(resp_stripped.startswith(pfx) for pfx in ('❌', 'Error', 'ERROR', 'DEBUG', 'Traceback', '[DIRECT PLAY', '[DIRECT RAG')):
+        logger.info(f"UserRAG [{user_id}]: response filtered as service/error message")
         return False
 
     try:
         rag = get_user_rag(user_id, api_key)
 
-        # Прореживание при переполнении — удаляем старейшие записи
+        # Prune on overflow - remove oldest records
         _prune_if_needed(rag, user_id)
 
         doc_id = _make_doc_id(user_id, query)
-        # Храним ультра-компактное резюме (до 150 символов), чтобы при последующем поиске
-        # в контекст модели вставлялось минимум токенов
+        # Store ultra-compact summary (up to 150 chars) so future searches
+        # insert minimal tokens into model context
         response_summary = _format_compact_summary(response, max_chars=150)
-        doc_text = f"Пользователь спросил: {query.strip()}\nОтвет модели: {response_summary}"
+        doc_text = f"User asked: {query.strip()}\nModel response: {response_summary}"
 
         rag.add_documents([{
             "id": doc_id,
@@ -177,16 +169,15 @@ def index_user_query(
                 "user_id": str(user_id),
                 "timestamp": time.time(),
                 "q": query[:500],
-                "response": response[:1000],  # полный текст в мета, не попадает в промпт
+                "response": response[:1000],  # full text in meta, not in prompt
                 "is_manual": False
             },
         }])
         return True
 
     except Exception as ex:
-        logger.error(f"Ошибка индексации запроса пользователя {user_id}", ex, False)
+        logger.error(f"Error indexing user query {user_id}", ex, False)
         return False
-
 
 def search_user_context(
     user_id,
@@ -195,17 +186,17 @@ def search_user_context(
     top_k: int = 3,
     threshold: float = 0.4,
 ) -> list:
-    """Семантический поиск по истории запросов пользователя.
+    """Semantic search over user's query history.
 
     Args:
-        user_id: ID пользователя.
-        api_key: Ключ Gemini API.
-        query: Текущий запрос для поиска похожего контекста.
-        top_k: Количество результатов.
-        threshold: Минимальный порог схожести (0.0-1.0).
+        user_id: User ID.
+        api_key: Gemini API key.
+        query: Current query for finding similar context.
+        top_k: Number of results.
+        threshold: Minimum similarity threshold (0.0-1.0).
 
     Returns:
-        list[dict]: Список {"id", "text", "meta", "score"} по убыванию score.
+        list[dict]: List of {"id", "text", "meta", "score"} sorted by score descending.
     """
     try:
         rag = get_user_rag(user_id, api_key)
@@ -213,19 +204,18 @@ def search_user_context(
             return []
         return rag.search(query, top_k=top_k, threshold=threshold)
     except Exception as ex:
-        logger.error(f"Ошибка поиска по RAG пользователя {user_id}", ex, False)
+        logger.error(f"Error searching user RAG {user_id}", ex, False)
         return []
 
-
 def get_user_rag_stats(user_id, api_key: str) -> dict:
-    """Возвращает статистику RAG-индекса пользователя.
+    """Return statistics of user's RAG index.
 
     Args:
-        user_id: ID пользователя.
-        api_key: Ключ Gemini API.
+        user_id: User ID.
+        api_key: Gemini API key.
 
     Returns:
-        dict: Поля count, db_path, db_size_kb.
+        dict: Fields count, db_path, db_size_kb.
     """
     db_path = _get_user_rag_path(user_id)
     try:
@@ -242,28 +232,26 @@ def get_user_rag_stats(user_id, api_key: str) -> dict:
         "db_size_kb": size_kb,
     }
 
-
 def clear_user_rag(user_id, api_key: str) -> bool:
-    """Полная очистка персонального RAG-индекса пользователя.
+    """Complete cleanup of user's personal RAG index.
 
     Args:
-        user_id: ID пользователя.
-        api_key: Ключ Gemini API.
+        user_id: User ID.
+        api_key: Gemini API key.
 
     Returns:
-        bool: True при успехе.
+        bool: True on success.
     """
     try:
         rag = get_user_rag(user_id, api_key)
         rag.clear()
         return True
     except Exception as ex:
-        logger.error(f"Ошибка очистки RAG пользователя {user_id}", ex, False)
+        logger.error(f"Error clearing user RAG {user_id}", ex, False)
         return False
 
-
 def clean_invalid_user_rag_entries(user_id, api_key: str = '') -> int:
-    """Удаляет из базы User RAG записи, содержащие сырой JSON или сообщения об ошибках."""
+    """Delete from User RAG entries containing raw JSON or error messages."""
     try:
         rag = get_user_rag(user_id, api_key)
         initial_count = len(rag.metadatas)
@@ -274,9 +262,9 @@ def clean_invalid_user_rag_entries(user_id, api_key: str = '') -> int:
             check_str = (meta_resp or text).strip()
             if check_str.startswith('{') and ('"title"' in check_str or '"error"' in check_str):
                 continue
-            if 'Ответ модели: {' in text and '"title"' in text:
+            if 'Model response: {' in text and '"title"' in text:
                 continue
-            if any(check_str.startswith(pfx) for pfx in ('❌', 'Ошибка', 'Error', 'DEBUG', 'Traceback')):
+            if any(check_str.startswith(pfx) for pfx in ('❌', 'Error', 'ERROR', 'DEBUG', 'Traceback')):
                 continue
             valid_metas.append(m)
 
@@ -285,21 +273,20 @@ def clean_invalid_user_rag_entries(user_id, api_key: str = '') -> int:
             rag.metadatas = valid_metas
             rag._rebuild_index()
             rag._save()
-            logger.info(f"UserRAG [{user_id}]: очищено {deleted_count} поврежденных записей.")
+            logger.info(f"UserRAG [{user_id}]: cleaned {deleted_count} corrupted records.")
         return deleted_count
     except Exception as ex:
-        logger.error(f"Ошибка очистки поврежденных записей RAG пользователя {user_id}", ex, False)
+        logger.error(f"Error cleaning corrupted RAG entries for user {user_id}", ex, False)
         return 0
-
 
 # =============================================================================
 # Internal helpers
 # =============================================================================
 
 def _prune_if_needed(rag: GeminiRAG, user_id) -> None:
-    """Удаляет старейшие документы если индекс превысил _MAX_DOCS_PER_USER.
+    """Delete oldest documents if index exceeds _MAX_DOCS_PER_USER.
 
-    Стратегия: читаем meta.timestamp из всех документов, удаляем 10% старейших.
+    Strategy: read meta.timestamp from all docs, delete 10% oldest.
     """
     count = rag.count()
     if count < _MAX_DOCS_PER_USER:
@@ -319,7 +306,7 @@ def _prune_if_needed(rag: GeminiRAG, user_id) -> None:
         for doc_id, _ in to_delete:
             rag.delete_document(doc_id)
 
-        logger.info(f"UserRAG [{user_id}]: удалено {len(to_delete)} старых записей (было {count})")
+        logger.info(f"UserRAG [{user_id}]: deleted {len(to_delete)} old records (was {count})")
 
     except Exception as ex:
-        logger.error(f"Ошибка прореживания RAG пользователя {user_id}", ex, False)
+        logger.error(f"Error pruning user RAG {user_id}", ex, False)

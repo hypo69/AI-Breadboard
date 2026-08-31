@@ -31,10 +31,10 @@ py manage_tools.py <группа> <команда> [аргументы...]
 | `torrents` | `assign`, `ids`, `state`, `path`, `clear`, `orchestrator` | Синхронизация с qBittorrent |
 | `db` | `update`, `sizes`, `fill` | Обслуживание базы данных |
 | `check` | `db`, `data`, `media_type`, `series` | Базовая диагностика |
-| `audit` | `disk`, `media` | Глубокая проверка целостности |
+| `audit` | `disk`, `media` | Глубокая check целостности |
 | `knowledge` | `extract`, `add`, `init` | Управление знаниями проекта |
 
-**Примеры:**
+**Examples:**
 ```powershell
 # Сканирование медиатеки
 py manage_tools.py media scan --disk "диск 2" --path "E:"
@@ -42,7 +42,7 @@ py manage_tools.py media scan --disk "диск 2" --path "E:"
 # Привязка торрентов к медиа
 py manage_tools.py torrents ids --disk "ДИСК 1"
 
-# Обновление размеров
+# Update размеров
 py manage_tools.py db sizes E: L:
 
 # Аудит диска
@@ -61,7 +61,7 @@ py manage_tools.py knowledge extract --file chat.md
 ### `manage_tools.py media scan`
 Основная точка входа для сканирования дисков, разметки медиа через Gemini и составления отчетов. Эквивалент `run_media_organizer.py` через CLI.
 
-**Примеры:**
+**Examples:**
 ```powershell
 # Интерактивный режим (запрос имени диска)
 py manage_tools.py media scan
@@ -88,7 +88,7 @@ py manage_tools.py media scan --web  # запуск веб-интерфейса
 ### `manage_tools.py media complete`
 Заполнение пропущенных метаданных в медиатеке.
 
-**Примеры:**
+**Examples:**
 ```powershell
 py manage_tools.py media complete
 py manage_tools.py media complete --disk "ДИСК 1"
@@ -97,9 +97,9 @@ py manage_tools.py media complete --title "Фауда"
 
 ---
 
-## 2. Интеграция с qBittorrent
+## 2. Integration с qBittorrent
 
-Для работы этих скриптов необходимо, чтобы в файле `config.json` в секции `qbittorrent` были настроены параметры подключения (`host`, `port`, `user`, `pass`), а сам клиент qBittorrent был запущен.
+Для работы этих скриптов необходимо, чтобы в файле `config.json` в секции `qbittorrent` были настроены Parameters подключения (`host`, `port`, `user`, `pass`), а сам клиент qBittorrent был запущен.
 
 ### `manage_tools.py torrents assign`
 Сопоставляет активные торренты в qBittorrent с записями в SQLite БД по названию и назначает им категории (например, Кино, Сериалы).
@@ -107,7 +107,7 @@ py manage_tools.py media complete --title "Фауда"
   ```powershell
   py manage_tools.py torrents assign
   ```
-* **Принцип работы**: Использует fuzzy-matching (коэффициент перекрытия токенов). Порог совпадения — `0.5`. При совпадении автоматически создает категорию в qBittorrent и присваивает ее торренту.
+* **Принцип работы**: Использует fuzzy-matching (коэффициент перекрытия токенов). Порог совпадения — `0.5`. При совпадении автоматически creates категорию в qBittorrent и присваивает ее торренту.
 
 ### `manage_tools.py torrents ids`
 Интеллектуальное сопоставление медиафайлов на диске с раздачами в qBittorrent через Gemini API.
@@ -122,7 +122,7 @@ py manage_tools.py media complete --title "Фауда"
   ```
 
 ### `manage_tools.py torrents state`
-Запускает принудительную перепроверку хеша (Force Recheck) в qBittorrent для всех торрентов, которые привязаны к медиатеке в БД (имеют непустой `torrent_id`).
+Запускает принудительную перепроверку хеша (Force Recheck) в qBittorrent для всех торрентов, которые привязаны к медиатеке в БД (имеют non-empty `torrent_id`).
 * **Использование:**
   ```powershell
   py manage_tools.py torrents state
@@ -134,7 +134,7 @@ py manage_tools.py media complete --title "Фауда"
   ```powershell
   py manage_tools.py torrents path
   ```
-* **Принцип работы**: Ожидаемый путь сохранения торрента устанавливается как родительская директория медиафайла из БД. Если пути расходятся, скрипт вызывает `set_location` в qBittorrent.
+* **Принцип работы**: Ожидаемый путь сохранения торрента устанавливается как родительская директория медиафайла из БД. Если пути расходятся, скрипт Raises `set_location` в qBittorrent.
 
 ### `manage_tools.py torrents clear`
 Служебный скрипт для полной очистки категорий и тегов у всех раздач в qBittorrent.
@@ -160,7 +160,7 @@ py manage_tools.py media complete --title "Фауда"
   ```powershell
   py manage_tools.py db update
   ```
-* **Принцип работы**: Создает резервную копию `media.db.backup`, переименовывает старую таблицу `media` в `media_old`, после чего создает новые пустые таблицы `media`, `series_episodes` и `duplicates` с обновленной структурой.
+* **Принцип работы**: Creates резервную копию `media.db.backup`, переименовывает старую таблицу `media` в `media_old`, после чего creates новые пустые таблицы `media`, `series_episodes` и `duplicates` с обновленной структурой.
 
 ### `manage_tools.py db sizes`
 Обновляет размеры файлов медиатеки в БД (колонка `media_size` таблицы `media`) и актуализирует информацию о свободном месте на жестких дисках в таблице `storage`.
@@ -182,12 +182,12 @@ py manage_tools.py media complete --title "Фауда"
 
 ---
 
-## 4. Диагностика и проверка данных
+## 4. Диагностика и check данных
 
 Скрипты для быстрого сбора информации о состоянии БД:
 
 ### `manage_tools.py check db`
-Выводит список таблиц и структуру колонок таблиц `media` и `series_episodes`.
+Выводит list таблиц и структуру колонок таблиц `media` и `series_episodes`.
 
 ### `manage_tools.py check data`
 Выводит первые 3 строки таблицы `media`, первые 5 строк `series_episodes` и количество дубликатов в JSON-виде.
@@ -199,15 +199,15 @@ py manage_tools.py media complete --title "Фауда"
 Выводит первые 5 записей с типом `series` из базы данных.
 
 **Также доступны оригинальные скрипты:**
-* `list_models.py` — выводит список всех доступных в аккаунте моделей Google Gemini.
+* `list_models.py` — выводит list всех доступных в аккаунте моделей Google Gemini.
 * `get_schema.py` — выводит SQL-запрос создания таблицы `media` (ее актуальную схему в БД).
 
 ---
 
-## 5. Аудит и проверка целостности
+## 5. Аудит и check целостности
 
 ### `manage_tools.py audit disk`
-Скрипт для глубокого аудита медиатеки на конкретных дисках. Проверяет соответствие файлов на диске и записей в БД.
+Скрипт для глубокого аудита медиатеки на конкретных дисках. Checks соответствие файлов на диске и записей в БД.
 
 * **Использование:**
   ```powershell
@@ -216,13 +216,13 @@ py manage_tools.py media complete --title "Фауда"
   py manage_tools.py audit disk "ДИСК 1" --yes
   ```
 * **Особенности**:
-  - Позиционные аргументы: список имён дисков из `DISK_MAP` внутри скрипта.
+  - Позиционные аргументы: list имён дисков из `DISK_MAP` внутри скрипта.
   - Флаг `--yes` (`-y`): автоматическая обработка обнаруженных новых файлов через AI (без подтверждения).
   - Флаг `--auto-fix`: автоматическое исправление данных при обнаружении расхождений.
   - Безопасность: пропускает диски, не найденные в `DISK_MAP` или с несуществующими путями.
 
 ### `manage_tools.py audit media`
-Аудит медиафайлов — проверка целостности записей в БД.
+Аудит медиафайлов — check целостности записей в БД.
 * **Использование:**
   ```powershell
   py manage_tools.py audit media
@@ -248,7 +248,7 @@ py manage_tools.py media complete --title "Фауда"
   ```
 
 ### `manage_tools.py knowledge init`
-Инициализация пустого реестра знаний.
+Initialization пустого реестра знаний.
 * **Использование:**
   ```powershell
   py manage_tools.py knowledge init
@@ -260,7 +260,7 @@ py manage_tools.py media complete --title "Фауда"
 
 ## 7. Скрипты запуска сервисов (Лончеры)
 
-Все лончеры в **корне проекта** `C:\ai-assistant\`. Полная документация: `.ai_instructions/knowledge/LAUNCHER_GUIDE.md`
+Все лончеры в **корне проекта** `C:\ai-assistant\`. Полная документация: [`LAUNCHER_GUIDE.md`](LAUNCHER_GUIDE.md)
 
 | Лончер | Что запускает | Пример запуска |
 |--------|--------------|----------------|
@@ -286,7 +286,7 @@ py manage_tools.py media complete --title "Фауда"
 * **SHOULD**: Запустить `py manage_tools.py torrents path`, чтобы qBittorrent узнал о новых путях расположения файлов.
 * **MAY**: Запустить `py manage_tools.py audit media <пути>` для проверки отсутствия расхождений между диском и БД.
 
-### 8.2 Добавление или обновление торрентов
+### 8.2 Добавление или update торрентов
 При добавлении новых раздач в qBittorrent или привязке существующих к медиатеке:
 * **SHOULD**: Запустить `py manage_tools.py torrents assign` для автоматической разметки категорий на основе названий из БД.
 * **MAY**: Запустить `py manage_tools.py torrents state` для запуска принудительной проверки (Force Recheck) перенесенных раздач.
@@ -296,7 +296,7 @@ py manage_tools.py media complete --title "Фауда"
 * **MUST**: Запустить `py manage_tools.py db update` для миграции структуры таблиц.
 
 ### 8.4 Диагностика при решении проблем с медиатекой
-Если пользователь сообщает об ошибках поиска, неверном отображении типов или пустых полях:
+Если пользователь сообщает об Errorх поиска, неверном отображении типов или пустых полях:
 * **SHOULD**: Запустить `py manage_tools.py check media_type` или `py manage_tools.py check data` для быстрого сбора статистики по типам данных и проверки наличия записей в таблицах.
 * **MAY**: Запустить `py manage_tools.py check db` для верификации текущей схемы БД на диске.
 
@@ -323,7 +323,7 @@ C:\ai-assistant\
 ├── 📁 tmp/                   # Временные файлы и отчёты (tmp/reports/, tmp/logs/, tmp/rag/)
 ├── 📁 __skills/              # Навыки агентов (Antigravity)
 ├── 📁 tests/                 # Тесты pytest (38 файлов)
-├── 📁 .gemini/               # Конфигурация Gemini AI
+├── 📁 .gemini/               # Configuration Gemini AI
 └── 📁 .ai_instructions/      # Инструкции для ИИ
 ```
 
@@ -334,7 +334,7 @@ C:\ai-assistant\
 | Пересборка RAG кодовой базы | `py tools/ai/rebuild_dev_rag.py` |
 | Пересборка RAG медиатеки | `py tools/ai/rebuild_rag.py` |
 | Поиск по коду | `py tools/ai/search_code.py --query "..."` |
-| Обновление документации | `py tools/ai/update_docs.py` |
+| Update документации | `py tools/ai/update_docs.py` |
 | Упаковка навыка | `py tools/ai/package_skill.py <name>` |
 
 ### Правила расположения файлов
@@ -344,35 +344,10 @@ C:\ai-assistant\
 - **Отчёты CI/аудита** → `tmp/reports/`
 - **Отчёты по дискам** → `tmp/media_reports/`
 - **RAG подсистема** → `core/rag/`
-- **Документация лончеров** → `.ai_instructions/knowledge/LAUNCHER_GUIDE.md`
+- **Документация лончеров** → [`LAUNCHER_GUIDE.md`](LAUNCHER_GUIDE.md)
 
+---
 
-## 8. Рекомендации по автоматическому запуску для ИИ-ассистентов (AI Execution Guidelines)
-
-ИИ-ассистенты (включая pair programming агентов) могут и должны самостоятельно принимать решение о запуске консольных скриптов проекта без явного указания пользователя в следующих сценариях:
-
-### 8.1 Синхронизация данных после файловых операций
-Если в ходе выполнения задачи ИИ-ассистент производил переименование, перенос или удаление медиафайлов/директорий:
-* **MUST**: Запустить `py manage_tools.py db sizes` для пересчета размеров в БД и обновления свободного места в таблице `storage`.
-* **SHOULD**: Запустить `py manage_tools.py torrents path`, чтобы qBittorrent узнал о новых путях расположения файлов.
-* **MAY**: Запустить `py manage_tools.py audit media <пути>` для проверки отсутствия расхождений между диском и БД.
-
-### 8.2 Добавление или обновление торрентов
-При добавлении новых раздач в qBittorrent или привязке существующих к медиатеке:
-* **SHOULD**: Запустить `py manage_tools.py torrents assign` для автоматической разметки категорий на основе названий из БД.
-* **MAY**: Запустить `py manage_tools.py torrents state` для запуска принудительной проверки (Force Recheck) перенесенных раздач.
-
-### 8.3 Изменение схемы базы данных
-Если ИИ-ассистент внес изменения в структуру таблиц SQLite в коде (например, в классе `MediaDatabase`):
-* **MUST**: Запустить `py manage_tools.py db update` для миграции структуры таблиц.
-
-### 8.4 Диагностика при решении проблем с медиатекой
-Если пользователь сообщает об ошибках поиска, неверном отображении типов или пустых полях:
-* **SHOULD**: Запустить `py manage_tools.py check media_type` или `py manage_tools.py check data` для быстрого сбора статистики по типам данных и проверки наличия записей в таблицах.
-* **MAY**: Запустить `py manage_tools.py check db` для верификации текущей схемы БД на диске.
-
-### 8.5 Использование CLI (Рекомендовано)
-* Всегда начинайте с `manage_tools.py` — это единая точка входа.
-* Используйте `--help` для получения справки: `py manage_tools.py --help`
-* Структура: `py manage_tools.py <группа> <команда> [аргументы...]`
-
+**Status:** ✅ Актуальна на август 2026  
+**Версия:** 1.0  
+**Последнее update:** 2026-08-24

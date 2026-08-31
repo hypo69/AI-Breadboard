@@ -1,7 +1,16 @@
-## \file /src/utils/convertors/tts.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: .. module:: src.utils.convertors.tts
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: tts.py
+# Project: ai-breadboard
+# Package: core.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module:: src.utils.convertors.tts 
@@ -9,7 +18,6 @@
 	:synopsis: speech recognition and text-to-speech conversion
 
 """
-
 
 from pathlib import Path
 import tempfile
@@ -21,7 +29,6 @@ from gtts import gTTS  # Генерация текста в речь
 
 from core.utils.jjson import j_loads, j_loads_ns, j_dumps
 from core.logger.logger import logger
-
 
 def speech_recognizer(audio_url: str = None, audio_file_path: Path = None, language: str = 'ru-RU') -> str:
     """ Download an audio file and recognize speech in it.
@@ -72,7 +79,6 @@ def speech_recognizer(audio_url: str = None, audio_file_path: Path = None, langu
     except Exception as ex:
         logger.error('Error in speech recognizer:', ex)
         return 'Error during speech recognition.'
-
 
 async def text2speech(text: str, lang: str = 'ru') -> str:
     """ Convert text to speech and save it as an audio file.

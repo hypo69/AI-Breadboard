@@ -1,39 +1,55 @@
 {
   "defaults": {
     "language": "en",
-    "install_dir": "%LOCALAPPDATA%\\AI Breadboard",
+    "platform": "auto",
     "venv_dir": "venv",
     "python_min_version": "3.10",
-    "python_preferred_versions": ["3.13", "3.12", "3.11", "3.10"],
+    "python_preferred_versions": [
+      "3.13",
+      "3.12",
+      "3.11",
+      "3.10"
+    ],
     "repo_url": "https://github.com/hypo69/AI-Breadboard",
     "repo_zip_url": "https://github.com/hypo69/AI-Breadboard/archive/refs/heads/master.zip",
     "deps_choice": "1",
     "default_models": "llama3.1,qwen2.5-1.5b-instruct-generic-cpu:4"
   },
   "paths": {
-    "certs_dir": "%USERPROFILE%\\.certs",
+    "comment": "Все пути теперь кроссплатформенные - определяются автоматически через scripts.cli.paths",
     "cert_file": "localhost+2.pem",
     "key_file": "localhost+2-key.pem",
-    "ssl_script": "install_ssl_cert.ps1",
-    "secrets_dir": "core\\secrets",
-    "gemini_keys_file": "core\\secrets\\gemini_keys.json",
+    "ssl_script": "install_ssl_certs.py",
     "env_file": ".env",
     "config_file": "config.json",
     "requirements_main": "requirements.txt",
-    "requirements_core": "install\\req\\requirements-core.txt",
-    "requirements_ai": "install\\req\\requirements-ai.txt",
-    "requirements_test": "install\\req\\requirements-test.txt",
-    "requirements_docs": "install\\req\\requirements-docs.txt",
-    "local_bin": "%USERPROFILE%\\.local\\bin",
-    "assist_ps1": "assist.ps1",
-    "assist_cmd": "assist.cmd"
+    "requirements_core": "install/req/requirements-core.txt",
+    "requirements_ai": "install/req/requirements-ai.txt",
+    "requirements_test": "install/req/requirements-test.txt",
+    "requirements_docs": "install/req/requirements-docs.txt",
+    "assist_cli": "assist.py"
   },
   "env_vars": {
     "AIBREADBOARD_DIR": "",
-    "ASSIST_DIR": ""
+    "ASSIST_DIR": "",
+    "PYTHONUTF8": "1"
   },
   "verify": {
-    "modules": ["fastapi", "uvicorn", "dotenv", "pydantic", "aiohttp", "cryptography"]
+    "modules": [
+      "fastapi",
+      "uvicorn",
+      "dotenv",
+      "pydantic",
+      "aiohttp",
+      "cryptography",
+      "platformdirs"
+    ]
   },
-  "supported_languages": ["ru", "en", "es", "he"]
+  "supported_languages": [
+    "ru",
+    "en",
+    "es",
+    "he"
+  ],
+  "note": "Используйте scripts.cli.paths.get_paths() для получения путей, которые автоматически адаптируются для Windows/Linux/macOS"
 }

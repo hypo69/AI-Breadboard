@@ -1,5 +1,17 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: # ================================================
+# =============================================================================
+# Description:
+#   Найти все Python файлы в корне проекта."""
+#
+# File: analyze_dependencies.py
+# Project: ai-breadboard
+# Package: .ai.tools.setup
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Скрипт для анализа зависимостей между скриптами в проекте.
 Помогает определить, какие скрипты используются другими и какие можно безопасно удалить.
@@ -44,7 +56,7 @@ def analyze_file_imports(file_path):
             if not line or line.startswith('#'):
                 continue
                 
-            # Проверка на импорты других скриптов
+            # Check на импорты других скриптов
             for pattern in patterns:
                 match = re.search(pattern, line)
                 if match:
@@ -64,7 +76,7 @@ def analyze_file_imports(file_path):
             imports.extend(subprocess_calls)
             
     except Exception as e:
-        print(f"Ошибка при анализе {file_path}: {e}")
+        print(f"Error при анализе {file_path}: {e}")
     
     return imports
 
@@ -99,7 +111,7 @@ def analyze_ps1_files():
                 ps1_dependencies[ps1_file.name] = list(called_scripts)
                 
         except Exception as e:
-            print(f"Ошибка при анализе {ps1_file}: {e}")
+            print(f"Error при анализе {ps1_file}: {e}")
     
     return ps1_dependencies
 
@@ -107,9 +119,9 @@ def build_dependency_graph():
     """Построить граф зависимостей между скриптами."""
     python_files = find_python_files()
     
-    # Словарь зависимостей: скрипт -> [зависимости]
+    # Dictionary зависимостей: скрипт -> [зависимости]
     dependencies = defaultdict(list)
-    # Словарь обратных зависимостей: скрипт -> [кто зависит]
+    # Dictionary обратных зависимостей: скрипт -> [кто зависит]
     reverse_deps = defaultdict(list)
     
     # Анализ Python файлов
@@ -256,7 +268,7 @@ def print_dependency_report(analysis):
     print("\n" + "=" * 80)
 
 def main():
-    """Основная функция."""
+    """Основная function."""
     print("Анализ зависимостей скриптов...")
     
     analysis = analyze_script_usage()

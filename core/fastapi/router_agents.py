@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: FastAPI-роутер управления и создания ИИ-агентов
+# Process Name: Loads полный config.json.
 # =============================================================================
-# Описание:
+# Description:
 #   CRUD для конфигурации агентов (системных и пользовательских).
-#   Каталог инструментов, пула моделей и провайдеров.
-#   AI Prompt & Agent Architect генератор и интерактивная песочница (Sandbox).
 #
 # File: router_agents.py
 # Project: ai-breadboard
-# Package: src.fastapi
+# Package: core.fastapi
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -78,7 +76,6 @@ _AVAILABLE_TOOLS = [
     }
 ]
 
-
 # ============================================================================
 # Pydantic Модели
 # ============================================================================
@@ -97,75 +94,68 @@ class AgentModel(BaseModel):
     tools: List[str] = Field(default_factory=list)
     system_prompt: str = ''
 
-
 class GeneratePromptRequest(BaseModel):
     task_description: str
     provider: str = 'gemini'
     model: str = 'gemini-2.5-flash'
     agent_name: str = ''
 
-
 class TestAgentRequest(BaseModel):
     agent_id: str = ''
     inline_config: Optional[AgentModel] = Field(default_factory=dict) # type: ignore
     test_message: str
-
 
 # ============================================================================
 # Хелперы работы с config.json
 # ============================================================================
 
 def _load_raw_config() -> dict:
-    """Загружает полный config.json."""
+    """Loads полный config.json."""
     if not _CONFIG_PATH.exists():
         return {}
     try:
         with open(_CONFIG_PATH, 'r', encoding='utf-8') as f:
             return json.load(f)
     except Exception as e:
-        logger.error(f'[router_agents] Ошибка загрузки config.json: {e}')
+        logger.error(f'[router_agents] Error загрузки config.json: {e}')
         return {}
 
-
 def _save_raw_config(data: dict) -> None:
-    """Сохраняет config.json с форматированием."""
+    """Saves config.json с форматированием."""
     try:
         with open(_CONFIG_PATH, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.error(f'[router_agents] Ошибка сохранения config.json: {e}')
+        logger.error(f'[router_agents] Error сохранения config.json: {e}')
         raise HTTPException(status_code=500, detail='Не удалось сохранить конфигурацию')
 
-
 def _get_agents_list() -> List[dict]:
-    """Возвращает список агентов из config.json."""
+    """Returns list агентов из config.json."""
     cfg = _load_raw_config()
     agents_cfg = cfg.get('agents', {})
     if isinstance(agents_cfg, dict):
         return agents_cfg.get('items', [])
     return []
 
-
 def _save_agents_list(items: List[dict]) -> None:
-    """Сохраняет обновленный список агентов в config.json."""
+    """Saves обновленный list агентов в config.json."""
     cfg = _load_raw_config()
     if 'agents' not in cfg or not isinstance(cfg['agents'], dict):
         cfg['agents'] = {}
     cfg['agents']['items'] = items
     _save_raw_config(cfg)
 
-
 # ============================================================================
 # Роутер FastAPI
 # ============================================================================
 
 def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
-    """Инициализирует и возвращает роутер управления агентами."""
+    """Инициализирует и Returns роутер управления агентами."""
     router = APIRouter(prefix=prefix, tags=['agents'])
 
     @router.get('')
     async def list_agents() -> List[dict]:
-        """Получить список всех агентов (системных и пользовательских)."""
+        """Получить list всех агентов (системных и пользовательских)."""
         return _get_agents_list()
 
     @router.get('/tools')
@@ -175,7 +165,7 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
 
     @router.get('/providers')
     async def list_providers() -> dict:
-        """Получить список провайдеров и моделей из пула проекта."""
+        """Получить list провайдеров и моделей из пула проекта."""
         raw_cfg = _load_raw_config()
         ai_section = raw_cfg.get('ai', {})
 
@@ -242,7 +232,7 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
         """Создать нового кастомного агента."""
         items = _get_agents_list()
         
-        # Проверка уникальности ID
+        # Check уникальности ID
         existing_ids = {a.get('id') for a in items}
         if agent.id in existing_ids:
             raise HTTPException(status_code=400, detail=f'Агент с ID "{agent.id}" уже существует')
@@ -271,7 +261,7 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
 
         old_item = items[found_idx]
         agent_dict = agent.dict()
-        # Сохраняем системный статус исходного агента
+        # Сохраняем системный status исходного агента
         agent_dict['is_system'] = old_item.get('is_system', False)
         agent_dict['id'] = agent_id  # ID не меняется
 
@@ -359,7 +349,7 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
                 cleaned = re.sub(r'\s*```$', '', cleaned)
 
             parsed_data = json.loads(cleaned)
-            # Валидация рекомендованных инструментов
+            # Validation рекомендованных инструментов
             if 'recommended_tools' in parsed_data:
                 parsed_data['recommended_tools'] = [
                     t for t in parsed_data['recommended_tools'] if t in tool_ids
@@ -370,7 +360,7 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
                 'data': parsed_data
             }
         except Exception as e:
-            logger.error(f'[router_agents] Ошибка AI-генератора промпта: {e}')
+            logger.error(f'[router_agents] Error AI-генератора промпта: {e}')
             # Фолбэк на дефолтную структуру при сбое модели
             return {
                 'status': 'fallback',
@@ -402,7 +392,7 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
                     break
 
         if not target_config:
-            raise HTTPException(status_code=400, detail='Не задана конфигурация агента для тестирования')
+            raise HTTPException(status_code=400, detail='Не задана Configuration агента для тестирования')
 
         provider = target_config.get('provider', 'gemini')
         model_name = target_config.get('model', 'gemini-2.5-flash')
@@ -413,7 +403,7 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
         steps.append({
             'step': 1,
             'type': 'thought',
-            'content': f"Инициализация агента '{target_config.get('name')}' [Провайдер: {provider}, Модель: {model_name}]"
+            'content': f"Initialization агента '{target_config.get('name')}' [Провайдер: {provider}, Модель: {model_name}]"
         })
 
         if tools:
@@ -454,7 +444,7 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
             steps.append({
                 'step': 4,
                 'type': 'finish',
-                'content': f"Завершено успешно за {duration_ms} мс."
+                'content': f"Завершено successfully за {duration_ms} мс."
             })
 
             return {
@@ -465,15 +455,15 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
             }
         except Exception as e:
             duration_ms = int((time.time() - start_time) * 1000)
-            logger.error(f'[router_agents] Ошибка тестового прогона агента: {e}')
+            logger.error(f'[router_agents] Error тестового прогона агента: {e}')
             steps.append({
                 'step': len(steps) + 1,
                 'type': 'error',
-                'content': f"Ошибка выполнения: {str(e)}"
+                'content': f"Error выполнения: {str(e)}"
             })
             return {
                 'status': 'error',
-                'response': f"Ошибка при выполнении агента: {str(e)}",
+                'response': f"Error при выполнении агента: {str(e)}",
                 'duration_ms': duration_ms,
                 'steps': steps
             }

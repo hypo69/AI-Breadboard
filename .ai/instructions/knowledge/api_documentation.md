@@ -10,24 +10,24 @@ http://localhost:3000
 https://ваш-домен.com
 ```
 
-## Аутентификация и Google OAuth
+## Authentication и Google OAuth
 
 ### Google OAuth2 Flow
 - `GET /auth/google?next=/` — инициирует процесс аутентификации и синхронизации через Google OAuth2 с запросом прав на доступ к Google Drive, Docs, Calendar, Contacts.
 - `GET /auth/google/callback` — обработка callback от Google, обмен авторизационного кода на access/refresh токены, сохранение профиля пользователя в `user_manager` и установка JWT-cookie `auth_token`.
-- `GET /auth/google/status` — проверка подключения и синхронизации Google-аккаунта.
+- `GET /auth/google/status` — check подключения и синхронизации Google-аккаунта.
 
 #### ⚠️ Требования к Google Redirect URI (Google Cloud Console):
-Во избежание ошибки `400: redirect_uri_mismatch`, в **Google Cloud Console &rarr; Credentials &rarr; OAuth 2.0 Client ID** в список **Authorized redirect URIs** должны быть добавлены все рабочие адреса:
+Во избежание ошибки `400: redirect_uri_mismatch`, в **Google Cloud Console &rarr; Credentials &rarr; OAuth 2.0 Client ID** в list **Authorized redirect URIs** должны быть добавлены все рабочие адреса:
 - `https://kino.davidka.net/auth/google/callback` (внешний домен / туннель)
 - `http://localhost:8000/auth/google/callback` (локальный порт)
 - `http://127.0.0.1:8000/auth/google/callback` (локальный IP)
 
-### Проверка статуса авторизации
+### Check статуса авторизации
 ```http
 GET /auth/check
 ```
-Возвращает информацию о текущей сессии:
+Returns информацию о текущей сессии:
 ```json
 {
   "authenticated": true,
@@ -70,11 +70,11 @@ Content-Type: application/json
 }
 ```
 
-#### Параметры:
+#### Parameters:
 - `message` (обязательный): Текст сообщения пользователя
 - `stream` (опциональный): Включить потоковый ответ (по умолчанию: false)
 - `model` (опциональный): Модель AI (gemini-*, foundry:*, agy-*, ollama:*)
-- `tools` (опциональный): Список инструментов для Function Calling
+- `tools` (опциональный): List инструментов для Function Calling
 
 ### 2. Медиатека (`/api/media`)
 **Роутер:** `router_media.py`
@@ -95,13 +95,13 @@ Content-Type: application/json
 GET /api/media/stream/{media_id}
 Range: bytes=0-1024
 ```
-Возвращает потоковую трансляцию медиафайла с поддержкой диапазонов байтов.
+Returns потоковую трансляцию медиафайла с поддержкой диапазонов байтов.
 
 #### Карточка медиа
 ```
 GET /api/media/card/{media_id}
 ```
-Возвращает полную карточку медиа с метаданными.
+Returns полную карточку медиа с метаданными.
 
 #### Сканирование медиатеки
 ```
@@ -118,11 +118,11 @@ Content-Type: application/json
 ### 3. Торренты (`/api/torrents`)
 **Роутер:** `router_qbittorrent.py`
 
-#### Список торрентов
+#### List торрентов
 ```
 GET /api/torrents/
 ```
-Возвращает список всех торрентов в qBittorrent.
+Returns list всех торрентов в qBittorrent.
 
 #### Поиск торрентов
 ```
@@ -169,11 +169,11 @@ Content-Type: application/json
 }
 ```
 
-#### Список голосов
+#### List голосов
 ```
 GET /api/tts/voices
 ```
-Возвращает список доступных голосов для синтеза.
+Returns list доступных голосов для синтеза.
 
 ### 5. Логи (`/api/logs`)
 **Роутер:** `router_logs.py`
@@ -191,16 +191,16 @@ Query parameters:
 ```
 GET /api/logs/analyze
 ```
-Анализирует логи и возвращает статистику ошибок.
+Анализирует логи и Returns статистику ошибок.
 
 ### 6. Ключи API (`/api/keys`)
 **Роутер:** `router_keys.py`
 
-#### Статус ключей
+#### Status ключей
 ```
 GET /api/keys/status
 ```
-Возвращает статус всех настроенных API ключей.
+Returns status всех настроенных API ключей.
 
 #### Переключение ключей
 ```
@@ -242,16 +242,16 @@ DELETE /api/admin/users/{id}
 ```
 GET /api/admin/monitoring
 ```
-Возвращает метрики системы и состояние компонентов.
+Returns метрики системы и state компонентов.
 
 ### 8. Агенты (`/api/agents`)
 **Роутер:** `router_agents.py` (новый)
 
-#### Список агентов
+#### List агентов
 ```
 GET /api/agents/
 ```
-Возвращает список всех настроенных AI агентов.
+Returns list всех настроенных AI агентов.
 
 #### Создание агента
 ```
@@ -338,7 +338,7 @@ GET /user_tts
 
 ## Модели данных
 
-### UnifiedChatModel конфигурация
+### UnifiedChatModel Configuration
 ```json
 {
   "model": "gemini-2.0-flash",
@@ -366,7 +366,7 @@ GET /user_tts
 }
 ```
 
-### Конфигурация агента
+### Configuration агента
 ```json
 {
   "name": "аналитик медиа",
@@ -390,10 +390,10 @@ GET /user_tts
 - `200 OK`: Успешный запрос
 - `201 Created`: Ресурс создан
 - `400 Bad Request`: Невалидные данные
-- `401 Unauthorized`: Требуется аутентификация
+- `401 Unauthorized`: Требуется authentication
 - `403 Forbidden`: Недостаточно прав
 - `404 Not Found`: Ресурс не найден
-- `500 Internal Server Error`: Внутренняя ошибка сервера
+- `500 Internal Server Error`: Внутренняя Error сервера
 
 ### Формат ответа с ошибкой
 ```json
@@ -419,7 +419,7 @@ CORS_CREDENTIALS = true
 CORS_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 ```
 
-## Интеграция с клиентами
+## Integration с клиентами
 
 ### Python клиент
 ```python
@@ -455,7 +455,7 @@ async function searchMedia(title: string) {
 ```
 GET /health
 ```
-Возвращает статус системы и состояние компонентов.
+Returns status системы и state компонентов.
 
 ### Метрики Prometheus
 ```
@@ -489,6 +489,6 @@ Accept: application/json; version=1
 
 ---
 
-**Последнее обновление:** 24 августа 2026  
+**Последнее update:** 24 августа 2026  
 **Версия API:** v1  
-**Базовая архитектура:** FastAPI + UnifiedChatModel + модульные плагины
+**Базовая архитектура:** FastAPI + UnifiedChatModel + Moduleные плагины

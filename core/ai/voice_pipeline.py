@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Вы — профессиональный редактор текстов для дикторо
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: voice_pipeline.py
+# Project: ai-breadboard
+# Package: core.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 import asyncio
 import re
 from typing import AsyncGenerator
@@ -29,7 +42,7 @@ SYSTEM_PROMPT = """Вы — профессиональный редактор т
 
 async def generate_voiceover_chunks(raw_text: str, api_key: str = "", api_key_names: list = ()) -> AsyncGenerator[str, None]:
     """
-    Принимает сырой текст, отправляет его в Gemini с системным промптом
+    Принимает сырой текст, sends его в Gemini с системным промптом
     и по мере готовности стримит чанки, разделенные [NEXT_CHUNK].
     """
     model = GoogleGenerativeAI(

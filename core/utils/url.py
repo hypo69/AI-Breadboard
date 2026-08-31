@@ -1,14 +1,18 @@
-## \file /src/utils/string/url.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
-
-"""
-.. module:: src.utils.string 
-	:platform: Windows, Unix
-	:synopsis: Модуль для работы с URL строками, включая извлечение параметров запроса, проверку на валидность URL и сокращение ссылок.
-
-"""
+# =============================================================================
+# Process Name: URL string parsing and manipulation utilities
+# =============================================================================
+# Description:
+#   Provides utilities for working with URL strings including extraction of query parameters,
+#   URL validation, and link shortening functionality with support for various URL formats
+#   and parameter parsing from query strings.
+#
+# File: url.py
+# Project: ai-breadboard
+# Package: core.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 from urllib.parse import urlparse, parse_qs
 try:
@@ -18,13 +22,13 @@ except ImportError:
 import requests
 
 def extract_url_params(url: str) -> dict | None:
-    """ Извлекает параметры из строки URL.
+    """Extraction of query parameters from URL string.
 
     Args:
-        url (str): Строка URL для парсинга.
+        url (str): URL string for parsing.
 
     Returns:
-        dict | None: Словарь параметров запроса и их значений или `None`, если URL не содержит параметров.
+        dict | None: Dictionary of query parameters and their values or None if URL has no parameters.
     """
     parsed_url = urlparse(url)
     params = parse_qs(parsed_url.query)
@@ -35,15 +39,14 @@ def extract_url_params(url: str) -> dict | None:
         return params
     return None
 
-
 def is_url(text: str) -> bool:
-    """ Проверяет, является ли переданный текст валидным URL с использованием библиотеки validators.
+    """ Checks, является ли переданный текст валидным URL с использованием библиотеки validators.
 
     Args:
-        text (str): Строка для проверки.
+        text (str): String для проверки.
 
     Returns:
-        bool: `True` если строка является валидным URL, иначе `False`.
+        bool: `True` если string является валидным URL, иначе `False`.
     """
     if not text:
         return False
@@ -57,7 +60,6 @@ def is_url(text: str) -> bool:
         r'([/?#].*)?$', re.IGNORECASE)
     return bool(pattern.match(text))
 
-
 def url_shortener(long_url: str) -> str | None:
     """ Сокращает длинный URL с использованием сервиса TinyURL.
 
@@ -65,7 +67,7 @@ def url_shortener(long_url: str) -> str | None:
         long_url (str): Длинный URL для сокращения.
 
     Returns:
-        str | None: Сокращённый URL или `None`, если произошла ошибка.
+        str | None: Сокращённый URL или `None`, если произошла Error.
     """
     url = f'http://tinyurl.com/api-create.php?url={long_url}'
     response = requests.get(url)
@@ -73,7 +75,6 @@ def url_shortener(long_url: str) -> str | None:
     if response.status_code == 200:
         return response.text
     return None
-
 
 if __name__ == "__main__":
     # Получаем строку URL от пользователя
@@ -83,9 +84,9 @@ if __name__ == "__main__":
     if is_url(url):
         params = extract_url_params(url)
         
-        # Выводим параметры
+        # Выводим Parameters
         if params:
-            print("Параметры URL:")
+            print("Parameters URL:")
             for key, value in params.items():
                 print(f"{key}: {value}")
         else:
@@ -98,6 +99,6 @@ if __name__ == "__main__":
             if short_url:
                 print(f"Сокращённый URL: {short_url}")
             else:
-                print("Ошибка при сокращении URL.")
+                print("Error при сокращении URL.")
     else:
-        print("Введенная строка не является валидным URL.")
+        print("Введенная string не является валидным URL.")

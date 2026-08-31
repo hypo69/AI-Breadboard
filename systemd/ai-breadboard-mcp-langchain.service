@@ -1,0 +1,25 @@
+[Unit]
+Description=AI Breadboard MCP LangChain Agent Server
+Documentation=https://github.com/hypo69/AI-Breadboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=%u
+WorkingDirectory=%h/AI-Breadboard
+Environment="PATH=%h/AI-Breadboard/venv/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PYTHONPATH=%h/AI-Breadboard"
+Environment="AIBREADBOARD_DIR=%h/AI-Breadboard"
+Environment="PYTHONUTF8=1"
+ExecStart=%h/AI-Breadboard/venv/bin/python %h/AI-Breadboard/.mcp/langchain_mcp_server.py
+Restart=on-failure
+RestartSec=10
+
+# Логирование
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=aibreadboard-mcp-langchain
+
+[Install]
+WantedBy=default.target

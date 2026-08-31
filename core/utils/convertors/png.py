@@ -1,7 +1,16 @@
-## \file /src/utils/convertors/png.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: .. module:: src.utils.convertors.png
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: png.py
+# Project: ai-breadboard
+# Package: core.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module:: src.utils.convertors.png 

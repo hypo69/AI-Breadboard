@@ -12,9 +12,9 @@
 
 #### FastAPI сервер (`main.py`)
 - Точка входа для всех API запросов
-- Инициализация `UnifiedChatModel` — единого интерфейса для AI моделей
-- Динамическая загрузка 10 плагинов через `plugins/__init__.py`
-- Подключение 9 роутеров: чат, медиа, торренты, управление, TTS, логи, ключи, аутентификация, админ
+- Initialization `UnifiedChatModel` — единого интерфейса для AI моделей
+- Динамическая Loading 10 плагинов через `plugins/__init__.py`
+- Connection 9 роутеров: чат, медиа, торренты, управление, TTS, логи, ключи, authentication, админ
 
 #### UnifiedChatModel (`core/ai/unified_chat.py`)
 Единый интерфейс для прозрачного роутинга между моделями:
@@ -47,13 +47,13 @@ POST /api/chat {message, history, generation_config}
   ↓
 Извлечение user_identifier (JWT токен → email или IP)
   ↓
-Загрузка персональных настроек (system_instruction, model, tts)
+Loading персональных настроек (system_instruction, model, tts)
   ↓
 Поиск контекста из User RAG (FAISS + Gemini Embeddings)
   ↓
 Добавление профиля предпочтений (get_recommendation_context)
   ↓
-Формирование финального system_prompt
+Formation финального system_prompt
   ↓
 Маршрутизация:
   ├─ Медиа-запрос → rag плагин (_is_media_query)
@@ -72,16 +72,16 @@ SSE StreamingResponse: {status}, {text}, {voice}
 
 **Two-tier generation:**
 - Два отдельных запроса к AI: один для текста, второй для голоса (TTS)
-- Параметры `response_type: 'chat' | 'voice'` в generation_config
+- Parameters `response_type: 'chat' | 'voice'` в generation_config
 
 **Debug mode:**
 - Включается через `generation_config.debug_mode = true`
-- Возвращает сформированный промпт вместо отправки в модель
+- Returns сформированный промпт вместо отправки в модель
 - Для отладки маршрутизации и контекста
 
 **Context continuity:**
 - Автоматическое пропускание старого контекста для коротких команд
-- Список контрольных слов: "да", "нет", "ок", "включи", "запусти" и др.
+- List контрольных слов: "да", "нет", "ок", "включи", "запусти" и др.
 - Порог: сообщение < 25 символов и присутствие контрольных слов
 
 **Голосовая гендерная коррекция:**
@@ -92,7 +92,7 @@ SSE StreamingResponse: {status}, {text}, {voice}
 
 ## Система плагинов
 
-### Базовый класс (`plugins/plugin.py`)
+### Базовый class (`plugins/plugin.py`)
 
 ```python
 class BasePlugin(ABC):
@@ -106,13 +106,13 @@ class BasePlugin(ABC):
         # Реализация конкретного плагина
 ```
 
-### Загрузка плагинов (`plugins/__init__.py`)
+### Loading плагинов (`plugins/__init__.py`)
 
 ```python
 def load_plugins(ai_model) -> dict[str, BasePlugin]:
     # Обход поддиректорий plugins/
     # Импорт через importlib.import_module
-    # Отключение через DISABLED_PLUGINS (env, через запятую)
+    # Disconnection через DISABLED_PLUGINS (env, через запятую)
 ```
 
 ### Активные плагины (2026)
@@ -136,7 +136,7 @@ class RAGPlugin(BasePlugin):
     name = "rag"
     
     def _is_media_query(self, message: str) -> bool:
-        # Проверка медиа-ключевых слов
+        # Check медиа-ключевых слов
         low = message.lower()
         return any(kw in low for kw in _MEDIA_KEYWORDS)
     
@@ -189,7 +189,7 @@ async def search_user_context(user_id, api_key, query, top_k=2, threshold=0.45):
 - search_media(query, top_k=5) — поиск фильмов/сериалов
 - get_media_card(disk_name, title, type) — карточка медиа
 - get_random_media() — случайный фильм
-- get_rag_status() — статус индексации
+- get_rag_status() — status индексации
 ```
 
 
@@ -213,7 +213,7 @@ webinterface/
 ### Главный файл (`webinterface/user/main.js`)
 
 #### Модули:
-1. **Auth** — авторизация (Google OAuth, email/password)
+1. **Auth** — authorization (Google OAuth, email/password)
 2. **Torrent** — обработка торрент-ссылок из ответов бота
 3. **Player** — воспроизведение медиафайлов
 4. **Chat** — отправка сообщений и получение ответов
@@ -293,7 +293,7 @@ async function launchFilm(title) {
 
 ---
 
-## Конфигурация
+## Configuration
 
 ### `core/fastapi/config.json`
 ```json
@@ -320,7 +320,7 @@ USE_OLLAMA=false
 OLLAMA_MODEL_ID=llama3.1
 OLLAMA_BASE_URL=http://localhost:11434
 
-# Отключение плагинов
+# Disconnection плагинов
 DISABLED_PLUGINS=telegram_bot,yt_dlp
 
 # TTS
@@ -347,13 +347,13 @@ TTS_VOICE=ru-RU-DmitryNeural
 
 ### Система логов (`core/logger/logger.py`)
 - Singleton паттерн для единого экземпляра
-- Модульные лог-файлы: `fastapi.log`, `gemini.log`, `playwright.log`, `yt_dlp.log`
+- Moduleные лог-файлы: `fastapi.log`, `gemini.log`, `playwright.log`, `yt_dlp.log`
 - JSON форматирование в `log.json`
 - Цветной консольный вывод
 
 ---
 
-## Интеграция со скриптами
+## Integration со скриптами
 
 После обработки медиа или внесения изменений в медиатеку автоматически запускаются:
 
@@ -364,7 +364,7 @@ py manage_tools.py torrents assign
 # Привязка торрентов к медиа
 py manage_tools.py torrents ids
 
-# Обновление размеров файлов
+# Update размеров файлов
 py manage_tools.py db sizes
 
 # Аудит медиафайлов
@@ -385,16 +385,16 @@ py manage_tools.py audit media
 
 ---
 
-## Проверка состояния системы
+## Check состояния системы
 
 ```bash
-# Список дос��упных моделей
+# List дос��упных моделей
 curl http://localhost:3000/api/chat/models
 
-# Статус WebSocket комнат
+# Status WebSocket комнат
 curl http://localhost:3000/api/control/status
 
-# Статус активных плееров
+# Status активных плееров
 curl http://localhost:3000/api/control/active_players
 
 # Ручное сохранение в RAG

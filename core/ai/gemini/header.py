@@ -1,16 +1,23 @@
-## \file /src/ai/gemini/header.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: .. module:: src.ai.gemini
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: header.py
+# Project: ai-breadboard
+# Package: core.ai.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module:: src.ai.gemini 
 	:platform: Windows, Unix
-	:synopsis: Модуль интерфейса с моделью от Coogle - generativeai
+	:synopsis: Module интерфейса с моделью от Coogle - generativeai
 
 """
-
-
 
 import sys
 from packaging.version import Version
@@ -37,7 +44,6 @@ def set_project_root(marker_files=('__root__','.git')) -> Path:
     if __root__ not in sys.path:
         sys.path.insert(0, str(__root__))
     return __root__
-
 
 # Get the root directory of the project
 __root__: Path = set_project_root()

@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тесты модуля core/user_manager
+# Process Name: Тесты модуля core/user_manager
 # =============================================================================
-# Описание:
-#   Модуль содержит тесты для модуля управления пользователями. Проверяет
-#   получение пути к профилю, структуру профиля по умолчанию и основные
-#   функции управления пользователями. Обеспечивает покрытие ключевых
-#   сценариев работы с пользовательскими данными.
+# Description:
+#   Module содержит тесты для модуля управления пользователями. Checks
 #
-# File: tests/test_user_manager.py
+# File: test_user_manager.py
 # Project: ai-breadboard
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
+
 """
 Тесты модуля core/user_manager
 """
@@ -23,12 +21,11 @@ import sqlite3
 from unittest.mock import Mock, patch
 from pathlib import Path
 
-
 class TestUserProfile:
     """Тесты user_profile.py."""
 
     def test_get_profile_path(self):
-        """Тест получения пути к профилю - проверка структуры пути."""
+        """Тест получения пути к профилю - check структуры пути."""
         from core.user_manager.user_profile import _get_profile_path
         
         result = _get_profile_path(1)
@@ -97,7 +94,6 @@ class TestUserProfile:
         )
         
         assert result is not None
-
 
 class TestUserManager:
     """Тесты UserManager."""

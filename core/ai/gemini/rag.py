@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: RAG на базе Gemini Embedding API и FAISS
+# Process Name: RAG-индекс на базе Gemini Embedding API и FAISS.
 # =============================================================================
-# Описание:
+# Description:
 #   Векторизация документов через Gemini text-embedding-004 / gemini-embedding-2,
-#   хранение эмбеддингов и поиск с использованием FAISS.
-#   Не требует внешних СУБД — только FAISS и JSON.
 #
 # File: rag.py
 # Project: ai-breadboard
-# Package: src.ai.gemini
+# Package: core.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -34,7 +32,6 @@ from core.logger import logger
 _EMBED_MODEL = 'models/gemini-embedding-2'
 _EMBED_DIM = 3072
 
-
 class GeminiRAG:
     """RAG-индекс на базе Gemini Embedding API и FAISS.
 
@@ -47,7 +44,7 @@ class GeminiRAG:
     """
 
     def __init__(self, api_key: str = '', db_path: Path = Path('.')) -> None:
-        """Инициализация RAG-индекса."""
+        """Initialization RAG-индекса."""
         self.db_path = db_path
         self.index_file = db_path.with_suffix('.faiss')
         self.meta_file = db_path.with_suffix('.json')
@@ -58,20 +55,20 @@ class GeminiRAG:
             try:
                 self.client = genai.Client(api_key=api_key)
             except Exception as e:
-                logger.error(f"[GeminiRAG] Ошибка инициализации genai.Client: {e}")
+                logger.error(f"[GeminiRAG] Error инициализации genai.Client: {e}")
         
         self.index_file.parent.mkdir(parents=True, exist_ok=True)
         self.metadatas: List[Dict] = []
         self._load()
 
     def _load(self) -> None:
-        """Загрузка индекса и метаданных."""
+        """Loading индекса и метаданных."""
         if self.meta_file.exists():
             try:
                 with open(self.meta_file, 'r', encoding='utf-8') as f:
                     self.metadatas = json.load(f)
             except Exception as e:
-                logger.error("Ошибка чтения метаданных пользователя", e)
+                logger.error("Error чтения метаданных пользователя", e)
                 self.metadatas = []
         else:
             self.metadatas = []
@@ -84,7 +81,7 @@ class GeminiRAG:
             try:
                 self.index = faiss.read_index(str(self.index_file))
             except Exception as e:
-                logger.error("Ошибка чтения FAISS индекса, пересоздаем", e)
+                logger.error("Error чтения FAISS индекса, пересоздаем", e)
                 self._rebuild_index()
         else:
             self.index = faiss.IndexFlatL2(self.dimension)
@@ -114,7 +111,7 @@ class GeminiRAG:
                 vectors = np.array([m['vector'] for m in self.metadatas], dtype=np.float32)
                 self.index.add(vectors)
             except Exception as e:
-                logger.error("Ошибка при добавлении векторов в FAISS индекс", e)
+                logger.error("Error при добавлении векторов в FAISS индекс", e)
 
     def _save(self) -> None:
         """Сохранение индекса и метаданных."""
@@ -124,7 +121,7 @@ class GeminiRAG:
             with open(self.meta_file, 'w', encoding='utf-8') as f:
                 json.dump(self.metadatas, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            logger.error("Ошибка сохранения FAISS индекса/метаданных", e)
+            logger.error("Error сохранения FAISS индекса/метаданных", e)
 
     def _embed(self, texts: List[str], task_type: str = 'RETRIEVAL_DOCUMENT') -> List[List[float]]:
         """Получение эмбеддингов для списка текстов через Gemini API с обработкой 429 и ротацией ключей."""
@@ -179,7 +176,7 @@ class GeminiRAG:
             try:
                 vectors = self._embed(texts, task_type='RETRIEVAL_DOCUMENT')
             except Exception as e:
-                logger.error(f"Ошибка получения эмбеддингов для батча: {e}")
+                logger.error(f"Error получения эмбеддингов для батча: {e}")
                 raise e
             
             # Заменяем старые документы с совпадающими ID
@@ -224,7 +221,7 @@ class GeminiRAG:
         try:
             query_vec = np.array(self._embed([query], task_type='RETRIEVAL_QUERY')[0], dtype=np.float32)
         except Exception as e:
-            logger.error("Ошибка векторизации поискового запроса", e)
+            logger.error("Error векторизации поискового запроса", e)
             return []
 
         query_norm = query_vec / (np.linalg.norm(query_vec) + 1e-10)

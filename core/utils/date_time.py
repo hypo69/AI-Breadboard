@@ -1,7 +1,16 @@
-## \file /src/utils/date_time.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: .. module:: src.utils
+# =============================================================================
+# Description:
+#   This module contains a function to check if the current time is within a specified interval with an
+#
+# File: date_time.py
+# Project: ai-breadboard
+# Package: core.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module:: src.utils 
@@ -9,7 +18,6 @@
 	:synopsis: function to check if the current time is within a specified interval with an optional timeout
 
 """
-
 
 """ This module contains a function to check if the current time is within a specified interval with an optional timeout.
 
@@ -93,7 +101,6 @@ class TimeoutCheck:
             return  # Возвращаем None, если тайм-аут произошел
 
         return self.user_input
-
 
 if __name__ == '__main__':
     # Example usage

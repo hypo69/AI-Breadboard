@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тесты модуля core/logger
+# Process Name: Фикстура для создания логгера с временными путями.
 # =============================================================================
-# Описание:
+# Description:
 #   Исчерпывающее тестирование всех публичных функций и классов модуля core/logger.
-#   Покрытие: прямые тесты, граничные условия, регрессионные сценарии, проверка файлового ввода-вывода.
 #
-# File: tests/test_logger_enhanced.py
+# File: test_logger_enhanced.py
 # Project: ai-breadboard
 # Package: tests
 # Author: hypo69
@@ -75,7 +74,7 @@ def test_logger_file_writing(temp_logger):
     temp_logger.info(message)
     
     # --- Assert ---
-    # Проверка, что файл info.log существует и содержит сообщение
+    # Check, что файл info.log существует и содержит сообщение
     assert temp_logger.info_log_path.exists(), "Файл info.log не создан"
     with open(temp_logger.info_log_path, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -106,7 +105,7 @@ def test_logger_debug_filter(temp_logger):
     temp_logger.debug(message)
     
     # --- Assert ---
-    # Проверка, что сообщение не попало в debug.log
+    # Check, что сообщение не попало в debug.log
     with open(temp_logger.debug_log_path, 'r', encoding='utf-8') as f:
         content = f.read()
         assert message not in content, "DEBUG сообщение записано в PROD режиме"

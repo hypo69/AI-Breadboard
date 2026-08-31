@@ -1,0 +1,58 @@
+#!/bin/bash
+#
+# Кроссплатформенный CLI ассистент для AI-Breadboard
+# Работает на Linux, macOS и Windows (WSL/Git Bash)
+#
+# Использование:
+#   assist start
+#   assist stop
+#   assist status
+#   assist providers
+#   assist logs 50
+#
+
+# Найти корень проекта
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$SCRIPT_DIR"
+
+# Если это находится в ~/.local/bin, найти проект через AIBREADBOARD_DIR
+if [[ "$PROJECT_ROOT" == *".local/bin"* ]]; then
+    if [ -n "$AIBREADBOARD_DIR" ]; then
+        PROJECT_ROOT="$AIBREADBOARD_DIR"
+    else
+        # Попробовать найти через поиск вверх
+        while [[ ! -f "$PROJECT_ROOT/config.json" && ! -f "$PROJECT_ROOT/main.py" ]]; do
+            if [[ "$PROJECT_ROOT" == "/" ]]; then
+                PROJECT_ROOT="$SCRIPT_DIR"
+                break
+            fi
+            PROJECT_ROOT="$(dirname "$PROJECT_ROOT")"
+        done
+    fi
+fi
+
+# Установить переменные окружения
+export AIBREADBOARD_DIR="$PROJECT_ROOT"
+export ASSIST_DIR="$PROJECT_ROOT"
+export PYTHONUTF8=1
+export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH}"
+
+# Найти Python интерпретатор
+PYTHON=""
+
+# 1. Виртуальное окружение в проекте
+if [ -f "$PROJECT_ROOT/venv/bin/python" ]; then
+    PYTHON="$PROJECT_ROOT/venv/bin/python"
+# 2. Python 3 в PATH
+elif command -v python3 &>/dev/null; then
+    PYTHON="python3"
+# 3. Python в PATH
+elif command -v python &>/dev/null; then
+    PYTHON="python"
+else
+    echo "❌ Python не найден. Пожалуйста, установите Python 3.10+"
+    exit 1
+fi
+
+# Выполнить CLI ассистент
+"$PYTHON" "$PROJECT_ROOT/scripts/cli/assist.py" "$@"

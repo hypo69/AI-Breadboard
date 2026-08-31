@@ -1,59 +1,192 @@
 # GEMINI.md
 
-## 📋 General Information
-This file is the primary source of project instructions, standards, and architectural conventions for the `aibreadboard` repository.
+## 📋 Основная Info
 
-## 💡 Project Concept and Strategy (AI Breadboard)
-- **Purpose:** Interactive "breadboard" for beginners to study, test, and compare various AI models (Google Gemini, Microsoft AI Foundry, OpenAI, local models, etc.).
-- **Breadboard Testbench Architecture:** The project provides a transparent testbench (breadboard) where AI models act as interchangeable microchips. Everything runs natively and directly on the host (PowerShell launchers + Python venv), making signal tracing, bus routing, and vector memory fully observable.
-- **Minimum Unnecessary Entities (KISS):** Architecture is built without over-engineering, unnecessary abstraction layers, or bulky frameworks.
-- **Universal Model Switches via API:** Users send their requests through a unified API (`/api/chat`, `/v1/chat/completions`, web interface). The code uses universal switches and a single interface contract (`UnifiedChatModel`, `get_chat_model()`, methods `chat()`, `ask()`, `stream_chat()`), which allows seamless work with any model types (Gemini, Foundry, Ollama, OpenAI/DeepSeek/Groq, HF/ONNX) without duplicating business logic.
-- **Model Behavior via Instructions:** Sufficient and exhaustive descriptions of behavior, roles, and protocols are embedded directly in machine instructions (`.ai/prompts/`, `.ai/instructions/`), rather than hardcoded in the logic.
+Этот файл — **главный индекс инструкций** проекта. Содержит ссылки на все документы проекта, архитектурные принципы и стандарты разработки.
 
-## ⚙️ Core Workflows
-All developments must strictly adhere to the principles described in `.ai_instructions/`:
-- **Code Standards:** Described in `rules/CODE_RULES.md`.
-- **TDD Documentation:** For all functional changes in `.py` files, use of the `tdd-doc-gen` skill is MANDATORY (see protocol in `rules/CODE_RULES.md`).
-- **Documentation:** Described in `rules/DOCS_RULES.md`. (Atomic changes: documentation + code).
-- **Launchers and Service Startup:** `.ai_instructions/knowledge/LAUNCHER_GUIDE.md` — single source of rules.
-- **AI Tools:** `tools/` — all utility scripts for agents. Described in `tools/README.md`.
+---
 
-## 🏗️ Architectural Requirements
-- **Explicit is better than implicit:** Dependency passing must be explicit.
-- **Fail-Fast:** Use early returns.
-- **Configuration over Hardcode:** No hardcoded parameters; only JSON configurations or environment variables.
-- **Configuration Storage:** All non-secret application settings must be stored in `config.json`. Environment variables and `.env` file must be used EXCLUSIVELY for secret data (API keys, tokens, passwords).
-- **Ban on `None`:** The `None` keyword and `is None` checks are strictly forbidden. Function parameters and class attributes MUST use concrete default values: `Optional[float] = 0.0`, `Optional[int] = 0`, `Optional[str] = ''`, `Optional[list] = []`, `Optional[dict] = {}`. Constructing signatures like `temperature: Optional[float] = None` is strictly prohibited.
-- **Automatic Frontend Versioning (Cache Busting):** When changing static files (JS, CSS), you must update/increment the version parameter (e.g., `?v=YYYYMMDD` or increment) in all HTML/templates that include this file to prevent browser caching.
-- **Mandatory Documentation:** Every new directory in the project MUST contain a `README.md` in English describing the module's purpose and how it works.
+## 🚀 Быстрый старт
 
-## 🚀 Launchers and Service Startup
+### Первый запуск
+```powershell
+.\install.ps1          # Установка проекта и venv
+.\run.ps1              # Запуск сервера (FastAPI + Foundry)
+```
 
-**Rule:** The main launcher `run.ps1` is located in the repository **root** directory, while individual service launchers are located in the `launchers/` directory.
+### Документация и инструменты
+- **Полная установка:** [`.ai/instructions/knowledge/INSTALLATION_GUIDE.md`](.ai/instructions/knowledge/INSTALLATION_GUIDE.md)
+- **Запуск сервисов:** [`.ai/instructions/knowledge/LAUNCHER_GUIDE.md`](.ai/instructions/knowledge/LAUNCHER_GUIDE.md)
+- **Консольные инструменты:** [`.ai/instructions/knowledge/scripts_tools.md`](.ai/instructions/knowledge/scripts_tools.md)
 
-| Launcher | Purpose |
-|----------|--------- |
-| `run.ps1` | Main launcher (FastAPI + Foundry) |
-| `launchers/Run-Unicorn.ps1` | FastAPI server |
-| `launchers/Run-Foundry.ps1` | AI Foundry |
-| `launchers/Run-LightServer.ps1` | HTTP server |
-| `launchers/Run-GeminiCli.ps1` | Google Gemini CLI agent |
-| `launchers/Run-Agy.ps1` | Google Antigravity (AGY) agent |
-| `launchers/run_tests.ps1` | Test runner |
+---
 
-See more: `.ai_instructions/knowledge/LAUNCHER_GUIDE.md`
+## 💡 Концепция проекта (AI Breadboard)
 
-## 🛠️ Using Skills
-For specific tasks, use available system skills via the `activate_skill` tool:
-- `skill-creator` — for creating new skills.
-- `antigravity-support` — for Antigravity CLI migration and setup.
-- `microsoft-foundry` — for Foundry agent management.
+**Назначение:** Интерактивная "макетная плата" для изучения и тестирования различных AI моделей (Google Gemini, Microsoft AI Foundry, Ollama, OpenAI и др.).
 
-## 📝 Quality Control (Commit Checklist)
-Before committing, ensure:
-1. File header conforms to the standard.
-2. Public functions have Docstrings in `hypo69 docblock` format.
-3. Code contains no Cyrillic (for Web/PHP stack).
-4. Logging is strictly via `core.logger.logger`.
-5. All secrets are moved to `.env`.
-6. **Commit Regulations:** Commits are made ONLY after complete verification of a finished debugging/development session. Do not commit every intermediate change. A commit must reflect a logically complete state of working code.
+**Ключевые особенности:**
+- **Moduleная архитектура:** Модели работают через единый интерфейс `UnifiedChatModel` без дублирования бизнес-логики
+- **Прямой запуск:** Всё работает на хосте (PowerShell лончеры + Python venv), полная наблюдаемость
+- **Configuration вместо кодирования:** Поведение моделей управляется через файлы конфигурации и инструкции, а не через hardcode
+- **Минимализм:** KISS-принцип без излишних слоёв абстракции
+
+---
+
+## 📚 Стандарты разработки
+
+Все разработки **MUST** следовать инструкциям в `.ai/instructions/`:
+
+### 1. **Стандарты кода**
+📄 [`.ai/instructions/rules/CODE_RULES.md`](.ai/instructions/rules/CODE_RULES.md)
+
+Содержит:
+- Архитектурные принципы (Explicit, DRY, Single Responsibility)
+- Запрет на использование `None`
+- Правила комментирования и логирования
+- Языковые стандарты (Python 3.12+, PHP 8.3+, JS ES2024)
+- Работа с конфигурацией и секретами
+
+### 2. **Документирование и TDD**
+📄 [`.ai/instructions/rules/DOCS_RULES.md`](.ai/instructions/rules/DOCS_RULES.md)
+
+Содержит:
+- Обязательный TDD-workflow для всех `.py` изменений
+- Структура docstrings в формате `hypo69 docblock`
+- Правила документирования README.md для каждой директории
+- Examples и best practices
+
+### 3. **Архитектурная документация**
+📄 [`.ai/instructions/knowledge/project_overview.md`](.ai/instructions/knowledge/project_overview.md)
+
+- Общее описание системы
+- Ключевые компоненты и их назначение
+- Архитектурные диаграммы
+- Процессы и workflows
+
+---
+
+## 🛠️ Основные инструменты и команды
+
+### Запуск сервиса
+```powershell
+# Главный лончер (всё сразу)
+.\run.ps1
+
+# Только FastAPI сервер
+.\launchers\Run-Unicorn.ps1
+
+# Check статуса
+assist status
+```
+
+### Управление через `manage_tools.py`
+```powershell
+# Универсальный CLI для скриптов
+py manage_tools.py <группа> <команда> [аргументы]
+
+# Examples
+py manage_tools.py media scan --disk "диск 2"
+py manage_tools.py torrents assign
+py manage_tools.py check db
+```
+
+Полная справка: [`.ai/instructions/knowledge/scripts_tools.md`](.ai/instructions/knowledge/scripts_tools.md)
+
+### Запуск тестов
+```powershell
+.\launchers\run_tests.ps1         # Полное тестирование
+pytest tests/ --cov                # С подсчётом покрытия
+```
+
+---
+
+## ⚙️ Архитектурные принципы
+
+| Принцип | Описание | Ссылка |
+|---------|----------|--------|
+| **Explicit** | Передача зависимостей явно (DI) | CODE_RULES.md § 3.3 |
+| **Fail-Fast** | Ранний возврат при ошибке | CODE_RULES.md § 3.4 |
+| **Config > Hardcode** | Parameters из конфига, не из кода | CODE_RULES.md § 3.5 |
+| **No None** | Запрет на использование `None` | CODE_RULES.md § 3.6 |
+| **DRY** | Нет дублирования кода | CODE_RULES.md § 4.2 |
+| **300-строк лимит** | Функции max 300 строк кода | CODE_RULES.md § 4.4 |
+| **Документация** | Docstrings + README.md для каждого модуля | DOCS_RULES.md § 3-4 |
+
+---
+
+## 🔐 Configuration и секреты
+
+### Configuration (`config.json`)
+Все Parameters работы приложения хранятся в публичном файле:
+```json
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 3000,
+    "workers": 1
+  },
+  "ai": {
+    "use_foundry": true,
+    "foundry_base_url": "http://localhost:54837"
+  }
+}
+```
+
+### Секреты (`.env`)
+Только приватные данные (API ключи, токены, пароли):
+```env
+GEMINI_API_KEY_1=AIzaSy...
+JWT_SECRET=secret_value
+TELEGRAM_BOT_TOKEN=...
+```
+
+Правило: **Никогда не коммитить `.env`!** Используйте `.env.example` для примеров.
+
+📄 Подробнее: CODE_RULES.md § 7 "Configuration и секреты"
+
+---
+
+## 📖 Полный указатель документации
+
+| Документ | Где | Описание |
+|----------|-----|---------|
+| **CODE_RULES.md** | `.ai/instructions/rules/` | Стандарты кода, архитектура, языки |
+| **DOCS_RULES.md** | `.ai/instructions/rules/` | TDD, docstrings, README.md |
+| **INSTALLATION_GUIDE.md** | `.ai/instructions/knowledge/` | Установка и настройка проекта |
+| **LAUNCHER_GUIDE.md** | `.ai/instructions/knowledge/` | Запуск сервисов и лончеры |
+| **scripts_tools.md** | `.ai/instructions/knowledge/` | Справочник консольных инструментов |
+| **project_overview.md** | `.ai/instructions/knowledge/` | Архитектура и компоненты |
+| **legacy_project_knowledge.md** | `.ai/instructions/knowledge/` | Историческая справка (2026) |
+| **api_documentation.md** | `.ai/instructions/knowledge/` | API эндпоинты |
+| **chat.md** | `.ai/instructions/knowledge/` | Реализация чат-логики |
+| **README.md** | `.ai/instructions/` | Справочник по инструкциям |
+
+---
+
+## ✅ Чек-лист перед коммитом
+
+Перед каждым коммитом убедитесь:
+
+- [ ] Заголовок файла соответствует стандарту (см. CODE_RULES.md § 6)
+- [ ] Все публичные функции имеют docstring формата `hypo69 docblock` (DOCS_RULES.md § 3)
+- [ ] В Python/PHP коде нет кириллицы (только в комментариях Python/PowerShell)
+- [ ] Логирование через `core.logger.logger`, а не `print()`
+- [ ] Все секреты перемещены в `.env`
+- [ ] Коммит отражает **логически завершённое state** рабочего кода
+- [ ] Тесты пройдены: `pytest tests/ --cov`
+- [ ] Новые директории содержат `README.md`
+
+---
+
+## 🔗 Дополнительные ресурсы
+
+- **Главный README:** [`README.ru.md`](README.ru.md)
+- **Индекс документации:** [`DOCUMENTATION_INDEX.md`](DOCUMENTATION_INDEX.md)
+- **Инструменты проекта:** [`tools/README.md`](tools/README.md)
+
+---
+
+**Status:** ✅ Актуальна на август 2026  
+**Версия:** 2.0 (переработана с удалением дублирования)  
+**Автор:** hypo69

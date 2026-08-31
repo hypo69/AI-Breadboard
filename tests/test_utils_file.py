@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Тесты модуля core/utils/file
+# Process Name: Class для тестирования функций модуля file.py.
 # =============================================================================
-# Описание:
+# Description:
 #   Исчерпывающее тестирование функций работы с файлами модуля file.py:
-#   save_text_file, read_text_file, get_filenames, remove_bom.
 #
-# File: tests/test_utils_file.py
+# File: test_utils_file.py
 # Project: ai-breadboard
 # Package: tests
 # Author: hypo69
@@ -19,17 +18,17 @@ from pathlib import Path
 from core.utils.file import save_text_file, read_text_file, get_filenames, remove_bom
 
 class TestFileUtils:
-    """Класс для тестирования функций модуля file.py."""
+    """Class для тестирования функций модуля file.py."""
 
     def test_save_and_read_text_file_happy_path(self, tmp_path):
         """Тестирование нормального сценария записи и чтения текста.
         
-        Проверка: данные записанные в файл корректно считываются.
+        Check: данные записанные в файл корректно считываются.
         """
         # --- Подготовка (Arrange) ---
         # Временная папка tmp_path (фикс pytest).
         test_file: Path = tmp_path / "test.txt"
-        content: str = "Тестовая строка"
+        content: str = "Тестовая string"
         
         # --- Выполнение (Act) ---
         # Запись текста.
@@ -37,7 +36,7 @@ class TestFileUtils:
         # Чтение текста.
         read_result: str | None = read_text_file(test_file)
         
-        # --- Проверка (Assert) ---
+        # --- Check (Assert) ---
         assert save_result is True, "save_text_file() должна вернуть True"
         assert read_result == content, f"Ожидалось {content!r}, получено {read_result!r}"
 
@@ -52,7 +51,7 @@ class TestFileUtils:
         # При чтении файла JSON через read_text_file мы получим строку JSON.
         read_result_str: str | None = read_text_file(test_file)
         
-        # --- Проверка (Assert) ---
+        # --- Check (Assert) ---
         assert save_result is True
         # Проверяем, что в файле есть корректная структура JSON.
         import json
@@ -69,7 +68,7 @@ class TestFileUtils:
         # --- Выполнение (Act) ---
         remove_bom(test_file)
         
-        # --- Проверка (Assert) ---
+        # --- Check (Assert) ---
         content_without_bom = test_file.read_text(encoding="utf-8")
         assert "\ufeff" not in content_without_bom
         assert content_without_bom == "Текст с BOM"

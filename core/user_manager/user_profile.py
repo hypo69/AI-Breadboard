@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Персональный профиль предпочтений и истории просмотров
+# Process Name: Returns путь к JSON-файлу профиля пользователя.
 # =============================================================================
-# Описание:
+# Description:
 #   Управление индивидуальными JSON-файлами пользователей (в src/ai/gemini/user_rags/).
-#   Хранит историю просмотров с прогрессом воспроизведения (таймкоды для восстановления),
-#   поисковые запросы, оценки (лайки/дизлайки), любимые категории и жанры.
 #
 # File: user_profile.py
 # Project: ai-breadboard
-# Package: src.user_manager
+# Package: core.user_manager
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -27,12 +25,10 @@ from core.logger import logger
 _USER_PROFILES_DIR = Path(__file__).parent.parent / 'ai' / 'gemini' / 'user_rags'
 _USER_PROFILES_DIR.mkdir(parents=True, exist_ok=True)
 
-
 def _get_profile_path(user_id: str | int) -> Path:
-    """Возвращает путь к JSON-файлу профиля пользователя."""
+    """Returns путь к JSON-файлу профиля пользователя."""
     safe_id = str(user_id).replace('.', '_').replace('/', '_').replace('\\', '_')
     return _USER_PROFILES_DIR / f'user_profile_{safe_id}.json'
-
 
 def _default_profile_structure(user_id: str | int) -> Dict[str, Any]:
     """Дефолтная структура профиля пользователя."""
@@ -51,33 +47,30 @@ def _default_profile_structure(user_id: str | int) -> Dict[str, Any]:
         }
     }
 
-
 def load_user_profile(user_id: str | int) -> Dict[str, Any]:
-    """Загружает JSON профиль пользователя или создаёт дефолтный."""
+    """Loads JSON профиль пользователя или creates дефолтный."""
     path = _get_profile_path(user_id)
     if path.exists():
         try:
             data = json.loads(path.read_text(encoding='utf-8'))
             return data
         except Exception as ex:
-            logger.error(f"Ошибка чтения профиля {user_id}", ex, False)
+            logger.error(f"Error чтения профиля {user_id}", ex, False)
 
     profile = _default_profile_structure(user_id)
     save_user_profile(user_id, profile)
     return profile
 
-
 def save_user_profile(user_id: str | int, profile: Dict[str, Any]) -> bool:
-    """Сохраняет профиль пользователя в JSON."""
+    """Saves профиль пользователя в JSON."""
     try:
         path = _get_profile_path(user_id)
         profile["updated_at"] = time.time()
         path.write_text(json.dumps(profile, ensure_ascii=False, indent=2), encoding='utf-8')
         return True
     except Exception as ex:
-        logger.error(f"Ошибка сохранения профиля {user_id}", ex, False)
+        logger.error(f"Error сохранения профиля {user_id}", ex, False)
         return False
-
 
 def update_watch_progress(
     user_id: str | int,
@@ -109,12 +102,10 @@ def update_watch_progress(
     save_user_profile(user_id, profile)
     return watch_history[file_path]
 
-
 def get_watch_progress(user_id: str | int, file_path: str) -> Optional[Dict[str, Any]]:
-    """Получает сохранённый прогресс просмотра конкретного файла."""
+    """Receives сохранённый прогресс просмотра конкретного файла."""
     profile = load_user_profile(user_id)
     return profile.get("watch_history", {}).get(file_path)
-
 
 def log_user_search(user_id: str | int, query: str):
     """Логирует поисковый запрос пользователя для сбора предпочтений."""
@@ -133,7 +124,6 @@ def log_user_search(user_id: str | int, query: str):
         profile["search_history"] = search_history[-200:]
 
     save_user_profile(user_id, profile)
-
 
 def set_user_preference(
     user_id: str | int,
@@ -173,7 +163,6 @@ def set_user_preference(
         fav_cats[category] = fav_cats.get(category, 0) + 1
 
     save_user_profile(user_id, profile)
-
 
 def get_recommendation_context(user_id: str | int) -> str:
     """Генерирует сводный текстовый промпт о предпочтениях пользователя для ИИ."""

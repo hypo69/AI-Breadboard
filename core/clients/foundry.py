@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Клиент для Microsoft Foundry API
+# Process Name: Клиент для работы с Microsoft AI Foundry.
 # =============================================================================
-# Описание:
+# Description:
 #   Реализация асинхронного клиента для взаимодействия с API Microsoft AI Foundry.
-#   Поддерживает генерацию текста с параметрами температуры и токенов, загрузку
-#   моделей на сервере, управление сессиями и обработку ошибок API.
 #
 # File: foundry.py
 # Project: ai-breadboard
-# Package: src.clients
+# Package: core.clients
+# Author: hypo69
+# Copyright: © 2026 hypo69
 # =============================================================================
 
 import os
@@ -19,12 +19,11 @@ from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger(__name__)
 
-
 class FoundryClient:
     """Клиент для работы с Microsoft AI Foundry."""
     
     def __init__(self, base_url: Optional[str] = "") -> None:
-        """Инициализация клиента.
+        """Initialization клиента.
 
         Args:
             base_url (Optional[str]): Базовый URL API Foundry.
@@ -56,7 +55,7 @@ class FoundryClient:
             model (str): ID модели.
             temperature (float): Температура сэмплинга.
             max_tokens (int): Максимальное число токенов.
-            messages (Optional[List[Dict[str, str]]]): Список сообщений диалога.
+            messages (Optional[List[Dict[str, str]]]): List сообщений диалога.
 
         Returns:
             Dict[str, Any]: Результат в виде словаря.
@@ -101,7 +100,7 @@ class FoundryClient:
             return {"success": False, "error": str(e)}
 
     async def load_model(self, model_id: str) -> Dict[str, Any]:
-        """Загрузка модели на сервере Foundry.
+        """Loading модели на сервере Foundry.
 
         Args:
             model_id (str): ID модели для загрузки.
@@ -129,7 +128,7 @@ class FoundryClient:
         """Получение списка доступных моделей.
 
         Returns:
-            List[str]: Список ID моделей.
+            List[str]: List ID моделей.
         """
         session = await self._get_session()
         url = f"{self.base_url}/v1/models"
@@ -156,6 +155,6 @@ class FoundryClient:
             return []
 
     async def close(self) -> None:
-        """Закрытие сессии клиента."""
+        """Closing сессии клиента."""
         if self.session and not self.session.closed:
             await self.session.close()

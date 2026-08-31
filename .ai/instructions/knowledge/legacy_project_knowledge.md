@@ -5,19 +5,19 @@
 `main.py` — FastAPI-сервер с автологином локальных пользователей и 10 плагинами.
 
 ### Что делает main.py в 2026:
-- Читает конфиг из `core/fastapi/config.json` → `_cfg` (host: 0.0.0.0, port: 3000)
-- Читает `.env`: `GEMINI_API_KEY_NAMES`, `USE_FOUNDRY`, `FOUNDRY_MODEL_ID`
-- Читает системную инструкцию из `.ai_instructions/prompts/chat/system_instruction.md`
-- Создаёт `UnifiedChatModel` (Gemini + Foundry)
-- Загружает 10 плагинов через `load_plugins(model)`
+- Reads конфиг из `core/fastapi/config.json` → `_cfg` (host: 0.0.0.0, port: 3000)
+- Reads `.env`: `GEMINI_API_KEY_NAMES`, `USE_FOUNDRY`, `FOUNDRY_MODEL_ID`
+- Reads системную инструкцию из `.ai_instructions/prompts/chat/system_instruction.md`
+- Creates `UnifiedChatModel` (Gemini + Foundry)
+- Loads 10 плагинов через `load_plugins(model)`
 - Подключает 9 роутеров FastAPI
 - Автологин для localhost → user_id=1 через JWT cookie
 - Поддерживает SSL сертификаты из `~/.certs/`
-- При старте: сканирование дисков, запуск анализатора логов, предзагрузка Silero TTS
+- При старте: сканирование дисков, запуск анализатора логов, предLoading Silero TTS
 
 ---
 
-## Конфигурация 2026
+## Configuration 2026
 
 ### `.env` (основные переменные):
 ```
@@ -27,7 +27,7 @@ USE_FOUNDRY=false
 FOUNDRY_MODEL_ID=qwen3-0.6b-generic-cpu:4
 FOUNDRY_BASE_URL=http://localhost:3000
 
-# Аутентификация
+# Authentication
 TELEGRAM_BOT_TOKEN=...
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
@@ -71,7 +71,7 @@ DISABLED_PLUGINS=plugin1,plugin2
 **Унифицированный интерфейс для AI моделей:**
 
 - **Поддерживает**: Google Gemini и Microsoft AI Foundry
-- **Автоматическое переключение**: при ошибках Gemini → Foundry
+- **Автоматическое переключение**: при Errorх Gemini → Foundry
 - **Управление ключами**: ротация Gemini API ключей
 - **Методы**:
   - `chat(message, system_instruction, model_name)` — основной чат
@@ -83,7 +83,7 @@ DISABLED_PLUGINS=plugin1,plugin2
 **Клиент для Microsoft AI Foundry:**
 
 - **Локальная модель**: qwen3-0.6b-generic-cpu:4
-- **HTTP API**: интеграция через Foundry Base URL
+- **HTTP API**: Integration через Foundry Base URL
 - **Fallback**: используется при недоступности Gemini
 
 ### `core/ai/gemini/generative_ai.py` — `GoogleGenerativeAI` (обновленный)
@@ -91,7 +91,7 @@ DISABLED_PLUGINS=plugin1,plugin2
 
 - **Модели**: gemini-2.0-flash-exp, gemini-2.0-pro-exp
 - **Streaming**: поддержка потокового вывода
-- **Function Calling**: интеграция с инструментами плагинов
+- **Function Calling**: Integration с инструментами плагинов
 - **Retry-логика**: улучшенная обработка квот и ошибок
 
 ---
@@ -157,7 +157,7 @@ ai-assistant/
 
 ## Обновленная система плагинов
 
-### Базовый класс `BasePlugin` (`plugins/plugin.py`)
+### Базовый class `BasePlugin` (`plugins/plugin.py`)
 **Улучшенная архитектура:**
 ```python
 class BasePlugin(ABC):
@@ -168,7 +168,7 @@ class BasePlugin(ABC):
         return True
     
     async def handle(self, message: str, **kwargs) -> str:
-        # Основной метод обработки с перехватом исключений
+        # Основной method обработки с перехватом исключений
         # Поддерживает async generator для потокового вывода
     
     @abstractmethod
@@ -179,10 +179,10 @@ class BasePlugin(ABC):
 
 ### `load_plugins(model)` (`plugins/__init__.py`)
 **Улучшения 2026:**
-- **Динамическая загрузка** всех 10 плагинов
-- **Отключение плагинов**: через `DISABLED_PLUGINS` в `.env`
+- **Динамическая Loading** всех 10 плагинов
+- **Disconnection плагинов**: через `DISABLED_PLUGINS` в `.env`
 - **Логирование ошибок**: при загрузке проблемных плагинов
-- **Возвращает**: `dict[str, BasePlugin]` {имя: экземпляр}
+- **Returns**: `dict[str, BasePlugin]` {имя: экземпляр}
 
 ---
 
@@ -195,7 +195,7 @@ class BasePlugin(ABC):
 - **Функции**:
   - Семантический поиск через RAG
   - "Карусель" случайных фильмов
-  - Интеграция с веб-поиском (Playwright)
+  - Integration с веб-поиском (Playwright)
   - Озвучка результатов TTS
 - **Особенности**: Streaming статусы, AI-анализ результатов
 
@@ -204,7 +204,7 @@ class BasePlugin(ABC):
 
 - **Триггеры**: "поищи в интернете", "найди в интернете", "погугли"
 - **Технология**: Playwright (Headless Chrome)
-- **Интеграция**: с AI для анализа результатов
+- **Integration**: с AI для анализа результатов
 - **Потоковый вывод**: статусы поиска → AI анализ → ответ
 
 ### 3. `torrent_playwright` (`plugins/torrent_playwright/__init__.py`)
@@ -212,7 +212,7 @@ class BasePlugin(ABC):
 
 - **Триггеры**: "торрент", "скачать", "tracker", "раздач"
 - **Трекеры**: Rutracker, NNMClub
-- **AI фильтрация**: Gemini для отбора лучших раздач
+- **AI filtering**: Gemini для отбора лучших раздач
 - **HTML карточки**: интерактивные кнопки загрузки в qBittorrent
 
 ### 4. `movie_search_sources` (`plugins/movie_search_sources/movie_search_sources.py`)
@@ -231,8 +231,8 @@ class BasePlugin(ABC):
 
 - **Триггеры**: `!list_users`, `!user_activity`
 - **База данных**: `users.db` (SQLite)
-- **Функции**: список пользователей, активность, роли
-- **Интеграция**: с JWT аутентификацией
+- **Функции**: list пользователей, активность, роли
+- **Integration**: с JWT аутентификацией
 
 ### 7. `yt_dlp` (`plugins/yt_dlp/`) ← **САМЫЙ НОВЫЙ**
 **Скачивание видео/аудио через yt-dlp:**
@@ -242,7 +242,7 @@ class BasePlugin(ABC):
   - Скачивание видео (лучшее качество)
   - Конвертация в аудио (mp3)
   - Поиск на YouTube
-  - Информация о видео без скачивания
+  - Info о видео без скачивания
 - **Прогресс**: Streaming статусы загрузки
 - **HTML карточки**: результаты с обложками, метаданными
 
@@ -334,7 +334,7 @@ CREATE TABLE user_activity_log (
 );
 ```
 
-### Класс `UserManager`:
+### Class `UserManager`:
 - **Управление пользователями**: CRUD операции
 - **JWT токены**: генерация и верификация
 - **Активность**: логирование действий пользователей
@@ -360,13 +360,13 @@ CREATE TABLE user_activity_log (
 ## Тестирование и документация
 
 ### 1. **Pytest** (`tests/`):
-- **Конфигурация**: `pytest.ini`, `conftest.py`
+- **Configuration**: `pytest.ini`, `conftest.py`
 - **Фикстуры**: `mock_ai_model`, `mock_db`, `mock_qbt_client`
 - **Маркеры**: `unit`, `integration`, `slow`, `database`, `api`, `asyncio`
 - **Покрытие**: `--cov=src --cov=plugins --cov-report=term-missing`
 
 ### 2. **MkDocs документация** (`docs/`):
-- **Конфигурация**: `mkdocs.yml`
+- **Configuration**: `mkdocs.yml`
 - **Навигация**: 6 разделов (Пользователь, Разработчик, Модули, Интеграции, QA, Troubleshooting)
 - **Тема**: Material Design
 - **Деплой**: GitHub Pages (https://hypo69.github.io/ai-assistant/)
@@ -385,9 +385,9 @@ CREATE TABLE user_activity_log (
 1. **Хранение**: `core/secrets/gemini_keys.json` (в .gitignore)
 2. **Имена ключей**: в `.env` как `GEMINI_API_KEY_NAMES=имя1,имя2,...`
 3. **Статусы**: `active`, `regional restriction`, `exhausted_at`
-4. **Ротация**: автоматическая при квотах/ошибках
+4. **Ротация**: автоматическая при квотах/Errorх
 
-### JWT аутентификация:
+### JWT authentication:
 - **Секрет**: `JWT_SECRET` в `.env`
 - **Токены**: 30 дней для автологина localhost
 - **Cookies**: `auth_token`, `admin_password_verified`
@@ -395,7 +395,7 @@ CREATE TABLE user_activity_log (
 
 ### SSL/TLS:
 - **Сертификаты**: `~/.certs/localhost+2.pem`, `~/.certs/localhost+2-key.pem`
-- **Конфигурация**: `USE_SSL=true` в `.env`
+- **Configuration**: `USE_SSL=true` в `.env`
 - **Запуск**: автоматическое определение наличия сертификатов
 
 ---
@@ -457,7 +457,7 @@ mkdocs serve  # локальная документация
 1. **Для разработки:**
    ```
    "покажи архитектуру проекта" → описание из этого файла
-   "какие плагины есть" → список 10 плагинов
+   "какие плагины есть" → list 10 плагинов
    "как работает RAG" → описание RAG-поиска
    ```
 
@@ -478,5 +478,5 @@ mkdocs serve  # локальная документация
 
 ---
 
-**Последнее обновление: август 2026**  
+**Последнее update: август 2026**  
 *Актуализировано после расширения проекта до 10 плагинов и добавления yt_dlp, web_search, movie_search_sources и других новых компонентов.*

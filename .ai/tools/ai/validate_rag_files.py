@@ -1,7 +1,21 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Module
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: validate_rag_files.py
+# Project: ai-breadboard
+# Package: .ai.tools.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 import os
 from pathlib import Path
 
-# Список исключений
+# List исключений
 EXCLUDED_DIRS = {
     '.git', '.pytest_cache', '.vs', '__pycache__', 'venv', 
     'htmlcov', 'site', 'node_modules', '.venv'
@@ -20,7 +34,7 @@ def get_files_to_index():
 
     # 1. Сканирование корня с исключениями
     for root, dirs, files in os.walk(project_root):
-        # Модифицируем список dirs на месте для пропуска исключенных директорий
+        # Модифицируем list dirs на месте для пропуска исключенных директорий
         dirs[:] = [d for d in dirs if d not in EXCLUDED_DIRS]
         
         for file in files:

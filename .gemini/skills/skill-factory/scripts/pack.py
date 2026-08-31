@@ -1,3 +1,16 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Module
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: pack.py
+# Project: ai-breadboard
+# Package: .gemini.skills.skill-factory.scripts
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 import os
 import zipfile
@@ -27,7 +40,7 @@ def package_skill(skill_dir):
                 arcname = file_path.relative_to(skill_path)
                 zipf.write(file_path, arcname)
                 
-    print(f'Навык успешно упакован: {skill_file}')
+    print(f'Навык successfully упакован: {skill_file}')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

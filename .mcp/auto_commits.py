@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Auto-Commits MCP Helper
+# Process Name: Выполнение git-команды в корне репозитория.
 # =============================================================================
-# Описание:
+# Description:
 #   Скрипт автоматического отслеживания изменений в файлах репозитория
-#   и создания git-коммитов перед применением изменений моделями.
 #
 # File: auto_commits.py
-# Project: ai-assistant
-# Package: .mcp
+# Project: ai-breadboard
+# Package: root
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -23,14 +22,12 @@ from core.logger import logger
 
 ROOT = Path(__file__).resolve().parent.parent
 
-
 def git(cmd: str) -> subprocess.CompletedProcess:
     """Выполнение git-команды в корне репозитория."""
     return subprocess.run(["git"] + cmd.split(), cwd=ROOT, capture_output=True, text=True, check=False)
 
-
 def commit_if_dirty(message: str) -> bool:
-    """Проверка наличия незакоммиченных изменений и создание коммита."""
+    """Check наличия незакоммиченных изменений и создание коммита."""
     git("add -A")
     status = git("status --porcelain")
     if status.stdout and status.stdout.strip():
@@ -38,7 +35,6 @@ def commit_if_dirty(message: str) -> bool:
         logger.info(f"[auto_commits] Закоммичены изменения: {message}")
         return True
     return False
-
 
 def main():
     """Основной цикл отслеживания изменений файлов."""
@@ -63,7 +59,6 @@ def main():
         if changed:
             commit_if_dirty("chore(mcp): auto-commit changes detected by MCP server")
         time.sleep(5)
-
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,16 @@
-## \file /src/utils/smtp.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: .. module:: src.utils
+# =============================================================================
+# Description:
+#   This module provides functionality to send and receive emails using an SMTP or IMAP server.
+#
+# File: smtp.py
+# Project: ai-breadboard
+# Package: core.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module:: src.utils 
@@ -9,8 +18,6 @@
 	:synopsis: SMTP Email Interface
 
 """
-
-
 
 """ This module provides functionality to send and receive emails using an SMTP or IMAP server.
 It includes functions to send emails using SMTP and retrieve emails using IMAP.
@@ -22,7 +29,6 @@ Functions:
     - `receive(imap_server: str, user: str, password: str, folder: str = 'inbox') -> Optional[List[Dict[str, str]]]`
       Retrieves emails from an IMAP server and returns them as a list of dictionaries.  Returns `None` on error. Includes error logging.
 
-
 ** Important Considerations for Security and Robustness **:
 
     - **_connection Dictionary:** Do *not* hardcode credentials in this file.  Move the `_connection` dictionary to environment variables (e.g., using `os.environ`). This is crucial for security.  Avoid storing passwords directly in source code.
@@ -32,7 +38,6 @@ Functions:
     - **Email Parsing:** The `receive` function handles various email formats gracefully, preventing potential issues.
 
     - **MIME Handling:**  The code correctly uses `MIMEText` for constructing the email message, crucial for sending basic text emails.
-
 
 """
 
@@ -54,7 +59,6 @@ _connection = {
     'password': os.environ.get('SMTP_PASSWORD'),
     'receiver': os.environ.get('SMTP_RECEIVER', 'one.last.bit@gmail.com')
 }
-
 
 def send(subject: str = '', body: str = '', to: str = 'one.last.bit@gmail.com') -> bool:
     """Sends an email.  Returns True if successful, False otherwise. Logs errors."""

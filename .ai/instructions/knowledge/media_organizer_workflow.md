@@ -5,7 +5,7 @@
 ```
 1. Запуск сканирования
    ↓
-2. Инициализация (TMDBClient, MediaDatabase, MediaScanner)
+2. Initialization (TMDBClient, MediaDatabase, MediaScanner)
    ↓
 3. Базовое сканирование (сканируются папки "фильмы" и "сериалы")
    ↓
@@ -32,13 +32,13 @@
 
 ## Модули
 
-| Модуль | Назначение |
+| Module | Назначение |
 | :--- | :--- |
 | `media_scanner.py` | Классы `TMDBClient` и `MediaScanner` для сканирования файловой структуры и получения данных из TMDB API |
-| `media_auditor.py` | Класс `MediaAuditor` для сверки данных БД с физическим наличием файлов на диске и состоянием торрентов |
+| `media_auditor.py` | Class `MediaAuditor` для сверки данных БД с физическим наличием файлов на диске и состоянием торрентов |
 | `genre_classifier.py` | Классы `GenreClassifier` и `PersistentGenreClassifier` для классификации медиа по жанрам через TMDB и Gemini |
 | `report_generator.py` | Функции `export_disk_json`, `export_disk_md` для экспорта данных из БД в JSON и Markdown |
-| `media_rebuild.py` | Функция `rebuild_db` для консолидации дублирующихся записей в БД |
+| `media_rebuild.py` | Function `rebuild_db` для консолидации дублирующихся записей в БД |
 | `media_tracker.py` | Утилиты для фильтрации путей, поиска торрентов, назначения категорий |
 
 
@@ -72,7 +72,7 @@
 | `cast` | TEXT | JSON-массив актёров |
 | `num_of_seasons` | INTEGER | Количество сезонов (для сериалов) |
 | `num_episodes_per_season` | TEXT | JSON-массив количества серий по сезонам |
-| `status` | TEXT | Статус (для сериалов) |
+| `status` | TEXT | Status (для сериалов) |
 | `rating` | TEXT | JSON-объект с оценками (IMDb, TMDB) |
 | `awards` | TEXT | JSON-массив наград |
 | `plot` | TEXT | Сюжет |
@@ -113,7 +113,7 @@
 **Ожидаемый формат:** JSON как в примере сериала в `instruction.md`, с массивом `seasons`
 
 **Умное сканирование эпизодов:**
-- Система проверяет количество сезонов и общее количество эпизодов через TMDB API
+- Система checks количество сезонов и общее количество эпизодов через TMDB API
 - Если сезонов > 15 ИЛИ общее количество эпизодов > 100, или сериал является длинным ежедневным шоу:
   - Запрос детальных эпизодов к Gemini **пропускается** (или переключается на `overview`)
   - В БД сохраняется `episode_scan_skipped = true`

@@ -1,3 +1,17 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Module
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: delete_media.py
+# Project: ai-breadboard
+# Package: .gemini.skills.smart-deletion-duplicates.scripts
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 import sqlite3
 import os
 import pandas as pd
@@ -13,7 +27,7 @@ def delete_media(file_path):
             os.remove(file_path)
             print(f"Файл удален: {file_path}")
         except Exception as e:
-            print(f"Ошибка при удалении файла {file_path}: {e}")
+            print(f"Error при удалении файла {file_path}: {e}")
             return False
     else:
         print(f"Файл не найден: {file_path}")
@@ -29,7 +43,7 @@ def delete_media(file_path):
         print(f"Запись удалена из БД: {file_path}")
         return True
     except Exception as e:
-        print(f"Ошибка при удалении записи из БД {file_path}: {e}")
+        print(f"Error при удалении записи из БД {file_path}: {e}")
         return False
 
 def main():

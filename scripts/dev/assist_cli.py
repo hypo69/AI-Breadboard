@@ -1,24 +1,13 @@
-## \file scripts/dev/assist_cli.py
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Интерактивный CLI-ассистент управления проектом (assist)
+# Process Name: Creates директорию состояния если её нет.
 # =============================================================================
-# Описание:
-#   Предоставляет удобный терминальный интерфейс для управления жизненным циклом
-#   серверов, проверки статуса, мониторинга провайдеров ИИ, просмотра логов
-#   и настройки конфигурации:
-#   - assist start [run|unicorn|light|foundry]
-#   - assist stop [server|foundry|all]
-#   - assist restart
-#   - assist status
-#   - assist providers
-#   - assist logs [lines]
-#   - assist config [show|get|set]
-#   - assist test
-#   - assist install-profile
+# Description:
+#   Module for AI Breadboard project.
 #
-# File: scripts/dev/assist_cli.py
+# File: assist_cli.py
 # Project: ai-breadboard
+# Package: scripts.dev
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -37,20 +26,17 @@ import header
 from header import __root__
 from dotenv import load_dotenv
 
-
 # Директория для хранения состояния выбранных провайдера/модели
 _STATE_DIR = __root__ / ".assist_state"
 _PROVIDER_FILE = _STATE_DIR / "provider.json"
 _MODEL_FILE = _STATE_DIR / "model.json"
 
-
 def _ensure_state_dir() -> None:
-    """Создает директорию состояния если её нет."""
+    """Creates директорию состояния если её нет."""
     _STATE_DIR.mkdir(parents=True, exist_ok=True)
 
-
 def _get_selected_provider() -> dict:
-    """Возвращает текущий выбранный провайдер."""
+    """Returns текущий выбранный провайдер."""
     if not _PROVIDER_FILE.exists():
         return {}
     try:
@@ -59,16 +45,14 @@ def _get_selected_provider() -> dict:
     except Exception:
         return {}
 
-
 def _set_selected_provider(provider_name: str) -> None:
-    """Сохраняет выбранный провайдер."""
+    """Saves выбранный провайдер."""
     _ensure_state_dir()
     with open(_PROVIDER_FILE, "w", encoding="utf-8") as f:
         json.dump({"provider": provider_name}, f, ensure_ascii=False, indent=2)
 
-
 def _get_selected_model() -> dict:
-    """Возвращает текущую выбранную модель."""
+    """Returns текущую выбранную модель."""
     if not _MODEL_FILE.exists():
         return {}
     try:
@@ -77,9 +61,8 @@ def _get_selected_model() -> dict:
     except Exception:
         return {}
 
-
 def _set_selected_model(model_name: str, provider: str = "") -> None:
-    """Сохраняет выбранную модель."""
+    """Saves выбранную модель."""
     _ensure_state_dir()
     data = {"model": model_name}
     if provider:
@@ -105,17 +88,15 @@ C_RED = "\033[91m"
 C_GRAY = "\033[90m"
 C_MAGENTA = "\033[95m"
 
-
 def _get_venv_python() -> str:
-    """Возвращает путь к интерпретатору Python в виртуальном окружении venv."""
+    """Returns путь к интерпретатору Python в виртуальном окружении venv."""
     venv_py = __root__ / "venv" / "Scripts" / "python.exe"
     if venv_py.exists():
         return str(venv_py)
     return sys.executable
 
-
 def _get_config() -> dict:
-    """Загружает config.json."""
+    """Loads config.json."""
     cfg_path = __root__ / "config.json"
     if not cfg_path.exists():
         return {}
@@ -123,12 +104,11 @@ def _get_config() -> dict:
         with open(cfg_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception as e:
-        print(f"{C_RED}Ошибка чтения config.json: {e}{C_RESET}")
+        print(f"{C_RED}Error чтения config.json: {e}{C_RESET}")
         return {}
 
-
 def _get_occupied_port_pids(port: int) -> list[int]:
-    """Возвращает список PID процессов, слушающих заданный порт."""
+    """Returns list PID процессов, слушающих заданный порт."""
     pids = []
     if sys.platform.startswith("win"):
         try:
@@ -143,7 +123,6 @@ def _get_occupied_port_pids(port: int) -> list[int]:
         except Exception:
             pass
     return pids
-
 
 def cmd_start(args: argparse.Namespace) -> int:
     """Запускает сервисы проекта."""
@@ -179,7 +158,6 @@ def cmd_start(args: argparse.Namespace) -> int:
         cmd = ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(script_path)]
 
     return subprocess.call(cmd, cwd=str(__root__))
-
 
 def cmd_stop(args: argparse.Namespace) -> int:
     """Останавливает сервер и сопутствующие процессы."""
@@ -219,17 +197,15 @@ def cmd_stop(args: argparse.Namespace) -> int:
         print(f"{C_GREEN}Все сервисы уже остановлены.{C_RESET}")
     return 0
 
-
 def cmd_restart(args: argparse.Namespace) -> int:
     """Перезапускает сервер."""
     print(f"{C_CYAN}🔄 Перезапуск сервисов...{C_RESET}")
     cmd_stop(args)
     return cmd_start(args)
 
-
 def _auto_start_server() -> bool:
-    """Проверяет и при необходимости запускает сервер."""
-    # Проверка через переменную окружения
+    """Checks и при необходимости запускает сервер."""
+    # Check через переменную окружения
     auto_env = os.getenv("AUTO_START_ASSIST_CLI", "").lower()
     if auto_env in ("false", "0", "no", ""):
         return False
@@ -268,12 +244,11 @@ def _auto_start_server() -> bool:
         print(f"{C_GREEN}✔ Сервер запускается в фоновом режиме{C_RESET}")
         return True
     except Exception as e:
-        print(f"{C_RED}✗ Ошибка автозапуска: {e}{C_RESET}")
+        print(f"{C_RED}✗ Error автозапуска: {e}{C_RESET}")
         return False
 
-
 def cmd_status(args: argparse.Namespace) -> int:
-    """Проверяет текущий статус сервера, портов и служб."""
+    """Checks текущий status сервера, портов и служб."""
     cfg = _get_config()
     server_cfg = cfg.get("server", {})
     port = int(server_cfg.get("port", 8000))
@@ -291,7 +266,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     # Автозапуск если сервер не запущен и включён переключатель
     _auto_start_server()
     
-    # Проверка порта
+    # Check порта
     pids = _get_occupied_port_pids(port)
     if pids:
         print(f"  {C_BOLD}FastAPI Сервер:{C_RESET}     {C_GREEN}● РАБОТАЕТ{C_RESET}")
@@ -303,7 +278,7 @@ def cmd_status(args: argparse.Namespace) -> int:
 
     print(f"  {C_BOLD}Режим / SSL:{C_RESET}        {mode} | SSL: {'ВКЛ' if use_ssl else 'ВЫКЛ'} | Autoreload: {'ВКЛ' if reload_on else 'ВЫКЛ'}")
 
-    # Проверка Foundry
+    # Check Foundry
     ai_cfg = cfg.get("ai", {})
     use_foundry = bool(ai_cfg.get("use_foundry", False))
     foundry_url = str(ai_cfg.get("foundry_base_url", "http://localhost:54837"))
@@ -332,9 +307,8 @@ def cmd_status(args: argparse.Namespace) -> int:
     print("")
     return 0
 
-
 def cmd_providers(args: argparse.Namespace) -> int:
-    """Выводит детальный список всех настроенных провайдеров ИИ и их моделей."""
+    """Выводит детальный list всех настроенных провайдеров ИИ и их моделей."""
     cfg = _get_config()
     ai_cfg = cfg.get("ai", {})
 
@@ -347,7 +321,7 @@ def cmd_providers(args: argparse.Namespace) -> int:
     keys = [k.strip() for k in key_names_env.split(",") if k.strip()]
     has_gemini = len(keys) > 0
     print(f"{C_BOLD}{C_GREEN}1. Google Gemini API (Прямой Cloud API){C_RESET}")
-    print(f"   Статус:          {'✅ Активен' if has_gemini else '❌ Нет ключей в .env'}")
+    print(f"   Status:          {'✅ Активен' if has_gemini else '❌ Нет ключей в .env'}")
     print(f"   Пул ключей:      {len(keys)} шт. ({', '.join(keys) if keys else 'пусто'})")
     print(f"   Дефолтная модель: gemini-2.5-flash / gemini-3.7-flash")
     print("")
@@ -356,7 +330,7 @@ def cmd_providers(args: argparse.Namespace) -> int:
     use_gemini_cli = bool(ai_cfg.get("use_gemini_cli", True))
     gemini_cli_model = str(ai_cfg.get("gemini_cli_model_id", "gemini-3.1-flash-lite"))
     print(f"{C_BOLD}{C_GREEN}2. Gemini CLI (Терминальный агент){C_RESET}")
-    print(f"   Статус:          {'✅ Включен' if use_gemini_cli else '○ Отключен'}")
+    print(f"   Status:          {'✅ Включен' if use_gemini_cli else '○ Отключен'}")
     print(f"   Модель:          {gemini_cli_model}")
     print("")
 
@@ -365,7 +339,7 @@ def cmd_providers(args: argparse.Namespace) -> int:
     agy_model = str(ai_cfg.get("agy_model_id", "agy-flash"))
     has_agy_key = bool(os.getenv("AGY_API_KEY"))
     print(f"{C_BOLD}{C_GREEN}3. Google Antigravity (AGY Platform){C_RESET}")
-    print(f"   Статус:          {'✅ Включен' if use_agy else '○ Отключен'}")
+    print(f"   Status:          {'✅ Включен' if use_agy else '○ Отключен'}")
     print(f"   Модель:          {agy_model}")
     print(f"   API Key:         {'✅ Настроен' if has_agy_key else '○ Не задан'}")
     print("")
@@ -375,7 +349,7 @@ def cmd_providers(args: argparse.Namespace) -> int:
     foundry_model = str(ai_cfg.get("foundry_model_id", "qwen2.5-1.5b"))
     foundry_url = str(ai_cfg.get("foundry_base_url", "http://localhost:54837"))
     print(f"{C_BOLD}{C_GREEN}4. Microsoft AI Foundry (Локальная служба LLM){C_RESET}")
-    print(f"   Статус:          {'✅ Включен' if use_foundry else '○ Отключен'}")
+    print(f"   Status:          {'✅ Включен' if use_foundry else '○ Отключен'}")
     print(f"   Модель:          {foundry_model}")
     print(f"   Endpoint:        {foundry_url}")
     print("")
@@ -385,7 +359,7 @@ def cmd_providers(args: argparse.Namespace) -> int:
     ollama_model = str(ai_cfg.get("ollama_model_id", "llama3.1"))
     ollama_url = str(ai_cfg.get("ollama_base_url", "http://localhost:11434"))
     print(f"{C_BOLD}{C_GREEN}5. Ollama Local{C_RESET}")
-    print(f"   Статус:          {'✅ Включен' if use_ollama else '○ Отключен'}")
+    print(f"   Status:          {'✅ Включен' if use_ollama else '○ Отключен'}")
     print(f"   Модель:          {ollama_model}")
     print(f"   Endpoint:        {ollama_url}")
     print("")
@@ -395,7 +369,7 @@ def cmd_providers(args: argparse.Namespace) -> int:
     hf_enabled = bool(hf_cfg.get("enabled", False))
     hf_model = str(hf_cfg.get("default_model", "Qwen/Qwen2.5-0.5B-Instruct"))
     print(f"{C_BOLD}{C_GREEN}6. HuggingFace (Local Transformers){C_RESET}")
-    print(f"   Статус:          {'✅ Включен' if hf_enabled else '○ Отключен'}")
+    print(f"   Status:          {'✅ Включен' if hf_enabled else '○ Отключен'}")
     print(f"   Модель:          {hf_model}")
     print("")
 
@@ -404,7 +378,7 @@ def cmd_providers(args: argparse.Namespace) -> int:
     onnx_enabled = bool(onnx_cfg.get("enabled", False))
     onnx_ep = str(onnx_cfg.get("execution_provider", "DirectMLExecutionProvider"))
     print(f"{C_BOLD}{C_GREEN}7. ONNX Runtime (DirectML / GPU / NPU){C_RESET}")
-    print(f"   Статус:          {'✅ Включен' if onnx_enabled else '○ Отключен'}")
+    print(f"   Status:          {'✅ Включен' if onnx_enabled else '○ Отключен'}")
     print(f"   Execution Prov:  {onnx_ep}")
     print("")
 
@@ -419,7 +393,6 @@ def cmd_providers(args: argparse.Namespace) -> int:
         print("")
 
     return 0
-
 
 def cmd_logs(args: argparse.Namespace) -> int:
     """Отображает последние строки логов."""
@@ -463,10 +436,9 @@ def cmd_logs(args: argparse.Namespace) -> int:
             for line in all_lines[-int(lines_count):]:
                 print(line.rstrip())
     except Exception as e:
-        print(f"{C_RED}Ошибка чтения файла логов: {e}{C_RESET}")
+        print(f"{C_RED}Error чтения файла логов: {e}{C_RESET}")
     print("-" * 70 + "\n")
     return 0
-
 
 def cmd_config(args: argparse.Namespace) -> int:
     """Просмотр и изменение config.json."""
@@ -526,7 +498,6 @@ def cmd_config(args: argparse.Namespace) -> int:
 
     return 0
 
-
 def cmd_test(args: argparse.Namespace) -> int:
     """Запускает набор тестов."""
     print(f"{C_CYAN}🧪 Запуск тестов проекта pytest...{C_RESET}")
@@ -537,13 +508,12 @@ def cmd_test(args: argparse.Namespace) -> int:
         cmd.extend(extra)
     return subprocess.call(cmd, cwd=str(__root__))
 
-
 # ============================================================================
 # НОВЫЕ КОМАНДЫ ДЛЯ РАБОТЫ С ПРОВАЙДЕРАМИ И МОДЕЛЯМИ
 # ============================================================================
 
 def cmd_list_providers(args: argparse.Namespace) -> int:
-    """Выводит список доступных провайдеров ИИ."""
+    """Выводит list доступных провайдеров ИИ."""
     cfg = _get_config()
     ai_cfg = cfg.get("ai", {})
     key_names_env = os.getenv("GEMINI_API_KEY_NAMES", "")
@@ -572,12 +542,11 @@ def cmd_list_providers(args: argparse.Namespace) -> int:
         status = f"{C_GREEN}✓ Активен{C_RESET}" if available else f"{C_GRAY}○ Отключен{C_RESET}"
         marker = " ▶ " if name == selected_provider else "   "
         print(f"{marker}{i}. {C_BOLD}{name}{C_RESET}: {desc}")
-        print(f"     Статус: {status}")
+        print(f"     Status: {status}")
 
     print(f"\n{C_GRAY}Текущий провайдер: {C_BOLD}{selected_provider or 'не выбран'}{C_RESET}")
     print(f"\n{C_GRAY}Используйте: {C_CYAN}assist select provider <имя>{C_RESET} для выбора провайдера")
     return 0
-
 
 def cmd_select_provider(args: argparse.Namespace) -> int:
     """Выбирает провайдера ИИ."""
@@ -602,9 +571,8 @@ def cmd_select_provider(args: argparse.Namespace) -> int:
     print(f"{C_GRAY}Используйте: assist list models{C_RESET}")
     return 0
 
-
 def cmd_list_models(args: argparse.Namespace) -> int:
-    """Выводит список моделей для выбранного провайдера или всех."""
+    """Выводит list моделей для выбранного провайдера или всех."""
     cfg = _get_config()
     ai_cfg = cfg.get("ai", {})
     selected = _get_selected_provider()
@@ -670,7 +638,6 @@ def cmd_list_models(args: argparse.Namespace) -> int:
         print(f"{C_GRAY}Текущая модель: {C_BOLD}{selected_model}{C_RESET}")
     return 0
 
-
 def cmd_select_model(args: argparse.Namespace) -> int:
     """Выбирает модель для работы."""
     model = getattr(args, "name", "")
@@ -712,9 +679,8 @@ def cmd_select_model(args: argparse.Namespace) -> int:
     print(f"{C_GRAY}assist model ask \"ваш вопрос\"{C_RESET}")
     return 0
 
-
 def cmd_model_ask(args: argparse.Namespace) -> int:
-    """Отправляет запрос к выбранной модели."""
+    """Sends запрос к выбранной модели."""
     message = getattr(args, "message", "")
     if not message:
         print(f"{C_RED}Укажите сообщение для модели{C_RESET}")
@@ -762,22 +728,21 @@ def cmd_model_ask(args: argparse.Namespace) -> int:
         asyncio.run(run_chat())
 
     except ImportError as e:
-        print(f"{C_RED}Ошибка импорта модулей: {e}{C_RESET}")
+        print(f"{C_RED}Error импорта модулей: {e}{C_RESET}")
         print(f"{C_YELLOW}Убедитесь что проект установлен и все зависимости доступны{C_RESET}")
         return 1
     except Exception as e:
-        print(f"{C_RED}Ошибка при обращении к модели: {e}{C_RESET}")
+        print(f"{C_RED}Error при обращении к модели: {e}{C_RESET}")
         return 1
 
     return 0
-
 
 # ============================================================================
 # КОМАНДЫ ДЛЯ РАБОТЫ С СИСТЕМНЫМИ ПРОМПТАМИ
 # ============================================================================
 
 def cmd_create_prompt(args: argparse.Namespace) -> int:
-    """Создает новый системный промпт."""
+    """Creates новый системный промпт."""
     _ensure_state_dir()
     prompt_file = _STATE_DIR / "system_prompt.txt"
 
@@ -814,7 +779,7 @@ def cmd_create_prompt(args: argparse.Namespace) -> int:
         return 0
 
     if not lines:
-        print(f"{C_YELLOW}Промпт пустой, не сохранен.{C_RESET}")
+        print(f"{C_YELLOW}Промпт empty, не сохранен.{C_RESET}")
         return 0
 
     prompt_text = "\n".join(lines)
@@ -823,7 +788,6 @@ def cmd_create_prompt(args: argparse.Namespace) -> int:
     print(f"\n{C_GREEN}✓ Системный промпт сохранен{C_RESET}")
     print(f"{C_GRAY}Файл: {prompt_file}{C_RESET}")
     return 0
-
 
 def cmd_edit_prompt(args: argparse.Namespace) -> int:
     """Редактирует существующий системный промпт."""
@@ -861,7 +825,7 @@ def cmd_edit_prompt(args: argparse.Namespace) -> int:
     print(f"\n{C_CYAN}Редактирование системного промпта{C_RESET}")
     print(f"{C_GRAY}Текущий текст:{C_RESET}\n")
     print(current)
-    print(f"\n{C_GRAY}Введите новый текст (пустая строка = оставить без изменений):{C_RESET}")
+    print(f"\n{C_GRAY}Введите новый текст (пустая string = оставить без изменений):{C_RESET}")
 
     try:
         new_lines = []
@@ -882,7 +846,6 @@ def cmd_edit_prompt(args: argparse.Namespace) -> int:
         print(f"\n{C_GRAY}Промпт оставлен без изменений.{C_RESET}")
 
     return 0
-
 
 # ============================================================================
 # ДОПОЛНИТЕЛЬНЫЕ КОМАНДЫ
@@ -916,7 +879,6 @@ def cmd_current(args: argparse.Namespace) -> int:
     print(f"  assist create-prompt / assist edit-prompt{C_RESET}\n")
     return 0
 
-
 def cmd_shell(args: argparse.Namespace) -> int:
     """Открывает интерактивную оболочку Python с загруженными модулями проекта."""
     print(f"{C_CYAN}Запуск интерактивной оболочки Python...{C_RESET}")
@@ -933,7 +895,6 @@ print('Доступны: __root__, get_chat_model')
 print('Пример: model = get_chat_model(\"gemini:gemini-2.5-flash\")')
 """]
     return subprocess.call(cmd, cwd=str(__root__))
-
 
 def cmd_install_profile(args: argparse.Namespace) -> int:
     """Добавляет глобальную функцию `assist` в PowerShell профиль пользователя."""
@@ -967,17 +928,16 @@ function assist {{
         existing_content = profile_file.read_text(encoding="utf-8")
 
     if "function assist" in existing_content:
-        print(f"{C_YELLOW}Функция 'assist' уже присутствует в $PROFILE:{C_RESET}\n  {profile_file}")
+        print(f"{C_YELLOW}Function 'assist' уже присутствует в $PROFILE:{C_RESET}\n  {profile_file}")
         return 0
 
     with open(profile_file, "a", encoding="utf-8") as f:
         f.write(snippet)
 
-    print(f"{C_GREEN}✅ Функция 'assist' успешно зарегистрирована в вашем PowerShell $PROFILE:{C_RESET}")
+    print(f"{C_GREEN}✅ Function 'assist' successfully зарегистрирована в вашем PowerShell $PROFILE:{C_RESET}")
     print(f"   {profile_file}")
     print(f"{C_CYAN}Теперь вы можете вводить 'assist start', 'assist status', 'assist providers' в любом терминале!{C_RESET}")
     return 0
-
 
 def main() -> int:
     """Точка входа CLI assist."""
@@ -986,13 +946,13 @@ def main() -> int:
         description="Терминальный ассистент управления проектом AI Assistant",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Примеры:
+Examples:
   assist start             # запуск сервера (run.ps1)
   assist start foundry     # запуск только AI Foundry
   assist stop              # остановка всех процессов сервера
   assist restart           # перезапуск сервера
-  assist status            # статус сервера, портов и моделей (автозапуск если включён)
-  assist providers         # подробный список провайдеров и моделей ИИ
+  assist status            # status сервера, портов и моделей (автозапуск если включён)
+  assist providers         # подробный list провайдеров и моделей ИИ
   assist logs 50           # последние 50 строк лога
   assist config show       # просмотр config.json
   assist test              # запуск pytest
@@ -1039,10 +999,10 @@ def main() -> int:
     p_restart.add_argument("service", nargs="?", default="run", help="Сервис: run, unicorn, light, foundry, all")
 
     # status
-    subparsers.add_parser("status", help="Проверить статус сервера, портов и служб")
+    subparsers.add_parser("status", help="Проверить status сервера, портов и служб")
 
     # providers
-    subparsers.add_parser("providers", help="Показать список и статус всех провайдеров ИИ")
+    subparsers.add_parser("providers", help="Показать list и status всех провайдеров ИИ")
     subparsers.add_parser("models", help="Алиас для assist providers")
 
     # logs
@@ -1065,7 +1025,7 @@ def main() -> int:
 
     # --- НОВЫЕ КОМАНДЫ ---
     # list providers
-    p_list_providers = subparsers.add_parser("list", help="Список (providers/models)")
+    p_list_providers = subparsers.add_parser("list", help="List (providers/models)")
     p_list_providers.add_argument("subcommand", nargs="?", default="", choices=["providers", "models"])
 
     # select provider
@@ -1108,7 +1068,7 @@ def main() -> int:
         elif args.subcommand == "models":
             return cmd_list_models(args)
         else:
-            # По умолчанию показываем список провайдеров
+            # По умолчанию показываем list провайдеров
             return cmd_list_providers(args)
 
     if args.command == "select":
@@ -1148,7 +1108,6 @@ def main() -> int:
         return 1
 
     return handler(args)
-
 
 if __name__ == "__main__":
     sys.exit(main())

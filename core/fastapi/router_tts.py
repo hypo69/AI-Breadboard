@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Синтезирует отдельный чанк текста при помощи Modul
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: router_tts.py
+# Project: ai-breadboard
+# Package: core.fastapi
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 from __future__ import annotations
 
 import os
@@ -21,11 +34,11 @@ TTS_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 from core.tts import synthesize_speech
 
 async def _synthesize_chunk_to_file(text: str, file_path: Path, tts_system: str = "edge-tts", voice: str = "ru-RU-DmitryNeural"):
-    """Синтезирует отдельный чанк текста при помощи модульной TTS системы."""
+    """Синтезирует отдельный чанк текста при помощи Moduleной TTS системы."""
     await synthesize_speech(text, file_path, tts_system, voice)
 
 def _get_user_tts_config(request: Request) -> tuple[str, str]:
-    """Возвращает (tts_system, tts_voice) для текущего пользователя или дефолтные значения."""
+    """Returns (tts_system, tts_voice) для текущего пользователя или дефолтные значения."""
     tts_system = "edge-tts"
     from core.config import tts_cfg
     tts_voice = getattr(tts_cfg, "default_voice", "ru-RU-DmitryNeural") if tts_cfg else "ru-RU-DmitryNeural"
@@ -97,7 +110,7 @@ def init_router(prefix: str = "/api/tts") -> APIRouter:
                     yield f"data: {chunk}\n\n"
             except Exception as e:
                 logger.error(f"Error in SSE stream-text: {e}")
-                yield f"data: Ошибка при обработке текста: {str(e)}\n\n"
+                yield f"data: Error при обработке текста: {str(e)}\n\n"
 
         return StreamingResponse(sse_generator(), media_type="text/event-stream")
 
@@ -114,7 +127,7 @@ def init_router(prefix: str = "/api/tts") -> APIRouter:
         if not text.strip():
             raise HTTPException(status_code=400, detail="Empty text")
         
-        # Получаем настройки озвучки текущего пользователя или параметры запроса
+        # Получаем настройки озвучки текущего пользователя или Parameters запроса
         user_system, user_voice = _get_user_tts_config(request)
         tts_system = system if system != "" else user_system
         tts_voice = voice if voice != "" else user_voice
@@ -132,7 +145,7 @@ def init_router(prefix: str = "/api/tts") -> APIRouter:
                 await _synthesize_chunk_to_file(text, file_path, tts_system, tts_voice)
             except Exception as e:
                 logger.error(f"TTS synthesis error: {e}")
-                raise HTTPException(status_code=500, detail=f"Ошибка синтеза речи: {e}")
+                raise HTTPException(status_code=500, detail=f"Error синтеза речи: {e}")
                 
         return FileResponse(file_path, media_type="audio/mpeg", filename="voiceover.mp3")
 
@@ -198,7 +211,7 @@ def init_router(prefix: str = "/api/tts") -> APIRouter:
 
     @router.get("/file/{filename}")
     async def get_audio_file(filename: str):
-        """Возвращает аудиофайл из кэша."""
+        """Returns аудиофайл из кэша."""
         file_path = TTS_CACHE_DIR / filename
         if not file_path.exists():
             raise HTTPException(status_code=404, detail="Audio file not found")

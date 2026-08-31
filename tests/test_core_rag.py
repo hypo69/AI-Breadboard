@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Модульные тесты подсистемы Core RAG
+# Process Name: Тесты моделей данных RAG.
 # =============================================================================
-# Описание:
+# Description:
 #   Тестирование чистых модулей core.rag:
-#   - RAGDecisionType, RAGRouteDecision, RAGSearchResult (models.py)
-#   - RulesRAG (rules_rag.py)
-#   - RAGEngine (engine.py): поиск по базе знаний, проверка threshold, fallback к LLM
 #
 # File: test_core_rag.py
 # Project: ai-breadboard
@@ -24,7 +21,6 @@ from unittest.mock import patch, MagicMock, AsyncMock
 from core.rag.models import RAGDecisionType, RAGRouteDecision, RAGSearchResult
 from core.rag.rules_rag import RulesRAG, build_rules_index, collect_prompt_documents
 from core.rag.engine import RAGEngine, get_rag_engine
-
 
 class TestCoreRagModels:
     """Тесты моделей данных RAG."""
@@ -47,7 +43,6 @@ class TestCoreRagModels:
         assert res.title == "Doc 1"
         assert res.text == "Sample content"
         assert res.score == 0.95
-
 
 class TestRulesRag:
     """Тесты сборщика и поиска по промптам RulesRAG."""
@@ -81,7 +76,6 @@ class TestRulesRag:
             ctx = rag.build_context("диктора", top_k=2)
             assert "Я ассистент" in ctx
             assert "Текст диктора" in ctx
-
 
 @pytest.mark.asyncio
 class TestRagEngine:

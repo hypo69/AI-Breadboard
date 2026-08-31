@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Loads and returns the Silero model, caching it in
+# =============================================================================
+# Description:
+#   Loads and returns the Silero model, caching it in memory."""
+#
+# File: silero.py
+# Project: ai-breadboard
+# Package: core.tts
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Module for Silero TTS system.
 """

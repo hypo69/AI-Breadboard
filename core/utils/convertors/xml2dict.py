@@ -1,7 +1,16 @@
-## \file /src/utils/convertors/xml2dict.py
 # -*- coding: utf-8 -*-
-
-#! .pyenv/bin/python3
+# =============================================================================
+# Process Name: .. module:: src.utils.convertors
+# =============================================================================
+# Description:
+#   Module for AI Breadboard project.
+#
+# File: xml2dict.py
+# Project: ai-breadboard
+# Package: core.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
 """
 .. module:: src.utils.convertors 

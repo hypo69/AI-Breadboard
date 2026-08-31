@@ -3,12 +3,12 @@
     "player": "Плеер",
     "chat": "Чат",
     "cabinet": "Кабинет",
-    "settings": "Настройки",
+    "settings": "Settings",
     "tts": "Настроить TTS"
   },
   "player": {
-    "noFiles": "Нет файлов",
-    "loadError": "Ошибка загрузки файлов",
+    "noFiles": "No файлов",
+    "loadError": "Error загрузки файлов",
     "prev": "⏮ Предыдущий",
     "next": "Следующий ⏭",
     "nowPlaying": "Сейчас играет:"
@@ -17,11 +17,11 @@
     "placeholder": "Введите сообщение...",
     "send": "Отправить",
     "startPrompt": "Начните разговор с AI",
-    "error": "Ошибка",
+    "error": "Error",
     "typing": "Печатает..."
   },
   "common": {
-    "loading": "Загрузка...",
-    "error": "Ошибка"
+    "loading": "Loading...",
+    "error": "Error"
   }
 }

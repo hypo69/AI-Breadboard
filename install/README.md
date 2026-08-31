@@ -2,13 +2,16 @@
 
 ## 1. Architectural Overview & Philosophy
 
-The `install/` subsystem is an enterprise-grade, modular setup and lifecycle bootstrapping framework designed for the **`AI Breadboard`** interactive AI platform.
+The `install/` subsystem is an enterprise-grade, modular setup and lifecycle bootstrapping framework designed for the **`AI Breadboard`** interactive AI platform with **full cross-platform support** (Windows, Linux, macOS).
 
 ### Core Architectural Principles
 1. **Configuration over Hardcode (`install.json`):** No paths, version targets, or repository URLs are hardcoded inside script logic. All operational boundaries are defined in [`install.json`](./install.json).
 2. **Single Source of Truth for Project Location (`AIBREADBOARD_DIR`):** The exact installation folder is permanently registered in the user's OS environment (`AIBREADBOARD_DIR` and `ASSIST_DIR`), ensuring that internal components (`header.py`), CLI tools (`scripts/dev/assist_cli.py`), and external agentic harnesses always locate the project root unambiguously.
 3. **Decoupled Single-Responsibility Modules:** Each stage of deployment (localization, directory allocation, environment isolation, package resolution, security certificate provisioning, CLI registration, and integrity verification) is encapsulated in an independent script that can be executed or tested in isolation.
-4. **Resilient Dual-Mode Execution:** Operates seamlessly both in **remote bootstrap mode** via an interactive one-liner (`irm ... | iex`) and in **local repository mode** (`.\install.ps1`).
+4. **Cross-Platform Execution:** Operates seamlessly across all major platforms:
+   - **Windows:** PowerShell (`install.ps1`) for native integration
+   - **Linux/macOS:** Bash (`install.sh`) for Unix-like systems
+   - **Universal:** Python (`install.py`) for all platforms
 5. **Full Multilingual Localization (I18N):** Native support for **Russian (RU)**, **English (EN)**, **Spanish (ES)**, and **Hebrew (HE)** across all dialogs, advisories, and status reports.
 
 ---
@@ -19,22 +22,63 @@ The diagram below illustrates the exact execution pipeline and module interactio
 
 ```mermaid
 flowchart TD
-    Start(["🚀 Start: irm ... | iex OR .\\install.ps1"]) --> LoadConfig["1. Load Configuration (install/install.json)"]
-    LoadConfig --> InitI18n["2. Initialize I18N Engine (Install-I18n.ps1)"]
-    InitI18n --> DetectLang["3. Detect System Locale & Prompt Language (RU / EN / ES / HE)"]
-    DetectLang --> DirSelect["4. Directory Resolution (Install-Directory.ps1)<br/>• Explain Active Dev Stability<br/>• Confirm Default: %LOCALAPPDATA%\\aibreadboard OR Custom<br/>• Autonomous Git Clone / ZIP Unpack if needed"]
-    DirSelect --> Unblock["5. Unblock Project Files (Unblock-File)"]
-    Unblock --> Venv["6. Python & Environment Isolation (Install-Venv.ps1)<br/>• Scan Python 3.12-3.14 via py launcher/PATH<br/>• Create/Recreate Isolated venv<br/>• Upgrade pip, setuptools, wheel"]
-    Venv --> Deps["7. Dependency Resolution (Install-Deps.ps1)<br/>• Profile: Full / Core / Core+AI / Dev / Skip<br/>• Install via pip"]
-    Deps --> Certs["8. Security & SSL Generation (Install-Certs.ps1)<br/>• Validate localhost+2.pem / key<br/>• Invoke install_ssl_cert.ps1 if missing"]
-    Certs --> Cli["9. Global System Registration (Install-Cli.ps1)<br/>• Set User Env Var: AIBREADBOARD_DIR & ASSIST_DIR<br/>• Generate assist.ps1, assist.cmd, bash wrapper<br/>• Deploy to %USERPROFILE%\\.local\\bin & Update PATH<br/>• Inject assist function into $PROFILE"]
-    Cli --> Verify["10. System Integrity & Verification (Install-Verify.ps1)<br/>• Test Core Python Module Imports<br/>• Persist Language in config.json<br/>• Render Completion Banner"]
-    Verify --> Done(["✅ Ready: assist start / ./run.ps1"])
+    Start(["🚀 Start: python install.py OR bash install.sh OR .\\install.ps1"]) --> SelectLang["1. Language Selection (RU / EN / ES / HE)"]
+    SelectLang --> SelectDir["2. Installation Directory Selection"]
+    SelectDir --> FindPython["3. Python Interpreter Discovery<br/>• Scan Python 3.13, 3.12, 3.11, 3.10<br/>• Fallback to system python/python3"]
+    FindPython --> Venv["4. Virtual Environment Creation<br/>• Create isolated venv<br/>• Upgrade pip, setuptools, wheel"]
+    Venv --> DepProfile["5. Dependency Profile Selection<br/>• [1] Full (Core + AI + Utils)<br/>• [2] Core only<br/>• [3] Core + AI<br/>• [4] Full + Dev<br/>• [5] Skip"]
+    DepProfile --> InstallDeps["6. Install Dependencies via pip<br/>• requirements.txt or profile-specific files<br/>• Handle missing files gracefully"]
+    InstallDeps --> Verify["7. Environment Verification<br/>• Test module imports (fastapi, uvicorn, etc)<br/>• Validate installation success"]
+    Verify --> Done(["✅ Ready: python -m scripts.dev.assist_cli"])
 ```
 
 ---
 
-## 3. Configuration Contract (`install/install.json`)
+## 3. Installation Methods
+
+### Method 1: Python Universal Installer (Recommended)
+```bash
+# All platforms
+python install.py
+
+# With options
+python install.py --language en --install-dir /opt/ai-breadboard
+```
+
+**Advantages:**
+- Single script for all platforms
+- No platform-specific dependencies
+- Consistent behavior across Windows/Linux/macOS
+
+### Method 2: Bash Installer (Linux/macOS)
+```bash
+bash install.sh
+
+# With options
+bash install.sh --language ru --install-dir ~/ai-breadboard
+```
+
+**Advantages:**
+- Native Unix shell integration
+- Lightweight, no Python required for installation
+- Direct environment variable management
+
+### Method 3: PowerShell Installer (Windows)
+```powershell
+.\install.ps1
+
+# Remote bootstrap
+irm https://raw.githubusercontent.com/hypo69/AI-Breadboard/master/install/install.ps1 | iex
+```
+
+**Advantages:**
+- Native Windows integration
+- Full PowerShell ecosystem support
+- Automatic PATH and profile management
+
+---
+
+## 4. Configuration Contract (`install/install.json`)
 
 The entire installation subsystem is driven by [`install.json`](./install.json). Any autonomous agent modifying setup behavior must update this file instead of modifying executable scripts:
 
@@ -81,7 +125,7 @@ The entire installation subsystem is driven by [`install.json`](./install.json).
 
 ---
 
-## 4. Module Specifications & Interfaces
+## 5. Module Specifications & Interfaces
 
 ### 4.1. `Install-I18n.ps1` (Localization Subsystem)
 * **Purpose:** Provides localized string dictionaries and lookup functions for all wizard steps.
@@ -178,7 +222,7 @@ The entire installation subsystem is driven by [`install.json`](./install.json).
 
 ---
 
-## 5. Execution Modes
+## 6. Execution Modes
 
 ### Mode A: Remote Web Bootstrap (Zero-Install One-Liner)
 ```powershell
@@ -201,7 +245,7 @@ irm https://raw.githubusercontent.com/hypo69/AI-Breadboard/master/install.ps1 | 
 
 ---
 
-## 6. Internal & External Tools Path Resolution Contract
+## 7. Internal & External Tools Path Resolution Contract
 
 All runtime scripts and tools in `aibreadboard` resolve the project root using this deterministic priority hierarchy:
 
@@ -234,7 +278,7 @@ def set_project_root(marker_files=('__root__', '.git')) -> Path:
 
 ---
 
-## 7. Troubleshooting & Agent Diagnostic Guide
+## 8. Troubleshooting & Agent Diagnostic Guide
 
 | Failure Symptom | Root Cause | Automated Resolution Action |
 |---|---|---|
@@ -245,7 +289,7 @@ def set_project_root(marker_files=('__root__', '.git')) -> Path:
 | `Target directory write denied` | Permissions error on custom folder | Default to `%LOCALAPPDATA%\AI Breadboard` which is always writable without UAC elevation |
 ---
 
-## 8. Global CLI Commands (`manage_tools.py`)
+## 9. Global CLI Commands (`manage_tools.py`)
 
 After installation, the following commands become globally available from any terminal:
 
@@ -329,7 +373,7 @@ assist providers      # List configured AI providers
 
 ---
 
-## 9. Shell Aliases (Installed Automatically)
+## 10. Shell Aliases (Installed Automatically)
 
 The installer registers the following aliases in your shell profile:
 

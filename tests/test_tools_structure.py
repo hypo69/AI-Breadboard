@@ -1,9 +1,21 @@
-## \file tests/test_tools_structure.py
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: # ================================================
+# =============================================================================
+# Description:
+#   Checks структуру директории scripts/."""
+#
+# File: test_tools_structure.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Тесты структуры директорий проекта.
 
-Проверяет наличие всех обязательных директорий, файлов и лончеров
+Checks наличие всех обязательных директорий, файлов и лончеров
 согласно агентоориентированной стратегии проекта.
 
 Документация: .ai_instructions/knowledge/LAUNCHER_GUIDE.md
@@ -12,13 +24,11 @@
 import pytest
 from pathlib import Path
 
-
 # Корень проекта определяется через header.py
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-
 class TestToolsDirectoryStructure:
-    """Проверяет структуру директории scripts/."""
+    """Checks структуру директории scripts/."""
 
     def test_scripts_directory_exists(self):
         """scripts/ обязан существовать."""
@@ -33,9 +43,8 @@ class TestToolsDirectoryStructure:
         """README.md скриптов обязан существовать."""
         assert (PROJECT_ROOT / "scripts" / "README.md").is_file() or (PROJECT_ROOT / "tools" / "README.md").is_file()
 
-
 class TestAiToolsExist:
-    """Проверяет наличие ключевых AI-инструментов и скриптов разработки."""
+    """Checks наличие ключевых AI-инструментов и скриптов разработки."""
 
     def test_rebuild_dev_rag_exists(self):
         """rebuild_dev_rag.py обязан существовать."""
@@ -49,18 +58,16 @@ class TestAiToolsExist:
         """update_docs.py обязан существовать."""
         assert (PROJECT_ROOT / "scripts" / "dev" / "update_docs.py").is_file() or (PROJECT_ROOT / "tools" / "ai" / "update_docs.py").is_file()
 
-
 class TestReportsDirectory:
-    """Проверяет директорию tmp/reports/."""
+    """Checks директорию tmp/reports/."""
 
     def test_reports_directory_exists(self):
         """tmp/reports/ обязан существовать."""
         assert (PROJECT_ROOT / "tmp" / "reports").is_dir() or (PROJECT_ROOT / "tmp").is_dir(), \
             "Директория tmp не найдена"
 
-
 class TestCoreRagDirectory:
-    """Проверяет директорию core/rag/."""
+    """Checks директорию core/rag/."""
 
     def test_core_rag_directory_exists(self):
         """core/rag/ обязан существовать."""
@@ -72,9 +79,8 @@ class TestCoreRagDirectory:
         assert (PROJECT_ROOT / "core" / "rag" / "models.py").is_file(), \
             "Файл core/rag/models.py не найден"
 
-
 class TestAiInstructionsDocuments:
-    """Проверяет ключевые AI-документы."""
+    """Checks ключевые AI-документы."""
 
     def test_launcher_guide_exists(self):
         """LAUNCHER_GUIDE.md обязан существовать."""
@@ -98,9 +104,8 @@ class TestAiInstructionsDocuments:
         assert "LAUNCHER_GUIDE" in content, \
             "GEMINI.md не содержит ссылки на LAUNCHER_GUIDE.md"
 
-
 class TestCoreProjectFiles:
-    """Проверяет наличие ключевых файлов проекта в корне."""
+    """Checks наличие ключевых файлов проекта в корне."""
 
     def test_main_py_exists(self):
         """main.py обязан существовать."""

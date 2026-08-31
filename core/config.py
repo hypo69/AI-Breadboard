@@ -1,25 +1,18 @@
-## \file core/config.py
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Загрузка и предоставление конфигурации приложения
+# Process Name: Application global configuration loading and exposure
 # =============================================================================
-# Описание:
-#   Модуль загружает глобальную конфигурацию из файла config.json и
-#   предоставляет доступ к основным секциям (сервер, ИИ, TTS, логирование,
-#   qBittorrent) в виде объектов SimpleNamespace.
+# Description:
+#   Loads global application configuration from config.json file and exposes
+#   main configuration sections (server, AI, TTS, logging, qBittorrent) as SimpleNamespace objects
+#   for convenient access across the application through centralized config module.
 #
-# File: core/config.py
+# File: config.py
 # Project: ai-breadboard
 # Package: core
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
-
-"""
-.. module:: core.config
-    :platform: Windows, Unix
-    :synopsis: Глобальная конфигурация приложения
-"""
 
 from pathlib import Path
 from types import SimpleNamespace
@@ -28,10 +21,10 @@ from header import __root__
 
 CONFIG_FILE = __root__ / "config.json"
 
-# Load global configuration
+# Loading global configuration
 global_settings = j_loads_ns(CONFIG_FILE)
 
-# Expose main sections for easier import
+# Exposure of main sections for easier import
 server_cfg = getattr(global_settings, "server", SimpleNamespace())
 ai_cfg = getattr(global_settings, "ai", SimpleNamespace())
 tts_cfg = getattr(global_settings, "tts", SimpleNamespace())

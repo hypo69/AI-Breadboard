@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Synthesizes text to a file using Microsoft Edge TT
+# =============================================================================
+# Description:
+#   Synthesizes text to a file using Microsoft Edge TTS."""
+#
+# File: edge.py
+# Project: ai-breadboard
+# Package: core.tts
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
 """
 Module for Microsoft Edge TTS system.
 """

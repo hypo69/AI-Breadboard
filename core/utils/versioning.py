@@ -1,37 +1,28 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Название процесса: Сравнение и выбор версий по стандарту SemVer
+# Process Name: Разбор нестандартной строки версии в list целых чи
 # =============================================================================
-# Описание:
+# Description:
 #   Разбор строк версий в формате SemVer, сравнение двух версий и выбор
-#   наилучшего тега из списка с учётом пре-релизных меток.
-#
-# Примеры:
-#   >>> from core.utils.versioning import compare_versions, choose_best_tag
-#   >>> compare_versions('1.2.3', '1.2.4')
-#   -1
-#   >>> choose_best_tag(['v1.0.0', 'v1.1.0-alpha', 'v1.0.1'])
-#   'v1.0.1'
 #
 # File: versioning.py
 # Project: ai-breadboard
 # Package: core.utils
-# Module: Versioning
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
+
 import re
 from typing import List, Optional, Tuple
 
-
 def _parse_version_legacy(v: str) -> List[int]:
-    """Разбор нестандартной строки версии в список целых чисел.
+    """Разбор нестандартной строки версии в list целых чисел.
 
     Args:
-        v (str): Строка версии произвольного формата.
+        v (str): String версии произвольного формата.
 
     Returns:
-        List[int]: Список числовых компонентов версии; [0, 0, 0] для пустой строки.
+        List[int]: List числовых компонентов версии; [0, 0, 0] для empty строки.
 
     Examples:
         >>> _parse_version_legacy('2.10.3')
@@ -42,17 +33,16 @@ def _parse_version_legacy(v: str) -> List[int]:
     parts = re.findall(r'(\d+)', v)
     return [int(p) for p in parts]
 
-
 def parse_semver(v: str) -> Tuple[int, int, int, List[str]]:
     """Разбор строки версии по стандарту SemVer 2.0.
 
     Args:
-        v (str): Строка версии, опционально с префиксом 'v', пре-релизом и build-метаданными.
+        v (str): String версии, опционально с префиксом 'v', пре-релизом и build-метаданными.
 
     Returns:
-        Tuple[int, int, int, List[str]]: Кортеж (major, minor, patch, prerelease).
-            Поле prerelease — пустой список при отсутствии пре-релизной метки.
-            Возвращает пустой кортеж () при невалидной строке.
+        Tuple[int, int, int, List[str]]: Tuple (major, minor, patch, prerelease).
+            Поле prerelease — empty list при отсутствии пре-релизной метки.
+            Returns empty tuple () при невалидной строке.
 
     Examples:
         >>> parse_semver('v1.2.3-alpha.1')
@@ -76,13 +66,12 @@ def parse_semver(v: str) -> Tuple[int, int, int, List[str]]:
     prerelease = prerelease_raw.split('.') if prerelease_raw else []
     return (major, minor, patch, prerelease)
 
-
 def compare_versions(a: str, b: str) -> int:
     """Сравнение двух строк версий с приоритетом SemVer.
 
     Args:
-        a (str): Первая строка версии.
-        b (str): Вторая строка версии.
+        a (str): Первая string версии.
+        b (str): Вторая string версии.
 
     Returns:
         int: -1 если a < b, 0 если равны, 1 если a > b.
@@ -153,19 +142,18 @@ def compare_versions(a: str, b: str) -> int:
 
     return _compare(parse_semver(a), parse_semver(b))
 
-
 def choose_best_tag(tags: List[str], allow_prerelease: bool = False, debug: bool = False) -> str:
     """Выбор наибольшей версии из списка тегов.
 
     Args:
-        tags (List[str]): Список строк версий/тегов.
+        tags (List[str]): List строк версий/тегов.
         allow_prerelease (bool): Разрешить пре-релизные теги при отсутствии стабильных.
             Значение по умолчанию: False.
         debug (bool): Вывод отладочной информации через logger.
             Значение по умолчанию: False.
 
     Returns:
-        str: Тег с наибольшей версией; пустая строка при пустом списке.
+        str: Тег с наибольшей версией; пустая string при пустом списке.
 
     Examples:
         >>> choose_best_tag(['v1.0.0', 'v1.1.0-alpha', 'v1.0.1'])
