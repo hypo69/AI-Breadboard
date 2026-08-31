@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Результат конвертации и оптимизации модели.
+# Process Name: GGUF to ONNX model conversion and optimization
 # =============================================================================
 # Description:
-#   Module конвертации локальных моделей в формат ONNX
+#   Module for converting local models to ONNX format with optional graph optimization.
 #
 # File: gguf_to_onnx.py
 # Project: ai-breadboard
@@ -11,6 +11,10 @@
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
+
+"""GGUF to ONNX model converter with optimization support.
+
+Converts HuggingFace models to ONNX format and optionally optimizes the computational graph."""
 
 import asyncio
 from dataclasses import dataclass, field
@@ -37,7 +41,15 @@ except ImportError:
 
 @dataclass
 class ConversionResult:
-    """Результат конвертации и оптимизации модели."""
+    """Model conversion and optimization result.
+    
+    Attributes:
+        success (bool): Whether conversion succeeded.
+        output_dir (str): Directory where ONNX artifacts saved.
+        optimized_path (str): Path to optimized model (if optimization ran).
+        error (str): Error message if conversion failed.
+        chunks_info (Dict): Metadata about exported files.
+    """
     success: bool
     output_dir: str = ""
     optimized_path: str = ""
@@ -45,7 +57,11 @@ class ConversionResult:
     chunks_info: Dict[str, Any] = field(default_factory=dict)
 
 class GGUFConverter:
-    """Конвертер моделей в формат ONNX с опциональной оптимизацией."""
+    """Converter for models to ONNX format with optional optimization.
+    
+    Converts HuggingFace or local models to ONNX and optionally runs
+    graph optimization passes for inference performance.
+    """
 
     async def convert(
         self,
@@ -55,29 +71,29 @@ class GGUFConverter:
         opset: int = 17,
         optimize: bool = True,
     ) -> ConversionResult:
-        """Конвертация модели в формат ONNX.
+        """Convert model to ONNX format.
 
         Args:
-            model_path: HF model ID или путь к локальной директории модели.
-            output_dir: Директория для сохранения ONNX артефактов.
-            model_type: Архитектурный тип для оптимизатора ('gpt2', 'bert', 'bart').
-            opset: Версия ONNX opset.
-            optimize: Запуск проходов оптимизации графа.
+            model_path (str): HuggingFace model ID or path to local model directory.
+            output_dir (str): Directory to save ONNX artifacts.
+            model_type (str): Architecture type for optimizer ('gpt2', 'bert', 'bart'). Default 'gpt2'.
+            opset (int): ONNX opset version. Default 17.
+            optimize (bool): Run graph optimization passes. Default True.
 
         Returns:
-            ConversionResult: Результат экспорта и пути к файлам.
+            ConversionResult: Export result and file paths.
         """
         if not CONVERTER_AVAILABLE:
             return ConversionResult(
                 success=False,
-                error="optimum[onnxruntime] не установлен. Выполните: pip install optimum[onnxruntime]",
+                error="optimum[onnxruntime] not installed. Run: pip install optimum[onnxruntime]",
             )
 
         src = Path(model_path)
         out = Path(output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        logger.info(f"[GGUFConverter] Начало конвертации: {model_path} -> {out}")
+        logger.info(f"[GGUFConverter] Starting conversion: {model_path} -> {out}")
 
         try:
             loop = asyncio.get_running_loop()
@@ -95,23 +111,32 @@ class GGUFConverter:
                     )
                     result.optimized_path = opt_path
 
-            logger.info(f"[GGUFConverter] Конвертация завершена successfully: {out}")
+            logger.info(f"[GGUFConverter] Conversion completed successfully: {out}")
             return result
 
         except Exception as e:
-            logger.error(f"[GGUFConverter] Error конвертации {model_path}: {e}")
+            logger.error(f"[GGUFConverter] Error converting {model_path}: {e}")
             return ConversionResult(success=False, error=str(e))
 
     def _export(self, model_path: str, output_dir: str, opset: int) -> ConversionResult:
-        """Синхронный экспорт модели через optimum."""
+        """Synchronous model export via optimum.
+        
+        Args:
+            model_path (str): Model path or identifier.
+            output_dir (str): Output directory for ONNX files.
+            opset (int): ONNX opset version.
+            
+        Returns:
+            ConversionResult: Export result with file information.
+        """
         try:
             from transformers import AutoTokenizer
             from optimum.onnxruntime import ORTModelForCausalLM
 
-            logger.info(f"[GGUFConverter] Loading токенизатора из {model_path}")
+            logger.info(f"[GGUFConverter] Loading tokenizer from {model_path}")
             tokenizer = AutoTokenizer.from_pretrained(model_path)
 
-            logger.info("[GGUFConverter] Экспорт в ONNX через ORTModelForCausalLM...")
+            logger.info("[GGUFConverter] Exporting to ONNX via ORTModelForCausalLM...")
             model = ORTModelForCausalLM.from_pretrained(
                 model_path,
                 export=True,
@@ -137,26 +162,38 @@ class GGUFConverter:
             )
 
         except Exception as e:
-            logger.error(f"[GGUFConverter] Error экспорта {model_path}: {e}")
+            logger.error(f"[GGUFConverter] Error exporting {model_path}: {e}")
             return ConversionResult(success=False, error=str(e))
 
     def _optimize(self, onnx_path: str, model_type: str) -> str:
-        """Синхронная оптимизация графа ONNX модели."""
+        """Synchronous ONNX graph optimization.
+        
+        Args:
+            onnx_path (str): Path to ONNX model file.
+            model_type (str): Model architecture type.
+            
+        Returns:
+            str: Path to optimized model, or empty string on error.
+        """
         try:
             from onnxruntime.transformers import optimizer as ort_optimizer
-            logger.info(f"[GGUFConverter] Оптимизация ONNX графа: {onnx_path}")
+            logger.info(f"[GGUFConverter] Optimizing ONNX graph: {onnx_path}")
             opt_model = ort_optimizer.optimize_model(onnx_path, model_type=model_type)
             output_path = onnx_path.replace(".onnx", "_optimized.onnx")
             opt_model.save_model_to_file(output_path)
-            logger.info(f"[GGUFConverter] Оптимизированная модель сохранена: {output_path}")
+            logger.info(f"[GGUFConverter] Optimized model saved: {output_path}")
             return output_path
         except Exception as e:
-            logger.warning(f"[GGUFConverter] Оптимизация пропущена из-за ошибки: {e}")
+            logger.warning(f"[GGUFConverter] Optimization skipped due to error: {e}")
             return ""
 
     @staticmethod
     def is_available() -> Dict[str, bool]:
-        """Check доступности инструментов конвертации."""
+        """Check availability of conversion tools.
+        
+        Returns:
+            Dict[str, bool]: Availability of converter and optimizer.
+        """
         return {
             "converter": CONVERTER_AVAILABLE,
             "optimizer": OPTIMIZER_AVAILABLE,

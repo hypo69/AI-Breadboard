@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Тестирование сохранения JSON в файл (успешный сцен
+# Process Name: JSON and CSV file handling utilities testing
 # =============================================================================
 # Description:
-#   Тестирование функций загрузки и сохранения JSON данных.
+#   Testing functions for loading and saving JSON data with various formats and scenarios.
 #
 # File: test_jjson.py
 # Project: ai-breadboard
@@ -18,26 +18,26 @@ from pathlib import Path
 from core.utils.jjson import j_loads, j_dumps
 from types import SimpleNamespace
 
-# --- Тесты для j_dumps ---
+# --- Tests for j_dumps ---
 
 def test_j_dumps_happy_path(tmp_path):
-    """Тестирование сохранения JSON в файл (успешный сценарий)."""
-    # Arrange: тестовые данные
+    """Test saving JSON to file (successful scenario)."""
+    # Arrange: test data
     data = {"key": "value"}
     file_path = tmp_path / "test.json"
     
-    # Act: сохранение
+    # Act: save
     result = j_dumps(data, file_path=file_path)
     
     # Assert
-    assert result == data, "j_dumps должна вернуть исходные данные"
-    assert file_path.exists(), "Файл должен быть создан"
-    assert json.loads(file_path.read_text(encoding="utf-8")) == data, "Содержимое файла не совпадает"
+    assert result == data, "j_dumps should return original data"
+    assert file_path.exists(), "File should be created"
+    assert json.loads(file_path.read_text(encoding="utf-8")) == data, "File content does not match"
 
-# --- Тесты для j_loads ---
+# --- Tests for j_loads ---
 
 def test_j_loads_str_happy_path():
-    """Тестирование загрузки JSON из строки (успешный сценарий)."""
+    """Test loading JSON from string (successful scenario)."""
     # Arrange
     json_str = '{"key": "value"}'
     
@@ -45,10 +45,10 @@ def test_j_loads_str_happy_path():
     result = j_loads(json_str)
     
     # Assert
-    assert result == {"key": "value"}, "Загруженные данные не совпадают"
+    assert result == {"key": "value"}, "Loaded data does not match"
 
 def test_j_loads_file_happy_path(tmp_path):
-    """Тестирование загрузки JSON из файла (успешный сценарий)."""
+    """Test loading JSON from file (successful scenario)."""
     # Arrange
     file_path = tmp_path / "data.json"
     data = {"key": "value"}
@@ -58,4 +58,4 @@ def test_j_loads_file_happy_path(tmp_path):
     result = j_loads(file_path)
     
     # Assert
-    assert result == data, "Загруженные данные из файла не совпадают"
+    assert result == data, "Loaded file data does not match"

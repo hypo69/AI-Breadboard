@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Loading и нормализация навыков для разных AI-агент
-# =============================================================================
-# Description:
-#   Loading и нормализация навыков для разных AI-агентов."""
-#
+# Process Name: Skill definition and registry management for AI agents
+# Description: Loads, normalizes, and registers skills for various AI agents.
 # File: registry.py
 # Project: ai-breadboard
 # Package: core.skills
@@ -12,7 +9,7 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""Loading и нормализация навыков для разных AI-агентов."""
+"""Loads, normalizes, and registers skills for various AI agents."""
 
 from __future__ import annotations
 
@@ -28,7 +25,7 @@ _FRONTMATTER_PATTERN = re.compile(r"\A---\s*\n(?P<body>.*?)\n---\s*(?:\n|\Z)", r
 _DEFAULT_SKILL_DIRS = (".gemini/skills", ".agents/skills", ".github/skills", "skills")
 
 def _parse_scalar(value: str) -> Any:
-    """Разбирает простые YAML-значения без обязательной зависимости PyYAML."""
+    """Parses simple YAML values without requiring PyYAML dependency."""
     normalized = value.strip()
     if not normalized:
         return ""
@@ -46,7 +43,7 @@ def _parse_scalar(value: str) -> Any:
     return normalized
 
 def _parse_frontmatter(text: str) -> tuple[dict[str, Any], str]:
-    """Returns метаданные frontmatter и Markdown без его заголовка."""
+    """Returns frontmatter metadata and Markdown without its header."""
     match = _FRONTMATTER_PATTERN.match(text)
     if not match:
         return {}, text.strip()
@@ -60,7 +57,7 @@ def _parse_frontmatter(text: str) -> tuple[dict[str, Any], str]:
     return metadata, text[match.end():].strip()
 
 def _load_json_manifest(skill_root: Path) -> dict[str, Any]:
-    """Loads необязательный машинный контракт навыка."""
+    """Loads optional machine contract for the skill."""
     manifest_path = skill_root / "skill.json"
     if not manifest_path.is_file():
         return {}
@@ -72,7 +69,7 @@ def _load_json_manifest(skill_root: Path) -> dict[str, Any]:
 
 @dataclass(frozen=True)
 class SkillDefinition:
-    """Нормализованное описание навыка, пригодное для любого провайдера."""
+    """Normalized skill description suitable for any provider."""
 
     name: str
     description: str
@@ -83,7 +80,7 @@ class SkillDefinition:
     manifest: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self, include_instructions: bool = True) -> dict[str, Any]:
-        """Преобразует навык в переносимый JSON-контракт."""
+        """Converts skill to portable JSON contract."""
         result: dict[str, Any] = {
             "name": self.name,
             "description": self.description,
@@ -97,18 +94,18 @@ class SkillDefinition:
         return result
 
     def prompt(self) -> str:
-        """Returns инструкции для добавления в system prompt модели."""
+        """Returns instructions for adding to the model's system prompt."""
         return self.instructions.strip()
 
 class SkillRegistry:
-    """Ищет навыки в совместимых каталогах и выдаёт единый API доступа."""
+    """Searches for skills in compatible directories and provides unified access API."""
 
     def __init__(self, project_root: Path = __root__, skill_dirs: Iterable[str] = _DEFAULT_SKILL_DIRS) -> None:
         self.project_root = Path(project_root).resolve()
         self.skill_dirs = tuple(skill_dirs)
 
     def discover(self) -> list[SkillDefinition]:
-        """Находит все каталоги с SKILL.md и deletes дубликаты по имени."""
+        """Finds all directories with SKILL.md and removes duplicates by name."""
         found: dict[str, SkillDefinition] = {}
         for relative_dir in self.skill_dirs:
             skills_root = self.project_root / relative_dir
@@ -121,15 +118,15 @@ class SkillRegistry:
         return sorted(found.values(), key=lambda item: item.name)
 
     def get(self, name: str) -> SkillDefinition:
-        """Returns навык по имени или сообщает об отсутствии навыка."""
+        """Returns skill by name or raises KeyError if not found."""
         normalized = name.strip().lower()
         for skill in self.discover():
             if skill.name.lower() == normalized:
                 return skill
-        raise KeyError(f"Навык не найден: {name}")
+        raise KeyError(f"Skill not found: {name}")
 
     def search(self, query: str) -> list[SkillDefinition]:
-        """Ищет навыки по имени и описанию."""
+        """Searches for skills by name and description."""
         terms = [term.lower() for term in query.split() if term.strip()]
         if not terms:
             return self.discover()
@@ -139,7 +136,7 @@ class SkillRegistry:
         ]
 
     def export_json(self, name: str, include_instructions: bool = True) -> str:
-        """Экспортирует навык в JSON для внешнего агента или модели."""
+        """Exports skill to JSON for external agent or model."""
         return json.dumps(self.get(name).to_dict(include_instructions), ensure_ascii=False, indent=2)
 
     @staticmethod

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: ## hypo69 docblock
+# Process Name: Domain-independent RAG-First algorithm implementation
 # =============================================================================
 # Description:
-#   Реализует чистый доменно-независимый алгоритм RAG-First:
+#   Implements clean domain-independent RAG-First algorithm for
 #
 # File: engine.py
 # Project: ai-breadboard

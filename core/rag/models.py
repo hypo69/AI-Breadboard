@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Тип решения маршрутизатора RAG.
+# Process Name: RAG router decision types and data models
 # =============================================================================
 # Description:
-#   Датаклассы и перечисления для универсального доменно-независимого
+#   Dataclasses and enumerations for universal domain-independent RAG routing decisions.
 #
 # File: models.py
 # Project: ai-breadboard
@@ -19,13 +19,13 @@ from enum import Enum
 from typing import Any, Dict, List
 
 class RAGDecisionType(str, Enum):
-    """Тип решения маршрутизатора RAG."""
+    """RAG router decision type."""
     DIRECT_ANSWER = "direct_answer"
     LLM_FALLBACK = "llm_fallback"
 
 @dataclass
 class RAGSearchResult:
-    """Результат семантического поиска в RAG-индексе."""
+    """Result of semantic search in RAG index."""
     title: str = ""
     file: str = ""
     path: str = ""
@@ -35,7 +35,7 @@ class RAGSearchResult:
 
 @dataclass
 class RAGRouteDecision:
-    """Решение RAG-движка по обработке запроса пользователя."""
+    """Decision of RAG engine for processing user request."""
     decision_type: RAGDecisionType = RAGDecisionType.LLM_FALLBACK
     is_direct: bool = False
     direct_text: str = ""

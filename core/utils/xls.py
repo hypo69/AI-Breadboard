@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: src.utils
+# Process Name: Excel file processing and conversion utilities
 # =============================================================================
 # Description:
 #   This module provides functions to convert Excel files to JSON format, handle multiple sheets, and sa
@@ -12,12 +12,7 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: src.utils 
-	:platform: Windows, Unix
-	:synopsis: Converter for Excel (`xls`) to JSON and JSON to Excel (`xls`)
-
-"""
+"""Excel file conversion utilities for converting between XLS and JSON formats."""
 
 """ This module provides functions to convert Excel files to JSON format, handle multiple sheets, and save JSON data back to Excel files.
 

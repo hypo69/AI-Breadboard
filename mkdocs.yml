@@ -1,8 +1,6 @@
-# New minimal, multi-language MkDocs configuration for AI Breadboard
-
-site_name: AI Breadboard
+site_name: AI-Breadboard
 site_description: Interactive AI Model Testbench & Breadboard
-site_url: https://hypo69.github.io/AI-Breadboard/
+site_url: !ENV READTHEDOCS_CANONICAL_URL
 repo_url: https://github.com/hypo69/AI-Breadboard
 edit_uri: edit/master/docs/
 
@@ -22,28 +20,29 @@ theme:
     - toc.integrate
     - content.code.copy
 
-# Navigation: three language roots (EN, ES, RU)
+# Navigation: English only
 nav:
   - Home: index.md
-  - English:
-      - Overview: en/index.md
-      - Getting started: en/getting-started.md
-      - API: en/api-reference.md
-  - Español:
-      - Inicio: es/index.md
-      - Comenzando: es/getting-started.md
-  - Русский:
-      - Обзор: ru/index.md
-      - Начало работы: ru/getting-started.md
+  - Getting Started: getting-started.md
+  - API:
+      - Overview: api.md
 
-# Plugins (keep mkdocstrings enabled but without deprecated handler keys)
+# Plugins
 plugins:
   - search:
       lang:
         - en
-        - es
-        - ru
-  - mkdocstrings: {}
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - .
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            members_order: source
+            show_signature_annotations: true
 
 # Markdown extensions
 markdown_extensions:
@@ -51,79 +50,9 @@ markdown_extensions:
       anchor_linenums: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-
-strict: false
-              - Overview: "en/tester/index.md"
-
-  - "\U0001F1EE\U0001F1F1 \u05E2\u05D1\u05E8\u05D9\u05EA":
-      - he/index.md
-      - "\U0001F4D8 \u05E1\u05E4\u05E8":
-          - "\u05E1\u05E7\u05D9\u05E8\u05D4": he/book/index.md
-      - "\U0001F6E0 AI Breadboard":
-          - "Dev Guide":
-              - "\u05E1\u05E7\u05D9\u05E8\u05D4": "he/AI Breadboard/dev/index.md"
-          - "User Guide":
-              - "\u05E1\u05E7\u05D9\u05E8\u05D4": "he/AI Breadboard/user/index.md"
-          - "Test Guide":
-              - "\u05E1\u05E7\u05D9\u05E8\u05D4": "he/AI Breadboard/test/index.md"
-
-  - "\U0001F1EA\U0001F1F8 Espa\u00F1ol":
-      - es/index.md
-      - "\U0001F4D8 Libro":
-          - Resumen: es/book/index.md
-      - "\U0001F6E0 AI Breadboard":
-          - "Dev Guide":
-              - Resumen: "es/AI Breadboard/dev/index.md"
-          - "User Guide":
-              - Resumen: "es/AI Breadboard/user/index.md"
-          - "Test Guide":
-              - Resumen: "es/AI Breadboard/test/index.md"
-
-  - "\U0001F1F8\U0001F1E6 \u0627\u0644\u0639\u0631\u0628\u064A\u0629":
-      - ar/index.md
-      - "\U0001F4D8 \u0643\u062A\u0627\u0628":
-          - "\u0646\u0638\u0631\u0629 \u0639\u0627\u0645\u0629": ar/book/index.md
-      - "\U0001F6E0 AI Breadboard":
-          - "Dev Guide":
-              - "\u0646\u0638\u0631\u0629 \u0639\u0627\u0645\u0629": "ar/AI Breadboard/dev/index.md"
-          - "User Guide":
-              - "\u0646\u0638\u0631\u0629 \u0639\u0627\u0645\u0629": "ar/AI Breadboard/user/index.md"
-          - "Test Guide":
-              - "\u0646\u0638\u0631\u0629 \u0639\u0627\u0645\u0629": "ar/AI Breadboard/test/index.md"
-
-# Plugins
-plugins:
-  - search:
-      lang:
-        - ru
-        - en
-        - es
-  - mkdocstrings:
-      handlers:
-        python:
-          setup_commands:
-            - "import sys"
-            - "sys.path.insert(0, 'core')"
-
-# Copyright
-copyright: Copyright © 2026 hypo69. Licensed under MIT.
-
-# Markdown Extensions
-markdown_extensions:
-  - pymdownx.highlight:
-      anchor_linenums: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
   - pymdownx.superfences
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
-  - attr_list
-  - md_in_html
-  - tables
-  - fenced_code
 
-# Custom CSS
+# Custom CSS / JS
 extra_css:
   - stylesheets/extra.css
 
@@ -133,14 +62,11 @@ extra_javascript:
 # Site metadata
 extra:
   version: 1.0.0
-  generator: false
   authors:
     - hypo69
   license: MIT
   repository: github
-  social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/hypo69/AI-Breadboard
 
 # Validation
-strict: false
+strict: true
+

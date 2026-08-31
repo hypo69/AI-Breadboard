@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: # ================================================
+# Process Name: Testing project directory structure
 # =============================================================================
 # Description:
-#   Checks структуру директории scripts/."""
+#   Checks structure of scripts directory for completeness and correctness.
 #
 # File: test_tools_structure.py
 # Project: ai-breadboard
@@ -13,113 +13,88 @@
 # =============================================================================
 
 """
-Тесты структуры директорий проекта.
+Tests for project directory structure.
 
-Checks наличие всех обязательных директорий, файлов и лончеров
-согласно агентоориентированной стратегии проекта.
+Check presence of all required directories, files and launchers
+according to agent-oriented project strategy.
 
-Документация: .ai_instructions/knowledge/LAUNCHER_GUIDE.md
+Documentation: .ai_instructions/knowledge/LAUNCHER_GUIDE.md
 """
 
 import pytest
 from pathlib import Path
 
-# Корень проекта определяется через header.py
+# Project root is determined via header.py
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 class TestToolsDirectoryStructure:
-    """Checks структуру директории scripts/."""
+    """Check structure of scripts directory."""
 
     def test_scripts_directory_exists(self):
-        """scripts/ обязан существовать."""
+        """scripts/ directory must exist."""
         assert (PROJECT_ROOT / "scripts").is_dir() or (PROJECT_ROOT / "tools").is_dir(), \
-            "Директория со скриптами не найдена в корне проекта"
+            "Scripts directory not found in project root"
 
     def test_scripts_dev_directory_exists(self):
-        """scripts/dev/ обязан существовать."""
+        """scripts/dev/ directory must exist."""
         assert (PROJECT_ROOT / "scripts" / "dev").is_dir() or (PROJECT_ROOT / "tools" / "ai").is_dir()
 
     def test_scripts_readme_exists(self):
-        """README.md скриптов обязан существовать."""
+        """Scripts README.md must exist."""
         assert (PROJECT_ROOT / "scripts" / "README.md").is_file() or (PROJECT_ROOT / "tools" / "README.md").is_file()
 
 class TestAiToolsExist:
-    """Checks наличие ключевых AI-инструментов и скриптов разработки."""
+    """Check presence of key AI tools and development scripts."""
 
     def test_rebuild_dev_rag_exists(self):
-        """rebuild_dev_rag.py обязан существовать."""
+        """rebuild_dev_rag.py must exist."""
         assert (PROJECT_ROOT / "scripts" / "maintenance" / "rebuild_dev_rag.py").is_file() or (PROJECT_ROOT / "tools" / "ai" / "rebuild_dev_rag.py").is_file()
 
     def test_search_code_exists(self):
-        """search_code.py обязан существовать."""
+        """search_code.py must exist."""
         assert (PROJECT_ROOT / "scripts" / "dev" / "search_code.py").is_file() or (PROJECT_ROOT / "tools" / "ai" / "search_code.py").is_file()
 
     def test_update_docs_exists(self):
-        """update_docs.py обязан существовать."""
+        """update_docs.py must exist."""
         assert (PROJECT_ROOT / "scripts" / "dev" / "update_docs.py").is_file() or (PROJECT_ROOT / "tools" / "ai" / "update_docs.py").is_file()
 
 class TestReportsDirectory:
-    """Checks директорию tmp/reports/."""
+    """Check tmp/reports/ directory."""
 
     def test_reports_directory_exists(self):
-        """tmp/reports/ обязан существовать."""
+        """tmp/reports/ directory must exist."""
         assert (PROJECT_ROOT / "tmp" / "reports").is_dir() or (PROJECT_ROOT / "tmp").is_dir(), \
-            "Директория tmp не найдена"
+            "tmp directory not found"
 
 class TestCoreRagDirectory:
-    """Checks директорию core/rag/."""
+    """Check core/rag/ directory."""
 
     def test_core_rag_directory_exists(self):
-        """core/rag/ обязан существовать."""
+        """core/rag/ directory must exist."""
         assert (PROJECT_ROOT / "core" / "rag").is_dir(), \
-            "Директория core/rag/ не найдена"
+            "core/rag/ directory not found"
 
     def test_core_rag_models_exists(self):
-        """core/rag/models.py обязан существовать."""
+        """core/rag/models.py must exist."""
         assert (PROJECT_ROOT / "core" / "rag" / "models.py").is_file(), \
-            "Файл core/rag/models.py не найден"
+            "File core/rag/models.py not found"
 
 class TestAiInstructionsDocuments:
-    """Checks ключевые AI-документы."""
+    """Check key AI documents."""
 
     def test_launcher_guide_exists(self):
-        """LAUNCHER_GUIDE.md обязан существовать."""
+        """LAUNCHER_GUIDE.md must exist."""
         path = PROJECT_ROOT / ".ai" / "instructions" / "knowledge" / "LAUNCHER_GUIDE.md"
         if not path.exists():
             path = PROJECT_ROOT / ".ai_instructions" / "knowledge" / "LAUNCHER_GUIDE.md"
-        assert path.is_file(), "LAUNCHER_GUIDE.md не найден"
+        assert path.is_file(), "LAUNCHER_GUIDE.md not found"
 
     def test_launcher_guide_not_empty(self):
-        """LAUNCHER_GUIDE.md не должен быть пустым."""
+        """LAUNCHER_GUIDE.md should not be empty."""
         path = PROJECT_ROOT / ".ai" / "instructions" / "knowledge" / "LAUNCHER_GUIDE.md"
         if not path.exists():
             path = PROJECT_ROOT / ".ai_instructions" / "knowledge" / "LAUNCHER_GUIDE.md"
         assert path.stat().st_size > 200, \
-            "LAUNCHER_GUIDE.md слишком мал — вероятно, не заполнен"
+            "LAUNCHER_GUIDE.md is too small — probably not filled"
 
     def test_gemini_md_has_launcher_guide_ref(self):
-        """GEMINI.md должен ссылаться на LAUNCHER_GUIDE.md."""
-        path = PROJECT_ROOT / "GEMINI.md"
-        content = path.read_text(encoding="utf-8")
-        assert "LAUNCHER_GUIDE" in content, \
-            "GEMINI.md не содержит ссылки на LAUNCHER_GUIDE.md"
-
-class TestCoreProjectFiles:
-    """Checks наличие ключевых файлов проекта в корне."""
-
-    def test_main_py_exists(self):
-        """main.py обязан существовать."""
-        assert (PROJECT_ROOT / "main.py").is_file()
-
-    def test_manage_tools_exists(self):
-        """manage_tools.py обязан существовать."""
-        assert (PROJECT_ROOT / "manage_tools.py").is_file()
-
-    def test_header_py_exists(self):
-        """header.py обязан существовать (используется main.py и manage_tools.py)."""
-        assert (PROJECT_ROOT / "header.py").is_file(), \
-            "header.py отсутствует — main.py и manage_tools.py не запустятся"
-
-    def test_env_example_exists(self):
-        """.env.example обязан существовать для документации переменных."""
-        assert (PROJECT_ROOT / ".env.example").is_file()

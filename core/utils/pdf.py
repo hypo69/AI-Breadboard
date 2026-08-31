@@ -108,26 +108,26 @@ class PDFUtils:
     @staticmethod
     def save_pdf_fpdf(data: str, pdf_file: str | Path) -> bool:
         """
-        Сохранить текст в PDF с использованием библиотеки FPDF.
+        Save text to PDF using FPDF library.
 
         Args:
-            data (str): Текст, который необходимо сохранить в PDF.
-            pdf_file (str | Path): Путь к сохраняемому PDF-файлу.
+            data (str): Text to save in PDF.
+            pdf_file (str | Path): Path to saved PDF file.
 
         Returns:
-            bool: `True`, если PDF successfully сохранен, иначе `False`.
+            bool: `True` if PDF successfully saved, otherwise `False`.
         """
         try:
             pdf = FPDF()
             pdf.add_page()
             pdf.set_auto_page_break(auto = True, margin = 15)
 
-            # Путь к файлу fonts.json
+            # Path to fonts.json file
             fonts_file_path = __root__ / 'assets' / 'fonts' / 'fonts.json'
             if not fonts_file_path.exists():
                 logger.error(
-                    f'JSON файл установки шрифтов не найден: {fonts_file_path}\n'
-                    'Формат файла `fonts.json`:\n'
+                    f'Font settings JSON file not found: {fonts_file_path}\n'
+                    'Format of `fonts.json` file:\n'
                     '{\n'
                     '    "dejavu-sans.book": {\n'
                     '        "family": "DejaVuSans",\n'
@@ -137,92 +137,92 @@ class PDFUtils:
                     '    }\n'
                     '}'
                 )
-                raise FileNotFoundError(f'Файл шрифтов не найден: {fonts_file_path}')
+                raise FileNotFoundError(f'Font file not found: {fonts_file_path}')
                 ...
 
             with open(fonts_file_path, 'r', encoding = 'utf-8') as json_file:
                 fonts = json.load(json_file)
 
-            # Добавление шрифтов
+            # Add fonts
             for font_name, font_info in fonts.items():
                 font_path = __root__ / 'assets' / 'fonts' / font_info['path']
                 if not font_path.exists():
-                    logger.error(f'Файл шрифта не найден: {font_path}')
-                    raise FileNotFoundError(f'Файл шрифта не найден: {font_path}')
+                    logger.error(f'Font file not found: {font_path}')
+                    raise FileNotFoundError(f'Font file not found: {font_path}')
                     ...
 
                 pdf.add_font(font_info['family'], font_info['style'], str(font_path), uni = font_info['uni'])
 
-            # Установка шрифта по умолчанию
+            # Set default font
             pdf.set_font('DejaVuSans', style = 'book', size = 12)
             pdf.multi_cell(0, 10, data)
             pdf.output(str(pdf_file))
-            logger.info(f'PDF отчет successfully сохранен: {pdf_file}')
+            logger.info(f'PDF report successfully saved: {pdf_file}')
             return True
         except Exception as ex:
-            logger.error('Error при сохранении PDF через FPDF: ', ex)
+            logger.error('Error saving PDF via FPDF: ', ex)
             ...
             return False
 
     @staticmethod
     def save_pdf_weasyprint(data: str | Path, pdf_file: str | Path) -> bool:
         """
-        Сохранить HTML-контент или файл в PDF с использованием библиотеки `WeasyPrint`.
+        Save HTML content or file to PDF using WeasyPrint library.
 
         Args:
-            data (str | Path): HTML-контент или путь к HTML-файлу.
-            pdf_file (str | Path): Путь к сохраняемому PDF-файлу.
+            data (str | Path): HTML content or path to HTML file.
+            pdf_file (str | Path): Path to saved PDF file.
 
         Returns:
-            bool: `True` если PDF successfully сохранен, иначе `False`.
+            bool: `True` if PDF successfully saved, otherwise `False`.
         """
         try:
             if isinstance(data, str):
                 HTML(string=data).write_pdf(pdf_file)
             else:
                 HTML(filename=str(data)).write_pdf(pdf_file)
-            logger.info(f"PDF successfully сохранен: {pdf_file}")
+            logger.info(f"PDF successfully saved: {pdf_file}")
             return True
         except Exception as ex:
-            logger.error("Error при сохранении PDF через WeasyPrint: ", ex)
+            logger.error("Error saving PDF via WeasyPrint: ", ex)
             return False
 
     @staticmethod
     def save_pdf_xhtml2pdf(data: str | Path, pdf_file: str | Path) -> bool:
         """
-        Сохранить HTML-контент или файл в PDF с использованием библиотеки `xhtml2pdf`.
+        Save HTML content or file to PDF using xhtml2pdf library.
 
         Args:
-            data (str | Path): HTML-контент или путь к HTML-файлу.
-            pdf_file (str | Path): Путь к сохраняемому PDF-файлу.
+            data (str | Path): HTML content or path to HTML file.
+            pdf_file (str | Path): Path to saved PDF file.
 
         Returns:
-            bool: `True` если PDF successfully сохранен, иначе `False`.
+            bool: `True` if PDF successfully saved, otherwise `False`.
         """
         try:
             with open(pdf_file, "w+b") as result_file:
                 if isinstance(data, str):
-                    # Убедимся, что string имеет кодировку UTF-8
-                    data_utf8 = data.encode('utf-8').decode('utf-8')  # Преобразуем строку обратно в UTF-8, если нужно
+                    # Ensure string has UTF-8 encoding
+                    data_utf8 = data.encode('utf-8').decode('utf-8')  # Convert string back to UTF-8 if needed
                     try:
                         pisa.CreatePDF(data, dest=result_file)
                     except Exception as ex:
-                        logger.error("Error компиляции PDF: ", ex)
+                        logger.error("Error compiling PDF: ", ex)
                         ...
                 else:
                     with open(data, "r", encoding="utf-8") as source_file:
                         try:
-                            # Прочитаем файл в кодировке UTF-8
+                            # Read file in UTF-8 encoding
                             source_data = source_file.read()
                             pisa.CreatePDF(source_data, dest=result_file, encoding='UTF-8')
                         except Exception as ex:
-                            logger.error("Error компиляции PDF: ", ex)
+                            logger.error("Error compiling PDF: ", ex)
                             ...
-            logger.info(f"PDF successfully сохранен: {pdf_file}")
+            logger.info(f"PDF successfully saved: {pdf_file}")
             ...
             return True
         except Exception as ex:
-            logger.error("Error при сохранении PDF через xhtml2pdf: ", ex)
+            logger.error("Error saving PDF via xhtml2pdf: ", ex)
             ...
             return False
 
@@ -240,30 +240,30 @@ class PDFUtils:
     @staticmethod
     def pdf_to_html(pdf_file: str | Path, html_file: str | Path) -> bool:
         """
-        Конвертирует PDF-файл в HTML-файл.
+        Convert PDF file to HTML file.
 
         Args:
-            pdf_file (str | Path): Путь к исходному PDF-файлу.
-            html_file (str | Path): Путь к сохраняемому HTML-файлу.
+            pdf_file (str | Path): Path to source PDF file.
+            html_file (str | Path): Path to saved HTML file.
 
         Returns:
-            bool: `True`, если конвертация прошла successfully, иначе `False`.
+            bool: `True` if conversion successful, otherwise `False`.
         """
         try:
-            # Извлечение текста из PDF
+            # Extract text from PDF
             text = extract_text(str(pdf_file))
 
-            # Создание HTML-файла
+            # Create HTML file
             with open(html_file, 'w', encoding='utf-8') as file:
                 file.write(f"<html><body>{text}</body></html>")
 
-            print(f"HTML successfully сохранен: {html_file}")
+            print(f"HTML successfully saved: {html_file}")
             return True
         except Exception as ex:
-            print(f"Error при конвертации PDF в HTML: {ex}")
+            print(f"Error converting PDF to HTML: {ex}")
             return False
 
-    # Function для конвертации словаря в PDF
+    # Function to convert dictionary to PDF
     @staticmethod
     def dict2pdf(data: dict | 'SimpleNamespace', file_path: str | Path) -> None:
         """
@@ -287,10 +287,9 @@ class PDFUtils:
             pdf.drawString(x, y, line)
             y -= 20
 
-            if y < 50:  # Создать новую страницу, если места недостаточно
+            if y < 50:  # Create new page if not enough space
                 pdf.showPage()
                 pdf.setFont("Helvetica", 12)
                 y = height - 50
 
         pdf.save()
-

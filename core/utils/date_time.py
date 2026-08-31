@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: src.utils
+# Process Name: Time interval checking and timeout utilities
 # =============================================================================
 # Description:
-#   This module contains a function to check if the current time is within a specified interval with an
+#   Provides utilities for time interval checking including functions to verify if current
+#   time falls within specified interval (useful for scheduled operations). Supports intervals
+#   spanning midnight and includes input waiting with timeout functionality.
 #
 # File: date_time.py
 # Project: ai-breadboard
@@ -11,23 +13,6 @@
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
-
-"""
-.. module:: src.utils 
-	:platform: Windows, Unix
-	:synopsis: function to check if the current time is within a specified interval with an optional timeout
-
-"""
-
-""" This module contains a function to check if the current time is within a specified interval with an optional timeout.
-
-The `interval` function allows for determining whether the current time falls within the 
-given time frame, which is useful for running operations that should only occur during 
-specific periods (e.g., late-night maintenance). The default time interval is from 23:00 
-to 06:00, and the function can handle intervals that span midnight.
-
-Additionally, it provides functionality to wait for a response with a timeout.
-"""
 
 from datetime import datetime, time
 import threading
@@ -37,7 +22,7 @@ class TimeoutCheck:
         self.result = None
 
     def interval(self, start: time = time(23, 0), end: time = time(6, 0)) -> bool:
-        """ Check if the current time is within the specified interval.
+        """Check if the current time is within the specified interval.
         
         Args:
             start (time): Start of the interval (default is 23:00).
@@ -56,7 +41,7 @@ class TimeoutCheck:
             self.result = current_time >= start or current_time <= end
 
     def interval_with_timeout(self, timeout: int = 5, start: time = time(23, 0), end: time = time(6, 0)) -> bool:
-        """ Check if the current time is within the specified interval with a timeout.
+        """Check if the current time is within the specified interval with a timeout.
 
         Args:
             timeout (int): Time in seconds to wait for the interval check.
@@ -77,28 +62,28 @@ class TimeoutCheck:
         return self.result
 
     def get_input(self):
-        """ Запрашиваем ввод от пользователя."""
+        """Request input from user."""
         self.user_input = input("U:> ")
 
     def input_with_timeout(self, timeout: int = 5) -> str | None:
-        """ Ожидаем ввод с тайм-аутом.
+        """Wait for input with timeout.
 
         Args:
-            timeout (int): Время ожидания ввода в секундах.
+            timeout (int): Input wait time in seconds.
 
         Returns:
-            str | None: Введенные данные или None, если был тайм-аут.
+            str | None: Entered data or None if timeout occurred.
         """
-        # Запускаем поток для получения ввода от пользователя
+        # Start thread to get input from user
         thread = threading.Thread(target=self.get_input)
         thread.start()
 
-        # Ожидаем завершения потока или тайм-аут
+        # Wait for thread completion or timeout
         thread.join(timeout)
 
         if thread.is_alive():
             print(f"Timeout occurred after {timeout} seconds.")
-            return  # Возвращаем None, если тайм-аут произошел
+            return  # Return None if timeout occurred
 
         return self.user_input
 

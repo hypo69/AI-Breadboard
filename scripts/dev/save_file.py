@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Saves содержимое в файл по указанному пути.
+# Process Name: Save content to file at specified path
 # =============================================================================
 # Description:
-#   Module for AI Breadboard project.
+#   Saves file content to disk at specified path with directory creation
+#   and error handling. Useful for programmatic file writing operations.
 #
 # File: save_file.py
 # Project: ai-breadboard
@@ -12,37 +13,44 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
+"""File content saving utility.
+
+Provides function to save text content to files with automatic directory
+creation and proper error handling."""
+
 import os
 import argparse
 
 def save_file(path: str, content: str) -> bool:
-    """
-    Saves содержимое в файл по указанному пути.
+    """Save content to file at specified path.
+
+    Creates necessary directories if they don't exist and writes
+    content to file with UTF-8 encoding.
 
     Args:
-        path (str): Путь к файлу (string).
-        content (str): Содержимое для сохранения (string).
+        path: File path where content should be saved.
+        content: Text content to write to file.
 
     Returns:
-        bool: True, если сохранение successfully, иначе False.
+        True if save successful, False if error occurred.
 
     Examples:
         >>> save_file("test.txt", "hello")
         True
     """
     try:
-        # Создание директории, если она отсутствует
+        # Create directory if it doesn't exist
         directory = os.path.dirname(path)
         if directory:
             os.makedirs(directory, exist_ok=True)
             
-        # Запись содержимого
+        # Write content
         with open(path, 'w', encoding='utf-8') as f:
             f.write(content)
         return True
     except Exception as e:
-        # В реальном проекте здесь должно быть логирование через src.logger.logger
-        print(f"Error при сохранении файла: {e}")
+        # In production, logging should use src.logger.logger
+        print(f"Error saving file: {e}")
         return False
 
 if __name__ == "__main__":

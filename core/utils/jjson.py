@@ -66,7 +66,7 @@ def j_dumps(
         try:
             data = repair_json(data)
         except Exception as ex:
-            logger.error(f'Error конвертации строки: {pprint(data)}', ex, False)
+            logger.error(f'Error converting string: {pprint(data)}', ex, False)
             ...
             return 
 
@@ -88,18 +88,18 @@ def j_dumps(
             return [_convert(item) for item in value]
         return value
 
-    # Конвертация входных данных в valid dictionary `dict` 
+    # Convert input data to valid dictionary `dict` 
     data = _convert(data)
 
-    # если указан неверный режим записи в файл - будет установлен 'w',
+    # If incorrect file write mode specified - 'w' will be set
     if mode not in {"w", "a+", "+a"}:     
         mode = 'w'
 
-    # Чтение существующих данных из файла (если файл существует и режим 'a+' или '+a')
+    # Read existing data from file (if file exists and mode is 'a+' or '+a')
     existing_data = {}
     if path and path.exists() and mode in {"a+", "+a"}:
         try:
-            with path.open("r", encoding="utf-8") as f:  # Чтение в режиме 'r'
+            with path.open("r", encoding="utf-8") as f:  # Read in 'r' mode
                 existing_data = json.load(f)
         except json.JSONDecodeError as e:
             logger.error(f"Error decoding existing JSON in {path}: {e}", exc_info=exc_info)
@@ -110,12 +110,12 @@ def j_dumps(
             ...
             return 
 
-    # Обработка данных в зависимости от режима
+    # Process data depending on mode
     if mode == "a+":
-        # Присоединение новых данных в начало существующего словаря
+        # Append new data to beginning of existing dictionary
         try:
             if isinstance(data, list) and isinstance(existing_data, list):
-                existing_data = data + existing_data  # Добавляем элементы из списка в начало
+                existing_data = data + existing_data  # Add list elements to beginning
             else:
                 data.update(existing_data)
         except Exception as ex:
@@ -123,10 +123,10 @@ def j_dumps(
             ...
 
     elif mode == "+a":
-        # Присоединение новых данных в конец существующего словаря
+        # Append new data to end of existing dictionary
         try:
             if isinstance(existing_data, list):
-                existing_data.extend(data)  # Добавляем элементы из списка в конец
+                existing_data.extend(data)  # Add list elements to end
             else:
                 existing_data.update(data)
             data = existing_data
@@ -134,7 +134,7 @@ def j_dumps(
             logger.error(ex)
             ...
 
-    # Режим 'w' - перезаписывает файл новыми данными
+    # Mode 'w' - overwrites file with new data
     if path:
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -154,87 +154,87 @@ def j_loads(
     ordered: bool = True
 ) -> dict | list:
     """
-    Loading JSON или CSV данных из файла, директории, строки, объекта JSON или SimpleNamespace.
-    Перекодирует строки ключей и значений в Unicode.
+    Load JSON or CSV data from file, directory, string, JSON object or SimpleNamespace.
+    Recodes string keys and values to Unicode.
 
     Args:
-        jjson (dict | SimpleNamespace | str | Path | list): Путь к файлу, директории, string JSON данных,
-                                                           объект JSON или SimpleNamespace.
-        ordered (bool, optional): Returns OrderedDict для сохранения порядка элементов. Defaults to True.
+        jjson (dict | SimpleNamespace | str | Path | list): Path to file, directory, JSON data string,
+                                                           JSON object or SimpleNamespace.
+        ordered (bool, optional): Returns OrderedDict to preserve element order. Defaults to True.
 
     Returns:
-        dict | list: Обработанные данные (dictionary или list словарей).
+        dict | list: Processed data (dictionary or list of dictionaries).
 
     Raises:
-        FileNotFoundError: Если указанный файл не найден.
-        json.JSONDecodeError: Если данные JSON не удалось разобрать.
+        FileNotFoundError: If specified file not found.
+        json.JSONDecodeError: If JSON data could not be parsed.
     """
 
     def decode_strings(data: Any) -> Any:
-        """Рекурсивно перекодирует строки в структуре данных."""
+        """Recursively recodes strings in data structure."""
         if isinstance(data, str):
             try:
-                return data.encode().decode('unicode_escape')  # Декодируем escape-последовательности
+                return data.encode().decode('unicode_escape')  # Decode escape sequences
             except Exception:
-                return data  # Если декодировать не получилось, возвращаем как есть
+                return data  # If decoding failed, return as is
         elif isinstance(data, list):
-            return [decode_strings(item) for item in data]  # Обрабатываем каждый элемент списка
+            return [decode_strings(item) for item in data]  # Process each list element
         elif isinstance(data, dict):
-            return {decode_strings(key): decode_strings(value) for key, value in data.items()}  # Обрабатываем ключи и значения словаря
+            return {decode_strings(key): decode_strings(value) for key, value in data.items()}  # Process keys and values
 
         # Decoding escape \u0412\u044b\u0441\u043e\u043a\u043e
         decoded_data = json.loads(json.dumps(data))
-        return data  # Возвращаем неизменённые значения, если они не string, list или dictionary
+        return data  # Return unchanged values if not string, list or dictionary
 
     def string2dict(json_string: str) -> dict:
-        """Deletes тройные обратные кавычки и 'json' из начала и конца строки."""
+        """Remove triple backticks and 'json' from beginning and end of string."""
         if json_string.startswith(('```', '```json')) and json_string.endswith(('```','```\n')):
             json_string = json_string.strip('`').replace('json', '', 1).strip()
         #json_string = json_string.replace()
         try:
             _j = simplejson.loads(json_string)
         except json.JSONDecodeError:
-            logger.error(f'Error парсинга строки JSON:\n {json_string}', ex, False)
+            logger.error(f'Error parsing JSON string:\n {json_string}', ex, False)
             ...
             return {}
         try:
             # Decoding escape \u0412\u044b\u0441\u043e\u043a\u043e
             return json.loads(json.dumps(_j))
         except Exception as ex:
-            logger.error(f"Error декодирования JSON", ex, False)
+            logger.error(f"Error decoding JSON", ex, False)
             ...
             return {}
 
-    # Основная обработка данных
+    # Main data processing
     try:
-        if isinstance(jjson, SimpleNamespace):  # Если это SimpleNamespace
-            jjson = vars(jjson)  # Преобразуем в dictionary
+        if isinstance(jjson, SimpleNamespace):  # If it's SimpleNamespace
+            jjson = vars(jjson)  # Convert to dictionary
 
         if isinstance(jjson, Path):
-            if jjson.is_dir():  # Если это директория
+            if jjson.is_dir():  # If it's directory
                 files = list(jjson.glob('*.json'))
                 return [j_loads(file, ordered=ordered) for file in files]
-            if jjson.suffix.lower() == '.csv':  # Если это CSV
+            if jjson.suffix.lower() == '.csv':  # If it's CSV
 
                 return pd.read_csv(jjson).to_dict(orient='records')
-            # Если это JSON-файл
+            # If it's JSON file
             #return decode_strings(json.loads(jjson.read_text(encoding='utf-8')))
             return json.loads(jjson.read_text(encoding='utf-8'))
-        elif isinstance(jjson, str):  # Если это string
+        elif isinstance(jjson, str):  # If it's string
             return string2dict(jjson)
-        elif isinstance(jjson, list):  # Если это list
+        elif isinstance(jjson, list):  # If it's list
             return [decode_strings(item) for item in jjson]
-        elif isinstance(jjson, dict):  # Если это dictionary
+        elif isinstance(jjson, dict):  # If it's dictionary
             return decode_strings(jjson)
 
     except FileNotFoundError as ex:
-        logger.error(f'Файл не найден: {jjson}')
+        logger.error(f'File not found: {jjson}')
         return {}
     except json.JSONDecodeError as ex:
-        logger.error(f'Error парсинга JSON:\n{jjson}\n', ex, False)
+        logger.error(f'Error parsing JSON:\n{jjson}\n', ex, False)
         return {}
     except Exception as ex:
-        logger.error(f'Error загрузки данных: ',ex, False)
+        logger.error(f'Error loading data: ',ex, False)
         return {}
 
     return {}
@@ -272,4 +272,3 @@ def j_loads_ns(
             return  [dict2ns(item) for item in data]
         return  dict2ns(data)
     return  {} 
-

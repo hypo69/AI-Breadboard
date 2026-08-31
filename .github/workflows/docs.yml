@@ -1,46 +1,36 @@
-name: "Docs - Build & Deploy"
+name: Documentation
 
 on:
   push:
-    branches: [ master, main ]
-  pull_request:
-    branches: [ master, main ]
-  workflow_dispatch:
+    branches:
+      - main
 
-permissions:
-  contents: write
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build:
+  docs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        persist-credentials: true
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements-docs.txt ]; then pip install -r requirements-docs.txt; else pip install mkdocs mkdocs-material mkdocstrings; fi
+      - name: Install documentation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs-requirements.txt
 
-    - name: Build docs
-      run: mkdocs build
+      - name: Build documentation
+        run: |
+          mkdocs build --strict
 
-    - name: Deploy to Read the Docs
-      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-      run: |
-        echo "Documentation will be automatically built and deployed by Read the Docs"
-        echo "Triggering Read the Docs build via webhook..."
-        curl -X POST https://readthedocs.org/api/v2/webhook/ai-breadboard/12345/ \
-          -H "Content-Type: application/json" \
-          -d '{"push": true}'
-      env:
-        RTD_WEBHOOK_SECRET: ${{ secrets.RTD_WEBHOOK_SECRET }}
+
+# Note: This workflow only validates that MkDocs builds successfully and does NOT publish documentation.
+# Read the Docs should be used to build and publish the site (including PR previews).

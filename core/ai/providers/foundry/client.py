@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Клиент для работы с Microsoft AI Foundry.
+# Process Name: Client for working with Microsoft AI Foundry
 # =============================================================================
 # Description:
-#   Реализация асинхронного клиента для взаимодействия с API Microsoft AI Foundry.
+#   Implementation of async client for interaction with Microsoft AI Foundry API.
+#   Provides text generation, model loading, and model listing capabilities.
 #
 # File: foundry.py
 # Project: ai-breadboard
@@ -20,13 +21,13 @@ from typing import Optional, Dict, Any, List
 logger = logging.getLogger(__name__)
 
 class FoundryClient:
-    """Клиент для работы с Microsoft AI Foundry."""
+    """Client for working with Microsoft AI Foundry."""
     
     def __init__(self, base_url: Optional[str] = "") -> None:
-        """Initialization клиента.
+        """Initialize client.
 
         Args:
-            base_url (Optional[str]): Базовый URL API Foundry.
+            base_url (Optional[str]): Base URL of Foundry API.
         """
         from core.config import ai_cfg
         self.base_url = base_url or getattr(ai_cfg, "foundry_base_url", "http://localhost:54837")
@@ -35,7 +36,7 @@ class FoundryClient:
         logger.info(f"FoundryClient initialized with base_url={self.base_url}")
 
     async def _get_session(self) -> aiohttp.ClientSession:
-        """Получение или создание сессии aiohttp."""
+        """Get or create aiohttp session."""
         if not self.session or self.session.closed:
             self.session = aiohttp.ClientSession()
         return self.session
@@ -48,17 +49,17 @@ class FoundryClient:
         max_tokens: int = 2048,
         messages: Optional[List[Dict[str, str]]] = [],
     ) -> Dict[str, Any]:
-        """Генерация текста через API Foundry.
+        """Generate text through Foundry API.
 
         Args:
-            prompt (str): Входной запрос (используется если messages пуст).
-            model (str): ID модели.
-            temperature (float): Температура сэмплинга.
-            max_tokens (int): Максимальное число токенов.
-            messages (Optional[List[Dict[str, str]]]): List сообщений диалога.
+            prompt (str): Input query (used if messages is empty).
+            model (str): Model ID.
+            temperature (float): Sampling temperature.
+            max_tokens (int): Maximum number of tokens.
+            messages (Optional[List[Dict[str, str]]]): List of dialog messages.
 
         Returns:
-            Dict[str, Any]: Результат в виде словаря.
+            Dict[str, Any]: Result as dictionary.
         """
         session = await self._get_session()
         url = f"{self.base_url}/v1/chat/completions"
@@ -100,13 +101,13 @@ class FoundryClient:
             return {"success": False, "error": str(e)}
 
     async def load_model(self, model_id: str) -> Dict[str, Any]:
-        """Loading модели на сервере Foundry.
+        """Load model on Foundry server.
 
         Args:
-            model_id (str): ID модели для загрузки.
+            model_id (str): Model ID to load.
 
         Returns:
-            Dict[str, Any]: Результат загрузки.
+            Dict[str, Any]: Load result.
         """
         session = await self._get_session()
         url = f"{self.base_url}/models/load/{model_id}"
@@ -125,10 +126,10 @@ class FoundryClient:
             return {"success": False, "error": str(e)}
 
     async def get_models(self) -> List[str]:
-        """Получение списка доступных моделей.
+        """Get list of available models.
 
         Returns:
-            List[str]: List ID моделей.
+            List[str]: List of model IDs.
         """
         session = await self._get_session()
         url = f"{self.base_url}/v1/models"
@@ -155,6 +156,6 @@ class FoundryClient:
             return []
 
     async def close(self) -> None:
-        """Closing сессии клиента."""
+        """Close client session."""
         if self.session and not self.session.closed:
             await self.session.close()

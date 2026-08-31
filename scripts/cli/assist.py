@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Кроссплатформенный CLI ассистент для управления пр
+# Process Name: Cross-platform CLI assistant for project management
 # =============================================================================
 # Description:
-#   Module for AI Breadboard project.
+#   Cross-platform CLI assistant for managing AI Breadboard project.
+#   Ported from old assist.ps1 to work on Windows, Linux, and macOS.
 #
 # File: assist.py
 # Project: ai-breadboard
@@ -12,10 +13,10 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-Кроссплатформенный CLI ассистент для управления проектом AI Breadboard.
+"""Cross-platform CLI assistant for AI Breadboard project management.
 
-Портировано со старого assist.ps1 для работы на Windows, Linux и macOS.
+CLI assistant providing cross-platform project management utilities,
+originally ported from PowerShell assist.ps1 for Windows, Linux, macOS.
 
 Использование:
     assist start [service]          # Запустить сервис (run, unicorn, light, foundry)

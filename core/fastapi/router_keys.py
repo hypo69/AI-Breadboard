@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Load all keys from secrets.json (email -> api_key)
+# Process Name: API key management and quota tracking router
 # =============================================================================
 # Description:
-#   CRUD operations for Gemini API keys.
+#   Provides FastAPI endpoints for managing Gemini API keys, tracking quota status,
+#   handling key rotation, and performing CRUD key operations.
 #
 # File: router_keys.py
 # Project: ai-breadboard

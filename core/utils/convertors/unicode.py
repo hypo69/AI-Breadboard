@@ -25,7 +25,7 @@ def decode_unicode_escape(input_data: Dict[str, Any] | list | str) -> Dict[str, 
     Returns:
         dict | list | str: Transformed data. For strings escape sequences are decoded. For dictionaries or lists all values are processed recursively.
 
-    Пример использования:
+    Usage example:
     .. code-block:: python
         input_dict = {
             'product_name': r'\u05de\u05e7\"\u05d8 \u05d9\u05e6\u05e8\u05df\nH510M K V2',
@@ -37,7 +37,7 @@ def decode_unicode_escape(input_data: Dict[str, Any] | list | str) -> Dict[str, 
 
         input_string = r'\u05de\u05e7\"\u05d8 \u05d9\u05e6\u05e8\u05df\nH510M K V2'
 
-        # Применяем функцию
+        # Apply function
         decoded_dict = decode_unicode_escape(input_dict)
         decoded_list = decode_unicode_escape(input_list)
         decoded_string = decode_unicode_escape(input_string)
@@ -49,27 +49,27 @@ def decode_unicode_escape(input_data: Dict[str, Any] | list | str) -> Dict[str, 
     """
     
     if isinstance(input_data, dict):
-        # Рекурсивная обработка значений словаря
+        # Recursively process dictionary values
         return {key: decode_unicode_escape(value) for key, value in input_data.items()}
     
     elif isinstance(input_data, list):
-        # Рекурсивная обработка элементов списка
+        # Recursively process list elements
         return [decode_unicode_escape(item) for item in input_data]
     
     elif isinstance(input_data, str):
-        # Function декодирует строку, если она содержит escape-последовательности
+        # Function decodes string if it contains escape sequences
         try:
-            # Шаг 1: Decoding строки с escape-последовательностями
+            # Step 1: Decode string with escape sequences
             decoded_string = input_data.encode('utf-8').decode('unicode_escape')
         except UnicodeDecodeError:
             decoded_string = input_data
         
-        # Шаг 2: Conversion всех найденных последовательностей \uXXXX
+        # Step 2: Convert all found \uXXXX sequences
         unicode_escape_pattern = r'\\u[0-9a-fA-F]{4}'
         decoded_string = re.sub(unicode_escape_pattern, lambda match: match.group(0).encode('utf-8').decode('unicode_escape'), decoded_string)
         
         return decoded_string
     
     else:
-        # Если тип данных не поддерживается, function вернет данные без изменений
+        # If data type not supported, function returns data unchanged
         return input_data

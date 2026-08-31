@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: src.utils.convertors.dot
+# Process Name: Convert DOT files to PNG images
 # =============================================================================
 # Description:
 #   Converts a DOT file to a PNG image.
@@ -12,12 +12,9 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: src.utils.convertors.dot 
-	:platform: Windows, Unix
-	:synopsis: converts DOT files into PNG images using the Graphviz library
+"""DOT file to PNG image conversion utilities.
 
-"""
+Converts DOT format graph description files to PNG images using Graphviz library."""
 
 import sys
 from graphviz import Source

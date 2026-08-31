@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Initialization маршрутизаторов FastAPI
+# Process Name: FastAPI router initialization and exports
 # =============================================================================
 # Description:
-#   Экспорт фабрик инициализации HTTP-роутеров ядра.
+#   Exports factory initializers and router instances for core FastAPI
+#   HTTP endpoints, WebSockets, authentication, chat, and administration services.
 #
 # File: __init__.py
 # Project: ai-breadboard

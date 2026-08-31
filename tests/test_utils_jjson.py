@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Class для тестирования функций модуля jjson.
+# Process Name: Testing class for jjson module functions
 # =============================================================================
 # Description:
-#   Исчерпывающее тестирование всех публичных функций модуля jjson:
+#   Comprehensive testing of all public functions in jjson module for JSON handling.
 #
 # File: test_utils_jjson.py
 # Project: ai-breadboard
@@ -19,53 +19,52 @@ from types import SimpleNamespace
 from core.utils.jjson import j_dumps, j_loads, j_loads_ns
 
 class TestJJson:
-    """Class для тестирования функций модуля jjson."""
+    """Class for testing jjson module functions."""
 
     def test_j_loads_happy_path_str(self):
-        """Тестирование загрузки корректной JSON-строки.
+        """Test loading correct JSON string.
 
-        Check: j_loads корректно парсит простую JSON-строку в dictionary.
+        Check: j_loads correctly parses simple JSON string to dictionary.
         """
-        # --- Подготовка (Arrange) ---
-        # Тестовая JSON-string: стандартный объект с ключом 'a' и значением 1.
+        # --- Setup (Arrange) ---
+        # Test JSON string: standard object with key 'a' and value 1.
         json_str: str = '{"a": 1}'
         
-        # --- Выполнение (Act) ---
-        # Вызов функции j_loads для парсинга строки.
+        # --- Execution (Act) ---
+        # Call j_loads function to parse string.
         result: dict = j_loads(json_str)
         
         # --- Check (Assert) ---
-        # Ожидается dictionary {'a': 1}.
-        assert result == {'a': 1}, f"j_loads() должна вернуть {'a': 1}, получено: {result!r}"
+        # Expected dictionary {'a': 1}.
+        assert result == {'a': 1}, f"j_loads() should return {{'a': 1}}, got: {result!r}"
 
     def test_j_dumps_happy_path_dict(self):
-        """Тестирование дампирования словаря в JSON (в память).
+        """Test dumping dictionary to JSON (in memory).
 
-        Check: j_dumps Returns correct dictionary при отсутствии файла.
+        Check: j_dumps returns correct dictionary when file is not specified.
         """
-        # --- Подготовка (Arrange) ---
-        # Тестовый dictionary.
+        # --- Setup (Arrange) ---
+        # Test dictionary.
         data: dict = {'a': 1, 'b': 2}
         
-        # --- Выполнение (Act) ---
-        # Дампирование без указания файла (должно вернуть данные).
+        # --- Execution (Act) ---
+        # Dump without specifying file (should return data).
         result: dict = j_dumps(data)
         
         # --- Check (Assert) ---
-        assert result == data, f"j_dumps() должна вернуть {data!r}, получено: {result!r}"
+        assert result == data, f"j_dumps() should return {data!r}, got: {result!r}"
         
     def test_j_loads_empty_str(self):
-        """Тестирование граничного случая: пустая string.
+        """Test edge case: empty string.
         
-        Check: пустая string должна возвращать empty dictionary (Error логики парсинга).
+        Check: empty string should return empty dictionary (error in parsing logic).
         """
-        # --- Подготовка (Arrange) ---
+        # --- Setup (Arrange) ---
         empty_str: str = ""
         
-        # --- Выполнение (Act) ---
-        # Пустая string приводит к ошибке парсинга внутри string2dict.
+        # --- Execution (Act) ---
+        # Empty string causes parsing error inside string2dict.
         result = j_loads(empty_str)
         
         # --- Check (Assert) ---
-        assert result == {}, f"j_loads() должна вернуть empty dictionary для empty строки, получено: {result!r}"
-
+        assert result == {}, f"j_loads() should return empty dictionary for empty string, got: {result!r}"

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: ## hypo69 docblock
+# Process Name: Prompt loader and RAG semantic search integration
 # =============================================================================
 # Description:
-#   Module for AI Breadboard project.
+#   Module for loading system prompts for AI agents with FAISS-based semantic search.
+#   Provides both RAG-mode (with semantic search) and static fallback mode.
 #
 # File: prompt_loader.py
 # Project: ai-breadboard
@@ -17,167 +18,160 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-## Базовые пути
+## Base paths
 _PROMPTS_ROOT: Path = Path(__file__).resolve().parent.parent / "prompts"
 _RAG_DIR: Path = Path(__file__).resolve().parent.parent / "tmp" / "rag"
 _INDEX_PATH: Path = _RAG_DIR / "rules.index"
 _DOCUMENTS_PATH: Path = _RAG_DIR / "documents.json"
 
-## Модель эмбеддингов (та же, что в build_rules_index.py)
+## Embeddings model (same as in build_rules_index.py)
 _MODEL_NAME: str = "sentence-transformers/all-MiniLM-L6-v2"
 
-## Модули, общие для обоих агентов (статический режим)
+## Modules common to both agents (static mode)
 _CORE_MODULES: list[str] = [
     "core/identity.md",
     "core/categories.md",
 ]
 
-## Модули только для чат-агента (статический режим)
+## Modules only for chat agent (static mode)
 _CHAT_MODULES: list[str] = [
     "chat/chat_rules.md",
     "narrator/narrator_style.md",
 ]
 
-## Модули только для агента-диктора (статический режим)
+## Modules only for narrator agent (static mode)
 _NARRATOR_MODULES: list[str] = [
     "narrator/tts_rules.md",
     "narrator/narrator_style.md",
 ]
 
-## Пример (статический режим)
+## Example (static mode)
 _EXAMPLE_MODULE: str = "examples/series_example.json"
 
-## JSON-схема (статический режим)
+## JSON schema (static mode)
 _SCHEMA_MODULE: str = "core/output_schema.json"
 
-## Файлы, которые всегда включаются в RAG-промпт (независимо от поиска).
-## Только маленькие базовые модули — схема и Examples подтягиваются через FAISS.
+## Files always included in RAG prompt (regardless of search).
+## Only small base modules — schema and examples are fetched via FAISS.
 _ALWAYS_INCLUDE: list[str] = [
     "identity.md",
     "categories.md",
 ]
 
 ## ---------------------------------------------------------------------------
-## Вспомогательные функции
+## Helper functions
 ## ---------------------------------------------------------------------------
 
 def _read_file(relative_path: str) -> str:
     """
-    ## hypo69 docblock
-    Reads файл из директории промптов.
+    Read file from prompts directory.
 
     Args:
-        relative_path (str): Путь относительно _PROMPTS_ROOT.
+        relative_path (str): Path relative to _PROMPTS_ROOT.
 
     Returns:
-        str: Содержимое файла.
+        str: File content.
 
     Raises:
-        FileNotFoundError: Если файл не найден.
+        FileNotFoundError: If file not found.
     """
     full_path: Path = _PROMPTS_ROOT / relative_path
     if not full_path.exists():
-        raise FileNotFoundError(f"Module промпта не найден: {full_path}")
+        raise FileNotFoundError(f"Prompt module not found: {full_path}")
     return full_path.read_text(encoding="utf-8")
 
 def _load_modules(module_paths: list[str]) -> str:
     """
-    ## hypo69 docblock
-    Loads и конкатенирует несколько модулей промпта.
+    Load and concatenate multiple prompt modules.
 
     Args:
-        module_paths (list[str]): List относительных путей к модулям.
+        module_paths (list[str]): List of relative paths to modules.
 
     Returns:
-        str: Объединённое содержимое всех модулей.
+        str: Combined content of all modules.
     """
     parts: list[str] = [_read_file(p).strip() for p in module_paths]
     return "\n\n---\n\n".join(parts)
 
 def _load_schema_block() -> str:
     """
-    ## hypo69 docblock
-    Loads JSON-схему и оборачивает в markdown-блок.
+    Load JSON schema and wrap in markdown block.
 
     Returns:
-        str: String с JSON-схемой в markdown-обёртке.
+        str: String with JSON schema in markdown wrapper.
     """
     raw: str = _read_file(_SCHEMA_MODULE)
     parsed: dict = json.loads(raw)
     formatted: str = json.dumps(parsed, ensure_ascii=False, indent=2)
-    return f"## JSON Schema ответа\n\n```json\n{formatted}\n```"
+    return f"## JSON Response Schema\n\n```json\n{formatted}\n```"
 
 def _load_example_block() -> str:
     """
-    ## hypo69 docblock
-    Loads пример JSON и оборачивает в markdown-блок.
+    Load example JSON and wrap in markdown block.
 
     Returns:
-        str: String с примером в markdown-обёртке.
+        str: String with example in markdown wrapper.
     """
     raw: str = _read_file(_EXAMPLE_MODULE)
     parsed: dict = json.loads(raw)
     formatted: str = json.dumps(parsed, ensure_ascii=False, indent=2)
-    return f"## Пример заполненного ответа (сериал)\n\n```json\n{formatted}\n```"
+    return f"## Example Filled Response (Series)\n\n```json\n{formatted}\n```"
 
 ## ---------------------------------------------------------------------------
-## RulesRAG — class семантического поиска
+## RulesRAG — semantic search class
 ## ---------------------------------------------------------------------------
 
 from core.rag.rules_rag import RulesRAG, RulesSearchResult
 
-# Алиас для обратной совместимости
+# Alias for backward compatibility
 SearchResult = RulesSearchResult
 
 ## ---------------------------------------------------------------------------
-## Публичные функции сборки промптов (RAG-режим)
+## Public prompt building functions (RAG mode)
 ## ---------------------------------------------------------------------------
 
-def load_chat_prompt(query: str = "Создать описание медиа для чата") -> str:
+def load_chat_prompt(query: str = "Create media description for chat") -> str:
     """
-    ## hypo69 docblock
-    Собирает системный промпт для Chat Agent через FAISS-поиск.
+    Build system prompt for Chat Agent via FAISS search.
 
     Args:
-        query (str): Запрос, по которому выбираются релевантные модули.
-                     По умолчанию — универсальный запрос для чат-агента.
+        query (str): Query used to select relevant modules.
+                     Default: universal query for chat agent.
 
     Returns:
-        str: Готовый системный промпт для чат-агента (~5 000–8 000 символов).
+        str: Ready system prompt for chat agent (~5,000–8,000 characters).
     """
     rag: RulesRAG = RulesRAG()
     context: str = rag.build_context(query, top_k=4)
     return context
 
-def load_narrator_prompt(query: str = "Подготовить текст для голосового диктора TTS") -> str:
+def load_narrator_prompt(query: str = "Prepare text for voice narrator TTS") -> str:
     """
-    ## hypo69 docblock
-    Собирает системный промпт для Narrator Agent через FAISS-поиск.
+    Build system prompt for Narrator Agent via FAISS search.
 
     Args:
-        query (str): Запрос, по которому выбираются релевантные модули.
-                     По умолчанию — запрос для TTS-режима.
+        query (str): Query used to select relevant modules.
+                     Default: query for TTS mode.
 
     Returns:
-        str: Готовый системный промпт для агента-диктора (~5 000–8 000 символов).
+        str: Ready system prompt for narrator agent (~5,000–8,000 characters).
     """
     rag: RulesRAG = RulesRAG()
     context: str = rag.build_context(query, top_k=4)
     return context
 
 ## ---------------------------------------------------------------------------
-## Резервные статические функции (без FAISS)
+## Static fallback functions (without FAISS)
 ## ---------------------------------------------------------------------------
 
 def load_chat_prompt_static() -> str:
     """
-    ## hypo69 docblock
-    Собирает полный промпт для Chat Agent из файлов без FAISS.
+    Build complete prompt for Chat Agent from files without FAISS.
 
-    Используется как резерв если индекс не построен.
+    Used as fallback if index not built.
 
     Returns:
-        str: Полный промпт для чат-агента (~20 000 символов).
+        str: Complete prompt for chat agent (~20,000 characters).
     """
     sections: list[str] = [
         _load_modules(_CORE_MODULES),
@@ -189,13 +183,12 @@ def load_chat_prompt_static() -> str:
 
 def load_narrator_prompt_static() -> str:
     """
-    ## hypo69 docblock
-    Собирает полный промпт для Narrator Agent из файлов без FAISS.
+    Build complete prompt for Narrator Agent from files without FAISS.
 
-    Используется как резерв если индекс не построен.
+    Used as fallback if index not built.
 
     Returns:
-        str: Полный промпт для агента-диктора (~20 000 символов).
+        str: Complete prompt for narrator agent (~20,000 characters).
     """
     sections: list[str] = [
         _load_modules(_CORE_MODULES),
@@ -206,30 +199,30 @@ def load_narrator_prompt_static() -> str:
     return "\n\n---\n\n".join(sections)
 
 ## ---------------------------------------------------------------------------
-## Точка входа — быстрая check
+## Entry point — quick check
 ## ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
 
-    print("=== Статический режим ===")
+    print("=== Static Mode ===")
     chat_s: str = load_chat_prompt_static()
     narrator_s: str = load_narrator_prompt_static()
-    print(f"Chat (static):     {len(chat_s):>6} символов  |  {len(chat_s.split()):>5} слов")
-    print(f"Narrator (static): {len(narrator_s):>6} символов  |  {len(narrator_s.split()):>5} слов")
+    print(f"Chat (static):     {len(chat_s):>6} characters  |  {len(chat_s.split()):>5} words")
+    print(f"Narrator (static): {len(narrator_s):>6} characters  |  {len(narrator_s.split()):>5} words")
 
     print()
     if not _INDEX_PATH.exists():
-        print("FAISS-индекс не найден. Запустите: python rag/build_rules_index.py")
+        print("FAISS index not found. Run: python rag/build_rules_index.py")
         sys.exit(0)
 
-    print("=== RAG-режим ===")
+    print("=== RAG Mode ===")
     rag: RulesRAG = RulesRAG()
 
     test_queries: list[str] = [
-        "Описание сериала",
-        "Правила для диктора TTS",
-        "Категории медиа боевики шпионы",
+        "Series description",
+        "Rules for TTS narrator",
+        "Media categories action spies",
     ]
     for q in test_queries:
         results = rag.search(q, top_k=3)
@@ -237,10 +230,10 @@ if __name__ == "__main__":
         print(f"  '{q}' → {files}")
 
     print()
-    chat_r: str = load_chat_prompt("Описание сериала")
-    narrator_r: str = load_narrator_prompt("Текст для диктора")
-    print(f"Chat (RAG):        {len(chat_r):>6} символов  |  {len(chat_r.split()):>5} слов")
-    print(f"Narrator (RAG):    {len(narrator_r):>6} символов  |  {len(narrator_r.split()):>5} слов")
+    chat_r: str = load_chat_prompt("Series description")
+    narrator_r: str = load_narrator_prompt("Text for narrator")
+    print(f"Chat (RAG):        {len(chat_r):>6} characters  |  {len(chat_r.split()):>5} words")
+    print(f"Narrator (RAG):    {len(narrator_r):>6} characters  |  {len(narrator_r.split()):>5} words")
 
     reduction: float = (1 - len(chat_r) / len(chat_s)) * 100
-    print(f"\nСжатие промпта: {reduction:.0f}%")
+    print(f"\nPrompt compression: {reduction:.0f}%")

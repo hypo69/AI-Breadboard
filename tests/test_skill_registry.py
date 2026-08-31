@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: # ================================================
+# Process Name: Testing universal skill registry
 # =============================================================================
 # Description:
-#   Тесты универсального реестра навыков."""
+#   Tests for universal skill registry functionality and discovery.
 #
 # File: test_skill_registry.py
 # Project: ai-breadboard
@@ -12,7 +12,7 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""Тесты универсального реестра навыков."""
+"""Tests for universal skill registry."""
 
 from pathlib import Path
 
@@ -31,13 +31,13 @@ def test_registry_discovers_gemini_and_agent_skill_roots(tmp_path: Path) -> None
     agents_root = tmp_path / ".agents" / "skills"
     gemini_root.mkdir(parents=True)
     agents_root.mkdir(parents=True)
-    _write_skill(gemini_root, "media-manager", "Медиатека", "Запускай аудит.")
-    _write_skill(agents_root, "db-inspector", "SQLite", "Проверяй схему.")
+    _write_skill(gemini_root, "media-manager", "Media library", "Start audit.")
+    _write_skill(agents_root, "db-inspector", "SQLite", "Check schema.")
 
     registry = SkillRegistry(tmp_path)
 
     assert [skill.name for skill in registry.discover()] == ["db-inspector", "media-manager"]
-    assert registry.get("MEDIA-MANAGER").prompt() == "Запускай аудит."
+    assert registry.get("MEDIA-MANAGER").prompt() == "Start audit."
 
 def test_registry_returns_empty_search_and_rejects_unknown_skill(tmp_path: Path) -> None:
     registry = SkillRegistry(tmp_path)
@@ -46,9 +46,9 @@ def test_registry_returns_empty_search_and_rejects_unknown_skill(tmp_path: Path)
     try:
         registry.get("missing")
     except KeyError as error:
-        assert "missing" in str(error), "Error должна содержать имя отсутствующего навыка"
+        assert "missing" in str(error), "Error should contain name of missing skill"
     else:
-        raise AssertionError("Неизвестный навык должен приводить к KeyError")
+        raise AssertionError("Unknown skill should raise KeyError")
 
 def test_registry_prefers_json_contract_and_exports_portable_json(tmp_path: Path) -> None:
     skills_root = tmp_path / ".gemini" / "skills"

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: # ================================================
+# Process Name: Universal skill registry for AI agents
 # =============================================================================
 # Description:
-#   Универсальный реестр навыков проекта."""
+#   Universal registry of project skills for AI agents and task execution.
 #
 # File: __init__.py
 # Project: ai-breadboard
@@ -12,7 +12,7 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""Универсальный реестр навыков проекта."""
+"""Universal registry of project skills."""
 
 from core.skills.registry import SkillDefinition, SkillRegistry
 

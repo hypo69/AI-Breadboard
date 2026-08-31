@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: src.utils.convertors.png
+# Process Name: Convert text to PNG images
 # =============================================================================
 # Description:
 #   Module for AI Breadboard project.
@@ -12,12 +12,10 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: src.utils.convertors.png 
-	:platform: Windows, Unix
-	:synopsis: png convertors 
-Module reads text from a file, generates PNG images for each line of text using Pillow,
-and saves them to an output directory with customizable options for image appearance.
+"""Text to PNG image conversion utilities.
+
+Reads text from files, generates PNG images for each line using Pillow,
+and saves them to output directory with customizable appearance options."""
 """
 
 from pathlib import Path

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Module
+# Process Name: Python files header validation scanner
 # =============================================================================
 # Description:
-#   Module for AI Breadboard project.
+#   Scans all Python files in project to validate header format compliance
+#   with CODE_RULES.md § 6.1 specification for file headers and docstrings.
 #
 # File: scan_headers.py
 # Project: ai-breadboard
@@ -12,15 +13,36 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
+"""Header validation scanner for Python files.
+
+Scans all Python files to validate header format and documentation compliance
+with project standards."""
+
 import os
 import re
 from pathlib import Path
 
 def count_words(text):
+    """Count words in text.
+    
+    Args:
+        text: Text string to count.
+        
+    Returns:
+        Number of words in text.
+    """
     words = re.findall(r'\b\w+\b', text)
     return len(words)
 
 def extract_description(header_text):
+    """Extract description from header text.
+    
+    Args:
+        header_text: Header section text.
+        
+    Returns:
+        Description string or empty if not found.
+    """
     desc_match = re.search(r'# Description:(.*?)(?=\s*# (?:File|Project|Author|Copyright|\$))', header_text, re.DOTALL)
     if desc_match:
         desc_lines = desc_match.group(1).strip()
@@ -29,6 +51,14 @@ def extract_description(header_text):
     return ''
 
 def check_header(filepath):
+    """Check if file has valid header.
+    
+    Args:
+        filepath: Path to file to check.
+        
+    Returns:
+        Dictionary with header validation results.
+    """
     with open(filepath, 'r', encoding='utf-8') as f:
         content = f.read()
     lines = content.split('\n')
@@ -51,14 +81,14 @@ def check_header(filepath):
         header_lines.append(line)
         
     header_text = '\n'.join(header_lines)
-    has_nazvanie = bool(re.search(r'#\s*Название\s*(?:процесса|модуля):', header_text))
-    has_opisanie = bool(re.search(r'#\s*Description:', header_text))
+    has_process_name = bool(re.search(r'#\s*Process Name:', header_text))
+    has_description = bool(re.search(r'#\s*Description:', header_text))
     has_file = bool(re.search(r'#\s*File:', header_text))
     has_project = bool(re.search(r'#\s*Project:', header_text))
     has_author = bool(re.search(r'#\s*Author:', header_text))
     has_copyright = bool(re.search(r'#\s*Copyright:', header_text))
     
-    all_fields_present = all([has_nazvanie, has_opisanie, has_file, has_project, has_author, has_copyright])
+    all_fields_present = all([has_process_name, has_description, has_file, has_project, has_author, has_copyright])
     if not all_fields_present:
         if len(header_lines) <= 3 and all('coding' in l.lower() or l.strip() == '' for l in header_lines):
             return {'has_header': 'no', 'word_count': 0, 'description': ''}
@@ -69,18 +99,18 @@ def check_header(filepath):
     return {'has_header': 'yes', 'word_count': word_count, 'description': description[:200]}
 
 if __name__ == '__main__':
-    # Скрипт сканирования заголовков
+    # Header scanning script
     import sys
     root_dir = Path(__root__ if '__root__' in globals() else '.')
     python_files = list(root_dir.glob('**/*.py'))
     
-    print(f"Найдено {len(python_files)} python файлов. Начинаю сканирование...")
+    print(f"Found {len(python_files)} Python files. Starting scan...")
     for pf in python_files:
         if 'venv' in pf.parts or '.git' in pf.parts:
             continue
         try:
             status = check_header(pf)
             if status['has_header'] == 'no':
-                print(f"❌ {pf.relative_to(root_dir)} — заголовок отсутствует или некорректен")
+                print(f"❌ {pf.relative_to(root_dir)} — header missing or invalid")
         except Exception as e:
-            print(f"⚠️ Error обработки {pf}: {e}")
+            print(f"⚠️ Error processing {pf}: {e}")

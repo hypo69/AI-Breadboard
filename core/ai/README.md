@@ -5,25 +5,35 @@ The `core.ai` package encapsulates all interaction logic with neural network mod
 
 ---
 
-## Subsystems & Components
+## Subsystems & Architecture
 
-| File / Subdirectory | Purpose | Key Classes / Functions |
-|---|---|---|
-| `unified_chat.py` | Single unified facade (`UnifiedChatModel`, `get_chat_model`) routing user prompts across all providers based on model prefixes. | `UnifiedChatModel`, `get_chat_model()` |
-| `model_manager.py` | Centralized model pool manager; model discovery, availability caching, and auto-blacklisting of unsupported models. | `ModelManager`, `get_model_manager()` |
-| `gemini/` | Direct Google Gemini SDK integration with automatic API key rotation, quota fallback, tool dispatching, and streaming. | `GoogleGenerativeAI`, `get_chat_model()` |
-| `foundry_chat.py` | Microsoft AI Foundry client communicating over local OpenAI-compatible endpoints. | `FoundryChatBase` |
-| `onnx_chat.py` | Microsoft ONNX Runtime / Olive local inference adapter supporting DirectML, CUDA, and CPU execution. | `ONNXChatBase` |
-| `hf_chat.py` | Hugging Face Transformers local inference adapter. | `HFChatBase` |
-| `openai_compat_chat.py` | Generic OpenAI-compatible client adapter for OpenAI, DeepSeek, Groq, and LM Studio. | `OpenAICompatChat` |
-| `gemini_cli_chat.py` | Integration with Google Gemini CLI terminal agent via async subprocess execution. | `GeminiCliChatBase` |
-| `agy_chat.py` | Integration with Google Antigravity AGY SDK over Gemini models. | `AgyChatBase` |
-| `ollama_chat.py` | Local Ollama REST client for offline model execution. | `OllamaChatBase` |
-| `langchain_agent.py` | LangChain ReAct agent orchestrator for tool calling and reasoning cycles. | `MediaAgent`, `create_media_agent()` |
-| `langchain_tools.py` | Modular tool definitions exposed to LangChain and ReAct agents. | Tool decorators & functions |
-| `langchain_prompts.py` | System prompt templates and chain configurations for autonomous agents. | Prompt builders |
-| `mcp_client.py` | Model Context Protocol (MCP) client connecting to external tool servers. | `MCPClientManager` |
-| `voice_pipeline.py` | End-to-end voice query processing and speech-driven playback control pipeline. | `VoicePipeline` |
+```text
+core/ai/
+├── providers/                 # Modular AI backends & transports
+│   ├── base.py                # BaseChatProvider interface
+│   ├── gemini/                # Google Gemini GenAI SDK, RAG & key rotation
+│   ├── ollama/                # Ollama Chat adapter & HTTP Client
+│   ├── foundry/               # Microsoft AI Foundry Chat & Client
+│   ├── onnx/                  # ONNX Runtime DirectML/CUDA
+│   ├── huggingface/           # Hugging Face Transformers
+│   ├── openai/                # OpenAI-compatible transport (DeepSeek, Groq, LM Studio)
+│   ├── gemini_cli/            # Google Gemini CLI terminal agent
+│   └── agy/                   # Google Antigravity AGY SDK
+│
+├── orchestration/             # Routing & Model pool management
+│   ├── model_manager.py       # Model discovery, health caching & blacklist
+│   └── unified_chat.py        # Single UnifiedChatModel routing facade
+│
+├── agents/                    # Autonomous ReAct agents, tools & MCP
+│   ├── agent.py               # MediaSearchAgent orchestrator
+│   ├── prompts.py             # System prompt templates
+│   ├── tools.py               # Agent tools
+│   └── mcp_client.py          # Model Context Protocol client manager
+│
+└── voice/                     # Speech & Voice pipelines
+    ├── pipeline.py            # Voiceover chunking & TTS generation pipeline
+    └── converters/            # GGUF / ONNX audio model converters
+```
 
 ---
 
@@ -47,9 +57,13 @@ User Prompt → UnifiedChatModel._get_active_model(model_name)
 ## Usage Example
 
 ```python
-from core.ai.unified_chat import get_chat_model
+from core.ai import UnifiedChatModel
 
-chat_model = get_chat_model()
+chat_model = UnifiedChatModel(
+    api_key_names=["GEMINI_API_KEY"],
+    system_instruction="You are a helpful assistant.",
+    foundry_model_id="qwen2.5-coder-7b",
+)
 
 # Single prompt query
 response = await chat_model.ask(

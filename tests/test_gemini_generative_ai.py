@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Тесты класса GoogleGenerativeAI и сопутствующих ут
+# Process Name: Tests for GoogleGenerativeAI class and related utilities
 # =============================================================================
 # Description:
-#   Комплексный набор тестов для модуля core/ai/gemini/generative_ai.py.
+#   Comprehensive test suite for core/ai/gemini/generative_ai.py module.
 #
 # File: test_gemini_generative_ai.py
 # Project: ai-breadboard
@@ -12,7 +12,7 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""Тесты класса GoogleGenerativeAI и сопутствующих утилит модуля Gemini."""
+"""Tests for GoogleGenerativeAI class and Gemini module utilities."""
 
 import asyncio
 from io import BytesIO
@@ -31,60 +31,60 @@ from core.ai.gemini.generative_ai import (
 )
 
 # =============================================================================
-# Section: Happy Path — Normal Scenarios использования
+# Section: Happy Path — Normal usage scenarios
 # =============================================================================
 
 class TestGoogleGenerativeAI_HappyPath:
-    """Тестирование нормальных (ожидаемых) сценариев работы GoogleGenerativeAI.
+    """Tests for normal and expected GoogleGenerativeAI usage scenarios.
 
-    Покрывает: успешную инициализацию, ask, chat, chat_stream, embed,
+    Covers: successful initialization, ask, chat, chat_stream, embed,
     describe_image, upload_file, ask_with_tools.
     """
 
     @pytest.mark.asyncio
     async def test_ask_happy_path(self):
-        """Тестирование одиночного запроса ask с корректным ответом модели.
+        """Test single ask request with correct model response.
 
-        Check: method Returns очищенный нормализованный текст.
-        Зависимости: Raisesся во многих плагинах и API endpoint'ах.
+        Validates: method returns cleaned and normalized text.
+        Dependencies: raised in many plugins and API endpoints.
         """
-        # --- Подготовка (Arrange) ---
-        # Текстовый вопрос пользователя для проверки генерации
-        query_text: str = 'Назови столицу Франции'
+        # --- Setup (Arrange) ---
+        # Text query from user for generation verification
+        query_text: str = 'What is the capital of France?'
 
-        # Подготовка мока ответа Google SDK
+        # Prepare mock Google SDK response
         mock_response: MagicMock = MagicMock()
-        mock_response.text = '```html<div>Париж</div>```\nСтолица Франции — Париж.'
+        mock_response.text = '```html<div>Paris</div>```\nThe capital of France is Paris.'
 
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content.return_value = mock_response
 
-        # Initialization модели с моком SDK и активным ключом
+        # Initialize model with mocked SDK and active key
         with patch('core.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
              patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
              patch('core.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(api_key_names=['key_dev'])
 
-            # --- Выполнение (Act) ---
+            # --- Execution (Act) ---
             result: str = await ai_instance.ask(query_text)
 
-            # --- Check (Assert) ---
-            assert 'Париж' in result, (
-                f'ask() обязан вернуть текст ответа модели, получено: {result!r}'
+            # --- Assertion (Assert) ---
+            assert 'Paris' in result, (
+                f'ask() must return model response text, got: {result!r}'
             )
             assert '```html' not in result, (
-                f'ask() обязан удалять HTML-блоки из ответа модели, получено: {result!r}'
+                f'ask() must remove HTML blocks from model response, got: {result!r}'
             )
 
     @pytest.mark.asyncio
     async def test_chat_happy_path_with_history(self):
-        """Тестирование диалогового чата с сохранением истории.
+        """Test dialogue chat with history preservation.
 
-        Check: сообщения добавляются в chat_history и Returnsся ответ.
+        Validates: messages are added to chat_history and response is returned.
         """
-        # --- Подготовка (Arrange) ---
-        user_message: str = 'Привет, как дела?'
-        model_reply_text: str = 'Привет! Все отлично.'
+        # --- Setup (Arrange) ---
+        user_message: str = 'Hello, how are you?'
+        model_reply_text: str = 'Hello! All good.'
 
         mock_response: MagicMock = MagicMock()
         mock_response.text = model_reply_text
@@ -100,29 +100,29 @@ class TestGoogleGenerativeAI_HappyPath:
              patch('core.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(save_history_chat=True)
 
-            # --- Выполнение (Act) ---
+            # --- Execution (Act) ---
             result: str = await ai_instance.chat(user_message)
 
-            # --- Check (Assert) ---
+            # --- Assertion (Assert) ---
             assert result == model_reply_text, (
-                f'chat() обязан вернуть ответ модели, получено: {result!r}'
+                f'chat() must return model response, got: {result!r}'
             )
             assert len(ai_instance.chat_history) == 2, (
-                f'chat() обязан сохранить 2 сообщения (user и model), в истории: {len(ai_instance.chat_history)}'
+                f'chat() must save 2 messages (user and model), history has: {len(ai_instance.chat_history)}'
             )
 
     @pytest.mark.asyncio
     async def test_chat_stream_happy_path(self):
-        """Тестирование потоковой генерации ответа модели.
+        """Test streaming model response generation.
 
-        Check: генератор последовательно отдает чанки текста.
+        Validates: generator sequentially yields text chunks.
         """
-        # --- Подготовка (Arrange) ---
-        user_prompt: str = 'Расскажи анекдот'
+        # --- Setup (Arrange) ---
+        user_prompt: str = 'Tell me a joke'
         chunk1: MagicMock = MagicMock()
-        chunk1.text = 'Идет '
+        chunk1.text = 'A bear '
         chunk2: MagicMock = MagicMock()
-        chunk2.text = 'медведь...'
+        chunk2.text = 'walks...'
 
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content_stream.return_value = [chunk1, chunk2]
@@ -132,27 +132,27 @@ class TestGoogleGenerativeAI_HappyPath:
              patch('core.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(save_history_chat=False)
 
-            # --- Выполнение (Act) ---
+            # --- Execution (Act) ---
             chunks: list[str] = []
             async for chunk in ai_instance.chat_stream(user_prompt):
                 chunks.append(chunk)
 
-            # --- Check (Assert) ---
+            # --- Assertion (Assert) ---
             assert len(chunks) == 2, (
-                f'chat_stream() обязан отдать 2 чанка, получено: {len(chunks)}'
+                f'chat_stream() must return 2 chunks, got: {len(chunks)}'
             )
-            assert ''.join(chunks) == 'Идет медведь...', (
-                f'Содержимое чанков должно корректно объединяться, получено: {"".join(chunks)!r}'
+            assert ''.join(chunks) == 'A bear walks...', (
+                f'Chunk content must merge correctly, got: {"".join(chunks)!r}'
             )
 
     @pytest.mark.asyncio
     async def test_embed_happy_path(self):
-        """Тестирование генерации векторных эмбеддингов.
+        """Test vector embedding generation.
 
-        Check: Returnsся numpy.ndarray с числами.
+        Validates: returns numpy.ndarray with numbers.
         """
-        # --- Подготовка (Arrange) ---
-        input_text: str = 'Векторизуемый текст'
+        # --- Setup (Arrange) ---
+        input_text: str = 'Text to vectorize'
         vector_data: list[float] = [0.1, 0.2, 0.3, 0.4]
 
         mock_embedding_obj: MagicMock = MagicMock()
@@ -169,24 +169,24 @@ class TestGoogleGenerativeAI_HappyPath:
              patch('core.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
-            # --- Выполнение (Act) ---
+            # --- Execution (Act) ---
             result = await ai_instance.embed(input_text)
 
-            # --- Check (Assert) ---
+            # --- Assertion (Assert) ---
             assert isinstance(result, np.ndarray), (
-                f'embed() обязан вернуть numpy.ndarray, получено: {type(result)}'
+                f'embed() must return numpy.ndarray, got: {type(result)}'
             )
             assert len(result) == 4, (
-                f'embed() размер вектора должен быть 4, получено: {len(result)}'
+                f'embed() vector size must be 4, got: {len(result)}'
             )
 
     @pytest.mark.asyncio
     async def test_ask_with_tools_happy_path(self):
-        """Тестирование agentic loop с вызовом функции и финальным ответом."""
-        # --- Подготовка (Arrange) ---
-        q: str = 'Какая температура в Париже?'
+        """Test agentic loop with function call and final response."""
+        # --- Setup (Arrange) ---
+        q: str = 'What is the temperature in Paris?'
 
-        # 1-й шаг: модель запрашивает вызов функции get_weather
+        # Step 1: model requests function call get_weather
         call_part: MagicMock = MagicMock()
         call_part.function_call = MagicMock()
         call_part.function_call.name = 'get_weather'
@@ -198,10 +198,10 @@ class TestGoogleGenerativeAI_HappyPath:
         candidate1.content.parts = [call_part]
         response_step1.candidates = [candidate1]
 
-        # 2-й шаг: модель выдает финальный текст
+        # Step 2: model returns final text
         text_part: MagicMock = MagicMock()
         text_part.function_call = False
-        text_part.text = 'В Париже сейчас 20 градусов.'
+        text_part.text = 'The temperature in Paris is currently 20 degrees.'
 
         response_step2: MagicMock = MagicMock()
         candidate2: MagicMock = MagicMock()
@@ -218,26 +218,26 @@ class TestGoogleGenerativeAI_HappyPath:
              patch('core.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
-            # --- Выполнение (Act) ---
+            # --- Execution (Act) ---
             result = await ai_instance.ask_with_tools(q, tools=['tool_def'], tool_dispatcher=dispatcher_mock)
 
-            # --- Check (Assert) ---
-            assert result == 'В Париже сейчас 20 градусов.', (
-                f'ask_with_tools() должен вернуть финальный ответ, получено: {result!r}'
+            # --- Assertion (Assert) ---
+            assert result == 'The temperature in Paris is currently 20 degrees.', (
+                f'ask_with_tools() must return final response, got: {result!r}'
             )
             dispatcher_mock.assert_called_once_with('get_weather', {'city': 'Paris'})
 
 # =============================================================================
-# Section: Edge Cases — Edge Cases и пустые данные
+# Section: Edge Cases — Edge cases and empty data
 # =============================================================================
 
 class TestGoogleGenerativeAI_EdgeCases:
-    """Тестирование поведения при пустых и нестандартных входных данных."""
+    """Tests for behavior with empty and non-standard input data."""
 
     @pytest.mark.asyncio
     async def test_ask_empty_query_returns_empty_string(self):
-        """Check раннего возврата при передаче пустого запроса в ask."""
-        # --- Подготовка (Arrange) ---
+        """Check early return when passing empty query to ask."""
+        # --- Setup (Arrange) ---
         empty_query: str = ''
 
         with patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
@@ -245,18 +245,18 @@ class TestGoogleGenerativeAI_EdgeCases:
              patch('core.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
-            # --- Выполнение (Act) ---
+            # --- Execution (Act) ---
             result: str = await ai_instance.ask(empty_query)
 
-            # --- Check (Assert) ---
+            # --- Assertion (Assert) ---
             assert result == '', (
-                f'ask() при пустом вопросе обязан возвращать пустую строку, получено: {result!r}'
+                f'ask() with empty question must return empty string, got: {result!r}'
             )
 
     @pytest.mark.asyncio
     async def test_chat_empty_query_returns_empty_string(self):
-        """Check раннего возврата при передаче пустого сообщения в chat."""
-        # --- Подготовка (Arrange) ---
+        """Check early return when passing empty message to chat."""
+        # --- Setup (Arrange) ---
         empty_message: str = ''
 
         with patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
@@ -264,18 +264,18 @@ class TestGoogleGenerativeAI_EdgeCases:
              patch('core.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
-            # --- Выполнение (Act) ---
+            # --- Execution (Act) ---
             result: str = await ai_instance.chat(empty_message)
 
-            # --- Check (Assert) ---
+            # --- Assertion (Assert) ---
             assert result == '', (
-                f'chat() при пустом вопросе обязан возвращать пустую строку, получено: {result!r}'
+                f'chat() with empty question must return empty string, got: {result!r}'
             )
 
     @pytest.mark.asyncio
     async def test_embed_empty_text_returns_false(self):
-        """Check раннего возврата False при пустом тексте для эмбеддинга."""
-        # --- Подготовка (Arrange) ---
+        """Check early return False when text is empty for embedding."""
+        # --- Setup (Arrange) ---
         empty_text: str = ''
 
         with patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
@@ -283,35 +283,35 @@ class TestGoogleGenerativeAI_EdgeCases:
              patch('core.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
-            # --- Выполнение (Act) ---
+            # --- Execution (Act) ---
             result = await ai_instance.embed(empty_text)
 
-            # --- Check (Assert) ---
+            # --- Assertion (Assert) ---
             assert result is False, (
-                f'embed() при пустом тексте обязан возвращать False, получено: {result!r}'
+                f'embed() with empty text must return False, got: {result!r}'
             )
 
     def test_normalize_text_and_remove_html_empty(self):
-        """Check утилит форматирования на пустых строках."""
-        # --- Выполнение и check (Act & Assert) ---
-        assert normalize_text('') == '', 'normalize_text("") должен возвращать ""'
-        assert remove_html_blocks('') == '', 'remove_html_blocks("") должен возвращать ""'
+        """Check formatting utilities on empty strings."""
+        # --- Execution and Assertion (Act & Assert) ---
+        assert normalize_text('') == '', 'normalize_text("") must return ""'
+        assert remove_html_blocks('') == '', 'remove_html_blocks("") must return ""'
 
 # =============================================================================
-# Section: Type Variants — варианты допустимых типов
+# Section: Type Variants — valid type variants
 # =============================================================================
 
 class TestGoogleGenerativeAI_TypeVariants:
-    """Тестирование обработки различных типов параметров (Path, bytes, IOBase)."""
+    """Tests for handling various parameter types (Path, bytes, IOBase)."""
 
     @pytest.mark.asyncio
     async def test_describe_image_with_bytes_and_path(self):
-        """Check describe_image при передаче байтов напрямую и через Path."""
-        # --- Подготовка (Arrange) ---
-        raw_bytes: bytes = b'\xff\xd8\xff\xe0\x00\x10JFIF'  # Симуляция JPEG
+        """Check describe_image when passing bytes directly and via Path."""
+        # --- Setup (Arrange) ---
+        raw_bytes: bytes = b'\xff\xd8\xff\xe0\x00\x10JFIF'  # Simulate JPEG
 
         mock_response: MagicMock = MagicMock()
-        mock_response.text = 'Изображение природы'
+        mock_response.text = 'A nature image'
 
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content.return_value = mock_response
@@ -321,18 +321,18 @@ class TestGoogleGenerativeAI_TypeVariants:
              patch('core.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
-            # --- Выполнение (Act) ---
+            # --- Execution (Act) ---
             result_bytes = await ai_instance.describe_image(raw_bytes)
 
-            # --- Check (Assert) ---
-            assert result_bytes == 'Изображение природы', (
-                f'describe_image() с bytes должен вернуть описание, получено: {result_bytes!r}'
+            # --- Assertion (Assert) ---
+            assert result_bytes == 'A nature image', (
+                f'describe_image() with bytes must return description, got: {result_bytes!r}'
             )
 
     @pytest.mark.asyncio
     async def test_upload_file_with_descriptor(self):
-        """Check upload_file при передаче BytesIO."""
-        # --- Подготовка (Arrange) ---
+        """Check upload_file when passing BytesIO."""
+        # --- Setup (Arrange) ---
         stream_file: BytesIO = BytesIO(b'Sample data')
 
         mock_client: MagicMock = MagicMock()
@@ -343,12 +343,12 @@ class TestGoogleGenerativeAI_TypeVariants:
              patch('core.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
-            # --- Выполнение (Act) ---
+            # --- Execution (Act) ---
             result: bool = await ai_instance.upload_file(stream_file, file_name='sample.txt')
 
-            # --- Check (Assert) ---
+            # --- Assertion (Assert) ---
             assert result is True, (
-                f'upload_file() с файловым дескриптором должен вернуть True, получено: {result!r}'
+                f'upload_file() with file descriptor must return True, got: {result!r}'
             )
 
 # =============================================================================
@@ -356,12 +356,12 @@ class TestGoogleGenerativeAI_TypeVariants:
 # =============================================================================
 
 class TestGoogleGenerativeAI_BoundaryValues:
-    """Тестирование лимитов попыток и граничных задержек."""
+    """Tests for attempt limits and boundary delays."""
 
     @pytest.mark.asyncio
     async def test_ask_exceeds_max_attempts(self):
-        """Check поведения ask при попытке attempts=1 и постоянных сбоях."""
-        # --- Подготовка (Arrange) ---
+        """Check ask behavior when attempts=1 and constant failures."""
+        # --- Setup (Arrange) ---
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content.side_effect = RuntimeError('SDK connection error')
 
@@ -370,28 +370,28 @@ class TestGoogleGenerativeAI_BoundaryValues:
              patch('core.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
-            # --- Выполнение (Act) ---
-            result: str = await ai_instance.ask('Любой вопрос', attempts=1)
+            # --- Execution (Act) ---
+            result: str = await ai_instance.ask('Any question', attempts=1)
 
-            # --- Check (Assert) ---
-            assert 'Error модели' in result or 'исчерпаны' in result, (
-                f'ask() после исчерпания попыток должен вернуть диагностическое сообщение, получено: {result!r}'
+            # --- Assertion (Assert) ---
+            assert 'Error' in result or 'exhausted' in result, (
+                f'ask() after exhausting attempts must return diagnostic message, got: {result!r}'
             )
 
 # =============================================================================
-# Section: Error Scenarios — отказоустойчивость и обработка сбоев
+# Section: Error Scenarios — resilience and error handling
 # =============================================================================
 
 class TestGoogleGenerativeAI_ErrorScenarios:
-    """Тестирование ротации ключей, моделей и реакции на ошибки API (401, 404, 503, 429)."""
+    """Tests for key rotation, model switching, and API error handling (401, 404, 503, 429)."""
 
     @pytest.mark.asyncio
     async def test_error_401_invalid_key_switches_key(self):
-        """Error 401 API_KEY_INVALID должна инвалидировать ключ и переключить на второй."""
-        # --- Подготовка (Arrange) ---
+        """Error 401 API_KEY_INVALID must invalidate key and switch to second."""
+        # --- Setup (Arrange) ---
         error_401: Exception = RuntimeError('401 API_KEY_INVALID: Key not valid')
         success_response: MagicMock = MagicMock()
-        success_response.text = 'Success со вторым ключом'
+        success_response.text = 'Success with second key'
 
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content.side_effect = [error_401, success_response]
@@ -401,24 +401,24 @@ class TestGoogleGenerativeAI_ErrorScenarios:
              patch('core.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
-            # --- Выполнение (Act) ---
-            result: str = await ai_instance.ask('Тест 401')
+            # --- Execution (Act) ---
+            result: str = await ai_instance.ask('Test 401')
 
-            # --- Check (Assert) ---
-            assert result == 'Success со вторым ключом', (
-                f'При ошибке 401 должен произойти transition на valid ключ, получено: {result!r}'
+            # --- Assertion (Assert) ---
+            assert result == 'Success with second key', (
+                f'On 401 error must transition to valid key, got: {result!r}'
             )
             assert 'bad_key' not in ai_instance.api_keys, (
-                'Invalid ключ обязан быть удален из активного пула'
+                'Invalid key must be removed from active pool'
             )
 
     @pytest.mark.asyncio
     async def test_error_404_unsupported_model_switches_model(self):
-        """Error 404 NOT_FOUND должна добавить модель в unsupported и сменить её."""
-        # --- Подготовка (Arrange) ---
+        """Error 404 NOT_FOUND must add model to unsupported and switch it."""
+        # --- Setup (Arrange) ---
         error_404: Exception = RuntimeError('404 NOT_FOUND: Model is no longer available')
         success_response: MagicMock = MagicMock()
-        success_response.text = 'Success с новой моделью'
+        success_response.text = 'Success with new model'
 
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content.side_effect = [error_404, success_response]
@@ -431,25 +431,25 @@ class TestGoogleGenerativeAI_ErrorScenarios:
 
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(model_name='gemini-old')
 
-            # --- Выполнение (Act) ---
-            result: str = await ai_instance.ask('Тест 404')
+            # --- Execution (Act) ---
+            result: str = await ai_instance.ask('Test 404')
 
-            # --- Check (Assert) ---
-            assert result == 'Success с новой моделью', (
-                f'При ошибке 404 должен произойти transition на доступную модель, получено: {result!r}'
+            # --- Assertion (Assert) ---
+            assert result == 'Success with new model', (
+                f'On 404 error must transition to available model, got: {result!r}'
             )
             assert ai_instance.model_name == 'gemini-new', (
-                f'Имя активной модели должно обновиться на gemini-new, текущее: {ai_instance.model_name}'
+                f'Active model name must update to gemini-new, current: {ai_instance.model_name}'
             )
             mock_add_unsupp.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_error_429_daily_quota_exhausted(self):
-        """Error 429 PerDay квоты должна пометить ключ exhausted и переключить его."""
-        # --- Подготовка (Arrange) ---
+        """Error 429 PerDay quota must mark key exhausted and switch it."""
+        # --- Setup (Arrange) ---
         error_429_daily: Exception = RuntimeError("429 RESOURCE_EXHAUSTED: quota_limit_value': '0'")
         success_response: MagicMock = MagicMock()
-        success_response.text = 'Success со вторым ключом после 429'
+        success_response.text = 'Success with second key after 429'
 
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content.side_effect = [error_429_daily, success_response]
@@ -461,38 +461,38 @@ class TestGoogleGenerativeAI_ErrorScenarios:
 
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
-            # --- Выполнение (Act) ---
-            result: str = await ai_instance.ask('Тест 429 Daily')
+            # --- Execution (Act) ---
+            result: str = await ai_instance.ask('Test 429 Daily')
 
-            # --- Check (Assert) ---
-            assert result == 'Success со вторым ключом после 429', (
-                f'При суточной 429 должен произойти transition на следующий ключ, получено: {result!r}'
+            # --- Assertion (Assert) ---
+            assert result == 'Success with second key after 429', (
+                f'On daily 429 must transition to next key, got: {result!r}'
             )
             mock_mark.assert_called_once_with('k1')
 
 # =============================================================================
-# Section: Regression — интеграционные и регрессионные сценарии
+# Section: Regression — integration and regression scenarios
 # =============================================================================
 
 class TestGoogleGenerativeAI_Regression:
-    """Регрессионное тестирование интеграции с UnifiedChatModel и экспортов."""
+    """Regression testing for integration with UnifiedChatModel and exports."""
 
     def test_default_model_exported_correctly(self):
-        """Check наличия и строкового типа _DEFAULT_MODEL."""
-        # --- Подготовка и check (Act & Assert) ---
+        """Check presence and string type of _DEFAULT_MODEL."""
+        # --- Setup and Assertion (Act & Assert) ---
         from core.ai.gemini.generative_ai import _DEFAULT_MODEL
-        assert isinstance(_DEFAULT_MODEL, str), '_DEFAULT_MODEL обязан быть строкой'
-        assert len(_DEFAULT_MODEL) > 0, '_DEFAULT_MODEL не должен быть empty строкой'
+        assert isinstance(_DEFAULT_MODEL, str), '_DEFAULT_MODEL must be a string'
+        assert len(_DEFAULT_MODEL) > 0, '_DEFAULT_MODEL must not be an empty string'
 
     @pytest.mark.asyncio
     async def test_unified_chat_model_integration(self):
-        """Check работы UnifiedChatModel с обновленным классом GoogleGenerativeAI."""
-        # --- Подготовка (Arrange) ---
+        """Check UnifiedChatModel integration with updated GoogleGenerativeAI class."""
+        # --- Setup (Arrange) ---
         from core.ai.unified_chat import UnifiedChatModel
 
         mock_client: MagicMock = MagicMock()
         mock_response: MagicMock = MagicMock()
-        mock_response.text = 'Ответ через UnifiedChatModel'
+        mock_response.text = 'Response via UnifiedChatModel'
         mock_client.models.generate_content.return_value = mock_response
 
         mock_chat: MagicMock = MagicMock()
@@ -505,15 +505,15 @@ class TestGoogleGenerativeAI_Regression:
 
             unified_model: UnifiedChatModel = UnifiedChatModel(
                 api_key_names=['key_dev'],
-                system_instruction='Тестовая инструкция',
+                system_instruction='Test instruction',
                 foundry_model_id='test-foundry',
                 use_foundry=False,
             )
 
-            # --- Выполнение (Act) ---
-            result = await unified_model.chat('Тестовый запрос в unified')
+            # --- Execution (Act) ---
+            result = await unified_model.chat('Test request to unified')
 
-            # --- Check (Assert) ---
-            assert result == 'Ответ через UnifiedChatModel', (
-                f'UnifiedChatModel обязан корректно вызывать chat() у Gemini, получено: {result!r}'
+            # --- Assertion (Assert) ---
+            assert result == 'Response via UnifiedChatModel', (
+                f'UnifiedChatModel must correctly call chat() on Gemini, got: {result!r}'
             )

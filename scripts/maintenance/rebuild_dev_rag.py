@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Переиндексация контекста разработчика
+# Process Name: Developer context RAG reindexing and rebuilding
 # =============================================================================
 # Description:
-#   Скрипт запускает перестроение RAG-индекса для технического контекста разработки.
+#   Script rebuilds RAG index for development technical documentation and codebase.
 #
 # File: rebuild_dev_rag.py
 # Project: ai-breadboard
@@ -19,15 +19,15 @@ from core.logger import logger
 def main():
     api_key = os.getenv('GEMINI_API_KEY')
     if not api_key:
-        print("❌ Error: Переменная окружения GEMINI_API_KEY не установлена.")
+        print("❌ Error: GEMINI_API_KEY environment variable not set.")
         return
 
-    print("🔄 Запуск переиндексации кодовой базы и документации...")
+    print("🔄 Starting codebase and documentation reindexing...")
     try:
         build_dev_rag(api_key)
-        print("✅ Индекс разработчика successfully перестроен.")
+        print("✅ Developer index successfully rebuilt.")
     except Exception as e:
-        print(f"❌ Error при переиндексации: {e}")
+        print(f"❌ Error during reindexing: {e}")
         logger.error(f"Error rebuild_dev_rag: {e}", exc_info=True)
 
 if __name__ == "__main__":

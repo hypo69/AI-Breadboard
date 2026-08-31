@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Тестирование сохранения текста в файл (успешный сц
+# Process Name: Testing text file save and read operations
 # =============================================================================
 # Description:
-#   Исчерпывающее тестирование функций для работы с файлами.
+#   Comprehensive testing of file handling functions for saving and reading text operations.
 #
 # File: test_file.py
 # Project: ai-breadboard
@@ -17,45 +17,45 @@ from pathlib import Path
 import os
 from core.utils.file import save_text_file, read_text_file
 
-# --- Тесты для save_text_file ---
+# --- Tests for save_text_file ---
 
 def test_save_text_file_happy_path(tmp_path):
-    """Тестирование сохранения текста в файл (успешный сценарий)."""
-    # Arrange: путь к временному файлу
+    """Test saving text to file (successful scenario)."""
+    # Arrange: path to temporary file
     file_path = tmp_path / "test.txt"
     data = "Hello, World!"
 
-    # Act: вызов функции
+    # Act: function call
     result = save_text_file(data, file_path)
 
-    # Assert: проверяем успешность и содержимое
-    assert result is True, "save_text_file должна вернуть True при успешной записи"
-    assert file_path.read_text(encoding="utf-8") == data, "Содержимое файла не совпадает с записанным"
+    # Assert: check success and content
+    assert result is True, "save_text_file should return True on successful write"
+    assert file_path.read_text(encoding="utf-8") == data, "File content does not match written data"
 
 def test_read_text_file_happy_path(tmp_path):
-    """Тестирование чтения текста из файла (успешный сценарий)."""
-    # Arrange: путь к временному файлу
+    """Test reading text from file (successful scenario)."""
+    # Arrange: path to temporary file
     file_path = tmp_path / "test_read.txt"
     data = "Hello, read!"
     file_path.write_text(data, encoding="utf-8")
 
-    # Act: вызов функции
+    # Act: function call
     result = read_text_file(file_path)
 
-    # Assert: проверяем содержимое
-    assert result == data, "Прочитанное содержимое не совпадает с записанным"
+    # Assert: check content
+    assert result == data, "Read content does not match written data"
 
 def test_save_text_file_invalid_mode(tmp_path):
-    """Тестирование записи с невалидным режимом (ожидаем ошибку или False)."""
+    """Test write with invalid mode (expect error or False)."""
     # Arrange
     file_path = tmp_path / "invalid_mode.txt"
     data = "data"
     
     # Act
-    # Если function правильно processes исключения через log, она должна вернуть False
-    result = save_text_file(data, file_path, mode="x") # 'x' не поддерживается логикой, но в open допустимо, проверим 'r' как пример
+    # If function properly handles exceptions via log, it should return False
+    result = save_text_file(data, file_path, mode="x")  # 'x' mode: exclusive creation
     
     # Assert
-    # Согласно стандартам, должна вернуть False при сбое, не генерировать exception
-    # В реальности 'x' создаст файл, но проверим, как function processes запись
-    assert result is True 
+    # Per standards, should return False on failure, not generate exception
+    # In reality 'x' creates file, but check how function handles write
+    assert result is True

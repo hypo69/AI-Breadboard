@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: src.utils.convertors.ns
+# Process Name: Convert SimpleNamespace to various formats
 # =============================================================================
 # Description:
 #   Module for AI Breadboard project.
@@ -12,17 +12,14 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: src.utils.convertors.ns 
-	:platform: Windows, Unix
-	:synopsis: convert SimpleNamespace (ns) into various formats: dict, JSON, CSV, XML, and XLS
+"""Convert SimpleNamespace objects to various formats: dict, JSON, CSV, XML, XLS.
 
 Functions:
-    - ns2dict: Convert SimpleNamespace object to a dictionary.
+    - ns2dict: Convert SimpleNamespace object to dictionary.
     - ns2json: Convert SimpleNamespace object to JSON format.
     - ns2csv: Convert SimpleNamespace object to CSV format.
     - ns2xml: Convert SimpleNamespace object to XML format.
-    - ns2xls: Convert SimpleNamespace object to XLS format.
+    - ns2xls: Convert SimpleNamespace object to XLS format."""
 """
 
 import json

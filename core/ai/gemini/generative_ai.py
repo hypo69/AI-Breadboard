@@ -15,5 +15,6 @@
 # =============================================================================
 
 from .api import GoogleGenerativeAI
+from .core import _DEFAULT_MODEL
 
-__all__ = ['GoogleGenerativeAI']
+__all__ = ['GoogleGenerativeAI', '_DEFAULT_MODEL']

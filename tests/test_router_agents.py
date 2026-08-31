@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Тестирование CRUD и вспомогательных эндпоинтов /ap
+# Process Name: Testing CRUD and helper endpoints for agents API
 # =============================================================================
 # Description:
 #   Module for test_router_agents.py in ai-breadboard project.
@@ -23,29 +23,29 @@ from core.fastapi.router_agents import _get_agents_list, _save_agents_list
 client = TestClient(app)
 
 class TestAgentsRouter:
-    """Тестирование CRUD и вспомогательных эндпоинтов /api/agents."""
+    """Testing CRUD and helper endpoints /api/agents."""
 
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
-        """Сохранение и восстановление состояния списка агентов."""
+        """Save and restore state of agents list."""
         self.original_agents = _get_agents_list()
         yield
         _save_agents_list(self.original_agents)
 
     def test_list_agents(self):
-        """Check получения списка всех агентов."""
+        """Check retrieval of all agents list."""
         response = client.get("/api/agents")
         assert response.status_code == 200
         agents = response.json()
         assert isinstance(agents, list)
         assert len(agents) > 0
-        # Проверяем наличие ключевых системных агентов
+        # Check presence of key system agents
         ids = [a.get("id") for a in agents]
         assert "web_search_gemini" in ids
         assert "web_search_gemini_cli" in ids
 
     def test_list_tools(self):
-        """Check получения каталога инструментов."""
+        """Check retrieval of tools catalog."""
         response = client.get("/api/agents/tools")
         assert response.status_code == 200
         tools = response.json()
@@ -56,7 +56,7 @@ class TestAgentsRouter:
         assert "python_eval" in tool_ids
 
     def test_list_providers(self):
-        """Check получения списка провайдеров и моделей из пула."""
+        """Check list of providers and models from pool."""
         response = client.get("/api/agents/providers")
         assert response.status_code == 200
         providers = response.json()
@@ -67,11 +67,11 @@ class TestAgentsRouter:
         assert len(providers["gemini"]["models"]) > 0
 
     def test_create_and_delete_custom_agent(self):
-        """Тест создания и последующего удаления кастомного агента."""
+        """Test creating and subsequent deletion of custom agent."""
         new_agent = {
             "id": "test_research_agent",
             "name": "Research Assistant",
-            "description": "Тестовый агент для поиска информации",
+            "description": "Test agent for information search",
             "is_system": False,
             "enabled": True,
             "provider": "gemini",
@@ -80,10 +80,10 @@ class TestAgentsRouter:
             "max_steps": 10,
             "timeout_seconds": 45,
             "tools": ["web_search", "rag_search"],
-            "system_prompt": "Ты тестовый агент-исследователь."
+            "system_prompt": "You are a test research agent."
         }
 
-        # 1. Создание
+        # 1. Creation
         create_res = client.post("/api/agents", json=new_agent)
         assert create_res.status_code == 200
         data = create_res.json()
@@ -91,7 +91,7 @@ class TestAgentsRouter:
         assert data.get("agent", {}).get("id") == "test_research_agent"
         assert data.get("agent", {}).get("is_system") is False
 
-        # 2. Check в списке
+        # 2. Check in list
         list_res = client.get("/api/agents")
         agent_ids = [a.get("id") for a in list_res.json()]
         assert "test_research_agent" in agent_ids
@@ -105,26 +105,26 @@ class TestAgentsRouter:
         assert update_res.json().get("agent", {}).get("name") == "Updated Research Assistant"
         assert update_res.json().get("agent", {}).get("enabled") is False
 
-        # 4. Удаление
+        # 4. Deletion
         del_res = client.delete("/api/agents/test_research_agent")
         assert del_res.status_code == 200
         assert del_res.json().get("deleted_id") == "test_research_agent"
 
-        # 5. Check отсутствия
+        # 5. Check absence
         list_after = client.get("/api/agents")
         agent_ids_after = [a.get("id") for a in list_after.json()]
         assert "test_research_agent" not in agent_ids_after
 
     def test_prevent_delete_system_agent(self):
-        """Check запрета удаления системных агентов."""
+        """Check prevention of system agents deletion."""
         del_res = client.delete("/api/agents/web_search_gemini")
         assert del_res.status_code == 403
-        assert "Системных агентов нельзя удалять" in del_res.json().get("detail", "")
+        assert "cannot be deleted" in del_res.json().get("detail", "").lower()
 
     def test_prevent_duplicate_agent_id(self):
-        """Check ошибки при создании дублирующегося ID."""
+        """Check error on duplicate agent ID creation."""
         dup_agent = {
-            "id": "web_search_gemini",  # Уже существует
+            "id": "web_search_gemini",  # Already exists
             "name": "Duplicate Agent",
             "description": "...",
             "enabled": True,
@@ -138,16 +138,16 @@ class TestAgentsRouter:
         }
         res = client.post("/api/agents", json=dup_agent)
         assert res.status_code == 400
-        assert "уже существует" in res.json().get("detail", "")
+        assert "already exists" in res.json().get("detail", "").lower()
 
     @patch("core.fastapi.router_chat.get_chat_model")
     def test_generate_prompt_ai(self, mock_get_chat_model):
-        """Тест генерации системного промпта через AI-модель."""
+        """Test system prompt generation via AI model."""
         mock_llm = MagicMock()
         mock_llm.ask = AsyncMock(return_value=json.dumps({
-            "name": "Аналитик данных",
-            "description": "Анализирует данные и performs расчеты",
-            "system_prompt": "Ты аналитик данных.",
+            "name": "Data Analyst",
+            "description": "Analyzes data and performs calculations",
+            "system_prompt": "You are a data analyst.",
             "recommended_tools": ["python_eval", "web_search"],
             "temperature": 0.4,
             "max_steps": 12
@@ -155,7 +155,7 @@ class TestAgentsRouter:
         mock_get_chat_model.return_value = mock_llm
 
         req_payload = {
-            "task_description": "Создай агента-аналитика для расчетов",
+            "task_description": "Create an analytics agent for calculations",
             "provider": "gemini",
             "model": "gemini-2.5-flash"
         }
@@ -164,24 +164,24 @@ class TestAgentsRouter:
         data = response.json()
         assert data.get("status") == "ok"
         spec = data.get("data", {})
-        assert spec.get("name") == "Аналитик данных"
+        assert spec.get("name") == "Data Analyst"
         assert "python_eval" in spec.get("recommended_tools", [])
 
     @patch("core.fastapi.router_chat.get_chat_model")
     def test_sandbox_execution(self, mock_get_chat_model):
-        """Тест выполнения тестового запроса в песочнице."""
+        """Test sandbox execution of test request."""
         mock_llm = MagicMock()
-        mock_llm.ask = AsyncMock(return_value="Тестовый ответ агента в песочнице.")
+        mock_llm.ask = AsyncMock(return_value="Test agent response in sandbox.")
         mock_get_chat_model.return_value = mock_llm
 
         test_payload = {
             "agent_id": "web_search_gemini",
-            "test_message": "Какая сегодня погода?"
+            "test_message": "What is the weather today?"
         }
         response = client.post("/api/agents/test", json=test_payload)
         assert response.status_code == 200
         data = response.json()
         assert data.get("status") == "ok"
-        assert "Тестовый ответ" in data.get("response", "")
+        assert "test" in data.get("response", "").lower()
         assert len(data.get("steps", [])) > 0
         assert data.get("duration_ms") >= 0

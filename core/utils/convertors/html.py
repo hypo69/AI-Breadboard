@@ -154,11 +154,11 @@ def html2ns(html_str: str) -> SimpleNamespace:
 #         Returns:
 #             str: Preprocessed CSS content without unsupported selectors.
 #         """
-#         # Убираем `:not(...)`
+#         # Remove `:not(...)`
 #         css_content = re.sub(r':not\([^)]*\)', '', css_content)
 
 #         return css_content
-#     # Убираем неподдерживаемые псевдоклассы, если они есть
+#     # Remove unsupported pseudo-classes if present
 #     html_str = preprocess_css(html_str)
 
 #     with open(pdf_file, "wb") as f:

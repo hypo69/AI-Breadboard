@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Dynamically construct/retrieve the appropriate AI 
+# Process Name: AI chat execution and dialogue management router
 # =============================================================================
 # Description:
-#   Обработка POST-запросов к /api/chat.
+#   Handles AI conversational endpoints, streaming responses across multiple providers,
+#   user dialogue context retrieval, and RAG query indexing workflows.
 #
 # File: router_chat.py
 # Project: ai-breadboard

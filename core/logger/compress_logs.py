@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Сжимает повторяющиеся строки в формат [Nx] text.""
+# Process Name: Compress repeated lines in log files to [Nx] format
 # =============================================================================
 # Description:
-#   Сжимает повторяющиеся строки в формат [Nx] text."""
+#   Compresses repeated lines into [Nx] text format for log file reduction.
 #
 # File: compress_logs.py
 # Project: ai-breadboard
-# Package: scripts.maintenance
+# Package: core.logger
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-Скрипт для сжатия логов — объединяет повторяющиеся строки.
-Запуск: python scripts/compress_logs.py
+"""Script for log file compression - combines repeated lines.
+
+Reduces log file size by consolidating identical lines into [Nx] format.
+Usage: python scripts/compress_logs.py
 """
 
 import sys
@@ -23,7 +24,15 @@ from pathlib import Path
 from typing import List, Tuple
 
 def compress_lines(lines: List[str], min_repeat: int = 2) -> List[str]:
-    """Сжимает повторяющиеся строки в формат [Nx] text."""
+    """Compress repeated lines into [Nx] text format.
+    
+    Args:
+        lines (List[str]): Input lines to compress.
+        min_repeat (int): Minimum repetitions to trigger compression.
+        
+    Returns:
+        List[str]: Compressed lines.
+    """
     counter = Counter(lines)
     result = []
     
@@ -34,17 +43,21 @@ def compress_lines(lines: List[str], min_repeat: int = 2) -> List[str]:
         if count >= min_repeat:
             result.append(f"[{count}x] {stripped}")
         else:
-            # Уникальные строки добавляем как есть
+            # Unique lines added as-is
             result.append(stripped)
     
     return result
 
 def compress_log_file(input_path: Path, output_path: Path = None, min_repeat: int = 2) -> Tuple[int, int]:
-    """
-    Сжимает лог-файл.
+    """Compress log file.
     
+    Args:
+        input_path (Path): Input log file path.
+        output_path (Path): Output log file path (default: .compressed.log).
+        min_repeat (int): Minimum repetitions to compress.
+        
     Returns:
-        Tuple[исходных_строк, уникальных_строк_после_сжатия]
+        Tuple[int, int]: (original_lines_count, compressed_lines_count)
     """
     with open(input_path, 'r', encoding='utf-8', errors='ignore') as f:
         lines = f.readlines()
@@ -66,27 +79,29 @@ def compress_log_file(input_path: Path, output_path: Path = None, min_repeat: in
     return original_count, len(compressed)
 
 def main():
+    """Main entry point for log compression."""
     from core.logger import logger
     
     logs_dir = Path(__file__).resolve().parent.parent.parent / 'tmp' / 'logs'
     
     if not logs_dir.exists():
-        logger.error(f"Директория логов не найдена: {logs_dir}")
+        logger.error(f"Logs directory not found: {logs_dir}")
         return
     
     log_files = list(logs_dir.glob('*.log'))
     if not log_files:
-        logger.info("Лог-файлы не найдены")
+        logger.info("No log files found")
         return
     
-    logger.info(f"Найдено файлов для сжатия: {len(log_files)}")
+    logger.info(f"Found files to compress: {len(log_files)}")
     
     for log_file in log_files:
         original, compressed = compress_log_file(log_file)
         if original > 0:
-            logger.info(f"{log_file.name}: {original} → {compressed} строк (compression {100 - compressed*100//original}%)")
+            compression_pct = 100 - compressed * 100 // original
+            logger.info(f"{log_file.name}: {original} → {compressed} lines (compression {compression_pct}%)")
         else:
-            logger.info(f"{log_file.name}: empty файл")
+            logger.info(f"{log_file.name}: empty file")
 
 if __name__ == "__main__":
     main()

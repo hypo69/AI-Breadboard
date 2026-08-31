@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Данные токена авторизации.
+# Process Name: User authentication and OAuth router
 # =============================================================================
 # Description:
-#   Обработка Google OAuth авторизации через Google Sign-In.
+#   Provides FastAPI routing for user authentication, Google OAuth integration,
+#   JWT token generation, and secure session state validation.
 #
 # File: router_auth.py
 # Project: ai-breadboard

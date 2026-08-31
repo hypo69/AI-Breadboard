@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: app.vercel_simple_gemini_chatbot.app.s
+# Process Name: Project root directory resolver
 # =============================================================================
 # Description:
-#   Module for AI Breadboard project.
+#   Module for finding and setting the project root path. All imports built
+#   relative to this root directory. Uses marker files (.git, __root__) to identify project root.
 #
 # File: header.py
 # Project: ai-breadboard
@@ -11,12 +12,6 @@
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
-
-"""
-.. module:: app.vercel_simple_gemini_chatbot.app.src 
-	:platform: Windows, Unix
-	:synopsis: Module определяющий корневой путь к проекту. Все импорты строятся относительно этого пути.
-"""
 
 import sys
 
@@ -46,4 +41,3 @@ def set_project_root(marker_files=('__root__','.git')) -> Path:
 # Get the root directory of the project
 __root__: Path = set_project_root()
 """__root__ (Path): Path to the root directory of the project"""
-

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Менеджер WebSocket соединений для пульта и плеера.
+# Process Name: WebSocket remote control and player synchronization router
 # =============================================================================
 # Description:
-#   Управление WebSocket-соединениями между плеером (веб-интерфейс)
+#   Manages WebSocket connections and REST endpoints for synchronized remote control,
+#   media player state broadcasts, and device pairing rooms.
 #
 # File: router_control.py
 # Project: ai-breadboard

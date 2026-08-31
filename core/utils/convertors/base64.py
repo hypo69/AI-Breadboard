@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: src.utils.convertors.base64
+# Process Name: Convert Base64 encoded content to temporary file
 # =============================================================================
 # Description:
 #   This module provides a function to decode Base64 encoded content and write it to a temporary file wi
@@ -12,12 +12,9 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: src.utils.convertors.base64 
-	:platform: Windows, Unix
-	:synopsis: Convert Base64 encoded content to a temporary file
+"""Base64 encoded content to temporary file conversion utilities.
 
-"""
+Converts Base64 encoded content to temporary files for processing."""
 
 """ This module provides a function to decode Base64 encoded content and write it to a temporary file with the specified extension.
 

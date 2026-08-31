@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: src.utils.convertors.tts
+# Process Name: Speech recognition and text-to-speech conversion utilities
 # =============================================================================
 # Description:
-#   Module for AI Breadboard project.
+#   Module for converting text to speech (TTS) and recognizing speech from audio files.
+#   Supports audio file download, format conversion, and multilingual speech recognition.
 #
 # File: tts.py
 # Project: ai-breadboard
@@ -12,26 +13,19 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: src.utils.convertors.tts 
-	:platform: Windows, Unix
-	:synopsis: speech recognition and text-to-speech conversion
-
-"""
-
 from pathlib import Path
 import tempfile
 import asyncio
 import requests
-import speech_recognition as sr  # Библиотека для распознавания речи
+import speech_recognition as sr  # Speech recognition library
 from pydub import AudioSegment  # Library for audio conversion
-from gtts import gTTS  # Генерация текста в речь
+from gtts import gTTS  # Text-to-speech generation
 
 from core.utils.jjson import j_loads, j_loads_ns, j_dumps
 from core.logger.logger import logger
 
 def speech_recognizer(audio_url: str = None, audio_file_path: Path = None, language: str = 'ru-RU') -> str:
-    """ Download an audio file and recognize speech in it.
+    """Download an audio file and recognize speech in it.
 
     Args:
         audio_url (str, optional): URL of the audio file to be downloaded. Defaults to `None`.
@@ -45,7 +39,7 @@ def speech_recognizer(audio_url: str = None, audio_file_path: Path = None, langu
         .. code::
 
             recognized_text = speech_recognizer(audio_url='https://example.com/audio.ogg')
-            print(recognized_text)  # Output: "Привет"
+            print(recognized_text)  # Output: "Hello"
     """
     try:
         if audio_url:
@@ -81,7 +75,7 @@ def speech_recognizer(audio_url: str = None, audio_file_path: Path = None, langu
         return 'Error during speech recognition.'
 
 async def text2speech(text: str, lang: str = 'ru') -> str:
-    """ Convert text to speech and save it as an audio file.
+    """Convert text to speech and save it as an audio file.
 
     Args:
         text (str): The text to be converted into speech.
@@ -93,7 +87,7 @@ async def text2speech(text: str, lang: str = 'ru') -> str:
     Example:
         .. code::
 
-            audio_path = await text2speech('Привет', lang='ru')
+            audio_path = await text2speech('Hello', lang='en')
             print(audio_path)  # Output: "/tmp/response.mp3"
     """
     try:

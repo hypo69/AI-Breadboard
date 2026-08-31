@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Результат поиска по индексу правил.
+# Process Name: Semantic search indexing for rules and prompts
 # =============================================================================
 # Description:
-#   Индексация и семантический поиск по Moduleным промптам и правилам из prompts/.
+#   FAISS-based vector indexing and semantic search for module prompts
+#   and rules from the prompts directory.
 #
 # File: rules_rag.py
 # Project: ai-breadboard
@@ -40,7 +41,7 @@ _EXCLUDE_NAMES: set[str] = {"README.md"}
 
 @dataclass
 class RulesSearchResult:
-    """Результат поиска по индексу правил."""
+    """Search result from the rules index."""
     file: str
     path: str
     text: str
@@ -49,17 +50,17 @@ class RulesSearchResult:
 def collect_prompt_documents(prompts_root: Path = _PROMPTS_ROOT) -> List[Dict[str, str]]:
     """
     ## hypo69 docblock
-    Собирает корпус документов из директории промптов.
+    Collects document corpus from the prompts directory.
 
     Args:
-        prompts_root (Path): Корневой каталог файлов промптов.
+        prompts_root (Path): Root directory path of prompt files.
 
     Returns:
-        List[Dict[str, str]]: List документов формата {"file": str, "path": str, "text": str}.
+        List[Dict[str, str]]: List of documents in format {"file": str, "path": str, "text": str}.
     """
     documents: List[Dict[str, str]] = []
     if not prompts_root.exists():
-        logger.warning(f"[RulesRAG] Каталог промптов не найден: {prompts_root}")
+        logger.warning(f"[RulesRAG] Prompts directory not found: {prompts_root}")
         return documents
 
     for glob_pat in _TARGET_GLOBS:
@@ -71,7 +72,7 @@ def collect_prompt_documents(prompts_root: Path = _PROMPTS_ROOT) -> List[Dict[st
             raw_text: str = file_path.read_text(encoding="utf-8").strip()
 
             if file_path.suffix == ".json":
-                text: str = f"[Файл: {file_path.name}]\n{raw_text}"
+                text: str = f"[File: {file_path.name}]\n{raw_text}"
             else:
                 text = raw_text
 
@@ -88,14 +89,14 @@ def build_rules_index(
 ) -> Tuple[Path, Path]:
     """
     ## hypo69 docblock
-    Строит FAISS-индекс по файлам промптов и saves документы и индекс.
+    Builds a FAISS index from prompt files and saves the documents and index.
 
     Args:
-        prompts_root (Path): Путь к каталогу prompts.
-        output_dir (Path): Каталог для сохранения rules.index и documents.json.
+        prompts_root (Path): Path to the prompts directory.
+        output_dir (Path): Directory for saving rules.index and documents.json.
 
     Returns:
-        Tuple[Path, Path]: Пути к сохранённому индексу и файлу документов.
+        Tuple[Path, Path]: Paths to the saved index and documents file.
     """
     import faiss
     import numpy as np
@@ -107,7 +108,7 @@ def build_rules_index(
 
     documents = collect_prompt_documents(prompts_root)
     if not documents:
-        raise RuntimeError(f"Документы промптов не найдены в {prompts_root}")
+        raise RuntimeError(f"Prompt documents not found in {prompts_root}")
 
     docs_path.write_text(
         json.dumps(documents, ensure_ascii=False, indent=2),
@@ -123,7 +124,7 @@ def build_rules_index(
     index.add(vectors.astype(np.float32))
 
     faiss.write_index(index, str(index_path))
-    logger.info(f"[RulesRAG] Индекс successfully построен: {index_path} ({len(documents)} документов)")
+    logger.info(f"[RulesRAG] Index successfully built: {index_path} ({len(documents)} documents)")
     return index_path, docs_path
 
 _ALWAYS_INCLUDE: List[str] = [
@@ -134,15 +135,15 @@ _ALWAYS_INCLUDE: List[str] = [
 class RulesRAG:
     """
     ## hypo69 docblock
-    Семантический поиск по модулям промптов через векторный FAISS-индекс.
+    Semantic search across module prompts using a vector FAISS index.
     """
 
     def __init__(self, index_path: Path = _DEFAULT_INDEX_PATH, docs_path: Path = _DEFAULT_DOCUMENTS_PATH) -> None:
         """
         ## hypo69 docblock
-        Инициализирует и loads индекс правил и корпус документов.
+        Initializes and loads the rules index and document corpus.
         """
-        # Поиск индекса: сначала в tmp/rag, затем в fallback путях
+        # Search for index: first in tmp/rag, then in fallback paths
         resolved_index = index_path
         resolved_docs = docs_path
         if not resolved_index.exists() and _LEGACY_INDEX_PATH.exists():
@@ -154,7 +155,7 @@ class RulesRAG:
                 resolved_index, resolved_docs = build_rules_index(_PROMPTS_ROOT, _TMP_RAG_DIR)
             except Exception as e:
                 raise FileNotFoundError(
-                    f"Не удалось найти или пересобрать FAISS-индекс правил: {e}"
+                    f"Failed to find or rebuild FAISS rules index: {e}"
                 )
 
         import faiss
@@ -175,14 +176,14 @@ class RulesRAG:
     def search(self, query: str, top_k: int = 4) -> List[RulesSearchResult]:
         """
         ## hypo69 docblock
-        Performs семантический поиск по корпусу правил.
+        Performs semantic search across the rules corpus.
 
         Args:
-            query (str): Запрос на естественном языке.
-            top_k (int): Число возвращаемых результатов.
+            query (str): Query in natural language.
+            top_k (int): Number of results to return.
 
         Returns:
-            List[RulesSearchResult]: List релевантных модулей промптов.
+            List[RulesSearchResult]: List of relevant module prompts.
         """
         if not query.strip():
             return []
@@ -206,7 +207,7 @@ class RulesRAG:
     def build_context(self, query: str, top_k: int = 4) -> str:
         """
         ## hypo69 docblock
-        Собирает текстовый контекст из найденных документов для вставки в системный промпт.
+        Builds text context from found documents for insertion into the system prompt.
         """
         always_docs: List[str] = []
         for doc in self._documents:

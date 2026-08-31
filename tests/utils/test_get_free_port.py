@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Тестирование получения первого доступного порта (б
+# Process Name: Testing for available port retrieval
 # =============================================================================
 # Description:
-#   Исчерпывающее тестирование всех публичных функций модуля get_free_port.
+#   Comprehensive testing of all public functions in the get_free_port module for finding available ports.
 #
 # File: test_get_free_port.py
 # Project: ai-breadboard
@@ -16,40 +16,40 @@ import pytest
 from core.utils.get_free_port import get_free_port
 
 def test_get_free_port_first_available():
-    """Тестирование получения первого доступного порта (без диапазона).
+    """Test retrieving the first available port (without range).
     
-    Check: function должна вернуть integer, начиная с 1024.
+    Check: function should return integer starting from 1024.
     """
-    # --- Подготовка (Arrange) ---
-    # Хост localhost — стандарт для локальной проверки.
+    # --- Setup (Arrange) ---
+    # Localhost host — standard for local testing.
     host: str = 'localhost'
     
-    # --- Выполнение (Act) ---
-    # Поиск первого свободного порта без ограничений.
+    # --- Execution (Act) ---
+    # Search for first available port without restrictions.
     port: int = get_free_port(host)
     
     # --- Check (Assert) ---
-    # Check: порт должен быть >= 1024.
-    assert port >= 1024, f"Порт должен быть >= 1024, получено: {port}"
+    # Check: port should be >= 1024.
+    assert port >= 1024, f"Port should be >= 1024, got: {port}"
 
 def test_get_free_port_in_range():
-    """Тестирование получения порта в заданном диапазоне."""
-    # --- Подготовка (Arrange) ---
+    """Test retrieving port within specified range."""
+    # --- Setup (Arrange) ---
     host: str = 'localhost'
     port_range: str = '3000-5000'
     
-    # --- Выполнение (Act) ---
+    # --- Execution (Act) ---
     port: int = get_free_port(host, port_range)
     
     # --- Check (Assert) ---
-    assert 3000 <= port <= 5000, f"Порт {port} вне диапазона {port_range}"
+    assert 3000 <= port <= 5000, f"Port {port} outside range {port_range}"
 
 def test_get_free_port_invalid_range():
-    """Тестирование ошибки при некорректном диапазоне."""
-    # --- Подготовка (Arrange) ---
+    """Test error handling with invalid range."""
+    # --- Setup (Arrange) ---
     host: str = 'localhost'
     port_range: str = 'invalid'
     
-    # --- Выполнение (Act) & Check (Assert) ---
+    # --- Execution (Act) & Check (Assert) ---
     with pytest.raises(ValueError):
         get_free_port(host, port_range)

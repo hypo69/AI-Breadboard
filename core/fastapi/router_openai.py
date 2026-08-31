@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Conversion внутреннего идентификатора модели в фор
+# Process Name: OpenAI compatibility API router
 # =============================================================================
 # Description:
-#   Предоставляет стандартные эндпоинты спецификации OpenAI для внешних клиентов:
+#   Implements OpenAI-compatible REST API endpoints including model listing
+#   and chat completion streaming for external client integrations.
 #
 # File: router_openai.py
 # Project: ai-breadboard

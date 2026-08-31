@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Ответ при проверке версии.
+# Process Name: Application version and update management router
 # =============================================================================
 # Description:
-#   API-эндпоинты для проверки обновлений, выполнения обновлений приложения,
+#   Provides FastAPI endpoints for querying application version information,
+#   checking remote update availability, and executing automatic updates.
 #
 # File: router_version.py
 # Project: ai-breadboard
@@ -254,5 +255,7 @@ def init_router() -> APIRouter:
         except Exception as ex:
             logger.error(f"Error getting version status: {ex}")
             raise HTTPException(status_code=500, detail=str(ex))
+
+    return router
 
 __all__ = ['init_router']

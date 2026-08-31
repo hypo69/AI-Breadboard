@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: src.utils
+# Process Name: Video file download and processing utilities
 # =============================================================================
 # Description:
 #   This module provides asynchronous functions for downloading and saving video files, as well as retri
@@ -12,12 +12,7 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: src.utils 
-	:platform: Windows, Unix
-	:synopsis: Video Saving Utilities
-
-"""
+"""Video saving utilities for generating and saving video files."""
 
 """ This module provides asynchronous functions for downloading and saving video files, as well as retrieving video data.  It includes error handling and logging for robust operation.
 

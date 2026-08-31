@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Управление авторизованными пользователями.
+# Process Name: User management and authorization system
 # =============================================================================
 # Description:
-#   Module обеспечивает управление авторизованными пользователями системы.
+#   User account management, role-based access control, permission handling,
+#   session management, and comprehensive audit logging for system security.
 #
 # File: __init__.py
 # Project: ai-breadboard
@@ -19,33 +20,33 @@ from typing import Dict, List
 from core.logger import logger
 
 # =============================================================================
-# Class управления пользователями
+# User management class
 # =============================================================================
 
 class UserManager:
-    """Управление авторизованными пользователями.
+    """User management and authorization system.
 
-    Хранение пользовательских данных, управление сессиями,
-    check прав доступа и логирование активности.
+    Storage of user data, session management,
+    access rights verification and activity logging.
 
     Attributes:
-        db_path (Path): Путь к файлу базы данных.
+        db_path (Path): Path to database file.
     """
 
     def __init__(self, db_path: Path) -> None:
-        """Initialization менеджера пользователей.
+        """Initialization of user manager.
 
         Args:
-            db_path (Path): Путь к файлу SQLite базы данных.
+            db_path (Path): Path to SQLite database file.
         """
         self.db_path: Path = db_path
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
 
     def _init_db(self) -> None:
-        """Initialization схемы таблиц управления пользователями."""
+        """Initialization of user management table schema."""
         with sqlite3.connect(self.db_path) as conn:
-            # Создание таблицы users для управления авторизованными пользователями
+            # Create users table for authorized user management
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,7 +61,7 @@ class UserManager:
                 )
             """)
 
-            # Добавляем новые колонки для телеграма
+            # Add new columns for Telegram
             try:
                 conn.execute("ALTER TABLE users ADD COLUMN telegram_id INTEGER")
             except sqlite3.OperationalError:
@@ -74,7 +75,7 @@ class UserManager:
             except sqlite3.OperationalError:
                 pass
 
-            # Добавляем новые колонки для email авторизации
+            # Add new columns for email authorization
             try:
                 conn.execute("ALTER TABLE users ADD COLUMN password_hash TEXT")
             except sqlite3.OperationalError:
@@ -84,7 +85,7 @@ class UserManager:
             except sqlite3.OperationalError:
                 pass
 
-            # Создание таблицы настроек пользователя
+            # Create user settings table
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS user_settings (
                     user_id INTEGER PRIMARY KEY,
@@ -113,7 +114,7 @@ class UserManager:
             except sqlite3.OperationalError:
                 pass
 
-            # Создание таблицы временных токенов линковки Telegram
+            # Create temporary tokens table for Telegram linking
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS telegram_link_tokens (
                     token TEXT PRIMARY KEY,
@@ -123,7 +124,7 @@ class UserManager:
                 )
             """)
 
-            # Создание таблицы токенов Google OAuth
+            # Create Google OAuth tokens table
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS google_oauth_tokens (
                     user_id INTEGER PRIMARY KEY,
@@ -136,7 +137,7 @@ class UserManager:
                 )
             """)
 
-            # Создание таблицы кодов подтверждения email
+            # Create email verification codes table
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS email_verification_tokens (
                     email TEXT PRIMARY KEY,
@@ -145,12 +146,12 @@ class UserManager:
                 )
             """)
 
-            # Создание индекса для быстрого поиска по email
+            # Create index for fast email lookup
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)
             """)
 
-            # Создание таблицы session_tokens для управления активными сессиями
+            # Create session tokens table for active session management
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS session_tokens (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -165,12 +166,12 @@ class UserManager:
                 )
             """)
 
-            # Создание индекса для поиска по хешу токена
+            # Create index for token hash lookup
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_session_token_hash ON session_tokens(token_hash)
             """)
 
-            # Создание таблицы user_activity_log для логирования активности
+            # Create user activity log table for activity logging
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS user_activity_log (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -184,12 +185,12 @@ class UserManager:
                 )
             """)
 
-            # Создание индекса для быстрого поиска по пользователю и времени
+            # Create index for fast user and time lookup
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_activity_user_time ON user_activity_log(user_id, timestamp)
             """)
 
-            # Создание таблицы roles для управления ролями и правами
+            # Create roles table for role and permission management
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS roles (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -199,7 +200,7 @@ class UserManager:
                 )
             """)
 
-            # Создание таблицы user_roles для связи пользователь-роль
+            # Create user-role association table
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS user_roles (
                     user_id INTEGER NOT NULL,
@@ -210,7 +211,7 @@ class UserManager:
                 )
             """)
 
-            # Создание таблицы permission_grants для грантов прав
+            # Create permission grants table
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS permission_grants (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -226,12 +227,12 @@ class UserManager:
                 )
             """)
 
-            # Создание индекса для быстрого поиска по grantee
+            # Create index for fast grantee lookup
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_permission_grants_grantee ON permission_grants(grantee_id)
             """)
 
-            # Создание таблицы audit_log для аудита важных операций
+            # Create audit log table for important operations audit
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS audit_log (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -247,12 +248,12 @@ class UserManager:
                 )
             """)
 
-            # Создание индекса для быстрого поиска по времени
+            # Create index for fast timestamp lookup
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_audit_log_timestamp ON audit_log(timestamp)
             """)
 
-            # Создание таблицы permissions для хранения разрешений
+            # Create permissions table for storing available permissions
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS permissions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -262,11 +263,11 @@ class UserManager:
                 )
             """)
 
-            # Вставка ролей по умолчанию
+            # Insert default roles
             initial_roles = [
-                ('admin', 'Администратор системы', '{"all": true}'),
-                ('user', 'Обычный пользователь', '{"read": true, "chat": true, "media": true}'),
-                ('guest', 'Гость', '{"read": true, "chat": false, "media": false}')
+                ('admin', 'System Administrator', '{"all": true}'),
+                ('user', 'Regular User', '{"read": true, "chat": true, "media": true}'),
+                ('guest', 'Guest', '{"read": true, "chat": false, "media": false}')
             ]
             for role_name, role_desc, role_perms in initial_roles:
                 conn.execute(
@@ -274,16 +275,16 @@ class UserManager:
                     (role_name, role_desc, role_perms)
                 )
 
-            # Вставка разрешений по умолчанию
+            # Insert default permissions
             initial_permissions = [
-                ('read', 'Чтение данных', 'basic'),
-                ('write', 'Запись данных', 'basic'),
-                ('delete', 'Удаление данных', 'admin'),
-                ('admin', 'Администрирование', 'admin'),
-                ('chat', 'Доступ к чату', 'chat'),
-                ('media', 'Доступ к медиа', 'media'),
-                ('qbt', 'Доступ к qBittorrent', 'tools'),
-                ('media_organizer', 'Доступ к медиа-организатору', 'tools')
+                ('read', 'Data read access', 'basic'),
+                ('write', 'Data write access', 'basic'),
+                ('delete', 'Data deletion access', 'admin'),
+                ('admin', 'System administration', 'admin'),
+                ('chat', 'Chat access', 'chat'),
+                ('media', 'Media access', 'media'),
+                ('qbt', 'qBittorrent access', 'tools'),
+                ('media_organizer', 'Media organizer access', 'tools')
             ]
             for perm_name, perm_desc, perm_cat in initial_permissions:
                 conn.execute(
@@ -291,31 +292,31 @@ class UserManager:
                     (perm_name, perm_desc, perm_cat)
                 )
 
-            # Вставка администратора по умолчанию (ID: 1) для локального обхода
+            # Insert default administrator (ID: 1) for local bypass
             conn.execute("""
                 INSERT OR IGNORE INTO users (id, email, name, is_admin, role)
                 VALUES (1, 'admin@localhost', 'Admin', 1, 'admin')
             """)
 
     def _get_connection(self) -> sqlite3.Connection:
-        """Получение подключения к базе данных.
+        """Obtaining database connection.
 
         Returns:
-            sqlite3.Connection: Connection к SQLite.
+            sqlite3.Connection: Connection to SQLite.
         """
         return sqlite3.connect(self.db_path)
 
     def add_user(self, email: str, name: str, picture: str = '', role: str = 'user') -> int:
-        """Добавление нового пользователя.
+        """Adding a new user.
 
         Args:
-            email (str): Email пользователя (уникальный).
-            name (str): Имя пользователя.
-            picture (str): URL аватара пользователя.
-            role (str): Роль пользователя ('admin', 'user', 'guest').
+            email (str): User email (unique).
+            name (str): User name.
+            picture (str): User avatar URL.
+            role (str): User role ('admin', 'user', 'guest').
 
         Returns:
-            int: ID добавленного пользователя или 0 при ошибке.
+            int: Added user ID or 0 on error.
         """
         with self._get_connection() as conn:
             try:
@@ -327,21 +328,21 @@ class UserManager:
                     (email, name, picture, role)
                 )
                 conn.commit()
-                logger.info(f'Добавлен новый пользователь: {email} (ID: {cursor.lastrowid})')
+                logger.info(f'New user added: {email} (ID: {cursor.lastrowid})')
                 return cursor.lastrowid
             except sqlite3.IntegrityError:
-                logger.error(f'Пользователь с email {email} уже существует')
+                logger.error(f'User with email {email} already exists')
                 return 0
 
     def update_user(self, user_id: int, **kwargs) -> bool:
-        """Update данных пользователя.
+        """Update user data.
 
         Args:
-            user_id (int): ID пользователя.
-            **kwargs: Поля для обновления (name, picture, role, is_active, is_admin, email, is_email_verified, password_hash, telegram_id, telegram_username).
+            user_id (int): User ID.
+            **kwargs: Fields to update (name, picture, role, is_active, is_admin, email, is_email_verified, password_hash, telegram_id, telegram_username).
 
         Returns:
-            bool: True при успехе, False при ошибке.
+            bool: True on success, False on error.
         """
         allowed_fields = {
             'name', 'picture', 'role', 'is_active', 'is_admin',
@@ -365,7 +366,7 @@ class UserManager:
                 conn.commit()
                 return cursor.rowcount > 0
             except Exception as e:
-                logger.error(f'Error обновления пользователя {user_id}:', e, False)
+                logger.error(f'Error updating user {user_id}:', e, False)
                 return False
 
     def create_user_admin(
@@ -378,19 +379,19 @@ class UserManager:
         is_active: int = 1,
         is_email_verified: int = 1
     ) -> int:
-        """Создание пользователя администратором.
+        """Creating user by administrator.
 
         Args:
-            email (str): Email пользователя.
-            name (str): Имя пользователя.
-            password (str): Пароль (опционально).
-            role (str): Роль ('admin', 'user', 'guest').
-            is_admin (int): Флаг администратора (0 или 1).
-            is_active (int): Флаг активности (0 или 1).
-            is_email_verified (int): Флаг подтверждения email (0 или 1).
+            email (str): User email.
+            name (str): User name.
+            password (str): Password (optional).
+            role (str): Role ('admin', 'user', 'guest').
+            is_admin (int): Administrator flag (0 or 1).
+            is_active (int): Activity flag (0 or 1).
+            is_email_verified (int): Email verification flag (0 or 1).
 
         Returns:
-            int: ID созданного пользователя или 0 при ошибке.
+            int: Created user ID or 0 on error.
         """
         email_clean = email.lower().strip()
         pw_hash = self.hash_password(password) if password else ''
@@ -405,24 +406,24 @@ class UserManager:
                 )
                 conn.commit()
                 user_id = cursor.lastrowid or 0
-                logger.info(f'Создан новый пользователь: {email_clean} (ID: {user_id})')
+                logger.info(f'New user created: {email_clean} (ID: {user_id})')
                 return user_id
             except sqlite3.IntegrityError:
-                logger.error(f'Пользователь с email {email_clean} уже существует')
+                logger.error(f'User with email {email_clean} already exists')
                 return 0
             except Exception as e:
-                logger.error(f'Error создания пользователя {email_clean}:', e, False)
+                logger.error(f'Error creating user {email_clean}:', e, False)
                 return 0
 
     def set_user_password(self, user_id: int, password: str) -> bool:
-        """Установка нового пароля пользователю.
+        """Setting new password for user.
 
         Args:
-            user_id (int): ID пользователя.
-            password (str): Новый пароль в открытом виде.
+            user_id (int): User ID.
+            password (str): New password in plain text.
 
         Returns:
-            bool: True при успехе, False при ошибке.
+            bool: True on success, False on error.
         """
         if not password:
             return False
@@ -430,13 +431,13 @@ class UserManager:
         return self.update_user(user_id, password_hash=pw_hash)
 
     def get_user_by_id(self, user_id: int) -> Dict:
-        """Получение пользователя по ID.
+        """Getting user by ID.
 
         Args:
-            user_id (int): ID пользователя.
+            user_id (int): User ID.
 
         Returns:
-            Dict: Данные пользователя или empty dictionary.
+            Dict: User data or empty dictionary.
         """
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
@@ -447,13 +448,13 @@ class UserManager:
             return dict(row) if row else {}
 
     def get_user_by_email(self, email: str) -> Dict:
-        """Получение пользователя по email.
+        """Getting user by email.
 
         Args:
-            email (str): Email пользователя.
+            email (str): User email.
 
         Returns:
-            Dict: Данные пользователя или empty dictionary.
+            Dict: User data or empty dictionary.
         """
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
@@ -464,13 +465,13 @@ class UserManager:
             return dict(row) if row else {}
 
     def get_all_users(self, active_only: bool = True) -> List[Dict]:
-        """Получение всех пользователей.
+        """Getting all users.
 
         Args:
-            active_only (bool): Фильтровать только активных пользователей.
+            active_only (bool): Filter only active users.
 
         Returns:
-            List[Dict]: List пользователей.
+            List[Dict]: List of users.
         """
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
@@ -485,13 +486,13 @@ class UserManager:
             return [dict(r) for r in rows]
 
     def delete_user(self, user_id: int) -> bool:
-        """Удаление пользователя.
+        """Deleting user.
 
         Args:
-            user_id (int): ID пользователя.
+            user_id (int): User ID.
 
         Returns:
-            bool: True при успехе, False при ошибке.
+            bool: True on success, False on error.
         """
         with self._get_connection() as conn:
             try:
@@ -502,17 +503,17 @@ class UserManager:
                 conn.commit()
                 return cursor.rowcount > 0
             except Exception as e:
-                logger.error(f'Error у��аления пользователя {user_id}:', e, False)
+                logger.error(f'Error deleting user {user_id}:', e, False)
                 return False
 
     def user_exists(self, email: str) -> bool:
-        """Check существования пользователя.
+        """Checking user existence.
 
         Args:
-            email (str): Email пользователя.
+            email (str): User email.
 
         Returns:
-            bool: True если пользователь существует.
+            bool: True if user exists.
         """
         with self._get_connection() as conn:
             row = conn.execute(
@@ -522,61 +523,61 @@ class UserManager:
             return row is not None
 
     def is_user_active(self, user_id: int) -> bool:
-        """Check активности пользователя.
+        """Checking user activity.
 
         Args:
-            user_id (int): ID пользователя.
+            user_id (int): User ID.
 
         Returns:
-            bool: True если пользователь активен.
+            bool: True if user is active.
         """
         user = self.get_user_by_id(user_id)
         return bool(user.get('is_active', 0))
 
     def is_admin(self, user_id: int) -> bool:
-        """Check прав администратора.
+        """Checking administrator rights.
 
         Args:
-            user_id (int): ID пользователя.
+            user_id (int): User ID.
 
         Returns:
-            bool: True если пользователь администратор.
+            bool: True if user is administrator.
         """
         user = self.get_user_by_id(user_id)
         return bool(user.get('is_admin', 0))
 
     def get_user_role(self, user_id: int) -> str:
-        """Получение роли пользователя.
+        """Getting user role.
 
         Args:
-            user_id (int): ID пользователя.
+            user_id (int): User ID.
 
         Returns:
-            str: Название роли или 'user' по умолчанию.
+            str: Role name or 'user' by default.
         """
         user = self.get_user_by_id(user_id)
         return user.get('role', 'user')
 
     def set_user_role(self, user_id: int, role: str) -> bool:
-        """Установка роли пользователя.
+        """Setting user role.
 
         Args:
-            user_id (int): ID пользователя.
-            role (str): Название роли ('admin', 'user', 'guest').
+            user_id (int): User ID.
+            role (str): Role name ('admin', 'user', 'guest').
 
         Returns:
-            bool: True при успехе.
+            bool: True on success.
         """
         return self.update_user(user_id, role=role)
 
     def revoke_session(self, token_hash: str) -> bool:
-        """Отзыв сессии по хешу токена.
+        """Revoking session by token hash.
 
         Args:
-            token_hash (str): Хеш токена для отзыва.
+            token_hash (str): Token hash to revoke.
 
         Returns:
-            bool: True при успехе.
+            bool: True on success.
         """
         with self._get_connection() as conn:
             try:
@@ -587,21 +588,21 @@ class UserManager:
                 conn.commit()
                 return cursor.rowcount > 0
             except Exception as e:
-                logger.error('Error отзыва сессии:', e, False)
+                logger.error('Error revoking session:', e, False)
                 return False
 
     def create_session_token(self, user_id: int, token_hash: str, expires_at: str, ip_address: str = '', user_agent: str = '') -> bool:
-        """Создание новой сессии.
+        """Creating new session.
 
         Args:
-            user_id (int): ID пользователя.
-            token_hash (str): Хеш токена.
-            expires_at (str): Дата истечения срока действия.
-            ip_address (str): IP адрес пользователя.
-            user_agent (str): User-Agent браузера.
+            user_id (int): User ID.
+            token_hash (str): Token hash.
+            expires_at (str): Expiration date.
+            ip_address (str): User IP address.
+            user_agent (str): Browser User-Agent.
 
         Returns:
-            bool: True при успехе.
+            bool: True on success.
         """
         with self._get_connection() as conn:
             try:
@@ -615,17 +616,17 @@ class UserManager:
                 conn.commit()
                 return True
             except Exception as e:
-                logger.error('Error создания сессии:', e, False)
+                logger.error('Error creating session:', e, False)
                 return False
 
     def is_session_valid(self, token_hash: str) -> bool:
-        """Check валидности сессии.
+        """Checking session validity.
 
         Args:
-            token_hash (str): Хеш токена.
+            token_hash (str): Token hash.
 
         Returns:
-            bool: True если сессия валидна.
+            bool: True if session is valid.
         """
         with self._get_connection() as conn:
             from datetime import datetime
@@ -642,17 +643,17 @@ class UserManager:
             return row is not None
 
     def log_user_activity(self, user_id: int, action: str, ip_address: str = '', user_agent: str = '', details: str = '') -> bool:
-        """Логирование активности пользователя.
+        """Logging user activity.
 
         Args:
-            user_id (int): ID пользователя.
-            action (str): Действие (login, logout, api_call, etc).
-            ip_address (str): IP адрес.
+            user_id (int): User ID.
+            action (str): Action (login, logout, api_call, etc).
+            ip_address (str): IP address.
             user_agent (str): User-Agent.
-            details (str): Дополнительные детали.
+            details (str): Additional details.
 
         Returns:
-            bool: True при успехе.
+            bool: True on success.
         """
         with self._get_connection() as conn:
             try:
@@ -666,23 +667,23 @@ class UserManager:
                 conn.commit()
                 return True
             except Exception as e:
-                logger.error('Error логирования активности:', e, False)
+                logger.error('Error logging activity:', e, False)
                 return False
 
     def log_audit(self, user_id: int, action: str, target_type: str = '', target_id: int = 0, old_values: str = '', new_values: str = '', ip_address: str = '') -> bool:
-        """Логирование аудита важных операций.
+        """Logging audit of important operations.
 
         Args:
-            user_id (int): ID пользователя.
-            action (str): Действие.
-            target_type (str): Тип целевого объекта.
-            target_id (int): ID целевого объекта.
-            old_values (str): Старые значения (JSON).
-            new_values (str): Новые значения (JSON).
-            ip_address (str): IP адрес.
+            user_id (int): User ID.
+            action (str): Action.
+            target_type (str): Target object type.
+            target_id (int): Target object ID.
+            old_values (str): Old values (JSON).
+            new_values (str): New values (JSON).
+            ip_address (str): IP address.
 
         Returns:
-            bool: True при успехе.
+            bool: True on success.
         """
         with self._get_connection() as conn:
             try:
@@ -696,25 +697,25 @@ class UserManager:
                 conn.commit()
                 return True
             except Exception as e:
-                logger.error('Error аудита:', e, False)
+                logger.error('Error auditing:', e, False)
                 return False
 
     def has_permission(self, user_id: int, permission: str) -> bool:
-        """Check наличия разрешения у пользователя.
+        """Checking permission presence for user.
 
         Args:
-            user_id (int): ID пользователя.
-            permission (str): Имя разрешения.
+            user_id (int): User ID.
+            permission (str): Permission name.
 
         Returns:
-            bool: True если пользователь имеет разрешение.
+            bool: True if user has permission.
         """
-        # Администраторы имеют все разрешения
+        # Administrators have all permissions
         if self.is_admin(user_id):
             return True
 
         with self._get_connection() as conn:
-            # Check через permission_grants
+            # Check through permission_grants
             row = conn.execute(
                 '''
                 SELECT 1 FROM permission_grants
@@ -727,7 +728,7 @@ class UserManager:
             if row:
                 return True
 
-            # Check через роли
+            # Check through roles
             row = conn.execute(
                 '''
                 SELECT r.permissions FROM roles r
@@ -748,31 +749,31 @@ class UserManager:
             return False
 
     def get_user_permissions(self, user_id: int) -> List[str]:
-        """Получение списка разрешений пользователя.
+        """Getting list of user permissions.
 
         Args:
-            user_id (int): ID пользователя.
+            user_id (int): User ID.
 
         Returns:
-            List[str]: List разрешений.
+            List[str]: List of permissions.
         """
         permissions = []
 
-        # Администраторы имеют все разрешения
+        # Administrators have all permissions
         if self.is_admin(user_id):
             with self._get_connection() as conn:
                 rows = conn.execute('SELECT name FROM permissions').fetchall()
                 return [r['name'] for r in rows]
 
         with self._get_connection() as conn:
-            # Получение разрешений через permission_grants
+            # Getting permissions through permission_grants
             rows = conn.execute(
                 'SELECT permission FROM permission_grants WHERE grantee_id = ? AND grant_type = ?',
                 (user_id, 'user')
             ).fetchall()
             permissions.extend([r['permission'] for r in rows])
 
-            # Получение разрешений через роли
+            # Getting permissions through roles
             rows = conn.execute(
                 '''
                 SELECT r.permissions FROM roles r
@@ -792,7 +793,7 @@ class UserManager:
         return list(set(permissions))
 
     def get_user_by_telegram_id(self, telegram_id: int) -> Dict:
-        """Получение пользователя по telegram_id."""
+        """Getting user by telegram_id."""
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
             row = conn.execute(
@@ -802,7 +803,7 @@ class UserManager:
             return dict(row) if row else {}
 
     def get_user_settings(self, user_id: int) -> Dict:
-        """Получение настроек пользователя."""
+        """Getting user settings."""
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
             row = conn.execute(
@@ -817,7 +818,7 @@ class UserManager:
                     )
                     conn.commit()
                 except Exception as e:
-                    logger.error(f'Error вставки настроек по умолчанию для {user_id}:', e, False)
+                    logger.error(f'Error inserting default settings for {user_id}:', e, False)
                 row = conn.execute(
                     'SELECT * FROM user_settings WHERE user_id = ? LIMIT 1',
                     (user_id,)
@@ -825,7 +826,7 @@ class UserManager:
             return dict(row) if row else {'user_id': user_id, 'theme': 'dark', 'language': 'ru', 'tts_enabled': 1, 'system_instruction': None, 'model': None, 'tts_system': 'edge-tts', 'tts_voice': 'ru-RU-DmitryNeural'}
 
     def update_user_settings(self, user_id: int, **kwargs) -> bool:
-        """Update настроек пользователя."""
+        """Update user settings."""
         allowed_fields = {'theme', 'language', 'tts_enabled', 'system_instruction', 'model', 'tts_system', 'tts_voice'}
         updates = {k: v for k, v in kwargs.items() if k in allowed_fields and v is not None}
         if not updates:
@@ -841,14 +842,14 @@ class UserManager:
                 conn.commit()
                 return True
             except Exception as e:
-                logger.error(f'Error обновления настроек {user_id}:', e, False)
+                logger.error(f'Error updating settings {user_id}:', e, False)
                 return False
 
     def generate_link_token(self, user_id: int) -> str:
-        """Генерация временного токена линковки Telegram."""
+        """Generating temporary token for Telegram linking."""
         import secrets
         from datetime import datetime, timedelta
-        token = secrets.token_hex(4).upper()  # 8-символьный код, например AB12CD34
+        token = secrets.token_hex(4).upper()  # 8-character code, e.g. AB12CD34
         expires_at = (datetime.utcnow() + timedelta(minutes=10)).isoformat()
         with self._get_connection() as conn:
             conn.execute(
@@ -859,7 +860,7 @@ class UserManager:
         return token
 
     def link_telegram_account(self, token: str, telegram_id: int, telegram_username: str) -> bool:
-        """Связывание Telegram-аккаунта по токену."""
+        """Linking Telegram account by token."""
         from datetime import datetime
         now = datetime.utcnow().isoformat()
         token = token.strip().upper()
@@ -872,17 +873,17 @@ class UserManager:
                 return False
             user_id = row[0]
             try:
-                # Удаляем временного telegram-пользователя, если он был автоматически создан
+                # Delete temporary telegram user if it was auto-created
                 conn.execute(
                     'DELETE FROM users WHERE telegram_id = ? AND email = ?',
                     (telegram_id, f"tg_{telegram_id}@telegram.bot")
                 )
-                # Очищаем telegram_id у любых других записей, если они есть
+                # Clear telegram_id from any other records
                 conn.execute(
                     'UPDATE users SET telegram_id = NULL, telegram_username = NULL WHERE telegram_id = ?',
                     (telegram_id,)
                 )
-                # Привязываем telegram_id к целевому пользователю
+                # Bind telegram_id to target user
                 conn.execute(
                     'UPDATE users SET telegram_id = ?, telegram_username = ? WHERE id = ?',
                     (telegram_id, telegram_username, user_id)
@@ -891,12 +892,12 @@ class UserManager:
                 conn.commit()
                 return True
             except Exception as e:
-                logger.error(f'Error линковки аккаунта {user_id}:', e, False)
+                logger.error(f'Error linking account {user_id}:', e, False)
                 return False
 
     @staticmethod
     def hash_password(password: str) -> str:
-        """Хеширование пароля с использованием PBKDF2."""
+        """Password hashing using PBKDF2."""
         import hashlib
         import os
         salt = os.urandom(16)
@@ -905,7 +906,7 @@ class UserManager:
 
     @staticmethod
     def verify_password(password: str, hashed: str) -> bool:
-        """Check пароля по его хешу."""
+        """Checking password against hash."""
         if not hashed or '$' not in hashed:
             return False
         import hashlib
@@ -918,10 +919,10 @@ class UserManager:
             return False
 
     def register_email_user(self, email: str, password: str, name: str) -> int:
-        """Регистрация нового пользователя с email/паролем.
-        Если пользователь уже существует (например, создан через Google),
-        мы обновляем ему пароль и имя, но не меняем его email_verified,
-        если он не подтвержден.
+        """Registering new user with email/password.
+        If user already exists (for example, created via Google),
+        we update password and name, but don't change email_verified
+        if it is not confirmed.
         """
         email = email.lower().strip()
         pw_hash = self.hash_password(password)
@@ -929,7 +930,7 @@ class UserManager:
         
         with self._get_connection() as conn:
             if db_user:
-                # Обновляем существующий аккаунт
+                # Update existing account
                 try:
                     conn.execute(
                         'UPDATE users SET name = ?, password_hash = ? WHERE id = ?',
@@ -938,10 +939,10 @@ class UserManager:
                     conn.commit()
                     return db_user['id']
                 except Exception as e:
-                    logger.error(f'Error обновления при регистрации {email}:', e, False)
+                    logger.error(f'Error updating during registration {email}:', e, False)
                     return 0
             else:
-                # Создаем новый аккаунт (unverified)
+                # Create new account (unverified)
                 try:
                     cursor = conn.execute(
                         '''
@@ -956,7 +957,7 @@ class UserManager:
                     return 0
 
     def create_email_verification(self, email: str) -> str:
-        """Создание 6-значного кода подтверждения email."""
+        """Creating 6-digit email verification code."""
         import random
         from datetime import datetime, timedelta
         email = email.lower().strip()
@@ -972,7 +973,7 @@ class UserManager:
         return code
 
     def verify_email_code(self, email: str, code: str) -> bool:
-        """Check кода подтверждения email."""
+        """Checking email verification code."""
         from datetime import datetime
         email = email.lower().strip()
         code = code.strip()
@@ -986,12 +987,12 @@ class UserManager:
             if not row:
                 return False
             
-            # Подтверждаем пользователя
+            # Verify user email
             conn.execute(
                 'UPDATE users SET is_email_verified = 1 WHERE email = ?',
                 (email,)
             )
-            # Удаляем использованный токен
+            # Delete used token
             conn.execute(
                 'DELETE FROM email_verification_tokens WHERE email = ?',
                 (email,)
@@ -1000,17 +1001,17 @@ class UserManager:
             return True
 
     def save_google_tokens(self, user_id: int, access_token: str, refresh_token: str = '', expires_in: int = 3600, scope: str = '') -> bool:
-        """Сохранение или update токенов Google OAuth.
+        """Saving or updating Google OAuth tokens.
 
         Args:
-            user_id: Идентификатор пользователя.
-            access_token: Токен доступа Google.
-            refresh_token: Токен обновления Google.
-            expires_in: Время жизни токена в секундах.
-            scope: List разрешений (scopes).
+            user_id: User identifier.
+            access_token: Google access token.
+            refresh_token: Google refresh token.
+            expires_in: Token lifetime in seconds.
+            scope: List of scopes.
 
         Returns:
-            bool: True в случае успешного сохранения.
+            bool: True on successful save.
         """
         from datetime import datetime, timedelta
         expires_at = (datetime.utcnow() + timedelta(seconds=expires_in)).isoformat()
@@ -1039,20 +1040,20 @@ class UserManager:
                     (user_id, access_token, refresh_token, expires_at, scope, now)
                 )
                 conn.commit()
-                logger.info(f'Токены Google OAuth сохранены для пользователя ID={user_id}')
+                logger.info(f'Google OAuth tokens saved for user ID={user_id}')
                 return True
             except Exception as e:
-                logger.error(f'Error сохранения токенов Google OAuth для user_id={user_id}:', e, False)
+                logger.error(f'Error saving Google OAuth tokens for user_id={user_id}:', e, False)
                 return False
 
     def get_google_tokens(self, user_id: int) -> dict:
-        """Получение токенов Google OAuth пользователя.
+        """Getting user Google OAuth tokens.
 
         Args:
-            user_id: Идентификатор пользователя.
+            user_id: User identifier.
 
         Returns:
-            dict: Dictionary с данными токенов или empty dictionary.
+            dict: Dictionary with token data or empty dictionary.
         """
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
@@ -1063,13 +1064,13 @@ class UserManager:
             return dict(row) if row else {}
 
     def has_google_auth(self, user_id: int) -> bool:
-        """Check наличия токенов Google OAuth у пользователя.
+        """Checking presence of Google OAuth tokens for user.
 
         Args:
-            user_id: Идентификатор пользователя.
+            user_id: User identifier.
 
         Returns:
-            bool: True если у пользователя есть токен Google.
+            bool: True if user has Google token.
         """
         tokens = self.get_google_tokens(user_id)
         return bool(tokens and tokens.get('access_token'))

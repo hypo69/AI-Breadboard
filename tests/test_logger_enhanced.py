@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Фикстура для создания логгера с временными путями.
+# Process Name: Fixture for creating logger with temporary paths
 # =============================================================================
 # Description:
-#   Исчерпывающее тестирование всех публичных функций и классов модуля core/logger.
+#   Comprehensive testing of all public functions and classes of core/logger module.
 #
 # File: test_logger_enhanced.py
 # Project: ai-breadboard
@@ -11,6 +11,10 @@
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
+
+"""Enhanced logger module tests.
+
+Tests for core logger module with temporary file handling and verification."""
 
 import pytest
 import os
@@ -21,11 +25,15 @@ from core.logger.logger import Logger
 
 @pytest.fixture
 def temp_logger(tmp_path):
-    """Фикстура для создания логгера с временными путями."""
+    """Fixture for creating logger with temporary paths.
+    
+    Creates a logger instance configured with temporary directories
+    for log file storage to ensure test isolation.
+    """
     log_dir = tmp_path / "logs"
     log_dir.mkdir()
     
-    # Инициализируем логгер с путями во временной директории
+    # Initialize logger with temporary directory paths
     logger = Logger(
         info_log_path="info.log",
         debug_log_path="debug.log",
@@ -33,19 +41,19 @@ def temp_logger(tmp_path):
         json_log_path="log.json"
     )
     
-    # Переопределяем пути логгера на временные для изоляции тестов
+    # Override logger paths with temporary paths for test isolation
     logger.log_files_path = log_dir
     logger.info_log_path = log_dir / "info.log"
     logger.debug_log_path = log_dir / "debug.log"
     logger.errors_log_path = log_dir / "errors.log"
     logger.json_log_path = log_dir / "log.json"
     
-    # Пересоздаем обработчики для новых путей
+    # Recreate handlers for new paths
     for logger_obj in [logger.logger_file_info, logger.logger_file_debug, logger.logger_file_errors, logger.logger_file_json]:
         for handler in logger_obj.handlers[:]:
             logger_obj.removeHandler(handler)
             
-    # Добавляем новые обработчики
+    # Add new handlers with temporary paths
     info_handler = logging.FileHandler(logger.info_log_path, encoding='utf-8')
     info_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
     logger.logger_file_info.addHandler(info_handler)
@@ -66,7 +74,10 @@ def temp_logger(tmp_path):
     return logger
 
 def test_logger_file_writing(temp_logger):
-    """Тестирование записи логов в файлы."""
+    """Test writing logs to files.
+    
+    Verifies that log messages are correctly written to the info log file.
+    """
     # --- Arrange ---
     message: str = "Test info message"
     
@@ -74,14 +85,17 @@ def test_logger_file_writing(temp_logger):
     temp_logger.info(message)
     
     # --- Assert ---
-    # Check, что файл info.log существует и содержит сообщение
-    assert temp_logger.info_log_path.exists(), "Файл info.log не создан"
+    # Check that info.log file was created and contains the message
+    assert temp_logger.info_log_path.exists(), "info.log file was not created"
     with open(temp_logger.info_log_path, 'r', encoding='utf-8') as f:
         content = f.read()
-        assert message in content, f"Сообщение '{message}' не найдено в info.log, получено: {content}"
+        assert message in content, f"Message '{message}' not found in info.log, got: {content}"
 
 def test_logger_json_writing(temp_logger):
-    """Тестирование записи логов в JSON файл."""
+    """Test writing logs to JSON file.
+    
+    Verifies that log entries are correctly serialized in JSON format.
+    """
     # --- Arrange ---
     message: str = "Test JSON message"
     
@@ -89,14 +103,17 @@ def test_logger_json_writing(temp_logger):
     temp_logger.info(message)
     
     # --- Assert ---
-    assert temp_logger.json_log_path.exists(), "Файл log.json не создан"
+    assert temp_logger.json_log_path.exists(), "log.json file was not created"
     with open(temp_logger.json_log_path, 'r', encoding='utf-8') as f:
         line = f.readline()
         log_data = json.loads(line)
-        assert log_data['message'] == message, f"Сообщение в JSON не совпадает: {log_data['message']}"
+        assert log_data['message'] == message, f"JSON message mismatch: {log_data['message']}"
 
 def test_logger_debug_filter(temp_logger):
-    """Тестирование фильтрации DEBUG в режиме PROD (is_debug_mode=False)."""
+    """Test DEBUG level filtering in PROD mode (is_debug_mode=False).
+    
+    Verifies that debug messages are not logged when debug mode is disabled.
+    """
     # --- Arrange ---
     temp_logger.is_debug_mode = False
     message: str = "Debug message"
@@ -105,7 +122,7 @@ def test_logger_debug_filter(temp_logger):
     temp_logger.debug(message)
     
     # --- Assert ---
-    # Check, что сообщение не попало в debug.log
+    # Check that message was not added to debug.log
     with open(temp_logger.debug_log_path, 'r', encoding='utf-8') as f:
         content = f.read()
-        assert message not in content, "DEBUG сообщение записано в PROD режиме"
+        assert message not in content, "DEBUG message was logged in PROD mode"

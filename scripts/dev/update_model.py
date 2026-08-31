@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Module
+# Process Name: Update user model preference in database
 # =============================================================================
 # Description:
-#   Module for AI Breadboard project.
+#   Script to update the default AI model preference for all users in the database
+#   to the latest Gemini version available.
 #
 # File: update_model.py
 # Project: ai-breadboard
@@ -11,6 +12,10 @@
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
+
+"""Update user model preference in database.
+
+Updates default AI model selection for all users to latest Gemini model."""
 
 import sqlite3
 import sys

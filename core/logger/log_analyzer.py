@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: core.logger.log_analyzer
+# Process Name: Intelligent log analyzer with Gemini AI integration
 # =============================================================================
 # Description:
 #   Module for AI Breadboard project.
@@ -12,17 +12,15 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: core.logger.log_analyzer
-    :platform: Windows, Unix
-    :synopsis: Интеллектуальный анализатор логов с использованием Gemini AI
-    
-Module предоставляет функциональность для анализа логов приложения
-с помощью Google Generative AI (Gemini), автоматического создания
-отчётов и ведения главного журнала (Master Journal) состояния системы.
+"""Intelligent log analyzer with Gemini AI integration.
 
-Основные функции:
-- Анализ логов с использованием AI
+Provides functionality for analyzing application logs using Google Generative AI (Gemini),
+automatic report generation, and Master Journal maintenance for system state tracking.
+
+Functions:
+    - Log analysis with AI assistance
+    - Automatic report generation
+    - Master Journal creation and maintenance"""
 - Создание детальных отчётов об Errorх и проблемах
 - Ведение единого журнала состояния системы
 - Интеллектуальная ротация и очистка логов

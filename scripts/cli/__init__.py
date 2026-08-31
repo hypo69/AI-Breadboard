@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: CLI модули для кроссплатформенной работы.
+# Process Name: CLI modules for cross-platform operations
 # =============================================================================
 # Description:
-#   Module for AI Breadboard project.
+#   CLI modules providing command-line interface utilities for cross-platform
+#   compatibility and system operations.
 #
 # File: __init__.py
 # Project: ai-breadboard
@@ -12,6 +13,4 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-CLI модули для кроссплатформенной работы.
-"""
+"""CLI modules package for cross-platform operations."""

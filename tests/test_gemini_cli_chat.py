@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Тестирование класса GeminiCliChatBase.
+# Process Name: Tests for GeminiCliChatBase class
 # =============================================================================
 # Description:
-#   Unit-тесты для адаптера GeminiCliChatBase, маршрутизации UnifiedChatModel
+#   Unit tests for GeminiCliChatBase adapter, UnifiedChatModel routing
 #
 # File: test_gemini_cli_chat.py
 # Project: ai-breadboard
@@ -22,10 +22,10 @@ from core.ai.unified_chat import UnifiedChatModel
 from core.fastapi.router_chat import get_chat_model
 
 class TestGeminiCliChat:
-    """Тестирование класса GeminiCliChatBase."""
+    """Tests for GeminiCliChatBase class."""
 
     def test_normalize_model_id_defaults(self):
-        """Check нормализации идентификатора модели по умолчанию."""
+        """Check model ID normalization defaults."""
         assert GeminiCliChatBase.normalize_model_id("") == "gemini-3.1-flash-lite"
         assert GeminiCliChatBase.normalize_model_id("gemini_cli:gemini-3.1-flash-lite") == "gemini-3.1-flash-lite"
         assert GeminiCliChatBase.normalize_model_id("gemini-cli-gemini-2.5-flash") == "gemini-2.5-flash"
@@ -33,7 +33,7 @@ class TestGeminiCliChat:
 
     @pytest.mark.asyncio
     async def test_ask_mock_subprocess(self):
-        """Тестирование метода ask с моком подпроцесса."""
+        """Test ask method with subprocess mock."""
         chat = GeminiCliChatBase(model_id="gemini-3.1-flash-lite", system_prompt="Test sys prompt")
         mock_proc = MagicMock()
         mock_proc.returncode = 0
@@ -46,7 +46,7 @@ class TestGeminiCliChat:
 
     @pytest.mark.asyncio
     async def test_chat_saves_history(self):
-        """Тестирование метода chat с сохранением истории."""
+        """Test chat method with history preservation."""
         chat = GeminiCliChatBase(model_id="gemini-3.1-flash-lite")
         mock_proc = MagicMock()
         mock_proc.returncode = 0
@@ -61,13 +61,13 @@ class TestGeminiCliChat:
 
     @pytest.mark.asyncio
     async def test_chat_stream(self):
-        """Тестирование потокового получения данных chat_stream."""
+        """Test streaming data retrieval via chat_stream."""
         chat = GeminiCliChatBase(model_id="gemini-3.1-flash-lite")
         mock_proc = MagicMock()
         mock_proc.returncode = 0
         mock_proc.wait = AsyncMock(return_value=0)
 
-        # Мок readline
+        # Mock readline
         lines = [b"Chunk 1\n", b"Chunk 2\n", b""]
         mock_proc.stdout.readline = AsyncMock(side_effect=lines)
 
@@ -81,10 +81,10 @@ class TestGeminiCliChat:
             assert chunks[1] == "Chunk 2\n"
 
 class TestModelManagerGeminiCli:
-    """Тестирование управления моделями Gemini CLI в model_manager."""
+    """Tests for Gemini CLI model management in model_manager."""
 
     def test_get_available_models_gemini_cli(self):
-        """Check получения списка моделей Gemini CLI."""
+        """Check retrieval of Gemini CLI models list."""
         models = get_available_models(provider="gemini_cli", force_refresh=True)
         assert isinstance(models, list)
         assert len(models) > 0
@@ -92,26 +92,26 @@ class TestModelManagerGeminiCli:
         assert models[0] == "gemini-3.1-flash-lite"
 
     def test_unsupported_models_filter(self):
-        """Check фильтрации неподдерживаемых моделей."""
+        """Check filtering of unsupported models."""
         unsupported = load_unsupported_models("gemini_cli")
         assert isinstance(unsupported, set)
 
 class TestRouterChatGeminiCliIntegration:
-    """Тестирование фабрики роутера get_chat_model."""
+    """Tests for router factory get_chat_model."""
 
     def test_get_chat_model_gemini_cli(self):
-        """Check создания экземпляра GeminiCliChatBase через get_chat_model."""
+        """Check GeminiCliChatBase instance creation via get_chat_model."""
         model = get_chat_model("gemini_cli:gemini-3.1-flash-lite", system_instruction="Test")
         assert isinstance(model, GeminiCliChatBase)
         assert model.model_id == "gemini-3.1-flash-lite"
         assert model.system_instruction == "Test"
 
 class TestUnifiedChatGeminiCliIntegration:
-    """Тестирование роутинга в UnifiedChatModel."""
+    """Tests for routing in UnifiedChatModel."""
 
     @pytest.mark.asyncio
     async def test_unified_chat_gemini_cli_dispatch(self):
-        """Check перенаправления запросов к Gemini CLI через UnifiedChatModel."""
+        """Check request forwarding to Gemini CLI via UnifiedChatModel."""
         unified = UnifiedChatModel(
             api_key_names=[],
             system_instruction="Default system",

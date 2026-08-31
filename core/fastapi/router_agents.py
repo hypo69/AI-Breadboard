@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Loads полный config.json.
+# Process Name: AI agents configuration and execution router
 # =============================================================================
 # Description:
-#   CRUD для конфигурации агентов (системных и пользовательских).
+#   Provides FastAPI endpoints for managing system and custom AI agents,
+#   handling prompt generation via AI Architect, and executing agent test workflows.
 #
 # File: router_agents.py
 # Project: ai-breadboard
@@ -27,60 +28,45 @@ from header import __root__
 from core.logger import logger
 from core.utils.jjson import j_loads_ns
 
+import copy
+
 _CONFIG_PATH = __root__ / 'config.json'
+_AGENTS_METADATA_PATH = Path(__file__).parent / 'agents_metadata.json'
 
 # ============================================================================
-# Каталог доступных инструментов
+# Load agents metadata from external config
 # ============================================================================
 
-_AVAILABLE_TOOLS = [
-    {
-        'id': 'web_search',
-        'name': 'Интернет-поиск (MCP)',
-        'icon': '🌐',
-        'category': 'search',
-        'description': 'Поиск актуальной информации в интернете через Google Grounding, AGY или Playwright.',
-        'parameters': {'query': 'str'}
-    },
-    {
-        'id': 'rag_search',
-        'name': 'База знаний RAG',
-        'icon': '🧠',
-        'category': 'rag',
-        'description': 'Семантический поиск по документам базы знаний и контексту предыдущих диалогов.',
-        'parameters': {'query': 'str', 'top_k': 'int'}
-    },
-    {
-        'id': 'python_eval',
-        'name': 'Python Code Execution',
-        'icon': '🐍',
-        'category': 'code',
-        'description': 'Выполнение вычислений и скриптов Python в безопасной песочнице.',
-        'parameters': {'code': 'str'}
-    },
-    {
-        'id': 'tts_generate',
-        'name': 'Синтез речи (TTS)',
-        'icon': '🗣️',
-        'category': 'voice',
-        'description': 'Озвучивание текстовых ответов агента через Edge-TTS или Silero.',
-        'parameters': {'text': 'str', 'voice': 'str'}
-    },
-    {
-        'id': 'file_system',
-        'name': 'Файловые операции',
-        'icon': '📁',
-        'category': 'files',
-        'description': 'Чтение и структурирование данных из локальных файлов проекта.',
-        'parameters': {'file_path': 'str'}
-    }
-]
+def _load_agents_metadata() -> dict:
+    """Load available tools and providers from external metadata file.
+    
+    Returns:
+        dict: Dictionary with 'tools' and 'providers' keys.
+    """
+    if not _AGENTS_METADATA_PATH.exists():
+        logger.warning(f'[router_agents] Metadata file not found: {_AGENTS_METADATA_PATH}')
+        return {'tools': [], 'providers': {}}
+    
+    try:
+        with open(_AGENTS_METADATA_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        logger.error(f'[router_agents] Error loading agents metadata: {e}')
+        return {'tools': [], 'providers': {}}
+
+_AGENTS_METADATA = _load_agents_metadata()
+_AVAILABLE_TOOLS = _AGENTS_METADATA.get('tools', [])
+_PROVIDERS_CONFIG = _AGENTS_METADATA.get('providers', {})
 
 # ============================================================================
-# Pydantic Модели
+# Pydantic Models
 # ============================================================================
 
 class AgentModel(BaseModel):
+    """Agent configuration model.
+    
+    Defines all parameters for AI agent execution and behavior.
+    """
     id: str
     name: str
     description: str = ''
@@ -95,42 +81,59 @@ class AgentModel(BaseModel):
     system_prompt: str = ''
 
 class GeneratePromptRequest(BaseModel):
+    """Request to generate agent prompt via AI Architect."""
     task_description: str
     provider: str = 'gemini'
     model: str = 'gemini-2.5-flash'
     agent_name: str = ''
 
 class TestAgentRequest(BaseModel):
+    """Request to test agent execution."""
     agent_id: str = ''
     inline_config: Optional[AgentModel] = Field(default_factory=dict) # type: ignore
     test_message: str
 
 # ============================================================================
-# Хелперы работы с config.json
+# Config.json helper functions
 # ============================================================================
 
 def _load_raw_config() -> dict:
-    """Loads полный config.json."""
+    """Load full config.json file.
+    
+    Returns:
+        dict: Parsed configuration or empty dict if file not found.
+    """
     if not _CONFIG_PATH.exists():
         return {}
     try:
         with open(_CONFIG_PATH, 'r', encoding='utf-8') as f:
             return json.load(f)
     except Exception as e:
-        logger.error(f'[router_agents] Error загрузки config.json: {e}')
+        logger.error(f'[router_agents] Error loading config.json: {e}')
         return {}
 
 def _save_raw_config(data: dict) -> None:
-    """Saves config.json с форматированием."""
+    """Save config.json with formatting.
+    
+    Args:
+        data: Configuration dictionary to save.
+        
+    Raises:
+        HTTPException: If save operation fails.
+    """
     try:
         with open(_CONFIG_PATH, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.error(f'[router_agents] Error сохранения config.json: {e}')
-        raise HTTPException(status_code=500, detail='Не удалось сохранить конфигурацию')
+        logger.error(f'[router_agents] Error saving config.json: {e}')
+        raise HTTPException(status_code=500, detail='Failed to save configuration')
 
 def _get_agents_list() -> List[dict]:
-    """Returns list агентов из config.json."""
+    """Get list of agents from config.json.
+    
+    Returns:
+        List[dict]: List of agent configurations.
+    """
     cfg = _load_raw_config()
     agents_cfg = cfg.get('agents', {})
     if isinstance(agents_cfg, dict):
@@ -138,7 +141,11 @@ def _get_agents_list() -> List[dict]:
     return []
 
 def _save_agents_list(items: List[dict]) -> None:
-    """Saves обновленный list агентов в config.json."""
+    """Save updated agents list to config.json.
+    
+    Args:
+        items: List of agent configurations to save.
+    """
     cfg = _load_raw_config()
     if 'agents' not in cfg or not isinstance(cfg['agents'], dict):
         cfg['agents'] = {}
@@ -146,109 +153,120 @@ def _save_agents_list(items: List[dict]) -> None:
     _save_raw_config(cfg)
 
 # ============================================================================
-# Роутер FastAPI
+# FastAPI Router
 # ============================================================================
 
 def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
-    """Инициализирует и Returns роутер управления агентами."""
+    """Initialize and return agent management router.
+    
+    Args:
+        prefix: URL prefix for router endpoints.
+        
+    Returns:
+        APIRouter: Configured FastAPI router.
+    """
     router = APIRouter(prefix=prefix, tags=['agents'])
 
     @router.get('')
     async def list_agents() -> List[dict]:
-        """Получить list всех агентов (системных и пользовательских)."""
+        """Get list of all agents (system and user-defined).
+        
+        Returns:
+            List[dict]: List of agent configurations.
+        """
         return _get_agents_list()
 
     @router.get('/tools')
     async def list_tools() -> List[dict]:
-        """Получить каталог всех доступных инструментов системы."""
+        """Get catalog of all available system tools.
+        
+        Returns:
+            List[dict]: List of tool definitions.
+        """
         return _AVAILABLE_TOOLS
 
     @router.get('/providers')
     async def list_providers() -> dict:
-        """Получить list провайдеров и моделей из пула проекта."""
+        """Get list of providers and dynamically fetched models from project pool."""
+        from core.ai.model_manager import get_available_models
+
         raw_cfg = _load_raw_config()
         ai_section = raw_cfg.get('ai', {})
 
-        providers = {
-            'gemini': {
-                'name': 'Google Gemini',
-                'description': 'Официальный Google GenAI SDK с пулом API-ключей',
-                'models': [
-                    {'id': 'gemini-2.5-flash', 'name': 'Gemini 2.5 Flash (Рекомендуется)'},
-                    {'id': 'gemini-2.5-pro', 'name': 'Gemini 2.5 Pro (Сложный reasoning)'},
-                    {'id': 'gemini-2.0-flash', 'name': 'Gemini 2.0 Flash'},
-                    {'id': 'gemini-1.5-flash', 'name': 'Gemini 1.5 Flash'},
-                    {'id': 'gemini-1.5-pro', 'name': 'Gemini 1.5 Pro'}
-                ],
-                'default_model': 'gemini-2.5-flash'
-            },
-            'gemini_cli': {
-                'name': 'Google Gemini CLI',
-                'description': 'Автономная среда Gemini CLI (локальный агентный инструмент)',
-                'models': [
-                    {'id': 'gemini-3.1-flash-lite', 'name': 'Gemini 3.1 Flash Lite (По умолчанию)'},
-                    {'id': 'gemini-2.5-flash', 'name': 'Gemini 2.5 Flash'},
-                    {'id': 'gemini-2.5-pro', 'name': 'Gemini 2.5 Pro'},
-                    {'id': 'gemini-3.1-pro-preview', 'name': 'Gemini 3.1 Pro Preview'},
-                    {'id': 'gemini-3.1-flash-lite-preview', 'name': 'Gemini 3.1 Flash Lite Preview'}
-                ],
-                'default_model': ai_section.get('gemini_cli_model_id', 'gemini-3.1-flash-lite')
-            },
-            'agy': {
-                'name': 'Google Antigravity (AGY)',
-                'description': 'Агентная среда Antigravity с встроенным поиском',
-                'models': [
-                    {'id': 'agy-flash', 'name': 'AGY Flash'},
-                    {'id': 'agy-gemma-4-26b-a4b-it', 'name': 'AGY Gemma 4-26B'},
-                    {'id': 'agy-pro', 'name': 'AGY Pro'}
-                ],
-                'default_model': ai_section.get('agy_model_id', 'agy-flash')
-            },
-            'foundry': {
-                'name': 'Microsoft Foundry',
-                'description': 'Локальные модели Foundry (без отправки во внешний интернет)',
-                'models': [
-                    {'id': 'qwen2.5-1.5b-instruct-generic-cpu:4', 'name': 'Qwen 2.5 1.5B Instruct'},
-                    {'id': 'deepseek-r1-distill-qwen-1.5b', 'name': 'DeepSeek R1 1.5B'},
-                    {'id': 'phi-3-mini-4k-instruct', 'name': 'Phi-3 Mini'}
-                ],
-                'default_model': ai_section.get('foundry_model_id', 'qwen2.5-1.5b-instruct-generic-cpu:4')
-            },
-            'ollama': {
-                'name': 'Ollama (Local)',
-                'description': 'Локальный REST-сервер Ollama',
-                'models': [
-                    {'id': 'qwen2.5:7b', 'name': 'Qwen 2.5 7B'},
-                    {'id': 'llama3.1:8b', 'name': 'Llama 3.1 8B'},
-                    {'id': 'mistral:7b', 'name': 'Mistral 7B'}
-                ],
-                'default_model': raw_cfg.get('langchain', {}).get('ollama_model', 'qwen2.5:7b')
-            }
-        }
+        # Deep copy base provider metadata
+        providers = copy.deepcopy(_PROVIDERS_CONFIG)
+
+        # Dynamically populate models for each provider from model_manager
+        for prov_id, prov_info in providers.items():
+            try:
+                raw_models = get_available_models(prov_id)
+                prov_info['models'] = [{'id': m, 'name': m} for m in raw_models]
+            except Exception as e:
+                logger.warning(f'[router_agents] Error querying models for provider {prov_id}: {e}')
+                prov_info['models'] = []
+
+        # Override defaults from config.json if present
+        if 'gemini_cli_model_id' in ai_section:
+            if 'gemini_cli' in providers:
+                providers['gemini_cli']['default_model'] = ai_section['gemini_cli_model_id']
+
+        if 'agy_model_id' in ai_section:
+            if 'agy' in providers:
+                providers['agy']['default_model'] = ai_section['agy_model_id']
+
+        if 'foundry_model_id' in ai_section:
+            if 'foundry' in providers:
+                providers['foundry']['default_model'] = ai_section['foundry_model_id']
+
+        if 'ollama_model' in raw_cfg.get('langchain', {}):
+            if 'ollama' in providers:
+                providers['ollama']['default_model'] = raw_cfg['langchain']['ollama_model']
+
         return providers
 
     @router.post('')
     async def create_agent(agent: AgentModel) -> dict:
-        """Создать нового кастомного агента."""
+        """Create new custom agent.
+        
+        Args:
+            agent: Agent configuration.
+            
+        Returns:
+            dict: Created agent data with status.
+            
+        Raises:
+            HTTPException: If agent ID already exists.
+        """
         items = _get_agents_list()
         
-        # Check уникальности ID
+        # Check ID uniqueness
         existing_ids = {a.get('id') for a in items}
         if agent.id in existing_ids:
-            raise HTTPException(status_code=400, detail=f'Агент с ID "{agent.id}" уже существует')
+            raise HTTPException(status_code=400, detail=f'Agent with ID "{agent.id}" already exists')
 
-        # Защита флага is_system для пользовательских агентов
+        # Protect is_system flag for user agents
         agent_dict = agent.dict()
         agent_dict['is_system'] = False
 
         items.append(agent_dict)
         _save_agents_list(items)
-        logger.info(f'[router_agents] Создан новый агент: {agent.id} ({agent.name})')
+        logger.info(f'[router_agents] Created new agent: {agent.id} ({agent.name})')
         return {'status': 'ok', 'agent': agent_dict}
 
     @router.put('/{agent_id}')
     async def update_agent(agent_id: str, agent: AgentModel) -> dict:
-        """Обновить существующего агента."""
+        """Update existing agent.
+        
+        Args:
+            agent_id: Agent identifier.
+            agent: Updated agent configuration.
+            
+        Returns:
+            dict: Updated agent data with status.
+            
+        Raises:
+            HTTPException: If agent not found.
+        """
         items = _get_agents_list()
         found_idx = -1
         for idx, item in enumerate(items):
@@ -257,22 +275,32 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
                 break
 
         if found_idx == -1:
-            raise HTTPException(status_code=404, detail=f'Агент с ID "{agent_id}" не найден')
+            raise HTTPException(status_code=404, detail=f'Agent with ID "{agent_id}" not found')
 
         old_item = items[found_idx]
         agent_dict = agent.dict()
-        # Сохраняем системный status исходного агента
+        # Preserve system status from original agent
         agent_dict['is_system'] = old_item.get('is_system', False)
-        agent_dict['id'] = agent_id  # ID не меняется
+        agent_dict['id'] = agent_id  # ID does not change
 
         items[found_idx] = agent_dict
         _save_agents_list(items)
-        logger.info(f'[router_agents] Обновлен агент: {agent_id}')
+        logger.info(f'[router_agents] Updated agent: {agent_id}')
         return {'status': 'ok', 'agent': agent_dict}
 
     @router.delete('/{agent_id}')
     async def delete_agent(agent_id: str) -> dict:
-        """Удалить кастомного агента (системные защищены)."""
+        """Delete custom agent (system agents are protected).
+        
+        Args:
+            agent_id: Agent identifier.
+            
+        Returns:
+            dict: Status and deleted agent ID.
+            
+        Raises:
+            HTTPException: If agent not found or is system agent.
+        """
         items = _get_agents_list()
         target = None
         for item in items:
@@ -281,40 +309,53 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
                 break
 
         if not target:
-            raise HTTPException(status_code=404, detail=f'Агент с ID "{agent_id}" не найден')
+            raise HTTPException(status_code=404, detail=f'Agent with ID "{agent_id}" not found')
 
         if target.get('is_system', False):
-            raise HTTPException(status_code=403, detail='Системных агентов нельзя удалять. Вы можете отключить их.')
+            raise HTTPException(status_code=403, detail='System agents cannot be deleted. You can disable them.')
 
         items = [i for i in items if i.get('id') != agent_id]
         _save_agents_list(items)
-        logger.info(f'[router_agents] Удален агент: {agent_id}')
+        logger.info(f'[router_agents] Deleted agent: {agent_id}')
         return {'status': 'ok', 'deleted_id': agent_id}
 
     @router.post('/generate-prompt')
     async def generate_prompt(req: GeneratePromptRequest) -> dict:
-        """AI Prompt & Agent Architect: генерация системного промпта и настроек через модель из пула."""
+        """Generate system prompt and agent settings via AI Architect model.
+        
+        Uses a language model to automatically generate agent configuration
+        based on task description.
+        
+        Args:
+            req: Request with task description and model selection.
+            
+        Returns:
+            dict: Generated agent specification with recommended tools and settings.
+            
+        Raises:
+            HTTPException: If task description is empty or model fails.
+        """
         if not req.task_description.strip():
-            raise HTTPException(status_code=400, detail='Описание задачи не может быть пустым')
+            raise HTTPException(status_code=400, detail='Task description cannot be empty')
 
         tool_ids = [t['id'] for t in _AVAILABLE_TOOLS]
         tool_desc = "\n".join([f"- {t['id']}: {t['name']} ({t['description']})" for t in _AVAILABLE_TOOLS])
 
-        prompt_architect_query = f"""Ты опытный архитектор ИИ-агентов (AI Agent Architect).
-Пользователь хочет создать специализированного агента для платформы ai-breadboard.
+        prompt_architect_query = f"""You are an experienced AI Agent Architect.
+User wants to create a specialized agent for the ai-breadboard platform.
 
-Задача агента от пользователя:
+User's agent task:
 "{req.task_description}"
 
-Доступные в системе инструменты (Tools):
+Available system tools:
 {tool_desc}
 
-Сформируй полную спецификацию агента строго в формате валидного JSON без markdown-блоков:
+Generate complete agent specification in valid JSON format without markdown blocks:
 {{
-  "name": "Название агента (короткое, понятное)",
-  "description": "Краткое описание роли агента (1-2 предложения)",
-  "system_prompt": "Детальная системная инструкция: роль, правила рассуждения (ReAct), выбор инструментов, формат выдачи",
-  "recommended_tools": ["id_инструментов_из_списка_выше"],
+  "name": "Agent name (short, clear)",
+  "description": "Brief description of agent role (1-2 sentences)",
+  "system_prompt": "Detailed system instruction: role, reasoning rules (ReAct), tool selection, output format",
+  "recommended_tools": ["tool_ids_from_list_above"],
   "temperature": 0.2,
   "max_steps": 15
 }}
@@ -332,7 +373,7 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
 
             llm = get_chat_model(model_key, system_instruction="You are an expert AI Agent Architect. Always return pure JSON.")
             
-            # Вызов модели
+            # Call model
             if hasattr(llm, 'ask'):
                 response_text = await llm.ask(prompt_architect_query)
             elif hasattr(llm, 'chat'):
@@ -342,14 +383,14 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
             else:
                 response_text = str(llm)
 
-            # Очистка JSON от возможных ```json обёрток
+            # Clean JSON from possible ```json wrappers
             cleaned = response_text.strip()
             if cleaned.startswith('```'):
                 cleaned = re.sub(r'^```(?:json)?\s*', '', cleaned)
                 cleaned = re.sub(r'\s*```$', '', cleaned)
 
             parsed_data = json.loads(cleaned)
-            # Validation рекомендованных инструментов
+            # Validate recommended tools
             if 'recommended_tools' in parsed_data:
                 parsed_data['recommended_tools'] = [
                     t for t in parsed_data['recommended_tools'] if t in tool_ids
@@ -360,14 +401,14 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
                 'data': parsed_data
             }
         except Exception as e:
-            logger.error(f'[router_agents] Error AI-генератора промпта: {e}')
-            # Фолбэк на дефолтную структуру при сбое модели
+            logger.error(f'[router_agents] Error in AI prompt generator: {e}')
+            # Fallback to default structure on model failure
             return {
                 'status': 'fallback',
                 'data': {
-                    'name': req.agent_name or 'Пользовательский агент',
+                    'name': req.agent_name or 'Custom agent',
                     'description': req.task_description[:100],
-                    'system_prompt': f"Ты специализированный агент ai-breadboard.\nТвоя задача: {req.task_description}\nИспользуй предоставленные инструменты при необходимости и давай чёткие ответы.",
+                    'system_prompt': f"You are a specialized ai-breadboard agent.\nYour task: {req.task_description}\nUse provided tools when needed and provide clear answers.",
                     'recommended_tools': ['web_search'],
                     'temperature': 0.3,
                     'max_steps': 10
@@ -377,10 +418,23 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
 
     @router.post('/test')
     async def test_agent(req: TestAgentRequest) -> dict:
-        """Интерактивная песочница: тестовый запуск агента с трассировкой шагов."""
+        """Interactive sandbox: test agent run with step tracing.
+        
+        Executes agent with provided configuration or inline settings,
+        returning step-by-step execution trace.
+        
+        Args:
+            req: Request with agent ID or inline config and test message.
+            
+        Returns:
+            dict: Execution result with response, duration, and steps trace.
+            
+        Raises:
+            HTTPException: If agent configuration not found or execution fails.
+        """
         start_time = time.time()
         
-        # Определяем конфигурацию агента
+        # Determine agent configuration
         target_config = {}
         if req.inline_config and isinstance(req.inline_config, AgentModel) and req.inline_config.name:
             target_config = req.inline_config.dict()
@@ -392,7 +446,7 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
                     break
 
         if not target_config:
-            raise HTTPException(status_code=400, detail='Не задана Configuration агента для тестирования')
+            raise HTTPException(status_code=400, detail='Agent configuration not set for testing')
 
         provider = target_config.get('provider', 'gemini')
         model_name = target_config.get('model', 'gemini-2.5-flash')
@@ -403,14 +457,14 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
         steps.append({
             'step': 1,
             'type': 'thought',
-            'content': f"Initialization агента '{target_config.get('name')}' [Провайдер: {provider}, Модель: {model_name}]"
+            'content': f"Initializing agent '{target_config.get('name')}' [Provider: {provider}, Model: {model_name}]"
         })
 
         if tools:
             steps.append({
                 'step': 2,
                 'type': 'tool_init',
-                'content': f"Подключено инструментов ({len(tools)}): {', '.join(tools)}"
+                'content': f"Connected tools ({len(tools)}): {', '.join(tools)}"
             })
 
         try:
@@ -428,23 +482,23 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
             steps.append({
                 'step': 3,
                 'type': 'action',
-                'content': f"Обработка входящего сообщения: '{req.test_message}'"
+                'content': f"Processing incoming message: '{req.test_message}'"
             })
 
-            # Выполнение вызова
+            # Execute model call
             if hasattr(llm, 'ask'):
                 res = await llm.ask(req.test_message)
             elif hasattr(llm, 'chat'):
                 res = await llm.chat(req.test_message)
             else:
-                res = "Ответ модели получен."
+                res = "Model response received."
 
             duration_ms = int((time.time() - start_time) * 1000)
 
             steps.append({
                 'step': 4,
                 'type': 'finish',
-                'content': f"Завершено successfully за {duration_ms} мс."
+                'content': f"Completed successfully in {duration_ms} ms."
             })
 
             return {
@@ -455,15 +509,15 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
             }
         except Exception as e:
             duration_ms = int((time.time() - start_time) * 1000)
-            logger.error(f'[router_agents] Error тестового прогона агента: {e}')
+            logger.error(f'[router_agents] Error in agent test run: {e}')
             steps.append({
                 'step': len(steps) + 1,
                 'type': 'error',
-                'content': f"Error выполнения: {str(e)}"
+                'content': f"Execution error: {str(e)}"
             })
             return {
                 'status': 'error',
-                'response': f"Error при выполнении агента: {str(e)}",
+                'response': f"Error during agent execution: {str(e)}",
                 'duration_ms': duration_ms,
                 'steps': steps
             }

@@ -110,7 +110,7 @@ def dict2pdf(data: dict | SimpleNamespace, file_path: str | Path) -> None:
         pdf.drawString(x, y, line)
         y -= 20
 
-        if y < 50:  # Создать новую страницу, если места недостаточно
+        if y < 50:  # Create new page if not enough space
             pdf.showPage()
             pdf.setFont("Helvetica", 12)
             y = height - 50

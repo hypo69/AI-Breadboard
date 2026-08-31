@@ -16,7 +16,6 @@
 import asyncio
 import re
 import time
-from typing import Exception
 
 import requests
 

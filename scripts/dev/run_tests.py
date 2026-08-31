@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: # ================================================
+# Process Name: Test runner with coverage analysis
 # =============================================================================
 # Description:
-#   Запуск тестов."""
+#   Runs project tests with optional coverage analysis and HTML report generation.
+#   Supports verbose output, test markers filtering, and coverage report viewing.
 #
 # File: run_tests.py
 # Project: ai-breadboard
@@ -12,9 +13,10 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-Скрипт для запуска тестов ai-breadboard
-"""
+"""Test runner script for ai-breadboard project.
+
+Provides command-line interface for running project tests with coverage
+analysis, verbose output, and filtering by test markers."""
 
 import subprocess
 import sys
@@ -22,10 +24,19 @@ import argparse
 from pathlib import Path
 
 def run_tests(coverage=False, verbose=False, markers=None):
-    """Запуск тестов."""
+    """Run project tests.
+    
+    Args:
+        coverage: Include coverage analysis and report generation.
+        verbose: Enable verbose test output.
+        markers: pytest markers to filter tests (e.g., unit, integration, slow).
+        
+    Returns:
+        pytest return code (0 for success).
+    """
     cmd = ["pytest"]
     
-    # Покрытие
+    # Coverage
     if coverage:
         cmd.extend([
             "--cov=src",
@@ -37,33 +48,34 @@ def run_tests(coverage=False, verbose=False, markers=None):
             "--cov-config=.coveragerc"
         ])
     
-    # Верbose
+    # Verbose
     if verbose:
         cmd.append("-v")
     
-    # Маркеры
+    # Markers
     if markers:
         cmd.extend(["-m", markers])
     
-    # Запуск
+    # Run
     result = subprocess.run(cmd, capture_output=False)
     return result.returncode
 
 def show_coverage():
-    """Показ отчета о покрытии."""
+    """Display coverage report in browser."""
     html_path = Path("htmlcov") / "index.html"
     if html_path.exists():
         import webbrowser
         webbrowser.open(f"file://{html_path.absolute()}")
     else:
-        print("HTML отчет не найден. Запустите тесты с --coverage")
+        print("HTML report not found. Run tests with --coverage flag")
 
 def main():
-    parser = argparse.ArgumentParser(description="Запуск тестов ai-ai-breadboard")
-    parser.add_argument("--coverage", "-c", action="store_true", help="С покрытием")
-    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose вывод")
-    parser.add_argument("--markers", "-m", type=str, help="Маркеры pytest (unit, integration, slow)")
-    parser.add_argument("--open-coverage", "-o", action="store_true", help="Открыть HTML отчет")
+    """Main function."""
+    parser = argparse.ArgumentParser(description="Run ai-breadboard project tests")
+    parser.add_argument("--coverage", "-c", action="store_true", help="Run with coverage analysis")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose test output")
+    parser.add_argument("--markers", "-m", type=str, help="pytest markers (unit, integration, slow)")
+    parser.add_argument("--open-coverage", "-o", action="store_true", help="Open HTML coverage report")
     
     args = parser.parse_args()
     
@@ -78,9 +90,9 @@ def main():
     )
     
     if exit_code == 0:
-        print("\n✓ Все тесты пройдены successfully!")
+        print("\n✓ All tests passed successfully!")
     else:
-        print(f"\n✗ Тесты провалились (exit code: {exit_code})")
+        print(f"\n✗ Tests failed (exit code: {exit_code})")
     
     sys.exit(exit_code)
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: core.logger.conftest
+# Process Name: pytest configuration for logger module
 # =============================================================================
 # Description:
 #   Module for conftest.py in ai-breadboard project.
@@ -12,25 +12,21 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: core.logger.conftest
-    :platform: Windows, Unix
-    :synopsis: Configuration pytest для модуля логирования
+"""pytest configuration for logger module testing.
 
-Содержит fixtures и конфигурацию для unit-тестов модуля core.logger.
-"""
+Provides fixtures and configuration for unit tests of core.logger module."""
 
 import pytest
 import sys
 from pathlib import Path
 from header import __root__
 
-# Добавляем корень проекта в sys.path для импортов
+# Add project root to sys.path for imports
 sys.path.insert(0, str(__root__))
 
 @pytest.fixture(scope="session")
 def project_root():
-    """Фикстура для получения корневой директории проекта."""
+    """Fixture to get project root directory."""
     return __root__
 
 @pytest.fixture(scope="session")

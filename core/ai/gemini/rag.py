@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: RAG-индекс на базе Gemini Embedding API и FAISS.
+# Process Name: RAG index using Gemini Embedding API and FAISS
 # =============================================================================
 # Description:
-#   Векторизация документов через Gemini text-embedding-004 / gemini-embedding-2,
+#   Document vectorization via Gemini text-embedding-004 / gemini-embedding-2
+#   with FAISS-based semantic search for retrieval-augmented generation.
 #
 # File: rag.py
 # Project: ai-breadboard
@@ -11,6 +12,10 @@
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
+
+"""RAG index using Gemini Embedding API and FAISS.
+
+Provides document vectorization, storage, and semantic search capabilities."""
 
 import json
 from pathlib import Path
@@ -33,18 +38,23 @@ _EMBED_MODEL = 'models/gemini-embedding-2'
 _EMBED_DIM = 3072
 
 class GeminiRAG:
-    """RAG-индекс на базе Gemini Embedding API и FAISS.
+    """RAG index using Gemini Embedding API and FAISS.
 
-    Векторизация произвольных текстовых документов, хранение в FAISS,
-    семантический поиск ближайших соседей.
+    Provides document vectorization, vector storage in FAISS index,
+    and semantic search of nearest neighbors.
 
     Attributes:
-        db_path (Path): Путь к файлу (мы заменяем .db на .faiss/.json).
-        client: Клиент google.genai.
+        db_path (Path): Path to index file (replaced .db with .faiss/.json).
+        client: google.genai client instance.
     """
 
     def __init__(self, api_key: str = '', db_path: Path = Path('.')) -> None:
-        """Initialization RAG-индекса."""
+        """Initialize RAG index.
+        
+        Args:
+            api_key (str): Gemini API key.
+            db_path (Path): Path to database directory.
+        """
         self.db_path = db_path
         self.index_file = db_path.with_suffix('.faiss')
         self.meta_file = db_path.with_suffix('.json')

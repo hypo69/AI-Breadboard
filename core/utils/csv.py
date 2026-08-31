@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module::  src.utils.csv
+# Process Name: CSV file processing utilities
 # =============================================================================
 # Description:
 #   Module for AI Breadboard project.
@@ -12,11 +12,7 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module::  src.utils.csv
-	:platform: Windows, Unix
-	:synopsis: Utilities for working with CSV and JSON files.
-"""
+"""CSV and JSON file conversion utilities."""
 
 import csv
 import json

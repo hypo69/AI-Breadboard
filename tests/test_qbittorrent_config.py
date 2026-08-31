@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: tests.test_qbittorrent_config
+# Process Name: Testing qBittorrent configuration loading
 # =============================================================================
 # Description:
-#   Module содержит unit-тесты для проверки загрузки параметров qBittorrent
+#   Unit tests for qBittorrent configuration parameters loading from config.json
 #
 # File: test_qbittorrent_config.py
 # Project: ai-breadboard
@@ -11,12 +11,6 @@
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
-
-"""
-.. module:: tests.test_qbittorrent_config
-    :platform: Windows, Unix
-    :synopsis: Тесты чтения конфигурации qBittorrent из config.json
-"""
 
 import json
 from pathlib import Path
@@ -27,16 +21,24 @@ from core.config import qbittorrent_cfg, qbt_cfg, CONFIG_FILE
 from core.utils.jjson import j_loads_ns
 
 class TestQBittorrentConfig:
-    """Тестирование опциональной конфигурации qBittorrent и совместимости."""
+    """Testing optional qBittorrent configuration and compatibility."""
 
     def test_core_config_exports_qbittorrent_cfg(self) -> None:
-        """Check безопасного экспорта qbittorrent_cfg и qbt_cfg в core.config."""
+        """Test safe export of qbittorrent_cfg and qbt_cfg in core.config.
+        
+        Check: Both configuration objects should be SimpleNamespace instances
+               and qbt_cfg should reference same object as qbittorrent_cfg.
+        """
         assert isinstance(qbittorrent_cfg, SimpleNamespace)
         assert isinstance(qbt_cfg, SimpleNamespace)
         assert qbt_cfg is qbittorrent_cfg
 
     def test_j_loads_ns_parses_custom_namespace(self, tmp_path: Path) -> None:
-        """Check корректной десериализации параметров через j_loads_ns."""
+        """Test correct deserialization of parameters via j_loads_ns.
+        
+        Check: Custom configuration file correctly parsed into nested
+               SimpleNamespace with proper attribute access.
+        """
         sample_config = tmp_path / "sample_config.json"
         sample_config.write_text(
             json.dumps(

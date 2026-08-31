@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Валидация и проверка установщиков AI Breadboard
+# Process Name: Validation and testing of AI Breadboard installers
 # =============================================================================
 # Description:
-#   Утилита для проверки логики установщиков, валидации конфигурации
+#   Utility for installer logic checking, configuration validation
 #   и тестирования кроссплатформенной совместимости.
 #
 # Examples:

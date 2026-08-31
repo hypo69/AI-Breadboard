@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: src.utils.convertors.csv
+# Process Name: Convert CSV and JSON file formats
 # =============================================================================
 # Description:
 #   Functions:
@@ -12,12 +12,7 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: src.utils.convertors.csv 
-	:platform: Windows, Unix
-	:synopsis: CSV and JSON conversion utilities
-
-"""
+"""CSV and JSON file conversion utilities."""
 
 """ Functions:
     - `csv2dict`: Convert CSV data to a dictionary.

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Module
+# Process Name: Package Gemini skills into distributable archives
 # =============================================================================
 # Description:
-#   Module for AI Breadboard project.
+#   Utility for packaging Gemini CLI skills into ZIP archives for distribution.
+#   Automatically excludes build artifacts and version control directories.
 #
 # File: package_skill.py
 # Project: ai-breadboard
@@ -12,12 +13,23 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
+"""Gemini skills packaging utility.
+
+Packages skill directories into ZIP archive format for distribution,
+automatically excluding build artifacts and version control files."""
+
 import os
 import zipfile
 import argparse
 from pathlib import Path
 
 def package_skill(skill_dir, output_dir):
+    """Package a skill directory into a distributable archive.
+    
+    Args:
+        skill_dir: Path to skill directory to package.
+        output_dir: Path to output directory for packaged skill file.
+    """
     skill_path = Path(skill_dir).resolve()
     output_path = Path(output_dir).resolve()
     
@@ -27,25 +39,25 @@ def package_skill(skill_dir, output_dir):
     skill_name = skill_path.name
     skill_file = output_path / f"{skill_name}.skill"
     
-    print(f"Упаковка навыка из {skill_path} в {skill_file}...")
+    print(f"Packaging skill from {skill_path} to {skill_file}...")
     
     with zipfile.ZipFile(skill_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, dirs, files in os.walk(skill_path):
-            # Пропускаем директории dist и .git
+            # Skip dist and git directories
             dirs[:] = [d for d in dirs if d not in ['dist', '.git', '__pycache__']]
             
             for file in files:
                 file_path = Path(root) / file
-                # Относительный путь внутри архива
+                # Relative path within archive
                 arcname = file_path.relative_to(skill_path)
                 zipf.write(file_path, arcname)
                 
-    print(f"Навык successfully упакован: {skill_file}")
+    print(f"Skill packaged successfully: {skill_file}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Упаковщик навыков Gemini CLI")
-    parser.add_argument("skill_dir", help="Путь к директории навыка")
-    parser.add_argument("output_dir", help="Путь к директории dist")
+    parser = argparse.ArgumentParser(description="Gemini CLI skills packager")
+    parser.add_argument("skill_dir", help="Path to skill directory")
+    parser.add_argument("output_dir", help="Path to dist directory")
     args = parser.parse_args()
     
     package_skill(args.skill_dir, args.output_dir)

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Class для тестирования функций модуля html.py.
+# Process Name: Testing class for html.py module functions
 # =============================================================================
 # Description:
-#   Исчерпывающее тестирование функций модуля html.py:
+#   Comprehensive testing of html.py module functions for HTML conversion.
 #
 # File: test_utils_convertors_html.py
 # Project: ai-breadboard
@@ -17,50 +17,50 @@ from types import SimpleNamespace
 from core.utils.convertors.html import html2escape, escape2html, html2dict, html2ns
 
 class TestHtmlUtils:
-    """Class для тестирования функций модуля html.py."""
+    """Class for testing html.py module functions."""
 
     def test_html2escape_happy_path(self):
-        """Тестирование корректного экранирования HTML-тегов."""
-        # --- Подготовка (Arrange) ---
+        """Test proper HTML tag escaping."""
+        # --- Setup (Arrange) ---
         html: str = "<p>Hello</p>"
         expected: str = "&lt;p&gt;Hello&lt;/p&gt;"
         
-        # --- Выполнение (Act) ---
+        # --- Execution (Act) ---
         result: str = html2escape(html)
         
         # --- Check (Assert) ---
-        assert result == expected, f"Ожидалось {expected!r}, получено {result!r}"
+        assert result == expected, f"Expected {expected!r}, got {result!r}"
 
     def test_escape2html_happy_path(self):
-        """Тестирование корректного преобразования эскейп-последовательностей в HTML."""
-        # --- Подготовка (Arrange) ---
+        """Test proper conversion of escape sequences to HTML."""
+        # --- Setup (Arrange) ---
         escaped: str = "&lt;p&gt;Hello&lt;/p&gt;"
         expected: str = "<p>Hello</p>"
         
-        # --- Выполнение (Act) ---
+        # --- Execution (Act) ---
         result: str = escape2html(escaped)
         
         # --- Check (Assert) ---
-        assert result == expected, f"Ожидалось {expected!r}, получено {result!r}"
+        assert result == expected, f"Expected {expected!r}, got {result!r}"
 
     def test_html2dict_happy_path(self):
-        """Тестирование конвертации HTML в dictionary."""
-        # --- Подготовка (Arrange) ---
+        """Test conversion of HTML to dictionary."""
+        # --- Setup (Arrange) ---
         html: str = "<p>Hello</p><a>World</a>"
         expected: dict = {"p": "Hello", "a": "World"}
         
-        # --- Выполнение (Act) ---
+        # --- Execution (Act) ---
         result: dict = html2dict(html)
         
         # --- Check (Assert) ---
-        assert result == expected, f"Ожидалось {expected!r}, получено {result!r}"
+        assert result == expected, f"Expected {expected!r}, got {result!r}"
 
     def test_html2ns_happy_path(self):
-        """Тестирование конвертации HTML в SimpleNamespace."""
-        # --- Подготовка (Arrange) ---
+        """Test conversion of HTML to SimpleNamespace."""
+        # --- Setup (Arrange) ---
         html: str = "<p>Hello</p><a>World</a>"
         
-        # --- Выполнение (Act) ---
+        # --- Execution (Act) ---
         result = html2ns(html)
         
         # --- Check (Assert) ---

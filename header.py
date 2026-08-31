@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: .header
+# Process Name: Project root path determination and initialization
 # =============================================================================
 # Description:
 #   Module for AI Breadboard project.
@@ -12,11 +12,9 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: .header
-	:platform: Windows, Unix
-	:synopsis: Module defining the root path to the project. All imports are built relative to this path.
-"""
+"""Module defining root path to the project.
+
+All imports are built relative to the project root path determined by this module."""
 
 import os
 import sys

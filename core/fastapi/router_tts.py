@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Синтезирует отдельный чанк текста при помощи Modul
+# Process Name: Text to speech synthesis router
 # =============================================================================
 # Description:
-#   Module for AI Breadboard project.
+#   Provides FastAPI endpoints for speech synthesis, voice list discovery,
+#   audio stream chunking, and multi-engine TTS provider integration.
 #
 # File: router_tts.py
 # Project: ai-breadboard

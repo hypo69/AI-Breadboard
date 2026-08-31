@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Update access_token с использованием refresh_token
+# Process Name: Update access_token using refresh_token
 # =============================================================================
 # Description:
-#   Module для взаимодействия с Google APIs с использованием OAuth токенов.
+#   Module for Google API interaction with OAuth token management.
 #
 # File: google_services.py
 # Project: ai-breadboard

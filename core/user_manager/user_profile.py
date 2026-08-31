@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Returns путь к JSON-файлу профиля пользователя.
+# Process Name: User profile JSON file management and watch progress tracking
 # =============================================================================
 # Description:
-#   Управление индивидуальными JSON-файлами пользователей (в src/ai/gemini/user_rags/).
+#   Management of individual user JSON profile files stored in user_rags directory.
+#   Tracks watch history, search queries, preferences, and generates recommendation context.
 #
 # File: user_profile.py
 # Project: ai-breadboard
@@ -21,17 +22,17 @@ from typing import Any, Dict, List, Optional
 
 from core.logger import logger
 
-# Директория профилей пользователей (совпадает с местом хранения пользовательских RAG)
+# User profiles directory (same as user RAG storage location)
 _USER_PROFILES_DIR = Path(__file__).parent.parent / 'ai' / 'gemini' / 'user_rags'
 _USER_PROFILES_DIR.mkdir(parents=True, exist_ok=True)
 
 def _get_profile_path(user_id: str | int) -> Path:
-    """Returns путь к JSON-файлу профиля пользователя."""
+    """Return path to user profile JSON file."""
     safe_id = str(user_id).replace('.', '_').replace('/', '_').replace('\\', '_')
     return _USER_PROFILES_DIR / f'user_profile_{safe_id}.json'
 
 def _default_profile_structure(user_id: str | int) -> Dict[str, Any]:
-    """Дефолтная структура профиля пользователя."""
+    """Default user profile structure."""
     return {
         "user_id": str(user_id),
         "created_at": time.time(),
@@ -40,36 +41,36 @@ def _default_profile_structure(user_id: str | int) -> Dict[str, Any]:
         "last_watched": None,  # { "path": str, "position": float }
         "search_history": [],  # [ { "query": str, "timestamp": float } ]
         "preferences": {
-            "liked_titles": [],    # ["Интерстеллар", ...]
-            "disliked_titles": [], # ["Фильм X", ...]
-            "favorite_genres": {}, # { "Космос": count, "Боевик": count }
-            "favorite_categories": {} # { "Боевики": count }
+            "liked_titles": [],    # ["Interstellar", ...]
+            "disliked_titles": [], # ["Movie X", ...]
+            "favorite_genres": {}, # { "Science Fiction": count, "Action": count }
+            "favorite_categories": {} # { "Action": count }
         }
     }
 
 def load_user_profile(user_id: str | int) -> Dict[str, Any]:
-    """Loads JSON профиль пользователя или creates дефолтный."""
+    """Load user JSON profile or create default."""
     path = _get_profile_path(user_id)
     if path.exists():
         try:
             data = json.loads(path.read_text(encoding='utf-8'))
             return data
         except Exception as ex:
-            logger.error(f"Error чтения профиля {user_id}", ex, False)
+            logger.error(f"Error reading profile {user_id}", ex, False)
 
     profile = _default_profile_structure(user_id)
     save_user_profile(user_id, profile)
     return profile
 
 def save_user_profile(user_id: str | int, profile: Dict[str, Any]) -> bool:
-    """Saves профиль пользователя в JSON."""
+    """Save user profile to JSON."""
     try:
         path = _get_profile_path(user_id)
         profile["updated_at"] = time.time()
         path.write_text(json.dumps(profile, ensure_ascii=False, indent=2), encoding='utf-8')
         return True
     except Exception as ex:
-        logger.error(f"Error сохранения профиля {user_id}", ex, False)
+        logger.error(f"Error saving profile {user_id}", ex, False)
         return False
 
 def update_watch_progress(
@@ -79,7 +80,7 @@ def update_watch_progress(
     current_time: float,
     duration: float
 ) -> Dict[str, Any]:
-    """Обновляет таймкод воспроизведения для файла и ставит его как последним просмотренным."""
+    """Update playback timestamp for file and mark as last watched."""
     profile = load_user_profile(user_id)
     watch_history = profile.setdefault("watch_history", {})
     
@@ -103,12 +104,12 @@ def update_watch_progress(
     return watch_history[file_path]
 
 def get_watch_progress(user_id: str | int, file_path: str) -> Optional[Dict[str, Any]]:
-    """Receives сохранённый прогресс просмотра конкретного файла."""
+    """Get saved watch progress for specific file."""
     profile = load_user_profile(user_id)
     return profile.get("watch_history", {}).get(file_path)
 
 def log_user_search(user_id: str | int, query: str):
-    """Логирует поисковый запрос пользователя для сбора предпочтений."""
+    """Log user search query for preference collection."""
     if not query or len(query.strip()) < 2:
         return
     profile = load_user_profile(user_id)
@@ -119,7 +120,7 @@ def log_user_search(user_id: str | int, query: str):
         "timestamp": time.time()
     })
 
-    # Ограничиваем последние 200 поисков
+    # Limit to last 200 searches
     if len(search_history) > 200:
         profile["search_history"] = search_history[-200:]
 
@@ -132,7 +133,7 @@ def set_user_preference(
     genre: Optional[str] = "",
     category: Optional[str] = ""
 ):
-    """Фиксирует предпочтение пользователя (лайк/дизлайк/жанры)."""
+    """Record user preference (like/dislike/genres)."""
     profile = load_user_profile(user_id)
     prefs = profile.setdefault("preferences", {
         "liked_titles": [],
@@ -165,7 +166,7 @@ def set_user_preference(
     save_user_profile(user_id, profile)
 
 def get_recommendation_context(user_id: str | int) -> str:
-    """Генерирует сводный текстовый промпт о предпочтениях пользователя для ИИ."""
+    """Generate summary text prompt of user preferences for AI."""
     profile = load_user_profile(user_id)
     prefs = profile.get("preferences", {})
     history = profile.get("watch_history", {})
@@ -178,10 +179,10 @@ def get_recommendation_context(user_id: str | int) -> str:
 
     context_lines = []
     if liked:
-        context_lines.append(f"Пользователю нравятся: {', '.join(liked[-10:])}")
+        context_lines.append(f"User likes: {', '.join(liked[-10:])}")
     if disliked:
-        context_lines.append(f"Пользователю НЕ нравятся: {', '.join(disliked[-10:])}")
+        context_lines.append(f"User dislikes: {', '.join(disliked[-10:])}")
     if recent_names:
-        context_lines.append(f"Недавно смотрел: {', '.join(recent_names)}")
+        context_lines.append(f"Recently watched: {', '.join(recent_names)}")
 
     return "\n".join(context_lines) if context_lines else ""

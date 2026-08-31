@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Подсистема Core RAG
+# Process Name: RAG (Retrieval-Augmented Generation) subsystem
 # =============================================================================
 # Description:
-#   Централизованная, доменно-независимая подсистема семантического поиска
+#   Centralized domain-independent semantic search subsystem for context retrieval and augmentation.
 #
 # File: __init__.py
 # Project: ai-breadboard

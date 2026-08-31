@@ -20,7 +20,7 @@ from typing import Any
 
 from google import genai
 
-from core.ai.model_manager import (
+from core.ai.orchestration.model_manager import (
     add_unsupported_model as _mgr_add_unsupported_model,
     get_available_models as _mgr_get_available_models,
     load_unsupported_models as _mgr_load_unsupported_models,

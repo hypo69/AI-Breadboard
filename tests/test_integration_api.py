@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Интеграционные тесты API endpoints
+# Process Name: Integration tests for API endpoints
 # =============================================================================
 # Description:
-#   Module содержит интеграционные тесты для всех API endpoint-ов приложения.
+#   Module contains integration tests for all API endpoints of the application.
 #
 # File: test_integration_api.py
 # Project: ai-breadboard
@@ -12,20 +12,23 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-Интеграционные тесты API endpoints
-"""
+"""Integration tests for API endpoints.
+
+Tests for chat, auth, control, TTS, and admin API endpoints."""
 
 import pytest
 from httpx import AsyncClient, ASGITransport
 from unittest.mock import Mock, AsyncMock, patch
 
 class TestChatAPI:
-    """Интеграционные тесты /api/chat endpoints."""
+    """Integration tests for /api/chat endpoints."""
 
     @pytest.mark.asyncio
     async def test_post_chat(self):
-        """Тест POST /api/chat."""
+        """Test POST /api/chat endpoint.
+        
+        Verifies that chat messages are processed and responses returned.
+        """
         from fastapi import FastAPI
         from core.fastapi.router_chat import init_router
         
@@ -45,18 +48,21 @@ class TestChatAPI:
                 response = await client.post(
                     '/api/chat',
                     json={
-                        'message': 'Какой фильм посмотреть?',
+                        'message': 'What movie should I watch?',
                         'history': []
                     }
                 )
                 assert response.status_code == 200
 
 class TestAuthAPI:
-    """Интеграционные тесты /api/auth endpoints."""
+    """Integration tests for /api/auth endpoints."""
 
     @pytest.mark.asyncio
     async def test_get_models(self):
-        """Тест GET /api/chat/models."""
+        """Test GET /api/chat/models endpoint.
+        
+        Verifies that available models list is returned.
+        """
         from fastapi import FastAPI
         from core.fastapi.router_chat import init_router
         
@@ -71,11 +77,14 @@ class TestAuthAPI:
             assert 'models' in data
 
 class TestControlAPI:
-    """Интеграционные тесты WebSocket control endpoints."""
+    """Integration tests for WebSocket control endpoints."""
 
     @pytest.mark.asyncio
     async def test_get_control_status(self):
-        """Тест GET /api/control/status."""
+        """Test GET /api/control/status endpoint.
+        
+        Verifies that control status can be retrieved.
+        """
         from fastapi import FastAPI
         from core.fastapi.router_control import init_router
         
@@ -87,11 +96,14 @@ class TestControlAPI:
             assert response.status_code == 200
 
 class TestTTSAPI:
-    """Интеграционные тесты /api/tts endpoints."""
+    """Integration tests for /api/tts endpoints."""
 
     @pytest.mark.asyncio
     async def test_tts_synthesize(self):
-        """Тест синтеза речи."""
+        """Test text-to-speech synthesis endpoint.
+        
+        Verifies that TTS synthesis can be triggered.
+        """
         from fastapi import FastAPI
         from core.fastapi.router_tts import init_router
         
@@ -101,16 +113,19 @@ class TestTTSAPI:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 '/api/tts/synthesize',
-                json={'text': 'Привет мир', 'voice': 'ru-RU-DmitryNeural', 'system': 'edge-tts'}
+                json={'text': 'Hello world', 'voice': 'en-US-AriaNeural', 'system': 'edge-tts'}
             )
             assert response.status_code in [200, 404, 405, 500]
 
 class TestAdminAPI:
-    """Интеграционные тесты админских endpoints."""
+    """Integration tests for admin endpoints."""
 
     @pytest.mark.asyncio
     async def test_admin_interface_redirect(self):
-        """Тест доступа к админке."""
+        """Test admin interface access.
+        
+        Verifies that admin endpoint is accessible.
+        """
         from main import app
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", follow_redirects=False) as client:
             response = await client.get('/admin')
@@ -118,7 +133,10 @@ class TestAdminAPI:
 
     @pytest.mark.asyncio
     async def test_root_redirect(self):
-        """Тест редиректа на главную."""
+        """Test root endpoint redirect.
+        
+        Verifies that root endpoint returns proper response.
+        """
         from main import app
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", follow_redirects=False) as client:
             response = await client.get('/')

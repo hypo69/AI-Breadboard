@@ -33,20 +33,20 @@ def extract_url_params(url: str) -> dict | None:
     parsed_url = urlparse(url)
     params = parse_qs(parsed_url.query)
     
-    # Преобразуем значения из списка в строку, если параметр имеет одно значение
+    # Convert parameter values from list to string if parameter has single value
     if params:
         params = {k: v if len(v) > 1 else v[0] for k, v in params.items()}
         return params
     return None
 
 def is_url(text: str) -> bool:
-    """ Checks, является ли переданный текст валидным URL с использованием библиотеки validators.
+    """Check if passed text is valid URL using validators library.
 
     Args:
-        text (str): String для проверки.
+        text (str): String to check.
 
     Returns:
-        bool: `True` если string является валидным URL, иначе `False`.
+        bool: `True` if string is valid URL, otherwise `False`.
     """
     if not text:
         return False
@@ -61,13 +61,13 @@ def is_url(text: str) -> bool:
     return bool(pattern.match(text))
 
 def url_shortener(long_url: str) -> str | None:
-    """ Сокращает длинный URL с использованием сервиса TinyURL.
+    """Shortens long URL using TinyURL service.
 
     Args:
-        long_url (str): Длинный URL для сокращения.
+        long_url (str): Long URL to shorten.
 
     Returns:
-        str | None: Сокращённый URL или `None`, если произошла Error.
+        str | None: Shortened URL or `None` if error occurred.
     """
     url = f'http://tinyurl.com/api-create.php?url={long_url}'
     response = requests.get(url)
@@ -77,28 +77,28 @@ def url_shortener(long_url: str) -> str | None:
     return None
 
 if __name__ == "__main__":
-    # Получаем строку URL от пользователя
-    url = input("Введите URL: ")
+    # Get URL string from user
+    url = input("Enter URL: ")
     
-    # Проверяем валидность URL
+    # Check URL validity
     if is_url(url):
         params = extract_url_params(url)
         
-        # Выводим Parameters
+        # Display parameters
         if params:
-            print("Parameters URL:")
+            print("URL Parameters:")
             for key, value in params.items():
                 print(f"{key}: {value}")
         else:
-            print("URL не содержит параметров.")
+            print("URL does not contain parameters.")
         
-        # Предлагаем пользователю сократить URL
-        shorten = input("Хотите сократить этот URL? (y/n): ").strip().lower()
+        # Offer user to shorten URL
+        shorten = input("Would you like to shorten this URL? (y/n): ").strip().lower()
         if shorten == 'y':
             short_url = url_shortener(url)
             if short_url:
-                print(f"Сокращённый URL: {short_url}")
+                print(f"Shortened URL: {short_url}")
             else:
-                print("Error при сокращении URL.")
+                print("Error shortening URL.")
     else:
-        print("Введенная string не является валидным URL.")
+        print("Entered string is not a valid URL.")

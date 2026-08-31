@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Кроссплатформенная система установки AI Breadboard
-# =============================================================================
-# Description:
-#   Module for AI Breadboard project.
-#
+# Process Name: Cross-platform installation system for AI Breadboard
+# Description: Sets up Python environment, dependencies, SSL certificates,
+#   CLI configuration, and optional AI models for AI Breadboard across all
+#   platforms.
 # File: installer.py
 # Project: ai-breadboard
 # Package: scripts.cli
@@ -13,13 +12,13 @@
 # =============================================================================
 
 """
-Кроссплатформенная система установки AI Breadboard.
+Cross-platform installation system for AI Breadboard.
 
-Портировано со старого install.ps1 для работы на Windows, Linux и macOS.
+Ported from legacy install.ps1 to work on Windows, Linux, and macOS.
 
-Использование:
+Usage:
     python scripts/cli/installer.py
-    python scripts/cli/installer.py --lang ru
+    python scripts/cli/installer.py --lang en
     python scripts/cli/installer.py --skip-models
 """
 
@@ -40,13 +39,13 @@ from scripts.cli.config import get_config_manager
 from scripts.cli.utils import which, run_command
 
 class Language(Enum):
-    """Поддерживаемые языки"""
+    """Supported languages"""
     EN = "en"
     RU = "ru"
     ES = "es"
     HE = "he"
 
-# Сообщения на разных языках
+# Messages in multiple languages
 MESSAGES = {
     "en": {
         "welcome": "🎯 AI Breadboard Installation",
@@ -61,21 +60,21 @@ MESSAGES = {
         "abort": "⚠️  Installation aborted by user",
     },
     "ru": {
-        "welcome": "🎯 Установка AI Breadboard",
-        "step_venv": "[1/6] Создание виртуального окружения Python...",
-        "step_deps": "[2/6] Установка зависимостей...",
-        "step_certs": "[3/6] Настройка SSL сертификатов...",
-        "step_cli": "[4/6] Configuration CLI ассистента...",
-        "step_verify": "[5/6] Check установки...",
-        "step_models": "[6/6] Loading моделей ИИ (опционально)...",
-        "success": "✅ Установка завершена successfully!",
-        "error": "❌ Error при установке:",
-        "abort": "⚠️  Установка отменена пользователем",
+        "welcome": "🎯 AI Breadboard Installation",
+        "step_venv": "[1/6] Creating Python virtual environment...",
+        "step_deps": "[2/6] Installing dependencies...",
+        "step_certs": "[3/6] Setting up SSL certificates...",
+        "step_cli": "[4/6] Configuring CLI assistant...",
+        "step_verify": "[5/6] Verifying installation...",
+        "step_models": "[6/6] Downloading AI models (optional)...",
+        "success": "✅ Installation completed successfully!",
+        "error": "❌ Installation failed:",
+        "abort": "⚠️  Installation aborted by user",
     },
 }
 
 class Installer:
-    """Главный class установщика"""
+    """Main installer class"""
     
     def __init__(self, language: str = "en", install_dir: Optional[Path] = None):
         self.language = Language[language.upper()] if language.upper() in Language.__members__ else Language.EN
@@ -85,43 +84,43 @@ class Installer:
         self.config_mgr = get_config_manager()
     
     def msg(self, key: str) -> str:
-        """Получить сообщение на текущем языке"""
+        """Get message in current language"""
         return self.messages.get(key, key)
     
     @staticmethod
     def _get_default_install_dir() -> Path:
-        """Получить директорию установки по умолчанию"""
+        """Get default installation directory"""
         if sys.platform == "win32":
             # Windows: %LOCALAPPDATA%\AI-Breadboard
             localappdata = os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData" / "Local"))
             return Path(localappdata) / "AI-Breadboard"
         else:
-            # Linux/macOS: ~/AI-Breadboard или ~/.local/share/AI-Breadboard
+            # Linux/macOS: ~/AI-Breadboard or ~/.local/share/AI-Breadboard
             return Path.home() / "AI-Breadboard"
     
     def print_header(self):
-        """Печать заголовка установки"""
+        """Print installation header"""
         print()
         print("╔" + "═" * 68 + "╗")
         print("║" + self.msg("welcome").center(68) + "║")
         print("╚" + "═" * 68 + "╝")
         print()
-        print(f"Установка в: {self.install_dir}")
+        print(f"Installing to: {self.install_dir}")
         print()
     
     def create_venv(self) -> bool:
-        """Создать виртуальное окружение"""
+        """Create virtual environment"""
         print(self.msg("step_venv"))
         
         try:
-            # Удалить старое venv если существует
+            # Remove old venv if exists
             if self.venv_dir.exists():
-                print(f"  Удаление старого venv...", end=" ", flush=True)
+                print(f"  Removing old venv...", end=" ", flush=True)
                 shutil.rmtree(self.venv_dir)
                 print("[OK]")
             
-            # Создать новое venv
-            print(f"  Создание venv...", end=" ", flush=True)
+            # Create new venv
+            print(f"  Creating venv...", end=" ", flush=True)
             subprocess.run(
                 [sys.executable, "-m", "venv", str(self.venv_dir)],
                 check=True,
@@ -137,22 +136,22 @@ class Installer:
             return False
     
     def install_dependencies(self) -> bool:
-        """Установить зависимости"""
+        """Install dependencies"""
         print(self.msg("step_deps"))
         
         try:
-            # Получить путь до pip в venv
+            # Get pip path in venv
             if sys.platform == "win32":
                 pip_exe = self.venv_dir / "Scripts" / "pip.exe"
             else:
                 pip_exe = self.venv_dir / "bin" / "pip"
             
             if not pip_exe.exists():
-                print(f"  [ERROR] pip не найден в venv")
+                print(f"  [ERROR] pip not found in venv")
                 print()
                 return False
             
-            # Файлы requirements
+            # Requirements files
             req_files = [
                 self.install_dir / "requirements.txt",
                 self.install_dir / "install" / "req" / "requirements-core.txt",
@@ -161,7 +160,7 @@ class Installer:
             
             for req_file in req_files:
                 if req_file.exists():
-                    print(f"  Установка из {req_file.name}...", end=" ", flush=True)
+                    print(f"  Installing from {req_file.name}...", end=" ", flush=True)
                     result = subprocess.run(
                         [str(pip_exe), "install", "-r", str(req_file)],
                         capture_output=True,
@@ -183,18 +182,18 @@ class Installer:
             return False
     
     def setup_ssl_certificates(self) -> bool:
-        """Настроить SSL сертификаты"""
+        """Setup SSL certificates"""
         print(self.msg("step_certs"))
         
         try:
             certs_dir = CrossPlatformPaths().certs_dir
             certs_dir.mkdir(parents=True, exist_ok=True)
             
-            print(f"  Директория сертификатов: {certs_dir}")
+            print(f"  Certificates directory: {certs_dir}")
             
-            # Проверить наличие mkcert
+            # Check for mkcert
             if which("mkcert"):
-                print(f"  mkcert найден, генерация сертификатов...", end=" ", flush=True)
+                print(f"  mkcert found, generating certificates...", end=" ", flush=True)
                 subprocess.run(
                     ["mkcert", "-install"],
                     cwd=str(certs_dir),
@@ -209,33 +208,33 @@ class Installer:
                 )
                 print("[OK]")
             else:
-                print(f"  mkcert не установлен (опционально)")
-                print(f"  Установка: https://github.com/FiloSottile/mkcert")
+                print(f"  mkcert not installed (optional)")
+                print(f"  Installation: https://github.com/FiloSottile/mkcert")
             
             print()
             return True
         
         except Exception as e:
-            print(f"[WARN] Error при настройке сертификатов: {e}")
+            print(f"[WARN] Error setting up certificates: {e}")
             print()
-            return True  # Не критично
+            return True  # Not critical
     
     def configure_cli(self) -> bool:
-        """Configuration CLI ассистента"""
+        """Configure CLI assistant"""
         print(self.msg("step_cli"))
         
         try:
             from scripts.cli.utils import ensure_in_path, add_to_env_var
             
-            # Добавить в PATH
-            print(f"  Добавление в PATH...", end=" ", flush=True)
+            # Add to PATH
+            print(f"  Adding to PATH...", end=" ", flush=True)
             if ensure_in_path(self.install_dir / "assist"):
                 print("[OK]")
             else:
                 print("[WARN]")
             
-            # Установить переменные окружения
-            print(f"  Установка переменных окружения...", end=" ", flush=True)
+            # Set environment variables
+            print(f"  Setting environment variables...", end=" ", flush=True)
             add_to_env_var("AIBREADBOARD_DIR", str(self.install_dir))
             add_to_env_var("PYTHONPATH", str(self.install_dir))
             print("[OK]")
@@ -246,26 +245,26 @@ class Installer:
         except Exception as e:
             print(f"[WARN] {e}")
             print()
-            return True  # Не критично
+            return True  # Not critical
     
     def verify_installation(self) -> bool:
-        """Проверить установку"""
+        """Verify installation"""
         print(self.msg("step_verify"))
         
         try:
-            # Получить Python в venv
+            # Get Python in venv
             if sys.platform == "win32":
                 python_exe = self.venv_dir / "Scripts" / "python.exe"
             else:
                 python_exe = self.venv_dir / "bin" / "python"
             
             if not python_exe.exists():
-                print(f"  [ERROR] Python не найден в venv")
+                print(f"  [ERROR] Python not found in venv")
                 print()
                 return False
             
-            # Проверить основные модули
-            print(f"  Check зависимостей...", end=" ", flush=True)
+            # Check core modules
+            print(f"  Checking dependencies...", end=" ", flush=True)
             result = subprocess.run(
                 [str(python_exe), "-c", "import fastapi, uvicorn, dotenv; print('OK')"],
                 capture_output=True,
@@ -276,15 +275,15 @@ class Installer:
             if result.returncode == 0 and "OK" in result.stdout:
                 print("[OK]")
             else:
-                print("[WARN] Некоторые зависимости могут быть не установлены")
+                print("[WARN] Some dependencies may not be installed")
             
-            # Проверить assist
+            # Check assist
             assist_file = self.install_dir / "assist"
             if assist_file.exists() or (self.install_dir / "assist.cmd").exists():
-                print(f"  Check assist CLI...", end=" ", flush=True)
+                print(f"  Checking assist CLI...", end=" ", flush=True)
                 print("[OK]")
             else:
-                print(f"  [WARN] assist не найден")
+                print(f"  [WARN] assist not found")
             
             print()
             return True
@@ -292,33 +291,33 @@ class Installer:
         except Exception as e:
             print(f"[WARN] {e}")
             print()
-            return True  # Не критично
+            return True  # Not critical
     
     def download_models(self, skip: bool = False) -> bool:
-        """Загрузить модели (опционально)"""
+        """Download models (optional)"""
         if skip:
             print(self.msg("step_models"))
-            print(f"  Пропуск (использовано --skip-models)")
+            print(f"  Skipping (used --skip-models)")
             print()
             return True
         
         print(self.msg("step_models"))
         
-        # TODO: Реализовать загрузку моделей
-        print(f"  TODO: Реализовать загрузку моделей")
+        # TODO: Implement model download
+        print(f"  TODO: Implement model download")
         print()
         return True
     
     def run(self, skip_models: bool = False, skip_venv: bool = False, 
             skip_deps: bool = False, skip_certs: bool = False) -> int:
-        """Запустить установку"""
+        """Run installation"""
         self.print_header()
         
         try:
-            # Создать директорию установки
+            # Create installation directory
             self.install_dir.mkdir(parents=True, exist_ok=True)
             
-            # Шаги установки
+            # Installation steps
             steps = [
                 (not skip_venv, self.create_venv, "venv"),
                 (not skip_deps, self.install_dependencies, "dependencies"),
@@ -339,15 +338,15 @@ class Installer:
             print("║" + self.msg("success").center(68) + "║")
             print("╚" + "═" * 68 + "╝")
             print()
-            print(f"Далее:")
-            print(f"  1. Перейдите в директорию установки:")
+            print(f"Next steps:")
+            print(f"  1. Go to installation directory:")
             print(f"     cd {self.install_dir}")
-            print(f"  2. Активируйте venv:")
+            print(f"  2. Activate venv:")
             if sys.platform == "win32":
                 print(f"     venv\\Scripts\\activate")
             else:
                 print(f"     source venv/bin/activate")
-            print(f"  3. Запустите сервер:")
+            print(f"  3. Start the server:")
             print(f"     python run.py")
             print()
             return 0
@@ -362,14 +361,14 @@ class Installer:
             return 1
 
 def main():
-    """Главная function"""
+    """Main function"""
     parser = argparse.ArgumentParser(
-        description="Установщик AI Breadboard",
+        description="AI Breadboard installer",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   python scripts/cli/installer.py
-  python scripts/cli/installer.py --lang ru
+  python scripts/cli/installer.py --lang en
   python scripts/cli/installer.py --install-dir /path/to/install
   python scripts/cli/installer.py --skip-models
         """
@@ -379,38 +378,38 @@ Examples:
         "--lang",
         choices=["en", "ru", "es", "he"],
         default="en",
-        help="Язык установки (по умолчанию: en)"
+        help="Installation language (default: en)"
     )
     
     parser.add_argument(
         "--install-dir",
         type=Path,
         default=None,
-        help="Директория установки"
+        help="Installation directory"
     )
     
     parser.add_argument(
         "--skip-models",
         action="store_true",
-        help="Пропустить загрузку моделей"
+        help="Skip model download"
     )
     
     parser.add_argument(
         "--skip-venv",
         action="store_true",
-        help="Пропустить создание venv"
+        help="Skip venv creation"
     )
     
     parser.add_argument(
         "--skip-deps",
         action="store_true",
-        help="Пропустить установку зависимостей"
+        help="Skip dependency installation"
     )
     
     parser.add_argument(
         "--skip-certs",
         action="store_true",
-        help="Пропустить настройку сертификатов"
+        help="Skip certificate setup"
     )
     
     args = parser.parse_args()

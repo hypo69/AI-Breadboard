@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Кроссплатформенный установщик AI Breadboard
+# Process Name: Cross-platform installer for AI Breadboard
 # =============================================================================
 # Description:
-#   Универсальный установщик для Windows, Linux и macOS с поддержкой
+#   Universal installer for Windows, Linux, and macOS with multilingual
 #   мультиязычности (RU/EN/ES/HE) и модульной архитектурой.
 #
 # Examples:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: src.utils
+# Process Name: FTP file transfer utilities
 # =============================================================================
 # Description:
 #   Module for AI Breadboard project.
@@ -12,17 +12,9 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: src.utils 
-	:platform: Windows, Unix
-	:synopsis: interface for interacting with FTP servers
-This module provides an interface for interacting with FTP servers. It includes functions to send, receive, and delete files from an FTP server.
+"""FTP interface for sending, receiving, and deleting files from FTP servers.
 
-** Purpose **:
-Allows for sending media files (images, videos), spreadsheets, and other files to and from an FTP server. 
-
-** Modules **:
-- helpers (local): Local helper utilities for FTP operations.
+Allows for sending media files, spreadsheets, and other files to and from an FTP server."""
 - typing: Type hints for function parameters and return values.
 - ftplib: Provides FTP protocol client capabilities.
 - pathlib: For handling file system paths.

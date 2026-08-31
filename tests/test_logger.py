@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Тесты модуля core/logger
+# Process Name: Tests for core/logger module
 # =============================================================================
 # Description:
-#   Module содержит тесты для модуля логгера core/logger. Checks форматирование
+#   Module contains tests for core/logger module. Checks formatting and logging functionality.
 #
 # File: test_logger.py
 # Project: ai-breadboard
@@ -12,9 +12,9 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-Тесты модуля core/logger
-"""
+"""Tests for core/logger module.
+
+Comprehensive testing of JSON formatter and logger functionality."""
 
 import pytest
 import json
@@ -22,10 +22,13 @@ from unittest.mock import Mock
 from pathlib import Path
 
 class TestJsonFormatter:
-    """Тесты JsonFormatter."""
+    """Tests for JsonFormatter."""
 
     def test_format(self):
-        """Тест форматирования лога."""
+        """Test log message formatting.
+        
+        Verifies that JsonFormatter correctly formats log records as JSON.
+        """
         from core.logger.logger import JsonFormatter
         
         formatter = JsonFormatter()
@@ -36,9 +39,9 @@ class TestJsonFormatter:
         record.pathname = "/test/path.py"
         record.lineno = 123
         record.funcName = "test_func"
-        record.created = 1722687000.0 # float
-        record.msecs = 123.0 # float для форматирования мс
-        record.exc_info = None # Добавлено: чтобы форматтер не падал
+        record.created = 1722687000.0  # float timestamp
+        record.msecs = 123.0  # float for millisecond formatting
+        record.exc_info = None  # Added: to prevent formatter failure
 
         
         result = formatter.format(record)
@@ -49,10 +52,13 @@ class TestJsonFormatter:
         assert log_data['message'] == 'Test message'
 
 class TestLogger:
-    """Тесты Logger."""
+    """Tests for Logger class."""
 
     def test_logger_singleton(self):
-        """Тест синглтона логера."""
+        """Test logger singleton pattern.
+        
+        Verifies that logger instances are singletons.
+        """
         from core.logger.logger import Logger
         
         logger1 = Logger()
@@ -61,12 +67,15 @@ class TestLogger:
         assert logger1 is logger2
 
     def test_logger_methods(self):
-        """Тест методов логера."""
+        """Test logger methods exist.
+        
+        Verifies that all standard logging methods are available.
+        """
         from core.logger.logger import Logger
         
         logger = Logger()
         
-        # Check что методы существуют
+        # Check that methods exist
         assert hasattr(logger, 'info')
         assert hasattr(logger, 'error')
         assert hasattr(logger, 'warning')
@@ -74,18 +83,24 @@ class TestLogger:
         assert hasattr(logger, 'critical')
 
     def test_logger_log(self):
-        """Тест логирования."""
+        """Test logger functionality.
+        
+        Verifies that global logger instance is accessible.
+        """
         from core.logger.logger import logger
         
-        # Check что глобальный logger доступен
+        # Check that global logger is available
         assert logger is not None
         assert hasattr(logger, 'info')
 
 class TestLogAnalyzer:
-    """Тесты log_analyzer.py."""
+    """Tests for log_analyzer module."""
 
     def test_get_max_size_bytes(self):
-        """Тест получения максимального размера лога."""
+        """Test retrieval of maximum log size.
+        
+        Verifies that max log size bytes calculation returns positive value.
+        """
         from core.logger.log_analyzer import get_max_size_bytes
         
         result = get_max_size_bytes()

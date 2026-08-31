@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Тестирование нормальных (ожидаемых) сценариев рабо
+# Process Name: Testing normal expected scenarios of FTP module
 # =============================================================================
 # Description:
-#   Исчерпывающее тестирование всех функций модуля core/utils/ftp.
+#   Comprehensive testing of all functions in core/utils/ftp module for FTP operations.
 #
 # File: test_utils_ftp.py
 # Project: ai-breadboard
@@ -21,18 +21,18 @@ from core.utils.ftp import write, read, delete
 # =============================================================================
 
 class TestFtp_HappyPath:
-    """Тестирование нормальных (ожидаемых) сценариев работы модуля ftp.
+    """Testing normal expected scenarios of FTP module operation.
     """
 
     @patch('core.utils.ftp.ftplib.FTP')
     def test_write_success(self, mock_ftp):
-        """Тестирование функции write с корректными данными.
+        """Test write function with correct data.
         """
-        # --- Подготовка (Arrange) ---
+        # --- Setup (Arrange) ---
         mock_session = mock_ftp.return_value
         with patch('builtins.open', mock_open()):
             
-            # --- Выполнение (Act) ---
+            # --- Execution (Act) ---
             result = write('test.txt', '/remote', 'test.txt')
             
             # --- Check (Assert) ---
@@ -42,13 +42,13 @@ class TestFtp_HappyPath:
 
     @patch('core.utils.ftp.ftplib.FTP')
     def test_read_success(self, mock_ftp):
-        """Тестирование функции read с корректными данными.
+        """Test read function with correct data.
         """
-        # --- Подготовка (Arrange) ---
+        # --- Setup (Arrange) ---
         mock_session = mock_ftp.return_value
         # Mock file operations for read
         with patch('builtins.open') as mock_file:
-            # --- Выполнение (Act) ---
+            # --- Execution (Act) ---
             result = read('test.txt', '/remote', 'test.txt')
             
             # --- Check (Assert) ---
@@ -58,12 +58,12 @@ class TestFtp_HappyPath:
 
     @patch('core.utils.ftp.ftplib.FTP')
     def test_delete_success(self, mock_ftp):
-        """Тестирование функции delete с корректными данными.
+        """Test delete function with correct data.
         """
-        # --- Подготовка (Arrange) ---
+        # --- Setup (Arrange) ---
         mock_session = mock_ftp.return_value
         
-        # --- Выполнение (Act) ---
+        # --- Execution (Act) ---
         result = delete('test.txt', '/remote', 'test.txt')
         
         # --- Check (Assert) ---

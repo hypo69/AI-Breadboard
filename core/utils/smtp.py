@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: src.utils
+# Process Name: SMTP email utilities
 # =============================================================================
 # Description:
 #   This module provides functionality to send and receive emails using an SMTP or IMAP server.
@@ -12,12 +12,7 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: src.utils 
-	:platform: Windows, Unix
-	:synopsis: SMTP Email Interface
-
-"""
+"""SMTP email interface utilities for sending email messages via SMTP server."""
 
 """ This module provides functionality to send and receive emails using an SMTP or IMAP server.
 It includes functions to send emails using SMTP and retrieve emails using IMAP.

@@ -24,34 +24,34 @@ from markdown2 import markdown
 from core.logger.logger import logger
 
 def md2html(md_string: str, extras: List[str] = None) -> str:
-     """
-     Конвертирует строку Markdown в HTML.
+    """
+    Convert Markdown string to HTML.
 
-     Args:
-         md_string (str): String Markdown для конвертации.
-         extras (list, optional): List расширений markdown2. Defaults to None.
+    Args:
+        md_string (str): Markdown string for conversion.
+        extras (list, optional): List of markdown2 extensions. Defaults to None.
 
-     Returns:
-         str: HTML-представление Markdown.
-     """
-     try:
-         if extras is None:
+    Returns:
+        str: HTML representation of Markdown.
+    """
+    try:
+        if extras is None:
             return markdown(md_string)
-         return markdown(md_string, extras=extras)
-     except Exception as ex:
-        logger.error("Error при преобразовании Markdown в HTML.", exc_info=True)
+        return markdown(md_string, extras=extras)
+    except Exception as ex:
+        logger.error("Error during Markdown to HTML conversion.", exc_info=True)
         return ""
 
 def md2dict(md_string: str, extras: List[str] = None) -> Dict[str, list[str]]:
     """
-    Конвертирует строку Markdown в структурированный dictionary.
+    Convert Markdown string to structured dictionary.
 
     Args:
-        md_string (str): String Markdown для конвертации.
-        extras (list, optional): List расширений markdown2 для md2html. Defaults to None.
+        md_string (str): Markdown string for conversion.
+        extras (list, optional): List of markdown2 extensions for md2html. Defaults to None.
 
     Returns:
-         Dict[str, list[str]]: Структурированное представление Markdown содержимого.
+        Dict[str, list[str]]: Structured representation of Markdown content.
     """
     try:
 
@@ -78,5 +78,5 @@ def md2dict(md_string: str, extras: List[str] = None) -> Dict[str, list[str]]:
         return sections
 
     except Exception as ex:
-        logger.error("Error при парсинге Markdown в структурированный dictionary.", exc_info=True)
+        logger.error("Error parsing Markdown to structured dictionary.", exc_info=True)
         return {}

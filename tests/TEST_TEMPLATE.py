@@ -41,7 +41,7 @@ class TestTargetClass_HappyPath:
         # Value 1 — minimum allowed non-zero identifier.
         user_id: int = 1
 
-        # String of name: non-empty string with Cyrillic characters.
+        # String of name: non-empty string with Latin characters.
         # Chosen to verify correct handling of Unicode characters.
         user_name: str = 'Ivan Ivanov'
 
@@ -69,25 +69,25 @@ class TestTargetClass_HappyPath:
         """Verification of return type of method.
 
         Verification: method must return dict type, not list or str.
-        Стандарт: тип возвращаемого значения зафиксирован в Docstring.
+        Standard: return type is fixed in Docstring.
         """
-        # --- Подготовка (Arrange) ---
+        # --- Setup (Arrange) ---
 
-        # Минимально необходимые данные для вызова метода.
-        # Используем минимальный набор, чтобы изолировать проверку типа.
+        # Minimal data required to call method.
+        # Use minimal set to isolate type checking.
         minimal_config: dict = {'key': 'value'}
 
-        # --- Выполнение (Act) ---
+        # --- Execution (Act) ---
 
-        # Результат вызова: ожидается dictionary с данными.
+        # Call result: expected dictionary with data.
         # result: dict = target.method_name(config=minimal_config)
 
         # --- Check (Assert) ---
 
-        # Check типа возвращаемого значения.
-        # Нарушение: неверный тип указывает на несовместимость с вызывающим кодом.
+        # Check return type.
+        # Violation: incorrect type indicates incompatibility with calling code.
         # assert isinstance(result, dict), (
-        #     f"method_name() должен возвращать dict, получен тип: {type(result).__name__}"
+        #     f"method_name() must return dict, received type: {type(result).__name__}"
         # )
         pass
 
@@ -96,234 +96,234 @@ class TestTargetClass_HappyPath:
 # =============================================================================
 
 class TestTargetClass_EdgeCases:
-    """Тестирование граничных значений и пустых данных.
+    """Testing of boundary values and empty data.
 
-    Покрывает: пустые строки, нулевые значения, пустые коллекции.
-    Цель: убедиться, что function корректно активирует Early Return.
+    Covers: empty strings, zero values, empty collections.
+    Goal: ensure that function correctly activates Early Return.
     """
 
     def test_method_name_empty_string(self):
-        """Тестирование граничного случая: пустая string как аргумент.
+        """Test edge case: empty string as argument.
 
-        Check: пустая string '' активирует ранний возврат → False.
-        Стандарт: CODE_RULES.md §3.4 — Early Return для невалидных данных.
+        Check: empty string '' activates early return → False.
+        Standard: CODE_RULES.md §3.4 — Early Return for invalid data.
         """
-        # --- Подготовка (Arrange) ---
+        # --- Setup (Arrange) ---
 
-        # Граничное значение: пустая string — минимальный Invalid Input строки.
-        # Ожидается срабатывание ветки `if not param_str: return False`.
+        # Edge value: empty string — minimal Invalid Input string.
+        # Expected activation of branch `if not param_str: return False`.
         empty_string: str = ''
 
-        # --- Выполнение (Act) ---
+        # --- Execution (Act) ---
 
-        # Вызов с empty строкой.
-        # Function должна вернуть False без генерации исключений.
+        # Call with empty string.
+        # Function should return False without raising exceptions.
         # result: bool = target.method_name(param=empty_string)
 
         # --- Check (Assert) ---
 
-        # Check: пустая string обязана возвращать False (Early Return).
-        # Нарушение: возврат True означает, что validation входных данных отсутствует.
+        # Check: empty string must return False (Early Return).
+        # Violation: return True means input validation is missing.
         # assert result is False, (
-        #     f"method_name('') должен вернуть False, получено: {result!r}"
+        #     f"method_name('') should return False, got: {result!r}"
         # )
         pass
 
     def test_method_name_zero_value(self):
-        """Тестирование граничного случая: нулевое числовое значение.
+        """Test edge case: zero numeric value.
 
-        Check: значение 0 для числового параметра → False (Early Return).
-        Обоснование: 0 является допустимым типом, но невалидным значением ID.
+        Check: value 0 for numeric parameter → False (Early Return).
+        Rationale: 0 is valid type but invalid ID value.
         """
-        # --- Подготовка (Arrange) ---
+        # --- Setup (Arrange) ---
 
-        # Нулевое значение: минимальный invalid целочисленный ввод.
-        # В контексте ID — 0 означает «не задан», что недопустимо.
+        # Zero value: minimal invalid integer input.
+        # In ID context — 0 means "not set", which is unacceptable.
         zero_id: int = 0
 
-        # --- Выполнение (Act) ---
+        # --- Execution (Act) ---
 
         # result: bool = target.method_name(user_id=zero_id)
 
         # --- Check (Assert) ---
 
-        # Zero ID должен вернуть False (идентификатор не может быть 0).
-        # Нарушение: обработка нулевого ID как валидного нарушает бизнес-логику.
+        # Zero ID should return False (identifier cannot be 0).
+        # Violation: treating zero ID as valid breaks business logic.
         # assert result is False, (
-        #     f"method_name(user_id=0) должен вернуть False, получено: {result!r}"
+        #     f"method_name(user_id=0) should return False, got: {result!r}"
         # )
         pass
 
     def test_method_name_empty_list(self):
-        """Тестирование граничного случая: empty list как аргумент.
+        """Test edge case: empty list as argument.
 
-        Check: empty [] активирует ранний возврат → False.
+        Check: empty [] activates early return → False.
         """
-        # --- Подготовка (Arrange) ---
+        # --- Setup (Arrange) ---
 
-        # Empty list: допустимый тип, но нет данных для обработки.
+        # Empty list: valid type, but no data to process.
         empty_items: list = []
 
-        # --- Выполнение (Act) ---
+        # --- Execution (Act) ---
 
         # result: bool = target.method_name(items=empty_items)
 
         # --- Check (Assert) ---
 
         # assert result is False, (
-        #     f"method_name([]) должен вернуть False, получено: {result!r}"
+        #     f"method_name([]) should return False, got: {result!r}"
         # )
         pass
 
 # =============================================================================
-# Section: Type Variants — варианты типов аргументов
+# Section: Type Variants — variants of argument types
 # =============================================================================
 
 class TestTargetClass_TypeVariants:
-    """Тестирование разных допустимых типов входных аргументов.
+    """Testing of different valid input argument types.
 
-    Покрывает: все типы, указанные в аннотациях функции.
-    Цель: убедиться, что function корректно processes каждый допустимый тип.
+    Covers: all types specified in function annotations.
+    Goal: ensure that function correctly processes each valid type.
     """
 
     @pytest.mark.parametrize("input_value,expected", [
-        # Integer: стандартный ввод для числового параметра
+        # Integer: standard input for numeric parameter
         (42, True),
-        # String-число: иногда ID приходит как string из запроса
+        # String-number: sometimes ID comes as string from request
         ('42', True),
-        # Ноль: граничное числовое значение → Early Return
+        # Zero: boundary numeric value → Early Return
         (0, False),
-        # Пустая string: граничное строковое значение → Early Return
+        # Empty string: boundary string value → Early Return
         ('', False),
     ])
     def test_method_name_parametrized_input(self, input_value, expected):
-        """Параметризованное тестирование разных типов входных данных.
+        """Parametrized testing of different input data types.
 
         Args:
-            input_value: Тестируемое входное значение (int или str).
-            expected (bool): Ожидаемое возвращаемое значение функции.
+            input_value: Test input value (int or str).
+            expected (bool): Expected function return value.
 
-        Check: function корректно processes все допустимые типы.
+        Check: function correctly processes all valid types.
         """
-        # --- Выполнение (Act) ---
+        # --- Execution (Act) ---
 
-        # Вызов функции с параметризованным значением.
-        # Ожидаемый результат указан в таблице parametrize выше.
+        # Call function with parametrized value.
+        # Expected result is specified in parametrize table above.
         # result: bool = target.method_name(param=input_value)
 
         # --- Check (Assert) ---
 
-        # Check соответствия результата ожидаемому значению.
-        # Нарушение: несоответствие указывает на баг в логике приведения типов.
+        # Check if result matches expected value.
+        # Violation: mismatch indicates bug in type conversion logic.
         # assert result is expected, (
-        #     f"method_name({input_value!r}) должен вернуть {expected!r}, "
-        #     f"получено: {result!r}"
+        #     f"method_name({input_value!r}) should return {expected!r}, "
+        #     f"got: {result!r}"
         # )
         pass
 
 # =============================================================================
-# Section: Error Scenarios — Invalid Input и исключения
+# Section: Error Scenarios — Invalid Input and exceptions
 # =============================================================================
 
 class TestTargetClass_ErrorScenarios:
-    """Тестирование обработки ошибочных сценариев.
+    """Testing of error scenario handling.
 
-    Покрывает: invalid тип, несуществующие ресурсы, исключения.
-    Стандарт: CODE_RULES.md §3.4 — function должна вернуть False, не пробросить exception.
+    Covers: invalid type, non-existent resources, exceptions.
+    Standard: CODE_RULES.md §3.4 — function should return False, not raise exception.
     """
 
     def test_method_name_invalid_type_returns_false(self):
-        """Тестирование: invalid тип аргумента → False (без исключения).
+        """Test: invalid argument type → False (without exception).
 
-        Check: function обязана вернуть False, а не пробрасывать TypeError.
-        Стандарт: CODE_RULES.md §3.6.3 — ранний возврат False вместо исключений.
+        Check: function must return False, not raise TypeError.
+        Standard: CODE_RULES.md §3.6.3 — early return False instead of exceptions.
         """
-        # --- Подготовка (Arrange) ---
+        # --- Setup (Arrange) ---
 
-        # Invalid тип: list вместо ожидаемого словаря.
-        # Проверяем устойчивость функции к неверному типу ввода.
+        # Invalid type: list instead of expected dictionary.
+        # Check function robustness against wrong input type.
         invalid_input: list = [1, 2, 3]
 
-        # --- Выполнение (Act) ---
+        # --- Execution (Act) ---
 
-        # Ожидается возврат False без генерации TypeError.
+        # Expected return False without raising TypeError.
         # result: bool = target.method_name(param=invalid_input)
 
         # --- Check (Assert) ---
 
-        # Function не должна бросать исключения при невалидном типе.
+        # Function must not raise exceptions on invalid type.
         # assert result is False, (
-        #     f"method_name() с невалидным типом должен вернуть False, "
-        #     f"получено: {result!r}"
+        #     f"method_name() with invalid type should return False, "
+        #     f"got: {result!r}"
         # )
         pass
 
     def test_method_name_raises_on_critical_error(self):
-        """Тестирование: критическая Error генерирует exception.
+        """Test: critical Error generates exception.
 
-        Check: при недоступности внешнего ресурса бросается ConnectionError.
-        Обоснование: это явная критическая Error, а не «нет данных».
+        Check: when external resource is unavailable, ConnectionError is raised.
+        Rationale: this is explicit critical Error, not "no data".
         """
-        # --- Подготовка (Arrange) ---
+        # --- Setup (Arrange) ---
 
-        # Мок внешнего сервиса: имитация недоступного ресурса.
-        # side_effect=ConnectionError() — принудительная генерация исключения.
+        # Mock external service: simulate unavailable resource.
+        # side_effect=ConnectionError() — force exception generation.
         mock_service: Mock = Mock()
-        mock_service.connect.side_effect = ConnectionError("Сервис недоступен")
+        mock_service.connect.side_effect = ConnectionError("Service unavailable")
 
-        # Correct ввод: Error возникает не из-за данных, а из-за сервиса.
+        # Correct input: Error arises from service, not data.
         valid_input: dict = {'key': 'value'}
 
-        # --- Выполнение и Check (Act + Assert) ---
+        # --- Execution and Check (Act + Assert) ---
 
-        # Check: function обязана пробросить ConnectionError наружу.
-        # Нарушение: проглатывание исключения скрывает критические сбои.
-        # with pytest.raises(ConnectionError, match="Сервис недоступен"):
+        # Check: function must raise ConnectionError.
+        # Violation: swallowing exception hides critical failures.
+        # with pytest.raises(ConnectionError, match="Service unavailable"):
         #     target.method_name(param=valid_input, service=mock_service)
         pass
 
 # =============================================================================
-# Section: Regression — Regression Tests зависимых блоков
+# Section: Regression — Regression Tests of dependent blocks
 # =============================================================================
 
 class TestTargetClass_Regression:
-    """Regression Tests: check влияния изменений на зависимые блоки.
+    """Regression Tests: check impact of changes on dependent blocks.
 
-    ВАЖНО: эти тесты проверяют модули, которые используют TargetClass.
-    Цель: убедиться, что изменения в TargetClass не сломали зависимый код.
+    IMPORTANT: these tests verify modules that use TargetClass.
+    Goal: ensure that changes in TargetClass did not break dependent code.
 
-    Зависимые блоки (заполнить после анализа влияния в Шаге 2):
-        - core/facade.py::process() — использует TargetClass.method_name()
-        - core/api/endpoints.py::create_endpoint() — передаёт ввод в TargetClass
+    Dependent blocks (fill after impact analysis in Step 2):
+        - core/facade.py::process() — uses TargetClass.method_name()
+        - core/api/endpoints.py::create_endpoint() — passes input to TargetClass
     """
 
     def test_dependent_facade_process_still_works(self):
-        """Регрессионный тест: Facade.process() работает после изменения TargetClass.
+        """Regression test: Facade.process() works after TargetClass changes.
 
-        Check: изменение в TargetClass не нарушило интерфейс Facade.process().
-        Обоснование: Facade — прямой потребитель TargetClass, критическая зависимость.
+        Check: change in TargetClass did not break Facade.process() interface.
+        Rationale: Facade — direct consumer of TargetClass, critical dependency.
         """
-        # --- Подготовка (Arrange) ---
+        # --- Setup (Arrange) ---
 
-        # Мок TargetClass: изолируем тест от реальной реализации.
-        # return_value='expected_data' — имитация успешного ответа.
+        # Mock TargetClass: isolate test from real implementation.
+        # return_value='expected_data' — simulate successful response.
         mock_target: Mock = Mock()
         mock_target.method_name.return_value = 'expected_data'
 
-        # Корректные входные данные для Facade.
+        # Correct input data for Facade.
         facade_input: dict = {'param': 'value'}
 
-        # --- Выполнение (Act) ---
+        # --- Execution (Act) ---
 
-        # Вызов зависимого метода с замоканным TargetClass.
+        # Call dependent method with mocked TargetClass.
         # with patch('core.target_module.TargetClass', return_value=mock_target):
         #     result = facade.process(facade_input)
 
         # --- Check (Assert) ---
 
-        # Check: зависимый method получил данные от TargetClass.
-        # Нарушение: изменение сигнатуры TargetClass.method_name() сломало Facade.
+        # Check: dependent method received data from TargetClass.
+        # Violation: change in TargetClass.method_name() signature broke Facade.
         # assert mock_target.method_name.called, (
-        #     "Facade.process() обязан вызывать TargetClass.method_name()"
+        #     "Facade.process() must call TargetClass.method_name()"
         # )
         pass

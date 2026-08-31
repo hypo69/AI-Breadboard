@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Returns list измененных файлов .py в git репозитор
+# Process Name: Check documentation validity of modified files
 # =============================================================================
 # Description:
-#   Скрипт checks наличие и заполненность документации (README.md, docstrings)
+#   Script checks presence and validity of documentation (README.md, docstrings)
+#   for modified Python files in the repository.
 #
 # File: update_docs.py
 # Project: ai-breadboard
@@ -12,6 +13,11 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
+"""Documentation validation for modified Python files.
+
+Checks for presence of docstrings in modified Python files and validates
+that proper documentation standards are met."""
+
 import os
 import sys
 import subprocess
@@ -19,7 +25,11 @@ from pathlib import Path
 from typing import List
 
 def get_modified_python_files() -> List[Path]:
-    """Returns list измененных файлов .py в git репозитории."""
+    """Get list of modified Python files in git repository.
+    
+    Returns:
+        List of Path objects for modified .py files.
+    """
     modified_files = []
     try:
         res = subprocess.check_output(
@@ -34,37 +44,45 @@ def get_modified_python_files() -> List[Path]:
                 if filepath.suffix == ".py" and filepath.exists():
                     modified_files.append(filepath)
     except Exception:
-        # Если git недоступен, вернем empty list
+        # Git unavailable, return empty list
         pass
     return modified_files
 
 def validate_docblocks(files: List[Path]) -> bool:
-    """Checks наличие docstring в измененных файлах."""
+    """Check for presence of docstrings in modified files.
+    
+    Args:
+        files: List of file paths to check.
+        
+    Returns:
+        True if all files contain docstrings, False otherwise.
+    """
     all_valid = True
     for f in files:
         content = f.read_text(encoding="utf-8")
-        # Простая check на наличие тройных кавычек (docstrings)
+        # Simple check for triple quotes (docstrings)
         if '"""' not in content and "'''" not in content:
-            print(f"⚠️  Файл {f.name} изменен, но не содержит docstring!")
+            print(f"⚠️  File {f.name} modified but contains no docstring!")
             all_valid = False
     return all_valid
 
 def main() -> int:
-    print("🔎 Запуск проверки актуальности документации и комментариев...")
+    """Main function."""
+    print("🔎 Starting documentation and comments validity check...")
     
     modified = get_modified_python_files()
     if not modified:
-        print("✅ Измененных файлов Python в Git не найдено. Дополнительная validation не требуется.")
+        print("✅ No modified Python files found in git. Additional validation not required.")
         return 0
         
-    print(f"Обнаружено измененных файлов: {len(modified)}")
+    print(f"Modified files found: {len(modified)}")
     valid = validate_docblocks(modified)
     
     if valid:
-        print("✅ Все измененные файлы содержат docstring.")
+        print("✅ All modified files contain docstrings.")
         return 0
     else:
-        print("❌ Рекомендуется добавить или обновить комментарии/документацию.")
+        print("❌ Recommended to add or update comments/documentation.")
         return 1
 
 if __name__ == "__main__":

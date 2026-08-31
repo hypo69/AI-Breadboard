@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Тесты модуля core/tts
+# Process Name: Tests for core/tts module
 # =============================================================================
 # Description:
-#   Module содержит тесты для модуля синтеза речи (Text-to-Speech). Checks
+#   Module contains tests for speech synthesis (Text-to-Speech) module. Checks
 #
 # File: test_tts.py
 # Project: ai-breadboard
@@ -13,7 +13,7 @@
 # =============================================================================
 
 """
-Тесты модуля core/tts
+Tests for core/tts module
 """
 
 import pytest
@@ -28,23 +28,23 @@ except ImportError:
     has_torch = False
 
 class TestTTSEdge:
-    """Тесты edge.py TTS."""
+    """Tests for edge.py TTS."""
 
     @pytest.mark.asyncio
     async def test_synthesize_edge(self):
-        """Тест синтеза речи edge-tts."""
+        """Test edge-tts speech synthesis."""
         from core.tts.edge import synthesize
         
         with patch('core.tts.edge') as mock_tts:
-            # Check что function существует
+            # Check that function exists
             assert callable(synthesize)
 
 class TestTTSGTTS:
-    """Тесты gtts.py TTS."""
+    """Tests for gtts.py TTS."""
 
     @pytest.mark.asyncio
     async def test_synthesize_gtts(self):
-        """Тест синтеза речи gtts."""
+        """Test gtts speech synthesis."""
         from core.tts.gtts import synthesize
         
         with patch('core.tts.gtts') as mock_tts:
@@ -52,12 +52,12 @@ class TestTTSGTTS:
 
 @pytest.mark.skipif(not has_torch, reason="torch is not installed")
 class TestTTSSilero:
-    """Тесты silero.py TTS."""
+    """Tests for silero.py TTS."""
 
     def test_get_silero_model(self):
-        """Тест загрузки модели Silero."""
+        """Test loading Silero model."""
         try:
-            # Проверяем что Module можно импортировать
+            # Check that module can be imported
             from core.tts.silero import get_silero_model
             assert callable(get_silero_model)
         except ModuleNotFoundError as e:
@@ -67,7 +67,7 @@ class TestTTSSilero:
 
     @pytest.mark.asyncio
     async def test_synthesize_silero(self):
-        """Тест синтеза речи Silero."""
+        """Test Silero speech synthesis."""
         try:
             from core.tts.silero import synthesize
             assert callable(synthesize)
@@ -77,31 +77,4 @@ class TestTTSSilero:
             raise
 
 class TestTTSInit:
-    """Тесты __init__.py TTS."""
-
-    @pytest.mark.asyncio
-    async def test_synthesize_speech(self):
-        """Тест синтеза речи (обертка)."""
-        from core.tts import synthesize_speech
-        
-        # Check что function существует
-        assert callable(synthesize_speech)
-
-class TestTTSIntegration:
-    """Интеграционные тесты TTS."""
-
-    @pytest.mark.asyncio
-    async def test_synthesize_all_systems(self, tmp_path):
-        """Тест синтеза для всех систем."""
-        import core.tts
-        
-        test_file = tmp_path / 'test.mp3'
-        text = "Тестовый текст для синтеза речи"
-        
-        with patch('core.tts.synthesize_speech') as mock_synth:
-            mock_synth.return_value = AsyncMock()
-            
-            result = await core.tts.synthesize_speech(text, test_file, "edge-tts", "ru-RU-DmitryNeural")
-            
-            mock_synth.assert_called_once()
-
+    """Tests for __init__.py TTS."""

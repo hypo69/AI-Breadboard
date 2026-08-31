@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: src.ai.gemini
+# Process Name: Gemini AI model interface integration
 # =============================================================================
 # Description:
 #   Module for AI Breadboard project.
@@ -12,12 +12,9 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: src.ai.gemini 
-	:platform: Windows, Unix
-	:synopsis: Module интерфейса с моделью от Coogle - generativeai
+"""Gemini AI model interface integration module.
 
-"""
+Provides interface for interacting with Google Generative AI (Gemini) model via generativeai library."""
 
 import sys
 from packaging.version import Version

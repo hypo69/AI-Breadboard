@@ -12,12 +12,7 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: src.utils.convertors.html2text 
-	:platform: Windows, Unix
-	:synopsis:  HTML -> MD
-
-"""
+"""HTML to Markdown conversion utilities."""
 
 """html2text: Turn HTML into equivalent Markdown-structured text."""
 __version__ = "3.1"

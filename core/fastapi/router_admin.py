@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Check прав администратора. Бросает HTTPException е
+# Process Name: Admin management and system configuration router
 # =============================================================================
 # Description:
-#   CRUD для файлов системных инструкций.
+#   Provides administrative FastAPI endpoints for managing system prompts,
+#   skills configuration, server lifecycle controls, and administrative settings.
 #
 # File: router_admin.py
 # Project: ai-breadboard

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: core.logger.header
+# Process Name: Project root path determination and meta information initialization
 # =============================================================================
 # Description:
 #   Module for AI Breadboard project.
@@ -12,15 +12,11 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: core.logger.header
-    :platform: Windows, Unix
-    :synopsis: Module для определения корневого пути проекта и инициализации метаинформации.
-    
-Этот Module решает две основные задачи:
-1. Определяет корневую директорию проекта путём поиска маркерных файлов
-2. Loads и инициализирует метаинформацию о проекте из конфигов
-"""
+"""Module for project root path determination and meta information initialization.
+
+Solves two primary tasks:
+1. Determines project root directory by searching for marker files
+2. Loads and initializes project meta information from configuration files"""
 
 import sys
 import json

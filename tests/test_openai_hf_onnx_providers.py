@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Check двустороннего маппинга идентификаторов модел
+# Process Name: Test bidirectional model identifier mapping
 # =============================================================================
 # Description:
-#   Check двустороннего маппинга идентификаторов моделей."""
+#   Test bidirectional mapping between internal and OpenAI-format model identifiers.
 #
 # File: test_openai_hf_onnx_providers.py
 # Project: ai-breadboard
@@ -11,6 +11,10 @@
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
+
+"""Test OpenAI-compatible, HuggingFace, and ONNX provider integration.
+
+Tests model ID mapping, provider routing, and chat completion endpoints."""
 
 import pytest
 from unittest.mock import AsyncMock, patch
@@ -25,7 +29,10 @@ from core.ai.model_manager import get_available_models
 from main import app
 
 def test_openai_id_mapping():
-    """Check двустороннего маппинга идентификаторов моделей."""
+    """Test bidirectional model identifier mapping.
+    
+    Verifies that internal model IDs map to OpenAI format and back.
+    """
     assert map_to_openai_id("foundry:qwen2.5-1.5b") == "foundry-qwen2.5-1.5b"
     assert map_to_openai_id("hf:Qwen/Qwen2.5-0.5B-Instruct") == "hf-Qwen/Qwen2.5-0.5B-Instruct"
     assert map_to_openai_id("onnx:models/gemma") == "onnx-models/gemma"
@@ -37,7 +44,10 @@ def test_openai_id_mapping():
     assert map_from_openai_id("openai-gpt-4o") == "openai:gpt-4o"
 
 def test_model_manager_new_providers():
-    """Check возврата списков моделей для hf, onnx и openai."""
+    """Test model list retrieval for HuggingFace, ONNX, and OpenAI providers.
+    
+    Verifies that each provider returns a non-empty list of available models.
+    """
     hf_models = get_available_models("hf", force_refresh=True)
     assert isinstance(hf_models, list)
     assert len(hf_models) > 0
@@ -51,14 +61,20 @@ def test_model_manager_new_providers():
     assert isinstance(onnx_models, list)
 
 def test_gguf_converter_availability():
-    """Check статуса доступности конвертера."""
+    """Test GGUF converter availability status.
+    
+    Verifies that converter and optimizer availability can be checked.
+    """
     status = gguf_converter.is_available()
     assert isinstance(status, dict)
     assert "converter" in status
     assert "optimizer" in status
 
 def test_openai_compat_chat_generate():
-    """Check генерации через OpenAICompatChat с моком aiohttp."""
+    """Test content generation via OpenAICompatChat with mocked aiohttp.
+    
+    Verifies that the OpenAI-compatible client can generate responses.
+    """
     async def _run():
         client = OpenAICompatChat(model_id="gpt-4o-mini", api_key="test-key")
         with patch("aiohttp.ClientSession.post") as mock_post:
@@ -76,7 +92,10 @@ def test_openai_compat_chat_generate():
     asyncio.run(_run())
 
 def test_router_openai_list_models():
-    """Check эндпоинта GET /v1/models."""
+    """Test GET /v1/models endpoint.
+    
+    Verifies that the endpoint returns a list of models in OpenAI format.
+    """
     client = TestClient(app)
     response = client.get("/v1/models")
     assert response.status_code == 200
@@ -84,14 +103,17 @@ def test_router_openai_list_models():
     assert data.get("object") == "list"
     assert isinstance(data.get("data"), list)
     assert len(data.get("data")) > 0
-    # Check наличия обязательных полей
+    # Check for required fields
     first_model = data["data"][0]
     assert "id" in first_model
     assert "object" in first_model
     assert "owned_by" in first_model
 
 def test_router_openai_chat_completions():
-    """Check эндпоинта POST /v1/chat/completions."""
+    """Test POST /v1/chat/completions endpoint.
+    
+    Verifies that the endpoint processes chat completion requests correctly.
+    """
     client = TestClient(app)
     with patch("core.fastapi.router_openai.get_chat_model") as mock_get_model:
         mock_chat = AsyncMock()
@@ -116,7 +138,10 @@ def test_router_openai_chat_completions():
         assert data["choices"][0]["message"]["content"] == "Universal assistant reply"
 
 def test_openai_compat_chat_ask_and_chat():
-    """Check методов ask() и chat() с историей для OpenAICompatChat."""
+    """Test ask() and chat() methods with history for OpenAICompatChat.
+    
+    Verifies both single requests and multi-turn conversations work correctly.
+    """
     async def _run():
         client = OpenAICompatChat(model_id="gpt-4o", api_key="test-key", system_prompt="Sys prompt")
         with patch("aiohttp.ClientSession.post") as mock_post:
@@ -143,7 +168,10 @@ def test_openai_compat_chat_ask_and_chat():
     asyncio.run(_run())
 
 def test_openai_compat_provider_factory():
-    """Check фабричного метода create_for_provider."""
+    """Test factory method create_for_provider.
+    
+    Verifies that the factory correctly initializes clients for different providers.
+    """
     client_deepseek = OpenAICompatChat.create_for_provider("deepseek", "deepseek-chat")
     assert client_deepseek.model_id == "deepseek-chat"
     assert "deepseek.com" in client_deepseek.base_url
@@ -153,7 +181,10 @@ def test_openai_compat_provider_factory():
     assert "groq.com" in client_groq.base_url
 
 def test_unified_chat_openai_routing():
-    """Check маршрутизации UnifiedChatModel на OpenAICompatChat."""
+    """Test UnifiedChatModel routing to OpenAICompatChat.
+    
+    Verifies that the unified model correctly routes to OpenAI-compatible provider.
+    """
     async def _run():
         from core.ai.unified_chat import UnifiedChatModel
         chat_model = UnifiedChatModel(
@@ -170,7 +201,10 @@ def test_unified_chat_openai_routing():
     asyncio.run(_run())
 
 def test_router_chat_models_endpoint():
-    """Check, что GET /api/chat/models Returns все провайдеры включая openai, hf, onnx."""
+    """Test GET /api/chat/models endpoint returns all providers.
+    
+    Verifies that the endpoint includes OpenAI, HuggingFace, ONNX and other providers.
+    """
     client = TestClient(app)
     response = client.get("/api/chat/models")
     assert response.status_code == 200

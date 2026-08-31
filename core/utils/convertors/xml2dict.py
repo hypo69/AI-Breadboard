@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: .. module:: src.utils.convertors
+# Process Name: Convert XML data to dictionaries
 # =============================================================================
 # Description:
 #   Module for AI Breadboard project.
@@ -12,12 +12,10 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""
-.. module:: src.utils.convertors 
-	:platform: Windows, Unix
-	:synopsis: provides utilities for converting XML data into dictionaries. It includes functions for parsing XML strings and converting XML element trees into dictionary representations.
+"""XML to dictionary conversion utilities.
 
-Functions:
+Provides utilities for converting XML data into dictionaries. Includes functions for
+parsing XML strings and converting XML element trees into dictionary representations."""
 - `_parse_node`: Parses an XML node into a dictionary.
 - `_make_dict`: Generates a dictionary with the tag name and value.
 - `xml2dict`: Parses an XML string into a dictionary.

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Returns путь к файлу логов после проверки безопасн
+# Process Name: Server logs inspection and AI analysis router
 # =============================================================================
 # Description:
-#   API-эндпоинты для просмотра, чтения, очистки и AI-анализа лог-файлов.
+#   Provides FastAPI endpoints for viewing application logs, clearing log files,
+#   streaming log outputs, and performing automated AI log analysis.
 #
 # File: router_logs.py
 # Project: ai-breadboard
