@@ -77,7 +77,7 @@ jobs:
         PY
 
     - name: Append missing LFS patterns and push branch
-      if: steps.check-patterns.outputs.missing == 'true'
+      if: steps.check-patterns.outputs.missing == 'true' && github.event_name != 'pull_request'
       run: |
         BRANCH="chore/add-git-lfs-patterns-${{ github.run_id }}"
         git config user.name "github-actions[bot]"
@@ -97,7 +97,7 @@ jobs:
         git push origin "$BRANCH"
 
     - name: Create PR for .gitattributes update
-      if: steps.check-patterns.outputs.missing == 'true'
+      if: steps.check-patterns.outputs.missing == 'true' && github.event_name != 'pull_request'
       uses: peter-evans/create-pull-request@v5
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
