@@ -37,6 +37,56 @@ import header
 from header import __root__
 from dotenv import load_dotenv
 
+
+# Директория для хранения состояния выбранных провайдера/модели
+_STATE_DIR = __root__ / ".assist_state"
+_PROVIDER_FILE = _STATE_DIR / "provider.json"
+_MODEL_FILE = _STATE_DIR / "model.json"
+
+
+def _ensure_state_dir() -> None:
+    """Создает директорию состояния если её нет."""
+    _STATE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _get_selected_provider() -> dict:
+    """Возвращает текущий выбранный провайдер."""
+    if not _PROVIDER_FILE.exists():
+        return {}
+    try:
+        with open(_PROVIDER_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _set_selected_provider(provider_name: str) -> None:
+    """Сохраняет выбранный провайдер."""
+    _ensure_state_dir()
+    with open(_PROVIDER_FILE, "w", encoding="utf-8") as f:
+        json.dump({"provider": provider_name}, f, ensure_ascii=False, indent=2)
+
+
+def _get_selected_model() -> dict:
+    """Возвращает текущую выбранную модель."""
+    if not _MODEL_FILE.exists():
+        return {}
+    try:
+        with open(_MODEL_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _set_selected_model(model_name: str, provider: str = "") -> None:
+    """Сохраняет выбранную модель."""
+    _ensure_state_dir()
+    data = {"model": model_name}
+    if provider:
+        data["provider"] = provider
+    with open(_MODEL_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
 # Настройка UTF-8 для вывода в консоль Windows
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -177,11 +227,56 @@ def cmd_restart(args: argparse.Namespace) -> int:
     return cmd_start(args)
 
 
+def _auto_start_server() -> bool:
+    """Проверяет и при необходимости запускает сервер."""
+    # Проверка через переменную окружения
+    auto_env = os.getenv("AUTO_START_ASSIST_CLI", "").lower()
+    if auto_env in ("false", "0", "no", ""):
+        return False
+    
+    cfg = _get_config()
+    auto_start = cfg.get("server", {}).get("auto_start_assist_cli", False)
+    
+    if not auto_start:
+        return False
+    
+    # Проверяем, запущен ли сервер
+    port = int(cfg.get("server", {}).get("port", 8000))
+    pids = _get_occupied_port_pids(port)
+    
+    if pids:
+        # Сервер уже запущен
+        return False
+    
+    # Запускаем сервер через run.ps1
+    run_script = __root__ / "run.ps1"
+    if not run_script.exists():
+        print(f"{C_YELLOW}⚠️  run.ps1 не найден, пропускаем автозапуск{C_RESET}")
+        return False
+    
+    print(f"{C_CYAN}🚀 Автозапуск сервера через run.ps1...{C_RESET}")
+    try:
+        result = subprocess.run(
+            ["powershell", "-ExecutionPolicy", "Bypass", "-File", str(run_script)],
+            cwd=str(__root__),
+            timeout=5  # Запуск в фоновом режиме, timeout для проверки
+        )
+        print(f"{C_GREEN}✔ Сервер запускается в фоновом режиме{C_RESET}")
+        return True
+    except subprocess.TimeoutExpired:
+        # Это нормально, запуск продолжится в фоне
+        print(f"{C_GREEN}✔ Сервер запускается в фоновом режиме{C_RESET}")
+        return True
+    except Exception as e:
+        print(f"{C_RED}✗ Ошибка автозапуска: {e}{C_RESET}")
+        return False
+
+
 def cmd_status(args: argparse.Namespace) -> int:
     """Проверяет текущий статус сервера, портов и служб."""
     cfg = _get_config()
     server_cfg = cfg.get("server", {})
-    port = int(server_cfg.get("port", 3000))
+    port = int(server_cfg.get("port", 8000))
     use_ssl = bool(server_cfg.get("use_ssl", False))
     mode = str(server_cfg.get("mode", "DEV"))
     reload_on = bool(server_cfg.get("reload", True))
@@ -193,7 +288,10 @@ def cmd_status(args: argparse.Namespace) -> int:
     print(f"{C_BOLD}{C_CYAN}║             СТАТУС AI ASSISTANT СИСТЕМЫ                       ║{C_RESET}")
     print(f"{C_BOLD}{C_CYAN}╚═══════════════════════════════════════════════════════════════╝{C_RESET}\n")
 
-    # Проверка порта 3000
+    # Автозапуск если сервер не запущен и включён переключатель
+    _auto_start_server()
+    
+    # Проверка порта
     pids = _get_occupied_port_pids(port)
     if pids:
         print(f"  {C_BOLD}FastAPI Сервер:{C_RESET}     {C_GREEN}● РАБОТАЕТ{C_RESET}")
@@ -440,6 +538,403 @@ def cmd_test(args: argparse.Namespace) -> int:
     return subprocess.call(cmd, cwd=str(__root__))
 
 
+# ============================================================================
+# НОВЫЕ КОМАНДЫ ДЛЯ РАБОТЫ С ПРОВАЙДЕРАМИ И МОДЕЛЯМИ
+# ============================================================================
+
+def cmd_list_providers(args: argparse.Namespace) -> int:
+    """Выводит список доступных провайдеров ИИ."""
+    cfg = _get_config()
+    ai_cfg = cfg.get("ai", {})
+    key_names_env = os.getenv("GEMINI_API_KEY_NAMES", "")
+    keys = [k.strip() for k in key_names_env.split(",") if k.strip()]
+    has_gemini = len(keys) > 0
+
+    selected = _get_selected_provider()
+    selected_provider = selected.get("provider", "")
+
+    print(f"\n{C_BOLD}{C_CYAN}╔═══════════════════════════════════════════════════════════════╗{C_RESET}")
+    print(f"{C_BOLD}{C_CYAN}║                    ДОСТУПНЫЕ ПРОВАЙДЕРЫ ИИ                         ║{C_RESET}")
+    print(f"{C_BOLD}{C_CYAN}╚═══════════════════════════════════════════════════════════════╝{C_RESET}\n")
+
+    providers = [
+        ("gemini", "Google Gemini API", has_gemini),
+        ("gemini_cli", "Gemini CLI", bool(ai_cfg.get("use_gemini_cli", True))),
+        ("agy", "Google Antigravity (AGY)", bool(ai_cfg.get("use_agy", False)) and bool(os.getenv("AGY_API_KEY"))),
+        ("foundry", "Microsoft AI Foundry", bool(ai_cfg.get("use_foundry", False))),
+        ("ollama", "Ollama Local", bool(ai_cfg.get("use_ollama", False))),
+        ("hf", "HuggingFace Local", bool(cfg.get("huggingface", {}).get("enabled", False))),
+        ("onnx", "ONNX Runtime (DirectML)", bool(cfg.get("onnx", {}).get("enabled", False))),
+        ("openai", "OpenAI Compatible", bool(cfg.get("openai_compat", {}).get("providers", {}))),
+    ]
+
+    for i, (name, desc, available) in enumerate(providers, 1):
+        status = f"{C_GREEN}✓ Активен{C_RESET}" if available else f"{C_GRAY}○ Отключен{C_RESET}"
+        marker = " ▶ " if name == selected_provider else "   "
+        print(f"{marker}{i}. {C_BOLD}{name}{C_RESET}: {desc}")
+        print(f"     Статус: {status}")
+
+    print(f"\n{C_GRAY}Текущий провайдер: {C_BOLD}{selected_provider or 'не выбран'}{C_RESET}")
+    print(f"\n{C_GRAY}Используйте: {C_CYAN}assist select provider <имя>{C_RESET} для выбора провайдера")
+    return 0
+
+
+def cmd_select_provider(args: argparse.Namespace) -> int:
+    """Выбирает провайдера ИИ."""
+    provider = getattr(args, "name", "")
+    if not provider:
+        print(f"{C_RED}Укажите имя провайдера. Доступные: gemini, gemini_cli, agy, foundry, ollama, hf, onnx, openai{C_RESET}")
+        return 1
+
+    valid_providers = ["gemini", "gemini_cli", "agy", "foundry", "ollama", "hf", "onnx", "openai"]
+    provider_lower = provider.lower()
+
+    if provider_lower not in valid_providers:
+        print(f"{C_RED}Неизвестный провайдер: {provider}{C_RESET}")
+        print(f"Доступные провайдеры: {', '.join(valid_providers)}")
+        return 1
+
+    _set_selected_provider(provider_lower)
+    print(f"{C_GREEN}✓ Провайдер '{provider_lower}' выбран{C_RESET}")
+
+    # Предложим выбрать модель
+    print(f"\n{C_CYAN}Доступные модели для {provider_lower}:{C_RESET}")
+    print(f"{C_GRAY}Используйте: assist list models{C_RESET}")
+    return 0
+
+
+def cmd_list_models(args: argparse.Namespace) -> int:
+    """Выводит список моделей для выбранного провайдера или всех."""
+    cfg = _get_config()
+    ai_cfg = cfg.get("ai", {})
+    selected = _get_selected_provider()
+    selected_provider = selected.get("provider", "")
+    selected_model = _get_selected_model().get("model", "")
+
+    print(f"\n{C_BOLD}{C_CYAN}╔═══════════════════════════════════════════════════════════════╗{C_RESET}")
+    print(f"{C_BOLD}{C_CYAN}║                        СПИСОК МОДЕЛЕЙ                            ║{C_RESET}")
+    print(f"{C_BOLD}{C_CYAN}╚═══════════════════════════════════════════════════════════════╝{C_RESET}\n")
+
+    all_models = {}
+
+    # Gemini
+    all_models["gemini"] = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+
+    # Gemini CLI
+    cli_model = ai_cfg.get("gemini_cli_model_id", "gemini-3.1-flash-lite")
+    all_models["gemini_cli"] = [cli_model, "gemini-2.5-flash", "gemini-3.1-pro-preview"]
+
+    # AGY
+    all_models["agy"] = [ai_cfg.get("agy_model_id", "agy-flash"), "agy-gemini-3.5-flash-lite"]
+
+    # Foundry
+    all_models["foundry"] = [ai_cfg.get("foundry_model_id", "qwen2.5-1.5b-instruct-generic-cpu:4")]
+
+    # Ollama
+    all_models["ollama"] = [ai_cfg.get("ollama_model_id", "llama3.1"), "qwen2.5:7b", "mistral"]
+
+    # HuggingFace
+    hf_cfg = cfg.get("huggingface", {})
+    all_models["hf"] = [hf_cfg.get("default_model", "Qwen/Qwen2.5-0.5B-Instruct")]
+
+    # ONNX
+    all_models["onnx"] = ["qwen2.5-0.5b", "llama3-1b"]
+
+    # OpenAI Compatible
+    openai_cfg = cfg.get("openai_compat", {}).get("providers", {})
+    if openai_cfg:
+        for prov_name, prov_data in openai_cfg.items():
+            models = prov_data.get("models", [])
+            if models:
+                all_models[prov_name] = models
+            # Добавляем дефолтные для openai/deepseek
+            if prov_name == "openai":
+                all_models[prov_name] = ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"]
+            elif prov_name == "deepseek":
+                all_models[prov_name] = ["deepseek-chat", "deepseek-reasoner"]
+
+    if selected_provider:
+        if selected_provider in all_models:
+            print(f"{C_BOLD}Провайдер: {selected_provider}{C_RESET}\n")
+            for model in all_models[selected_provider]:
+                marker = " ▶ " if model == selected_model else "   "
+                print(f"{marker}{model}")
+        else:
+            print(f"{C_YELLOW}Нет информации о моделях для прова��дера: {selected_provider}{C_RESET}")
+    else:
+        print(f"{C_YELLOW}Провайдер не выбран. Сначала выберите провайдера:{C_RESET}")
+        print(f"{C_GRAY}assist select provider <имя>{C_RESET}\n")
+        print("Или используйте 'assist providers' для просмотра всех провайдеров\n")
+
+    if selected_model:
+        print(f"{C_GRAY}Текущая модель: {C_BOLD}{selected_model}{C_RESET}")
+    return 0
+
+
+def cmd_select_model(args: argparse.Namespace) -> int:
+    """Выбирает модель для работы."""
+    model = getattr(args, "name", "")
+    if not model:
+        print(f"{C_RED}Укажите имя модели. Сначала выберите провайдер: assist list models{C_RESET}")
+        return 1
+
+    # СНАЧАЛА получаем текущий выбранный провайдер
+    provider = _get_selected_provider().get("provider", "")
+    
+    # Затем пытаемся уточнить по префиксу модели (только если есть явный префикс с ":")
+    model_lower = model.lower()
+    
+    # Явные префиксы с двоеточием имеют приоритет
+    if ":" in model:
+        if model.startswith("gemini_cli:") or model.startswith("gemini-cli-"):
+            provider = "gemini_cli"
+        elif model.startswith("gemini:"):
+            provider = "gemini"
+        elif model.startswith("agy"):
+            provider = "agy"
+        elif model.startswith("foundry:"):
+            provider = "foundry"
+        elif model.startswith("ollama:"):
+            provider = "ollama"
+        elif model.startswith("hf:") or model.startswith("hf::"):
+            provider = "hf"
+        elif model.startswith("onnx:") or model.startswith("onnx::"):
+            provider = "onnx"
+
+    if not provider:
+        print(f"{C_YELLOW}Провайдер не определен. Сначала выберите провайдера:{C_RESET}")
+        print(f"{C_GRAY}assist select provider <имя>{C_RESET}")
+        return 1
+
+    _set_selected_model(model, provider)
+    print(f"{C_GREEN}✓ Модель '{model}' выбрана для провайдера '{provider}'{C_RESET}")
+    print(f"\n{C_CYAN}Теперь можете отправить запрос:{C_RESET}")
+    print(f"{C_GRAY}assist model ask \"ваш вопрос\"{C_RESET}")
+    return 0
+
+
+def cmd_model_ask(args: argparse.Namespace) -> int:
+    """Отправляет запрос к выбранной модели."""
+    message = getattr(args, "message", "")
+    if not message:
+        print(f"{C_RED}Укажите сообщение для модели{C_RESET}")
+        print(f"{C_GRAY}Пример: assist model ask \"Привет, как дела?\"{C_RESET}")
+        return 1
+
+    model_data = _get_selected_model()
+    provider_data = _get_selected_provider()
+
+    selected_model = model_data.get("model", "")
+    selected_provider = model_data.get("provider", "") or provider_data.get("provider", "")
+
+    if not selected_model and not selected_provider:
+        print(f"{C_YELLOW}Модель не выбрана. Сначала выберите провайдер и модель:{C_RESET}")
+        print(f"{C_GRAY}assist list providers")
+        print(f"assist select provider <имя>")
+        print(f"assist list models")
+        print(f"assist select model <имя>{C_RESET}")
+        return 1
+
+    # Формируем полное имя модели с префиксом провайдера
+    full_model_name = f"{selected_provider}:{selected_model}" if selected_provider else selected_model
+
+    print(f"\n{C_CYAN}→ Провайдер: {selected_provider}{C_RESET}")
+    print(f"{C_CYAN}→ Модель: {selected_model}{C_RESET}")
+    print(f"{C_CYAN}→ Запрос: {message}{C_RESET}\n")
+    print(f"{C_BOLD}{C_YELLOW}Ответ:{C_RESET}\n")
+
+    # Загружаем системный промпт если есть
+    system_prompt = ""
+    prompt_file = _STATE_DIR / "system_prompt.txt"
+    if prompt_file.exists():
+        system_prompt = prompt_file.read_text(encoding="utf-8").strip()
+
+    try:
+        from core.fastapi.router_chat import get_chat_model
+        import asyncio
+
+        model = get_chat_model(full_model_name, system_instruction=system_prompt)
+
+        async def run_chat():
+            result = await model.chat(message)
+            print(result)
+
+        asyncio.run(run_chat())
+
+    except ImportError as e:
+        print(f"{C_RED}Ошибка импорта модулей: {e}{C_RESET}")
+        print(f"{C_YELLOW}Убедитесь что проект установлен и все зависимости доступны{C_RESET}")
+        return 1
+    except Exception as e:
+        print(f"{C_RED}Ошибка при обращении к модели: {e}{C_RESET}")
+        return 1
+
+    return 0
+
+
+# ============================================================================
+# КОМАНДЫ ДЛЯ РАБОТЫ С СИСТЕМНЫМИ ПРОМПТАМИ
+# ============================================================================
+
+def cmd_create_prompt(args: argparse.Namespace) -> int:
+    """Создает новый системный промпт."""
+    _ensure_state_dir()
+    prompt_file = _STATE_DIR / "system_prompt.txt"
+
+    # Проверяем, передан ли текст через аргумент
+    prompt_text = getattr(args, "text", "") or ""
+
+    if prompt_file.exists() and not prompt_text:
+        print(f"{C_YELLOW}Системный промпт уже существует.{C_RESET}")
+        print(f"{C_GRAY}Используйте: assist edit-prompt для редактирования{C_RESET}")
+        print(f"Или удалите файл: {prompt_file}")
+        return 1
+
+    if prompt_text:
+        # Используем переданный текст
+        prompt_file.write_text(prompt_text, encoding="utf-8")
+        print(f"\n{C_GREEN}✓ Системный промпт сохранен{C_RESET}")
+        print(f"{C_GRAY}Файл: {prompt_file}{C_RESET}")
+        return 0
+
+    # Интерактивный ввод промпта
+    print(f"\n{C_CYAN}Создание системного промпта{C_RESET}")
+    print(f"{C_GRAY}Введите текст системного промпта (нажмите Enter для завершения ввода):{C_RESET}")
+    print(f"{C_GRAY}Для отмены введите пустую строку или нажмите Ctrl+C{C_RESET}\n")
+
+    try:
+        lines = []
+        while True:
+            line = input()
+            if line.strip() == "" and lines:
+                break
+            lines.append(line)
+    except (KeyboardInterrupt, EOFError):
+        print(f"\n{C_YELLOW}Создание промпта отменено.{C_RESET}")
+        return 0
+
+    if not lines:
+        print(f"{C_YELLOW}Промпт пустой, не сохранен.{C_RESET}")
+        return 0
+
+    prompt_text = "\n".join(lines)
+    prompt_file.write_text(prompt_text, encoding="utf-8")
+
+    print(f"\n{C_GREEN}✓ Системный промпт сохранен{C_RESET}")
+    print(f"{C_GRAY}Файл: {prompt_file}{C_RESET}")
+    return 0
+
+
+def cmd_edit_prompt(args: argparse.Namespace) -> int:
+    """Редактирует существующий системный промпт."""
+    _ensure_state_dir()
+    prompt_file = _STATE_DIR / "system_prompt.txt"
+
+    mode = getattr(args, "mode", "edit")
+
+    if mode == "view":
+        if not prompt_file.exists():
+            print(f"{C_YELLOW}Системный промпт не существует. Создайте его:{C_RESET}")
+            print(f"{C_GRAY}assist create-prompt{C_RESET}")
+            return 1
+        content = prompt_file.read_text(encoding="utf-8")
+        print(f"\n{C_CYAN}Текущий системный промпт:{C_RESET}\n")
+        print(content)
+        return 0
+
+    if mode == "delete":
+        if not prompt_file.exists():
+            print(f"{C_YELLOW}Системный промпт не существует.{C_RESET}")
+            return 1
+        prompt_file.unlink()
+        print(f"{C_GREEN}✓ Системный промпт удален{C_RESET}")
+        return 0
+
+    # Редактирование (по умолчанию)
+    if not prompt_file.exists():
+        print(f"{C_YELLOW}Системный промпт не существует. Сначала создайте его:{C_RESET}")
+        print(f"{C_GRAY}assist create-prompt{C_RESET}")
+        return 1
+
+    current = prompt_file.read_text(encoding="utf-8")
+
+    print(f"\n{C_CYAN}Редактирование системного промпта{C_RESET}")
+    print(f"{C_GRAY}Текущий текст:{C_RESET}\n")
+    print(current)
+    print(f"\n{C_GRAY}Введите новый текст (пустая строка = оставить без изменений):{C_RESET}")
+
+    try:
+        new_lines = []
+        while True:
+            line = input()
+            if line.strip() == "":
+                break
+            new_lines.append(line)
+    except (KeyboardInterrupt, EOFError):
+        print(f"\n{C_YELLOW}Редактирование отменено.{C_RESET}")
+        return 0
+
+    if new_lines:
+        new_text = "\n".join(new_lines)
+        prompt_file.write_text(new_text, encoding="utf-8")
+        print(f"\n{C_GREEN}✓ Системный промпт обновлен{C_RESET}")
+    else:
+        print(f"\n{C_GRAY}Промпт оставлен без изменений.{C_RESET}")
+
+    return 0
+
+
+# ============================================================================
+# ДОПОЛНИТЕЛЬНЫЕ КОМАНДЫ
+# ============================================================================
+
+def cmd_current(args: argparse.Namespace) -> int:
+    """Показывает текущие настройки (выбранный провайдер и модель)."""
+    provider = _get_selected_provider()
+    model = _get_selected_model()
+
+    print(f"\n{C_BOLD}{C_CYAN}╔═══════════════════════════════════════════════════════════════╗{C_RESET}")
+    print(f"{C_BOLD}{C_CYAN}║                    ТЕКУЩИЕ НАСТРОЙКИ                             ║{C_RESET}")
+    print(f"{C_BOLD}{C_CYAN}╚═══════════════════════════════════════════════════════════════╝{C_RESET}\n")
+
+    print(f"  {C_BOLD}Провайдер:{C_RESET}  {provider.get('provider', 'не выбран') or C_YELLOW + 'не выбран' + C_RESET}")
+    print(f"  {C_BOLD}Модель:{C_RESET}    {model.get('model', 'не выбрана') or C_YELLOW + 'не выбрана' + C_RESET}")
+
+    # Проверим системный промпт
+    prompt_file = _STATE_DIR / "system_prompt.txt"
+    if prompt_file.exists():
+        prompt_content = prompt_file.read_text(encoding="utf-8")
+        preview = prompt_content[:100] + "..." if len(prompt_content) > 100 else prompt_content
+        print(f"\n  {C_BOLD}Системный промпт:{C_RESET} {C_GREEN}установлен{C_RESET}")
+        print(f"  {C_GRAY}   → {preview}{C_RESET}")
+    else:
+        print(f"\n  {C_BOLD}Системный промпт:{C_RESET} {C_GRAY}не установлен{C_RESET}")
+
+    print(f"\n{C_GRAY}Изменить настройки:")
+    print(f"  assist select provider <имя>")
+    print(f"  assist select model <имя>")
+    print(f"  assist create-prompt / assist edit-prompt{C_RESET}\n")
+    return 0
+
+
+def cmd_shell(args: argparse.Namespace) -> int:
+    """Открывает интерактивную оболочку Python с загруженными модулями проекта."""
+    print(f"{C_CYAN}Запуск интерактивной оболочки Python...{C_RESET}")
+    print(f"{C_GRAY}Доступны модули: core, header (как __root__){C_RESET}")
+    print(f"{C_GRAY}Для выхода введите exit(){C_RESET}\n")
+
+    venv_py = _get_venv_python()
+    cmd = [venv_py, "-i", "-c", f"""
+import sys
+sys.path.insert(0, r'{__root__}')
+from header import __root__
+from core.fastapi.router_chat import get_chat_model
+print('Доступны: __root__, get_chat_model')
+print('Пример: model = get_chat_model(\"gemini:gemini-2.5-flash\")')
+"""]
+    return subprocess.call(cmd, cwd=str(__root__))
+
+
 def cmd_install_profile(args: argparse.Namespace) -> int:
     """Добавляет глобальную функцию `assist` в PowerShell профиль пользователя."""
     if not sys.platform.startswith("win"):
@@ -496,12 +991,36 @@ def main() -> int:
   assist start foundry     # запуск только AI Foundry
   assist stop              # остановка всех процессов сервера
   assist restart           # перезапуск сервера
-  assist status            # статус сервера, портов и моделей
+  assist status            # статус сервера, портов и моделей (автозапуск если включён)
   assist providers         # подробный список провайдеров и моделей ИИ
   assist logs 50           # последние 50 строк лога
   assist config show       # просмотр config.json
   assist test              # запуск pytest
   assist install-profile   # зарегистрировать команду 'assist' глобально в PowerShell
+
+Управление провайдерами и моделями:
+  assist list providers    # показать доступных провайдеров
+  assist select provider <name>    # выбрать провайдера (gemini, gemini_cli, agy, foundry, ollama, hf, onnx, openai)
+  assist list models       # показать модели выбранного провайдера
+  assist select model <name>       # выбрать модель
+  assist model ask "msg"   # отправить запрос к модели
+  assist current           # показать текущие настройки
+
+Работа с системными промптами:
+  assist create-prompt     # создать системный промпт
+  assist edit-prompt       # редактировать системный промпт
+  assist edit-prompt view  # посмотреть текущий промпт
+  assist edit-prompt delete # удалить промпт
+
+Дополнительно:
+  assist shell             # открыть интерактивную оболочку Python
+
+Настройка автозапуска:
+  В config.json установите:
+  "server": {
+    "auto_start_assist_cli": true
+  }
+  При включении сервер будет запускаться автоматически при вызове assist без параметров или assist status
 """,
     )
 
@@ -544,11 +1063,63 @@ def main() -> int:
     # install-profile
     subparsers.add_parser("install-profile", help="Зарегистрировать 'assist' в PowerShell $PROFILE")
 
+    # --- НОВЫЕ КОМАНДЫ ---
+    # list providers
+    p_list_providers = subparsers.add_parser("list", help="Список (providers/models)")
+    p_list_providers.add_argument("subcommand", nargs="?", default="", choices=["providers", "models"])
+
+    # select provider
+    p_select = subparsers.add_parser("select", help="Выбрать провайдер или модель")
+    p_select.add_argument("target", choices=["provider", "model"], help="Что выбрать")
+    p_select.add_argument("name", help="Имя провайдера или модели")
+
+    # model ask
+    p_model = subparsers.add_parser("model", help="Работа с моделью")
+    p_model_sub = p_model.add_subparsers(dest="model_command", help="Команды модели")
+    p_model_ask = p_model_sub.add_parser("ask", help="Отправить запрос модели")
+    p_model_ask.add_argument("message", nargs="?", default="", help="Сообщение для модели")
+
+    # create-prompt
+    p_create_prompt = subparsers.add_parser("create-prompt", help="Создать системный промпт")
+    p_create_prompt.add_argument("--text", "-t", default="", help="Текст промпта (можно передать сразу)")
+
+    # edit-prompt
+    p_edit_prompt = subparsers.add_parser("edit-prompt", help="Редактировать системный промпт")
+    p_edit_prompt.add_argument("mode", nargs="?", default="edit", choices=["edit", "view", "delete"])
+
+    # current - показать текущие настройки
+    subparsers.add_parser("current", help="Показать текущие настройки (провайдер, модель)")
+
+    # shell - интерактивная оболочка
+    subparsers.add_parser("shell", help="Открыть интерактивную оболочку Python")
+
     args = parser.parse_args()
 
     if not args.command:
+        # При вызове без параметров показываем справку, но перед этим проверяем автозапуск
+        _auto_start_server()
         parser.print_help()
         return 0
+
+    # Обработка составных команд
+    if args.command == "list":
+        if args.subcommand == "providers":
+            return cmd_list_providers(args)
+        elif args.subcommand == "models":
+            return cmd_list_models(args)
+        else:
+            # По умолчанию показываем список провайдеров
+            return cmd_list_providers(args)
+
+    if args.command == "select":
+        if args.target == "provider":
+            return cmd_select_provider(args)
+        elif args.target == "model":
+            return cmd_select_model(args)
+
+    if args.command == "model":
+        if args.model_command == "ask":
+            return cmd_model_ask(args)
 
     dispatch = {
         "start": cmd_start,
@@ -561,6 +1132,14 @@ def main() -> int:
         "config": cmd_config,
         "test": cmd_test,
         "install-profile": cmd_install_profile,
+        # Новые команды
+        "list": lambda a: cmd_list_providers(a) if getattr(a, 'subcommand', '') == 'providers' else cmd_list_models(a),
+        "select": lambda a: cmd_select_provider(a) if getattr(a, 'target', '') == 'provider' else cmd_select_model(a),
+        "model": cmd_model_ask,
+        "create-prompt": cmd_create_prompt,
+        "edit-prompt": cmd_edit_prompt,
+        "current": cmd_current,
+        "shell": cmd_shell,
     }
 
     handler = dispatch.get(args.command)

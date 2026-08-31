@@ -204,6 +204,8 @@ if (Test-Path $envFile) {
             $val = $Matches[2].Trim().Trim('"').Trim("'")
             if ($key -eq "USE_SSL") { $useSsl = $val -in ("true","1","yes") }
             if ($key -eq "USE_FOUNDRY") { $useFoundry = $val -in ("true","1","yes") }
+            if ($key -eq "AUTO_LAUNCH_ENABLED") { $autoLaunchEnabled = $val -in ("true","1","yes") }
+            if ($key -eq "AUTO_LAUNCH_DELAY_SECONDS" -and $val -match '^\d+$') { $autoLaunchDelay = [int]$val }
         }
     }
 }
@@ -221,9 +223,42 @@ $lanIp = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
 # Microsoft AI Foundry. В неинтерактивном режиме используются переданные
 # параметры или значения из config.json.
 # ============================================================================
+# Проверка переменных автозапуска
+$autoLaunchEnabled = $env:AUTO_LAUNCH_ENABLED -in ("true","1","yes")
+$autoLaunchDelay = 0
+if ($env:AUTO_LAUNCH_DELAY_SECONDS -match '^\d+$') {
+    $autoLaunchDelay = [int]$env:AUTO_LAUNCH_DELAY_SECONDS
+}
+
+# Если задержка задана в config.json, используем её
+if (-not $autoLaunchEnabled -and $configPath -and (Test-Path $configPath)) {
+    try {
+        $cfg = Get-Content $configPath | ConvertFrom-Json
+        if ($cfg.server.auto_launch -and $cfg.server.auto_launch.enabled -eq $true) {
+            $autoLaunchEnabled = $true
+            if ($cfg.server.auto_launch.delay_seconds -match '^\d+$') {
+                $autoLaunchDelay = [int]$cfg.server.auto_launch.delay_seconds
+            }
+        }
+    } catch {}
+}
+
 $isInteractive = (-not $NonInteractive) -and (-not $HostAddress)
 
-if ($isInteractive) {
+# Если включён автозапуск и задержка > 0, показать предупреждение и подождать
+if ($isInteractive -and $autoLaunchEnabled -and $autoLaunchDelay -gt 0) {
+    Write-Host ""
+    Write-Host "┌─────────────────────────────────────────────────────────────┐" -ForegroundColor Yellow
+    Write-Host " ⚠️  АВТОЗАПУСК САРВЕРА С ЗАДЕРЖКОЙ $autoLaunchDelay СЕК" -ForegroundColor Yellow
+    Write-Host "    Используются параметры из config.json:" -ForegroundColor White
+    Write-Host "    Хост: $cfgHost, Порт: $cfgPort" -ForegroundColor Gray
+    Write-Host "    Нажмите Ctrl+C для отмены..." -ForegroundColor Yellow
+    Write-Host "└─────────────────────────────────────────────────────────────┘" -ForegroundColor Yellow
+    Write-Host ""
+    Start-Sleep -Seconds $autoLaunchDelay
+}
+
+if ($isInteractive -and -not $autoLaunchEnabled) {
     Write-Host ""
     Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkCyan
     Write-Host " 🌐 ИНТЕРАКТИВНЫЙ ВЫБОР АДРЕСА И ПОРТА" -ForegroundColor Yellow
@@ -281,8 +316,9 @@ if ($isInteractive) {
         $useFoundry = $false
     }
 } else {
+    # Автозапуск или неинтерактивный режим
     $host_ = if ($HostAddress) { $HostAddress } else { $cfgHost }
-    $port  = if ($Port)        { $Port }        else { $cfgPort }
+    $port  = if ($Port)        { [string]$Port }        else { [string]$cfgPort }
 }
 
 # ============================================================================
@@ -398,7 +434,10 @@ $proto = if ($useSsl) { "https" } else { "http" }
 $browserHost = if ($host_ -eq "0.0.0.0") { "localhost" } else { $host_ }
 $url = "${proto}://${browserHost}:${port}"
 
-Write-Host ""
+# Вывод параметров запуска (без задержки для автозапуска)
+if (-not $autoLaunchEnabled) {
+    Write-Host ""
+}
 Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
 Write-Host "ИТОГОВЫЕ ПАРАМЕТРЫ ЗАПУСКА:" -ForegroundColor Cyan
 Write-Host "  • Хост:            $host_" -ForegroundColor White
@@ -409,6 +448,9 @@ if ($lanIp -and $host_ -eq "0.0.0.0") {
     Write-Host "  • Сетевой URL:     ${proto}://${lanIp}:${port}/" -ForegroundColor Yellow
 }
 Write-Host "  • AI Foundry:      $(if ($useFoundry) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
+if ($autoLaunchEnabled -and $autoLaunchDelay -gt 0) {
+    Write-Host "  • Автозапуск:      ВКЛЮЧЁН (задержка: $autoLaunchDelay сек)" -ForegroundColor Yellow
+}
 Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
 
 # ============================================================================

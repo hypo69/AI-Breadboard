@@ -33,6 +33,10 @@ $I18N = @{
         
         step_1                = "[1/6] Снятие блокировки Windows (Unblock-File)..."
         step_1_ok             = "    [OK] Файлы разблокированы"
+        step_1_info           = "    [INFO] Снятие блокировки Windows (Unblock-File) разрешает выполнение скриптов, загруженных из интернета"
+        step_1_info_details   = "    [INFO] Когда файл загружается из интернета (через irm или браузер), Windows добавляет атрибут ""Mark of the Web"" (MOTW), помечающий файл как ненадёжный источник."
+        step_1_info_details2  = "    [INFO] Без снятия блокировки PowerShell блокирует выполнение .ps1 скриптов с ошибкой: ""running scripts is disabled on this system"""
+        step_1_info_details3  = "    [INFO] Некоторые функции Python/Node.js могут не работать."
         
         step_2                = "[2/6] Проверка виртуального окружения (venv)..."
         step_2_existing       = "    [OK] venv уже существует: {0} ({1})"
@@ -93,6 +97,10 @@ $I18N = @{
         
         step_1                = "[1/6] Unblocking Windows files (Unblock-File)..."
         step_1_ok             = "    [OK] Files unblocked"
+        step_1_info           = "    [INFO] Unblock-File allows execution of scripts downloaded from the internet"
+        step_1_info_details   = "    [INFO] When a file is downloaded from the internet (via irm or browser), Windows adds the ""Mark of the Web"" (MOTW) attribute, marking it as an untrusted source."
+        step_1_info_details2  = "    [INFO] Without unblocking, PowerShell blocks .ps1 script execution with error: ""running scripts is disabled on this system"""
+        step_1_info_details3  = "    [INFO] Some Python/Node.js features may not work."
         
         step_2                = "[2/6] Checking virtual environment (venv)..."
         step_2_existing       = "    [OK] venv already exists: {0} ({1})"
@@ -153,6 +161,10 @@ $I18N = @{
         
         step_1                = "[1/6] שחרור חסימת קבצים של Windows (Unblock-File)..."
         step_1_ok             = "    [OK] חסימת הקבצים הוסרה בהצלחה"
+        step_1_info           = "    [INFO] שחרור חסימה מותיר הפעלת תסריטים שירדו מהאינטרנט"
+        step_1_info_details   = "    [INFO] כשמקובץ יורד מהאינטרנט (באמצעות irm או דפדפן), Windows מוסיף את הערך ""Mark of the Web"" (MOTW), מסמן אותו כמקור לא מהימן."
+        step_1_info_details2  = "    [INFO] ללא שחרור חסימה, PowerShell חוסם הפעלת תסריטים .ps1 עם השגיאה: ""running scripts is disabled on this system"""
+        step_1_info_details3  = "    [INFO] ייתכן שחלק מהתכונות של Python/Node.js לא יפעלו."
         
         step_2                = "[2/6] בדיקת סביבה וירטואלית (venv)..."
         step_2_existing       = "    [OK] סביבת venv כבר קיימת: {0} ({1})"
@@ -291,6 +303,11 @@ Get-ChildItem -Path $ScriptRoot -Recurse -File -ErrorAction SilentlyContinue |
     Unblock-File -ErrorAction SilentlyContinue
 
 Write-Host (Msg "step_1_ok") -ForegroundColor Green
+Write-Host (Msg "step_1_info") -ForegroundColor Gray
+Write-Host (Msg "step_1_info_details") -ForegroundColor DarkGray
+Write-Host (Msg "step_1_info_details2") -ForegroundColor DarkGray
+Write-Host (Msg "step_1_info_details3") -ForegroundColor DarkGray
+Write-Host ""
 
 # ============================================================
 # [2/6] Проверка / Создание виртуального окружения

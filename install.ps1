@@ -1,11 +1,10 @@
 <#
 .SYNOPSIS
-    AI Breadboard - New Web-Based Installer (v2.0)
-    Launches FastAPI server with web interface for installation.
+    Главный оркестратор установки AI Breadboard с модульной архитектурой и поддержкой i18n (RU, EN, ES, HE).
 .DESCRIPTION
-    1. Installs FastAPI and required packages
-    2. Starts web installer server
-    3. Opens browser to web GUI for continued installation
+    Загружает конфигурацию из install/install.json, подключает модули интернационализации,
+    выбора директории (%LOCALAPPDATA%\AI Breadboard или пользовательский путь),
+    создания venv, установки зависимостей, генерации SSL и регистрации AIBREADBOARD_DIR.
 .EXAMPLE
     irm https://raw.githubusercontent.com/hypo69/AI-Breadboard/master/install.ps1 | iex
     .\install.ps1
@@ -25,87 +24,101 @@ try {
     }
 } catch {}
 
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  AI Breadboard Web Installer v2.0" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
+$localInstallDir = if ($runningScriptDir) { Join-Path $runningScriptDir "install" } else { "" }
 
-# 1. Проверка и установка FastAPI
-Write-Host "[1/3] Checking FastAPI installation..." -ForegroundColor Cyan
-
-$requiredPackages = @("fastapi", "uvicorn", "pydantic", "aiofiles")
-$missingPackages = @()
-
-foreach ($pkg in $requiredPackages) {
+# 1. Загрузка конфигурации install.json
+$config = $null
+$configPath = if ($localInstallDir) { Join-Path $localInstallDir "install.json" } else { "" }
+if ($configPath -and (Test-Path $configPath)) {
     try {
-        $result = & python -c "import $pkg" 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "  $pkg - OK" -ForegroundColor Green
-        } else {
-            $missingPackages += $pkg
-            Write-Host "  $pkg - Not installed" -ForegroundColor Yellow
-        }
-    } catch {
-        $missingPackages += $pkg
-        Write-Host "  $pkg - Not installed" -ForegroundColor Yellow
-    }
+        $config = Get-Content $configPath -Raw | ConvertFrom-Json
+    } catch {}
 }
 
-# Install missing packages
-if ($missingPackages.Count -gt 0) {
-    Write-Host ""
-    Write-Host "Installing missing packages..." -ForegroundColor Cyan
-    
+# 2. Подключение модуля i18n
+$i18nScript = if ($localInstallDir) { Join-Path $localInstallDir "Install-I18n.ps1" } else { "" }
+if ($i18nScript -and (Test-Path $i18nScript)) {
+    . $i18nScript
+} else {
+    # Fallback загрузка i18n из веб-репозитория
+    $rawI18nUrl = "https://raw.githubusercontent.com/hypo69/AI-Breadboard/master/install/Install-I18n.ps1"
     try {
-        # Upgrade pip first
-        Write-Host "  Upgrading pip..." -ForegroundColor Gray
-        & python -m pip install --upgrade pip --quiet
-        
-        # Install missing packages
-        $packageList = $missingPackages -join " "
-        Write-Host "  Installing: $packageList" -ForegroundColor Gray
-        & python -m pip install $packageList --quiet
-        
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "  [OK] All packages installed successfully" -ForegroundColor Green
-        } else {
-            Write-Host "  [WARN] Some packages may have failed to install" -ForegroundColor Yellow
-        }
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+        $webI18n = Invoke-RestMethod -Uri $rawI18nUrl -UseBasicParsing
+        . ([ScriptBlock]::Create($webI18n))
     } catch {
-        Write-Host "  [ERROR] Failed to install packages: $_" -ForegroundColor Red
-        Write-Host "  Please run manually: python -m pip install $packageList" -ForegroundColor Yellow
+        Write-Host "[ERROR] Failed to load I18n module: $_" -ForegroundColor Red
         exit 1
     }
 }
 
-# 2. Определение путей
-$scriptDir = if ($runningScriptDir) { $runningScriptDir } else { $PWD.Path }
-$installerDir = Join-Path $scriptDir "installer"
-$mainScript = Join-Path $installerDir "install.py"
+# 3. Выбор языка пользователем
+$defaultLang = if ($config -and $config.defaults -and $config.defaults.language) { $config.defaults.language } else { "en" }
+Select-InstallerLanguage -DefaultLang $defaultLang
 
-# Check if installer directory exists
-if (-not (Test-Path $mainScript)) {
-    Write-Host ""
-    Write-Host "  [ERROR] Installer not found at: $mainScript" -ForegroundColor Red
-    Write-Host ""
-    Write-Host "  Please clone the repository first:" -ForegroundColor Yellow
-    Write-Host "    git clone https://github.com/hypo69/AI-Breadboard.git" -ForegroundColor Yellow
-    exit 1
+# 4. Модуль выбора директории
+$dirScript = if ($localInstallDir) { Join-Path $localInstallDir "Install-Directory.ps1" } else { "" }
+$targetDir = ""
+if ($dirScript -and (Test-Path $dirScript)) {
+    $targetDir = & $dirScript -Config $config -SourceDir $runningScriptDir
+} else {
+    $rawDirUrl = "https://raw.githubusercontent.com/hypo69/AI-Breadboard/master/install/Install-Directory.ps1"
+    $webDir = Invoke-RestMethod -Uri $rawDirUrl -UseBasicParsing
+    $targetDir = & ([ScriptBlock]::Create($webDir)) -Config $config -SourceDir $runningScriptDir
 }
 
-# 3. Запуск веб-сервера
-Write-Host ""
-Write-Host "[2/3] Starting web installer server..." -ForegroundColor Cyan
+if (-not $targetDir) {
+    $targetDir = Join-Path $env:LOCALAPPDATA 'AI Breadboard'
+}
 
-# Start server in background
-$serverArgs = @("--host", "127.0.0.1", "--port", "8000", "--no-open")
-& python $mainScript @serverArgs
+$InstallDir = $targetDir
+$installedModulesDir = Join-Path $InstallDir "install"
 
-Write-Host ""
-Write-Host "  Server started on http://127.0.0.1:8000" -ForegroundColor Green
-Write-Host "  Press Ctrl+C to stop" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "  Browser should open automatically..." -ForegroundColor Cyan
-Write-Host "  If not, open: http://127.0.0.1:8000" -ForegroundColor Cyan
-Write-Host ""
+# 5. Инициализация логирования установки в tmp/logs/install.log
+$tmpLogsDir = Join-Path $InstallDir "tmp\logs"
+if (-not (Test-Path $tmpLogsDir)) {
+    New-Item -ItemType Directory -Force -Path $tmpLogsDir | Out-Null
+}
+$installLogFile = Join-Path $tmpLogsDir "install.log"
+try {
+    Start-Transcript -Path $installLogFile -Append -Force -ErrorAction SilentlyContinue | Out-Null
+} catch {}
+
+# Перезагружаем config.json из целевой директории, если он там появился
+if (Test-Path (Join-Path $installedModulesDir "install.json")) {
+    try {
+        $config = Get-Content (Join-Path $installedModulesDir "install.json") -Raw | ConvertFrom-Json
+    } catch {}
+}
+
+# 6. Снятие блокировки файлов Windows
+Write-Host (Msg "step_1") -ForegroundColor Cyan
+Get-ChildItem -Path $InstallDir -Recurse -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.FullName -notmatch '\\\.git\\' } |
+    Unblock-File -ErrorAction SilentlyContinue
+Write-Host (Msg "step_1_ok") -ForegroundColor Green
+
+# 7. Модуль venv
+$venvScript = Join-Path $installedModulesDir "Install-Venv.ps1"
+$PythonPath = & $venvScript -InstallDir $InstallDir -Config $config
+
+# 8. Модуль зависимостей
+$depsScript = Join-Path $installedModulesDir "Install-Deps.ps1"
+& $depsScript -InstallDir $InstallDir -PythonPath $PythonPath -Config $config
+
+# 9. Модуль сертификатов SSL
+$certsScript = Join-Path $installedModulesDir "Install-Certs.ps1"
+& $certsScript -InstallDir $InstallDir -Config $config
+
+# 10. Модуль CLI assist и переменных среды
+$cliScript = Join-Path $installedModulesDir "Install-Cli.ps1"
+& $cliScript -InstallDir $InstallDir -Config $config
+
+# 11. Модуль верификации и финализации
+$verifyScript = Join-Path $installedModulesDir "Install-Verify.ps1"
+& $verifyScript -InstallDir $InstallDir -PythonPath $PythonPath -Config $config
+
+# Завершение логирования установки
+try {
+    Stop-Transcript -ErrorAction SilentlyContinue | Out-Null
+} catch {}

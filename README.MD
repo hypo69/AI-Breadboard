@@ -58,6 +58,20 @@ User Request → UnifiedChatModel._get_active_model(model_name)
 
 ---
 
+## 📖 Documentation
+
+### Project Architecture & Startup Guide
+
+- **[English: Detailed Startup Guide](en/code/start-engine.md)** - Complete explanation of `run.ps1` workflow, component responsibilities, and system impact
+- **[Русский: Детальное руководство по запуску](ru/code/start-engine.md)** - Подробное описание процесса запуска, ответственности компонентов и влияния на систему
+
+### CLI Commands Reference
+
+- **[English: CLI Commands](en/code/cli-commands.md)** - Complete reference for `assist` command-line interface
+- **[Русский: CLI-команды](ru/code/cli-commands.md)** - Полный справочник по интерфейсу командной строки `assist`
+
+---
+
 ## 🏗️ Architecture
 
 ```
@@ -151,8 +165,10 @@ This command:
    - Selection is saved to `config.json` for future sessions
 
    **Step 1: File Unblocking**
-   - Removes Windows "Mark of the Web" from all project files
-   - Required for PowerShell script execution on Windows
+   - Removes Windows "Mark of the Web" (MOTW) from all project files
+   - Windows adds MOTW metadata to files downloaded from the internet, marking them as untrusted
+   - Without unblocking, PowerShell blocks `.ps1` script execution with error: "running scripts is disabled on this system"
+   - Some Python/Node.js features may not work properly
 
    **Step 2: Virtual Environment Setup**
    - Searches for Python 3.10+ via `py` launcher, `python`, or `python3` commands

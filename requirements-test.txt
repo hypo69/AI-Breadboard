@@ -1,2 +1,2 @@
 # Тестовые зависимости проекта ai-breadboard
--r req/requirements-test.txt
+-r install/req/requirements-test.txt
