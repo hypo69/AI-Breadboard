@@ -218,7 +218,7 @@ def cmd_stop(args: argparse.Namespace) -> int:
 
     cfg = _get_config()
     server_cfg = cfg.get("server", {})
-    port = int(server_cfg.get("port", 3000))
+    port = int(server_cfg.get("port", 8000))
 
     stopped_any = False
 

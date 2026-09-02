@@ -299,7 +299,7 @@ async function launchFilm(title) {
 ```json
 {
   "host": "0.0.0.0",
-  "port": 3000,
+  "port": 8000,
   "workers": 1
 }
 ```
@@ -310,7 +310,7 @@ async function launchFilm(title) {
 GEMINI_API_KEY_NAMES=gemini_key_1,gemini_key_2
 USE_FOUNDRY=false
 FOUNDRY_MODEL_ID=qwen3-0.6b-generic-cpu:4
-FOUNDRY_BASE_URL=http://localhost:3000
+FOUNDRY_BASE_URL=http://localhost:8000
 
 # AGY (Gemini через прокси)
 USE_AGY=false
@@ -389,16 +389,16 @@ py manage_tools.py audit media
 
 ```bash
 # List дос��упных моделей
-curl http://localhost:3000/api/chat/models
+curl http://localhost:8000/api/chat/models
 
 # Status WebSocket комнат
-curl http://localhost:3000/api/control/status
+curl http://localhost:8000/api/control/status
 
 # Status активных плееров
-curl http://localhost:3000/api/control/active_players
+curl http://localhost:8000/api/control/active_players
 
 # Ручное сохранение в RAG
-curl -X POST http://localhost:3000/api/chat/save-rag \
+curl -X POST http://localhost:8000/api/chat/save-rag \
   -H "Content-Type: application/json" \
   -d '{"query": "...", "chat_text": "...", "voice_text": "..."}'
 ```

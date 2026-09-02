@@ -189,24 +189,21 @@ const activeConnections = new Set();
 const activeConnections = new Set();
 ```
 
-### 5.2 Использование отглагольных существительных в комментариях
-При написании русскоязычных комментариев (разрешено для Python и PowerShell) вместо глагольных форм (глаголов, деепричастий) **MUST** использоваться **отглагольные существительные**, выражающие процесс или state.
+### 5.2 Comment and Docstring Philosophy: "Why", Not "What"
+Comments and docstrings **SHOULD** explain architectural decisions, non-obvious engineering logic, and operational context rather than stating trivial syntax. Use concise gerund or noun phrasing for process steps (`Initialization`, `Verification`, `Loading`, `Execution`).
 
-* **Плохо:** `// Sends запрос`, `// Суммаризирует текст`, `// Объединяет данные`
-* **Хорошо:** `// Отправка запроса`, `// Суммаризация текста`, `// Объединение данных`
+### 5.3 Language Standard: English Everywhere
+To ensure global consistency, eliminate character encoding/Unicode corruption risks, and maintain compatibility across multi-agent AI ecosystems:
+* **All code, docstrings, code comments, log messages, headers, and documentation MUST be written strictly in English.**
+* Russian or other non-English languages are deprecated and **MUST NOT** be used in new or refactored code, docstrings, comments, or README files.
 
-Для англоязычных комментариев (весь Web-стек и PHP) **SHOULD** использоваться существительные или отглагольные формы (Noun/Gerund), выражающие процесс: `Initialization`, `Verification`, `Loading`, `Execution` (вместо глаголов вроде `Initializes`, `Verifies`, `Loads`).
-
-### 5.3 Языковые зоны комментариев
-Ограничения на использование языков в комментариях введены для предотвращения сбоев Юникода (Unicode breakage), повреждения кодировки файлов и критических ошибок интерпретации в веб-среде и PHP-окружении.
-
-| Тип расширения файлов | Комментарии в коде | Документирование (Docstrings / JSDoc) | Заголовок файла (Header Blocks) | Обоснование ограничения |
+| File Types | Code Comments | Docstrings / JSDoc | Header Blocks & Documentation | Requirement |
 | :--- | :--- | :--- | :--- | :--- |
-| `.js`, `.ts`, `.jsx`, `.tsx` | **English only** | **English only** | **English only** | **MUST NOT** содержать кириллицу во избежание поломки Юникода в веб-окружении. |
-| `.css`, `.scss`, `.sass` | **English only** | **English only** | **English only** | **MUST NOT** содержать кириллицу во избежание поломки Юникода при сборке ассетов. |
-| `.html` | **English only** | — | **English only** | **MUST NOT** содержать кириллицу во избежание проблем с кодировкой при рендеринге страниц. |
-| `.php` | **English only** | **English only** | **English only** | **MUST NOT** содержать кириллицу во избежание ошибок парсинга и сбоев Юникода в PHP-окружении. |
-| `.py`, `.ps1` | **Russian / English** | **Russian / English** | **Russian / English** | Допускается использование кириллицы (строго UTF-8 без BOM). |
+| `.py`, `.ps1` | **English only** | **English only** | **English only** | Strict UTF-8 without BOM |
+| `.js`, `.ts`, `.jsx`, `.tsx` | **English only** | **English only** | **English only** | Strict UTF-8 |
+| `.css`, `.scss`, `.sass` | **English only** | **English only** | **English only** | Strict UTF-8 |
+| `.html`, `.json`, `.md` | **English only** | **English only** | **English only** | Strict UTF-8 |
+| `.php` | **English only** | **English only** | **English only** | Strict UTF-8 |
 
 ### 5.4 Стандарт документирования функций (`hypo69 docblock`)
 Для всех публичных методов, функций и классов во всех языках программирования **MUST** использоваться единый унифицированный формат описания секций. 
@@ -657,7 +654,7 @@ HUGGING_FACE_TOKEN=hf_your_token_here
 
 # Сетевые Parameters локального окружения Foundry
 FOUNDRY_BASE_URL=http://localhost
-FOUNDRY_DYNAMIC_PORT=3000
+FOUNDRY_DYNAMIC_PORT=8000
 ```
 
 ### 7.3 Логирование и вывод информации
@@ -907,7 +904,7 @@ pytest tests/test_<module_name>.py --cov=core/<module_name> --cov-report=term-mi
 #
 # Examples:
 #   >>> from core.main import app
-#   >>> app.run(host="0.0.0.0", port=3000)
+#   >>> app.run(host="0.0.0.0", port = 8000)
 #
 # File: main_service.py
 # Project: ai-assistant
@@ -1127,7 +1124,7 @@ Copyright: © 2026 hypo69
 {
   "server": {
     "host": "0.0.0.0",
-    "port": 3000
+    "port": 8000
   }
 }
 ```

@@ -9,7 +9,9 @@ description: Интерактивный CLI-интерфейс чата с по�
 
 ## 🚀 Как использовать
 Запустите чат командой:
-`python .gemini/skills/web-chat-cli/src/chat.py`
+```bash
+python .agents/skills/web-chat-cli/src/chat.py
+```
 
 ## 🛠️ Функционал
 - Интерактивная сессия (цикл вопрос-ответ).

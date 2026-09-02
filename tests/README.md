@@ -6,6 +6,8 @@
 tests/
 ├── __init__.py              # Test suite package root
 ├── conftest.py              # Shared Pytest fixtures and mock objects
+├── coverage/                # Code coverage HTML reports (see coverage/README.md)
+│   └── README.md
 ├── data/                    # Test fixtures and static sample payloads
 │   └── __init__.py
 ├── test_ai.py               # Unit tests for AI models and UnifiedChatModel
@@ -35,7 +37,7 @@ pytest tests/test_fastapi.py
 
 ### Run with Code Coverage
 ```bash
-pytest --cov=core --cov=webinterface --cov-report=term-missing
+pytest --cov=core --cov=plugins --cov=scripts --cov-report=html:tests/coverage
 ```
 
 ### Run by Marker

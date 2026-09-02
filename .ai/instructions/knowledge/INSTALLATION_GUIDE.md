@@ -24,7 +24,7 @@
   > [!IMPORTANT]
   > При установке Python на Windows обязательно отметьте галочку **"Add python.exe to PATH"**.
 * **Система контроля версий:** Git ([git-scm.com](https://git-scm.com/)).
-* **Сетевые порты:** По умолчанию сервер использует порт `3000` (FastAPI) и `54837` (локальный AI Foundry).
+* **Сетевые порты:** По умолчанию сервер использует порт `8000` (FastAPI) и `54837` (локальный AI Foundry).
 
 ---
 
@@ -146,7 +146,7 @@ TMDB_API_KEY=...
 {
   "server": {
     "host": "0.0.0.0",
-    "port": 3000,
+    "port": 8000,
     "workers": 1,
     "reload": true,
     "use_ssl": true,
@@ -177,7 +177,7 @@ TMDB_API_KEY=...
 | `assist start unicorn` | Запуск сервера через FastAPI/Uvicorn (`Run-Unicorn.ps1`) |
 | `assist start light` | Запуск облегченного сервера без сторонних служб (`Run-LightServer.ps1`) |
 | `assist start foundry` | Запуск локальной службы Microsoft AI Foundry |
-| `assist stop` | Остановка сервера и освобождение порта `3000` |
+| `assist stop` | Остановка сервера и освобождение порта `8000` |
 | `assist restart` | Быстрый перезапуск сервера |
 | `assist status` | Check состояния процессов, открытых портов и статуса служб |
 | `assist providers` | Инспекция и list всех подключенных AI-провайдеров и моделей |
@@ -210,7 +210,7 @@ TMDB_API_KEY=...
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
 ```
 
-### 7.2. Порт 3000 занят
+### 7.2. Порт 8000 занят
 Скрипты `run.ps1` и `Run-Unicorn.ps1` автоматически находят и завершают зависший процесс. Также это можно сделать вручную командой:
 ```powershell
 assist stop

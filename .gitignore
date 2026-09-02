@@ -55,6 +55,8 @@ MANIFEST
 
 # Unit test / coverage reports
 htmlcov/
+tests/coverage/
+!tests/coverage/README.md
 .tox/
 .nox/
 .coverage

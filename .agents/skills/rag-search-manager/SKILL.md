@@ -11,5 +11,5 @@ description: Навык для поиска медиа с использован
 
 ## 🛠️ Использование
 ```bash
-python .gemini\skills\rag-search-manager\scripts\search_media.py --query "название или запрос"
+python .agents/skills/rag-search-manager/scripts/search_media.py --query "название или запрос"
 ```

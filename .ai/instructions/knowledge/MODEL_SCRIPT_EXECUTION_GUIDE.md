@@ -274,7 +274,7 @@ py tools/ai/package_skill.py <skill_name>
 & "C:\ai-assistant\Run-Foundry.ps1" -Action status
 
 # Проверить что FastAPI запущен
-Invoke-WebRequest -Uri "https://localhost:3000/health" -SkipCertificateCheck
+Invoke-WebRequest -Uri "https://localhost:8000/health" -SkipCertificateCheck
 ```
 
 ---

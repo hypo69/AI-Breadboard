@@ -74,16 +74,16 @@
 
 ```powershell
 # FastAPI health-check
-Invoke-WebRequest -Uri "https://localhost:3000/health" -SkipCertificateCheck
+Invoke-WebRequest -Uri "https://localhost:8000/health" -SkipCertificateCheck
 
 # Проверить занятость порта
-netstat -aon | Select-String ":3000"
+netstat -aon | Select-String ":8000"
 ```
 
 ### Остановка сервисов
 
 # Остановить сервисы
-$pid_ = (netstat -aon | Select-String ":3000\s" | ForEach-Object { ($_ -split "\s+")[-1] } | Select-Object -First 1)
+$pid_ = (netstat -aon | Select-String ":8000\s" | ForEach-Object { ($_ -split "\s+")[-1] } | Select-Object -First 1)
 if ($pid_) { Stop-Process -Id $pid_ -Force }
 ```
 

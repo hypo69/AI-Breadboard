@@ -41,8 +41,8 @@ def generate_coverage_report():
         cov.report(show_missing=True)
         
         # HTML report
-        html_dir = Path('htmlcov')
-        html_dir.mkdir(exist_ok=True)
+        html_dir = Path('tests/coverage')
+        html_dir.mkdir(parents=True, exist_ok=True)
         cov.html_report(directory=str(html_dir))
         
         # XML report

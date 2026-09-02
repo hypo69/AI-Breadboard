@@ -1,10 +1,5 @@
-; Настройки для coverage.py.
-; Этот файл задаёт, какие каталоги проекта учитываются при подсчёте покрытия
-; тестами, а какие файлы и каталоги исключаются из отчёта.
-; Например, сюда включены основные исходники проекта (src, plugins, scripts),
-; а временные файлы, кэш, тесты и локальные env-файлы не учитываются.
-; Такой набор позволяет получать корректный процент покрытия именно
-; рабочего кода проекта, без "шума" от служебных файлов.
+; Configuration for coverage.py.
+; Specifies source packages to measure and directories to omit from code coverage analysis.
 
 [run]
 source = 
@@ -36,4 +31,4 @@ omit =
     .env.*
 
 [html]
-directory = htmlcov
+directory = tests/coverage

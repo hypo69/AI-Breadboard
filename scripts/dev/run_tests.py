@@ -43,7 +43,7 @@ def run_tests(coverage=False, verbose=False, markers=None):
             "--cov=plugins",
             "--cov=scripts",
             "--cov-report=term-missing",
-            "--cov-report=html:htmlcov",
+            "--cov-report=html:tests/coverage",
             "--cov-report=xml:coverage.xml",
             "--cov-config=.coveragerc"
         ])
@@ -62,7 +62,7 @@ def run_tests(coverage=False, verbose=False, markers=None):
 
 def show_coverage():
     """Display coverage report in browser."""
-    html_path = Path("htmlcov") / "index.html"
+    html_path = Path("tests/coverage") / "index.html"
     if html_path.exists():
         import webbrowser
         webbrowser.open(f"file://{html_path.absolute()}")

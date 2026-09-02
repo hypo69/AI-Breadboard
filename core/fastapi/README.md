@@ -53,5 +53,5 @@ app.include_router(init_agents_router(), prefix="/api")
 
 ## OpenAPI & Swagger Documentation
 Interactive API docs are hosted dynamically at:
-- `http://localhost:3000/docs` — Swagger UI
-- `http://localhost:3000/redoc` — ReDoc
+- `http://localhost:8000/docs` — Swagger UI
+- `http://localhost:8000/redoc` — ReDoc

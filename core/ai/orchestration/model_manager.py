@@ -73,6 +73,8 @@ def _normalize_model_name(name: str) -> str:
         res = res[len("models/") :]
     return res
 
+normalize_model_name = _normalize_model_name
+
 def load_unsupported_models(provider: str = "gemini") -> Set[str]:
     """Load list of unsupported models from configuration files.
 
@@ -116,6 +118,12 @@ def load_unsupported_models(provider: str = "gemini") -> Set[str]:
                             unsupported.add(_normalize_model_name(item))
 
     return unsupported
+
+def is_model_supported(provider: str, model_name: str) -> bool:
+    """Check if model is supported for the specified provider."""
+    norm = _normalize_model_name(model_name)
+    unsupported = load_unsupported_models(provider)
+    return norm not in unsupported
 
 def add_unsupported_model(provider: str = "gemini", model_name: str = "", reason: str = "") -> bool:
     """Add unsupported model to configuration file and remove from cache.

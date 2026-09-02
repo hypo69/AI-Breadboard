@@ -212,7 +212,7 @@ After successful installation:
 
 2. **Access the web interface:**
    ```
-   http://localhost:3000
+   http://localhost:8000
    ```
 
 3. **Configure AI models:**

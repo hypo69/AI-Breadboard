@@ -1,81 +1,43 @@
-# `core.ai` Module — AI Model Integrations & Orchestration
+# Core AI Subsystem (`core/ai`)
 
-## Purpose
-The `core.ai` package encapsulates all interaction logic with neural network models, provider backends, and ReAct agent workflows.
+## Overview
+The `core/ai` package is the central artificial intelligence engine of **AI-Breadboard**, providing capability routing, hardware awareness, and seamless multi-provider abstraction across local and cloud runtimes.
 
 ---
 
-## Subsystems & Architecture
+## Architecture
 
-```text
-core/ai/
-├── providers/                 # Modular AI backends & transports
-│   ├── base.py                # BaseChatProvider interface
-│   ├── gemini/                # Google Gemini GenAI SDK, RAG & key rotation
-│   ├── ollama/                # Ollama Chat adapter & HTTP Client
-│   ├── foundry/               # Microsoft AI Foundry Chat & Client
-│   ├── onnx/                  # ONNX Runtime DirectML/CUDA
-│   ├── huggingface/           # Hugging Face Transformers
-│   ├── openai/                # OpenAI-compatible transport (DeepSeek, Groq, LM Studio)
-│   ├── gemini_cli/            # Google Gemini CLI terminal agent
-│   └── agy/                   # Google Antigravity AGY SDK
-│
-├── orchestration/             # Routing & Model pool management
-│   ├── model_manager.py       # Model discovery, health caching & blacklist
-│   └── unified_chat.py        # Single UnifiedChatModel routing facade
-│
-├── agents/                    # Autonomous ReAct agents, tools & MCP
-│   ├── agent.py               # MediaSearchAgent orchestrator
-│   ├── prompts.py             # System prompt templates
-│   ├── tools.py               # Agent tools
-│   └── mcp_client.py          # Model Context Protocol client manager
-│
-└── voice/                     # Speech & Voice pipelines
-    ├── pipeline.py            # Voiceover chunking & TTS generation pipeline
-    └── converters/            # GGUF / ONNX audio model converters
+```
+                               core/ai
+                                  │
+          ┌───────────────────────┼───────────────────────┐
+          │                       │                       │
+     orchestration/           providers/                agents/
+  (Routing & Discovery) (Dedicated Adapters)     (Autonomous Agents)
+          │                       │
+          │                       ├── windows_ai/  (Windows AI APIs & Phi Silica)
+          │                       ├── foundry/     (Microsoft Foundry Local)
+          │                       ├── ollama/      (Ollama Local Daemon)
+          │                       ├── onnx/        (Windows ML & DirectML)
+          │                       ├── gemini/      (Google Generative AI)
+          │                       ├── gemini_cli/  (Gemini CLI utility)
+          │                       ├── agy/         (Antigravity Subprocess)
+          │                       ├── huggingface/ (Local Transformers)
+          │                       └── openai/      (OpenAI-Compatible APIs)
+          │
+          └── converter/ (GGUF to ONNX model converter)
 ```
 
 ---
 
-## Model Routing Scheme
-
-```
-User Prompt → UnifiedChatModel._get_active_model(model_name)
-    ├── "foundry:*"     → FoundryChatBase
-    ├── "onnx:*"        → ONNXChatBase
-    ├── "hf:*"          → HFChatBase
-    ├── "openai:*"      → OpenAICompatChat
-    ├── "deepseek:*"    → OpenAICompatChat
-    ├── "gemini_cli:*"  → GeminiCliChatBase
-    ├── "agy-*"         → AgyChatBase
-    ├── "ollama:*"      → OllamaChatBase
-    └── "gemini-*"      → GoogleGenerativeAI (GenAI SDK)
-```
+## Key Modules
+- **`orchestration/`**: Capability registry, hardware probes, discovery engine, routing policies, and `UnifiedChatModel`.
+- **`providers/`**: Modular implementations of all local and cloud backends with dedicated `README.md` documentation.
+- **`agents/`**: Agentic workflows, MCP tool integration, and prompt management.
+- **`converter/`**: Model format converters (e.g., GGUF to ONNX).
 
 ---
 
-## Usage Example
-
-```python
-from core.ai import UnifiedChatModel
-
-chat_model = UnifiedChatModel(
-    api_key_names=["GEMINI_API_KEY"],
-    system_instruction="You are a helpful assistant.",
-    foundry_model_id="qwen2.5-coder-7b",
-)
-
-# Single prompt query
-response = await chat_model.ask(
-    q="Explain breadboard circuit tracing in 2 sentences.",
-    model_name="gemini-2.5-flash"
-)
-print(response)
-
-# Streaming response
-async for chunk in chat_model.stream_chat(
-    q="Compare DirectML vs CUDA for local ONNX inference.",
-    model_name="foundry:qwen2.5-coder-7b"
-):
-    print(chunk, end="", flush=True)
-```
+## Standards
+- **Language**: English only for all code, docstrings, comments, logs, and documentation.
+- **Error Handling**: Graceful fallback across local and cloud backends without unhandled runtime crashes.

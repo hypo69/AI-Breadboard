@@ -1,192 +1,168 @@
 # GEMINI.md
 
-## 📋 Основная Info
+## 📋 Master Overview
 
-Этот файл — **главный индекс инструкций** проекта. Содержит ссылки на все документы проекта, архитектурные принципы и стандарты разработки.
+This file serves as the **primary instruction index** for the project. It links to all project documents, architectural principles, and engineering standards.
+
+> [!IMPORTANT]
+> **Language Standard**: All documentation, code, docstrings, code comments, tests, and commit messages **MUST** be written strictly in **English**.
 
 ---
 
-## 🚀 Быстрый старт
+## 🚀 Quick Start
 
-### Первый запуск
+### Initial Setup
 ```powershell
-.\install.ps1          # Установка проекта и venv
-.\run.ps1              # Запуск сервера (FastAPI + Foundry)
+.\install.ps1          # Project and venv installation
+.\run.ps1              # Run application server (FastAPI + AI backends)
 ```
 
-### Документация и инструменты
-- **Полная установка:** [`.ai/instructions/knowledge/INSTALLATION_GUIDE.md`](.ai/instructions/knowledge/INSTALLATION_GUIDE.md)
-- **Запуск сервисов:** [`.ai/instructions/knowledge/LAUNCHER_GUIDE.md`](.ai/instructions/knowledge/LAUNCHER_GUIDE.md)
-- **Консольные инструменты:** [`.ai/instructions/knowledge/scripts_tools.md`](.ai/instructions/knowledge/scripts_tools.md)
+### Documentation and Tools
+- **Installation Guide:** [`.ai/instructions/knowledge/INSTALLATION_GUIDE.md`](.ai/instructions/knowledge/INSTALLATION_GUIDE.md)
+- **Launcher Guide:** [`.ai/instructions/knowledge/LAUNCHER_GUIDE.md`](.ai/instructions/knowledge/LAUNCHER_GUIDE.md)
+- **CLI Tools Reference:** [`.ai/instructions/knowledge/scripts_tools.md`](.ai/instructions/knowledge/scripts_tools.md)
 
 ---
 
-## 💡 Концепция проекта (AI Breadboard)
+## 💡 Project Concept (AI Breadboard)
 
-**Назначение:** Интерактивная "макетная плата" для изучения и тестирования различных AI моделей (Google Gemini, Microsoft AI Foundry, Ollama, OpenAI и др.).
+**Purpose:** An interactive "breadboard" for testing, benchmarking, and seamlessly routing between diverse AI providers and runtimes (Windows AI APIs, Microsoft Foundry Local, Windows ML / ONNX Runtime, Ollama, Google Gemini, OpenAI-compatible APIs, and HuggingFace).
 
-**Ключевые особенности:**
-- **Moduleная архитектура:** Модели работают через единый интерфейс `UnifiedChatModel` без дублирования бизнес-логики
-- **Прямой запуск:** Всё работает на хосте (PowerShell лончеры + Python venv), полная наблюдаемость
-- **Configuration вместо кодирования:** Поведение моделей управляется через файлы конфигурации и инструкции, а не через hardcode
-- **Минимализм:** KISS-принцип без излишних слоёв абстракции
+**Key Architectural Pillars:**
+- **Capability-Driven Routing:** Workloads are dispatched based on capability requirements (`chat`, `vision`, `ocr`, `embedding`, `code`) and policy constraints (`local_only`, `privacy_strict`, `performance_first`, `cloud_fallback`).
+- **Dynamic Discovery & Hardware Awareness:** Automatically probes CPU, GPU (CUDA, DirectML), NPU (QNN, DirectML), Windows AI Component availability, and local daemon ports without crashing on unsupported hardware.
+- **Provider Modularization:** Each provider resides in its own package under `core/ai/providers/` with dedicated logic and an English `README.md`.
+- **Zero-Hardcode Configuration:** Model behaviors and routing rules are declared in JSON configuration and policy files.
+- **Direct Host Execution:** Everything runs natively on the Windows host with full observability.
 
 ---
 
-## 📚 Стандарты разработки
+## 📚 Development Standards
 
-Все разработки **MUST** следовать инструкциям в `.ai/instructions/`:
+All development **MUST** adhere to instructions located in `.ai/instructions/`:
 
-### 1. **Стандарты кода**
+### 1. **Engineering Standards**
 📄 [`.ai/instructions/rules/CODE_RULES.md`](.ai/instructions/rules/CODE_RULES.md)
 
-Содержит:
-- Архитектурные принципы (Explicit, DRY, Single Responsibility)
-- Запрет на использование `None`
-- Правила комментирования и логирования
-- Языковые стандарты (Python 3.12+, PHP 8.3+, JS ES2024)
-- Работа с конфигурацией и секретами
+Key requirements:
+- Architecture principles: Explicit DI, Fail-Fast, DRY, Single Responsibility
+- Language standards: Python 3.12+ (strictly English code, docstrings, and comments)
+- Prohibition of undocumented `None` returns
+- Standardized logging via `core.logger.logger`
+- Strict separation of configuration (`config.json`) and secrets (`.env`)
 
-### 2. **Документирование и TDD**
+### 2. **Documentation & TDD**
 📄 [`.ai/instructions/rules/DOCS_RULES.md`](.ai/instructions/rules/DOCS_RULES.md)
 
-Содержит:
-- Обязательный TDD-workflow для всех `.py` изменений
-- Структура docstrings в формате `hypo69 docblock`
-- Правила документирования README.md для каждой директории
-- Examples и best practices
+Key requirements:
+- Mandatory TDD workflow for all Python changes
+- Standardized docstring structure (`hypo69 docblock` in English)
+- English `README.md` in every directory and provider package
 
-### 3. **Архитектурная документация**
+### 3. **Architectural Documentation**
 📄 [`.ai/instructions/knowledge/project_overview.md`](.ai/instructions/knowledge/project_overview.md)
 
-- Общее описание системы
-- Ключевые компоненты и их назначение
-- Архитектурные диаграммы
-- Процессы и workflows
+- Comprehensive system architecture and capability dispatch diagrams
+- Runtime layers: Windows AI, Foundry Local, ONNX/DirectML, Ollama, Gemini
 
 ---
 
-## 🛠️ Основные инструменты и команды
+## 🛠️ Common Commands
 
-### Запуск сервиса
+### Service Launch
 ```powershell
-# Главный лончер (всё сразу)
+# Unified launcher (everything)
 .\run.ps1
 
-# Только FastAPI сервер
+# FastAPI server only
 .\launchers\Run-Unicorn.ps1
 
-# Check статуса
+# Status check
 assist status
 ```
 
-### Управление через `manage_tools.py`
+### Script Execution via `manage_tools.py`
 ```powershell
-# Универсальный CLI для скриптов
-py manage_tools.py <группа> <команда> [аргументы]
+# Universal CLI
+py manage_tools.py <group> <command> [arguments]
 
 # Examples
-py manage_tools.py media scan --disk "диск 2"
+py manage_tools.py media scan --disk "disk 2"
 py manage_tools.py torrents assign
 py manage_tools.py check db
 ```
 
-Полная справка: [`.ai/instructions/knowledge/scripts_tools.md`](.ai/instructions/knowledge/scripts_tools.md)
-
-### Запуск тестов
+### Testing
 ```powershell
-.\launchers\run_tests.ps1         # Полное тестирование
-pytest tests/ --cov                # С подсчётом покрытия
+.\launchers\run_tests.ps1         # Full test suite execution
+pytest tests/ --cov                # Pytest with coverage reporting
 ```
 
 ---
 
-## ⚙️ Архитектурные принципы
+## ⚙️ Core Architectural Principles
 
-| Принцип | Описание | Ссылка |
-|---------|----------|--------|
-| **Explicit** | Передача зависимостей явно (DI) | CODE_RULES.md § 3.3 |
-| **Fail-Fast** | Ранний возврат при ошибке | CODE_RULES.md § 3.4 |
-| **Config > Hardcode** | Parameters из конфига, не из кода | CODE_RULES.md § 3.5 |
-| **No None** | Запрет на использование `None` | CODE_RULES.md § 3.6 |
-| **DRY** | Нет дублирования кода | CODE_RULES.md § 4.2 |
-| **300-строк лимит** | Функции max 300 строк кода | CODE_RULES.md § 4.4 |
-| **Документация** | Docstrings + README.md для каждого модуля | DOCS_RULES.md § 3-4 |
+| Principle | Description | Reference |
+|---|---|---|
+| **Explicit DI** | Pass dependencies explicitly; avoid hidden globals | CODE_RULES.md § 3.3 |
+| **Fail-Fast** | Early return on invalid inputs or failed preconditions | CODE_RULES.md § 3.4 |
+| **Config > Hardcode** | System parameters loaded from configuration | CODE_RULES.md § 3.5 |
+| **No None Ambiguity** | Explicit types and robust fallback handling | CODE_RULES.md § 3.6 |
+| **DRY** | No code duplication across provider adapters | CODE_RULES.md § 4.2 |
+| **English Only** | Code, docstrings, comments, and docs in English | CODE_RULES.md § 5.1 |
+| **300-Line Limit** | Maximum 300 lines of functional code per function | CODE_RULES.md § 4.4 |
+| **Documentation** | English Docstrings + README.md per directory | DOCS_RULES.md § 3-4 |
 
 ---
 
-## 🔐 Configuration и секреты
+## 🔐 Configuration & Secrets
 
 ### Configuration (`config.json`)
-Все Parameters работы приложения хранятся в публичном файле:
+Public system settings stored in root configuration:
 ```json
 {
   "server": {
     "host": "0.0.0.0",
-    "port": 3000,
+    "port": 8000,
     "workers": 1
   },
   "ai": {
     "use_foundry": true,
-    "foundry_base_url": "http://localhost:54837"
+    "foundry_base_url": "http://localhost:54837",
+    "use_ollama": true,
+    "ollama_base_url": "http://localhost:11434",
+    "use_windows_ai": false
   }
 }
 ```
 
-### Секреты (`.env`)
-Только приватные данные (API ключи, токены, пароли):
+### Secrets (`.env`)
+Private credentials, tokens, and keys:
 ```env
 GEMINI_API_KEY_1=AIzaSy...
 JWT_SECRET=secret_value
 TELEGRAM_BOT_TOKEN=...
 ```
 
-Правило: **Никогда не коммитить `.env`!** Используйте `.env.example` для примеров.
-
-📄 Подробнее: CODE_RULES.md § 7 "Configuration и секреты"
+Rule: **Never commit `.env`!** Use `.env.example` as a template.
 
 ---
 
-## 📖 Полный указатель документации
+## ✅ Pre-Commit Checklist
 
-| Документ | Где | Описание |
-|----------|-----|---------|
-| **CODE_RULES.md** | `.ai/instructions/rules/` | Стандарты кода, архитектура, языки |
-| **DOCS_RULES.md** | `.ai/instructions/rules/` | TDD, docstrings, README.md |
-| **INSTALLATION_GUIDE.md** | `.ai/instructions/knowledge/` | Установка и настройка проекта |
-| **LAUNCHER_GUIDE.md** | `.ai/instructions/knowledge/` | Запуск сервисов и лончеры |
-| **scripts_tools.md** | `.ai/instructions/knowledge/` | Справочник консольных инструментов |
-| **project_overview.md** | `.ai/instructions/knowledge/` | Архитектура и компоненты |
-| **legacy_project_knowledge.md** | `.ai/instructions/knowledge/` | Историческая справка (2026) |
-| **api_documentation.md** | `.ai/instructions/knowledge/` | API эндпоинты |
-| **chat.md** | `.ai/instructions/knowledge/` | Реализация чат-логики |
-| **README.md** | `.ai/instructions/` | Справочник по инструкциям |
+Before every commit, verify:
+
+- [ ] File header follows the required standard (see CODE_RULES.md § 6)
+- [ ] All code, docstrings, comments, and logs are in **English**
+- [ ] All public functions and classes have `hypo69 docblock` docstrings
+- [ ] Logging is executed via `core.logger.logger` (no raw `print` calls)
+- [ ] All credentials and secrets are managed via `.env`
+- [ ] Commit represents a **logically complete, verified state** of working code
+- [ ] Tests pass: `pytest tests/ --cov`
+- [ ] New directories contain an English `README.md`
 
 ---
 
-## ✅ Чек-лист перед коммитом
-
-Перед каждым коммитом убедитесь:
-
-- [ ] Заголовок файла соответствует стандарту (см. CODE_RULES.md § 6)
-- [ ] Все публичные функции имеют docstring формата `hypo69 docblock` (DOCS_RULES.md § 3)
-- [ ] В Python/PHP коде нет кириллицы (только в комментариях Python/PowerShell)
-- [ ] Логирование через `core.logger.logger`, а не `print()`
-- [ ] Все секреты перемещены в `.env`
-- [ ] Коммит отражает **логически завершённое state** рабочего кода
-- [ ] Тесты пройдены: `pytest tests/ --cov`
-- [ ] Новые директории содержат `README.md`
-
----
-
-## 🔗 Дополнительные ресурсы
-
-- **Главный README:** [`README.ru.md`](README.ru.md)
-- **Индекс документации:** [`DOCUMENTATION_INDEX.md`](DOCUMENTATION_INDEX.md)
-- **Инструменты проекта:** [`tools/README.md`](tools/README.md)
-
----
-
-**Status:** ✅ Актуальна на август 2026  
-**Версия:** 2.0 (переработана с удалением дублирования)  
-**Автор:** hypo69
+**Status:** ✅ Active (English Standard)  
+**Version:** 3.0  
+**Author:** hypo69

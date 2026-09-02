@@ -64,7 +64,7 @@ def get_free_port(host: str, port_range: Union[str, List[str]] = '') -> int:
         ValueError: Error if free port not found or range specified incorrectly.
 
     Examples:
-        >>> port = get_free_port(host='localhost', port_range='3000-3005')
+        >>> port = get_free_port(host='localhost', port_range='8000-8005')
     """
     if port_range:
         if isinstance(port_range, str):

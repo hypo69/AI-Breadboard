@@ -6,4 +6,4 @@ Interactive command-line chat interface connecting directly to the running backe
 ---
 
 ## Operating Principles
-Connects to `http://localhost:3000/api/chat` with full conversational history, RAG context injection, and streaming token rendering.
+Connects to `http://localhost:8000/api/chat` with full conversational history, RAG context injection, and streaming token rendering.

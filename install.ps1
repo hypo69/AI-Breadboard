@@ -114,11 +114,17 @@ $certsScript = Join-Path $installedModulesDir "Install-Certs.ps1"
 $cliScript = Join-Path $installedModulesDir "Install-Cli.ps1"
 & $cliScript -InstallDir $InstallDir -Config $config
 
-# 11. Модуль верификации и финализации
+# 11. Модуль установки Gemini CLI
+$geminiCliScript = Join-Path $installedModulesDir "Install-Gemini-cli.ps1"
+if (Test-Path $geminiCliScript) {
+    & $geminiCliScript -InstallDir $InstallDir -Config $config
+}
+
+# 12. Модуль верификации и финализации
 $verifyScript = Join-Path $installedModulesDir "Install-Verify.ps1"
 & $verifyScript -InstallDir $InstallDir -PythonPath $PythonPath -Config $config
 
-# 12. Модуль выбора и скачивания моделей
+# 13. Модуль выбора и скачивания моделей
 $modelsScript = Join-Path $installedModulesDir "Install-Models.ps1"
 & $modelsScript -InstallDir $InstallDir -Config $config
 

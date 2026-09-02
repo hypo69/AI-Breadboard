@@ -5,7 +5,7 @@
 `main.py` — FastAPI-сервер с автологином локальных пользователей и 10 плагинами.
 
 ### Что делает main.py в 2026:
-- Reads конфиг из `core/fastapi/config.json` → `_cfg` (host: 0.0.0.0, port: 3000)
+- Reads конфиг из `core/fastapi/config.json` → `_cfg` (host: 0.0.0.0, port: 8000)
 - Reads `.env`: `GEMINI_API_KEY_NAMES`, `USE_FOUNDRY`, `FOUNDRY_MODEL_ID`
 - Reads системную инструкцию из `.ai_instructions/prompts/chat/system_instruction.md`
 - Creates `UnifiedChatModel` (Gemini + Foundry)
@@ -25,7 +25,7 @@
 GEMINI_API_KEY_NAMES=имя1,имя2,...
 USE_FOUNDRY=false
 FOUNDRY_MODEL_ID=qwen3-0.6b-generic-cpu:4
-FOUNDRY_BASE_URL=http://localhost:3000
+FOUNDRY_BASE_URL=http://localhost:8000
 
 # Authentication
 TELEGRAM_BOT_TOKEN=...
@@ -46,7 +46,7 @@ DISABLED_PLUGINS=plugin1,plugin2
 ```json
 {
   "host": "0.0.0.0",
-  "port": 3000,
+  "port": 8000,
   "workers": 4
 }
 ```

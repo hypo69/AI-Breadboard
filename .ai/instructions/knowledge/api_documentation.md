@@ -6,7 +6,7 @@
 
 ## Базовый URL
 ```
-http://localhost:3000
+http://localhost:8000
 https://ваш-домен.com
 ```
 
@@ -414,7 +414,7 @@ GET /user_tts
 
 ### CORS настройки
 ```
-CORS_ORIGINS = ["http://localhost:3000", "https://ваш-домен.com"]
+CORS_ORIGINS = ["http://localhost:8000", "https://ваш-домен.com"]
 CORS_CREDENTIALS = true
 CORS_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 ```
@@ -425,7 +425,7 @@ CORS_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 ```python
 import requests
 
-BASE_URL = "http://localhost:3000"
+BASE_URL = "http://localhost:8000"
 
 def chat_with_ai(message):
     response = requests.post(
@@ -437,7 +437,7 @@ def chat_with_ai(message):
 
 ### JavaScript/TypeScript
 ```typescript
-const API_BASE = 'http://localhost:3000';
+const API_BASE = 'http://localhost:8000';
 
 async function searchMedia(title: string) {
   const response = await fetch(`${API_BASE}/api/media/by-title`, {

@@ -195,5 +195,5 @@ class TestUrlEdgeCases:
         result1 = is_url("http://localhost:8080")
         assert result1 is True
         
-        result2 = is_url("http://127.0.0.1:3000")
+        result2 = is_url("http://127.0.0.1:8000")
         assert result2 is True

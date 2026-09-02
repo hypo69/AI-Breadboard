@@ -29,12 +29,12 @@
 | **2. Комментарии** | Пояснение логики "почему", а не "что" | В критических местах кода |
 | **3. README.md** | Описание модуля, архитектура, использование | В директории модуля |
 
-### 1.3 Правило "One Document Per Module"
-Каждая директория проекта **MUST** содержать **README.md** на русском языке, описывающий:
-- Назначение модуля
-- Основные компоненты
-- Examples использования
-- Ссылки на связанные модули
+### 1.3 Rule "One Document Per Module"
+Every directory and module package **MUST** contain a **README.md** written in **English**, describing:
+- Module purpose and architecture
+- Core components, classes, and functions
+- Code examples and usage scenarios
+- Cross-references to related modules and dependencies
 
 ---
 

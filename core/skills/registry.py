@@ -22,7 +22,7 @@ from typing import Any, Iterable
 from header import __root__
 
 _FRONTMATTER_PATTERN = re.compile(r"\A---\s*\n(?P<body>.*?)\n---\s*(?:\n|\Z)", re.DOTALL)
-_DEFAULT_SKILL_DIRS = (".gemini/skills", ".agents/skills", ".github/skills", "skills")
+_DEFAULT_SKILL_DIRS = (".agents/skills", ".github/skills", "skills", ".gemini/skills")
 
 def _parse_scalar(value: str) -> Any:
     """Parses simple YAML values without requiring PyYAML dependency."""

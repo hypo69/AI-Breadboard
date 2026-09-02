@@ -293,7 +293,7 @@ ai-assistant/
 # AI Модели
 GEMINI_API_KEY_NAMES=your_api_keys
 FOUNDRY_API_KEY=your_foundry_key
-FOUNDRY_BASE_URL=http://localhost:3000
+FOUNDRY_BASE_URL=http://localhost:8000
 AGY_API_KEY=your_agy_key
 OLLAMA_BASE_URL=http://localhost:11434
 
@@ -417,11 +417,11 @@ python main.py
 .\run.ps1
 
 # Доступные интерфейсы:
-# http://localhost:3000/user      - плеер+чат
-# http://localhost:3000/rc        - пульт ДУ
-# http://localhost:3000/tgmini    - Telegram Mini App
-# http://localhost:3000/admin     - админка (пароль: onela)
-# http://localhost:3000/api/docs  - OpenAPI документация
+# http://localhost:8000/user      - плеер+чат
+# http://localhost:8000/rc        - пульт ДУ
+# http://localhost:8000/tgmini    - Telegram Mini App
+# http://localhost:8000/admin     - админка (пароль: onela)
+# http://localhost:8000/api/docs  - OpenAPI документация
 ```
 
 ---

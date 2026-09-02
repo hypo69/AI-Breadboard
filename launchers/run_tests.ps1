@@ -72,7 +72,7 @@ $cmdArgs = @()
 if ($Coverage) {
     $cmdArgs += "--cov=core"
     $cmdArgs += "--cov-report=term-missing"
-    $cmdArgs += "--cov-report=html:htmlcov"
+    $cmdArgs += "--cov-report=html:tests/coverage"
     $cmdArgs += "--cov-report=xml:coverage.xml"
     $cmdArgs += "--cov-config=.coveragerc"
 }
@@ -94,9 +94,9 @@ if ($LASTEXITCODE -eq 0) {
 }
 
 # Opening report
-if ($Coverage -and (Test-Path (Join-Path $projectRoot "htmlcov\index.html"))) {
+if ($Coverage -and (Test-Path (Join-Path $projectRoot "tests\coverage\index.html"))) {
     if ($OpenCoverage) {
-        Start-Process (Join-Path $projectRoot "htmlcov\index.html")
+        Start-Process (Join-Path $projectRoot "tests\coverage\index.html")
     }
 }
 
