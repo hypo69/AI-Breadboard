@@ -14,7 +14,11 @@ on:
       confirm_force_push:
         description: 'Type YES to confirm force-push when migrate_history is true'
         required: false
-        default: ''
+        default: 'NO'
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   validate-and-auto-pr:
@@ -29,6 +33,7 @@ jobs:
       with:
         fetch-depth: 0
         lfs: true
+        persist-credentials: true
 
     - name: Setup Python (used for portable checks)
       uses: actions/setup-python@v4
@@ -66,8 +71,12 @@ jobs:
           g = ''
         miss = [p for p in required if p not in g]
         missing_flag = 'true' if miss else 'false'
-        print(f"missing={missing_flag}", file=open('/github/output','w')) if False else None
-        print(f"::set-output name=missing::{missing_flag}")
+        # Use GITHUB_OUTPUT environment file to set step output (set-output is deprecated)
+        import os
+        gh_out = os.environ.get('GITHUB_OUTPUT')
+        if gh_out:
+          with open(gh_out, 'a') as o:
+            o.write(f"missing={missing_flag}\n")
         if miss:
           print('Missing patterns:', miss)
           # dump missing list for later steps
@@ -76,38 +85,20 @@ jobs:
         sys.exit(0)
         PY
 
-    - name: Append missing LFS patterns and push branch
-      if: steps.check-patterns.outputs.missing == 'true' && github.event_name != 'pull_request'
+    - name: Report missing LFS patterns (no push)
+      if: steps.check-patterns.outputs.missing == 'true'
       run: |
-        BRANCH="chore/add-git-lfs-patterns-${{ github.run_id }}"
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git checkout -b "$BRANCH"
-        mkdir -p $(dirname .gitattributes) || true
-        if [ ! -f .gitattributes ]; then echo "# Git LFS attributes" > .gitattributes; fi
-        if [ -f .github/missing-lfs-patterns ]; then
-          while IFS= read -r p; do
-            if ! grep -Fq "$p" .gitattributes; then
-              echo "$p filter=lfs diff=lfs merge=lfs -text" >> .gitattributes
-            fi
-          done < .github/missing-lfs-patterns
-        fi
-        git add .gitattributes
-        git commit -m "chore: add git-lfs track patterns for large assets" || echo "no changes to commit"
-        git push origin "$BRANCH"
+        echo "Missing git-lfs patterns detected. To avoid permission errors in CI, this workflow will not attempt to push or create a PR from forks or limited tokens."
+        echo "Missing patterns file (.github/missing-lfs-patterns) is available in the workspace."
+        echo "List of missing patterns:"
+        if [ -f .github/missing-lfs-patterns ]; then cat .github/missing-lfs-patterns; else echo "(missing file not found)"; fi
 
-    - name: Create PR for .gitattributes update
-      if: steps.check-patterns.outputs.missing == 'true' && github.event_name != 'pull_request'
-      uses: peter-evans/create-pull-request@v5
+    - name: Upload missing LFS patterns as artifact
+      if: steps.check-patterns.outputs.missing == 'true'
+      uses: actions/upload-artifact@v4
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        branch: 'chore/add-git-lfs-patterns-${{ github.run_id }}'
-        title: 'chore: add git-lfs track patterns'
-        body: |
-          This PR adds required git-lfs patterns to .gitattributes to ensure large files are tracked.
-          Generated automatically by CI.
-        labels: automated,git-lfs
-        committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        name: missing-lfs-patterns
+        path: .github/missing-lfs-patterns
 
   cross-platform-checks:
     name: Cross-platform LFS checks
