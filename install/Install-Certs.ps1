@@ -29,13 +29,12 @@ if ($Config -and $Config.paths) {
     if ($Config.paths.ssl_script) { $sslScriptPath = Join-Path $InstallDir $Config.paths.ssl_script }
 }
 
-if ((Test-Path $certFile) -and (Test-Path $keyFile)) {
-    Write-Host (Msg "step_5_found" @($certFile)) -ForegroundColor Green
+Write-Host "Обновление SSL-сертификатов..." -ForegroundColor Cyan
+$skillScript = Join-Path $InstallDir ".agents\skills\cert-installer\scripts\manage_certs.ps1"
+if (Test-Path $skillScript) {
+    & $skillScript -Force
+} elseif (Test-Path $sslScriptPath) {
+    & $sslScriptPath
 } else {
-    Write-Host (Msg "step_5_not_found") -ForegroundColor Yellow
-    if (Test-Path $sslScriptPath) {
-        & $sslScriptPath
-    } else {
-        Write-Host (Msg "step_5_missing_script" @($sslScriptPath)) -ForegroundColor Yellow
-    }
+    Write-Host (Msg "step_5_missing_script" @($sslScriptPath)) -ForegroundColor Yellow
 }

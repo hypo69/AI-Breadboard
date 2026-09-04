@@ -204,6 +204,7 @@ if (Test-Path $envFile) {
             $val = $Matches[2].Trim().Trim('"').Trim("'")
             if ($key -eq "USE_SSL") { $useSsl = $val -in ("true","1","yes") }
             if ($key -eq "USE_FOUNDRY") { $useFoundry = $val -in ("true","1","yes") }
+            if ($key -eq "CLOUDFLARE_TUNNEL_TOKEN") { $cfTunnelToken = $val }
             if ($key -eq "AUTO_LAUNCH_ENABLED") { $autoLaunchEnabled = $val -in ("true","1","yes") }
             if ($key -eq "AUTO_LAUNCH_DELAY_SECONDS" -and $val -match '^\d+$') { $autoLaunchDelay = [int]$val }
         }
@@ -448,6 +449,9 @@ if ($lanIp -and $host_ -eq "0.0.0.0") {
     Write-Host "  • Сетевой URL:     ${proto}://${lanIp}:${port}/" -ForegroundColor Yellow
 }
 Write-Host "  • AI Foundry:      $(if ($useFoundry) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
+if ($cfTunnelToken) {
+    Write-Host "  • Тоннель Cloudflare: https://kino.davidka.net" -ForegroundColor Cyan
+}
 if ($autoLaunchEnabled -and $autoLaunchDelay -gt 0) {
     Write-Host "  • Автозапуск:      ВКЛЮЧЁН (задержка: $autoLaunchDelay сек)" -ForegroundColor Yellow
 }
@@ -512,6 +516,24 @@ if ($useFoundry) {
         & $foundryScript -Action start
     } else {
         Write-Host "    [WARN] Run-Foundry.ps1 не найден: $foundryScript" -ForegroundColor Yellow
+    }
+}
+
+# ----------------------------------------------------------------------------
+# SUBSTAGE 9.2 — CLOUDFLARE TUNNEL (kino.davidka.net)
+# ----------------------------------------------------------------------------
+if ($cfTunnelToken) {
+    Write-Host ""
+    Write-Host "    Запуск службы Cloudflare Tunnel..." -ForegroundColor Cyan
+    $cfScript = Join-Path $scriptDir "launchers\Run-Cloudflared.ps1"
+    if (-not (Test-Path $cfScript)) {
+        $cfScript = Join-Path $scriptDir "Run-Cloudflared.ps1"
+    }
+    if (Test-Path $cfScript) {
+        Write-Host "    Вызов Run-Cloudflared.ps1..." -ForegroundColor DarkGray
+        & $cfScript
+    } else {
+        Write-Host "    [WARN] Run-Cloudflared.ps1 не найден: $cfScript" -ForegroundColor Yellow
     }
 }
 

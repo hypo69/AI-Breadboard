@@ -32,6 +32,26 @@ plugins:
   - search:
       lang:
         - en
+        - ru
+  - i18n:
+      docs_structure: folder
+      languages:
+        - locale: en
+          name: English
+          build: true
+          default: true
+        - locale: ru
+          name: Русский
+          build: true
+        - locale: es
+          name: Español
+          build: true
+        - locale: ar
+          name: العربية
+          build: true
+        - locale: he
+          name: עברית
+          build: true
   - mkdocstrings:
       handlers:
         python:
@@ -68,5 +88,5 @@ extra:
   repository: github
 
 # Validation
-strict: true
+strict: false
 

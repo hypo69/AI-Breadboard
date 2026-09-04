@@ -1,1 +1,395 @@
-# 🏗️ Installer Architecture & Logic Documentation\n\n## Overview\n\nThe AI Breadboard installation system consists of three complementary installers:\n\n1. **Python Installer** (`install.py`) — Universal, cross-platform\n2. **Bash Installer** (`install.sh`) — Unix-like systems (Linux/macOS)\n3. **PowerShell Installer** (`install.ps1`) — Windows native\n\nAll installers follow the same logical flow and support identical features.\n\n---\n\n## Core Logic Flow\n\n```\n┌─────────────────────────────────────────────────────────────┐\n│ 1. Language Selection (I18N)                                │\n│    └─ Interactive prompt: RU / EN / ES / HE                │\n├─────────────────────────────────────────────────────────────┤\n│ 2. Installation Directory Selection                         │\n│    └─ Default: current directory or user input             │\n├─────────────────────────────────────────────────────────────┤\n│ 3. Python Interpreter Discovery                            │\n│    ├─ Try: python3.13, python3.12, python3.11, python3.10 │\n│    ├─ Fallback: python, python3                            │\n│    └─ Error: Exit if not found                             │\n├─────────────────────────────────────────────────────────────┤\n│ 4. Virtual Environment Creation                            │\n│    ├─ Check: venv already exists?                          │\n│    ├─ Create: python -m venv <dir>                         │\n│    └─ Verify: venv/bin/python exists                       │\n├─────────────────────────────────────────────────────────────┤\n│ 5. Pip & Tools Upgrade                                     │\n│    └─ pip install --upgrade pip setuptools wheel           │\n├─────────────────────────────────────────────────────────────┤\n│ 6. Dependency Profile Selection                            │\n│    ├─ [1] Full (Core + AI + Utils) — Default              │\n│    ├─ [2] Core only                                        │\n│    ├─ [3] Core + AI                                        │\n│    ├─ [4] Full + Dev                                       │\n│    └─ [5] Skip                                             │\n├─────────────────────────────────────────────────────────────┤\n│ 7. Dependency Installation                                 │\n│    └─ pip install -r <requirements-file>                   │\n├─────────────────────────────────────────────────────────────┤\n│ 8. Environment Verification                                │\n│    └─ Test imports: fastapi, uvicorn, dotenv, pydantic    │\n├─────────────────────────────────────────────────────────────┤\n│ 9. Success Banner                                          │\n│    └─ Display completion message in selected language      │\n└─────────────────────────────────────────────────────────────┘\n```\n\n---\n\n## Multilingual System (I18N)\n\n### Message Dictionary Structure\n\n**Python:**\n```python\nclass I18N:\n    MESSAGES = {\n        \"ru\": {\"step_1\": \"[1/6] Проверка Python...\"},\n        \"en\": {\"step_1\": \"[1/6] Checking Python...\"},\n        \"es\": {\"step_1\": \"[1/6] Verificando Python...\"},\n        \"he\": {\"step_1\": \"[1/6] בדיקת Python...\"},\n    }\n```\n\n**Bash:**\n```bash\ndeclare -A MESSAGES_RU=(\n    [step_1]=\"[1/6] Проверка Python...\"\n)\ndeclare -A MESSAGES_EN=(\n    [step_1]=\"[1/6] Checking Python...\"\n)\n```\n\n### Message Keys\n\nAll installers use consistent message keys:\n\n| Key | Purpose | Example |\n|-----|---------|----------|\n| `welcome` | Initial greeting | \"🚀 Welcome to AI Breadboard Installer\" |\n| `select_lang` | Language selection prompt | \"Select installation language:\" |\n| `lang_selected` | Confirmation of language | \"✓ Selected language: en\" |\n| `step_1` to `step_6` | Installation steps | \"[1/6] Checking Python interpreter...\" |\n| `step_X_ok` | Step success | \"✓ Virtual environment created\" |\n| `step_X_error` | Step failure | \"✗ Python not found\" |\n| `finish` | Completion message | \"✅ Installation completed successfully!\" |\n| `error` | Generic error | \"✗ Error: {msg}\" |\n\n---\n\n## Python Interpreter Discovery Logic\n\n### Algorithm\n\n```python\ndef find_python():\n    # Step 1: Try specific versions in order\n    for version in [\"3.13\", \"3.12\", \"3.11\", \"3.10\"]:\n        if command_exists(f\"python{version}\"):\n            return path_to_python\n    \n    # Step 2: Fallback to generic python/python3\n    if command_exists(\"python\"):\n        return path_to_python\n    if command_exists(\"python3\"):\n        return path_to_python\n    \n    # Step 3: Not found\n    return False\n```\n\n### Platform-Specific Behavior\n\n**Windows:**\n- Uses Python Launcher (`py -3.13`, `py -3.12`, etc.)\n- Fallback: `python` from PATH\n\n**Linux/macOS:**\n- Direct command lookup: `python3.13`, `python3.12`, etc.\n- Fallback: `python3`, `python`\n\n---\n\n## Virtual Environment Management\n\n### Creation Logic\n\n```python\ndef create_venv(python_path):\n    # Check if venv already exists\n    if venv_dir.exists():\n        return True  # Reuse existing\n    \n    # Create new venv\n    subprocess.run([python_path, \"-m\", \"venv\", venv_dir])\n    \n    # Verify creation\n    if venv_python.exists():\n        return True\n    return False\n```\n\n### Platform-Specific Paths\n\n| Platform | Python Path | Activation |\n|----------|-------------|------------|\n| Windows | `venv\\Scripts\\python.exe` | `venv\\Scripts\\activate.bat` |\n| Linux/macOS | `venv/bin/python` | `source venv/bin/activate` |\n\n---\n\n## Dependency Installation Profiles\n\n### Profile Mapping\n\n```python\nprofiles = {\n    \"1\": [\"requirements.txt\"],  # Full\n    \"2\": [\"install/req/requirements-core.txt\"],  # Core\n    \"3\": [\"install/req/requirements-core.txt\", \"install/req/requirements-ai.txt\"],  # Core+AI\n    \"4\": [\"requirements.txt\", \"install/req/requirements-test.txt\", \"install/req/requirements-docs.txt\"],  # Full+Dev\n    \"5\": [],  # Skip\n}\n```\n\n### Installation Logic\n\n```python\ndef install_dependencies(profile):\n    req_files = profiles.get(profile, [])\n    \n    if not req_files:\n        return True  # Skip\n    \n    cmd = [python_path, \"-m\", \"pip\", \"install\"]\n    for req_file in req_files:\n        if Path(req_file).exists():\n            cmd.extend([\"-r\", req_file])\n    \n    subprocess.run(cmd)\n```\n\n---\n\n## Environment Verification\n\n### Verification Steps\n\n```python\ndef verify_environment():\n    modules = [\"fastapi\", \"uvicorn\", \"dotenv\", \"pydantic\"]\n    \n    for module in modules:\n        try:\n            subprocess.run(\n                [python_path, \"-c\", f\"import {module}\"],\n                check=True,\n                timeout=10\n            )\n        except:\n            return False\n    \n    return True\n```\n\n### Verification Modules\n\n| Module | Purpose | Package |\n|--------|---------|----------|\n| `fastapi` | Web framework | fastapi |\n| `uvicorn` | ASGI server | uvicorn |\n| `dotenv` | Environment variables | python-dotenv |\n| `pydantic` | Data validation | pydantic |\n\n---\n\n## Error Handling Strategy\n\n### Early Return Pattern\n\nAll installers follow the \"Early Return\" pattern (per CODE_RULES):\n\n```python\ndef create_venv(python_path):\n    if venv_dir.exists():\n        return True\n    \n    try:\n        subprocess.run([python_path, \"-m\", \"venv\", venv_dir], check=True)\n        return True\n    except:\n        return False  # Not None, not exception propagation\n```\n\n### Error Messages\n\nAll errors are:\n1. Logged with context\n2. Returned as `False` (not exceptions)\n3. Displayed in user's selected language\n4. Actionable (include next steps)\n\n---\n\n## Code Quality Standards (CODE_RULES Compliance)\n\n### ✅ Implemented Standards\n\n1. **No `None` usage:**\n   - Variables initialized with empty values: `''`, `0`, `[]`, `{}`\n   - Functions return `False` on error, not `None`\n   - No `is None` comparisons\n\n2. **Configuration over Hardcode:**\n   - All paths from `install.json`\n   - All messages from I18N dictionaries\n   - All versions from configuration\n\n3. **Single Responsibility:**\n   - Each method does one thing\n   - Each function has clear purpose\n   - Separation of concerns maintained\n\n4. **Early Return:**\n   - Validation at function start\n   - Immediate return on error\n   - No deep nesting\n\n5. **Explicit Dependencies:**\n   - All parameters passed explicitly\n   - No global state\n   - Clear function signatures\n\n### ✅ Documentation Standards\n\n1. **File Headers:**\n   - Process name and description\n   - Examples of usage\n   - File metadata (author, copyright)\n\n2. **Docstrings (hypo69 format):**\n   - Short description\n   - Args with types\n   - Returns with type\n   - Examples\n\n3. **Comments:**\n   - Explain \"why\", not \"what\"\n   - Use noun forms (not verbs)\n   - Minimal but clear\n\n---\n\n## Testing & Validation\n\n### Validation Script\n\nRun `validate_installers.py` to check:\n\n```bash\npython validate_installers.py\n```\n\nChecks performed:\n1. Python installer structure\n2. Bash installer structure\n3. Configuration validity\n4. Consistency between installers\n5. Language support\n6. Method/function presence\n\n### Manual Testing\n\n```bash\n# Test Python installer\npython install.py --language en\n\n# Test Bash installer\nbash install.sh --language ru\n\n# Test PowerShell installer\n.\\install.ps1\n```\n\n---\n\n## Maintenance & Extension\n\n### Adding New Languages\n\n1. Add translations to all three installers\n2. Update `supported_languages` in `install.json`\n3. Test with `--language` option\n4. Update documentation\n\n### Adding New Installation Steps\n\n1. Create new method in `Installer` class\n2. Add message keys to I18N\n3. Call from `run()` method\n4. Update flow diagram\n5. Add validation checks\n\n### Updating Dependencies\n\n1. Modify `requirements*.txt` files\n2. Update `install.json` paths if needed\n3. Test all profiles\n4. Update documentation\n\n---\n\n## Performance Considerations\n\n### Optimization Strategies\n\n1. **Parallel Operations:** Could parallelize pip installs (future)\n2. **Caching:** Could cache Python discovery results\n3. **Lazy Loading:** Only load needed modules\n4. **Timeouts:** All subprocess calls have timeouts\n\n### Resource Usage\n\n| Operation | Time | Space |\n|-----------|------|-------|\n| Python discovery | ~1-2s | Minimal |\n| venv creation | ~5-10s | ~100MB |\n| pip upgrade | ~10-20s | Minimal |\n| Full install (profile 1) | ~2-5 min | ~500MB-1GB |\n| Verification | ~5-10s | Minimal |\n\n---\n\n## Security Considerations\n\n1. **No Hardcoded Secrets:** All secrets in `.env`\n2. **Safe Subprocess Calls:** All use `check=True` and timeouts\n3. **Path Validation:** All paths validated before use\n4. **Input Sanitization:** User input validated\n5. **SSL Certificates:** Handled separately by `install_ssl_certs.py`\n\n---\n\n**Last Updated:** 2026-08-20  \n**Status:** ✅ Production Ready  \n**Maintainer:** hypo69\n
+# 🏗️ Installer Architecture & Logic Documentation
+
+## Overview
+
+The AI Breadboard installation system consists of three complementary installers:
+
+1. **Python Installer** (`install.py`) — Universal, cross-platform
+2. **Bash Installer** (`install.sh`) — Unix-like systems (Linux/macOS)
+3. **PowerShell Installer** (`install.ps1`) — Windows native
+
+All installers follow the same logical flow and support identical features.
+
+---
+
+## Core Logic Flow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 1. Language Selection (I18N)                                │
+│    └─ Interactive prompt: RU / EN / ES / HE                │
+├─────────────────────────────────────────────────────────────┤
+│ 2. Installation Directory Selection                         │
+│    └─ Default: current directory or user input             │
+├─────────────────────────────────────────────────────────────┤
+│ 3. Python Interpreter Discovery                            │
+│    ├─ Try: python3.13, python3.12, python3.11, python3.10 │
+│    ├─ Fallback: python, python3                            │
+│    └─ Error: Exit if not found                             │
+├─────────────────────────────────────────────────────────────┤
+│ 4. Virtual Environment Creation                            │
+│    ├─ Check: venv already exists?                          │
+│    ├─ Create: python -m venv <dir>                         │
+│    └─ Verify: venv/bin/python exists                       │
+├─────────────────────────────────────────────────────────────┤
+│ 5. Pip & Tools Upgrade                                     │
+│    └─ pip install --upgrade pip setuptools wheel           │
+├─────────────────────────────────────────────────────────────┤
+│ 6. Dependency Profile Selection                            │
+│    ├─ [1] Full (Core + AI + Utils) — Default              │
+│    ├─ [2] Core only                                        │
+│    ├─ [3] Core + AI                                        │
+│    ├─ [4] Full + Dev                                       │
+│    └─ [5] Skip                                             │
+├─────────────────────────────────────────────────────────────┤
+│ 7. Dependency Installation                                 │
+│    └─ pip install -r <requirements-file>                   │
+├─────────────────────────────────────────────────────────────┤
+│ 8. Environment Verification                                │
+│    └─ Test imports: fastapi, uvicorn, dotenv, pydantic    │
+├─────────────────────────────────────────────────────────────┤
+│ 9. Success Banner                                          │
+│    └─ Display completion message in selected language      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Multilingual System (I18N)
+
+### Message Dictionary Structure
+
+**Python:**
+```python
+class I18N:
+    MESSAGES = {
+        \"ru\": {\"step_1\": \"[1/6] Проверка Python...\"},
+        \"en\": {\"step_1\": \"[1/6] Checking Python...\"},
+        \"es\": {\"step_1\": \"[1/6] Verificando Python...\"},
+        \"he\": {\"step_1\": \"[1/6] בדיקת Python...\"},
+    }
+```
+
+**Bash:**
+```bash
+declare -A MESSAGES_RU=(
+    [step_1]=\"[1/6] Проверка Python...\"
+)
+declare -A MESSAGES_EN=(
+    [step_1]=\"[1/6] Checking Python...\"
+)
+```
+
+### Message Keys
+
+All installers use consistent message keys:
+
+| Key | Purpose | Example |
+|-----|---------|----------|
+| `welcome` | Initial greeting | \"🚀 Welcome to AI Breadboard Installer\" |
+| `select_lang` | Language selection prompt | \"Select installation language:\" |
+| `lang_selected` | Confirmation of language | \"✓ Selected language: en\" |
+| `step_1` to `step_6` | Installation steps | \"[1/6] Checking Python interpreter...\" |
+| `step_X_ok` | Step success | \"✓ Virtual environment created\" |
+| `step_X_error` | Step failure | \"✗ Python not found\" |
+| `finish` | Completion message | \"✅ Installation completed successfully!\" |
+| `error` | Generic error | \"✗ Error: {msg}\" |
+
+---
+
+## Python Interpreter Discovery Logic
+
+### Algorithm
+
+```python
+def find_python():
+    # Step 1: Try specific versions in order
+    for version in [\"3.13\", \"3.12\", \"3.11\", \"3.10\"]:
+        if command_exists(f\"python{version}\"):
+            return path_to_python
+    
+    # Step 2: Fallback to generic python/python3
+    if command_exists(\"python\"):
+        return path_to_python
+    if command_exists(\"python3\"):
+        return path_to_python
+    
+    # Step 3: Not found
+    return False
+```
+
+### Platform-Specific Behavior
+
+**Windows:**
+- Uses Python Launcher (`py -3.13`, `py -3.12`, etc.)
+- Fallback: `python` from PATH
+
+**Linux/macOS:**
+- Direct command lookup: `python3.13`, `python3.12`, etc.
+- Fallback: `python3`, `python`
+
+---
+
+## Virtual Environment Management
+
+### Creation Logic
+
+```python
+def create_venv(python_path):
+    # Check if venv already exists
+    if venv_dir.exists():
+        return True  # Reuse existing
+    
+    # Create new venv
+    subprocess.run([python_path, \"-m\", \"venv\", venv_dir])
+    
+    # Verify creation
+    if venv_python.exists():
+        return True
+    return False
+```
+
+### Platform-Specific Paths
+
+| Platform | Python Path | Activation |
+|----------|-------------|------------|
+| Windows | `venv\\Scripts\\python.exe` | `venv\\Scripts\\activate.bat` |
+| Linux/macOS | `venv/bin/python` | `source venv/bin/activate` |
+
+---
+
+## Dependency Installation Profiles
+
+### Profile Mapping
+
+```python
+profiles = {
+    \"1\": [\"requirements.txt\"],  # Full
+    \"2\": [\"install/req/requirements-core.txt\"],  # Core
+    \"3\": [\"install/req/requirements-core.txt\", \"install/req/requirements-ai.txt\"],  # Core+AI
+    \"4\": [\"requirements.txt\", \"install/req/requirements-test.txt\", \"install/req/requirements-docs.txt\"],  # Full+Dev
+    \"5\": [],  # Skip
+}
+```
+
+### Installation Logic
+
+```python
+def install_dependencies(profile):
+    req_files = profiles.get(profile, [])
+    
+    if not req_files:
+        return True  # Skip
+    
+    cmd = [python_path, \"-m\", \"pip\", \"install\"]
+    for req_file in req_files:
+        if Path(req_file).exists():
+            cmd.extend([\"-r\", req_file])
+    
+    subprocess.run(cmd)
+```
+
+---
+
+## Environment Verification
+
+### Verification Steps
+
+```python
+def verify_environment():
+    modules = [\"fastapi\", \"uvicorn\", \"dotenv\", \"pydantic\"]
+    
+    for module in modules:
+        try:
+            subprocess.run(
+                [python_path, \"-c\", f\"import {module}\"],
+                check=True,
+                timeout=10
+            )
+        except:
+            return False
+    
+    return True
+```
+
+### Verification Modules
+
+| Module | Purpose | Package |
+|--------|---------|----------|
+| `fastapi` | Web framework | fastapi |
+| `uvicorn` | ASGI server | uvicorn |
+| `dotenv` | Environment variables | python-dotenv |
+| `pydantic` | Data validation | pydantic |
+
+---
+
+## Error Handling Strategy
+
+### Early Return Pattern
+
+All installers follow the \"Early Return\" pattern (per CODE_RULES):
+
+```python
+def create_venv(python_path):
+    if venv_dir.exists():
+        return True
+    
+    try:
+        subprocess.run([python_path, \"-m\", \"venv\", venv_dir], check=True)
+        return True
+    except:
+        return False  # Not None, not exception propagation
+```
+
+### Error Messages
+
+All errors are:
+1. Logged with context
+2. Returned as `False` (not exceptions)
+3. Displayed in user's selected language
+4. Actionable (include next steps)
+
+---
+
+## Code Quality Standards (CODE_RULES Compliance)
+
+### ✅ Implemented Standards
+
+1. **No `None` usage:**
+   - Variables initialized with empty values: `''`, `0`, `[]`, `{}`
+   - Functions return `False` on error, not `None`
+   - No `is None` comparisons
+
+2. **Configuration over Hardcode:**
+   - All paths from `install.json`
+   - All messages from I18N dictionaries
+   - All versions from configuration
+
+3. **Single Responsibility:**
+   - Each method does one thing
+   - Each function has clear purpose
+   - Separation of concerns maintained
+
+4. **Early Return:**
+   - Validation at function start
+   - Immediate return on error
+   - No deep nesting
+
+5. **Explicit Dependencies:**
+   - All parameters passed explicitly
+   - No global state
+   - Clear function signatures
+
+### ✅ Documentation Standards
+
+1. **File Headers:**
+   - Process name and description
+   - Examples of usage
+   - File metadata (author, copyright)
+
+2. **Docstrings (hypo69 format):**
+   - Short description
+   - Args with types
+   - Returns with type
+   - Examples
+
+3. **Comments:**
+   - Explain \"why\", not \"what\"
+   - Use noun forms (not verbs)
+   - Minimal but clear
+
+---
+
+## Testing & Validation
+
+### Validation Script
+
+Run `validate_installers.py` to check:
+
+```bash
+python validate_installers.py
+```
+
+Checks performed:
+1. Python installer structure
+2. Bash installer structure
+3. Configuration validity
+4. Consistency between installers
+5. Language support
+6. Method/function presence
+
+### Manual Testing
+
+```bash
+# Test Python installer
+python install.py --language en
+
+# Test Bash installer
+bash install.sh --language ru
+
+# Test PowerShell installer
+.\\install.ps1
+```
+
+---
+
+## Maintenance & Extension
+
+### Adding New Languages
+
+1. Add translations to all three installers
+2. Update `supported_languages` in `install.json`
+3. Test with `--language` option
+4. Update documentation
+
+### Adding New Installation Steps
+
+1. Create new method in `Installer` class
+2. Add message keys to I18N
+3. Call from `run()` method
+4. Update flow diagram
+5. Add validation checks
+
+### Updating Dependencies
+
+1. Modify `requirements*.txt` files
+2. Update `install.json` paths if needed
+3. Test all profiles
+4. Update documentation
+
+---
+
+## Performance Considerations
+
+### Optimization Strategies
+
+1. **Parallel Operations:** Could parallelize pip installs (future)
+2. **Caching:** Could cache Python discovery results
+3. **Lazy Loading:** Only load needed modules
+4. **Timeouts:** All subprocess calls have timeouts
+
+### Resource Usage
+
+| Operation | Time | Space |
+|-----------|------|-------|
+| Python discovery | ~1-2s | Minimal |
+| venv creation | ~5-10s | ~100MB |
+| pip upgrade | ~10-20s | Minimal |
+| Full install (profile 1) | ~2-5 min | ~500MB-1GB |
+| Verification | ~5-10s | Minimal |
+
+---
+
+## Security Considerations
+
+1. **No Hardcoded Secrets:** All secrets in `.env`
+2. **Safe Subprocess Calls:** All use `check=True` and timeouts
+3. **Path Validation:** All paths validated before use
+4. **Input Sanitization:** User input validated
+5. **SSL Certificates:** Handled separately by `install_ssl_certs.py`
+
+---
+
+**Last Updated:** 2026-08-20  
+**Status:** ✅ Production Ready  
+**Maintainer:** hypo69

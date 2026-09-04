@@ -5,3 +5,4 @@ mkdocstrings[python]==0.22.0
 pymdown-extensions>=10.0
 pygments>=2.15.0
 python-dotenv>=1.0.0
+mkdocs-static-i18n>=1.2.0
