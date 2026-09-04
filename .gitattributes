@@ -46,7 +46,4 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
-plugins/media_organizer/data/media_rag.json filter=lfs diff=lfs merge=lfs -text
-plugins/media_organizer/data/* filter=lfs diff=lfs merge=lfs -text
-core/ai/gemini/user_rags/*.faiss filter=lfs diff=lfs merge=lfs -text
-core/ai/gemini/user_rags/*.json filter=lfs diff=lfs merge=lfs -text
+
