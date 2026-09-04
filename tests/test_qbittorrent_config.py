@@ -17,8 +17,8 @@ from pathlib import Path
 from types import SimpleNamespace
 import pytest
 
-from core.config import qbittorrent_cfg, qbt_cfg, CONFIG_FILE
-from core.utils.jjson import j_loads_ns
+from src.config import qbittorrent_cfg, qbt_cfg, CONFIG_FILE
+from src.utils.jjson import j_loads_ns
 
 class TestQBittorrentConfig:
     """Testing optional qBittorrent configuration and compatibility."""

@@ -13,7 +13,7 @@
 # =============================================================================
 
 import pytest
-from core.utils.get_free_port import get_free_port
+from src.utils.get_free_port import get_free_port
 
 def test_get_free_port_first_available():
     """Test retrieving the first available port (without range).

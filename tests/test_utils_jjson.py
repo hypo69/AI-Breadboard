@@ -16,7 +16,7 @@ import pytest
 import json
 from pathlib import Path
 from types import SimpleNamespace
-from core.utils.jjson import j_dumps, j_loads, j_loads_ns
+from src.utils.jjson import j_dumps, j_loads, j_loads_ns
 
 class TestJJson:
     """Class for testing jjson module functions."""

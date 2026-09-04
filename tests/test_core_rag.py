@@ -18,9 +18,9 @@ import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock, AsyncMock
 
-from core.rag.models import RAGDecisionType, RAGRouteDecision, RAGSearchResult
-from core.rag.rules_rag import RulesRAG, build_rules_index, collect_prompt_documents
-from core.rag.engine import RAGEngine, get_rag_engine
+from src.rag.models import RAGDecisionType, RAGRouteDecision, RAGSearchResult
+from src.rag.rules_rag import RulesRAG, build_rules_index, collect_prompt_documents
+from src.rag.engine import RAGEngine, get_rag_engine
 
 class TestCoreRagModels:
     """Тесты моделей данных RAG."""
@@ -92,7 +92,7 @@ class TestRagEngine:
         engine = RAGEngine(direct_threshold=0.8)
         mock_history = [{"text": "Это готовый ответ из базы знаний", "score": 0.92}]
 
-        with patch("core.rag.engine.search_user_history", new_callable=AsyncMock, return_value=mock_history):
+        with patch("src.rag.engine.search_user_history", new_callable=AsyncMock, return_value=mock_history):
             decision = await engine.evaluate(
                 query="Как настроить проект?",
                 user_identifier="user_1",
@@ -107,8 +107,8 @@ class TestRagEngine:
         engine = RAGEngine(direct_threshold=0.85)
         mock_history = [{"text": "Фрагмент контекста по теме", "score": 0.60}]
 
-        with patch("core.rag.engine.search_user_history", new_callable=AsyncMock, return_value=mock_history), \
-             patch("core.rag.engine.get_user_preferences_context", new_callable=AsyncMock, return_value="Любит краткие ответы"):
+        with patch("src.rag.engine.search_user_history", new_callable=AsyncMock, return_value=mock_history), \
+             patch("src.rag.engine.get_user_preferences_context", new_callable=AsyncMock, return_value="Любит краткие ответы"):
             decision = await engine.evaluate(
                 query="Расскажи что-нибудь новое",
                 user_identifier="user_1",

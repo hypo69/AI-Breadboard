@@ -20,7 +20,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from core.fastapi.router_chat import TestModelRequest, init_router
+from src.fastapi.router_chat import TestModelRequest, init_router
 
 class TestRouterChatTestModel(unittest.TestCase):
     """Test suite for model verification request endpoint /api/chat/test-model."""
@@ -49,7 +49,7 @@ class TestRouterChatTestModel(unittest.TestCase):
     # 1. Happy Path Scenarios
     # =========================================================================
 
-    @patch("core.fastapi.router_chat.get_chat_model")
+    @patch("src.fastapi.router_chat.get_chat_model")
     def test_test_model_gemini_happy_path(self, mock_get_chat_model: MagicMock) -> None:
         """Test successful verification request to Gemini model.
 

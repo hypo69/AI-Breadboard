@@ -23,8 +23,8 @@ import io
 import httpx
 import asyncio
 from typing import AsyncGenerator
-from core.logger import logger
-from core.ai.voice import generate_voiceover_chunks
+from src.logger import logger
+from src.ai.voice import generate_voiceover_chunks
 
 # URL of local FastAPI instance
 API_BASE_URL = "http://127.0.0.1:8000"

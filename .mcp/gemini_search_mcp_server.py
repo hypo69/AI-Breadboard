@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import asyncio
 from pathlib import Path
-from core.logger.logger import logger
+from src.logger.logger import logger
 from plugins.web_search.gemini_searcher import GeminiWebSearcher, GeminiKeyPool
 
 try:

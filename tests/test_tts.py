@@ -33,9 +33,9 @@ class TestTTSEdge:
     @pytest.mark.asyncio
     async def test_synthesize_edge(self):
         """Test edge-tts speech synthesis."""
-        from core.tts.edge import synthesize
+        from src.tts.edge import synthesize
         
-        with patch('core.tts.edge') as mock_tts:
+        with patch('src.tts.edge') as mock_tts:
             # Check that function exists
             assert callable(synthesize)
 
@@ -45,9 +45,9 @@ class TestTTSGTTS:
     @pytest.mark.asyncio
     async def test_synthesize_gtts(self):
         """Test gtts speech synthesis."""
-        from core.tts.gtts import synthesize
+        from src.tts.gtts import synthesize
         
-        with patch('core.tts.gtts') as mock_tts:
+        with patch('src.tts.gtts') as mock_tts:
             assert callable(synthesize)
 
 @pytest.mark.skipif(not has_torch, reason="torch is not installed")
@@ -58,7 +58,7 @@ class TestTTSSilero:
         """Test loading Silero model."""
         try:
             # Check that module can be imported
-            from core.tts.silero import get_silero_model
+            from src.tts.silero import get_silero_model
             assert callable(get_silero_model)
         except ModuleNotFoundError as e:
             if 'pyaudioop' in str(e):
@@ -69,7 +69,7 @@ class TestTTSSilero:
     async def test_synthesize_silero(self):
         """Test Silero speech synthesis."""
         try:
-            from core.tts.silero import synthesize
+            from src.tts.silero import synthesize
             assert callable(synthesize)
         except ModuleNotFoundError as e:
             if 'pyaudioop' in str(e):

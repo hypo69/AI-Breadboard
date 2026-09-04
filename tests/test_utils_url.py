@@ -18,7 +18,7 @@ Tests for core/utils/url.py module
 
 import pytest
 from unittest.mock import patch, Mock
-from core.utils.url import extract_url_params, is_url, url_shortener
+from src.utils.url import extract_url_params, is_url, url_shortener
 
 class TestExtractUrlParams:
     """Tests for extract_url_params function."""
@@ -129,7 +129,7 @@ class TestUrlShortener:
         """Test successful shortening."""
         long_url = "https://example.com/very/long/url/path"
         
-        with patch('core.utils.url.requests.get') as mock_get:
+        with patch('src.utils.url.requests.get') as mock_get:
             mock_response = Mock()
             mock_response.status_code = 200
             mock_response.text = "https://tinyurl.com/abc123"
@@ -143,7 +143,7 @@ class TestUrlShortener:
         """Test failed shortening."""
         long_url = "https://example.com/long/url"
         
-        with patch('core.utils.url.requests.get') as mock_get:
+        with patch('src.utils.url.requests.get') as mock_get:
             mock_response = Mock()
             mock_response.status_code = 404
             mock_get.return_value = mock_response
@@ -156,7 +156,7 @@ class TestUrlShortener:
         """Test that correct API is called."""
         long_url = "https://example.com"
         
-        with patch('core.utils.url.requests.get') as mock_get:
+        with patch('src.utils.url.requests.get') as mock_get:
             mock_response = Mock()
             mock_response.status_code = 200
             mock_response.text = "https://tinyurl.com/short"

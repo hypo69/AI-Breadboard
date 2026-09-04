@@ -15,7 +15,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from main import app
-from core.user_manager import user_manager
+from src.user_manager import user_manager
 
 client = TestClient(app)
 

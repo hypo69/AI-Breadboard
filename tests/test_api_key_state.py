@@ -17,7 +17,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from unittest.mock import patch
 
-from core.secrets.api_key_state import (
+from src.secrets.api_key_state import (
     get_status,
     load_api_keys,
     mark_exhausted,
@@ -30,9 +30,9 @@ def test_save_and_load_api_key(tmp_path):
     """Test saving an API key and loading it back."""
     keys_file = tmp_path / 'gemini_keys.json'
     legacy_file = tmp_path / 'secrets.json'
-    with patch('core.secrets.api_key_state._KEYS_FILE', keys_file), \
-         patch('core.secrets.api_key_state._LEGACY_SECRETS_FILE', legacy_file), \
-         patch('core.secrets.api_key_state._SECRETS_DIR', tmp_path), \
+    with patch('src.secrets.api_key_state._KEYS_FILE', keys_file), \
+         patch('src.secrets.api_key_state._LEGACY_SECRETS_FILE', legacy_file), \
+         patch('src.secrets.api_key_state._SECRETS_DIR', tmp_path), \
          patch.dict('os.environ', {}, clear=True):
 
         assert save_api_key('test_main', 'AIzaSyTest1234567890') is True
@@ -47,9 +47,9 @@ def test_mark_exhausted_and_cooldown(tmp_path):
     """Test marking key exhausted and calculating cooldown."""
     keys_file = tmp_path / 'gemini_keys.json'
     legacy_file = tmp_path / 'secrets.json'
-    with patch('core.secrets.api_key_state._KEYS_FILE', keys_file), \
-         patch('core.secrets.api_key_state._LEGACY_SECRETS_FILE', legacy_file), \
-         patch('core.secrets.api_key_state._SECRETS_DIR', tmp_path), \
+    with patch('src.secrets.api_key_state._KEYS_FILE', keys_file), \
+         patch('src.secrets.api_key_state._LEGACY_SECRETS_FILE', legacy_file), \
+         patch('src.secrets.api_key_state._SECRETS_DIR', tmp_path), \
          patch.dict('os.environ', {}, clear=True):
 
         save_api_key('k1', 'AIzaSyKeyOne1111111111111')
@@ -71,9 +71,9 @@ def test_update_last_run(tmp_path):
     """Test updating last_run timestamp."""
     keys_file = tmp_path / 'gemini_keys.json'
     legacy_file = tmp_path / 'secrets.json'
-    with patch('core.secrets.api_key_state._KEYS_FILE', keys_file), \
-         patch('core.secrets.api_key_state._LEGACY_SECRETS_FILE', legacy_file), \
-         patch('core.secrets.api_key_state._SECRETS_DIR', tmp_path), \
+    with patch('src.secrets.api_key_state._KEYS_FILE', keys_file), \
+         patch('src.secrets.api_key_state._LEGACY_SECRETS_FILE', legacy_file), \
+         patch('src.secrets.api_key_state._SECRETS_DIR', tmp_path), \
          patch.dict('os.environ', {}, clear=True):
 
         save_api_key('k_run', 'AIzaSyKeyRun2222222222222')

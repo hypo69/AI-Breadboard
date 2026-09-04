@@ -30,7 +30,7 @@ class TestChatAPI:
         Verifies that chat messages are processed and responses returned.
         """
         from fastapi import FastAPI
-        from core.fastapi.router_chat import init_router
+        from src.fastapi.router_chat import init_router
         
         app = FastAPI()
         mock_model = Mock()
@@ -42,8 +42,8 @@ class TestChatAPI:
         plugins = {}
         app.include_router(init_router(mock_model, mock_model, plugins))
         
-        with patch('core.fastapi.router_chat._extract_user_auth', return_value=("user1", "", "gemini-2.5-flash", {})), \
-             patch('core.fastapi.router_chat.get_chat_model', return_value=mock_model):
+        with patch('src.fastapi.router_chat._extract_user_auth', return_value=("user1", "", "gemini-2.5-flash", {})), \
+             patch('src.fastapi.router_chat.get_chat_model', return_value=mock_model):
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     '/api/chat',
@@ -64,7 +64,7 @@ class TestAuthAPI:
         Verifies that available models list is returned.
         """
         from fastapi import FastAPI
-        from core.fastapi.router_chat import init_router
+        from src.fastapi.router_chat import init_router
         
         app = FastAPI()
         mock_model = Mock()
@@ -86,7 +86,7 @@ class TestControlAPI:
         Verifies that control status can be retrieved.
         """
         from fastapi import FastAPI
-        from core.fastapi.router_control import init_router
+        from src.fastapi.router_control import init_router
         
         app = FastAPI()
         app.include_router(init_router())
@@ -105,7 +105,7 @@ class TestTTSAPI:
         Verifies that TTS synthesis can be triggered.
         """
         from fastapi import FastAPI
-        from core.fastapi.router_tts import init_router
+        from src.fastapi.router_tts import init_router
         
         app = FastAPI()
         app.include_router(init_router())

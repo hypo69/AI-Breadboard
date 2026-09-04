@@ -66,18 +66,18 @@ class TestReportsDirectory:
         assert (PROJECT_ROOT / "tmp" / "reports").is_dir() or (PROJECT_ROOT / "tmp").is_dir(), \
             "tmp directory not found"
 
-class TestCoreRagDirectory:
-    """Check core/rag/ directory."""
+class TestSrcRagDirectory:
+    """Check src/rag/ directory."""
 
-    def test_core_rag_directory_exists(self):
-        """core/rag/ directory must exist."""
-        assert (PROJECT_ROOT / "core" / "rag").is_dir(), \
-            "core/rag/ directory not found"
+    def test_src_rag_directory_exists(self):
+        """src/rag/ directory must exist."""
+        assert (PROJECT_ROOT / "src" / "rag").is_dir(), \
+            "src/rag/ directory not found"
 
-    def test_core_rag_models_exists(self):
-        """core/rag/models.py must exist."""
-        assert (PROJECT_ROOT / "core" / "rag" / "models.py").is_file(), \
-            "File core/rag/models.py not found"
+    def test_src_rag_models_exists(self):
+        """src/rag/models.py must exist."""
+        assert (PROJECT_ROOT / "src" / "rag" / "models.py").is_file(), \
+            "File src/rag/models.py not found"
 
 class TestAiInstructionsDocuments:
     """Check key AI documents."""
@@ -98,3 +98,6 @@ class TestAiInstructionsDocuments:
             "LAUNCHER_GUIDE.md is too small — probably not filled"
 
     def test_gemini_md_has_launcher_guide_ref(self):
+        """GEMINI.md should contain reference to LAUNCHER_GUIDE.md."""
+        gemini_md = (PROJECT_ROOT / "GEMINI.md").read_text(encoding="utf-8")
+        assert "LAUNCHER_GUIDE.md" in gemini_md

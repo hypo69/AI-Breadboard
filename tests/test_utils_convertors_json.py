@@ -16,7 +16,7 @@ import pytest
 import json
 from pathlib import Path
 from types import SimpleNamespace
-from core.utils.convertors.json import json2csv, json2ns, json2xml, json2xls
+from src.utils.convertors.json import json2csv, json2ns, json2xml, json2xls
 
 class TestJsonUtils:
     """Class for testing json.py module functions."""

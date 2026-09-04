@@ -26,7 +26,7 @@ class TestUserProfile:
 
     def test_get_profile_path(self):
         """Test retrieving profile path - check path structure."""
-        from core.user_manager.user_profile import _get_profile_path
+        from src.user_manager.user_profile import _get_profile_path
         
         result = _get_profile_path(1)
         
@@ -37,7 +37,7 @@ class TestUserProfile:
 
     def test_default_profile_structure(self):
         """Test default profile structure."""
-        from core.user_manager.user_profile import _default_profile_structure
+        from src.user_manager.user_profile import _default_profile_structure
         
         result = _default_profile_structure(1)
         
@@ -53,12 +53,12 @@ class TestUserProfile:
 
     def test_load_user_profile(self, tmp_path):
         """Test loading profile."""
-        from core.user_manager.user_profile import load_user_profile
+        from src.user_manager.user_profile import load_user_profile
         
         user_id = 1
         profile_path = tmp_path / 'user_1_profile.json'
         
-        with patch('core.user_manager.user_profile._get_profile_path') as mock_path:
+        with patch('src.user_manager.user_profile._get_profile_path') as mock_path:
             mock_path.return_value = profile_path
             
             # Profile does not exist - new one is created
@@ -68,13 +68,13 @@ class TestUserProfile:
 
     def test_save_user_profile(self, tmp_path):
         """Test saving profile."""
-        from core.user_manager.user_profile import save_user_profile
+        from src.user_manager.user_profile import save_user_profile
         
         user_id = 1
         profile = {'last_watched': 'test'}
         profile_path = tmp_path / 'user_1_profile.json'
         
-        with patch('core.user_manager.user_profile._get_profile_path') as mock_path:
+        with patch('src.user_manager.user_profile._get_profile_path') as mock_path:
             mock_path.return_value = profile_path
             
             result = save_user_profile(user_id, profile)

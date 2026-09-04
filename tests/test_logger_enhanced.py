@@ -21,7 +21,7 @@ import os
 import json
 import logging
 from pathlib import Path
-from core.logger.logger import Logger
+from src.logger.logger import Logger
 
 @pytest.fixture
 def temp_logger(tmp_path):
@@ -66,7 +66,7 @@ def temp_logger(tmp_path):
     errors_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
     logger.logger_file_errors.addHandler(errors_handler)
     
-    from core.logger.logger import JsonFormatter
+    from src.logger.logger import JsonFormatter
     json_handler = logging.FileHandler(logger.json_log_path, encoding='utf-8')
     json_handler.setFormatter(JsonFormatter())
     logger.logger_file_json.addHandler(json_handler)

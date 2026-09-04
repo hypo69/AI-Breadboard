@@ -14,7 +14,7 @@
 
 import pytest
 from unittest.mock import Mock, patch, mock_open
-from core.utils.ftp import write, read, delete
+from src.utils.ftp import write, read, delete
 
 # =============================================================================
 # Section: Happy Path — Normal Scenarios
@@ -24,7 +24,7 @@ class TestFtp_HappyPath:
     """Testing normal expected scenarios of FTP module operation.
     """
 
-    @patch('core.utils.ftp.ftplib.FTP')
+    @patch('src.utils.ftp.ftplib.FTP')
     def test_write_success(self, mock_ftp):
         """Test write function with correct data.
         """
@@ -40,7 +40,7 @@ class TestFtp_HappyPath:
             mock_session.cwd.assert_called_with('/remote')
             mock_session.storbinary.assert_called()
 
-    @patch('core.utils.ftp.ftplib.FTP')
+    @patch('src.utils.ftp.ftplib.FTP')
     def test_read_success(self, mock_ftp):
         """Test read function with correct data.
         """
@@ -56,7 +56,7 @@ class TestFtp_HappyPath:
             mock_session.cwd.assert_called_with('/remote')
             mock_session.retrbinary.assert_called()
 
-    @patch('core.utils.ftp.ftplib.FTP')
+    @patch('src.utils.ftp.ftplib.FTP')
     def test_delete_success(self, mock_ftp):
         """Test delete function with correct data.
         """

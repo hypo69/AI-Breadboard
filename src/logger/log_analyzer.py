@@ -20,10 +20,10 @@ automatic report generation, and Master Journal maintenance for system state tra
 Functions:
     - Log analysis with AI assistance
     - Automatic report generation
-    - Master Journal creation and maintenance"""
-- Создание детальных отчётов об Errorх и проблемах
-- Ведение единого журнала состояния системы
-- Интеллектуальная ротация и очистка логов
+    - Master Journal creation and maintenance
+    - Detailed error report creation
+    - System state tracking
+    - Intelligent log rotation and cleanup
 """
 
 import os

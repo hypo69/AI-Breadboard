@@ -18,8 +18,8 @@ import httpx
 from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 
-from core.logger import logger
-from core.utils.jjson import j_loads_ns
+from src.logger import logger
+from src.utils.jjson import j_loads_ns
 
 # Initialization FastMCP сервера
 mcp = FastMCP("FastAPI-Media-Client")

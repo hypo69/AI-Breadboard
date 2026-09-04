@@ -15,7 +15,7 @@
 import pytest
 import json
 from pathlib import Path
-from core.utils.jjson import j_loads, j_dumps
+from src.utils.jjson import j_loads, j_dumps
 from types import SimpleNamespace
 
 # --- Tests for j_dumps ---

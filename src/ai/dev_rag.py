@@ -56,7 +56,7 @@ def build_dev_rag(api_key: str) -> GeminiRAG:
     rag.clear()
 
     # Directories to index
-    target_dirs = ["docs", "prompts", "core", "plugins"]
+    target_dirs = ["docs", "prompts", "src", "plugins"]
     docs = []
 
     for dir_name in target_dirs:

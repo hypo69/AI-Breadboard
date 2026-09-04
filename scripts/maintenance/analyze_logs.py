@@ -25,9 +25,9 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from core.logger.log_analyzer import analyze_log_file, LOG_DIR, get_max_size_bytes
-from core.ai import GoogleGenerativeAI
-from core.logger import logger
+from src.logger.log_analyzer import analyze_log_file, LOG_DIR, get_max_size_bytes
+from src.ai import GoogleGenerativeAI
+from src.logger import logger
 
 async def main():
     logger.info("=" * 60)

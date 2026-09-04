@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 # Добавляем корень проекта в путь для импортов
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from core.ai.gemini.user_query_rag import search_user_context
+from src.ai.gemini.user_query_rag import search_user_context
 from plugins.web_search import WebSearchPlugin
 
 # Loading .env

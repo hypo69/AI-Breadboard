@@ -20,7 +20,7 @@ using the RAG (Retrieval-Augmented Generation) search system."""
 import os
 import sys
 import json
-from core.ai.dev_rag import rag_search_tool
+from src.ai.dev_rag import rag_search_tool
 
 def main():
     """Main function."""

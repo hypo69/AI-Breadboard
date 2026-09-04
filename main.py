@@ -50,8 +50,8 @@ from fastapi.staticfiles import StaticFiles
 
 import header
 from header import __root__
-from core.ai import GoogleGenerativeAI
-from core.fastapi import (
+from src.ai import GoogleGenerativeAI
+from src.fastapi import (
     init_auth_router,
     init_chat_router,
     init_control_router,
@@ -62,11 +62,11 @@ from core.fastapi import (
     init_agents_router,
     router_openai,
 )
-from core.fastapi.router_version import init_router as init_version_router
-from core.logger import logger
-from core.utils.file import read_text_file
-from core.utils.jjson import j_loads_ns
-from core.utils.versioning import compare_versions as _compare_versions, choose_best_tag
+from src.fastapi.router_version import init_router as init_version_router
+from src.logger import logger
+from src.utils.file import read_text_file
+from src.utils.jjson import j_loads_ns
+from src.utils.versioning import compare_versions as _compare_versions, choose_best_tag
 import subprocess
 import json
 import urllib.request
@@ -74,7 +74,7 @@ import configparser
 import re
 
 load_dotenv(__root__ / '.env')
-from core.config import server_cfg, ai_cfg, tts_cfg, logging_cfg
+from src.config import server_cfg, ai_cfg, tts_cfg, logging_cfg
 
 app = FastAPI()
 app.add_middleware(
@@ -97,7 +97,7 @@ async def auto_login_local_user(request: Request, call_next):
     )
     if is_local:
         token: str = request.cookies.get('auth_token', '')
-        from core.fastapi.router_auth import verify_jwt_token
+        from src.fastapi.router_auth import verify_jwt_token
         is_token_valid: bool = False
         if token:
             try:
@@ -106,11 +106,11 @@ async def auto_login_local_user(request: Request, call_next):
                 is_token_valid = False
 
         if not token or not is_token_valid:
-            from core.user_manager import user_manager
+            from src.user_manager import user_manager
             try:
                 db_user = user_manager.get_user_by_id(1)
                 if db_user:
-                    from core.fastapi.router_auth import TokenData, create_jwt_token
+                    from src.fastapi.router_auth import TokenData, create_jwt_token
                     token_data = TokenData(
                         email=db_user['email'],
                         name=db_user['name'],
@@ -151,7 +151,7 @@ async def auto_login_local_user(request: Request, call_next):
     return await call_next(request)
 
 # Mount static files
-webinterface_dir = __root__ / 'webinterface'
+webinterface_dir = __root__ / 'src' / 'fastapi' / 'webinterface'
 webinterface_dir.mkdir(parents=True, exist_ok=True)
 app.mount('/webinterface', StaticFiles(directory=webinterface_dir), name='webinterface')
 app.mount('/html', StaticFiles(directory=webinterface_dir), name='html')
@@ -363,7 +363,7 @@ def prompt_and_perform_update(branch: str = 'main') -> None:
 
         # Используем новый VersionManager для проверки обновлений
         try:
-            from core.version_manager import get_version_manager
+            from src.version_manager import get_version_manager
             vm = get_version_manager(__root__)
             
             check_result = vm.check_updates()
@@ -478,7 +478,7 @@ use_ollama = getattr(ai_cfg, 'use_ollama', False) if ai_cfg else False
 ollama_model_id = getattr(ai_cfg, 'ollama_model_id', 'llama3.1') if ai_cfg else 'llama3.1'
 ollama_base_url = getattr(ai_cfg, 'ollama_base_url', 'http://localhost:11434') if ai_cfg else 'http://localhost:11434'
 
-from core.ai import UnifiedChatModel
+from src.ai import UnifiedChatModel
 
 # --- Chat model instance ---
 _system_instruction_chat: str = read_text_file(__root__ / 'prompts' / 'chat' / 'system_instruction.md') or ''
@@ -523,16 +523,16 @@ async def startup_event():
     app.state.narrator_model = narrator_model
 
     # One-time actualization and caching of all provider models
-    from core.ai.model_manager import actualize_all_models
+    from src.ai.model_manager import actualize_all_models
     await actualize_all_models()
 
     # Log analyzer is disabled — run manually if needed
-    # from core.logger.log_analyzer import start_log_analyzer
+    # from src.logger.log_analyzer import start_log_analyzer
     # start_log_analyzer()
     
     # Check обновлений при старте приложения
     try:
-        from core.version_manager import get_version_manager
+        from src.version_manager import get_version_manager
         vm = get_version_manager(__root__)
         check_result = vm.check_updates()
         if check_result.get("is_update_available"):
@@ -547,7 +547,7 @@ async def startup_event():
         logger.debug(f"Failed to check updates on startup: {e}")
     
     if ai_cfg and getattr(ai_cfg, 'preload_silero', False):
-        from core.tts.silero import get_silero_model
+        from src.tts.silero import get_silero_model
         logger.info("Pre-loading Silero TTS model...")
         try:
             get_silero_model()
@@ -561,7 +561,7 @@ async def root(request: Request) -> HTMLResponse:
     auth_response = check_admin_auth(request)
     if auth_response:
         return auth_response
-    content = read_text_file(__root__ / 'webinterface' / 'admin' / 'index.html')
+    content = read_text_file(webinterface_dir / 'admin' / 'index.html')
     if not content:
         raise HTTPException(status_code=500, detail='Failed to read admin index page')
     return HTMLResponse(content=content)
@@ -569,7 +569,7 @@ async def root(request: Request) -> HTMLResponse:
 @app.get('/tgmini', response_class=HTMLResponse)
 async def tgmini_interface() -> HTMLResponse:
     """Serving of Telegram Mini App HTML page."""
-    content = read_text_file(__root__ / 'webinterface' / 'tgmini' / 'index.html')
+    content = read_text_file(webinterface_dir / 'tgmini' / 'index.html')
     if not content:
         raise HTTPException(status_code=500, detail='Failed to read Telegram Mini App index page')
     return HTMLResponse(content=content)
@@ -577,7 +577,7 @@ async def tgmini_interface() -> HTMLResponse:
 @app.get('/tgmini/{full_path:path}', response_class=HTMLResponse)
 async def tgmini_static(full_path: str) -> HTMLResponse:
     """Serving Telegram Mini App static files."""
-    content = read_text_file(__root__ / 'webinterface' / 'tgmini' / full_path)
+    content = read_text_file(webinterface_dir / 'tgmini' / full_path)
     if not content:
         raise HTTPException(status_code=404, detail='File not found')
     return HTMLResponse(content=content)
@@ -585,7 +585,7 @@ async def tgmini_static(full_path: str) -> HTMLResponse:
 @app.get('/rc', response_class=HTMLResponse)
 async def rc_interface() -> HTMLResponse:
     """Serving of Remote Control HTML page."""
-    content = read_text_file(__root__ / 'webinterface' / 'rc' / 'index.html')
+    content = read_text_file(webinterface_dir / 'rc' / 'index.html')
     if not content:
         raise HTTPException(status_code=500, detail='Failed to read Remote Control page')
     return HTMLResponse(content=content)
@@ -593,7 +593,7 @@ async def rc_interface() -> HTMLResponse:
 @app.get('/rc/{full_path:path}', response_class=HTMLResponse)
 async def rc_static(full_path: str) -> HTMLResponse:
     """Serving Remote Control static files."""
-    content = read_text_file(__root__ / 'webinterface' / 'rc' / full_path)
+    content = read_text_file(webinterface_dir / 'rc' / full_path)
     if not content:
         raise HTTPException(status_code=404, detail='File not found')
     return HTMLResponse(content=content)
@@ -601,7 +601,7 @@ async def rc_static(full_path: str) -> HTMLResponse:
 @app.get('/user_tts', response_class=HTMLResponse)
 async def user_tts_interface() -> HTMLResponse:
     """Serving of User TTS experimental page."""
-    content = read_text_file(__root__ / 'webinterface' / 'user_tts' / 'index.html')
+    content = read_text_file(webinterface_dir / 'user_tts' / 'index.html')
     if not content:
         raise HTTPException(status_code=500, detail='Failed to read User TTS page')
     return HTMLResponse(content=content)
@@ -609,7 +609,7 @@ async def user_tts_interface() -> HTMLResponse:
 @app.get('/user_tts/{full_path:path}', response_class=HTMLResponse)
 async def user_tts_static(full_path: str) -> HTMLResponse:
     """Serving User TTS static files."""
-    content = read_text_file(__root__ / 'webinterface' / 'user_tts' / full_path)
+    content = read_text_file(webinterface_dir / 'user_tts' / full_path)
     if not content:
         raise HTTPException(status_code=404, detail='File not found')
     return HTMLResponse(content=content)
@@ -844,8 +844,8 @@ ADMIN_LOGIN_HTML = """<!DOCTYPE html>
 def check_admin_auth(request: Request):
     """Check прав доступа к панели администратора с Google OAuth."""
     from fastapi.responses import RedirectResponse, HTMLResponse
-    from core.fastapi.router_auth import verify_jwt_token
-    from core.user_manager import user_manager
+    from src.fastapi.router_auth import verify_jwt_token
+    from src.user_manager import user_manager
 
     token = request.cookies.get('auth_token', '')
     if not token:
@@ -888,7 +888,7 @@ async def admin_interface(request: Request):
     auth_response = check_admin_auth(request)
     if auth_response:
         return auth_response
-    content = read_text_file(__root__ / 'webinterface' / 'admin' / 'index.html')
+    content = read_text_file(webinterface_dir / 'admin' / 'index.html')
     if not content:
         raise HTTPException(status_code=500, detail='Failed to read admin index page')
     return HTMLResponse(content=content)
@@ -912,7 +912,7 @@ async def admin_static(full_path: str, request: Request):
     auth_response = check_admin_auth(request)
     if auth_response:
         return auth_response
-    content = read_text_file(__root__ / 'webinterface' / 'admin' / full_path)
+    content = read_text_file(webinterface_dir / 'admin' / full_path)
     if not content:
         raise HTTPException(status_code=404, detail='File not found')
     return HTMLResponse(content=content)
@@ -920,7 +920,7 @@ async def admin_static(full_path: str, request: Request):
 @app.get('/tv', response_class=HTMLResponse)
 async def tv_interface() -> HTMLResponse:
     """Serving of TV Player HTML page."""
-    content = read_text_file(__root__ / 'webinterface' / 'tv' / 'index.html')
+    content = read_text_file(webinterface_dir / 'tv' / 'index.html')
     if not content:
         raise HTTPException(status_code=500, detail='Failed to read TV index page')
     return HTMLResponse(content=content)
@@ -928,7 +928,7 @@ async def tv_interface() -> HTMLResponse:
 @app.get('/tv/{full_path:path}', response_class=HTMLResponse)
 async def tv_static(full_path: str) -> HTMLResponse:
     """Serving TV static files."""
-    content = read_text_file(__root__ / 'webinterface' / 'tv' / full_path)
+    content = read_text_file(webinterface_dir / 'tv' / full_path)
     if not content:
         raise HTTPException(status_code=404, detail='File not found')
     return HTMLResponse(content=content)

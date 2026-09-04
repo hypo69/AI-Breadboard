@@ -18,7 +18,7 @@ from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi.testclient import TestClient
 
 from main import app
-from core.fastapi.router_agents import _get_agents_list, _save_agents_list
+from src.fastapi.router_agents import _get_agents_list, _save_agents_list
 
 client = TestClient(app)
 
@@ -140,7 +140,7 @@ class TestAgentsRouter:
         assert res.status_code == 400
         assert "already exists" in res.json().get("detail", "").lower()
 
-    @patch("core.fastapi.router_chat.get_chat_model")
+    @patch("src.fastapi.router_chat.get_chat_model")
     def test_generate_prompt_ai(self, mock_get_chat_model):
         """Test system prompt generation via AI model."""
         mock_llm = MagicMock()
@@ -167,7 +167,7 @@ class TestAgentsRouter:
         assert spec.get("name") == "Data Analyst"
         assert "python_eval" in spec.get("recommended_tools", [])
 
-    @patch("core.fastapi.router_chat.get_chat_model")
+    @patch("src.fastapi.router_chat.get_chat_model")
     def test_sandbox_execution(self, mock_get_chat_model):
         """Test sandbox execution of test request."""
         mock_llm = MagicMock()

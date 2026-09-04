@@ -61,7 +61,7 @@ except ImportError:
     )
 
 try:
-    from core.logger import logger
+    from src.logger import logger
 except ImportError:
     # Fallback логирование если Module недоступен
     class SimpleLogger:

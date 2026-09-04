@@ -205,21 +205,21 @@ class TestRequirements:
 class TestDirectoryStructure:
     """Тесты структуры директорий."""
 
-    def test_core_exists(self):
-        """Тест наличия core/."""
-        core_dir = Path(__file__).parent.parent / 'core'
+    def test_src_exists(self):
+        """Test existence of src/."""
+        src_dir = Path(__file__).parent.parent / 'src'
         
-        assert core_dir.exists()
+        assert src_dir.exists()
 
     def test_rag_exists(self):
-        """Тест наличия core/rag/."""
-        rag_dir = Path(__file__).parent.parent / 'core' / 'rag'
+        """Test existence of src/rag/."""
+        rag_dir = Path(__file__).parent.parent / 'src' / 'rag'
         
         assert rag_dir.exists()
 
     def test_webinterface_exists(self):
         """Тест наличия webinterface/."""
-        webinterface_dir = Path(__file__).parent.parent / 'webinterface'
+        webinterface_dir = Path(__file__).parent.parent / 'src' / 'fastapi' / 'webinterface'
         
         assert webinterface_dir.exists()
 

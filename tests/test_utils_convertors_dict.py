@@ -14,7 +14,7 @@
 
 import pytest
 from types import SimpleNamespace
-from core.utils.convertors.dict import dict2ns, replace_key_in_dict
+from src.utils.convertors.dict import dict2ns, replace_key_in_dict
 
 class TestDictUtils:
     """Class for testing dict.py module functions."""

@@ -18,7 +18,7 @@ import time
 import subprocess
 from pathlib import Path
 
-from core.logger import logger
+from src.logger import logger
 
 ROOT = Path(__file__).resolve().parent.parent
 

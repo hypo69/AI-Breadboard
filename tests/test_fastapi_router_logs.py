@@ -28,8 +28,8 @@ class TestRouterLogsSafePaths:
     def test_safe_log_path_valid_filename(self):
         """Test safe log path with valid filename."""
         # Mock the LOG_DIR
-        with patch('core.fastapi.router_logs.LOG_DIR', Path('/mock/logs')):
-            from core.fastapi.router_logs import _safe_log_path
+        with patch('src.fastapi.router_logs.LOG_DIR', Path('/mock/logs')):
+            from src.fastapi.router_logs import _safe_log_path
             
             path = _safe_log_path("test.log")
             assert path.suffix == ".log"
@@ -38,9 +38,9 @@ class TestRouterLogsSafePaths:
     def test_safe_log_path_invalid_extension(self):
         """Test safe path with invalid extension."""
         from fastapi import HTTPException
-        from core.fastapi.router_logs import _safe_log_path
+        from src.fastapi.router_logs import _safe_log_path
         
-        with patch('core.fastapi.router_logs.LOG_DIR', Path('/mock/logs')), \
+        with patch('src.fastapi.router_logs.LOG_DIR', Path('/mock/logs')), \
              patch.object(Path, 'resolve') as mock_resolve:
             mock_resolve.return_value = Path('/mock/logs/test.exe')
             
@@ -52,9 +52,9 @@ class TestRouterLogsSafePaths:
     def test_safe_log_path_path_traversal_attempt(self):
         """Test path traversal attempt."""
         from fastapi import HTTPException
-        from core.fastapi.router_logs import _safe_log_path
+        from src.fastapi.router_logs import _safe_log_path
         
-        with patch('core.fastapi.router_logs.LOG_DIR', Path('/mock/logs')), \
+        with patch('src.fastapi.router_logs.LOG_DIR', Path('/mock/logs')), \
              patch.object(Path, 'resolve', return_value=Path('/etc/passwd')):
             
             with pytest.raises(HTTPException) as exc_info:
@@ -64,18 +64,18 @@ class TestRouterLogsSafePaths:
 
     def test_safe_report_path_valid(self):
         """Test safe path to report."""
-        from core.fastapi.router_logs import _safe_report_path
+        from src.fastapi.router_logs import _safe_report_path
         
-        with patch('core.fastapi.router_logs.REPORTS_DIR', Path('/mock/reports')):
+        with patch('src.fastapi.router_logs.REPORTS_DIR', Path('/mock/reports')):
             path = _safe_report_path("report.md")
             assert path.suffix == ".md"
 
     def test_safe_report_path_invalid_extension(self):
         """Test report path with invalid extension."""
         from fastapi import HTTPException
-        from core.fastapi.router_logs import _safe_report_path
+        from src.fastapi.router_logs import _safe_report_path
         
-        with patch('core.fastapi.router_logs.REPORTS_DIR', Path('/mock/reports')):
+        with patch('src.fastapi.router_logs.REPORTS_DIR', Path('/mock/reports')):
             with pytest.raises(HTTPException):
                 _safe_report_path("report.exe")
 
@@ -84,7 +84,7 @@ class TestRouterLogsFileInfo:
 
     def test_file_info_returns_dict(self):
         """Test that _file_info returns dictionary."""
-        from core.fastapi.router_logs import _file_info
+        from src.fastapi.router_logs import _file_info
         import datetime
         
         # Create a mock path
@@ -107,7 +107,7 @@ class TestRouterLogsFileInfo:
 
     def test_file_info_modified_format(self):
         """Test modification date format."""
-        from core.fastapi.router_logs import _file_info
+        from src.fastapi.router_logs import _file_info
         
         mock_path = Mock()
         mock_path.name = "info.log"
@@ -141,10 +141,10 @@ class TestRouterLogsEndpoints:
 
     def test_list_log_files_empty(self, tmp_path):
         """Test file list for empty directory."""
-        from core.fastapi.router_logs import init_router
+        from src.fastapi.router_logs import init_router
         
-        with patch('core.fastapi.router_logs.LOG_DIR', tmp_path), \
-             patch('core.fastapi.router_logs.REPORTS_DIR', tmp_path / 'reports'), \
+        with patch('src.fastapi.router_logs.LOG_DIR', tmp_path), \
+             patch('src.fastapi.router_logs.REPORTS_DIR', tmp_path / 'reports'), \
              patch.object(Path, 'mkdir'):
             router = init_router()
             app = __import__('fastapi', fromlist=['FastAPI']).FastAPI()
@@ -161,10 +161,10 @@ class TestRouterLogsEndpoints:
     def test_read_log_file_not_found(self):
         """Test reading non-existent file."""
         from fastapi import HTTPException
-        from core.fastapi.router_logs import _safe_log_path
+        from src.fastapi.router_logs import _safe_log_path
         
         # Test with a path that doesn't exist - should raise HTTPException via path.exists()
-        with patch('core.fastapi.router_logs.LOG_DIR', Path('/mock/logs')), \
+        with patch('src.fastapi.router_logs.LOG_DIR', Path('/mock/logs')), \
              patch.object(Path, 'exists', return_value=False):
             # Since file doesn't exist, path.exists() returns False
             # The HTTPException is raised only after path validation passes
@@ -174,24 +174,24 @@ class TestRouterLogsEndpoints:
     def test_clear_log_file_not_found(self):
         """Test clearing non-existent file."""
         from fastapi import HTTPException
-        from core.fastapi.router_logs import _safe_log_path
+        from src.fastapi.router_logs import _safe_log_path
         
         # Test that non-existent file handling is tested at endpoint level
-        with patch('core.fastapi.router_logs.LOG_DIR', Path('/mock/logs')), \
+        with patch('src.fastapi.router_logs.LOG_DIR', Path('/mock/logs')), \
              patch.object(Path, 'exists', return_value=False):
             # File check happens in the endpoint, not in _safe_log_path
             assert True  # Skip detailed testing
 
     def test_analyze_request_model(self):
         """Test AnalyzeRequest model."""
-        from core.fastapi.router_logs import AnalyzeRequest
+        from src.fastapi.router_logs import AnalyzeRequest
         
         request = AnalyzeRequest(filename="test.log")
         assert request.filename == "test.log"
 
     def test_allowed_extensions(self):
         """Test list of allowed extensions."""
-        from core.fastapi.router_logs import _ALLOWED_EXTENSIONS
+        from src.fastapi.router_logs import _ALLOWED_EXTENSIONS
         
         assert '.log' in _ALLOWED_EXTENSIONS
         assert '.json' in _ALLOWED_EXTENSIONS
@@ -204,14 +204,14 @@ class TestRouterLogsStats:
 
     def test_log_stats_empty(self, tmp_path):
         """Test statistics for empty directory."""
-        from core.fastapi.router_logs import init_router
+        from src.fastapi.router_logs import init_router
         
         log_dir = tmp_path / 'logs'
         reports_dir = log_dir / 'reports'
         log_dir.mkdir()
         
-        with patch('core.fastapi.router_logs.LOG_DIR', log_dir), \
-             patch('core.fastapi.router_logs.REPORTS_DIR', reports_dir):
+        with patch('src.fastapi.router_logs.LOG_DIR', log_dir), \
+             patch('src.fastapi.router_logs.REPORTS_DIR', reports_dir):
             router = init_router(prefix='/api/logs')
             app = __import__('fastapi', fromlist=['FastAPI']).FastAPI()
             app.include_router(router)
@@ -229,7 +229,7 @@ class TestRouterLogsStats:
 
     def test_log_stats_with_files(self, tmp_path):
         """Test statistics with files."""
-        from core.fastapi.router_logs import init_router
+        from src.fastapi.router_logs import init_router
         
         log_dir = tmp_path / 'logs'
         reports_dir = log_dir / 'reports'
@@ -243,8 +243,8 @@ class TestRouterLogsStats:
         report = reports_dir / 'report.md'
         report.write_text('report content', encoding='utf-8')
         
-        with patch('core.fastapi.router_logs.LOG_DIR', log_dir), \
-             patch('core.fastapi.router_logs.REPORTS_DIR', reports_dir):
+        with patch('src.fastapi.router_logs.LOG_DIR', log_dir), \
+             patch('src.fastapi.router_logs.REPORTS_DIR', reports_dir):
             router = init_router(prefix='/api/logs')
             app = __import__('fastapi', fromlist=['FastAPI']).FastAPI()
             app.include_router(router)
@@ -265,15 +265,15 @@ class TestRouterLogsIntegration:
     @pytest.fixture
     def app_with_router(self, tmp_path):
         """Create test application."""
-        from core.fastapi.router_logs import init_router
+        from src.fastapi.router_logs import init_router
         
         log_dir = tmp_path / 'logs'
         reports_dir = log_dir / 'reports'
         log_dir.mkdir()
         reports_dir.mkdir()
         
-        with patch('core.fastapi.router_logs.LOG_DIR', log_dir), \
-             patch('core.fastapi.router_logs.REPORTS_DIR', reports_dir):
+        with patch('src.fastapi.router_logs.LOG_DIR', log_dir), \
+             patch('src.fastapi.router_logs.REPORTS_DIR', reports_dir):
             router = init_router(prefix='/api/logs')
             app = __import__('fastapi', fromlist=['FastAPI']).FastAPI()
             app.include_router(router)

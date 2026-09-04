@@ -29,7 +29,7 @@ class TestJsonFormatter:
         
         Verifies that JsonFormatter correctly formats log records as JSON.
         """
-        from core.logger.logger import JsonFormatter
+        from src.logger.logger import JsonFormatter
         
         formatter = JsonFormatter()
         
@@ -59,7 +59,7 @@ class TestLogger:
         
         Verifies that logger instances are singletons.
         """
-        from core.logger.logger import Logger
+        from src.logger.logger import Logger
         
         logger1 = Logger()
         logger2 = Logger()
@@ -71,7 +71,7 @@ class TestLogger:
         
         Verifies that all standard logging methods are available.
         """
-        from core.logger.logger import Logger
+        from src.logger.logger import Logger
         
         logger = Logger()
         
@@ -87,7 +87,7 @@ class TestLogger:
         
         Verifies that global logger instance is accessible.
         """
-        from core.logger.logger import logger
+        from src.logger.logger import logger
         
         # Check that global logger is available
         assert logger is not None
@@ -101,7 +101,7 @@ class TestLogAnalyzer:
         
         Verifies that max log size bytes calculation returns positive value.
         """
-        from core.logger.log_analyzer import get_max_size_bytes
+        from src.logger.log_analyzer import get_max_size_bytes
         
         result = get_max_size_bytes()
         

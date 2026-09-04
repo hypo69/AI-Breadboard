@@ -22,7 +22,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import numpy as np
 import pytest
 
-from core.ai.gemini.generative_ai import (
+from src.ai.gemini.generative_ai import (
     GoogleGenerativeAI,
     add_unsupported_model,
     load_unsupported_models,
@@ -60,9 +60,9 @@ class TestGoogleGenerativeAI_HappyPath:
         mock_client.models.generate_content.return_value = mock_response
 
         # Initialize model with mocked SDK and active key
-        with patch('core.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
-             patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
-             patch('core.ai.gemini.generative_ai.get_status'):
+        with patch('src.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
+             patch('src.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(api_key_names=['key_dev'])
 
             # --- Execution (Act) ---
@@ -95,9 +95,9 @@ class TestGoogleGenerativeAI_HappyPath:
         mock_client: MagicMock = MagicMock()
         mock_client.chats.create.return_value = mock_chat_session
 
-        with patch('core.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
-             patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
-             patch('core.ai.gemini.generative_ai.get_status'):
+        with patch('src.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
+             patch('src.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(save_history_chat=True)
 
             # --- Execution (Act) ---
@@ -127,9 +127,9 @@ class TestGoogleGenerativeAI_HappyPath:
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content_stream.return_value = [chunk1, chunk2]
 
-        with patch('core.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
-             patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
-             patch('core.ai.gemini.generative_ai.get_status'):
+        with patch('src.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
+             patch('src.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(save_history_chat=False)
 
             # --- Execution (Act) ---
@@ -164,9 +164,9 @@ class TestGoogleGenerativeAI_HappyPath:
         mock_client: MagicMock = MagicMock()
         mock_client.models.embed_content.return_value = mock_response
 
-        with patch('core.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
-             patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
-             patch('core.ai.gemini.generative_ai.get_status'):
+        with patch('src.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
+             patch('src.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
             # --- Execution (Act) ---
@@ -213,9 +213,9 @@ class TestGoogleGenerativeAI_HappyPath:
 
         dispatcher_mock = MagicMock(return_value='+20 C, Sunny')
 
-        with patch('core.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
-             patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
-             patch('core.ai.gemini.generative_ai.get_status'):
+        with patch('src.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
+             patch('src.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
             # --- Execution (Act) ---
@@ -240,9 +240,9 @@ class TestGoogleGenerativeAI_EdgeCases:
         # --- Setup (Arrange) ---
         empty_query: str = ''
 
-        with patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
-             patch('core.ai.gemini.generative_ai.genai.Client'), \
-             patch('core.ai.gemini.generative_ai.get_status'):
+        with patch('src.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
+             patch('src.ai.gemini.generative_ai.genai.Client'), \
+             patch('src.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
             # --- Execution (Act) ---
@@ -259,9 +259,9 @@ class TestGoogleGenerativeAI_EdgeCases:
         # --- Setup (Arrange) ---
         empty_message: str = ''
 
-        with patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
-             patch('core.ai.gemini.generative_ai.genai.Client'), \
-             patch('core.ai.gemini.generative_ai.get_status'):
+        with patch('src.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
+             patch('src.ai.gemini.generative_ai.genai.Client'), \
+             patch('src.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
             # --- Execution (Act) ---
@@ -278,9 +278,9 @@ class TestGoogleGenerativeAI_EdgeCases:
         # --- Setup (Arrange) ---
         empty_text: str = ''
 
-        with patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
-             patch('core.ai.gemini.generative_ai.genai.Client'), \
-             patch('core.ai.gemini.generative_ai.get_status'):
+        with patch('src.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
+             patch('src.ai.gemini.generative_ai.genai.Client'), \
+             patch('src.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
             # --- Execution (Act) ---
@@ -316,9 +316,9 @@ class TestGoogleGenerativeAI_TypeVariants:
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content.return_value = mock_response
 
-        with patch('core.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
-             patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
-             patch('core.ai.gemini.generative_ai.get_status'):
+        with patch('src.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
+             patch('src.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
             # --- Execution (Act) ---
@@ -338,9 +338,9 @@ class TestGoogleGenerativeAI_TypeVariants:
         mock_client: MagicMock = MagicMock()
         mock_client.files.upload.return_value = MagicMock(name='uploaded_file')
 
-        with patch('core.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
-             patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
-             patch('core.ai.gemini.generative_ai.get_status'):
+        with patch('src.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
+             patch('src.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
             # --- Execution (Act) ---
@@ -365,9 +365,9 @@ class TestGoogleGenerativeAI_BoundaryValues:
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content.side_effect = RuntimeError('SDK connection error')
 
-        with patch('core.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
-             patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
-             patch('core.ai.gemini.generative_ai.get_status'):
+        with patch('src.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
+             patch('src.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
             # --- Execution (Act) ---
@@ -396,9 +396,9 @@ class TestGoogleGenerativeAI_ErrorScenarios:
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content.side_effect = [error_401, success_response]
 
-        with patch('core.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
-             patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['bad_key', 'good_key'], ['k_bad', 'k_good'], ['k_bad', 'k_good'])), \
-             patch('core.ai.gemini.generative_ai.get_status'):
+        with patch('src.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.generative_ai.load_api_keys', return_value=(['bad_key', 'good_key'], ['k_bad', 'k_good'], ['k_bad', 'k_good'])), \
+             patch('src.ai.gemini.generative_ai.get_status'):
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
             # --- Execution (Act) ---
@@ -423,11 +423,11 @@ class TestGoogleGenerativeAI_ErrorScenarios:
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content.side_effect = [error_404, success_response]
 
-        with patch('core.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
-             patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['key1'], ['k1'], ['k1'])), \
-             patch('core.ai.gemini.generative_ai.get_status'), \
-             patch('core.ai.gemini.generative_ai.GoogleGenerativeAI.get_available_models', return_value=['gemini-old', 'gemini-new']), \
-             patch('core.ai.gemini.generative_ai.add_unsupported_model') as mock_add_unsupp:
+        with patch('src.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.generative_ai.load_api_keys', return_value=(['key1'], ['k1'], ['k1'])), \
+             patch('src.ai.gemini.generative_ai.get_status'), \
+             patch('src.ai.gemini.generative_ai.GoogleGenerativeAI.get_available_models', return_value=['gemini-old', 'gemini-new']), \
+             patch('src.ai.gemini.generative_ai.add_unsupported_model') as mock_add_unsupp:
 
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(model_name='gemini-old')
 
@@ -454,10 +454,10 @@ class TestGoogleGenerativeAI_ErrorScenarios:
         mock_client: MagicMock = MagicMock()
         mock_client.models.generate_content.side_effect = [error_429_daily, success_response]
 
-        with patch('core.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
-             patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['key1', 'key2'], ['k1', 'k2'], ['k1', 'k2'])), \
-             patch('core.ai.gemini.generative_ai.get_status'), \
-             patch('core.ai.gemini.generative_ai.mark_exhausted') as mock_mark:
+        with patch('src.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.generative_ai.load_api_keys', return_value=(['key1', 'key2'], ['k1', 'k2'], ['k1', 'k2'])), \
+             patch('src.ai.gemini.generative_ai.get_status'), \
+             patch('src.ai.gemini.generative_ai.mark_exhausted') as mock_mark:
 
             ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
 
@@ -480,7 +480,7 @@ class TestGoogleGenerativeAI_Regression:
     def test_default_model_exported_correctly(self):
         """Check presence and string type of _DEFAULT_MODEL."""
         # --- Setup and Assertion (Act & Assert) ---
-        from core.ai.gemini.generative_ai import _DEFAULT_MODEL
+        from src.ai.gemini.generative_ai import _DEFAULT_MODEL
         assert isinstance(_DEFAULT_MODEL, str), '_DEFAULT_MODEL must be a string'
         assert len(_DEFAULT_MODEL) > 0, '_DEFAULT_MODEL must not be an empty string'
 
@@ -488,7 +488,7 @@ class TestGoogleGenerativeAI_Regression:
     async def test_unified_chat_model_integration(self):
         """Check UnifiedChatModel integration with updated GoogleGenerativeAI class."""
         # --- Setup (Arrange) ---
-        from core.ai.unified_chat import UnifiedChatModel
+        from src.ai.unified_chat import UnifiedChatModel
 
         mock_client: MagicMock = MagicMock()
         mock_response: MagicMock = MagicMock()
@@ -499,9 +499,9 @@ class TestGoogleGenerativeAI_Regression:
         mock_chat.send_message.return_value = mock_response
         mock_client.chats.create.return_value = mock_chat
 
-        with patch('core.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
-             patch('core.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
-             patch('core.ai.gemini.generative_ai.get_status'):
+        with patch('src.ai.gemini.generative_ai.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.generative_ai.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), \
+             patch('src.ai.gemini.generative_ai.get_status'):
 
             unified_model: UnifiedChatModel = UnifiedChatModel(
                 api_key_names=['key_dev'],

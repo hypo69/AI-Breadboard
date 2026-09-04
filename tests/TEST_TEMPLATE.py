@@ -316,7 +316,7 @@ class TestTargetClass_Regression:
         # --- Execution (Act) ---
 
         # Call dependent method with mocked TargetClass.
-        # with patch('core.target_module.TargetClass', return_value=mock_target):
+        # with patch('src.target_module.TargetClass', return_value=mock_target):
         #     result = facade.process(facade_input)
 
         # --- Check (Assert) ---

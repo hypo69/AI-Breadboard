@@ -13,7 +13,7 @@
 # =============================================================================
 
 import argparse
-from core.rag import build_rules_index
+from src.rag import build_rules_index
 
 def main() -> None:
     """Запуск переиндексации Core RAG индекса."""

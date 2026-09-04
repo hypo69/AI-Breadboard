@@ -23,7 +23,7 @@ from dotenv import load_dotenv
 
 import header
 from header import __root__
-from core.skills import SkillRegistry
+from src.skills import SkillRegistry
 
 # =============================================================================
 # UTF-8 Encoding Fix for Windows Console
@@ -136,13 +136,13 @@ def run_rag_command(args: argparse.Namespace) -> int:
     if sub == 'rebuild':
         extra = getattr(args, 'rest', [])
         try:
-            from core.rag import build_rules_index
+            from src.rag import build_rules_index
             index_path, docs_path = build_rules_index(*extra)
             print(f"RAG index rebuilt successfully: {index_path}, {docs_path}")
             return 0
         except TypeError:
             # If build_rules_index doesn't accept arguments, call without args
-            from core.rag import build_rules_index
+            from src.rag import build_rules_index
             index_path, docs_path = build_rules_index()
             print(f"RAG index rebuilt successfully: {index_path}, {docs_path}")
             return 0

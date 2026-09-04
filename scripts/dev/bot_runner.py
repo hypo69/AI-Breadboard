@@ -33,10 +33,10 @@ from header import __root__
 
 load_dotenv(__root__ / '.env')
 
-from core.utils.jjson import j_loads_ns
-from core.logger import logger
+from src.utils.jjson import j_loads_ns
+from src.logger import logger
 
-from core.config import server_cfg, ai_cfg, tts_cfg, logging_cfg
+from src.config import server_cfg, ai_cfg, tts_cfg, logging_cfg
 
 async def _run_bot() -> None:
     """Run Telegram bot with full plugin and AI model suite.
@@ -44,8 +44,8 @@ async def _run_bot() -> None:
     Initializes bot with configured AI model (either Google Generative AI
     or Foundry model), loads plugins, and starts async event loop.
     """
-    from core.ai import GoogleGenerativeAI
-    from core.utils.file import read_text_file
+    from src.ai import GoogleGenerativeAI
+    from src.utils.file import read_text_file
     from plugins import load_plugins
 
     _system_instruction = read_text_file(__root__ / 'prompts' / 'chat' / 'system_instruction.md') or ''
@@ -55,7 +55,7 @@ async def _run_bot() -> None:
     foundry_model_id = getattr(ai_cfg, 'foundry_model_id', 'qwen2.5-1.5b') if ai_cfg else 'qwen2.5-1.5b'
 
     if use_foundry:
-        from core.ai.foundry_chat import FoundryChatBase
+        from src.ai.foundry_chat import FoundryChatBase
         model = FoundryChatBase(model_id=foundry_model_id, system_prompt=_system_instruction)
     else:
         model = GoogleGenerativeAI(api_key_names=_api_key_names, system_instruction=_system_instruction)

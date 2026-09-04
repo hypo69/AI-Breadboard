@@ -28,14 +28,14 @@ class TestRouterKeysHelpers:
 
     def test_mask_key_short(self):
         """Тест маскирования короткого ключа."""
-        from core.fastapi.router_keys import _mask_key
+        from src.fastapi.router_keys import _mask_key
         
         result = _mask_key("short")
         assert result == "*****"
 
     def test_mask_key_long(self):
         """Тест маскирования длинного ключа."""
-        from core.fastapi.router_keys import _mask_key
+        from src.fastapi.router_keys import _mask_key
         
         api_key = "AIzaSyDaGmWKaJsXk_hKl_pQrBwV8MiFa"  # 33 chars
         result = _mask_key(api_key)
@@ -48,14 +48,14 @@ class TestRouterKeysHelpers:
 
     def test_mask_key_exact_12_chars(self):
         """Тест маскирования ключа ровно 12 символов."""
-        from core.fastapi.router_keys import _mask_key
+        from src.fastapi.router_keys import _mask_key
         
         result = _mask_key("123456789012")
         assert result == "12345678...9012"
 
     def test_now_iso_format(self):
         """Тест формата _now_iso."""
-        from core.fastapi.router_keys import _now_iso
+        from src.fastapi.router_keys import _now_iso
         
         result = _now_iso()
         
@@ -64,7 +64,7 @@ class TestRouterKeysHelpers:
 
     def test_iso_to_ts_valid(self):
         """Тест конвертации валидной ISO строки."""
-        from core.fastapi.router_keys import _iso_to_ts
+        from src.fastapi.router_keys import _iso_to_ts
         
         iso = "2026-01-15T10:30:00+00:00"
         result = _iso_to_ts(iso)
@@ -73,14 +73,14 @@ class TestRouterKeysHelpers:
 
     def test_iso_to_ts_invalid(self):
         """Тест конвертации невалидной строки."""
-        from core.fastapi.router_keys import _iso_to_ts
+        from src.fastapi.router_keys import _iso_to_ts
         
         result = _iso_to_ts("invalid")
         assert result == 0.0
 
     def test_now_ts_returns_float(self):
         """Тест что _now_ts Returns float."""
-        from core.fastapi.router_keys import _now_ts
+        from src.fastapi.router_keys import _now_ts
         
         result = _now_ts()
         
@@ -104,7 +104,7 @@ class TestRouterKeysEndpoints:
 
     def test_list_keys_empty(self, mock_secrets_files):
         """Тест списка ключей при пустых файлах."""
-        from core.fastapi.router_keys import init_router, _SECRETS_FILE, _KEYS_FILE
+        from src.fastapi.router_keys import init_router, _SECRETS_FILE, _KEYS_FILE
         
         secrets_file, keys_file = mock_secrets_files
         
@@ -127,7 +127,7 @@ class TestRouterKeysEndpoints:
 
     def test_create_key_validation_empty_name(self):
         """Тест валидации при создании ключа с пустым именем."""
-        from core.fastapi.router_keys import init_router, _SECRETS_FILE, _KEYS_FILE
+        from src.fastapi.router_keys import init_router, _SECRETS_FILE, _KEYS_FILE
         
         with patch.object(type(_SECRETS_FILE), 'exists', return_value=False):
             router = init_router()
@@ -144,7 +144,7 @@ class TestRouterKeysEndpoints:
 
     def test_create_key_validation_empty_api_key(self):
         """Тест валидации при создании ключа с пустым API ключом."""
-        from core.fastapi.router_keys import init_router, _SECRETS_FILE, _KEYS_FILE
+        from src.fastapi.router_keys import init_router, _SECRETS_FILE, _KEYS_FILE
         
         with patch.object(type(_SECRETS_FILE), 'exists', return_value=False):
             router = init_router()
@@ -161,7 +161,7 @@ class TestRouterKeysEndpoints:
 
     def test_key_create_request_model(self):
         """Тест модели KeyCreateRequest."""
-        from core.fastapi.router_keys import KeyCreateRequest
+        from src.fastapi.router_keys import KeyCreateRequest
         
         request = KeyCreateRequest(name="test", api_key="key123")
         
@@ -171,7 +171,7 @@ class TestRouterKeysEndpoints:
 
     def test_key_update_request_model(self):
         """Тест модели KeyUpdateRequest."""
-        from core.fastapi.router_keys import KeyUpdateRequest
+        from src.fastapi.router_keys import KeyUpdateRequest
         
         request = KeyUpdateRequest(status="disabled")
         
@@ -180,7 +180,7 @@ class TestRouterKeysEndpoints:
 
     def test_key_entry_model(self):
         """Тест модели KeyEntry."""
-        from core.fastapi.router_keys import KeyEntry
+        from src.fastapi.router_keys import KeyEntry
         
         entry = KeyEntry(api_key="test_key")
         
@@ -194,9 +194,9 @@ class TestRouterKeysLogic:
 
     def test_check_exhaustion_not_exhausted(self):
         """Тест проверки неистощённого ключа."""
-        from core.fastapi.router_keys import _check_exhaustion, _load_keys_data
+        from src.fastapi.router_keys import _check_exhaustion, _load_keys_data
         
-        with patch('core.fastapi.router_keys._load_keys_data') as mock_load:
+        with patch('src.fastapi.router_keys._load_keys_data') as mock_load:
             mock_load.return_value = {'test_key': {'exhausted_at': None}}
             
             exhausted, reset_in = _check_exhaustion('test_key')
@@ -206,13 +206,13 @@ class TestRouterKeysLogic:
 
     def test_check_exhausted_key(self):
         """Тест проверки истощённого ключа."""
-        from core.fastapi.router_keys import _check_exhaustion, _load_keys_data
+        from src.fastapi.router_keys import _check_exhaustion, _load_keys_data
         from datetime import datetime, timezone
         
         # Exhausted 1 hour ago - still exhausted
         recent_time = datetime.now(timezone.utc).isoformat()
         
-        with patch('core.fastapi.router_keys._load_keys_data') as mock_load:
+        with patch('src.fastapi.router_keys._load_keys_data') as mock_load:
             mock_load.return_value = {'test_key': {'exhausted_at': recent_time}}
             
             exhausted, reset_in = _check_exhaustion('test_key')
@@ -222,9 +222,9 @@ class TestRouterKeysLogic:
 
     def test_check_exhaustion_key_not_found(self):
         """Тест проверки несуществующего ключа."""
-        from core.fastapi.router_keys import _check_exhaustion, _load_keys_data
+        from src.fastapi.router_keys import _check_exhaustion, _load_keys_data
         
-        with patch('core.fastapi.router_keys._load_keys_data') as mock_load:
+        with patch('src.fastapi.router_keys._load_keys_data') as mock_load:
             mock_load.return_value = {}
             
             exhausted, reset_in = _check_exhaustion('nonexistent')

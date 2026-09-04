@@ -14,7 +14,7 @@
 
 import pytest
 from pathlib import Path
-from core.utils.header import set_project_root
+from src.utils.header import set_project_root
 
 def test_set_project_root_success():
     """Test successful finding of project root.

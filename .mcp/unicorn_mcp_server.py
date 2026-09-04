@@ -19,7 +19,7 @@ import subprocess
 from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 
-from core.logger import logger
+from src.logger import logger
 
 # Initialization FastMCP сервера
 mcp = FastMCP("Unicorn-Manager")

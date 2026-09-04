@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
-from core.ai.orchestration import (
+from src.ai.orchestration import (
     HardwareProfile,
     probe_hardware,
     AICapability,
@@ -16,8 +16,8 @@ from core.ai.orchestration import (
     AIRouter,
     AIRequest,
 )
-from core.ai.providers.windows_ai import WindowsAIChatBase, probe_windows_ai_components
-from core.ai.providers.gemini import GeminiChatBase
+from src.ai.providers.windows_ai import WindowsAIChatBase, probe_windows_ai_components
+from src.ai.providers.gemini import GeminiChatBase
 
 
 def test_hardware_probe():

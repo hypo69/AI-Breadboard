@@ -23,7 +23,7 @@ try:
 except ImportError:
     FastMCP = None
 
-from core.logger import logger
+from src.logger import logger
 from plugins.web_search.gemini_cli_searcher import GeminiCliWebSearcher
 
 if FastMCP:

@@ -122,6 +122,7 @@ class JsonFormatter(logging.Formatter):
         log_entry: Dict = {
             "timestamp": self.formatTime(record, self.datefmt),
             "level": record.levelname,
+            "levelname": record.levelname,
             "message": record.getMessage().replace('"', "'"),
             "exc_info": self.formatException(record.exc_info)
             if record.exc_info

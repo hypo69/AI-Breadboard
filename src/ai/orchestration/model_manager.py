@@ -25,7 +25,7 @@ from src.secrets.api_key_state import load_api_keys
 from src.utils.jjson import j_dumps, j_loads
 
 _GLOBAL_CONFIG_PATH: Path = __root__ / "config.json"
-_GEMINI_CONFIG_PATH: Path = __root__ / "core" / "ai" / "gemini" / "config.json"
+_GEMINI_CONFIG_PATH: Path = __root__ / "src" / "ai" / "gemini" / "config.json"
 
 # Локальный кэш доступных моделей в оперативной памяти на весь жизненный цикл
 _CACHED_MODELS: Dict[str, List[str]] = {}

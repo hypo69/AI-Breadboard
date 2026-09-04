@@ -19,9 +19,9 @@ import asyncio
 from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 
-from core.logger import logger
-from core.ai.langchain_agent import MediaSearchAgent
-from core.ai.langchain_tools import (
+from src.logger import logger
+from src.ai.langchain_agent import MediaSearchAgent
+from src.ai.langchain_tools import (
     web_search,
     rag_search,
     python_eval,

@@ -42,7 +42,7 @@ class TestRouterAuth:
 
     def test_create_jwt_token(self):
         """Тест создания JWT токена."""
-        from core.fastapi.router_auth import TokenData, create_jwt_token
+        from src.fastapi.router_auth import TokenData, create_jwt_token
         
         token_data = TokenData(
             email="test@example.com",
@@ -57,7 +57,7 @@ class TestRouterAuth:
 
     def test_verify_jwt_token(self):
         """Тест верификации JWT токена."""
-        from core.fastapi.router_auth import TokenData, create_jwt_token, verify_jwt_token
+        from src.fastapi.router_auth import TokenData, create_jwt_token, verify_jwt_token
         
         token_data = TokenData(
             email="test@example.com",
@@ -73,7 +73,7 @@ class TestRouterAuth:
 
     def test_verify_jwt_token_invalid(self):
         """Тест верификации невалидного токена."""
-        from core.fastapi.router_auth import verify_jwt_token
+        from src.fastapi.router_auth import verify_jwt_token
         
         result = verify_jwt_token("invalid_token")
         
@@ -82,7 +82,7 @@ class TestRouterAuth:
     @pytest.mark.asyncio
     async def test_get_settings_search_engine(self):
         """Тест получения настроек пользователя с актуальным search_engine."""
-        from core.fastapi.router_auth import get_settings, TokenData, create_jwt_token
+        from src.fastapi.router_auth import get_settings, TokenData, create_jwt_token
         from fastapi import Request
 
         token_data = TokenData(email="test@example.com", name="Test User", id=1)
@@ -91,8 +91,8 @@ class TestRouterAuth:
         mock_request = Mock(spec=Request)
         mock_request.cookies = {"auth_token": token}
 
-        with patch("core.user_manager.user_manager.get_user_by_email", return_value={"id": 1, "email": "test@example.com"}):
-            with patch("core.user_manager.user_manager.get_user_settings", return_value={"user_id": 1, "theme": "dark", "model": "gemini-2.5-flash"}):
+        with patch("src.user_manager.user_manager.get_user_by_email", return_value={"id": 1, "email": "test@example.com"}):
+            with patch("src.user_manager.user_manager.get_user_settings", return_value={"user_id": 1, "theme": "dark", "model": "gemini-2.5-flash"}):
                 res = await get_settings(mock_request)
                 assert "search_engine" in res
                 assert res["search_engine"] in ["gemini_cli", "gemini", "agy", "langchain", "playwright"]
@@ -102,7 +102,7 @@ class TestRouterChat:
 
     def test_init_router(self, app_client):
         """Тест инициализации чат-роутера."""
-        from core.fastapi.router_chat import init_router
+        from src.fastapi.router_chat import init_router
         
         mock_model = Mock()
         mock_model.chat = AsyncMock()
@@ -117,7 +117,7 @@ class TestRouterChat:
     @pytest.mark.asyncio
     async def test_get_models_logging(self):
         """Тест получения списка моделей."""
-        from core.fastapi.router_chat import init_router
+        from src.fastapi.router_chat import init_router
         
         mock_model = Mock()
         router = init_router(mock_model, mock_model, {})
@@ -137,7 +137,7 @@ class TestRouterChat:
     @pytest.mark.asyncio
     async def test_chat_stream_excludes_search_engine_for_model(self):
         """Тест checks, что search_engine из generation_config не попадает в chat_stream модели."""
-        from core.fastapi.router_chat import init_router, ChatRequest
+        from src.fastapi.router_chat import init_router, ChatRequest
         from fastapi import Request
 
         called_kwargs = {}
@@ -162,8 +162,8 @@ class TestRouterChat:
         mock_fastapi_req.cookies = {}
         mock_fastapi_req.client = Mock(host="127.0.0.1")
 
-        with patch('core.fastapi.router_chat._extract_user_auth', return_value=("user1", "", "gemini-2.5-flash", {})), \
-             patch('core.fastapi.router_chat.get_chat_model', return_value=mock_model):
+        with patch('src.fastapi.router_chat._extract_user_auth', return_value=("user1", "", "gemini-2.5-flash", {})), \
+             patch('src.fastapi.router_chat.get_chat_model', return_value=mock_model):
             resp = await chat_endpoint(request=req, fastapi_req=mock_fastapi_req)
             # Читаем стриминг-генератор
             chunks = []
@@ -178,7 +178,7 @@ class TestRouterTTS:
 
     def test_init_router(self):
         """Тест инициализации tts-роутера."""
-        from core.fastapi.router_tts import init_router
+        from src.fastapi.router_tts import init_router
         
         router = init_router(prefix='/api/tts')
         
@@ -190,7 +190,7 @@ class TestRouterControl:
 
     def test_connection_manager(self):
         """Тест ConnectionManager."""
-        from core.fastapi.router_control import ControlConnectionManager
+        from src.fastapi.router_control import ControlConnectionManager
         
         manager = ControlConnectionManager()
         

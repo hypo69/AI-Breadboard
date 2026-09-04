@@ -15,7 +15,7 @@
 import pytest
 from pathlib import Path
 import os
-from core.utils.file import save_text_file, read_text_file
+from src.utils.file import save_text_file, read_text_file
 
 # --- Tests for save_text_file ---
 

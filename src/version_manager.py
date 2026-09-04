@@ -244,7 +244,7 @@ class VersionManager:
                 files_to_backup = [
                     "config.json",
                     ".env",
-                    "core",
+                    "src",
                     "requirements.txt"
                 ]
             

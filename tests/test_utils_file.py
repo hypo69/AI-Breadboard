@@ -15,7 +15,7 @@
 import pytest
 import os
 from pathlib import Path
-from core.utils.file import save_text_file, read_text_file, get_filenames, remove_bom
+from src.utils.file import save_text_file, read_text_file, get_filenames, remove_bom
 
 class TestFileUtils:
     """Class for testing file.py module functions."""

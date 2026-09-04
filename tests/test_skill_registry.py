@@ -16,7 +16,7 @@
 
 from pathlib import Path
 
-from core.skills import SkillRegistry
+from src.skills import SkillRegistry
 
 def _write_skill(root: Path, name: str, description: str, body: str) -> None:
     skill_dir = root / name

@@ -14,7 +14,7 @@
 
 import pytest
 
-from core.utils.versioning import compare_versions, choose_best_tag
+from src.utils.versioning import compare_versions, choose_best_tag
 
 def test_compare_versions_basic():
     assert compare_versions('1.2.3', '1.2.4') == -1

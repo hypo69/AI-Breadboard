@@ -14,7 +14,7 @@
 
 import pytest
 from types import SimpleNamespace
-from core.utils.convertors.html import html2escape, escape2html, html2dict, html2ns
+from src.utils.convertors.html import html2escape, escape2html, html2dict, html2ns
 
 class TestHtmlUtils:
     """Class for testing html.py module functions."""
