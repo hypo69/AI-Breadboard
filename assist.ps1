@@ -9,8 +9,13 @@
     assist providers
     assist stop
 #>
-
-$projectDir = "C:\Users\onela\AppData\Local\AI Breadboard"
+$projectDir = $PSScriptRoot
+if ([string]::IsNullOrEmpty($projectDir) -and $env:AIBREADBOARD_DIR -and (Test-Path $env:AIBREADBOARD_DIR)) {
+    $projectDir = $env:AIBREADBOARD_DIR
+}
+if (-not (Test-Path $projectDir)) {
+    $projectDir = "C:\Users\onela\AppData\Local\AI Breadboard"
+}
 if (-not (Test-Path $projectDir) -and $env:AIBREADBOARD_DIR) {
     $projectDir = $env:AIBREADBOARD_DIR
 }

@@ -30,6 +30,10 @@
     Включить запуск Telegram-бота. По умолчанию выключен ($false).
     Алиасы: -Telegram, -EnableTelegram, -TelegramBot, -tg.
 
+.PARAMETER EnableAssist
+    Включить запуск терминала с ассистентом assist.ps1. По умолчанию включен ($true).
+    Алиасы: -Assist, -enable_assist.
+
 .PARAMETER Help
     Отображение справки по использованию лончера (-Help, -h, --help).
 
@@ -66,6 +70,9 @@ param (
 
     [Alias('Telegram', 'EnableTelegram', 'TelegramBot', 'tg')]
     [Nullable[bool]]$EnableTelegramBot = $null,
+
+    [Alias('Assist', 'enable_assist')]
+    [Nullable[bool]]$EnableAssist = $null,
 
     [Alias('Worker', 'UnicornWorkers', 'unicorn_workers')]
     [Nullable[int]]$Workers = $null,
@@ -131,6 +138,7 @@ if ($Help) {
     Write-Host "  -Cloudflared, -cf     Включить туннель Cloudflare Tunnel (по умолчанию выключен)."
     Write-Host "  -EnableOAuth, -OAuth  Включить авторизацию через Google OAuth (по умолчанию выключена)."
     Write-Host "  -EnableTelegramBot    Включить запуск Telegram-бота (по умолчанию выключен, алиас: -tg)."
+    Write-Host "  -EnableAssist, -Assist Включить терминал с assist.ps1 (по умолчанию: `$true, алиас: -enable_assist)."
     Write-Host "  -Help, -h, --help     Показать эту справку и выйти."
     Write-Host ""
     Write-Host "ПРИМЕРЫ:" -ForegroundColor Yellow
@@ -225,6 +233,7 @@ $useOllama = $true
 $useCloudflared = $false
 $enableOAuthVal = $false
 $enableTelegramBotVal = $false
+$enableAssistVal = $true
 $preloadSilero = $false
 
 if (Test-Path $configPath) {
@@ -235,6 +244,8 @@ if (Test-Path $configPath) {
         if ($cfg.server.use_ssl -ne $null) { $useSsl = [bool]$cfg.server.use_ssl }
         if ($cfg.server.enable_oauth -ne $null) { $enableOAuthVal = [bool]$cfg.server.enable_oauth }
         if ($cfg.server.enable_telegram_bot -ne $null) { $enableTelegramBotVal = [bool]$cfg.server.enable_telegram_bot }
+        if ($cfg.server.enable_assist -ne $null) { $enableAssistVal = [bool]$cfg.server.enable_assist }
+        if ($cfg.server.auto_start_assist_cli -ne $null) { $enableAssistVal = [bool]$cfg.server.auto_start_assist_cli }
         if ($cfg.ai.use_foundry -ne $null) { $useFoundry = [bool]$cfg.ai.use_foundry }
         if ($cfg.ai.use_ollama -ne $null) { $useOllama = [bool]$cfg.ai.use_ollama }
         if ($cfg.server.use_cloudflared -ne $null) { $useCloudflared = [bool]$cfg.server.use_cloudflared }
@@ -257,6 +268,8 @@ if (Test-Path $envFile) {
             if ($key -eq "USE_SSL") { $useSsl = $val -in ("true","1","yes") }
             if ($key -eq "ENABLE_OAUTH") { $enableOAuthVal = $val -in ("true","1","yes") }
             if ($key -eq "ENABLE_TELEGRAM_BOT") { $enableTelegramBotVal = $val -in ("true","1","yes") }
+            if ($key -eq "ENABLE_ASSIST") { $enableAssistVal = $val -in ("true","1","yes") }
+            if ($key -eq "AUTO_START_ASSIST_CLI") { $enableAssistVal = $val -in ("true","1","yes") }
             if ($key -eq "USE_FOUNDRY") { $useFoundry = $val -in ("true","1","yes") }
             if ($key -eq "USE_OLLAMA") { $useOllama = $val -in ("true","1","yes") }
             if ($key -eq "USE_CLOUDFLARED") { $useCloudflared = $val -in ("true","1","yes") }
@@ -280,6 +293,11 @@ if ($EnableOAuth -ne $null) {
 # Если передан явный CLI-параметр -EnableTelegramBot, он переопределяет значение
 if ($EnableTelegramBot -ne $null) {
     $enableTelegramBotVal = [bool]$EnableTelegramBot
+}
+
+# Если передан явный CLI-параметр -EnableAssist, он переопределяет значение
+if ($EnableAssist -ne $null) {
+    $enableAssistVal = [bool]$EnableAssist
 }
 
 # Определяется сетевой IPv4-адрес машины для отображения пользователю.
@@ -438,6 +456,19 @@ if ($isInteractive -and -not $autoLaunchEnabled) {
             $enableTelegramBotVal = $false
         }
     }
+
+    # Пользователь подтверждает запуск терминала Assist (если не передан явный ключ -EnableAssist)
+    if ($EnableAssist -eq $null) {
+        $assistDefaultHint = if ($enableAssistVal) { "y" } else { "n" }
+        $assistPrompt = if ($enableAssistVal) { "Y/n" } else { "y/N" }
+        $assistChoice = Read-Host "Запустить ассистент assist.ps1 в новом терминале? ($assistPrompt) [Enter = $assistDefaultHint]"
+        $assistChoice = $assistChoice.Trim().ToLower()
+        if ($assistChoice -in @("y", "yes", "д", "да", "1")) {
+            $enableAssistVal = $true
+        } elseif ($assistChoice -in @("n", "no", "н", "нет", "0")) {
+            $enableAssistVal = $false
+        }
+    }
 } else {
     # Автозапуск или неинтерактивный режим
     $host_ = if ($HostAddress) { $HostAddress } else { $cfgHost }
@@ -574,6 +605,7 @@ Write-Host "  • AI Foundry:      $(if ($useFoundry) {'ВКЛЮЧЁН'} else {'
 Write-Host "  • Ollama:          $(if ($useOllama) {'ВКЛЮЧЕНА (localhost:11434)'} else {'ВЫКЛЮЧЕНА'})" -ForegroundColor White
 Write-Host "  • Google OAuth:    $(if ($enableOAuthVal) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН (по умолчанию)'})" -ForegroundColor White
 Write-Host "  • Telegram Bot:    $(if ($enableTelegramBotVal) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН (по умолчанию)'})" -ForegroundColor White
+Write-Host "  • Assist Terminal: $(if ($enableAssistVal) {'ВКЛЮЧЁН (по умолчанию)'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
 Write-Host "  • Cloudflare:      $(if ($useCloudflared -and $cfTunnelToken) {'ВКЛЮЧЁН (https://kino.davidka.net)'} elseif (-not $cfTunnelToken) {'ТОКЕН НЕ ЗАДАН'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
 if ($autoLaunchEnabled -and $autoLaunchDelay -gt 0) {
     Write-Host "  • Автозапуск:      ВКЛЮЧЁН (задержка: $autoLaunchDelay сек)" -ForegroundColor Yellow
@@ -713,6 +745,36 @@ if ($enableTelegramBotVal) {
     }
     if (Test-Path $tgScript) {
         & $tgScript -Action stop
+    }
+}
+
+# ----------------------------------------------------------------------------
+# SUBSTAGE 9.5 — ASSIST CLI TERMINAL (assist.ps1)
+# ----------------------------------------------------------------------------
+# При включённом параметре EnableAssist запускается отдельное окно терминала
+# с интерактивным окружением assist.ps1.
+# ----------------------------------------------------------------------------
+if ($enableAssistVal) {
+    Write-Host ""
+    Write-Host "    Запуск терминала Assist (assist.ps1)..." -ForegroundColor Cyan
+    $assistScript = Join-Path $scriptDir "assist.ps1"
+    if (Test-Path $assistScript) {
+        try {
+            $hasWt = Get-Command wt.exe -ErrorAction SilentlyContinue
+            $hasPwsh = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+            $shellExe = if ($hasPwsh) { "pwsh.exe" } else { "powershell.exe" }
+
+            if ($hasWt) {
+                Start-Process wt.exe -ArgumentList "-d `"$scriptDir`" $shellExe -NoExit -ExecutionPolicy Bypass -File `"$assistScript`""
+            } else {
+                Start-Process $shellExe -ArgumentList "-NoExit -ExecutionPolicy Bypass -File `"$assistScript`"" -WorkingDirectory $scriptDir
+            }
+            Write-Host "    [OK] Терминал Assist запущен" -ForegroundColor Green
+        } catch {
+            Write-Host "    [WARN] Не удалось запустить терминал Assist: $_" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "    [WARN] assist.ps1 не найден: $assistScript" -ForegroundColor Yellow
     }
 }
 

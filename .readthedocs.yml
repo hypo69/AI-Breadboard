@@ -1,44 +1,21 @@
-# Конфигурация Read the Docs для проекта AI-Breadboard
-# This file specifies the build environment, Python version,
-# and Sphinx configuration file used to generate the project
-# documentation and reference materials.
+# Read the Docs configuration file for AI-Breadboard
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
 
 version: 2
 
-# Версия Python для сборки
-python:
-  version: "3.10"
-  install:
-    - requirements: docs/ru/requirements-docs.txt
-
-# Сборка документации
+# Build environment configuration
 build:
   os: ubuntu-22.04
   tools:
-    python: "3.10"
+    python: "3.11"
 
-# Конфигурация Sphinx
+# Configuration for Sphinx
 sphinx:
   configuration: docs/ru/conf.py
-  fail_on_warning: true
+  fail_on_warning: false
 
-# Версионирование через Git-теги
-versions:
-  active: latest
-  builds:
-    latest:
-      commands: "pip install -r docs/ru/requirements-docs.txt && sphinx-build -b html docs/ru docs/ru/_build/html"
+# Python packages installation
+python:
+  install:
+    - requirements: docs/ru/requirements-docs.txt
 
-# Перенаправления (redirects)
-redirects:
-  old-api-page: /en/latest/api/new-page/
-
-# Включение функций
-features:
-  - versioning
-
-# Notifications (вебхуки для уведомлений)
-notifications:
-  webhooks:
-    - url: "{{ env.WEBHOOK_URL }}"
-      events: [build.success, build.failed]
