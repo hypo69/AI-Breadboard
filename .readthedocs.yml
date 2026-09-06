@@ -9,13 +9,13 @@ build:
   tools:
     python: "3.11"
 
-# Configuration for Sphinx
-sphinx:
-  configuration: docs/ru/conf.py
+# Configuration for MkDocs
+mkdocs:
+  configuration: mkdocs.yml
   fail_on_warning: false
 
 # Python packages installation
 python:
   install:
-    - requirements: docs/ru/requirements-docs.txt
+    - requirements: install/req/requirements-docs.txt
 
