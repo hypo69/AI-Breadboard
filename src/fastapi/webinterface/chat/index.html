@@ -294,10 +294,35 @@
     <option value="debug">DEBUG</option>
   </select>
   <input type="text" class="form-control" id="message-input" data-i18n-placeholder="chat.placeholder" placeholder="Введите сообщение...">
+  
+  <!-- Voice & Audio Buttons -->
+  <button class="btn btn-outline-danger" id="voice-record-btn" title="🎙️ Записать голосовое сообщение с разбором по собеседникам" style="padding: 0.375rem 0.65rem; font-size: 1rem;">
+    <i class="bi bi-mic-fill"></i>
+  </button>
+  <input type="file" id="voice-file-input" class="d-none" accept="audio/*,.mp3,.wav,.ogg,.m4a,.webm,.aac">
+  <button class="btn btn-outline-warning" id="voice-upload-btn" title="📎 Загрузить аудиофайл для диаризации и сводки" style="padding: 0.375rem 0.65rem; font-size: 1rem;" onclick="document.getElementById('voice-file-input').click();">
+    <i class="bi bi-file-earmark-music"></i>
+  </button>
+
   <button class="btn btn-primary" id="send-button" data-i18n="chat.send">Отправить</button>
   <button class="btn btn-outline-info" id="chat-algo-btn" onclick="window.showChatLogicModal ? window.showChatLogicModal() : null" title="🧠 Схема и алгоритм логики ответов чата" style="padding: 0.375rem 0.65rem; font-size: 1rem;"><i class="bi bi-diagram-3-fill"></i></button>
   <button class="btn btn-outline-success" id="save-history-rag-btn" title="Сохранить всю историю в RAG" style="padding: 0.375rem 0.65rem; font-size: 1rem;">💾</button>
   <button class="btn btn-outline-secondary" id="clear-history-btn" title="Очистить историю чата" style="padding: 0.375rem 0.65rem; font-size: 1rem;">🗑️</button>
+</div>
+
+<!-- Active Voice Recording Bar (Shown during microphone recording) -->
+<div id="voice-recording-bar" class="d-none alert alert-danger d-flex align-items-center justify-content-between p-2 mt-2 mb-0 shadow-sm border border-danger">
+  <div class="d-flex align-items-center gap-2">
+    <span class="spinner-grow spinner-grow-sm text-danger" role="status"></span>
+    <span class="fw-bold text-danger">🎙️ Идет запись голоса...</span>
+    <span class="badge bg-danger font-monospace" id="voice-record-timer">00:00</span>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <button class="btn btn-sm btn-outline-secondary" id="btn-cancel-voice-record">Отмена</button>
+    <button class="btn btn-sm btn-danger fw-bold" id="btn-stop-voice-record">
+      <i class="bi bi-stop-fill me-1"></i> Завершить и разобрать
+    </button>
+  </div>
 </div>
 
 <!-- Modal for editing and saving chat history to RAG -->
@@ -325,6 +350,30 @@
       <div class="modal-footer" style="border-top: 1px solid var(--border-color, #495057);">
         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Отмена</button>
         <button type="button" class="btn btn-primary btn-sm" id="btn-save-history-confirm">Сохранить в RAG</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for viewing full Diarization and Conversation Summary -->
+<div class="modal fade" id="diarizationDetailsModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content" style="background: var(--bg-color-card, #2b3035); color: var(--text-color, #f8f9fa); border: 1px solid var(--border-color, #495057);">
+      <div class="modal-header" style="border-bottom: 1px solid var(--border-color, #495057);">
+        <h5 class="modal-title d-flex align-items-center gap-2">
+          <i class="bi bi-people-fill text-danger"></i>
+          <span>🎙️ Разбор разговора по собеседникам и сводка</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3" id="diarizationModalBody">
+        <!-- Dynamic content will be injected by main.js -->
+      </div>
+      <div class="modal-footer d-flex justify-content-between" style="border-top: 1px solid var(--border-color, #495057);">
+        <button type="button" class="btn btn-outline-success btn-sm" id="btn-save-diarization-rag">
+          <i class="bi bi-floppy me-1"></i> Сохранить этот разбор в RAG
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Закрыть</button>
       </div>
     </div>
   </div>

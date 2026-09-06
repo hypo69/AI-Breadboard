@@ -30,6 +30,7 @@ Direct Answer Return (Direct RAG)   LLM Call (with Injected RAG Context)
 | `__init__.py` | Public package API and singleton accessor `get_rag_engine()`. |
 | `models.py` | Data models and enums (`RAGDecisionType`, `RAGRouteDecision`, `RAGSearchResult`). |
 | `engine.py` | `RAGEngine`: Coordinates knowledge base searches, confidence scoring, and context synthesis. |
+| `document_rag.py` | `DocumentRAGManager`: Multi-format document parser (PDF, MD, TXT, JSON, CSV, code), chunking, and similarity indexing. |
 | `rules_rag.py` | `RulesRAG`: Semantic index over prompt guidelines (`prompts/`) for dynamic LLM system instruction assembly. |
 | `user_rag.py` | `UserRAG`: Semantic search over historical Q&A and user preference profiles. |
 

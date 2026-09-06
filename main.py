@@ -60,6 +60,8 @@ from src.fastapi import (
     init_keys_router,
     init_admin_router,
     init_agents_router,
+    init_rag_router,
+    init_audio_router,
     router_openai,
 )
 from src.fastapi.router_version import init_router as init_version_router
@@ -513,6 +515,8 @@ app.include_router(init_logs_router())
 app.include_router(init_keys_router())
 app.include_router(init_admin_router())
 app.include_router(init_agents_router())
+app.include_router(init_rag_router())
+app.include_router(init_audio_router())
 app.include_router(init_version_router())
 app.include_router(router_openai)
 

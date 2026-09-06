@@ -185,6 +185,32 @@
     "googleSignInTitle": "Войти или зарегистрироваться через Google OAuth",
     "logout": "Выйти"
   },
+  "rag": {
+    "title": "🧠 База знаний и RAG",
+    "subtitle": "Загрузка документов, построение векторного индекса и семантический поиск.",
+    "totalDocuments": "Документов",
+    "totalChunks": "Чанков в индексе",
+    "vectorDimension": "Размерность вектора",
+    "lastUpdated": "Последнее обновление",
+    "uploadTitle": "Загрузка документов",
+    "dropzoneText": "Перетащите файлы сюда или нажмите для выбора",
+    "browseFiles": "Выбрать файлы",
+    "uploading": "Загрузка файлов...",
+    "indexSettings": "Параметры индексации",
+    "providerLabel": "Провайдер векторизации:",
+    "chunkSize": "Размер чанка (символов):",
+    "chunkOverlap": "Перекрытие (Overlap):",
+    "buildIndexBtn": "🔨 Построить / Перестроить индекс",
+    "documentsTitle": "Список документов в базе",
+    "fileName": "Имя файла",
+    "fileSize": "Размер",
+    "chunks": "Чанки",
+    "status": "Статус",
+    "noDocuments": "Документы не загружены. Загрузите файлы в блоке слева.",
+    "searchPlaygroundTitle": "Семантический поиск по базе",
+    "searchPlaceholder": "Введите поисковый запрос по смыслу...",
+    "enterQueryPrompt": "Введите запрос и нажмите «Поиск» для проверки RAG."
+  },
   "button_apply": "Применить изменения",
   "label_active_voice": "Активный голос:"
 }

@@ -185,6 +185,32 @@
     "googleSignInTitle": "Sign in or register with Google OAuth",
     "logout": "Sign out"
   },
+  "rag": {
+    "title": "🧠 Knowledge Base & RAG",
+    "subtitle": "Upload documents, build vector index, and perform semantic similarity search.",
+    "totalDocuments": "Documents",
+    "totalChunks": "Chunks in Index",
+    "vectorDimension": "Vector Dimension",
+    "lastUpdated": "Last Updated",
+    "uploadTitle": "Document Upload",
+    "dropzoneText": "Drag & drop files here or click to browse",
+    "browseFiles": "Browse Files",
+    "uploading": "Uploading files...",
+    "indexSettings": "Index Configuration",
+    "providerLabel": "Vectorization Provider:",
+    "chunkSize": "Chunk Size (chars):",
+    "chunkOverlap": "Overlap (chars):",
+    "buildIndexBtn": "🔨 Build / Rebuild Index",
+    "documentsTitle": "Knowledge Base Documents",
+    "fileName": "File Name",
+    "fileSize": "Size",
+    "chunks": "Chunks",
+    "status": "Status",
+    "noDocuments": "No documents uploaded. Upload files using the panel on the left.",
+    "searchPlaygroundTitle": "Semantic Search Playground",
+    "searchPlaceholder": "Enter query for semantic search...",
+    "enterQueryPrompt": "Enter a query and click 'Search' to test RAG retrieval."
+  },
   "button_apply": "Apply Changes",
   "label_active_voice": "Active voice:"
 }

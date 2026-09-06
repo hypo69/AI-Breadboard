@@ -376,19 +376,25 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
   
   let modelsGrouped = {};
   
-  try {
-    const url = forceRefresh ? '/api/chat/models?refresh=true' : '/api/chat/models';
-    const modelsData = await window.api.fetch(url);
-    modelsGrouped = modelsData.models || {};
-    if (Array.isArray(modelsGrouped)) {
-      modelsGrouped = { 'gemini': modelsGrouped };
+  const fetchModels = async (force = false) => {
+    try {
+      const url = force ? '/api/chat/models?refresh=true' : '/api/chat/models';
+      const modelsData = await window.api.fetch(url);
+      let grouped = modelsData.models || {};
+      if (Array.isArray(grouped)) {
+        grouped = { 'gemini': grouped };
+      }
+      return grouped;
+    } catch (err) {
+      console.error('Error loading AI models:', err);
+      showModelsNotification('Ошибка загрузки моделей AI: ' + err.message, 'danger');
+      return {};
     }
-    if (forceRefresh) {
-      showModelsNotification('Список моделей успешно обновлен', 'success');
-    }
-  } catch (err) {
-    console.error('Error loading AI models:', err);
-    showModelsNotification('Ошибка загрузки моделей AI: ' + err.message, 'danger');
+  };
+
+  modelsGrouped = await fetchModels(forceRefresh);
+  if (forceRefresh) {
+    showModelsNotification('Список моделей успешно обновлен', 'success');
   }
 
   const providers = Object.keys(modelsGrouped).filter(p => modelsGrouped[p] && modelsGrouped[p].length > 0);
@@ -412,10 +418,10 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
     });
   }
 
-  const populateModels = (provider) => {
+  const populateModels = (provider, providerModelsList) => {
     modelSelect.innerHTML = '';
-    const providerModels = modelsGrouped[provider] || [];
-    if (providerModels.length === 0) {
+    const providerModels = providerModelsList !== undefined ? providerModelsList : (modelsGrouped[provider] || []);
+    if (!providerModels || providerModels.length === 0) {
       modelSelect.innerHTML = '<option value="">Нет моделей</option>';
       saveBtn.disabled = true;
     } else {
@@ -435,8 +441,22 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
   };
 
   if (providerSelect) {
-    providerSelect.onchange = () => populateModels(providerSelect.value);
-    populateModels(providerSelect.value);
+    providerSelect.onchange = async () => {
+      const chosenProvider = providerSelect.value;
+      // При каждом выборе провайдера актуализируем список доступных моделей
+      modelSelect.innerHTML = '<option value="">Обновление списка моделей...</option>';
+      saveBtn.disabled = true;
+      try {
+        const updatedGrouped = await fetchModels(true);
+        if (updatedGrouped && Object.keys(updatedGrouped).length > 0) {
+          modelsGrouped = updatedGrouped;
+        }
+      } catch (e) {
+        console.warn('Failed to refresh models on provider change:', e);
+      }
+      populateModels(chosenProvider, modelsGrouped[chosenProvider]);
+    };
+    populateModels(providerSelect.value, modelsGrouped[providerSelect.value]);
   } else {
     let allModels = [];
     providers.forEach(p => allModels = allModels.concat(modelsGrouped[p]));
@@ -454,14 +474,14 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
     if (settingsData && settingsData.model) {
       let foundProvider = null;
       for (const p of providers) {
-        if (modelsGrouped[p].includes(settingsData.model)) {
+        if (modelsGrouped[p] && modelsGrouped[p].includes(settingsData.model)) {
           foundProvider = p;
           break;
         }
       }
       if (foundProvider && providerSelect) {
         providerSelect.value = foundProvider;
-        populateModels(foundProvider);
+        populateModels(foundProvider, modelsGrouped[foundProvider]);
       }
       modelSelect.value = settingsData.model;
     }

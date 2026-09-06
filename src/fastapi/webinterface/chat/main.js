@@ -150,6 +150,9 @@ function initChatTab() {
     });
   }
 
+  // Voice recording & Audio file upload handlers
+  setupVoiceRecordingHandlers();
+
   // Media controls handlers
   document.getElementById('btn-toggle-player-body')?.addEventListener('click', togglePlayerBody);
   document.getElementById('btn-close-player')?.addEventListener('click', closeMediaControls);
@@ -1584,3 +1587,309 @@ async function loadSystemInstruction() {
     systemInstruction = null;
   }
 }
+
+// ── VOICE RECORDING & AUDIO DIARIZATION ──────────────────────────────────────
+
+let mediaRecorder = null;
+let audioChunks = [];
+let recordingStartTime = 0;
+let recordingTimerInterval = null;
+let currentDiarizationData = null;
+
+function setupVoiceRecordingHandlers() {
+  const recordBtn = document.getElementById('voice-record-btn');
+  const cancelBtn = document.getElementById('btn-cancel-voice-record');
+  const stopBtn = document.getElementById('btn-stop-voice-record');
+  const fileInput = document.getElementById('voice-file-input');
+  const saveDiarizationRagBtn = document.getElementById('btn-save-diarization-rag');
+
+  if (recordBtn) {
+    recordBtn.addEventListener('click', toggleVoiceRecording);
+  }
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', cancelVoiceRecording);
+  }
+  if (stopBtn) {
+    stopBtn.addEventListener('click', stopVoiceRecording);
+  }
+  if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        const file = e.target.files[0];
+        processVoiceAudio(file, file.name);
+        fileInput.value = '';
+      }
+    });
+  }
+  if (saveDiarizationRagBtn) {
+    saveDiarizationRagBtn.addEventListener('click', async () => {
+      if (currentDiarizationData) {
+        await saveDiarizationToRag(currentDiarizationData);
+      }
+    });
+  }
+}
+
+async function toggleVoiceRecording() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    stopVoiceRecording();
+  } else {
+    await startVoiceRecording();
+  }
+}
+
+async function startVoiceRecording() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert('Запись аудио с микрофона не поддерживается вашим браузером или отключена.');
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+
+    // Select supported mimeType
+    let options = {};
+    if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+      options = { mimeType: 'audio/webm;codecs=opus' };
+    } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+      options = { mimeType: 'audio/ogg;codecs=opus' };
+    }
+
+    mediaRecorder = new MediaRecorder(stream, options);
+
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data && event.data.size > 0) {
+        audioChunks.push(event.data);
+      }
+    };
+
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(track => track.stop());
+      if (audioChunks.length > 0) {
+        const mime = mediaRecorder.mimeType || 'audio/webm';
+        const audioBlob = new Blob(audioChunks, { type: mime });
+        processVoiceAudio(audioBlob, `voice_recording_${Date.now()}.webm`);
+      }
+    };
+
+    mediaRecorder.start(250);
+    recordingStartTime = Date.now();
+
+    // Show recording bar
+    const bar = document.getElementById('voice-recording-bar');
+    const timer = document.getElementById('voice-record-timer');
+    if (bar) bar.classList.remove('d-none');
+
+    clearInterval(recordingTimerInterval);
+    recordingTimerInterval = setInterval(() => {
+      const elapsedSec = Math.floor((Date.now() - recordingStartTime) / 1000);
+      const m = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+      const s = String(elapsedSec % 60).padStart(2, '0');
+      if (timer) timer.textContent = `${m}:${s}`;
+    }, 500);
+
+  } catch (err) {
+    console.error('Ошибка доступа к микрофону:', err);
+    alert(`Не удалось получить доступ к микрофону: ${err.message}`);
+  }
+}
+
+function stopVoiceRecording() {
+  clearInterval(recordingTimerInterval);
+  const bar = document.getElementById('voice-recording-bar');
+  if (bar) bar.classList.add('d-none');
+
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+  }
+}
+
+function cancelVoiceRecording() {
+  clearInterval(recordingTimerInterval);
+  const bar = document.getElementById('voice-recording-bar');
+  if (bar) bar.classList.add('d-none');
+
+  if (mediaRecorder) {
+    if (mediaRecorder.state === 'recording') {
+      mediaRecorder.onstop = null;
+      mediaRecorder.stop();
+    }
+    audioChunks = [];
+  }
+}
+
+async function processVoiceAudio(audioBlob, filename) {
+  const chatWindow = document.getElementById('chat-window');
+  if (!chatWindow) return;
+
+  const audioUrl = URL.createObjectURL(audioBlob);
+
+  // 1. Add user message with audio playback
+  const userMsg = document.createElement('div');
+  userMsg.className = 'message user-message';
+  userMsg.innerHTML = `
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <i class="bi bi-mic-fill text-danger"></i>
+      <strong>Вы:</strong> <span class="badge bg-secondary font-monospace">${escapeHtml(filename)}</span>
+    </div>
+    <audio controls class="w-100 mt-1" style="max-height: 38px;">
+      <source src="${audioUrl}" type="${audioBlob.type}">
+      Ваш браузер не поддерживает воспроизведение аудио.
+    </audio>
+  `;
+  chatWindow.appendChild(userMsg);
+
+  // 2. Add bot loading message
+  const botMsg = document.createElement('div');
+  botMsg.className = 'message bot-message';
+  botMsg.innerHTML = `
+    <div class="d-flex align-items-center gap-2 text-primary">
+      <span class="spinner-border spinner-border-sm" role="status"></span>
+      <span>🎙️ Распознавание речи, диаризация собеседников и анализ беседы...</span>
+    </div>
+  `;
+  chatWindow.appendChild(botMsg);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+
+  // 3. Send to /api/audio/diarize
+  const formData = new FormData();
+  formData.append('file', audioBlob, filename);
+  formData.append('language', 'ru');
+
+  try {
+    const res = await fetch('/api/audio/diarize', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.detail || 'Diarization error');
+    }
+
+    const data = json.data || {};
+    currentDiarizationData = data;
+    renderDiarizationCard(botMsg, data, filename);
+  } catch (err) {
+    console.error('[VoiceDiarization] Error:', err);
+    botMsg.innerHTML = `
+      <div class="alert alert-danger mb-0 p-2 small">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        <strong>Ошибка анализа аудио:</strong> ${escapeHtml(err.message)}
+      </div>
+    `;
+  }
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function renderDiarizationCard(container, data, filename) {
+  const summary = data.summary || '';
+  const keyPoints = data.key_points || [];
+  const actionItems = data.action_items || [];
+  const transcript = data.transcript || [];
+  const speakers = data.speakers || [];
+
+  const speakerColors = [
+    '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'
+  ];
+
+  let keyPointsHtml = '';
+  if (keyPoints.length > 0) {
+    keyPointsHtml = `
+      <div class="mt-2">
+        <strong class="text-info small"><i class="bi bi-key-fill me-1"></i>Ключевые темы:</strong>
+        <ul class="mb-1 ps-3 small text-body-secondary">
+          ${keyPoints.map(kp => `<li>${escapeHtml(kp)}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  let actionItemsHtml = '';
+  if (actionItems.length > 0) {
+    actionItemsHtml = `
+      <div class="mt-2">
+        <strong class="text-success small"><i class="bi bi-check2-square me-1"></i>Задачи и договоренности:</strong>
+        <ul class="mb-1 ps-3 small text-body-secondary">
+          ${actionItems.map(ai => `<li><span class="badge bg-success bg-opacity-25 text-success me-1">TODO</span> ${escapeHtml(ai)}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  let transcriptHtml = '';
+  if (transcript.length > 0) {
+    transcriptHtml = `
+      <div class="mt-3 border-top pt-2">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <strong class="small text-warning"><i class="bi bi-chat-quote-fill me-1"></i>Стенограмма по собеседникам (${speakers.length || 2} уч.):</strong>
+        </div>
+        <div class="d-flex flex-column gap-2" style="max-height: 280px; overflow-y: auto;">
+          ${transcript.map((t, idx) => {
+            const speakerName = t.speaker || `Собеседник ${idx % 2 + 1}`;
+            const color = speakerColors[idx % speakerColors.length];
+            const ts = t.timestamp ? `<span class="badge bg-dark text-muted font-monospace">${escapeHtml(t.timestamp)}</span>` : '';
+            return `
+              <div class="p-2 rounded bg-body-tertiary border-start border-3" style="border-left-color: ${color} !important;">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                  <span class="fw-bold small" style="color: ${color};"><i class="bi bi-person-fill me-1"></i>${escapeHtml(speakerName)}</span>
+                  ${ts}
+                </div>
+                <div class="small text-body">${escapeHtml(t.text)}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  container.innerHTML = `
+    <div class="card bg-body border-secondary-subtle shadow-sm">
+      <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-2">
+        <span class="fw-bold"><i class="bi bi-people-fill text-danger me-2"></i>Разбор аудиозаписи: ${escapeHtml(filename)}</span>
+        <button class="btn btn-outline-success btn-sm py-0 px-2" onclick="window.saveCurrentDiarizationToRag('${escapeHtml(filename)}')">
+          <i class="bi bi-floppy me-1"></i> В RAG
+        </button>
+      </div>
+      <div class="card-body p-3">
+        ${summary ? `<div class="alert alert-primary p-2 mb-2 small"><strong>📋 Сводка:</strong> ${escapeHtml(summary)}</div>` : ''}
+        ${keyPointsHtml}
+        ${actionItemsHtml}
+        ${transcriptHtml}
+      </div>
+    </div>
+  `;
+}
+
+window.saveCurrentDiarizationToRag = async function(filename) {
+  if (!currentDiarizationData) return;
+  await saveDiarizationToRag(currentDiarizationData, filename);
+};
+
+async function saveDiarizationToRag(data, filename = 'voice_meeting') {
+  try {
+    const res = await fetch('/api/audio/save-to-rag', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: `Разбор аудио: ${filename}`,
+        summary: data.summary || '',
+        transcript: data.transcript || [],
+        key_points: data.key_points || [],
+        action_items: data.action_items || [],
+        markdown_report: data.markdown_report || '',
+      }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.detail || 'Save error');
+
+    alert(`✓ ${json.message || 'Разговор успешно сохранен в базу знаний RAG!'}`);
+  } catch (err) {
+    console.error('Ошибка сохранения в RAG:', err);
+    alert(`Не удалось сохранить в RAG: ${err.message}`);
+  }
+}
+

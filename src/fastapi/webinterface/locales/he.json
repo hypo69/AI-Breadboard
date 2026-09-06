@@ -185,6 +185,32 @@
     "googleSignInTitle": "התחבר או הירשם באמצעות Google OAuth",
     "logout": "התנתק"
   },
+  "rag": {
+    "title": "🧠 מאגר ידע ו-RAG",
+    "subtitle": "העלאת מסמכים, בניית אינדקס וקטורי וחיפוש סמנטי.",
+    "totalDocuments": "מסמכים",
+    "totalChunks": "מקטעים באינדקס",
+    "vectorDimension": "ממד וקטור",
+    "lastUpdated": "עודכן לאחרונה",
+    "uploadTitle": "העלאת מסמכים",
+    "dropzoneText": "גרור ושחרר קבצים כאן או לחץ לבחירה",
+    "browseFiles": "בחר קבצים",
+    "uploading": "מעלה קבצים...",
+    "indexSettings": "הגדרות אינדקס",
+    "providerLabel": "ספק וקטוריזציה:",
+    "chunkSize": "גודל מקטע (תווים):",
+    "chunkOverlap": "חפיפה (Overlap):",
+    "buildIndexBtn": "🔨 בנה / בנה מחדש אינדקס",
+    "documentsTitle": "רשימת מסמכים במאגר",
+    "fileName": "שם הקובץ",
+    "fileSize": "גודל",
+    "chunks": "מקטעים",
+    "status": "סטטוס",
+    "noDocuments": "לא הועלו מסמכים. העלה קבצים באמצעות הפאנל משמאל.",
+    "searchPlaygroundTitle": "חיפוש סמנטי במאגר",
+    "searchPlaceholder": "הזן שאילתת חיפוש...",
+    "enterQueryPrompt": "הזן שאילתה ולחץ על 'חפש' כדי לבדוק שליפת RAG."
+  },
   "button_apply": "החל שינויים",
   "label_active_voice": "קול פעיל:"
 }

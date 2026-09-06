@@ -43,9 +43,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log('HELP system initialized');
   
   console.log('Loading tabs...');
-  const v = '20260825_cleanup_tabs';
+  const v = '20260906_rag_tab';
   await Promise.all([
     loadTabContent('chat', `/html/chat/index.html?v=${v}`),
+    loadTabContent('rag', `/html/rag_tab/index.html?v=${v}`, `/html/rag_tab/main.js?v=${v}`),
     loadTabContent('plugins', `/html/plugins_tab/index.html?v=${v}`, `/html/plugins_tab/main.js?v=${v}`),
     loadTabContent('admin', `/html/admin/index.html?v=${v}`),
     loadTabContent('help', `/html/help/index.html?v=${v}`),

@@ -9,6 +9,8 @@ tests_cache.pickle
 *.local.*
 outputs/
 .VSCodeCounter/
+data/rag_documents/
+data/rag_index/
 
 # IDE settings
 .vscode/

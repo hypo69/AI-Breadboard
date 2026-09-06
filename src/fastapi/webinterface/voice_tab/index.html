@@ -1,0 +1,129 @@
+<!-- Voice Diarization & Audio Analyzer Tab -->
+<div class="container-fluid py-2">
+  <div class="alert alert-danger d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 shadow-sm">
+    <div>
+      <h5 class="mb-1"><i class="bi bi-mic-fill me-2"></i><span data-i18n="voice.title">🎙️ Разбор голосовых сообщений и диаризация</span></h5>
+      <p class="mb-0 small text-secondary" data-i18n="voice.subtitle">Запись с микрофона или загрузка аудиофайла: разделение по собеседникам, стенограмма и сводка встреч.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-dark font-monospace p-2">Gemini Multimodal Audio</span>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- LEFT COLUMN: Recording & Audio Upload Controls -->
+    <div class="col-lg-5 col-md-12">
+      <!-- Microphone Live Recording Card -->
+      <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+          <span class="fw-semibold"><i class="bi bi-broadcast me-2 text-danger"></i><span data-i18n="voice.recordTitle">Запись с микрофона</span></span>
+          <span class="badge bg-danger font-monospace d-none" id="vtab-record-timer">00:00</span>
+        </div>
+        <div class="card-body text-center p-4">
+          <div id="vtab-mic-visual" class="my-3">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle p-4 border border-3 border-danger shadow" style="width: 100px; height: 100px; transition: all 0.3s;" id="vtab-mic-circle">
+              <i class="bi bi-mic-fill fs-1 text-danger" id="vtab-mic-icon"></i>
+            </div>
+          </div>
+          <h6 class="fw-bold mb-1" id="vtab-record-status-label" data-i18n="voice.clickToRecord">Нажмите для начала записи</h6>
+          <p class="text-muted small mb-3">Говорите в микрофон — система автоматически распознает разных спикеров.</p>
+
+          <div class="d-flex justify-content-center gap-2">
+            <button class="btn btn-danger px-4 py-2 rounded-pill fw-bold shadow-sm" id="btn-vtab-record-toggle">
+              <i class="bi bi-record-fill me-1"></i> <span id="vtab-record-btn-text" data-i18n="voice.startRecord">Начать запись</span>
+            </button>
+            <button class="btn btn-outline-secondary px-3 py-2 rounded-pill d-none" id="btn-vtab-record-cancel">
+              Отмена
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- File Upload Card -->
+      <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+          <span class="fw-semibold"><i class="bi bi-cloud-arrow-up me-2 text-info"></i><span data-i18n="voice.uploadTitle">Загрузка аудиофайла</span></span>
+        </div>
+        <div class="card-body">
+          <div id="vtab-dropzone" class="border border-2 border-dashed rounded p-4 text-center cursor-pointer mb-2 bg-body-secondary bg-opacity-25" style="border-style: dashed !important;">
+            <i class="bi bi-file-earmark-music fs-1 text-info mb-2 d-block"></i>
+            <h6 class="fw-bold mb-1" data-i18n="voice.dropzoneText">Перетащите аудиофайл сюда или нажмите для выбора</h6>
+            <p class="text-muted small mb-2">Форматы: .mp3, .wav, .ogg, .m4a, .webm, .aac</p>
+            <input type="file" id="vtab-file-input" class="d-none" accept="audio/*,.mp3,.wav,.ogg,.m4a,.webm,.aac">
+            <button class="btn btn-outline-info btn-sm px-3 rounded-pill mt-1" type="button" onclick="document.getElementById('vtab-file-input').click();">
+              <i class="bi bi-folder2-open me-1"></i> <span data-i18n="voice.browseAudio">Выбрать аудиофайл</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audio Analysis Settings -->
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+          <span class="fw-semibold"><i class="bi bi-sliders me-2"></i>Параметры распознавания</span>
+        </div>
+        <div class="card-body">
+          <div class="mb-2">
+            <label class="form-label small fw-bold" for="vtab-model-select">Модель:</label>
+            <select class="form-select form-select-sm" id="vtab-model-select">
+              <option value="gemini-2.5-flash" selected>gemini-2.5-flash (Рекомендуется для аудио)</option>
+              <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+              <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+              <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-bold" for="vtab-lang-select">Язык отчёта и сводки:</label>
+            <select class="form-select form-select-sm" id="vtab-lang-select">
+              <option value="ru" selected>Русский (Russian)</option>
+              <option value="en">English</option>
+              <option value="he">עברית (Hebrew)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label small fw-bold" for="vtab-api-key">Gemini API Key (опционально):</label>
+            <input type="password" class="form-control form-control-sm" id="vtab-api-key" placeholder="Из .env по умолчанию">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Audio Playback & Diarization Result -->
+    <div class="col-lg-7 col-md-12">
+      <div class="card shadow-sm border-0 mb-3" id="vtab-result-card">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+          <span class="fw-semibold"><i class="bi bi-file-text me-2 text-warning"></i><span data-i18n="voice.resultTitle">Результат анализа и стенограмма</span></span>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-success btn-sm d-none" id="vtab-btn-save-rag">
+              <i class="bi bi-floppy me-1"></i> <span data-i18n="voice.saveToRag">Сохранить в RAG</span>
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-3" id="vtab-result-body">
+          <!-- Audio Player Preview -->
+          <div id="vtab-player-container" class="mb-3 d-none p-2 bg-body-tertiary border rounded">
+            <div class="small fw-semibold mb-1 text-muted"><i class="bi bi-play-circle me-1 text-danger"></i>Исходная аудиозапись: <span id="vtab-current-filename" class="text-body font-monospace"></span></div>
+            <audio id="vtab-audio-element" controls class="w-100" style="max-height: 38px;"></audio>
+          </div>
+
+          <!-- Loading State -->
+          <div id="vtab-loading" class="d-none text-center py-5">
+            <div class="spinner-border text-danger mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+            <h6 class="fw-bold text-primary">Идет распознавание и диаризация...</h6>
+            <p class="text-muted small">Gemini слушает аудио, разделяет собеседников и готовит сводку.</p>
+          </div>
+
+          <!-- Empty Initial State -->
+          <div id="vtab-empty-state" class="text-center py-5 text-muted">
+            <i class="bi bi-soundwave fs-1 d-block mb-2 opacity-50"></i>
+            <h6 class="fw-bold" data-i18n="voice.emptyStateTitle">Запишите голос или загрузите аудиофайл</h6>
+            <p class="small mb-0">Здесь появится краткая сводка, список ключевых решений и реплики каждого собеседника.</p>
+          </div>
+
+          <!-- Analysis Content Container -->
+          <div id="vtab-analysis-content" class="d-none"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
