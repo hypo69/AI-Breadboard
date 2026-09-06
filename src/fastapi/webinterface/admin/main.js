@@ -223,6 +223,11 @@ async function initInterface() {
       if (window.initSourcesTab) {
         window.initSourcesTab();
       }
+    } else if (target === '#tab-logs') {
+      console.log('[AdminInterface] Switching to logs tab...');
+      if (window.initLogsTab) {
+        window.initLogsTab();
+      }
     }
   });
   

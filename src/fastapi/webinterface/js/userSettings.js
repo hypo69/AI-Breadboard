@@ -100,11 +100,15 @@ export async function refreshUserProfile() {
         roleBadge.textContent = role;
         roleBadge.className = `badge ${role.toLowerCase() === 'admin' ? 'bg-danger' : 'bg-primary'}`;
       }
+      const isOauthEnabled = data.oauth_enabled !== false;
+
       if (googleBadge) {
         if (hasGoogle) {
           googleBadge.innerHTML = '<i class="bi bi-google text-danger me-1"></i>Google OAuth: <span class="text-success fw-bold">Синхронизирован</span>';
-        } else {
+        } else if (isOauthEnabled) {
           googleBadge.innerHTML = '<i class="bi bi-google text-muted me-1"></i>Google OAuth: <span class="text-warning">Не подключен</span> <button type="button" class="btn btn-sm btn-outline-danger ms-2 py-0 px-2 btn-google-login">Синхронизировать</button>';
+        } else {
+          googleBadge.innerHTML = '<i class="bi bi-google text-muted me-1"></i>Google OAuth: <span class="text-muted">Отключен</span>';
         }
       }
 
@@ -123,14 +127,36 @@ export async function refreshUserProfile() {
       if (authCard) authCard.classList.add('d-none');
       if (guestCard) guestCard.classList.remove('d-none');
 
-      // Navbar: show full Google register/sign-in button, hide user profile pill
+      const isOauthEnabled = data && data.oauth_enabled !== false;
+
+      // Navbar: show full Google register/sign-in button only if OAuth is enabled, else show user settings gear/pill
       if (navGoogleBtn) {
-        navGoogleBtn.classList.remove('d-none');
-        navGoogleBtn.classList.add('d-flex');
+        if (isOauthEnabled) {
+          navGoogleBtn.classList.remove('d-none');
+          navGoogleBtn.classList.add('d-flex');
+        } else {
+          navGoogleBtn.classList.add('d-none');
+          navGoogleBtn.classList.remove('d-flex');
+        }
       }
       if (userSettingsBtn) {
-        userSettingsBtn.classList.add('d-none');
-        userSettingsBtn.classList.remove('d-flex');
+        if (isOauthEnabled) {
+          userSettingsBtn.classList.add('d-none');
+          userSettingsBtn.classList.remove('d-flex');
+        } else {
+          userSettingsBtn.classList.remove('d-none');
+          userSettingsBtn.classList.add('d-flex');
+        }
+      }
+
+      // Guest card google login button adjustment
+      const guestGoogleBtn = guestCard ? guestCard.querySelector('.btn-google-login') : null;
+      if (guestGoogleBtn) {
+        if (isOauthEnabled) {
+          guestGoogleBtn.classList.remove('d-none');
+        } else {
+          guestGoogleBtn.classList.add('d-none');
+        }
       }
 
       if (navAvatar) navAvatar.classList.add('d-none');

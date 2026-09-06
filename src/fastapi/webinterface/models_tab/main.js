@@ -1,5 +1,18 @@
 // Gemini Models & APIs management tab logic
 
+let modelTestAbortController = null;
+
+function cancelModelTest() {
+  if (modelTestAbortController) {
+    try {
+      modelTestAbortController.abort();
+    } catch (e) {
+      console.warn('Error aborting model test:', e);
+    }
+    modelTestAbortController = null;
+  }
+}
+
 async function initModelsTab() {
   const modelSelect = document.getElementById('models-tab-select');
   const saveBtn = document.getElementById('btn-models-tab-save');
@@ -14,6 +27,7 @@ async function initModelsTab() {
 
   const refreshModelsBtn = document.getElementById('btn-refresh-models-list');
   const testModelBtn = document.getElementById('btn-model-test-send');
+  const cancelModelBtn = document.getElementById('btn-model-test-cancel');
   const testModelPrompt = document.getElementById('model-test-prompt');
 
   // 1. Bind event handlers immediately
@@ -38,11 +52,18 @@ async function initModelsTab() {
     testModelBtn.onclick = executeModelTest;
   }
 
+  if (cancelModelBtn) {
+    cancelModelBtn.onclick = cancelModelTest;
+  }
+
   if (testModelPrompt) {
     testModelPrompt.onkeydown = (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         executeModelTest();
+      } else if (e.key === 'Escape' && modelTestAbortController) {
+        e.preventDefault();
+        cancelModelTest();
       }
     };
   }
@@ -231,6 +252,7 @@ async function executeModelTest() {
   const modelSelect = document.getElementById('models-tab-select');
   const promptInput = document.getElementById('model-test-prompt');
   const testBtn = document.getElementById('btn-model-test-send');
+  const cancelBtn = document.getElementById('btn-model-test-cancel');
   const resultContainer = document.getElementById('model-test-result');
 
   if (!testBtn || !resultContainer) return;
@@ -250,22 +272,42 @@ async function executeModelTest() {
     return;
   }
 
+  // Abort any prior running test
+  cancelModelTest();
+  modelTestAbortController = new AbortController();
+
   testBtn.disabled = true;
   const originalBtnHtml = testBtn.innerHTML;
   testBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Тест...';
 
+  if (cancelBtn) {
+    cancelBtn.style.display = 'inline-block';
+    cancelBtn.disabled = false;
+  }
+
   resultContainer.style.display = 'block';
   resultContainer.innerHTML = `
-    <div class="d-flex align-items-center text-info small">
-      <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-      <span>Отправка запроса в <strong>${escapeHtml(model)}</strong> (${escapeHtml(provider)})...</span>
+    <div class="d-flex justify-content-between align-items-center text-info small">
+      <div class="d-flex align-items-center text-truncate">
+        <span class="spinner-border spinner-border-sm me-2 flex-shrink-0" role="status"></span>
+        <span class="text-truncate">Отправка запроса в <strong>${escapeHtml(model)}</strong> (${escapeHtml(provider)})...</span>
+      </div>
+      <button class="btn btn-outline-danger btn-sm py-0 px-2 rounded ms-2 flex-shrink-0" id="btn-model-test-cancel-inner" type="button" title="Отменить проверочный запрос">
+        <i class="bi bi-stop-circle me-1"></i> Отмена
+      </button>
     </div>
   `;
+
+  const cancelInnerBtn = document.getElementById('btn-model-test-cancel-inner');
+  if (cancelInnerBtn) {
+    cancelInnerBtn.onclick = cancelModelTest;
+  }
 
   try {
     const res = await window.api.fetch('/api/chat/test-model', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: modelTestAbortController.signal,
       body: JSON.stringify({
         provider: provider,
         model: model,
@@ -298,17 +340,31 @@ async function executeModelTest() {
       `;
     }
   } catch (err) {
-    console.error('Error during model test request:', err);
-    resultContainer.innerHTML = `
-      <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-secondary">
-        <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Ошибка сети/API</span>
-        <span class="badge bg-dark border border-secondary text-warning font-monospace">${escapeHtml(model)}</span>
-      </div>
-      <div class="text-danger small mt-1 font-monospace" style="white-space: pre-wrap; word-break: break-word;">${escapeHtml(err.message || 'Ошибка соединения')}</div>
-    `;
+    if (err.name === 'AbortError' || err.message?.toLowerCase().includes('abort')) {
+      resultContainer.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-secondary">
+          <span class="badge bg-warning text-dark"><i class="bi bi-slash-circle me-1"></i>Отменено</span>
+          <span class="badge bg-dark border border-secondary text-warning font-monospace">${escapeHtml(model)}</span>
+        </div>
+        <div class="text-warning small mt-1 font-monospace"><i class="bi bi-info-circle me-1"></i>Запрос отменен пользователем.</div>
+      `;
+    } else {
+      console.error('Error during model test request:', err);
+      resultContainer.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-secondary">
+          <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Ошибка сети/API</span>
+          <span class="badge bg-dark border border-secondary text-warning font-monospace">${escapeHtml(model)}</span>
+        </div>
+        <div class="text-danger small mt-1 font-monospace" style="white-space: pre-wrap; word-break: break-word;">${escapeHtml(err.message || 'Ошибка соединения')}</div>
+      `;
+    }
   } finally {
+    modelTestAbortController = null;
     testBtn.disabled = false;
     testBtn.innerHTML = originalBtnHtml;
+    if (cancelBtn) {
+      cancelBtn.style.display = 'none';
+    }
   }
 }
 

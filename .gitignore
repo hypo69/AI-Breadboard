@@ -257,6 +257,7 @@ export/
 # =============================================================================
 logs/
 log/
+!src/fastapi/webinterface/logs/
 tmp/
 temp/
 *.tmp

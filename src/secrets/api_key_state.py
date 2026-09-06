@@ -23,7 +23,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from header import __root__
 from src.logger.logger import logger
 
-_SECRETS_DIR: Path = __root__ / 'core' / 'secrets'
+_SECRETS_DIR: Path = __root__ / 'src' / 'secrets'
 _KEYS_FILE: Path = _SECRETS_DIR / 'gemini_keys.json'
 _LEGACY_SECRETS_FILE: Path = __root__ / 'core' / 'ai' / 'gemini' / 'secrets.json'
 _ENV_FILE: Path = __root__ / '.env'

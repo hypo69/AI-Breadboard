@@ -16,17 +16,31 @@
 .PARAMETER Port
     TCP-порт для запуска сервера (по умолчанию: из config.json или 8000).
 
-.PARAMETER NonInteractive
-    Запуск в неинтерактивном режиме без диалоговых вопросов (использует переданные параметры или config.json).
+.PARAMETER Interactive
+    Запуск в интерактивном диалоговом режиме с вопросами пользователю (по умолчанию выключен).
+
+.PARAMETER Cloudflared
+    Включить туннель Cloudflare Tunnel (cloudflared). По умолчанию выключен ($false).
+
+.PARAMETER EnableOAuth
+    Включить авторизацию через Google OAuth. По умолчанию выключен ($false).
+    Алиасы: -OAuth.
+
+.PARAMETER EnableTelegramBot
+    Включить запуск Telegram-бота. По умолчанию выключен ($false).
+    Алиасы: -Telegram, -EnableTelegram, -TelegramBot, -tg.
 
 .PARAMETER Help
     Отображение справки по использованию лончера (-Help, -h, --help).
 
 .EXAMPLE
     .\run.ps1
+    .\run.ps1 -EnableOAuth
+    .\run.ps1 -EnableTelegramBot
+    .\run.ps1 -Cloudflared
+    .\run.ps1 -Interactive
     .\run.ps1 -Host 0.0.0.0
     .\run.ps1 -Host 127.0.0.1 -Port 8000
-    .\run.ps1 -NonInteractive
     .\run.ps1 --help
 #>
 
@@ -39,9 +53,27 @@ param (
     [Parameter(Position = 1)]
     [string]$Port,
 
+    [Alias('i')]
+    [switch]$Interactive,
+
     [switch]$NonInteractive,
 
-    [Alias('h', '-help')]
+    [Alias('Tunnel', 'cf')]
+    [switch]$Cloudflared,
+
+    [Alias('OAuth')]
+    [Nullable[bool]]$EnableOAuth = $null,
+
+    [Alias('Telegram', 'EnableTelegram', 'TelegramBot', 'tg')]
+    [Nullable[bool]]$EnableTelegramBot = $null,
+
+    [Alias('Worker', 'UnicornWorkers', 'unicorn_workers')]
+    [Nullable[int]]$Workers = $null,
+
+    [Alias('Autoreload', 'UnicornReload', 'unicorn_reload')]
+    [Nullable[bool]]$Reload = $null,
+
+    [Alias('h', '-help', '?')]
     [switch]$Help
 )
 
@@ -70,6 +102,11 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 # лончера, доступные параметры и примеры запуска, после чего выполнение
 # завершается без запуска сервисов.
 # ============================================================================
+if ($HostAddress -in @('-h', '--help', '-help', '/?', '-?')) {
+    $Help = $true
+    $HostAddress = $null
+}
+
 if ($Help) {
     Write-Host ""
     Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
@@ -77,32 +114,39 @@ if ($Help) {
     Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "НАЗНАЧЕНИЕ:" -ForegroundColor Yellow
-    Write-Host "  Главный интерактивный лончер проекта ai-breadboard."
-    Write-Host "  Запускает FastAPI-сервер и сопутствующие сервисы (Foundry)."
+    Write-Host "  Главный лончер проекта ai-breadboard."
+    Write-Host "  По умолчанию запускается автоматически без лишних вопросов (значения по умолчанию)."
+    Write-Host "  Запускает FastAPI-сервер и сопутствующие сервисы (Foundry, Cloudflare Tunnel)."
     Write-Host ""
     Write-Host "СИНТАКСИС:" -ForegroundColor Yellow
     Write-Host "  .\run.ps1"
-    Write-Host "  .\run.ps1 [-Host <хост>] [-Port <порт>] [-NonInteractive]"
+    Write-Host "  .\run.ps1 [-Cloudflared] [-Interactive] [-Host <хост>] [-Port <порт>]"
     Write-Host "  .\run.ps1 --help"
     Write-Host ""
     Write-Host "ПАРАМЕТРЫ:" -ForegroundColor Yellow
     Write-Host "  -Host, -Address, -IP  IP-адрес привязки (0.0.0.0, 127.0.0.1, localhost)."
     Write-Host "  -Port <string>        Порт сервера (по умолчанию: из config.json или 8000)."
-    Write-Host "  -NonInteractive       Пропустить интерактивные запросы и запустить сразу."
+    Write-Host "  -Interactive, -i      Включить интерактивный режим (диалоговые вопросы)."
+    Write-Host "  -NonInteractive       Неинтерактивный режим (включен по умолчанию)."
+    Write-Host "  -Cloudflared, -cf     Включить туннель Cloudflare Tunnel (по умолчанию выключен)."
+    Write-Host "  -EnableOAuth, -OAuth  Включить авторизацию через Google OAuth (по умолчанию выключена)."
+    Write-Host "  -EnableTelegramBot    Включить запуск Telegram-бота (по умолчанию выключен, алиас: -tg)."
     Write-Host "  -Help, -h, --help     Показать эту справку и выйти."
     Write-Host ""
     Write-Host "ПРИМЕРЫ:" -ForegroundColor Yellow
     Write-Host "  .\run.ps1"
+    Write-Host "  .\run.ps1 -EnableTelegramBot"
+    Write-Host "  .\run.ps1 -Cloudflared"
+    Write-Host "  .\run.ps1 -Interactive"
     Write-Host "  .\run.ps1 -Host 0.0.0.0"
     Write-Host "  .\run.ps1 -Host 127.0.0.1 -Port 8000"
-    Write-Host "  .\run.ps1 -NonInteractive"
     Write-Host ""
     exit 0
 }
 
 Write-Host ""
 Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║         ЗАПУСК FastAPI СЕРВЕРА - ИНТЕРАКТИВНЫЙ ЛОНЧЕР         ║" -ForegroundColor Cyan
+Write-Host "║              ЗАПУСК FastAPI СЕРВЕРА (ai-breadboard)           ║" -ForegroundColor Cyan
 Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
 
@@ -177,6 +221,10 @@ $cfgHost = "0.0.0.0"
 $cfgPort = "8000"
 $useSsl = $true
 $useFoundry = $false
+$useOllama = $true
+$useCloudflared = $false
+$enableOAuthVal = $false
+$enableTelegramBotVal = $false
 $preloadSilero = $false
 
 if (Test-Path $configPath) {
@@ -185,7 +233,11 @@ if (Test-Path $configPath) {
         if ($cfg.server.host) { $cfgHost = [string]$cfg.server.host }
         if ($cfg.server.port) { $cfgPort = [string]$cfg.server.port }
         if ($cfg.server.use_ssl -ne $null) { $useSsl = [bool]$cfg.server.use_ssl }
+        if ($cfg.server.enable_oauth -ne $null) { $enableOAuthVal = [bool]$cfg.server.enable_oauth }
+        if ($cfg.server.enable_telegram_bot -ne $null) { $enableTelegramBotVal = [bool]$cfg.server.enable_telegram_bot }
         if ($cfg.ai.use_foundry -ne $null) { $useFoundry = [bool]$cfg.ai.use_foundry }
+        if ($cfg.ai.use_ollama -ne $null) { $useOllama = [bool]$cfg.ai.use_ollama }
+        if ($cfg.server.use_cloudflared -ne $null) { $useCloudflared = [bool]$cfg.server.use_cloudflared }
         if ($cfg.ai.preload_silero -ne $null) { $preloadSilero = [bool]$cfg.ai.preload_silero }
         Write-Host "    [OK] Конфигурация config.json загружена" -ForegroundColor Green
     } catch {
@@ -203,12 +255,31 @@ if (Test-Path $envFile) {
             $key = $Matches[1].Trim()
             $val = $Matches[2].Trim().Trim('"').Trim("'")
             if ($key -eq "USE_SSL") { $useSsl = $val -in ("true","1","yes") }
+            if ($key -eq "ENABLE_OAUTH") { $enableOAuthVal = $val -in ("true","1","yes") }
+            if ($key -eq "ENABLE_TELEGRAM_BOT") { $enableTelegramBotVal = $val -in ("true","1","yes") }
             if ($key -eq "USE_FOUNDRY") { $useFoundry = $val -in ("true","1","yes") }
+            if ($key -eq "USE_OLLAMA") { $useOllama = $val -in ("true","1","yes") }
+            if ($key -eq "USE_CLOUDFLARED") { $useCloudflared = $val -in ("true","1","yes") }
             if ($key -eq "CLOUDFLARE_TUNNEL_TOKEN") { $cfTunnelToken = $val }
             if ($key -eq "AUTO_LAUNCH_ENABLED") { $autoLaunchEnabled = $val -in ("true","1","yes") }
             if ($key -eq "AUTO_LAUNCH_DELAY_SECONDS" -and $val -match '^\d+$') { $autoLaunchDelay = [int]$val }
         }
     }
+}
+
+# Если передан явный CLI-параметр -Cloudflared, он принудительно включает туннель
+if ($Cloudflared) {
+    $useCloudflared = $true
+}
+
+# Если передан явный CLI-параметр -EnableOAuth, он переопределяет значение
+if ($EnableOAuth -ne $null) {
+    $enableOAuthVal = [bool]$EnableOAuth
+}
+
+# Если передан явный CLI-параметр -EnableTelegramBot, он переопределяет значение
+if ($EnableTelegramBot -ne $null) {
+    $enableTelegramBotVal = [bool]$EnableTelegramBot
 }
 
 # Определяется сетевой IPv4-адрес машины для отображения пользователю.
@@ -244,7 +315,8 @@ if (-not $autoLaunchEnabled -and $configPath -and (Test-Path $configPath)) {
     } catch {}
 }
 
-$isInteractive = (-not $NonInteractive) -and (-not $HostAddress)
+# Интерактивный режим включается только явно флагом -Interactive (-i)
+$isInteractive = $Interactive -and (-not $NonInteractive) -and (-not $HostAddress)
 
 # Если включён автозапуск и задержка > 0, показать предупреждение и подождать
 if ($isInteractive -and $autoLaunchEnabled -and $autoLaunchDelay -gt 0) {
@@ -315,6 +387,56 @@ if ($isInteractive -and -not $autoLaunchEnabled) {
         $useFoundry = $true
     } elseif ($foundryChoice -in @("n", "no", "н", "нет", "0")) {
         $useFoundry = $false
+    }
+
+    # Пользователь подтверждает или отключает запуск Ollama.
+    $ollamaDefaultHint = if ($useOllama) { "y" } else { "n" }
+    $ollamaPrompt = if ($useOllama) { "Y/n" } else { "y/N" }
+    $ollamaChoice = Read-Host "Запустить Ollama (localhost:11434)? ($ollamaPrompt) [Enter = $ollamaDefaultHint]"
+    $ollamaChoice = $ollamaChoice.Trim().ToLower()
+    if ($ollamaChoice -in @("y", "yes", "д", "да", "1")) {
+        $useOllama = $true
+    } elseif ($ollamaChoice -in @("n", "no", "н", "нет", "0")) {
+        $useOllama = $false
+    }
+
+    # Пользователь подтверждает запуск Cloudflare Tunnel (только если настроен токен)
+    if ($cfTunnelToken) {
+        $cfDefaultHint = if ($useCloudflared) { "y" } else { "n" }
+        $cfPrompt = if ($useCloudflared) { "Y/n" } else { "y/N" }
+        $cfChoice = Read-Host "Запустить Cloudflare Tunnel (kino.davidka.net)? ($cfPrompt) [Enter = $cfDefaultHint]"
+        $cfChoice = $cfChoice.Trim().ToLower()
+        if ($cfChoice -in @("y", "yes", "д", "да", "1")) {
+            $useCloudflared = $true
+        } elseif ($cfChoice -in @("n", "no", "н", "нет", "0")) {
+            $useCloudflared = $false
+        }
+    }
+
+    # Пользователь подтверждает или отключает Google OAuth (если не передан явный ключ -EnableOAuth)
+    if ($EnableOAuth -eq $null) {
+        $oauthDefaultHint = if ($enableOAuthVal) { "y" } else { "n" }
+        $oauthPrompt = if ($enableOAuthVal) { "Y/n" } else { "y/N" }
+        $oauthChoice = Read-Host "Включить авторизацию Google OAuth? ($oauthPrompt) [Enter = $oauthDefaultHint]"
+        $oauthChoice = $oauthChoice.Trim().ToLower()
+        if ($oauthChoice -in @("y", "yes", "д", "да", "1")) {
+            $enableOAuthVal = $true
+        } elseif ($oauthChoice -in @("n", "no", "н", "нет", "0")) {
+            $enableOAuthVal = $false
+        }
+    }
+
+    # Пользователь подтверждает запуск Telegram-бота (если не передан явный ключ -EnableTelegramBot)
+    if ($EnableTelegramBot -eq $null) {
+        $tgDefaultHint = if ($enableTelegramBotVal) { "y" } else { "n" }
+        $tgPrompt = if ($enableTelegramBotVal) { "Y/n" } else { "y/N" }
+        $tgChoice = Read-Host "Запустить Telegram-бота? ($tgPrompt) [Enter = $tgDefaultHint]"
+        $tgChoice = $tgChoice.Trim().ToLower()
+        if ($tgChoice -in @("y", "yes", "д", "да", "1")) {
+            $enableTelegramBotVal = $true
+        } elseif ($tgChoice -in @("n", "no", "н", "нет", "0")) {
+            $enableTelegramBotVal = $false
+        }
     }
 } else {
     # Автозапуск или неинтерактивный режим
@@ -449,9 +571,10 @@ if ($lanIp -and $host_ -eq "0.0.0.0") {
     Write-Host "  • Сетевой URL:     ${proto}://${lanIp}:${port}/" -ForegroundColor Yellow
 }
 Write-Host "  • AI Foundry:      $(if ($useFoundry) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
-if ($cfTunnelToken) {
-    Write-Host "  • Тоннель Cloudflare: https://kino.davidka.net" -ForegroundColor Cyan
-}
+Write-Host "  • Ollama:          $(if ($useOllama) {'ВКЛЮЧЕНА (localhost:11434)'} else {'ВЫКЛЮЧЕНА'})" -ForegroundColor White
+Write-Host "  • Google OAuth:    $(if ($enableOAuthVal) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН (по умолчанию)'})" -ForegroundColor White
+Write-Host "  • Telegram Bot:    $(if ($enableTelegramBotVal) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН (по умолчанию)'})" -ForegroundColor White
+Write-Host "  • Cloudflare:      $(if ($useCloudflared -and $cfTunnelToken) {'ВКЛЮЧЁН (https://kino.davidka.net)'} elseif (-not $cfTunnelToken) {'ТОКЕН НЕ ЗАДАН'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
 if ($autoLaunchEnabled -and $autoLaunchDelay -gt 0) {
     Write-Host "  • Автозапуск:      ВКЛЮЧЁН (задержка: $autoLaunchDelay сек)" -ForegroundColor Yellow
 }
@@ -520,20 +643,76 @@ if ($useFoundry) {
 }
 
 # ----------------------------------------------------------------------------
-# SUBSTAGE 9.2 — CLOUDFLARE TUNNEL (kino.davidka.net)
+# SUBSTAGE 9.2 — OLLAMA LOCAL SERVICE (localhost:11434)
 # ----------------------------------------------------------------------------
-if ($cfTunnelToken) {
+# Проверяется наличие Run-Ollama.ps1 и передаётся ему команда запуска.
+# При отключённой Ollama этот блок полностью пропускается.
+# ----------------------------------------------------------------------------
+if ($useOllama) {
     Write-Host ""
-    Write-Host "    Запуск службы Cloudflare Tunnel..." -ForegroundColor Cyan
-    $cfScript = Join-Path $scriptDir "launchers\Run-Cloudflared.ps1"
-    if (-not (Test-Path $cfScript)) {
-        $cfScript = Join-Path $scriptDir "Run-Cloudflared.ps1"
+    Write-Host "    Запуск локальной службы Ollama..." -ForegroundColor Cyan
+    $ollamaScript = Join-Path $scriptDir "launchers\Run-Ollama.ps1"
+    if (-not (Test-Path $ollamaScript)) {
+        $ollamaScript = Join-Path $scriptDir "Run-Ollama.ps1"
     }
-    if (Test-Path $cfScript) {
-        Write-Host "    Вызов Run-Cloudflared.ps1..." -ForegroundColor DarkGray
-        & $cfScript
+    if (Test-Path $ollamaScript) {
+        Write-Host "    Вызов Run-Ollama.ps1..." -ForegroundColor DarkGray
+        & $ollamaScript -Action start
     } else {
-        Write-Host "    [WARN] Run-Cloudflared.ps1 не найден: $cfScript" -ForegroundColor Yellow
+        Write-Host "    [WARN] Run-Ollama.ps1 не найден: $ollamaScript" -ForegroundColor Yellow
+    }
+}
+
+# ----------------------------------------------------------------------------
+# SUBSTAGE 9.3 — CLOUDFLARE TUNNEL (kino.davidka.net)
+# ----------------------------------------------------------------------------
+if ($useCloudflared) {
+    if ($cfTunnelToken) {
+        Write-Host ""
+        Write-Host "    Запуск службы Cloudflare Tunnel..." -ForegroundColor Cyan
+        $cfScript = Join-Path $scriptDir "launchers\Run-Cloudflared.ps1"
+        if (-not (Test-Path $cfScript)) {
+            $cfScript = Join-Path $scriptDir "Run-Cloudflared.ps1"
+        }
+        if (Test-Path $cfScript) {
+            Write-Host "    Вызов Run-Cloudflared.ps1..." -ForegroundColor DarkGray
+            & $cfScript
+        } else {
+            Write-Host "    [WARN] Run-Cloudflared.ps1 не найден: $cfScript" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host ""
+        Write-Host "    [WARN] Cloudflare Tunnel включен, но CLOUDFLARE_TUNNEL_TOKEN отсутствует в .env" -ForegroundColor Yellow
+    }
+}
+
+# ----------------------------------------------------------------------------
+# SUBSTAGE 9.4 — TELEGRAM BOT (scripts/dev/bot_runner.py)
+# ----------------------------------------------------------------------------
+# Проверяется наличие Run-TelegramBot.ps1 и передаётся ему команда запуска.
+# При отключённом Telegram-боте этот блок полностью пропускается.
+# ----------------------------------------------------------------------------
+if ($enableTelegramBotVal) {
+    Write-Host ""
+    Write-Host "    Запуск фоновой службы Telegram-бота..." -ForegroundColor Cyan
+    $tgScript = Join-Path $scriptDir "launchers\Run-TelegramBot.ps1"
+    if (-not (Test-Path $tgScript)) {
+        $tgScript = Join-Path $scriptDir "Run-TelegramBot.ps1"
+    }
+    if (Test-Path $tgScript) {
+        Write-Host "    Вызов Run-TelegramBot.ps1..." -ForegroundColor DarkGray
+        & $tgScript -Action start
+    } else {
+        Write-Host "    [WARN] Run-TelegramBot.ps1 не найден: $tgScript" -ForegroundColor Yellow
+    }
+} else {
+    # Если бот отключён, убеждаемся что фоновые процессы бота остановлены
+    $tgScript = Join-Path $scriptDir "launchers\Run-TelegramBot.ps1"
+    if (-not (Test-Path $tgScript)) {
+        $tgScript = Join-Path $scriptDir "Run-TelegramBot.ps1"
+    }
+    if (Test-Path $tgScript) {
+        & $tgScript -Action stop
     }
 }
 
@@ -547,13 +726,21 @@ Write-Host "[SUCCESS] Настройка завершена. Запуск сер
 # который запускает FastAPI-сервер в текущем окне PowerShell.
 # ============================================================================
 $env:PRELOAD_SILERO = $preloadSilero
+$env:ENABLE_OAUTH = if ($enableOAuthVal) { "true" } else { "false" }
 $unicornScript = Join-Path $scriptDir "launchers\Run-Unicorn.ps1"
 if (-not (Test-Path $unicornScript)) {
     $unicornScript = Join-Path $scriptDir "Run-Unicorn.ps1"
 }
 if (Test-Path $unicornScript) {
-    Write-Host "    Запуск Run-Unicorn.ps1 с параметрами -Host_ $host_ -Port $port..." -ForegroundColor DarkGray
-    & $unicornScript -Host_ $host_ -Port $port
+    $unicornCallArgs = @{
+        Host_ = $host_
+        Port  = $port
+    }
+    if ($enableOAuthVal -ne $null) { $unicornCallArgs['EnableOAuth'] = $enableOAuthVal }
+    if ($Workers -ne $null) { $unicornCallArgs['Workers'] = $Workers }
+    if ($Reload -ne $null) { $unicornCallArgs['Reload'] = $Reload }
+    Write-Host "    Запуск Run-Unicorn.ps1 с параметрами -Host_ $host_ -Port $port -EnableOAuth $enableOAuthVal..." -ForegroundColor DarkGray
+    & $unicornScript @unicornCallArgs
 } else {
     Write-Host "    [ERROR] Run-Unicorn.ps1 не найден: $unicornScript" -ForegroundColor Red
     exit 1

@@ -30,8 +30,10 @@ def test_save_and_load_api_key(tmp_path):
     """Test saving an API key and loading it back."""
     keys_file = tmp_path / 'gemini_keys.json'
     legacy_file = tmp_path / 'secrets.json'
+    env_file = tmp_path / '.env'
     with patch('src.secrets.api_key_state._KEYS_FILE', keys_file), \
          patch('src.secrets.api_key_state._LEGACY_SECRETS_FILE', legacy_file), \
+         patch('src.secrets.api_key_state._ENV_FILE', env_file), \
          patch('src.secrets.api_key_state._SECRETS_DIR', tmp_path), \
          patch.dict('os.environ', {}, clear=True):
 
@@ -47,8 +49,10 @@ def test_mark_exhausted_and_cooldown(tmp_path):
     """Test marking key exhausted and calculating cooldown."""
     keys_file = tmp_path / 'gemini_keys.json'
     legacy_file = tmp_path / 'secrets.json'
+    env_file = tmp_path / '.env'
     with patch('src.secrets.api_key_state._KEYS_FILE', keys_file), \
          patch('src.secrets.api_key_state._LEGACY_SECRETS_FILE', legacy_file), \
+         patch('src.secrets.api_key_state._ENV_FILE', env_file), \
          patch('src.secrets.api_key_state._SECRETS_DIR', tmp_path), \
          patch.dict('os.environ', {}, clear=True):
 
@@ -71,8 +75,10 @@ def test_update_last_run(tmp_path):
     """Test updating last_run timestamp."""
     keys_file = tmp_path / 'gemini_keys.json'
     legacy_file = tmp_path / 'secrets.json'
+    env_file = tmp_path / '.env'
     with patch('src.secrets.api_key_state._KEYS_FILE', keys_file), \
          patch('src.secrets.api_key_state._LEGACY_SECRETS_FILE', legacy_file), \
+         patch('src.secrets.api_key_state._ENV_FILE', env_file), \
          patch('src.secrets.api_key_state._SECRETS_DIR', tmp_path), \
          patch.dict('os.environ', {}, clear=True):
 

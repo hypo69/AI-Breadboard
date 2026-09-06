@@ -31,6 +31,15 @@ param (
     [Parameter(Position = 1)]
     [string]$Port,
 
+    [Alias('OAuth')]
+    [Nullable[bool]]$EnableOAuth = $null,
+
+    [Alias('Worker', 'UnicornWorkers', 'unicorn_workers')]
+    [Nullable[int]]$Workers = $null,
+
+    [Alias('Autoreload', 'UnicornReload', 'unicorn_reload')]
+    [Nullable[bool]]$Reload = $null,
+
     [Alias('h', '-help')]
     [switch]$Help
 )
@@ -108,7 +117,7 @@ $cfgHost    = "0.0.0.0"
 $cfgPort    = "8000"
 $workers    = 1
 $useSsl     = $false
-$reload     = $true
+$reload     = $false
 
 if (Test-Path $configPath) {
     $cfg     = Get-Content $configPath | ConvertFrom-Json
@@ -118,22 +127,36 @@ if (Test-Path $configPath) {
     $mode    = $cfg.server.mode.ToLower()
     $debug   = if ($cfg.server.debug) { "true" } else { "false" }
     
-    if ($cfg.server.PSObject.Properties['reload']) {
+    # Priority: unicorn_reload -> reload (default: false)
+    if ($cfg.server.PSObject.Properties['unicorn_reload']) {
+        $reload = [bool]$cfg.server.unicorn_reload
+    } elseif ($cfg.server.PSObject.Properties['reload']) {
         $reload = [bool]$cfg.server.reload
     } else {
-        $reload = $true
+        $reload = $false
     }
 
-    if ($cfg.server.PSObject.Properties['workers']) {
+    # Priority: unicorn_workers -> workers (default: 1)
+    if ($cfg.server.PSObject.Properties['unicorn_workers']) {
+        $workers = [int]$cfg.server.unicorn_workers
+    } elseif ($cfg.server.PSObject.Properties['workers']) {
         $workers = [int]$cfg.server.workers
+    } else {
+        $workers = 1
     }
 } else {
     $mode = "dev"
     $debug = "true"
-    $reload = $true
+    $reload = $false
+    $workers = 1
 }
 
 # Reading .env
+$oauthEnabled = $false
+if ($cfg.server -and $cfg.server.enable_oauth -ne $null) {
+    $oauthEnabled = [bool]$cfg.server.enable_oauth
+}
+
 if (Test-Path $envFile) {
     Get-Content $envFile | ForEach-Object {
         $line = $_.Trim()
@@ -142,8 +165,23 @@ if (Test-Path $envFile) {
             $val = $Matches[2].Trim().Trim('"').Trim("'")
             if ($key -eq "USE_SSL") { $useSsl = $val -in ("true","1","yes") }
             if ($key -eq "MODE") { $mode = $val.ToLower() }
+            if ($key -eq "ENABLE_OAUTH") { $oauthEnabled = $val -in ("true","1","yes") }
+            if ($key -in ("UNICORN_RELOAD", "RELOAD")) { $reload = $val -in ("true","1","yes") }
+            if ($key -in ("UNICORN_WORKERS", "WORKERS")) { $workers = [int]$val }
         }
     }
+}
+
+if ($EnableOAuth -ne $null) {
+    $oauthEnabled = [bool]$EnableOAuth
+}
+$env:ENABLE_OAUTH = if ($oauthEnabled) { "true" } else { "false" }
+
+if ($Workers -ne $null) {
+    $workers = [int]$Workers
+}
+if ($Reload -ne $null) {
+    $reload = [bool]$Reload
 }
 
 $host_ = if ($HostAddress) { $HostAddress } else { $cfgHost }
@@ -165,6 +203,7 @@ if (-not $hasApiKey -and (Test-Path $geminiKeysFile)) {
 Write-Host "    Host:       $host_" -ForegroundColor Gray
 Write-Host "    Port:       $port"  -ForegroundColor Gray
 Write-Host "    AI Keys:    $(if ($hasApiKey) { 'FOUND' } else { 'NOT CONFIGURED (https://aistudio.google.com/app/apikey)' })" -ForegroundColor $(if ($hasApiKey) { 'Green' } else { 'Yellow' })
+Write-Host "    OAuth:      $(if ($oauthEnabled) { 'ENABLED' } else { 'DISABLED (default)' })" -ForegroundColor $(if ($oauthEnabled) { 'Green' } else { 'Yellow' })
 Write-Host "    Autoreload: $(if ($reload) { 'ENABLED (config.json)' } else { 'DISABLED (config.json)' })" -ForegroundColor $(if ($reload) { 'Green' } else { 'Yellow' })
 if (-not $reload) {
     Write-Host "    Workers:    $workers" -ForegroundColor Gray

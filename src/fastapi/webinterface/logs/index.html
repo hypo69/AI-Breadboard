@@ -1,0 +1,194 @@
+<!-- System Logs Viewer & AI Analyzer Tab -->
+<div class="container-fluid py-2" id="logs-tab-root">
+  <!-- Top Banner & Controls -->
+  <div class="alert alert-dark d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 shadow-sm border-secondary">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fs-4">📋</span>
+      <div>
+        <h5 class="mb-0 fw-bold">Системные логи и AI-анализ</h5>
+        <p class="mb-0 small text-muted">Инспекция журналов событий сервера, фильтрация уровней сообщений и отчеты Gemini</p>
+      </div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+      <div class="form-check form-switch mb-0 me-2">
+        <input class="form-check-input" type="checkbox" role="switch" id="logs-auto-refresh" checked>
+        <label class="form-check-label small text-muted" for="logs-auto-refresh">Автообновление (3с)</label>
+      </div>
+      <button class="btn btn-outline-info btn-sm d-flex align-items-center gap-1" id="btn-refresh-logs" onclick="refreshCurrentLog()">
+        <i class="bi bi-arrow-clockwise"></i> Обновить
+      </button>
+      <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" id="btn-clear-log" onclick="clearCurrentLog()">
+        <i class="bi bi-trash3"></i> Очистить лог
+      </button>
+      <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" id="btn-analyze-log" onclick="triggerLogAnalysis()">
+        <i class="bi bi-cpu"></i> AI-анализ лога
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Stats Cards -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-3 col-sm-6">
+      <div class="card shadow-sm border-secondary-subtle h-100 bg-body-tertiary">
+        <div class="card-body p-3">
+          <div class="text-muted small text-uppercase fw-semibold mb-1">Всего лог-файлов</div>
+          <div class="d-flex align-items-center justify-content-between">
+            <h5 class="mb-0 fw-bold text-primary" id="log-stat-files-count">0</h5>
+            <i class="bi bi-file-earmark-text fs-4 text-primary"></i>
+          </div>
+          <small class="text-muted">Активные журналы</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="card shadow-sm border-secondary-subtle h-100 bg-body-tertiary">
+        <div class="card-body p-3">
+          <div class="text-muted small text-uppercase fw-semibold mb-1">Общий объём</div>
+          <div class="d-flex align-items-center justify-content-between">
+            <h5 class="mb-0 fw-bold text-info" id="log-stat-total-size">0 KB</h5>
+            <i class="bi bi-hdd-stack fs-4 text-info"></i>
+          </div>
+          <small class="text-muted" id="log-stat-size-mb">0 MB на диске</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="card shadow-sm border-secondary-subtle h-100 bg-body-tertiary">
+        <div class="card-body p-3">
+          <div class="text-muted small text-uppercase fw-semibold mb-1">Строк в текущем файле</div>
+          <div class="d-flex align-items-center justify-content-between">
+            <h5 class="mb-0 fw-bold text-warning" id="log-stat-current-lines">0</h5>
+            <i class="bi bi-list-ol fs-4 text-warning"></i>
+          </div>
+          <small class="text-muted" id="log-stat-current-filename">—</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="card shadow-sm border-secondary-subtle h-100 bg-body-tertiary">
+        <div class="card-body p-3">
+          <div class="text-muted small text-uppercase fw-semibold mb-1">AI-отчёты</div>
+          <div class="d-flex align-items-center justify-content-between">
+            <h5 class="mb-0 fw-bold text-success" id="log-stat-reports-count">0</h5>
+            <button class="badge bg-success border-0 text-white text-decoration-none" onclick="toggleReportsModal()">Смотреть ➔</button>
+          </div>
+          <small class="text-muted">Сводные аудиты</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log Viewer Toolbar -->
+  <div class="card shadow-sm border-secondary-subtle mb-3">
+    <div class="card-body p-2 d-flex flex-wrap align-items-center justify-content-between gap-2 bg-body-tertiary">
+      <div class="d-flex align-items-center gap-2 flex-grow-1 flex-wrap">
+        <!-- File Selector -->
+        <div class="input-group input-group-sm" style="max-width: 280px;">
+          <label class="input-group-text bg-body-secondary fw-semibold" for="log-file-selector">
+            <i class="bi bi-file-text me-1"></i> Файл:
+          </label>
+          <select class="form-select" id="log-file-selector" onchange="onLogFileSelected(this.value)">
+            <option value="">Загрузка файлов...</option>
+          </select>
+        </div>
+
+        <!-- Tail Lines -->
+        <div class="input-group input-group-sm" style="max-width: 170px;">
+          <label class="input-group-text bg-body-secondary fw-semibold" for="log-tail-selector">Строк:</label>
+          <select class="form-select" id="log-tail-selector" onchange="refreshCurrentLog()">
+            <option value="100">100</option>
+            <option value="250" selected>250</option>
+            <option value="500">500</option>
+            <option value="1000">1000</option>
+            <option value="0">Все</option>
+          </select>
+        </div>
+
+        <!-- Level Filter -->
+        <div class="btn-group btn-group-sm" role="group" id="log-level-filters">
+          <button type="button" class="btn btn-outline-secondary active" data-level="ALL" onclick="setLogLevelFilter('ALL')">Все</button>
+          <button type="button" class="btn btn-outline-danger" data-level="ERROR" onclick="setLogLevelFilter('ERROR')">ERROR</button>
+          <button type="button" class="btn btn-outline-warning" data-level="WARNING" onclick="setLogLevelFilter('WARNING')">WARN</button>
+          <button type="button" class="btn btn-outline-info" data-level="INFO" onclick="setLogLevelFilter('INFO')">INFO</button>
+          <button type="button" class="btn btn-outline-success" data-level="DEBUG" onclick="setLogLevelFilter('DEBUG')">DEBUG</button>
+        </div>
+
+        <!-- Search in logs -->
+        <div class="input-group input-group-sm flex-grow-1" style="min-width: 200px;">
+          <span class="input-group-text bg-body-secondary"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control" id="log-search-input" placeholder="Поиск по логам..." oninput="filterLogsInViewer()">
+          <button class="btn btn-outline-secondary" type="button" onclick="clearLogSearch()" title="Сбросить поиск">✕</button>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-1">
+        <button class="btn btn-sm btn-outline-secondary" onclick="copyLogContent()" title="Скопировать логи в буфер">
+          <i class="bi bi-clipboard"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="downloadLogFile()" title="Скачать файл">
+          <i class="bi bi-download"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" id="btn-scroll-bottom" onclick="scrollLogToBottom()" title="Прокрутить в конец">
+          <i class="bi bi-arrow-down-circle"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terminal Output Screen -->
+  <div class="card shadow-sm border-secondary-subtle">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-1 px-3" style="font-family: monospace; font-size: 0.85rem;">
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-success p-1" style="width: 10px; height: 10px; border-radius: 50%; display: inline-block;"></span>
+        <span id="log-terminal-filename">terminal</span>
+        <span class="text-muted">|</span>
+        <span class="text-muted" id="log-terminal-timestamp">—</span>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-secondary text-white" id="log-visible-lines-badge">0 строк</span>
+      </div>
+    </div>
+    <div class="card-body p-0 bg-black" style="position: relative;">
+      <pre id="log-output-container" class="m-0 p-3 text-light" style="max-height: 65vh; min-height: 400px; overflow-y: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.82rem; line-height: 1.45; white-space: pre-wrap; word-break: break-all;">Загрузка логов...</pre>
+    </div>
+  </div>
+</div>
+
+<!-- AI Reports Modal -->
+<div class="modal fade" id="logReportsModal" tabindex="-1" aria-labelledby="logReportsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="logReportsModalLabel">
+          <i class="bi bi-journal-text text-success"></i> Отчёты AI-анализа логов
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3">
+        <div class="row g-3">
+          <div class="col-md-4 border-end border-secondary">
+            <h6 class="fw-bold mb-2 text-muted text-uppercase small">Сформированные отчеты</h6>
+            <div class="list-group list-group-flush" id="reports-list-group" style="max-height: 60vh; overflow-y: auto;">
+              <div class="text-muted small p-2">Загрузка списка отчётов...</div>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="fw-bold mb-0 text-info" id="report-view-title">Выберите отчёт</h6>
+              <span class="small text-muted" id="report-view-date"></span>
+            </div>
+            <div class="p-3 bg-black rounded border border-secondary text-light small" id="report-view-content" style="max-height: 58vh; overflow-y: auto; min-height: 300px; white-space: pre-wrap;">
+              Выберите отчёт из списка слева для просмотра содержимого.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>

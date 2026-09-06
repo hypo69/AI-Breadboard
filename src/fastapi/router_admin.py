@@ -25,6 +25,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from header import __root__
+from src.config import ai_cfg
 from src.logger import logger
 
 router = APIRouter(prefix='/api/admin', tags=['admin'])
@@ -314,7 +315,7 @@ async def check_instruction_in_model(request: Request, data: Dict[str, Any]) -> 
 
         system_instruction = data.get('instruction', '')
         prompt = data.get('prompt', 'Привет!')
-        foundry_model_id = os.getenv('FOUNDRY_MODEL_ID', 'qwen3-0.6b-generic-cpu:4')
+        foundry_model_id = getattr(ai_cfg, 'foundry_model_id', None) or os.getenv('FOUNDRY_MODEL_ID', 'qwen2.5-1.5b-instruct-generic-cpu:4')
 
         # Создаём временный инстанс модели для теста
         temp_model = UnifiedChatModel(
@@ -369,47 +370,86 @@ class PluginConfigUpdate(BaseModel):
 class PluginActionRequest(BaseModel):
     params: Dict[str, Any] = {}
 
+def _get_app_plugins(request: Request) -> Dict[str, Any]:
+    """Retrieve or lazily initialize system plugins dictionary."""
+    if not hasattr(request.app.state, 'plugins') or not request.app.state.plugins:
+        try:
+            from plugins import load_plugins
+            chat_model = getattr(request.app.state, 'chat_model', None)
+            request.app.state.plugins = load_plugins(ai_model=chat_model)
+        except Exception as exc:
+            logger.error(f"Failed to load plugins in router_admin: {exc}")
+            request.app.state.plugins = {}
+    return request.app.state.plugins
+
 @router.get('/plugins')
 async def get_all_plugins(request: Request) -> Dict[str, Any]:
-    """Returns empty реестр (плагины отключены)."""
+    """Returns list of registered plugins and their manifests."""
     _check_admin(request)
-    return {'plugins': {}, 'count': 0}
+    plugins_dict = _get_app_plugins(request)
+    manifests = [p.get_manifest() for p in plugins_dict.values()]
+    return {'plugins': manifests, 'count': len(manifests)}
 
 @router.get('/plugins/{plugin_name}')
 async def get_plugin_details(plugin_name: str, request: Request) -> Dict[str, Any]:
-    """Returns 404 (плагины отключены)."""
+    """Returns manifest of a specific plugin."""
     _check_admin(request)
-    raise HTTPException(status_code=404, detail=f"Плагин '{plugin_name}' не найден")
+    plugins_dict = _get_app_plugins(request)
+    plugin = plugins_dict.get(plugin_name)
+    if not plugin:
+        raise HTTPException(status_code=404, detail=f"Плагин '{plugin_name}' не найден")
+    return plugin.get_manifest()
 
 @router.post('/plugins/{plugin_name}/toggle')
 async def toggle_plugin(plugin_name: str, data: PluginStateUpdate, request: Request) -> Dict[str, Any]:
-    """Плагины отключены."""
+    """Enable or disable a plugin at runtime."""
     _check_admin(request)
-    raise HTTPException(status_code=404, detail=f"Плагин '{plugin_name}' не найден")
+    plugins_dict = _get_app_plugins(request)
+    plugin = plugins_dict.get(plugin_name)
+    if not plugin:
+        raise HTTPException(status_code=404, detail=f"Плагин '{plugin_name}' не найден")
+    plugin.enabled = data.enabled
+    plugin.update_config({'enabled': data.enabled})
+    logger.info(f"Plugin {plugin_name} enabled state changed to {data.enabled}")
+    return {'name': plugin_name, 'enabled': plugin.enabled, 'message': f"Плагин {plugin_name} {'включен' if data.enabled else 'выключен'}"}
 
 @router.post('/plugins/{plugin_name}/config')
 async def save_plugin_config(plugin_name: str, data: PluginConfigUpdate, request: Request) -> Dict[str, Any]:
-    """Плагины отключены."""
+    """Update plugin configuration."""
     _check_admin(request)
-    raise HTTPException(status_code=404, detail=f"Плагин '{plugin_name}' не найден")
+    plugins_dict = _get_app_plugins(request)
+    plugin = plugins_dict.get(plugin_name)
+    if not plugin:
+        raise HTTPException(status_code=404, detail=f"Плагин '{plugin_name}' не найден")
+    plugin.update_config(data.config)
+    return {'name': plugin_name, 'config': plugin.config, 'message': 'Конфигурация сохранена'}
 
 @router.post('/plugins/{plugin_name}/action/{action_name}')
 async def call_plugin_action(plugin_name: str, action_name: str, data: PluginActionRequest, request: Request) -> Dict[str, Any]:
-    """Плагины отключены."""
+    """Execute an action on a specific plugin."""
     _check_admin(request)
-    raise HTTPException(status_code=404, detail=f"Плагин '{plugin_name}' не найден")
+    plugins_dict = _get_app_plugins(request)
+    plugin = plugins_dict.get(plugin_name)
+    if not plugin:
+        raise HTTPException(status_code=404, detail=f"Плагин '{plugin_name}' не найден")
+    result = await plugin.execute_action(action_name, data.params)
+    return result
 
 @router.get('/plugin/{plugin_name}/status')
 async def get_plugin_status(plugin_name: str, request: Request):
-    """Плагины отключены."""
+    """Retrieve status of plugin (backward compatibility)."""
     _check_admin(request)
-    raise HTTPException(status_code=404, detail='Плагин не найден')
+    plugins_dict = _get_app_plugins(request)
+    plugin = plugins_dict.get(plugin_name)
+    if not plugin:
+        raise HTTPException(status_code=404, detail='Плагин не найден')
+    return await plugin.health_check()
 
 @router.post('/plugin/{plugin_name}/status')
 async def update_plugin_status(plugin_name: str, data: PluginStateUpdate, request: Request):
-    """Update статуса плагина (обратная совместимость)."""
+    """Update status of plugin (backward compatibility)."""
     _check_admin(request)
-    plugins_dict = getattr(request.app.state, 'plugins', {})
+    plugins_dict = _get_app_plugins(request)
     plugin = plugins_dict.get(plugin_name)
     if not plugin:
         raise HTTPException(status_code=404, detail='Плагин не найден')
@@ -417,6 +457,7 @@ async def update_plugin_status(plugin_name: str, data: PluginStateUpdate, reques
     plugin.update_config({'enabled': data.enabled})
     logger.info(f'Plugin {plugin_name} enabled state changed to {data.enabled}')
     return {'name': plugin_name, 'enabled': plugin.enabled}
+
 
 # ============================================================================
 # RAG Endpoints

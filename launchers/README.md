@@ -10,8 +10,10 @@ Server startup scripts for AI Breadboard. Each launcher targets a specific runti
 - `run_foundry.py` — Launcher that starts Microsoft AI Foundry alongside the FastAPI server
 - `Run-Agy.ps1` — PowerShell wrapper for AGY provider startup
 - `Run-Foundry.ps1` — PowerShell wrapper for Foundry startup
+- `Run-Ollama.ps1` — PowerShell wrapper for Ollama service lifecycle management
 - `Run-GeminiCli.ps1` — PowerShell wrapper for Gemini CLI mode
 - `Run-LightServer.ps1` — PowerShell wrapper for light server mode
+- `Run-TelegramBot.ps1` — PowerShell wrapper for standalone Telegram bot service
 - `Run-Unicorn.ps1` — PowerShell wrapper for Uvicorn mode
 - `run_tests.ps1` — PowerShell script for running the test suite
 

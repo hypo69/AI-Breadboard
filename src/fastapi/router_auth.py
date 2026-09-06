@@ -30,6 +30,7 @@ from fastapi.responses import RedirectResponse
 
 from header import __root__
 from src.logger import logger
+from src.user_manager import user_manager
 
 load_dotenv()
 
@@ -81,6 +82,25 @@ def load_google_oauth_config() -> dict:
         'client_secret': env_client_secret or '',
         'redirect_uri': env_redirect_uri or default_redirect
     }
+
+def is_oauth_enabled() -> bool:
+    """Check if Google OAuth is enabled via environment variable or config.json.
+    
+    Returns:
+        bool: True if OAuth is explicitly enabled, False otherwise (default False).
+    """
+    from src.config import server_cfg
+    env_val = os.getenv('ENABLE_OAUTH')
+    if env_val is not None:
+        return env_val.strip().lower() in ('true', '1', 'yes')
+    cfg_val = getattr(server_cfg, 'enable_oauth', None)
+    if cfg_val is not None:
+        if isinstance(cfg_val, bool):
+            return cfg_val
+        return str(cfg_val).strip().lower() in ('true', '1', 'yes')
+    return False
+
+ENABLE_OAUTH = is_oauth_enabled()
 
 # Configuration JWT
 JWT_SECRET = os.getenv('JWT_SECRET', 'your-secret-key-change-in-production')
@@ -189,6 +209,11 @@ async def google_login(request: Request, next: str = '/') -> RedirectResponse:
     Returns:
         RedirectResponse: Перенаправление на Google OAuth.
     """
+    if not is_oauth_enabled():
+        raise HTTPException(
+            status_code=403,
+            detail='Google OAuth отключен в конфигурации сервера.'
+        )
     if not GOOGLE_CLIENT_ID:
         raise HTTPException(
             status_code=500,
@@ -392,11 +417,11 @@ async def check_auth(request: Request) -> dict:
     """
     token = request.cookies.get('auth_token', '')
     if not token:
-        return {'authenticated': False}
+        return {'authenticated': False, 'oauth_enabled': is_oauth_enabled()}
     
     user_data = verify_jwt_token(token)
     if not user_data:
-        return {'authenticated': False}
+        return {'authenticated': False, 'oauth_enabled': is_oauth_enabled()}
     
     db_user = user_manager.get_user_by_email(user_data.email) if user_data.email else {}
     role = db_user.get('role', 'user') if db_user else 'user'
@@ -407,6 +432,7 @@ async def check_auth(request: Request) -> dict:
     
     return {
         'authenticated': True,
+        'oauth_enabled': is_oauth_enabled(),
         'id': user_id,
         'email': user_data.email,
         'name': user_data.name,

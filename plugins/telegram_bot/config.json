@@ -1,0 +1,11 @@
+{
+  "token": "",
+  "admin_ids": [],
+  "notifications_enabled": true,
+  "webhook_url": "",
+  "allowed_updates": [
+    "message",
+    "callback_query"
+  ],
+  "api_base_url": "http://127.0.0.1:8000"
+}

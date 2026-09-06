@@ -16,6 +16,8 @@ import os
 import sys
 import shutil
 import asyncio
+import subprocess
+import queue
 from typing import List, Dict, AsyncGenerator
 
 from src.logger.logger import logger
@@ -273,27 +275,67 @@ class GeminiCliChatBase:
         proc = False
         full_response = ""
         try:
-            proc = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
+            try:
+                proc = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
 
-            while True:
-                line_bytes = await proc.stdout.readline()
-                if not line_bytes:
-                    break
-                line = line_bytes.decode("utf-8", errors="replace")
-                if line.startswith("YOLO mode is enabled") or line.startswith("Loaded extension:"):
-                    continue
-                full_response += line
-                yield line
+                while True:
+                    line_bytes = await proc.stdout.readline()
+                    if not line_bytes:
+                        break
+                    line = line_bytes.decode("utf-8", errors="replace")
+                    if line.startswith("YOLO mode is enabled") or line.startswith("Loaded extension:"):
+                        continue
+                    full_response += line
+                    yield line
 
-            await proc.wait()
-            if proc.returncode != 0:
-                stderr_bytes = await proc.stderr.read()
-                err_msg = stderr_bytes.decode("utf-8", errors="replace").strip()
-                logger.warning(f"[GeminiCliChat] Процесс завершился с кодом {proc.returncode}: {err_msg}")
+                await proc.wait()
+                if proc.returncode != 0:
+                    stderr_bytes = await proc.stderr.read()
+                    err_msg = stderr_bytes.decode("utf-8", errors="replace").strip()
+                    logger.warning(f"[GeminiCliChat] Процесс завершился с кодом {proc.returncode}: {err_msg}")
+            except NotImplementedError:
+                # Fallback for event loops without subprocess transport on Windows (e.g. SelectorEventLoop)
+                loop = asyncio.get_running_loop()
+                q_lines: queue.Queue[str | None] = queue.Queue()
+
+                def _sync_stream():
+                    try:
+                        p = subprocess.Popen(
+                            cmd,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            text=True,
+                            shell=(os.name == "nt"),
+                            encoding="utf-8",
+                            errors="replace"
+                        )
+                        if p.stdout:
+                            for line in p.stdout:
+                                q_lines.put(line)
+                        p.wait()
+                        if p.returncode != 0 and p.stderr:
+                            err = p.stderr.read().strip()
+                            if err:
+                                logger.warning(f"[GeminiCliChat] Sync stream proc exit {p.returncode}: {err}")
+                    finally:
+                        q_lines.put(None)
+
+                import threading
+                t = threading.Thread(target=_sync_stream, daemon=True)
+                t.start()
+
+                while True:
+                    line = await loop.run_in_executor(None, q_lines.get)
+                    if line is None:
+                        break
+                    if line.startswith("YOLO mode is enabled") or line.startswith("Loaded extension:"):
+                        continue
+                    full_response += line
+                    yield line
         except Exception as ex:
             logger.error(f"[GeminiCliChat] Error потокового выполнения: {ex}")
             yield f"\n[Gemini CLI Error: {str(ex)}]"
@@ -315,18 +357,36 @@ class GeminiCliChatBase:
         logger.info(f"[GeminiCliChat] Выполнение команды: model={self._model_id}")
 
         try:
-            proc = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
-            stdout_bytes, stderr_bytes = await proc.communicate()
-            stdout_text = stdout_bytes.decode("utf-8", errors="replace")
-            stderr_text = stderr_bytes.decode("utf-8", errors="replace")
+            try:
+                proc = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                stdout_bytes, stderr_bytes = await proc.communicate()
+                stdout_text = stdout_bytes.decode("utf-8", errors="replace")
+                stderr_text = stderr_bytes.decode("utf-8", errors="replace")
+                returncode = proc.returncode
+            except NotImplementedError:
+                # Fallback for event loops without subprocess transport on Windows (e.g. SelectorEventLoop)
+                loop = asyncio.get_running_loop()
+                def _sync_run():
+                    return subprocess.run(
+                        cmd,
+                        capture_output=True,
+                        text=True,
+                        shell=(os.name == "nt"),
+                        encoding="utf-8",
+                        errors="replace"
+                    )
+                sub_res = await loop.run_in_executor(None, _sync_run)
+                stdout_text = sub_res.stdout
+                stderr_text = sub_res.stderr
+                returncode = sub_res.returncode
 
-            if proc.returncode != 0:
+            if returncode != 0:
                 logger.warning(
-                    f"[GeminiCliChat] Код возврата {proc.returncode}. Stderr: {stderr_text[:200]}"
+                    f"[GeminiCliChat] Код возврата {returncode}. Stderr: {stderr_text[:200]}"
                 )
                 from src.ai.model_manager import add_unsupported_model
                 if "model not found" in stderr_text.lower() or "not supported" in stderr_text.lower():

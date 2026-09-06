@@ -80,6 +80,40 @@ class TestGeminiCliChat:
             assert chunks[0] == "Chunk 1\n"
             assert chunks[1] == "Chunk 2\n"
 
+    @pytest.mark.asyncio
+    async def test_ask_not_implemented_error_fallback(self):
+        """Test ask method fallback when create_subprocess_exec raises NotImplementedError."""
+        chat = GeminiCliChatBase(model_id="gemini-3.1-flash-lite")
+        mock_run_result = MagicMock()
+        mock_run_result.returncode = 0
+        mock_run_result.stdout = "Sync Fallback Output"
+        mock_run_result.stderr = ""
+
+        with patch("asyncio.create_subprocess_exec", side_effect=NotImplementedError):
+            with patch("subprocess.run", return_value=mock_run_result) as mock_sub_run:
+                res = await chat.ask("Test Question")
+                assert res == "Sync Fallback Output"
+                mock_sub_run.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_chat_stream_not_implemented_error_fallback(self):
+        """Test chat_stream fallback when create_subprocess_exec raises NotImplementedError."""
+        chat = GeminiCliChatBase(model_id="gemini-3.1-flash-lite")
+        mock_popen = MagicMock()
+        mock_popen.returncode = 0
+        mock_popen.stdout = ["Stream Line 1\n", "Stream Line 2\n"]
+        mock_popen.stderr = MagicMock()
+        mock_popen.stderr.read.return_value = ""
+
+        with patch("asyncio.create_subprocess_exec", side_effect=NotImplementedError):
+            with patch("subprocess.Popen", return_value=mock_popen) as mock_sub_popen:
+                chunks = []
+                async for chunk in chat.chat_stream("Stream Question"):
+                    chunks.append(chunk)
+
+                assert chunks == ["Stream Line 1\n", "Stream Line 2\n"]
+                mock_sub_popen.assert_called_once()
+
 class TestModelManagerGeminiCli:
     """Tests for Gemini CLI model management in model_manager."""
 

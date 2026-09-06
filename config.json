@@ -3,7 +3,7 @@
     "host": "0.0.0.0",
     "port": 8000,
     "workers": 1,
-    "reload": true,
+    "reload": false,
     "use_ssl": true,
     "mode": "DEV",
     "debug": true,
@@ -11,7 +11,9 @@
       "enabled": false,
       "delay_seconds": 5
     },
-    "auto_start_assist_cli": false
+    "auto_start_assist_cli": false,
+    "enable_oauth": false,
+    "use_cloudflared": false
   },
   "ai": {
     "use_foundry": true,
