@@ -490,8 +490,12 @@ async function initAdminTab() {
   // 4. Загружаем текущие настройки пользователя (выбранную модель)
   try {
     const settingsData = await window.api.fetch('/auth/settings');
-    if (settingsData && settingsData.model) {
-      modelSelect.value = settingsData.model;
+    const savedModel = settingsData && settingsData.model ? settingsData.model : '';
+    if (savedModel) {
+      modelSelect.value = savedModel;
+    }
+    if (typeof window.updateChatBadges === 'function') {
+      window.updateChatBadges(savedModel);
     }
   } catch (err) {
     console.error('Ошибка загрузки настроек AI пользователя:', err);

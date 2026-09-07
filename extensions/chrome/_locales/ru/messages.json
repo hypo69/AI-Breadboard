@@ -1,0 +1,86 @@
+{
+  "extensionName": {
+    "message": "AI-Breadboard Assistant",
+    "description": "Имя расширения."
+  },
+  "extensionDescription": {
+    "message": "Связь браузера с пользовательским пространством AI-Breadboard. Сохранение страниц и анализ в ИИ-чате прямо из контекстного меню.",
+    "description": "Описание расширения."
+  },
+  "menuSavePage": {
+    "message": "Сохранить страницу",
+    "description": "Пункт меню сохранения страницы."
+  },
+  "menuAnalyzeInChat": {
+    "message": "Проанализировать страницу в чате",
+    "description": "Пункт меню анализа страницы в чате."
+  },
+  "defaultSummaryPrompt": {
+    "message": "Дай краткое содержание",
+    "description": "Запрос по умолчанию для краткого содержания страницы."
+  },
+  "pageSavedSuccess": {
+    "message": "Страница успешно сохранена в рабочее пространство AI-Breadboard!",
+    "description": "Уведомление об успешном сохранении."
+  },
+  "pageSaveError": {
+    "message": "Не удалось сохранить страницу. Убедитесь, что сервер AI-Breadboard запущен.",
+    "description": "Уведомление об ошибке."
+  },
+  "popupTitle": {
+    "message": "AI-Breadboard Assistant",
+    "description": "Заголовок всплывающего окна"
+  },
+  "popupServerStatus": {
+    "message": "Статус сервера",
+    "description": "Метка статуса"
+  },
+  "popupConnected": {
+    "message": "Подключен",
+    "description": "Статус подключен"
+  },
+  "popupDisconnected": {
+    "message": "Отключен",
+    "description": "Статус отключен"
+  },
+  "popupOpenChat": {
+    "message": "Открыть AI Чат",
+    "description": "Кнопка открытия чата"
+  },
+  "popupSaveCurrent": {
+    "message": "Сохранить текущую страницу",
+    "description": "Кнопка сохранения текущей страницы"
+  },
+  "popupAnalyzeCurrent": {
+    "message": "Проанализировать в чате",
+    "description": "Кнопка анализа текущей страницы"
+  },
+  "popupOptions": {
+    "message": "Настройки",
+    "description": "Кнопка настроек"
+  },
+  "optionsTitle": {
+    "message": "Настройки расширения AI-Breadboard",
+    "description": "Заголовок настроек"
+  },
+  "optionsServerUrl": {
+    "message": "URL сервера AI-Breadboard",
+    "description": "Метка URL сервера"
+  },
+  "optionsLanguage": {
+    "message": "Язык запроса (Промпта)",
+    "description": "Метка языка промпта"
+  },
+  "optionsCustomPrompt": {
+    "message": "Шаблон запроса для анализа",
+    "description": "Метка шаблона запроса"
+  },
+  "optionsSave": {
+    "message": "Сохранить настройки",
+    "description": "Кнопка сохранения"
+  },
+  "optionsSaved": {
+    "message": "Настройки успешно сохранены!",
+    "description": "Сообщение об успехе"
+  }
+}

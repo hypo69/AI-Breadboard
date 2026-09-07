@@ -25,10 +25,62 @@ function initChatTab() {
       }
     });
   }
+
+  // Check for pending external chat payload (from Chrome extension or URL parameters)
+  try {
+    const pending = sessionStorage.getItem('pending_breadboard_chat');
+    if (pending) {
+      const payload = JSON.parse(pending);
+      sessionStorage.removeItem('pending_breadboard_chat');
+      setTimeout(() => handleExternalChatPrompt(payload), 300);
+    } else {
+      const urlParams = new URLSearchParams(window.location.search);
+      const promptParam = urlParams.get('prompt') || urlParams.get('message');
+      if (promptParam) {
+        setTimeout(() => {
+          handleExternalChatPrompt({
+            prompt: promptParam,
+            autoSend: urlParams.get('autosend') !== 'false'
+          });
+        }, 300);
+      }
+    }
+  } catch (e) {
+    console.error('Error checking pending chat payload:', e);
+  }
+}
+
+function handleExternalChatPrompt(payload) {
+  if (!payload || !payload.prompt) return;
+
+  const chatTabBtn = document.querySelector('[data-bs-target="#tab-chat"]');
+  if (chatTabBtn && window.bootstrap?.Tab) {
+    bootstrap.Tab.getOrCreateInstance(chatTabBtn).show();
+  }
+
+  const msgInput = document.getElementById('message-input');
+  if (msgInput) {
+    msgInput.value = payload.prompt;
+    if (payload.autoSend !== false) {
+      setTimeout(() => {
+        sendMessage();
+      }, 150);
+    }
+  }
 }
 
 if (typeof window !== 'undefined') {
   window.initChatTab = initChatTab;
+  window.handleExternalChatPrompt = handleExternalChatPrompt;
+
+  // Listen for browser extension messages directly if present
+  if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
+    chrome.runtime.onMessage.addListener((msg) => {
+      if (msg && msg.action === 'breadboard_external_chat_prompt') {
+        handleExternalChatPrompt(msg);
+      }
+    });
+  }
 }
 
 function parseContentToHtml(text) {

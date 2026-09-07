@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-Breadboard Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="../icons/icon48.png" alt="Logo" class="logo">
+      <h2 id="txt-options-title">Настройки расширения AI-Breadboard</h2>
+    </div>
+
+    <form id="options-form">
+      <div class="form-group">
+        <label for="server-url" id="lbl-server-url">URL сервера AI-Breadboard</label>
+        <input type="url" id="server-url" class="form-control" placeholder="http://localhost:8000" required>
+        <div class="form-hint">Базовый адрес запущенного сервера AI-Breadboard (FastAPI).</div>
+      </div>
+
+      <div class="form-group">
+        <label for="prompt-lang" id="lbl-language">Язык запроса (Промпта)</label>
+        <select id="prompt-lang" class="form-control">
+          <option value="default">🌐 Язык браузера (Авто)</option>
+          <option value="ru">🇷🇺 Русский ("Дай краткое содержание")</option>
+          <option value="en">🇬🇧 English ("Provide a concise summary...")</option>
+          <option value="he">🇮🇱 עברית ("תן סיכום תמציתי...")</option>
+        </select>
+        <div class="form-hint">Определяет язык команды анализа страницы по умолчанию.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="custom-prompt" id="lbl-custom-prompt">Пользовательский шаблон запроса (опционально)</label>
+        <textarea id="custom-prompt" class="form-control" rows="3" placeholder="Оставьте пустым для стандартного запроса или укажите свой собственный..."></textarea>
+        <div class="form-hint">Если заполнено, этот запрос будет использоваться вместо стандартного "Дай краткое содержание".</div>
+      </div>
+
+      <div class="form-group">
+        <label for="subfolder">Папка для сохраненных страниц в Workspace</label>
+        <input type="text" id="subfolder" class="form-control" placeholder="web_pages">
+        <div class="form-hint">Подпапка в вашем личном хранилище (по умолчанию: <code>web_pages</code>).</div>
+      </div>
+
+      <div class="form-group checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="auto-send-chat" checked>
+          <span>Автоматически отправлять запрос при открытии чата</span>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary" id="btn-save">
+          💾 <span id="txt-save">Сохранить настройки</span>
+        </button>
+      </div>
+
+      <div id="status-message" class="status-message d-none"></div>
+    </form>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

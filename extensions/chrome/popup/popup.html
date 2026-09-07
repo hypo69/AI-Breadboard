@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-Breadboard</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <div class="header">
+      <img src="../icons/icon48.png" alt="AI-Breadboard" class="logo">
+      <div class="header-text">
+        <h3 id="txt-title">AI-Breadboard</h3>
+        <div id="server-status" class="status-badge checking">
+          <span class="dot"></span>
+          <span id="status-text">Проверка...</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="btn-analyze" class="btn btn-primary">
+        <span class="icon">💬</span>
+        <span id="txt-analyze">Проанализировать в чате</span>
+      </button>
+
+      <button id="btn-save" class="btn btn-secondary">
+        <span class="icon">💾</span>
+        <span id="txt-save">Сохранить страницу</span>
+      </button>
+
+      <button id="btn-open-chat" class="btn btn-outline">
+        <span class="icon">🚀</span>
+        <span id="txt-open-chat">Открыть AI Чат</span>
+      </button>
+    </div>
+
+    <div class="footer">
+      <button id="btn-options" class="btn-link" title="Настройки">
+        ⚙️ <span id="txt-options">Настройки</span>
+      </button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

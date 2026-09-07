@@ -670,14 +670,14 @@ if ($useCloudflared) {
 # ----------------------------------------------------------------------------
 if ($enableTelegramBotVal) {
     Write-Host ""
-    Write-Host "    Запуск фоновой службы Telegram-бота..." -ForegroundColor Cyan
+    Write-Host "    Запуск Telegram-бота в отдельном окне терминала..." -ForegroundColor Cyan
     $tgScript = Join-Path $scriptDir "launchers\Run-TelegramBot.ps1"
     if (-not (Test-Path $tgScript)) {
         $tgScript = Join-Path $scriptDir "Run-TelegramBot.ps1"
     }
     if (Test-Path $tgScript) {
-        Write-Host "    Вызов Run-TelegramBot.ps1..." -ForegroundColor DarkGray
-        & $tgScript -Action start
+        Write-Host "    Вызов Run-TelegramBot.ps1 (-NewWindow)..." -ForegroundColor DarkGray
+        & $tgScript -Action start -NewWindow
     } else {
         Write-Host "    [WARN] Run-TelegramBot.ps1 не найден: $tgScript" -ForegroundColor Yellow
     }

@@ -7,14 +7,21 @@
     Reads TELEGRAM_BOT_TOKEN from .env, validates environment and
     manages the bot process lifecycle.
 
-.PARAMETER Action
-    Action to perform: start | stop | restart | status (default: start).
+.PARAMETER Foreground
+    Run the Telegram bot directly in current console/terminal without detaching.
+    Aliases: -f, -Interactive, -Console.
+
+.PARAMETER NewWindow
+    Launch bot in a visible standalone console/terminal window with -NoExit.
+    Aliases: -Window, -SeparateWindow.
 
 .PARAMETER Help
     Display usage help for script (-Help, -h, --help).
 
 .EXAMPLE
     .\launchers\Run-TelegramBot.ps1 -Action start
+    .\launchers\Run-TelegramBot.ps1 -NewWindow
+    .\launchers\Run-TelegramBot.ps1 -Foreground
     .\launchers\Run-TelegramBot.ps1 -Action stop
     .\launchers\Run-TelegramBot.ps1 -Action status
 #>
@@ -23,6 +30,12 @@
 param (
     [ValidateSet('start', 'stop', 'restart', 'status')]
     [string]$Action = 'start',
+
+    [Alias('f', 'Interactive', 'Console')]
+    [switch]$Foreground,
+
+    [Alias('Window', 'SeparateWindow')]
+    [switch]$NewWindow,
 
     [Alias('h', '-help')]
     [switch]$Help
@@ -141,14 +154,44 @@ if ($Action -in @('start', 'restart')) {
         Write-Host "[WARN] TELEGRAM_BOT_TOKEN is not configured in .env." -ForegroundColor Yellow
     }
 
-    $logsDir = Join-Path $projectRoot "logs"
-    if (-not (Test-Path $logsDir)) {
-        New-Item -ItemType Directory -Force -Path $logsDir | Out-Null
+    if ($Foreground) {
+        Write-Host ""
+        Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Green
+        Write-Host "  🤖 TELEGRAM BOT RUNNING (FOREGROUND CONSOLE)                   " -ForegroundColor Green
+        Write-Host "  Script:   $botScript" -ForegroundColor DarkGray
+        Write-Host "  Python:   $venvPython" -ForegroundColor DarkGray
+        Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Green
+        Write-Host ""
+        & $venvPython $botScript
+        exit $LASTEXITCODE
     }
-    $logFilePath = Join-Path $logsDir "telegram_bot.log"
 
-    Write-Host "    Starting Telegram bot in background process..." -ForegroundColor Cyan
-    $botProc = Start-Process $venvPython -ArgumentList "`"$botScript`"" -PassThru -WindowStyle Minimized -RedirectStandardOutput $logFilePath -RedirectStandardError $logFilePath
+    if ($NewWindow) {
+        Write-Host "    Starting Telegram bot in a separate console window..." -ForegroundColor Cyan
+        $hasWt = Get-Command wt.exe -ErrorAction SilentlyContinue
+        $hasPwsh = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+        $shellExe = if ($hasPwsh) { "pwsh.exe" } else { "powershell.exe" }
+        $thisScript = $MyInvocation.MyCommand.Path
+        if (-not $thisScript) {
+            $thisScript = Join-Path $projectRoot "launchers\Run-TelegramBot.ps1"
+        }
+
+        if ($hasWt) {
+            $botProc = Start-Process wt.exe -ArgumentList "-d `"$projectRoot`" --title `"Telegram Bot`" $shellExe -NoExit -ExecutionPolicy Bypass -File `"$thisScript`" -Foreground" -PassThru
+        } else {
+            $botProc = Start-Process $shellExe -ArgumentList "-NoExit -ExecutionPolicy Bypass -File `"$thisScript`" -Foreground" -WorkingDirectory $projectRoot -PassThru
+        }
+    } else {
+        $logsDir = Join-Path $projectRoot "logs"
+        if (-not (Test-Path $logsDir)) {
+            New-Item -ItemType Directory -Force -Path $logsDir | Out-Null
+        }
+        $logOutPath = Join-Path $logsDir "telegram_bot.log"
+        $logErrPath = Join-Path $logsDir "telegram_bot_stderr.log"
+
+        Write-Host "    Starting Telegram bot in background process..." -ForegroundColor Cyan
+        $botProc = Start-Process $venvPython -ArgumentList "`"$botScript`"" -PassThru -WindowStyle Minimized -RedirectStandardOutput $logOutPath -RedirectStandardError $logErrPath
+    }
 
     if ($botProc) {
         Write-Host ""
@@ -156,7 +199,12 @@ if ($Action -in @('start', 'restart')) {
         Write-Host "  ✅ TELEGRAM BOT STARTED!                                       " -ForegroundColor Green
         Write-Host "  Script:   $botScript" -ForegroundColor DarkGray
         Write-Host "  PID:      $($botProc.Id)" -ForegroundColor DarkGray
-        Write-Host "  Log:      $logFilePath" -ForegroundColor DarkGray
+        if ($NewWindow) {
+            Write-Host "  Window:   Interactive Console Window (running with -NoExit)" -ForegroundColor DarkGray
+        } else {
+            Write-Host "  Log:      $logOutPath" -ForegroundColor DarkGray
+            Write-Host "  Err Log:  $logErrPath" -ForegroundColor DarkGray
+        }
         Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Green
         Write-Host ""
     } else {

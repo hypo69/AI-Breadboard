@@ -1,0 +1,86 @@
+{
+  "extensionName": {
+    "message": "AI-Breadboard Assistant",
+    "description": "The name of the extension."
+  },
+  "extensionDescription": {
+    "message": "Connect your browser with AI-Breadboard workspace. Save pages and analyze content with AI chat directly from the context menu.",
+    "description": "Description of the extension."
+  },
+  "menuSavePage": {
+    "message": "Сохранить страницу в рабочее пространство",
+    "description": "Context menu title for saving page."
+  },
+  "menuAnalyzeInChat": {
+    "message": "Проанализировать страницу в чате",
+    "description": "Context menu title for analyzing page in chat."
+  },
+  "defaultSummaryPrompt": {
+    "message": "Give a concise summary of this page:",
+    "description": "Default prompt for summarizing the page."
+  },
+  "pageSavedSuccess": {
+    "message": "Page successfully saved to AI-Breadboard workspace!",
+    "description": "Notification message on successful save."
+  },
+  "pageSaveError": {
+    "message": "Failed to save page. Please ensure AI-Breadboard server is running.",
+    "description": "Notification message on save error."
+  },
+  "popupTitle": {
+    "message": "AI-Breadboard Assistant",
+    "description": "Title in popup"
+  },
+  "popupServerStatus": {
+    "message": "Server Status",
+    "description": "Status section label"
+  },
+  "popupConnected": {
+    "message": "Connected",
+    "description": "Connected status"
+  },
+  "popupDisconnected": {
+    "message": "Disconnected",
+    "description": "Disconnected status"
+  },
+  "popupOpenChat": {
+    "message": "Open AI Chat",
+    "description": "Open chat button"
+  },
+  "popupSaveCurrent": {
+    "message": "Save Current Page",
+    "description": "Save current page button"
+  },
+  "popupAnalyzeCurrent": {
+    "message": "Analyze Current Page",
+    "description": "Analyze current page button"
+  },
+  "popupOptions": {
+    "message": "Settings",
+    "description": "Options button"
+  },
+  "optionsTitle": {
+    "message": "AI-Breadboard Extension Settings",
+    "description": "Options page header"
+  },
+  "optionsServerUrl": {
+    "message": "Server URL",
+    "description": "Server URL label"
+  },
+  "optionsLanguage": {
+    "message": "Prompt Language",
+    "description": "Prompt language label"
+  },
+  "optionsCustomPrompt": {
+    "message": "Summary Prompt Template",
+    "description": "Custom prompt template label"
+  },
+  "optionsSave": {
+    "message": "Save Settings",
+    "description": "Save button"
+  },
+  "optionsSaved": {
+    "message": "Settings saved successfully!",
+    "description": "Saved alert"
+  }
+}

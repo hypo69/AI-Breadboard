@@ -471,10 +471,11 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
 
   try {
     const settingsData = await window.api.fetch('/auth/settings');
-    if (settingsData && settingsData.model) {
+    const savedModel = settingsData && settingsData.model ? settingsData.model : '';
+    if (savedModel) {
       let foundProvider = null;
       for (const p of providers) {
-        if (modelsGrouped[p] && modelsGrouped[p].includes(settingsData.model)) {
+        if (modelsGrouped[p] && modelsGrouped[p].includes(savedModel)) {
           foundProvider = p;
           break;
         }
@@ -483,7 +484,10 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
         providerSelect.value = foundProvider;
         populateModels(foundProvider, modelsGrouped[foundProvider]);
       }
-      modelSelect.value = settingsData.model;
+      modelSelect.value = savedModel;
+    }
+    if (typeof window.updateChatBadges === 'function') {
+      window.updateChatBadges(savedModel);
     }
   } catch (err) {
     console.error('Error loading user AI settings:', err);

@@ -390,22 +390,61 @@ window.updateChatBadges = function(modelName, searchEngine) {
   const curModel = window.activeModelName || '';
   const curSearch = window.activeSearchEngine || '';
 
-  if (curModel) {
-    const modelBadges = document.querySelectorAll('#chat-model-badge, #chat-popup-model-badge');
-    modelBadges.forEach(badge => {
-      badge.textContent = curModel;
-      badge.title = `Выбранная модель ИИ: ${curModel}`;
-      badge.style.display = 'inline-block';
-    });
-  }
+  const modelBadges = document.querySelectorAll('#chat-model-badge, #chat-popup-model-badge');
+  modelBadges.forEach(badge => {
+    if (curModel) {
+      badge.innerHTML = `<i class="bi bi-cpu-fill text-info me-1"></i> <span>${curModel}</span>`;
+      badge.title = `Активная модель ИИ: ${curModel} (клик для перехода к настройкам моделей)`;
+      badge.style.display = 'inline-flex';
+    } else {
+      badge.innerHTML = `<i class="bi bi-cpu text-muted me-1"></i> <span class="text-secondary">По умолчанию (сервер)</span>`;
+      badge.title = `Используется модель по умолчанию сервера (клик для выбора модели)`;
+      badge.style.display = 'inline-flex';
+    }
 
-  if (curSearch) {
-    const searchBadges = document.querySelectorAll('#chat-search-badge, #chat-popup-search-badge');
-    searchBadges.forEach(badge => {
-      badge.textContent = formatSearchEngine(curSearch);
+    if (!badge._hasClickBound) {
+      badge._hasClickBound = true;
+      badge.style.cursor = 'pointer';
+      badge.onclick = () => {
+        // Try activating models tab if present
+        const modelsTabBtn = document.querySelector('button[data-bs-target="#tab-models"]');
+        if (modelsTabBtn) {
+          const tab = new bootstrap.Tab(modelsTabBtn);
+          tab.show();
+        } else {
+          // Open settings modal
+          const modalEl = document.getElementById('userSettingsModal');
+          if (modalEl && window.bootstrap) {
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.show();
+          }
+        }
+      };
+    }
+  });
+
+  const searchBadges = document.querySelectorAll('#chat-search-badge, #chat-popup-search-badge');
+  searchBadges.forEach(badge => {
+    if (curSearch) {
+      badge.innerHTML = `<i class="bi bi-globe2 text-warning me-1"></i> <span>${formatSearchEngine(curSearch)}</span>`;
       badge.title = `Провайдер веб-поиска: ${curSearch}`;
-      badge.style.display = 'inline-block';
-    });
+      badge.style.display = 'inline-flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  });
+
+  const savedCardBadge = document.getElementById('saved-default-model-badge');
+  if (savedCardBadge) {
+    if (curModel) {
+      savedCardBadge.textContent = curModel;
+      savedCardBadge.className = 'badge bg-success font-monospace px-2 py-1';
+      savedCardBadge.title = `В вашем профиле сохранена модель: ${curModel}`;
+    } else {
+      savedCardBadge.textContent = 'Не задана (системный fallback)';
+      savedCardBadge.className = 'badge bg-secondary font-monospace px-2 py-1';
+      savedCardBadge.title = 'Модель в профиле не выбрана, сервер использует системный дефолт';
+    }
   }
 };
 

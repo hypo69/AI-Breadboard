@@ -1,0 +1,86 @@
+{
+  "extensionName": {
+    "message": "AI-Breadboard Assistant",
+    "description": "שם התוסף"
+  },
+  "extensionDescription": {
+    "message": "חיבור הדפדפן למרחב העבודה של AI-Breadboard. שמירת דפים וניתוח תוכן בצ׳אט AI ישירות מתפריט ההקשר.",
+    "description": "תיאור התוסף"
+  },
+  "menuSavePage": {
+    "message": "שמור דף למרחב העבודה",
+    "description": "שמירת דף"
+  },
+  "menuAnalyzeInChat": {
+    "message": "נתח דף בצ׳אט",
+    "description": "ניתוח דף בצ׳אט"
+  },
+  "defaultSummaryPrompt": {
+    "message": "תן סיכום תמציתי של דף זה:",
+    "description": "ברירת מחדל לבקשת סיכום"
+  },
+  "pageSavedSuccess": {
+    "message": "הדף נשמר בהצלחה במרחב העבודה של AI-Breadboard!",
+    "description": "הודעת הצלחה"
+  },
+  "pageSaveError": {
+    "message": "שמירת הדף נכשלה. ודא ששרת AI-Breadboard פעיל.",
+    "description": "הודעת שגיאה"
+  },
+  "popupTitle": {
+    "message": "AI-Breadboard Assistant",
+    "description": "כותרת חלונית"
+  },
+  "popupServerStatus": {
+    "message": "סטטוס שרת",
+    "description": "סטטוס שרת"
+  },
+  "popupConnected": {
+    "message": "מחובר",
+    "description": "מחובר"
+  },
+  "popupDisconnected": {
+    "message": "מנותק",
+    "description": "מנותק"
+  },
+  "popupOpenChat": {
+    "message": "פתח צ׳אט AI",
+    "description": "פתח צ׳אט"
+  },
+  "popupSaveCurrent": {
+    "message": "שמור דף נוכחי",
+    "description": "שמור דף נוכחי"
+  },
+  "popupAnalyzeCurrent": {
+    "message": "נתח דף נוכחי",
+    "description": "נתח דף נוכחי"
+  },
+  "popupOptions": {
+    "message": "הגדרות",
+    "description": "הגדרות"
+  },
+  "optionsTitle": {
+    "message": "הגדרות תוסף AI-Breadboard",
+    "description": "כותרת הגדרות"
+  },
+  "optionsServerUrl": {
+    "message": "כתובת שרת",
+    "description": "כתובת שרת"
+  },
+  "optionsLanguage": {
+    "message": "שפת הנחיה",
+    "description": "שפת הנחיה"
+  },
+  "optionsCustomPrompt": {
+    "message": "תבנית הנחיה לסיכום",
+    "description": "תבנית הנחיה"
+  },
+  "optionsSave": {
+    "message": "שמור הגדרות",
+    "description": "שמור הגדרות"
+  },
+  "optionsSaved": {
+    "message": "ההגדרות נשמרו בהצלחה!",
+    "description": "ההגדרות נשמרו"
+  }
+}
