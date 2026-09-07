@@ -24,7 +24,7 @@
     "description": "הודעת הצלחה"
   },
   "pageSaveError": {
-    "message": "שמירת הדף נכשלה. ודא ששרת AI-Breadboard פעיל.",
+    "message": "שמירת הדף נכשלה. ודא חיבור והרשאות.",
     "description": "הודעת שגיאה"
   },
   "popupTitle": {
@@ -58,6 +58,14 @@
   "popupOptions": {
     "message": "הגדרות",
     "description": "הגדרות"
+  },
+  "popupGoogleLogin": {
+    "message": "התחבר עם Google",
+    "description": "כפתור התחברות"
+  },
+  "popupLogout": {
+    "message": "התנתק",
+    "description": "התנתקות"
   },
   "optionsTitle": {
     "message": "הגדרות תוסף AI-Breadboard",

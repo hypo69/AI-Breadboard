@@ -20,6 +20,7 @@ from .router_tts import init_router as init_tts_router
 from .router_logs import init_router as init_logs_router
 from .router_keys import init_router as init_keys_router
 from .router_admin import init_router as init_admin_router, init_skills_router, init_plugins_router
+from .router_mcp import init_admin_mcp_router, init_user_mcp_router
 from .router_agents import init_agents_router
 from .router_rag import init_router as init_rag_router
 from .router_audio import init_router as init_audio_router
@@ -36,6 +37,8 @@ __all__ = [
     "init_admin_router",
     "init_skills_router",
     "init_plugins_router",
+    "init_admin_mcp_router",
+    "init_user_mcp_router",
     "init_agents_router",
     "init_rag_router",
     "init_audio_router",

@@ -1315,5 +1315,6 @@ class UserManager:
         return bool(tokens and tokens.get('access_token'))
 
 from header import __root__
-db_path = __root__ / 'core' / 'user_manager' / 'users.db'
+db_path = __root__ / 'src' / 'user_manager' / 'users.db'
 user_manager = UserManager(db_path)
+

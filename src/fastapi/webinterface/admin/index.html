@@ -33,51 +33,140 @@
 <div class="container-fluid mt-2" id="admin-interface">
 
   <div class="d-flex align-items-center justify-content-between mb-3 main-nav-container rounded px-2 py-1">
-    <ul class="nav nav-tabs flex-nowrap overflow-x-auto flex-grow-1 border-0 me-2" id="mainTabs">
-      <li class="nav-item">
-        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-chat" data-i18n="tabs.chat">💬 Чат</button>
+    <ul class="nav nav-tabs flex-nowrap flex-grow-1 border-0 me-2 align-items-center" id="mainTabs">
+      <!-- Группа: Диалог и аудио -->
+      <li class="nav-item dropdown">
+        <button class="nav-link dropdown-toggle active d-flex align-items-center gap-1" data-bs-toggle="dropdown" type="button" aria-expanded="false" id="dialogTabsDropdown">
+          <i class="bi bi-chat-dots-fill text-primary me-1"></i>
+          <span data-i18n="tabs.groupDialog">Диалог и аудио</span>
+        </button>
+        <ul class="dropdown-menu shadow border-secondary-subtle">
+          <li>
+            <button class="dropdown-item active d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-chat" type="button" data-i18n="tabs.chat">
+              💬 Чат
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-voice" type="button" data-i18n="tabs.voice">
+              🎙️ Голос и диаризация
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-tts" type="button" data-i18n="tabs.tts">
+              🗣️ Настройка TTS
+            </button>
+          </li>
+        </ul>
       </li>
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-plugins" data-i18n="tabs.plugins">🔌 Плагины</button>
+
+      <!-- Разделитель -->
+      <li class="nav-item d-flex align-items-center">
+        <div class="nav-group-divider"></div>
       </li>
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-admin" data-i18n="tabs.admin">⚙️ Управление</button>
+
+      <!-- Группа: ИИ и Знания -->
+      <li class="nav-item dropdown">
+        <button class="nav-link dropdown-toggle d-flex align-items-center gap-1" data-bs-toggle="dropdown" type="button" aria-expanded="false" id="aiTabsDropdown">
+          <i class="bi bi-cpu-fill text-info me-1"></i>
+          <span data-i18n="tabs.groupAi">ИИ и Знания</span>
+        </button>
+        <ul class="dropdown-menu shadow border-secondary-subtle">
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-rag" type="button" data-i18n="tabs.rag">
+              🧠 RAG
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-models" type="button" data-i18n="tabs.models">
+              🤖 Модели и API
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-agents" type="button" data-i18n="tabs.agents">
+              🧩 Агенты ИИ
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-skills" type="button" data-i18n="tabs.skills">
+              ⚡ Навыки
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-mcp" type="button" data-i18n="tabs.mcp">
+              🔌 MCP Серверы
+            </button>
+          </li>
+        </ul>
       </li>
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-users" data-i18n="tabs.users">👥 Пользователи</button>
+
+      <!-- Разделитель -->
+      <li class="nav-item d-flex align-items-center">
+        <div class="nav-group-divider"></div>
       </li>
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-rag" data-i18n="tabs.rag">🧠 RAG</button>
+
+      <!-- Группа: Плагины и поиск -->
+      <li class="nav-item dropdown">
+        <button class="nav-link dropdown-toggle d-flex align-items-center gap-1" data-bs-toggle="dropdown" type="button" aria-expanded="false" id="pluginsTabsDropdown">
+          <i class="bi bi-puzzle-fill text-warning me-1"></i>
+          <span data-i18n="tabs.groupPlugins">Плагины и поиск</span>
+        </button>
+        <ul class="dropdown-menu shadow border-secondary-subtle">
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-plugins" type="button" data-i18n="tabs.plugins">
+              🔌 Плагины
+            </button>
+          </li>
+          <li data-plugin-tab="web_search">
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-search" data-plugin="web_search" data-i18n="tabs.search">
+              🌐 Веб-поиск
+            </button>
+          </li>
+          <li data-plugin-tab="movie_search_sources">
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-sources" data-plugin="movie_search_sources" data-i18n="tabs.sources">
+              📑 Источники
+            </button>
+          </li>
+        </ul>
       </li>
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-voice" data-i18n="tabs.voice">🎙️ Голос и диаризация</button>
+
+      <!-- Разделитель -->
+      <li class="nav-item d-flex align-items-center">
+        <div class="nav-group-divider"></div>
       </li>
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-models" data-i18n="tabs.models">🤖 Модели и API</button>
-      </li>
-      <li class="nav-item" data-plugin-tab="langchain_media">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-agents" data-plugin="langchain_media" data-i18n="tabs.agents">🧩 Агенты ИИ</button>
-      </li>
-      <li class="nav-item" data-plugin-tab="web_search">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-search" data-plugin="web_search" data-i18n="tabs.search">🌐 Веб-поиск</button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-tts" data-i18n="tabs.tts">🗣️ Настройка TTS</button>
-      </li>
-      <li class="nav-item" data-plugin-tab="movie_search_sources">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-sources" data-plugin="movie_search_sources" data-i18n="tabs.sources">📑 Источники</button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-logs" data-i18n="tabs.logs">📋 Логи</button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-help" data-i18n="tabs.help">📚 Справочник</button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-instructions" data-i18n="tabs.instructions">📝 Системные инструкции</button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-skills" data-i18n="tabs.skills">⚡ Навыки</button>
+
+      <!-- Группа: Администрирование -->
+      <li class="nav-item dropdown">
+        <button class="nav-link dropdown-toggle d-flex align-items-center gap-1" data-bs-toggle="dropdown" type="button" aria-expanded="false" id="adminTabsDropdown">
+          <i class="bi bi-gear-wide-connected text-success me-1"></i>
+          <span data-i18n="tabs.groupSystem">Администрирование</span>
+        </button>
+        <ul class="dropdown-menu shadow border-secondary-subtle">
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-admin" type="button" data-i18n="tabs.admin">
+              ⚙️ Управление
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-users" type="button" data-i18n="tabs.users">
+              👥 Пользователи
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-logs" type="button" data-i18n="tabs.logs">
+              📋 Логи
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-instructions" type="button" data-i18n="tabs.instructions">
+              📝 Системные инструкции
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-help" type="button" data-i18n="tabs.help">
+              📚 Справочник
+            </button>
+          </li>
+        </ul>
       </li>
     </ul>
 
@@ -175,6 +264,9 @@
 
     <!-- Skills Tab -->
     <div id="tab-skills" class="tab-pane fade"></div>
+
+    <!-- MCP Servers Tab -->
+    <div id="tab-mcp" class="tab-pane fade"></div>
   </div>
 </div>
 

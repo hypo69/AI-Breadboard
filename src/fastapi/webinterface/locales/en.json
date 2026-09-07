@@ -2,6 +2,10 @@
   "tabs": {
     "groupStandard": "Standard",
     "groupExtended": "Extended",
+    "groupDialog": "Dialog & Audio",
+    "groupAi": "AI & Knowledge",
+    "groupPlugins": "Plugins & Search",
+    "groupSystem": "Administration",
     "chat": "💬 Chat",
     "torrents": "🧲 Torrents",
     "media": "🎬 Media Library",
@@ -19,7 +23,8 @@
     "logs": "📋 Logs",
     "help": "📚 Reference",
     "instructions": "📝 System Instructions",
-    "skills": "⚡ Skills"
+    "skills": "⚡ Skills",
+    "mcp": "🔌 MCP Servers"
   },
   "movieSearch": {
     "title": "🔍 Search Movies on Trackers",

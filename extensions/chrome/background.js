@@ -1,20 +1,45 @@
 // Background Service Worker for AI-Breadboard Chrome Extension (Manifest V3)
 
-const DEFAULT_SERVER_URL = 'http://localhost:8000';
-const DEFAULT_SUBFOLDER = 'web_pages';
+let _cachedConfig = null;
 
 /**
- * Helper to get extension settings.
+ * Load runtime extension configuration from bundled config.json.
+ */
+async function getAppConfig() {
+  if (_cachedConfig) return _cachedConfig;
+  try {
+    const configUrl = chrome.runtime.getURL('config.json');
+    const res = await fetch(configUrl);
+    if (res.ok) {
+      _cachedConfig = await res.json();
+      return _cachedConfig;
+    }
+  } catch (err) {
+    console.error('Failed to load extension config.json:', err);
+  }
+  _cachedConfig = {
+    serverUrl: '',
+    subfolder: 'web_pages',
+    autoSendChat: true,
+    language: 'default',
+    chatWindow: { type: 'popup', width: 520, height: 780 }
+  };
+  return _cachedConfig;
+}
+
+/**
+ * Helper to get extension user settings (merged with config.json defaults).
  */
 async function getSettings() {
+  const config = await getAppConfig();
   return new Promise((resolve) => {
     chrome.storage.sync.get(
       {
-        serverUrl: DEFAULT_SERVER_URL,
-        language: 'default',
+        serverUrl: config.serverUrl || '',
+        language: config.language || 'default',
         customPrompt: '',
-        subfolder: DEFAULT_SUBFOLDER,
-        autoSendChat: true
+        subfolder: config.subfolder || 'web_pages',
+        autoSendChat: config.autoSendChat !== false
       },
       (items) => resolve(items)
     );
@@ -99,7 +124,7 @@ async function extractDataFromTab(tabId) {
     }
   }
 
-  // Fallback if content script could not run (e.g. chrome:// internal pages)
+  // Fallback if content script could not run
   const tab = await chrome.tabs.get(tabId);
   return {
     title: tab.title || 'Page',
@@ -137,6 +162,13 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
  * Save page to user workspace.
  */
 async function handleSavePage(pageData, settings) {
+  const config = await getAppConfig();
+  const serverUrl = (settings.serverUrl || config.serverUrl || '').replace(/\/+$/, '');
+  if (!serverUrl) {
+    notify('error', 'URL сервера не настроен в конфигурации.');
+    return;
+  }
+
   const dateStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   const safeTitle = sanitizeFilename(pageData.title);
   const filename = `web_${safeTitle}_${dateStr}.md`;
@@ -155,18 +187,19 @@ async function handleSavePage(pageData, settings) {
     pageData.textContent || ''
   ].filter(line => line !== null).join('\n');
 
+  const subfolder = settings.subfolder || config.subfolder || 'web_pages';
   const formData = new FormData();
   const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8' });
   formData.append('file', blob, filename);
-  formData.append('subfolder', settings.subfolder || DEFAULT_SUBFOLDER);
+  formData.append('subfolder', subfolder);
 
-  const serverUrl = (settings.serverUrl || DEFAULT_SERVER_URL).replace(/\/+$/, '');
   const uploadUrl = `${serverUrl}/api/user/files/upload`;
 
   try {
     const res = await fetch(uploadUrl, {
       method: 'POST',
-      body: formData
+      body: formData,
+      credentials: 'include'
     });
 
     if (!res.ok) {
@@ -188,66 +221,77 @@ async function handleSavePage(pageData, settings) {
 }
 
 /**
- * Send page to AI-Breadboard chat.
+ * Open chat in a popup window and execute analysis prompt.
  */
 async function handleAnalyzeInChat(pageData, settings) {
+  const config = await getAppConfig();
+  const serverUrl = (settings.serverUrl || config.serverUrl || '').replace(/\/+$/, '');
+  if (!serverUrl) {
+    notify('error', 'URL сервера не настроен в конфигурации.');
+    return;
+  }
+
   const prompt = resolveSummaryPrompt(settings);
   const contentToAnalyze = pageData.selection 
     ? `> ${pageData.selection}\n\n${pageData.textContent}` 
     : pageData.textContent;
 
   const fullPromptMessage = `${prompt}\n\n**Источник:** [${pageData.title}](${pageData.url})\n\n${contentToAnalyze}`;
-
-  const serverUrl = (settings.serverUrl || DEFAULT_SERVER_URL).replace(/\/+$/, '');
   const chatTargetUrl = `${serverUrl}/`;
 
-  // Find existing tab or open a new one
-  const tabs = await chrome.tabs.query({ url: `${serverUrl}/*` });
-  let targetTab = null;
-
-  if (tabs.length > 0) {
-    targetTab = tabs[0];
-    await chrome.tabs.update(targetTab.id, { active: true });
-    if (targetTab.windowId) {
-      await chrome.windows.update(targetTab.windowId, { focused: true });
-    }
-  } else {
-    targetTab = await chrome.tabs.create({ url: chatTargetUrl, active: true });
-  }
-
-  // Send message to the tab to execute chat analysis
   const executePayload = {
     action: 'breadboard_external_chat_prompt',
     prompt: fullPromptMessage,
     autoSend: settings.autoSendChat !== false
   };
 
-  // Give the web page a brief moment to initialize if newly opened
-  setTimeout(async () => {
-    try {
-      await chrome.tabs.sendMessage(targetTab.id, executePayload);
-    } catch (e) {
-      // If message fails, inject directly via scripting
-      try {
-        await chrome.scripting.executeScript({
-          target: { tabId: targetTab.id },
-          func: (payload) => {
-            window.sessionStorage.setItem('pending_breadboard_chat', JSON.stringify(payload));
-            if (window.handleExternalChatPrompt) {
-              window.handleExternalChatPrompt(payload);
+  const winWidth = (config.chatWindow && config.chatWindow.width) || 520;
+  const winHeight = (config.chatWindow && config.chatWindow.height) || 780;
+
+  // Create standalone popup window for the chat interface
+  const popupWindow = await chrome.windows.create({
+    url: chatTargetUrl,
+    type: 'popup',
+    width: winWidth,
+    height: winHeight,
+    focused: true
+  });
+
+  const targetTab = popupWindow.tabs && popupWindow.tabs[0];
+  const targetTabId = targetTab ? targetTab.id : null;
+
+  if (targetTabId) {
+    const onTabUpdated = (tabId, changeInfo) => {
+      if (tabId === targetTabId && changeInfo.status === 'complete') {
+        chrome.tabs.onUpdated.removeListener(onTabUpdated);
+        setTimeout(async () => {
+          try {
+            await chrome.tabs.sendMessage(targetTabId, executePayload);
+          } catch (e) {
+            try {
+              await chrome.scripting.executeScript({
+                target: { tabId: targetTabId },
+                func: (payload) => {
+                  window.sessionStorage.setItem('pending_breadboard_chat', JSON.stringify(payload));
+                  if (window.handleExternalChatPrompt) {
+                    window.handleExternalChatPrompt(payload);
+                  }
+                },
+                args: [executePayload]
+              });
+            } catch (err) {
+              console.error('Failed to inject chat prompt to popup window:', err);
             }
-          },
-          args: [executePayload]
-        });
-      } catch (scriptErr) {
-        console.error('Failed to dispatch chat prompt to tab:', scriptErr);
+          }
+        }, 400);
       }
-    }
-  }, tabs.length > 0 ? 300 : 1500);
+    };
+    chrome.tabs.onUpdated.addListener(onTabUpdated);
+  }
 }
 
 /**
- * Show chrome notification.
+ * Show desktop notification.
  */
 function notify(type, message) {
   chrome.notifications.create({

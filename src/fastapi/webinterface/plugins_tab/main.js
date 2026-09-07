@@ -471,7 +471,7 @@ function syncPluginTabsVisibility(plugins) {
     } else {
       item.classList.add('d-none');
       // Если отключенная вкладка была активна, переключаемся на вкладку чата
-      const button = item.querySelector('.nav-link');
+      const button = item.querySelector('.nav-link, .dropdown-item');
       if (button && button.classList.contains('active')) {
         const chatTab = document.querySelector('[data-bs-target="#tab-chat"]');
         if (chatTab) {

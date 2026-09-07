@@ -61,6 +61,8 @@ from src.fastapi import (
     init_admin_router,
     init_skills_router,
     init_plugins_router,
+    init_admin_mcp_router,
+    init_user_mcp_router,
     init_agents_router,
     init_rag_router,
     init_audio_router,
@@ -519,6 +521,8 @@ app.include_router(init_keys_router())
 app.include_router(init_admin_router())
 app.include_router(init_skills_router())
 app.include_router(init_plugins_router())
+app.include_router(init_admin_mcp_router())
+app.include_router(init_user_mcp_router())
 app.include_router(init_agents_router())
 app.include_router(init_rag_router())
 app.include_router(init_audio_router())

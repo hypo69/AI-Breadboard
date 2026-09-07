@@ -1,6 +1,36 @@
 {
   "tools": [
     {
+      "id": "flight_search",
+      "name": "Flight Search (MCP)",
+      "icon": "✈️",
+      "category": "travel",
+      "description": "Multi-engine flight search across airline schedules, aggregators, and web grounding.",
+      "parameters": {
+        "origin": "str",
+        "destination": "str",
+        "date": "str",
+        "return_date": "str",
+        "passengers": "int",
+        "travel_class": "str"
+      }
+    },
+    {
+      "id": "flight_price_calculator",
+      "name": "Flight Price Calculator",
+      "icon": "🧮",
+      "category": "finance",
+      "description": "Calculate exact multi-passenger ticket prices with baggage fees, taxes, discounts, and currency conversions.",
+      "parameters": {
+        "base_price": "float",
+        "currency": "str",
+        "baggage_fee": "float",
+        "passengers": "int",
+        "tax_rate": "float",
+        "discount_percent": "float"
+      }
+    },
+    {
       "id": "web_search",
       "name": "Web Search (MCP)",
       "icon": "🌐",

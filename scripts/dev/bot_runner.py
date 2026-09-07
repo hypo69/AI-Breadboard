@@ -22,9 +22,14 @@ from __future__ import annotations
 
 import asyncio
 import os
-import sys
 import signal
+import sys
 from pathlib import Path
+
+# Add project root to sys.path
+_project_root = Path(__file__).resolve().parent.parent.parent
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
 
 from dotenv import load_dotenv
 
@@ -48,17 +53,22 @@ async def _run_bot() -> None:
     from src.utils.file import read_text_file
     from plugins import load_plugins
 
-    _system_instruction = read_text_file(__root__ / 'prompts' / 'chat' / 'system_instruction.md') or ''
-    _api_key_names = [n.strip() for n in os.getenv('GEMINI_API_KEY_NAMES', '').split(',') if n.strip()]
+    model = None
+    try:
+        prompt_file = __root__ / 'prompts' / 'chat' / 'system_instruction.md'
+        _system_instruction = read_text_file(prompt_file) if prompt_file.exists() else ''
+        _api_key_names = [n.strip() for n in os.getenv('GEMINI_API_KEY_NAMES', '').split(',') if n.strip()]
 
-    use_foundry = getattr(ai_cfg, 'use_foundry', False) if ai_cfg else False
-    foundry_model_id = getattr(ai_cfg, 'foundry_model_id', 'qwen2.5-1.5b') if ai_cfg else 'qwen2.5-1.5b'
+        use_foundry = getattr(ai_cfg, 'use_foundry', False) if ai_cfg else False
+        foundry_model_id = getattr(ai_cfg, 'foundry_model_id', 'qwen2.5-1.5b') if ai_cfg else 'qwen2.5-1.5b'
 
-    if use_foundry:
-        from src.ai.foundry_chat import FoundryChatBase
-        model = FoundryChatBase(model_id=foundry_model_id, system_prompt=_system_instruction)
-    else:
-        model = GoogleGenerativeAI(api_key_names=_api_key_names, system_instruction=_system_instruction)
+        if use_foundry:
+            from src.ai.foundry_chat import FoundryChatBase
+            model = FoundryChatBase(model_id=foundry_model_id, system_prompt=_system_instruction)
+        elif _api_key_names:
+            model = GoogleGenerativeAI(api_key_names=_api_key_names, system_instruction=_system_instruction)
+    except Exception as model_err:
+        logger.info(f"AI model optional initialization note: {model_err}")
 
     plugins = load_plugins(model)
     tg_plugin = plugins.get('telegram_bot')

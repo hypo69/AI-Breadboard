@@ -24,7 +24,7 @@
     "description": "Уведомление об успешном сохранении."
   },
   "pageSaveError": {
-    "message": "Не удалось сохранить страницу. Убедитесь, что сервер AI-Breadboard запущен.",
+    "message": "Не удалось сохранить страницу. Проверьте подключение и авторизацию.",
     "description": "Уведомление об ошибке."
   },
   "popupTitle": {
@@ -58,6 +58,14 @@
   "popupOptions": {
     "message": "Настройки",
     "description": "Кнопка настроек"
+  },
+  "popupGoogleLogin": {
+    "message": "Войти через Google",
+    "description": "Кнопка авторизации через Google"
+  },
+  "popupLogout": {
+    "message": "Выйти",
+    "description": "Кнопка выхода"
   },
   "optionsTitle": {
     "message": "Настройки расширения AI-Breadboard",

@@ -32,7 +32,7 @@ This file serves as the **primary instruction index** for the project. It links 
 **Key Architectural Pillars:**
 - **Capability-Driven Routing:** Workloads are dispatched based on capability requirements (`chat`, `vision`, `ocr`, `embedding`, `code`) and policy constraints (`local_only`, `privacy_strict`, `performance_first`, `cloud_fallback`).
 - **Dynamic Discovery & Hardware Awareness:** Automatically probes CPU, GPU (CUDA, DirectML), NPU (QNN, DirectML), Windows AI Component availability, and local daemon ports without crashing on unsupported hardware.
-- **Provider Modularization:** Each provider resides in its own package under `core/ai/providers/` with dedicated logic and an English `README.md`.
+- **Provider Modularization:** Each provider resides in its own package under `src/ai/providers/` with dedicated logic and an English `README.md`.
 - **Zero-Hardcode Configuration:** Model behaviors and routing rules are declared in JSON configuration and policy files.
 - **Direct Host Execution:** Everything runs natively on the Windows host with full observability.
 
@@ -49,10 +49,18 @@ Key requirements:
 - Architecture principles: Explicit DI, Fail-Fast, DRY, Single Responsibility
 - Language standards: Python 3.12+ (strictly English code, docstrings, and comments)
 - Prohibition of undocumented `None` returns
-- Standardized logging via `core.logger.logger`
+- Standardized logging via `src.logger.logger`
 - Strict separation of configuration (`config.json`) and secrets (`.env`)
 
-### 2. **Documentation & TDD**
+
+### 2. **Codebase Reuse & Prior Art Audit**
+📄 [`.ai/instructions/rules/REUSE_RULES.md`](.ai/instructions/rules/REUSE_RULES.md)
+
+Key requirements:
+- **Mandatory Pre-Flight Audit:** Before developing new features, UI components, or utilities, search the codebase (`grep_search`, `find_by_name`) for existing implementations.
+- **Code Uniformity:** Re-use or extend existing implementations (e.g. dropdown patterns, modals, API patterns); never create divergent duplicate implementations.
+
+### 3. **Documentation & TDD**
 📄 [`.ai/instructions/rules/DOCS_RULES.md`](.ai/instructions/rules/DOCS_RULES.md)
 
 Key requirements:
@@ -60,7 +68,7 @@ Key requirements:
 - Standardized docstring structure (`hypo69 docblock` in English)
 - English `README.md` in every directory and provider package
 
-### 3. **Architectural Documentation**
+### 4. **Architectural Documentation**
 📄 [`.ai/instructions/knowledge/project_overview.md`](.ai/instructions/knowledge/project_overview.md)
 
 - Comprehensive system architecture and capability dispatch diagrams
@@ -109,7 +117,7 @@ pytest tests/ --cov                # Pytest with coverage reporting
 | **Fail-Fast** | Early return on invalid inputs or failed preconditions | CODE_RULES.md § 3.4 |
 | **Config > Hardcode** | System parameters loaded from configuration | CODE_RULES.md § 3.5 |
 | **No None Ambiguity** | Explicit types and robust fallback handling | CODE_RULES.md § 3.6 |
-| **DRY** | No code duplication across provider adapters | CODE_RULES.md § 4.2 |
+| **DRY & Reuse** | Search existing codebase first; reuse/extend existing components | REUSE_RULES.md § 1-3 |
 | **English Only** | Code, docstrings, comments, and docs in English | CODE_RULES.md § 5.1 |
 | **500-Line Limit** | Maximum 500 lines of functional code (up to +15% allowance when needed) | CODE_RULES.md § 4.4 |
 | **Documentation** | English Docstrings + README.md per directory | DOCS_RULES.md § 3-4 |
@@ -153,10 +161,12 @@ Rule: **Never commit `.env`!** Use `.env.example` as a template.
 
 Before every commit, verify:
 
+- [ ] Prior art searched in codebase; no duplicate or conflicting implementations created (REUSE_RULES.md)
 - [ ] File header follows the required standard (see CODE_RULES.md § 6)
 - [ ] All code, docstrings, comments, and logs are in **English**
 - [ ] All public functions and classes have `hypo69 docblock` docstrings
-- [ ] Logging is executed via `core.logger.logger` (no raw `print` calls)
+- [ ] Logging is executed via `src.logger.logger` (no raw `print` calls)
+
 - [ ] All credentials and secrets are managed via `.env`
 - [ ] Commit represents a **logically complete, verified state** of working code
 - [ ] Tests pass: `pytest tests/ --cov`

@@ -2,6 +2,10 @@
   "tabs": {
     "groupStandard": "רגיל",
     "groupExtended": "מורחב",
+    "groupDialog": "שיחה ואודיו",
+    "groupAi": "AI וידע",
+    "groupPlugins": "פלאגינים וחיפוש",
+    "groupSystem": "ניהול מערכת",
     "chat": "צ'אט",
     "torrents": "טורנטים",
     "media": "ספריית медиיה",
@@ -17,7 +21,8 @@
     "cabinet": "ממשк משתמש",
     "settings": "הגדרות",
     "tts": "🗣️ הגדרות TTS",
-    "skills": "⚡ מיומנויות"
+    "skills": "⚡ מיומנויות",
+    "mcp": "🔌 שרתי MCP"
   },
   "movieSearch": {
     "title": "🔍 חיפוש סרטים בטורנט",

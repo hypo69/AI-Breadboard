@@ -8,11 +8,11 @@
     "description": "Description of the extension."
   },
   "menuSavePage": {
-    "message": "Сохранить страницу в рабочее пространство",
+    "message": "Save page to workspace",
     "description": "Context menu title for saving page."
   },
   "menuAnalyzeInChat": {
-    "message": "Проанализировать страницу в чате",
+    "message": "Analyze page in chat",
     "description": "Context menu title for analyzing page in chat."
   },
   "defaultSummaryPrompt": {
@@ -24,7 +24,7 @@
     "description": "Notification message on successful save."
   },
   "pageSaveError": {
-    "message": "Failed to save page. Please ensure AI-Breadboard server is running.",
+    "message": "Failed to save page. Please check connection and authorization.",
     "description": "Notification message on save error."
   },
   "popupTitle": {
@@ -52,12 +52,20 @@
     "description": "Save current page button"
   },
   "popupAnalyzeCurrent": {
-    "message": "Analyze Current Page",
+    "message": "Analyze in Chat",
     "description": "Analyze current page button"
   },
   "popupOptions": {
     "message": "Settings",
     "description": "Options button"
+  },
+  "popupGoogleLogin": {
+    "message": "Sign in with Google",
+    "description": "Google login button"
+  },
+  "popupLogout": {
+    "message": "Sign out",
+    "description": "Logout button"
   },
   "optionsTitle": {
     "message": "AI-Breadboard Extension Settings",

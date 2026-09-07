@@ -122,7 +122,51 @@ async function loadTabContent(tabName, url, scriptUrl = null) {
 function setupDropdownTabs() {
   document.querySelectorAll('#mainTabs [data-bs-toggle="dropdown"]').forEach((toggleBtn) => {
     if (window.bootstrap?.Dropdown) {
-      bootstrap.Dropdown.getOrCreateInstance(toggleBtn);
+      bootstrap.Dropdown.getOrCreateInstance(toggleBtn, {
+        autoClose: true
+      });
+    }
+
+    if (!toggleBtn.dataset.boundDropdownClick) {
+      toggleBtn.dataset.boundDropdownClick = 'true';
+      toggleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const menu = toggleBtn.nextElementSibling;
+        const isShown = toggleBtn.classList.contains('show') || (menu && menu.classList.contains('show'));
+
+        // Close other open dropdowns first
+        document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((otherMenu) => {
+          if (otherMenu !== menu) {
+            otherMenu.classList.remove('show');
+            const otherToggle = otherMenu.previousElementSibling;
+            otherToggle?.classList.remove('show');
+            otherToggle?.setAttribute('aria-expanded', 'false');
+            if (otherToggle && window.bootstrap?.Dropdown) {
+              const dd = bootstrap.Dropdown.getInstance(otherToggle);
+              dd?.hide();
+            }
+          }
+        });
+
+        if (isShown) {
+          if (window.bootstrap?.Dropdown) {
+            const dd = bootstrap.Dropdown.getInstance(toggleBtn);
+            dd?.hide();
+          }
+          menu?.classList.remove('show');
+          toggleBtn.classList.remove('show');
+          toggleBtn.setAttribute('aria-expanded', 'false');
+        } else {
+          if (window.bootstrap?.Dropdown) {
+            const dd = bootstrap.Dropdown.getOrCreateInstance(toggleBtn);
+            dd.show();
+          }
+          menu?.classList.add('show');
+          toggleBtn.classList.add('show');
+          toggleBtn.setAttribute('aria-expanded', 'true');
+        }
+      });
     }
   });
 
@@ -132,18 +176,46 @@ function setupDropdownTabs() {
 
     itemBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      e.stopPropagation();
       if (window.bootstrap?.Tab) {
         const tabInstance = bootstrap.Tab.getOrCreateInstance(itemBtn);
         tabInstance.show();
       }
-      const dropdownToggle = itemBtn.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
-      if (dropdownToggle && window.bootstrap?.Dropdown) {
-        const dd = bootstrap.Dropdown.getInstance(dropdownToggle);
-        dd?.hide();
+      const dropdown = itemBtn.closest('.dropdown');
+      const dropdownToggle = dropdown?.querySelector('[data-bs-toggle="dropdown"]');
+      if (dropdownToggle) {
+        if (window.bootstrap?.Dropdown) {
+          const dd = bootstrap.Dropdown.getInstance(dropdownToggle);
+          dd?.hide();
+        }
+        const menu = itemBtn.closest('.dropdown-menu');
+        if (menu) {
+          menu.classList.remove('show');
+          dropdownToggle.classList.remove('show');
+          dropdownToggle.setAttribute('aria-expanded', 'false');
+        }
       }
     });
   });
 }
+
+// Close dropdowns on outside click
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#mainTabs .dropdown')) {
+    document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((menu) => {
+      menu.classList.remove('show');
+      const toggle = menu.previousElementSibling;
+      if (toggle) {
+        toggle.classList.remove('show');
+        toggle.setAttribute('aria-expanded', 'false');
+        if (window.bootstrap?.Dropdown) {
+          const dd = bootstrap.Dropdown.getInstance(toggle);
+          dd?.hide();
+        }
+      }
+    });
+  }
+});
 
 // Обработка переключения вкладок
 document.getElementById('mainTabs')?.addEventListener('shown.bs.tab', (e) => {

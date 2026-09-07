@@ -547,6 +547,85 @@ async def check_auth(request: Request) -> dict:
         'has_google': has_google
     }
 
+@router.get('/extension-callback')
+async def extension_callback(request: Request) -> HTMLResponse:
+    """HTML response for Chrome Extension Google OAuth authorization completion."""
+    token = request.cookies.get('auth_token', '')
+    user_data = verify_jwt_token(token) if token else None
+    user_name = user_data.name if user_data and user_data.name else "User"
+    user_email = user_data.email if user_data and user_data.email else ""
+    
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Breadboard — Google OAuth Authorized</title>
+    <style>
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #111827;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+        }}
+        .card {{
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 32px 24px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+        }}
+        .icon {{ font-size: 48px; margin-bottom: 12px; }}
+        h1 {{ font-size: 20px; color: #38bdf8; margin-bottom: 8px; }}
+        p {{ font-size: 14px; color: #94a3b8; line-height: 1.5; margin-bottom: 16px; }}
+        .badge {{
+            display: inline-block;
+            background: #0284c7;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">✨</div>
+        <h1>Google OAuth Connected!</h1>
+        <div class="badge">{user_name} ({user_email})</div>
+        <p>Расширение AI-Breadboard успешно авторизовано. Вы можете закрыть эту вкладку.</p>
+    </div>
+    <script>
+        const authData = {{
+            token: "{token}",
+            user: {{
+                name: "{user_name}",
+                email: "{user_email}"
+            }}
+        }};
+        try {{
+            if (window.opener) {{
+                window.opener.postMessage({{ type: 'BREADBOARD_AUTH_SUCCESS', data: authData }}, '*');
+            }}
+        }} catch(e) {{}}
+        setTimeout(() => {{
+            window.close();
+        }}, 1500);
+    </script>
+</body>
+</html>"""
+    return HTMLResponse(content=html, status_code=200)
+
 from pydantic import BaseModel
 
 class EmailRegisterRequest(BaseModel):
@@ -880,7 +959,22 @@ async def get_link_token(request: Request) -> dict:
         raise HTTPException(status_code=404, detail='Пользователь не найден')
         
     link_token = user_manager.generate_link_token(db_user['id'])
-    return {'token': link_token}
+    
+    bot_name = "ai_breadboard_bot"
+    cfg_file = __root__ / "config.json"
+    if cfg_file.exists():
+        try:
+            cfg_data = json.loads(cfg_file.read_text(encoding="utf-8"))
+            bot_name = cfg_data.get("telegram", {}).get("bot_name") or bot_name
+        except Exception:
+            pass
+            
+    link_url = f"https://t.me/{bot_name}?start={link_token}"
+    return {
+        'token': link_token,
+        'bot_name': bot_name,
+        'link_url': link_url,
+    }
 
 @router.get('/settings')
 async def get_settings(request: Request) -> dict:

@@ -32,7 +32,8 @@ def project_root():
 @pytest.fixture(scope="session")
 def logger_module_path():
     """Фикстура для получения пути к модулю логирования."""
-    return __root__ / 'core' / 'logger'
+    return __root__ / 'src' / 'logger'
+
 
 @pytest.fixture
 def temp_log_dir(tmp_path):

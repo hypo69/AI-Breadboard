@@ -104,9 +104,9 @@ class TelegramBotEngine:
             self.app.add_handler(CommandHandler("start", self._cmd_start))
             self.app.add_handler(CommandHandler("help", self._cmd_help))
             self.app.add_handler(CommandHandler("status", self._cmd_status))
-            self.app.add_handler(CommandHandler("auth", self._cmd_auth))
-            self.app.add_handler(CommandHandler("login", self._cmd_auth))
-            self.app.add_handler(CommandHandler("register", self._cmd_auth))
+            self.app.add_handler(CommandHandler("auth", self._cmd_start))
+            self.app.add_handler(CommandHandler("login", self._cmd_start))
+            self.app.add_handler(CommandHandler("register", self._cmd_start))
             self.app.add_handler(CommandHandler("dialogs", self._cmd_dialogs))
             self.app.add_handler(CommandHandler("link", self._cmd_link))
             self.app.add_handler(CommandHandler("tts", self._cmd_tts))
@@ -233,160 +233,146 @@ class TelegramBotEngine:
     # ── Command Handlers ──────────────────────────────────────────────────────
 
     async def _cmd_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle /start command.
-
-        Displays user authentication state, Google OAuth registration link if unauthenticated,
-        or personal workspace dashboard if authenticated.
-        """
-        if not update.effective_chat or not update.effective_user:
+        """Handle /start command with Deep Linking support (/start <TOKEN>)."""
+        if not update.effective_chat or not update.effective_user or not update.message:
             return
 
         tg_id = update.effective_user.id
         tg_username = update.effective_user.username or ""
         user_name = update.effective_user.first_name or "User"
-        api_base = self.config.get("api_base_url", "http://127.0.0.1:8000").rstrip("/")
-        rc_url = f"{api_base}/rc"
 
         from src.user_manager import user_manager
+
+        # Check for deep-link payload: /start A1B2C3D4
+        args = context.args or []
+        if args:
+            token_candidate = args[0].strip().upper()
+            if len(token_candidate) == 8 and re.match(r'^[A-F0-9]{8}$', token_candidate):
+                success = user_manager.link_telegram_account(token_candidate, tg_id, tg_username or user_name)
+                if success:
+                    user = user_manager.get_user_by_telegram_id(tg_id)
+                    u_name = user.get("name") or user_name
+                    email = user.get("email", "")
+                    await update.message.reply_text(
+                        f"🎉 *Здравствуйте, {u_name}! Ваш Telegram-аккаунт успешно привязан!*\n\n"
+                        f"👤 *Аккаунт:* `{email}`\n"
+                        f"🆔 *Telegram ID:* `{tg_id}`\n\n"
+                        "🎙 Теперь вы можете отправлять голосовые заметки и аудиофайлы прямо сюда.\n"
+                        "Они сохраняются в вашей персональной папке на сервере и обрабатываются инструментами AI Breadboard.",
+                        parse_mode="Markdown",
+                    )
+                    return
+                else:
+                    await update.message.reply_text(
+                        "❌ *Ошибка привязки аккаунта!*\nКод недействителен, истек (10 минут) или уже использован.\n"
+                        "Сгенерируйте новый код в веб-профиле.",
+                        parse_mode="Markdown",
+                    )
+                    return
+
+        # Check existing linked user
         user = user_manager.get_user_by_telegram_id(tg_id)
 
+        api_base = self.config.get("api_base_url", "").rstrip("/")
+        rc_url = f"{api_base}/rc" if api_base else ""
+
         if user:
-            # User is authenticated & linked
+            # Authenticated user
             email = user.get("email", "")
             name = user.get("name", user_name)
 
-            keyboard = [
-                [InlineKeyboardButton("🎛 Remote Control (Mini App)", web_app=WebAppInfo(url=rc_url))],
-                [
-                    InlineKeyboardButton("📁 Мои записи диалогов", callback_data="btn_dialogs"),
-                    InlineKeyboardButton("📊 Статус", callback_data="btn_status"),
-                ],
-                [
-                    InlineKeyboardButton("❓ Помощь", callback_data="btn_help"),
-                ],
-            ]
+            keyboard: List[List[InlineKeyboardButton]] = []
+            if rc_url.lower().startswith("https://"):
+                keyboard.append([InlineKeyboardButton("🎛 Remote Control (Mini App)", web_app=WebAppInfo(url=rc_url))])
+
+            keyboard.append([
+                InlineKeyboardButton("📁 Мои аудиозаписи", callback_data="btn_dialogs"),
+                InlineKeyboardButton("📊 Статус", callback_data="btn_status"),
+            ])
+            keyboard.append([
+                InlineKeyboardButton("❓ Помощь", callback_data="btn_help"),
+            ])
             reply_markup = InlineKeyboardMarkup(keyboard)
 
             welcome_text = (
                 f"👋 *Здравствуйте, {name}!* Рады видеть вас в *AI Breadboard*.\n\n"
                 f"👤 *Аккаунт:* `{email}`\n"
                 f"🆔 *Telegram ID:* `{tg_id}`\n\n"
-                "🎙 *Отправка записей диалогов:*\n"
-                "Вы можете прямо сейчас отправлять сюда с телефона:\n"
+                "🎙 *Отправка аудиозаписей:*\n"
+                "Вы можете отправлять сюда:\n"
                 "• Голосовые сообщения\n"
                 "• Аудиофайлы (`.mp3`, `.m4a`, `.wav`, `.ogg`)\n"
-                "• Документы с расшифровками диалогов (`.txt`, `.json`, `.md`, `.docx`)\n\n"
-                "Все файлы автоматически сохраняются в вашу изолированную папку `dialogs/` на сервере.\n\n"
-                "• `/dialogs` — Просмотр ваших сохраненных записей\n"
-                "• `/tts <текст>` — Озвучивание текста\n"
-                "• `/status` — Состояние моделей и сервера\n"
-                "• `/help` — Справка по всем командам"
+                "• Документы с аудиозаписями\n\n"
+                "Все файлы сохраняются напрямую в вашу персональную папку `audio/` на сервере и обрабатываются нашими инструментами.\n\n"
+                "• `/dialogs` — Список сохранённых аудиозаписей\n"
+                "• `/status` — Состояние сервисов и нейросетей\n"
+                "• `/tts <текст>` — Голосовое озвучивание текста"
             )
+            await update.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode="Markdown")
         else:
-            # User is not linked yet — provide Google OAuth button
-            oauth_url = self._get_oauth_url(tg_id, tg_username)
-
+            # Unauthenticated user — require /link <TOKEN>
             keyboard = [
-                [InlineKeyboardButton("🔑 Войти через Google OAuth", url=oauth_url)],
-                [InlineKeyboardButton("🎛 Remote Control (Mini App)", web_app=WebAppInfo(url=rc_url))],
                 [
                     InlineKeyboardButton("📊 Статус", callback_data="btn_status"),
                     InlineKeyboardButton("❓ Помощь", callback_data="btn_help"),
-                ],
+                ]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
 
             welcome_text = (
                 f"👋 *Здравствуйте, {user_name}!* Добро пожаловать в *AI Breadboard*.\n\n"
-                "Для привязки аккаунта и синхронизации файлов с вашей личной папкой на сервере, "
-                "пожалуйста, авторизуйтесь через Google.\n\n"
-                "Нажмите кнопку *«Войти через Google OAuth»* ниже.\n\n"
-                "После входа вы сможете отправлять голосовые заметки и файлы записей диалогов, "
-                "а они будут поступать в вашу персональную директорию."
+                "🔒 *Требуется привязка аккаунта:*\n"
+                "Чтобы бот сохранял файлы в вашу личную изолированную папку и обрабатывал их, "
+                "необходимо связать ваш Telegram-аккаунт с профилем в системе.\n\n"
+                "📌 *Как привязать:*\n"
+                "1. Войдите в веб-интерфейс AI Breadboard\n"
+                "2. В профиле пользователя нажмите кнопку *«Привязать Telegram»* (или скопируйте 8-значный код)\n"
+                "3. Отправьте код сюда командой `/link <КОД>` (или просто пришлите сам 8-значный код)."
             )
-
-        await update.message.reply_text(
-            welcome_text,
-            reply_markup=reply_markup,
-            parse_mode="Markdown",
-        )
-
-    async def _cmd_auth(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle /auth, /login, and /register commands for Google OAuth sign-in."""
-        if not update.message or not update.effective_user:
-            return
-
-        tg_id = update.effective_user.id
-        tg_username = update.effective_user.username or ""
-
-        from src.user_manager import user_manager
-        user = user_manager.get_user_by_telegram_id(tg_id)
-
-        if user:
-            await update.message.reply_text(
-                f"✅ Вы уже авторизованы как *{user.get('name', 'User')}* (`{user.get('email', '')}`).\n\n"
-                "Вы можете сразу отправлять файлы с записями диалогов или воспользоваться `/dialogs`.",
-                parse_mode="Markdown",
-            )
-            return
-
-        oauth_url = self._get_oauth_url(tg_id, tg_username)
-        keyboard = [[InlineKeyboardButton("🔑 Авторизоваться через Google", url=oauth_url)]]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
-        await update.message.reply_text(
-            "🔑 *Авторизация через Google OAuth*\n\n"
-            "Нажмите кнопку ниже, чтобы войти в свой Google аккаунт и привязать его к Telegram:",
-            reply_markup=reply_markup,
-            parse_mode="Markdown",
-        )
+            await update.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode="Markdown")
 
     async def _cmd_dialogs(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle /dialogs command to list saved dialogue recordings."""
+        """Handle /dialogs command to list user's audio recordings and dialog files."""
         if not update.message or not update.effective_user:
             return
 
-        tg_id = update.effective_user.id
         from src.user_manager import user_manager
-        user = user_manager.get_user_by_telegram_id(tg_id)
+        user = user_manager.get_user_by_telegram_id(update.effective_user.id)
 
         if not user:
-            oauth_url = self._get_oauth_url(tg_id, update.effective_user.username or "")
-            keyboard = [[InlineKeyboardButton("🔑 Войти через Google OAuth", url=oauth_url)]]
             await update.message.reply_text(
-                "⚠️ *Требуется авторизация*\n\n"
-                "Авторизуйтесь через Google, чтобы получить доступ к своим файлам диалогов:",
-                reply_markup=InlineKeyboardMarkup(keyboard),
+                "🔒 *Требуется привязка аккаунта!*\nОтправьте команду `/link <КОД>`, полученный в профиле.",
                 parse_mode="Markdown",
             )
             return
 
-        dialogs_dir = user_manager.get_user_directory(user["id"], "dialogs", create=True)
-        files = sorted(list(dialogs_dir.glob("*")), key=lambda p: p.stat().st_mtime if p.is_file() else 0, reverse=True)
-        file_items = [f for f in files if f.is_file()]
+        user_id = user["id"]
+        audio_dir = user_manager.get_user_directory(user_id, "audio", create=True)
+        dialogs_dir = user_manager.get_user_directory(user_id, "dialogs", create=True)
 
-        if not file_items:
-            await update.message.reply_text(
-                f"📁 *Ваша папка диалогов пуста*\n\n"
-                f"📂 Директория: `data/users/{user['id']}/dialogs/`\n\n"
-                "Отправьте аудиосообщение или файл записи диалога с телефона, и он появится здесь!",
-                parse_mode="Markdown",
-            )
-            return
+        audio_files = sorted([f for f in audio_dir.glob("*") if f.is_file()], key=lambda p: p.stat().st_mtime, reverse=True)
+        dialog_files = sorted([f for f in dialogs_dir.glob("*") if f.is_file()], key=lambda p: p.stat().st_mtime, reverse=True)
 
-        total_bytes = sum(f.stat().st_size for f in file_items)
-        lines = [
-            f"📁 *Ваши файлы записей диалогов ({len(file_items)} шт., {self._format_size(total_bytes)}):*\n"
-        ]
-        for f in file_items[:10]:
-            lines.append(f"• `{f.name}` ({self._format_size(f.stat().st_size)})")
+        total_audio_bytes = sum(f.stat().st_size for f in audio_files)
+        
+        text = (
+            f"📁 *Ваше персональное хранилище:*\n\n"
+            f"🎙 *Аудиофайлы:* {len(audio_files)} шт. ({self._format_size(total_audio_bytes)})\n"
+            f"📂 `data/users/{user_id}/audio/`\n\n"
+            f"📋 *Отчёты и стенограммы:* {len(dialog_files)} шт.\n"
+            f"📂 `data/users/{user_id}/dialogs/`\n"
+        )
 
-        if len(file_items) > 10:
-            lines.append(f"\n_...и еще {len(file_items) - 10} файлов._")
+        if audio_files:
+            text += "\n*Последние аудиофайлы:*\n"
+            for f in audio_files[:5]:
+                text += f"• `{f.name}` ({self._format_size(f.stat().st_size)})\n"
 
-        lines.append(f"\n📂 *Путь на сервере:* `data/users/{user['id']}/dialogs/`")
+        await update.message.reply_text(text, parse_mode="Markdown")
 
-        await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
+    async def _cmd_auth(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handle /auth, /login, /register commands as alias to /start."""
+        await self._cmd_start(update, context)
 
     async def _cmd_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /help command."""
@@ -394,16 +380,14 @@ class TelegramBotEngine:
             return
 
         help_text = (
-            "📖 *Команды AI Breadboard Bot:*\n\n"
-            "• `/start` — Главное меню и статус подключения\n"
-            "• `/auth` или `/login` — Вход через Google OAuth\n"
-            "• `/dialogs` — Список ваших записей диалогов в личной папке\n"
-            "• `/link <ТОКЕН>` — Ручная привязка по 8-значному токену из профиля\n"
-            "• `/status` — Состояние сервисов и активных нейросетей\n"
-            "• `/tts <текст>` — Голосовое озвучивание текста\n"
+            "📖 *Справка по командам AI Breadboard Bot:*\n\n"
+            "• `/start` — Главное меню и статус авторизации\n"
+            "• `/link <ТОКЕН>` — Привязать Telegram к веб-профилю по 8-значному коду\n"
+            "• `/dialogs` — Список ваших аудиозаписей в персональной папке\n"
+            "• `/status` — Состояние сервера и подключенных AI-моделей\n"
+            "• `/tts <текст>` — Озвучить текст голосом\n"
             "• `/help` — Эта справка\n\n"
-            "🎙 *Записи диалогов:* Просто отправьте аудиофайл, голосовое сообщение или документ с телефона, и бот сохранит его в вашу персональную директорию!\n\n"
-            "💬 *AI Чат:* Отправьте текстовое сообщение, чтобы спросить ассистента."
+            "🎙 *Обработка аудио:* Отправьте голосовое сообщение или аудиофайл — бот сохранит его в вашу личную директорию, распознает речь и проведет диаризацию."
         )
         await update.message.reply_text(help_text, parse_mode="Markdown")
 
@@ -423,8 +407,8 @@ class TelegramBotEngine:
         args = context.args or []
         if not args:
             await update.message.reply_text(
-                "⚠️ *Использование:* `/link <8-значный-токен>`\n\n"
-                "Токен привязки можно сгенерировать в веб-интерфейсе в профиле пользователя.",
+                "⚠️ *Использование:* `/link <8-значный-код>`\n\n"
+                "Код привязки можно сгенерировать в веб-интерфейсе в профиле пользователя.",
                 parse_mode="Markdown",
             )
             return
@@ -432,20 +416,26 @@ class TelegramBotEngine:
         token = args[0].strip().upper()
         tg_id = update.effective_user.id
         tg_username = update.effective_user.username or ""
+        user_name = update.effective_user.first_name or "User"
 
         try:
             from src.user_manager import user_manager
 
-            success = user_manager.link_telegram_account(token, tg_id, tg_username)
+            success = user_manager.link_telegram_account(token, tg_id, tg_username or user_name)
             if success:
+                user = user_manager.get_user_by_telegram_id(tg_id)
+                u_name = user.get("name", user_name)
+                email = user.get("email", "")
                 await update.message.reply_text(
-                    f"✅ *Аккаунт успешно привязан!*\n\n"
-                    f"Ваш Telegram ID (`{tg_id}`) подключен к учетной записи AI Breadboard.",
+                    f"🎉 *Здравствуйте, {u_name}! Ваш Telegram-аккаунт успешно привязан!*\n\n"
+                    f"👤 *Аккаунт:* `{email}`\n"
+                    f"🆔 *Telegram ID:* `{tg_id}`\n\n"
+                    "Теперь вы можете отправлять аудиофайлы и голосовые сообщения для обработки.",
                     parse_mode="Markdown",
                 )
             else:
                 await update.message.reply_text(
-                    "❌ *Ошибка привязки.* Токен истек или недействителен. Сгенерируйте новый в настройках веб-профиля.",
+                    "❌ *Ошибка привязки.* Код истек или недействителен. Сгенерируйте новый в настройках профиля.",
                     parse_mode="Markdown",
                 )
         except Exception as exc:
@@ -465,90 +455,147 @@ class TelegramBotEngine:
         api_base = self.config.get("api_base_url", "http://127.0.0.1:8000")
         await handle_telegram_voiceover_request(update, context, text=text, api_base_url=api_base)
 
-    # ── Dialogue Media File Handlers ──────────────────────────────────────────
+    # ── Dialogue Audio Handlers ───────────────────────────────────────────────
 
-    async def _save_dialog_attachment(
+    async def _save_and_process_audio(
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
         attachment: Any,
         default_filename: str,
     ) -> None:
-        """Authenticate user and save received media or document into their dialogue directory."""
+        """Authenticate user, save audio directly into isolated user workspace, and process with audio tools."""
         if not update.message or not update.effective_user:
             return
 
         tg_id = update.effective_user.id
-        tg_username = update.effective_user.username or ""
-
         from src.user_manager import user_manager
         user = user_manager.get_user_by_telegram_id(tg_id)
 
         if not user:
-            oauth_url = self._get_oauth_url(tg_id, tg_username)
-            keyboard = [[InlineKeyboardButton("🔑 Войти через Google OAuth", url=oauth_url)]]
             await update.message.reply_text(
-                "⚠️ *Требуется авторизация*\n\n"
-                "Чтобы отправлять файлы диалогов в вашу персональную директорию на сервере, "
-                "пожалуйста, авторизуйтесь через Google:",
-                reply_markup=InlineKeyboardMarkup(keyboard),
+                "🔒 *Доступ ограничен!*\n\n"
+                "Для сохранения и обработки аудио необходимо привязать ваш аккаунт.\n"
+                "Сгенерируйте код в веб-профиле и отправьте команду `/link <КОД>` (или откройте прямую ссылку из профиля).",
                 parse_mode="Markdown",
             )
             return
 
+        user_id = user["id"]
+
         try:
+            status_msg = await update.message.reply_text("📥 *Сохраняю аудиофайл в вашу личную папку...*", parse_mode="Markdown")
+
+            # 1. Download file directly into user's audio directory
+            user_audio_dir = user_manager.get_user_directory(user_id, subfolder="audio", create=True)
+
+            clean_name = Path(default_filename).name
+            clean_name = "".join(c for c in clean_name if c.isalnum() or c in ("-", "_", ".", " ")).strip()
+            if not clean_name:
+                clean_name = f"audio_{int(time.time())}.ogg"
+
+            timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+            saved_filename = f"{timestamp_str}_{clean_name}"
+            saved_file_path = user_audio_dir / saved_filename
+
             await update.message.chat.send_action("upload_document")
             tg_file = await context.bot.get_file(attachment.file_id)
-            data_bytes = bytes(await tg_file.download_as_bytearray())
+            await tg_file.download_to_drive(saved_file_path)
 
-            meta = user_manager.save_user_dialog_file(
-                user_id=user["id"],
-                filename=default_filename,
-                content=data_bytes,
-                subfolder="dialogs",
+            file_size_str = self._format_size(saved_file_path.stat().st_size)
+            await status_msg.edit_text(
+                f"✅ *Файл сохранён:* `{saved_filename}` ({file_size_str})\n"
+                "⚙️ *Запускаю распознавание речи и анализ диалога...*",
+                parse_mode="Markdown",
             )
 
-            file_size_str = self._format_size(meta["size_bytes"])
-            user_display = user.get("name") or user.get("email") or f"User #{user['id']}"
+            # 2. Run speech recognition
+            recognized_text = ""
+            try:
+                from src.utils.convertors.tts import speech_recognizer
+                loop = asyncio.get_event_loop()
+                recognized_text = await loop.run_in_executor(
+                    None, speech_recognizer, None, saved_file_path, "ru-RU"
+                )
+            except Exception as sr_err:
+                logger.warning(f"Speech recognition notice: {sr_err}")
 
-            response_text = (
-                "✅ *Файл диалога успешно сохранён!*\n\n"
-                f"📁 *Файл:* `{meta['filename']}`\n"
-                f"📦 *Размер:* `{file_size_str}`\n"
-                f"📂 *Директория:* `{meta['relative_path']}`\n"
-                f"👤 *Пользователь:* {user_display}\n\n"
-                "Файл доступен в вашей рабочей области AI Breadboard."
-            )
-            await update.message.reply_text(response_text, parse_mode="Markdown")
+            # 3. If audio diarization service is available, process dialogue
+            diarization_summary = ""
+            try:
+                from src.ai.audio_diarization import AudioDiarizationService
+                diar_service = AudioDiarizationService()
+                diar_res = await diar_service.process_audio_file(saved_file_path)
+                if diar_res and diar_res.summary:
+                    diarization_summary = diar_res.markdown_report or diar_res.summary
+            except Exception as diar_err:
+                logger.info(f"Diarization status: {diar_err}")
+
+            # 4. Save markdown report to user's dialogs directory
+            user_dialogs_dir = user_manager.get_user_directory(user_id, subfolder="dialogs", create=True)
+            transcript_md_path = user_dialogs_dir / f"{timestamp_str}_transcript.md"
+
+            md_lines = [
+                f"# Аудиозапись: {saved_filename}",
+                f"- **Дата загрузки:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                f"- **Размер файла:** {file_size_str}",
+                f"- **Путь к файлу:** `data/users/{user_id}/audio/{saved_filename}`",
+                "",
+            ]
+            if recognized_text and not recognized_text.startswith("Error") and not recognized_text.startswith("Could not"):
+                md_lines.extend(["## Распознанный текст", "", recognized_text, ""])
+            if diarization_summary:
+                md_lines.extend(["## Анализ и стенограмма диалога", "", diarization_summary, ""])
+
+            transcript_md_path.write_text("\n".join(md_lines), encoding="utf-8")
+
+            # 5. Build user response
+            res_parts = [
+                "🎙 *Результат обработки аудио:*",
+                f"📁 *Файл:* `{saved_filename}` ({file_size_str})",
+            ]
+            if recognized_text and not recognized_text.startswith("Error") and not recognized_text.startswith("Could not"):
+                res_parts.append(f"\n💬 *Распознанный текст:*\n«{recognized_text}»")
+            
+            if diarization_summary:
+                trimmed_summary = diarization_summary[:3000]
+                res_parts.append(f"\n📋 *Анализ / Резюме:*\n{trimmed_summary}")
+
+            if (not recognized_text or recognized_text.startswith("Could not")) and not diarization_summary:
+                res_parts.append("\nℹ️ Аудио успешно сохранено в вашей личной папке.")
+
+            res_parts.append(f"\n📂 *Личная папка:* `data/users/{user_id}/audio/`")
+
+            await status_msg.edit_text("\n".join(res_parts), parse_mode="Markdown")
 
         except Exception as exc:
-            logger.error(f"Error saving dialogue attachment: {exc}", exc_info=True)
-            await update.message.reply_text(f"❌ Ошибка сохранения файла диалога: {exc}")
+            logger.error(f"Error processing audio attachment: {exc}", exc_info=True)
+            await update.message.reply_text(f"❌ Ошибка обработки аудио: {exc}")
 
     async def _handle_voice_dialog(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle incoming voice messages from user's phone."""
+        """Handle incoming voice messages."""
         if not update.message or not update.message.voice:
             return
         voice = update.message.voice
         unique_id = getattr(voice, "file_unique_id", "voice")
         default_name = f"voice_{unique_id}.ogg"
-        await self._save_dialog_attachment(update, context, voice, default_name)
+        await self._save_and_process_audio(update, context, voice, default_name)
 
     async def _handle_audio_dialog(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle incoming audio files from user's phone."""
+        """Handle incoming audio files."""
         if not update.message or not update.message.audio:
             return
         audio = update.message.audio
         name = audio.file_name or f"audio_{getattr(audio, 'file_unique_id', 'clip')}.mp3"
-        await self._save_dialog_attachment(update, context, audio, name)
+        await self._save_and_process_audio(update, context, audio, name)
 
     async def _handle_document_dialog(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle incoming document files (transcripts, dialogue logs, audio files as docs)."""
+        """Handle incoming documents (audio documents and transcripts)."""
         if not update.message or not update.message.document:
             return
         doc = update.message.document
         name = doc.file_name or f"doc_{getattr(doc, 'file_unique_id', 'file')}.dat"
-        await self._save_dialog_attachment(update, context, doc, name)
+        await self._save_and_process_audio(update, context, doc, name)
 
     # ── Text & Callback Query Handlers ────────────────────────────────────────
 
@@ -565,8 +612,8 @@ class TelegramBotEngine:
             await query.edit_message_text(self._build_status_message(), parse_mode="Markdown")
         elif data == "btn_help":
             await query.edit_message_text(
-                "📖 *Команды:* /start, /auth, /dialogs, /status, /link <токен>, /tts <текст>.\n\n"
-                "Отправляйте голосовые сообщения и файлы с телефона для сохранения в личную папку диалогов.",
+                "📖 *Команды:* /start, /link <код>, /dialogs, /status, /tts <текст>.\n\n"
+                "Отправляйте голосовые сообщения и аудиофайлы для автоматического сохранения в личную папку и распознавания.",
                 parse_mode="Markdown",
             )
         elif data == "btn_dialogs":
@@ -574,35 +621,74 @@ class TelegramBotEngine:
                 from src.user_manager import user_manager
                 user = user_manager.get_user_by_telegram_id(update.effective_user.id)
                 if user:
-                    dialogs_dir = user_manager.get_user_directory(user["id"], "dialogs", create=True)
-                    files = [f for f in dialogs_dir.glob("*") if f.is_file()]
+                    audio_dir = user_manager.get_user_directory(user["id"], "audio", create=True)
+                    files = [f for f in audio_dir.glob("*") if f.is_file()]
                     total_bytes = sum(f.stat().st_size for f in files)
-                    text = f"📁 *Ваши записи диалогов:* {len(files)} шт. ({self._format_size(total_bytes)})\n📂 `data/users/{user['id']}/dialogs/`"
+                    text = f"📁 *Ваши аудиозаписи:* {len(files)} шт. ({self._format_size(total_bytes)})\n📂 `data/users/{user['id']}/audio/`"
                 else:
-                    text = "⚠️ Авторизуйтесь через Google с помощью команды /auth."
+                    text = "🔒 Сначала привяжите аккаунт, отправив `/link <КОД>`."
                 await query.edit_message_text(text, parse_mode="Markdown")
 
     async def _handle_text_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle incoming text messages and query the AI model."""
-        if not update.message or not update.message.text:
+        """Handle incoming text messages (direct token input or AI chat)."""
+        if not update.message or not update.message.text or not update.effective_user:
             return
 
         user_text = update.message.text.strip()
         if not user_text:
             return
 
-        # Check if AI model is available
+        tg_id = update.effective_user.id
+        tg_username = update.effective_user.username or ""
+        user_name = update.effective_user.first_name or "User"
+
+        from src.user_manager import user_manager
+
+        # Check if user entered an 8-character linking token directly: "A1B2C3D4", "link A1B2C3D4", "/link A1B2C3D4"
+        token_match = re.match(r'^(?:/?link\s+)?/?([A-F0-9]{8})$', user_text, re.IGNORECASE)
+        if token_match:
+            token = token_match.group(1).upper()
+            success = user_manager.link_telegram_account(token, tg_id, tg_username or user_name)
+            if success:
+                user = user_manager.get_user_by_telegram_id(tg_id)
+                u_name = user.get("name", user_name)
+                await update.message.reply_text(
+                    f"🎉 *Здравствуйте, {u_name}! Ваш Telegram-аккаунт успешно привязан!*\n\n"
+                    f"👤 *Аккаунт:* `{user.get('email', '')}`\n"
+                    f"🆔 *Telegram ID:* `{tg_id}`\n\n"
+                    "Теперь вы можете отправлять голосовые заметки и аудиофайлы прямо сюда.",
+                    parse_mode="Markdown",
+                )
+            else:
+                await update.message.reply_text(
+                    "❌ *Ошибка привязки аккаунта!*\nКод недействителен, истек (10 минут) или уже использован.\n"
+                    "Сгенерируйте новый код в веб-профиле.",
+                    parse_mode="Markdown",
+                )
+            return
+
+        # Check if user is linked
+        user = user_manager.get_user_by_telegram_id(tg_id)
+        if not user:
+            await update.message.reply_text(
+                "🔒 *Доступ ограничен!*\n\n"
+                "Чтобы пользоваться ботом, привяжите ваш аккаунт: откройте профиль в веб-интерфейсе, "
+                "нажмите кнопку *«Привязать Telegram»* или отправьте сюда полученный код командой `/link <КОД>`.",
+                parse_mode="Markdown",
+            )
+            return
+
+        # If AI model is attached, query AI model
         if not self.ai_model:
             await update.message.reply_text(
-                f"🤖 Echo: {user_text}\n\n_(AI model is currently not attached)_",
+                f"🤖 Сообщение получено: «{user_text}»\n\n"
+                "Отправьте аудиозапись или голосовое сообщение для распознавания и анализа.",
             )
             return
 
         try:
-            # Send typing action
             await update.message.chat.send_action("typing")
 
-            # Route through chat or generate method
             ai_reply = ""
             if hasattr(self.ai_model, "chat") and callable(self.ai_model.chat):
                 res = self.ai_model.chat(user_text)
@@ -611,13 +697,13 @@ class TelegramBotEngine:
                 res = self.ai_model.generate(user_text)
                 ai_reply = await res if asyncio.iscoroutine(res) else str(res)
             else:
-                ai_reply = f"AI model received: {user_text}"
+                ai_reply = f"Ответ: {user_text}"
 
             await update.message.reply_text(ai_reply)
 
         except Exception as exc:
             logger.error(f"Error generating AI reply for Telegram message: {exc}", exc_info=True)
-            await update.message.reply_text(f"⚠️ Ошибка генерации ответа: {exc}")
+            await update.message.reply_text(f"⚠️ Ошибка обработки запроса: {exc}")
 
     def _build_status_message(self) -> str:
         """Construct status report string."""

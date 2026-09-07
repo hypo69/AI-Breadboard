@@ -54,7 +54,7 @@ async def web_search(query: str) -> str:
         query: Поисковый запрос.
     """
     try:
-        from src.ai.unified_chat import get_chat_model
+        from src.fastapi.router_chat import get_chat_model
         model = get_chat_model()
         response = await model.ask(f"Найди в интернете актуальную информацию по запросу: {query}")
         return response
@@ -108,6 +108,110 @@ def file_read(file_path: str) -> str:
         return p.read_text(encoding="utf-8", errors="replace")[:10000]
     except Exception as e:
         return f"Error чтения файла: {e}"
+
+@tool
+async def flight_search(
+    origin: str,
+    destination: str,
+    date: str,
+    return_date: str = "",
+    passengers: int = 1,
+    travel_class: str = "economy",
+) -> str:
+    """Поиск авиабилетов и рейсов через поисковые адаптеры и агрегаторы.
+
+    Args:
+        origin: Город или IATA-код отправления (напр. 'TLV', 'Тель-Авив', 'MOW').
+        destination: Город или IATA-код назначения (напр. 'CDG', 'Париж', 'BER').
+        date: Дата вылета (напр. '2026-10-15' или '15 октября 2026').
+        return_date: Дата обратного рейса (опционально).
+        passengers: Количество пассажиров (по умолчанию 1).
+        travel_class: Класс обслуживания ('economy', 'premium_economy', 'business', 'first').
+    """
+    try:
+        from src.fastapi.router_chat import get_chat_model
+        
+        # Build search query
+        query_parts = [
+            f"Найди актуальные авиабилеты и рейсы из {origin} в {destination} на дату {date}"
+        ]
+        if return_date:
+            query_parts.append(f"обратно {return_date}")
+        query_parts.append(f"пассажиров: {passengers}, класс: {travel_class}.")
+        query_parts.append(
+            "Укажи авиакомпании, прямые рейсы или пересадки, время вылета/прилета, цены и ссылки на бронирование."
+        )
+        full_query = " ".join(query_parts)
+
+        model = get_chat_model()
+        response = await model.ask(full_query)
+        
+        # Construct helpful direct aggregator links
+        import urllib.parse
+        encoded_origin = urllib.parse.quote(origin)
+        encoded_dest = urllib.parse.quote(destination)
+        google_flights_url = f"https://www.google.com/travel/flights?q=Flights%20to%20{encoded_dest}%20from%20{encoded_origin}%20on%20{urllib.parse.quote(date)}"
+        aviasales_url = f"https://www.aviasales.ru/search/{origin}{date}{destination}"
+        skyscanner_url = f"https://www.skyscanner.com/transport/flights/{encoded_origin}/{encoded_dest}/{urllib.parse.quote(date)}"
+
+        links_block = (
+            f"\n\nПолезные прямые ссылки для бронирования:\n"
+            f"- [Google Flights]({google_flights_url})\n"
+            f"- [Aviasales]({aviasales_url})\n"
+            f"- [Skyscanner]({skyscanner_url})"
+        )
+
+        return f"{response}\n{links_block}"
+    except Exception as e:
+        logger.error(f"[langchain_tools] Error поиска авиабилетов: {e}")
+        return json.dumps({
+            "error": f"Flight search failed: {str(e)}",
+            "origin": origin,
+            "destination": destination,
+            "date": date
+        }, ensure_ascii=False)
+
+@tool
+def flight_price_calculator(
+    base_price: float,
+    currency: str = "USD",
+    baggage_fee: float = 0.0,
+    passengers: int = 1,
+    tax_rate: float = 0.0,
+    discount_percent: float = 0.0,
+) -> str:
+    """Точный расчет полной стоимости перелета с учетом багажа, налогов, скидок и количества пассажиров.
+
+    Args:
+        base_price: Базовый тариф за 1 билет.
+        currency: Валюта расчета (USD, EUR, RUB, ILS).
+        baggage_fee: Дополнительная плата за багаж на человека.
+        passengers: Количество пассажиров.
+        tax_rate: Процент аэропортовых и сервисных сборов (напр. 5.0 для 5%).
+        discount_percent: Скидка или промокод в процентах (напр. 10.0 для 10%).
+    """
+    try:
+        subtotal_per_person = float(base_price) + float(baggage_fee)
+        taxes_per_person = subtotal_per_person * (float(tax_rate) / 100.0)
+        total_per_person = subtotal_per_person + taxes_per_person
+        
+        discount_amount = total_per_person * (float(discount_percent) / 100.0)
+        final_per_person = total_per_person - discount_amount
+        total_all_passengers = final_per_person * int(passengers)
+
+        breakdown = {
+            "currency": currency,
+            "passengers_count": passengers,
+            "base_price_per_passenger": base_price,
+            "baggage_fee_per_passenger": baggage_fee,
+            "tax_amount_per_passenger": round(taxes_per_person, 2),
+            "discount_per_passenger": round(discount_amount, 2),
+            "final_per_passenger": round(final_per_person, 2),
+            "total_overall": round(total_all_passengers, 2)
+        }
+        return json.dumps(breakdown, ensure_ascii=False, indent=2)
+    except Exception as e:
+        return f"Error расчета цены: {e}"
 
 # --- Заглушки для обратной совместимости ---
 

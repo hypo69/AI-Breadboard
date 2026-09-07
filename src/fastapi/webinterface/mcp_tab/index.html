@@ -1,0 +1,301 @@
+<!-- MCP Servers Tab Component -->
+<div class="container-fluid p-3" id="mcp-tab-root">
+  <!-- Top Banner / Summary -->
+  <div class="alert alert-dark border-secondary bg-dark text-light d-flex flex-wrap align-items-center justify-content-between gap-3 shadow-sm">
+    <div class="d-flex align-items-center gap-3">
+      <div class="p-3 bg-black rounded border border-secondary text-primary display-6 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px;">
+        <i class="bi bi-hdd-network-fill"></i>
+      </div>
+      <div>
+        <h5 class="mb-1 text-white d-flex align-items-center gap-2">
+          🔌 Серверы MCP (Model Context Protocol)
+          <span class="badge bg-primary rounded-pill small" id="mcp-total-badge">0</span>
+        </h5>
+        <p class="mb-0 text-muted small">
+          Управление внешними MCP-серверами, интеграция инструментов браузера, файловой системы, баз данных и API для ИИ-агентов.
+        </p>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <button type="button" class="btn btn-outline-info btn-sm d-flex align-items-center gap-1" id="btn-view-all-tools" onclick="window.mcpTab?.openAllToolsModal()">
+        <i class="bi bi-tools"></i> Все инструменты
+      </button>
+      <button type="button" class="btn btn-outline-light btn-sm d-flex align-items-center gap-1" id="btn-refresh-mcp" onclick="window.mcpTab?.refresh()">
+        <i class="bi bi-arrow-clockwise"></i> Обновить
+      </button>
+      <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#mcpServerModal" onclick="window.mcpTab?.openCreateModal()">
+        <i class="bi bi-plus-circle-fill"></i> Добавить MCP сервер
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Row -->
+  <div class="row g-2 mb-3" id="mcp-stats-row">
+    <div class="col-6 col-md-3">
+      <div class="p-2 bg-dark rounded border border-secondary text-center">
+        <div class="h4 mb-0 text-white" id="stat-total-mcp">0</div>
+        <div class="small text-muted">Всего серверов</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-2 bg-dark rounded border border-secondary text-center">
+        <div class="h4 mb-0 text-success" id="stat-active-mcp">0</div>
+        <div class="small text-muted">Активных серверов</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-2 bg-dark rounded border border-secondary text-center">
+        <div class="h4 mb-0 text-info" id="stat-stdio-mcp">0</div>
+        <div class="small text-muted">Stdio-процессов</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-2 bg-dark rounded border border-secondary text-center">
+        <div class="h4 mb-0 text-warning" id="stat-network-mcp">0</div>
+        <div class="small text-muted">SSE / HTTP серверов</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & View Controls -->
+  <div class="card bg-dark border-secondary text-white mb-3">
+    <div class="card-body p-2 d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div class="input-group input-group-sm flex-grow-1" style="max-width: 450px;">
+        <span class="input-group-text bg-black border-secondary text-muted"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control bg-black text-white border-secondary" id="mcp-search-input" placeholder="Поиск по ID, названию или команде...">
+        <button class="btn btn-outline-secondary border-secondary text-muted" type="button" id="mcp-search-clear" onclick="window.mcpTab?.clearSearch()">✕</button>
+      </div>
+
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <select class="form-select form-select-sm bg-black text-white border-secondary" id="mcp-filter-select" style="width: auto;" onchange="window.mcpTab?.applyFilters()">
+          <option value="all">Все серверы</option>
+          <option value="enabled">Только включенные</option>
+          <option value="disabled">Только отключенные</option>
+          <option value="stdio">Транспорт: stdio</option>
+          <option value="sse">Транспорт: SSE / HTTP</option>
+        </select>
+
+        <div class="btn-group btn-group-sm" role="group">
+          <button type="button" class="btn btn-outline-secondary active" id="btn-mcp-view-cards" onclick="window.mcpTab?.setViewMode('cards')">
+            <i class="bi bi-grid-fill"></i> Карточки
+          </button>
+          <button type="button" class="btn btn-outline-secondary" id="btn-mcp-view-table" onclick="window.mcpTab?.setViewMode('table')">
+            <i class="bi bi-table"></i> Таблица
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading & Empty Indicators -->
+  <div id="mcp-loading" class="text-center py-5 text-muted d-none">
+    <div class="spinner-border text-primary mb-2" role="status"></div>
+    <div>Загрузка серверов MCP...</div>
+  </div>
+
+  <div id="mcp-empty" class="text-center py-5 text-muted d-none">
+    <i class="bi bi-hdd-network display-4 d-block mb-2 text-secondary"></i>
+    <h5>Серверы MCP не настроены</h5>
+    <p class="small">Добавьте сервер MCP (например, Playwright, Filesystem, SQLite) для расширения возможностей агентов.</p>
+    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#mcpServerModal" onclick="window.mcpTab?.openCreateModal()">
+      <i class="bi bi-plus-circle-fill"></i> Добавить первый сервер
+    </button>
+  </div>
+
+  <!-- Cards Container -->
+  <div class="row g-3" id="mcp-cards-container"></div>
+
+  <!-- Table Container -->
+  <div class="card bg-dark border-secondary d-none" id="mcp-table-container">
+    <div class="table-responsive">
+      <table class="table table-dark table-hover mb-0 align-middle">
+        <thead>
+          <tr class="text-muted small">
+            <th style="width: 50px;">Статус</th>
+            <th>ID / Название</th>
+            <th>Транспорт</th>
+            <th>Команда / URL</th>
+            <th>Описание</th>
+            <th class="text-end" style="width: 220px;">Действия</th>
+          </tr>
+        </thead>
+        <tbody id="mcp-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit MCP Server Modal -->
+<div class="modal fade" id="mcpServerModal" tabindex="-1" aria-labelledby="mcpServerModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="mcpServerModalLabel">
+          <i class="bi bi-hdd-network-fill text-primary"></i> <span id="mcp-modal-title-text">Настройка MCP сервера</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <!-- Preset Selector -->
+        <div class="mb-3 p-3 bg-black rounded border border-secondary" id="mcp-preset-container">
+          <label class="form-label text-info small fw-bold mb-1 d-flex align-items-center gap-1">
+            <i class="bi bi-magic"></i> Готовые шаблоны (Presets)
+          </label>
+          <div class="d-flex gap-2 flex-wrap">
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.mcpTab?.applyPreset('playwright')">🌐 Playwright (Browser)</button>
+            <button type="button" class="btn btn-sm btn-outline-info" onclick="window.mcpTab?.applyPreset('filesystem')">📁 Filesystem</button>
+            <button type="button" class="btn btn-sm btn-outline-success" onclick="window.mcpTab?.applyPreset('memory')">🧠 Memory</button>
+            <button type="button" class="btn btn-sm btn-outline-warning" onclick="window.mcpTab?.applyPreset('sqlite')">🗄️ SQLite</button>
+            <button type="button" class="btn btn-sm btn-outline-light" onclick="window.mcpTab?.applyPreset('fetch')">🌍 Fetch / HTTP</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.mcpTab?.applyPreset('sse')">⚡ Remote SSE / HTTP</button>
+          </div>
+        </div>
+
+        <form id="mcp-server-form" onsubmit="window.mcpTab?.saveServer(event)">
+          <input type="hidden" id="mcp-form-mode" value="create">
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="mcp-server-id" class="form-label small text-muted">ID сервера (уникальный ключ) <span class="text-danger">*</span></label>
+              <input type="text" class="form-control bg-black text-white border-secondary" id="mcp-server-id" placeholder="например, playwright" required pattern="[a-zA-Z0-9_-]+">
+              <div class="form-text text-muted small">Латинские буквы, цифры, дефис или подчеркивание.</div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="mcp-server-name" class="form-label small text-muted">Отображаемое имя</label>
+              <input type="text" class="form-control bg-black text-white border-secondary" id="mcp-server-name" placeholder="Playwright Web Browser">
+            </div>
+
+            <div class="col-12">
+              <label for="mcp-server-desc" class="form-label small text-muted">Описание</label>
+              <input type="text" class="form-control bg-black text-white border-secondary" id="mcp-server-desc" placeholder="Управление браузером и поиск информации в веб-страницах">
+            </div>
+
+            <div class="col-md-6">
+              <label for="mcp-server-transport" class="form-label small text-muted">Протокол транспорта <span class="text-danger">*</span></label>
+              <select class="form-select bg-black text-white border-secondary" id="mcp-server-transport" onchange="window.mcpTab?.onTransportChange()">
+                <option value="stdio">stdio (Локальный subprocess)</option>
+                <option value="sse">sse (Server-Sent Events по HTTP)</option>
+                <option value="streamable_http">streamable_http (HTTP Streaming)</option>
+              </select>
+            </div>
+
+            <div class="col-md-6 d-flex align-items-center pt-4">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="mcp-server-enabled" checked>
+                <label class="form-check-label text-white" for="mcp-server-enabled">Включить сервер для агентов</label>
+              </div>
+            </div>
+
+            <!-- Stdio Section -->
+            <div class="col-12 mcp-field-stdio" id="mcp-stdio-container">
+              <div class="mb-3">
+                <label for="mcp-server-command" class="form-label small text-muted">Команда (Command) <span class="text-danger">*</span></label>
+                <input type="text" class="form-control bg-black text-white border-secondary" id="mcp-server-command" placeholder="npx, python, node, uvx">
+                <div class="form-text text-muted small">Исполняемый файл или утилита в PATH.</div>
+              </div>
+
+              <div class="mb-3">
+                <label for="mcp-server-args" class="form-label small text-muted">Аргументы (Arguments)</label>
+                <input type="text" class="form-control bg-black text-white border-secondary" id="mcp-server-args" placeholder="@playwright/mcp@latest или через пробел / запятую">
+                <div class="form-text text-muted small">Укажите аргументы через пробел или в формате JSON-массива строк.</div>
+              </div>
+
+              <div>
+                <label for="mcp-server-env" class="form-label small text-muted">Переменные окружения (Environment JSON / Key-Value)</label>
+                <textarea class="form-control bg-black text-white border-secondary font-monospace" id="mcp-server-env" rows="2" placeholder='{"NODE_ENV": "production"}'></textarea>
+                <div class="form-text text-muted small">Опциональный JSON-объект с переменными окружения для процесса.</div>
+              </div>
+            </div>
+
+            <!-- Network URL Section -->
+            <div class="col-12 mcp-field-network d-none" id="mcp-network-container">
+              <label for="mcp-server-url" class="form-label small text-muted">URL эндпоинта <span class="text-danger">*</span></label>
+              <input type="url" class="form-control bg-black text-white border-secondary" id="mcp-server-url" placeholder="http://localhost:8080/sse">
+              <div class="form-text text-muted small">Полный HTTP/HTTPS адрес удаленного MCP-сервера.</div>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex justify-content-between align-items-center border-top border-secondary pt-3">
+            <button type="button" class="btn btn-outline-info btn-sm d-flex align-items-center gap-1" id="btn-test-modal-server" onclick="window.mcpTab?.testCurrentForm()">
+              <i class="bi bi-play-circle"></i> Проверить подключение
+            </button>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+              <button type="submit" class="btn btn-primary" id="mcp-btn-save-server">Сохранить</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Test Connection & Tools Inspection Modal -->
+<div class="modal fade" id="mcpTestModal" tabindex="-1" aria-labelledby="mcpTestModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="mcpTestModalLabel">
+          <i class="bi bi-activity text-info"></i> Диагностика MCP: <span id="mcp-test-server-name">...</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div id="mcp-test-status-box" class="p-3 mb-3 rounded border border-secondary bg-black d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <div class="spinner-border spinner-border-sm text-info" id="mcp-test-spinner" role="status"></div>
+            <span id="mcp-test-status-text">Установка соединения и опрос инструментов...</span>
+          </div>
+          <span class="badge bg-secondary font-monospace" id="mcp-test-latency-badge">—</span>
+        </div>
+
+        <h6 class="text-white d-flex align-items-center gap-2 mb-3">
+          <i class="bi bi-tools text-warning"></i> Обнаруженные инструменты (Tools):
+          <span class="badge bg-primary rounded-pill" id="mcp-test-tools-count">0</span>
+        </h6>
+
+        <div id="mcp-test-tools-list" class="d-flex flex-column gap-2">
+          <!-- Tools list populated dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- All Tools Aggregator Modal -->
+<div class="modal fade" id="mcpAllToolsModal" tabindex="-1" aria-labelledby="mcpAllToolsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="mcpAllToolsModalLabel">
+          <i class="bi bi-boxes text-success"></i> Доступный пул инструментов MCP
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <p class="text-muted small mb-3">
+          Список всех инструментов, агрегированных со всех включенных серверов MCP. Эти инструменты автоматически предоставляются LangChain/ReAct агенту.
+        </p>
+
+        <div id="mcp-all-tools-loading" class="text-center py-4 text-muted">
+          <div class="spinner-border text-primary mb-2" role="status"></div>
+          <div>Опрос активных MCP серверов...</div>
+        </div>
+
+        <div id="mcp-all-tools-empty" class="text-center py-4 text-muted d-none">
+          <i class="bi bi-tools display-6 d-block mb-2 text-secondary"></i>
+          <div>Нет доступных инструментов от активных MCP серверов.</div>
+        </div>
+
+        <div id="mcp-all-tools-container" class="row g-3 d-none"></div>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>

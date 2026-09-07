@@ -28,6 +28,11 @@ import sys
 import urllib.request
 from pathlib import Path
 
+# Add project root to sys.path
+_project_root = Path(__file__).resolve().parent.parent.parent
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
 import header
 from header import __root__
 from dotenv import load_dotenv

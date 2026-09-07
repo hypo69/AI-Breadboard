@@ -2,6 +2,10 @@
   "tabs": {
     "groupStandard": "Стандартные",
     "groupExtended": "Расширенные",
+    "groupDialog": "Диалог и аудио",
+    "groupAi": "ИИ и Знания",
+    "groupPlugins": "Плагины и поиск",
+    "groupSystem": "Администрирование",
     "chat": "💬 Чат",
     "torrents": "🧲 Торренты",
     "media": "🎬 Медиатека",
@@ -19,7 +23,8 @@
     "logs": "📋 Логи",
     "help": "📚 Справочник",
     "instructions": "📝 Системные инструкции",
-    "skills": "⚡ Навыки"
+    "skills": "⚡ Навыки",
+    "mcp": "🔌 MCP Серверы"
   },
   "movieSearch": {
     "title": "🔍 Поиск фильмов на трекерах",

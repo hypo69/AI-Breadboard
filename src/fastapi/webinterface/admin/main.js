@@ -124,6 +124,55 @@ window.api = {
         method: 'POST'
       });
     }
+  },
+
+  // MCP Servers management API
+  mcp: {
+    async list() {
+      return window.api.fetch('/api/admin/mcp/servers');
+    },
+    async get(id) {
+      return window.api.fetch(`/api/admin/mcp/servers/${encodeURIComponent(id)}`);
+    },
+    async create(data) {
+      return window.api.fetch('/api/admin/mcp/servers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    },
+    async update(id, data) {
+      return window.api.fetch(`/api/admin/mcp/servers/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    },
+    async delete(id) {
+      return window.api.fetch(`/api/admin/mcp/servers/${encodeURIComponent(id)}`, {
+        method: 'DELETE'
+      });
+    },
+    async toggle(id) {
+      return window.api.fetch(`/api/admin/mcp/servers/${encodeURIComponent(id)}/toggle`, {
+        method: 'POST'
+      });
+    },
+    async test(id) {
+      return window.api.fetch(`/api/admin/mcp/servers/${encodeURIComponent(id)}/test`, {
+        method: 'POST'
+      });
+    },
+    async testAdhoc(data) {
+      return window.api.fetch('/api/admin/mcp/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    },
+    async getTools() {
+      return window.api.fetch('/api/admin/mcp/tools');
+    }
   }
 };
 
@@ -197,6 +246,7 @@ async function initInterface() {
     loadTabContent('tts', `/html/tts_tab/index.html?v=${cb}`, `/html/tts_tab/main.js?v=${cb}`),
     loadTabContent('sources', `/html/sources_tab/index.html?v=${cb}`, `/html/sources_tab/main.js?v=${cb}`),
     loadTabContent('skills', `/html/skills_tab/index.html?v=${cb}`, `/html/skills_tab/main.js?v=${cb}`),
+    loadTabContent('mcp', `/html/mcp_tab/index.html?v=${cb}`, `/html/mcp_tab/main.js?v=${cb}`),
     loadTabContent('logs', `/html/logs/index.html?v=${cb}`),
     loadTabContent('help', `/html/help/index.html?v=${cb}`),
   ]);
@@ -214,13 +264,158 @@ async function initInterface() {
     console.error('Ошибка синхронизации видимости плагинов:', err);
   }
   
-  // Фокусировать поле ввода при переключении на вкладку чата
+  // Setup dropdowns and wire click handlers
+  function setupDropdownTabs() {
+    document.querySelectorAll('#mainTabs [data-bs-toggle="dropdown"]').forEach((toggleBtn) => {
+      if (window.bootstrap?.Dropdown) {
+        bootstrap.Dropdown.getOrCreateInstance(toggleBtn, {
+          autoClose: true
+        });
+      }
+
+      if (!toggleBtn.dataset.boundDropdownClick) {
+        toggleBtn.dataset.boundDropdownClick = 'true';
+        toggleBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const menu = toggleBtn.nextElementSibling;
+          const isShown = toggleBtn.classList.contains('show') || (menu && menu.classList.contains('show'));
+
+          // Close other open dropdowns first
+          document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((otherMenu) => {
+            if (otherMenu !== menu) {
+              otherMenu.classList.remove('show');
+              const otherToggle = otherMenu.previousElementSibling;
+              otherToggle?.classList.remove('show');
+              otherToggle?.setAttribute('aria-expanded', 'false');
+              if (otherToggle && window.bootstrap?.Dropdown) {
+                const dd = bootstrap.Dropdown.getInstance(otherToggle);
+                dd?.hide();
+              }
+            }
+          });
+
+          if (isShown) {
+            if (window.bootstrap?.Dropdown) {
+              const dd = bootstrap.Dropdown.getInstance(toggleBtn);
+              dd?.hide();
+            }
+            menu?.classList.remove('show');
+            toggleBtn.classList.remove('show');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+          } else {
+            if (window.bootstrap?.Dropdown) {
+              const dd = bootstrap.Dropdown.getOrCreateInstance(toggleBtn);
+              dd.show();
+            }
+            menu?.classList.add('show');
+            toggleBtn.classList.add('show');
+            toggleBtn.setAttribute('aria-expanded', 'true');
+          }
+        });
+      }
+    });
+
+    document.querySelectorAll('#mainTabs .dropdown-item[data-bs-toggle="tab"]').forEach((itemBtn) => {
+      // Avoid duplicate click listeners
+      if (itemBtn.dataset.boundTabClick) return;
+      itemBtn.dataset.boundTabClick = 'true';
+
+      itemBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.bootstrap?.Tab) {
+          const tabInstance = bootstrap.Tab.getOrCreateInstance(itemBtn);
+          tabInstance.show();
+        }
+        const dropdown = itemBtn.closest('.dropdown');
+        const dropdownToggle = dropdown?.querySelector('[data-bs-toggle="dropdown"]');
+        if (dropdownToggle) {
+          if (window.bootstrap?.Dropdown) {
+            const dd = bootstrap.Dropdown.getInstance(dropdownToggle);
+            dd?.hide();
+          }
+          const menu = itemBtn.closest('.dropdown-menu');
+          if (menu) {
+            menu.classList.remove('show');
+            dropdownToggle.classList.remove('show');
+            dropdownToggle.setAttribute('aria-expanded', 'false');
+          }
+        }
+      });
+    });
+  }
+
+  // Close dropdowns on outside click
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#mainTabs .dropdown')) {
+      document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((menu) => {
+        menu.classList.remove('show');
+        const toggle = menu.previousElementSibling;
+        if (toggle) {
+          toggle.classList.remove('show');
+          toggle.setAttribute('aria-expanded', 'false');
+          if (window.bootstrap?.Dropdown) {
+            const dd = bootstrap.Dropdown.getInstance(toggle);
+            dd?.hide();
+          }
+        }
+      });
+    }
+  });
+
+  setupDropdownTabs();
+
+  // Tab switch handlers
   document.addEventListener('shown.bs.tab', (e) => {
     const target = e.target.getAttribute('data-bs-target');
+
+    // Sync active state for dropdown items and toggles
+    document.querySelectorAll('#mainTabs .dropdown-item').forEach((item) => {
+      if (item.getAttribute('data-bs-target') === target) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
+    });
+    document.querySelectorAll('#mainTabs .dropdown').forEach((dropdown) => {
+      const toggle = dropdown.querySelector('.dropdown-toggle');
+      const hasActiveChild = dropdown.querySelector('.dropdown-item.active');
+      if (toggle) {
+        if (hasActiveChild) {
+          toggle.classList.add('active');
+        } else {
+          toggle.classList.remove('active');
+        }
+      }
+    });
+
+    setupDropdownTabs();
+
     if (target === '#tab-chat') {
       const msgInput = document.getElementById('message-input');
       if (msgInput) {
         msgInput.focus();
+      }
+    } else if (target === '#tab-voice') {
+      console.log('[AdminInterface] Switching to voice tab...');
+      if (window.initVoiceTab) {
+        window.initVoiceTab();
+      }
+    } else if (target === '#tab-tts') {
+      console.log('[AdminInterface] Switching to tts tab...');
+      if (window.initTtsTab) {
+        window.initTtsTab();
+      }
+    } else if (target === '#tab-plugins') {
+      console.log('[AdminInterface] Switching to plugins tab...');
+      if (window.initPluginsTab) {
+        window.initPluginsTab();
+      }
+    } else if (target === '#tab-admin') {
+      console.log('[AdminInterface] Switching to admin tab...');
+      if (window.initAdminTab) {
+        window.initAdminTab();
       }
     } else if (target === '#tab-users') {
       console.log('[AdminInterface] Switching to users tab...');
@@ -236,6 +431,11 @@ async function initInterface() {
       console.log('[AdminInterface] Switching to skills tab...');
       if (window.initSkillsTab) {
         window.initSkillsTab();
+      }
+    } else if (target === '#tab-mcp') {
+      console.log('[AdminInterface] Switching to MCP tab...');
+      if (window.initMcpTab) {
+        window.initMcpTab();
       }
     } else if (target === '#tab-rag') {
       console.log('[AdminInterface] Switching to RAG tab...');

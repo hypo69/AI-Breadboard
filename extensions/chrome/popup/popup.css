@@ -6,7 +6,7 @@
 }
 
 body {
-  width: 280px;
+  width: 290px;
   background-color: #1e1e24;
   color: #f0f0f5;
   padding: 14px;
@@ -66,6 +66,84 @@ body {
 }
 .status-badge.disconnected {
   color: #ef4444;
+}
+
+/* User Auth Card */
+.auth-section {
+  margin: 2px 0;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #272730;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #3b82f6;
+}
+
+.user-info {
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.user-name {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #f3f4f6;
+}
+
+.user-email {
+  font-size: 11px;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+.btn-icon:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #ffffff;
+  color: #1f2937;
+  font-weight: 600;
+}
+.btn-google:hover {
+  background-color: #f3f4f6;
+}
+
+.google-icon {
+  width: 18px;
+  height: 18px;
 }
 
 .actions {
@@ -134,4 +212,8 @@ body {
 .btn-link:hover {
   color: #ffffff;
   background-color: rgba(255, 255, 255, 0.05);
+}
+
+.d-none {
+  display: none !important;
 }

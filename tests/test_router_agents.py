@@ -41,6 +41,7 @@ class TestAgentsRouter:
         assert len(agents) > 0
         # Check presence of key system agents
         ids = [a.get("id") for a in agents]
+        assert "travel_agent" in ids
         assert "web_search_gemini" in ids
         assert "web_search_gemini_cli" in ids
 
@@ -51,6 +52,8 @@ class TestAgentsRouter:
         tools = response.json()
         assert isinstance(tools, list)
         tool_ids = [t.get("id") for t in tools]
+        assert "flight_search" in tool_ids
+        assert "flight_price_calculator" in tool_ids
         assert "web_search" in tool_ids
         assert "rag_search" in tool_ids
         assert "python_eval" in tool_ids

@@ -1,16 +1,62 @@
 // Popup Script for AI-Breadboard Chrome Extension
 
+let _configCache = null;
+
+async function getAppConfig() {
+  if (_configCache) return _configCache;
+  try {
+    const res = await fetch(chrome.runtime.getURL('config.json'));
+    if (res.ok) {
+      _configCache = await res.json();
+      return _configCache;
+    }
+  } catch (err) {
+    console.error('Failed to load extension config.json in popup:', err);
+  }
+  _configCache = { serverUrl: '', chatWindow: { width: 520, height: 780 } };
+  return _configCache;
+}
+
+async function getSettings() {
+  const config = await getAppConfig();
+  return new Promise((resolve) => {
+    chrome.storage.sync.get({ serverUrl: config.serverUrl || '' }, (items) => resolve(items));
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   // Apply i18n
   applyI18n();
 
-  // Load settings and check connection
+  // Load settings and check connection & auth
+  const config = await getAppConfig();
   const settings = await getSettings();
-  const serverUrl = (settings.serverUrl || 'http://localhost:8000').replace(/\/+$/, '');
+  const serverUrl = (settings.serverUrl || config.serverUrl || '').replace(/\/+$/, '');
   
-  checkServerStatus(serverUrl);
+  if (serverUrl) {
+    await checkServerStatus(serverUrl);
+    await checkUserAuth(serverUrl);
+  } else {
+    setServerDisconnected();
+  }
 
   // Wire event handlers
+  document.getElementById('btn-google-login')?.addEventListener('click', async () => {
+    if (!serverUrl) return;
+    chrome.windows.create({
+      url: `${serverUrl}/auth/google?next=/auth/extension-callback`,
+      type: 'popup',
+      width: 480,
+      height: 640
+    });
+    window.close();
+  });
+
+  document.getElementById('btn-logout')?.addEventListener('click', async () => {
+    if (!serverUrl) return;
+    await performLogout(serverUrl);
+  });
+
   document.getElementById('btn-analyze')?.addEventListener('click', async () => {
     chrome.runtime.sendMessage({ action: 'analyze_current_tab' });
     window.close();
@@ -22,7 +68,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   document.getElementById('btn-open-chat')?.addEventListener('click', async () => {
-    chrome.tabs.create({ url: `${serverUrl}/` });
+    if (!serverUrl) return;
+    const winWidth = (config.chatWindow && config.chatWindow.width) || 520;
+    const winHeight = (config.chatWindow && config.chatWindow.height) || 780;
+    chrome.windows.create({
+      url: `${serverUrl}/`,
+      type: 'popup',
+      width: winWidth,
+      height: winHeight,
+      focused: true
+    });
     window.close();
   });
 
@@ -39,6 +94,7 @@ function applyI18n() {
   setElemText('txt-save', getMsg('popupSaveCurrent', 'Сохранить страницу'));
   setElemText('txt-open-chat', getMsg('popupOpenChat', 'Открыть AI Чат'));
   setElemText('txt-options', getMsg('popupOptions', 'Настройки'));
+  setElemText('txt-google-login', getMsg('popupGoogleLogin', 'Войти через Google'));
 }
 
 function setElemText(id, text) {
@@ -46,10 +102,11 @@ function setElemText(id, text) {
   if (el) el.textContent = text;
 }
 
-async function getSettings() {
-  return new Promise((resolve) => {
-    chrome.storage.sync.get({ serverUrl: 'http://localhost:8000' }, (items) => resolve(items));
-  });
+function setServerDisconnected() {
+  const statusEl = document.getElementById('server-status');
+  const textEl = document.getElementById('status-text');
+  if (statusEl) statusEl.className = 'status-badge disconnected';
+  if (textEl) textEl.textContent = chrome.i18n.getMessage('popupDisconnected') || 'Отключен';
 }
 
 async function checkServerStatus(serverUrl) {
@@ -59,14 +116,14 @@ async function checkServerStatus(serverUrl) {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
 
     const res = await fetch(`${serverUrl}/api/control/health`, {
       method: 'GET',
+      credentials: 'include',
       signal: controller.signal
     }).catch(async () => {
-      // Fallback check on root or docs
-      return await fetch(`${serverUrl}/docs`, { method: 'HEAD', signal: controller.signal });
+      return await fetch(`${serverUrl}/`, { method: 'HEAD', credentials: 'include', signal: controller.signal });
     });
 
     clearTimeout(timeoutId);
@@ -78,7 +135,56 @@ async function checkServerStatus(serverUrl) {
       throw new Error('Not reachable');
     }
   } catch (err) {
-    statusEl.className = 'status-badge disconnected';
-    textEl.textContent = chrome.i18n.getMessage('popupDisconnected') || 'Отключен';
+    setServerDisconnected();
   }
+}
+
+async function checkUserAuth(serverUrl) {
+  const profileCard = document.getElementById('user-profile-card');
+  const guestCard = document.getElementById('guest-login-card');
+  const userNameEl = document.getElementById('user-name');
+  const userEmailEl = document.getElementById('user-email');
+  const userAvatarEl = document.getElementById('user-avatar');
+
+  try {
+    const res = await fetch(`${serverUrl}/auth/check`, {
+      method: 'GET',
+      credentials: 'include'
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.authenticated && data.email) {
+        if (profileCard) profileCard.classList.remove('d-none');
+        if (guestCard) guestCard.classList.add('d-none');
+
+        if (userNameEl) userNameEl.textContent = data.name || data.email;
+        if (userEmailEl) userEmailEl.textContent = data.email;
+        if (userAvatarEl && data.picture) {
+          userAvatarEl.src = data.picture;
+        }
+
+        chrome.storage.local.set({ user: data });
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn('Auth check error:', err);
+  }
+
+  if (profileCard) profileCard.classList.add('d-none');
+  if (guestCard) guestCard.classList.remove('d-none');
+  chrome.storage.local.remove(['user']);
+}
+
+async function performLogout(serverUrl) {
+  try {
+    await fetch(`${serverUrl}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+  } catch (err) {}
+  
+  chrome.storage.local.remove(['user']);
+  await checkUserAuth(serverUrl);
 }

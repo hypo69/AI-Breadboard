@@ -15,7 +15,12 @@
         "enable_assist": false,
         "enable_oauth": true,
         "enable_telegram_bot": true,
-        "use_cloudflared": true
+        "use_cloudflared": true,
+        "user_domain": "kino.davidka.net",
+        "client_url": "https://kino.davidka.net"
+    },
+    "telegram": {
+        "bot_name": "ai_breadboard_bot"
     },
     "ai": {
         "use_foundry": false,
@@ -118,6 +123,24 @@
                     "@playwright/mcp@latest"
                 ],
                 "transport": "stdio"
+            },
+            "fetch": {
+                "command": "uvx",
+                "args": [
+                    "mcp-server-fetch"
+                ],
+                "transport": "stdio"
+            },
+            "brave_search": {
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "@modelcontextprotocol/server-brave-search"
+                ],
+                "transport": "stdio",
+                "env": {
+                    "BRAVE_API_KEY": ""
+                }
             }
         },
         "max_agent_steps": 15,
@@ -126,9 +149,29 @@
     "agents": {
         "items": [
             {
+                "id": "travel_agent",
+                "name": "Flight & Travel Agent",
+                "description": "Автономный агент поиска авиабилетов и планирования путешествий через мульти-поисковый стек (Google Grounding, AGY, Playwright MCP, агрегаторы)",
+                "is_system": true,
+                "enabled": true,
+                "provider": "gemini",
+                "model": "gemini-2.5-flash",
+                "temperature": 0.2,
+                "max_steps": 15,
+                "timeout_seconds": 60,
+                "tools": [
+                    "flight_search",
+                    "flight_price_calculator",
+                    "web_search",
+                    "rag_search",
+                    "python_eval"
+                ],
+                "system_prompt": "Вы — интеллектуальный агент по поиску авиабилетов и планированию путешествий. Анализируйте даты, маршруты, классы обслуживания и находите лучшие рейсы через поисковые движки и MCP-инструменты."
+            },
+            {
                 "id": "web_search_gemini",
                 "name": "Gemini Search Grounding",
-                "description": "\u041f\u0440\u044f\u043c\u043e\u0439 \u043f\u043e\u0438\u0441\u043a \u0432 \u0440\u0435\u0430\u043b\u044c\u043d\u043e\u043c \u0438\u043d\u0434\u0435\u043a\u0441\u0435 Google \u0441 \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u0435\u0441\u043a\u043e\u0439 \u0440\u043e\u0442\u0430\u0446\u0438\u0435\u0439 \u043f\u0443\u043b\u0430 API-\u043a\u043b\u044e\u0447\u0435\u0439",
+                "description": "Прямой поиск в реальном индексе Google с автоматической ротацией пула API-ключей",
                 "is_system": true,
                 "enabled": true,
                 "provider": "gemini",
@@ -139,12 +182,12 @@
                 "tools": [
                     "web_search"
                 ],
-                "system_prompt": "\u0422\u044b \u043f\u043e\u0438\u0441\u043a\u043e\u0432\u044b\u0439 \u0430\u0433\u0435\u043d\u0442 ai-breadboard. \u0418\u0449\u0438 \u0430\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u044b\u0435 \u043f\u0440\u043e\u0432\u0435\u0440\u0435\u043d\u043d\u044b\u0435 \u0444\u0430\u043a\u0442\u044b \u0432 \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442\u0435, \u0446\u0438\u0442\u0438\u0440\u0443\u0439 \u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a\u0438 \u0438 \u0444\u043e\u0440\u043c\u0438\u0440\u0443\u0439 \u0447\u0435\u0442\u043a\u0438\u0435 \u0441\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0435 \u043e\u0442\u0432\u0435\u0442\u044b."
+                "system_prompt": "Ты поисковый агент ai-breadboard. Ищи актуальные проверенные факты в интернете, цитируй источники и формируй четкие структурированные ответы."
             },
             {
                 "id": "web_search_gemini_cli",
                 "name": "Gemini CLI Searcher",
-                "description": "\u041f\u043e\u0438\u0441\u043a \u0432 \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442\u0435 \u0447\u0435\u0440\u0435\u0437 \u043b\u043e\u043a\u0430\u043b\u044c\u043d\u044b\u0439 \u0442\u0435\u0440\u043c\u0438\u043d\u0430\u043b\u044c\u043d\u044b\u0439 \u0430\u0433\u0435\u043d\u0442 Google Gemini CLI",
+                "description": "Поиск в интернете через локальный терминальный агент Google Gemini CLI",
                 "is_system": true,
                 "enabled": true,
                 "provider": "gemini_cli",
@@ -155,12 +198,12 @@
                 "tools": [
                     "web_search"
                 ],
-                "system_prompt": "\u0422\u044b \u043f\u043e\u0438\u0441\u043a\u043e\u0432\u044b\u0439 \u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442 Google Gemini CLI. \u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0439 \u0432\u0435\u0431-\u043f\u043e\u0438\u0441\u043a \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430 \u0441\u0432\u0435\u0436\u0435\u0439 \u0438\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u0438 \u0438 \u0432\u044b\u0434\u0430\u0432\u0430\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u0432 \u0444\u043e\u0440\u043c\u0430\u0442\u0435 Markdown."
+                "system_prompt": "Ты поисковый ассистент Google Gemini CLI. Используй веб-поиск для поиска свежей информации и выдавай результат в формате Markdown."
             },
             {
                 "id": "web_search_agy",
                 "name": "Antigravity AGY Searcher",
-                "description": "\u0410\u0433\u0435\u043d\u0442\u043d\u044b\u0439 \u0432\u0435\u0431-\u043f\u043e\u0438\u0441\u043a \u0447\u0435\u0440\u0435\u0437 \u0432\u0441\u0442\u0440\u043e\u0435\u043d\u043d\u044b\u0435 \u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u044b \u043f\u043b\u0430\u0442\u0444\u043e\u0440\u043c\u044b Google Antigravity",
+                "description": "Агентный веб-поиск через встроенные инструменты платформы Google Antigravity",
                 "is_system": true,
                 "enabled": true,
                 "provider": "agy",
@@ -171,12 +214,12 @@
                 "tools": [
                     "web_search"
                 ],
-                "system_prompt": "\u0422\u044b \u043f\u043e\u0438\u0441\u043a\u043e\u0432\u044b\u0439 \u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442 Antigravity. \u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0439 \u0432\u0441\u0442\u0440\u043e\u0435\u043d\u043d\u044b\u0439 \u0432\u0435\u0431-\u043f\u043e\u0438\u0441\u043a \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430 \u0441\u0432\u0435\u0436\u0435\u0439 \u0438\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u0438 \u0438 \u0432\u044b\u0434\u0430\u0432\u0430\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u0432 \u0444\u043e\u0440\u043c\u0430\u0442\u0435 Markdown."
+                "system_prompt": "Ты поисковый ассистент Antigravity. Используй встроенный веб-поиск для поиска свежей информации и выдавай результат в формате Markdown."
             },
             {
                 "id": "playwright_agent",
                 "name": "Playwright Browser Agent",
-                "description": "\u0410\u0432\u0442\u043e\u043d\u043e\u043c\u043d\u044b\u0439 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u043d\u044b\u0439 \u043f\u0430\u0440\u0441\u0438\u043d\u0433 \u0438 \u0441\u0431\u043e\u0440 \u043a\u043e\u043d\u0442\u0435\u043d\u0442\u0430 \u0441\u0430\u0439\u0442\u043e\u0432 \u0447\u0435\u0440\u0435\u0437 Headless Chromium",
+                "description": "Автономный браузерный парсинг и сбор контента сайтов через Headless Chromium",
                 "is_system": true,
                 "enabled": true,
                 "provider": "gemini",
@@ -187,7 +230,7 @@
                 "tools": [
                     "web_search"
                 ],
-                "system_prompt": "\u0422\u044b \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u043d\u044b\u0439 \u0430\u0433\u0435\u043d\u0442 Playwright. \u0412\u044b\u043f\u043e\u043b\u043d\u044f\u0439 \u043d\u0430\u0432\u0438\u0433\u0430\u0446\u0438\u044e \u043f\u043e \u0432\u0435\u0431-\u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0430\u043c, \u0438\u0437\u0432\u043b\u0435\u043a\u0430\u0439 \u043f\u043e\u043b\u0435\u0437\u043d\u044b\u0439 \u0442\u0435\u043a\u0441\u0442 \u0438 \u0441\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0438\u0440\u0443\u0439 \u0434\u0430\u043d\u043d\u044b\u0435."
+                "system_prompt": "Ты браузерный агент Playwright. Выполняй навигацию по веб-страницам, извлекай полезный текст и структурируй данные."
             }
         ]
     },

@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import List, Dict
 
 from src.utils.csv import save_csv_file
-from src.utils.jjson import j_dumps
+from src.utils.jjson import j_dumps, j_loads, j_loads_ns
 from src.utils.xls import save_xls_file
 from src.utils.convertors.dict import dict2xml
 from src.logger.logger import logger
@@ -51,16 +51,15 @@ def json2csv(json_data: str | list | dict | Path, csv_file_path: str | Path) -> 
         Exception: If unable to parse JSON or write CSV.
     """
     try:
-        # Load JSON data
         if isinstance(json_data, dict):
             data = [json_data]
-        elif isinstance(json_data, str):
-            data = json.loads(json_data)
         elif isinstance(json_data, list):
             data = json_data
-        elif isinstance(json_data, Path):
-            with open(json_data, 'r', encoding='utf-8') as json_file:
-                data = json.load(json_file)
+        elif isinstance(json_data, (str, Path)):
+            loaded = j_loads(json_data)
+            if loaded is None:
+                raise ValueError(f"Failed to parse json_data: {json_data}")
+            data = [loaded] if isinstance(loaded, dict) else loaded
         else:
             raise ValueError("Unsupported type for json_data")
 
@@ -68,7 +67,7 @@ def json2csv(json_data: str | list | dict | Path, csv_file_path: str | Path) -> 
         return True
     except Exception as ex:
         logger.error(f"json2csv failed", ex, True)
-        ...
+        return False
 
 def json2ns(json_data: str | dict | Path) -> SimpleNamespace:
     """
@@ -85,19 +84,14 @@ def json2ns(json_data: str | dict | Path) -> SimpleNamespace:
         Exception: If unable to parse JSON.
     """
     try:
-        if isinstance(json_data, dict):
-            data = json_data
-        elif isinstance(json_data, str):
-            data = json.loads(json_data)
-        elif isinstance(json_data, Path):
-            with open(json_data, 'r', encoding='utf-8') as json_file:
-                data = json.load(json_file)
-        else:
-            raise ValueError("Unsupported type for json_data")
-        
-        return SimpleNamespace(**data)
+        ns = j_loads_ns(json_data)
+        if ns is None:
+            raise ValueError(f"Failed to parse JSON into SimpleNamespace: {json_data}")
+        return ns
     except Exception as ex:
         logger.error(f"json2ns failed", ex, True)
+        raise
+
 
 def json2xml(json_data: str | dict | Path, root_tag: str = "root") -> str:
     """

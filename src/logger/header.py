@@ -25,48 +25,8 @@ from packaging.version import Version
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
-def set_project_root(marker_files: Tuple[str, ...] = ('__root__', '.git')) -> Path:
-    """
-    Определяет корневую директорию проекта, поднимаясь вверх по иерархии папок.
-    
-    Алгоритм:
-    1. Начинает с директории, где расположен этот файл
-    2. Поднимается вверх по папкам в поиске маркерных файлов/папок
-    3. Первая найденная маркер-папка считается корнем проекта
-    4. Добавляет корень в sys.path для импортов
-    
-    Args:
-        marker_files: Tuple имён маркерных файлов/папок для идентификации корня.
-                     По умолчанию ищет '__root__' или '.git'.
-    
-    Returns:
-        Path: Путь к корневой директории проекта.
-              Если не найдена, Returns директорию скрипта.
-    
-    Example:
-        >>> root = set_project_root()
-        >>> print(root)
-        /path/to/project
-    """
-    __root__: Path
-    current_path: Path = Path(__file__).resolve().parent
-    __root__ = current_path
-    
-    # Поиск маркера в текущей папке и всех родительских папках
-    for parent in [current_path] + list(current_path.parents):
-        if any((parent / marker).exists() for marker in marker_files):
-            __root__ = parent
-            break
-    
-    # Добавление корня в sys.path для импортов
-    if __root__ not in sys.path:
-        sys.path.insert(0, str(__root__))
-    
-    return __root__
+from header import __root__, set_project_root
 
-# Получение корневой директории проекта
-__root__: Path = set_project_root()
-"""__root__ (Path): Путь к корневой директории проекта"""
 
 def _load_project_settings() -> Dict[str, str]:
     """

@@ -1,0 +1,12 @@
+{
+  "serverUrl": "https://kino.davidka.net",
+  "userDomain": "kino.davidka.net",
+  "subfolder": "web_pages",
+  "autoSendChat": true,
+  "language": "default",
+  "chatWindow": {
+    "type": "popup",
+    "width": 520,
+    "height": 780
+  }
+}

@@ -1,5 +1,6 @@
 {
   "token": "",
+  "bot_name": "ai_breadboard_bot",
   "admin_ids": [],
   "notifications_enabled": true,
   "webhook_url": "",
