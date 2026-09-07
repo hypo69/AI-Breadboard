@@ -126,25 +126,25 @@ body {
   background-color: var(--nav-bg);
   border-bottom: 1px solid var(--border-color);
   min-height: 44px;
+  position: relative;
+  z-index: 1020;
+  overflow: visible;
 }
 
 .nav-tabs {
   border-bottom: none;
   background-color: transparent;
   flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-  -webkit-overflow-scrolling: touch;
-}
-
-.nav-tabs::-webkit-scrollbar {
-  height: 4px;
+  overflow: visible;
 }
 
 .nav-tabs .nav-item {
   flex-shrink: 0;
+  position: relative;
+}
+
+.nav-tabs .dropdown-menu {
+  z-index: 1050;
 }
 
 .nav-tabs .nav-link {
@@ -168,6 +168,31 @@ body {
   color: var(--nav-active);
   background: transparent;
   border-bottom-color: var(--nav-active);
+}
+
+.nav-group-label {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--nav-text);
+  opacity: 0.85;
+  padding: 3px 8px;
+  background-color: var(--nav-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  user-select: none;
+}
+
+.nav-group-divider {
+  width: 1px;
+  height: 22px;
+  background-color: var(--border-color);
+  margin: 0 8px;
+  opacity: 0.6;
+  align-self: center;
 }
 
 .main-nav-container .lang-selector {

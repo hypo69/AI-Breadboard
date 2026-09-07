@@ -26,7 +26,7 @@ import jwt
 import requests
 from dotenv import load_dotenv
 from fastapi import APIRouter, Cookie, HTTPException, Request, Response
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from header import __root__
 from src.logger import logger
@@ -148,21 +148,41 @@ def verify_jwt_token(token: str) -> Optional[TokenData]:
         return None
 
 # Хранилище for OAuth state (in production use Redis or similar)
-oauth_states: dict[str, datetime] = {}
+oauth_states: dict[str, dict] = {}
 
-def generate_state_token() -> str:
-    """Генерация state token для защиты от CSRF атак."""
+def generate_state_token(tg_id: Optional[int] = None, tg_username: Optional[str] = None) -> str:
+    """Генерация state token для защиты от CSRF атак с поддержкой привязки Telegram."""
     state = secrets.token_urlsafe(32)
-    oauth_states[state] = datetime.utcnow() + timedelta(minutes=10)
+    oauth_states[state] = {
+        'created_at': datetime.utcnow(),
+        'expires_at': datetime.utcnow() + timedelta(minutes=10),
+        'tg_id': tg_id,
+        'tg_username': tg_username or ''
+    }
     return state
 
+def get_state_payload(state: str) -> Optional[dict]:
+    """Retrieve and clean up state payload."""
+    if state not in oauth_states:
+        return None
+    raw = oauth_states[state]
+    now = datetime.utcnow()
+    expires_at = raw.get('expires_at') if isinstance(raw, dict) else raw
+    if isinstance(expires_at, datetime) and expires_at < now:
+        del oauth_states[state]
+        return None
+    data = raw if isinstance(raw, dict) else {'expires_at': expires_at, 'tg_id': None, 'tg_username': ''}
+    del oauth_states[state]
+    return data
+
 def validate_state_token(state: str) -> bool:
-    """Validation state token."""
+    """Validation state token without premature deletion."""
     if state not in oauth_states:
         return False
-    # Clean up expired states
+    raw = oauth_states[state]
     now = datetime.utcnow()
-    if oauth_states[state] < now:
+    expires_at = raw.get('expires_at') if isinstance(raw, dict) else raw
+    if isinstance(expires_at, datetime) and expires_at < now:
         del oauth_states[state]
         return False
     return True
@@ -203,7 +223,12 @@ GOOGLE_SCOPES = [
 ]
 
 @router.get('/google')
-async def google_login(request: Request, next: str = '/') -> RedirectResponse:
+async def google_login(
+    request: Request,
+    next: str = '/',
+    tg_id: Optional[int] = None,
+    tg_username: Optional[str] = None,
+) -> RedirectResponse:
     """Перенаправление на Google OAuth страницу с расширенными правами.
     
     Returns:
@@ -220,7 +245,7 @@ async def google_login(request: Request, next: str = '/') -> RedirectResponse:
             detail='Google OAuth не настроен. Пожалуйста, свяжитесь с администратором.'
         )
     
-    state = generate_state_token()
+    state = generate_state_token(tg_id=tg_id, tg_username=tg_username)
     
     # Determine redirect URI:
     # If GOOGLE_REDIRECT_URI is explicitly configured in .env, use it
@@ -346,8 +371,88 @@ async def google_callback(request: Request, code: str, state: str) -> RedirectRe
             scope=granted_scope
         )
 
+        # Telegram Account Linking from OAuth State
+        state_payload = get_state_payload(state) or {}
+        tg_id = state_payload.get('tg_id')
+        tg_username = state_payload.get('tg_username')
+
+        if tg_id:
+            try:
+                user_manager.link_telegram_account_direct(
+                    user_id=user_id,
+                    telegram_id=int(tg_id),
+                    telegram_username=tg_username
+                )
+            except Exception as link_err:
+                logger.error(f'Error linking Telegram user in callback: {link_err}', exc_info=True)
+
         # Создаем JWT токен с ID пользователя
         token = create_jwt_token(TokenData(email=user_email, name=user_name, picture=user_picture, id=user_id))
+
+        if tg_id:
+            html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Breadboard — Telegram Linked</title>
+    <style>
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #090d16;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+        }}
+        .card {{
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 20px;
+            padding: 36px 28px;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }}
+        .badge {{
+            display: inline-block;
+            background: #0284c7;
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 600;
+            margin: 16px 0 24px;
+        }}
+        h1 {{ font-size: 22px; color: #38bdf8; margin-bottom: 8px; }}
+        p {{ font-size: 14px; line-height: 1.6; color: #94a3b8; }}
+        .success-icon {{ font-size: 52px; margin-bottom: 12px; }}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="success-icon">✨</div>
+        <h1>Telegram Linked Successfully</h1>
+        <div class="badge">{user_name} ({user_email})</div>
+        <p>Your Telegram account is now connected to AI Breadboard. You can return to Telegram and send dialogue audio recordings, transcripts, and messages directly to your workspace!</p>
+    </div>
+</body>
+</html>"""
+            response = HTMLResponse(content=html_content, status_code=200)
+            response.set_cookie(
+                'auth_token',
+                token,
+                httponly=True,
+                secure=False,
+                samesite='lax',
+                max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+            )
+            response.delete_cookie('next_redirect')
+            return response
         
         next_redirect = request.cookies.get('next_redirect') or '/'
         if not next_redirect.startswith('/'):

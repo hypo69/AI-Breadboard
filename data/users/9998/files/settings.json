@@ -1,0 +1,1 @@
+{"engine": "fastapi", "features": ["rag", "tts", "skills"]}

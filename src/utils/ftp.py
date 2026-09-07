@@ -14,7 +14,9 @@
 
 """FTP interface for sending, receiving, and deleting files from FTP servers.
 
-Allows for sending media files, spreadsheets, and other files to and from an FTP server."""
+Allows for sending media files, spreadsheets, and other files to and from an FTP server.
+
+Dependencies:
 - typing: Type hints for function parameters and return values.
 - ftplib: Provides FTP protocol client capabilities.
 - pathlib: For handling file system paths.

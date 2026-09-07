@@ -78,3 +78,36 @@ class TestTTSSilero:
 
 class TestTTSInit:
     """Tests for __init__.py TTS."""
+
+    @pytest.mark.asyncio
+    async def test_synthesize_speech_routing(self):
+        """Test routing to edge-tts by default."""
+        from src.tts import synthesize_speech
+        with patch('src.tts.edge.synthesize', new_callable=AsyncMock) as mock_edge:
+            await synthesize_speech("Hello", Path("test.mp3"), tts_system="edge-tts", voice="en-US-JennyNeural")
+            mock_edge.assert_called_once_with("Hello", Path("test.mp3"), "en-US-JennyNeural")
+
+
+class TestTTSLanguageAdjustment:
+    """Tests for _adjust_voice_for_language in router_tts."""
+
+    def test_adjust_voice_russian(self):
+        from src.fastapi.router_tts import _adjust_voice_for_language
+        # Cyrillic text with English default voice should adjust to Russian
+        assert _adjust_voice_for_language("Привет, как дела?", "en-US-JennyNeural") == "ru-RU-DmitryNeural"
+
+    def test_adjust_voice_hebrew(self):
+        from src.fastapi.router_tts import _adjust_voice_for_language
+        # Hebrew text with Russian voice should adjust to Hebrew
+        assert _adjust_voice_for_language("שלום עולם, מה שלומך?", "ru-RU-DmitryNeural") == "he-IL-AvriNeural"
+
+    def test_adjust_voice_english(self):
+        from src.fastapi.router_tts import _adjust_voice_for_language
+        # English text with Russian voice should adjust to English
+        assert _adjust_voice_for_language("Hello world, how are you?", "ru-RU-DmitryNeural") == "en-US-AriaNeural"
+
+    def test_preserve_voice_when_matching(self):
+        from src.fastapi.router_tts import _adjust_voice_for_language
+        assert _adjust_voice_for_language("שלום", "he-IL-HilaNeural") == "he-IL-HilaNeural"
+        assert _adjust_voice_for_language("Hello", "en-US-JennyNeural") == "en-US-JennyNeural"
+        assert _adjust_voice_for_language("Привет", "ru-RU-SvetlanaNeural") == "ru-RU-SvetlanaNeural"

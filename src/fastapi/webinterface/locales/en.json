@@ -1,5 +1,7 @@
 {
   "tabs": {
+    "groupStandard": "Standard",
+    "groupExtended": "Extended",
     "chat": "💬 Chat",
     "torrents": "🧲 Torrents",
     "media": "🎬 Media Library",
@@ -8,6 +10,7 @@
     "admin": "⚙️ Admin",
     "users": "👥 Users",
     "rag": "🧠 RAG",
+    "voice": "🎙️ Audio Processing",
     "models": "🤖 Models & APIs",
     "agents": "🧩 AI Agents",
     "search": "🌐 Web Search",
@@ -15,7 +18,8 @@
     "sources": "📑 Sources",
     "logs": "📋 Logs",
     "help": "📚 Reference",
-    "instructions": "📝 System Instructions"
+    "instructions": "📝 System Instructions",
+    "skills": "⚡ Skills"
   },
   "movieSearch": {
     "title": "🔍 Search Movies on Trackers",
@@ -193,8 +197,9 @@
     "vectorDimension": "Vector Dimension",
     "lastUpdated": "Last Updated",
     "uploadTitle": "Document Upload",
-    "dropzoneText": "Drag & drop files here or click to browse",
+    "dropzoneText": "Drag & drop files or folders here or click to browse",
     "browseFiles": "Browse Files",
+    "browseFolder": "Browse Whole Folder",
     "uploading": "Uploading files...",
     "indexSettings": "Index Configuration",
     "providerLabel": "Vectorization Provider:",
@@ -210,6 +215,19 @@
     "searchPlaygroundTitle": "Semantic Search Playground",
     "searchPlaceholder": "Enter query for semantic search...",
     "enterQueryPrompt": "Enter a query and click 'Search' to test RAG retrieval."
+  },
+  "voice": {
+    "title": "🎙️ Voice Message Diarization & Meeting Summary",
+    "subtitle": "Microphone recording or audio file upload: speaker diarization, timestamps, transcript, and executive summary.",
+    "recordTitle": "Microphone Recording",
+    "clickToRecord": "Click to start recording",
+    "startRecord": "Start Recording",
+    "uploadTitle": "Audio File Upload",
+    "dropzoneText": "Drag & drop audio file here or click to browse",
+    "browseAudio": "Browse Audio File",
+    "resultTitle": "Analysis & Diarized Transcript",
+    "saveToRag": "Save to RAG",
+    "emptyStateTitle": "Record speech or upload an audio file"
   },
   "button_apply": "Apply Changes",
   "label_active_voice": "Active voice:"

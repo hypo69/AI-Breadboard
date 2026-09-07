@@ -24,6 +24,24 @@ from header import __root__
 _FRONTMATTER_PATTERN = re.compile(r"\A---\s*\n(?P<body>.*?)\n---\s*(?:\n|\Z)", re.DOTALL)
 _DEFAULT_SKILL_DIRS = (".agents/skills", ".github/skills", "skills", ".gemini/skills")
 
+def _get_home_dir() -> Path | None:
+    """Safely retrieves user home directory across platforms."""
+    try:
+        return Path.home()
+    except Exception:
+        import os
+        user_profile = os.environ.get("USERPROFILE") or os.environ.get("HOME")
+        if user_profile:
+            return Path(user_profile)
+        return None
+
+def _get_default_global_dirs() -> tuple[Path, ...]:
+    """Returns accessible global user skill directories."""
+    home = _get_home_dir()
+    if not home:
+        return ()
+    return (home / ".agents" / "skills", home / ".gemini" / "skills")
+
 def _parse_scalar(value: str) -> Any:
     """Parses simple YAML values without requiring PyYAML dependency."""
     normalized = value.strip()
@@ -100,13 +118,26 @@ class SkillDefinition:
 class SkillRegistry:
     """Searches for skills in compatible directories and provides unified access API."""
 
-    def __init__(self, project_root: Path = __root__, skill_dirs: Iterable[str] = _DEFAULT_SKILL_DIRS) -> None:
+    def __init__(
+        self,
+        project_root: Path = __root__,
+        skill_dirs: Iterable[str] = _DEFAULT_SKILL_DIRS,
+        include_global: bool | None = None,
+        global_dirs: Iterable[Path] | None = None,
+    ) -> None:
         self.project_root = Path(project_root).resolve()
         self.skill_dirs = tuple(skill_dirs)
+        if include_global is None:
+            self.include_global = (self.project_root == Path(__root__).resolve())
+        else:
+            self.include_global = include_global
+        resolved_global = global_dirs if global_dirs is not None else _get_default_global_dirs()
+        self.global_dirs = tuple(Path(d).resolve() for d in resolved_global)
 
     def discover(self) -> list[SkillDefinition]:
         """Finds all directories with SKILL.md and removes duplicates by name."""
         found: dict[str, SkillDefinition] = {}
+        # 1. Project-level skill directories
         for relative_dir in self.skill_dirs:
             skills_root = self.project_root / relative_dir
             if not skills_root.is_dir():
@@ -115,6 +146,17 @@ class SkillRegistry:
                 definition = self._load(skill_file)
                 if definition.name and definition.name not in found:
                     found[definition.name] = definition
+
+        # 2. Global user skill directories (if enabled)
+        if self.include_global:
+            for g_dir in self.global_dirs:
+                if not g_dir.is_dir():
+                    continue
+                for skill_file in sorted(g_dir.glob("*/SKILL.md")):
+                    definition = self._load(skill_file)
+                    if definition.name and definition.name not in found:
+                        found[definition.name] = definition
+
         return sorted(found.values(), key=lambda item: item.name)
 
     def get(self, name: str) -> SkillDefinition:

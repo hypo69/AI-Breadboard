@@ -119,6 +119,19 @@ class TestRouterRAG:
         assert search_data["count"] >= 1
         assert search_data["results"][0]["doc_name"] == "fastapi_intro.txt"
 
+        # 5. Search with novel words
+        novel_res = client.post(
+            "/api/rag/search",
+            json={
+                "query": "framework with unknown_word_12345",
+                "top_k": 3,
+                "min_score": 0.0,
+            }
+        )
+        assert novel_res.status_code == 200
+        assert novel_res.json()["status"] == "success"
+        assert novel_res.json()["count"] >= 1
+
     def test_delete_document(self, isolated_rag_manager):
         # Upload a file
         client.post(

@@ -331,13 +331,20 @@ window.chatService = {
 
     if ('speechSynthesis' in window) {
       window.currentUtterance = new SpeechSynthesisUtterance(cleanText);
-      window.currentUtterance.lang = 'ru-RU';
+      
+      // Dynamic language detection for Web Speech API fallback
+      const hasHebrew = /[\u0590-\u05FF]/.test(cleanText);
+      const hasCyrillic = /[\u0400-\u04FF]/.test(cleanText);
+      window.currentUtterance.lang = hasHebrew ? 'he-IL' : (hasCyrillic ? 'ru-RU' : 'en-US');
       
       if (userSettings && userSettings.tts_voice) {
         const voices = window.speechSynthesis.getVoices();
         const selectedVoice = voices.find(v => v.name === userSettings.tts_voice);
         if (selectedVoice) {
           window.currentUtterance.voice = selectedVoice;
+          if (selectedVoice.lang) {
+            window.currentUtterance.lang = selectedVoice.lang;
+          }
         }
       }
       

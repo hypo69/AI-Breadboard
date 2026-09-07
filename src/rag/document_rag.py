@@ -89,6 +89,8 @@ class DocumentRAGManager:
 
         self.chunks: List[DocumentChunk] = []
         self.vectors: Optional[np.ndarray] = None
+        self.vocab: Dict[str, int] = {}
+        self.idf: Optional[np.ndarray] = None
         self.meta: Dict[str, Any] = {
             "total_documents": 0,
             "total_chunks": 0,
@@ -127,6 +129,23 @@ class DocumentRAGManager:
                 logger.error(f"[DocumentRAG] Failed to load vectors: {e}")
                 self.vectors = None
 
+        vocab_file = self.index_dir / "document_rag_vocab.json"
+        if vocab_file.exists():
+            try:
+                with open(vocab_file, "r", encoding="utf-8") as f:
+                    self.vocab = json.load(f)
+            except Exception as e:
+                logger.error(f"[DocumentRAG] Failed to load vocab: {e}")
+                self.vocab = {}
+
+        idf_file = self.index_dir / "document_rag_idf.npy"
+        if idf_file.exists():
+            try:
+                self.idf = np.load(str(idf_file))
+            except Exception as e:
+                logger.error(f"[DocumentRAG] Failed to load idf: {e}")
+                self.idf = None
+
     def _save_state(self) -> None:
         """Persist metadata, chunks, and vectors to disk."""
         try:
@@ -139,25 +158,43 @@ class DocumentRAGManager:
             if self.vectors is not None:
                 vec_file = self.index_dir / "document_rag_vectors.npy"
                 np.save(str(vec_file), self.vectors)
+
+            if self.vocab:
+                vocab_file = self.index_dir / "document_rag_vocab.json"
+                with open(vocab_file, "w", encoding="utf-8") as f:
+                    json.dump(self.vocab, f, ensure_ascii=False, indent=2)
+
+            if self.idf is not None:
+                idf_file = self.index_dir / "document_rag_idf.npy"
+                np.save(str(idf_file), self.idf)
         except Exception as e:
             logger.error(f"[DocumentRAG] Failed to save state: {e}")
 
     def save_document(self, filename: str, content: bytes) -> DocumentInfo:
         """Save an uploaded document file to docs directory.
 
+        Supports relative paths and subdirectories for folder uploads.
+
         Args:
-            filename (str): Name of the file.
+            filename (str): Name or relative path of the file.
             content (bytes): Raw binary content.
 
         Returns:
             DocumentInfo: Stored document info metadata.
         """
-        safe_name = re.sub(r'[^a-zA-Z0-9_\-\.\u0400-\u04FF]', '_', filename)
-        file_path = self.docs_dir / safe_name
+        # Clean relative path parts, preserve directory structure
+        norm_parts = [
+            re.sub(r'[^a-zA-Z0-9_\-\.\u0400-\u04FF]', '_', p)
+            for p in Path(filename).parts
+            if p not in ("..", ".", "")
+        ]
+        safe_rel_path = "/".join(norm_parts) if norm_parts else "untitled.txt"
+        file_path = self.docs_dir.joinpath(*norm_parts) if norm_parts else self.docs_dir / "untitled.txt"
+        file_path.parent.mkdir(parents=True, exist_ok=True)
         file_path.write_bytes(content)
 
         info = DocumentInfo(
-            name=safe_name,
+            name=safe_rel_path,
             size_bytes=len(content),
             modified_at=time.time(),
             status="pending",
@@ -165,24 +202,25 @@ class DocumentRAGManager:
         )
 
         files = self.meta.get("files", {})
-        files[safe_name] = asdict(info)
+        files[safe_rel_path] = asdict(info)
         self.meta["files"] = files
         self._save_state()
-        logger.info(f"[DocumentRAG] Saved document {safe_name} ({len(content)} bytes)")
+        logger.info(f"[DocumentRAG] Saved document {safe_rel_path} ({len(content)} bytes)")
         return info
 
     def delete_document(self, filename: str) -> bool:
         """Delete document file and remove its chunks from index.
 
         Args:
-            filename (str): Document file name.
+            filename (str): Document file name or relative path.
 
         Returns:
             bool: True if file was found and removed, False otherwise.
         """
-        file_path = self.docs_dir / filename
+        parts = [p for p in Path(filename).parts if p not in ("..", ".")]
+        file_path = self.docs_dir.joinpath(*parts) if parts else self.docs_dir / filename
         found = False
-        if file_path.exists():
+        if file_path.exists() and file_path.is_file():
             file_path.unlink()
             found = True
 
@@ -196,6 +234,8 @@ class DocumentRAGManager:
         self.chunks = [c for c in self.chunks if c.doc_name != filename]
         if len(self.chunks) != prev_count:
             self.vectors = None
+            self.vocab = {}
+            self.idf = None
 
         self.meta["total_chunks"] = len(self.chunks)
         self.meta["total_documents"] = len(self.meta.get("files", {}))
@@ -204,7 +244,7 @@ class DocumentRAGManager:
         return found
 
     def list_documents(self) -> List[DocumentInfo]:
-        """List all uploaded documents with current status.
+        """List all uploaded documents (including subdirectories) with current status.
 
         Returns:
             List[DocumentInfo]: List of all known documents.
@@ -212,14 +252,14 @@ class DocumentRAGManager:
         files_meta = self.meta.get("files", {})
         results: List[DocumentInfo] = []
 
-        for p in self.docs_dir.iterdir():
+        for p in self.docs_dir.rglob("*"):
             if p.is_file() and not p.name.startswith("."):
-                name = p.name
+                rel_name = p.relative_to(self.docs_dir).as_posix()
                 stat = p.stat()
-                if name in files_meta:
-                    m = files_meta[name]
+                if rel_name in files_meta:
+                    m = files_meta[rel_name]
                     results.append(DocumentInfo(
-                        name=name,
+                        name=rel_name,
                         size_bytes=stat.st_size,
                         modified_at=stat.st_mtime,
                         status=m.get("status", "pending"),
@@ -228,7 +268,7 @@ class DocumentRAGManager:
                     ))
                 else:
                     results.append(DocumentInfo(
-                        name=name,
+                        name=rel_name,
                         size_bytes=stat.st_size,
                         modified_at=stat.st_mtime,
                         status="pending",
@@ -357,6 +397,8 @@ class DocumentRAGManager:
     def _compute_local_embeddings(self, texts: List[str]) -> np.ndarray:
         """Generate TF-IDF vector embeddings locally without external API.
 
+        Fits vocabulary and IDF weights on the provided texts, updating internal model state.
+
         Args:
             texts (List[str]): List of chunk strings.
 
@@ -372,8 +414,10 @@ class DocumentRAGManager:
                 if len(w) > 2 and w not in vocab:
                     vocab[w] = len(vocab)
 
+        self.vocab = vocab
         if not vocab:
-            return np.zeros((len(texts), 1), dtype=np.float32)
+            self.idf = None
+            return np.zeros((len(texts), 0), dtype=np.float32)
 
         doc_count = len(tokenized_docs)
         df = np.zeros(len(vocab), dtype=np.float32)
@@ -384,6 +428,7 @@ class DocumentRAGManager:
                     df[vocab[w]] += 1
 
         idf = np.log((doc_count + 1.0) / (df + 1.0)) + 1.0
+        self.idf = idf
 
         matrix = np.zeros((len(texts), len(vocab)), dtype=np.float32)
         for i, words in enumerate(tokenized_docs):
@@ -401,6 +446,38 @@ class DocumentRAGManager:
         norms = np.linalg.norm(matrix, axis=1, keepdims=True) + 1e-10
         normalized = matrix / norms
         return normalized
+
+    def _transform_query(self, query: str) -> np.ndarray:
+        """Transform query string into normalized vector using existing vocabulary and IDF.
+
+        Args:
+            query (str): Query text.
+
+        Returns:
+            np.ndarray: Vector of shape (1, dim).
+        """
+        if not self.vocab or self.idf is None:
+            return np.zeros((1, 0), dtype=np.float32)
+
+        words = re.findall(r'\b\w+\b', query.lower())
+        vec = np.zeros((1, len(self.vocab)), dtype=np.float32)
+        if not words:
+            return vec
+
+        tf: Dict[int, int] = {}
+        for w in words:
+            if w in self.vocab:
+                idx = self.vocab[w]
+                tf[idx] = tf.get(idx, 0) + 1
+
+        total_w = len(words)
+        for idx, count in tf.items():
+            vec[0, idx] = (count / total_w) * self.idf[idx]
+
+        norm = np.linalg.norm(vec)
+        if norm > 1e-10:
+            vec = vec / norm
+        return vec
 
     def build_index(
         self,
@@ -423,9 +500,9 @@ class DocumentRAGManager:
         all_chunks: List[DocumentChunk] = []
         files_meta: Dict[str, Any] = {}
 
-        for p in self.docs_dir.iterdir():
+        for p in self.docs_dir.rglob("*"):
             if p.is_file() and not p.name.startswith("."):
-                doc_name = p.name
+                doc_name = p.relative_to(self.docs_dir).as_posix()
                 try:
                     text = self.extract_text(p)
                     doc_chunks = self.chunk_text(text, doc_name, chunk_size, chunk_overlap)
@@ -534,13 +611,20 @@ class DocumentRAGManager:
                 logger.warning(f"[DocumentRAG] Gemini search failed, falling back: {e}")
 
         all_texts = [c.text for c in self.chunks]
-        if self.vectors is None or self.vectors.shape[0] != len(all_texts):
+        if (
+            self.vectors is None
+            or self.vectors.shape[0] != len(all_texts)
+            or not self.vocab
+            or self.idf is None
+            or self.vectors.shape[1] != len(self.vocab)
+        ):
             self.vectors = self._compute_local_embeddings(all_texts)
 
-        query_vec = self._compute_local_embeddings(all_texts + [clean_query])[-1:]
-        query_norm = query_vec / (np.linalg.norm(query_vec) + 1e-10)
+        query_vec = self._transform_query(clean_query)
+        if query_vec.shape[1] == 0 or np.linalg.norm(query_vec) < 1e-10:
+            return []
 
-        similarities = np.dot(self.vectors, query_norm.T).flatten()
+        similarities = np.dot(self.vectors, query_vec.T).flatten()
         top_indices = np.argsort(similarities)[::-1][:min(top_k, len(self.chunks))]
 
         results: List[Dict[str, Any]] = []

@@ -31,4 +31,5 @@ tts_cfg = getattr(global_settings, "tts", SimpleNamespace())
 logging_cfg = getattr(global_settings, "logging", SimpleNamespace())
 qbittorrent_cfg = getattr(global_settings, "qbittorrent", SimpleNamespace())
 qbt_cfg = qbittorrent_cfg
+storage_cfg = getattr(global_settings, "storage", SimpleNamespace())
 

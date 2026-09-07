@@ -4,7 +4,8 @@
     "chat": "Чат",
     "cabinet": "Кабинет",
     "settings": "Settings",
-    "tts": "Настроить TTS"
+    "tts": "Настроить TTS",
+    "skills": "⚡ Навыки"
   },
   "player": {
     "noFiles": "No файлов",

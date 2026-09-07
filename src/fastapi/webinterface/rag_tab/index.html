@@ -1,209 +1,535 @@
-<!-- RAG Knowledge Base & Document Management Tab -->
+<!-- RAG Knowledge Base & Document / Codebase Management Tab -->
 <div class="container-fluid py-2">
+  <!-- Header Alert with Sub-Navigation -->
   <div class="alert alert-primary d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 shadow-sm">
     <div>
       <h5 class="mb-1"><i class="bi bi-brain me-2"></i><span data-i18n="rag.title">🧠 База знаний и RAG</span></h5>
-      <p class="mb-0 small text-secondary" data-i18n="rag.subtitle">Загрузка документов, построение векторного индекса и семантический поиск.</p>
+      <p class="mb-0 small text-secondary" data-i18n="rag.subtitle">Загрузка документов, индексация исходного кода проектов и семантический поиск.</p>
     </div>
     <div class="d-flex align-items-center gap-2">
-      <span class="badge bg-secondary p-2" id="rag-provider-badge">Provider: Local TF-IDF</span>
-      <button class="btn btn-outline-primary btn-sm rounded-pill" id="btn-refresh-rag">
+      <!-- Sub-Tabs Navigation -->
+      <ul class="nav nav-pills nav-fill bg-body-secondary p-1 rounded-pill" id="rag-mode-pills" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active rounded-pill btn-sm px-3 py-1" id="pills-user-rags-tab" data-bs-toggle="pill" data-bs-target="#pills-user-rags" type="button" role="tab">
+            <i class="bi bi-folder2-open me-1"></i> Коллекции Workspace
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link rounded-pill btn-sm px-3 py-1" id="pills-doc-rag-tab" data-bs-toggle="pill" data-bs-target="#pills-doc-rag" type="button" role="tab">
+            <i class="bi bi-file-earmark-text me-1"></i> Документы
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link rounded-pill btn-sm px-3 py-1" id="pills-code-rag-tab" data-bs-toggle="pill" data-bs-target="#pills-code-rag" type="button" role="tab">
+            <i class="bi bi-code-slash me-1"></i> Код проектов (AST)
+          </button>
+        </li>
+      </ul>
+      <button class="btn btn-outline-primary btn-sm rounded-pill ms-2" id="btn-refresh-rag">
         <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="common.refresh">Обновить</span>
       </button>
     </div>
   </div>
 
-  <!-- Top Statistics Summary -->
-  <div class="row g-3 mb-3">
-    <div class="col-md-3 col-sm-6">
-      <div class="card shadow-sm border-0 bg-body-tertiary">
-        <div class="card-body p-3 d-flex align-items-center justify-content-between">
-          <div>
-            <div class="text-muted small" data-i18n="rag.totalDocuments">Документов</div>
-            <h4 class="mb-0 fw-bold" id="rag-stat-docs">0</h4>
-          </div>
-          <i class="bi bi-file-earmark-text fs-1 text-primary opacity-50"></i>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-      <div class="card shadow-sm border-0 bg-body-tertiary">
-        <div class="card-body p-3 d-flex align-items-center justify-content-between">
-          <div>
-            <div class="text-muted small" data-i18n="rag.totalChunks">Чанков в индексе</div>
-            <h4 class="mb-0 fw-bold" id="rag-stat-chunks">0</h4>
-          </div>
-          <i class="bi bi-diagram-3 fs-1 text-success opacity-50"></i>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-      <div class="card shadow-sm border-0 bg-body-tertiary">
-        <div class="card-body p-3 d-flex align-items-center justify-content-between">
-          <div>
-            <div class="text-muted small" data-i18n="rag.vectorDimension">Размерность вектора</div>
-            <h4 class="mb-0 fw-bold" id="rag-stat-dim">0</h4>
-          </div>
-          <i class="bi bi-cpu fs-1 text-info opacity-50"></i>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-      <div class="card shadow-sm border-0 bg-body-tertiary">
-        <div class="card-body p-3 d-flex align-items-center justify-content-between">
-          <div>
-            <div class="text-muted small" data-i18n="rag.lastUpdated">Последнее обновление</div>
-            <div class="small fw-bold text-truncate" id="rag-stat-updated" style="max-width: 140px;">—</div>
-          </div>
-          <i class="bi bi-clock-history fs-1 text-warning opacity-50"></i>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row g-3">
-    <!-- LEFT COLUMN: File Ingestion & Index Controls -->
-    <div class="col-lg-5 col-md-12">
-      <!-- Upload Dropzone Card -->
-      <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-          <span class="fw-semibold"><i class="bi bi-cloud-arrow-up me-2"></i><span data-i18n="rag.uploadTitle">Загрузка документов</span></span>
-        </div>
-        <div class="card-body">
-          <div id="rag-dropzone" class="border border-2 border-dashed rounded p-4 text-center cursor-pointer mb-3 bg-body-secondary bg-opacity-25" style="border-style: dashed !important; transition: all 0.2s;">
-            <i class="bi bi-file-earmark-arrow-up fs-1 text-primary mb-2 d-block"></i>
-            <h6 class="fw-bold mb-1" data-i18n="rag.dropzoneText">Перетащите файлы сюда или нажмите для выбора</h6>
-            <p class="text-muted small mb-2">Поддерживаются: .txt, .md, .pdf, .json, .csv, .py, .js, .html</p>
-            <input type="file" id="rag-file-input" multiple class="d-none" accept=".txt,.md,.markdown,.json,.csv,.tsv,.py,.js,.ts,.html,.css,.pdf,.log,.sql,.yaml,.yml">
-            <button class="btn btn-outline-primary btn-sm px-3 rounded-pill mt-1" type="button" onclick="document.getElementById('rag-file-input').click();">
-              <i class="bi bi-folder2-open me-1"></i> <span data-i18n="rag.browseFiles">Выбрать файлы</span>
-            </button>
-          </div>
-
-          <div id="rag-upload-progress-container" class="d-none mb-3">
-            <div class="d-flex justify-content-between small text-muted mb-1">
-              <span data-i18n="rag.uploading">Загрузка файлов...</span>
-              <span id="rag-upload-percent">0%</span>
+  <div class="tab-content" id="rag-tab-content">
+    
+    <!-- SUB-TAB 0: USER WORKSPACE MULTI-RAG -->
+    <div class="tab-pane fade show active" id="pills-user-rags" role="tabpanel">
+      <div class="row g-3">
+        <!-- LEFT: Collections List & Create -->
+        <div class="col-lg-4 col-md-12">
+          <div class="card shadow-sm border-0 mb-3">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+              <span class="fw-semibold"><i class="bi bi-folder2-open me-2"></i>Базы знаний (RAG)</span>
+              <button class="btn btn-primary btn-sm rounded-pill px-2 py-0" id="btn-show-create-rag-modal" data-bs-toggle="modal" data-bs-target="#modal-create-user-rag">
+                <i class="bi bi-plus-lg me-1"></i> Создать
+              </button>
             </div>
-            <div class="progress" style="height: 6px;">
-              <div id="rag-upload-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%"></div>
+            <div class="card-body p-2">
+              <div id="user-rags-list-container" class="d-flex flex-column gap-2" style="max-height: 480px; overflow-y: auto;">
+                <div class="text-center text-muted py-4">
+                  <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+                  <div>Загрузка коллекций...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Selected Collection Details, File Pipeline, & Search -->
+        <div class="col-lg-8 col-md-12">
+          <div id="user-rag-empty-state" class="card shadow-sm border-0 p-5 text-center text-muted">
+            <i class="bi bi-diagram-3 fs-1 mb-2 text-primary opacity-50"></i>
+            <h5>Выберите RAG-коллекцию</h5>
+            <p class="small text-secondary mb-3">Выберите существующую базу знаний слева или создайте новую для подготовки и индексации документов.</p>
+            <div>
+              <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modal-create-user-rag">
+                <i class="bi bi-plus-lg me-1"></i> Создать первую коллекцию
+              </button>
             </div>
           </div>
 
-          <div id="rag-upload-status-alert" class="d-none alert p-2 small mb-0"></div>
+          <div id="user-rag-detail-container" class="d-none">
+            <!-- Collection Header Card -->
+            <div class="card shadow-sm border-0 mb-3">
+              <div class="card-header bg-body-tertiary d-flex justify-content-between align-items-center flex-wrap gap-2 py-2">
+                <div>
+                  <h6 class="mb-0 fw-bold d-flex align-items-center gap-2">
+                    <i class="bi bi-folder2 text-primary"></i>
+                    <span id="active-rag-title">Название коллекции</span>
+                    <span id="active-rag-status-badge" class="badge bg-secondary">created</span>
+                  </h6>
+                  <small class="text-muted" id="active-rag-desc">Описание коллекции</small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <button class="btn btn-outline-danger btn-sm rounded-pill" id="btn-delete-active-rag" title="Удалить коллекцию">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body p-3">
+                <!-- Stats Row -->
+                <div class="row g-2 mb-3 text-center">
+                  <div class="col-sm-4">
+                    <div class="p-2 border rounded bg-body-secondary bg-opacity-25">
+                      <div class="small text-muted">Чанков в индексе</div>
+                      <div class="fw-bold fs-5 text-success" id="active-rag-stat-chunks">0</div>
+                    </div>
+                  </div>
+                  <div class="col-sm-4">
+                    <div class="p-2 border rounded bg-body-secondary bg-opacity-25">
+                      <div class="small text-muted">Прикреплено файлов</div>
+                      <div class="fw-bold fs-5 text-primary" id="active-rag-stat-files">0</div>
+                    </div>
+                  </div>
+                  <div class="col-sm-4">
+                    <div class="p-2 border rounded bg-body-secondary bg-opacity-25">
+                      <div class="small text-muted">Обновлено</div>
+                      <div class="small fw-bold mt-1 text-truncate" id="active-rag-stat-updated">—</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Pipeline & Files Section -->
+                <div class="card border border-secondary-subtle mb-3">
+                  <div class="card-header bg-light d-flex justify-content-between align-items-center py-1 px-3">
+                    <span class="small fw-bold"><i class="bi bi-file-earmark-check me-1"></i> Файлы для очистки и сборки (rag_cleaner)</span>
+                    <button class="btn btn-link btn-sm text-decoration-none p-0" id="btn-select-all-user-files">Выбрать все</button>
+                  </div>
+                  <div class="card-body p-2">
+                    <div id="user-rag-files-checklist" class="d-flex flex-column gap-1" style="max-height: 180px; overflow-y: auto;">
+                      <div class="text-muted small p-2">Загрузка файлов...</div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top flex-wrap gap-2">
+                      <div class="d-flex align-items-center gap-2">
+                        <input type="file" id="user-rag-quick-upload-input" class="d-none" multiple>
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill" type="button" onclick="document.getElementById('user-rag-quick-upload-input').click();">
+                          <i class="bi bi-upload me-1"></i> Загрузить файлы
+                        </button>
+                      </div>
+                      <button class="btn btn-success btn-sm rounded-pill px-3 fw-semibold shadow-sm" id="btn-build-active-rag">
+                        <i class="bi bi-magic me-1"></i> Очистить и собрать RAG
+                      </button>
+                    </div>
+                    <div id="user-rag-build-status-alert" class="d-none alert p-2 small mt-2 mb-0"></div>
+                  </div>
+                </div>
+
+                <!-- Search Inside Active Collection -->
+                <div class="card border border-secondary-subtle">
+                  <div class="card-header bg-light py-1 px-3">
+                    <span class="small fw-bold"><i class="bi bi-search me-1"></i> Тестовый поиск по этой коллекции</span>
+                  </div>
+                  <div class="card-body p-2">
+                    <div class="input-group input-group-sm mb-2">
+                      <input type="text" class="form-control" id="active-rag-search-query" placeholder="Введите поисковый запрос по коллекции...">
+                      <button class="btn btn-primary px-3" id="btn-active-rag-search">
+                        <i class="bi bi-search me-1"></i> Поиск
+                      </button>
+                    </div>
+                    <div id="active-rag-search-results" class="border rounded p-2 bg-body-tertiary" style="min-height: 120px; max-height: 220px; overflow-y: auto;">
+                      <div class="text-center text-muted small py-3">Введите запрос для поиска по выбранной базе знаний.</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create User RAG Modal -->
+    <div class="modal fade" id="modal-create-user-rag" tabindex="-1" aria-labelledby="modalCreateUserRAGLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow">
+          <div class="modal-header">
+            <h6 class="modal-title fw-bold" id="modalCreateUserRAGLabel"><i class="bi bi-folder-plus text-primary me-2"></i>Создание новой базы знаний (RAG)</h6>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="new-rag-name" class="form-label small fw-bold">Имя коллекции:</label>
+              <input type="text" class="form-control form-control-sm" id="new-rag-name" placeholder="например: project_alpha">
+              <div class="form-text small">Идентификатор для группировки документов.</div>
+            </div>
+            <div class="mb-3">
+              <label for="new-rag-desc" class="form-label small fw-bold">Описание (опционально):</label>
+              <textarea class="form-control form-control-sm" id="new-rag-desc" rows="2" placeholder="Кратко опишите назначение этой базы знаний..."></textarea>
+            </div>
+            <div class="row g-2">
+              <div class="col-6">
+                <label for="new-rag-min-chunk" class="form-label small fw-bold">Мин. длина чанка:</label>
+                <input type="number" class="form-control form-control-sm" id="new-rag-min-chunk" value="20" min="5" max="500">
+              </div>
+              <div class="col-6">
+                <label for="new-rag-max-chunk" class="form-label small fw-bold">Макс. длина чанка:</label>
+                <input type="number" class="form-control form-control-sm" id="new-rag-max-chunk" value="1500" min="100" max="5000">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer py-2">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Отмена</button>
+            <button type="button" class="btn btn-primary btn-sm fw-semibold" id="btn-confirm-create-rag">Создать</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUB-TAB 1: DOCUMENT RAG -->
+    <div class="tab-pane fade" id="pills-doc-rag" role="tabpanel">
+      <!-- Top Statistics Summary -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-3 col-sm-6">
+          <div class="card shadow-sm border-0 bg-body-tertiary">
+            <div class="card-body p-3 d-flex align-items-center justify-content-between">
+              <div>
+                <div class="text-muted small" data-i18n="rag.totalDocuments">Документов</div>
+                <h4 class="mb-0 fw-bold" id="rag-stat-docs">0</h4>
+              </div>
+              <i class="bi bi-file-earmark-text fs-1 text-primary opacity-50"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="card shadow-sm border-0 bg-body-tertiary">
+            <div class="card-body p-3 d-flex align-items-center justify-content-between">
+              <div>
+                <div class="text-muted small" data-i18n="rag.totalChunks">Чанков в индексе</div>
+                <h4 class="mb-0 fw-bold" id="rag-stat-chunks">0</h4>
+              </div>
+              <i class="bi bi-diagram-3 fs-1 text-success opacity-50"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="card shadow-sm border-0 bg-body-tertiary">
+            <div class="card-body p-3 d-flex align-items-center justify-content-between">
+              <div>
+                <div class="text-muted small" data-i18n="rag.vectorDimension">Размерность вектора</div>
+                <h4 class="mb-0 fw-bold" id="rag-stat-dim">0</h4>
+              </div>
+              <i class="bi bi-cpu fs-1 text-info opacity-50"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="card shadow-sm border-0 bg-body-tertiary">
+            <div class="card-body p-3 d-flex align-items-center justify-content-between">
+              <div>
+                <div class="text-muted small" data-i18n="rag.lastUpdated">Последнее обновление</div>
+                <div class="small fw-bold text-truncate" id="rag-stat-updated" style="max-width: 140px;">—</div>
+              </div>
+              <i class="bi bi-clock-history fs-1 text-warning opacity-50"></i>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Index Settings & Build Card -->
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-          <span class="fw-semibold"><i class="bi bi-sliders me-2"></i><span data-i18n="rag.indexSettings">Параметры индексации</span></span>
+      <div class="row g-3">
+        <!-- LEFT COLUMN: File Ingestion & Index Controls -->
+        <div class="col-lg-5 col-md-12">
+          <!-- Upload Dropzone Card -->
+          <div class="card shadow-sm border-0 mb-3">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+              <span class="fw-semibold"><i class="bi bi-cloud-arrow-up me-2"></i><span data-i18n="rag.uploadTitle">Загрузка документов</span></span>
+            </div>
+            <div class="card-body">
+              <div id="rag-dropzone" class="border border-2 border-dashed rounded p-4 text-center cursor-pointer mb-3 bg-body-secondary bg-opacity-25" style="border-style: dashed !important; transition: all 0.2s;">
+                <i class="bi bi-file-earmark-arrow-up fs-1 text-primary mb-2 d-block"></i>
+                <h6 class="fw-bold mb-1" data-i18n="rag.dropzoneText">Перетащите файлы сюда или нажмите для выбора</h6>
+                <input type="file" id="rag-file-input" multiple class="d-none" accept=".txt,.md,.markdown,.json,.csv,.tsv,.py,.js,.ts,.html,.css,.pdf,.log,.sql,.yaml,.yml">
+                <input type="file" id="rag-folder-input" webkitdirectory directory multiple class="d-none">
+                <div class="d-flex justify-content-center gap-2 mt-2 flex-wrap">
+                  <button class="btn btn-outline-primary btn-sm px-3 rounded-pill" type="button" onclick="document.getElementById('rag-file-input').click();">
+                    <i class="bi bi-file-earmark-plus me-1"></i> <span data-i18n="rag.browseFiles">Выбрать файлы</span>
+                  </button>
+                  <button class="btn btn-primary btn-sm px-3 rounded-pill" type="button" onclick="document.getElementById('rag-folder-input').click();">
+                    <i class="bi bi-folder-plus me-1"></i> <span data-i18n="rag.browseFolder">Выбрать папку целиком</span>
+                  </button>
+                </div>
+              </div>
+
+              <div id="rag-upload-progress-container" class="d-none mb-3">
+                <div class="d-flex justify-content-between small text-muted mb-1">
+                  <span data-i18n="rag.uploading">Загрузка файлов...</span>
+                  <span id="rag-upload-percent">0%</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                  <div id="rag-upload-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <div id="rag-upload-status-alert" class="d-none alert p-2 small mb-0"></div>
+            </div>
+          </div>
+
+          <!-- Index Settings & Build Card -->
+          <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+              <span class="fw-semibold"><i class="bi bi-sliders me-2"></i><span data-i18n="rag.indexSettings">Параметры индексации</span></span>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="form-label small fw-bold" for="rag-provider-select" data-i18n="rag.providerLabel">Провайдер векторизации:</label>
+                <select class="form-select form-select-sm" id="rag-provider-select">
+                  <option value="auto">Auto (Gemini если доступен ключ, иначе Local TF-IDF)</option>
+                  <option value="gemini">Google Gemini Embeddings (gemini-embedding-2)</option>
+                  <option value="local_tfidf">Local TF-IDF Vectorizer (Полностью офлайн)</option>
+                </select>
+              </div>
+
+              <div class="mb-3" id="rag-api-key-group">
+                <label class="form-label small fw-bold" for="rag-api-key-input">Gemini API Key (опционально, берется из .env):</label>
+                <input type="password" class="form-control form-control-sm" id="rag-api-key-input" placeholder="AIzaSy... (или оставить пустым для авто)">
+              </div>
+
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label class="form-label small fw-bold" for="rag-chunk-size" data-i18n="rag.chunkSize">Размер чанка (символов):</label>
+                  <input type="number" class="form-control form-control-sm" id="rag-chunk-size" value="500" min="100" max="4000" step="50">
+                </div>
+                <div class="col-6">
+                  <label class="form-label small fw-bold" for="rag-chunk-overlap" data-i18n="rag.chunkOverlap">Перекрытие (Overlap):</label>
+                  <input type="number" class="form-control form-control-sm" id="rag-chunk-overlap" value="50" min="0" max="1000" step="10">
+                </div>
+              </div>
+
+              <div class="d-grid">
+                <button class="btn btn-success btn-sm fw-semibold py-2 shadow-sm" id="btn-build-rag-index">
+                  <i class="bi bi-hammer me-1"></i> <span data-i18n="rag.buildIndexBtn">🔨 Построить / Перестроить индекс</span>
+                </button>
+              </div>
+              <div id="rag-build-status" class="small mt-2 text-center text-muted"></div>
+            </div>
+          </div>
         </div>
-        <div class="card-body">
-          <div class="mb-3">
-            <label class="form-label small fw-bold" for="rag-provider-select" data-i18n="rag.providerLabel">Провайдер векторизации:</label>
-            <select class="form-select form-select-sm" id="rag-provider-select">
-              <option value="auto">Auto (Gemini если доступен ключ, иначе Local TF-IDF)</option>
-              <option value="gemini">Google Gemini Embeddings (gemini-embedding-2)</option>
-              <option value="local_tfidf">Local TF-IDF Vectorizer (Полностью офлайн)</option>
+
+        <!-- RIGHT COLUMN: Documents List & Semantic Search Playground -->
+        <div class="col-lg-7 col-md-12">
+          <!-- Documents Table Card -->
+          <div class="card shadow-sm border-0 mb-3">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+              <span class="fw-semibold"><i class="bi bi-files me-2"></i><span data-i18n="rag.documentsTitle">Список документов в базе</span></span>
+              <span class="badge bg-primary" id="rag-docs-badge">0 файлов</span>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
+                <table class="table table-hover table-sm align-middle mb-0" id="rag-documents-table">
+                  <thead class="table-light sticky-top">
+                    <tr>
+                      <th class="ps-3" data-i18n="rag.fileName">Имя файла</th>
+                      <th data-i18n="rag.fileSize">Размер</th>
+                      <th data-i18n="rag.chunks">Чанки</th>
+                      <th data-i18n="rag.status">Статус</th>
+                      <th class="text-end pe-3" data-i18n="common.actions">Действия</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rag-documents-tbody">
+                    <tr>
+                      <td colspan="5" class="text-center text-muted py-3" data-i18n="rag.noDocuments">
+                        Документы не загружены. Загрузите файлы в блоке слева.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Semantic Search Playground Card -->
+          <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+              <span class="fw-semibold"><i class="bi bi-search me-2"></i><span data-i18n="rag.searchPlaygroundTitle">Семантический поиск по базе</span></span>
+            </div>
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2 p-2 bg-body-tertiary rounded border small text-muted">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="d-flex align-items-center gap-1">
+                    <label for="rag-top-k" class="text-nowrap fw-semibold">Top K:</label>
+                    <select class="form-select form-select-sm" id="rag-top-k" style="width: 75px;">
+                      <option value="3">3</option>
+                      <option value="5" selected>5</option>
+                      <option value="10">10</option>
+                      <option value="20">20</option>
+                    </select>
+                  </div>
+                  <div class="d-flex align-items-center gap-1">
+                    <label for="rag-min-score" class="text-nowrap fw-semibold">Min Score:</label>
+                    <input type="number" class="form-control form-control-sm" id="rag-min-score" value="0.0" min="0.0" max="1.0" step="0.05" style="width: 80px;">
+                  </div>
+                </div>
+                <span class="small text-secondary"><i class="bi bi-info-circle me-1"></i>Фильтры выдачи</span>
+              </div>
+
+              <div class="input-group mb-3">
+                <input type="text" class="form-control" id="rag-search-query" placeholder="Введите поисковый запрос по смыслу..." data-i18n-placeholder="rag.searchPlaceholder">
+                <button class="btn btn-primary px-3" id="btn-rag-search">
+                  <i class="bi bi-search me-1"></i> <span data-i18n="common.search">Поиск</span>
+                </button>
+              </div>
+
+              <div id="rag-search-results" class="border rounded p-2 bg-body-tertiary" style="min-height: 180px; max-height: 320px; overflow-y: auto;">
+                <div class="text-center text-muted py-4">
+                  <i class="bi bi-chat-left-quote fs-3 d-block mb-1 opacity-50"></i>
+                  <span data-i18n="rag.enterQueryPrompt">Введите запрос и нажмите «Поиск» для проверки RAG.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUB-TAB 2: CODEBASE RAG (AST + Multi-Project) -->
+    <div class="tab-pane fade" id="pills-code-rag" role="tabpanel">
+      <!-- Active Project & Index Selector Bar -->
+      <div class="card shadow-sm border-0 mb-3 bg-body-tertiary">
+        <div class="card-body p-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+            <label class="form-label small fw-bold mb-0 text-nowrap" for="codebase-active-index-select">
+              <i class="bi bi-diagram-2 text-primary me-1"></i> Активный RAG индекс:
+            </label>
+            <select class="form-select form-select-sm" id="codebase-active-index-select" style="max-width: 320px;">
+              <option value="codebase">codebase (По умолчанию)</option>
             </select>
-          </div>
-
-          <div class="mb-3" id="rag-api-key-group">
-            <label class="form-label small fw-bold" for="rag-api-key-input">Gemini API Key (опционально, берется из .env):</label>
-            <input type="password" class="form-control form-control-sm" id="rag-api-key-input" placeholder="AIzaSy... (или оставить пустым для авто)">
-          </div>
-
-          <div class="row g-2 mb-3">
-            <div class="col-6">
-              <label class="form-label small fw-bold" for="rag-chunk-size" data-i18n="rag.chunkSize">Размер чанка (символов):</label>
-              <input type="number" class="form-control form-control-sm" id="rag-chunk-size" value="500" min="100" max="4000" step="50">
-            </div>
-            <div class="col-6">
-              <label class="form-label small fw-bold" for="rag-chunk-overlap" data-i18n="rag.chunkOverlap">Перекрытие (Overlap):</label>
-              <input type="number" class="form-control form-control-sm" id="rag-chunk-overlap" value="50" min="0" max="1000" step="10">
-            </div>
-          </div>
-
-          <div class="d-grid">
-            <button class="btn btn-success btn-sm fw-semibold py-2 shadow-sm" id="btn-build-rag-index">
-              <i class="bi bi-hammer me-1"></i> <span data-i18n="rag.buildIndexBtn">🔨 Построить / Перестроить индекс</span>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill" id="btn-refresh-codebase-indexes" title="Обновить список индексов">
+              <i class="bi bi-arrow-clockwise"></i>
             </button>
           </div>
-          <div id="rag-build-status" class="small mt-2 text-center text-muted"></div>
+          <div class="d-flex align-items-center gap-2" id="codebase-index-quick-stats">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle" id="codebase-stat-chunks">0 чанков</span>
+            <span class="badge bg-success-subtle text-success border border-success-subtle" id="codebase-stat-symbols">0 символов AST</span>
+          </div>
         </div>
+      </div>
+
+      <div class="row g-3">
+        <!-- LEFT COLUMN: Codebase Index Settings & Trigger -->
+        <div class="col-lg-5 col-md-12">
+          <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+              <span class="fw-semibold"><i class="bi bi-folder2-open me-2"></i>Сборка индекса проекта</span>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="form-label small fw-bold" for="codebase-project-root-input">
+                  Директория проекта (Project Root):
+                </label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text"><i class="bi bi-hdd"></i></span>
+                  <input type="text" class="form-control" id="codebase-project-root-input" value="." placeholder="Например: . или C:/Projects/my_app">
+                </div>
+                <div class="form-text small text-muted">Укажите путь к проекту на диске (абсолютный или относительный).</div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label small fw-bold" for="codebase-index-name-input">
+                  Имя RAG индекса (Index Name):
+                </label>
+                <input type="text" class="form-control form-control-sm" id="codebase-index-name-input" value="codebase" placeholder="Например: my_project_v1">
+                <div class="form-text small text-muted">Индексы сохраняются изолированно в вашем персональном хранилище.</div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label small fw-bold" for="codebase-include-dirs-input">
+                  Подкаталоги для анализа (через запятую):
+                </label>
+                <input type="text" class="form-control form-control-sm font-monospace" id="codebase-include-dirs-input" value="src, plugins, integrations, launchers, scripts, install, docs, prompts">
+              </div>
+
+              <div class="d-grid">
+                <button class="btn btn-primary btn-sm fw-semibold py-2 shadow-sm d-flex align-items-center justify-content-center gap-2" id="btn-build-codebase-rag">
+                  <i class="bi bi-cpu"></i>
+                  <span>🔨 Собрать Codebase RAG</span>
+                </button>
+              </div>
+
+              <div id="codebase-build-status-alert" class="d-none alert p-2 small mt-3 mb-0"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Code & Symbol Search Playground -->
+        <div class="col-lg-7 col-md-12">
+          <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+              <ul class="nav nav-tabs card-header-tabs border-0" id="codebase-search-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active text-white" id="tab-code-semantic-btn" data-bs-toggle="tab" data-bs-target="#tab-code-semantic" type="button" role="tab">
+                    <i class="bi bi-search me-1"></i> Семантический поиск по коду
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link text-white-50" id="tab-code-symbols-btn" data-bs-toggle="tab" data-bs-target="#tab-code-symbols" type="button" role="tab">
+                    <i class="bi bi-compass me-1"></i> AST Символы
+                  </button>
+                </li>
+              </ul>
+            </div>
+            <div class="card-body">
+              <div class="tab-content" id="codebase-search-tabs-content">
+                
+                <!-- Code Semantic Search -->
+                <div class="tab-pane fade show active" id="tab-code-semantic" role="tabpanel">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="codebase-search-query" placeholder="Например: Как реализован роутинг провайдеров?">
+                    <button class="btn btn-primary px-3" id="btn-codebase-search">
+                      <i class="bi bi-search me-1"></i> Поиск
+                    </button>
+                  </div>
+                  <div id="codebase-search-results" class="border rounded p-2 bg-body-tertiary" style="min-height: 220px; max-height: 360px; overflow-y: auto;">
+                    <div class="text-center text-muted py-4">
+                      <i class="bi bi-code-square fs-3 d-block mb-1 opacity-50"></i>
+                      <span>Введите вопрос или описание логики для поиска по коду.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Symbol Lookup -->
+                <div class="tab-pane fade" id="tab-code-symbols" role="tabpanel">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="codebase-symbol-query" placeholder="Имя класса или метода: например MediaSearchAgent, search, BasePlugin">
+                    <button class="btn btn-success px-3" id="btn-codebase-symbol-search">
+                      <i class="bi bi-compass me-1"></i> Найти символ
+                    </button>
+                  </div>
+                  <div id="codebase-symbol-results" class="border rounded p-2 bg-body-tertiary" style="min-height: 220px; max-height: 360px; overflow-y: auto;">
+                    <div class="text-center text-muted py-4">
+                      <i class="bi bi-diagram-3 fs-3 d-block mb-1 opacity-50"></i>
+                      <span>Введите имя класса, метода или функции для мгновенного AST-поиска.</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- RIGHT COLUMN: Documents List & Semantic Search Playground -->
-    <div class="col-lg-7 col-md-12">
-      <!-- Documents Table Card -->
-      <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-          <span class="fw-semibold"><i class="bi bi-files me-2"></i><span data-i18n="rag.documentsTitle">Список документов в базе</span></span>
-          <span class="badge bg-primary" id="rag-docs-badge">0 файлов</span>
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
-            <table class="table table-hover table-sm align-middle mb-0" id="rag-documents-table">
-              <thead class="table-light sticky-top">
-                <tr>
-                  <th class="ps-3" data-i18n="rag.fileName">Имя файла</th>
-                  <th data-i18n="rag.fileSize">Размер</th>
-                  <th data-i18n="rag.chunks">Чанки</th>
-                  <th data-i18n="rag.status">Статус</th>
-                  <th class="text-end pe-3" data-i18n="common.actions">Действия</th>
-                </tr>
-              </thead>
-              <tbody id="rag-documents-tbody">
-                <tr>
-                  <td colspan="5" class="text-center text-muted py-3" data-i18n="rag.noDocuments">
-                    Документы не загружены. Загрузите файлы в блоке слева.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Semantic Search Playground Card -->
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-          <span class="fw-semibold"><i class="bi bi-search me-2"></i><span data-i18n="rag.searchPlaygroundTitle">Семантический поиск по базе</span></span>
-        </div>
-        <div class="card-body">
-          <div class="input-group mb-2">
-            <input type="text" class="form-control" id="rag-search-query" placeholder="Введите поисковый запрос по смыслу..." data-i18n-placeholder="rag.searchPlaceholder">
-            <button class="btn btn-primary px-3" id="btn-rag-search">
-              <i class="bi bi-search me-1"></i> <span data-i18n="common.search">Поиск</span>
-            </button>
-          </div>
-
-          <div class="d-flex align-items-center gap-3 mb-3 text-muted small">
-            <div class="d-flex align-items-center gap-1">
-              <label for="rag-top-k" class="text-nowrap">Top K:</label>
-              <select class="form-select form-select-sm" id="rag-top-k" style="width: 70px;">
-                <option value="3">3</option>
-                <option value="5" selected>5</option>
-                <option value="10">10</option>
-                <option value="20">20</option>
-              </select>
-            </div>
-            <div class="d-flex align-items-center gap-1">
-              <label for="rag-min-score" class="text-nowrap">Min Score:</label>
-              <input type="number" class="form-control form-control-sm" id="rag-min-score" value="0.0" min="0.0" max="1.0" step="0.05" style="width: 80px;">
-            </div>
-          </div>
-
-          <div id="rag-search-results" class="border rounded p-2 bg-body-tertiary" style="min-height: 180px; max-height: 320px; overflow-y: auto;">
-            <div class="text-center text-muted py-4">
-              <i class="bi bi-chat-left-quote fs-3 d-block mb-1 opacity-50"></i>
-              <span data-i18n="rag.enterQueryPrompt">Введите запрос и нажмите «Поиск» для проверки RAG.</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </div>

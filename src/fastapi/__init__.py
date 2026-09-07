@@ -19,11 +19,12 @@ from .router_control import init_router as init_control_router
 from .router_tts import init_router as init_tts_router
 from .router_logs import init_router as init_logs_router
 from .router_keys import init_router as init_keys_router
-from .router_admin import init_router as init_admin_router
+from .router_admin import init_router as init_admin_router, init_skills_router, init_plugins_router
 from .router_agents import init_agents_router
 from .router_rag import init_router as init_rag_router
 from .router_audio import init_router as init_audio_router
 from .router_openai import router as router_openai
+from .router_user_storage import init_router as init_user_storage_router
 
 __all__ = [
     "init_auth_router",
@@ -33,8 +34,11 @@ __all__ = [
     "init_logs_router",
     "init_keys_router",
     "init_admin_router",
+    "init_skills_router",
+    "init_plugins_router",
     "init_agents_router",
     "init_rag_router",
     "init_audio_router",
+    "init_user_storage_router",
     "router_openai",
 ]

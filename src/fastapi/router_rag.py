@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: FastAPI router for Document RAG management and search
+# Process Name: FastAPI router for Document & Codebase RAG management and search
 # =============================================================================
 # Description:
 #   REST API endpoints for uploading documents, listing files, building vector
-#   indexes, and performing semantic searches over the knowledge base.
+#   indexes, AST codebase indexing, and performing semantic / symbol searches.
 #
 # File: router_rag.py
 # Project: ai-breadboard
@@ -16,16 +16,18 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile, status
 from pydantic import BaseModel, Field
 
 from src.logger import logger
 from src.rag.document_rag import DocumentRAGManager, get_document_rag_manager
+from plugins.generate_rag_from_codebase.plugin import GenerateRagCodebasePlugin
 
 
 class BuildIndexRequest(BaseModel):
-    """Payload for building RAG index."""
+    """Payload for building document RAG index."""
     provider: str = Field(default="auto", description="Vector provider: 'auto', 'gemini', or 'local_tfidf'")
     api_key: Optional[str] = Field(default="", description="Gemini API Key if using Gemini embedding provider")
     chunk_size: int = Field(default=500, ge=100, le=4000, description="Max character length per chunk")
@@ -40,13 +42,75 @@ class SearchRequest(BaseModel):
     api_key: Optional[str] = Field(default="", description="Gemini API Key if using Gemini search")
 
 
+class BuildCodebaseIndexRequest(BaseModel):
+    """Payload for building AST codebase RAG index."""
+    project_root: str = Field(default=".", description="Project directory path (absolute or relative)")
+    index_name: str = Field(default="codebase", description="Unique name/identifier for the index")
+    include_dirs: Optional[List[str]] = Field(default=None, description="Subdirectories to index")
+    include_files: Optional[List[str]] = Field(default=None, description="Files in root to index")
+
+
+class SearchCodebaseRequest(BaseModel):
+    """Payload for searching codebase RAG index."""
+    query: str = Field(..., min_length=1, description="Search query")
+    index_name: str = Field(default="codebase", description="Target index name")
+    top_k: int = Field(default=5, ge=1, le=50, description="Number of results to return")
+    type_filter: Optional[str] = Field(default=None, description="Optional chunk type filter")
+    module_filter: Optional[str] = Field(default=None, description="Optional module filter")
+
+
+class SymbolLookupRequest(BaseModel):
+    """Payload for looking up symbols in AST codebase index."""
+    symbol: str = Field(..., min_length=1, description="Class, function, or method name")
+    index_name: str = Field(default="codebase", description="Target index name")
+    exact: bool = Field(default=False, description="Require exact name match")
+    limit: int = Field(default=10, ge=1, le=50, description="Max symbol matches")
+
+
+def _get_optional_user_id(request: Request) -> Optional[int]:
+    """Retrieve current authenticated user ID if available."""
+    try:
+        from src.fastapi.router_auth import verify_jwt_token
+        from src.user_manager import user_manager
+        token = request.cookies.get('auth_token', '')
+        if not token:
+            auth_header = request.headers.get('Authorization', '')
+            if auth_header.startswith('Bearer '):
+                token = auth_header[7:].strip()
+
+        if token:
+            user_data = verify_jwt_token(token)
+            if user_data:
+                if user_data.id:
+                    return user_data.id
+                db_user = user_manager.get_user_by_email(user_data.email)
+                if db_user and 'id' in db_user:
+                    return db_user['id']
+
+        hostname = request.url.hostname or ''
+        is_local = (
+            hostname in ('127.0.0.1', 'localhost', '::1', 'testserver', '0.0.0.0')
+            or hostname.startswith('192.168.')
+            or hostname.startswith('10.')
+            or hostname.startswith('172.')
+        )
+        if is_local:
+            return 1
+    except Exception:
+        pass
+    return None
+
+
 def init_router() -> APIRouter:
-    """Initialize and configure Document RAG FastAPI router.
+    """Initialize and configure Document & Codebase RAG FastAPI router.
 
     Returns:
         APIRouter: Configured APIRouter instance.
     """
-    router = APIRouter(prefix="/api/rag", tags=["Document RAG"])
+    router = APIRouter(prefix="/api/rag", tags=["Document & Codebase RAG"])
+    codebase_plugin = GenerateRagCodebasePlugin()
+
+    # --- Document RAG Endpoints ---
 
     @router.post("/upload", summary="Upload documents to knowledge base")
     async def upload_documents(
@@ -164,5 +228,85 @@ def init_router() -> APIRouter:
             "count": len(results),
             "results": results,
         }
+
+    # --- Codebase RAG Endpoints (Admin & User) ---
+
+    @router.post("/codebase/build", summary="Build or rebuild Codebase RAG index")
+    async def build_codebase_index_endpoint(
+        req: BuildCodebaseIndexRequest,
+        request: Request
+    ) -> Dict[str, Any]:
+        """Build AST symbol and vector index for a project directory."""
+        user_id = _get_optional_user_id(request)
+        result = codebase_plugin.build_codebase_index(
+            project_root=req.project_root,
+            index_name=req.index_name,
+            user_id=user_id,
+            include_dirs=req.include_dirs,
+            include_files=req.include_files
+        )
+        return {"status": "success", "result": result}
+
+    @router.get("/codebase/indexes", summary="List available Codebase RAG indexes")
+    async def list_codebase_indexes_endpoint(request: Request) -> Dict[str, Any]:
+        """List all codebase indexes for current user and system."""
+        user_id = _get_optional_user_id(request)
+        indexes = codebase_plugin.list_available_indexes(user_id=user_id)
+        # If user is present, also include system indexes
+        if user_id is not None:
+            sys_indexes = codebase_plugin.list_available_indexes(user_id=None)
+            for s in sys_indexes:
+                s["scope"] = "system"
+            for u in indexes:
+                u["scope"] = "user"
+            indexes = indexes + [s for s in sys_indexes if s["name"] not in {u["name"] for u in indexes}]
+
+        return {"status": "success", "count": len(indexes), "indexes": indexes}
+
+    @router.post("/codebase/search", summary="Search Codebase RAG index semantically")
+    async def search_codebase_endpoint(
+        req: SearchCodebaseRequest,
+        request: Request
+    ) -> Dict[str, Any]:
+        """Semantic search over code, docstrings, and docs."""
+        user_id = _get_optional_user_id(request)
+        res = await codebase_plugin.execute_action("search_code", {
+            "query": req.query,
+            "index_name": req.index_name,
+            "user_id": user_id,
+            "top_k": req.top_k,
+            "type_filter": req.type_filter,
+            "module_filter": req.module_filter
+        })
+        return res
+
+    @router.post("/codebase/symbols", summary="Lookup symbols in Codebase RAG AST index")
+    async def lookup_symbols_endpoint(
+        req: SymbolLookupRequest,
+        request: Request
+    ) -> Dict[str, Any]:
+        """Lookup class, function, or method names in AST index."""
+        user_id = _get_optional_user_id(request)
+        res = await codebase_plugin.execute_action("search_symbols", {
+            "query": req.symbol,
+            "index_name": req.index_name,
+            "user_id": user_id,
+            "exact": req.exact,
+            "limit": req.limit
+        })
+        return res
+
+    @router.delete("/codebase/indexes/{index_name}", summary="Delete Codebase RAG index")
+    async def delete_codebase_index_endpoint(
+        index_name: str,
+        request: Request
+    ) -> Dict[str, Any]:
+        """Delete a named codebase RAG index."""
+        user_id = _get_optional_user_id(request)
+        res = await codebase_plugin.execute_action("delete_index", {
+            "index_name": index_name,
+            "user_id": user_id
+        })
+        return res
 
     return router

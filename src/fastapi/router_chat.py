@@ -447,11 +447,16 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                 from src.rag import get_rag_engine, index_user_interaction
                 rag_engine = get_rag_engine()
 
+                top_k = int(request.generation_config.get('top_k', 3))
+                threshold = float(request.generation_config.get('min_score', request.generation_config.get('threshold', 0.45)))
+
                 yield f"data: {json.dumps({'status': '🔍 Поиск в базе знаний (RAG)...'})}\n\n"
                 decision = await rag_engine.evaluate(
                     query=request.message,
                     user_identifier=user_identifier,
-                    api_key=api_key
+                    api_key=api_key,
+                    threshold=threshold,
+                    top_k=top_k
                 )
 
                 # 2. Если найден точный ответ — мгновенный возврат (Direct RAG)

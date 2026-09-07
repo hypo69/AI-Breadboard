@@ -47,11 +47,17 @@ export async function initUserSettings() {
   }
 }
 
+export function isUserAdmin() {
+  if (!window.currentUser) return false;
+  return Boolean(window.currentUser.is_admin || (window.currentUser.role && String(window.currentUser.role).toLowerCase() === 'admin'));
+}
+
 export async function refreshUserProfile() {
   try {
     const res = await fetch('/auth/check');
     if (!res.ok) return;
     const data = await res.json();
+    window.currentUser = data;
 
     const authCard = document.getElementById('user-settings-auth-card');
     const guestCard = document.getElementById('user-settings-guest-card');
@@ -170,3 +176,4 @@ export async function refreshUserProfile() {
 
 window.initUserSettings = initUserSettings;
 window.refreshUserProfile = refreshUserProfile;
+window.isUserAdmin = isUserAdmin;

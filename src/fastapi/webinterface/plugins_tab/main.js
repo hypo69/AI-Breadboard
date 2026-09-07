@@ -12,6 +12,19 @@ function showPluginNotification(message, type = 'info') {
   console.log(`[Plugin Notification ${type}]: ${message}`);
 }
 
+// Helper to check if current view is user interface
+function isRunningInUserInterface() {
+  if (document.getElementById('user-interface')) return true;
+  if (window.location.pathname.includes('/user')) return true;
+  if (!document.getElementById('admin-interface')) {
+    if (typeof window.isUserAdmin === 'function') {
+      return !window.isUserAdmin();
+    }
+    return true;
+  }
+  return false;
+}
+
 // Initialize Plugins Tab
 window.initPluginsTab = async function() {
   console.log('Инициализация вкладки плагинов...');
@@ -24,18 +37,40 @@ async function loadPluginsList() {
   if (!container) return;
 
   try {
-    const data = await window.api.fetch('/api/admin/plugins');
-    loadedPlugins = data.plugins || [];
+    const isUserUI = isRunningInUserInterface();
+    const endpoint = isUserUI ? '/api/plugins?scope=user' : '/api/admin/plugins';
 
-    document.getElementById('plugins-count').textContent = loadedPlugins.length;
+    let data;
+    if (window.api && typeof window.api.fetch === 'function') {
+      try {
+        data = await window.api.fetch(endpoint);
+      } catch {
+        data = await window.api.fetch('/api/admin/plugins');
+      }
+    } else {
+      let resp = await fetch(endpoint);
+      if (!resp.ok && isUserUI) {
+        resp = await fetch('/api/admin/plugins?scope=user');
+      }
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      data = await resp.json();
+    }
+    let plugins = data.plugins || [];
+    if (isUserUI) {
+      plugins = plugins.filter(p => !p.is_system && p.scope !== 'system');
+    }
+    loadedPlugins = plugins;
+
+    const countEl = document.getElementById('plugins-count');
+    if (countEl) countEl.textContent = loadedPlugins.length;
     const activeCount = loadedPlugins.filter(p => p.enabled).length;
-    document.getElementById('active-plugins-badge').textContent = `${activeCount} активных`;
+    const badgeEl = document.getElementById('active-plugins-badge');
+    if (badgeEl) badgeEl.textContent = `${activeCount} активных`;
 
     renderPluginsList(loadedPlugins);
     syncPluginTabsVisibility(loadedPlugins);
 
     if (loadedPlugins.length > 0) {
-      // Если плагин не выбран или текущий пропал, выбираем первый
       const toSelect = loadedPlugins.find(p => p.name === selectedPluginName) || loadedPlugins[0];
       selectPlugin(toSelect.name);
     } else {
@@ -53,7 +88,9 @@ function renderPluginsList(plugins) {
   if (!container) return;
 
   if (plugins.length === 0) {
-    container.innerHTML = '<div class="text-center text-muted p-3 small">Плагины не найдены</div>';
+    const isUserUI = isRunningInUserInterface();
+    const emptyMsg = isUserUI ? 'Пользовательские плагины не найдены' : 'Плагины не найдены';
+    container.innerHTML = `<div class="text-center text-muted p-3 small">${emptyMsg}</div>`;
     return;
   }
 
@@ -63,6 +100,9 @@ function renderPluginsList(plugins) {
     const statusBadge = p.enabled 
       ? '<span class="badge bg-success-subtle text-success border border-success-subtle small">Вкл</span>'
       : '<span class="badge bg-secondary-subtle text-muted border small">Выкл</span>';
+    const typeBadge = p.is_system
+      ? '<span class="badge bg-secondary-subtle text-body-secondary border small">Системный</span>'
+      : '<span class="badge bg-info-subtle text-info-emphasis border small">Пользовательский</span>';
 
     html += `
       <a href="javascript:void(0)" 
@@ -74,7 +114,7 @@ function renderPluginsList(plugins) {
             <span class="fs-5">${p.icon || '🧩'}</span>
             <strong class="text-truncate">${p.title || p.name}</strong>
           </div>
-          <div>${statusBadge}</div>
+          <div class="d-flex align-items-center gap-1">${typeBadge}${statusBadge}</div>
         </div>
         <div class="small text-truncate ${isSelected ? 'text-white-50' : 'text-muted'}">
           ${p.description || p.name}
@@ -122,9 +162,33 @@ function selectPlugin(pluginName) {
   document.getElementById('plugin-id').textContent = `id: ${plugin.name}`;
   document.getElementById('plugin-description').textContent = plugin.description || 'Нет описания';
   
+  const scopeBadgeEl = document.getElementById('plugin-scope-badge');
+  if (scopeBadgeEl) {
+    if (plugin.is_system) {
+      scopeBadgeEl.textContent = 'Системный';
+      scopeBadgeEl.className = 'badge bg-secondary-subtle text-body-secondary border';
+    } else {
+      scopeBadgeEl.textContent = 'Пользовательский';
+      scopeBadgeEl.className = 'badge bg-info-subtle text-info-emphasis border';
+    }
+  }
+
+  const isAdmin = (typeof window.isUserAdmin === 'function') ? window.isUserAdmin() : false;
+  const isLocked = Boolean(plugin.is_system && !isAdmin);
+
   const toggleSwitch = document.getElementById('plugin-toggle-switch');
   if (toggleSwitch) {
     toggleSwitch.checked = Boolean(plugin.enabled);
+    toggleSwitch.disabled = isLocked;
+    toggleSwitch.title = isLocked 
+      ? 'Системный плагин управляется администратором' 
+      : 'Включить / отключить плагин';
+  }
+
+  const saveBtn = document.getElementById('btn-save-plugin-config');
+  if (saveBtn) {
+    saveBtn.disabled = isLocked;
+    saveBtn.title = isLocked ? 'Настройки системного плагина изменяются только администратором' : '';
   }
 
   // Render Actions
@@ -428,3 +492,12 @@ window.saveCurrentPluginConfig = saveCurrentPluginConfig;
 window.executePluginAction = executePluginAction;
 window.clearPluginConsole = clearPluginConsole;
 window.syncPluginTabsVisibility = syncPluginTabsVisibility;
+
+// Auto-run initialization
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof window.initPluginsTab === 'function') window.initPluginsTab();
+  });
+} else {
+  if (typeof window.initPluginsTab === 'function') window.initPluginsTab();
+}

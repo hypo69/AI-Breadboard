@@ -72,10 +72,10 @@ def init_router(prefix: str = '/api/logs') -> APIRouter:
     # ------------------------------------------------------------------
     @router.get('/files')
     async def list_log_files() -> dict:
-        """Returns list доступных лог-файлов с их метаданными."""
+        """Returns list доступных лог-файлов с их метаданными в порядке убывания по дате."""
         LOG_DIR.mkdir(parents=True, exist_ok=True)
         files = []
-        for p in sorted(LOG_DIR.iterdir()):
+        for p in sorted(LOG_DIR.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True):
             if p.is_file() and p.suffix in _ALLOWED_EXTENSIONS:
                 files.append(_file_info(p))
         return {'files': files, 'count': len(files)}

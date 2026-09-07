@@ -62,27 +62,67 @@ def _get_user_tts_config(request: Request) -> tuple[str, str]:
     return tts_system, tts_voice
 
 def _adjust_voice_for_language(text: str, current_voice: str) -> str:
-    """Эвристически определяет язык текста и подменяет голос, если он не совпадает с языком."""
+    """Heuristically detects text language and switches default voice if it doesn't match."""
     import re
-    # Подсчитываем количество букв кириллицы и латиницы
-    ru_count = len(re.findall(r'[А-Яа-яЁё]', text))
+    # Count Cyrillic, Hebrew, and Latin characters
+    ru_count = len(re.findall(r'[\u0400-\u04FF]', text))
+    he_count = len(re.findall(r'[\u0590-\u05FF]', text))
     en_count = len(re.findall(r'[A-Za-z]', text))
-    
-    # Если кириллицы больше, считаем текст русским
-    if ru_count >= en_count:
-        if current_voice.lower().startswith('en-'):
-            # Возвращаем дефолтный русский голос
+
+    # Determine dominant script
+    if he_count > ru_count and he_count > en_count:
+        if not current_voice.lower().startswith('he-') and current_voice.lower() != 'he':
+            return "he-IL-AvriNeural"
+    elif ru_count >= en_count and ru_count >= he_count and ru_count > 0:
+        if not current_voice.lower().startswith('ru-') and current_voice.lower() != 'ru' and current_voice not in {"aidar", "baya", "eugene", "kseniya", "xenia", "random"}:
             return "ru-RU-DmitryNeural"
-    else:
-        # Считаем текст английским
-        if current_voice.lower().startswith('ru-'):
-            # Возвращаем дефолтный английский голос
+    elif en_count > 0:
+        if current_voice.lower().startswith('ru-') or current_voice.lower().startswith('he-'):
             return "en-US-AriaNeural"
-            
+
     return current_voice
 
 def init_router(prefix: str = "/api/tts") -> APIRouter:
     router = APIRouter(prefix=prefix, tags=["tts"])
+
+    @router.get("/voices")
+    async def get_voices():
+        """Returns catalogue of supported multilingual TTS voices grouped by engine."""
+        return {
+            "edge-tts": [
+                {"value": "ru-RU-DmitryNeural", "label": "Дмитрий (RU - Мужской)", "lang": "ru-RU", "gender": "male"},
+                {"value": "ru-RU-SvetlanaNeural", "label": "Светлана (RU - Женский)", "lang": "ru-RU", "gender": "female"},
+                {"value": "en-US-JennyNeural", "label": "Jenny (US - Female)", "lang": "en-US", "gender": "female"},
+                {"value": "en-US-GuyNeural", "label": "Guy (US - Male)", "lang": "en-US", "gender": "male"},
+                {"value": "en-US-AriaNeural", "label": "Aria (US - Female)", "lang": "en-US", "gender": "female"},
+                {"value": "en-GB-SoniaNeural", "label": "Sonia (UK - Female)", "lang": "en-GB", "gender": "female"},
+                {"value": "en-GB-RyanNeural", "label": "Ryan (UK - Male)", "lang": "en-GB", "gender": "male"},
+                {"value": "he-IL-AvriNeural", "label": "Avri (HE - אברי)", "lang": "he-IL", "gender": "male"},
+                {"value": "he-IL-HilaNeural", "label": "Hila (HE - הילה)", "lang": "he-IL", "gender": "female"},
+                {"value": "de-DE-KatjaNeural", "label": "Katja (DE - Female)", "lang": "de-DE", "gender": "female"},
+                {"value": "de-DE-ConradNeural", "label": "Conrad (DE - Male)", "lang": "de-DE", "gender": "male"},
+                {"value": "fr-FR-DeniseNeural", "label": "Denise (FR - Female)", "lang": "fr-FR", "gender": "female"},
+                {"value": "fr-FR-HenriNeural", "label": "Henri (FR - Male)", "lang": "fr-FR", "gender": "male"},
+                {"value": "es-ES-ElviraNeural", "label": "Elvira (ES - Female)", "lang": "es-ES", "gender": "female"},
+                {"value": "es-ES-AlvaroNeural", "label": "Alvaro (ES - Male)", "lang": "es-ES", "gender": "male"}
+            ],
+            "gtts": [
+                {"value": "ru", "label": "Русский (Google TTS)", "lang": "ru"},
+                {"value": "en", "label": "English (Google TTS)", "lang": "en"},
+                {"value": "he", "label": "עברית (Google TTS)", "lang": "he"},
+                {"value": "de", "label": "Deutsch (Google TTS)", "lang": "de"},
+                {"value": "fr", "label": "Français (Google TTS)", "lang": "fr"},
+                {"value": "es", "label": "Español (Google TTS)", "lang": "es"}
+            ],
+            "silero": [
+                {"value": "eugene", "label": "Евгений (Silero RU - Мужской)", "lang": "ru", "gender": "male"},
+                {"value": "aidar", "label": "Айдар (Silero RU - Мужской)", "lang": "ru", "gender": "male"},
+                {"value": "baya", "label": "Бая (Silero RU - Женский)", "lang": "ru", "gender": "female"},
+                {"value": "kseniya", "label": "Ксения (Silero RU - Женский)", "lang": "ru", "gender": "female"},
+                {"value": "xenia", "label": "Ксения v2 (Silero RU - Женский)", "lang": "ru", "gender": "female"},
+                {"value": "random", "label": "Рандомный (Silero RU)", "lang": "ru", "gender": "other"}
+            ]
+        }
 
     @router.get("/stream-text")
     async def stream_text(

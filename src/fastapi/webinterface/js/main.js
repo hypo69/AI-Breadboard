@@ -43,10 +43,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log('HELP system initialized');
   
   console.log('Loading tabs...');
-  const v = '20260906_rag_tab';
+  const v = '20260906_rag_voice_tab';
   await Promise.all([
     loadTabContent('chat', `/html/chat/index.html?v=${v}`),
     loadTabContent('rag', `/html/rag_tab/index.html?v=${v}`, `/html/rag_tab/main.js?v=${v}`),
+    loadTabContent('voice', `/html/voice_tab/index.html?v=${v}`, `/html/voice_tab/main.js?v=${v}`),
     loadTabContent('plugins', `/html/plugins_tab/index.html?v=${v}`, `/html/plugins_tab/main.js?v=${v}`),
     loadTabContent('admin', `/html/admin/index.html?v=${v}`),
     loadTabContent('help', `/html/help/index.html?v=${v}`),
@@ -75,6 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     chatTab.classList.add('active');
     document.getElementById('tab-chat').classList.add('show', 'active');
   }
+  setupDropdownTabs();
   console.log('Initialization complete');
 });
 
@@ -93,7 +95,7 @@ async function loadTabContent(tabName, url, scriptUrl = null) {
     // Загрузка JS файла вкладки
     const script = document.createElement('script');
     script.src = scriptUrl || `/html/${tabName}/main.js?v=20260824_plugin_manager`;
-    if (tabName === 'admin') {
+    if (tabName === 'admin' || tabName === 'instructions' || tabName === 'rag') {
       script.type = 'module';
     }
     script.onload = () => {
@@ -116,10 +118,59 @@ async function loadTabContent(tabName, url, scriptUrl = null) {
   }
 }
 
+// Setup dropdowns and wire click handlers
+function setupDropdownTabs() {
+  document.querySelectorAll('#mainTabs [data-bs-toggle="dropdown"]').forEach((toggleBtn) => {
+    if (window.bootstrap?.Dropdown) {
+      bootstrap.Dropdown.getOrCreateInstance(toggleBtn);
+    }
+  });
+
+  document.querySelectorAll('#mainTabs .dropdown-item[data-bs-toggle="tab"]').forEach((itemBtn) => {
+    if (itemBtn.dataset.boundTabClick) return;
+    itemBtn.dataset.boundTabClick = 'true';
+
+    itemBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (window.bootstrap?.Tab) {
+        const tabInstance = bootstrap.Tab.getOrCreateInstance(itemBtn);
+        tabInstance.show();
+      }
+      const dropdownToggle = itemBtn.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
+      if (dropdownToggle && window.bootstrap?.Dropdown) {
+        const dd = bootstrap.Dropdown.getInstance(dropdownToggle);
+        dd?.hide();
+      }
+    });
+  });
+}
+
 // Обработка переключения вкладок
 document.getElementById('mainTabs')?.addEventListener('shown.bs.tab', (e) => {
-  const target = e.target.dataset.bsTarget.replace('#tab-', '');
+  const target = e.target.dataset.bsTarget?.replace('#tab-', '') || '';
   console.log(`Переключение на вкладку: ${target}`);
+  
+  const targetSelector = e.target.getAttribute('data-bs-target');
+  document.querySelectorAll('#mainTabs .dropdown-item').forEach((item) => {
+    if (item.getAttribute('data-bs-target') === targetSelector) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+  document.querySelectorAll('#mainTabs .dropdown').forEach((dropdown) => {
+    const toggle = dropdown.querySelector('.dropdown-toggle');
+    const hasActiveChild = dropdown.querySelector('.dropdown-item.active');
+    if (toggle) {
+      if (hasActiveChild) {
+        toggle.classList.add('active');
+      } else {
+        toggle.classList.remove('active');
+      }
+    }
+  });
+
+  setupDropdownTabs();
 });
 
 // Модуль для работы с API

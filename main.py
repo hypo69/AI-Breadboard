@@ -59,9 +59,12 @@ from src.fastapi import (
     init_logs_router,
     init_keys_router,
     init_admin_router,
+    init_skills_router,
+    init_plugins_router,
     init_agents_router,
     init_rag_router,
     init_audio_router,
+    init_user_storage_router,
     router_openai,
 )
 from src.fastapi.router_version import init_router as init_version_router
@@ -514,9 +517,12 @@ app.include_router(init_tts_router())
 app.include_router(init_logs_router())
 app.include_router(init_keys_router())
 app.include_router(init_admin_router())
+app.include_router(init_skills_router())
+app.include_router(init_plugins_router())
 app.include_router(init_agents_router())
 app.include_router(init_rag_router())
 app.include_router(init_audio_router())
+app.include_router(init_user_storage_router())
 app.include_router(init_version_router())
 app.include_router(router_openai)
 
@@ -559,15 +565,36 @@ async def startup_event():
         except Exception as e:
             logger.error(f"Failed to pre-load Silero TTS model: {e}")
 
+def is_localhost(request: Request) -> bool:
+    """Check if the incoming request originates from localhost/loopback."""
+    client_host = request.client.host if request.client else ''
+    return client_host in ('127.0.0.1', '::1', 'localhost', 'testserver', 'testclient', '0.0.0.0')
+
+def get_request_hostname(request: Request) -> str:
+    """Return lowercase hostname from headers or url."""
+    host_header = request.headers.get('x-forwarded-host') or request.headers.get('host') or request.url.hostname or ''
+    return host_header.split(':')[0].strip().lower()
+
 @app.get('/', response_class=HTMLResponse)
 async def root(request: Request) -> HTMLResponse:
-    """Serving of main HTML page — admin interface."""
-    auth_response = check_admin_auth(request)
-    if auth_response:
-        return auth_response
-    content = read_text_file(webinterface_dir / 'admin' / 'index.html')
+    """Serving of main HTML page — user interface for kino.davidka.net / client access."""
+    content = read_text_file(webinterface_dir / 'user' / 'index.html')
     if not content:
-        raise HTTPException(status_code=500, detail='Failed to read admin index page')
+        raise HTTPException(status_code=500, detail='Failed to read user index page')
+    return HTMLResponse(content=content)
+
+@app.get('/user')
+async def user_interface(request: Request) -> RedirectResponse:
+    """Redirect User interface path to root /."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url='/', status_code=303)
+
+@app.get('/user/{full_path:path}', response_class=HTMLResponse)
+async def user_static(full_path: str) -> HTMLResponse:
+    """Serving User static files."""
+    content = read_text_file(webinterface_dir / 'user' / full_path)
+    if not content:
+        raise HTTPException(status_code=404, detail='File not found')
     return HTMLResponse(content=content)
 
 @app.get('/tgmini', response_class=HTMLResponse)
@@ -846,10 +873,17 @@ ADMIN_LOGIN_HTML = """<!DOCTYPE html>
 """
 
 def check_admin_auth(request: Request):
-    """Check прав доступа к панели администратора с Google OAuth."""
+    """Check access rights to admin panel, strictly restricting access to localhost."""
     from fastapi.responses import RedirectResponse, HTMLResponse
     from src.fastapi.router_auth import verify_jwt_token
     from src.user_manager import user_manager
+
+    user_domain = os.getenv('USER_DOMAIN', 'kino.davidka.net').strip().lower()
+    req_host = get_request_hostname(request)
+
+    # Restrict /admin to localhost only: silently redirect to root for external / user domain
+    if req_host == user_domain or not is_localhost(request):
+        return RedirectResponse(url='/', status_code=303)
 
     token = request.cookies.get('auth_token', '')
     if not token:
@@ -901,6 +935,11 @@ async def admin_interface(request: Request):
 async def admin_interface_post(request: Request):
     """Verify password and set admin authentication cookie."""
     from fastapi.responses import RedirectResponse
+    user_domain = os.getenv('USER_DOMAIN', 'kino.davidka.net').strip().lower()
+    req_host = get_request_hostname(request)
+    if req_host == user_domain or not is_localhost(request):
+        return RedirectResponse(url='/', status_code=303)
+
     form = await request.form()
     password = form.get('password')
     if password == 'onela':
@@ -938,9 +977,13 @@ async def tv_static(full_path: str) -> HTMLResponse:
     return HTMLResponse(content=content)
 
 @app.get('/logs')
-async def logs_interface():
-    """Redirect to admin dashboard logs tab."""
+async def logs_interface(request: Request):
+    """Redirect to admin dashboard logs tab or root on user domain."""
     from fastapi.responses import RedirectResponse
+    user_domain = os.getenv('USER_DOMAIN', 'kino.davidka.net').strip().lower()
+    req_host = get_request_hostname(request)
+    if req_host == user_domain or not is_localhost(request):
+        return RedirectResponse(url='/', status_code=303)
     return RedirectResponse(url='/admin#tab-logs', status_code=303)
 
 from pydantic import BaseModel

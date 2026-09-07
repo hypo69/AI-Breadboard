@@ -1,0 +1,54 @@
+[
+  {
+    "id": "core/calculator.py::module",
+    "path": "core/calculator.py",
+    "module": "core.calculator",
+    "type": "python_module",
+    "symbol": "core.calculator",
+    "class_name": null,
+    "function_name": null,
+    "is_async": false,
+    "docstring": "",
+    "signature": "module core.calculator",
+    "imports": [],
+    "related_symbols": [
+      "SuperCalculator"
+    ],
+    "text": "MODULE: core.calculator\nPATH: core/calculator.py\nTYPE: python_module\nDOCSTRING: \nIMPORTS: None\nCLASSES: SuperCalculator\nTOP_FUNCTIONS: None\n",
+    "code": ""
+  },
+  {
+    "id": "core/calculator.py::SuperCalculator",
+    "path": "core/calculator.py",
+    "module": "core.calculator",
+    "type": "python_class",
+    "symbol": "SuperCalculator",
+    "class_name": "SuperCalculator",
+    "function_name": null,
+    "is_async": false,
+    "docstring": "Advanced math engine.",
+    "signature": "class SuperCalculator",
+    "imports": [],
+    "related_symbols": [
+      "compute"
+    ],
+    "text": "CLASS: SuperCalculator\nMODULE: core.calculator\nPATH: core/calculator.py\nBASES: object\nDOCSTRING: Advanced math engine.\nMETHODS: compute\n",
+    "code": "class SuperCalculator:\n    \"\"\"Advanced math engine.\"\"\"\n    def compute(self, x: int) -> int:\n        \"\"\"Compute square.\"\"\"\n        return x * x\n"
+  },
+  {
+    "id": "core/calculator.py::SuperCalculator.compute",
+    "path": "core/calculator.py",
+    "module": "core.calculator",
+    "type": "python_method",
+    "symbol": "SuperCalculator.compute",
+    "class_name": "SuperCalculator",
+    "function_name": "compute",
+    "is_async": false,
+    "docstring": "Compute square.",
+    "signature": "def compute(self, x)",
+    "imports": [],
+    "related_symbols": [],
+    "text": "PATH: core/calculator.py\nMODULE: core.calculator\nCLASS: SuperCalculator\nSYMBOL: SuperCalculator.compute\nSIGNATURE: def compute(self, x)\nDOCSTRING: Compute square.\nIMPORTS: None\nRELATED_SYMBOLS: None\n\nCODE:\n    def compute(self, x: int) -> int:\n        \"\"\"Compute square.\"\"\"\n        return x * x\n",
+    "code": "    def compute(self, x: int) -> int:\n        \"\"\"Compute square.\"\"\"\n        return x * x\n"
+  }
+]

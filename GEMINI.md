@@ -21,6 +21,7 @@ This file serves as the **primary instruction index** for the project. It links 
 - **Installation Guide:** [`.ai/instructions/knowledge/INSTALLATION_GUIDE.md`](.ai/instructions/knowledge/INSTALLATION_GUIDE.md)
 - **Launcher Guide:** [`.ai/instructions/knowledge/LAUNCHER_GUIDE.md`](.ai/instructions/knowledge/LAUNCHER_GUIDE.md)
 - **CLI Tools Reference:** [`.ai/instructions/knowledge/scripts_tools.md`](.ai/instructions/knowledge/scripts_tools.md)
+- **RAG Document Cleaner:** [`.ai/instructions/knowledge/rag_cleaner.md`](.ai/instructions/knowledge/rag_cleaner.md)
 
 ---
 
@@ -110,7 +111,7 @@ pytest tests/ --cov                # Pytest with coverage reporting
 | **No None Ambiguity** | Explicit types and robust fallback handling | CODE_RULES.md § 3.6 |
 | **DRY** | No code duplication across provider adapters | CODE_RULES.md § 4.2 |
 | **English Only** | Code, docstrings, comments, and docs in English | CODE_RULES.md § 5.1 |
-| **300-Line Limit** | Maximum 300 lines of functional code per function | CODE_RULES.md § 4.4 |
+| **500-Line Limit** | Maximum 500 lines of functional code (up to +15% allowance when needed) | CODE_RULES.md § 4.4 |
 | **Documentation** | English Docstrings + README.md per directory | DOCS_RULES.md § 3-4 |
 
 ---

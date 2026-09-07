@@ -15,8 +15,18 @@
 import sys
 import argparse
 import asyncio
-# Импортируем RAG-плагин для использования логики
-from plugins.rag import RAGPlugin
+class RAGPlugin:
+    """TEMPORARY STUB: Implement real RAGPlugin."""
+    def __init__(self, ai_model):
+        self.ai_model = ai_model
+    
+    async def _handle(self, message: str, **kwargs):
+        yield {"status": "🔍 Поиск в RAG (Заглушка)..."}
+        yield {"text": f"[STUB] RAG processed: {message}"}
+
+    async def handle(self, message: str, **kwargs) -> str:
+        return f"[STUB] RAG processed: {message}"
+
 
 class FakeAIModel:
     """Фиктивный объект модели для инициализации плагина."""

@@ -42,7 +42,8 @@ class RAGEngine:
         query: str,
         user_identifier: str = "",
         api_key: str = "",
-        threshold: Optional[float] = None
+        threshold: Optional[float] = None,
+        top_k: int = 3
     ) -> RAGRouteDecision:
         """
         ## hypo69 docblock
@@ -53,6 +54,7 @@ class RAGEngine:
             user_identifier (str): Идентификатор пользователя.
             api_key (str): Ключ API.
             threshold (Optional[float]): Порог уверенности для прямого ответа.
+            top_k (int): Количество возвращаемых фрагментов.
 
         Returns:
             RAGRouteDecision: Решение движка (прямой ответ или fallback к модели).
@@ -75,8 +77,8 @@ class RAGEngine:
                 user_identifier,
                 api_key,
                 clean_query,
-                top_k=3,
-                threshold=0.45
+                top_k=top_k,
+                threshold=active_threshold
             )
 
             if results:

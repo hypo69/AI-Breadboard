@@ -3,9 +3,9 @@
     Главный лончер проекта ai-breadboard. Запускает FastAPI-сервер и сопутствующие сервисы.
 
 .DESCRIPTION
-    Активирует виртуальное окружение, загружает конфигурацию из config.json и .env,
+    Загружает конфигурацию из config.json и .env,
     в интерактивном режиме запрашивает адрес хоста (0.0.0.0, 127.0.0.1 или свой IP),
-    порт и параметры сопутствующих сервисов (Foundry), проверяет зависимости,
+    порт и параметры сопутствующих сервисов (Foundry),
     освобождает порт и запускает FastAPI-сервер через Run-Unicorn.ps1.
 
 .PARAMETER HostAddress
@@ -27,11 +27,11 @@
     Алиасы: -OAuth.
 
 .PARAMETER EnableTelegramBot
-    Включить запуск Telegram-бота. По умолчанию выключен ($false).
+    Включить запуск Telegram-бота. По умолчанию включен ($true).
     Алиасы: -Telegram, -EnableTelegram, -TelegramBot, -tg.
 
 .PARAMETER EnableAssist
-    Включить запуск терминала с ассистентом assist.ps1. По умолчанию включен ($true).
+    Включить запуск терминала с ассистентом assist.ps1. По умолчанию выключен ($false).
     Алиасы: -Assist, -enable_assist.
 
 .PARAMETER Help
@@ -95,7 +95,6 @@ if ([string]::IsNullOrEmpty($scriptDir)) {
     $scriptDir = (Get-Location).Path
 }
 
-$venvActivate = Join-Path $scriptDir "venv\Scripts\Activate.ps1"
 $env:PYTHONUTF8 = "1"
 $env:AIBREADBOARD_DIR = $scriptDir
 $env:ASSIST_DIR = $scriptDir
@@ -136,9 +135,9 @@ if ($Help) {
     Write-Host "  -Interactive, -i      Включить интерактивный режим (диалоговые вопросы)."
     Write-Host "  -NonInteractive       Неинтерактивный режим (включен по умолчанию)."
     Write-Host "  -Cloudflared, -cf     Включить туннель Cloudflare Tunnel (по умолчанию выключен)."
-    Write-Host "  -EnableOAuth, -OAuth  Включить авторизацию через Google OAuth (по умолчанию выключена)."
-    Write-Host "  -EnableTelegramBot    Включить запуск Telegram-бота (по умолчанию выключен, алиас: -tg)."
-    Write-Host "  -EnableAssist, -Assist Включить терминал с assist.ps1 (по умолчанию: `$true, алиас: -enable_assist)."
+    Write-Host "  -EnableOAuth, -OAuth  Включить авторизацию через Google OAuth (по умолчанию включена)."
+    Write-Host "  -EnableTelegramBot    Включить запуск Telegram-бота (по умолчанию включен, алиас: -tg)."
+    Write-Host "  -EnableAssist, -Assist Включить терминал с assist.ps1 (по умолчанию выключен, алиас: -enable_assist)."
     Write-Host "  -Help, -h, --help     Показать эту справку и выйти."
     Write-Host ""
     Write-Host "ПРИМЕРЫ:" -ForegroundColor Yellow
@@ -159,62 +158,7 @@ Write-Host "╚═════════════════════�
 Write-Host ""
 
 # ============================================================================
-# STAGE 2 — ПОДГОТОВКА PYTHON-ОКРУЖЕНИЯ
-# ----------------------------------------------------------------------------
-# Определяется Python, используемый проектом. В первую очередь проверяется
-# виртуальное окружение проекта. Если оно отсутствует, используется Python,
-# доступный в системном PATH.
-#
-# На этом этапе также активируется venv, если его скрипт активации найден.
-# ============================================================================
-Write-Host "[1/5] Проверка виртуального окружения..." -ForegroundColor Cyan
-
-# Используется прямой путь к Python из venv, чтобы выбор интерпретатора
-# не зависел от PATH и возможных заглушек Microsoft Store.
-$venvPython = Join-Path $scriptDir "venv\Scripts\python.exe"
-
-if (Test-Path $venvPython) {
-    Write-Host "    [OK] Виртуальное окружение найдено" -ForegroundColor Green
-    Write-Host "    Активация..." -ForegroundColor DarkGray
-    if (Test-Path $venvActivate) { . $venvActivate }
-    Write-Host "    [OK] Виртуальное окружение активировано" -ForegroundColor Green
-
-    # Python из виртуального окружения используется напрямую, минуя PATH.
-    $pythonPath = $venvPython
-    Write-Host "    Python: $pythonPath" -ForegroundColor Gray
-} else {
-    Write-Host "    [WARN] Виртуальное окружение не найдено: $venvPython" -ForegroundColor Yellow
-    $pythonPath = (Get-Command python -ErrorAction SilentlyContinue).Source
-    if (-not $pythonPath) {
-        Write-Host "    [ERROR] Python не найден! Установите Python с python.org и пересоздайте venv." -ForegroundColor Red
-        exit 1
-    }
-    Write-Host "    [WARN] Используется системный Python: $pythonPath" -ForegroundColor Yellow
-}
-
-# ============================================================================
-# STAGE 3 — ПРОВЕРКА PYTHON-ЗАВИСИМОСТЕЙ
-# ----------------------------------------------------------------------------
-# Проверяется наличие основных библиотек, необходимых для запуска приложения:
-# FastAPI, Uvicorn, python-dotenv и PyJWT. Ошибка на этом этапе не прерывает
-# лончер, а выводится как предупреждение с указанием способа установки.
-# ============================================================================
-Write-Host ""
-Write-Host "[2/5] Проверка зависимостей..." -ForegroundColor Cyan
-try {
-    $packages = & $pythonPath -c "import fastapi, uvicorn, dotenv, jwt; print('fastapi, uvicorn, python-dotenv, PyJWT - OK')" 2>$null
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "    [OK] Основные зависимости загружены" -ForegroundColor Green
-    } else {
-        Write-Host "    [WARN] Некоторые зависимости не установлены. Запустите install.cmd" -ForegroundColor Yellow
-    }
-} catch {
-    Write-Host "    [ERROR] Ошибка при проверке зависимостей: $_" -ForegroundColor Red
-    Write-Host "    Установка: install.cmd или pip install -r requirements.txt" -ForegroundColor Yellow
-}
-
-# ============================================================================
-# STAGE 4 — ЗАГРУЗКА КОНФИГУРАЦИИ И ОКРУЖЕНИЯ
+# STAGE 2 — ЗАГРУЗКА КОНФИГУРАЦИИ И ОКРУЖЕНИЯ
 # ----------------------------------------------------------------------------
 # Загружаются базовые параметры из config.json и значения, переопределяющие
 # их из .env. Одновременно определяются параметры SSL, Foundry и предварительной
@@ -222,18 +166,18 @@ try {
 # используется только для подсказки пользователю.
 # ============================================================================
 Write-Host ""
-Write-Host "[3/5] Загрузка конфигурации..." -ForegroundColor Cyan
+Write-Host "[1/3] Загрузка конфигурации..." -ForegroundColor Cyan
 $configPath = Join-Path $scriptDir "config.json"
 $envFile = Join-Path $scriptDir ".env"
 $cfgHost = "0.0.0.0"
 $cfgPort = "8000"
 $useSsl = $true
 $useFoundry = $false
-$useOllama = $true
-$useCloudflared = $false
-$enableOAuthVal = $false
-$enableTelegramBotVal = $false
-$enableAssistVal = $true
+$useOllama = $false
+$useCloudflared = $true
+$enableOAuthVal = $true
+$enableTelegramBotVal = $true
+$enableAssistVal = $false
 $preloadSilero = $false
 
 if (Test-Path $configPath) {
@@ -306,7 +250,7 @@ $lanIp = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
     Select-Object -ExpandProperty IPAddress -First 1)
 
 # ============================================================================
-# STAGE 5 — ВЫБОР ПАРАМЕТРОВ ЗАПУСКА
+# STAGE 3 — ВЫБОР ПАРАМЕТРОВ ЗАПУСКА
 # ----------------------------------------------------------------------------
 # Определяются конечные значения Host и Port. В интерактивном режиме
 # пользователь может выбрать сетевой интерфейс, порт и необходимость запуска
@@ -476,7 +420,7 @@ if ($isInteractive -and -not $autoLaunchEnabled) {
 }
 
 # ============================================================================
-# STAGE 6 — ПРОВЕРКА КОНФИГУРАЦИИ AI
+# STAGE 4 — ПРОВЕРКА КОНФИГУРАЦИИ AI
 # ----------------------------------------------------------------------------
 # Проверяется наличие API-ключа Gemini в переменных окружения, .env и локальном
 # хранилище core/secrets/gemini_keys.json. Если ключ отсутствует и запуск
@@ -578,7 +522,7 @@ if (-not $hasApiKey) {
 }
 
 # ============================================================================
-# STAGE 7 — ФОРМИРОВАНИЕ ИТОГОВОЙ КОНФИГУРАЦИИ
+# STAGE 5 — ФОРМИРОВАНИЕ ИТОГОВОЙ КОНФИГУРАЦИИ
 # ----------------------------------------------------------------------------
 # На основе выбранных параметров формируются протокол и URL, по которому
 # приложение будет доступно из браузера. Для привязки к 0.0.0.0 в браузере
@@ -604,8 +548,8 @@ if ($lanIp -and $host_ -eq "0.0.0.0") {
 Write-Host "  • AI Foundry:      $(if ($useFoundry) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
 Write-Host "  • Ollama:          $(if ($useOllama) {'ВКЛЮЧЕНА (localhost:11434)'} else {'ВЫКЛЮЧЕНА'})" -ForegroundColor White
 Write-Host "  • Google OAuth:    $(if ($enableOAuthVal) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН (по умолчанию)'})" -ForegroundColor White
-Write-Host "  • Telegram Bot:    $(if ($enableTelegramBotVal) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН (по умолчанию)'})" -ForegroundColor White
-Write-Host "  • Assist Terminal: $(if ($enableAssistVal) {'ВКЛЮЧЁН (по умолчанию)'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
+Write-Host "  • Telegram Bot:    $(if ($enableTelegramBotVal) {'ВКЛЮЧЁН (по умолчанию)'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
+Write-Host "  • Assist Terminal: $(if ($enableAssistVal) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
 Write-Host "  • Cloudflare:      $(if ($useCloudflared -and $cfTunnelToken) {'ВКЛЮЧЁН (https://kino.davidka.net)'} elseif (-not $cfTunnelToken) {'ТОКЕН НЕ ЗАДАН'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
 if ($autoLaunchEnabled -and $autoLaunchDelay -gt 0) {
     Write-Host "  • Автозапуск:      ВКЛЮЧЁН (задержка: $autoLaunchDelay сек)" -ForegroundColor Yellow
@@ -613,14 +557,14 @@ if ($autoLaunchEnabled -and $autoLaunchDelay -gt 0) {
 Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
 
 # ============================================================================
-# STAGE 8 — ПОДГОТОВКА TCP-ПОРТА
+# STAGE 6 — ПОДГОТОВКА TCP-ПОРТА
 # ----------------------------------------------------------------------------
 # Проверяется, занят ли выбранный порт. Если порт используется другим
 # процессом, определяется его PID и процесс принудительно завершается, чтобы
 # FastAPI мог занять порт без конфликта.
 # ============================================================================
 Write-Host ""
-Write-Host "[4/5] Проверка порта $port..." -ForegroundColor Cyan
+Write-Host "[2/3] Проверка порта $port..." -ForegroundColor Cyan
 
 # Определяется наличие процессов, использующих выбранный TCP-порт.
 $netstatOutput = netstat -aon 2>$null
@@ -644,17 +588,17 @@ if ($occupied) {
 }
 
 # ============================================================================
-# STAGE 9 — ЗАПУСК СОПУТСТВУЮЩИХ СЕРВИСОВ
+# STAGE 7 — ЗАПУСК СОПУТСТВУЮЩИХ СЕРВИСОВ
 # ----------------------------------------------------------------------------
 # После подготовки основной конфигурации запускаются сервисы, необходимые
 # приложению. На текущем этапе таким сервисом является локальный Foundry,
 # если он был включён пользователем или конфигурацией.
 # ============================================================================
 Write-Host ""
-Write-Host "[5/5] Проверка сопутствующих сервисов..." -ForegroundColor Cyan
+Write-Host "[3/3] Проверка сопутствующих сервисов..." -ForegroundColor Cyan
 
 # ----------------------------------------------------------------------------
-# SUBSTAGE 9.1 — MICROSOFT AI FOUNDRY
+# SUBSTAGE 7.1 — MICROSOFT AI FOUNDRY
 # ----------------------------------------------------------------------------
 # Проверяется наличие Run-Foundry.ps1 и передаётся ему команда запуска.
 # При отключённом Foundry этот блок полностью пропускается.
@@ -675,7 +619,7 @@ if ($useFoundry) {
 }
 
 # ----------------------------------------------------------------------------
-# SUBSTAGE 9.2 — OLLAMA LOCAL SERVICE (localhost:11434)
+# SUBSTAGE 7.2 — OLLAMA LOCAL SERVICE (localhost:11434)
 # ----------------------------------------------------------------------------
 # Проверяется наличие Run-Ollama.ps1 и передаётся ему команда запуска.
 # При отключённой Ollama этот блок полностью пропускается.
@@ -696,7 +640,7 @@ if ($useOllama) {
 }
 
 # ----------------------------------------------------------------------------
-# SUBSTAGE 9.3 — CLOUDFLARE TUNNEL (kino.davidka.net)
+# SUBSTAGE 7.3 — CLOUDFLARE TUNNEL (kino.davidka.net)
 # ----------------------------------------------------------------------------
 if ($useCloudflared) {
     if ($cfTunnelToken) {
@@ -719,7 +663,7 @@ if ($useCloudflared) {
 }
 
 # ----------------------------------------------------------------------------
-# SUBSTAGE 9.4 — TELEGRAM BOT (scripts/dev/bot_runner.py)
+# SUBSTAGE 7.4 — TELEGRAM BOT (scripts/dev/bot_runner.py)
 # ----------------------------------------------------------------------------
 # Проверяется наличие Run-TelegramBot.ps1 и передаётся ему команда запуска.
 # При отключённом Telegram-боте этот блок полностью пропускается.
@@ -749,7 +693,7 @@ if ($enableTelegramBotVal) {
 }
 
 # ----------------------------------------------------------------------------
-# SUBSTAGE 9.5 — ASSIST CLI TERMINAL (assist.ps1)
+# SUBSTAGE 7.5 — ASSIST CLI TERMINAL (assist.ps1)
 # ----------------------------------------------------------------------------
 # При включённом параметре EnableAssist запускается отдельное окно терминала
 # с интерактивным окружением assist.ps1.
@@ -781,7 +725,7 @@ if ($enableAssistVal) {
 Write-Host ""
 Write-Host "[SUCCESS] Настройка завершена. Запуск сервера..." -ForegroundColor Green
 # ============================================================================
-# STAGE 10 — ЗАПУСК FASTAPI-СЕРВЕРА
+# STAGE 8 — ЗАПУСК FASTAPI-СЕРВЕРА
 # ----------------------------------------------------------------------------
 # Все параметры запуска подготовлены, порт освобождён, а необходимые
 # сопутствующие сервисы запущены. Управление передаётся Run-Unicorn.ps1,

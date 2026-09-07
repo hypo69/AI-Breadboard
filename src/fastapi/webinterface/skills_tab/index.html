@@ -1,0 +1,277 @@
+<!-- Skills Tab Component -->
+<div class="container-fluid p-3" id="skills-tab-root">
+  <!-- Top Banner / Summary -->
+  <div class="alert alert-dark border-secondary bg-dark text-light d-flex flex-wrap align-items-center justify-content-between gap-3 shadow-sm">
+    <div class="d-flex align-items-center gap-3">
+      <div class="p-3 bg-black rounded border border-secondary text-warning display-6 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px;">
+        <i class="bi bi-lightning-charge-fill"></i>
+      </div>
+      <div>
+        <h5 class="mb-1 text-white d-flex align-items-center gap-2">
+          ⚡ Управление навыками (Agent Skills)
+          <span class="badge bg-primary rounded-pill small" id="skills-total-badge">0</span>
+        </h5>
+        <p class="mb-0 text-muted small">
+          Просмотр, создание, настройка и упаковка переиспользуемых навыков для AI-агентов (Antigravity, Gemini CLI, Breadboard).
+        </p>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <button type="button" class="btn btn-outline-light btn-sm d-flex align-items-center gap-1" id="btn-refresh-skills" onclick="window.skillsTab?.refresh()">
+        <i class="bi bi-arrow-clockwise"></i> Обновить
+      </button>
+      <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#createSkillModal">
+        <i class="bi bi-plus-circle-fill"></i> Новый навык
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Row -->
+  <div class="row g-2 mb-3" id="skills-stats-row">
+    <div class="col-6 col-md-3">
+      <div class="p-2 bg-dark rounded border border-secondary text-center">
+        <div class="h4 mb-0 text-white" id="stat-total-skills">0</div>
+        <div class="small text-muted">Всего навыков</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-2 bg-dark rounded border border-secondary text-center">
+        <div class="h4 mb-0 text-info" id="stat-scripts-skills">0</div>
+        <div class="small text-muted">С исполняемыми скриптами</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-2 bg-dark rounded border border-secondary text-center">
+        <div class="h4 mb-0 text-warning" id="stat-refs-skills">0</div>
+        <div class="small text-muted">Со справочниками</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-2 bg-dark rounded border border-secondary text-center">
+        <div class="h4 mb-0 text-success" id="stat-packaged-skills">0</div>
+        <div class="small text-muted">Скомпилировано (.skill)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & View Controls -->
+  <div class="card bg-dark border-secondary text-white mb-3">
+    <div class="card-body p-2 d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div class="input-group input-group-sm flex-grow-1" style="max-width: 450px;">
+        <span class="input-group-text bg-black border-secondary text-muted"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control bg-black text-white border-secondary" id="skills-search-input" placeholder="Поиск по названию или описанию навыка...">
+        <button class="btn btn-outline-secondary border-secondary text-muted" type="button" id="skills-search-clear" onclick="window.skillsTab?.clearSearch()">✕</button>
+      </div>
+
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <select class="form-select form-select-sm bg-black text-white border-secondary" id="skills-filter-select" style="width: auto;" onchange="window.skillsTab?.applyFilters()">
+          <option value="all">Все навыки</option>
+          <option value="scripts">Только со скриптами</option>
+          <option value="references">Только со справочниками</option>
+          <option value="packaged">Собранные (.skill)</option>
+        </select>
+
+        <div class="btn-group btn-group-sm" role="group">
+          <button type="button" class="btn btn-outline-secondary active" id="btn-view-cards" onclick="window.skillsTab?.setViewMode('cards')">
+            <i class="bi bi-grid-fill"></i> Карточки
+          </button>
+          <button type="button" class="btn btn-outline-secondary" id="btn-view-table" onclick="window.skillsTab?.setViewMode('table')">
+            <i class="bi bi-table"></i> Таблица
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading & Empty Indicators -->
+  <div id="skills-loading" class="text-center py-5 text-muted d-none">
+    <div class="spinner-border text-primary mb-2" role="status"></div>
+    <div>Загрузка навыков...</div>
+  </div>
+
+  <div id="skills-empty" class="text-center py-5 text-muted d-none">
+    <i class="bi bi-folder-x display-4 d-block mb-2 text-secondary"></i>
+    <h5>Навыки не найдены</h5>
+    <p class="small">Попробуйте изменить поисковый запрос или создайте новый навык.</p>
+  </div>
+
+  <!-- Cards Container -->
+  <div class="row g-3" id="skills-cards-container"></div>
+
+  <!-- Table Container -->
+  <div class="card bg-dark border-secondary text-white d-none" id="skills-table-card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle mb-0">
+          <thead class="table-secondary text-uppercase small">
+            <tr>
+              <th scope="col" style="width: 25%;">Название навыка</th>
+              <th scope="col" style="width: 35%;">Описание</th>
+              <th scope="col" style="width: 15%;">Расположение</th>
+              <th scope="col" style="width: 10%;">Компоненты</th>
+              <th scope="col" style="width: 15%; text-align: right;">Действия</th>
+            </tr>
+          </thead>
+          <tbody id="skills-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Create New Skill -->
+<div class="modal fade" id="createSkillModal" tabindex="-1" aria-labelledby="createSkillModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="createSkillModalLabel">
+          <i class="bi bi-plus-circle-fill text-primary"></i> Создание нового навыка
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="create-skill-form" onsubmit="event.preventDefault(); window.skillsTab?.createSkill();">
+          <div class="mb-3">
+            <label for="new-skill-name" class="form-label fw-semibold">
+              Имя навыка (kebab-case) <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-black border-secondary text-muted">⚡</span>
+              <input type="text" class="form-control bg-black text-white border-secondary" id="new-skill-name" placeholder="например, media-analyzer или log-scanner" required pattern="^[a-z0-9_-]+$">
+            </div>
+            <div class="form-text text-muted small">Допустимы латинские буквы, цифры, дефис и знак подчеркивания.</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="new-skill-desc" class="form-label fw-semibold">Краткое описание назначения</label>
+            <input type="text" class="form-control bg-black text-white border-secondary" id="new-skill-desc" placeholder="Кратко опишите, какие задачи решает этот навык...">
+          </div>
+
+          <div class="mb-3">
+            <label for="new-skill-dir" class="form-label fw-semibold">Целевой каталог (Тип навыка)</label>
+            <select class="form-select bg-black text-white border-secondary" id="new-skill-dir">
+              <option value="~/.gemini/skills" selected>~/.gemini/skills (Пользовательский навык — Gemini CLI / Antigravity)</option>
+              <option value="~/.agents/skills">~/.agents/skills (Глобальный пользовательский навык)</option>
+              <option value=".agents/skills">.agents/skills (Проектный навык AI Breadboard)</option>
+              <option value="skills">skills (Локальный каталог)</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="new-skill-instructions" class="form-label fw-semibold">
+              Инструкции для агента (Markdown в SKILL.md)
+            </label>
+            <textarea class="form-control bg-black text-white border-secondary" id="new-skill-instructions" rows="8" style="font-family: 'Courier New', monospace; font-size: 0.85rem;" placeholder="## 🎯 Purpose&#10;...&#10;&#10;## 🚀 Usage & Protocol&#10;..."></textarea>
+            <div class="form-text text-muted small">Шаблон будет автоматически дополнен стандартной структурой и YAML frontmatter.</div>
+          </div>
+
+          <div id="create-skill-alert" class="alert d-none py-2 mb-0"></div>
+        </form>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-primary d-flex align-items-center gap-1" id="btn-submit-create-skill" onclick="window.skillsTab?.createSkill()">
+          <span class="spinner-border spinner-border-sm d-none" id="create-skill-spinner" role="status"></span>
+          <span><i class="bi bi-check2-circle"></i> Создать навык</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal / Inspector: View & Edit Skill -->
+<div class="modal fade" id="skillDetailsModal" tabindex="-1" aria-labelledby="skillDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="modal-title d-flex align-items-center gap-2 mb-0" id="skillDetailsModalLabel">
+            <i class="bi bi-lightning-charge-fill text-warning"></i>
+            <span id="detail-skill-title">Навык</span>
+          </h5>
+          <small class="text-muted" id="detail-skill-path">—</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-outline-info btn-sm d-flex align-items-center gap-1" id="btn-package-modal" onclick="window.skillsTab?.packageCurrentSkill()">
+            <i class="bi bi-box-seam"></i> Собрать .skill
+          </button>
+          <button type="button" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" id="btn-delete-modal" onclick="window.skillsTab?.deleteCurrentSkill()">
+            <i class="bi bi-trash"></i> Удалить
+          </button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+      </div>
+      <div class="modal-body p-3">
+        <!-- Navigation tabs in inspector -->
+        <ul class="nav nav-pills mb-3" id="skillDetailTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="detail-tab-skillmd" data-bs-toggle="pill" data-bs-target="#detail-pane-skillmd" type="button" role="tab">
+              📝 SKILL.md (Инструкции)
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="detail-tab-readme" data-bs-toggle="pill" data-bs-target="#detail-pane-readme" type="button" role="tab">
+              📑 README.md
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="detail-tab-files" data-bs-toggle="pill" data-bs-target="#detail-pane-files" type="button" role="tab">
+              📁 Файлы и структура
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="detail-tab-contract" data-bs-toggle="pill" data-bs-target="#detail-pane-contract" type="button" role="tab">
+              ⚙️ JSON Contract / Метаданные
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="skillDetailTabContent">
+          <!-- SKILL.md Tab Pane -->
+          <div class="tab-pane fade show active" id="detail-pane-skillmd" role="tabpanel">
+            <div class="mb-3">
+              <label for="detail-skill-desc-input" class="form-label fw-semibold small text-muted">Описание в YAML Frontmatter:</label>
+              <input type="text" class="form-control bg-black text-white border-secondary form-control-sm" id="detail-skill-desc-input">
+            </div>
+            <div class="mb-2 d-flex justify-content-between align-items-center">
+              <label for="detail-skill-instructions" class="form-label fw-semibold small text-muted mb-0">Тело инструкции (Markdown):</label>
+              <small class="text-muted">Редактируемый текст</small>
+            </div>
+            <textarea class="form-control bg-black text-white border-secondary" id="detail-skill-instructions" rows="16" style="font-family: 'Courier New', monospace; font-size: 0.9rem;" spellcheck="false"></textarea>
+          </div>
+
+          <!-- README.md Tab Pane -->
+          <div class="tab-pane fade" id="detail-pane-readme" role="tabpanel">
+            <div class="mb-2 d-flex justify-content-between align-items-center">
+              <label for="detail-skill-readme" class="form-label fw-semibold small text-muted mb-0">README.md документация:</label>
+              <small class="text-muted">Англоязычная документация пакета</small>
+            </div>
+            <textarea class="form-control bg-black text-white border-secondary" id="detail-skill-readme" rows="18" style="font-family: 'Courier New', monospace; font-size: 0.9rem;" spellcheck="false"></textarea>
+          </div>
+
+          <!-- Files Structure Tab Pane -->
+          <div class="tab-pane fade" id="detail-pane-files" role="tabpanel">
+            <div class="p-3 bg-black rounded border border-secondary">
+              <h6 class="text-info mb-2"><i class="bi bi-folder2-open"></i> Содержимое папки навыка:</h6>
+              <div id="detail-files-list" class="list-group list-group-flush bg-transparent"></div>
+            </div>
+          </div>
+
+          <!-- JSON Contract Tab Pane -->
+          <div class="tab-pane fade" id="detail-pane-contract" role="tabpanel">
+            <pre class="bg-black p-3 rounded border border-secondary text-info mb-0" id="detail-json-contract" style="font-size: 0.85rem; max-height: 400px; overflow-y: auto;"></pre>
+          </div>
+        </div>
+
+        <div id="detail-skill-alert" class="alert d-none py-2 mt-3 mb-0"></div>
+      </div>
+      <div class="modal-footer border-secondary d-flex justify-content-between">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Закрыть</button>
+        <button type="button" class="btn btn-primary d-flex align-items-center gap-1" id="btn-save-skill" onclick="window.skillsTab?.saveCurrentSkill()">
+          <span class="spinner-border spinner-border-sm d-none" id="save-skill-spinner" role="status"></span>
+          <span><i class="bi bi-save"></i> Сохранить изменения</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -17,7 +17,7 @@
 
 .NOTES
     Ported from legacy batch scripts for Windows PowerShell execution.
-    Automatically updates FOUNDRY_BASE_URL in .env file on startup.
+    Automatically updates foundry_base_url in config.json on startup.
 #>
 
 [CmdletBinding()]
@@ -148,25 +148,20 @@ if ($Action -eq 'start') {
                     Write-Host "Base URL: http://localhost:$port/v1/" -ForegroundColor Green
                     Write-Host ""
                     
-                    # Writing FOUNDRY_BASE_URL to .env for automatic configuration
-                    $envFile = Join-Path $projectRoot ".env"
-                    if (Test-Path $envFile) {
-                        $content = Get-Content $envFile
-                        $updated = $false
-                        $newContent = @()
-                        foreach ($line in $content) {
-                            if ($line -match "^FOUNDRY_BASE_URL=") {
-                                $newContent += "FOUNDRY_BASE_URL=http://localhost:$port"
-                                $updated = $true
-                            } else {
-                                $newContent += $line
+                    # Writing foundry_base_url to config.json for automatic configuration
+                    $configFile = Join-Path $projectRoot "config.json"
+                    if (Test-Path $configFile) {
+                        try {
+                            $cfg = Get-Content $configFile -Raw | ConvertFrom-Json
+                            if (-not $cfg.ai) {
+                                $cfg | Add-Member -MemberType NoteProperty -Name "ai" -Value ([PSCustomObject]@{})
                             }
+                            $cfg.ai.foundry_base_url = "http://localhost:$port"
+                            $cfg | ConvertTo-Json -Depth 10 | Set-Content $configFile -Encoding UTF8
+                            Write-Host "📝 Updated foundry_base_url in config.json" -ForegroundColor Gray
+                        } catch {
+                            Write-Warning "Could not update config.json: $_"
                         }
-                        if (-not $updated) {
-                            $newContent += "FOUNDRY_BASE_URL=http://localhost:$port"
-                        }
-                        $newContent | Set-Content $envFile
-                        Write-Host "📝 Updated FOUNDRY_BASE_URL in .env file" -ForegroundColor Gray
                     }
                     break
                 }

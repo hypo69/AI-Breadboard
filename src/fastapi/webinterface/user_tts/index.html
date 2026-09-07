@@ -266,23 +266,16 @@
 
   function getFriendlyVoiceName(system, voice) {
     if (system === 'edge-tts') {
-      if (voice === 'ru-RU-DmitryNeural') return 'Дмитрий (Microsoft Edge)';
-      if (voice === 'ru-RU-SvetlanaNeural') return 'Светлана (Microsoft Edge)';
-      return `Edge (${voice})`;
+      const found = voiceMap['edge-tts'].find(v => v.value === voice);
+      return found ? translateVoiceLabel(found.labelKey) : `Edge (${voice})`;
     }
     if (system === 'silero') {
-      const names = {
-        eugene: 'Евгений (Silero)',
-        aidar: 'Айдар (Silero)',
-        baya: 'Бая (Silero)',
-        kseniya: 'Ксения (Silero)',
-        xenia: 'Ксения v2 (Silero)',
-        random: 'Рандомный (Silero)'
-      };
-      return names[voice] || `Silero (${voice})`;
+      const found = voiceMap['silero'].find(v => v.value === voice);
+      return found ? translateVoiceLabel(found.labelKey) : `Silero (${voice})`;
     }
     if (system === 'gtts') {
-      return 'Google TTS (Базовый)';
+      const found = voiceMap['gtts'].find(v => v.value === voice);
+      return found ? translateVoiceLabel(found.labelKey) : `Google TTS (${voice})`;
     }
     if (system === 'browser') {
       return `Браузерный (${voice || 'По умолчанию'})`;
@@ -303,11 +296,29 @@
   const voiceMap = {
     'browser': [], // Populated dynamically from window.speechSynthesis
     'gtts': [
-      { value: 'ru', labelKey: 'voices.ru_standard' }
+      { value: 'ru', labelKey: 'voices.ru_standard' },
+      { value: 'en', labelKey: 'voices.en_standard' },
+      { value: 'he', labelKey: 'voices.he_standard' },
+      { value: 'de', labelKey: 'voices.de_standard' },
+      { value: 'fr', labelKey: 'voices.fr_standard' },
+      { value: 'es', labelKey: 'voices.es_standard' }
     ],
     'edge-tts': [
       { value: 'ru-RU-DmitryNeural', labelKey: 'voices.dmitry' },
-      { value: 'ru-RU-SvetlanaNeural', labelKey: 'voices.svetlana' }
+      { value: 'ru-RU-SvetlanaNeural', labelKey: 'voices.svetlana' },
+      { value: 'en-US-JennyNeural', labelKey: 'voices.jenny' },
+      { value: 'en-US-GuyNeural', labelKey: 'voices.guy' },
+      { value: 'en-US-AriaNeural', labelKey: 'voices.aria' },
+      { value: 'en-GB-SoniaNeural', labelKey: 'voices.sonia' },
+      { value: 'en-GB-RyanNeural', labelKey: 'voices.ryan' },
+      { value: 'he-IL-AvriNeural', labelKey: 'voices.avri' },
+      { value: 'he-IL-HilaNeural', labelKey: 'voices.hila' },
+      { value: 'de-DE-KatjaNeural', labelKey: 'voices.katja' },
+      { value: 'de-DE-ConradNeural', labelKey: 'voices.conrad' },
+      { value: 'fr-FR-DeniseNeural', labelKey: 'voices.denise' },
+      { value: 'fr-FR-HenriNeural', labelKey: 'voices.henri' },
+      { value: 'es-ES-ElviraNeural', labelKey: 'voices.elvira' },
+      { value: 'es-ES-AlvaroNeural', labelKey: 'voices.alvaro' }
     ],
     'silero': [
       { value: 'eugene', labelKey: 'voices.eugene' },
@@ -329,10 +340,9 @@
     if ('speechSynthesis' in window) {
       const voices = window.speechSynthesis.getVoices();
       voiceMap['browser'] = voices
-        .filter(v => v.lang.startsWith('ru'))
-        .map(v => ({ value: v.name, labelKey: `voices.${v.name.replace(/\s+/g, '_')}` }));
+        .map(v => ({ value: v.name, labelKey: `[${v.lang}] ${v.name}` }));
       
-      // Fallback if no Russian voices found in browser
+      // Fallback if no voices found in browser
       if (voiceMap['browser'].length === 0) {
         voiceMap['browser'].push({ value: 'default', labelKey: 'voices.default' });
       }
@@ -409,12 +419,13 @@
         window.speechSynthesis.cancel();
         const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_`#]/g, '');
         const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.lang = 'ru-RU';
-        
         const voices = window.speechSynthesis.getVoices();
         const selectedVoice = voices.find(v => v.name === voice);
         if (selectedVoice) {
           utterance.voice = selectedVoice;
+          if (selectedVoice.lang) {
+            utterance.lang = selectedVoice.lang;
+          }
         }
         
         ttsStatus.style.display = 'inline-flex';

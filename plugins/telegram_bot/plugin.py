@@ -52,6 +52,8 @@ class TelegramBotPlugin(BasePlugin):
     icon: str = "🤖"
     category: str = "communication"
     enabled: bool = True
+    is_system: bool = True
+    scope: str = "system"
 
     def __init__(self, ai_model: Any = None, config: Optional[Dict[str, Any]] = None) -> None:
         """Initialize the Telegram bot plugin.

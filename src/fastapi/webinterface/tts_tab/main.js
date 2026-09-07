@@ -24,41 +24,52 @@ function ttsNotify(msg, type = 'info') {
 const ADMIN_VOICE_MAP = {
   'browser': [], // Populated dynamically from window.speechSynthesis
   'gtts': [
-    { value: 'ru', label: 'Русский (Google TTS)' }
+    { value: 'ru', label: 'Русский (Google TTS)' },
+    { value: 'en', label: 'English (Google TTS)' },
+    { value: 'he', label: 'עברית (Google TTS)' },
+    { value: 'de', label: 'Deutsch (Google TTS)' },
+    { value: 'fr', label: 'Français (Google TTS)' },
+    { value: 'es', label: 'Español (Google TTS)' }
   ],
   'edge-tts': [
-    { value: 'ru-RU-DmitryNeural', label: 'Дмитрий (Microsoft Edge)' },
-    { value: 'ru-RU-SvetlanaNeural', label: 'Светлана (Microsoft Edge)' }
+    { value: 'ru-RU-DmitryNeural', label: 'Дмитрий (RU - Мужской)' },
+    { value: 'ru-RU-SvetlanaNeural', label: 'Светлана (RU - Женский)' },
+    { value: 'en-US-JennyNeural', label: 'Jenny (US - Female)' },
+    { value: 'en-US-GuyNeural', label: 'Guy (US - Male)' },
+    { value: 'en-US-AriaNeural', label: 'Aria (US - Female)' },
+    { value: 'en-GB-SoniaNeural', label: 'Sonia (UK - Female)' },
+    { value: 'en-GB-RyanNeural', label: 'Ryan (UK - Male)' },
+    { value: 'he-IL-AvriNeural', label: 'Avri (HE - אברי)' },
+    { value: 'he-IL-HilaNeural', label: 'Hila (HE - הילה)' },
+    { value: 'de-DE-KatjaNeural', label: 'Katja (DE - Female)' },
+    { value: 'de-DE-ConradNeural', label: 'Conrad (DE - Male)' },
+    { value: 'fr-FR-DeniseNeural', label: 'Denise (FR - Female)' },
+    { value: 'fr-FR-HenriNeural', label: 'Henri (FR - Male)' },
+    { value: 'es-ES-ElviraNeural', label: 'Elvira (ES - Female)' },
+    { value: 'es-ES-AlvaroNeural', label: 'Alvaro (ES - Male)' }
   ],
   'silero': [
-    { value: 'eugene', label: 'Евгений (Silero)' },
-    { value: 'aidar', label: 'Айдар (Silero)' },
-    { value: 'baya', label: 'Бая (Silero)' },
-    { value: 'kseniya', label: 'Ксения (Silero)' },
-    { value: 'xenia', label: 'Ксения v2 (Silero)' },
-    { value: 'random', label: 'Рандомный (Silero)' }
+    { value: 'eugene', label: 'Евгений (Silero RU)' },
+    { value: 'aidar', label: 'Айдар (Silero RU)' },
+    { value: 'baya', label: 'Бая (Silero RU)' },
+    { value: 'kseniya', label: 'Ксения (Silero RU)' },
+    { value: 'xenia', label: 'Ксения v2 (Silero RU)' },
+    { value: 'random', label: 'Рандомный (Silero RU)' }
   ]
 };
 
 function getFriendlyVoiceName(system, voice) {
   if (system === 'edge-tts') {
-    if (voice === 'ru-RU-DmitryNeural') return 'Дмитрий (Microsoft Edge)';
-    if (voice === 'ru-RU-SvetlanaNeural') return 'Светлана (Microsoft Edge)';
-    return `Edge (${voice})`;
+    const found = ADMIN_VOICE_MAP['edge-tts'].find(v => v.value === voice);
+    return found ? `Edge: ${found.label}` : `Edge (${voice})`;
   }
   if (system === 'silero') {
-    const names = {
-      eugene: 'Евгений (Silero)',
-      aidar: 'Айдар (Silero)',
-      baya: 'Бая (Silero)',
-      kseniya: 'Ксения (Silero)',
-      xenia: 'Ксения v2 (Silero)',
-      random: 'Рандомный (Silero)'
-    };
-    return names[voice] || `Silero (${voice})`;
+    const found = ADMIN_VOICE_MAP['silero'].find(v => v.value === voice);
+    return found ? found.label : `Silero (${voice})`;
   }
   if (system === 'gtts') {
-    return 'Google TTS (Базовый)';
+    const found = ADMIN_VOICE_MAP['gtts'].find(v => v.value === voice);
+    return found ? found.label : `Google TTS (${voice})`;
   }
   if (system === 'browser') {
     return `Браузерный (${voice || 'По умолчанию'})`;
@@ -118,8 +129,7 @@ async function initTtsTab() {
     if ('speechSynthesis' in window) {
       const voices = window.speechSynthesis.getVoices();
       ADMIN_VOICE_MAP['browser'] = voices
-        .filter(v => v.lang.startsWith('ru'))
-        .map(v => ({ value: v.name, label: `Браузер: ${v.name}` }));
+        .map(v => ({ value: v.name, label: `[${v.lang}] ${v.name}` }));
       
       if (ADMIN_VOICE_MAP['browser'].length === 0) {
         ADMIN_VOICE_MAP['browser'].push({ value: 'default', label: 'Браузер по умолчанию' });
@@ -172,12 +182,13 @@ async function initTtsTab() {
         window.speechSynthesis.cancel();
         const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_`#]/g, '');
         const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.lang = 'ru-RU';
-        
         const voices = window.speechSynthesis.getVoices();
         const selectedVoice = voices.find(v => v.name === voice);
         if (selectedVoice) {
           utterance.voice = selectedVoice;
+          if (selectedVoice.lang) {
+            utterance.lang = selectedVoice.lang;
+          }
         }
         
         ttsStatus.classList.remove('d-none');

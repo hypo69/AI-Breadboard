@@ -1,16 +1,23 @@
 {
   "tabs": {
+    "groupStandard": "רגיל",
+    "groupExtended": "מורחב",
     "chat": "צ'אט",
     "torrents": "טורנטים",
     "media": "ספריית медиיה",
     "movieSearch": "חיפוש סרטים",
+    "plugins": "🔌 פלאגינים",
     "admin": "ניהול",
     "users": "משתמשים",
+    "rag": "🧠 RAG",
+    "voice": "🎙️ עיבוד אודיו",
     "help": "ה-reference",
     "remote": "שלט רחוק",
     "player": "נגן מקומי",
     "cabinet": "ממשк משתמש",
-    "settings": "הגדרות"
+    "settings": "הגדרות",
+    "tts": "🗣️ הגדרות TTS",
+    "skills": "⚡ מיומנויות"
   },
   "movieSearch": {
     "title": "🔍 חיפוש סרטים בטורנט",
@@ -193,8 +200,9 @@
     "vectorDimension": "ממד וקטור",
     "lastUpdated": "עודכן לאחרונה",
     "uploadTitle": "העלאת מסמכים",
-    "dropzoneText": "גרור ושחרר קבצים כאן או לחץ לבחירה",
+    "dropzoneText": "גרור ושחרר קבצים או תיקיות כאן או לחץ לבחירה",
     "browseFiles": "בחר קבצים",
+    "browseFolder": "בחר תיקייה שלמה",
     "uploading": "מעלה קבצים...",
     "indexSettings": "הגדרות אינדקס",
     "providerLabel": "ספק וקטוריזציה:",
@@ -210,6 +218,19 @@
     "searchPlaygroundTitle": "חיפוש סמנטי במאגר",
     "searchPlaceholder": "הזן שאילתת חיפוש...",
     "enterQueryPrompt": "הזן שאילתה ולחץ על 'חפש' כדי לבדוק שליפת RAG."
+  },
+  "voice": {
+    "title": "🎙️ ניתוח הודעות קוליות וסיכום פגישות",
+    "subtitle": "הקלטה מהמיקרופון או העלאת קובץ שמע: חלוקת דוברים, תמלול וסיכום מנהלים.",
+    "recordTitle": "הקלטה מהמיקרופון",
+    "clickToRecord": "לחץ כדי להתחיל בהקלטה",
+    "startRecord": "התחל הקלטה",
+    "uploadTitle": "העלאת קובץ שמע",
+    "dropzoneText": "גרור ושחרר קובץ שמע כאן או לחץ לבחירה",
+    "browseAudio": "בחר קובץ שמע",
+    "resultTitle": "תוצאות ניתוח ותמלול לפי דוברים",
+    "saveToRag": "שמור ב-RAG",
+    "emptyStateTitle": "הקלט קול או העלה קובץ שמע"
   },
   "button_apply": "החל שינויים",
   "label_active_voice": "קול פעיל:"

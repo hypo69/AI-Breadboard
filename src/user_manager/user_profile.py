@@ -27,9 +27,21 @@ _USER_PROFILES_DIR = Path(__file__).parent.parent / 'ai' / 'gemini' / 'user_rags
 _USER_PROFILES_DIR.mkdir(parents=True, exist_ok=True)
 
 def _get_profile_path(user_id: str | int) -> Path:
-    """Return path to user profile JSON file."""
-    safe_id = str(user_id).replace('.', '_').replace('/', '_').replace('\\', '_')
-    return _USER_PROFILES_DIR / f'user_profile_{safe_id}.json'
+    """Return path to user profile JSON file in user directory with legacy fallback."""
+    from src.user_manager import user_manager
+    safe_id = user_manager.sanitize_user_id(user_id)
+    profile_dir = user_manager.get_user_directory(user_id, 'profile', create=True)
+    target_path = profile_dir / f'user_profile_{safe_id}.json'
+
+    # Backward compatibility: if file in new location doesn't exist but exists in legacy dir
+    legacy_path = _USER_PROFILES_DIR / f'user_profile_{safe_id}.json'
+    if not target_path.exists() and legacy_path.exists():
+        try:
+            target_path.write_text(legacy_path.read_text(encoding='utf-8'), encoding='utf-8')
+        except Exception:
+            return legacy_path
+
+    return target_path
 
 def _default_profile_structure(user_id: str | int) -> Dict[str, Any]:
     """Default user profile structure."""

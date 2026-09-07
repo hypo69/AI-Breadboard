@@ -1,0 +1,78 @@
+{
+  "core.calculator": [
+    {
+      "id": "core/calculator.py::module",
+      "symbol": "core.calculator",
+      "type": "python_module",
+      "path": "core/calculator.py",
+      "module": "core.calculator",
+      "class_name": null,
+      "function_name": null,
+      "signature": "module core.calculator",
+      "docstring": "",
+      "related_symbols": [
+        "SuperCalculator"
+      ]
+    }
+  ],
+  "calculator": [
+    {
+      "id": "core/calculator.py::module",
+      "symbol": "core.calculator",
+      "type": "python_module",
+      "path": "core/calculator.py",
+      "module": "core.calculator",
+      "class_name": null,
+      "function_name": null,
+      "signature": "module core.calculator",
+      "docstring": "",
+      "related_symbols": [
+        "SuperCalculator"
+      ]
+    }
+  ],
+  "supercalculator": [
+    {
+      "id": "core/calculator.py::SuperCalculator",
+      "symbol": "SuperCalculator",
+      "type": "python_class",
+      "path": "core/calculator.py",
+      "module": "core.calculator",
+      "class_name": "SuperCalculator",
+      "function_name": null,
+      "signature": "class SuperCalculator",
+      "docstring": "Advanced math engine.",
+      "related_symbols": [
+        "compute"
+      ]
+    }
+  ],
+  "supercalculator.compute": [
+    {
+      "id": "core/calculator.py::SuperCalculator.compute",
+      "symbol": "SuperCalculator.compute",
+      "type": "python_method",
+      "path": "core/calculator.py",
+      "module": "core.calculator",
+      "class_name": "SuperCalculator",
+      "function_name": "compute",
+      "signature": "def compute(self, x)",
+      "docstring": "Compute square.",
+      "related_symbols": []
+    }
+  ],
+  "compute": [
+    {
+      "id": "core/calculator.py::SuperCalculator.compute",
+      "symbol": "SuperCalculator.compute",
+      "type": "python_method",
+      "path": "core/calculator.py",
+      "module": "core.calculator",
+      "class_name": "SuperCalculator",
+      "function_name": "compute",
+      "signature": "def compute(self, x)",
+      "docstring": "Compute square.",
+      "related_symbols": []
+    }
+  ]
+}

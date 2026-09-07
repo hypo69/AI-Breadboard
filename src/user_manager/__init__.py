@@ -13,9 +13,11 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
+import os
+import shutil
 import sqlite3
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 
 from src.logger import logger
 
@@ -27,21 +29,35 @@ class UserManager:
     """User management and authorization system.
 
     Storage of user data, session management,
-    access rights verification and activity logging.
+    access rights verification, activity logging, and isolated user file storage.
 
     Attributes:
         db_path (Path): Path to database file.
+        users_dir (Path): Base directory for user personal file storage.
     """
 
-    def __init__(self, db_path: Path) -> None:
+    def __init__(self, db_path: Path, users_dir: Optional[Path] = None) -> None:
         """Initialization of user manager.
 
         Args:
             db_path (Path): Path to SQLite database file.
+            users_dir (Optional[Path]): Base directory for user personal storage.
         """
         self.db_path: Path = db_path
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        if users_dir is None:
+            try:
+                from header import __root__
+                from src.config import storage_cfg
+                configured_dir = getattr(storage_cfg, 'users_dir', 'data/users')
+                self.users_dir: Path = __root__ / configured_dir
+            except Exception:
+                self.users_dir: Path = Path(__file__).resolve().parent.parent.parent / 'data' / 'users'
+        else:
+            self.users_dir = Path(users_dir)
+        self.users_dir.mkdir(parents=True, exist_ok=True)
         self._init_db()
+        self.init_user_workspace(1)
 
     def _init_db(self) -> None:
         """Initialization of user management table schema."""
@@ -298,6 +314,137 @@ class UserManager:
                 VALUES (1, 'admin@localhost', 'Admin', 1, 'admin')
             """)
 
+    def sanitize_user_id(self, user_id: int | str) -> str:
+        """Sanitize user identifier for filesystem safety.
+
+        Args:
+            user_id (int | str): User identifier or email.
+
+        Returns:
+            str: Sanitized identifier safe for path construction.
+        """
+        raw = str(user_id).strip()
+        sanitized = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in raw)
+        return sanitized or "anonymous"
+
+    def get_user_directory(self, user_id: int | str, subfolder: Optional[str] = None, create: bool = True) -> Path:
+        """Get or create isolated personal directory for a user.
+
+        Args:
+            user_id (int | str): User identifier.
+            subfolder (Optional[str]): Optional subfolder name (e.g., 'files', 'rag', 'profile', 'temp').
+            create (bool): Whether to create directory if it does not exist.
+
+        Returns:
+            Path: Resolved Path object to the user's directory or subfolder.
+        """
+        safe_id = self.sanitize_user_id(user_id)
+        user_dir = self.users_dir / safe_id
+
+        if subfolder:
+            safe_subfolder = self.sanitize_user_id(subfolder)
+            target_path = user_dir / safe_subfolder
+        else:
+            target_path = user_dir
+
+        if create:
+            target_path.mkdir(parents=True, exist_ok=True)
+
+        return target_path
+
+    def init_user_workspace(self, user_id: int | str) -> Path:
+        """Initialize standard workspace directory structure for a user.
+
+        Creates subdirectories:
+            - files: user-uploaded and stored files
+            - rag: user personal RAG vector indices and DBs
+            - profile: user JSON profile and state
+            - temp: temporary processing directory
+
+        Args:
+            user_id (int | str): User identifier.
+
+        Returns:
+            Path: Root path of user's personal directory.
+        """
+        user_root = self.get_user_directory(user_id, create=True)
+        for folder in ('files', 'rag', 'profile', 'temp', 'dialogs'):
+            (user_root / folder).mkdir(parents=True, exist_ok=True)
+        return user_root
+
+    def get_user_storage_stats(self, user_id: int | str) -> Dict[str, Any]:
+        """Compute storage usage statistics for a user.
+
+        Args:
+            user_id (int | str): User identifier.
+
+        Returns:
+            Dict[str, Any]: Storage statistics including total size in bytes and file count.
+        """
+        safe_id = self.sanitize_user_id(user_id)
+        user_dir = self.users_dir / safe_id
+
+        stats: Dict[str, Any] = {
+            "user_id": str(user_id),
+            "directory": str(user_dir),
+            "exists": user_dir.exists(),
+            "total_size_bytes": 0,
+            "total_files": 0,
+            "subfolders": {}
+        }
+
+        if not user_dir.exists():
+            return stats
+
+        total_size = 0
+        total_files = 0
+        subfolders_stats: Dict[str, Dict[str, int]] = {}
+
+        try:
+            for item in user_dir.rglob('*'):
+                if item.is_file():
+                    size = item.stat().st_size
+                    total_size += size
+                    total_files += 1
+
+                    rel = item.relative_to(user_dir)
+                    subfolder_name = rel.parts[0] if len(rel.parts) > 1 else 'root'
+                    if subfolder_name not in subfolders_stats:
+                        subfolders_stats[subfolder_name] = {"files": 0, "size_bytes": 0}
+                    subfolders_stats[subfolder_name]["files"] += 1
+                    subfolders_stats[subfolder_name]["size_bytes"] += size
+        except Exception as ex:
+            logger.error(f"Error computing storage stats for user {user_id}:", ex, False)
+
+        stats["total_size_bytes"] = total_size
+        stats["total_files"] = total_files
+        stats["subfolders"] = subfolders_stats
+        return stats
+
+    def delete_user_workspace(self, user_id: int | str, remove_files: bool = True) -> bool:
+        """Delete or clean up user's personal storage directory.
+
+        Args:
+            user_id (int | str): User identifier.
+            remove_files (bool): If True, removes all files and the directory.
+
+        Returns:
+            bool: True on success, False on error.
+        """
+        safe_id = self.sanitize_user_id(user_id)
+        user_dir = self.users_dir / safe_id
+        if not user_dir.exists():
+            return True
+
+        if remove_files:
+            try:
+                shutil.rmtree(user_dir)
+                return True
+            except Exception as ex:
+                logger.error(f"Error deleting user directory {user_dir}:", ex, False)
+                return False
+        return True
+
     def _get_connection(self) -> sqlite3.Connection:
         """Obtaining database connection.
 
@@ -328,8 +475,10 @@ class UserManager:
                     (email, name, picture, role)
                 )
                 conn.commit()
-                logger.info(f'New user added: {email} (ID: {cursor.lastrowid})')
-                return cursor.lastrowid
+                user_id = cursor.lastrowid
+                self.init_user_workspace(user_id)
+                logger.info(f'New user added: {email} (ID: {user_id})')
+                return user_id
             except sqlite3.IntegrityError:
                 logger.error(f'User with email {email} already exists')
                 return 0
@@ -406,6 +555,8 @@ class UserManager:
                 )
                 conn.commit()
                 user_id = cursor.lastrowid or 0
+                if user_id:
+                    self.init_user_workspace(user_id)
                 logger.info(f'New user created: {email_clean} (ID: {user_id})')
                 return user_id
             except sqlite3.IntegrityError:
@@ -501,7 +652,10 @@ class UserManager:
                     (user_id,)
                 )
                 conn.commit()
-                return cursor.rowcount > 0
+                if cursor.rowcount > 0:
+                    self.delete_user_workspace(user_id, remove_files=True)
+                    return True
+                return False
             except Exception as e:
                 logger.error(f'Error deleting user {user_id}:', e, False)
                 return False
@@ -895,6 +1049,88 @@ class UserManager:
                 logger.error(f'Error linking account {user_id}:', e, False)
                 return False
 
+    def link_telegram_account_direct(self, user_id: int, telegram_id: int, telegram_username: Optional[str] = "") -> bool:
+        """Directly bind a Telegram account to a user ID.
+
+        Args:
+            user_id (int): User identifier.
+            telegram_id (int): Telegram user ID.
+            telegram_username (Optional[str]): Telegram username.
+
+        Returns:
+            bool: True on successful binding.
+        """
+        tg_user = str(telegram_username or "")
+        with self._get_connection() as conn:
+            try:
+                # Delete temporary telegram user if it was auto-created
+                conn.execute(
+                    'DELETE FROM users WHERE telegram_id = ? AND email = ?',
+                    (telegram_id, f"tg_{telegram_id}@telegram.bot")
+                )
+                # Clear telegram_id from any other records
+                conn.execute(
+                    'UPDATE users SET telegram_id = NULL, telegram_username = NULL WHERE telegram_id = ?',
+                    (telegram_id,)
+                )
+                # Bind telegram_id to target user
+                conn.execute(
+                    'UPDATE users SET telegram_id = ?, telegram_username = ? WHERE id = ?',
+                    (telegram_id, tg_user, user_id)
+                )
+                conn.commit()
+                self.init_user_workspace(user_id)
+                logger.info(f"Directly linked Telegram ID {telegram_id} to User ID {user_id}")
+                return True
+            except Exception as e:
+                logger.error(f'Error directly linking Telegram account for user {user_id}:', e, False)
+                return False
+
+    def save_user_dialog_file(
+        self,
+        user_id: int | str,
+        filename: str,
+        content: bytes,
+        subfolder: str = "dialogs",
+    ) -> Dict[str, Any]:
+        """Save an uploaded dialogue recording or transcript to the user's isolated workspace.
+
+        Args:
+            user_id (int | str): User identifier.
+            filename (str): Original or generated filename.
+            content (bytes): Binary content of the file.
+            subfolder (str): Workspace subfolder, defaults to 'dialogs'.
+
+        Returns:
+            Dict[str, Any]: File metadata including relative path, absolute path, size, and timestamp.
+        """
+        import time
+        from datetime import datetime
+
+        safe_user_id = self.sanitize_user_id(user_id)
+        target_dir = self.get_user_directory(safe_user_id, subfolder, create=True)
+
+        clean_name = Path(filename).name
+        clean_name = "".join(c for c in clean_name if c.isalnum() or c in ("-", "_", ".", " ")).strip()
+        if not clean_name:
+            clean_name = f"dialog_{int(time.time())}.dat"
+
+        timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+        final_filename = f"{timestamp_str}_{clean_name}"
+        file_path = target_dir / final_filename
+
+        file_path.write_bytes(content)
+
+        return {
+            "user_id": str(user_id),
+            "filename": final_filename,
+            "original_filename": filename,
+            "absolute_path": str(file_path),
+            "relative_path": f"{subfolder}/{final_filename}",
+            "size_bytes": len(content),
+            "created_at": datetime.now().isoformat(),
+        }
+
     @staticmethod
     def hash_password(password: str) -> str:
         """Password hashing using PBKDF2."""
@@ -952,7 +1188,10 @@ class UserManager:
                         (email, name, pw_hash)
                     )
                     conn.commit()
-                    return cursor.lastrowid
+                    user_id = cursor.lastrowid
+                    if user_id:
+                        self.init_user_workspace(user_id)
+                    return user_id
                 except sqlite3.IntegrityError:
                     return 0
 

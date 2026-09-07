@@ -4,7 +4,8 @@
     "chat": "Chat",
     "cabinet": "Cabinet",
     "settings": "Settings",
-    "tts": "Configure TTS"
+    "tts": "Configure TTS",
+    "skills": "⚡ Skills"
   },
   "player": {
     "noFiles": "No files",

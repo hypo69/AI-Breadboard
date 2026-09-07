@@ -70,7 +70,7 @@ class AudioDiarizationService:
             return custom_key
 
         # Try secrets pool
-        keys, _ = load_api_keys()
+        keys, _, _ = load_api_keys()
         if keys:
             return keys[0]
 

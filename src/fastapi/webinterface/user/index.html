@@ -6,646 +6,218 @@
   <title>AI Assistant</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/html/css/main.css?v=20260818_youtube_online" rel="stylesheet">
+  <link href="/html/css/main.css?v=20260907_user_ui" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/i18next@23.11.5/i18next.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <style>
-    body {
-      background: #0d1117;
-      color: #c9d1d9;
-      min-height: 100vh;
-    }
-    .nav-tabs .nav-link {
-      color: #8b949e;
-      border: none;
-      border-bottom: 2px solid transparent;
-      background: transparent;
-    }
-    .nav-tabs .nav-link:hover {
-      color: #c9d1d9;
-      border-color: transparent;
-    }
-    .nav-tabs .nav-link.active {
-      color: #58a6ff;
-      background: transparent;
-      border-bottom-color: #58a6ff;
-    }
-    .chat-window {
-      background: #161b22;
-      border-radius: 8px;
-      padding: 15px;
-      height: 60vh;
-      overflow-y: auto;
-    }
-    .chat-message {
-      margin-bottom: 12px;
-      padding: 10px 14px;
-      border-radius: 8px;
-      max-width: 85%;
-    }
-    .chat-message.user {
-      background: #1f6feb;
-      color: #fff;
-      margin-left: auto;
-    }
-    .chat-message.assistant {
-      background: #21262d;
-      color: #c9d1d9;
-    }
-    .input-group {
-      background: #161b22;
-      border-radius: 8px;
-      padding: 10px;
-    }
-    .form-control {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      color: #c9d1d9;
-    }
-    .form-control:focus {
-      background: #0d1117;
-      border-color: #388bfd;
-      color: #c9d1d9;
-      box-shadow: 0 0 0 2px rgba(56,139,253,0.3);
-    }
-    .btn-primary {
-      background: #238636;
-      border-color: #238636;
-    }
-    .btn-primary:hover {
-      background: #2ea043;
-      border-color: #2ea043;
-    }
-    .player-container {
-      background: #161b22;
-      border-radius: 8px;
-      padding: 20px;
-      height: 70vh;
-      position: relative;
-    }
-    .video-wrapper {
-      background: #000;
-      border-radius: 8px;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-    .chat-toggle-btn {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: rgba(31, 111, 235, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #fff;
-      font-size: 24px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      z-index: 100;
-    }
-    .chat-toggle-btn:hover {
-      transform: scale(1.1);
-      background: #238636;
-      box-shadow: 0 6px 20px rgba(35, 134, 54, 0.5);
-    }
-    .chat-popup {
-      position: absolute;
-      bottom: 80px;
-      right: 20px;
-      width: 320px;
-      height: 380px;
-      background: rgba(22, 27, 34, 0.9);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-      z-index: 101;
-      opacity: 0;
-      transform: translateY(20px) scale(0.95);
-      pointer-events: none;
-      transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-    }
-    .chat-popup.show {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-      pointer-events: all;
-    }
-    .chat-popup-header {
-      padding: 12px 15px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: 600;
-      font-size: 14px;
-      background: rgba(0, 0, 0, 0.2);
-      border-top-left-radius: 12px;
-      border-top-right-radius: 12px;
-    }
-    .chat-close-btn {
-      background: transparent;
-      border: none;
-      color: #aaa;
-      font-size: 16px;
-      cursor: pointer;
-      padding: 2px 6px;
-      transition: color 0.2s;
-    }
-    .chat-close-btn:hover {
-      color: #fff;
-    }
-    .chat-popup-messages {
-      flex: 1;
-      padding: 15px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .chat-popup-msg {
-      max-width: 85%;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      line-height: 1.4;
-      word-break: break-word;
-    }
-    .chat-popup-msg.bot {
-      background: rgba(255, 255, 255, 0.08);
-      color: #c9d1d9;
-      align-self: flex-start;
-      border-bottom-left-radius: 2px;
-    }
-    .chat-popup-msg.user {
-      background: #1f6feb;
-      color: #fff;
-      align-self: flex-end;
-      border-bottom-right-radius: 2px;
-    }
-    .chat-popup-input-area {
-      padding: 10px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      display: flex;
-      gap: 8px;
-      background: rgba(0, 0, 0, 0.1);
-      border-bottom-left-radius: 12px;
-      border-bottom-right-radius: 12px;
-    }
-    .chat-popup-input-area input {
-      flex: 1;
-      padding: 6px 12px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.05);
-      color: #fff;
-      font-size: 13px;
-      outline: none;
-    }
-    .chat-popup-input-area input:focus {
-      border-color: #1f6feb;
-      background: rgba(255, 255, 255, 0.08);
-    }
-    .chat-popup-input-area button {
-      padding: 6px 12px;
-      background: #238636;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .chat-popup-input-area button:hover {
-      background: #2ea043;
-    }
-    .chat-popup-input-area button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .video-wrapper video {
-      max-width: 100%;
-      max-height: 100%;
-    }
-    .file-list {
-      background: #161b22;
-      border-radius: 8px;
-      padding: 15px;
-      max-height: 30vh;
-      overflow-y: auto;
-    }
-    .file-item {
-      padding: 8px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-bottom: 4px;
-    }
-    .file-item:hover {
-      background: #21262d;
-    }
-    .file-item.active {
-      background: #1f6feb;
-    }
-    .lang-selector {
-      background: #21262d !important;
-      border-color: #30363d !important;
-      color: #c9d1d9 !important;
-    }
-    
-    /* Light theme styles */
-    .theme-light body {
-      background: #f6f8fa;
-      color: #24292f;
-    }
-    .theme-light .nav-tabs .nav-link {
-      color: #6e7781;
-    }
-    .theme-light .nav-tabs .nav-link.active {
-      color: #0969da;
-    }
-    .theme-light .chat-window {
-      background: #ffffff;
-    }
-    .theme-light .chat-message.assistant {
-      background: #f6f8fa;
-      color: #24292f;
-    }
-    .theme-light .chat-popup {
-      background: rgba(255, 255, 255, 0.95);
-    }
-    .theme-light .chat-popup-msg.bot {
-      background: #f6f8fa;
-      color: #24292f;
-    }
-    .theme-light .chat-popup-input-area input {
-      background: #fafafa;
-      color: #24292f;
-    }
-    .theme-light .form-control {
-      background: #ffffff;
-      border-color: #d0d7de;
-      color: #24292f;
-    }
-    .theme-light .form-control:focus {
-      border-color: #0969da;
-    }
-    .theme-light .btn-primary {
-      background: #2da44e;
-      border-color: #2da44e;
-    }
-    .theme-light .btn-primary:hover {
-      background: #2da44e;
-    }
-    .theme-light .player-container {
-      background: #ffffff;
-    }
-    .theme-light .file-list {
-      background: #ffffff;
-    }
-    .theme-light .file-item:hover {
-      background: #f6f8fa;
-    }
-    .theme-light .file-item.active {
-      background: #0969da;
-    }
-    .theme-light .lang-selector {
-      background: #ffffff !important;
-      border-color: #d0d7de !important;
-      color: #24292f !important;
-    }
-  </style>
 </head>
 <body>
-<div class="container-fluid mt-3">
+<div class="container-fluid mt-2" id="user-interface">
 
-  <ul class="nav nav-tabs mb-3" id="mainTabs">
-    <li class="nav-item">
-      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-player" data-i18n="tabs.player">
-        <i class="bi bi-play-circle"></i> Плеер
-      </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-chat" data-i18n="tabs.chat">
-        <i class="bi bi-chat-dots"></i> Чат
-      </button>
-    </li>
-    <li class="nav-item auth-only d-none">
-      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-settings" data-i18n="tabs.settings">
-        <i class="bi bi-gear"></i> Настройки
-      </button>
-    </li>
-    <li class="nav-item auth-only d-none">
-      <a class="nav-link" href="/user_tts" data-i18n="tabs.tts">
-        <i class="bi bi-mic"></i> Настроить TTS
-      </a>
-    </li>
-    <li class="nav-item ms-auto">
-      <select class="form-select form-select-sm lang-selector" id="lang-selector" style="width:auto;">
-        <option value="ru">Русский</option>
-        <option value="en">English</option>
-        <option value="he">עברית</option>
-      </select>
-    </li>
-    <li class="nav-item ms-2">
-      <div id="auth-container">
-        <button id="login-trigger-btn" class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#loginModal">
-          <i class="bi bi-box-arrow-in-right"></i>
-          <span>Войти</span>
+  <div class="d-flex align-items-center justify-content-between mb-3 main-nav-container rounded px-2 py-1">
+    <ul class="nav nav-tabs flex-nowrap flex-grow-1 border-0 me-2 align-items-center" id="mainTabs">
+      <!-- Группа: Стандартные -->
+      <li class="nav-item dropdown">
+        <button class="nav-link dropdown-toggle active d-flex align-items-center gap-1" data-bs-toggle="dropdown" type="button" aria-expanded="false" id="standardTabsDropdown">
+          <i class="bi bi-grid-fill text-primary me-1"></i>
+          <span data-i18n="tabs.groupStandard">Стандартные</span>
         </button>
-        <div id="user-profile" class="d-none">
-          <div class="d-flex align-items-center gap-2">
-            <img id="user-avatar" src="" class="rounded-circle" width="32" height="32">
-            <span id="user-name" class="text-muted small"></span>
-            <button id="logout-btn" class="btn btn-sm btn-danger">
-              <i class="bi bi-box-arrow-right"></i>
+        <ul class="dropdown-menu shadow border-secondary-subtle">
+          <li>
+            <button class="dropdown-item active d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-chat" type="button" data-i18n="tabs.chat">
+              💬 Чат
             </button>
-          </div>
-        </div>
-      </div>
-    </li>
-  </ul>
-
-  <div class="tab-content">
-    <!-- Player Tab -->
-    <div id="tab-player" class="tab-pane fade show active">
-      <div class="row g-3">
-        <div class="col-md-3">
-          <div class="file-list" id="file-list">
-            <div class="text-muted text-center p-3" data-i18n="player.noFiles">Загрузка файлов...</div>
-          </div>
-          <!-- Настройки загрузки торрентов -->
-          <div class="mt-2 p-2" style="background:#161b22;border-radius:8px;">
-            <small class="text-muted">Папка загрузки:</small>
-            <input type="text" class="form-control form-control-sm" id="download-dir" 
-                   value="D:/Downloads" placeholder="D:/Downloads">
-            <button class="btn btn-outline-primary btn-sm w-100 mt-2" id="btn-refresh-files">
-              🔄 Обновить список
+          </li>
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-voice" type="button" data-i18n="tabs.voice">
+              🎙️ Голос и аудио
             </button>
-          </div>
-        </div>
-        <div class="col-md-9">
-          <div class="player-container">
-            <div class="video-wrapper" id="video-wrapper">
-              <video id="video" controls playsinline></video>
-            </div>
-            <button class="chat-toggle-btn" id="chat-toggle-btn" title="Открыть чат">💬</button>
-            <div class="chat-popup" id="chat-popup">
-              <div class="chat-popup-header">
-                <span>💬 Чат с AI</span>
-                <span class="badge bg-secondary text-white font-monospace ms-2" id="chat-popup-model-badge" style="font-size: 0.7rem; opacity: 0.95; display: none; color: #ffffff !important;" title="Выбранная модель ИИ"></span>
-                <span class="badge bg-secondary text-white font-monospace ms-1" id="chat-popup-search-badge" style="font-size: 0.7rem; opacity: 0.95; display: none; color: #38bdf8 !important;" title="Провайдер веб-поиска"></span>
-                <button class="chat-close-btn" id="chat-close-btn">✕</button>
-              </div>
-              <div class="chat-popup-messages" id="chat-popup-messages">
-                <div class="chat-popup-msg bot"><strong>Ai Ассистент</strong> (System): Привет! Задавайте вопросы о воспроизводимом фильме/сериале или общайтесь с ассистентом.</div>
-              </div>
-              <div class="chat-popup-input-area">
-                <input type="text" id="chat-popup-input" placeholder="Задайте вопрос...">
-                <button id="chat-popup-send">Отправить</button>
-              </div>
-            </div>
-          </div>
-          <div class="mt-3 d-flex gap-2">
-            <button class="btn btn-secondary btn-sm" id="btn-prev" data-i18n="player.prev">⏮ Предыдущий</button>
-            <button class="btn btn-secondary btn-sm" id="btn-next" data-i18n="player.next">Следующий ⏭</button>
-            <span class="ms-auto text-muted" id="current-file"></span>
-          </div>
-        </div>
-      </div>
-    </div>
+          </li>
+        </ul>
+      </li>
 
-    <!-- Chat Tab -->
-    <div id="tab-chat" class="tab-pane fade">
-      <div class="position-relative">
-        <div class="chat-window" id="chat-window">
-          <div class="text-center text-muted p-4" id="chat-empty" data-i18n="chat.startPrompt">
-            Начните разговор с AI
-          </div>
-        </div>
-        <div class="position-absolute d-flex gap-1" style="top: 8px; right: 15px; z-index: 100;">
-          <span class="badge bg-secondary text-white font-monospace" id="chat-model-badge" style="opacity: 0.95; font-size: 0.75rem; display: none; color: #ffffff !important;" title="Выбранная модель ИИ"></span>
-          <span class="badge bg-secondary text-white font-monospace" id="chat-search-badge" style="opacity: 0.95; font-size: 0.75rem; display: none; color: #38bdf8 !important;" title="Провайдер веб-поиска"></span>
-        </div>
-      </div>
-      <div class="input-group mt-3">
-        <button class="btn btn-outline-secondary btn-sm" id="theme-toggle-btn" title="Переключить тему">
-          <i class="bi bi-brightness-high"></i>
+      <!-- Разделитель -->
+      <li class="nav-item d-flex align-items-center">
+        <div class="nav-group-divider"></div>
+      </li>
+
+      <!-- Группа: Расширенные -->
+      <li class="nav-item dropdown">
+        <button class="nav-link dropdown-toggle d-flex align-items-center gap-1" data-bs-toggle="dropdown" type="button" aria-expanded="false" id="extendedTabsDropdown">
+          <i class="bi bi-sliders2 text-info me-1"></i>
+          <span data-i18n="tabs.groupExtended">Расширенные</span>
         </button>
-        <input type="text" class="form-control" id="message-input" 
-               data-i18n-placeholder="chat.placeholder" placeholder="Введите сообщение...">
-        <button class="btn btn-primary" id="send-button" data-i18n="chat.send">Отправить</button>
-      </div>
-    </div>
+        <ul class="dropdown-menu shadow border-secondary-subtle">
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-rag" type="button" data-i18n="tabs.rag">
+              🧠 RAG
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-tts" type="button" data-i18n="tabs.tts">
+              🗣️ Настройка TTS
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-skills" type="button" data-i18n="tabs.skills">
+              ⚡ Навыки
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="tab" data-bs-target="#tab-plugins" type="button" data-i18n="tabs.plugins">
+              🔌 Плагины
+            </button>
+          </li>
+        </ul>
+      </li>
+    </ul>
 
-    <!-- Settings Tab -->
-    <div id="tab-settings" class="tab-pane fade">
-      <div class="card bg-dark text-white border-secondary p-4 mt-3" style="max-width: 600px; margin: 0 auto; background: #161b22 !important;">
-        <div class="text-center mb-4">
-          <img id="cab-avatar" src="" class="rounded-circle border border-3 border-primary" width="100" height="100" style="object-fit: cover;">
-          <h3 class="mt-3" id="cab-name">Имя пользователя</h3>
-          <p class="text-muted" id="cab-email">email@example.com</p>
-          <span class="badge bg-secondary" id="cab-role">User</span>
-        </div>
-        
-        <hr class="border-secondary">
-        
-        <div class="mb-3">
-          <h5><i class="bi bi-telegram text-info"></i> Связь с Telegram</h5>
-          <div id="tg-status-linked" class="d-none">
-            <p class="text-success"><i class="bi bi-check-circle-fill"></i> Ваш аккаунт успешно связан с Telegram-ботом!</p>
-            <p>Имя пользователя: <strong id="cab-tg-username">@username</strong></p>
-            <a href="https://t.me/onela_bot" target="_blank" class="btn btn-primary btn-sm mt-2">
-              <i class="bi bi-telegram"></i> Открыть telegram desktop
-            </a>
-          </div>
-          <div id="tg-status-unlinked">
-            <p class="text-warning"><i class="bi bi-exclamation-triangle-fill"></i> Аккаунт Telegram не привязан.</p>
-            <p class="small text-muted">Чтобы привязать Telegram, нажмите кнопку ниже для генерации кода, затем отправьте боту в чат команду: <code>/link &lt;КОД&gt;</code></p>
-            <button class="btn btn-primary btn-sm" id="btn-gen-link-token">Сгенерировать код привязки</button>
-            <div id="tg-link-code-area" class="mt-3 d-none">
-              <div class="alert alert-info d-flex align-items-center justify-content-between mb-0" style="background:#1f6feb; border-color:#1f6feb; color: white;">
-                <span>Код привязки: <strong id="tg-link-code" class="fs-4 ms-2">XXXX</strong></span>
-                <span class="badge bg-danger">Действителен 10 минут</span>
-              </div>
-              <div class="mt-2">
-                <a href="https://t.me/onela_bot" target="_blank" class="btn btn-outline-primary btn-sm">
-                  <i class="bi bi-telegram"></i> Открыть telegram desktop
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <hr class="border-secondary">
-        
-        <h4 class="mb-4"><i class="bi bi-gear-fill text-primary"></i> Настройки профиля</h4>
-        
-        <form id="settings-form">
-          <div class="mb-3">
-            <label for="settings-theme" class="form-label">Тема оформления</label>
-            <select class="form-select bg-dark text-white border-secondary" id="settings-theme">
-              <option value="system">Системная</option>
-              <option value="dark">Темная</option>
-              <option value="light">Светлая</option>
-            </select>
-          </div>
-          
-          <div class="mb-3">
-            <label for="settings-lang" class="form-label">Язык интерфейса</label>
-            <select class="form-select bg-dark text-white border-secondary" id="settings-lang">
-              <option value="ru">Русский</option>
-              <option value="en">English</option>
-              <option value="he">עברית</option>
-            </select>
-          </div>
-          
-          <div class="mb-3 form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="settings-tts" checked>
-            <label class="form-check-label text-white" for="settings-tts">Озвучивать ответы AI голосом (TTS) в Telegram</label>
-          </div>
+    <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-auto pb-1" id="nav-auth-container">
+      <!-- Google OAuth Register / Sign-in Button (Shown when not logged in) -->
+      <button class="btn btn-sm btn-light text-dark fw-semibold d-flex align-items-center gap-2 px-3 py-1 shadow-sm rounded-pill btn-google-login" id="nav-google-btn" title="Войти или зарегистрироваться через Google" data-i18n-title="auth.googleSignInTitle" style="border: 1px solid rgba(0,0,0,0.15);">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+        <span data-i18n="auth.googleSignUp">Регистрация через Google</span>
+      </button>
 
-          <div class="mb-3">
-            <label for="settings-tts-system" class="form-label">Система озвучки (TTS)</label>
-            <select class="form-select bg-dark text-white border-secondary" id="settings-tts-system">
-              <option value="browser">Web Speech API (Браузерный)</option>
-              <option value="edge-tts">Microsoft Edge TTS (Нейросетевой)</option>
-              <option value="gtts">Google TTS (Базовый)</option>
-              <option value="silero">Silero TTS (Локальный оффлайн)</option>
-            </select>
-          </div>
+      <!-- Authenticated User Profile Pill (Shown when logged in) -->
+      <button class="btn btn-sm btn-outline-secondary d-none align-items-center gap-2 px-2 py-1 rounded-pill" id="user-settings-btn" data-bs-toggle="modal" data-bs-target="#userSettingsModal" title="Профиль и настройки" data-i18n-title="userSettings.title">
+        <img id="nav-user-avatar" src="" class="rounded-circle d-none" width="22" height="22" style="object-fit: cover;">
+        <i class="bi bi-person-gear" id="nav-user-icon"></i>
+        <span id="nav-user-label" class="small fw-semibold" data-i18n="userSettings.button">User Settings</span>
+      </button>
 
-          <div class="mb-3" id="settings-tts-voice-container">
-            <label for="settings-tts-voice" class="form-label">Голос / Диктор</label>
-            <select class="form-select bg-dark text-white border-secondary" id="settings-tts-voice">
-              <optgroup label="Web Speech API" id="optgroup-browser">
-                <!-- Populated dynamically -->
-              </optgroup>
-              <optgroup label="Microsoft Edge TTS" id="optgroup-edge">
-                <option value="ru-RU-DmitryNeural">Дмитрий (Мужской)</option>
-                <option value="ru-RU-SvetlanaNeural">Светлана (Женский)</option>
-              </optgroup>
-              <optgroup label="Silero TTS" id="optgroup-silero">
-                <option value="eugene">Евгений (Мужской)</option>
-                <option value="aidar">Айдар (Мужской)</option>
-                <option value="baya">Бая (Женский)</option>
-                <option value="kseniya">Ксения (Женский)</option>
-                <option value="xenia">Ксения v2 (Женский)</option>
-                <option value="random">Случайный (Рандомный)</option>
-              </optgroup>
-            </select>
-          </div>
-          
-          <div class="mb-3">
-            <label for="settings-instruction" class="form-label">Персональная системная инструкция для AI</label>
-            <textarea class="form-control bg-dark text-white border-secondary" id="settings-instruction" rows="4" placeholder="Например: Отвечай коротко и вежливо..."></textarea>
-            <div class="form-text text-muted">Индивидуальные правила поведения AI ассистента для ваших диалогов.</div>
-          </div>
-          
-          <button type="submit" class="btn btn-success w-100 mt-2" id="btn-save-settings">Сохранить настройки</button>
-        </form>
-        
-        <hr class="border-secondary">
-        <p class="small text-muted mb-0">Дата регистрации: <span id="cab-created-at">--.--.----</span></p>
-      </div>
+      <!-- Quick Settings Gear Button -->
+      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center p-0 rounded-circle" id="user-settings-gear-btn" data-bs-toggle="modal" data-bs-target="#userSettingsModal" title="Настройки" style="width: 32px; height: 32px;" data-i18n-title="userSettings.title">
+        <i class="bi bi-gear-fill"></i>
+      </button>
     </div>
   </div>
-</div>
 
-<!-- Login Modal -->
-<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content bg-dark text-white border-secondary">
-      <div class="modal-header border-secondary">
-        <h5 class="modal-title" id="loginModalLabel">Авторизация</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-4">
-        <!-- Error alert -->
-        <div id="auth-alert" class="alert alert-danger d-none" role="alert"></div>
+  <div class="tab-content">
+    <!-- Chat Tab -->
+    <div id="tab-chat" class="tab-pane fade show active"></div>
 
-        <!-- Login Form -->
-        <div id="auth-form-login">
-          <form id="form-login">
-            <div class="mb-3">
-              <label for="login-email" class="form-label">Email</label>
-              <input type="email" class="form-control bg-dark text-white border-secondary" id="login-email" required>
-            </div>
-            <div class="mb-3">
-              <label for="login-password" class="form-label">Пароль</label>
-              <input type="password" class="form-control bg-dark text-white border-secondary" id="login-password" required>
-            </div>
-            <button type="submit" class="btn btn-primary w-100 mb-3">Войти</button>
-            <p class="text-center small mb-0">Нет аккаунта? <a href="#" id="go-to-register" class="text-info">Зарегистрироваться</a></p>
-          </form>
-        </div>
+    <!-- RAG Tab -->
+    <div id="tab-rag" class="tab-pane fade"></div>
 
-        <!-- Register Form -->
-        <div id="auth-form-register" class="d-none">
-          <form id="form-register">
-            <div class="mb-3">
-              <label for="register-name" class="form-label">Имя</label>
-              <input type="text" class="form-control bg-dark text-white border-secondary" id="register-name" required>
-            </div>
-            <div class="mb-3">
-              <label for="register-email" class="form-label">Email</label>
-              <input type="email" class="form-control bg-dark text-white border-secondary" id="register-email" required>
-            </div>
-            <div class="mb-3">
-              <label for="register-password" class="form-label">Пароль</label>
-              <input type="password" class="form-control bg-dark text-white border-secondary" id="register-password" required>
-            </div>
-            <button type="submit" class="btn btn-success w-100 mb-3">Зарегистрироваться</button>
-            <p class="text-center small mb-0">Уже есть аккаунт? <a href="#" id="go-to-login" class="text-info">Войти</a></p>
-          </form>
-        </div>
+    <!-- TTS Tab -->
+    <div id="tab-tts" class="tab-pane fade"></div>
 
-        <!-- Verify Form -->
-        <div id="auth-form-verify" class="d-none">
-          <p class="text-center">На вашу почту отправлен 6-значный код подтверждения. Пожалуйста, введите его ниже.</p>
-          <form id="form-verify">
-            <div class="mb-3">
-              <label for="verify-code" class="form-label">Код подтверждения</label>
-              <input type="text" class="form-control bg-dark text-white border-secondary text-center fs-3" id="verify-code" maxlength="6" placeholder="XXXXXX" required>
-            </div>
-            <button type="submit" class="btn btn-info w-100 mb-3 text-white">Подтвердить</button>
-            <p class="text-center small mb-0"><a href="#" id="verify-cancel" class="text-info">Назад к входу</a></p>
-          </form>
-        </div>
+    <!-- Voice Tab -->
+    <div id="tab-voice" class="tab-pane fade"></div>
 
-        <div id="auth-social-divider" class="my-4 text-center position-relative">
-          <hr class="border-secondary">
-          <span class="bg-dark px-2 text-muted position-absolute top-50 start-50 translate-middle small">Или войти через</span>
-        </div>
+    <!-- Skills Tab -->
+    <div id="tab-skills" class="tab-pane fade"></div>
 
-        <!-- Social Login buttons -->
-        <div id="auth-social" class="d-flex flex-column gap-2 align-items-center">
-          <button id="google-signin-btn" class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2">
-            <i class="bi bi-google"></i>
-            <span>Google</span>
-          </button>
-          
-          <div class="w-100 d-flex justify-content-center mt-2">
-            <!-- Telegram Login Widget -->
-            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="onela_bot" data-size="large" data-auth-url="/auth/telegram/callback" data-request-access="write"></script>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Plugins Tab -->
+    <div id="tab-plugins" class="tab-pane fade"></div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/html/js/chatService.js?v=20260818_search_badge"></script>
-<script type="module" src="/html/user/main.js?v=20260818_search_badge"></script>
+<script src="/html/js/chatService.js?v=20260907_plugins_v3"></script>
+<script type="module" src="/html/user/main.js?v=20260907_plugins_v3"></script>
+
+<!-- Chat Logic & RAG Architecture Modal -->
+<div class="modal fade" id="chat-logic-modal" tabindex="-1" aria-labelledby="chat-logic-modal-label" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary d-flex justify-content-between align-items-center">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="chat-logic-modal-label">
+          <i class="bi bi-diagram-3-fill text-info"></i> 🧠 Архитектура и алгоритм диспетчеризации ответов чата
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3">
+        <div class="p-2 border border-secondary rounded bg-black d-flex justify-content-center align-items-center" style="overflow-x: auto; min-height: 520px;">
+          <img src="/html/assets/chat_and_rag_logic.svg?v=20260817_1" alt="Схема логики чата" style="max-width: 100%; height: auto; border-radius: 6px;">
+        </div>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- User Settings Modal -->
+<div class="modal fade" id="userSettingsModal" tabindex="-1" aria-labelledby="userSettingsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow border-secondary-subtle">
+      <div class="modal-header border-secondary-subtle">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="userSettingsModalLabel">
+          <i class="bi bi-person-gear text-primary"></i>
+          <span data-i18n="userSettings.title">Пользовательские настройки</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3">
+        <!-- User Account & Google OAuth Card -->
+        <div class="card bg-body-tertiary border-secondary-subtle mb-3 p-3" id="user-settings-auth-card">
+          <div class="d-flex align-items-center gap-3">
+            <img id="user-settings-avatar" src="" class="rounded-circle border border-2 border-primary" width="48" height="48" style="object-fit: cover;">
+            <div class="flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center gap-2">
+                <strong id="user-settings-name" class="text-truncate">Пользователь</strong>
+                <span id="user-settings-role-badge" class="badge bg-primary">User</span>
+              </div>
+              <div id="user-settings-email" class="small text-muted text-truncate">email@gmail.com</div>
+              <div id="user-settings-google-badge" class="small mt-1 text-muted">
+                <i class="bi bi-google text-danger me-1"></i>Google OAuth
+              </div>
+            </div>
+            <button type="button" class="btn btn-outline-danger btn-sm btn-user-logout" title="Выйти">
+              <i class="bi bi-box-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Guest / Connect Google OAuth Card -->
+        <div class="card bg-body-tertiary border-secondary-subtle mb-3 p-3 text-center d-none" id="user-settings-guest-card">
+          <div class="text-muted small mb-2">
+            <i class="bi bi-shield-lock me-1"></i> Авторизация и синхронизация аккаунта
+          </div>
+          <button type="button" class="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-2 btn-google-login">
+            <i class="bi bi-google"></i>
+            <span>Войти через Google (OAuth)</span>
+          </button>
+          <div class="small text-muted mt-2" style="font-size: 0.75rem;">
+            Синхронизация с Google Drive, Docs, Calendar и Contacts
+          </div>
+        </div>
+
+        <!-- Language Selection -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold small d-flex align-items-center gap-2" for="modal-lang-selector">
+            <i class="bi bi-translate text-info"></i>
+            <span data-i18n="userSettings.language">Язык интерфейса</span>
+          </label>
+          <select class="form-select lang-selector" id="modal-lang-selector">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+            <option value="he">עברית</option>
+          </select>
+        </div>
+
+        <!-- Theme Selection -->
+        <div class="mb-2">
+          <label class="form-label fw-semibold small d-flex align-items-center gap-2" for="modal-theme-selector">
+            <i class="bi bi-palette text-warning"></i>
+            <span data-i18n="userSettings.theme">Тема оформления</span>
+          </label>
+          <select class="form-select theme-selector" id="modal-theme-selector">
+            <option value="light" data-i18n="userSettings.themeLight">☀️ Светлая</option>
+            <option value="dark" data-i18n="userSettings.themeDark">🌙 Тёмная</option>
+            <option value="system" data-i18n="userSettings.themeSystem">🌓 Системная</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer border-secondary-subtle py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" data-i18n="userSettings.close">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

@@ -51,6 +51,8 @@ class BasePlugin(abc.ABC):
     icon: str = "🧩"
     category: str = "general"
     enabled: bool = True
+    is_system: bool = True
+    scope: str = "system"  # 'system' or 'user'
 
     def __init__(self, ai_model: Any = None, config: Optional[Dict[str, Any]] = None) -> None:
         """Initialize the plugin instance.
@@ -78,6 +80,8 @@ class BasePlugin(abc.ABC):
             "icon": self.icon,
             "category": self.category,
             "enabled": self.enabled,
+            "is_system": getattr(self, "is_system", True),
+            "scope": getattr(self, "scope", "system" if getattr(self, "is_system", True) else "user"),
             "is_running": self.is_running,
             "actions": self.get_actions(),
             "tools": self.get_tools(),

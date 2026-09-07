@@ -89,6 +89,41 @@ window.api = {
         method: 'DELETE'
       });
     }
+  },
+
+  // Skills management API
+  skills: {
+    async list(params = {}) {
+      const q = new URLSearchParams(params).toString();
+      return window.api.fetch(`/api/admin/skills${q ? '?' + q : ''}`);
+    },
+    async get(name) {
+      return window.api.fetch(`/api/admin/skills/${encodeURIComponent(name)}`);
+    },
+    async create(data) {
+      return window.api.fetch('/api/admin/skills', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    },
+    async update(name, data) {
+      return window.api.fetch(`/api/admin/skills/${encodeURIComponent(name)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    },
+    async delete(name) {
+      return window.api.fetch(`/api/admin/skills/${encodeURIComponent(name)}`, {
+        method: 'DELETE'
+      });
+    },
+    async package(name) {
+      return window.api.fetch(`/api/admin/skills/${encodeURIComponent(name)}/package`, {
+        method: 'POST'
+      });
+    }
   }
 };
 
@@ -155,11 +190,13 @@ async function initInterface() {
     loadTabContent('users', `/html/users_tab/index.html?v=${cb}`, `/html/users_tab/main.js?v=${cb}`),
     loadTabContent('instructions', `/html/instructions_tab/index.html?v=${cb}`, `/html/instructions_tab/main.js?v=${cb}`),
     loadTabContent('rag', `/html/rag_tab/index.html?v=${cb}`, `/html/rag_tab/main.js?v=${cb}`),
+    loadTabContent('voice', `/html/voice_tab/index.html?v=${cb}`, `/html/voice_tab/main.js?v=${cb}`),
     loadTabContent('models', `/html/models_tab/index.html?v=${cb}`, `/html/models_tab/main.js?v=${cb}`),
     loadTabContent('agents', `/html/agents_tab/index.html?v=${cb}`, `/html/agents_tab/main.js?v=${cb}`),
     loadTabContent('search', `/html/search_tab/index.html?v=${cb}`, `/html/search_tab/main.js?v=${cb}`),
     loadTabContent('tts', `/html/tts_tab/index.html?v=${cb}`, `/html/tts_tab/main.js?v=${cb}`),
     loadTabContent('sources', `/html/sources_tab/index.html?v=${cb}`, `/html/sources_tab/main.js?v=${cb}`),
+    loadTabContent('skills', `/html/skills_tab/index.html?v=${cb}`, `/html/skills_tab/main.js?v=${cb}`),
     loadTabContent('logs', `/html/logs/index.html?v=${cb}`),
     loadTabContent('help', `/html/help/index.html?v=${cb}`),
   ]);
@@ -185,9 +222,6 @@ async function initInterface() {
       if (msgInput) {
         msgInput.focus();
       }
-      if (window.initChatDebuggerToolbar) {
-        window.initChatDebuggerToolbar();
-      }
     } else if (target === '#tab-users') {
       console.log('[AdminInterface] Switching to users tab...');
       if (window.initUsersTab) {
@@ -197,6 +231,11 @@ async function initInterface() {
       console.log('[AdminInterface] Switching to instructions tab...');
       if (window.initInstructionsTab) {
         window.initInstructionsTab();
+      }
+    } else if (target === '#tab-skills') {
+      console.log('[AdminInterface] Switching to skills tab...');
+      if (window.initSkillsTab) {
+        window.initSkillsTab();
       }
     } else if (target === '#tab-rag') {
       console.log('[AdminInterface] Switching to RAG tab...');
@@ -301,7 +340,7 @@ async function loadTabContent(tabName, url, jsOverrideSrc) {
     
     await new Promise((resolve) => {
       const script = document.createElement('script');
-      if (tabName === 'instructions') {
+      if (tabName === 'instructions' || tabName === 'rag') {
         script.type = 'module';
       }
       script.src = scriptSrc;

@@ -15,6 +15,8 @@
 
 """Test suite for plugins.base, plugins.__init__, and plugins.telegram_bot."""
 
+from pathlib import Path
+
 import pytest
 from plugins import BasePlugin, load_plugins
 from plugins.telegram_bot import TelegramBotPlugin, plugin
@@ -116,3 +118,67 @@ async def test_plugin_handle_stream():
     assert chunks[0]["status"] == "start"
     assert chunks[1]["status"] == "complete"
     assert "Telegram Bot Plugin Status" in chunks[1]["text"]
+
+
+def test_oauth_state_with_telegram():
+    """Verify Google OAuth state generation stores and retrieves Telegram ID."""
+    from src.fastapi.router_auth import generate_state_token, get_state_payload, validate_state_token
+
+    state = generate_state_token(tg_id=12345678, tg_username="alex_user")
+    assert isinstance(state, str)
+    assert validate_state_token(state) is True
+
+    payload = get_state_payload(state)
+    assert payload is not None
+    assert payload["tg_id"] == 12345678
+    assert payload["tg_username"] == "alex_user"
+
+
+def test_user_manager_telegram_linking_and_dialog_storage(tmp_path):
+    """Verify direct Telegram account linking and user workspace dialogue file storage."""
+    from src.user_manager import UserManager
+
+    db_file = tmp_path / "test_users.db"
+    users_dir = tmp_path / "data" / "users"
+    mgr = UserManager(db_path=db_file, users_dir=users_dir)
+
+    user_id = mgr.add_user(email="test_user@example.com", name="Test User", role="user")
+    assert user_id > 0
+
+    # Direct Telegram link
+    ok = mgr.link_telegram_account_direct(user_id=user_id, telegram_id=987654321, telegram_username="tg_tester")
+    assert ok is True
+
+    # Retrieve user by Telegram ID
+    fetched = mgr.get_user_by_telegram_id(987654321)
+    assert fetched["id"] == user_id
+    assert fetched["email"] == "test_user@example.com"
+    assert fetched["telegram_username"] == "tg_tester"
+
+    # Save dialogue recording file
+    file_bytes = b"sample dialogue audio audio content"
+    saved_meta = mgr.save_user_dialog_file(
+        user_id=user_id,
+        filename="conversation_recording.ogg",
+        content=file_bytes,
+        subfolder="dialogs"
+    )
+
+    assert "conversation_recording.ogg" in saved_meta["filename"]
+    assert saved_meta["size_bytes"] == len(file_bytes)
+    assert Path(saved_meta["absolute_path"]).exists()
+    assert Path(saved_meta["absolute_path"]).read_bytes() == file_bytes
+
+
+def test_bot_engine_oauth_url_and_format_size():
+    """Verify TelegramBotEngine OAuth URL construction and size formatting."""
+    bot_plugin = plugin(config={"api_base_url": "http://127.0.0.1:8000"})
+    url = bot_plugin.bot_engine._get_oauth_url(tg_id=555444, tg_username="tg_user")
+    assert "tg_id=555444" in url
+    assert "tg_username=tg_user" in url
+    assert url.startswith("http://127.0.0.1:8000/auth/google?")
+
+    assert bot_plugin.bot_engine._format_size(500) == "500 B"
+    assert bot_plugin.bot_engine._format_size(2048) == "2.0 KB"
+    assert bot_plugin.bot_engine._format_size(1048576) == "1.0 MB"
+

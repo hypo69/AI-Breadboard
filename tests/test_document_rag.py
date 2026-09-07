@@ -116,6 +116,15 @@ class TestDocumentRAGManager:
         assert results[0]["doc_name"] == "quantum.txt"
         assert results[0]["score"] > 0.0
 
+        # Search with novel/unseen words (testing matrix shape alignment)
+        results_novel = manager.search("qubits and completely novel unknown words xyz123", top_k=2)
+        assert len(results_novel) > 0
+        assert results_novel[0]["doc_name"] == "quantum.txt"
+
+        # Search with completely out-of-vocabulary query
+        results_oov = manager.search("supercalifragilisticexpialidocious foobar bazqux", top_k=2)
+        assert results_oov == []
+
         # Search for culinary topic
         results_cooking = manager.search("baking and french sauces", top_k=2)
         assert len(results_cooking) > 0
@@ -134,3 +143,33 @@ class TestDocumentRAGManager:
 
         # Deleting non-existent file
         assert manager.delete_document("non_existent.txt") is False
+
+    def test_save_and_list_nested_folder_documents(self, temp_rag_dirs):
+        docs_dir, index_dir = temp_rag_dirs
+        manager = DocumentRAGManager(docs_dir=docs_dir, index_dir=index_dir)
+
+        # Save files under subdirectories (e.g. from folder upload)
+        manager.save_document("subfolder/deep/doc1.txt", b"Deep document content about space exploration.")
+        manager.save_document("subfolder/doc2.txt", b"Subfolder doc about marine biology.")
+
+        docs = manager.list_documents()
+        doc_names = [d.name for d in docs]
+        assert "subfolder/deep/doc1.txt" in doc_names
+        assert "subfolder/doc2.txt" in doc_names
+
+        # Build index over nested folders
+        status = manager.build_index(provider="local_tfidf")
+        assert status["total_documents"] == 2
+
+        # Search query matching nested document
+        results = manager.search("space exploration", top_k=1)
+        assert len(results) > 0
+        assert results[0]["doc_name"] == "subfolder/deep/doc1.txt"
+
+        # Delete nested document
+        deleted = manager.delete_document("subfolder/deep/doc1.txt")
+        assert deleted is True
+        remaining = manager.list_documents()
+        assert len(remaining) == 1
+        assert remaining[0].name == "subfolder/doc2.txt"
+

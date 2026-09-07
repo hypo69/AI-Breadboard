@@ -1,36 +1,331 @@
-name: Documentation
+# GitHub Actions Workflow для обработки и валидации документации
+# Волна 4: Реализация 4 job'ов (validate, generate-api, build, notify)
+# Триггеры: push в main/develop, pull_request в main, изменения в docs/ru/ или src/
+
+name: Документация - Валидация и Обработка
 
 on:
+  # Триггер: push в основные ветки
   push:
     branches:
       - main
-
+      - develop
+    paths:
+      - 'docs/ru/**'
+      - 'src/**'
+      - '.github/workflows/docs.yml'
+      - 'scripts/docs/**'
+  
+  # Триггер: pull_request в main ветку
   pull_request:
     branches:
       - main
+    paths:
+      - 'docs/ru/**'
+      - 'src/**'
+      - '.github/workflows/docs.yml'
+      - 'scripts/docs/**'
+
+env:
+  # Версия Python для работы с документацией
+  PYTHON_VERSION: '3.10'
+  # Ключ кэша для зависимостей pip
+  CACHE_KEY: 'docs-cache'
 
 jobs:
-  docs:
+  # ============================================================================
+  # JOB 1: VALIDATE (4.2) - Валидация структуры документации и проверка ссылок
+  # Запускается параллельно с generate-api
+  # ============================================================================
+  validate:
+    name: "🔍 Валидация документации"
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout repository
+      # Шаг 1: Клонирование репозитория
+      - name: Checkout репозитория
         uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-
-      - name: Install documentation dependencies
+          fetch-depth: 0  # Получить полную историю для анализа
+      
+      # Шаг 2: Установка Python
+      - name: Установка Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      # Шаг 3: Кэширование зависимостей pip
+      - name: Кэширование зависимостей pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ env.CACHE_KEY }}-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ env.CACHE_KEY }}-
+            ${{ runner.os }}-pip-
+      
+      # Шаг 4: Установка зависимостей
+      - name: Установка зависимостей Python
         run: |
           python -m pip install --upgrade pip
-          pip install -r docs-requirements.txt
-
-      - name: Build documentation
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-docs.txt ]; then pip install -r requirements-docs.txt; fi
+      
+      # Шаг 5: Запуск валидации структуры документации
+      - name: "📋 Запуск validate_structure.py"
         run: |
-          mkdocs build --strict
+          echo "🔍 Проверка структуры документации..."
+          python scripts/docs/validate_structure.py
+      
+      # Шаг 6: Запуск проверки ссылок
+      - name: "🔗 Запуск check_links.py"
+        run: |
+          echo "🔗 Проверка ссылок в документации..."
+          python scripts/docs/check_links.py
+      
+      # Шаг 7: Вывод результатов валидации
+      - name: "✅ Результаты валидации"
+        if: always()
+        run: |
+          echo "📊 Валидация документации завершена"
+          echo "  Событие: ${{ github.event_name }}"
+          echo "  Ветка: ${{ github.ref }}"
+          echo "  Коммит: ${{ github.sha }}"
 
+  # ============================================================================
+  # JOB 2: GENERATE-API (4.3) - Генерация API документации
+  # Запускается параллельно с validate
+  # ============================================================================
+  generate-api:
+    name: "📚 Генерация API документации"
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Шаг 1: Клонирование репозитория
+      - name: Checkout репозитория
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Получить полную историю для анализа
+      
+      # Шаг 2: Установка Python
+      - name: Установка Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      # Шаг 3: Кэширование зависимостей pip
+      - name: Кэширование зависимостей pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ env.CACHE_KEY }}-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ env.CACHE_KEY }}-
+            ${{ runner.os }}-pip-
+      
+      # Шаг 4: Установка зависимостей
+      - name: Установка зависимостей Python
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-docs.txt ]; then pip install -r requirements-docs.txt; fi
+      
+      # Шаг 5: Запуск генерации API документации
+      - name: "🔧 Запуск generate_api.py"
+        run: |
+          echo "📚 Генерация API документации..."
+          python scripts/docs/generate_api.py
+      
+      # Шаг 6: Проверка сгенерированных артефактов
+      - name: "✅ Проверка артефактов API"
+        if: always()
+        run: |
+          echo "📊 Генерация API документации завершена"
+          echo "  Событие: ${{ github.event_name }}"
+          echo "  Ветка: ${{ github.ref }}"
+          echo "  Коммит: ${{ github.sha }}"
 
-# Note: This workflow only validates that MkDocs builds successfully and does NOT publish documentation.
-# Read the Docs should be used to build and publish the site (including PR previews).
+  # ============================================================================
+  # JOB 3: BUILD (4.4) - Сборка документации с Sphinx
+  # Зависит от: validate и generate-api
+  # Параметры: -b html -W --keep-going (ошибки = warnings)
+  # ============================================================================
+  build:
+    name: "🏗️  Сборка документации Sphinx"
+    runs-on: ubuntu-latest
+    needs:
+      - validate
+      - generate-api
+    
+    steps:
+      # Шаг 1: Клонирование репозитория
+      - name: Checkout репозитория
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Получить полную историю для анализа
+      
+      # Шаг 2: Установка Python
+      - name: Установка Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      # Шаг 3: Кэширование зависимостей pip
+      - name: Кэширование зависимостей pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ env.CACHE_KEY }}-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ env.CACHE_KEY }}-
+            ${{ runner.os }}-pip-
+      
+      # Шаг 4: Установка зависимостей
+      - name: Установка зависимостей Python
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-docs.txt ]; then pip install -r requirements-docs.txt; fi
+      
+      # Шаг 5: Запуск sphinx-build с параметрами
+      - name: "🔨 Сборка с sphinx-build"
+        run: |
+          echo "🏗️  Сборка документации Sphinx..."
+          # Параметры:
+          # -b html          : формат вывода HTML
+          # -W --keep-going  : ошибки = warnings, но продолжаем сборку
+          sphinx-build -b html -W --keep-going docs/ru docs/ru/_build/html
+      
+      # Шаг 6: Проверка сгенерированной документации
+      - name: "✅ Проверка сгенерированных файлов"
+        if: always()
+        run: |
+          echo "📊 Проверка результатов сборки..."
+          if [ -d "docs/ru/_build/html" ]; then
+            echo "✅ Директория docs/ru/_build/html создана успешно"
+            echo "  Размер сборки: $(du -sh docs/ru/_build/html | cut -f1)"
+            echo "  Количество HTML файлов: $(find docs/ru/_build/html -name '*.html' | wc -l)"
+          else
+            echo "❌ Директория docs/ru/_build/html не найдена!"
+            exit 1
+          fi
+      
+      # Шаг 7: Загрузка артефактов
+      - name: "📦 Загрузка артефактов (HTML документация)"
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: docs-html-${{ github.run_id }}
+          path: docs/ru/_build/html
+          retention-days: 30
+          if-no-files-found: warn
+      
+      # Шаг 8: Вывод результатов сборки
+      - name: "✨ Результаты сборки"
+        if: always()
+        run: |
+          echo "📊 Сборка документации завершена"
+          echo "  Событие: ${{ github.event_name }}"
+          echo "  Ветка: ${{ github.ref }}"
+          echo "  Коммит: ${{ github.sha }}"
+          echo "  Артефакты: docs/ru/_build/html"
+
+  # ============================================================================
+  # JOB 4: NOTIFY (4.5) - Отправка уведомлений о статусе сборки
+  # Зависит от: build
+  # Использует GitHub status checks для отправки уведомлений
+  # ============================================================================
+  notify:
+    name: "📧 Отправка уведомлений о статусе"
+    runs-on: ubuntu-latest
+    needs: build
+    if: always()  # Выполняется всегда, независимо от результатов предыдущих job'ов
+    
+    steps:
+      # Шаг 1: Определение статуса предыдущих job'ов
+      - name: "🔍 Определение статуса сборки"
+        id: check-status
+        run: |
+          if [ "${{ needs.build.result }}" == "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=✅ Документация успешно собрана!" >> $GITHUB_OUTPUT
+            echo "color=success" >> $GITHUB_OUTPUT
+          elif [ "${{ needs.build.result }}" == "failure" ]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=❌ Ошибка при сборке документации!" >> $GITHUB_OUTPUT
+            echo "color=failure" >> $GITHUB_OUTPUT
+          else
+            echo "status=neutral" >> $GITHUB_OUTPUT
+            echo "message=⚠️  Сборка прервана или отменена" >> $GITHUB_OUTPUT
+            echo "color=neutral" >> $GITHUB_OUTPUT
+          fi
+      
+      # Шаг 2: Отправка GitHub Status Check при успехе
+      - name: "✅ GitHub Status Check - Успех"
+        if: steps.check-status.outputs.status == 'success'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'success',
+              description: '✅ Документация успешно собрана и валидирована',
+              context: 'documentation/build',
+              target_url: '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            });
+      
+      # Шаг 3: Отправка GitHub Status Check при ошибке
+      - name: "❌ GitHub Status Check - Ошибка"
+        if: steps.check-status.outputs.status == 'failure'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'failure',
+              description: '❌ Ошибка при сборке документации',
+              context: 'documentation/build',
+              target_url: '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            });
+      
+      # Шаг 4: Отправка GitHub Status Check при нейтральном статусе
+      - name: "⚠️  GitHub Status Check - Нейтральный"
+        if: steps.check-status.outputs.status == 'neutral'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'error',
+              description: '⚠️  Сборка документации отменена или прервана',
+              context: 'documentation/build',
+              target_url: '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            });
+      
+      # Шаг 5: Вывод итогового уведомления
+      - name: "📊 Итоговое уведомление"
+        run: |
+          echo "=========================================="
+          echo "📧 УВЕДОМЛЕНИЕ О СТАТУСЕ СБОРКИ ДОКУМЕНТАЦИИ"
+          echo "=========================================="
+          echo "Статус: ${{ steps.check-status.outputs.status }}"
+          echo "Сообщение: ${{ steps.check-status.outputs.message }}"
+          echo "------------------------------------------"
+          echo "Ветка: ${{ github.ref }}"
+          echo "Коммит: ${{ github.sha }}"
+          echo "Запуск: ${{ github.run_id }}"
+          echo "Событие: ${{ github.event_name }}"
+          echo "=========================================="
+      
+      # Шаг 6: Вывод ссылки на артефакты (если успех)
+      - name: "📦 Ссылка на артефакты"
+        if: steps.check-status.outputs.status == 'success'
+        run: |
+          echo "📚 Сгенерированная документация доступна в артефактах:"
+          echo "   🔗 ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

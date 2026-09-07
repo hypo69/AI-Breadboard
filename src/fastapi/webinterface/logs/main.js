@@ -62,6 +62,7 @@
     try {
       const data = await window.api.fetch('/api/logs/files');
       state.files = Array.isArray(data.files) ? data.files : [];
+      state.files.sort((a, b) => new Date(b.modified || 0) - new Date(a.modified || 0));
 
       if (state.files.length === 0) {
         selector.innerHTML = '<option value="">(Лог-файлы не найдены)</option>';
@@ -104,7 +105,11 @@
       const res = await window.api.fetch(url);
 
       state.rawContent = res.content || '';
-      state.lines = state.rawContent.split(/\r?\n/);
+      // Reverse lines so newest entries are displayed first (descending order by date)
+      state.lines = state.rawContent
+        .split(/\r?\n/)
+        .filter(line => line.trim().length > 0)
+        .reverse();
 
       // Update terminal metadata
       const filenameEl = document.getElementById('log-terminal-filename');

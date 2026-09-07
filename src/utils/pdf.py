@@ -55,7 +55,8 @@ def set_project_root(marker_files=('__root__','.git')) -> Path:
 __root__: Path = set_project_root()
 """__root__ (Path): Path to the root directory of the project"""
 
-wkhtmltopdf_exe = __root__ / 'bin' / 'wkhtmltopdf' / 'files' / 'bin' /  'wkhtmltopdf.exe'
+#wkhtmltopdf_exe = __root__ / 'bin' / 'wkhtmltopdf' / 'files' / 'bin' /  'wkhtmltopdf.exe'
+wkhtmltopdf_exe:Path = Path(r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe')
 
 if not wkhtmltopdf_exe.exists():
     logger.error("wkhtmltopdf.exe not found at specified path.")
