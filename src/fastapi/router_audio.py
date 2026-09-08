@@ -19,7 +19,7 @@ import json
 import time
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile, status
 from pydantic import BaseModel, Field
 
 from src.ai.audio_diarization import AudioDiarizationService, get_audio_diarization_service
@@ -47,12 +47,15 @@ def init_router() -> APIRouter:
 
     @router.post("/diarize", summary="Analyze voice message: diarize speakers and summarize")
     async def diarize_audio(
+        request: Request,
         file: UploadFile = File(...),
         model: Optional[str] = Form(None),
         api_key: Optional[str] = Form(""),
         language: Optional[str] = Form("ru"),
     ) -> Dict[str, Any]:
         """Process uploaded audio or microphone recording with Gemini multimodal."""
+        from src.fastapi.router_auth import get_current_user_data
+        get_current_user_data(request)
         if not file:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No audio file provided")
 
@@ -85,8 +88,10 @@ def init_router() -> APIRouter:
             )
 
     @router.post("/save-to-rag", summary="Save audio transcript and summary to RAG knowledge base")
-    async def save_diarization_to_rag(req: SaveToRAGRequest) -> Dict[str, Any]:
+    async def save_diarization_to_rag(req: SaveToRAGRequest, request: Request) -> Dict[str, Any]:
         """Save diarization outcome as a document in RAG knowledge base."""
+        from src.fastapi.router_auth import get_current_user_data
+        get_current_user_data(request)
         rag_mgr = get_document_rag_manager()
         safe_title = req.title.strip().replace(" ", "_") or "voice_recording"
         timestamp_str = int(time.time())

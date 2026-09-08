@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Loading Gemini API keys from secrets.json file
+# Process Name: Loading Gemini API keys from unified environment storage
 # =============================================================================
 # Description:
-#   Loads and manages Google Gemini API authentication keys from local secrets.json.
-#   Provides functions to retrieve all keys, get keys by name, and load active keys
-#   with proper filtering by status and quota restrictions.
+#   Loads and manages Google Gemini API authentication keys from .env.
+#   Provides backwards-compatible functions to retrieve all keys, get keys by name,
+#   and load active keys with proper filtering by status and quota restrictions.
 #
 # File: secrets_loader.py
 # Project: ai-breadboard
@@ -14,33 +14,28 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-import json
-from pathlib import Path
-from typing import Dict, List, Tuple
+from __future__ import annotations
 
-# Path to secrets.json file relative to module directory
-_SECRETS_FILE = Path(__file__).parent / 'secrets.json'
+from typing import Any, Dict, List, Optional, Tuple
+
+from src.secrets.api_key_state import (
+    _get_merged_keys_data,
+    _read_env_keys,
+    load_api_keys as state_load_api_keys,
+)
+
 
 def load_secrets() -> Dict[str, str]:
-    """
-    Loading API keys from secrets.json file.
+    """Load API keys mapping from environment storage.
 
     Returns:
-        Dict[str, str]: Dictionary mapping email addresses to API keys.
+        Dict[str, str]: Dictionary mapping key names to API keys.
     """
-    if not _SECRETS_FILE.exists():
-        return {}
-    
-    try:
-        content = _SECRETS_FILE.read_text(encoding='utf-8')
-        return json.loads(content)
-    except Exception as ex:
-        print(f"Error loading secrets.json: {ex}")
-        return {}
+    return _read_env_keys()
+
 
 def get_all_keys() -> List[str]:
-    """
-    Returns list of all API keys.
+    """Returns list of all API keys.
 
     Returns:
         List[str]: List of API key values.
@@ -48,47 +43,41 @@ def get_all_keys() -> List[str]:
     secrets = load_secrets()
     return list(secrets.values())
 
+
 def get_all_key_names() -> List[str]:
-    """
-    Returns list of all key names (email addresses).
+    """Returns list of all key names.
 
     Returns:
-        List[str]: List of key identifiers (email addresses).
+        List[str]: List of key identifiers.
     """
     secrets = load_secrets()
     return list(secrets.keys())
 
-def get_key_by_name(name: str) -> str | None:
-    """
-    Returns API key by name.
+
+def get_key_by_name(name: str) -> Optional[str]:
+    """Returns API key by name.
 
     Args:
-        name: Key identifier (email address).
+        name (str): Key identifier.
 
     Returns:
-        str | None: API key value or None if not found.
+        Optional[str]: API key value or None if not found.
     """
     secrets = load_secrets()
     return secrets.get(name)
 
-def load_api_keys(names: List[str] = []) -> Tuple[List[str], List[str], List[str]]:
-    """
-    Loading API keys sorted by last_run timestamp.
-    Filters keys: only active status and not banned (daily quota).
+
+def load_api_keys(
+    names: Optional[List[str]] = [],
+    skip_exhausted: bool = True,
+) -> Tuple[List[str], List[str], List[Any]]:
+    """Load active API keys.
 
     Args:
-        names: Optional list of key names; if empty, loads all from file.
+        names (Optional[List[str]]): Optional list of key names.
+        skip_exhausted (bool): Whether to skip quota-exhausted keys.
 
     Returns:
-        Tuple[List[str], List[str], List[str]]: (api_keys, key_names, key_names)
+        Tuple[List[str], List[str], List[Any]]: (api_keys, key_names, key_states)
     """
-    from src.secrets.api_key_state import load_api_keys as state_load_api_keys
-    
-    # Using existing function with names from secrets.json
-    all_names = get_all_key_names()
-    
-    if names:
-        # Filter only names that exist in secrets.json
-        names = [n for n in names if n in all_names]
-    
-    return state_load_api_keys(names)
+    return state_load_api_keys(names=names, skip_exhausted=skip_exhausted)

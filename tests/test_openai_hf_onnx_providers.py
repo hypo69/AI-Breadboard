@@ -217,3 +217,46 @@ def test_router_chat_models_endpoint():
     assert "openai" in models
     assert "hf" in models
     assert "onnx" in models
+
+def test_onnx_olive_config_and_providers():
+    """Test GET and POST /api/onnx/config and GET /api/onnx/providers endpoints.
+    
+    Verifies that ONNX and Olive settings can be retrieved and updated.
+    """
+    client = TestClient(app)
+    # 1. GET config
+    get_res = client.get("/api/onnx/config")
+    assert get_res.status_code == 200
+    cfg = get_res.json()
+    assert "enabled" in cfg
+    assert "execution_provider" in cfg
+    assert "models_dir" in cfg
+    assert "olive_precision" in cfg
+
+    # 2. POST config
+    post_res = client.post("/api/onnx/config", json={
+        "enabled": True,
+        "models_dir": "models/onnx",
+        "execution_provider": "DirectMLExecutionProvider",
+        "default_model": "phi-3.5-mini-instruct-onnx",
+        "olive_precision": "int4"
+    })
+    assert post_res.status_code == 200
+    assert post_res.json().get("status") == "ok"
+
+    # 3. GET providers
+    prov_res = client.get("/api/onnx/providers")
+    assert prov_res.status_code == 200
+    prov_data = prov_res.json()
+    assert "providers" in prov_data
+    assert isinstance(prov_data["providers"], list)
+
+def test_olive_optimizer_helpers():
+    """Test Olive config generation and availability check."""
+    from src.ai.providers.onnx.olive_optimizer import generate_olive_config, check_olive_available
+    assert isinstance(check_olive_available(), bool)
+    cfg = generate_olive_config("test-model", "models/onnx/test", precision="int4")
+    assert cfg["engine"]["output_dir"] == "models/onnx/test"
+    assert "passes" in cfg
+    assert "onnx_conversion" in cfg["passes"]
+

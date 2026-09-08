@@ -9,6 +9,7 @@ async function initModelsTab() {
   const saveAgyBtn = document.getElementById('btn-save-agy');
   const saveFoundryBtn = document.getElementById('btn-save-foundry');
   const saveOllamaBtn = document.getElementById('btn-save-ollama');
+  const saveOnnxBtn = document.getElementById('btn-save-onnx');
   const saveBtnInstr = document.getElementById('btn-save-instruction');
   const reloadBtnInstr = document.getElementById('btn-reload-instruction');
 
@@ -16,9 +17,113 @@ async function initModelsTab() {
   if (saveBtnInstr) saveBtnInstr.onclick = saveSystemInstruction;
   if (reloadBtnInstr) reloadBtnInstr.onclick = loadSystemInstruction;
 
+  // Provider switch direct toggling
+  const agyEnabledSwitch = document.getElementById('agy-enabled');
+  if (agyEnabledSwitch) {
+    agyEnabledSwitch.onchange = async () => {
+      const enabled = agyEnabledSwitch.checked;
+      const remember = document.getElementById('agy-remember')?.checked ?? true;
+      const model = document.getElementById('agy-model')?.value || 'agy-flash';
+      const key = document.getElementById('agy-key')?.value.trim() || '';
+
+      try {
+        await window.api.fetch('/api/agy/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled, model, key, remember })
+        });
+        showModelsNotification(`Google Antigravity (AGY) ${enabled ? 'активирован' : 'деактивирован'}${remember ? ' (сохранено в config.json)' : ''}`, 'info');
+        if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
+      } catch (err) {
+        console.error('Ошибка переключения Antigravity:', err);
+        showModelsNotification('Ошибка переключения: ' + err.message, 'danger');
+      }
+    };
+  }
+
+  const foundryEnabledSwitch = document.getElementById('foundry-enabled');
+  if (foundryEnabledSwitch) {
+    foundryEnabledSwitch.onchange = async () => {
+      const enabled = foundryEnabledSwitch.checked;
+      const remember = document.getElementById('foundry-remember')?.checked ?? true;
+      const url = document.getElementById('foundry-url')?.value.trim() || 'http://localhost:54837';
+      const key = document.getElementById('foundry-key')?.value.trim() || '';
+      const model = document.getElementById('foundry-model')?.value?.trim() || 'qwen2.5-1.5b';
+
+      try {
+        await window.api.fetch('/api/foundry/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled, url, key, model, remember })
+        });
+        showModelsNotification(`Microsoft Foundry ${enabled ? 'активирован' : 'деактивирован'}${remember ? ' (сохранено в config.json)' : ''}`, 'info');
+        if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
+      } catch (err) {
+        console.error('Ошибка переключения Foundry:', err);
+        showModelsNotification('Ошибка переключения: ' + err.message, 'danger');
+      }
+    };
+  }
+
+  const ollamaEnabledSwitch = document.getElementById('ollama-enabled');
+  if (ollamaEnabledSwitch) {
+    ollamaEnabledSwitch.onchange = async () => {
+      const enabled = ollamaEnabledSwitch.checked;
+      const remember = document.getElementById('ollama-remember')?.checked ?? true;
+      const url = document.getElementById('ollama-url')?.value.trim() || 'http://localhost:11434';
+      const model = document.getElementById('ollama-model')?.value?.trim() || 'llama3.1';
+
+      try {
+        await window.api.fetch('/api/ollama/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled, url, model, remember })
+        });
+        showModelsNotification(`Ollama ${enabled ? 'активирован' : 'деактивирован'}${remember ? ' (сохранено в config.json)' : ''}`, 'info');
+        if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
+      } catch (err) {
+        console.error('Ошибка переключения Ollama:', err);
+        showModelsNotification('Ошибка переключения: ' + err.message, 'danger');
+      }
+    };
+  }
+
+  const onnxEnabledSwitch = document.getElementById('onnx-enabled');
+  if (onnxEnabledSwitch) {
+    onnxEnabledSwitch.onchange = async () => {
+      const enabled = onnxEnabledSwitch.checked;
+      const remember = document.getElementById('onnx-remember')?.checked ?? true;
+      const execution_provider = document.getElementById('onnx-execution-provider')?.value || 'DirectMLExecutionProvider';
+      const models_dir = document.getElementById('onnx-models-dir')?.value.trim() || 'models/onnx';
+      const default_model = document.getElementById('onnx-default-model')?.value.trim() || 'phi-3.5-mini-instruct-onnx';
+      const olive_precision = document.getElementById('onnx-olive-precision')?.value || 'int4';
+
+      try {
+        await window.api.fetch('/api/onnx/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            enabled,
+            execution_provider,
+            models_dir,
+            default_model,
+            olive_precision,
+            remember
+          })
+        });
+        showModelsNotification(`ONNX / Olive ${enabled ? 'активирован' : 'деактивирован'}${remember ? ' (сохранено в config.json)' : ''}`, 'info');
+        if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
+      } catch (err) {
+        console.error('Ошибка переключения ONNX / Olive:', err);
+        showModelsNotification('Ошибка переключения: ' + err.message, 'danger');
+      }
+    };
+  }
+
   if (saveAgyBtn) {
     saveAgyBtn.onclick = async () => {
       const enabled = document.getElementById('agy-enabled')?.checked ?? true;
+      const remember = document.getElementById('agy-remember')?.checked ?? true;
       const model = document.getElementById('agy-model')?.value || 'agy-flash';
       const key = document.getElementById('agy-key')?.value.trim() || '';
 
@@ -27,9 +132,9 @@ async function initModelsTab() {
         await window.api.fetch('/api/agy/config', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ enabled, model, key })
+          body: JSON.stringify({ enabled, model, key, remember })
         });
-        showModelsNotification('Настройки Antigravity (AGY) успешно сохранены', 'success');
+        showModelsNotification(`Настройки Antigravity (AGY) успешно сохранены${remember ? ' в config.json' : ''}`, 'success');
         if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
       } catch (err) {
         console.error('Ошибка сохранения Antigravity:', err);
@@ -43,17 +148,19 @@ async function initModelsTab() {
   if (saveFoundryBtn) {
     saveFoundryBtn.onclick = async () => {
       const enabled = document.getElementById('foundry-enabled')?.checked || false;
-      const url = document.getElementById('foundry-url')?.value.trim() || '';
+      const remember = document.getElementById('foundry-remember')?.checked ?? true;
+      const url = document.getElementById('foundry-url')?.value.trim() || 'http://localhost:54837';
       const key = document.getElementById('foundry-key')?.value.trim() || '';
+      const model = document.getElementById('foundry-model')?.value?.trim() || 'qwen2.5-1.5b';
       
       saveFoundryBtn.disabled = true;
       try {
         await window.api.fetch('/api/foundry/config', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ enabled, url, key })
+          body: JSON.stringify({ enabled, url, key, model, remember })
         });
-        showModelsNotification('Настройки Microsoft Foundry успешно сохранены', 'success');
+        showModelsNotification(`Настройки Microsoft Foundry успешно сохранены${remember ? ' в config.json' : ''}`, 'success');
         if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
       } catch (err) {
         console.error('Ошибка сохранения Foundry:', err);
@@ -67,22 +174,58 @@ async function initModelsTab() {
   if (saveOllamaBtn) {
     saveOllamaBtn.onclick = async () => {
       const enabled = document.getElementById('ollama-enabled')?.checked || false;
-      const url = document.getElementById('ollama-url')?.value.trim() || '';
+      const remember = document.getElementById('ollama-remember')?.checked ?? true;
+      const url = document.getElementById('ollama-url')?.value.trim() || 'http://localhost:11434';
+      const model = document.getElementById('ollama-model')?.value?.trim() || 'llama3.1';
       
       saveOllamaBtn.disabled = true;
       try {
         await window.api.fetch('/api/ollama/config', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ enabled, url })
+          body: JSON.stringify({ enabled, url, model, remember })
         });
-        showModelsNotification('Настройки Ollama успешно сохранены', 'success');
+        showModelsNotification(`Настройки Ollama успешно сохранены${remember ? ' в config.json' : ''}`, 'success');
         if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
       } catch (err) {
         console.error('Ошибка сохранения Ollama:', err);
         showModelsNotification('Ошибка сохранения: ' + err.message, 'danger');
       } finally {
         saveOllamaBtn.disabled = false;
+      }
+    };
+  }
+
+  if (saveOnnxBtn) {
+    saveOnnxBtn.onclick = async () => {
+      const enabled = document.getElementById('onnx-enabled')?.checked ?? true;
+      const remember = document.getElementById('onnx-remember')?.checked ?? true;
+      const execution_provider = document.getElementById('onnx-execution-provider')?.value || 'DirectMLExecutionProvider';
+      const models_dir = document.getElementById('onnx-models-dir')?.value.trim() || 'models/onnx';
+      const default_model = document.getElementById('onnx-default-model')?.value.trim() || 'phi-3.5-mini-instruct-onnx';
+      const olive_precision = document.getElementById('onnx-olive-precision')?.value || 'int4';
+
+      saveOnnxBtn.disabled = true;
+      try {
+        await window.api.fetch('/api/onnx/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            enabled,
+            execution_provider,
+            models_dir,
+            default_model,
+            olive_precision,
+            remember
+          })
+        });
+        showModelsNotification(`Настройки ONNX / Olive успешно сохранены${remember ? ' в config.json' : ''}`, 'success');
+        if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
+      } catch (err) {
+        console.error('Ошибка сохранения ONNX / Olive:', err);
+        showModelsNotification('Ошибка сохранения: ' + err.message, 'danger');
+      } finally {
+        saveOnnxBtn.disabled = false;
       }
     };
   }
@@ -176,6 +319,7 @@ async function initModelsTab() {
     loadFoundryConfig(),
     loadOllamaConfig(),
     loadAgyConfig(),
+    loadOnnxConfig(),
     loadSystemInstruction()
   ]);
 }
@@ -495,6 +639,25 @@ async function loadAgyConfig() {
     if (keyInput) keyInput.value = config.key || '';
   } catch (err) {
     console.error('Ошибка загрузки настроек Antigravity (AGY):', err);
+  }
+}
+
+async function loadOnnxConfig() {
+  try {
+    const config = await window.api.fetch('/api/onnx/config');
+    const enabledInput = document.getElementById('onnx-enabled');
+    const epSelect = document.getElementById('onnx-execution-provider');
+    const dirInput = document.getElementById('onnx-models-dir');
+    const modelInput = document.getElementById('onnx-default-model');
+    const precSelect = document.getElementById('onnx-olive-precision');
+
+    if (enabledInput) enabledInput.checked = config.enabled ?? true;
+    if (epSelect && config.execution_provider) epSelect.value = config.execution_provider;
+    if (dirInput && config.models_dir) dirInput.value = config.models_dir;
+    if (modelInput && config.default_model) modelInput.value = config.default_model;
+    if (precSelect && config.olive_precision) precSelect.value = config.olive_precision;
+  } catch (err) {
+    console.error('Ошибка загрузки настроек ONNX / Olive:', err);
   }
 }
 

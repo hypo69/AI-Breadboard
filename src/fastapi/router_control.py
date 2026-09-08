@@ -150,6 +150,8 @@ async def websocket_control_endpoint(
 @router.get("/status")
 async def get_control_status(request: Request, token: Optional[str] = None, room: Optional[str] = None):
     """Получить текущее state комнаты по HTTP."""
+    from src.fastapi.router_auth import get_current_user_data
+    get_current_user_data(request)
     cookie_token = request.cookies.get("auth_token")
     if cookie_token and not token:
         token = cookie_token
@@ -166,38 +168,23 @@ async def get_control_status(request: Request, token: Optional[str] = None, room
 @router.get("/active_players")
 async def get_active_players(request: Request):
     """Получить list комнат с активными плеерами."""
-    token = request.cookies.get("auth_token")
-    user_email = None
-    if token:
-        token_data = verify_jwt_token(token)
-        if token_data and token_data.email:
-            user_email = token_data.email.strip().lower()
+    from src.fastapi.router_auth import get_current_user_data
+    user_data = get_current_user_data(request)
+    user_email = user_data.email.strip().lower() if user_data and user_data.email else None
 
     active = []
     for room_id, roles in manager.rooms.items():
         if len(roles.get("player", [])) > 0:
             active.append(room_id)
             
-    logger.info(f"active_players endpoint called: token={token}, user_email={user_email}, active_rooms={active}")
+    logger.info(f"active_players endpoint called: user_email={user_email}, active_rooms={active}")
     return {"players": active, "user_email": user_email}
 
 @router.get("/rescan")
 async def rescan_storage(request: Request):
     """Принудительное пересканирование доступных хранилищ."""
-    # Check прав администратора
-    token = request.cookies.get("auth_token")
-    if not token:
-        raise HTTPException(status_code=403)
-        
-    from src.fastapi.router_auth import verify_jwt_token
-    user_data = verify_jwt_token(token)
-    if not user_data:
-        raise HTTPException(status_code=403)
-    
-    from src.user_manager import user_manager
-    db_user = user_manager.get_user_by_email(user_data.email)
-    if not db_user or (not db_user.get('is_admin', 0) and db_user.get('role') != 'admin'):
-        raise HTTPException(status_code=403)
+    from src.fastapi.router_auth import require_admin_user
+    require_admin_user(request)
 
     import psutil
     drives = []

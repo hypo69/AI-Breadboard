@@ -269,6 +269,14 @@ class SearchUserRAGRequest(BaseModel):
     min_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Min score threshold")
 
 
+class AddUserRAGQAEntryRequest(BaseModel):
+    """Payload for adding a Q&A pair or text knowledge entry to a user RAG collection."""
+    question: str = Field(default="", max_length=10000, description="Question or prompt")
+    answer: str = Field(..., min_length=1, max_length=50000, description="Answer or knowledge content")
+    meta: Optional[Dict[str, Any]] = Field(default=None, description="Optional metadata")
+
+
+
 user_rags_router = APIRouter(prefix='/api/user/rags', tags=['user-rags'])
 
 
@@ -427,6 +435,93 @@ async def search_user_rag_endpoint(
         'results': results,
         'total': len(results)
     }
+
+
+@user_rags_router.get('/{rag_id}/entries')
+async def list_user_rag_entries_endpoint(
+    request: Request,
+    rag_id: str,
+    q: str = Query(default='', description='Search filter query'),
+    limit: int = Query(default=100, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0)
+) -> Dict[str, Any]:
+    """List and search chunk/QA entries in a specific user RAG collection.
+
+    Args:
+        request: FastAPI request object.
+        rag_id: Collection identifier.
+        q: Filter query string.
+        limit: Max items to return.
+        offset: Items offset.
+
+    Returns:
+        Dict[str, Any]: Collection entries payload.
+    """
+    user_id = _get_current_user_id(request)
+    data = user_workspace_rag_manager.list_entries(user_id, rag_id, query=q, limit=limit, offset=offset)
+    return {
+        'status': 'ok',
+        'user_id': user_id,
+        'rag_id': rag_id,
+        'total': data['total'],
+        'entries': data['entries']
+    }
+
+
+@user_rags_router.post('/{rag_id}/entries')
+async def add_user_rag_qa_entry_endpoint(
+    request: Request,
+    rag_id: str,
+    payload: AddUserRAGQAEntryRequest
+) -> Dict[str, Any]:
+    """Add a Q&A pair or custom knowledge entry to the user RAG collection.
+
+    Args:
+        request: FastAPI request object.
+        rag_id: Collection identifier.
+        payload: Q&A entry data.
+
+    Returns:
+        Dict[str, Any]: Created entry response.
+    """
+    user_id = _get_current_user_id(request)
+    try:
+        entry = user_workspace_rag_manager.add_qa_entry(
+            user_id=user_id,
+            rag_id=rag_id,
+            question=payload.question,
+            answer=payload.answer,
+            meta=payload.meta
+        )
+        return {'status': 'ok', 'user_id': user_id, 'rag_id': rag_id, 'entry': entry}
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Collection '{rag_id}' not found")
+    except Exception as ex:
+        logger.error(f"Error adding QA entry to {rag_id}: {ex}")
+        raise HTTPException(status_code=500, detail=str(ex))
+
+
+@user_rags_router.delete('/{rag_id}/entries/{chunk_id:path}')
+async def delete_user_rag_entry_endpoint(
+    request: Request,
+    rag_id: str,
+    chunk_id: str
+) -> Dict[str, Any]:
+    """Delete a chunk or Q&A entry from a user RAG collection and reindex.
+
+    Args:
+        request: FastAPI request object.
+        rag_id: Collection identifier.
+        chunk_id: Chunk unique identifier.
+
+    Returns:
+        Dict[str, Any]: Deletion status.
+    """
+    user_id = _get_current_user_id(request)
+    deleted = user_workspace_rag_manager.delete_entry(user_id, rag_id, chunk_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Entry '{chunk_id}' not found in collection '{rag_id}'")
+    return {'status': 'ok', 'user_id': user_id, 'rag_id': rag_id, 'deleted_chunk_id': chunk_id}
 
 
 def init_router() -> APIRouter:

@@ -96,3 +96,31 @@ def test_admin_post_redirects_for_user_domain(client):
     response = client.post("/admin", data={"password": "onela"}, headers={"host": "kino.davidka.net"}, follow_redirects=False)
     assert response.status_code == 303
     assert response.headers["location"] == "/"
+
+
+def test_docs_endpoints_allowed_for_localhost(client):
+    """Test that localhost can access /docs, /redoc, and /openapi.json."""
+    resp_docs = client.get("/docs", headers={"host": "localhost:8000"})
+    assert resp_docs.status_code == 200
+    assert "swagger-ui" in resp_docs.text.lower() or "html" in resp_docs.text.lower()
+
+    resp_redoc = client.get("/redoc", headers={"host": "localhost:8000"})
+    assert resp_redoc.status_code == 200
+    assert "redoc" in resp_redoc.text.lower()
+
+    resp_openapi = client.get("/openapi.json", headers={"host": "localhost:8000"})
+    assert resp_openapi.status_code == 200
+    assert "openapi" in resp_openapi.json()
+
+
+def test_docs_endpoints_return_404_for_user_domain(client):
+    """Test that requests from user domain to /docs, /redoc, and /openapi.json return 404."""
+    resp_docs = client.get("/docs", headers={"host": "kino.davidka.net"})
+    assert resp_docs.status_code == 404
+
+    resp_redoc = client.get("/redoc", headers={"host": "kino.davidka.net"})
+    assert resp_redoc.status_code == 404
+
+    resp_openapi = client.get("/openapi.json", headers={"host": "kino.davidka.net"})
+    assert resp_openapi.status_code == 404
+

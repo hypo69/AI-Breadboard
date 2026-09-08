@@ -166,3 +166,103 @@ class TestUserWorkspaceRAGAPI:
 
         # 7. Clean up uploaded file
         client.delete("/api/user/files?filename=python_guide.md&subfolder=files")
+
+    def test_qa_entries_and_reindexing(self):
+        """Test adding Q&A entries, listing, searching, and deleting specific entries."""
+        test_user_id = 9997
+        col_name = "qa_test_col"
+
+        # 1. Create collection
+        user_workspace_rag_manager.create_collection(user_id=test_user_id, name=col_name)
+
+        # 2. Add Q&A entry
+        qa_entry = user_workspace_rag_manager.add_qa_entry(
+            user_id=test_user_id,
+            rag_id=col_name,
+            question="Где можно скачать фильм?",
+            answer="Фильмы и сериалы можно найти в каталоге локальной медиатеки."
+        )
+        assert qa_entry["chunk_id"].startswith("qa_")
+        assert "локальной медиатеки" in qa_entry["content"]
+
+        # 3. List entries
+        entries_data = user_workspace_rag_manager.list_entries(user_id=test_user_id, rag_id=col_name)
+        assert entries_data["total"] == 1
+        assert entries_data["entries"][0]["chunk_id"] == qa_entry["chunk_id"]
+
+        # 4. Search by question text
+        search_res = user_workspace_rag_manager.search_collection(
+            user_id=test_user_id,
+            rag_id=col_name,
+            query="скачать фильм",
+            top_k=2
+        )
+        assert len(search_res) > 0
+        assert "медиатеки" in search_res[0]["text"]
+
+        # 5. Delete entry
+        del_success = user_workspace_rag_manager.delete_entry(
+            user_id=test_user_id,
+            rag_id=col_name,
+            chunk_id=qa_entry["chunk_id"]
+        )
+        assert del_success is True
+
+        # 6. Verify entry gone and reindexed
+        entries_after = user_workspace_rag_manager.list_entries(user_id=test_user_id, rag_id=col_name)
+        assert entries_after["total"] == 0
+
+        search_after = user_workspace_rag_manager.search_collection(
+            user_id=test_user_id,
+            rag_id=col_name,
+            query="скачать фильм",
+            top_k=2
+        )
+        assert len(search_after) == 0
+
+        # Clean up
+        user_workspace_rag_manager.delete_collection(test_user_id, col_name)
+
+    def test_api_qa_entries_crud_flow(self):
+        """Test API endpoints for adding, listing, and deleting Q&A entries."""
+        rag_name = "api_qa_collection"
+
+        # 1. Create collection
+        client.post("/api/user/rags", json={"name": rag_name, "description": "QA API testing"})
+
+        # 2. Add QA entry via POST /api/user/rags/{rag_id}/entries
+        post_resp = client.post(
+            f"/api/user/rags/{rag_name}/entries",
+            json={
+                "question": "Как настроить SSL сертификат?",
+                "answer": "Используйте скрипт install_cert.ps1 или команду assist cert generate."
+            }
+        )
+        assert post_resp.status_code == 200
+        chunk_id = post_resp.json()["entry"]["chunk_id"]
+
+        # 3. List entries via GET /api/user/rags/{rag_id}/entries
+        list_resp = client.get(f"/api/user/rags/{rag_name}/entries")
+        assert list_resp.status_code == 200
+        assert list_resp.json()["total"] == 1
+
+        # 4. Search in collection
+        search_resp = client.post(
+            f"/api/user/rags/{rag_name}/search",
+            json={"query": "сертификат SSL", "top_k": 1}
+        )
+        assert search_resp.status_code == 200
+        assert len(search_resp.json()["results"]) > 0
+
+        # 5. Delete entry via DELETE /api/user/rags/{rag_id}/entries/{chunk_id}
+        del_entry_resp = client.delete(f"/api/user/rags/{rag_name}/entries/{chunk_id}")
+        assert del_entry_resp.status_code == 200
+        assert del_entry_resp.json()["deleted_chunk_id"] == chunk_id
+
+        # 6. Verify list is now empty
+        list_empty = client.get(f"/api/user/rags/{rag_name}/entries")
+        assert list_empty.json()["total"] == 0
+
+        # Clean up collection
+        client.delete(f"/api/user/rags/{rag_name}")
+

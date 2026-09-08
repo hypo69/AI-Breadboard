@@ -33,8 +33,11 @@ import {
 import {
   loadUserRags,
   createUserRag,
-  deleteActiveUserRag
+  deleteActiveUserRag,
+  addQaEntry,
+  loadRagEntries
 } from './modules/userRagCollections.js';
+
 import {
   buildActiveUserRag,
   executeActiveUserRagSearch,
@@ -98,7 +101,39 @@ function setupEventListeners() {
     deleteActiveRagBtn.addEventListener('click', deleteActiveUserRag);
   }
 
+  const confirmAddQaBtn = document.getElementById('btn-confirm-add-qa');
+  if (confirmAddQaBtn) {
+    confirmAddQaBtn.addEventListener('click', addQaEntry);
+  }
+
+  const refreshEntriesBtn = document.getElementById('btn-refresh-rag-entries');
+  if (refreshEntriesBtn) {
+    refreshEntriesBtn.addEventListener('click', () => loadRagEntries());
+  }
+
+  const entriesFilterInput = document.getElementById('user-rag-entries-filter');
+  if (entriesFilterInput) {
+    let filterDebounce = null;
+    entriesFilterInput.addEventListener('input', (e) => {
+      clearTimeout(filterDebounce);
+      filterDebounce = setTimeout(() => {
+        loadRagEntries(undefined, e.target.value.trim());
+      }, 300);
+    });
+  }
+
+  const clearFilterBtn = document.getElementById('btn-clear-entries-filter');
+  if (clearFilterBtn) {
+    clearFilterBtn.addEventListener('click', () => {
+      if (entriesFilterInput) {
+        entriesFilterInput.value = '';
+        loadRagEntries(undefined, '');
+      }
+    });
+  }
+
   const searchActiveRagBtn = document.getElementById('btn-active-rag-search');
+
   const searchActiveRagInput = document.getElementById('active-rag-search-query');
   if (searchActiveRagBtn) {
     searchActiveRagBtn.addEventListener('click', executeActiveUserRagSearch);

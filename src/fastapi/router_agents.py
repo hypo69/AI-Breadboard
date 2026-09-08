@@ -21,11 +21,12 @@ import re
 import asyncio
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel, Field
 
 from header import __root__
 from src.logger import logger
+from src.fastapi.router_auth import get_current_user_data
 from src.utils.jjson import j_loads_ns
 
 import copy
@@ -165,7 +166,7 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
     Returns:
         APIRouter: Configured FastAPI router.
     """
-    router = APIRouter(prefix=prefix, tags=['agents'])
+    router = APIRouter(prefix=prefix, tags=['agents'], dependencies=[Depends(get_current_user_data)])
 
     @router.get('')
     async def list_agents() -> List[dict]:

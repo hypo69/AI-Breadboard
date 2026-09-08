@@ -72,23 +72,29 @@ class RAGEngine:
         context_parts: List[str] = []
 
         # 1. Поиск по базе знаний / предыдущим сохраненным ответам
-        if user_identifier and api_key and len(clean_query) >= 3:
+        from src.ai.gemini.user_query_rag import is_garbage_query
+
+        # Skip direct RAG on greetings and short conversational fillers
+        is_greeting = is_garbage_query(clean_query)
+
+        if user_identifier and api_key and len(clean_query) >= 3 and not is_greeting:
             results = await search_user_history(
                 user_identifier,
                 api_key,
                 clean_query,
                 top_k=top_k,
-                threshold=active_threshold
+                threshold=0.40
             )
 
             if results:
                 best_match = results[0]
                 best_score = float(best_match.get("score", 0.0))
 
-                # Если есть точный ответ с высоким качеством совпадения
-                if best_score >= active_threshold and best_match.get("text"):
+                # Прямой ответ отдается только при очень высокой уверенности (>= 0.85)
+                direct_cutoff = max(active_threshold, self.direct_threshold)
+                if best_score >= direct_cutoff and best_match.get("text"):
                     matched_text = best_match["text"].strip()
-                    logger.info(f"[RAGEngine] Найден прямой ответ в RAG (score={best_score:.2f} >= {active_threshold})")
+                    logger.info(f"[RAGEngine] Найден прямой ответ в RAG (score={best_score:.2f} >= {direct_cutoff})")
                     return RAGRouteDecision(
                         decision_type=RAGDecisionType.DIRECT_ANSWER,
                         is_direct=True,
@@ -103,6 +109,7 @@ class RAGEngine:
                 snippets = [item["text"].strip() for item in results if item.get("text")]
                 if snippets:
                     context_parts.append("[Контекст из базы знаний]:\n" + "\n---\n".join(snippets))
+
 
         # 2. Добавление профиля предпочтений пользователя (если доступно)
         if user_identifier:

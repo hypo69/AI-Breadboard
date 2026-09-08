@@ -189,15 +189,15 @@ $port  = if ($Port)        { [string]$Port }   else { [string]$cfgPort }
 
 # Check for Gemini API key
 $hasApiKey = $false
-if ($env:GEMINI_API_KEY -or $env:GOOGLE_API_KEY -or $env:AGY_API_KEY) { $hasApiKey = $true }
-$geminiKeysFile = Join-Path $projectRoot "core\secrets\gemini_keys.json"
-if (-not $hasApiKey -and (Test-Path $geminiKeysFile)) {
-    try {
-        $jsonKeys = Get-Content $geminiKeysFile -Raw | ConvertFrom-Json
-        foreach ($prop in $jsonKeys.PSObject.Properties) {
-            if ($prop.Value.api_key) { $hasApiKey = $true; break }
+if ($env:GEMINI_API_KEY -or $env:GEMINI_ANTIGRAVITY_API_KEY -or $env:AGY_API_KEY) { $hasApiKey = $true }
+if (-not $hasApiKey -and (Test-Path $envFile)) {
+    Get-Content $envFile | ForEach-Object {
+        $line = $_.Trim()
+        if ($line -and -not $line.StartsWith('#') -and $line -match "^(GEMINI_API_KEY|GEMINI_API_KEY_\d+|GEMINI_ANTIGRAVITY_API_KEY|AGY_API_KEY)=(.*)$") {
+            $val = $Matches[2].Trim().Trim('"').Trim("'")
+            if ($val -and $val.Length -ge 10) { $hasApiKey = $true }
         }
-    } catch {}
+    }
 }
 
 Write-Host "    Host:       $host_" -ForegroundColor Gray
@@ -305,7 +305,7 @@ $lanIp = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
     Select-Object -ExpandProperty IPAddress -First 1)
 
 $browserProto = if ($useSsl) { "https" } else { "http" }
-$browserUrl   = "${browserProto}://localhost:${port}/"
+$browserUrl   = "${browserProto}://localhost:${port}/admin"
 
 Start-Job -ScriptBlock {
     param($targetPort, $targetOpenUrl)

@@ -80,7 +80,7 @@ class AgyChatBase:
         self.system_prompt: str = system_prompt
         self.history: List[Dict[str, str]] = []
         valid_keys: List[str] = []
-        agy_key = os.getenv('AGY_API_KEY', '').strip()
+        agy_key = os.getenv('AGY_API_KEY', '').strip() or os.getenv('GEMINI_ANTIGRAVITY_API_KEY', '').strip()
         if agy_key:
             valid_keys.append(agy_key)
 

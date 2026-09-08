@@ -94,7 +94,7 @@ class TravelAgent:
         if self.llm_type == 'gemini':
             from langchain_google_genai import ChatGoogleGenerativeAI
             model_name = getattr(self._langchain_cfg, 'gemini_model', 'gemini-2.5-flash')
-            api_key = os.environ.get('GOOGLE_API_KEY', '') or os.environ.get('GEMINI_API_KEY', '')
+            api_key = os.environ.get('GEMINI_API_KEY', '')
             if not api_key:
                 from src.secrets.api_key_state import load_api_keys
                 loaded, _, _ = load_api_keys()
@@ -104,8 +104,8 @@ class TravelAgent:
                 elif loaded:
                     api_key = loaded[0]
             if not api_key:
-                logger.error('[TravelAgent] GOOGLE_API_KEY is not set in environment')
-                raise EnvironmentError('GOOGLE_API_KEY is not set')
+                logger.error('[TravelAgent] GEMINI_API_KEY is not set in environment')
+                raise EnvironmentError('GEMINI_API_KEY is not set')
 
             self._llm = ChatGoogleGenerativeAI(
                 model=model_name,

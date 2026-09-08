@@ -13,8 +13,6 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-from __future__ import annotations
-
 import os
 import time
 import asyncio
@@ -48,6 +46,16 @@ class TestModelRequest(BaseModel):
     model: str = ""
     provider: str = ""
     message: str = "Привет! Назови свою модель и провайдера, и подтверди готовность к работе."
+    system_instruction: str = ""
+
+class CommentResponderRequest(BaseModel):
+    post_title: str = ""
+    post_content: str = ""
+    comment_author: str = ""
+    comment_content: str = ""
+    parent_context: str = ""
+    model: str = ""
+    provider: str = ""
     system_instruction: str = ""
 
 def get_chat_model(selected_model_name: str, system_instruction: str = ""):
@@ -140,24 +148,25 @@ async def _extract_user_auth(fastapi_req: Request) -> tuple[str, str, str, dict]
     selected_model = ""
     settings = {}
 
-    token = fastapi_req.cookies.get('auth_token')
-    if token:
-        from src.fastapi.router_auth import verify_jwt_token
-        user_data = verify_jwt_token(token)
-        if user_data:
-            from src.user_manager import user_manager
-            db_user = await asyncio.to_thread(user_manager.get_user_by_email, user_data.email)
-            if db_user:
-                user_identifier = str(db_user['id'])
-                settings = await asyncio.to_thread(user_manager.get_user_settings, db_user['id']) or {}
-                if settings.get('system_instruction'):
-                    system_instruction = settings['system_instruction']
-                if settings.get('model'):
-                    selected_model = settings['model']
+    from src.fastapi.router_auth import get_current_user_data
+    user_data = get_current_user_data(fastapi_req)
 
-    if not user_identifier:
-        client_ip = fastapi_req.client.host if fastapi_req.client else 'unknown'
-        user_identifier = f"anon_{client_ip}"
+    from src.user_manager import user_manager
+    db_user = None
+    if user_data.id:
+        db_user = await asyncio.to_thread(user_manager.get_user_by_id, user_data.id)
+    if not db_user and user_data.email:
+        db_user = await asyncio.to_thread(user_manager.get_user_by_email, user_data.email)
+
+    if db_user:
+        user_identifier = str(db_user.get('id', 1))
+        settings = await asyncio.to_thread(user_manager.get_user_settings, db_user.get('id', 1)) or {}
+        if settings.get('system_instruction'):
+            system_instruction = settings['system_instruction']
+        if settings.get('model'):
+            selected_model = settings['model']
+    else:
+        user_identifier = str(user_data.id or 1)
 
     return user_identifier, system_instruction, selected_model, settings
 
@@ -271,8 +280,11 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
         narrator_model.gemini_model.save_history_chat = False
 
     @router.get('/models')
-    async def get_models(refresh: bool = False) -> dict:
+    async def get_models(fastapi_req: Request, refresh: bool = False) -> dict:
         """Получение списка доступных моделей, сгруппированных по провайдеру."""
+        if fastapi_req is not None:
+            from src.fastapi.router_auth import get_current_user_data
+            get_current_user_data(fastapi_req)
         from src.ai.model_manager import get_available_models
 
         gemini_models = get_available_models('gemini', force_refresh=refresh)
@@ -311,8 +323,11 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
         }
 
     @router.post('/test-model')
-    async def test_model(req: TestModelRequest) -> dict:
+    async def test_model(req: TestModelRequest, fastapi_req: Request) -> dict:
         """Проверочный запрос к указанной AI-модели для валидации связи (Запрос -> Ответ)."""
+        if fastapi_req is not None:
+            from src.fastapi.router_auth import get_current_user_data
+            get_current_user_data(fastapi_req)
         start_time = time.perf_counter()
         target_model = req.model.strip()
         provider = req.provider.strip().lower()
@@ -385,15 +400,102 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                 'duration_ms': duration_ms
             }
 
+    @router.post('/comment-responder')
+    async def respond_to_comment(req: CommentResponderRequest, fastapi_req: Request) -> dict:
+        """Endpoint for WordPress AI Responder plugin to generate context-aware replies to user comments."""
+        if fastapi_req is not None:
+            from src.fastapi.router_auth import get_current_user_data
+            get_current_user_data(fastapi_req)
+
+        start_time = time.perf_counter()
+        target_model = req.model.strip() or 'gemini-2.5-flash'
+        provider = req.provider.strip().lower()
+
+        if provider == 'foundry' and target_model and not target_model.startswith('foundry:'):
+            target_model = f"foundry:{target_model}"
+        elif provider == 'ollama' and target_model and not target_model.startswith('ollama:'):
+            target_model = f"ollama:{target_model}"
+        elif provider == 'agy' and target_model and not target_model.startswith('agy-'):
+            target_model = f"agy-{target_model}"
+        elif provider in ('gemini_cli', 'gemini-cli') and target_model and not target_model.startswith('gemini_cli:'):
+            target_model = f"gemini_cli:{target_model}"
+        elif provider in ('openai', 'openai_compat', 'openai-compat', 'deepseek', 'groq', 'openrouter', 'lmstudio') and target_model:
+            openai_prefixes = ('openai:', 'deepseek:', 'groq:', 'openrouter:', 'lmstudio:', 'local:', 'compat:')
+            if not any(target_model.startswith(p) for p in openai_prefixes):
+                target_model = f"{provider}:{target_model}"
+        elif provider in ('hf', 'huggingface') and target_model and not target_model.startswith('hf:'):
+            target_model = f"hf:{target_model}"
+        elif provider == 'onnx' and target_model and not target_model.startswith('onnx:'):
+            target_model = f"onnx:{target_model}"
+
+        prompt_instructions = [
+            "You are an AI assistant responding to user comments on a website/blog (davidka.net).",
+            "Generate a polite, helpful, engaging, and concise reply in the same language as the comment (usually Russian).",
+            "Do not include unnecessary greetings or preamble if inappropriate; be natural, courteous, and accurate.",
+        ]
+        if req.system_instruction.strip():
+            prompt_instructions.append(f"Custom Persona & Instructions:\n{req.system_instruction.strip()}")
+
+        context_blocks = []
+        if req.post_title.strip():
+            context_blocks.append(f"Post Title: {req.post_title.strip()}")
+        if req.post_content.strip():
+            snippet = req.post_content.strip()[:3000]
+            context_blocks.append(f"Post Content Excerpt:\n{snippet}")
+        if req.parent_context.strip():
+            context_blocks.append(f"Comment Thread History:\n{req.parent_context.strip()}")
+        if req.comment_author.strip():
+            context_blocks.append(f"Comment Author: {req.comment_author.strip()}")
+        context_blocks.append(f"User Comment to Reply To:\n{req.comment_content.strip()}")
+
+        full_prompt = "\n\n".join(prompt_instructions) + "\n\n── CONTEXT & COMMENT ──\n" + "\n---\n".join(context_blocks)
+
+        try:
+            model_instance = get_chat_model(target_model, system_instruction=req.system_instruction)
+            response_text = ""
+            if hasattr(model_instance, 'ask'):
+                response_text = await model_instance.ask(full_prompt)
+            elif hasattr(model_instance, 'chat'):
+                response_text = await model_instance.chat(full_prompt)
+            elif hasattr(model_instance, 'chat_stream'):
+                chunks = []
+                async for chunk in model_instance.chat_stream(full_prompt):
+                    if chunk:
+                        clean_chunk = chunk.replace("[CHAT]", "").replace("[VOICE]", "")
+                        if clean_chunk:
+                            chunks.append(clean_chunk)
+                response_text = "".join(chunks)
+            else:
+                raise RuntimeError(f"Model {target_model} does not support generation methods")
+
+            duration_ms = round((time.perf_counter() - start_time) * 1000, 1)
+            return {
+                'status': 'success',
+                'reply': response_text.strip(),
+                'model': target_model,
+                'provider': provider,
+                'duration_ms': duration_ms
+            }
+        except Exception as exc:
+            logger.error(f"[ChatRouter] Error generating comment reply: {exc}", exc_info=True)
+            duration_ms = round((time.perf_counter() - start_time) * 1000, 1)
+            return {
+                'status': 'error',
+                'message': str(exc),
+                'model': target_model,
+                'provider': provider,
+                'duration_ms': duration_ms
+            }
+
     @router.post('/save-rag')
-    async def save_to_rag(request: SaveRagRequest, fastapi_req: Request):
+    async def save_to_rag(rag_req: SaveRagRequest, request: Request):
         """Ручное сохранение одобренного ответа в постоянный JSON-архив."""
         try:
-            user_identifier, _, _, _ = await _extract_user_auth(fastapi_req)
+            user_identifier, _, _, _ = await _extract_user_auth(request)
             from src.rag import save_user_approved_response
             save_success = await asyncio.to_thread(
                 save_user_approved_response,
-                user_identifier, request.query, request.chat_text, request.voice_text
+                user_identifier, rag_req.query, rag_req.chat_text, rag_req.voice_text
             )
             if save_success:
                 return {"status": "success", "message": "Successfully сохранено для последующей компиляции RAG"}
@@ -404,21 +506,21 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.post('/save-rag-instant')
-    async def save_to_rag_instant(request: SaveRagRequest, fastapi_req: Request):
+    async def save_to_rag_instant(rag_req: SaveRagRequest, request: Request):
         """Мгновенное сохранение ответа: запись в JSON + векторизация в FAISS."""
         try:
-            user_identifier, _, _, _ = await _extract_user_auth(fastapi_req)
+            user_identifier, _, _, _ = await _extract_user_auth(request)
             api_key = getattr(chat_model, 'api_key', '') or os.getenv('GEMINI_API_KEY', '')
 
-            content_to_index = request.voice_text if request.voice_text.strip() else request.chat_text
+            content_to_index = rag_req.voice_text if rag_req.voice_text.strip() else rag_req.chat_text
 
             from src.rag import save_user_approved_response, index_user_interaction
             save_success = await asyncio.to_thread(
                 save_user_approved_response,
-                user_identifier, request.query, request.chat_text, request.voice_text
+                user_identifier, rag_req.query, rag_req.chat_text, rag_req.voice_text
             )
             rag_success = await asyncio.to_thread(
-                index_user_interaction, user_identifier, api_key, request.query, content_to_index
+                index_user_interaction, user_identifier, api_key, rag_req.query, content_to_index
             )
 
             if save_success and rag_success:
@@ -432,14 +534,14 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.post('')
-    async def chat(request: ChatRequest, fastapi_req: Request):
+    async def chat(chat_req: ChatRequest, request: Request):
         """Обработка чат-запроса по алгоритму RAG-First: RAG Search -> Direct Match / LLM Fallback -> Auto-Index."""
         from fastapi.responses import StreamingResponse
         import json
 
         async def event_generator():
             try:
-                user_identifier, system_instruction, selected_model, settings = await _extract_user_auth(fastapi_req)
+                user_identifier, system_instruction, selected_model, settings = await _extract_user_auth(request)
 
                 api_key = getattr(chat_model, 'api_key', '') or os.getenv('GEMINI_API_KEY', '')
 
@@ -447,12 +549,12 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                 from src.rag import get_rag_engine, index_user_interaction
                 rag_engine = get_rag_engine()
 
-                top_k = int(request.generation_config.get('top_k', 3))
-                threshold = float(request.generation_config.get('min_score', request.generation_config.get('threshold', 0.45)))
+                top_k = int(chat_req.generation_config.get('top_k', 3))
+                threshold = float(chat_req.generation_config.get('min_score', chat_req.generation_config.get('threshold', 0.45)))
 
                 yield f"data: {json.dumps({'status': '🔍 Поиск в базе знаний (RAG)...'})}\n\n"
                 decision = await rag_engine.evaluate(
-                    query=request.message,
+                    query=chat_req.message,
                     user_identifier=user_identifier,
                     api_key=api_key,
                     threshold=threshold,
@@ -475,32 +577,32 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                 if decision.context_text:
                     dynamic_context_parts.append(decision.context_text)
 
-                user_msg_with_context = request.message
+                user_msg_with_context = chat_req.message
                 if dynamic_context_parts:
-                    user_msg_with_context = "\n\n".join(dynamic_context_parts) + "\n\n[Запрос пользователя]:\n" + request.message
+                    user_msg_with_context = "\n\n".join(dynamic_context_parts) + "\n\n[Запрос пользователя]:\n" + chat_req.message
 
                 # Режим отладки (DEBUG MODE)
-                if request.generation_config.get('debug_mode', False):
-                    debug_text = _build_debug_prompt(request, decision.context_text, voice_gender_instruction)
+                if chat_req.generation_config.get('debug_mode', False):
+                    debug_text = _build_debug_prompt(chat_req, decision.context_text, voice_gender_instruction)
                     yield f"data: {json.dumps({'status': 'DEBUG MODE: Промпт сформирован, не отправляется в модель'})}\n\n"
                     yield f"data: {json.dumps({'text': debug_text})}\n\n"
                     return
 
-                token = fastapi_req.cookies.get('auth_token')
+                token = request.cookies.get('auth_token')
                 from src.fastapi.router_control import get_room_id
                 room_id = get_room_id(token, None)
 
-                if request.generation_config.get('model'):
-                    selected_model = request.generation_config['model']
+                if chat_req.generation_config.get('model'):
+                    selected_model = chat_req.generation_config['model']
 
-                clean_history = _clean_chat_history(request.history)
+                clean_history = _clean_chat_history(chat_req.history)
                 kwargs = {
                     'history': clean_history,
                     'room_id': room_id,
                     'model_name': selected_model,
                 }
-                if request.generation_config.get('search_engine'):
-                    kwargs['search_engine'] = request.generation_config['search_engine']
+                if chat_req.generation_config.get('search_engine'):
+                    kwargs['search_engine'] = chat_req.generation_config['search_engine']
 
                 if selected_model:
                     active_model = get_chat_model(selected_model, None)
@@ -513,7 +615,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                 chat_kwargs_1 = kwargs.copy()
                 chat_kwargs_1.pop('room_id', '')
                 chat_kwargs_1.pop('search_engine', None)
-                gen_cfg_1 = request.generation_config.copy()
+                gen_cfg_1 = chat_req.generation_config.copy()
                 gen_cfg_1['response_type'] = 'chat'
                 chat_kwargs_1['generation_config'] = gen_cfg_1
 
@@ -536,7 +638,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                     chat_kwargs_2.pop('search_engine', None)
                     chat_kwargs_2['history'] = []
 
-                    gen_cfg_2 = request.generation_config.copy()
+                    gen_cfg_2 = chat_req.generation_config.copy()
                     gen_cfg_2['response_type'] = 'voice'
                     chat_kwargs_2['generation_config'] = gen_cfg_2
 
@@ -552,7 +654,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                 content_to_index = voice_response if voice_response.strip() else chat_response
                 if content_to_index and api_key and user_identifier:
                     asyncio.ensure_future(asyncio.to_thread(
-                        index_user_interaction, user_identifier, api_key, request.message, content_to_index
+                        index_user_interaction, user_identifier, api_key, chat_req.message, content_to_index
                     ))
 
             except Exception as ex:

@@ -1,27 +1,37 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Check for optimum and onnxruntime availability
+# Process Name: ONNX Runtime and Olive Chat Engine
 # =============================================================================
 # Description:
-#   Прямой запуск оптимизированных моделей ONNX с поддержкой DirectML / CPU / CUDA.
+#   Direct inference execution for ONNX models and Olive-optimized models with
+#   support for DirectML, QNN NPU, CUDA, and CPU execution providers.
 #
-# File: onnx_chat.py
+# File: chat.py
 # Project: ai-breadboard
-# Package: src.ai
+# Package: src.ai.providers.onnx
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-import asyncio
-from pathlib import Path
-from typing import Any, AsyncIterator, Dict, List
+from __future__ import annotations
 
+import asyncio
+import os
+from pathlib import Path
+from typing import Any, AsyncIterator, Dict, List, Optional
+
+from header import __root__
 from src.logger.logger import logger
 
 _loaded_onnx_models: Dict[str, Dict[str, Any]] = {}
 
+
 def _check_onnx_runtime() -> bool:
-    """Check наличия optimum и onnxruntime."""
+    """Check for optimum and onnxruntime availability.
+
+    Returns:
+        bool: True if required packages are installed, False otherwise.
+    """
     try:
         import onnxruntime  # noqa: F401
         from optimum.onnxruntime import ORTModelForCausalLM  # noqa: F401
@@ -30,61 +40,114 @@ def _check_onnx_runtime() -> bool:
     except ImportError:
         return False
 
+
+def _resolve_model_path(model_path_or_name: str) -> str:
+    """Resolve model path to local models/onnx directory or return input identifier.
+
+    Args:
+        model_path_or_name (str): Relative or absolute path, or model folder name.
+
+    Returns:
+        str: Absolute or normalized model path string.
+    """
+    clean_name = model_path_or_name.strip()
+    if clean_name.startswith("onnx:"):
+        clean_name = clean_name.split(":", 1)[-1].lstrip(":")
+
+    candidate_local = __root__ / "models" / "onnx" / clean_name
+    if candidate_local.exists():
+        return str(candidate_local)
+
+    candidate_direct = Path(clean_name)
+    if candidate_direct.exists():
+        return str(candidate_direct)
+
+    return clean_name
+
+
 class ONNXClient:
-    """Клиент локального инференса моделей ONNX."""
+    """Local inference client for ONNX and Microsoft Olive optimized models."""
 
     def load_model(
         self,
         model_path: str,
         execution_provider: str = "DirectMLExecutionProvider",
     ) -> Dict[str, Any]:
-        """Loading ONNX модели в память с выбранным провайдером исполнения."""
+        """Load ONNX model into memory with chosen execution provider.
+
+        Args:
+            model_path (str): Path or identifier for ONNX model.
+            execution_provider (str): Execution provider name. Defaults to 'DirectMLExecutionProvider'.
+
+        Returns:
+            Dict[str, Any]: Load result status dictionary.
+        """
         if not _check_onnx_runtime():
             return {
                 "success": False,
-                "error": "optimum[onnxruntime] или onnxruntime не установлены",
+                "error": "optimum[onnxruntime] or onnxruntime not installed in environment",
             }
 
-        if model_path in _loaded_onnx_models:
-            return {"success": True, "model_path": model_path, "status": "already_loaded"}
+        resolved_path = _resolve_model_path(model_path)
+        if resolved_path in _loaded_onnx_models:
+            return {"success": True, "model_path": resolved_path, "status": "already_loaded"}
 
         try:
             from optimum.onnxruntime import ORTModelForCausalLM
             from transformers import AutoTokenizer
 
-            logger.info(f"[ONNXClient] Loading ONNX модели из {model_path} с {execution_provider}")
+            logger.info(f"[ONNXClient] Loading ONNX model from {resolved_path} using {execution_provider}")
 
-            providers: List[str] = [execution_provider, "CPUExecutionProvider"]
-            model = ORTModelForCausalLM.from_pretrained(
-                model_path,
-                provider=execution_provider,
-            )
-            tokenizer = AutoTokenizer.from_pretrained(model_path)
+            try:
+                model = ORTModelForCausalLM.from_pretrained(
+                    resolved_path,
+                    provider=execution_provider,
+                )
+                active_provider = execution_provider
+            except Exception as ep_err:
+                logger.warning(
+                    f"[ONNXClient] Provider {execution_provider} failed ({ep_err}). Falling back to CPUExecutionProvider"
+                )
+                model = ORTModelForCausalLM.from_pretrained(
+                    resolved_path,
+                    provider="CPUExecutionProvider",
+                )
+                active_provider = "CPUExecutionProvider"
 
-            _loaded_onnx_models[model_path] = {
+            tokenizer = AutoTokenizer.from_pretrained(resolved_path)
+
+            _loaded_onnx_models[resolved_path] = {
                 "model": model,
                 "tokenizer": tokenizer,
-                "provider": execution_provider,
+                "provider": active_provider,
             }
-            logger.info(f"[ONNXClient] ONNX модель {model_path} successfully загружена")
-            return {"success": True, "model_path": model_path, "provider": execution_provider}
+            logger.info(f"[ONNXClient] ONNX model {resolved_path} successfully loaded on {active_provider}")
+            return {"success": True, "model_path": resolved_path, "provider": active_provider}
 
         except Exception as e:
-            logger.error(f"[ONNXClient] Error при загрузке ONNX модели {model_path}: {e}")
+            logger.error(f"[ONNXClient] Failed loading ONNX model {model_path}: {e}")
             return {"success": False, "error": str(e)}
 
     def unload_model(self, model_path: str) -> Dict[str, Any]:
-        """Выгрузка ONNX модели из памяти."""
-        if model_path not in _loaded_onnx_models:
-            return {"success": False, "error": f"Модель {model_path} не загружена"}
+        """Unload ONNX model from memory.
+
+        Args:
+            model_path (str): Model path to unload.
+
+        Returns:
+            Dict[str, Any]: Status dictionary.
+        """
+        resolved_path = _resolve_model_path(model_path)
+        if resolved_path not in _loaded_onnx_models:
+            return {"success": False, "error": f"Model {model_path} is not loaded"}
         try:
             import gc
-            del _loaded_onnx_models[model_path]
+            del _loaded_onnx_models[resolved_path]
             gc.collect()
-            logger.info(f"[ONNXClient] ONNX модель {model_path} выгружена")
-            return {"success": True, "model_path": model_path}
+            logger.info(f"[ONNXClient] ONNX model {resolved_path} unloaded")
+            return {"success": True, "model_path": resolved_path}
         except Exception as e:
-            logger.error(f"[ONNXClient] Error выгрузки ONNX модели {model_path}: {e}")
+            logger.error(f"[ONNXClient] Error unloading ONNX model {resolved_path}: {e}")
             return {"success": False, "error": str(e)}
 
     async def generate(
@@ -94,16 +157,30 @@ class ONNXClient:
         system_prompt: str = "",
         max_new_tokens: int = 512,
         temperature: float = 0.7,
+        execution_provider: str = "DirectMLExecutionProvider",
     ) -> Dict[str, Any]:
-        """Генерация ответа через ONNX Runtime в отдельном пуле потоков."""
-        if model_path not in _loaded_onnx_models:
+        """Generate response via ONNX Runtime in thread pool.
+
+        Args:
+            prompt (str): User prompt text.
+            model_path (str): Model path or name.
+            system_prompt (str): System instruction prompt.
+            max_new_tokens (int): Maximum new tokens to generate.
+            temperature (float): Sampling temperature.
+            execution_provider (str): Requested execution provider.
+
+        Returns:
+            Dict[str, Any]: Response payload dictionary with content.
+        """
+        resolved_path = _resolve_model_path(model_path)
+        if resolved_path not in _loaded_onnx_models:
             loop = asyncio.get_running_loop()
-            load_res = await loop.run_in_executor(None, self.load_model, model_path)
+            load_res = await loop.run_in_executor(None, self.load_model, resolved_path, execution_provider)
             if not load_res.get("success"):
-                return {"success": False, "error": f"Не удалось загрузить ONNX модель: {load_res.get('error', '')}"}
+                return {"success": False, "error": f"Failed to load ONNX model: {load_res.get('error', '')}"}
 
         try:
-            data = _loaded_onnx_models[model_path]
+            data = _loaded_onnx_models[resolved_path]
             model = data["model"]
             tokenizer = data["tokenizer"]
 
@@ -140,17 +217,23 @@ class ONNXClient:
             return {"success": True, "content": content, "model": model_path}
 
         except Exception as e:
-            logger.error(f"[ONNXClient] Error инференса ONNX {model_path}: {e}")
+            logger.error(f"[ONNXClient] ONNX inference error for {model_path}: {e}")
             return {"success": False, "error": str(e)}
 
     def list_loaded(self) -> List[Dict[str, Any]]:
-        """List загруженных ONNX моделей."""
+        """List currently loaded ONNX models in memory.
+
+        Returns:
+            List[Dict[str, Any]]: Model entries with path and provider.
+        """
         return [{"id": k, "provider": v.get("provider", "")} for k, v in _loaded_onnx_models.items()]
+
 
 onnx_client = ONNXClient()
 
+
 class ONNXChatBase:
-    """Обертка чата для ONNX моделей."""
+    """High-level chat wrapper for ONNX and Microsoft Olive models."""
 
     def __init__(self, model_id: str, system_prompt: str = ""):
         self.model_id = model_id
@@ -164,7 +247,7 @@ class ONNXChatBase:
         max_tokens: int = 2048,
         **kwargs: Any,
     ) -> str:
-        """Синхронно-асинхронная генерация единого ответа."""
+        """Generate full response synchronously or asynchronously."""
         res = await self.client.generate(
             prompt=prompt,
             model_path=self.model_id,
@@ -183,7 +266,8 @@ class ONNXChatBase:
         max_tokens: int = 2048,
         **kwargs: Any,
     ) -> AsyncIterator[str]:
-        """Стриминговая генерация контента."""
+        """Generate response as an asynchronous stream."""
         content = await self.generate_content(prompt, temperature=temperature, max_tokens=max_tokens)
         if content:
             yield content
+

@@ -332,22 +332,48 @@ def _fetch_hf_models_sync() -> List[str]:
     return [m for m in fallback if _normalize_model_name(m) not in unsupported]
 
 def _fetch_onnx_models_sync() -> List[str]:
-    """Synchronously fetch list of ONNX models."""
+    """Synchronously fetch list of ONNX models from local models/onnx directory, memory, and config."""
     unsupported: Set[str] = load_unsupported_models("onnx")
+    discovered_models: Set[str] = set()
+
+    # 1. Check currently loaded in-memory models
     try:
         from src.ai.onnx_chat import onnx_client
         loaded: List[Dict[str, Any]] = onnx_client.list_loaded()
-        models: List[str] = []
         for item in loaded:
             mid: str = item.get("id", "")
             if mid and _normalize_model_name(mid) not in unsupported:
-                models.append(mid)
-        if models:
-            return models
+                discovered_models.add(mid)
     except Exception as e:
-        logger.info(f"[ModelManager] ONNX list моделей недоступен: {e}")
+        logger.debug(f"[ModelManager] ONNX memory models check: {e}")
 
-    return []
+    # 2. Scan local models/onnx directory
+    try:
+        global_cfg: Dict[str, Any] = j_loads(_GLOBAL_CONFIG_PATH) or {}
+        onnx_cfg: Dict[str, Any] = global_cfg.get("onnx", {}) if isinstance(global_cfg, dict) else {}
+        models_dir_rel: str = onnx_cfg.get("models_dir", "models/onnx")
+        models_dir: Path = __root__ / models_dir_rel if not Path(models_dir_rel).is_absolute() else Path(models_dir_rel)
+
+        if models_dir.exists() and models_dir.is_dir():
+            for entry in models_dir.iterdir():
+                if entry.is_dir() or entry.suffix in (".onnx", ".ort"):
+                    name = entry.name
+                    if name and _normalize_model_name(name) not in unsupported:
+                        discovered_models.add(name)
+
+        # Default configured model
+        def_model = onnx_cfg.get("default_model", "")
+        if def_model and _normalize_model_name(def_model) not in unsupported:
+            discovered_models.add(def_model)
+
+    except Exception as e:
+        logger.info(f"[ModelManager] ONNX local directory scan: {e}")
+
+    if not discovered_models:
+        discovered_models = {"phi-3.5-mini-instruct-onnx", "qwen2.5-0.5b-instruct-onnx"}
+
+    return [m for m in sorted(discovered_models) if _normalize_model_name(m) not in unsupported]
+
 
 def _fetch_openai_compat_models_sync() -> List[str]:
     """Synchronously fetch list of OpenAI-compatible provider models."""

@@ -20,12 +20,13 @@ import os
 import tempfile
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 from header import __root__
 from src.logger import logger
+from src.fastapi.router_auth import require_admin_user
 
 LOG_DIR = Path(tempfile.gettempdir()) / 'ai-breadboard' / 'logs'
 REPORTS_DIR = Path(tempfile.gettempdir()) / 'ai-breadboard' / 'reports'
@@ -65,7 +66,7 @@ class AnalyzeRequest(BaseModel):
     filename: str
 
 def init_router(prefix: str = '/api/logs') -> APIRouter:
-    router = APIRouter(prefix=prefix, tags=['logs'])
+    router = APIRouter(prefix=prefix, tags=['logs'], dependencies=[Depends(require_admin_user)])
 
     # ------------------------------------------------------------------
     # GET /api/logs/files — list лог-файлов

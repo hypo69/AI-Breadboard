@@ -181,10 +181,167 @@ window.api = {
 let isPasswordProtected = false;
 let hasEnteredPassword = false;
 
+// Tab Switch Handler
+function onTabSwitched(targetId) {
+  const cleanId = targetId.startsWith('#') ? targetId.slice(1) : targetId;
+  if (cleanId === 'tab-chat') {
+    const msgInput = document.getElementById('message-input');
+    if (msgInput) msgInput.focus();
+  } else if (cleanId === 'tab-voice' && typeof window.initVoiceTab === 'function') {
+    console.log('[AdminInterface] Switching to voice tab...');
+    window.initVoiceTab();
+  } else if (cleanId === 'tab-tts' && typeof window.initTtsTab === 'function') {
+    console.log('[AdminInterface] Switching to tts tab...');
+    window.initTtsTab();
+  } else if (cleanId === 'tab-plugins' && typeof window.initPluginsTab === 'function') {
+    console.log('[AdminInterface] Switching to plugins tab...');
+    window.initPluginsTab();
+  } else if (cleanId === 'tab-admin' && typeof window.initAdminTab === 'function') {
+    console.log('[AdminInterface] Switching to admin tab...');
+    window.initAdminTab();
+  } else if (cleanId === 'tab-users' && typeof window.initUsersTab === 'function') {
+    console.log('[AdminInterface] Switching to users tab...');
+    window.initUsersTab();
+  } else if (cleanId === 'tab-instructions' && typeof window.initInstructionsTab === 'function') {
+    console.log('[AdminInterface] Switching to instructions tab...');
+    window.initInstructionsTab();
+  } else if (cleanId === 'tab-skills' && typeof window.initSkillsTab === 'function') {
+    console.log('[AdminInterface] Switching to skills tab...');
+    window.initSkillsTab();
+  } else if (cleanId === 'tab-mcp' && typeof window.initMcpTab === 'function') {
+    console.log('[AdminInterface] Switching to MCP tab...');
+    window.initMcpTab();
+  } else if (cleanId === 'tab-rag' && typeof window.initRagTab === 'function') {
+    console.log('[AdminInterface] Switching to RAG tab...');
+    window.initRagTab();
+  } else if (cleanId === 'tab-search' && typeof window.initSearchTab === 'function') {
+    console.log('[AdminInterface] Switching to search tab...');
+    window.initSearchTab();
+  } else if (cleanId === 'tab-models' && typeof window.initModelsTab === 'function') {
+    console.log('[AdminInterface] Switching to models tab...');
+    window.initModelsTab();
+  } else if (cleanId === 'tab-agents' && typeof window.initAgentsTab === 'function') {
+    console.log('[AdminInterface] Switching to agents tab...');
+    window.initAgentsTab();
+  } else if (cleanId === 'tab-sources' && typeof window.initSourcesTab === 'function') {
+    console.log('[AdminInterface] Switching to sources tab...');
+    window.initSourcesTab();
+  } else if (cleanId === 'tab-logs' && typeof window.initLogsTab === 'function') {
+    console.log('[AdminInterface] Switching to logs tab...');
+    window.initLogsTab();
+  } else if (cleanId === 'tab-help' && typeof window.initHelpTab === 'function') {
+    console.log('[AdminInterface] Switching to help tab...');
+    window.initHelpTab();
+  }
+}
+
+// Programmatic tab switcher
+function switchTab(targetId) {
+  if (!targetId) return;
+  const cleanId = targetId.startsWith('#') ? targetId.slice(1) : targetId;
+
+  // 1. Update active state on dropdown items & toggles
+  document.querySelectorAll('#mainTabs .dropdown-item').forEach((item) => {
+    const itemTarget = item.getAttribute('data-tab') || item.getAttribute('data-bs-target')?.replace('#', '');
+    if (itemTarget === cleanId) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+
+  document.querySelectorAll('#mainTabs .dropdown').forEach((dropdown) => {
+    const toggle = dropdown.querySelector('.dropdown-toggle');
+    const hasActiveChild = dropdown.querySelector('.dropdown-item.active');
+    if (toggle) {
+      if (hasActiveChild) {
+        toggle.classList.add('active');
+      } else {
+        toggle.classList.remove('active');
+      }
+    }
+  });
+
+  // 2. Switch tab-pane
+  document.querySelectorAll('.tab-content > .tab-pane').forEach((pane) => {
+    pane.classList.remove('show', 'active');
+  });
+  const targetPane = document.getElementById(cleanId);
+  if (targetPane) {
+    targetPane.classList.add('show', 'active');
+  }
+
+  // 3. Notify lifecycle callback
+  onTabSwitched(cleanId);
+}
+window.switchTab = switchTab;
+
+// Setup dropdowns navigation
+function setupDropdownTabs() {
+  const mainTabs = document.getElementById('mainTabs');
+  if (!mainTabs) return;
+
+  // 1. Dropdown Toggle Buttons
+  mainTabs.querySelectorAll('.dropdown-toggle').forEach((btn) => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const dropdown = btn.closest('.dropdown');
+      const menu = dropdown?.querySelector('.dropdown-menu');
+      const isAlreadyOpen = menu?.classList.contains('show');
+
+      // Close all dropdowns
+      document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((m) => {
+        m.classList.remove('show');
+        m.closest('.dropdown')?.querySelector('.dropdown-toggle')?.classList.remove('show');
+      });
+
+      // Toggle clicked dropdown
+      if (!isAlreadyOpen && menu) {
+        menu.classList.add('show');
+        btn.classList.add('show');
+      }
+    };
+  });
+
+  // 2. Dropdown Item Buttons (Tab Switchers)
+  mainTabs.querySelectorAll('.dropdown-item').forEach((item) => {
+    item.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const targetId = item.getAttribute('data-tab') || item.getAttribute('data-bs-target')?.replace('#', '');
+
+      // Close dropdown menu
+      item.closest('.dropdown-menu')?.classList.remove('show');
+      item.closest('.dropdown')?.querySelector('.dropdown-toggle')?.classList.remove('show');
+
+      if (targetId) {
+        switchTab(targetId);
+      }
+    };
+  });
+
+  // 3. Document Click to Close Dropdowns
+  if (!document.body.dataset.dropdownOutsideBound) {
+    document.body.dataset.dropdownOutsideBound = 'true';
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#mainTabs .dropdown')) {
+        document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((menu) => {
+          menu.classList.remove('show');
+          menu.closest('.dropdown')?.querySelector('.dropdown-toggle')?.classList.remove('show');
+        });
+      }
+    });
+  }
+}
+
 async function startAdmin() {
   console.log('Admin interface initializing...');
   try {
     initTheme();
+    setupDropdownTabs();
     const el = document.getElementById('admin-interface');
     if (el) el.style.display = 'block';
     
@@ -202,8 +359,12 @@ async function startAdmin() {
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', startAdmin);
+  document.addEventListener('DOMContentLoaded', () => {
+    setupDropdownTabs();
+    startAdmin();
+  });
 } else {
+  setupDropdownTabs();
   startAdmin();
 }
 
@@ -264,213 +425,7 @@ async function initInterface() {
     console.error('Ошибка синхронизации видимости плагинов:', err);
   }
   
-  // Setup dropdowns and wire click handlers
-  function setupDropdownTabs() {
-    document.querySelectorAll('#mainTabs [data-bs-toggle="dropdown"]').forEach((toggleBtn) => {
-      if (window.bootstrap?.Dropdown) {
-        bootstrap.Dropdown.getOrCreateInstance(toggleBtn, {
-          autoClose: true
-        });
-      }
-
-      if (!toggleBtn.dataset.boundDropdownClick) {
-        toggleBtn.dataset.boundDropdownClick = 'true';
-        toggleBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const menu = toggleBtn.nextElementSibling;
-          const isShown = toggleBtn.classList.contains('show') || (menu && menu.classList.contains('show'));
-
-          // Close other open dropdowns first
-          document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((otherMenu) => {
-            if (otherMenu !== menu) {
-              otherMenu.classList.remove('show');
-              const otherToggle = otherMenu.previousElementSibling;
-              otherToggle?.classList.remove('show');
-              otherToggle?.setAttribute('aria-expanded', 'false');
-              if (otherToggle && window.bootstrap?.Dropdown) {
-                const dd = bootstrap.Dropdown.getInstance(otherToggle);
-                dd?.hide();
-              }
-            }
-          });
-
-          if (isShown) {
-            if (window.bootstrap?.Dropdown) {
-              const dd = bootstrap.Dropdown.getInstance(toggleBtn);
-              dd?.hide();
-            }
-            menu?.classList.remove('show');
-            toggleBtn.classList.remove('show');
-            toggleBtn.setAttribute('aria-expanded', 'false');
-          } else {
-            if (window.bootstrap?.Dropdown) {
-              const dd = bootstrap.Dropdown.getOrCreateInstance(toggleBtn);
-              dd.show();
-            }
-            menu?.classList.add('show');
-            toggleBtn.classList.add('show');
-            toggleBtn.setAttribute('aria-expanded', 'true');
-          }
-        });
-      }
-    });
-
-    document.querySelectorAll('#mainTabs .dropdown-item[data-bs-toggle="tab"]').forEach((itemBtn) => {
-      // Avoid duplicate click listeners
-      if (itemBtn.dataset.boundTabClick) return;
-      itemBtn.dataset.boundTabClick = 'true';
-
-      itemBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (window.bootstrap?.Tab) {
-          const tabInstance = bootstrap.Tab.getOrCreateInstance(itemBtn);
-          tabInstance.show();
-        }
-        const dropdown = itemBtn.closest('.dropdown');
-        const dropdownToggle = dropdown?.querySelector('[data-bs-toggle="dropdown"]');
-        if (dropdownToggle) {
-          if (window.bootstrap?.Dropdown) {
-            const dd = bootstrap.Dropdown.getInstance(dropdownToggle);
-            dd?.hide();
-          }
-          const menu = itemBtn.closest('.dropdown-menu');
-          if (menu) {
-            menu.classList.remove('show');
-            dropdownToggle.classList.remove('show');
-            dropdownToggle.setAttribute('aria-expanded', 'false');
-          }
-        }
-      });
-    });
-  }
-
-  // Close dropdowns on outside click
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('#mainTabs .dropdown')) {
-      document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((menu) => {
-        menu.classList.remove('show');
-        const toggle = menu.previousElementSibling;
-        if (toggle) {
-          toggle.classList.remove('show');
-          toggle.setAttribute('aria-expanded', 'false');
-          if (window.bootstrap?.Dropdown) {
-            const dd = bootstrap.Dropdown.getInstance(toggle);
-            dd?.hide();
-          }
-        }
-      });
-    }
-  });
-
   setupDropdownTabs();
-
-  // Tab switch handlers
-  document.addEventListener('shown.bs.tab', (e) => {
-    const target = e.target.getAttribute('data-bs-target');
-
-    // Sync active state for dropdown items and toggles
-    document.querySelectorAll('#mainTabs .dropdown-item').forEach((item) => {
-      if (item.getAttribute('data-bs-target') === target) {
-        item.classList.add('active');
-      } else {
-        item.classList.remove('active');
-      }
-    });
-    document.querySelectorAll('#mainTabs .dropdown').forEach((dropdown) => {
-      const toggle = dropdown.querySelector('.dropdown-toggle');
-      const hasActiveChild = dropdown.querySelector('.dropdown-item.active');
-      if (toggle) {
-        if (hasActiveChild) {
-          toggle.classList.add('active');
-        } else {
-          toggle.classList.remove('active');
-        }
-      }
-    });
-
-    setupDropdownTabs();
-
-    if (target === '#tab-chat') {
-      const msgInput = document.getElementById('message-input');
-      if (msgInput) {
-        msgInput.focus();
-      }
-    } else if (target === '#tab-voice') {
-      console.log('[AdminInterface] Switching to voice tab...');
-      if (window.initVoiceTab) {
-        window.initVoiceTab();
-      }
-    } else if (target === '#tab-tts') {
-      console.log('[AdminInterface] Switching to tts tab...');
-      if (window.initTtsTab) {
-        window.initTtsTab();
-      }
-    } else if (target === '#tab-plugins') {
-      console.log('[AdminInterface] Switching to plugins tab...');
-      if (window.initPluginsTab) {
-        window.initPluginsTab();
-      }
-    } else if (target === '#tab-admin') {
-      console.log('[AdminInterface] Switching to admin tab...');
-      if (window.initAdminTab) {
-        window.initAdminTab();
-      }
-    } else if (target === '#tab-users') {
-      console.log('[AdminInterface] Switching to users tab...');
-      if (window.initUsersTab) {
-        window.initUsersTab();
-      }
-    } else if (target === '#tab-instructions') {
-      console.log('[AdminInterface] Switching to instructions tab...');
-      if (window.initInstructionsTab) {
-        window.initInstructionsTab();
-      }
-    } else if (target === '#tab-skills') {
-      console.log('[AdminInterface] Switching to skills tab...');
-      if (window.initSkillsTab) {
-        window.initSkillsTab();
-      }
-    } else if (target === '#tab-mcp') {
-      console.log('[AdminInterface] Switching to MCP tab...');
-      if (window.initMcpTab) {
-        window.initMcpTab();
-      }
-    } else if (target === '#tab-rag') {
-      console.log('[AdminInterface] Switching to RAG tab...');
-      if (window.initRagTab) {
-        window.initRagTab();
-      }
-    } else if (target === '#tab-search') {
-      console.log('[AdminInterface] Switching to search tab...');
-      if (window.initSearchTab) {
-        window.initSearchTab();
-      }
-    } else if (target === '#tab-models') {
-      console.log('[AdminInterface] Switching to models tab...');
-      if (window.initModelsTab) {
-        window.initModelsTab();
-      }
-    } else if (target === '#tab-agents') {
-      console.log('[AdminInterface] Switching to agents tab...');
-      if (window.initAgentsTab) {
-        window.initAgentsTab();
-      }
-    } else if (target === '#tab-sources') {
-      console.log('[AdminInterface] Switching to sources tab...');
-      if (window.initSourcesTab) {
-        window.initSourcesTab();
-      }
-    } else if (target === '#tab-logs') {
-      console.log('[AdminInterface] Switching to logs tab...');
-      if (window.initLogsTab) {
-        window.initLogsTab();
-      }
-    }
-  });
-  
-  console.log('Admin interface ready');
 }
 
 function showPasswordModal() {
@@ -649,7 +604,8 @@ async function initAdminTab() {
     'gemini': { label: '✨ Google Gemini', order: 1 },
     'agy': { label: '🚀 Google Antigravity (AGY)', order: 2 },
     'foundry': { label: '⚙️ Microsoft Foundry', order: 3 },
-    'ollama': { label: '🦙 Ollama (Local)', order: 4 }
+    'ollama': { label: '🦙 Ollama (Local)', order: 4 },
+    'onnx': { label: '🧠 Microsoft ONNX / Olive', order: 5 }
   };
 
   const providers = Object.keys(modelsGrouped).sort((a, b) => {

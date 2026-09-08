@@ -18,6 +18,8 @@ from typing import Any
 
 from google.genai import types
 
+from src.logger.logger import logger
+
 
 def normalize_text(text: str) -> str:
     """Normalization of model response text.
@@ -112,14 +114,20 @@ class GoogleGenerativeAIConfigMixin:
             inst += format_rule
             cfg_kwargs['system_instruction'] = inst
 
-        all_tools: list = list(tools) if tools else []
-        has_search: bool = any(
-            hasattr(t, 'google_search') or (isinstance(t, dict) and 'google_search' in t)
-            for t in all_tools
+        use_google_search: bool = gen_cfg.pop(
+            'use_google_search',
+            getattr(self, 'use_google_search', False)
         )
-        if not has_search:
-            all_tools.append(types.Tool(google_search=types.GoogleSearch()))
-        cfg_kwargs['tools'] = all_tools
+        all_tools: list = list(tools) if tools else []
+        if use_google_search:
+            has_search: bool = any(
+                hasattr(t, 'google_search') or (isinstance(t, dict) and 'google_search' in t)
+                for t in all_tools
+            )
+            if not has_search:
+                all_tools.append(types.Tool(google_search=types.GoogleSearch()))
+        if all_tools:
+            cfg_kwargs['tools'] = all_tools
 
         if gen_cfg:
             for k in ['temperature', 'top_p', 'top_k', 'response_mime_type']:
@@ -150,3 +158,68 @@ class GoogleGenerativeAIConfigMixin:
             str: Text with ```html ... ``` blocks removed.
         """
         return remove_html_blocks(text)
+
+    def _log_request_details(
+        self,
+        method: str,
+        model: str,
+        q: str,
+        history: Any = None,
+        system_instruction: str = '',
+        tools: Any = None,
+        generation_config: dict = {},
+    ) -> None:
+        """Log outgoing request structure, prompt size, and configuration for debugging.
+
+        Args:
+            method (str): API calling method name (e.g., 'ask', 'chat_stream').
+            model (str): Gemini model identifier.
+            q (str): User query/prompt.
+            history (Any): Dialog history entries if any.
+            system_instruction (str): Applied system prompt.
+            tools (Any): List of attached tools if any.
+            generation_config (dict): Generation parameter overrides.
+        """
+        try:
+            q_len: int = len(q) if q else 0
+            q_preview: str = (q[:120] + '...') if q and len(q) > 120 else (q or '')
+            inst: str = system_instruction or getattr(self, 'system_instruction', '') or ''
+            inst_len: int = len(inst)
+            inst_preview: str = (inst[:80] + '...') if inst and len(inst) > 80 else inst
+
+            history_count: int = len(history) if history else 0
+            history_chars: int = 0
+            if history:
+                for item in history:
+                    if isinstance(item, dict):
+                        parts = item.get('parts', [])
+                        if isinstance(parts, list):
+                            for p in parts:
+                                if isinstance(p, dict):
+                                    history_chars += len(str(p.get('text', '')))
+                                else:
+                                    history_chars += len(str(p))
+                        elif isinstance(parts, str):
+                            history_chars += len(parts)
+
+            tools_list: list = list(tools) if tools else []
+            tools_summary: list[str] = []
+            for t in tools_list:
+                if hasattr(t, 'google_search') or (isinstance(t, dict) and 'google_search' in t):
+                    tools_summary.append('google_search')
+                elif hasattr(t, 'function_declarations'):
+                    tools_summary.append('custom_functions')
+                else:
+                    tools_summary.append(type(t).__name__)
+
+            logger.info(
+                f'Gemini Outgoing [{method}] -> Model: "{model}" | '
+                f'Prompt ({q_len} chars): {q_preview!r} | '
+                f'History: {history_count} msgs (~{history_chars} chars) | '
+                f'SysInstruction ({inst_len} chars): {inst_preview!r} | '
+                f'Tools: {tools_summary or "none"} | '
+                f'GenConfig: {generation_config or "{}"}'
+            )
+        except Exception as log_ex:
+            logger.debug(f'Gemini: Failed to log request payload details: {log_ex}')
+

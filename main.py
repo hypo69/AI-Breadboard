@@ -45,7 +45,9 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse, Response, JSONResponse, RedirectResponse
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
 
 import header
@@ -83,10 +85,47 @@ import re
 load_dotenv(__root__ / '.env')
 from src.config import server_cfg, ai_cfg, tts_cfg, logging_cfg
 
-app = FastAPI()
+def _build_cors_config() -> tuple[list[str], str | None]:
+    """Build secure CORS allowed origins and regex pattern from server configuration."""
+    origins: list[str] = [
+        "http://localhost",
+        "https://localhost",
+        "http://127.0.0.1",
+        "https://127.0.0.1",
+    ]
+    client_url = getattr(server_cfg, 'client_url', '') or ''
+    if client_url and client_url not in origins:
+        origins.append(client_url.rstrip('/'))
+        
+    user_domain = getattr(server_cfg, 'user_domain', '') or ''
+    if user_domain:
+        origins.append(f"http://{user_domain}")
+        origins.append(f"https://{user_domain}")
+
+    custom_origins = getattr(server_cfg, 'cors_origins', []) or []
+    if isinstance(custom_origins, list):
+        for o in custom_origins:
+            if o and o not in origins:
+                origins.append(str(o).rstrip('/'))
+
+    domain_escaped = re.escape(user_domain) if user_domain else ""
+    domain_pattern = f"|{domain_escaped}" if domain_escaped else ""
+    origin_regex = (
+        r"^https?://(localhost|127\.0\.0\.1|0\.0\.0\.0|"
+        r"192\.168\.\d{1,3}\.\d{1,3}|"
+        r"10\.\d{1,3}\.\d{1,3}\.\d{1,3}|"
+        r"172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}"
+        f"{domain_pattern})(:\\d+)?$"
+    )
+    return origins, origin_regex
+
+cors_origins, cors_regex = _build_cors_config()
+
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
+    allow_origins=cors_origins,
+    allow_origin_regex=cors_regex,
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],
@@ -164,6 +203,17 @@ app.mount('/webinterface', StaticFiles(directory=webinterface_dir), name='webint
 app.mount('/html', StaticFiles(directory=webinterface_dir), name='html')
 simple_assistant_dir = __root__ / 'SANDBOX' / 'AI Assistant' / 'Simple Assistant'
 app.mount('/simple-assistant', StaticFiles(directory=simple_assistant_dir, html=True), name='simple-assistant')
+
+
+@app.get('/favicon.ico', include_in_schema=False)
+async def favicon() -> Response:
+    """Serve favicon.ico from webinterface root or assets."""
+    fav = webinterface_dir / 'favicon.ico'
+    if not fav.exists():
+        fav = webinterface_dir / 'assets' / 'favicon.ico'
+    if fav.exists():
+        return FileResponse(fav)
+    return Response(status_code=204)
 
 def _parse_version(v: str) -> list[int]:
     """Legacy simple numeric parser kept for backward compatibility.
@@ -570,14 +620,46 @@ async def startup_event():
             logger.error(f"Failed to pre-load Silero TTS model: {e}")
 
 def is_localhost(request: Request) -> bool:
-    """Check if the incoming request originates from localhost/loopback."""
+    """Check if the incoming request originates from localhost/loopback or local network."""
     client_host = request.client.host if request.client else ''
-    return client_host in ('127.0.0.1', '::1', 'localhost', 'testserver', 'testclient', '0.0.0.0')
+    return (
+        client_host in ('127.0.0.1', '::1', 'localhost', 'testserver', 'testclient', '0.0.0.0')
+        or client_host.startswith('192.168.')
+        or client_host.startswith('10.')
+        or client_host.startswith('172.')
+    )
 
 def get_request_hostname(request: Request) -> str:
     """Return lowercase hostname from headers or url."""
     host_header = request.headers.get('x-forwarded-host') or request.headers.get('host') or request.url.hostname or ''
     return host_header.split(':')[0].strip().lower()
+
+@app.get('/docs', include_in_schema=False)
+async def custom_swagger_ui_html(request: Request) -> HTMLResponse:
+    """Serve Swagger UI documentation strictly for localhost / local network requests."""
+    user_domain = os.getenv('USER_DOMAIN', 'kino.davidka.net').strip().lower()
+    req_host = get_request_hostname(request)
+    if req_host == user_domain or not is_localhost(request):
+        raise HTTPException(status_code=404, detail='Not Found')
+    return get_swagger_ui_html(openapi_url='/openapi.json', title=f"{app.title} - Swagger UI")
+
+@app.get('/redoc', include_in_schema=False)
+async def custom_redoc_html(request: Request) -> HTMLResponse:
+    """Serve ReDoc documentation strictly for localhost / local network requests."""
+    user_domain = os.getenv('USER_DOMAIN', 'kino.davidka.net').strip().lower()
+    req_host = get_request_hostname(request)
+    if req_host == user_domain or not is_localhost(request):
+        raise HTTPException(status_code=404, detail='Not Found')
+    return get_redoc_html(openapi_url='/openapi.json', title=f"{app.title} - ReDoc")
+
+@app.get('/openapi.json', include_in_schema=False)
+async def custom_openapi(request: Request) -> JSONResponse:
+    """Serve OpenAPI JSON schema strictly for localhost / local network requests."""
+    user_domain = os.getenv('USER_DOMAIN', 'kino.davidka.net').strip().lower()
+    req_host = get_request_hostname(request)
+    if req_host == user_domain or not is_localhost(request):
+        raise HTTPException(status_code=404, detail='Not Found')
+    return JSONResponse(get_openapi(title=app.title, version=app.version, routes=app.routes))
 
 @app.get('/', response_class=HTMLResponse)
 async def root(request: Request) -> HTMLResponse:
@@ -994,14 +1076,16 @@ from pydantic import BaseModel
 
 class FoundryConfigRequest(BaseModel):
     enabled: bool
-    url: str
-    key: str
-    model: str
+    url: str = "http://localhost:54837"
+    key: str = ""
+    model: str = "qwen2.5-1.5b"
+    remember: bool = True
 
 class OllamaConfigRequest(BaseModel):
     enabled: bool
-    url: str
-    model: str
+    url: str = "http://localhost:11434"
+    model: str = "llama3.1"
+    remember: bool = True
 
 @app.get('/api/foundry/config')
 async def get_foundry_config():
@@ -1020,33 +1104,39 @@ async def save_foundry_config(data: FoundryConfigRequest):
     import json
     
     # Secret goes to .env
-    env_path = str(__root__ / '.env')
-    set_key(env_path, "FOUNDRY_API_KEY", data.key)
-    os.environ["FOUNDRY_API_KEY"] = data.key
+    if data.key:
+        env_path = str(__root__ / '.env')
+        set_key(env_path, "FOUNDRY_API_KEY", data.key)
+        os.environ["FOUNDRY_API_KEY"] = data.key
     
-    # Non-secrets go to config.json
-    config_path = __root__ / 'config.json'
-    try:
-        with open(config_path, 'r', encoding='utf-8') as f:
-            cfg_data = json.load(f)
-    except Exception:
-        cfg_data = {}
+    # Non-secrets go to config.json when remember is True
+    if data.remember:
+        config_path = __root__ / 'config.json'
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                cfg_data = json.load(f)
+        except Exception:
+            cfg_data = {}
+            
+        if "ai" not in cfg_data:
+            cfg_data["ai"] = {}
+            
+        cfg_data["ai"]["use_foundry"] = data.enabled
+        if data.url:
+            cfg_data["ai"]["foundry_base_url"] = data.url
+        if data.model:
+            cfg_data["ai"]["foundry_model_id"] = data.model
         
-    if "ai" not in cfg_data:
-        cfg_data["ai"] = {}
-        
-    cfg_data["ai"]["use_foundry"] = data.enabled
-    cfg_data["ai"]["foundry_base_url"] = data.url
-    cfg_data["ai"]["foundry_model_id"] = data.model
-    
-    with open(config_path, 'w', encoding='utf-8') as f:
-        json.dump(cfg_data, f, indent=2, ensure_ascii=False)
+        with open(config_path, 'w', encoding='utf-8') as f:
+            json.dump(cfg_data, f, indent=2, ensure_ascii=False)
         
     # Update in-memory config
     if ai_cfg:
         ai_cfg.use_foundry = data.enabled
-        ai_cfg.foundry_base_url = data.url
-        ai_cfg.foundry_model_id = data.model
+        if data.url:
+            ai_cfg.foundry_base_url = data.url
+        if data.model:
+            ai_cfg.foundry_model_id = data.model
     
     return {"status": "ok"}
 
@@ -1062,28 +1152,33 @@ async def get_ollama_config():
 async def save_ollama_config(data: OllamaConfigRequest):
     import json
     
-    config_path = __root__ / 'config.json'
-    try:
-        with open(config_path, 'r', encoding='utf-8') as f:
-            cfg_data = json.load(f)
-    except Exception:
-        cfg_data = {}
+    if data.remember:
+        config_path = __root__ / 'config.json'
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                cfg_data = json.load(f)
+        except Exception:
+            cfg_data = {}
+            
+        if "ai" not in cfg_data:
+            cfg_data["ai"] = {}
+            
+        cfg_data["ai"]["use_ollama"] = data.enabled
+        if data.url:
+            cfg_data["ai"]["ollama_base_url"] = data.url
+        if data.model:
+            cfg_data["ai"]["ollama_model_id"] = data.model
         
-    if "ai" not in cfg_data:
-        cfg_data["ai"] = {}
-        
-    cfg_data["ai"]["use_ollama"] = data.enabled
-    cfg_data["ai"]["ollama_base_url"] = data.url
-    cfg_data["ai"]["ollama_model_id"] = data.model
-    
-    with open(config_path, 'w', encoding='utf-8') as f:
-        json.dump(cfg_data, f, indent=2, ensure_ascii=False)
+        with open(config_path, 'w', encoding='utf-8') as f:
+            json.dump(cfg_data, f, indent=2, ensure_ascii=False)
         
     # Update in-memory config
     if ai_cfg:
         ai_cfg.use_ollama = data.enabled
-        ai_cfg.ollama_base_url = data.url
-        ai_cfg.ollama_model_id = data.model
+        if data.url:
+            ai_cfg.ollama_base_url = data.url
+        if data.model:
+            ai_cfg.ollama_model_id = data.model
     
     return {"status": "ok"}
 
@@ -1091,13 +1186,14 @@ class AgyConfigRequest(BaseModel):
     enabled: bool
     key: str = ""
     model: str = "agy-flash"
+    remember: bool = True
 
 @app.get('/api/agy/config')
 async def get_agy_config():
     import os
     return {
         "enabled": getattr(ai_cfg, "use_agy", True) if ai_cfg else True,
-        "key": os.getenv("AGY_API_KEY", ""),
+        "key": os.getenv("AGY_API_KEY", "") or os.getenv("GEMINI_ANTIGRAVITY_API_KEY", ""),
         "model": getattr(ai_cfg, "agy_model_id", "agy-flash") if ai_cfg else "agy-flash"
     }
 
@@ -1108,33 +1204,98 @@ async def save_agy_config(data: AgyConfigRequest):
     import json
     
     # Secret goes to .env
-    env_path = str(__root__ / '.env')
-    set_key(env_path, "AGY_API_KEY", data.key)
-    os.environ["AGY_API_KEY"] = data.key
+    if data.key:
+        env_path = str(__root__ / '.env')
+        set_key(env_path, "AGY_API_KEY", data.key)
+        os.environ["AGY_API_KEY"] = data.key
     
-    # Non-secrets go to config.json
+    if data.remember:
+        # Non-secrets go to config.json
+        config_path = __root__ / 'config.json'
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                cfg_data = json.load(f)
+        except Exception:
+            cfg_data = {}
+            
+        if "ai" not in cfg_data:
+            cfg_data["ai"] = {}
+            
+        cfg_data["ai"]["use_agy"] = data.enabled
+        if data.model:
+            cfg_data["ai"]["agy_model_id"] = data.model
+        
+        with open(config_path, 'w', encoding='utf-8') as f:
+            json.dump(cfg_data, f, indent=2, ensure_ascii=False)
+        
+    # Update in-memory config
+    if ai_cfg:
+        ai_cfg.use_agy = data.enabled
+        if data.model:
+            ai_cfg.agy_model_id = data.model
+    
+    return {"status": "ok"}
+
+class OnnxConfigRequest(BaseModel):
+    enabled: bool = True
+    models_dir: str = "models/onnx"
+    execution_provider: str = "DirectMLExecutionProvider"
+    default_model: str = "phi-3.5-mini-instruct-onnx"
+    olive_precision: str = "int4"
+    remember: bool = True
+
+@app.get('/api/onnx/config')
+async def get_onnx_config():
     config_path = __root__ / 'config.json'
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
             cfg_data = json.load(f)
     except Exception:
         cfg_data = {}
-        
-    if "ai" not in cfg_data:
-        cfg_data["ai"] = {}
-        
-    cfg_data["ai"]["use_agy"] = data.enabled
-    cfg_data["ai"]["agy_model_id"] = data.model
+    onnx_data = cfg_data.get("onnx", {}) if isinstance(cfg_data, dict) else {}
+    return {
+        "enabled": onnx_data.get("enabled", True),
+        "models_dir": onnx_data.get("models_dir", "models/onnx"),
+        "execution_provider": onnx_data.get("execution_provider", "DirectMLExecutionProvider"),
+        "default_model": onnx_data.get("default_model", "phi-3.5-mini-instruct-onnx"),
+        "olive_precision": onnx_data.get("olive_precision", "int4"),
+    }
+
+@app.post('/api/onnx/config')
+async def save_onnx_config(data: OnnxConfigRequest):
+    import json
     
-    with open(config_path, 'w', encoding='utf-8') as f:
-        json.dump(cfg_data, f, indent=2, ensure_ascii=False)
-        
-    # Update in-memory config
-    if ai_cfg:
-        ai_cfg.use_agy = data.enabled
-        ai_cfg.agy_model_id = data.model
-    
+    if data.remember:
+        config_path = __root__ / 'config.json'
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                cfg_data = json.load(f)
+        except Exception:
+            cfg_data = {}
+
+        if "onnx" not in cfg_data:
+            cfg_data["onnx"] = {}
+
+        cfg_data["onnx"]["enabled"] = data.enabled
+        cfg_data["onnx"]["models_dir"] = data.models_dir
+        cfg_data["onnx"]["execution_provider"] = data.execution_provider
+        cfg_data["onnx"]["default_model"] = data.default_model
+        cfg_data["onnx"]["olive_precision"] = data.olive_precision
+
+        with open(config_path, 'w', encoding='utf-8') as f:
+            json.dump(cfg_data, f, indent=2, ensure_ascii=False)
+
     return {"status": "ok"}
+
+@app.get('/api/onnx/providers')
+async def get_onnx_providers():
+    from src.ai.providers.onnx.olive_optimizer import get_available_execution_providers, check_olive_available
+    available = get_available_execution_providers()
+    return {
+        "providers": available,
+        "olive_available": check_olive_available(),
+    }
+
 
 if __name__ == '__main__':
     try:

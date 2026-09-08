@@ -25,7 +25,7 @@ from src.ai.orchestration.model_manager import (
     get_available_models as _mgr_get_available_models,
     load_unsupported_models as _mgr_load_unsupported_models,
 )
-from src.config import server_cfg
+from src.config import server_cfg, ai_cfg
 from src.logger.logger import logger
 from src.secrets.api_key_state import (
     get_status,
@@ -48,6 +48,11 @@ _DEFAULT_SAVE_HISTORY: bool = (
     _gemini_config.get('save_history_chat', False)
     if isinstance(_gemini_config, dict)
     else False
+)
+_DEFAULT_REALTIME_STREAMING: bool = (
+    _gemini_config.get('realtime_streaming', True)
+    if isinstance(_gemini_config, dict)
+    else True
 )
 
 
@@ -96,6 +101,7 @@ class GoogleGenerativeAICore:
         api_key_names (list[str]): List разрешенных имен ключей.
         save_history_chat (bool): Флаг сохранения контекста истории чата.
         sleep_on_exhausted (bool): Флаг ожидания разблокировки при исчерпании квоты.
+        realtime_streaming (bool): Флаг немедленной потоковой передачи токенов без буферизации.
     """
 
     api_key: str = ''
@@ -112,9 +118,17 @@ class GoogleGenerativeAICore:
     _unavailable_attempts: int = field(default=0, init=False)
     save_history_chat: bool = field(default_factory=lambda: _DEFAULT_SAVE_HISTORY)
     sleep_on_exhausted: bool = True
+    use_google_search: bool = False
+    realtime_streaming: bool = field(
+        default_factory=lambda: getattr(ai_cfg, 'realtime_streaming', _DEFAULT_REALTIME_STREAMING)
+        if ai_cfg is not None
+        else _DEFAULT_REALTIME_STREAMING
+    )
 
     _last_exception: str = field(default='', init=False)
     _key_errors: dict[str, str] = field(default_factory=dict, init=False)
+    chat_history: list[dict] = field(default_factory=list, init=False)
+    _chat: Any = field(default=False, init=False)
 
     MODELS: list[str] = field(default_factory=lambda: GoogleGenerativeAICore.get_available_models(), init=False)
 
@@ -141,6 +155,8 @@ class GoogleGenerativeAICore:
         self._last_exception = ''
         self._key_errors = {}
         self._unavailable_attempts = 0
+        self.chat_history = []
+        self._chat = False
 
         self.api_keys, self._key_names_active, _ = load_api_keys(self.api_key_names)
         self.api_key_owners = list(self._key_names_active)
@@ -154,6 +170,8 @@ class GoogleGenerativeAICore:
         self.api_key = self.api_keys[0]
         logger.info(f'GoogleGenerativeAI: Initialization с ключом: {self._key_names_active[0]}')
         self._client = genai.Client(api_key=self.api_key)
+        if self.save_history_chat and hasattr(self, '_start_chat'):
+            self._chat = self._start_chat()
 
     def _get_exhausted_error_msg(self) -> str:
         """Formation сообщения об исчерпании всех доступных API-ключей.

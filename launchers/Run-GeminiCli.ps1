@@ -123,7 +123,7 @@ if (Test-Path $envFile) {
         if ($line -and -not $line.StartsWith('#') -and $line -match "^([^=]+)=(.*)$") {
             $key = $Matches[1].Trim()
             $val = $Matches[2].Trim().Trim('"').Trim("'")
-            if ($key -in @("GEMINI_API_KEY", "GOOGLE_API_KEY", "AGY_API_KEY")) {
+            if ($key -in @("GEMINI_API_KEY", "AGY_API_KEY")) {
                 if (-not $geminiApiKey -and $val) {
                     $geminiApiKey = $val
                 }

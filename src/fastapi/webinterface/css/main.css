@@ -128,14 +128,14 @@ body {
   min-height: 44px;
   position: relative;
   z-index: 1020;
-  overflow: visible;
+  overflow: visible !important;
 }
 
 .nav-tabs {
   border-bottom: none;
   background-color: transparent;
   flex-wrap: nowrap;
-  overflow: visible;
+  overflow: visible !important;
 }
 
 .nav-tabs .nav-item {
@@ -143,8 +143,40 @@ body {
   position: relative;
 }
 
+.nav-tabs .nav-item.dropdown {
+  position: relative;
+}
+
 .nav-tabs .dropdown-menu {
-  z-index: 1050;
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  margin-top: 4px !important;
+  z-index: 9999 !important;
+  min-width: 190px;
+  display: none !important;
+  padding: 6px;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35) !important;
+}
+
+.nav-tabs .dropdown-menu.show {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.nav-tabs .dropdown-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .nav-tabs .nav-link {

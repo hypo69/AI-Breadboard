@@ -422,38 +422,27 @@ if ($isInteractive -and -not $autoLaunchEnabled) {
 # ============================================================================
 # STAGE 4 — ПРОВЕРКА КОНФИГУРАЦИИ AI
 # ----------------------------------------------------------------------------
-# Проверяется наличие API-ключа Gemini в переменных окружения, .env и локальном
-# хранилище core/secrets/gemini_keys.json. Если ключ отсутствует и запуск
-# интерактивный, пользователю предлагается ввести его и сохранить в проекте.
 # ============================================================================
-$geminiKeysFile = Join-Path $scriptDir "core\secrets\gemini_keys.json"
+# STAGE 4.4 — ПРОВЕРКА НАЛИЧИЯ API-КЛЮЧА GOOGLE GEMINI (AI)
+# ----------------------------------------------------------------------------
+# Проверяется наличие API-ключа Gemini в переменных окружения и .env.
+# Если ключ отсутствует и запуск интерактивный, пользователю предлагается ввести
+# его и сохранить в .env.
+# ============================================================================
 $hasApiKey = $false
 
-if ($env:GEMINI_API_KEY -or $env:GOOGLE_API_KEY -or $env:AGY_API_KEY) {
+if ($env:GEMINI_API_KEY -or $env:GEMINI_ANTIGRAVITY_API_KEY -or $env:AGY_API_KEY) {
     $hasApiKey = $true
 }
 
 if (-not $hasApiKey -and (Test-Path $envFile)) {
     Get-Content $envFile | ForEach-Object {
         $line = $_.Trim()
-        if ($line -and -not $line.StartsWith('#') -and $line -match "^(GEMINI_API_KEY|GOOGLE_API_KEY|AGY_API_KEY)=(.*)$") {
+        if ($line -and -not $line.StartsWith('#') -and $line -match "^(GEMINI_API_KEY|GEMINI_API_KEY_\d+|GEMINI_ANTIGRAVITY_API_KEY|AGY_API_KEY)=(.*)$") {
             $val = $Matches[2].Trim().Trim('"').Trim("'")
             if ($val -and $val.Length -ge 10) { $hasApiKey = $true }
         }
     }
-}
-
-if (-not $hasApiKey -and (Test-Path $geminiKeysFile)) {
-    try {
-        $jsonKeys = Get-Content $geminiKeysFile -Raw | ConvertFrom-Json
-        foreach ($prop in $jsonKeys.PSObject.Properties) {
-            $entry = $prop.Value
-            if ($entry.api_key -and $entry.api_key.Length -ge 10) {
-                $hasApiKey = $true
-                break
-            }
-        }
-    } catch {}
 }
 
 if (-not $hasApiKey) {
@@ -468,49 +457,25 @@ if (-not $hasApiKey) {
         $keyInput = Read-Host "Введите Gemini API Key (Enter — пропустить и настроить позже)"
         $keyInput = $keyInput.Trim().Trim('"').Trim("'")
         if ($keyInput) {
-            # Обновляется файл .env: существующие значения заменяются, отсутствующие
-# параметры добавляются.
+            # Обновляется файл .env: существующие значения заменяются, отсутствующие параметры добавляются.
             $envLines = @()
             if (Test-Path $envFile) { $envLines = Get-Content $envFile }
             $hasGemini = $false
-            $hasNames = $false
             $newLines = @()
             foreach ($line in $envLines) {
                 if ($line -match "^GEMINI_API_KEY=") {
                     $newLines += "GEMINI_API_KEY=$keyInput"
                     $hasGemini = $true
-                } elseif ($line -match "^GEMINI_API_KEY_NAMES=") {
-                    $newLines += "GEMINI_API_KEY_NAMES=default"
-                    $hasNames = $true
-                } elseif ($line -match "^GOOGLE_API_KEY=") {
-                    $newLines += "GOOGLE_API_KEY=$keyInput"
                 } else {
                     $newLines += $line
                 }
             }
             if (-not $hasGemini) {
                 $newLines += "GEMINI_API_KEY=$keyInput"
-                $newLines += "GOOGLE_API_KEY=$keyInput"
-            }
-            if (-not $hasNames) {
-                $newLines += "GEMINI_API_KEY_NAMES=default"
             }
             Set-Content -Path $envFile -Value $newLines -Encoding UTF8
-            
-            # Обновляется локальное хранилище API-ключей Gemini.
-            $secretsDir = Join-Path $scriptDir "core\secrets"
-            if (-not (Test-Path $secretsDir)) { New-Item -ItemType Directory -Force -Path $secretsDir | Out-Null }
-            $keysObj = [ordered]@{
-                "default" = [ordered]@{
-                    "api_key" = $keyInput
-                    "status" = "active"
-                    "last_run" = ""
-                    "exhausted_at" = ""
-                }
-            }
-            $keysObj | ConvertTo-Json -Depth 5 | Set-Content -Path $geminiKeysFile -Encoding UTF8
             $hasApiKey = $true
-            Write-Host "    [OK] API-ключ сохранён в .env и core/secrets/gemini_keys.json" -ForegroundColor Green
+            Write-Host "    [OK] API-ключ сохранён в .env" -ForegroundColor Green
         } else {
             Write-Host "    [WARN] Запуск без API-ключа. ИИ-функции будут ограничены." -ForegroundColor Yellow
         }
@@ -530,7 +495,7 @@ if (-not $hasApiKey) {
 # ============================================================================
 $proto = if ($useSsl) { "https" } else { "http" }
 $browserHost = if ($host_ -eq "0.0.0.0") { "localhost" } else { $host_ }
-$url = "${proto}://${browserHost}:${port}"
+$url = "${proto}://${browserHost}:${port}/admin"
 
 # Вывод параметров запуска (без задержки для автозапуска)
 if (-not $autoLaunchEnabled) {
@@ -543,7 +508,7 @@ Write-Host "  • Порт:            $port" -ForegroundColor White
 Write-Host "  • Протокол:        $($proto.ToUpper()) $(if ($useSsl) {'(SSL активен)'} else {'(без SSL)'})" -ForegroundColor White
 Write-Host "  • Локальный URL:   $url" -ForegroundColor Green
 if ($lanIp -and $host_ -eq "0.0.0.0") {
-    Write-Host "  • Сетевой URL:     ${proto}://${lanIp}:${port}/" -ForegroundColor Yellow
+    Write-Host "  • Сетевой URL:     ${proto}://${lanIp}:${port}/admin" -ForegroundColor Yellow
 }
 Write-Host "  • AI Foundry:      $(if ($useFoundry) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
 Write-Host "  • Ollama:          $(if ($useOllama) {'ВКЛЮЧЕНА (localhost:11434)'} else {'ВЫКЛЮЧЕНА'})" -ForegroundColor White

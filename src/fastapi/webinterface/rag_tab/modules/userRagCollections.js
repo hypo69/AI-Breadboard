@@ -176,8 +176,178 @@ export async function selectUserRag(ragId) {
     }
 
     await loadUserStorageFiles(col.files || []);
+    await loadRagEntries(ragId);
   } catch (err) {
     console.error('Failed to load user RAG details:', err);
+  }
+}
+
+/**
+ * Fetch and render chunk/QA entries for the active collection.
+ *
+ * @param {string} ragId - Collection identifier.
+ * @param {string} query - Optional filter query.
+ * @returns {Promise<void>}
+ */
+export async function loadRagEntries(ragId = activeUserRagId, query = '') {
+  const container = document.getElementById('user-rag-entries-container');
+  if (!container || !ragId) return;
+
+  container.innerHTML = '<div class="text-center text-muted small py-2"><div class="spinner-border spinner-border-sm text-primary me-1"></div>Загрузка записей...</div>';
+
+  try {
+    const url = `/api/user/rags/${encodeURIComponent(ragId)}/entries?q=${encodeURIComponent(query)}&limit=100`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    renderRagEntries(data.entries || [], data.total || 0);
+  } catch (err) {
+    container.innerHTML = `<div class="alert alert-danger p-2 small mb-0">Ошибка загрузки записей: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+/**
+ * Render entries inside the collection container.
+ *
+ * @param {Array<object>} entries - List of chunk/QA items.
+ * @param {number} total - Total entries count.
+ */
+export function renderRagEntries(entries, total) {
+  const container = document.getElementById('user-rag-entries-container');
+  if (!container) return;
+
+  if (!entries || entries.length === 0) {
+    container.innerHTML = `
+      <div class="text-center text-muted py-3 small">
+        <i class="bi bi-chat-left-dots fs-4 d-block mb-1 opacity-50"></i>
+        В этой коллекции пока нет записей.<br>
+        Нажмите «+ Добавить Q&A» или соберите RAG из файлов выше.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = entries.map((entry, idx) => {
+    const chunkId = entry.chunk_id || `chunk_${idx}`;
+    const docType = entry.doc_type || 'chunk';
+    const isQa = docType === 'qa' || entry.meta?.is_qa;
+    const badgeClass = isQa ? 'bg-primary' : 'bg-info text-dark';
+    const badgeLabel = isQa ? 'Q&A' : (entry.source_file || 'Файл');
+
+    let displayContent = entry.content || '';
+    let questionText = entry.meta?.question || '';
+    let answerText = entry.meta?.answer || '';
+
+    if (!questionText && displayContent.includes('Вопрос:') && displayContent.includes('Ответ:')) {
+      const parts = displayContent.split('\nОтвет:');
+      questionText = parts[0].replace('Вопрос:', '').trim();
+      answerText = (parts[1] || '').trim();
+    }
+
+    return `
+      <div class="card p-2 border border-secondary-subtle bg-body-tertiary position-relative rag-entry-card" data-chunk-id="${escapeHtml(chunkId)}">
+        <div class="d-flex justify-content-between align-items-start mb-1">
+          <div class="d-flex align-items-center gap-1 flex-wrap">
+            <span class="badge ${badgeClass} small" style="font-size: 0.7rem;">${escapeHtml(badgeLabel)}</span>
+            <small class="text-muted font-monospace" style="font-size: 0.72rem;">#${escapeHtml(chunkId)}</small>
+          </div>
+          <button class="btn btn-outline-danger btn-sm py-0 px-2 rounded-pill btn-delete-entry" data-chunk-id="${escapeHtml(chunkId)}" title="Удалить запись из RAG">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+        ${questionText ? `
+          <div class="small fw-bold text-primary mb-1"><i class="bi bi-question-circle me-1"></i>${escapeHtml(questionText)}</div>
+          <div class="small text-secondary font-monospace bg-body p-2 rounded border" style="white-space: pre-wrap; font-size: 0.78rem;">${escapeHtml(answerText || displayContent)}</div>
+        ` : `
+          <div class="small text-secondary font-monospace bg-body p-2 rounded border" style="white-space: pre-wrap; font-size: 0.78rem;">${escapeHtml(displayContent)}</div>
+        `}
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.btn-delete-entry').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const chunkId = btn.getAttribute('data-chunk-id');
+      if (chunkId) deleteRagEntry(chunkId);
+    });
+  });
+}
+
+/**
+ * Add a new custom Q&A pair entry to the active collection.
+ *
+ * @returns {Promise<void>}
+ */
+export async function addQaEntry() {
+  if (!activeUserRagId) {
+    alert('Пожалуйста, выберите коллекцию RAG.');
+    return;
+  }
+
+  const qInput = document.getElementById('new-qa-question');
+  const aInput = document.getElementById('new-qa-answer');
+  const btn = document.getElementById('btn-confirm-add-qa');
+
+  const question = qInput?.value.trim() || '';
+  const answer = aInput?.value.trim() || '';
+
+  if (!answer) {
+    alert('Пожалуйста, введите текст ответа или знания.');
+    return;
+  }
+
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch(`/api/user/rags/${encodeURIComponent(activeUserRagId)}/entries`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, answer })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+
+    const modalEl = document.getElementById('modal-add-qa-entry');
+    if (modalEl && window.bootstrap?.Modal) {
+      const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+      modal.hide();
+    }
+
+    if (qInput) qInput.value = '';
+    if (aInput) aInput.value = '';
+
+    await selectUserRag(activeUserRagId);
+    await loadUserRags();
+  } catch (err) {
+    alert(`Ошибка сохранения Q&A записи: ${err.message}`);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+/**
+ * Delete a specific chunk/QA entry from the active collection.
+ *
+ * @param {string} chunkId - Chunk identifier.
+ * @returns {Promise<void>}
+ */
+export async function deleteRagEntry(chunkId) {
+  if (!activeUserRagId || !chunkId) return;
+
+  const confirmed = confirm(`Удалить эту запись (#${chunkId}) из базы знаний?`);
+  if (!confirmed) return;
+
+  try {
+    const res = await fetch(`/api/user/rags/${encodeURIComponent(activeUserRagId)}/entries/${encodeURIComponent(chunkId)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    await selectUserRag(activeUserRagId);
+    await loadUserRags();
+  } catch (err) {
+    alert(`Ошибка удаления записи: ${err.message}`);
   }
 }
 
@@ -257,3 +427,4 @@ export async function deleteActiveUserRag() {
     alert(`Ошибка удаления коллекции: ${err.message}`);
   }
 }
+

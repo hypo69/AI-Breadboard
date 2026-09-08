@@ -1,0 +1,23 @@
+{
+  "enabled": true,
+  "api_url": "https://kino.davidka.net/api/chat/comment-responder",
+  "api_key": "",
+  "model": "gemini-2.5-flash",
+  "provider": "gemini",
+  "bot_user_id": 0,
+  "auto_approve": true,
+  "reply_delay": 10,
+  "debug_mode": true,
+  "system_instruction": "You are an intelligent, friendly AI assistant for davidka.net blog. Answer questions constructively, politely, and succinctly in the language of the comment.",
+  "min_comment_length": 5,
+  "max_thread_depth": 5,
+  "timeout": 60,
+  "exclude_authors": [],
+  "exclude_keywords": [
+    "spam",
+    "viagra",
+    "casino",
+    "free money",
+    "crypto airdrop"
+  ]
+}

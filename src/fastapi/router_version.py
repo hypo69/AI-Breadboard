@@ -20,12 +20,13 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Request
 from pydantic import BaseModel
 
 from header import __root__
 from src.logger import logger
 from src.version_manager import get_version_manager, UpdateStatus
+from src.fastapi.router_auth import require_admin_user
 
 class VersionCheckResponse(BaseModel):
     """Ответ при проверке версии."""
@@ -83,24 +84,26 @@ def init_router() -> APIRouter:
             raise HTTPException(status_code=500, detail=str(ex))
     
     @router.post('/update', response_model=UpdateResponse)
-    async def perform_update(request: UpdateRequest, background_tasks: BackgroundTasks) -> UpdateResponse:
+    async def perform_update(request_data: UpdateRequest, background_tasks: BackgroundTasks, request: Request) -> UpdateResponse:
         """
         Performs update приложения с автоматическим резервным копированием.
         
         Args:
-            request: UpdateRequest с параметрами обновления
+            request_data: UpdateRequest с параметрами обновления
             background_tasks: BackgroundTasks для асинхронных операций
+            request: FastAPI request object
             
         Returns:
             UpdateResponse с результатом обновления
         """
+        require_admin_user(request)
         try:
             vm = get_version_manager(__root__)
             
             # Выполняем update в фоне
             update_result = await vm.update_application(
-                branch=request.branch,
-                auto_backup=request.auto_backup
+                branch=request_data.branch,
+                auto_backup=request_data.auto_backup
             )
             
             return UpdateResponse(
@@ -110,18 +113,21 @@ def init_router() -> APIRouter:
                 version=update_result.get('version'),
                 backup_path=update_result.get('backup_path')
             )
+        except HTTPException:
+            raise
         except Exception as ex:
             logger.error(f"Error performing update: {ex}")
             raise HTTPException(status_code=500, detail=str(ex))
     
     @router.get('/backups', response_model=List[BackupInfo])
-    async def list_backups() -> List[BackupInfo]:
+    async def list_backups(request: Request) -> List[BackupInfo]:
         """
         Receives list всех резервных копий.
         
         Returns:
             List информации о резервных копиях
         """
+        require_admin_user(request)
         try:
             vm = get_version_manager(__root__)
             
@@ -156,12 +162,14 @@ def init_router() -> APIRouter:
                 ))
             
             return backups
+        except HTTPException:
+            raise
         except Exception as ex:
             logger.error(f"Error listing backups: {ex}")
             raise HTTPException(status_code=500, detail=str(ex))
     
     @router.post('/restore/{backup_name}')
-    async def restore_backup(backup_name: str) -> Dict[str, Any]:
+    async def restore_backup(backup_name: str, request: Request) -> Dict[str, Any]:
         """
         Восстанавливает приложение из резервной копии.
         
@@ -171,6 +179,7 @@ def init_router() -> APIRouter:
         Returns:
             Dictionary с результатом восстановления
         """
+        require_admin_user(request)
         try:
             vm = get_version_manager(__root__)
             backup_path = vm.temp_backup_dir / backup_name
@@ -199,7 +208,7 @@ def init_router() -> APIRouter:
             raise HTTPException(status_code=500, detail=str(ex))
     
     @router.post('/cleanup-backups')
-    async def cleanup_backups(keep_count: int = 5) -> Dict[str, Any]:
+    async def cleanup_backups(request: Request, keep_count: int = 5) -> Dict[str, Any]:
         """
         Deletes старые резервные копии, оставляя последние N.
         
@@ -209,6 +218,7 @@ def init_router() -> APIRouter:
         Returns:
             Dictionary с результатом очистки
         """
+        require_admin_user(request)
         try:
             vm = get_version_manager(__root__)
             deleted_count = vm.cleanup_old_backups(keep_count=keep_count)

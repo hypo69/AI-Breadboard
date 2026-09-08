@@ -76,9 +76,8 @@ class AudioDiarizationService:
 
         # Try environment variables
         return (
-            os.getenv("GEMINI_API_KEY_1", "")
-            or os.getenv("GEMINI_API_KEY", "")
-            or os.getenv("GOOGLE_API_KEY", "")
+            os.getenv("GEMINI_API_KEY", "")
+            or os.getenv("GEMINI_API_KEY_1", "")
         )
 
     def _build_prompt(self, target_lang: str = "ru") -> str:

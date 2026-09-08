@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "log_level": "ALL",
+  "tail_lines": 500,
+  "enable_ai_synthesis": true,
+  "auto_save_report": true
+}

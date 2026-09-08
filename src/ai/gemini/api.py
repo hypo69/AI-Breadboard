@@ -28,6 +28,8 @@ from .core import GoogleGenerativeAICore
 from .errors import GoogleGenerativeAIErrorMixin
 from .history import GoogleGenerativeAIHistoryMixin
 from .config import GoogleGenerativeAIConfigMixin
+from .images import GoogleGenerativeAIImagesMixin
+from .embeddings import GoogleGenerativeAIEmbeddingsMixin
 
 
 class GoogleGenerativeAI(
@@ -35,6 +37,8 @@ class GoogleGenerativeAI(
     GoogleGenerativeAIErrorMixin,
     GoogleGenerativeAIHistoryMixin,
     GoogleGenerativeAIConfigMixin,
+    GoogleGenerativeAIImagesMixin,
+    GoogleGenerativeAIEmbeddingsMixin,
 ):
     """Class for interaction with Google Generative AI (Gemini) models.
 
@@ -76,6 +80,13 @@ class GoogleGenerativeAI(
             if not self._switch_api_key():
                 return self._get_exhausted_error_msg()
             self._all_keys_exhausted = False
+
+        self._log_request_details(
+            method='ask',
+            model=self.model_name,
+            q=q,
+            generation_config=generation_config,
+        )
 
         for attempt in range(attempts):
             try:
@@ -140,6 +151,14 @@ class GoogleGenerativeAI(
 
         instruction: str = system_instruction or self.system_instruction or ''
         active_model: str = model_name or self.model_name
+
+        self._log_request_details(
+            method='chat',
+            model=active_model,
+            q=q,
+            history=history or self.chat_history,
+            system_instruction=instruction,
+        )
 
         for attempt in range(attempts):
             try:
@@ -225,26 +244,51 @@ class GoogleGenerativeAI(
         instruction: str = system_instruction or self.system_instruction or ''
         active_model: str = model_name or self.model_name
 
+        self._log_request_details(
+            method='chat_stream',
+            model=active_model,
+            q=q,
+            history=history or self.chat_history,
+            system_instruction=instruction,
+            generation_config=generation_config,
+        )
+
         for attempt in range(attempts):
             try:
                 if not self.save_history_chat:
                     config = self._build_content_config(instruction, generation_config=generation_config)
                     contents = self._prepare_contents(q, history)
 
-                    def _collect_stateless(_client=self._client, _m=active_model, _c=contents, _cfg=config):
-                        res: list[str] = []
-                        for chunk in _client.models.generate_content_stream(model=_m, contents=_c, config=_cfg):
+                    if self.realtime_streaming:
+                        response = await self._client.aio.models.generate_content_stream(
+                            model=active_model,
+                            contents=contents,
+                            config=config,
+                        )
+                        has_yielded = False
+                        async for chunk in response:
                             if chunk.text:
-                                res.append(chunk.text)
-                        return res
+                                yield chunk.text
+                                has_yielded = True
+                        if has_yielded:
+                            update_last_run(self._key_names_active[0] if self._key_names_active else '')
+                            self._unavailable_attempts = 0
+                            return
+                    else:
+                        def _collect_stateless(_client=self._client, _m=active_model, _c=contents, _cfg=config):
+                            res: list[str] = []
+                            for chunk in _client.models.generate_content_stream(model=_m, contents=_c, config=_cfg):
+                                if chunk.text:
+                                    res.append(chunk.text)
+                            return res
 
-                    chunks = await asyncio.to_thread(_collect_stateless)
-                    if chunks:
-                        for chunk_text in chunks:
-                            yield chunk_text
-                        update_last_run(self._key_names_active[0] if self._key_names_active else '')
-                        self._unavailable_attempts = 0
-                        return
+                        chunks = await asyncio.to_thread(_collect_stateless)
+                        if chunks:
+                            for chunk_text in chunks:
+                                yield chunk_text
+                            update_last_run(self._key_names_active[0] if self._key_names_active else '')
+                            self._unavailable_attempts = 0
+                            return
 
                     await asyncio.sleep(2 ** min(attempt, 4))
                     continue
@@ -256,25 +300,48 @@ class GoogleGenerativeAI(
                     self.chat_history = []
                     self._chat = self._start_chat()
 
-                _chat_ref = self._chat
-
-                def _collect_chat(_chat=_chat_ref, _query=q):
-                    res: list[str] = []
-                    for chunk in _chat.send_message_stream(_query):
+                if self.realtime_streaming:
+                    contents = self._prepare_contents(q, self.chat_history)
+                    config = self._build_content_config(instruction, generation_config=generation_config)
+                    response = await self._client.aio.models.generate_content_stream(
+                        model=active_model,
+                        contents=contents,
+                        config=config,
+                    )
+                    full_chunks: list[str] = []
+                    async for chunk in response:
                         if chunk.text:
-                            res.append(chunk.text)
-                    return res
+                            full_chunks.append(chunk.text)
+                            yield chunk.text
+                    if full_chunks:
+                        full_text: str = ''.join(full_chunks)
+                        normalized: str = self._remove_html_blocks(self._normalize_text(full_text))
+                        self.chat_history.append({'role': 'user', 'parts': [q]})
+                        self.chat_history.append({'role': 'model', 'parts': [normalized]})
+                        update_last_run(self._key_names_active[0] if self._key_names_active else '')
+                        self._unavailable_attempts = 0
+                        return
+                else:
+                    _chat_ref = self._chat
 
-                chunks = await asyncio.to_thread(_collect_chat)
-                full_text: str = ''.join(chunks)
-                if full_text:
-                    for chunk_text in chunks:
-                        yield chunk_text
-                    normalized: str = self._remove_html_blocks(self._normalize_text(full_text))
-                    self.chat_history.append({'role': 'user', 'parts': [q]})
-                    self.chat_history.append({'role': 'model', 'parts': [normalized]})
-                    self._unavailable_attempts = 0
-                    return
+                    def _collect_chat(_chat=_chat_ref, _query=q):
+                        res: list[str] = []
+                        for chunk in _chat.send_message_stream(_query):
+                            if chunk.text:
+                                res.append(chunk.text)
+                        return res
+
+                    chunks = await asyncio.to_thread(_collect_chat)
+                    full_text: str = ''.join(chunks)
+                    if full_text:
+                        for chunk_text in chunks:
+                            yield chunk_text
+                        normalized: str = self._remove_html_blocks(self._normalize_text(full_text))
+                        self.chat_history.append({'role': 'user', 'parts': [q]})
+                        self.chat_history.append({'role': 'model', 'parts': [normalized]})
+                        update_last_run(self._key_names_active[0] if self._key_names_active else '')
+                        self._unavailable_attempts = 0
+                        return
 
                 await asyncio.sleep(2 ** min(attempt, 4))
             except Exception as ex:
@@ -313,6 +380,14 @@ class GoogleGenerativeAI(
         instruction: str = system_instruction or self.system_instruction or ''
         active_model: str = model_name or self.model_name
         config = self._build_content_config(instruction, tools)
+
+        self._log_request_details(
+            method='ask_with_tools',
+            model=active_model,
+            q=q,
+            system_instruction=instruction,
+            tools=tools,
+        )
 
         for _ in range(10):
             response = self._client.models.generate_content(
@@ -374,6 +449,15 @@ class GoogleGenerativeAI(
         instruction: str = system_instruction or self.system_instruction or ''
         active_model: str = model_name or self.model_name
         config = self._build_content_config(instruction, tools)
+
+        self._log_request_details(
+            method='ask_with_tools_stream',
+            model=active_model,
+            q=q,
+            history=history,
+            system_instruction=instruction,
+            tools=tools,
+        )
 
         for _ in range(10):
             try:

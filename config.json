@@ -1,244 +1,251 @@
 {
-    "server": {
-        "host": "0.0.0.0",
-        "port": 8000,
-        "workers": 1,
-        "reload": false,
-        "use_ssl": true,
-        "mode": "DEV",
-        "debug": true,
-        "auto_launch": {
-            "enabled": false,
-            "delay_seconds": 5
-        },
-        "auto_start_assist_cli": false,
-        "enable_assist": false,
-        "enable_oauth": true,
-        "enable_telegram_bot": true,
-        "use_cloudflared": true,
-        "user_domain": "kino.davidka.net",
-        "client_url": "https://kino.davidka.net"
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "workers": 1,
+    "reload": false,
+    "use_ssl": true,
+    "mode": "DEV",
+    "debug": true,
+    "auto_launch": {
+      "enabled": false,
+      "delay_seconds": 5
     },
-    "telegram": {
-        "bot_name": "ai_breadboard_bot"
-    },
-    "ai": {
-        "use_foundry": false,
-        "foundry_base_url": "http://localhost:57708",
-        "foundry_model_id": "qwen2.5-1.5b-instruct-generic-cpu:4",
-        "use_ollama": false,
-        "ollama_base_url": "http://localhost:11434",
-        "ollama_model_id": "llama3.1",
-        "preload_silero": false,
-        "use_agy": true,
-        "agy_model_id": "agy-gemini-3.5-flash-lite",
-        "use_gemini_cli": true,
-        "gemini_cli_model_id": "gemini-3.1-flash-lite",
-        "unsupported_models": {
-            "gemini": [
-                "gemini-1.0-pro",
-                "gemini-1.0-ultra",
-                "gemini-1.5-flash",
-                "gemini-1.5-pro",
-                "gemini-2.0-flash",
-                "gemini-2.0-flash-exp",
-                "gemini-2.5-flash",
-                "gemini-2.5-flash-lite",
-                "gemini-2.5-pro",
-                "gemini-3.1-flash-lite-preview",
-                "gemini-3.1-pro-preview",
-                "gemini:gemini-3.1-flash-lite"
-            ],
-            "gemini_cli": [],
-            "agy": [],
-            "foundry": [
-                "test-foundry-model-1"
-            ],
-            "ollama": [
-                "llama3.1"
-            ],
-            "hf": [],
-            "onnx": [],
-            "openai": []
-        }
-    },
-    "huggingface": {
-        "enabled": true,
-        "default_model": "Qwen/Qwen2.5-0.5B-Instruct",
-        "cache_dir": ""
-    },
-    "onnx": {
-        "enabled": true,
-        "execution_provider": "DirectMLExecutionProvider"
-    },
-    "openai_compat": {
-        "providers": {
-            "openai": {
-                "base_url": "https://api.openai.com/v1",
-                "models": [
-                    "gpt-4o",
-                    "gpt-4o-mini"
-                ]
-            },
-            "deepseek": {
-                "base_url": "https://api.deepseek.com/v1",
-                "models": [
-                    "deepseek-chat",
-                    "deepseek-reasoner"
-                ]
-            },
-            "lmstudio": {
-                "base_url": "http://localhost:1234/v1",
-                "models": []
-            }
-        }
-    },
-    "tts": {
-        "default_voice": "ru-RU-DmitryNeural"
-    },
-    "logging": {
-        "enable_log_analyzer": false,
-        "max_size_mb": 10.0
-    },
-    "rag": {
-        "mode": "rag+model"
-    },
-    "web_search": {
-        "engine": "gemini_cli",
-        "gemini_model": "gemini-2.5-flash",
-        "gemini_cli_model": "gemini-3.1-flash-lite",
-        "agy_model": "agy-flash",
-        "fallback_on_rag_not_found": true
-    },
-    "langchain": {
-        "enabled": true,
-        "default_llm": "gemini",
-        "gemini_model": "gemini-2.5-flash",
-        "ollama_model": "qwen2.5:7b",
-        "ollama_base_url": "http://localhost:11434",
-        "mcp_servers": {
-            "playwright": {
-                "command": "npx",
-                "args": [
-                    "@playwright/mcp@latest"
-                ],
-                "transport": "stdio"
-            },
-            "fetch": {
-                "command": "uvx",
-                "args": [
-                    "mcp-server-fetch"
-                ],
-                "transport": "stdio"
-            },
-            "brave_search": {
-                "command": "npx",
-                "args": [
-                    "-y",
-                    "@modelcontextprotocol/server-brave-search"
-                ],
-                "transport": "stdio",
-                "env": {
-                    "BRAVE_API_KEY": ""
-                }
-            }
-        },
-        "max_agent_steps": 15,
-        "search_timeout_seconds": 60
-    },
-    "agents": {
-        "items": [
-            {
-                "id": "travel_agent",
-                "name": "Flight & Travel Agent",
-                "description": "Автономный агент поиска авиабилетов и планирования путешествий через мульти-поисковый стек (Google Grounding, AGY, Playwright MCP, агрегаторы)",
-                "is_system": true,
-                "enabled": true,
-                "provider": "gemini",
-                "model": "gemini-2.5-flash",
-                "temperature": 0.2,
-                "max_steps": 15,
-                "timeout_seconds": 60,
-                "tools": [
-                    "flight_search",
-                    "flight_price_calculator",
-                    "web_search",
-                    "rag_search",
-                    "python_eval"
-                ],
-                "system_prompt": "Вы — интеллектуальный агент по поиску авиабилетов и планированию путешествий. Анализируйте даты, маршруты, классы обслуживания и находите лучшие рейсы через поисковые движки и MCP-инструменты."
-            },
-            {
-                "id": "web_search_gemini",
-                "name": "Gemini Search Grounding",
-                "description": "Прямой поиск в реальном индексе Google с автоматической ротацией пула API-ключей",
-                "is_system": true,
-                "enabled": true,
-                "provider": "gemini",
-                "model": "gemini-2.5-flash",
-                "temperature": 0.2,
-                "max_steps": 5,
-                "timeout_seconds": 30,
-                "tools": [
-                    "web_search"
-                ],
-                "system_prompt": "Ты поисковый агент ai-breadboard. Ищи актуальные проверенные факты в интернете, цитируй источники и формируй четкие структурированные ответы."
-            },
-            {
-                "id": "web_search_gemini_cli",
-                "name": "Gemini CLI Searcher",
-                "description": "Поиск в интернете через локальный терминальный агент Google Gemini CLI",
-                "is_system": true,
-                "enabled": true,
-                "provider": "gemini_cli",
-                "model": "gemini-3.1-flash-lite",
-                "temperature": 0.2,
-                "max_steps": 5,
-                "timeout_seconds": 30,
-                "tools": [
-                    "web_search"
-                ],
-                "system_prompt": "Ты поисковый ассистент Google Gemini CLI. Используй веб-поиск для поиска свежей информации и выдавай результат в формате Markdown."
-            },
-            {
-                "id": "web_search_agy",
-                "name": "Antigravity AGY Searcher",
-                "description": "Агентный веб-поиск через встроенные инструменты платформы Google Antigravity",
-                "is_system": true,
-                "enabled": true,
-                "provider": "agy",
-                "model": "agy-gemma-4-26b-a4b-it",
-                "temperature": 0.2,
-                "max_steps": 5,
-                "timeout_seconds": 30,
-                "tools": [
-                    "web_search"
-                ],
-                "system_prompt": "Ты поисковый ассистент Antigravity. Используй встроенный веб-поиск для поиска свежей информации и выдавай результат в формате Markdown."
-            },
-            {
-                "id": "playwright_agent",
-                "name": "Playwright Browser Agent",
-                "description": "Автономный браузерный парсинг и сбор контента сайтов через Headless Chromium",
-                "is_system": true,
-                "enabled": true,
-                "provider": "gemini",
-                "model": "gemini-2.5-flash",
-                "temperature": 0.1,
-                "max_steps": 10,
-                "timeout_seconds": 60,
-                "tools": [
-                    "web_search"
-                ],
-                "system_prompt": "Ты браузерный агент Playwright. Выполняй навигацию по веб-страницам, извлекай полезный текст и структурируй данные."
-            }
-        ]
-    },
-    "plugins": {},
-    "storage": {
-        "users_dir": "data/users"
-    },
-    "user_settings": {
-        "language": "en"
+    "auto_start_assist_cli": false,
+    "enable_assist": false,
+    "enable_oauth": true,
+    "enable_telegram_bot": true,
+    "use_cloudflared": true,
+    "user_domain": "kino.davidka.net",
+    "client_url": "https://kino.davidka.net"
+  },
+  "telegram": {
+    "bot_name": "ai_breadboard_bot"
+  },
+  "ai": {
+    "use_foundry": false,
+    "foundry_base_url": "http://localhost:57708",
+    "foundry_model_id": "qwen2.5-1.5b-instruct-generic-cpu:4",
+    "use_ollama": false,
+    "ollama_base_url": "http://localhost:11434",
+    "ollama_model_id": "llama3.1",
+    "preload_silero": false,
+    "use_agy": true,
+    "agy_model_id": "agy-gemini-3.5-flash-lite",
+    "use_gemini_cli": true,
+    "gemini_cli_model_id": "gemini-3.1-flash-lite",
+    "realtime_streaming": true,
+    "unsupported_models": {
+      "gemini": [
+        "gemini-1.0-pro",
+        "gemini-1.0-ultra",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-exp",
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-2.5-pro",
+        "gemini-3.1-flash-lite-preview",
+        "gemini-3.1-pro-preview",
+        "gemini-old",
+        "gemini:gemini-3.1-flash-lite"
+      ],
+      "gemini_cli": [],
+      "agy": [],
+      "foundry": [
+        "antigravity-preview-05-2026",
+        "test-foundry-model-1"
+      ],
+      "ollama": [
+        "llama3.1"
+      ],
+      "hf": [],
+      "onnx": [],
+      "openai": []
     }
+  },
+  "huggingface": {
+    "enabled": true,
+    "default_model": "Qwen/Qwen2.5-0.5B-Instruct",
+    "cache_dir": ""
+  },
+  "onnx": {
+    "enabled": true,
+    "models_dir": "models/onnx",
+    "execution_provider": "DirectMLExecutionProvider",
+    "default_model": "phi-3.5-mini-instruct-onnx",
+    "device_id": 0,
+    "olive_precision": "int4"
+  },
+  "openai_compat": {
+    "providers": {
+      "openai": {
+        "base_url": "https://api.openai.com/v1",
+        "models": [
+          "gpt-4o",
+          "gpt-4o-mini"
+        ]
+      },
+      "deepseek": {
+        "base_url": "https://api.deepseek.com/v1",
+        "models": [
+          "deepseek-chat",
+          "deepseek-reasoner"
+        ]
+      },
+      "lmstudio": {
+        "base_url": "http://localhost:1234/v1",
+        "models": []
+      }
+    }
+  },
+  "tts": {
+    "default_voice": "ru-RU-DmitryNeural"
+  },
+  "logging": {
+    "enable_log_analyzer": false,
+    "max_size_mb": 10.0
+  },
+  "rag": {
+    "mode": "rag+model"
+  },
+  "web_search": {
+    "engine": "gemini_cli",
+    "gemini_model": "gemini-2.5-flash",
+    "gemini_cli_model": "gemini-3.1-flash-lite",
+    "agy_model": "agy-flash",
+    "fallback_on_rag_not_found": true
+  },
+  "langchain": {
+    "enabled": true,
+    "default_llm": "gemini",
+    "gemini_model": "gemini-2.5-flash",
+    "ollama_model": "qwen2.5:7b",
+    "ollama_base_url": "http://localhost:11434",
+    "mcp_servers": {
+      "playwright": {
+        "command": "npx",
+        "args": [
+          "@playwright/mcp@latest"
+        ],
+        "transport": "stdio"
+      },
+      "fetch": {
+        "command": "uvx",
+        "args": [
+          "mcp-server-fetch"
+        ],
+        "transport": "stdio"
+      },
+      "brave_search": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-brave-search"
+        ],
+        "transport": "stdio",
+        "env": {
+          "BRAVE_API_KEY": ""
+        }
+      }
+    },
+    "max_agent_steps": 15,
+    "search_timeout_seconds": 60
+  },
+  "agents": {
+    "items": [
+      {
+        "id": "travel_agent",
+        "name": "Flight & Travel Agent",
+        "description": "Автономный агент поиска авиабилетов и планирования путешествий через мульти-поисковый стек (Google Grounding, AGY, Playwright MCP, агрегаторы)",
+        "is_system": true,
+        "enabled": true,
+        "provider": "gemini",
+        "model": "gemini-2.5-flash",
+        "temperature": 0.2,
+        "max_steps": 15,
+        "timeout_seconds": 60,
+        "tools": [
+          "flight_search",
+          "flight_price_calculator",
+          "web_search",
+          "rag_search",
+          "python_eval"
+        ],
+        "system_prompt": "Вы — интеллектуальный агент по поиску авиабилетов и планированию путешествий. Анализируйте даты, маршруты, классы обслуживания и находите лучшие рейсы через поисковые движки и MCP-инструменты."
+      },
+      {
+        "id": "web_search_gemini",
+        "name": "Gemini Search Grounding",
+        "description": "Прямой поиск в реальном индексе Google с автоматической ротацией пула API-ключей",
+        "is_system": true,
+        "enabled": true,
+        "provider": "gemini",
+        "model": "gemini-2.5-flash",
+        "temperature": 0.2,
+        "max_steps": 5,
+        "timeout_seconds": 30,
+        "tools": [
+          "web_search"
+        ],
+        "system_prompt": "Ты поисковый агент ai-breadboard. Ищи актуальные проверенные факты в интернете, цитируй источники и формируй четкие структурированные ответы."
+      },
+      {
+        "id": "web_search_gemini_cli",
+        "name": "Gemini CLI Searcher",
+        "description": "Поиск в интернете через локальный терминальный агент Google Gemini CLI",
+        "is_system": true,
+        "enabled": true,
+        "provider": "gemini_cli",
+        "model": "gemini-3.1-flash-lite",
+        "temperature": 0.2,
+        "max_steps": 5,
+        "timeout_seconds": 30,
+        "tools": [
+          "web_search"
+        ],
+        "system_prompt": "Ты поисковый ассистент Google Gemini CLI. Используй веб-поиск для поиска свежей информации и выдавай результат в формате Markdown."
+      },
+      {
+        "id": "web_search_agy",
+        "name": "Antigravity AGY Searcher",
+        "description": "Агентный веб-поиск через встроенные инструменты платформы Google Antigravity",
+        "is_system": true,
+        "enabled": true,
+        "provider": "agy",
+        "model": "agy-gemma-4-26b-a4b-it",
+        "temperature": 0.2,
+        "max_steps": 5,
+        "timeout_seconds": 30,
+        "tools": [
+          "web_search"
+        ],
+        "system_prompt": "Ты поисковый ассистент Antigravity. Используй встроенный веб-поиск для поиска свежей информации и выдавай результат в формате Markdown."
+      },
+      {
+        "id": "playwright_agent",
+        "name": "Playwright Browser Agent",
+        "description": "Автономный браузерный парсинг и сбор контента сайтов через Headless Chromium",
+        "is_system": true,
+        "enabled": true,
+        "provider": "gemini",
+        "model": "gemini-2.5-flash",
+        "temperature": 0.1,
+        "max_steps": 10,
+        "timeout_seconds": 60,
+        "tools": [
+          "web_search"
+        ],
+        "system_prompt": "Ты браузерный агент Playwright. Выполняй навигацию по веб-страницам, извлекай полезный текст и структурируй данные."
+      }
+    ]
+  },
+  "plugins": {},
+  "storage": {
+    "users_dir": "data/users"
+  },
+  "user_settings": {
+    "language": "en"
+  }
 }

@@ -1,39 +1,34 @@
-# `core.secrets` Module — Secrets & API Key Management
+# `src.secrets` Module — Secrets & API Key Management
 
 ## Overview
-The `core.secrets` module manages sensitive credentials, API keys for AI models (Google Gemini, Microsoft AI Foundry, OpenAI, etc.), and their runtime state (status, quota exhaustion cooldowns, rotation).
+The `src.secrets` module manages Google Gemini and AI provider credentials, rotation pools, and runtime statuses.
 
 ---
 
-## Key Components
+## Storage Schema (`src/secrets/gemini_keys.json`)
 
-- **`api_key_state.py`**: Core logic for loading, rotating, and tracking API key quotas.
-  - `load_api_keys(names=None, skip_exhausted=True)`: Returns active, non-exhausted API keys.
-  - `mark_exhausted(key_name)`: Applies a 24-hour exhaustion cooldown when quota limit (HTTP 429) is encountered.
-  - `update_last_run(key_name)`: Updates the last access timestamp for round-robin balancing.
-  - `next_available_in()`: Returns seconds until the earliest quarantined key resets.
-  - `save_api_key(name, api_key, status)`: Persists new or updated API keys.
-
----
-
-## Storage Priority & Hierarchy
-
-1. `core/secrets/gemini_keys.json` (Structured JSON storage with quota metadata)
-2. `core/ai/gemini/secrets.json` (Legacy secrets storage)
-3. `.env` file (`GEMINI_API_KEY`, `GOOGLE_API_KEY`, `GEMINI_API_KEYS`, `AGY_API_KEY`)
-4. Environment variables in the host process
-
----
-
-## Schema (`gemini_keys.json`)
+All keys are stored in `src/secrets/gemini_keys.json` with the following structure:
 
 ```json
 {
   "key_name": {
-    "api_key": "AIzaSy...",
-    "status": "active",
-    "last_run": "2026-08-26T12:00:00+00:00",
-    "exhausted_at": ""
+    "value": "AIzaSy...",
+    "last_run": "2026-09-08T15:45:00+00:00",
+    "status": "active"
   }
 }
 ```
+
+### Statuses:
+- `"active"`: The API key is ready and available for generation requests.
+- `"exhausted"`: The key hit daily quota limit (HTTP 429) and is temporarily quarantined with auto-recovery after 24h.
+- `"disabled"`: The key was manually turned off.
+
+---
+
+## Dynamic Environment Substitution
+
+When keys are loaded, rotated, or when quota exhaustion occurs, the module dynamically selects the active key from the pool and injects it into:
+- `os.environ["GEMINI_API_KEY"]`
+
+Antigravity (AGY) provider credentials are read preferentially from `AGY_API_KEY` with fallback to the Gemini rotation pool.

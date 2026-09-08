@@ -86,11 +86,24 @@ class GoogleGenerativeAIErrorMixin:
 
         # 4. Request quota exceeded (429 RESOURCE_EXHAUSTED)
         if '429' in ex_str or 'RESOURCE_EXHAUSTED' in ex_str:
-            is_daily: bool = any(
+            is_per_minute: bool = any(
                 k in ex_str.lower()
-                for k in ['perday', 'per_day', 'exceeded your current quota', "quota_limit_value': '0'"]
+                for k in [
+                    '1/min',
+                    'perminute',
+                    'per_minute',
+                    'requestsperminute',
+                    'apirequestsperminute',
+                    'rate_limit_exceeded',
+                ]
             )
+            is_daily: bool = not is_per_minute and any(
+                k in ex_str.lower()
+                for k in ['perday', 'per_day', 'requestsperday', 'daily_quota']
+            )
+
             if is_daily:
+                logger.warning('GoogleGenerativeAI: Daily quota exhausted for key. Rotating key...')
                 self._mark_key_exhausted(self.api_key)
                 if self._switch_api_key():
                     return True
@@ -99,7 +112,7 @@ class GoogleGenerativeAIErrorMixin:
             m = re.search(r'retry\D*(\d+(?:\.\d+)?)s', ex_str, re.IGNORECASE)
             base_wait: int = int(float(m.group(1))) + 2 if m else 5
             wait_time: int = min(base_wait * (2 ** min(attempt, 3)), 60)
-            logger.info(f'GoogleGenerativeAI: 429 Rate Limit. Waiting {wait_time}s before retry...')
+            logger.info(f'GoogleGenerativeAI: 429 Rate Limit (Per-Minute/Burst). Waiting {wait_time}s before retry...')
             await asyncio.sleep(wait_time)
             return True
 

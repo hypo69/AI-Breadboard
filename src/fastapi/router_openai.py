@@ -69,8 +69,10 @@ def _collect_all_models_sync() -> List[Dict[str, Any]]:
 
 @router.get("/v1/models")
 @router.get("/models")
-async def list_models() -> Dict[str, Any]:
+async def list_models(request: Request) -> Dict[str, Any]:
     """List всех доступных моделей в формате OpenAI API."""
+    from src.fastapi.router_auth import get_current_user_data
+    get_current_user_data(request)
     loop = asyncio.get_running_loop()
     data = await loop.run_in_executor(None, _collect_all_models_sync)
     return {
@@ -82,6 +84,8 @@ async def list_models() -> Dict[str, Any]:
 @router.post("/chat/completions")
 async def chat_completions(request: Request) -> Any:
     """Универсальный эндпоинт OpenAI /chat/completions."""
+    from src.fastapi.router_auth import get_current_user_data
+    get_current_user_data(request)
     try:
         body = await request.json()
     except Exception:

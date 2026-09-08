@@ -67,38 +67,17 @@ class SymbolLookupRequest(BaseModel):
     limit: int = Field(default=10, ge=1, le=50, description="Max symbol matches")
 
 
-def _get_optional_user_id(request: Request) -> Optional[int]:
-    """Retrieve current authenticated user ID if available."""
-    try:
-        from src.fastapi.router_auth import verify_jwt_token
-        from src.user_manager import user_manager
-        token = request.cookies.get('auth_token', '')
-        if not token:
-            auth_header = request.headers.get('Authorization', '')
-            if auth_header.startswith('Bearer '):
-                token = auth_header[7:].strip()
-
-        if token:
-            user_data = verify_jwt_token(token)
-            if user_data:
-                if user_data.id:
-                    return user_data.id
-                db_user = user_manager.get_user_by_email(user_data.email)
-                if db_user and 'id' in db_user:
-                    return db_user['id']
-
-        hostname = request.url.hostname or ''
-        is_local = (
-            hostname in ('127.0.0.1', 'localhost', '::1', 'testserver', '0.0.0.0')
-            or hostname.startswith('192.168.')
-            or hostname.startswith('10.')
-            or hostname.startswith('172.')
-        )
-        if is_local:
-            return 1
-    except Exception:
-        pass
-    return None
+def _get_current_user_id(request: Request) -> int:
+    """Retrieve current authenticated user ID or fallback to local user. Raises 401 if unauthenticated."""
+    from src.fastapi.router_auth import get_current_user_data
+    user_data = get_current_user_data(request)
+    if user_data.id:
+        return user_data.id
+    from src.user_manager import user_manager
+    db_user = user_manager.get_user_by_email(user_data.email)
+    if db_user and 'id' in db_user:
+        return db_user['id']
+    return 1
 
 
 def init_router() -> APIRouter:
@@ -114,9 +93,11 @@ def init_router() -> APIRouter:
 
     @router.post("/upload", summary="Upload documents to knowledge base")
     async def upload_documents(
+        request: Request,
         files: List[UploadFile] = File(...),
     ) -> Dict[str, Any]:
         """Upload one or more documents to knowledge base directory."""
+        _get_current_user_id(request)
         if not files:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No files provided")
 
@@ -146,8 +127,9 @@ def init_router() -> APIRouter:
         }
 
     @router.get("/documents", summary="List all knowledge base documents")
-    async def list_documents() -> Dict[str, Any]:
+    async def list_documents(request: Request) -> Dict[str, Any]:
         """Get list of all documents currently stored in knowledge base."""
+        _get_current_user_id(request)
         manager = get_document_rag_manager()
         docs = manager.list_documents()
         return {
@@ -167,8 +149,9 @@ def init_router() -> APIRouter:
         }
 
     @router.delete("/documents/{filename}", summary="Delete document from knowledge base")
-    async def delete_document(filename: str) -> Dict[str, Any]:
+    async def delete_document(filename: str, request: Request) -> Dict[str, Any]:
         """Delete specific document and remove its chunks from index."""
+        _get_current_user_id(request)
         manager = get_document_rag_manager()
         success = manager.delete_document(filename)
         if not success:
@@ -181,8 +164,9 @@ def init_router() -> APIRouter:
         }
 
     @router.post("/build", summary="Build or rebuild document RAG index")
-    async def build_index(req: BuildIndexRequest) -> Dict[str, Any]:
+    async def build_index(req: BuildIndexRequest, request: Request) -> Dict[str, Any]:
         """Chunk all uploaded documents and construct vector search index."""
+        _get_current_user_id(request)
         manager = get_document_rag_manager()
         api_key = req.api_key or ""
         if not api_key:
@@ -200,8 +184,9 @@ def init_router() -> APIRouter:
         }
 
     @router.get("/status", summary="Get RAG index status")
-    async def get_rag_status() -> Dict[str, Any]:
+    async def get_rag_status(request: Request) -> Dict[str, Any]:
         """Get current index statistics and status."""
+        _get_current_user_id(request)
         manager = get_document_rag_manager()
         return {
             "status": "success",
@@ -209,8 +194,9 @@ def init_router() -> APIRouter:
         }
 
     @router.post("/search", summary="Search documents semantically")
-    async def search_rag(req: SearchRequest) -> Dict[str, Any]:
+    async def search_rag(req: SearchRequest, request: Request) -> Dict[str, Any]:
         """Perform semantic similarity search over indexed chunks."""
+        _get_current_user_id(request)
         manager = get_document_rag_manager()
         api_key = req.api_key or ""
         if not api_key:
@@ -237,7 +223,7 @@ def init_router() -> APIRouter:
         request: Request
     ) -> Dict[str, Any]:
         """Build AST symbol and vector index for a project directory."""
-        user_id = _get_optional_user_id(request)
+        user_id = _get_current_user_id(request)
         result = codebase_plugin.build_codebase_index(
             project_root=req.project_root,
             index_name=req.index_name,
@@ -250,7 +236,7 @@ def init_router() -> APIRouter:
     @router.get("/codebase/indexes", summary="List available Codebase RAG indexes")
     async def list_codebase_indexes_endpoint(request: Request) -> Dict[str, Any]:
         """List all codebase indexes for current user and system."""
-        user_id = _get_optional_user_id(request)
+        user_id = _get_current_user_id(request)
         indexes = codebase_plugin.list_available_indexes(user_id=user_id)
         # If user is present, also include system indexes
         if user_id is not None:
@@ -269,7 +255,7 @@ def init_router() -> APIRouter:
         request: Request
     ) -> Dict[str, Any]:
         """Semantic search over code, docstrings, and docs."""
-        user_id = _get_optional_user_id(request)
+        user_id = _get_current_user_id(request)
         res = await codebase_plugin.execute_action("search_code", {
             "query": req.query,
             "index_name": req.index_name,
@@ -286,7 +272,7 @@ def init_router() -> APIRouter:
         request: Request
     ) -> Dict[str, Any]:
         """Lookup class, function, or method names in AST index."""
-        user_id = _get_optional_user_id(request)
+        user_id = _get_current_user_id(request)
         res = await codebase_plugin.execute_action("search_symbols", {
             "query": req.symbol,
             "index_name": req.index_name,
@@ -302,7 +288,7 @@ def init_router() -> APIRouter:
         request: Request
     ) -> Dict[str, Any]:
         """Delete a named codebase RAG index."""
-        user_id = _get_optional_user_id(request)
+        user_id = _get_current_user_id(request)
         res = await codebase_plugin.execute_action("delete_index", {
             "index_name": index_name,
             "user_id": user_id

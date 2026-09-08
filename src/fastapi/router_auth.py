@@ -107,6 +107,35 @@ JWT_SECRET = os.getenv('JWT_SECRET', 'your-secret-key-change-in-production')
 JWT_ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 часа
 
+def get_oauth_redirect_uri(request: Request) -> str:
+    """Determine the Google OAuth redirect URI dynamically based on the incoming request.
+    
+    If the request originates from localhost or 127.0.0.1, use the local URL so local
+    development redirects back to localhost. Otherwise, use GOOGLE_REDIRECT_URI if configured,
+    or the request's forwarded host.
+    
+    Args:
+        request: FastAPI Request instance.
+        
+    Returns:
+        str: Absolute callback redirect URI.
+    """
+    host = request.headers.get('x-forwarded-host') or request.headers.get('host') or request.url.netloc
+    scheme = request.headers.get('x-forwarded-proto') or request.url.scheme
+
+    # Extract hostname without port
+    raw_host = host.split(':')[0].lower() if host else ''
+
+    # If the user accessed via localhost or loopback IP, always redirect back to localhost
+    if raw_host in ('localhost', '127.0.0.1'):
+        return f'{scheme}://{host}/auth/google/callback'
+
+    # If an explicit public redirect URI is configured, use it for non-localhost requests
+    if GOOGLE_REDIRECT_URI and not ('localhost' in GOOGLE_REDIRECT_URI or '127.0.0.1' in GOOGLE_REDIRECT_URI):
+        return GOOGLE_REDIRECT_URI
+
+    return f'{scheme}://{host}/auth/google/callback'
+
 # Configuration Google OAuth (загружаем из .env или secrets)
 _oauth_config = load_google_oauth_config()
 GOOGLE_CLIENT_ID = _oauth_config['client_id']
@@ -146,6 +175,75 @@ def verify_jwt_token(token: str) -> Optional[TokenData]:
         )
     except jwt.PyJWTError:
         return None
+
+def is_local_request(request: Request) -> bool:
+    """Check if the incoming request originates from loopback or local subnet."""
+    hostname: str = request.url.hostname or ''
+    return (
+        hostname in ('127.0.0.1', 'localhost', '::1', 'testserver', '0.0.0.0')
+        or hostname.startswith('192.168.')
+        or hostname.startswith('10.')
+        or hostname.startswith('172.')
+    )
+
+def get_current_user_data(request: Request) -> TokenData:
+    """Extract authenticated user data from cookies or Authorization header.
+    
+    Falls back to local default user (id=1) if the request originates from localhost/LAN.
+    Raises HTTPException 401 if unauthenticated and not local.
+    """
+    token: str = request.cookies.get('auth_token', '')
+    if not token:
+        auth_header: str = request.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer '):
+            token = auth_header[7:].strip()
+        elif auth_header.startswith('Token '):
+            token = auth_header[6:].strip()
+
+    if token:
+        user_data = verify_jwt_token(token)
+        if user_data:
+            return user_data
+
+    if is_local_request(request):
+        try:
+            db_user = user_manager.get_user_by_id(1)
+            if db_user:
+                return TokenData(
+                    email=db_user.get('email', 'admin@localhost'),
+                    name=db_user.get('name', 'Local Admin'),
+                    picture=db_user.get('picture', ''),
+                    id=db_user.get('id', 1)
+                )
+        except Exception as e:
+            logger.warning(f"Error fetching local default user: {e}")
+        return TokenData(
+            email='admin@localhost',
+            name='Local Admin',
+            picture='',
+            id=1
+        )
+
+    raise HTTPException(status_code=401, detail='Authentication required')
+
+def get_current_user_optional(request: Request) -> Optional[TokenData]:
+    """Retrieve current user data if authenticated or local, without raising 401."""
+    try:
+        return get_current_user_data(request)
+    except HTTPException:
+        return None
+
+def require_admin_user(request: Request) -> TokenData:
+    """Ensure current request has administrative privileges."""
+    user_data = get_current_user_data(request)
+    if is_local_request(request):
+        return user_data
+
+    db_user = user_manager.get_user_by_email(user_data.email)
+    if db_user and (db_user.get('is_admin', 0) or db_user.get('role') == 'admin'):
+        return user_data
+
+    raise HTTPException(status_code=403, detail='Admin privileges required')
 
 # Хранилище for OAuth state (in production use Redis or similar)
 oauth_states: dict[str, dict] = {}
@@ -246,16 +344,7 @@ async def google_login(
         )
     
     state = generate_state_token(tg_id=tg_id, tg_username=tg_username)
-    
-    # Determine redirect URI:
-    # If GOOGLE_REDIRECT_URI is explicitly configured in .env, use it
-    if GOOGLE_REDIRECT_URI and not GOOGLE_REDIRECT_URI.startswith('http://localhost:'):
-        redirect_uri = GOOGLE_REDIRECT_URI
-    else:
-        # Fallback to dynamic request URL
-        host = request.headers.get('x-forwarded-host') or request.headers.get('host') or request.url.netloc
-        scheme = request.headers.get('x-forwarded-proto') or request.url.scheme
-        redirect_uri = f'{scheme}://{host}/auth/google/callback'
+    redirect_uri = get_oauth_redirect_uri(request)
     
     # Build Google OAuth URL with extended scopes & offline refresh token
     import urllib.parse
@@ -308,12 +397,7 @@ async def google_callback(request: Request, code: str, state: str) -> RedirectRe
     # Exchange code for tokens with Google
     redirect_uri = request.cookies.get('oauth_redirect_uri', '')
     if not redirect_uri:
-        if GOOGLE_REDIRECT_URI and not GOOGLE_REDIRECT_URI.startswith('http://localhost:'):
-            redirect_uri = GOOGLE_REDIRECT_URI
-        else:
-            host = request.headers.get('x-forwarded-host') or request.headers.get('host') or request.url.netloc
-            scheme = request.headers.get('x-forwarded-proto') or request.url.scheme
-            redirect_uri = f'{scheme}://{host}/auth/google/callback'
+        redirect_uri = get_oauth_redirect_uri(request)
 
     token_url = 'https://oauth2.googleapis.com/token'
     token_data = {

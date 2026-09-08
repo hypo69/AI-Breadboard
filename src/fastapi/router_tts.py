@@ -44,18 +44,20 @@ def _get_user_tts_config(request: Request) -> tuple[str, str]:
     from src.config import tts_cfg
     tts_voice = getattr(tts_cfg, "default_voice", "ru-RU-DmitryNeural") if tts_cfg else "ru-RU-DmitryNeural"
     
-    token = request.cookies.get('auth_token')
-    if token:
+    from src.fastapi.router_auth import get_current_user_data
+    user_data = get_current_user_data(request)
+    if user_data:
         try:
-            from src.fastapi.router_auth import verify_jwt_token
             from src.user_manager import user_manager
-            user_data = verify_jwt_token(token)
-            if user_data and user_data.email:
+            db_user = None
+            if user_data.id:
+                db_user = user_manager.get_user_by_id(user_data.id)
+            if not db_user and user_data.email:
                 db_user = user_manager.get_user_by_email(user_data.email)
-                if db_user:
-                    settings = user_manager.get_user_settings(db_user['id'])
-                    tts_system = settings.get('tts_system') or tts_system
-                    tts_voice = settings.get('tts_voice') or tts_voice
+            if db_user:
+                settings = user_manager.get_user_settings(db_user['id'])
+                tts_system = settings.get('tts_system') or tts_system
+                tts_voice = settings.get('tts_voice') or tts_voice
         except Exception as e:
             logger.error(f"Error getting user TTS settings: {e}")
             
@@ -86,8 +88,10 @@ def init_router(prefix: str = "/api/tts") -> APIRouter:
     router = APIRouter(prefix=prefix, tags=["tts"])
 
     @router.get("/voices")
-    async def get_voices():
+    async def get_voices(request: Request):
         """Returns catalogue of supported multilingual TTS voices grouped by engine."""
+        from src.fastapi.router_auth import get_current_user_data
+        get_current_user_data(request)
         return {
             "edge-tts": [
                 {"value": "ru-RU-DmitryNeural", "label": "Дмитрий (RU - Мужской)", "lang": "ru-RU", "gender": "male"},
@@ -126,12 +130,15 @@ def init_router(prefix: str = "/api/tts") -> APIRouter:
 
     @router.get("/stream-text")
     async def stream_text(
+        request: Request,
         media_id: int = Query(..., description="ID медиафайла в БД"),
         field: str = Query("plot", description="Какое поле озвучить (plot, facts, why_watch, final_verdict)")
     ):
         """
         Стримит адаптированные для диктора куски текста через Server-Sent Events (SSE).
         """
+        from src.fastapi.router_auth import get_current_user_data
+        get_current_user_data(request)
         db = _db()
         # Получаем запись из базы данных по media_id
         conn = db.get_connection()

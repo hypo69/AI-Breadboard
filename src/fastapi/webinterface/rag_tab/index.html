@@ -117,7 +117,7 @@
                     <button class="btn btn-link btn-sm text-decoration-none p-0" id="btn-select-all-user-files">Выбрать все</button>
                   </div>
                   <div class="card-body p-2">
-                    <div id="user-rag-files-checklist" class="d-flex flex-column gap-1" style="max-height: 180px; overflow-y: auto;">
+                    <div id="user-rag-files-checklist" class="d-flex flex-column gap-1" style="max-height: 140px; overflow-y: auto;">
                       <div class="text-muted small p-2">Загрузка файлов...</div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top flex-wrap gap-2">
@@ -135,6 +135,32 @@
                   </div>
                 </div>
 
+                <!-- Q&A and Knowledge Entries Section -->
+                <div class="card border border-secondary-subtle mb-3">
+                  <div class="card-header bg-light d-flex justify-content-between align-items-center py-1 px-3">
+                    <span class="small fw-bold"><i class="bi bi-chat-quote me-1 text-primary"></i> Записи и связки «Вопрос-Ответ»</span>
+                    <div class="d-flex align-items-center gap-2">
+                      <button class="btn btn-outline-secondary btn-sm py-0 px-2 rounded-pill" id="btn-refresh-rag-entries" title="Обновить записи">
+                        <i class="bi bi-arrow-clockwise"></i>
+                      </button>
+                      <button class="btn btn-primary btn-sm rounded-pill px-2 py-0 fw-semibold" id="btn-show-add-qa-modal" data-bs-toggle="modal" data-bs-target="#modal-add-qa-entry">
+                        <i class="bi bi-plus-lg me-1"></i> Добавить Q&A
+                      </button>
+                    </div>
+                  </div>
+                  <div class="card-body p-2">
+                    <div class="input-group input-group-sm mb-2">
+                      <input type="text" class="form-control" id="user-rag-entries-filter" placeholder="Фильтр записей в этой коллекции...">
+                      <button class="btn btn-outline-secondary" type="button" id="btn-clear-entries-filter">
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+                    </div>
+                    <div id="user-rag-entries-container" class="d-flex flex-column gap-2" style="max-height: 250px; overflow-y: auto;">
+                      <div class="text-center text-muted small py-3">Загрузка записей базы знаний...</div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Search Inside Active Collection -->
                 <div class="card border border-secondary-subtle">
                   <div class="card-header bg-light py-1 px-3">
@@ -147,7 +173,7 @@
                         <i class="bi bi-search me-1"></i> Поиск
                       </button>
                     </div>
-                    <div id="active-rag-search-results" class="border rounded p-2 bg-body-tertiary" style="min-height: 120px; max-height: 220px; overflow-y: auto;">
+                    <div id="active-rag-search-results" class="border rounded p-2 bg-body-tertiary" style="min-height: 100px; max-height: 200px; overflow-y: auto;">
                       <div class="text-center text-muted small py-3">Введите запрос для поиска по выбранной базе знаний.</div>
                     </div>
                   </div>
@@ -171,8 +197,8 @@
           <div class="modal-body">
             <div class="mb-3">
               <label for="new-rag-name" class="form-label small fw-bold">Имя коллекции:</label>
-              <input type="text" class="form-control form-control-sm" id="new-rag-name" placeholder="например: project_alpha">
-              <div class="form-text small">Идентификатор для группировки документов.</div>
+              <input type="text" class="form-control form-control-sm" id="new-rag-name" placeholder="например: movies, coding, general">
+              <div class="form-text small">Уникальное имя для группировки знаний.</div>
             </div>
             <div class="mb-3">
               <label for="new-rag-desc" class="form-label small fw-bold">Описание (опционально):</label>
@@ -196,6 +222,36 @@
         </div>
       </div>
     </div>
+
+    <!-- Add QA Entry Modal -->
+    <div class="modal fade" id="modal-add-qa-entry" tabindex="-1" aria-labelledby="modalAddQAEntryLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow">
+          <div class="modal-header">
+            <h6 class="modal-title fw-bold" id="modalAddQAEntryLabel"><i class="bi bi-patch-question text-primary me-2"></i>Добавление знания / Связки «Вопрос-Ответ»</h6>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="new-qa-question" class="form-label small fw-bold">Вопрос пользователя / Триггерная фраза:</label>
+              <input type="text" class="form-control form-control-sm" id="new-qa-question" placeholder="например: Где можно скачать сериал?">
+              <div class="form-text small">Фраза или формулировка запроса, при схожести с которой будет применяться этот ответ.</div>
+            </div>
+            <div class="mb-3">
+              <label for="new-qa-answer" class="form-label small fw-bold">Ответ модели / Текст знания:</label>
+              <textarea class="form-control form-control-sm font-monospace" id="new-qa-answer" rows="5" placeholder="Введите точный ответ, инструкцию или фрагмент знаний..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer py-2">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Отмена</button>
+            <button type="button" class="btn btn-success btn-sm fw-semibold" id="btn-confirm-add-qa">
+              <i class="bi bi-check2-circle me-1"></i> Сохранить в RAG
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
 
     <!-- SUB-TAB 1: DOCUMENT RAG -->
     <div class="tab-pane fade" id="pills-doc-rag" role="tabpanel">
@@ -302,7 +358,7 @@
 
               <div class="mb-3" id="rag-api-key-group">
                 <label class="form-label small fw-bold" for="rag-api-key-input">Gemini API Key (опционально, берется из .env):</label>
-                <input type="password" class="form-control form-control-sm" id="rag-api-key-input" placeholder="AIzaSy... (или оставить пустым для авто)">
+                <input type="password" class="form-control form-control-sm" id="rag-api-key-input" placeholder="AIzaSy... (или оставить пустым для авто)" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true">
               </div>
 
               <div class="row g-2 mb-3">

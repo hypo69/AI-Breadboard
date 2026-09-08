@@ -17,6 +17,9 @@ window.refreshUserProfile = refreshUserProfile;
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('Starting initialization...');
   
+  // Initialize dropdown navigation immediately
+  setupDropdownTabs();
+
   // Initialize theme first
   initTheme();
   console.log('Theme initialized');
@@ -118,118 +121,45 @@ async function loadTabContent(tabName, url, scriptUrl = null) {
   }
 }
 
-// Setup dropdowns and wire click handlers
-function setupDropdownTabs() {
-  document.querySelectorAll('#mainTabs [data-bs-toggle="dropdown"]').forEach((toggleBtn) => {
-    if (window.bootstrap?.Dropdown) {
-      bootstrap.Dropdown.getOrCreateInstance(toggleBtn, {
-        autoClose: true
-      });
-    }
-
-    if (!toggleBtn.dataset.boundDropdownClick) {
-      toggleBtn.dataset.boundDropdownClick = 'true';
-      toggleBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const menu = toggleBtn.nextElementSibling;
-        const isShown = toggleBtn.classList.contains('show') || (menu && menu.classList.contains('show'));
-
-        // Close other open dropdowns first
-        document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((otherMenu) => {
-          if (otherMenu !== menu) {
-            otherMenu.classList.remove('show');
-            const otherToggle = otherMenu.previousElementSibling;
-            otherToggle?.classList.remove('show');
-            otherToggle?.setAttribute('aria-expanded', 'false');
-            if (otherToggle && window.bootstrap?.Dropdown) {
-              const dd = bootstrap.Dropdown.getInstance(otherToggle);
-              dd?.hide();
-            }
-          }
-        });
-
-        if (isShown) {
-          if (window.bootstrap?.Dropdown) {
-            const dd = bootstrap.Dropdown.getInstance(toggleBtn);
-            dd?.hide();
-          }
-          menu?.classList.remove('show');
-          toggleBtn.classList.remove('show');
-          toggleBtn.setAttribute('aria-expanded', 'false');
-        } else {
-          if (window.bootstrap?.Dropdown) {
-            const dd = bootstrap.Dropdown.getOrCreateInstance(toggleBtn);
-            dd.show();
-          }
-          menu?.classList.add('show');
-          toggleBtn.classList.add('show');
-          toggleBtn.setAttribute('aria-expanded', 'true');
-        }
-      });
-    }
-  });
-
-  document.querySelectorAll('#mainTabs .dropdown-item[data-bs-toggle="tab"]').forEach((itemBtn) => {
-    if (itemBtn.dataset.boundTabClick) return;
-    itemBtn.dataset.boundTabClick = 'true';
-
-    itemBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (window.bootstrap?.Tab) {
-        const tabInstance = bootstrap.Tab.getOrCreateInstance(itemBtn);
-        tabInstance.show();
-      }
-      const dropdown = itemBtn.closest('.dropdown');
-      const dropdownToggle = dropdown?.querySelector('[data-bs-toggle="dropdown"]');
-      if (dropdownToggle) {
-        if (window.bootstrap?.Dropdown) {
-          const dd = bootstrap.Dropdown.getInstance(dropdownToggle);
-          dd?.hide();
-        }
-        const menu = itemBtn.closest('.dropdown-menu');
-        if (menu) {
-          menu.classList.remove('show');
-          dropdownToggle.classList.remove('show');
-          dropdownToggle.setAttribute('aria-expanded', 'false');
-        }
-      }
-    });
-  });
+// Tab Switch Handler
+function onTabSwitched(targetId) {
+  const cleanId = targetId.startsWith('#') ? targetId.slice(1) : targetId;
+  if (cleanId === 'tab-chat') {
+    const msgInput = document.getElementById('message-input');
+    if (msgInput) msgInput.focus();
+  } else if (cleanId === 'tab-rag' && typeof window.initRagTab === 'function') {
+    console.log('[MainInterface] Switching to RAG tab...');
+    window.initRagTab();
+  } else if (cleanId === 'tab-voice' && typeof window.initVoiceTab === 'function') {
+    console.log('[MainInterface] Switching to Voice tab...');
+    window.initVoiceTab();
+  } else if (cleanId === 'tab-plugins' && typeof window.initPluginsTab === 'function') {
+    console.log('[MainInterface] Switching to Plugins tab...');
+    window.initPluginsTab();
+  } else if (cleanId === 'tab-admin' && typeof window.initAdminTab === 'function') {
+    console.log('[MainInterface] Switching to Admin tab...');
+    window.initAdminTab();
+  } else if (cleanId === 'tab-help' && typeof window.initHelpTab === 'function') {
+    console.log('[MainInterface] Switching to Help tab...');
+    window.initHelpTab();
+  }
 }
 
-// Close dropdowns on outside click
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('#mainTabs .dropdown')) {
-    document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((menu) => {
-      menu.classList.remove('show');
-      const toggle = menu.previousElementSibling;
-      if (toggle) {
-        toggle.classList.remove('show');
-        toggle.setAttribute('aria-expanded', 'false');
-        if (window.bootstrap?.Dropdown) {
-          const dd = bootstrap.Dropdown.getInstance(toggle);
-          dd?.hide();
-        }
-      }
-    });
-  }
-});
+// Programmatic tab switcher
+function switchTab(targetId) {
+  if (!targetId) return;
+  const cleanId = targetId.startsWith('#') ? targetId.slice(1) : targetId;
 
-// Обработка переключения вкладок
-document.getElementById('mainTabs')?.addEventListener('shown.bs.tab', (e) => {
-  const target = e.target.dataset.bsTarget?.replace('#tab-', '') || '';
-  console.log(`Переключение на вкладку: ${target}`);
-  
-  const targetSelector = e.target.getAttribute('data-bs-target');
+  // 1. Update active state on dropdown items & toggles
   document.querySelectorAll('#mainTabs .dropdown-item').forEach((item) => {
-    if (item.getAttribute('data-bs-target') === targetSelector) {
+    const itemTarget = item.getAttribute('data-tab') || item.getAttribute('data-bs-target')?.replace('#', '');
+    if (itemTarget === cleanId) {
       item.classList.add('active');
     } else {
       item.classList.remove('active');
     }
   });
+
   document.querySelectorAll('#mainTabs .dropdown').forEach((dropdown) => {
     const toggle = dropdown.querySelector('.dropdown-toggle');
     const hasActiveChild = dropdown.querySelector('.dropdown-item.active');
@@ -242,8 +172,80 @@ document.getElementById('mainTabs')?.addEventListener('shown.bs.tab', (e) => {
     }
   });
 
-  setupDropdownTabs();
-});
+  // 2. Switch tab-pane
+  document.querySelectorAll('.tab-content > .tab-pane').forEach((pane) => {
+    pane.classList.remove('show', 'active');
+  });
+  const targetPane = document.getElementById(cleanId);
+  if (targetPane) {
+    targetPane.classList.add('show', 'active');
+  }
+
+  // 3. Notify lifecycle callback
+  onTabSwitched(cleanId);
+}
+window.switchTab = switchTab;
+
+// Setup dropdowns navigation
+function setupDropdownTabs() {
+  const mainTabs = document.getElementById('mainTabs');
+  if (!mainTabs) return;
+
+  // 1. Dropdown Toggle Buttons
+  mainTabs.querySelectorAll('.dropdown-toggle').forEach((btn) => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const dropdown = btn.closest('.dropdown');
+      const menu = dropdown?.querySelector('.dropdown-menu');
+      const isAlreadyOpen = menu?.classList.contains('show');
+
+      // Close all dropdowns
+      document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((m) => {
+        m.classList.remove('show');
+        m.closest('.dropdown')?.querySelector('.dropdown-toggle')?.classList.remove('show');
+      });
+
+      // Toggle clicked dropdown
+      if (!isAlreadyOpen && menu) {
+        menu.classList.add('show');
+        btn.classList.add('show');
+      }
+    };
+  });
+
+  // 2. Dropdown Item Buttons (Tab Switchers)
+  mainTabs.querySelectorAll('.dropdown-item').forEach((item) => {
+    item.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const targetId = item.getAttribute('data-tab') || item.getAttribute('data-bs-target')?.replace('#', '');
+
+      // Close dropdown menu
+      item.closest('.dropdown-menu')?.classList.remove('show');
+      item.closest('.dropdown')?.querySelector('.dropdown-toggle')?.classList.remove('show');
+
+      if (targetId) {
+        switchTab(targetId);
+      }
+    };
+  });
+
+  // 3. Document Click to Close Dropdowns
+  if (!document.body.dataset.dropdownOutsideBound) {
+    document.body.dataset.dropdownOutsideBound = 'true';
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#mainTabs .dropdown')) {
+        document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((menu) => {
+          menu.classList.remove('show');
+          menu.closest('.dropdown')?.querySelector('.dropdown-toggle')?.classList.remove('show');
+        });
+      }
+    });
+  }
+}
 
 // Модуль для работы с API
 window.api = {

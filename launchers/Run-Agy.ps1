@@ -117,20 +117,25 @@ Write-Host ""
 # ============================================
 $envFile = Join-Path $projectRoot ".env"
 $agyApiKey = $null
+$envMap = @{}
 
 if (Test-Path $envFile) {
     Get-Content $envFile | ForEach-Object {
         $line = $_.Trim()
         if ($line -and -not $line.StartsWith('#') -and $line -match "^([^=]+)=(.*)$") {
-            $key = $Matches[1].Trim()
-            $val = $Matches[2].Trim().Trim('"').Trim("'")
-            if ($key -in @("AGY_API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY")) {
-                if (-not $agyApiKey -and $val) {
-                    $agyApiKey = $val
-                }
-            }
+            $k = $Matches[1].Trim()
+            $v = $Matches[2].Trim().Trim('"').Trim("'")
+            $envMap[$k] = $v
         }
     }
+}
+
+if ($envMap.ContainsKey("AGY_API_KEY") -and $envMap["AGY_API_KEY"]) {
+    $agyApiKey = $envMap["AGY_API_KEY"]
+} elseif ($envMap.ContainsKey("GEMINI_ANTIGRAVITY_API_KEY") -and $envMap["GEMINI_ANTIGRAVITY_API_KEY"]) {
+    $agyApiKey = $envMap["GEMINI_ANTIGRAVITY_API_KEY"]
+} elseif ($envMap.ContainsKey("GEMINI_API_KEY") -and $envMap["GEMINI_API_KEY"]) {
+    $agyApiKey = $envMap["GEMINI_API_KEY"]
 }
 
 if ($agyApiKey) {
@@ -262,7 +267,7 @@ try {
 Write-Host "    [OK] Antigravity CLI found: $cliPath" -ForegroundColor Green
 Write-Host "    Version:      $versionStr" -ForegroundColor Gray
 Write-Host "    Model:        $Model" -ForegroundColor Gray
-if ($env:AGY_API_KEY -or $env:GEMINI_API_KEY) {
+if ($env:AGY_API_KEY -or $env:GEMINI_ANTIGRAVITY_API_KEY -or $env:GEMINI_API_KEY) {
     Write-Host "    API Key:      Loaded from .env" -ForegroundColor Green
 } else {
     Write-Host "    [WARN] API Key (AGY_API_KEY / GEMINI_API_KEY) not found in .env!" -ForegroundColor Yellow

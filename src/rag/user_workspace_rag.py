@@ -494,6 +494,170 @@ class UserWorkspaceRAGManager:
 
         return results
 
+    def _reindex_chunks(
+        self,
+        col_dir: Path,
+        chunks: List[Dict[str, Any]],
+        manifest_dict: Dict[str, Any],
+        manifest_path: Path
+    ) -> None:
+        """Write chunks to disk and recompute TF-IDF vector index."""
+        chunks_jsonl_path = col_dir / "cleaned_chunks.jsonl"
+        with open(chunks_jsonl_path, "w", encoding="utf-8") as f:
+            for c in chunks:
+                f.write(json.dumps(c, ensure_ascii=False) + "\n")
+
+        self._build_collection_tfidf_index(col_dir, [c.get("content", "") for c in chunks])
+        manifest_dict["total_chunks"] = len(chunks)
+        manifest_dict["status"] = "indexed" if chunks else "created"
+        manifest_dict["updated_at"] = time.time()
+        manifest_dict["error_message"] = ""
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            json.dump(manifest_dict, f, ensure_ascii=False, indent=2)
+
+    def list_entries(
+        self,
+        user_id: int,
+        rag_id: str,
+        query: str = "",
+        limit: int = 100,
+        offset: int = 0
+    ) -> Dict[str, Any]:
+        """List and search chunk entries in a user RAG collection.
+
+        Args:
+            user_id (int): User unique identifier.
+            rag_id (str): Collection identifier.
+            query (str): Optional search/filter text.
+            limit (int): Number of entries to return.
+            offset (int): Offset for pagination.
+
+        Returns:
+            Dict[str, Any]: Dictionary containing total count and entries list.
+        """
+        col_dir = self._get_collection_dir(user_id, rag_id)
+        chunks_jsonl_path = col_dir / "cleaned_chunks.jsonl"
+        if not chunks_jsonl_path.exists():
+            return {"total": 0, "entries": []}
+
+        chunks: List[Dict[str, Any]] = []
+        with open(chunks_jsonl_path, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    chunks.append(json.loads(line))
+
+        if query.strip():
+            q_lower = query.strip().lower()
+            chunks = [
+                c for c in chunks
+                if q_lower in c.get("content", "").lower()
+                or q_lower in c.get("chunk_id", "").lower()
+                or q_lower in c.get("source_file", "").lower()
+            ]
+
+        total = len(chunks)
+        paged_chunks = chunks[offset:offset + limit]
+        return {"total": total, "entries": paged_chunks}
+
+    def add_qa_entry(
+        self,
+        user_id: int,
+        rag_id: str,
+        question: str,
+        answer: str,
+        meta: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Add a custom Q&A pair entry directly into the user RAG collection.
+
+        Args:
+            user_id (int): User unique identifier.
+            rag_id (str): Collection identifier.
+            question (str): Question or prompt text.
+            answer (str): Answer or knowledge content.
+            meta (Optional[Dict[str, Any]]): Optional metadata.
+
+        Returns:
+            Dict[str, Any]: Created entry chunk dictionary.
+        """
+        col_dir = self._get_collection_dir(user_id, rag_id)
+        manifest_path = col_dir / "manifest.json"
+        if not manifest_path.exists():
+            raise FileNotFoundError(f"Collection '{rag_id}' not found for user {user_id}")
+
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            manifest_dict = json.load(f)
+
+        chunks_jsonl_path = col_dir / "cleaned_chunks.jsonl"
+        chunks: List[Dict[str, Any]] = []
+        if chunks_jsonl_path.exists():
+            with open(chunks_jsonl_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        chunks.append(json.loads(line))
+
+        q_clean = question.strip()
+        a_clean = answer.strip()
+        content = f"Вопрос: {q_clean}\nОтвет: {a_clean}" if q_clean else a_clean
+        entry_meta = meta or {}
+        entry_meta.update({"question": q_clean, "answer": a_clean, "is_qa": bool(q_clean), "created_at": time.time()})
+
+        chunk_id = f"qa_{int(time.time() * 1000)}"
+        new_chunk = {
+            "chunk_id": chunk_id,
+            "source_file": "manual_qa",
+            "doc_type": "qa" if q_clean else "note",
+            "chunk_index": len(chunks),
+            "content": content,
+            "length": len(content),
+            "meta": entry_meta
+        }
+        chunks.append(new_chunk)
+        self._reindex_chunks(col_dir, chunks, manifest_dict, manifest_path)
+        logger.info(f"[UserWorkspaceRAG] Added QA entry '{chunk_id}' to collection '{rag_id}' for user {user_id}")
+        return new_chunk
+
+    def delete_entry(self, user_id: int, rag_id: str, chunk_id: str) -> bool:
+        """Delete an entry/chunk from the collection by chunk_id and reindex.
+
+        Args:
+            user_id (int): User unique identifier.
+            rag_id (str): Collection identifier.
+            chunk_id (str): Chunk identifier to remove.
+
+        Returns:
+            bool: True if entry was removed and reindexed, False if not found.
+        """
+        col_dir = self._get_collection_dir(user_id, rag_id)
+        manifest_path = col_dir / "manifest.json"
+        if not manifest_path.exists():
+            return False
+
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            manifest_dict = json.load(f)
+
+        chunks_jsonl_path = col_dir / "cleaned_chunks.jsonl"
+        if not chunks_jsonl_path.exists():
+            return False
+
+        chunks: List[Dict[str, Any]] = []
+        found = False
+        with open(chunks_jsonl_path, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    item = json.loads(line)
+                    if item.get("chunk_id") == chunk_id:
+                        found = True
+                    else:
+                        chunks.append(item)
+
+        if not found:
+            return False
+
+        self._reindex_chunks(col_dir, chunks, manifest_dict, manifest_path)
+        logger.info(f"[UserWorkspaceRAG] Deleted entry '{chunk_id}' from collection '{rag_id}' for user {user_id}")
+        return True
+
 
 # Global singleton instance
 user_workspace_rag_manager = UserWorkspaceRAGManager()
+

@@ -13,7 +13,13 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-from .router_auth import init_router as init_auth_router
+from .router_auth import (
+    init_router as init_auth_router,
+    is_local_request,
+    get_current_user_data,
+    get_current_user_optional,
+    require_admin_user,
+)
 from .router_chat import init_router as init_chat_router
 from .router_control import init_router as init_control_router
 from .router_tts import init_router as init_tts_router
@@ -29,6 +35,10 @@ from .router_user_storage import init_router as init_user_storage_router
 
 __all__ = [
     "init_auth_router",
+    "is_local_request",
+    "get_current_user_data",
+    "get_current_user_optional",
+    "require_admin_user",
     "init_chat_router",
     "init_control_router",
     "init_tts_router",

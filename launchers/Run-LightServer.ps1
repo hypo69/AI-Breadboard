@@ -239,16 +239,16 @@ $lanIp = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
     Select-Object -ExpandProperty IPAddress -First 1)
 
 # For local browser use localhost (valid for SSL certificate)
-$browserUrl = "${proto}://localhost:${port}/"
+$browserUrl = "${proto}://localhost:${port}/admin"
 
 Write-Host "    Command: $venvPython $($uvicornArgs -join ' ')" -ForegroundColor Gray
 Write-Host ""
 Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
 Write-Host "║  LOCAL SERVER READY TO WORK                                   ║" -ForegroundColor Cyan
 Write-Host "║  Mode:            -mode $mode                                ║" -ForegroundColor Cyan
-Write-Host "║  Local address:   ${proto}://localhost:${port}/                      ║" -ForegroundColor Green
+Write-Host "║  Local address:   ${proto}://localhost:${port}/admin                 ║" -ForegroundColor Green
 if ($lanIp -and $mode -eq '0.0.0.0') {
-Write-Host "║  Network address: ${proto}://${lanIp}:${port}/                ║" -ForegroundColor Yellow
+Write-Host "║  Network address: ${proto}://${lanIp}:${port}/admin           ║" -ForegroundColor Yellow
 }
 Write-Host "║  (no external tunnels, 1 worker, Ctrl+C to stop)              ║" -ForegroundColor Cyan
 Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
