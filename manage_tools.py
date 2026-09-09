@@ -450,6 +450,18 @@ Examples:
     db_create.add_argument('--py', action='store_true', help='Create python migration script')
 
     # ==========================================================================
+    # Database Migration Subparser
+    # ==========================================================================
+    db_parser = subparsers.add_parser('db', help='Database migrations management')
+    db_subparsers = db_parser.add_subparsers(dest='subcommand', help='Subcommands')
+    db_subparsers.add_parser('status', help='Check database migration status')
+    db_subparsers.add_parser('migrate', help='Apply all pending database migrations')
+    db_create = db_subparsers.add_parser('create', help='Create new database migration')
+    db_create.add_argument('db', help='Database name (e.g. users)')
+    db_create.add_argument('name', help='Migration description name')
+    db_create.add_argument('--py', action='store_true', help='Create python migration script')
+
+    # ==========================================================================
     # Assistant CLI Subparser
     # ==========================================================================
     # Gateway to the main assistant CLI for process management including
