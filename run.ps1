@@ -80,6 +80,9 @@ param (
     [Alias('Autoreload', 'UnicornReload', 'unicorn_reload')]
     [Nullable[bool]]$Reload = $null,
 
+    [Alias('SkipUpdate', 'NoUpdate')]
+    [switch]$SkipUpdateCheck,
+
     [Alias('h', '-help', '?')]
     [switch]$Help
 )
@@ -138,6 +141,7 @@ if ($Help) {
     Write-Host "  -EnableOAuth, -OAuth  Включить авторизацию через Google OAuth (по умолчанию включена)."
     Write-Host "  -EnableTelegramBot    Включить запуск Telegram-бота (по умолчанию включен, алиас: -tg)."
     Write-Host "  -EnableAssist, -Assist Включить терминал с assist.ps1 (по умолчанию выключен, алиас: -enable_assist)."
+    Write-Host "  -SkipUpdateCheck      Пропустить предварительную проверку обновлений."
     Write-Host "  -Help, -h, --help     Показать эту справку и выйти."
     Write-Host ""
     Write-Host "ПРИМЕРЫ:" -ForegroundColor Yellow
@@ -156,6 +160,65 @@ Write-Host "╔═════════════════════�
 Write-Host "║              ЗАПУСК FastAPI СЕРВЕРА (ai-breadboard)           ║" -ForegroundColor Cyan
 Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
+
+# ============================================================================
+# STAGE 1.5 — ПРОВЕРКА ВЕРСИИ И ОБНОВЛЕНИЙ
+# ----------------------------------------------------------------------------
+# Проверяется наличие новой версии в Git-репозитории.
+# Если обнаружена новая версия, пользователю предлагается обновиться [Y]/n.
+# ============================================================================
+if (-not $SkipUpdateCheck) {
+    Write-Host "[0/3] Проверка версии приложения..." -ForegroundColor Cyan
+    if (Get-Command git -ErrorAction SilentlyContinue) {
+        try {
+            $localCommit = git rev-parse --short HEAD 2>$null
+            $currentTag  = git describe --tags --always 2>$null
+
+            # Быстрый запрос HEAD из удаленного репозитория
+            $remoteHead = git ls-remote origin HEAD 2>$null
+            if ($remoteHead) {
+                $remoteCommit = ($remoteHead -split '\s+')[0]
+                if ($remoteCommit.Length -ge 7) {
+                    $remoteCommit = $remoteCommit.Substring(0, 7)
+                }
+
+                if ($localCommit -and $remoteCommit -and ($localCommit -ne $remoteCommit)) {
+                    Write-Host ""
+                    Write-Host "┌─────────────────────────────────────────────────────────────┐" -ForegroundColor Yellow
+                    Write-Host " 🚀 ДОСТУПНА НОВАЯ ВЕРСИЯ AI-BREADBOARD                       " -ForegroundColor Yellow
+                    Write-Host "    Текущая версия: $currentTag ($localCommit)" -ForegroundColor White
+                    Write-Host "    Новая версия:   $remoteCommit" -ForegroundColor Green
+                    Write-Host "└─────────────────────────────────────────────────────────────┘" -ForegroundColor Yellow
+                    Write-Host ""
+
+                    if (-not $NonInteractive) {
+                        $updateChoice = Read-Host "Обновить приложение сейчас? (Y/n) [Enter = Y]"
+                        $updateChoice = $updateChoice.Trim().ToLower()
+                        if ([string]::IsNullOrWhiteSpace($updateChoice) -or $updateChoice -in @("y", "yes", "д", "да", "1")) {
+                            Write-Host "    Загрузка и применение обновлений (git pull)..." -ForegroundColor Cyan
+                            $gitPullOut = git pull origin 2>&1
+                            if ($LASTEXITCODE -eq 0) {
+                                Write-Host "    [OK] Приложение успешно обновлено!" -ForegroundColor Green
+                            } else {
+                                Write-Host "    [WARN] Ошибка при обновлении: $gitPullOut" -ForegroundColor Yellow
+                            }
+                        } else {
+                            Write-Host "    Обновление пропущено пользователем." -ForegroundColor DarkGray
+                        }
+                    }
+                } else {
+                    Write-Host "    [OK] Версия актуальна ($currentTag)" -ForegroundColor Green
+                }
+            } else {
+                Write-Host "    [INFO] Текущая версия: $currentTag (удаленный репозиторий недоступен)" -ForegroundColor DarkGray
+            }
+        } catch {
+            Write-Host "    [WARN] Ошибка при проверке версии: $_" -ForegroundColor DarkGray
+        }
+    } else {
+        Write-Host "    [INFO] Git не найден, проверка версии пропущена." -ForegroundColor DarkGray
+    }
+}
 
 # ============================================================================
 # STAGE 2 — ЗАГРУЗКА КОНФИГУРАЦИИ И ОКРУЖЕНИЯ
@@ -179,6 +242,7 @@ $enableOAuthVal = $true
 $enableTelegramBotVal = $true
 $enableAssistVal = $false
 $preloadSilero = $false
+$clientUrl = $null
 
 if (Test-Path $configPath) {
     try {
@@ -190,6 +254,8 @@ if (Test-Path $configPath) {
         if ($cfg.server.enable_telegram_bot -ne $null) { $enableTelegramBotVal = [bool]$cfg.server.enable_telegram_bot }
         if ($cfg.server.enable_assist -ne $null) { $enableAssistVal = [bool]$cfg.server.enable_assist }
         if ($cfg.server.auto_start_assist_cli -ne $null) { $enableAssistVal = [bool]$cfg.server.auto_start_assist_cli }
+        if ($cfg.server.client_url) { $clientUrl = [string]$cfg.server.client_url }
+        elseif ($cfg.server.user_domain) { $clientUrl = "https://$($cfg.server.user_domain)" }
         if ($cfg.ai.use_foundry -ne $null) { $useFoundry = [bool]$cfg.ai.use_foundry }
         if ($cfg.ai.use_ollama -ne $null) { $useOllama = [bool]$cfg.ai.use_ollama }
         if ($cfg.server.use_cloudflared -ne $null) { $useCloudflared = [bool]$cfg.server.use_cloudflared }
@@ -218,6 +284,8 @@ if (Test-Path $envFile) {
             if ($key -eq "USE_OLLAMA") { $useOllama = $val -in ("true","1","yes") }
             if ($key -eq "USE_CLOUDFLARED") { $useCloudflared = $val -in ("true","1","yes") }
             if ($key -eq "CLOUDFLARE_TUNNEL_TOKEN") { $cfTunnelToken = $val }
+            if ($key -eq "CLIENT_URL" -and $val) { $clientUrl = $val }
+            if ($key -eq "USER_DOMAIN" -and $val -and -not $clientUrl) { $clientUrl = "https://$val" }
             if ($key -eq "AUTO_LAUNCH_ENABLED") { $autoLaunchEnabled = $val -in ("true","1","yes") }
             if ($key -eq "AUTO_LAUNCH_DELAY_SECONDS" -and $val -match '^\d+$') { $autoLaunchDelay = [int]$val }
         }
@@ -495,7 +563,8 @@ if (-not $hasApiKey) {
 # ============================================================================
 $proto = if ($useSsl) { "https" } else { "http" }
 $browserHost = if ($host_ -eq "0.0.0.0") { "localhost" } else { $host_ }
-$url = "${proto}://${browserHost}:${port}/admin"
+$localUrl = "${proto}://${browserHost}:${port}/admin"
+$openUrl = if ($clientUrl) { "$($clientUrl.TrimEnd('/'))/admin" } else { $localUrl }
 
 # Вывод параметров запуска (без задержки для автозапуска)
 if (-not $autoLaunchEnabled) {
@@ -506,9 +575,12 @@ Write-Host "ИТОГОВЫЕ ПАРАМЕТРЫ ЗАПУСКА:" -ForegroundColo
 Write-Host "  • Хост:            $host_" -ForegroundColor White
 Write-Host "  • Порт:            $port" -ForegroundColor White
 Write-Host "  • Протокол:        $($proto.ToUpper()) $(if ($useSsl) {'(SSL активен)'} else {'(без SSL)'})" -ForegroundColor White
-Write-Host "  • Локальный URL:   $url" -ForegroundColor Green
+Write-Host "  • Локальный URL:   $localUrl" -ForegroundColor Green
 if ($lanIp -and $host_ -eq "0.0.0.0") {
     Write-Host "  • Сетевой URL:     ${proto}://${lanIp}:${port}/admin" -ForegroundColor Yellow
+}
+if ($clientUrl) {
+    Write-Host "  • URL в браузере:  $openUrl" -ForegroundColor Cyan
 }
 Write-Host "  • AI Foundry:      $(if ($useFoundry) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
 Write-Host "  • Ollama:          $(if ($useOllama) {'ВКЛЮЧЕНА (localhost:11434)'} else {'ВЫКЛЮЧЕНА'})" -ForegroundColor White
@@ -704,13 +776,14 @@ if (-not (Test-Path $unicornScript)) {
 }
 if (Test-Path $unicornScript) {
     $unicornCallArgs = @{
-        Host_ = $host_
-        Port  = $port
+        Host_   = $host_
+        Port    = $port
+        OpenUrl = $openUrl
     }
     if ($enableOAuthVal -ne $null) { $unicornCallArgs['EnableOAuth'] = $enableOAuthVal }
     if ($Workers -ne $null) { $unicornCallArgs['Workers'] = $Workers }
     if ($Reload -ne $null) { $unicornCallArgs['Reload'] = $Reload }
-    Write-Host "    Запуск Run-Unicorn.ps1 с параметрами -Host_ $host_ -Port $port -EnableOAuth $enableOAuthVal..." -ForegroundColor DarkGray
+    Write-Host "    Запуск Run-Unicorn.ps1 с параметрами -Host_ $host_ -Port $port -OpenUrl $openUrl -EnableOAuth $enableOAuthVal..." -ForegroundColor DarkGray
     & $unicornScript @unicornCallArgs
 } else {
     Write-Host "    [ERROR] Run-Unicorn.ps1 не найден: $unicornScript" -ForegroundColor Red

@@ -19,8 +19,9 @@ from main import app, is_localhost, get_request_hostname
 
 
 @pytest.fixture
-def client():
-    """Create TestClient instance."""
+def client(monkeypatch):
+    """Create TestClient instance with test environment variables."""
+    monkeypatch.setenv("ADMIN_PASSWORD", "test_admin_secret_123")
     return TestClient(app)
 
 
@@ -77,25 +78,31 @@ def test_user_endpoint_serves_user_interface(client):
 
 
 def test_admin_access_allowed_for_localhost(client):
-    """Test that localhost can access /admin (returns 200 login page or admin panel)."""
-    # TestClient by default simulates testserver on localhost
+    """Test that localhost can access /admin (returns 200 login page)."""
     response = client.get("/admin", headers={"host": "localhost:8000"})
-    # Either returns login form (200) or redirects to auth (303/200)
-    assert response.status_code in (200, 303)
+    assert response.status_code == 200
+    assert 'name="password"' in response.text
 
 
-def test_admin_access_redirects_for_user_domain(client):
-    """Test that requests from user domain to /admin are silently redirected to root /."""
+def test_admin_access_allowed_for_user_domain(client):
+    """Test that requests from user domain to /admin return the password login page."""
     response = client.get("/admin", headers={"host": "kino.davidka.net"}, follow_redirects=False)
-    assert response.status_code == 303
-    assert response.headers["location"] == "/"
+    assert response.status_code == 200
+    assert 'name="password"' in response.text
 
 
-def test_admin_post_redirects_for_user_domain(client):
-    """Test that POST /admin from user domain is silently redirected to root /."""
-    response = client.post("/admin", data={"password": "onela"}, headers={"host": "kino.davidka.net"}, follow_redirects=False)
+def test_admin_post_password_login(client):
+    """Test that POST /admin with correct password sets cookie and redirects to /admin."""
+    response = client.post("/admin", data={"password": "test_admin_secret_123"}, headers={"host": "kino.davidka.net"}, follow_redirects=False)
     assert response.status_code == 303
-    assert response.headers["location"] == "/"
+    assert response.headers["location"] == "/admin"
+    assert "admin_password_verified=true" in response.headers.get("set-cookie", "")
+
+    # Access /admin with the verified cookie
+    client.cookies.set("admin_password_verified", "true")
+    admin_page = client.get("/admin", headers={"host": "kino.davidka.net"})
+    assert admin_page.status_code == 200
+    assert "Панель управления" in admin_page.text or "admin" in admin_page.text.lower()
 
 
 def test_docs_endpoints_allowed_for_localhost(client):

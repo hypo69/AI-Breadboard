@@ -76,7 +76,7 @@ body {
   background: var(--card-bg);
 }
 
-/* Fix overlap in admin panel chat tab */
+/* Chat Layout & Sidebar (ChatGPT-style) */
 #tab-chat {
   height: calc(100vh - 95px);
   max-height: calc(100vh - 95px);
@@ -90,6 +90,128 @@ body {
   height: calc(100vh - 95px);
   max-height: calc(100vh - 95px);
 }
+
+.chat-container {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  min-height: 0;
+  gap: 10px;
+  position: relative;
+}
+
+.chat-sidebar {
+  width: 250px;
+  min-width: 250px;
+  max-width: 250px;
+  display: flex;
+  flex-direction: column;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px;
+  transition: margin-left 0.25s ease, opacity 0.2s ease;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+.chat-sidebar.collapsed {
+  margin-left: -262px;
+  opacity: 0;
+  pointer-events: none;
+  display: none !important;
+}
+
+.chat-sessions-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  padding-right: 2px;
+}
+
+.chat-session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-color);
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+}
+
+.chat-session-item:hover {
+  background: rgba(128, 128, 128, 0.12);
+}
+
+.chat-session-item.active {
+  background: rgba(13, 110, 253, 0.15);
+  border-color: rgba(13, 110, 253, 0.35);
+  font-weight: 500;
+}
+
+.chat-session-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1 1 auto;
+  margin-right: 4px;
+}
+
+.chat-session-actions {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.chat-session-item:hover .chat-session-actions,
+.chat-session-item.active .chat-session-actions {
+  display: flex;
+}
+
+.chat-session-action-btn {
+  background: transparent;
+  border: none;
+  padding: 0 3px;
+  color: var(--text-muted, #888);
+  border-radius: 3px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.chat-session-action-btn:hover {
+  color: var(--text-color);
+  background: rgba(128, 128, 128, 0.2);
+}
+
+.chat-main-area {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  font-size: 0.875rem;
+}
+
 #tab-chat .chat-window {
   height: auto;
   flex: 1 1 auto;

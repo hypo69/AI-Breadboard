@@ -23,7 +23,7 @@ from pydantic import BaseModel
 
 from src.logger import logger
 from src.fastapi.router_auth import require_admin_user
-from src.secrets.api_key_state import (
+from src.ai.gemini.gemini_api_key_state import (
     _DAY_SECONDS,
     _iso_to_ts,
     _load_keys_file,

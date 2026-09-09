@@ -139,16 +139,17 @@ if ($Action -eq 'start') {
         exit 0
     }
 
-    Write-Host "🚀 Starting Ollama service: $resolvedExe serve" -ForegroundColor Cyan
+    Write-Host "🚀 Starting Ollama service in a separate window: $resolvedExe serve" -ForegroundColor Cyan
     try {
-        $logsDir = Join-Path $projectRoot "logs"
-        if (-not (Test-Path $logsDir)) {
-            New-Item -ItemType Directory -Force -Path $logsDir | Out-Null
-        }
-        $logOutPath = Join-Path $logsDir "ollama_stdout.log"
-        $logErrPath = Join-Path $logsDir "ollama_stderr.log"
+        $hasWt = Get-Command wt.exe -ErrorAction SilentlyContinue
+        $hasPwsh = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+        $shellExe = if ($hasPwsh) { "pwsh.exe" } else { "powershell.exe" }
 
-        Start-Process -FilePath $resolvedExe -ArgumentList "serve" -RedirectStandardOutput $logOutPath -RedirectStandardError $logErrPath -WindowStyle Minimized
+        if ($hasWt) {
+            Start-Process wt.exe -ArgumentList "-d `"$projectRoot`" --title `"Ollama Service`" $shellExe -NoExit -Command `"`& `'$resolvedExe`' serve`""
+        } else {
+            Start-Process $shellExe -ArgumentList "-NoExit -Command `"`& `'$resolvedExe`' serve`"" -WorkingDirectory $projectRoot
+        }
 
         for ($i = 1; $i -le 10; $i++) {
             Start-Sleep -Seconds 1
@@ -160,7 +161,7 @@ if ($Action -eq 'start') {
             Write-Host "⏳ Waiting for Ollama startup... ($i/10)" -ForegroundColor Gray
         }
 
-        Write-Host "⚠️  Ollama process started, but port 11434 is not responding yet." -ForegroundColor Yellow
+        Write-Host "⚠️  Ollama window opened, but port 11434 is not responding yet." -ForegroundColor Yellow
     } catch {
         Write-Host "⚠️  Failed to launch Ollama: $_" -ForegroundColor Yellow
     }

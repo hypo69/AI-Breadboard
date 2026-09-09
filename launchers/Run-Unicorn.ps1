@@ -40,6 +40,9 @@ param (
     [Alias('Autoreload', 'UnicornReload', 'unicorn_reload')]
     [Nullable[bool]]$Reload = $null,
 
+    [Alias('Url', 'ClientUrl', 'TargetUrl')]
+    [string]$OpenUrl,
+
     [Alias('h', '-help')]
     [switch]$Help
 )
@@ -118,6 +121,7 @@ $cfgPort    = "8000"
 $workers    = 1
 $useSsl     = $false
 $reload     = $false
+$clientUrl  = $null
 
 if (Test-Path $configPath) {
     $cfg     = Get-Content $configPath | ConvertFrom-Json
@@ -126,6 +130,11 @@ if (Test-Path $configPath) {
     $useSsl  = $cfg.server.use_ssl
     $mode    = $cfg.server.mode.ToLower()
     $debug   = if ($cfg.server.debug) { "true" } else { "false" }
+    if ($cfg.server.PSObject.Properties['client_url'] -and $cfg.server.client_url) {
+        $clientUrl = [string]$cfg.server.client_url
+    } elseif ($cfg.server.PSObject.Properties['user_domain'] -and $cfg.server.user_domain) {
+        $clientUrl = "https://$($cfg.server.user_domain)"
+    }
     
     # Priority: unicorn_reload -> reload (default: false)
     if ($cfg.server.PSObject.Properties['unicorn_reload']) {
@@ -168,6 +177,8 @@ if (Test-Path $envFile) {
             if ($key -eq "ENABLE_OAUTH") { $oauthEnabled = $val -in ("true","1","yes") }
             if ($key -in ("UNICORN_RELOAD", "RELOAD")) { $reload = $val -in ("true","1","yes") }
             if ($key -in ("UNICORN_WORKERS", "WORKERS")) { $workers = [int]$val }
+            if ($key -eq "CLIENT_URL" -and $val) { $clientUrl = $val }
+            if ($key -eq "USER_DOMAIN" -and $val -and -not $clientUrl) { $clientUrl = "https://$val" }
         }
     }
 }
@@ -305,7 +316,13 @@ $lanIp = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
     Select-Object -ExpandProperty IPAddress -First 1)
 
 $browserProto = if ($useSsl) { "https" } else { "http" }
-$browserUrl   = "${browserProto}://localhost:${port}/admin"
+if ($OpenUrl) {
+    $browserUrl = $OpenUrl
+} elseif ($clientUrl) {
+    $browserUrl = "$($clientUrl.TrimEnd('/'))/admin"
+} else {
+    $browserUrl = "${browserProto}://localhost:${port}/admin"
+}
 
 Start-Job -ScriptBlock {
     param($targetPort, $targetOpenUrl)

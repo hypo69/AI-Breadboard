@@ -60,6 +60,7 @@ from src.fastapi import (
     init_tts_router,
     init_logs_router,
     init_keys_router,
+    init_google_accounts_router,
     init_admin_router,
     init_skills_router,
     init_plugins_router,
@@ -568,6 +569,7 @@ app.include_router(init_control_router())
 app.include_router(init_tts_router())
 app.include_router(init_logs_router())
 app.include_router(init_keys_router())
+app.include_router(init_google_accounts_router())
 app.include_router(init_admin_router())
 app.include_router(init_skills_router())
 app.include_router(init_plugins_router())
@@ -601,12 +603,12 @@ async def startup_event():
         check_result = vm.check_updates()
         if check_result.get("is_update_available"):
             logger.warning(
-                f"Доступно update: {check_result.get('remote_version')} "
-                f"(текущая версия: {check_result.get('current_version')}). "
-                f"Запустите приложение с флагом --check-update для обновления."
+                f"Update available: {check_result.get('remote_version')} "
+                f"(current version: {check_result.get('current_version')}). "
+                f"Run the application with --check-update flag to update."
             )
         else:
-            logger.info(f"Приложение актуально: версия {check_result.get('current_version')}")
+            logger.info(f"Application is up to date: version {check_result.get('current_version')}")
     except Exception as e:
         logger.debug(f"Failed to check updates on startup: {e}")
     
@@ -932,24 +934,12 @@ ADMIN_LOGIN_HTML = """<!DOCTYPE html>
     <div class="login-container">
         <div class="logo">
             <h1>Панель управления</h1>
-            <p>Авторизуйтесь через Google для доступа к функциям AI Assistant, Google Документам, Календарю и Контактам</p>
+            <p>Введите пароль администратора для входа</p>
         </div>
-
-        <a href="/auth/google?next=/admin" class="btn-google">
-            <svg width="20" height="20" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-            </svg>
-            Войти через Google
-        </a>
-
-        <div class="divider"><span>или локальный вход</span></div>
 
         <form method="POST" action="/admin">
             <div class="input-group">
-                <input type="password" name="password" placeholder="Пароль администратора" required autocomplete="current-password">
+                <input type="password" name="password" placeholder="Пароль администратора" required autocomplete="current-password" autofocus>
             </div>
             <button type="submit" class="btn-submit">Войти по паролю</button>
         </form>
@@ -959,52 +949,17 @@ ADMIN_LOGIN_HTML = """<!DOCTYPE html>
 """
 
 def check_admin_auth(request: Request):
-    """Check access rights to admin panel, strictly restricting access to localhost."""
-    from fastapi.responses import RedirectResponse, HTMLResponse
-    from src.fastapi.router_auth import verify_jwt_token
-    from src.user_manager import user_manager
+    """Check access rights to admin panel by password authentication."""
+    from fastapi.responses import HTMLResponse, RedirectResponse
 
-    user_domain = os.getenv('USER_DOMAIN', 'kino.davidka.net').strip().lower()
-    req_host = get_request_hostname(request)
+    # If administrator verified password via cookie, grant access
+    if request.cookies.get('admin_password_verified') == 'true':
+        return None
 
-    # Restrict /admin to localhost only: silently redirect to root for external / user domain
-    if req_host == user_domain or not is_localhost(request):
-        return RedirectResponse(url='/', status_code=303)
-
-    token = request.cookies.get('auth_token', '')
-    if not token:
-        if request.url.path in ('/admin', '/'):
-            return HTMLResponse(content=ADMIN_LOGIN_HTML)
-        return RedirectResponse(url='/auth/google?next=' + request.url.path, status_code=303)
-
-    user_data = verify_jwt_token(token)
-    if not user_data:
-        if request.url.path in ('/admin', '/'):
-            return HTMLResponse(content=ADMIN_LOGIN_HTML)
-        return RedirectResponse(url='/auth/google?next=' + request.url.path, status_code=303)
-
-    db_user = user_manager.get_user_by_email(user_data.email)
-    if not db_user:
-        if request.url.path in ('/admin', '/'):
-            return HTMLResponse(content=ADMIN_LOGIN_HTML)
-        return RedirectResponse(url='/auth/google?next=' + request.url.path, status_code=303)
-
-    # Check if user has Google OAuth tokens for working with Google services
-    has_google = user_manager.has_google_auth(db_user['id'])
-    is_admin_user = bool(db_user.get('is_admin', 0) or db_user.get('role') == 'admin')
-
-    # If user is logged in via Google and is admin — grant access
-    if has_google and is_admin_user:
-        return False
-
-    # If administrator verified password locally
-    if request.cookies.get('admin_password_verified') == 'true' and is_admin_user:
-        return False
-
-    if request.url.path in ('/admin', '/'):
+    if request.url.path in ('/admin', '/admin/'):
         return HTMLResponse(content=ADMIN_LOGIN_HTML)
 
-    return RedirectResponse(url='/auth/google?next=' + request.url.path, status_code=303)
+    return RedirectResponse(url='/admin', status_code=303)
 
 @app.get('/admin')
 async def admin_interface(request: Request):
@@ -1021,16 +976,23 @@ async def admin_interface(request: Request):
 async def admin_interface_post(request: Request):
     """Verify password and set admin authentication cookie."""
     from fastapi.responses import RedirectResponse
-    user_domain = os.getenv('USER_DOMAIN', 'kino.davidka.net').strip().lower()
-    req_host = get_request_hostname(request)
-    if req_host == user_domain or not is_localhost(request):
-        return RedirectResponse(url='/', status_code=303)
-
     form = await request.form()
     password = form.get('password')
-    if password == 'onela':
+    admin_password = os.getenv('ADMIN_PASSWORD')
+    if not admin_password:
+        logger.error("ADMIN_PASSWORD is not configured in .env")
+        return RedirectResponse(url='/admin', status_code=303)
+
+    if password and password == admin_password:
         response = RedirectResponse(url='/admin', status_code=303)
-        response.set_cookie(key='admin_password_verified', value='true', max_age=86400 * 30, httponly=True)
+        response.set_cookie(
+            key='admin_password_verified',
+            value='true',
+            max_age=86400 * 30,
+            httponly=True,
+            samesite='lax',
+            path='/'
+        )
         return response
     else:
         return RedirectResponse(url='/admin', status_code=303)
@@ -1064,12 +1026,11 @@ async def tv_static(full_path: str) -> HTMLResponse:
 
 @app.get('/logs')
 async def logs_interface(request: Request):
-    """Redirect to admin dashboard logs tab or root on user domain."""
+    """Redirect to admin dashboard logs tab."""
     from fastapi.responses import RedirectResponse
-    user_domain = os.getenv('USER_DOMAIN', 'kino.davidka.net').strip().lower()
-    req_host = get_request_hostname(request)
-    if req_host == user_domain or not is_localhost(request):
-        return RedirectResponse(url='/', status_code=303)
+    auth_response = check_admin_auth(request)
+    if auth_response:
+        return auth_response
     return RedirectResponse(url='/admin#tab-logs', status_code=303)
 
 from pydantic import BaseModel

@@ -81,6 +81,97 @@
       "parameters": {
         "file_path": "str"
       }
+    },
+    {
+      "id": "gmail_search",
+      "name": "Gmail Search",
+      "icon": "✉️",
+      "category": "google_workspace",
+      "description": "Search, filter and retrieve emails from Gmail (is:unread, sender, subject, keywords).",
+      "parameters": {
+        "query": "str",
+        "limit": "int"
+      }
+    },
+    {
+      "id": "gmail_create_draft",
+      "name": "Gmail Create Draft",
+      "icon": "📝",
+      "category": "google_workspace",
+      "description": "Create an email draft in Gmail with recipient, subject, and body text.",
+      "parameters": {
+        "to": "str",
+        "subject": "str",
+        "body": "str"
+      }
+    },
+    {
+      "id": "gdrive_list_files",
+      "name": "Google Drive Search & List",
+      "icon": "📂",
+      "category": "google_workspace",
+      "description": "Search, list, and inspect files and folders on Google Drive.",
+      "parameters": {
+        "query": "str",
+        "limit": "int"
+      }
+    },
+    {
+      "id": "gdrive_download_file",
+      "name": "Google Drive File Exporter",
+      "icon": "📥",
+      "category": "google_workspace",
+      "description": "Download files or export Google Docs / Sheets to standard local formats (.docx, .xlsx, .pdf).",
+      "parameters": {
+        "file_id": "str",
+        "mime_type": "str",
+        "dest_path": "str"
+      }
+    },
+    {
+      "id": "gsheets_info",
+      "name": "Google Sheets Info",
+      "icon": "📊",
+      "category": "google_workspace",
+      "description": "Inspect Google Spreadsheet metadata, sheet titles, and grid dimensions.",
+      "parameters": {
+        "spreadsheet_id": "str"
+      }
+    },
+    {
+      "id": "gsheets_read",
+      "name": "Google Sheets Read Range",
+      "icon": "📑",
+      "category": "google_workspace",
+      "description": "Read row and column values from Google Sheets using A1 notation.",
+      "parameters": {
+        "spreadsheet_id": "str",
+        "range_name": "str"
+      }
+    },
+    {
+      "id": "gsheets_search",
+      "name": "Google Sheets Search",
+      "icon": "🔍",
+      "category": "google_workspace",
+      "description": "Search for text matching specific rows inside Google Sheets.",
+      "parameters": {
+        "spreadsheet_id": "str",
+        "query": "str",
+        "range_name": "str"
+      }
+    },
+    {
+      "id": "gsheets_append",
+      "name": "Google Sheets Append Row",
+      "icon": "➕",
+      "category": "google_workspace",
+      "description": "Append new rows of structured data to a Google Sheet.",
+      "parameters": {
+        "spreadsheet_id": "str",
+        "range_name": "str",
+        "values_json": "str"
+      }
     }
   ],
   "providers": {

@@ -13,6 +13,18 @@ async function initModelsTab() {
   const saveBtnInstr = document.getElementById('btn-save-instruction');
   const reloadBtnInstr = document.getElementById('btn-reload-instruction');
 
+  // Ensure active provider pill tab pane has show active classes
+  const activePill = document.querySelector('#provider-pills-tab .nav-link.active') || document.getElementById('pill-gemini-tab');
+  if (activePill) {
+    const targetSelector = activePill.getAttribute('data-bs-target');
+    if (targetSelector) {
+      const targetPane = document.querySelector(targetSelector);
+      if (targetPane && !targetPane.classList.contains('active')) {
+        targetPane.classList.add('show', 'active');
+      }
+    }
+  }
+
   // 1. Bind event handlers immediately
   if (saveBtnInstr) saveBtnInstr.onclick = saveSystemInstruction;
   if (reloadBtnInstr) reloadBtnInstr.onclick = loadSystemInstruction;

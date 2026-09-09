@@ -255,6 +255,23 @@ class TestModelManager:
             assert "test-foundry-model-1" not in _CACHED_MODELS["foundry"]
             assert "test-foundry-model-2" in _CACHED_MODELS["foundry"]
 
+    def test_get_available_models_include_unsupported(self):
+        """Тест получения всех моделей Gemini включая неподдерживаемые при include_unsupported=True."""
+        from src.ai.model_manager import get_available_models, load_unsupported_models
+
+        # Без include_unsupported (по умолчанию - только поддерживаемые)
+        filtered = get_available_models("gemini", force_refresh=True, include_unsupported=False)
+        unsupported = load_unsupported_models("gemini")
+        for unsup in unsupported:
+            assert unsup not in filtered
+
+        # C include_unsupported=True (показать все)
+        all_models = get_available_models("gemini", force_refresh=True, include_unsupported=True)
+        assert len(all_models) >= len(filtered)
+        # Проверяем, что хотя бы одна неподдерживаемая модель включена
+        for unsup in unsupported:
+            assert unsup in all_models
+
     @pytest.mark.asyncio
     async def test_actualize_all_models(self):
         """Тест разовой актуализации всех моделей при старте."""

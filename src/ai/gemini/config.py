@@ -129,6 +129,18 @@ class GoogleGenerativeAIConfigMixin:
         if all_tools:
             cfg_kwargs['tools'] = all_tools
 
+        # Configure automatic function calling (AFC)
+        # Disable by default when direct models.generate_content / manual dispatcher is used
+        # to prevent SDK warnings (Google GenAI recommends AFC only with Chat.send_message).
+        afc_cfg = gen_cfg.pop('automatic_function_calling', None)
+        if afc_cfg is not None:
+            if isinstance(afc_cfg, dict):
+                cfg_kwargs['automatic_function_calling'] = types.AutomaticFunctionCallingConfig(**afc_cfg)
+            else:
+                cfg_kwargs['automatic_function_calling'] = afc_cfg
+        elif all_tools:
+            cfg_kwargs['automatic_function_calling'] = types.AutomaticFunctionCallingConfig(disable=True)
+
         if gen_cfg:
             for k in ['temperature', 'top_p', 'top_k', 'response_mime_type']:
                 val = gen_cfg.get(k)

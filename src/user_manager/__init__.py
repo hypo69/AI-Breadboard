@@ -111,6 +111,7 @@ class UserManager:
                     system_instruction TEXT,
                     tts_system TEXT DEFAULT 'edge-tts',
                     tts_voice TEXT DEFAULT 'ru-RU-DmitryNeural',
+                    rag_enabled INTEGER DEFAULT 1,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 )
             """)
@@ -127,6 +128,11 @@ class UserManager:
 
             try:
                 conn.execute("ALTER TABLE user_settings ADD COLUMN tts_voice TEXT DEFAULT 'ru-RU-DmitryNeural'")
+            except sqlite3.OperationalError:
+                pass
+
+            try:
+                conn.execute("ALTER TABLE user_settings ADD COLUMN rag_enabled INTEGER DEFAULT 1")
             except sqlite3.OperationalError:
                 pass
 
@@ -977,11 +983,11 @@ class UserManager:
                     'SELECT * FROM user_settings WHERE user_id = ? LIMIT 1',
                     (user_id,)
                 ).fetchone()
-            return dict(row) if row else {'user_id': user_id, 'theme': 'dark', 'language': 'ru', 'tts_enabled': 1, 'system_instruction': None, 'model': None, 'tts_system': 'edge-tts', 'tts_voice': 'ru-RU-DmitryNeural'}
+            return dict(row) if row else {'user_id': user_id, 'theme': 'dark', 'language': 'ru', 'tts_enabled': 1, 'system_instruction': None, 'model': None, 'tts_system': 'edge-tts', 'tts_voice': 'ru-RU-DmitryNeural', 'rag_enabled': 1}
 
     def update_user_settings(self, user_id: int, **kwargs) -> bool:
         """Update user settings."""
-        allowed_fields = {'theme', 'language', 'tts_enabled', 'system_instruction', 'model', 'tts_system', 'tts_voice'}
+        allowed_fields = {'theme', 'language', 'tts_enabled', 'system_instruction', 'model', 'tts_system', 'tts_voice', 'rag_enabled'}
         updates = {k: v for k, v in kwargs.items() if k in allowed_fields and v is not None}
         if not updates:
             return False

@@ -138,7 +138,7 @@ class VersionManager:
             # If no tags, use commit hash
             rc, stdout, stderr = self._run_git_command(["git", "rev-parse", "--short", "HEAD"])
             if rc == 0 and stdout:
-                self.current_version = f"commit-{stdout}"
+                self.current_version = stdout
                 logger.info(f"Current version (hash): {self.current_version}")
                 return self.current_version
             
@@ -156,26 +156,31 @@ class VersionManager:
             Version string or None on error
         """
         try:
+            from src.utils.versioning import choose_best_tag
+
             # Get remote repository information
             rc, stdout, stderr = self._run_git_command(["git", "ls-remote", "--tags", self.remote_url])
             
             if rc == 0 and stdout:
-                lines = stdout.split('\n')
+                lines = [line.strip() for line in stdout.split('\n') if line.strip()]
                 # Find latest tag
-                tags = [line.split()[-1].replace('refs/tags/', '').replace('^{}', '') 
-                       for line in lines if 'refs/tags/' in line]
+                tags = [
+                    line.split()[-1].replace('refs/tags/', '').replace('^{}', '') 
+                    for line in lines if 'refs/tags/' in line
+                ]
+                tags = [t for t in tags if t]
                 if tags:
-                    # Sort and get latest
-                    remote_version = sorted(tags)[-1]
-                    logger.info(f"Remote version: {remote_version}")
-                    return remote_version
+                    remote_version = choose_best_tag(tags)
+                    if remote_version:
+                        logger.info(f"Remote version: {remote_version}")
+                        return remote_version
             
-            # If no tags, use HEAD of remote repo
+            # If no tags, use HEAD of remote repo (short hash without prefix)
             rc, stdout, stderr = self._run_git_command(["git", "ls-remote", self.remote_url, "HEAD"])
             if rc == 0 and stdout:
-                remote_hash = stdout.split()[0]
+                remote_hash = stdout.split()[0][:7]
                 logger.info(f"Remote version (HEAD): {remote_hash}")
-                return f"remote-{remote_hash[:7]}"
+                return remote_hash
             
             logger.warning("Could not determine remote version")
             return None
@@ -204,17 +209,28 @@ class VersionManager:
             
             # Get commit hashes
             rc1, curr_hash, _ = self._run_git_command(["git", "rev-parse", "HEAD"])
-            rc2, remote_hash, _ = self._run_git_command(["git", "rev-parse", f"{self.remote_url}/main"])
+            rc2, remote_ls, _ = self._run_git_command(["git", "ls-remote", self.remote_url, "HEAD"])
+            remote_hash = remote_ls.split()[0] if (rc2 == 0 and remote_ls) else "unknown"
+            curr_hash = curr_hash if rc1 == 0 else "unknown"
             
-            is_update_available = current != remote
+            if curr_hash != "unknown" and remote_hash != "unknown":
+                if curr_hash == remote_hash or curr_hash.startswith(remote_hash) or remote_hash.startswith(curr_hash):
+                    is_update_available = False
+                elif current != remote and not (curr_hash.startswith(remote) or remote.startswith(curr_hash[:7])):
+                    is_update_available = True
+                else:
+                    is_update_available = (curr_hash[:7] != remote_hash[:7])
+            else:
+                is_update_available = (current != remote)
+
             status = UpdateStatus.UPDATE_AVAILABLE if is_update_available else UpdateStatus.CURRENT
             
             result = {
                 "status": status.value,
                 "current_version": current,
                 "remote_version": remote,
-                "current_commit": curr_hash if rc1 == 0 else "unknown",
-                "remote_commit": remote_hash if rc2 == 0 else "unknown",
+                "current_commit": curr_hash,
+                "remote_commit": remote_hash,
                 "is_update_available": is_update_available,
                 "timestamp": datetime.now().isoformat()
             }

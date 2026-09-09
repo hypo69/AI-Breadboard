@@ -899,6 +899,7 @@ class SettingsUpdateRequest(BaseModel):
     tts_system: Optional[str] = ""
     tts_voice: Optional[str] = ""
     search_engine: Optional[str] = ""
+    rag_enabled: Optional[int] = None
 
 # ===========================================
 # Admin User Management API
@@ -1115,7 +1116,8 @@ async def update_settings(request: Request, data: SettingsUpdateRequest) -> dict
         system_instruction=data.system_instruction,
         model=data.model,
         tts_system=data.tts_system,
-        tts_voice=data.tts_voice
+        tts_voice=data.tts_voice,
+        rag_enabled=data.rag_enabled
     )
     if not success:
         raise HTTPException(status_code=500, detail='Не удалось сохранить настройки')

@@ -13,15 +13,15 @@
 # =============================================================================
 
 import asyncio
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Set
 
-from google import genai
 import aiohttp
+from google import genai
 
 from header import __root__
 from src.logger.logger import logger
-from src.secrets.api_key_state import load_api_keys
 from src.utils.jjson import j_dumps, j_loads
 
 _GLOBAL_CONFIG_PATH: Path = __root__ / "config.json"
@@ -198,61 +198,55 @@ def add_unsupported_model(provider: str = "gemini", model_name: str = "", reason
     )
     return True
 
-def _fetch_gemini_models_from_sdk(api_key: str = "") -> List[str]:
-    """Fetch Gemini models directly via Google GenAI SDK with filtering."""
-    api_keys_to_try: List[str] = []
-    if api_key:
-        api_keys_to_try.append(api_key)
-    else:
-        keys, _, _ = load_api_keys()
-        if keys:
-            api_keys_to_try.extend(keys)
-
+def _fetch_gemini_models_sync(api_key: str = "", include_unsupported: bool = False) -> List[str]:
+    """Synchronously fetch list of models for Gemini with optional filtering."""
     unsupported: Set[str] = load_unsupported_models("gemini")
-    fallback_pool: List[str] = [m for m in _DEFAULT_GEMINI_FALLBACK if m not in unsupported]
-    if not fallback_pool:
-        fallback_pool = ["gemini-flash-latest", "gemini-pro-latest"]
+    discovered: List[str] = []
 
-    if not api_keys_to_try:
-        return fallback_pool
-
-    last_error: str = ""
-    for key in api_keys_to_try:
+    key_to_use: str = api_key
+    if not key_to_use:
         try:
-            client = genai.Client(api_key=key)
-            models: List[str] = []
-            for m in client.models.list():
-                name: str = _normalize_model_name(m.name)
-                # Check поддержки действия генерации контента
-                if m.supported_actions and "generateContent" in m.supported_actions:
-                    if name in unsupported:
-                        continue
-                    if any(x in name for x in ("bison", "gecko", "vision", "embedding", "aqa", "imagen")):
-                        continue
-                    models.append(name)
-
-            if models:
-                sorted_models: List[str] = []
-                for pm in _GEMINI_PRIORITY_ORDER:
-                    if pm in models and pm not in sorted_models:
-                        sorted_models.append(pm)
-                for m in models:
-                    if m not in sorted_models:
-                        sorted_models.append(m)
-                return sorted_models
+            from src.ai.gemini.gemini_api_key_state import load_api_keys
+            keys, _, _ = load_api_keys()
+            if keys:
+                key_to_use = keys[0]
         except Exception as e:
-            last_error = str(e)
-            continue
+            logger.debug(f"[ModelManager] Failed to load Gemini API key for listing: {e}")
+        if not key_to_use:
+            key_to_use = os.getenv("GEMINI_API_KEY", "") or os.getenv("GEMINI_API_KEY_1", "")
 
-    if last_error:
-        logger.warning(
-            f"[ModelManager] Error запроса списка моделей от Google GenAI SDK: {last_error}. "
-            f"Используется резервный list моделей."
-        )
+    if key_to_use:
+        try:
+            client = genai.Client(api_key=key_to_use)
+            for m in client.models.list():
+                m_name = getattr(m, 'name', '') or ''
+                norm = _normalize_model_name(m_name)
+                actions = getattr(m, 'supported_actions', []) or getattr(m, 'supported_generation_methods', []) or []
+                if actions and not any('generateContent' in str(a) for a in actions):
+                    continue
+                if norm and norm not in discovered:
+                    discovered.append(norm)
+        except Exception as e:
+            logger.debug(f"[ModelManager] Could not fetch Gemini models via SDK: {e}")
 
-    return fallback_pool
+    combined: List[str] = list(discovered)
+    for fb in _DEFAULT_GEMINI_FALLBACK:
+        norm_fb = _normalize_model_name(fb)
+        if norm_fb not in combined:
+            combined.append(norm_fb)
 
-def _fetch_foundry_models_sync(base_url: str = "") -> List[str]:
+    if include_unsupported:
+        for unsup in unsupported:
+            if unsup and unsup not in combined:
+                combined.append(unsup)
+        return combined
+
+    pool: List[str] = [m for m in combined if m not in unsupported]
+    if not pool:
+        pool = ["gemini-flash-latest", "gemini-pro-latest"]
+    return pool
+
+def _fetch_foundry_models_sync(base_url: str = "", include_unsupported: bool = False) -> List[str]:
     """Synchronously fetch list of models from local Foundry server."""
     from src.config import ai_cfg
     url: str = base_url or (getattr(ai_cfg, "foundry_base_url", "http://localhost:54837") if ai_cfg else "http://localhost:54837")
@@ -260,25 +254,27 @@ def _fetch_foundry_models_sync(base_url: str = "") -> List[str]:
     unsupported: Set[str] = load_unsupported_models("foundry")
 
     import requests
+    models: List[str] = []
     try:
         resp = requests.get(f"{url}/v1/models", timeout=5)
         if resp.status_code == 200:
             data: Dict[str, Any] = resp.json()
-            models: List[str] = []
             for item in data.get("data", []):
                 mid: str = item.get("id", "")
-                if mid and _normalize_model_name(mid) not in unsupported:
-                    models.append(mid)
+                if mid:
+                    norm = _normalize_model_name(mid)
+                    if include_unsupported or norm not in unsupported:
+                        models.append(mid)
             if models:
                 return models
     except Exception as e:
         logger.info(f"[ModelManager] Foundry сервер ({url}) недоступен или вернул ошибку: {e}")
 
-    if _normalize_model_name(fallback_id) not in unsupported:
+    if include_unsupported or _normalize_model_name(fallback_id) not in unsupported:
         return [fallback_id]
     return []
 
-def _fetch_ollama_models_sync(base_url: str = "") -> List[str]:
+def _fetch_ollama_models_sync(base_url: str = "", include_unsupported: bool = False) -> List[str]:
     """Synchronously fetch list of models from Ollama server."""
     from src.config import ai_cfg
     url: str = base_url or (getattr(ai_cfg, "ollama_base_url", "http://localhost:11434") if ai_cfg else "http://localhost:11434")
@@ -286,52 +282,64 @@ def _fetch_ollama_models_sync(base_url: str = "") -> List[str]:
     unsupported: Set[str] = load_unsupported_models("ollama")
 
     import requests
+    models: List[str] = []
     try:
         resp = requests.get(f"{url}/api/tags", timeout=5)
         if resp.status_code == 200:
             data: Dict[str, Any] = resp.json()
-            models: List[str] = []
             for item in data.get("models", []):
                 name: str = item.get("name", "")
-                if name and _normalize_model_name(name) not in unsupported:
-                    models.append(name)
+                if name:
+                    norm = _normalize_model_name(name)
+                    if include_unsupported or norm not in unsupported:
+                        models.append(name)
             if models:
                 return models
     except Exception as e:
         logger.info(f"[ModelManager] Ollama сервер ({url}) недоступен или вернул ошибку: {e}")
 
-    if _normalize_model_name(fallback_id) not in unsupported:
+    if include_unsupported or _normalize_model_name(fallback_id) not in unsupported:
         return [fallback_id]
     return []
 
-def _fetch_gemini_cli_models_sync() -> List[str]:
-    """Synchronously fetch list of models for Gemini CLI with filtering."""
+def _fetch_gemini_cli_models_sync(include_unsupported: bool = False) -> List[str]:
+    """Synchronously fetch list of models for Gemini CLI with optional filtering."""
     unsupported: Set[str] = load_unsupported_models("gemini_cli")
+    if include_unsupported:
+        combined = list(_DEFAULT_GEMINI_CLI_FALLBACK)
+        for u in unsupported:
+            if u not in combined:
+                combined.append(u)
+        return combined
     pool: List[str] = [m for m in _DEFAULT_GEMINI_CLI_FALLBACK if m not in unsupported]
     if not pool:
         pool = ["gemini-3.1-flash-lite", "gemini-2.5-flash"]
     return pool
 
-def _fetch_hf_models_sync() -> List[str]:
+def _fetch_hf_models_sync(include_unsupported: bool = False) -> List[str]:
     """Synchronously fetch list of cached HuggingFace models."""
     unsupported: Set[str] = load_unsupported_models("hf")
+    models: List[str] = []
     try:
         from src.ai.hf_chat import hf_client
         downloaded: List[Dict[str, Any]] = hf_client.list_downloaded()
-        models: List[str] = []
         for item in downloaded:
             mid: str = item.get("id", "")
-            if mid and _normalize_model_name(mid) not in unsupported:
-                models.append(mid)
+            if mid:
+                norm = _normalize_model_name(mid)
+                if include_unsupported or norm not in unsupported:
+                    models.append(mid)
         if models:
             return models
     except Exception as e:
         logger.info(f"[ModelManager] HuggingFace list моделей недоступен: {e}")
 
     fallback: List[str] = ["Qwen/Qwen2.5-0.5B-Instruct", "google/gemma-2-2b-it"]
+    if include_unsupported:
+        return fallback + [u for u in unsupported if u not in fallback]
     return [m for m in fallback if _normalize_model_name(m) not in unsupported]
 
-def _fetch_onnx_models_sync() -> List[str]:
+def _fetch_onnx_models_sync(include_unsupported: bool = False) -> List[str]:
     """Synchronously fetch list of ONNX models from local models/onnx directory, memory, and config."""
     unsupported: Set[str] = load_unsupported_models("onnx")
     discovered_models: Set[str] = set()
@@ -342,8 +350,10 @@ def _fetch_onnx_models_sync() -> List[str]:
         loaded: List[Dict[str, Any]] = onnx_client.list_loaded()
         for item in loaded:
             mid: str = item.get("id", "")
-            if mid and _normalize_model_name(mid) not in unsupported:
-                discovered_models.add(mid)
+            if mid:
+                norm = _normalize_model_name(mid)
+                if include_unsupported or norm not in unsupported:
+                    discovered_models.add(mid)
     except Exception as e:
         logger.debug(f"[ModelManager] ONNX memory models check: {e}")
 
@@ -358,13 +368,17 @@ def _fetch_onnx_models_sync() -> List[str]:
             for entry in models_dir.iterdir():
                 if entry.is_dir() or entry.suffix in (".onnx", ".ort"):
                     name = entry.name
-                    if name and _normalize_model_name(name) not in unsupported:
-                        discovered_models.add(name)
+                    if name:
+                        norm = _normalize_model_name(name)
+                        if include_unsupported or norm not in unsupported:
+                            discovered_models.add(name)
 
         # Default configured model
         def_model = onnx_cfg.get("default_model", "")
-        if def_model and _normalize_model_name(def_model) not in unsupported:
-            discovered_models.add(def_model)
+        if def_model:
+            norm_def = _normalize_model_name(def_model)
+            if include_unsupported or norm_def not in unsupported:
+                discovered_models.add(def_model)
 
     except Exception as e:
         logger.info(f"[ModelManager] ONNX local directory scan: {e}")
@@ -372,10 +386,15 @@ def _fetch_onnx_models_sync() -> List[str]:
     if not discovered_models:
         discovered_models = {"phi-3.5-mini-instruct-onnx", "qwen2.5-0.5b-instruct-onnx"}
 
+    if include_unsupported:
+        for unsup in unsupported:
+            discovered_models.add(unsup)
+        return sorted(list(discovered_models))
+
     return [m for m in sorted(discovered_models) if _normalize_model_name(m) not in unsupported]
 
 
-def _fetch_openai_compat_models_sync() -> List[str]:
+def _fetch_openai_compat_models_sync(include_unsupported: bool = False) -> List[str]:
     """Synchronously fetch list of OpenAI-compatible provider models."""
     unsupported: Set[str] = load_unsupported_models("openai")
     global_cfg: Dict[str, Any] = j_loads(_GLOBAL_CONFIG_PATH)
@@ -386,24 +405,32 @@ def _fetch_openai_compat_models_sync() -> List[str]:
             for prov_name, prov_data in compat_sec.get("providers", {}).items():
                 if isinstance(prov_data, dict):
                     for m in prov_data.get("models", []):
-                        if isinstance(m, str) and m and _normalize_model_name(m) not in unsupported:
-                            if prov_name != "openai" and not any(m.startswith(f"{p}:") for p in ("openai", "deepseek", "groq", "openrouter", "lmstudio", "local")):
-                                models.append(f"{prov_name}:{m}")
-                            else:
-                                models.append(m)
+                        if isinstance(m, str) and m:
+                            norm = _normalize_model_name(m)
+                            if include_unsupported or norm not in unsupported:
+                                if prov_name != "openai" and not any(m.startswith(f"{p}:") for p in ("openai", "deepseek", "groq", "openrouter", "lmstudio", "local")):
+                                    models.append(f"{prov_name}:{m}")
+                                else:
+                                    models.append(m)
     if not models:
-        models: List[str] = ["gpt-4o-mini", "gpt-4o", "deepseek:deepseek-chat"]
+        models = ["gpt-4o-mini", "gpt-4o", "deepseek:deepseek-chat"]
+    if include_unsupported:
+        for u in unsupported:
+            if u not in models:
+                models.append(u)
+        return models
     return [m for m in models if _normalize_model_name(m) not in unsupported]
 
 def get_available_models(
     provider: str = "gemini",
     api_key: str = "",
     force_refresh: bool = False,
+    include_unsupported: bool = False,
 ) -> List[str]:
     """Get list of current available models for given provider.
 
     Uses single fetch via SDK/API with subsequent caching in memory
-    for the entire application lifecycle. Excludes unsupported models from config.json.
+    for the entire application lifecycle. Excludes unsupported models from config.json by default.
 
     Args:
         provider (str): Provider name ('gemini', 'gemini_cli', 'agy', 'foundry', 'ollama', 'hf', 'onnx', 'openai').
@@ -412,6 +439,8 @@ def get_available_models(
                        Default: ''.
         force_refresh (bool): Force cache reset and re-query provider.
                               Default: False.
+        include_unsupported (bool): Include models from unsupported/filtered list.
+                                    Default: False.
 
     Returns:
         List[str]: List of available model identifiers.
@@ -424,55 +453,68 @@ def get_available_models(
     """
     prov: str = provider.lower().strip()
 
-    # Быстрый возврат из кэша в оперативной памяти
-    if not force_refresh and prov in _CACHED_MODELS and _CACHED_MODELS[prov]:
+    # Fast return from cache when filtering is default (False)
+    if not force_refresh and not include_unsupported and prov in _CACHED_MODELS and _CACHED_MODELS[prov]:
         return list(_CACHED_MODELS[prov])
 
     result_models: List[str] = []
 
     if prov == "gemini":
-        result_models = _fetch_gemini_models_from_sdk(api_key=api_key)
-        _CACHED_MODELS["gemini"] = result_models
+        result_models = _fetch_gemini_models_sync(api_key=api_key, include_unsupported=include_unsupported)
+        if not include_unsupported:
+            _CACHED_MODELS["gemini"] = result_models
         return list(result_models)
 
     elif prov in ("gemini_cli", "gemini-cli"):
-        result_models = _fetch_gemini_cli_models_sync()
-        _CACHED_MODELS["gemini_cli"] = result_models
+        result_models = _fetch_gemini_cli_models_sync(include_unsupported=include_unsupported)
+        if not include_unsupported:
+            _CACHED_MODELS["gemini_cli"] = result_models
         return list(result_models)
 
     elif prov == "agy":
-        gemini_models: List[str] = get_available_models("gemini", api_key=api_key, force_refresh=force_refresh)
+        gemini_models: List[str] = get_available_models(
+            "gemini", api_key=api_key, force_refresh=force_refresh, include_unsupported=include_unsupported
+        )
         agy_unsupported: Set[str] = load_unsupported_models("agy")
-        result_models = [
-            f"agy-{m}" for m in gemini_models
-            if _normalize_model_name(m) not in agy_unsupported and f"agy-{m}" not in agy_unsupported
-        ]
-        _CACHED_MODELS["agy"] = result_models
+        if include_unsupported:
+            result_models = [f"agy-{m}" if not m.startswith("agy-") else m for m in gemini_models]
+        else:
+            result_models = [
+                f"agy-{m}" for m in gemini_models
+                if _normalize_model_name(m) not in agy_unsupported and f"agy-{m}" not in agy_unsupported
+            ]
+        if not include_unsupported:
+            _CACHED_MODELS["agy"] = result_models
         return list(result_models)
 
     elif prov == "foundry":
-        result_models = _fetch_foundry_models_sync()
-        _CACHED_MODELS["foundry"] = result_models
+        result_models = _fetch_foundry_models_sync(include_unsupported=include_unsupported)
+        if not include_unsupported:
+            _CACHED_MODELS["foundry"] = result_models
         return list(result_models)
 
     elif prov == "ollama":
-        result_models = _fetch_ollama_models_sync()
-        _CACHED_MODELS["ollama"] = result_models
+        result_models = _fetch_ollama_models_sync(include_unsupported=include_unsupported)
+        if not include_unsupported:
+            _CACHED_MODELS["ollama"] = result_models
         return list(result_models)
 
     elif prov in ("hf", "huggingface"):
-        result_models = _fetch_hf_models_sync()
-        _CACHED_MODELS["hf"] = result_models
+        result_models = _fetch_hf_models_sync(include_unsupported=include_unsupported)
+        if not include_unsupported:
+            _CACHED_MODELS["hf"] = result_models
         return list(result_models)
 
     elif prov == "onnx":
-        result_models = _fetch_onnx_models_sync()
-        _CACHED_MODELS["onnx"] = result_models
+        result_models = _fetch_onnx_models_sync(include_unsupported=include_unsupported)
+        if not include_unsupported:
+            _CACHED_MODELS["onnx"] = result_models
         return list(result_models)
 
     elif prov in ("openai", "openai_compat", "openai-compat", "deepseek", "groq", "openrouter", "lmstudio"):
-        result_models = _fetch_openai_compat_models_sync()
-        _CACHED_MODELS["openai"] = result_models
+        result_models = _fetch_openai_compat_models_sync(include_unsupported=include_unsupported)
+        if not include_unsupported:
+            _CACHED_MODELS["openai"] = result_models
         return list(result_models)
 
     return result_models

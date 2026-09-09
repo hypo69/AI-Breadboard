@@ -24,7 +24,8 @@
     "help": "📚 Справочник",
     "instructions": "📝 Системные инструкции",
     "skills": "⚡ Навыки",
-    "mcp": "🔌 MCP Серверы"
+    "mcp": "🔌 MCP Серверы",
+    "googleAccounts": "🌐 Google аккаунты"
   },
   "movieSearch": {
     "title": "🔍 Поиск фильмов на трекерах",

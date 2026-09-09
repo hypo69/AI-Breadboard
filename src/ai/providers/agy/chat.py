@@ -23,7 +23,7 @@ import asyncio
 from typing import Optional, List, Dict, AsyncGenerator
 
 from src.logger.logger import logger
-from src.secrets.api_key_state import load_api_keys
+from src.ai.gemini.gemini_api_key_state import load_api_keys
 
 class AgyChatBase:
     """Chat adapter for Antigravity SDK models (agy-flash, agy-pro).
@@ -92,6 +92,9 @@ class AgyChatBase:
 
         self.api_keys: List[str] = valid_keys
         self.api_key: str = valid_keys[0] if valid_keys else ""
+        self._agent: Optional[object] = None
+        self._agent_lock: asyncio.Lock = asyncio.Lock()
+        self._active_system_prompt: str = ""
 
     @property
     def model_id(self) -> str:
@@ -109,7 +112,14 @@ class AgyChatBase:
         Args:
             val (str): Model identifier to set.
         """
-        self._model_id = self.normalize_model_id(val)
+        new_val = self.normalize_model_id(val)
+        if new_val != self._model_id:
+            self._model_id = new_val
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self.close())
+            except RuntimeError:
+                pass
 
     @property
     def system_instruction(self) -> str:
@@ -127,7 +137,13 @@ class AgyChatBase:
         Args:
             val (str): System instruction to set.
         """
-        self.system_prompt = val
+        if val != self.system_prompt:
+            self.system_prompt = val
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self.close())
+            except RuntimeError:
+                pass
 
     def _clean_output(self, text: str) -> str:
         """Clean response from SDK internal step messages.
@@ -151,9 +167,58 @@ class AgyChatBase:
                 cleaned = "\n".join(filtered).strip()
         return cleaned
 
+    async def _close_agent_unlocked(self) -> None:
+        """Close current agent session without acquiring lock."""
+        if self._agent is not None:
+            try:
+                await self._agent.__aexit__(None, None, None)
+            except Exception as e:
+                logger.warning(f"Error closing Antigravity Agent session: {e}")
+            finally:
+                self._agent = None
+                self._active_system_prompt = ""
+
+    async def close(self) -> None:
+        """Explicitly terminate the persistent agent session."""
+        async with self._agent_lock:
+            await self._close_agent_unlocked()
+
     def clear_history(self) -> None:
-        """Clear local chat history."""
+        """Clear local chat history and restart agent session."""
         self.history = []
+        if self._agent is not None:
+            asyncio.create_task(self.close())
+
+    async def _get_or_create_agent(self, sys_prompt: str = "") -> object:
+        """Retrieve existing persistent agent or start a new long-running session.
+
+        Args:
+            sys_prompt (str): System prompt configuration.
+
+        Returns:
+            object: Initialized and running Agent instance.
+        """
+        async with self._agent_lock:
+            is_started = getattr(self._agent, 'is_started', False) if self._agent else False
+            if self._agent is not None and is_started and self._active_system_prompt == sys_prompt:
+                return self._agent
+
+            await self._close_agent_unlocked()
+
+            from google.antigravity import Agent, LocalAgentConfig, CapabilitiesConfig
+            config = LocalAgentConfig(
+                model=self.model_id,
+                system_instructions=sys_prompt,
+                api_key=self.api_key,
+                tools=[],
+                policies=[],
+                capabilities=CapabilitiesConfig(enable_subagents=False, enabled_tools=[])
+            )
+            agent = Agent(config)
+            await agent.__aenter__()
+            self._agent = agent
+            self._active_system_prompt = sys_prompt
+            return self._agent
 
     async def ask(
         self,
@@ -180,29 +245,21 @@ class AgyChatBase:
         sys_prompt = system_instruction or self.system_prompt or ""
 
         try:
-            from google.antigravity import Agent, LocalAgentConfig, CapabilitiesConfig
-            config = LocalAgentConfig(
-                model=self.model_id,
-                system_instructions=sys_prompt,
-                api_key=self.api_key,
-                tools=[],
-                policies=[],
-                capabilities=CapabilitiesConfig(enable_subagents=False, enabled_tools=[])
-            )
-            async with Agent(config) as agent:
-                response = await agent.chat(q)
-                text = ""
-                async for token in response:
-                    text += token
-                return self._clean_output(text)
+            agent = await self._get_or_create_agent(sys_prompt)
+            response = await agent.chat(q)
+            text = ""
+            async for token in response:
+                text += token
+            return self._clean_output(text)
         except Exception as e:
+            await self.close()
             err_str = str(e)
             if any(x in err_str for x in ('404', 'NOT_FOUND', 'not supported', 'is no longer available', 'not found')):
                 from src.ai.model_manager import add_unsupported_model
                 add_unsupported_model('agy', self.model_id, reason=err_str)
                 add_unsupported_model('gemini', self.model_id, reason=err_str)
-            logger.error("Error in AgyChatBase.ask", e, exc_info=True)
-            return ""
+            logger.error(f"Error in AgyChatBase.ask: {err_str}", exc_info=True)
+            raise
 
     async def chat(
         self,
@@ -230,7 +287,6 @@ class AgyChatBase:
         if not q or not q.strip():
             return ""
         
-        # Build full response from chat_stream generator
         chunks = []
         async for chunk in self.chat_stream(
             q=q,
@@ -250,13 +306,13 @@ class AgyChatBase:
     async def chat_stream(
         self,
         q: str,
-        history: Optional[List[Dict]] = [],
+        history: Optional[List[Dict]] = None,
         system_instruction: Optional[str] = "",
         temperature: Optional[float] = 0.0,
         max_tokens: Optional[int] = 0,
         **kwargs
     ) -> AsyncGenerator[str, None]:
-        """Send streaming request to agent.
+        """Send streaming request to agent using persistent session.
 
         Args:
             q (str): User question text.
@@ -272,40 +328,19 @@ class AgyChatBase:
             return
 
         sys_prompt = system_instruction or self.system_prompt or ""
-        
-        # Integrate history into context
-        context = ""
-        if history:
-            for msg in history:
-                role = msg.get('role', 'user')
-                content = msg.get('content', '')
-                if not content and 'parts' in msg:
-                    content = " ".join([p.get('text', '') if isinstance(p, dict) else str(p) for p in msg['parts']])
-                context += f"\n[{role}]: {content}"
-
-        if context:
-            sys_prompt = f"{sys_prompt}\n\nConversation history:\n{context}"
 
         try:
-            from google.antigravity import Agent, LocalAgentConfig, CapabilitiesConfig
-            config = LocalAgentConfig(
-                model=self.model_id,
-                system_instructions=sys_prompt,
-                api_key=self.api_key,
-                tools=[],
-                policies=[],
-                capabilities=CapabilitiesConfig(enable_subagents=False, enabled_tools=[])
-            )
-            async with Agent(config) as agent:
-                response = await agent.chat(q)
-                async for token in response:
-                    yield token
+            agent = await self._get_or_create_agent(sys_prompt)
+            response = await agent.chat(q)
+            async for token in response:
+                yield token
         except Exception as e:
+            await self.close()
             err_str = str(e)
             if any(x in err_str for x in ('404', 'NOT_FOUND', 'not supported', 'is no longer available', 'not found')):
                 from src.ai.model_manager import add_unsupported_model
                 add_unsupported_model('agy', self.model_id, reason=err_str)
                 add_unsupported_model('gemini', self.model_id, reason=err_str)
             err_msg = f"Error Antigravity SDK: {err_str}"
-            logger.error(err_msg, e, exc_info=True)
+            logger.error(err_msg, exc_info=True)
             yield err_msg

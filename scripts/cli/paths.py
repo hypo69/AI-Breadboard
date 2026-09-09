@@ -71,7 +71,7 @@ class CrossPlatformPaths:
     
     @property
     def data_dir(self) -> Path:
-        """Application data directory.
+        r"""Application data directory.
         
         Windows: %LOCALAPPDATA%\AI-Breadboard
         Linux: ~/.local/share/AI-Breadboard
@@ -91,7 +91,7 @@ class CrossPlatformPaths:
     
     @property
     def config_dir(self) -> Path:
-        """Configuration directory.
+        r"""Configuration directory.
         
         Windows: %LOCALAPPDATA%\AI-Breadboard\config
         Linux: ~/.config/AI-Breadboard
@@ -109,7 +109,7 @@ class CrossPlatformPaths:
     
     @property
     def cache_dir(self) -> Path:
-        """Cache directory.
+        r"""Cache directory.
         
         Windows: %LOCALAPPDATA%\AI-Breadboard\Cache
         Linux: ~/.cache/AI-Breadboard
@@ -127,7 +127,7 @@ class CrossPlatformPaths:
     
     @property
     def certs_dir(self) -> Path:
-        """SSL certificates directory.
+        r"""SSL certificates directory.
         
         Windows: %USERPROFILE%\.certs
         Linux: ~/.local/share/ca-certificates
@@ -147,7 +147,7 @@ class CrossPlatformPaths:
     
     @property
     def bin_dir(self) -> Path:
-        """Executable files directory.
+        r"""Executable files directory.
         
         Windows: %USERPROFILE%\.local\bin
         Linux/macOS: ~/.local/bin

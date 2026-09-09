@@ -96,7 +96,7 @@ class TravelAgent:
             model_name = getattr(self._langchain_cfg, 'gemini_model', 'gemini-2.5-flash')
             api_key = os.environ.get('GEMINI_API_KEY', '')
             if not api_key:
-                from src.secrets.api_key_state import load_api_keys
+                from src.ai.gemini.gemini_api_key_state import load_api_keys
                 loaded, _, _ = load_api_keys()
                 aiza_keys = [k for k in loaded if k.startswith('AIzaSy')]
                 if aiza_keys:

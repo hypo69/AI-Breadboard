@@ -20,6 +20,20 @@ import os
 import sys
 from pathlib import Path
 
+# Ensure USERPROFILE / HOME exist so expanduser() never fails on Windows
+if "USERPROFILE" not in os.environ and "HOME" in os.environ:
+    os.environ["USERPROFILE"] = os.environ["HOME"]
+elif "HOME" not in os.environ and "USERPROFILE" in os.environ:
+    os.environ["HOME"] = os.environ["USERPROFILE"]
+elif "USERPROFILE" not in os.environ and "HOME" not in os.environ:
+    try:
+        _home = str(Path.home())
+    except Exception:
+        _home = str(Path(__file__).resolve().parent)
+    os.environ["USERPROFILE"] = _home
+    os.environ["HOME"] = _home
+
+
 def set_project_root(marker_files=('__root__','.git')) -> Path:
     """
     Finds the root directory of the project starting from the current file's directory,

@@ -27,7 +27,7 @@ from src.ai.orchestration.model_manager import (
 )
 from src.config import server_cfg, ai_cfg
 from src.logger.logger import logger
-from src.secrets.api_key_state import (
+from src.ai.gemini.gemini_api_key_state import (
     get_status,
     load_api_keys,
     mark_exhausted,
