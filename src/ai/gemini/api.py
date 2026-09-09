@@ -21,7 +21,7 @@ from typing import Any, AsyncGenerator
 from google.genai import types
 
 from src.logger.logger import logger
-from src.secrets.api_key_state import update_last_run
+from src.ai.gemini.gemini_api_key_state import update_last_run
 from src.utils.jjson import j_loads
 
 from .core import GoogleGenerativeAICore

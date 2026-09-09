@@ -136,11 +136,19 @@ window.chatService = {
     let fullText = '';
     let voiceText = '';
     
+    const effectiveGenConfig = { ...generationConfig };
+    if (!effectiveGenConfig.model && window.activeModelName) {
+      effectiveGenConfig.model = window.activeModelName;
+    }
+    if (!effectiveGenConfig.search_engine && window.activeSearchEngine) {
+      effectiveGenConfig.search_engine = window.activeSearchEngine;
+    }
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, history, generation_config: generationConfig }),
+        body: JSON.stringify({ message, history, generation_config: effectiveGenConfig }),
         signal: this._abortController.signal
       });
       

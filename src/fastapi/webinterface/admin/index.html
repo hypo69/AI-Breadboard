@@ -129,6 +129,9 @@
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-users" data-bs-target="#tab-users" type="button" data-i18n="tabs.users">
             👥 Пользователи
           </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-google-accounts" data-bs-target="#tab-google-accounts" type="button" data-i18n="tabs.googleAccounts">
+            🌐 Google аккаунты
+          </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-logs" data-bs-target="#tab-logs" type="button" data-i18n="tabs.logs">
             📋 Логи
           </button>
@@ -170,7 +173,7 @@
     </div>
   </div>
 
-  <div class="tab-content">
+  <div class="tab-content" id="mainTabContent">
     <!-- Chat Tab -->
     <div id="tab-chat" class="tab-pane fade show active">
       <div class="chat-window mb-2" id="chat-window"></div>
@@ -203,6 +206,9 @@
 
     <!-- Users Tab -->
     <div id="tab-users" class="tab-pane fade"></div>
+
+    <!-- Google Accounts Tab -->
+    <div id="tab-google-accounts" class="tab-pane fade"></div>
 
     <!-- RAG Tab -->
     <div id="tab-rag" class="tab-pane fade"></div>

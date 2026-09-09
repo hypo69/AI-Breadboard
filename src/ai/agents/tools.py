@@ -213,6 +213,234 @@ def flight_price_calculator(
     except Exception as e:
         return f"Error расчета цены: {e}"
 
+# --- Google Workspace Tools (Gmail, Drive, Sheets, Docs) ---
+
+def _get_google_workspace_managers():
+    """Dynamically import Google Workspace managers from skill scripts."""
+    scripts_dir = __root__ / ".agents" / "skills" / "google-workspace" / "scripts"
+    import sys
+    if str(scripts_dir) not in sys.path:
+        sys.path.insert(0, str(scripts_dir))
+    try:
+        from gmail_manager import GmailManager
+        from gdrive_manager import GDriveManager
+        from gsheets_manager import GSheetsManager
+        return GmailManager, GDriveManager, GSheetsManager
+    except Exception as e:
+        logger.error(f"[google_workspace_tools] Failed to import managers: {e}")
+        return None, None, None
+
+@tool
+def gmail_search(query: str = "is:unread", limit: int = 10, account_name: str = "") -> str:
+    """Поиск и получение списка писем в Gmail по запросу (например: 'is:unread', 'from:boss', 'subject:report').
+
+    Args:
+        query: Строка поискового фильтра Gmail.
+        limit: Максимальное количество писем (по умолчанию 10).
+        account_name: Имя аккаунта в пуле src/secrets/google_accounts.json (опционально).
+    """
+    try:
+        GmailManager, _, _ = _get_google_workspace_managers()
+        if not GmailManager:
+            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+        manager = GmailManager(account_name=account_name or None)
+        if not manager.service:
+            return json.dumps({
+                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
+            }, ensure_ascii=False)
+        messages = manager.search_messages(query=query, max_results=limit)
+        return json.dumps(messages, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"[google_workspace_tools] Error in gmail_search: {e}")
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+@tool
+def gmail_create_draft(to: str, subject: str, body: str, account_name: str = "") -> str:
+    """Создание черновика электронного письма в Gmail.
+
+    Args:
+        to: Email адрес получателя.
+        subject: Тема письма.
+        body: Текст сообщения.
+        account_name: Имя аккаунта в пуле src/secrets/google_accounts.json (опционально).
+    """
+    try:
+        GmailManager, _, _ = _get_google_workspace_managers()
+        if not GmailManager:
+            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+        manager = GmailManager(account_name=account_name or None)
+        if not manager.service:
+            return json.dumps({
+                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
+            }, ensure_ascii=False)
+        draft = manager.create_draft(to=to, subject=subject, body_text=body)
+        if draft:
+            return json.dumps({"status": "ok", "draft_id": draft.get("id"), "message": f"Draft created for {to}"}, ensure_ascii=False)
+        return json.dumps({"error": "Failed to create draft"}, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"[google_workspace_tools] Error in gmail_create_draft: {e}")
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+@tool
+def gdrive_list_files(query: str = "", limit: int = 10, account_name: str = "") -> str:
+    """Поиск и получение списка файлов и папок на Google Диске (например: "name contains 'Report'", "trashed = false").
+
+    Args:
+        query: Строка поискового запроса Google Drive API (опционально).
+        limit: Максимальное количество файлов (по умолчанию 10).
+        account_name: Имя аккаунта в пуле src/secrets/google_accounts.json (опционально).
+    """
+    try:
+        _, GDriveManager, _ = _get_google_workspace_managers()
+        if not GDriveManager:
+            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+        manager = GDriveManager(account_name=account_name or None)
+        if not manager.service:
+            return json.dumps({
+                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
+            }, ensure_ascii=False)
+        files = manager.list_files(query=query if query else None, page_size=limit)
+        return json.dumps(files, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"[google_workspace_tools] Error in gdrive_list_files: {e}")
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+@tool
+def gdrive_download_file(file_id: str, mime_type: str = "", dest_path: str = "data/downloads/document", account_name: str = "") -> str:
+    """Выгрузка файла с Google Диска или экспорт документа Google Docs / Sheets в локальный файл.
+
+    Args:
+        file_id: Идентификатор файла в Google Drive.
+        mime_type: MIME-тип файла (напр. 'application/vnd.google-apps.document').
+        dest_path: Локальный путь для сохранения файла.
+        account_name: Имя аккаунта в пуле src/secrets/google_accounts.json (опционально).
+    """
+    try:
+        _, GDriveManager, _ = _get_google_workspace_managers()
+        if not GDriveManager:
+            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+        manager = GDriveManager(account_name=account_name or None)
+        if not manager.service:
+            return json.dumps({
+                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
+            }, ensure_ascii=False)
+        target_path = Path(dest_path)
+        if not target_path.is_absolute():
+            target_path = __root__ / target_path
+        success = manager.download_or_export_file(file_id=file_id, mime_type=mime_type, dest_path=target_path)
+        if success:
+            return json.dumps({"status": "ok", "saved_path": str(target_path)}, ensure_ascii=False)
+        return json.dumps({"error": f"Failed to download file {file_id}"}, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"[google_workspace_tools] Error in gdrive_download_file: {e}")
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+@tool
+def gsheets_info(spreadsheet_id: str, account_name: str = "") -> str:
+    """Получение структуры и списка листов Google Таблицы по её ID.
+
+    Args:
+        spreadsheet_id: Идентификатор Google Таблицы из URL.
+        account_name: Имя аккаунта в пуле src/secrets/google_accounts.json (опционально).
+    """
+    try:
+        _, _, GSheetsManager = _get_google_workspace_managers()
+        if not GSheetsManager:
+            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+        manager = GSheetsManager(account_name=account_name or None)
+        if not manager.service:
+            return json.dumps({
+                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
+            }, ensure_ascii=False)
+        info = manager.get_spreadsheet_info(spreadsheet_id)
+        if info:
+            return json.dumps(info, ensure_ascii=False, indent=2)
+        return json.dumps({"error": f"Failed to get info for spreadsheet {spreadsheet_id}"}, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"[google_workspace_tools] Error in gsheets_info: {e}")
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+@tool
+def gsheets_read(spreadsheet_id: str, range_name: str = "A1:Z50", account_name: str = "") -> str:
+    """Чтение значений ячеек из Google Таблицы в указанном диапазоне (например: 'Sheet1!A1:D20').
+
+    Args:
+        spreadsheet_id: Идентификатор Google Таблицы.
+        range_name: Диапазон ячеек в нотации A1 (по умолчанию 'A1:Z50').
+        account_name: Имя аккаунта в пуле src/secrets/google_accounts.json (опционально).
+    """
+    try:
+        _, _, GSheetsManager = _get_google_workspace_managers()
+        if not GSheetsManager:
+            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+        manager = GSheetsManager(account_name=account_name or None)
+        if not manager.service:
+            return json.dumps({
+                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
+            }, ensure_ascii=False)
+        rows = manager.read_range(spreadsheet_id=spreadsheet_id, range_name=range_name)
+        return json.dumps({"range": range_name, "rows": rows}, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"[google_workspace_tools] Error in gsheets_read: {e}")
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+@tool
+def gsheets_search(spreadsheet_id: str, query: str, range_name: str = "A1:Z500", account_name: str = "") -> str:
+    """Поиск строк в Google Таблице по текстовому запросу.
+
+    Args:
+        spreadsheet_id: Идентификатор Google Таблицы.
+        query: Текст для поиска.
+        range_name: Диапазон поиска (по умолчанию 'A1:Z500').
+        account_name: Имя аккаунта в пуле src/secrets/google_accounts.json (опционально).
+    """
+    try:
+        _, _, GSheetsManager = _get_google_workspace_managers()
+        if not GSheetsManager:
+            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+        manager = GSheetsManager(account_name=account_name or None)
+        if not manager.service:
+            return json.dumps({
+                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
+            }, ensure_ascii=False)
+        matches = manager.search(spreadsheet_id=spreadsheet_id, query=query, range_name=range_name)
+        return json.dumps({"query": query, "matches": matches}, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"[google_workspace_tools] Error in gsheets_search: {e}")
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+@tool
+def gsheets_append(spreadsheet_id: str, range_name: str, values_json: str, account_name: str = "") -> str:
+    """Добавление новой строки данных в Google Таблицу.
+
+    Args:
+        spreadsheet_id: Идентификатор Google Таблицы.
+        range_name: Диапазон/лист для добавления (например: 'Sheet1!A1').
+        values_json: JSON-массив значений ячеек (например: '["Значение 1", "Значение 2", 123]').
+        account_name: Имя аккаунта в пуле src/secrets/google_accounts.json (опционально).
+    """
+    try:
+        _, _, GSheetsManager = _get_google_workspace_managers()
+        if not GSheetsManager:
+            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+        manager = GSheetsManager(account_name=account_name or None)
+        if not manager.service:
+            return json.dumps({
+                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
+            }, ensure_ascii=False)
+        parsed_values = json.loads(values_json)
+        if not isinstance(parsed_values, list):
+            return json.dumps({"error": "values_json must be a JSON array"}, ensure_ascii=False)
+        if parsed_values and not isinstance(parsed_values[0], list):
+            parsed_values = [parsed_values]
+        res = manager.append_rows(spreadsheet_id=spreadsheet_id, range_name=range_name, values=parsed_values)
+        if res:
+            return json.dumps({"status": "ok", "updated_range": res.get("updates", {}).get("updatedRange")}, ensure_ascii=False)
+        return json.dumps({"error": "Failed to append rows"}, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"[google_workspace_tools] Error in gsheets_append: {e}")
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
 # --- Заглушки для обратной совместимости ---
 
 @tool

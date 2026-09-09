@@ -23,6 +23,8 @@ from src.logger import logger
 from src.config import ai_cfg, tts_cfg
 from src.ai.gemini.user_query_rag import index_user_query, search_user_context
 
+from header import __root__
+
 router = APIRouter(prefix='/api/chat', tags=['chat'])
 
 # Короткие слова-продолжения диалога, которые сами по себе не содержат медиа-ключевых слов
@@ -58,8 +60,31 @@ class CommentResponderRequest(BaseModel):
     provider: str = ""
     system_instruction: str = ""
 
-def get_chat_model(selected_model_name: str, system_instruction: str = ""):
-    """Dynamically construct/retrieve the appropriate AI model instance."""
+_active_chat_models: dict[str, object] = {}
+
+def _get_default_system_instruction() -> str:
+    """Load default system instruction for chat assistant."""
+    prompt_file = __root__ / 'prompts' / 'chat' / 'system_instruction.md'
+    if prompt_file.exists():
+        try:
+            content = prompt_file.read_text(encoding='utf-8', errors='replace').strip()
+            if content:
+                return content
+        except Exception as e:
+            logger.debug(f"[router_chat] Could not read default prompt file: {e}")
+    return "Вы — интеллектуальный ассистент платформы AI Breadboard с доступом к Google Workspace и RAG-базе знаний."
+
+def get_chat_model(selected_model_name: str, system_instruction: str = "", user_id: str = ""):
+    """Dynamically construct or retrieve cached AI model instance."""
+    eff_sys_prompt = system_instruction.strip() if system_instruction and system_instruction.strip() else _get_default_system_instruction()
+    cache_key = f"{user_id}:{selected_model_name}" if user_id else selected_model_name
+    if cache_key in _active_chat_models:
+        instance = _active_chat_models[cache_key]
+        if eff_sys_prompt and hasattr(instance, 'system_instruction'):
+            if getattr(instance, 'system_instruction', None) != eff_sys_prompt:
+                instance.system_instruction = eff_sys_prompt
+        return instance
+
     is_gemini_cli = selected_model_name.startswith('gemini_cli:') or selected_model_name.startswith('gemini-cli-')
     is_foundry = selected_model_name.startswith('foundry:')
     is_ollama = selected_model_name.startswith('ollama:')
@@ -72,39 +97,39 @@ def get_chat_model(selected_model_name: str, system_instruction: str = ""):
 
     if is_gemini_cli:
         from src.ai.gemini_cli_chat import GeminiCliChatBase
-        return GeminiCliChatBase(
+        inst = GeminiCliChatBase(
             model_id=selected_model_name,
-            system_prompt=system_instruction or "You are a helpful AI assistant.",
+            system_prompt=eff_sys_prompt,
         )
     elif is_foundry:
         model_id = selected_model_name.split(':', 1)[-1]
         from src.ai.foundry_chat import FoundryChatBase
-        return FoundryChatBase(
+        inst = FoundryChatBase(
             model_id=model_id,
-            system_prompt=system_instruction or "You are a helpful AI assistant.",
+            system_prompt=eff_sys_prompt,
         )
     elif is_ollama:
         model_id = selected_model_name.split(':', 1)[-1]
         from src.ai.ollama_chat import OllamaChatBase
         ollama_url = ai_cfg.ollama_base_url if ai_cfg else 'http://localhost:11434'
-        return OllamaChatBase(
+        inst = OllamaChatBase(
             model_id=model_id,
-            system_prompt=system_instruction or "You are a helpful AI assistant.",
+            system_prompt=eff_sys_prompt,
             api_url=ollama_url
         )
     elif is_hf:
         model_id = selected_model_name.split(':', 1)[-1].lstrip(':')
         from src.ai.hf_chat import HFChatBase
-        return HFChatBase(
+        inst = HFChatBase(
             model_id=model_id,
-            system_prompt=system_instruction or "You are a helpful AI assistant.",
+            system_prompt=eff_sys_prompt,
         )
     elif is_onnx:
         model_id = selected_model_name.split(':', 1)[-1].lstrip(':')
         from src.ai.onnx_chat import ONNXChatBase
-        return ONNXChatBase(
+        inst = ONNXChatBase(
             model_id=model_id,
-            system_prompt=system_instruction or "You are a helpful AI assistant.",
+            system_prompt=eff_sys_prompt,
         )
     elif is_openai:
         prov_part, model_part = selected_model_name.split(':', 1)
@@ -113,33 +138,32 @@ def get_chat_model(selected_model_name: str, system_instruction: str = ""):
         if prov_name == 'compat':
             prov_name = 'openai'
         from src.ai.openai_compat_chat import OpenAICompatChat
-        return OpenAICompatChat.create_for_provider(
+        inst = OpenAICompatChat.create_for_provider(
             provider_name=prov_name,
             model_id=model_id,
-            system_prompt=system_instruction or "You are a helpful AI assistant.",
+            system_prompt=eff_sys_prompt,
         )
     elif is_agy:
         from src.ai.agy_chat import AgyChatBase
-        return AgyChatBase(
+        inst = AgyChatBase(
             model_id=selected_model_name,
-            system_prompt=system_instruction or "You are a helpful AI assistant.",
+            system_prompt=eff_sys_prompt,
         )
     elif is_gemini:
-        from src.ai.gemini.generative_ai import GoogleGenerativeAI
-        _api_key_names = [n.strip() for n in os.getenv('GEMINI_API_KEY_NAMES', '').split(',') if n.strip()]
-        return GoogleGenerativeAI(
-            model_name=selected_model_name,
-            api_key_names=_api_key_names,
-            system_instruction=system_instruction,
-            sleep_on_exhausted=False,
+        from src.ai.gemini_chat import GeminiChatBase
+        inst = GeminiChatBase(
+            model_id=selected_model_name,
+            system_prompt=eff_sys_prompt,
         )
     else:
-        # По умолчанию - Foundry для неизвестных моделей (обратная совместимость)
         from src.ai.foundry_chat import FoundryChatBase
-        return FoundryChatBase(
+        inst = FoundryChatBase(
             model_id=selected_model_name,
-            system_prompt=system_instruction or "You are a helpful AI assistant.",
+            system_prompt=eff_sys_prompt,
         )
+
+    _active_chat_models[cache_key] = inst
+    return inst
 
 async def _extract_user_auth(fastapi_req: Request) -> tuple[str, str, str, dict]:
     """Извлекает идентификатор пользователя, системную инструкцию, модель и настройки из JWT/IP."""
@@ -167,6 +191,9 @@ async def _extract_user_auth(fastapi_req: Request) -> tuple[str, str, str, dict]
             selected_model = settings['model']
     else:
         user_identifier = str(user_data.id or 1)
+
+    if not system_instruction:
+        system_instruction = _get_default_system_instruction()
 
     return user_identifier, system_instruction, selected_model, settings
 
@@ -280,33 +307,33 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
         narrator_model.gemini_model.save_history_chat = False
 
     @router.get('/models')
-    async def get_models(fastapi_req: Request, refresh: bool = False) -> dict:
+    async def get_models(fastapi_req: Request, refresh: bool = False, include_unsupported: bool = False) -> dict:
         """Получение списка доступных моделей, сгруппированных по провайдеру."""
         if fastapi_req is not None:
             from src.fastapi.router_auth import get_current_user_data
             get_current_user_data(fastapi_req)
-        from src.ai.model_manager import get_available_models
+        from src.ai.model_manager import get_available_models, load_unsupported_models
 
-        gemini_models = get_available_models('gemini', force_refresh=refresh)
+        gemini_models = get_available_models('gemini', force_refresh=refresh, include_unsupported=include_unsupported)
         
-        foundry_raw = get_available_models('foundry', force_refresh=refresh)
+        foundry_raw = get_available_models('foundry', force_refresh=refresh, include_unsupported=include_unsupported)
         foundry_models = [f"foundry:{m}" if not m.startswith('foundry:') else m for m in foundry_raw]
 
-        ollama_raw = get_available_models('ollama', force_refresh=refresh)
+        ollama_raw = get_available_models('ollama', force_refresh=refresh, include_unsupported=include_unsupported)
         ollama_models = [f"ollama:{m}" if not m.startswith('ollama:') else m for m in ollama_raw]
 
-        agy_models = get_available_models('agy', force_refresh=refresh)
+        agy_models = get_available_models('agy', force_refresh=refresh, include_unsupported=include_unsupported)
 
-        gemini_cli_raw = get_available_models('gemini_cli', force_refresh=refresh)
+        gemini_cli_raw = get_available_models('gemini_cli', force_refresh=refresh, include_unsupported=include_unsupported)
         gemini_cli_models = [f"gemini_cli:{m}" if not m.startswith('gemini_cli:') else m for m in gemini_cli_raw]
 
-        openai_raw = get_available_models('openai', force_refresh=refresh)
+        openai_raw = get_available_models('openai', force_refresh=refresh, include_unsupported=include_unsupported)
         openai_models = [f"openai:{m}" if not any(m.startswith(f"{p}:") for p in ('openai', 'deepseek', 'groq', 'openrouter', 'lmstudio')) else m for m in openai_raw]
 
-        hf_raw = get_available_models('hf', force_refresh=refresh)
+        hf_raw = get_available_models('hf', force_refresh=refresh, include_unsupported=include_unsupported)
         hf_models = [f"hf:{m}" if not m.startswith('hf:') else m for m in hf_raw]
 
-        onnx_raw = get_available_models('onnx', force_refresh=refresh)
+        onnx_raw = get_available_models('onnx', force_refresh=refresh, include_unsupported=include_unsupported)
         onnx_models = [f"onnx:{m}" if not m.startswith('onnx:') else m for m in onnx_raw]
 
         return {
@@ -319,6 +346,16 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                 'openai': openai_models,
                 'hf': hf_models,
                 'onnx': onnx_models,
+            },
+            'unsupported_models': {
+                'gemini': list(load_unsupported_models('gemini')),
+                'foundry': list(load_unsupported_models('foundry')),
+                'ollama': list(load_unsupported_models('ollama')),
+                'agy': list(load_unsupported_models('agy')),
+                'gemini_cli': list(load_unsupported_models('gemini_cli')),
+                'openai': list(load_unsupported_models('openai')),
+                'hf': list(load_unsupported_models('hf')),
+                'onnx': list(load_unsupported_models('onnx')),
             }
         }
 
@@ -545,37 +582,46 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
 
                 api_key = getattr(chat_model, 'api_key', '') or os.getenv('GEMINI_API_KEY', '')
 
-                # 1. RAG-First: Поиск по базе знаний
-                from src.rag import get_rag_engine, index_user_interaction
-                rag_engine = get_rag_engine()
+                # 1. RAG-First: Поиск по базе знаний (при включенном RAG)
+                rag_enabled_config = chat_req.generation_config.get('rag_enabled')
+                if rag_enabled_config is not None:
+                    is_rag_active = bool(rag_enabled_config)
+                else:
+                    is_rag_active = bool(settings.get('rag_enabled', 1))
 
-                top_k = int(chat_req.generation_config.get('top_k', 3))
-                threshold = float(chat_req.generation_config.get('min_score', chat_req.generation_config.get('threshold', 0.45)))
+                context_text = ""
+                if is_rag_active:
+                    from src.rag import get_rag_engine
+                    rag_engine = get_rag_engine()
 
-                yield f"data: {json.dumps({'status': '🔍 Поиск в базе знаний (RAG)...'})}\n\n"
-                decision = await rag_engine.evaluate(
-                    query=chat_req.message,
-                    user_identifier=user_identifier,
-                    api_key=api_key,
-                    threshold=threshold,
-                    top_k=top_k
-                )
+                    top_k = int(chat_req.generation_config.get('top_k', 3))
+                    threshold = float(chat_req.generation_config.get('min_score', chat_req.generation_config.get('threshold', 0.45)))
 
-                # 2. Если найден точный ответ — мгновенный возврат (Direct RAG)
-                if decision.is_direct:
-                    yield f"data: {json.dumps({'status': decision.status_message or '⚡ Ответ найден в базе знаний...'})}\n\n"
-                    yield f"data: {json.dumps({'text': decision.direct_text})}\n\n"
-                    if decision.direct_voice:
-                        yield f"data: {json.dumps({'voice': decision.direct_voice})}\n\n"
-                    return
+                    yield f"data: {json.dumps({'status': '🔍 Поиск в базе знаний (RAG)...'})}\n\n"
+                    decision = await rag_engine.evaluate(
+                        query=chat_req.message,
+                        user_identifier=user_identifier,
+                        api_key=api_key,
+                        threshold=threshold,
+                        top_k=top_k
+                    )
+
+                    # 2. Если найден точный ответ — мгновенный возврат (Direct RAG)
+                    if decision.is_direct:
+                        yield f"data: {json.dumps({'status': decision.status_message or '⚡ Ответ найден в базе знаний...'})}\n\n"
+                        yield f"data: {json.dumps({'text': decision.direct_text})}\n\n"
+                        if decision.direct_voice:
+                            yield f"data: {json.dumps({'voice': decision.direct_voice})}\n\n"
+                        return
+                    context_text = decision.context_text
 
                 # 3. Подготовка контекста для LLM
                 voice_gender_instruction = _get_voice_gender_rule(settings)
                 dynamic_context_parts = []
                 if voice_gender_instruction:
                     dynamic_context_parts.append(f"[Правило]: {voice_gender_instruction}")
-                if decision.context_text:
-                    dynamic_context_parts.append(decision.context_text)
+                if context_text:
+                    dynamic_context_parts.append(context_text)
 
                 user_msg_with_context = chat_req.message
                 if dynamic_context_parts:
@@ -583,7 +629,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
 
                 # Режим отладки (DEBUG MODE)
                 if chat_req.generation_config.get('debug_mode', False):
-                    debug_text = _build_debug_prompt(chat_req, decision.context_text, voice_gender_instruction)
+                    debug_text = _build_debug_prompt(chat_req, context_text, voice_gender_instruction)
                     yield f"data: {json.dumps({'status': 'DEBUG MODE: Промпт сформирован, не отправляется в модель'})}\n\n"
                     yield f"data: {json.dumps({'text': debug_text})}\n\n"
                     return
@@ -605,7 +651,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                     kwargs['search_engine'] = chat_req.generation_config['search_engine']
 
                 if selected_model:
-                    active_model = get_chat_model(selected_model, None)
+                    active_model = get_chat_model(selected_model, system_instruction or "", user_id=user_identifier)
                     api_key = getattr(active_model, 'api_key', '') or getattr(chat_model, 'api_key', '') or api_key
                 else:
                     active_model = chat_model
@@ -629,8 +675,11 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                             chat_response += c
                             yield f"data: {json.dumps({'text': c})}\n\n"
 
+                output_mode = chat_req.generation_config.get('output_mode', 'text_and_voice')
+                need_voice = output_mode in ('voice_only', 'text_and_voice', 'voice') or bool(chat_req.generation_config.get('tts_enabled', False))
+
                 voice_response = ""
-                if chat_response:
+                if chat_response and need_voice:
                     yield f"data: {json.dumps({'status': 'Генерация голоса (этап 2)...'})}\n\n"
 
                     chat_kwargs_2 = kwargs.copy()
@@ -650,9 +699,10 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                                 voice_response += c
                                 yield f"data: {json.dumps({'voice': c})}\n\n"
 
-                # 4. Автоматическая фоновая индексация взаимодействия в RAG
+                # 4. Автоматическая фоновая индексация взаимодействия в RAG (только при включенном RAG)
                 content_to_index = voice_response if voice_response.strip() else chat_response
-                if content_to_index and api_key and user_identifier:
+                if is_rag_active and content_to_index and api_key and user_identifier:
+                    from src.rag import index_user_interaction
                     asyncio.ensure_future(asyncio.to_thread(
                         index_user_interaction, user_identifier, api_key, chat_req.message, content_to_index
                     ))

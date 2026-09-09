@@ -16,7 +16,7 @@
 import os
 from unittest.mock import patch
 
-from src.secrets.api_key_state import (
+from src.ai.gemini.gemini_api_key_state import (
     delete_api_key,
     get_status,
     load_api_keys,
@@ -33,9 +33,9 @@ def test_save_and_load_api_key(tmp_path):
     """Test saving an API key to gemini_keys.json and dynamic env substitution."""
     keys_file = tmp_path / 'gemini_keys.json'
     env_file = tmp_path / '.env'
-    with patch('src.secrets.api_key_state._KEYS_FILE', keys_file), \
-         patch('src.secrets.api_key_state._ENV_FILE', env_file), \
-         patch('src.secrets.api_key_state._SECRETS_DIR', tmp_path), \
+    with patch('src.ai.gemini.gemini_api_key_state._KEYS_FILE', keys_file), \
+         patch('src.ai.gemini.gemini_api_key_state._ENV_FILE', env_file), \
+         patch('src.ai.gemini.gemini_api_key_state._SECRETS_DIR', tmp_path), \
          patch.dict('os.environ', {}, clear=True):
 
         assert save_api_key('GEMINI_API_KEY_MAIN', 'AIzaSyTest1234567890') is True
@@ -55,9 +55,9 @@ def test_mark_exhausted_and_cooldown(tmp_path):
     """Test marking key exhausted, rotating env key, and calculating cooldown."""
     keys_file = tmp_path / 'gemini_keys.json'
     env_file = tmp_path / '.env'
-    with patch('src.secrets.api_key_state._KEYS_FILE', keys_file), \
-         patch('src.secrets.api_key_state._ENV_FILE', env_file), \
-         patch('src.secrets.api_key_state._SECRETS_DIR', tmp_path), \
+    with patch('src.ai.gemini.gemini_api_key_state._KEYS_FILE', keys_file), \
+         patch('src.ai.gemini.gemini_api_key_state._ENV_FILE', env_file), \
+         patch('src.ai.gemini.gemini_api_key_state._SECRETS_DIR', tmp_path), \
          patch.dict('os.environ', {}, clear=True):
 
         save_api_key('key_primary', 'AIzaSyKeyOne1111111111111')
@@ -91,9 +91,9 @@ def test_update_last_run(tmp_path):
     """Test updating last_run timestamp."""
     keys_file = tmp_path / 'gemini_keys.json'
     env_file = tmp_path / '.env'
-    with patch('src.secrets.api_key_state._KEYS_FILE', keys_file), \
-         patch('src.secrets.api_key_state._ENV_FILE', env_file), \
-         patch('src.secrets.api_key_state._SECRETS_DIR', tmp_path), \
+    with patch('src.ai.gemini.gemini_api_key_state._KEYS_FILE', keys_file), \
+         patch('src.ai.gemini.gemini_api_key_state._ENV_FILE', env_file), \
+         patch('src.ai.gemini.gemini_api_key_state._SECRETS_DIR', tmp_path), \
          patch.dict('os.environ', {}, clear=True):
 
         save_api_key('k_run', 'AIzaSyKeyRun3333333333333')
@@ -108,9 +108,9 @@ def test_reset_quota_and_delete_key(tmp_path):
     """Test quota reset and key deletion."""
     keys_file = tmp_path / 'gemini_keys.json'
     env_file = tmp_path / '.env'
-    with patch('src.secrets.api_key_state._KEYS_FILE', keys_file), \
-         patch('src.secrets.api_key_state._ENV_FILE', env_file), \
-         patch('src.secrets.api_key_state._SECRETS_DIR', tmp_path), \
+    with patch('src.ai.gemini.gemini_api_key_state._KEYS_FILE', keys_file), \
+         patch('src.ai.gemini.gemini_api_key_state._ENV_FILE', env_file), \
+         patch('src.ai.gemini.gemini_api_key_state._SECRETS_DIR', tmp_path), \
          patch.dict('os.environ', {}, clear=True):
 
         save_api_key('key_to_delete', 'AIzaSyKeyDel4444444444444')

@@ -66,12 +66,15 @@ class UnifiedChatModel:
         self.agy_model = False
 
         from src.ai.gemini.generative_ai import _DEFAULT_MODEL
-        if use_ollama:
-            self.default_model = f"ollama:{ollama_model_id}"
-        elif use_foundry:
+        from src.config import ai_cfg
+        
+        if use_foundry and not use_ollama:
             self.default_model = f"foundry:{foundry_model_id}"
+        elif use_ollama and not use_foundry:
+            self.default_model = f"ollama:{ollama_model_id}"
         else:
-            self.default_model = _DEFAULT_MODEL
+            cfg_default = getattr(ai_cfg, 'default_model', '') if ai_cfg else ''
+            self.default_model = cfg_default or _DEFAULT_MODEL
             
         self._model_name = self.default_model
         

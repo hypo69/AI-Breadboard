@@ -17,16 +17,31 @@ import sys
 
 from googleapiclient.discovery import build
 
+# Ensure repository root is on sys.path
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+# Ensure scripts directory is on sys.path
+_SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
+
 from src.logger.logger import logger
-from agents.skills.google_workspace.scripts.google_auth import get_credentials
+
+try:
+    from google_auth import get_credentials
+except ImportError:
+    from .google_auth import get_credentials
 
 
 class GmailManager:
     """Manages interactions with Gmail API."""
 
-    def __init__(self, credentials=None) -> None:
+    def __init__(self, credentials=None, account_name: Optional[str] = None) -> None:
         """Initialize Gmail service."""
-        self.creds = credentials or get_credentials()
+        self.account_name = account_name
+        self.creds = credentials or get_credentials(account_name=account_name)
         self.service = build("gmail", "v1", credentials=self.creds) if self.creds else None
 
     def search_messages(self, query: str = "is:unread", max_results: int = 10) -> List[Dict[str, Any]]:

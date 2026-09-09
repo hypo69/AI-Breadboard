@@ -25,7 +25,7 @@ from google import genai
 from google.genai import types
 
 from src.logger import logger
-from src.secrets.api_key_state import load_api_keys, update_last_run
+from src.ai.gemini.gemini_api_key_state import load_api_keys, update_last_run
 
 
 @dataclass

@@ -101,10 +101,19 @@ function switchTab(targetId) {
     }
   });
 
-  // 2. Switch tab-pane
-  document.querySelectorAll('.tab-content > .tab-pane').forEach((pane) => {
-    pane.classList.remove('show', 'active');
-  });
+  // 2. Switch tab-pane (scoped to top-level container to preserve nested subtabs)
+  const mainTabContent = document.getElementById('mainTabContent');
+  if (mainTabContent) {
+    Array.from(mainTabContent.children).forEach((pane) => {
+      if (pane.classList.contains('tab-pane')) {
+        pane.classList.remove('show', 'active');
+      }
+    });
+  } else {
+    document.querySelectorAll('#mainTabContent > .tab-pane, body > .container-fluid > .tab-content > .tab-pane').forEach((pane) => {
+      pane.classList.remove('show', 'active');
+    });
+  }
   const targetPane = document.getElementById(cleanId);
   if (targetPane) {
     targetPane.classList.add('show', 'active');

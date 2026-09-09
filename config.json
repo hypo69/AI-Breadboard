@@ -23,10 +23,10 @@
     "bot_name": "ai_breadboard_bot"
   },
   "ai": {
-    "use_foundry": false,
-    "foundry_base_url": "http://localhost:57708",
-    "foundry_model_id": "qwen2.5-1.5b-instruct-generic-cpu:4",
-    "use_ollama": false,
+    "use_foundry": true,
+    "foundry_base_url": "http://localhost:63954",
+    "foundry_model_id": "qwen2.5-1.5b",
+    "use_ollama": true,
     "ollama_base_url": "http://localhost:11434",
     "ollama_model_id": "llama3.1",
     "preload_silero": false,
@@ -34,6 +34,7 @@
     "agy_model_id": "agy-gemini-3.5-flash-lite",
     "use_gemini_cli": true,
     "gemini_cli_model_id": "gemini-3.1-flash-lite",
+    "gemini_api_key_names": "*",
     "realtime_streaming": true,
     "unsupported_models": {
       "gemini": [
@@ -238,6 +239,29 @@
           "web_search"
         ],
         "system_prompt": "Ты браузерный агент Playwright. Выполняй навигацию по веб-страницам, извлекай полезный текст и структурируй данные."
+      },
+      {
+        "id": "google_workspace_agent",
+        "name": "Google Workspace Assistant",
+        "description": "Агент для работы с почтой Gmail, файлами на Google Диске, Google Таблицами и Документами",
+        "is_system": true,
+        "enabled": true,
+        "provider": "gemini",
+        "model": "gemini-2.5-flash",
+        "temperature": 0.2,
+        "max_steps": 15,
+        "timeout_seconds": 60,
+        "tools": [
+          "gmail_search",
+          "gmail_create_draft",
+          "gdrive_list_files",
+          "gdrive_download_file",
+          "gsheets_info",
+          "gsheets_read",
+          "gsheets_search",
+          "gsheets_append"
+        ],
+        "system_prompt": "Вы — интеллектуальный ассистент Google Workspace. Помогайте пользователю искать и проверять почту в Gmail, создавать черновики, искать и выгружать файлы с Google Диска, а также читать, искать и обновлять данные в Google Таблицах."
       }
     ]
   },

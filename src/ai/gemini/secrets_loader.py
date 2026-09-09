@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from src.secrets.api_key_state import (
+from src.ai.gemini.gemini_api_key_state import (
     _get_merged_keys_data,
     _read_env_keys,
     load_api_keys as state_load_api_keys,

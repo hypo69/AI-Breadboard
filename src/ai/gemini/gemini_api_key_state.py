@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: AI Provider API Key State and Rotation Pool Manager
+# Process Name: Google Gemini API Key State and Rotation Pool Manager
 # =============================================================================
 # Description:
 #   Manages Google Gemini and AI provider API keys, rotation pools, and 24h quota
 #   exhaustion cooldowns. Keys are stored as {key_name: {value, last_run, status}}
 #   in src/secrets/gemini_keys.json and dynamically injected into GEMINI_API_KEY.
 #
-# File: api_key_state.py
+# File: gemini_api_key_state.py
 # Project: ai-breadboard
-# Package: src.secrets
+# Package: src.ai.gemini
 # Author: hypo69
 # Copyright: © 2026 hypo69
 # =============================================================================
@@ -233,6 +233,12 @@ def load_api_keys(
 
     if not filter_names:
         env_names_str = os.getenv('GEMINI_API_KEY_NAMES', '').strip()
+        if not env_names_str:
+            try:
+                from src.config import ai_cfg
+                env_names_str = str(getattr(ai_cfg, 'gemini_api_key_names', '') or getattr(ai_cfg, 'api_key_names', '') or '').strip()
+            except Exception:
+                env_names_str = ''
         if env_names_str and env_names_str != '*':
             filter_names = [n.strip() for n in env_names_str.split(',') if n.strip() and n.strip() != '*']
 

@@ -11,9 +11,6 @@ window.getResolvedTheme = getResolvedTheme;
 window.initUserSettings = initUserSettings;
 window.refreshUserProfile = refreshUserProfile;
 
-// Admin password (hardcoded for security)
-const ADMIN_PASSWORD = 'onela';
-
 // API module
 window.api = {
   async fetch(url, options = {}) {
@@ -173,6 +170,58 @@ window.api = {
     async getTools() {
       return window.api.fetch('/api/admin/mcp/tools');
     }
+  },
+
+  // Google Workspace Accounts Pool API
+  googleAccounts: {
+    async list() {
+      return window.api.fetch('/api/admin/google-accounts');
+    },
+    async get(name) {
+      return window.api.fetch(`/api/admin/google-accounts/${encodeURIComponent(name)}`);
+    },
+    async create(data) {
+      return window.api.fetch('/api/admin/google-accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    },
+    async upload(formData) {
+      const response = await fetch('/api/admin/google-accounts/upload', {
+        method: 'POST',
+        body: formData
+      });
+      if (!response.ok) {
+        let msg = response.statusText;
+        try {
+          const data = await response.json();
+          if (data && data.detail) msg = data.detail;
+        } catch {}
+        throw new Error(`${response.status} ${msg}`);
+      }
+      return response.json();
+    },
+    async setDefault(name) {
+      return window.api.fetch(`/api/admin/google-accounts/${encodeURIComponent(name)}/default`, {
+        method: 'POST'
+      });
+    },
+    async resetStatus(name) {
+      return window.api.fetch(`/api/admin/google-accounts/${encodeURIComponent(name)}/reset-status`, {
+        method: 'POST'
+      });
+    },
+    async test(name) {
+      return window.api.fetch(`/api/admin/google-accounts/${encodeURIComponent(name)}/test`, {
+        method: 'POST'
+      });
+    },
+    async delete(name) {
+      return window.api.fetch(`/api/admin/google-accounts/${encodeURIComponent(name)}`, {
+        method: 'DELETE'
+      });
+    }
   }
 };
 
@@ -202,6 +251,9 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-users' && typeof window.initUsersTab === 'function') {
     console.log('[AdminInterface] Switching to users tab...');
     window.initUsersTab();
+  } else if (cleanId === 'tab-google-accounts' && typeof window.initGoogleAccountsTab === 'function') {
+    console.log('[AdminInterface] Switching to google accounts tab...');
+    window.initGoogleAccountsTab();
   } else if (cleanId === 'tab-instructions' && typeof window.initInstructionsTab === 'function') {
     console.log('[AdminInterface] Switching to instructions tab...');
     window.initInstructionsTab();
@@ -262,10 +314,19 @@ function switchTab(targetId) {
     }
   });
 
-  // 2. Switch tab-pane
-  document.querySelectorAll('.tab-content > .tab-pane').forEach((pane) => {
-    pane.classList.remove('show', 'active');
-  });
+  // 2. Switch tab-pane (scoped to top-level container to preserve nested subtabs)
+  const mainTabContent = document.getElementById('mainTabContent');
+  if (mainTabContent) {
+    Array.from(mainTabContent.children).forEach((pane) => {
+      if (pane.classList.contains('tab-pane')) {
+        pane.classList.remove('show', 'active');
+      }
+    });
+  } else {
+    document.querySelectorAll('#mainTabContent > .tab-pane, body > .container-fluid > .tab-content > .tab-pane').forEach((pane) => {
+      pane.classList.remove('show', 'active');
+    });
+  }
   const targetPane = document.getElementById(cleanId);
   if (targetPane) {
     targetPane.classList.add('show', 'active');
@@ -398,6 +459,7 @@ async function initInterface() {
     loadTabContent('plugins', `/html/plugins_tab/index.html?v=${cb}`, `/html/plugins_tab/main.js?v=${cb}`),
     loadTabContent('admin', `/html/admin_tab/index.html?v=${cb}`, `/html/admin_tab/main.js?v=${cb}`),
     loadTabContent('users', `/html/users_tab/index.html?v=${cb}`, `/html/users_tab/main.js?v=${cb}`),
+    loadTabContent('google-accounts', `/html/google_accounts_tab/index.html?v=${cb}`, `/html/google_accounts_tab/main.js?v=${cb}`),
     loadTabContent('instructions', `/html/instructions_tab/index.html?v=${cb}`, `/html/instructions_tab/main.js?v=${cb}`),
     loadTabContent('rag', `/html/rag_tab/index.html?v=${cb}`, `/html/rag_tab/main.js?v=${cb}`),
     loadTabContent('voice', `/html/voice_tab/index.html?v=${cb}`, `/html/voice_tab/main.js?v=${cb}`),
@@ -447,32 +509,32 @@ async function verifyPassword() {
   const passwordInput = document.getElementById('admin-password');
   const passwordError = document.getElementById('password-error');
   const password = passwordInput?.value;
-  
-  if (password === ADMIN_PASSWORD) {
-    // Password correct
-    hasEnteredPassword = true;
-    
-    // Hide error
-    passwordError?.classList.add('d-none');
-    
-    // Close modal
-    const modalElement = document.getElementById('passwordModal');
-    const modal = bootstrap.Modal.getInstance(modalElement);
-    modal?.hide();
-    
-    // Show interface
-    document.getElementById('admin-interface').style.display = 'block';
-    
-    // Initialize interface
-    await initInterface();
-  } else {
-    // Password incorrect
+  if (!password) return;
+
+  const formData = new FormData();
+  formData.append('password', password);
+
+  try {
+    const res = await fetch('/admin', {
+      method: 'POST',
+      body: formData
+    });
+    if (res.ok) {
+      hasEnteredPassword = true;
+      passwordError?.classList.add('d-none');
+      const modalElement = document.getElementById('passwordModal');
+      const modal = bootstrap.Modal.getInstance(modalElement);
+      modal?.hide();
+      document.getElementById('admin-interface').style.display = 'block';
+      await initInterface();
+    } else {
+      throw new Error('Invalid password');
+    }
+  } catch {
     passwordError?.classList.remove('d-none');
     if (passwordError) {
       passwordError.textContent = 'Неверный пароль';
     }
-    
-    // Clear input
     if (passwordInput) {
       passwordInput.value = '';
       passwordInput.focus();

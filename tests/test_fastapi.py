@@ -129,7 +129,7 @@ class TestRouterChat:
                 break
         
         assert get_models_func is not None
-        res = await get_models_func()
+        res = await get_models_func(fastapi_req=None)
         assert 'models' in res
         assert 'gemini' in res['models']
         assert 'agy' in res['models']
@@ -164,7 +164,7 @@ class TestRouterChat:
 
         with patch('src.fastapi.router_chat._extract_user_auth', return_value=("user1", "", "gemini-2.5-flash", {})), \
              patch('src.fastapi.router_chat.get_chat_model', return_value=mock_model):
-            resp = await chat_endpoint(request=req, fastapi_req=mock_fastapi_req)
+            resp = await chat_endpoint(chat_req=req, request=mock_fastapi_req)
             # Читаем стриминг-генератор
             chunks = []
             async for chunk in resp.body_iterator:

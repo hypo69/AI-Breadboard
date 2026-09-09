@@ -46,9 +46,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log('HELP system initialized');
   
   console.log('Loading tabs...');
-  const v = '20260906_rag_voice_tab';
+  const v = '20260908_chat_fixed_v9';
   await Promise.all([
-    loadTabContent('chat', `/html/chat/index.html?v=${v}`),
+    loadTabContent('chat', `/html/chat/index.html?v=${v}`, `/html/chat/main.js?v=${v}`),
     loadTabContent('rag', `/html/rag_tab/index.html?v=${v}`, `/html/rag_tab/main.js?v=${v}`),
     loadTabContent('voice', `/html/voice_tab/index.html?v=${v}`, `/html/voice_tab/main.js?v=${v}`),
     loadTabContent('plugins', `/html/plugins_tab/index.html?v=${v}`, `/html/plugins_tab/main.js?v=${v}`),
@@ -97,7 +97,7 @@ async function loadTabContent(tabName, url, scriptUrl = null) {
     
     // Загрузка JS файла вкладки
     const script = document.createElement('script');
-    script.src = scriptUrl || `/html/${tabName}/main.js?v=20260824_plugin_manager`;
+    script.src = scriptUrl || `/html/${tabName}/main.js?v=20260908_chat_fixed_v9`;
     if (tabName === 'admin' || tabName === 'instructions' || tabName === 'rag') {
       script.type = 'module';
     }
@@ -172,10 +172,19 @@ function switchTab(targetId) {
     }
   });
 
-  // 2. Switch tab-pane
-  document.querySelectorAll('.tab-content > .tab-pane').forEach((pane) => {
-    pane.classList.remove('show', 'active');
-  });
+  // 2. Switch tab-pane (scoped to top-level container to preserve nested subtabs)
+  const mainTabContent = document.getElementById('mainTabContent');
+  if (mainTabContent) {
+    Array.from(mainTabContent.children).forEach((pane) => {
+      if (pane.classList.contains('tab-pane')) {
+        pane.classList.remove('show', 'active');
+      }
+    });
+  } else {
+    document.querySelectorAll('#mainTabContent > .tab-pane, body > .container-fluid > .tab-content > .tab-pane').forEach((pane) => {
+      pane.classList.remove('show', 'active');
+    });
+  }
   const targetPane = document.getElementById(cleanId);
   if (targetPane) {
     targetPane.classList.add('show', 'active');

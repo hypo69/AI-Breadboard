@@ -137,7 +137,7 @@ class GeminiRAG:
         """Получение эмбеддингов для списка текстов через Gemini API с обработкой 429 и ротацией ключей."""
         import time
         from google.genai.errors import APIError
-        from src.secrets.api_key_state import load_api_keys, mark_exhausted
+        from src.ai.gemini.gemini_api_key_state import load_api_keys, mark_exhausted
         import random
         
         start_idx = random.randint(0, 100)

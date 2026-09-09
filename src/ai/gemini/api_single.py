@@ -17,7 +17,7 @@
 import asyncio
 
 from src.logger.logger import logger
-from src.secrets.api_key_state import update_last_run
+from src.ai.gemini.gemini_api_key_state import update_last_run
 
 from .core import GoogleGenerativeAICore
 from .errors import GoogleGenerativeAIErrorMixin

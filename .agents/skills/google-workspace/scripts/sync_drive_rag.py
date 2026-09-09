@@ -13,9 +13,27 @@ from pathlib import Path
 import argparse
 import sys
 
+# Ensure repository root is on sys.path
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+# Ensure scripts directory is on sys.path
+_SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
+
 from src.logger.logger import logger
-from agents.skills.google_workspace.scripts.gdrive_manager import GDriveManager
-from agents.skills.rag_cleaner.scripts.rag_cleaner import RAGDocumentCleaner
+
+try:
+    from gdrive_manager import GDriveManager
+except ImportError:
+    from .gdrive_manager import GDriveManager
+
+try:
+    from agents.skills.rag_cleaner.scripts.rag_cleaner import RAGDocumentCleaner
+except ImportError:
+    RAGDocumentCleaner = None
 
 
 def sync_and_clean_folder(folder_query: str, download_dir: Path, output_jsonl: Path):
