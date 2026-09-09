@@ -1,6 +1,9 @@
 ---
 name: media-card-builder
-description: Навык для составления высококачественных, подробных карточек фильмов и сериалов. Используется для генерации структурированных Markdown-описаний сезонов и эпизодов с ограничением по количеству слов.
+description: Skill for building high-quality, detailed movie and series cards with structured Markdown descriptions and word limits.
+description_i18n:
+  en: Skill for building high-quality, detailed movie and series cards with structured Markdown descriptions and word limits.
+  ru: Навык для составления высококачественных, подробных карточек фильмов и сериалов. Используется для генерации структурированных Markdown-описаний сезонов и эпизодов с ограничением по количеству слов.
 ---
 
 # Media Card Builder (Составитель карточек медиа)

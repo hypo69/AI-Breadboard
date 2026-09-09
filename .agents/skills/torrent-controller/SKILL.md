@@ -1,6 +1,9 @@
 ---
 name: torrent-controller
-description: Инструментарий для управления qBittorrent: синхронизация путей, назначение категорий и check целостности торрентов. Используйте для управления состоянием скачиваний и связки торрентов с медиатекой.
+description: qBittorrent management toolkit: path synchronization, category assignment, and torrent integrity checks.
+description_i18n:
+  en: qBittorrent management toolkit: path synchronization, category assignment, and torrent integrity checks.
+  ru: Инструментарий для управления qBittorrent: синхронизация путей, назначение категорий и проверка целостности торрентов. Используйте для управления состоянием скачиваний и связки торрентов с медиатекой.
 ---
 
 # Torrent Controller

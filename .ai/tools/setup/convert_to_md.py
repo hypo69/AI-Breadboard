@@ -14,9 +14,10 @@
 
 import json
 from pathlib import Path
-from header import __root__
 
+__root__ = Path(__file__).resolve().parents[3]
 REPORTS_DIR = __root__ / 'tmp' / 'reports'
+REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Загружаем JSON (замените на реальные данные из предыдущего шага)
 # Для примера я использую структуру, полученную в прошлый раз

@@ -260,14 +260,14 @@ Examples:
 #   Выполнение проверок доступности портов и управление процессами.
 #
 # Examples:
-#   >>> from core.foundry import FoundryConnector
+#   >>> from src.ai.providers.foundry import FoundryConnector
 #   >>> connector = FoundryConnector(port=config.port)
 #   >>> connector.verify_status()
 #
 # File: foundry_connector.py
 # Project: Наш интеллектуальный помощник
 # Package: FoundryIntegration
-# Module: Core
+# Module: src.ai.providers.foundry
 # Class: FoundryConnector
 # Function: verify_status
 # Author: hypo69
@@ -295,10 +295,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from header import __root__
-from core import gs
-from core.logger import logger
-from core.utils.printer import pprint
+from src.logger import logger
 ```
 
 #### Пример реализации класса и функции на Python
@@ -660,16 +657,13 @@ FOUNDRY_DYNAMIC_PORT=8000
 ```
 
 ### 7.3 Логирование и вывод информации
-* Вывод логов во всех средах выполнения **MUST** осуществляться исключительно через стандартный объект логгера проекта `core.logger.logger`.
+* Вывод логов во всех средах выполнения **MUST** осуществляться исключительно через стандартный объект логгера проекта `src.logger.logger`.
 * Использование системного вызова `print()` для вывода информации в консоль **MUST NOT** допускаться в продакшн-коде.
-* Для отладочной печати сложных структур в консоль (в среде разработки) **MUST** использоваться утилита красивого вывода `pprint`.
+* Для отладочной печати сложных структур в консоль (в среде разработки) **MUST** использоваться модуль `rich` или форматированное логирование.
 
 ```python
 # ✅ Запись ошибки с исключением
-logger.error("Сбой инициализации API коннектора", ex, exc_info=True)
-
-# ✅ Вывод отладочной структуры
-pprint(debug_data_structure)
+logger.error("API connector initialization failed", exc_info=True)
 ```
 
 ---
@@ -681,7 +675,7 @@ pprint(debug_data_structure)
 #### Протокол выполнения (строгий порядок):
 
 **Шаг 1 — Документирование директорий:**
-При создании любой новой директории **MUST** создаваться файл `README.md` на русском языке с описанием предназначения и принципов работы модуля.
+При создании любой новой директории **MUST** создаваться файл `README.md` на английском языке с описанием предназначения и принципов работы модуля.
 
 **Шаг 2 — Анализ влияния (Impact Analysis):**
 Перед написанием тестов — обязательная идентификация полной цепочки зависимостей:
@@ -692,7 +686,7 @@ pprint(debug_data_structure)
 Тесты **MUST** создаваться не только для изменённого блока, но и для всех выявленных зависимых блоков (регрессионные сценарии).
 
 **Шаг 3 — Validation запуска (Smoke Test):**
-Перед генерацией тестов **MUST** выполняться check: `python -c "from core.module import Class; print('OK')"`.
+Перед генерацией тестов **MUST** выполняться check: `python -c "from src.module import Class; print('OK')"`.
 Если импорт не проходит — сначала исправить код.
 
 **Шаг 4 — Генерация тестов (Scenario-based, исчерпывающая):**
@@ -717,58 +711,44 @@ pprint(debug_data_structure)
 
 ```python
 def test_process_user_data_happy_path(self):
-    """Тестирование нормального сценария обработки данных пользователя.
+    """Test standard user data processing scenario.
 
-    Check: correct dictionary с обязательными полями Returns True.
-    Зависимости: function используется в UserManager.create_session().
+    Verify: valid dictionary with required fields returns True.
+    Dependencies: function is used in UserManager.create_session().
     """
-    # --- Подготовка входных данных (Arrange) ---
+    # --- Input data preparation (Arrange) ---
 
-    # Тестовый dictionary: содержит обязательное поле 'user_id' типа int.
-    # Значение 42 — стандартный ненулевой идентификатор для smoke-проверки.
-    test_data: dict = {'user_id': 42, 'name': 'Тест'}
+    # Test dictionary: contains required 'user_id' field of type int.
+    test_data: dict = {'user_id': 42, 'name': 'Test'}
 
-    # --- Выполнение (Act) ---
+    # --- Execution (Act) ---
 
-    # Вызов тестируемой функции с корректными данными.
-    # Ожидаемое возвращаемое значение: True (успешная обработка).
+    # Call target function with valid data.
     result: bool = process_user_data(test_data)
 
-    # --- Check (Assert) ---
+    # --- Verification (Assert) ---
 
-    # Check: function обязана вернуть True для корректного ненулевого словаря.
-    # Нарушение: возврат False означает ошибку в логике валидации входных данных.
     assert result is True, (
-        f"process_user_data() должна вернуть True для корректного ввода, "
-        f"получено: {result!r}"
+        f"process_user_data() should return True for valid input, "
+        f"got: {result!r}"
     )
 
 
 def test_process_user_data_empty_dict(self):
-    """Тестирование граничного случая: empty dictionary.
+    """Test edge case: empty dictionary.
 
-    Check: empty {} активирует ранний возврат (Early Return) → False.
-    Стандарт: по §3.4 CODE_RULES, function обязана вернуть False, не exception.
+    Verify: empty {} triggers early return -> False.
     """
-    # --- Подготовка (Arrange) ---
-
-    # Граничное значение: empty dictionary — допустимый тип, но без данных.
-    # Ожидается срабатывание ветки `if not data: return False`.
+    # --- Preparation (Arrange) ---
     empty_data: dict = {}
 
-    # --- Выполнение (Act) ---
-
-    # Вызов с пустым словарём.
-    # Function должна обнаружить отсутствие данных и вернуть False без исключений.
+    # --- Execution (Act) ---
     result: bool = process_user_data(empty_data)
 
-    # --- Check (Assert) ---
-
-    # Check: empty dictionary обязан приводить к возврату False (Early Return).
-    # Нарушение: возврат True означает отсутствие проверки входных данных.
+    # --- Verification (Assert) ---
     assert result is False, (
-        f"process_user_data() должна вернуть False для пустого словаря, "
-        f"получено: {result!r}"
+        f"process_user_data() should return False for empty dictionary, "
+        f"got: {result!r}"
     )
 ```
 
@@ -781,7 +761,7 @@ pytest tests/test_<module_name>.py -v
 pytest tests/test_<module_name>.py tests/test_<dependent_module>.py -v
 
 # Check покрытия
-pytest tests/test_<module_name>.py --cov=core/<module_name> --cov-report=term-missing
+pytest tests/test_<module_name>.py --cov=src/<module_name> --cov-report=term-missing
 ```
 
 **Шаг 7 — Документирование (только после зелёных тестов):**
@@ -879,14 +859,14 @@ pytest tests/test_<module_name>.py --cov=core/<module_name> --cov-report=term-mi
 Внутри каждой директории проекта **MUST** находиться файл `README.md`, описывающий ее структуру и функциональное назначение. Файл составляется по следующему жесткому шаблону:
 
 ```markdown
-# Название директории (например: core/utils)
+# Название директории (например: src/ai)
 
 ## Описание
 Краткое описание назначения данной папки, ее роли в глобальной архитектуре проекта.
 
 ## Обзор файлов и модулей
-* `printer.py` — Обеспечение красивого консольного вывода сложных структур данных.
-* `json_processor.py` — Утилиты безопасного чтения, парсинга и записи JSON файлов.
+* `unified_chat.py` — Обеспечение единого интерфейса чата и маршрутизации.
+* `model_manager.py` — Управление жизненным циклом и конфигурацией моделей.
 
 ## Связи и зависимости
 * Module импортируется всеми уровнями приложения для ведения вспомогательных операций.
@@ -907,12 +887,12 @@ pytest tests/test_<module_name>.py --cov=core/<module_name> --cov-report=term-mi
 #   жизненным циклом сервисов проекта.
 #
 # Examples:
-#   >>> from core.main import app
+#   >>> from src.fastapi.main import app
 #   >>> app.run(host="0.0.0.0", port = 8000)
 #
-# File: main_service.py
+# File: main.py
 # Project: ai-assistant
-# Package: Core
+# Package: src.fastapi
 # Module: Runtime
 # Class: ServiceManager
 # Function: start
@@ -933,7 +913,7 @@ pytest tests/test_<module_name>.py --cov=core/<module_name> --cov-report=term-mi
 #
 # Examples:
 #   .\run.ps1
-#   .\Run-Unicorn.ps1
+#   .\launchers\Run-Unicorn.ps1
 #
 # File: run.ps1
 # Project: ai-assistant
@@ -1055,7 +1035,7 @@ Copyright: © 2026 hypo69
 #   Автоматическое переключение между Gemini, Foundry, AGY и Ollama.
 #
 # Examples:
-#   >>> from core.ai.unified_chat import UnifiedChatModel
+#   >>> from src.ai.unified_chat import UnifiedChatModel
 #   >>> model = UnifiedChatModel(config)
 #   >>> response = await model.chat("Привет")
 #
@@ -1107,7 +1087,7 @@ Copyright: © 2026 hypo69
 #   Loading конфигураций из файлов и переменных окружения.
 #
 # Examples:
-#   >>> from core.ai.model_manager import ModelManager
+#   >>> from src.ai.model_manager import ModelManager
 #   >>> manager = ModelManager()
 #   >>> config = manager.get_config('foundry')
 #

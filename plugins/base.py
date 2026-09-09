@@ -46,8 +46,10 @@ class BasePlugin(abc.ABC):
 
     name: str = "base_plugin"
     title: str = "Base Plugin"
+    title_i18n: Dict[str, str] = {}
     version: str = "1.0.0"
     description: str = "Base plugin interface."
+    description_i18n: Dict[str, str] = {}
     icon: str = "🧩"
     category: str = "general"
     enabled: bool = True
@@ -65,18 +67,61 @@ class BasePlugin(abc.ABC):
         self.config: Dict[str, Any] = config or {}
         self.is_running: bool = False
 
-    def get_manifest(self) -> Dict[str, Any]:
+    def get_title(self, lang: Optional[str] = "en") -> str:
+        """Return the localized title for the requested language.
+
+        Args:
+            lang (Optional[str]): Language code (e.g. 'ru', 'en').
+
+        Returns:
+            str: Localized title if available, otherwise default title.
+        """
+        if not lang:
+            return self.title
+        lang_key = lang.strip().lower().split("-")[0].split("_")[0]
+        if self.title_i18n and lang_key in self.title_i18n and self.title_i18n[lang_key]:
+            return self.title_i18n[lang_key]
+        if self.title_i18n and "en" in self.title_i18n and self.title_i18n["en"]:
+            return self.title_i18n["en"]
+        return self.title
+
+    def get_description(self, lang: Optional[str] = "en") -> str:
+        """Return the localized description for the requested language.
+
+        Args:
+            lang (Optional[str]): Language code (e.g. 'ru', 'en').
+
+        Returns:
+            str: Localized description if available, otherwise default description.
+        """
+        if not lang:
+            return self.description
+        lang_key = lang.strip().lower().split("-")[0].split("_")[0]
+        if self.description_i18n and lang_key in self.description_i18n and self.description_i18n[lang_key]:
+            return self.description_i18n[lang_key]
+        if self.description_i18n and "en" in self.description_i18n and self.description_i18n["en"]:
+            return self.description_i18n["en"]
+        return self.description
+
+    def get_manifest(self, lang: Optional[str] = None) -> Dict[str, Any]:
         """Return the plugin manifest schema and metadata.
+
+        Args:
+            lang (Optional[str]): Optional language code for localized metadata.
 
         Returns:
             Dict[str, Any]: Dictionary containing plugin metadata, status,
                 actions, tools, and configurable fields.
         """
+        resolved_title = self.get_title(lang) if lang else self.title
+        resolved_desc = self.get_description(lang) if lang else self.description
         return {
             "name": self.name,
-            "title": self.title,
+            "title": resolved_title,
+            "title_i18n": dict(self.title_i18n) if self.title_i18n else {"en": self.title},
             "version": self.version,
-            "description": self.description,
+            "description": resolved_desc,
+            "description_i18n": dict(self.description_i18n) if self.description_i18n else {"en": self.description},
             "icon": self.icon,
             "category": self.category,
             "enabled": self.enabled,

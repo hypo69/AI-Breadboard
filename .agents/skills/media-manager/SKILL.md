@@ -1,6 +1,9 @@
 ---
 name: media-manager
-description: Инструментарий для управления медиатекой: сканирование, классификация, аудит и генерация отчетов. Используйте при необходимости организовать файлы, проверить структуру БД, провести аудит медиа или сгенерировать отчеты по диску.
+description: Toolkit for managing the media library: scanning, classification, auditing, and generating disk/library reports.
+description_i18n:
+  en: Toolkit for managing the media library: scanning, classification, auditing, and generating disk/library reports.
+  ru: Инструментарий для управления медиатекой: сканирование, классификация, аудит и генерация отчетов. Используйте при необходимости организовать файлы, проверить структуру БД, провести аудит медиа или сгенерировать отчеты по диску.
 ---
 
 # Медиа-менеджер

@@ -165,7 +165,7 @@ Write-Host ""
 # STAGE 1.5 — ПРОВЕРКА ВЕРСИИ И ОБНОВЛЕНИЙ
 # ----------------------------------------------------------------------------
 # Проверяется наличие новой версии в Git-репозитории.
-# Если обнаружена новая версия, пользователю предлагается обновиться [Y]/n.
+# Если обнаружена новая версия, пользователю предлагается обновиться y/[N].
 # ============================================================================
 if (-not $SkipUpdateCheck) {
     Write-Host "[0/3] Проверка версии приложения..." -ForegroundColor Cyan
@@ -192,9 +192,9 @@ if (-not $SkipUpdateCheck) {
                     Write-Host ""
 
                     if (-not $NonInteractive) {
-                        $updateChoice = Read-Host "Обновить приложение сейчас? (Y/n) [Enter = Y]"
+                        $updateChoice = Read-Host "Обновить приложение сейчас? (y/N) [Enter = n]"
                         $updateChoice = $updateChoice.Trim().ToLower()
-                        if ([string]::IsNullOrWhiteSpace($updateChoice) -or $updateChoice -in @("y", "yes", "д", "да", "1")) {
+                        if ($updateChoice -in @("y", "yes", "д", "да", "1")) {
                             Write-Host "    Загрузка и применение обновлений (git pull)..." -ForegroundColor Cyan
                             $gitPullOut = git pull origin 2>&1
                             if ($LASTEXITCODE -eq 0) {

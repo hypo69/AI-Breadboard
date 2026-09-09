@@ -1,6 +1,9 @@
 ---
 name: storage-tool
-description: Инструментарий для аудита дисков и мониторинга использования хранилища. Используйте для расчета размеров медиа-файлов, сверки данных с физическим наличием на дисках и просмотра статистики использования.
+description: Drive auditing and storage monitoring toolkit. Use for calculating media file sizes, reconciling DB data with physical disk files, and viewing storage usage statistics.
+description_i18n:
+  en: Drive auditing and storage monitoring toolkit. Use for calculating media file sizes, reconciling DB data with physical disk files, and viewing storage usage statistics.
+  ru: Инструментарий для аудита дисков и мониторинга использования хранилища. Используйте для расчета размеров медиа-файлов, сверки данных с физическим наличием на дисках и просмотра статистики использования.
 ---
 
 # Storage Tool

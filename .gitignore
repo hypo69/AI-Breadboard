@@ -11,6 +11,8 @@ outputs/
 .VSCodeCounter/
 data/rag_documents/
 data/rag_index/
+data/users/
+
 
 # IDE settings
 .vscode/
@@ -287,13 +289,10 @@ password.txt
 *.kdbx
 ___*.*
 
-# Ignore secret data files in secrets directories, but keep source code
-src/secrets/*.json
-src/secrets/*.yaml
-core/secrets/*.json
-core/secrets/*.yaml
-core/ai/gemini/secrets.json
-core/ai/gemini/secrets*.json
+# Ignore secret data files in secrets directories, but keep README.md
+src/secrets/*
+!src/secrets/README.md
+
 
 # =============================================================================
 # 🧰 PROJECT SPECIFIC

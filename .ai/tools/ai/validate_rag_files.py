@@ -27,9 +27,10 @@ EXCLUDED_FILES = {
     'potential_duplicates.csv'
 }
 
-def get_files_to_index():
-    project_root = Path(r"C:\mediateka")
-    aux_dir = project_root / "knowledge" / "rag_auxiliary"
+def get_files_to_index(project_root: Path = None):
+    if project_root is None:
+        project_root = Path(__file__).resolve().parents[3]
+    aux_dir = project_root / ".ai" / "instructions" / "knowledge"
     files_to_index = []
 
     # 1. Сканирование корня с исключениями

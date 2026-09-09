@@ -1,6 +1,9 @@
 ---
 name: rag-search-manager
-description: Навык для поиска медиа с использованием RAG-индекса в качестве приоритетного источника, с последующим поиском в интернете при отсутствии совпадений.
+description: Skill for searching media using RAG index as primary source, with fallback to web search when no matches are found.
+description_i18n:
+  en: Skill for searching media using RAG index as primary source, with fallback to web search when no matches are found.
+  ru: Навык для поиска медиа с использованием RAG-индекса в качестве приоритетного источника, с последующим поиском в интернете при отсутствии совпадений.
 ---
 
 # RAG Search Manager

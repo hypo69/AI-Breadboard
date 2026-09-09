@@ -1,6 +1,9 @@
 ---
 name: file-saver
-description: Инструментарий для безопасного сохранения файлов на диск. Используйте для записи данных в файлы, обеспечения целостности записи и управления путями сохранения.
+description: Toolkit for securely saving files to disk. Use for writing data to files, ensuring write integrity, and managing storage paths.
+description_i18n:
+  en: Toolkit for securely saving files to disk. Use for writing data to files, ensuring write integrity, and managing storage paths.
+  ru: Инструментарий для безопасного сохранения файлов на диск. Используйте для записи данных в файлы, обеспечения целостности записи и управления путями сохранения.
 ---
 
 # File Saver

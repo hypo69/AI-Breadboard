@@ -1,6 +1,9 @@
 ---
 name: skill-factory
-description: Инструмент для создания, упаковки и управления жизненным циклом навыков AI Breadboard и Gemini CLI. Используйте для инициализации новых навыков и автоматической сборки существующих в .agents/skills/.
+description: Tool for creating, packaging, and managing the lifecycle of AI Breadboard and Gemini CLI skills. Use for initializing new skills and automated builds in .agents/skills/.
+description_i18n:
+  en: Tool for creating, packaging, and managing the lifecycle of AI Breadboard and Gemini CLI skills. Use for initializing new skills and automated builds in .agents/skills/.
+  ru: Инструмент для создания, упаковки и управления жизненным циклом навыков AI Breadboard и Gemini CLI. Используйте для инициализации новых навыков и автоматической сборки существующих в .agents/skills/.
 ---
 
 # 🏭 Skill Factory
@@ -19,7 +22,7 @@ description: Инструмент для создания, упаковки и �
 ### 📁 Обязательная структура любого навыка:
 ```text
 .agents/skills/<skill-name>/
-├── SKILL.md                 # Обязательно: frontmatter (name, description) + инструкции
+├── SKILL.md                 # Обязательно: frontmatter (name, description, description_i18n) + инструкции
 ├── README.md                # Обязательно: англоязычная документация пакета
 ├── scripts/                 # (Опционально) Исполняемые утилиты и хелперы
 ├── references/              # (Опционально) Справочные markdown файлы, гайды, примеры
@@ -29,14 +32,18 @@ description: Инструмент для создания, упаковки и �
 
 ---
 
-## 📝 Требования к `SKILL.md`
+## 📝 Требования к `SKILL.md` и Мультиязычности (i18n)
 
-Каждый `SKILL.md` обязан начинаться с YAML Frontmatter:
+Каждый `SKILL.md` обязан начинаться с YAML Frontmatter, содержащего каноническое описание на английском языке (`description`) и блок локализаций (`description_i18n`):
 
 ```markdown
 ---
 name: my-new-skill
-description: Четкое описание роли и триггеров вызова навыка на русском или английском.
+description: Clear English description of skill role and activation triggers.
+description_i18n:
+  en: Clear English description of skill role and activation triggers.
+  ru: Четкое описание роли и триггеров вызова навыка на русском языке.
+  es: Descripción clara del rol y disparadores del skill en español.
 ---
 
 # Название навыка
@@ -56,14 +63,14 @@ description: Четкое описание роли и триггеров выз
 ## 🛠️ Доступные утилиты
 
 ### 1. Инициализация нового навыка (`init_skill.py`)
-Автоматически создаёт правильную файловую структуру в `.agents/skills/`:
+Автоматически создаёт правильную файловую структуру в `.agents/skills/` с поддержкой i18n:
 
 ```bash
-# Инициализация навыка
-python .agents/skills/skill-factory/scripts/init_skill.py <имя-навыка> --description "Краткое описание"
+# Инициализация навыка с двуязычным описанием:
+python .agents/skills/skill-factory/scripts/init_skill.py network-monitor --description-en "Network and port monitoring toolkit" --description-ru "Мониторинг сети и портов"
 
-# Пример:
-python .agents/skills/skill-factory/scripts/init_skill.py network-monitor --description "Мониторинг сети и портов"
+# Или с общим описанием (автоматически определит язык):
+python .agents/skills/skill-factory/scripts/init_skill.py network-monitor --description "Network and port monitoring toolkit"
 ```
 
 ### 2. Упаковка навыка (`pack.py`)

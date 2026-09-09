@@ -1,21 +1,25 @@
-# Обновленная архитектура проекта ai-assistant (август 2026)
+# Legacy Project Architecture & Historical Knowledge (August 2026 Snapshot)
 
-## Точка входа - обновленная
-
-`main.py` — FastAPI-сервер с автологином локальных пользователей и 10 плагинами.
-
-### Что делает main.py в 2026:
-- Reads конфиг из `core/fastapi/config.json` → `_cfg` (host: 0.0.0.0, port: 8000)
-- Reads `.env`: `GEMINI_API_KEY_NAMES`, `USE_FOUNDRY`, `FOUNDRY_MODEL_ID`
-- Reads системную инструкцию из `.ai_instructions/prompts/chat/system_instruction.md`
-- Creates `UnifiedChatModel` (Gemini + Foundry)
-- Loads 10 плагинов через `load_plugins(model)`
-- Подключает 9 роутеров FastAPI
-- Автологин для localhost → user_id=1 через JWT cookie
-- Поддерживает SSL сертификаты из `~/.certs/`
-- При старте: сканирование дисков, запуск анализатора логов, предLoading Silero TTS
+> [!NOTE]
+> **Archive Notice**: This document captures the historical architecture of the early `ai-assistant` project (August 2026) prior to the reorganization into the modular `src/` architecture and AI Breadboard runtime.
+> For current documentation, refer to:
+> - [`project_overview.md`](project_overview.md) — System Architecture and AI Providers
+> - [`api_documentation.md`](api_documentation.md) — Active FastAPI and WebSocket Endpoints
+> - [`scripts_tools.md`](scripts_tools.md) — CLI Tools and Script Automation
 
 ---
+
+## 🏛️ Historical Entry Point (Legacy Context)
+
+`main.py` — FastAPI server with local user auto-login and initial plugin integrations.
+
+### Historical Responsibilities (August 2026):
+- Read configuration from legacy `core/fastapi/config.json`
+- Managed early `.env` variables (`GEMINI_API_KEY_NAMES`, `USE_FOUNDRY`, `FOUNDRY_MODEL_ID`)
+- Initialized `UnifiedChatModel` with Gemini and Foundry
+- Connected 9 legacy routers and basic plugins
+- Provided auto-login for localhost users via JWT cookie
+- Supported SSL certificates from `~/.certs/`
 
 ## Configuration 2026
 

@@ -33,11 +33,11 @@ flowchart TD
 ### Phase 1: Deep Discovery Search (Discovery & Audit)
 Before proposing or writing new code:
 1. **Search by Filename & Patterns (`find_by_name`):**
-   - Look for existing modules, tools, plugins, components, or routers in relevant directories (`core/`, `plugins/`, `scripts/`, `src/`, `templates/`, `static/`).
+   - Look for existing modules, tools, plugins, components, or routers in relevant directories (`src/`, `plugins/`, `scripts/`, `templates/`, `static/`).
 2. **Search by Identifiers & Logic (`grep_search`):**
    - Search for function names, class names, keywords, endpoints, and data contracts that handle similar tasks.
    - For UI tasks: Search how dropdowns, tabs, buttons, modals, and tables are implemented elsewhere in the application.
-   - For Backend tasks: Search for existing utility functions (`core/utils/`), database models, clients, and helpers.
+   - For Backend tasks: Search for existing utility functions (`src/`), database models, clients, and helpers.
 
 ### Phase 2: Comparison & Collision Analysis
 Inspect found matches to answer:
@@ -54,7 +54,7 @@ Inspect found matches to answer:
 Verify that:
 - The solution does not fragment the architecture.
 - Both user-facing and internal interfaces remain uniform and consistent.
-- No redundant helper functions were created when shared ones exist in `core/utils/`.
+- No redundant helper functions were created when shared ones exist in `src/`.
 
 ---
 
@@ -65,7 +65,7 @@ Verify that:
 | **UI Components** | Creating new custom dropdown/modal CSS/JS when a standard project component/pattern exists. | Reuse the standard template structure, CSS classes, and JS handlers. |
 | **Data & Files** | Writing custom raw `open()`, `json.loads()`, `json.dumps()` in business logic. | Use project-wide wrappers: `j_loads()`, `j_dumps()`, `read_text_file()`, `save_text_file()`. |
 | **API Clients** | Direct ad-hoc HTTP calls creating multiple divergent AI clients. | Route all model requests through `UnifiedChatModel` and shared provider interfaces. |
-| **Logging** | Raw `print()` statements or custom logging mechanisms. | Standard logger `core.logger.logger`. |
+| **Logging** | Raw `print()` statements or custom logging mechanisms. | Standard logger `src.logger.logger`. |
 | **Configuration** | Hardcoded port/path/URL constants in multiple places. | Centralized configuration via `config.json` and `.env`. |
 | **DB & Data Access**| Writing raw divergent SQL queries bypassing established DB helpers/skills. | Use shared database utilities and repository patterns. |
 
@@ -76,7 +76,7 @@ Verify that:
 Before creating any file or function, the AI must verify:
 - [ ] **Prior Art Search Performed:** Checked `grep_search` and `find_by_name` for existing solutions.
 - [ ] **No Divergent Duplication:** Confirmed that no other module already implements this exact or similar capability.
-- [ ] **Shared Utilities Utilized:** Reused existing helpers from `core/` instead of implementing local duplicates.
+- [ ] **Shared Utilities Utilized:** Reused existing helpers from `src/` instead of implementing local duplicates.
 - [ ] **Uniform Architectural Style:** Applied project standards (RFC 2119, English documentation, explicit DI, Fail-Fast, no `None`).
 
 ---

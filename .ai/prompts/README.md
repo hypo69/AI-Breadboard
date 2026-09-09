@@ -15,4 +15,4 @@ Hosts the production system instructions, role descriptions, and modular rule ch
 
 ## Dynamic Assembly with RulesRAG
 
-At runtime, `core.rag.RulesRAG` semantically queries the rules collection based on user intent and injects only relevant instructions into the active context window to optimize token efficiency.
+At runtime, `src.rag.rules_rag` semantically queries the rules collection based on user intent and injects only relevant instructions into the active context window to optimize token efficiency.

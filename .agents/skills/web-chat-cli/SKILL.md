@@ -1,6 +1,9 @@
 ---
 name: web-chat-cli
-description: Интерактивный CLI-интерфейс чата с поддержкой истории и RAG-интеграцией для работы с медиатекой.
+description: Interactive CLI chat interface with history support and RAG integration for media library interaction.
+description_i18n:
+  en: Interactive CLI chat interface with history support and RAG integration for media library interaction.
+  ru: Интерактивный CLI-интерфейс чата с поддержкой истории и RAG-интеграцией для работы с медиатекой.
 ---
 
 # Web Chat CLI

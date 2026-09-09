@@ -1,146 +1,144 @@
-# 📦 Руководство по установке AI Breadboard (Русский)
+# 📦 AI Breadboard Installation Guide
 
-**Language / Язык:** [🇷🇺 Русский](installation.ru.md) | [🇬🇧 English](installation.en.md) | [🇪🇸 Español](installation.es.md) | [🇮🇱 עברית](installation.he.md)
-
-Документ описывает полный процесс установки, настройки и инициализации проекта **AI Breadboard** на локальной машине или сервере.
+Comprehensive setup, configuration, and initialization guide for **AI Breadboard** on local environments and host servers.
 
 ---
 
-## 📋 Содержание
-1. [Системные требования](#1-системные-требования)
-2. [Автоматическая установка (Рекомендуется)](#2-автоматическая-установка-рекомендуется)
-3. [Ручная установка](#3-ручная-установка)
-4. [Настройка переменных окружения и конфигурации](#4-настройка-переменных-окружения-и-конфигурации)
-5. [Глобальные команды управления (CLI assist)](#5-глобальные-команды-управления-cli-assist)
-6. [Лончеры сервисов](#6-лончеры-сервисов)
-7. [Устранение неполадок (Troubleshooting)](#7-устранение-неполадок-troubleshooting)
+## 📋 Table of Contents
+1. [System Requirements](#1-system-requirements)
+2. [Automated Installation (Recommended)](#2-automated-installation-recommended)
+3. [Manual Installation](#3-manual-installation)
+4. [Environment Variables and Configuration](#4-environment-variables-and-configuration)
+5. [Global CLI Management (`assist`)](#5-global-cli-management-assist)
+6. [Service Launchers](#6-service-launchers)
+7. [Troubleshooting](#7-troubleshooting)
 
 ---
 
-## 1. Системные требования
+## 1. System Requirements
 
-* **Операционная система:** Windows 10/11 (x64), Linux (Ubuntu 22.04+ / Debian), macOS.
-* **Интерпретатор Python:** Python 3.10 – 3.14 (рекомендуется Python 3.12 или 3.13 с официального сайта [python.org](https://www.python.org/downloads/)).
+* **Operating System:** Windows 10/11 (x64), Linux (Ubuntu 22.04+ / Debian), macOS.
+* **Python Runtime:** Python 3.10 – 3.14 (Python 3.12+ recommended from [python.org](https://www.python.org/downloads/)).
   > [!IMPORTANT]
-  > При установке Python на Windows обязательно отметьте галочку **"Add python.exe to PATH"**.
-* **Система контроля версий:** Git ([git-scm.com](https://git-scm.com/)).
-* **Сетевые порты:** По умолчанию сервер использует порт `8000` (FastAPI) и `54837` (локальный AI Foundry).
+  > When installing Python on Windows, ensure the **"Add python.exe to PATH"** checkbox is checked.
+* **Version Control:** Git ([git-scm.com](https://git-scm.com/)).
+* **Network Ports:** Port `8000` for FastAPI server and `54837` for local Microsoft AI Foundry service.
 
 ---
 
-## 2. Автоматическая установка (Рекомендуется)
+## 2. Automated Installation (Recommended)
 
-Для быстрой и безошибочной установки предназначен интерактивный скрипт [`install.ps1`](file:///c:/Users/onela/AppData/Local/AI%20Breadboard/install.ps1).
+The automated interactive installer [`install.ps1`](../../../install.ps1) sets up the environment end-to-end:
 
-### Шаги запуска инсталлятора:
+### Running the Installer:
 
-1. Откройте терминал PowerShell.
-2. Запустите инсталлятор:
+1. Open a PowerShell terminal.
+2. Run the installer from the repository root:
    ```powershell
-   # Запуск из локальной папки проекта
+   # Run from local project directory
    .\install.ps1
 
-   # Или удаленный запуск одной строкой:
+   # Or remote one-liner execution:
    irm https://raw.githubusercontent.com/hypo69/AI-Breadboard/master/install.ps1 | iex
    ```
 
-### Что делает мастер установки:
+### Installer Execution Flow:
 
 ```mermaid
 flowchart TD
-    A[Запуск install.ps1] --> B[0. Выбор языка: RU / EN / ES / HE]
-    B --> C[1. Снятие блокировки файлов Windows]
-    C --> D[2. Поиск Python и создание изолированного venv]
-    D --> E[3. Update pip, setuptools, wheel]
-    E --> F[4. Выбор профиля зависимостей: Full / Core / AI / Dev]
-    F --> G[5. Check и генерация SSL-сертификатов]
-    G --> H[6. Регистрация глобальных команд assist в PATH и $PROFILE]
-    H --> I[7. Check модулей и сохранение настроек]
-    I --> J[Готово к работе: assist start]
+    A[Launch install.ps1] --> B[0. Language Selection: RU / EN / ES / HE]
+    B --> C[1. Unblock Windows PowerShell scripts]
+    C --> D[2. Locate Python and create isolated venv]
+    D --> E[3. Upgrade pip, setuptools, wheel]
+    E --> F[4. Select Dependency Profile: Full / Core / AI / Dev]
+    F --> G[5. Verify and generate SSL certificates]
+    G --> H[6. Register global assist CLI in PATH and PROFILE]
+    H --> I[7. Verify module imports and save configuration]
+    I --> J[Ready: assist start]
 ```
 
-* **[0] Язык мастера:** Поддерживает **Русский (RU)**, **English (EN)**, **Español (ES)**, **עברית (HE)** с автоматическим определением локали системы.
-* **[1/7] Снятие блокировки (Unblock-File):** Разблокирует загруженные скрипты PowerShell в Windows.
-* **[2/7] Виртуальное окружение:** Находит оптимальный Python (через `py` launcher, `python`, `python3`), исключает заглушки Windows Store и creates чистое окружение `venv`.
-* **[3/7] Update pip:** Обновляет базовые утилиты сборки (`pip`, `setuptools`, `wheel`).
-* **[4/7] Профили зависимостей:** Позволяет выбрать профиль установки:
-  1. *Полная установка (Core + AI + Utils)* — рекомендуется
-  2. *Только базовый сервер (Core)*
-  3. *Сервер + AI модули (Core + AI)*
-  4. *Полная установка + Dev (Тесты и Документация)*
-  5. *Пропустить установку*
-* **[5/7] SSL-сертификаты:** Checks наличие локальных сертификатов для безопасного HTTPS (`localhost+2.pem`) или запускает генератор `install_ssl_cert.ps1`.
-* **[6/7] Глобальная Integration (assist):**
-  * Генерирует `assist.ps1`, `assist.cmd` и bash-скрипт `assist`.
-  * Размещает их в каталоге `%USERPROFILE%\.local\bin\`.
-  * Добавляет пути в системную переменную `PATH`.
-  * Регистрирует функцию `assist` в профилях PowerShell 7 и Windows PowerShell.
-* **[7/7] Финальная check:** Тестирует импорт ключевых модулей (`fastapi`, `uvicorn`, `dotenv`, `pydantic`, `cryptography`) и saves выбранный язык в `config.json`.
+* **[0] Language Selection:** Supports English, Russian, Spanish, and Hebrew with automatic OS locale detection.
+* **[1/7] Unblock Files:** Unblocks downloaded PowerShell scripts in Windows.
+* **[2/7] Virtual Environment:** Creates an isolated `venv` avoiding Windows Store stubs.
+* **[3/7] Pip Upgrade:** Upgrades `pip`, `setuptools`, and `wheel` build utilities.
+* **[4/7] Dependency Profiles:** Allows choosing between:
+  1. *Full Installation (Core + AI + Utils)* — recommended
+  2. *Core Server Only (Core)*
+  3. *Server + AI Modules (Core + AI)*
+  4. *Full Installation + Dev (Tests & Documentation)*
+  5. *Skip Dependency Installation*
+* **[5/7] SSL Certificates:** Checks for local HTTPS certificates (`localhost+2.pem`) or triggers `install_ssl_cert.ps1`.
+* **[6/7] Global assist CLI Integration:**
+  * Generates `assist.ps1`, `assist.cmd`, and bash script `assist`.
+  * Deploys them to `%USERPROFILE%\.local\bin\`.
+  * Adds the path to the system `PATH`.
+  * Registers the `assist` helper in PowerShell profiles.
+* **[7/7] Final Verification:** Validates key dependencies (`fastapi`, `uvicorn`, `dotenv`, `pydantic`, `cryptography`) and updates `config.json`.
 
 ---
 
-## 3. Ручная установка
+## 3. Manual Installation
 
-Если вам требуется выполнить пошаговую ручную установку:
+For step-by-step manual setup:
 
-### 3.1. Клонирование репозитория
+### 3.1. Clone Repository
 ```bash
 git clone https://github.com/hypo69/AI-Breadboard.git C:\Users\%USERNAME%\AppData\Local\AI-Breadboard
 cd C:\Users\%USERNAME%\AppData\Local\AI-Breadboard
 ```
 
-### 3.2. Создание и активация виртуального окружения
+### 3.2. Create and Activate Virtual Environment
 ```powershell
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 ```
 
-### 3.3. Установка зависимостей
+### 3.3. Install Dependencies
 ```powershell
 python -m pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 ```
 
-### 3.4. Генерация SSL-сертификатов (для HTTPS)
+### 3.4. Generate SSL Certificates (for HTTPS)
 ```powershell
 .\install_ssl_cert.ps1
 ```
 
-### 3.5. Регистрация глобальной команды assist
+### 3.5. Register Global CLI Commands
 ```powershell
 .\assist.ps1 install-profile
 ```
 
 ---
 
-## 4. Настройка переменных окружения и конфигурации
+## 4. Environment Variables and Configuration
 
-Архитектурный принцип проекта: **Configuration over Hardcode**.
+Architectural Principle: **Configuration over Hardcode**.
 
-### 4.1. Секретные данные (`.env`)
-Файл `.env` располагается в корне проекта и используется **ИСКЛЮЧИТЕЛЬНО** для секретных ключей, паролей и токенов:
+### 4.1. Secrets (`.env`)
+The `.env` file is stored in the project root and is used **STRICTLY** for secret API keys, tokens, and credentials:
 
 ```env
-# Имена переменных окружения с API-ключами Google Gemini через запятую
+# Google Gemini API keys (comma-separated list of environment variable names)
 GEMINI_API_KEY_NAMES=GEMINI_API_KEY_1,GEMINI_API_KEY_2
 
-# Сами ключи
+# API Key values
 GEMINI_API_KEY_1=AIzaSy...
 GEMINI_API_KEY_2=AIzaSy...
 
-# Antigravity AGY API Key (опционально)
+# Antigravity AGY API Key (optional)
 AGY_API_KEY=...
 
-# Секрет для подписи JWT-токенов авторизации
+# Secret for signing JWT authentication tokens
 JWT_SECRET=your_super_secret_jwt_key
 
-# Опциональные токены внешних сервисов
+# Optional third-party credentials
 TELEGRAM_BOT_TOKEN=...
 TMDB_API_KEY=...
 ```
 
-### 4.2. Несекретные настройки (`config.json`)
-Все Parameters сервера, модели ИИ, плагины и режимы хранятся в `config.json`:
+### 4.2. Public Settings (`config.json`)
+All public server parameters, AI model selections, plugins, and runtime modes are maintained in `config.json`:
 
 ```json
 {
@@ -167,61 +165,62 @@ TMDB_API_KEY=...
 
 ---
 
-## 5. Глобальные команды управления (CLI assist)
+## 5. Global CLI Management (`assist`)
 
-После установки в любом терминале доступна глобальная утилита **`assist`**:
+Once installed, the global CLI tool **`assist`** is available across all terminals:
 
-| Команда | Назначение |
+| Command | Description |
 |---|---|
-| `assist start` | Запуск главного сервера и зависимых служб (`run.ps1`) |
-| `assist start unicorn` | Запуск сервера через FastAPI/Uvicorn (`Run-Unicorn.ps1`) |
-| `assist start light` | Запуск облегченного сервера без сторонних служб (`Run-LightServer.ps1`) |
-| `assist start foundry` | Запуск локальной службы Microsoft AI Foundry |
-| `assist stop` | Остановка сервера и освобождение порта `8000` |
-| `assist restart` | Быстрый перезапуск сервера |
-| `assist status` | Check состояния процессов, открытых портов и статуса служб |
-| `assist providers` | Инспекция и list всех подключенных AI-провайдеров и моделей |
-| `assist logs [N]` | Просмотр последних $N$ строк системных логов (по умолчанию 40) |
-| `assist config show` | Просмотр текущей конфигурации `config.json` |
-| `assist config get <key>` | Получить значение параметра (например: `assist config get server.port`) |
-| `assist config set <key> <val>` | Установить значение параметра (например: `assist config set server.port 8000`) |
-| `assist test` | Запуск набора автоматических тестов `pytest` |
+| `assist start` | Starts the main application and all dependent services (`run.ps1`) |
+| `assist start unicorn` | Starts the FastAPI/Uvicorn server (`Run-Unicorn.ps1`) |
+| `assist start light` | Starts lightweight server without auxiliary daemons (`Run-LightServer.ps1`) |
+| `assist start foundry` | Starts local Microsoft AI Foundry service |
+| `assist stop` | Stops the running server and frees port `8000` |
+| `assist restart` | Performs a quick server restart |
+| `assist status` | Inspects process status, listening ports, and active services |
+| `assist providers` | Inspects and lists all registered AI providers and models |
+| `assist logs [N]` | Tails the last $N$ lines of system logs (default: 40) |
+| `assist config show` | Displays the current `config.json` configuration |
+| `assist config get <key>` | Reads a specific config value (e.g. `assist config get server.port`) |
+| `assist config set <key> <val>` | Sets a configuration property (e.g. `assist config set server.port 8000`) |
+| `assist test` | Executes the automated test suite with `pytest` |
 
 ---
 
-## 6. Лончеры сервисов
+## 6. Service Launchers
 
-Все лончеры расположены в корне проекта и могут вызываться напрямую:
+All service launchers are located in the repository root and `launchers/` directory:
 
-* **[`run.ps1`](../../../run.ps1)** — Главный оркестратор: check venv, зависимостей, освобождение порта, старт Foundry и запуск Unicorn.
-* **[`Run-Unicorn.ps1`](../../../launchers/Run-Unicorn.ps1)** — Запуск FastAPI сервера с автоматическим открытием браузера по готовности порта и записью в `logs/`.
-* **[`Run-LightServer.ps1`](../../../launchers/Run-LightServer.ps1)** — Облегченный режим (Parameters `-mode 0.0.0.0|localhost` и `-port`).
-* **[`Run-Foundry.ps1`](../../../launchers/Run-Foundry.ps1)** — Управление локальной службой Microsoft AI Foundry (`-Action start|stop|status`).
+* **[`run.ps1`](../../../run.ps1)** — Main orchestrator: validates venv, dependencies, port release, starts Foundry, and launches Uvicorn.
+* **[`Run-Unicorn.ps1`](../../../launchers/Run-Unicorn.ps1)** — Starts FastAPI server, automatically opens default browser, and writes to `logs/`.
+* **[`Run-LightServer.ps1`](../../../launchers/Run-LightServer.ps1)** — Lightweight standalone server (`-mode 0.0.0.0|localhost` and `-port`).
+* **[`Run-Foundry.ps1`](../../../launchers/Run-Foundry.ps1)** — Manages Microsoft AI Foundry local daemon (`-Action start|stop|status`).
 
-Подробнее: [`LAUNCHER_GUIDE.md`](LAUNCHER_GUIDE.md)
+For complete details, see [`LAUNCHER_GUIDE.md`](LAUNCHER_GUIDE.md).
 
 ---
 
-## 7. Устранение неполадок (Troubleshooting)
+## 7. Troubleshooting
 
-### 7.1. Error выполнения скриптов PowerShell (`ExecutionPolicy`)
-Если при запуске скриптов PowerShell выводит `running scripts is disabled on this system`:
+### 7.1. PowerShell Execution Policy Error
+If PowerShell outputs `running scripts is disabled on this system`:
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
 ```
 
-### 7.2. Порт 8000 занят
-Скрипты `run.ps1` и `Run-Unicorn.ps1` автоматически находят и завершают зависший процесс. Также это можно сделать вручную командой:
+### 7.2. Port 8000 is Already in Use
+`run.ps1` and `Run-Unicorn.ps1` automatically detect and terminate hanging processes on port 8000. You can also manually invoke:
 ```powershell
 assist stop
 ```
 
-### 7.3. Warning браузера о самоподписанном SSL сертификате
-Сертификаты генерируются для доменов `localhost`, `127.0.0.1` и локального сетевого IP. При первом входе в браузере нажмите **"Дополнительно" -> "Перейти на сайт localhost (небезопасно)"**, либо добавьте сертификат в доверенные корневые центры сертификации Windows.
+### 7.3. Browser Warning for Self-Signed SSL Certificate
+Certificates are generated for `localhost`, `127.0.0.1`, and local network IP addresses. On first access, click **"Advanced" -> "Proceed to localhost (unsafe)"**, or import the certificate into the Windows Trusted Root Certification Authorities store.
 
-### 7.4. Check логов
-Все логи сохраняются в каталоге `logs/`:
-* `logs/fastapi.log` — запросы и маршрутизация FastAPI
-* `logs/info.log` — общие события системы
-* `logs/errors.log` — ошибки приложения
-* `logs/uvicorn_*.log` — консольный вывод сервера Uvicorn
+### 7.4. Log File Locations
+All system logs are stored in the `logs/` directory:
+* `logs/fastapi.log` — FastAPI routing and HTTP request logs
+* `logs/info.log` — General system runtime events
+* `logs/errors.log` — Unhandled application errors and tracebacks
+* `logs/uvicorn_*.log` — Raw Uvicorn console output
+

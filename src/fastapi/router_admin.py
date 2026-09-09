@@ -418,17 +418,24 @@ def _get_request_user(request: Request) -> Optional[Dict[str, Any]]:
 
 plugins_router = APIRouter(prefix='/api/plugins', tags=['plugins'])
 
+def _get_plugin_manifest(p: Any, lang: Optional[str] = None) -> Dict[str, Any]:
+    """Safely retrieves plugin manifest with optional language parameter."""
+    try:
+        return p.get_manifest(lang=lang)
+    except TypeError:
+        return p.get_manifest()
+
 @router.get('/plugins')
 @plugins_router.get('')
 @plugins_router.get('/')
-async def get_all_plugins(request: Request, scope: Optional[str] = None) -> Dict[str, Any]:
+async def get_all_plugins(request: Request, scope: Optional[str] = None, lang: Optional[str] = None) -> Dict[str, Any]:
     """Returns list of registered plugins and their manifests.
     
     If scope is 'user' or accessed from user-facing plugins endpoint by non-admin,
     plugins marked as system (is_system == True or scope == 'system') are excluded.
     """
     plugins_dict = _get_app_plugins(request)
-    manifests = [p.get_manifest() for p in plugins_dict.values()]
+    manifests = [_get_plugin_manifest(p, lang=lang) for p in plugins_dict.values()]
     
     user = _get_request_user(request)
     is_admin = bool(user and (user.get('is_admin') or user.get('role') == 'admin'))
@@ -444,7 +451,7 @@ async def get_all_plugins(request: Request, scope: Optional[str] = None) -> Dict
 
 @router.get('/plugins/{plugin_name}')
 @plugins_router.get('/{plugin_name}')
-async def get_plugin_details(plugin_name: str, request: Request) -> Dict[str, Any]:
+async def get_plugin_details(plugin_name: str, request: Request, lang: Optional[str] = None) -> Dict[str, Any]:
     """Returns manifest of a specific plugin."""
     plugins_dict = _get_app_plugins(request)
     plugin = plugins_dict.get(plugin_name)
@@ -457,7 +464,7 @@ async def get_plugin_details(plugin_name: str, request: Request) -> Dict[str, An
     if (is_user_endpoint and not is_admin) and getattr(plugin, 'is_system', True):
         raise HTTPException(status_code=403, detail=f"Системный плагин '{plugin_name}' доступен только администратору")
 
-    return plugin.get_manifest()
+    return _get_plugin_manifest(plugin, lang=lang)
 
 @router.post('/plugins/{plugin_name}/toggle')
 async def toggle_plugin(plugin_name: str, data: PluginStateUpdate, request: Request) -> Dict[str, Any]:
@@ -991,19 +998,20 @@ class AdminSkillUpdateRequest(BaseModel):
 @router.get('/skills')
 @skills_router.get('')
 @skills_router.get('/')
-async def list_admin_skills(request: Request, q: str = '') -> Dict[str, Any]:
+async def list_admin_skills(request: Request, q: str = '', lang: str = '') -> Dict[str, Any]:
     """List all registered agent skills across supported project skill directories."""
     _check_skills_access(request)
     from src.skills import SkillRegistry
     registry = SkillRegistry(__root__)
-    skills = registry.discover()
+    skills = registry.discover(lang=lang if lang else None)
 
     skills_list = []
     q_clean = q.strip().lower()
     home = _safe_home_dir()
 
     for s in skills:
-        if q_clean and q_clean not in s.name.lower() and q_clean not in s.description.lower():
+        all_text = f"{s.name} {s.description} " + " ".join(s.descriptions_i18n.values())
+        if q_clean and q_clean not in all_text.lower():
             continue
 
         try:
@@ -1030,7 +1038,8 @@ async def list_admin_skills(request: Request, q: str = '') -> Dict[str, Any]:
 
         skills_list.append({
             'name': s.name,
-            'description': s.description,
+            'description': s.get_description(lang) if lang else s.description,
+            'descriptions_i18n': s.descriptions_i18n,
             'relative_path': rel_root,
             'source_file': str(s.source.name),
             'metadata': s.metadata,
@@ -1051,7 +1060,7 @@ async def list_admin_skills(request: Request, q: str = '') -> Dict[str, Any]:
 
 @router.get('/skills/{name}')
 @skills_router.get('/{name}')
-async def get_admin_skill_details(name: str, request: Request) -> Dict[str, Any]:
+async def get_admin_skill_details(name: str, request: Request, lang: str = '') -> Dict[str, Any]:
     """Get full details of a specific skill including SKILL.md and README.md content."""
     _check_skills_access(request)
     from src.skills import SkillRegistry
@@ -1104,7 +1113,8 @@ async def get_admin_skill_details(name: str, request: Request) -> Dict[str, Any]
         'status': 'ok',
         'skill': {
             'name': skill.name,
-            'description': skill.description,
+            'description': skill.get_description(lang) if lang else skill.description,
+            'descriptions_i18n': skill.descriptions_i18n,
             'relative_path': rel_root,
             'metadata': skill.metadata,
             'manifest': skill.manifest,

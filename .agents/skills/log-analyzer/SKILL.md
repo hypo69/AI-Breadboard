@@ -1,6 +1,9 @@
 ---
 name: log-analyzer
-description: Интеллектуальный анализатор системных логов. Парсинг текстовых и JSON логов, кластеризация ошибок, подсчет метрик, генерация отчетов и AI-диагностика с рекомендациями.
+description: Intelligent system log analyzer. Parsing text and JSON logs, clustering errors, metric calculations, report generation, and AI diagnostics with recommendations.
+description_i18n:
+  en: Intelligent system log analyzer. Parsing text and JSON logs, clustering errors, metric calculations, report generation, and AI diagnostics with recommendations.
+  ru: Интеллектуальный анализатор системных логов. Парсинг текстовых и JSON логов, кластеризация ошибок, подсчет метрик, генерация отчетов и AI-диагностика с рекомендациями.
 ---
 
 # 📊 Log Analyzer Skill

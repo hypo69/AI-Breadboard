@@ -1,494 +1,165 @@
-# Документация API проекта ai-assistant
+# FastAPI REST & WebSocket API Documentation (`api_documentation.md`)
 
-## Общее описание
+**Project:** `AI-Breadboard`  
+**Backend:** FastAPI / Uvicorn  
+**Base URL:** `http://localhost:8000` (or configured HTTPS domain)  
+**Status:** ✅ Up to date (September 2026)
 
-Проект ai-assistant предоставляет REST API на базе FastAPI для управления медиатекой, AI-ассистентом, торрент-клиентом и системными компонентами. API состоит из 10 роутеров с единой архитектурой и стандартами.
-
-## Базовый URL
-```
-http://localhost:8000
-https://ваш-домен.com
-```
-
-## Authentication и Google OAuth
-
-### Google OAuth2 Flow
-- `GET /auth/google?next=/` — инициирует процесс аутентификации и синхронизации через Google OAuth2 с запросом прав на доступ к Google Drive, Docs, Calendar, Contacts.
-- `GET /auth/google/callback` — обработка callback от Google, обмен авторизационного кода на access/refresh токены, сохранение профиля пользователя в `user_manager` и установка JWT-cookie `auth_token`.
-- `GET /auth/google/status` — check подключения и синхронизации Google-аккаунта.
-
-#### ⚠️ Требования к Google Redirect URI (Google Cloud Console):
-Во избежание ошибки `400: redirect_uri_mismatch`, в **Google Cloud Console &rarr; Credentials &rarr; OAuth 2.0 Client ID** в list **Authorized redirect URIs** должны быть добавлены все рабочие адреса:
-- `https://kino.davidka.net/auth/google/callback` (внешний домен / туннель)
-- `http://localhost:8000/auth/google/callback` (локальный порт)
-- `http://127.0.0.1:8000/auth/google/callback` (локальный IP)
-
-### Check статуса авторизации
-```http
-GET /auth/check
-```
-Returns информацию о текущей сессии:
-```json
-{
-  "authenticated": true,
-  "id": 1,
-  "email": "user@gmail.com",
-  "name": "User Name",
-  "picture": "https://...",
-  "role": "admin",
-  "is_admin": true,
-  "has_google": true
-}
-```
-
-### Выход из системы
-```http
-POST /auth/logout
-```
-Очищает cookie `auth_token` и завершает сессию.
-
-## Основные API группы
-
-### 1. Чат AI (`/api/chat`)
-**Роутер:** `router_chat.py`
-
-#### WebSocket чат
-```
-WS /api/chat/ws
-```
-Двусторонний WebSocket для интерактивного чата с UnifiedChatModel.
-
-#### SSE потоковый чат
-```
-POST /api/chat
-Content-Type: application/json
-
-{
-  "message": "текст сообщения",
-  "stream": true,
-  "model": "gemini-2.0-flash"
-}
-```
-
-#### Parameters:
-- `message` (обязательный): Текст сообщения пользователя
-- `stream` (опциональный): Включить потоковый ответ (по умолчанию: false)
-- `model` (опциональный): Модель AI (gemini-*, foundry:*, agy-*, ollama:*)
-- `tools` (опциональный): List инструментов для Function Calling
-
-### 2. Медиатека (`/api/media`)
-**Роутер:** `router_media.py`
-
-#### Поиск медиа по названию
-```
-POST /api/media/by-title
-Content-Type: application/json
-
-{
-  "title": "название фильма",
-  "type": "movie" // optional: movie, series, season, episode
-}
-```
-
-#### Потоковая трансляция
-```
-GET /api/media/stream/{media_id}
-Range: bytes=0-1024
-```
-Returns потоковую трансляцию медиафайла с поддержкой диапазонов байтов.
-
-#### Карточка медиа
-```
-GET /api/media/card/{media_id}
-```
-Returns полную карточку медиа с метаданными.
-
-#### Сканирование медиатеки
-```
-POST /api/media/scan
-Content-Type: application/json
-
-{
-  "disk": "диск 1",
-  "path": "E:",
-  "force": false
-}
-```
-
-### 3. Торренты (`/api/torrents`)
-**Роутер:** `router_qbittorrent.py`
-
-#### List торрентов
-```
-GET /api/torrents/
-```
-Returns list всех торрентов в qBittorrent.
-
-#### Поиск торрентов
-```
-POST /api/torrents/search
-Content-Type: application/json
-
-{
-  "query": "название фильма",
-  "category": "movies"
-}
-```
-
-#### Добавление торрента
-```
-POST /api/torrents/add
-Content-Type: application/json
-
-{
-  "url": "magnet:...",
-  "category": "movies",
-  "tags": ["фильм", "боевик"]
-}
-```
-
-#### Управление категориями
-```
-GET /api/torrents/categories
-POST /api/torrents/categories
-DELETE /api/torrents/categories/{name}
-```
-
-### 4. TTS (`/api/tts`)
-**Роутер:** `router_tts.py`
-
-#### Синтез речи
-```
-POST /api/tts/synthesize
-Content-Type: application/json
-
-{
-  "text": "текст для озвучки",
-  "voice": "ru_v3",
-  "speed": 1.0
-}
-```
-
-#### List голосов
-```
-GET /api/tts/voices
-```
-Returns list доступных голосов для синтеза.
-
-### 5. Логи (`/api/logs`)
-**Роутер:** `router_logs.py`
-
-#### Просмотр логов
-```
-GET /api/logs/
-Query parameters:
-  - level: error, warning, info, debug
-  - limit: количество записей
-  - since: timestamp начала
-```
-
-#### Анализ логов
-```
-GET /api/logs/analyze
-```
-Анализирует логи и Returns статистику ошибок.
-
-### 6. Ключи API (`/api/keys`)
-**Роутер:** `router_keys.py`
-
-#### Status ключей
-```
-GET /api/keys/status
-```
-Returns status всех настроенных API ключей.
-
-#### Переключение ключей
-```
-POST /api/keys/switch
-Content-Type: application/json
-
-{
-  "provider": "gemini",
-  "key_name": "primary"
-}
-```
-
-### 7. Администрация (`/admin`, `/api/admin`)
-**Роутер:** `router_admin.py`
-
-**Защита:** Парольная защита (пароль: `onela`)
-
-#### Административный интерфейс
-```
-GET /admin
-```
-HTML интерфейс административной панели.
-
-#### Системные настройки
-```
-GET /api/admin/settings
-POST /api/admin/settings
-```
-
-#### Управление пользователями
-```
-GET /api/admin/users
-POST /api/admin/users
-PUT /api/admin/users/{id}
-DELETE /api/admin/users/{id}
-```
-
-#### Мониторинг системы
-```
-GET /api/admin/monitoring
-```
-Returns метрики системы и state компонентов.
-
-### 8. Агенты (`/api/agents`)
-**Роутер:** `router_agents.py` (новый)
-
-#### List агентов
-```
-GET /api/agents/
-```
-Returns list всех настроенных AI агентов.
-
-#### Создание агента
-```
-POST /api/agents/
-Content-Type: application/json
-
-{
-  "name": "медиа-аналитик",
-  "description": "Агент для анализа медиатеки",
-  "config": {
-    "model": "gemini-2.0-flash",
-    "temperature": 0.7,
-    "plugins": ["rag", "media_organizer"]
-  }
-}
-```
-
-#### Тестирование агента
-```
-POST /api/agents/{id}/test
-Content-Type: application/json
-
-{
-  "input": "тестовый запрос",
-  "parameters": {}
-}
-```
-
-#### Генерация промптов
-```
-POST /api/agents/generate-prompt
-Content-Type: application/json
-
-{
-  "agent_type": "media_analyzer",
-  "requirements": ["анализ", "рекомендации", "структурирование"]
-}
-```
-
-### 9. WebSocket управление (`/ws/control`)
-**Роутер:** `router_control.py`
-
-#### Управление плеером
-```
-WS /ws/control
-```
-WebSocket для управления медиаплеером:
-- Воспроизведение/пауза
-- Перемотка
-- Управление громкостью
-- Навигация по контенту
-
-### 10. Статические файлы и интерфейсы
-
-#### Пользовательский интерфейс
-```
-GET /user
-```
-Основной интерфейс с плеером и чатом.
-
-#### Пульт ДУ
-```
-GET /rc
-```
-Голосовой пульт дистанционного управления.
-
-#### Telegram Mini App
-```
-GET /tgmini
-```
-Интерфейс для интеграции с Telegram.
-
-#### Телевизионный интерфейс
-```
-GET /tv
-```
-Упрощенный интерфейс для телевизоров.
-
-#### TTS тестирование
-```
-GET /user_tts
-```
-Интерфейс для тестирования Text-to-Speech.
-
-## Модели данных
-
-### UnifiedChatModel Configuration
-```json
-{
-  "model": "gemini-2.0-flash",
-  "api_key": "${GEMINI_API_KEY}",
-  "temperature": 0.7,
-  "max_tokens": 2048
-}
-```
-
-### Медиа карточка
-```json
-{
-  "id": 1,
-  "title": "Название фильма",
-  "title_ru": "Русское название",
-  "title_orig": "Original Title",
-  "year": 2024,
-  "main_category": "Боевики",
-  "path": "E:/фильмы/фильм.mkv",
-  "media_type": "movie",
-  "rating": {
-    "imdb": 8.5,
-    "tmdb": 8.2
-  }
-}
-```
-
-### Configuration агента
-```json
-{
-  "name": "аналитик медиа",
-  "description": "Анализирует медиатеку и предоставляет рекомендации",
-  "enabled": true,
-  "config": {
-    "model": "foundry:qwen3-one",
-    "system_prompt": "Ты эксперт по анализу медиаконтента...",
-    "plugins": ["rag", "media_organizer"],
-    "parameters": {
-      "temperature": 0.7,
-      "max_tokens": 4096
-    }
-  }
-}
-```
-
-## Обработка ошибок
-
-### Стандартные HTTP статусы
-- `200 OK`: Успешный запрос
-- `201 Created`: Ресурс создан
-- `400 Bad Request`: Невалидные данные
-- `401 Unauthorized`: Требуется authentication
-- `403 Forbidden`: Недостаточно прав
-- `404 Not Found`: Ресурс не найден
-- `500 Internal Server Error`: Внутренняя Error сервера
-
-### Формат ответа с ошибкой
-```json
-{
-  "error": "описание ошибки",
-  "code": "ERROR_CODE",
-  "timestamp": "2026-08-24T12:00:00Z"
-}
-```
-
-## Безопасность
-
-### Защита эндпоинтов
-1. Административные функции защищены паролем
-2. API ключи хранятся в `.env` файле
-3. Сессии управляются через JWT токены
-4. Входные данные валидируются через Pydantic
-
-### CORS настройки
-```
-CORS_ORIGINS = ["http://localhost:8000", "https://ваш-домен.com"]
-CORS_CREDENTIALS = true
-CORS_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-```
-
-## Integration с клиентами
-
-### Python клиент
-```python
-import requests
-
-BASE_URL = "http://localhost:8000"
-
-def chat_with_ai(message):
-    response = requests.post(
-        f"{BASE_URL}/api/chat",
-        json={"message": message, "stream": False}
-    )
-    return response.json()
-```
-
-### JavaScript/TypeScript
-```typescript
-const API_BASE = 'http://localhost:8000';
-
-async function searchMedia(title: string) {
-  const response = await fetch(`${API_BASE}/api/media/by-title`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({title})
-  });
-  return response.json();
-}
-```
-
-## Мониторинг и метрики
-
-### Health check
-```
-GET /health
-```
-Returns status системы и state компонентов.
-
-### Метрики Prometheus
-```
-GET /metrics
-```
-Метрики системы в формате Prometheus.
-
-### OpenAPI документация
-```
-GET /api/docs
-GET /api/redoc
-GET /api/openapi.json
-```
-
-## Версионирование API
-
-Текущая версия: **v1**
-Формат версии в заголовках:
-```
-Accept: application/json; version=1
-```
-
-## Правила разработки новых эндпоинтов
-
-1. Использовать существующие Pydantic модели для валидации
-2. Реализовать полную обработку ошибок
-3. Добавить документацию через docstrings
-4. Интегрировать с системой логирования
-5. Тестировать через pytest
-6. Обновлять OpenAPI документацию
+The AI Breadboard API provides 15 modular routers under [`src/fastapi/`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi) for conversational AI, multi-provider routing, Model Context Protocol (MCP), RAG search, skills dispatch, user storage, authentication, audio/TTS, and system administration.
 
 ---
 
-**Последнее update:** 24 августа 2026  
-**Версия API:** v1  
-**Базовая архитектура:** FastAPI + UnifiedChatModel + Moduleные плагины
+## 🔐 Authentication & Session Management (`/auth`)
+
+**Router:** [`src/fastapi/router_auth.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_auth.py)
+
+### Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/auth/google` | Initiates Google OAuth2 login flow (`?next=/`) |
+| `GET` | `/auth/callback` | OAuth2 callback, token exchange, and JWT cookie set |
+| `GET` | `/auth/check` | Returns current session and user profile information |
+| `POST` | `/auth/logout` | Clears `auth_token` cookie and terminates session |
+
+---
+
+## 💬 Conversational AI & Streaming (`/api/chat`)
+
+**Router:** [`src/fastapi/router_chat.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_chat.py)
+
+### Endpoints
+
+- **`POST /api/chat`** — Send chat prompt with optional streaming (SSE) and capability routing.
+  ```json
+  {
+    "message": "Explain how ONNX DirectML execution works.",
+    "model": "gemini-2.0-flash",
+    "stream": true,
+    "tools": ["storage-controller", "rag-search-manager"]
+  }
+  ```
+- **`WS /api/chat/ws`** — Full-duplex WebSocket stream for real-time token streaming and function call roundtrips.
+- **`GET /api/chat/history`** — Retrieve chat history for the active session.
+- **`DELETE /api/chat/sessions/{session_id}`** — Clear specific chat session context.
+
+---
+
+## 🔌 OpenAI-Compatible API (`/v1`)
+
+**Router:** [`src/fastapi/router_openai.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_openai.py)
+
+Enables any standard OpenAI client (e.g. OpenAI SDK, LangChain, Cursor, Continue) to connect directly to AI Breadboard.
+
+### Endpoints
+
+- **`POST /v1/chat/completions`** — Standard OpenAI chat completions endpoint (supports streaming SSE).
+- **`GET /v1/models`** — List all available models discovered across providers (Gemini, Foundry, Ollama, ONNX, Windows AI).
+
+---
+
+## 🧩 Model Context Protocol (MCP) (`/api/mcp`)
+
+**Router:** [`src/fastapi/router_mcp.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_mcp.py)
+
+### Endpoints
+
+- **`GET /api/mcp/servers`** — List configured and active MCP servers.
+- **`POST /api/mcp/servers`** — Register or update an external MCP server connection.
+- **`GET /api/mcp/tools`** — List all MCP tools aggregated from registered servers.
+- **`POST /api/mcp/call`** — Execute a specific MCP tool call.
+
+---
+
+## 🧠 Semantic Search & RAG (`/api/rag`)
+
+**Router:** [`src/fastapi/router_rag.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_rag.py)
+
+### Endpoints
+
+- **`POST /api/rag/search`** — Perform semantic vector search over knowledge chunks.
+  ```json
+  {
+    "query": "How are skills discovered?",
+    "top_k": 5,
+    "threshold": 0.65
+  }
+  ```
+- **`POST /api/rag/rebuild`** — Trigger background vector index re-embedding and FAISS index build.
+- **`GET /api/rag/status`** — Get index health, record counts, and embedding model state.
+
+---
+
+## 🤖 Subagent Management (`/api/agents`)
+
+**Router:** [`src/fastapi/router_agents.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_agents.py)
+
+### Endpoints
+
+- **`GET /api/agents`** — List active agent configurations, memory quotas, and execution history.
+- **`POST /api/agents/invoke`** — Invoke an agent execution pipeline.
+- **`GET /api/agents/status/{task_id}`** — Query progress of a background subagent task.
+
+---
+
+## 🔑 API Keys & Provider Health (`/api/keys`)
+
+**Router:** [`src/fastapi/router_keys.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_keys.py)
+
+### Endpoints
+
+- **`GET /api/keys/status`** — Check status, quota health, and error rates of configured provider keys.
+- **`POST /api/keys/rotate`** — Force immediate rotation of active Gemini or external API keys.
+
+---
+
+## 📊 Logging & Diagnostics (`/api/logs`)
+
+**Router:** [`src/fastapi/router_logs.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_logs.py)
+
+### Endpoints
+
+- **`GET /api/logs`** — Query system and access logs with filtering by level, component, and date range.
+- **`WS /api/logs/ws`** — Live WebSocket stream of system logs.
+- **`POST /api/logs/analyze`** — Run AI-powered log diagnostic and error clustering.
+
+---
+
+## 🔊 Audio & Text-to-Speech (`/api/tts`, `/api/audio`)
+
+**Routers:** [`src/fastapi/router_tts.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_tts.py), [`src/fastapi/router_audio.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_audio.py)
+
+### Endpoints
+
+- **`POST /api/tts/synthesize`** — Synthesize text into audio stream (Edge-TTS / Silero).
+- **`GET /api/tts/voices`** — List available TTS voices and locales.
+- **`POST /api/audio/transcribe`** — Transcribe audio input into text.
+- **`GET /api/audio/devices`** — Probe host audio input and output devices.
+
+---
+
+## 📁 User Storage & Google Accounts (`/api/storage`, `/api/google`)
+
+**Routers:** [`src/fastapi/router_user_storage.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_user_storage.py), [`src/fastapi/router_google_accounts.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_google_accounts.py)
+
+### Endpoints
+
+- **`GET /api/storage/files`** — List user sandboxed files and storage quota utilization.
+- **`POST /api/storage/upload`** — Upload document or asset for processing / RAG ingestion.
+- **`DELETE /api/storage/files/{file_id}`** — Delete user file.
+- **`GET /api/google/accounts`** — List connected Google accounts and synced service scopes.
+- **`POST /api/google/sync`** — Trigger synchronization of Google Drive / Docs metadata.
+
+---
+
+## ⚙️ Administration & Versioning (`/api/admin`, `/api/version`, `/ws/control`)
+
+**Routers:** [`src/fastapi/router_admin.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_admin.py), [`src/fastapi/router_version.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_version.py), [`src/fastapi/router_control.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_control.py)
+
+### Endpoints
+
+- **`GET /api/admin/config`** — Read public `config.json` configuration.
+- **`POST /api/admin/config`** — Update configuration parameters.
+- **`GET /api/version`** — Returns current system version, git commit hash, and component versions.
+- **`GET /api/version/check`** — Check for updates against remote repository.
+- **`WS /ws/control`** — Real-time device and remote control WebSocket connection.

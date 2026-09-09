@@ -1,15 +1,16 @@
-# `core.logger` Module — Advanced Structured Logging System
+# `src.logger` Module — Advanced Structured Logging System
 
 ## Overview
 
-`core.logger` is a comprehensive, production-ready logging module that provides:
+`src.logger` is a comprehensive, production-ready logging module that provides:
 
-- **Unified logging interface** with support for multiple output formats
-- **Colorized console output** for better readability during development
-- **Structured JSON logging** for machine-readable log analysis
-- **Automatic log rotation** by file size to prevent disk overflow
-- **Module-specific routing** to separate logs by functionality (FastAPI, AI, Playwright, etc.)
-- **Compression of repetitive log entries** on-the-fly to reduce disk usage
+- **Unified logging interface** with support for multiple output formats and colorization
+- **Built-in pretty-printing (`pformat`/`pprint`)**: Automatically formats Python dicts/lists, JSON strings, and prefixed log messages (`RAW WS MSG: {...}`) into indented, human-readable console and file logs
+- **Colorized console output** with ANSI foreground and background colors for rapid visual debugging
+- **Structured JSON logging** for machine-readable log analysis (`log.json`)
+- **Automatic log rotation** and file management in system temp directory to prevent disk overflow
+- **Module-specific routing** to separate logs by functionality (FastAPI, AI/Gemini, Playwright, YT-DLP, etc.)
+- **Compression of repetitive log entries** on-the-fly (`[5x] Message`) to reduce disk usage
 - **Intelligent log analysis** using Google Generative AI (Gemini)
 - **Master Journal generation** from analyzed logs for system health monitoring
 
@@ -22,13 +23,13 @@ The module implements the **Singleton pattern** to guarantee a single, consisten
 ### Core Components
 
 ```
-core/logger/
-├── logger.py          # Main Logger class with Singleton pattern and CompressingHandler
+src/logger/
+├── logger.py          # Main Logger class with Singleton pattern, CompressingHandler, and pretty-formatting
 ├── compress_logs.py   # Utility functions for log compression
 ├── log_analyzer.py    # AI-powered log analysis and Master Journal generation
 ├── header.py          # Project root detection and metadata initialization
 ├── __init__.py        # Module exports
-└── README.md          # This file
+└── README.MD          # This file
 ```
 
 ### Class Hierarchy
@@ -47,8 +48,9 @@ Converts log records into structured JSON format for machine-readable analysis.
 **Output Format:**
 ```json
 {
-  "timestamp": "2024-01-15 10:30:45,123",
+  "timestamp": "2026-09-10 00:30:45,123",
   "level": "ERROR",
+  "levelname": "ERROR",
   "message": "Database connection failed",
   "exc_info": null
 }
@@ -64,15 +66,87 @@ File handler with automatic log rotation and compression of repetitive entries.
 - Graceful cleanup on application exit
 
 #### `Logger` (Main Class)
-Central logging facade providing all logging methods with colorization and routing.
+Central logging facade providing all logging methods with automatic pretty-printing, colorization, and routing.
 
-**Logging Levels:**
-- `info()` - Informational messages (green by default)
-- `success()` - Successful operations (light green by default)
-- `warning()` - Warning messages (black on yellow by default)
-- `debug()` - Debug information (cyan, disabled in production)
-- `error()` - Error messages (red by default)
-- `critical()` - Critical errors (white on red by default)
+**Logging Methods:**
+- `info(message, ex=None, exc_info=False, text_color="green", bg_color="")` - Informational messages
+- `success(message, ex=None, exc_info=False, text_color="light_green", bg_color="")` - Successful operations
+- `warning(message, ex=None, exc_info=False, text_color="black", bg_color="yellow")` - Warning messages
+- `debug(message, ex=None, exc_info=False, text_color="cyan", bg_color="")` - Debug information (filtered in production)
+- `error(message, ex=None, exc_info=True, text_color="red", bg_color="")` - Error messages
+- `critical(message, ex=None, exc_info=True, text_color="white", bg_color="red")` - Critical errors
+
+---
+
+## Pretty Printing & Structured Logging
+
+The logger seamlessly integrates with `src.utils.printer.pformat` and `PrettyConsoleFormatter` to inspect and pretty-print data structures without manual string conversion.
+
+### Supported Input Types
+
+1. **Native Python Dictionaries & Lists:**
+   ```python
+   from src.logger.logger import logger
+
+   user_data = {"id": 101, "role": "admin", "permissions": ["read", "write"]}
+   logger.info(user_data)
+   ```
+
+2. **Raw JSON Strings:**
+   ```python
+   raw_json = '{"status": "ok", "latency_ms": 42}'
+   logger.info(raw_json)
+   ```
+   *Auto-formats with 4-space indentation and syntax alignment.*
+
+3. **Embedded JSON Blocks in Text (`<text> <JSON> <text>`):**
+   ```python
+   # Arbitrary text with embedded JSON
+   logger.info('Starting task {"task_id": "abc123", "progress": 0.5} and continuing execution')
+   ```
+   *Outputs:*
+   ```text
+   Starting task
+   {
+       "task_id": "abc123",
+       "progress": 0.5
+   }
+   and continuing execution
+   ```
+
+4. **Multiple Embedded JSON Blocks in a Single String:**
+   ```python
+   logger.info('Config: {"env": "prod"} with servers: ["srv-1", "srv-2"] ready.')
+   ```
+   *Outputs:*
+   ```text
+   Config:
+   {
+       "env": "prod"
+   }
+   with servers:
+   [
+       "srv-1",
+       "srv-2"
+   ]
+   ready.
+   ```
+
+5. **Prefixed Log Messages (e.g., WebSocket / Agent streams):**
+   ```python
+   ws_msg = 'RAW WS MSG: {"stepUpdate":{"state":"STATE_RUNNING","stepIndex":1}}'
+   logger.info(ws_msg)
+   ```
+   *Outputs:*
+   ```text
+   RAW WS MSG:
+   {
+       "stepUpdate": {
+           "state": "STATE_RUNNING",
+           "stepIndex": 1
+       }
+   }
+   ```
 
 ---
 
@@ -81,21 +155,24 @@ Central logging facade providing all logging methods with colorization and routi
 ### Basic Usage
 
 ```python
-from core.logger import logger
+from src.logger.logger import logger
 
-# Standard logging
+# Standard text logging
 logger.info("Application started successfully")
 logger.success("User authentication completed")
 logger.warning("Cache is nearly full")
 logger.debug("Processing item 42")
 logger.error("Failed to connect to database", ex=connection_error)
 logger.critical("System integrity compromised", ex=critical_error)
+
+# Structured data logging (automatically pretty-printed)
+logger.info({"provider": "agy", "model": "gemini-flash-lite-latest", "status": "ready"})
 ```
 
 ### Customizing Colors
 
 ```python
-# Change color of info message
+# Change text color
 logger.info("Important notification", text_color="light_yellow")
 
 # Add background color
@@ -108,64 +185,50 @@ logger.warning("System warning", text_color="white", bg_color="red")
 try:
     result = risky_operation()
 except Exception as ex:
-    # Log with exception details
+    # Log with exception details and full traceback
     logger.error("Operation failed", ex=ex, exc_info=True)
-```
-
-### Custom Log File Configuration
-
-```python
-from core.logger.logger import Logger
-
-# Initialize with custom paths (optional)
-custom_logger = Logger(
-    info_log_path="custom_info.log",
-    debug_log_path="custom_debug.log",
-    errors_log_path="custom_errors.log",
-    json_log_path="custom_log.json"
-)
 ```
 
 ---
 
 ## Log File Organization
 
-Logs are automatically organized in `tmp/logs/` directory:
+Logs are stored in the system temporary directory (`%TEMP%/ai-breadboard/logs/` on Windows):
 
 ```
-tmp/logs/
-├── info.log              # All INFO level messages
+logs/
+├── info.log              # All INFO level messages (formatted, clean text)
 ├── debug.log             # All DEBUG level messages
-├── errors.log            # ERROR and CRITICAL messages (compressed)
+├── errors.log            # ERROR and CRITICAL messages (compressed with [Nx])
 ├── log.json              # All messages in JSON format
-├── fastapi.log           # FastAPI-specific logs
-├── gemini.log            # AI (Gemini) API logs
+├── fastapi.log           # FastAPI request and router logs
+├── gemini.log            # AI / Gemini / Provider execution logs
 ├── playwright.log        # Browser automation logs
 └── yt_dlp.log            # Video download logs
 ```
 
+
 ---
 
-## Log Analysis with AI
+## Configuration in `config.json`
 
-The module includes intelligent log analysis powered by Google Generative AI (Gemini).
+The logger and pretty-printing modules are configured via `config.json` without hardcoding:
 
-### Enabling Log Analysis
+```json
+{
+  "logging": {
+    "enable_log_analyzer": false,
+    "max_size_mb": 10.0
+  },
+  "pprint": {
+    "json_indent": 6
+  }
+}
+```
 
-1. **Set environment variables:**
-   ```bash
-   GEMINI_API_KEY_NAMES=your-api-key-1,your-api-key-2
-   ```
-
-2. **Enable in config.json:**
-   ```json
-   {
-     "logging": {
-       "enable_log_analyzer": true,
-       "max_size_mb": 10
-     }
-   }
-   ```
+* **`logging.enable_log_analyzer`**: Boolean flag to enable/disable automated Gemini AI log analysis.
+* **`logging.max_size_mb`**: Log file size threshold (in MB) before rotation and analysis.
+* **`pprint.json_indent`**: Number of spaces used for indentation when formatting JSON structures, arbitrary embedded JSON blocks (`<text> <JSON> <text>`), and console/file logs (default: 6).
 
 ### How It Works
 

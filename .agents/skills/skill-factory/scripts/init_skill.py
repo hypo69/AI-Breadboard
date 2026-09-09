@@ -27,12 +27,26 @@ SKILLS_ROOT = CURRENT_DIR.parents[1]  # .agents/skills/
 PROJECT_ROOT = CURRENT_DIR.parents[2]  # project root
 
 
-def create_skill(name: str, description: str = "") -> Path:
+def _contains_cyrillic(text: str) -> bool:
+    """Checks if text contains Cyrillic characters."""
+    return any("\u0400" <= char <= "\u04FF" for char in text)
+
+
+def create_skill(
+    name: str,
+    description: str = "",
+    description_en: str = "",
+    description_ru: str = "",
+    extra_i18n: dict[str, str] | None = None,
+) -> Path:
     """Create a new standard skill directory structure in .agents/skills/<name>.
 
     Args:
         name (str): The name of the new skill in kebab-case.
-        description (str): Short description of the skill.
+        description (str): General description (auto-routed to EN or RU).
+        description_en (str): Specific English description.
+        description_ru (str): Specific Russian description.
+        extra_i18n (dict[str, str] | None): Additional language translations.
 
     Returns:
         Path: The path to the created skill directory.
@@ -47,21 +61,54 @@ def create_skill(name: str, description: str = "") -> Path:
     (skill_dir / "references").mkdir(exist_ok=True)
     (skill_dir / "assets").mkdir(exist_ok=True)
 
+    # Resolve descriptions
+    en_desc = description_en.strip()
+    ru_desc = description_ru.strip()
+    raw_desc = description.strip()
+
+    if not en_desc and not ru_desc and raw_desc:
+        if _contains_cyrillic(raw_desc):
+            ru_desc = raw_desc
+            en_desc = f"Agent skill for {name}."
+        else:
+            en_desc = raw_desc
+            ru_desc = f"Навык агента для {name}."
+    elif not en_desc and not ru_desc:
+        en_desc = f"Agent skill for {name}."
+        ru_desc = f"Навык агента для {name}."
+    elif en_desc and not ru_desc:
+        ru_desc = f"Навык агента для {name}."
+    elif ru_desc and not en_desc:
+        en_desc = f"Agent skill for {name}."
+
+    i18n_dict: dict[str, str] = {
+        "en": en_desc,
+        "ru": ru_desc,
+    }
+    if extra_i18n:
+        for k, v in extra_i18n.items():
+            if v and v.strip():
+                i18n_dict[k.strip().lower()] = v.strip()
+
+    i18n_lines = "\n".join(f"  {k}: {v}" for k, v in i18n_dict.items())
+
     skill_md_content = f"""---
 name: {name}
-description: {description or f"Agent skill for {name}."}
+description: {en_desc}
+description_i18n:
+{i18n_lines}
 ---
 
 # {name.replace('-', ' ').title()} Skill
 
 ## 🎯 Purpose
-{description or f"Provides capabilities for {name}."}
+{en_desc}
 
 ## 🚀 Usage & Protocol
 Describe how AI agents should execute this skill and what triggers its activation.
 
 ## ⚙️ Directory Structure
-- `SKILL.md`: Main instructions and frontmatter contract.
+- `SKILL.md`: Main instructions and frontmatter contract with multilingual i18n metadata.
 - `README.md`: English documentation for developers.
 - `scripts/`: Executable helper tools.
 - `references/`: Reference documentation and guidelines.
@@ -71,7 +118,11 @@ Describe how AI agents should execute this skill and what triggers its activatio
     readme_content = f"""# {name.replace('-', ' ').title()}
 
 ## Overview
-{description or f"Skill module for {name}."}
+{en_desc}
+
+## Localization (i18n)
+- **English**: {en_desc}
+- **Russian**: {ru_desc}
 
 ## Location
 `.agents/skills/{name}/`
@@ -86,12 +137,19 @@ Describe how AI agents should execute this skill and what triggers its activatio
 
 def main() -> int:
     """CLI entry point for skill initialization."""
-    parser = argparse.ArgumentParser(description="Create a new AI Breadboard agent skill.")
+    parser = argparse.ArgumentParser(description="Create a new AI Breadboard agent skill with multilingual support.")
     parser.add_argument("name", help="Name of the skill in kebab-case (e.g. data-analyzer)")
-    parser.add_argument("--description", "-d", default="", help="Description of the skill")
+    parser.add_argument("--description", "-d", default="", help="General description of the skill")
+    parser.add_argument("--description-en", "-en", default="", help="English description (canonical)")
+    parser.add_argument("--description-ru", "-ru", default="", help="Russian description")
     args = parser.parse_args()
 
-    create_skill(args.name, args.description)
+    create_skill(
+        name=args.name,
+        description=args.description,
+        description_en=args.description_en,
+        description_ru=args.description_ru,
+    )
     return 0
 
 

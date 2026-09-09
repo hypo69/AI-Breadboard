@@ -8,11 +8,25 @@ AI-Breadboard — это интерактивный стенд для прото
 
 - [Начало работы](manual/getting-started.md) — Первые шаги с AI-Breadboard
 - [Установка](manual/installation.md) — Как установить проект
-- [Справочник API](api/index.md) — Полная документация API
+- [Плагины системы](plugins/index.md) — Модульные расширения, UI-интерфейсы и фоновые демоны
+- [Навыки моделей (Skills)](skills/index.md) — Прогрессивное расширение возможностей AI-агентов
 - [Архитектура](architecture/overview.md) — Обзор архитектуры системы
-- [Гайды](guides/index.md) — Подробные руководства
+- [Гайды](guides/index.md) — Подробные руководства по разработке
+- [Справочник API](api/index.md) — Полная документация API
 
 ## Разделы документации
+
+### 🧩 Плагины системы
+Раздел [Плагины (Plugins)](plugins/index.md):
+- [Архитектура и жизненный цикл](plugins/architecture.md)
+- [Руководство по разработке](plugins/development.md)
+- [Каталог плагинов](plugins/catalog.md)
+
+### 🧠 Навыки моделей (Skills)
+Раздел [Навыки моделей (Skills)](skills/index.md):
+- [Архитектура и реестр навыков](skills/architecture.md)
+- [Руководство по разработке](skills/development.md)
+- [Каталог навыков](skills/catalog.md)
 
 ### 📚 Руководства
 Начните с [раздела руководств](manual/index.md) для пошагового введения в систему.

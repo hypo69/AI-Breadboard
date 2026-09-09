@@ -1,6 +1,9 @@
 ---
 name: storage-controller
-description: Управление подключенными хранилищами (дисками). Используйте для сканирования дисков, получения списка подключенных хранилищ и обновления переменной окружения CONNECTED_DRIVES.
+description: Storage and drive management. Use for scanning drives, retrieving list of connected storages, and updating CONNECTED_DRIVES environment configuration.
+description_i18n:
+  en: Storage and drive management. Use for scanning drives, retrieving list of connected storages, and updating CONNECTED_DRIVES environment configuration.
+  ru: Управление подключенными хранилищами (дисками). Используйте для сканирования дисков, получения списка подключенных хранилищ и обновления переменной окружения CONNECTED_DRIVES.
 ---
 
 # Storage Controller

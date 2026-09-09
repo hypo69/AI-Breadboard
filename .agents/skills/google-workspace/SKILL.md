@@ -1,6 +1,9 @@
 ---
 name: google-workspace
 description: Google Workspace integration (Gmail, Google Drive, Google Sheets, Google Docs) for email triage, document search, spreadsheets manipulation, and RAG ingestion.
+description_i18n:
+  en: Google Workspace integration (Gmail, Google Drive, Google Sheets, Google Docs) for email triage, document search, spreadsheets manipulation, and RAG ingestion.
+  ru: Интеграция с Google Workspace (Gmail, Google Диск, Google Таблицы, Google Документы) для сортировки писем, поиска документов, работы с таблицами и RAG.
 ---
 
 # 🌐 Google Workspace (Drive, Sheets, Docs & Gmail) Skill

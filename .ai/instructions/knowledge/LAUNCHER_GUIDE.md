@@ -147,7 +147,7 @@ switch ($Action) {
 ### Чек-лист нового лончера
 
 - [ ] Файл назван `Run-<ServiceName>.ps1`
-- [ ] Помещён в **корень** репозитория
+- [ ] Помещён в каталог `launchers/`
 - [ ] Содержит `.SYNOPSIS` и `.DESCRIPTION`
 - [ ] Reads `.env` при старте
 - [ ] Выводит чёткий status
@@ -158,32 +158,33 @@ switch ($Action) {
 ## 🔧 Вспомогательные скрипты (не лончеры)
 
 | Скрипт | Назначение |
-|--------|------------ |
+|---|---|
 | `install.ps1` | Установка проекта и venv |
 | `install.cmd` | Установка (CMD вариант) |
 | `install_ssl_cert.ps1` | Генерация SSL-сертификата |
-| `run_tests.ps1` | Запуск тестов pytest |
+| `launchers/run_tests.ps1` | Запуск тестов pytest |
 
 ---
 
 ## 📁 Структура проекта
 
 ```
-AI Breadboard/
-├── 📄 run.ps1 + Run-*.ps1    # Лончеры сервисов
+AI-Breadboard/
+├── 📄 run.ps1                # Главный лончер сервисов
+├── 📁 launchers/             # Специализированные лончеры (Run-*.ps1, run_tests.ps1)
 ├── 📄 main.py                # FastAPI приложение
 ├── 📄 manage_tools.py        # Универсальный CLI агентов
 ├── 📄 header.py              # Определение __root__ проекта
-├── 📁 core/                   # Основной код (AI, FastAPI, TTS, rag, utils...)
-│   └── 📁 rag/                # Подсистема RAG (RAG-First пайплайн, RulesRAG)
-├── 📁 tools/                 # Служебные инструменты
-│   ├── 📁 ai/                # Инструменты агентов ИИ (RAG, поиск)
-│   └── 📁 setup/             # Настройка кодовой базы
-├── 📁 tmp/                   # Временные файлы и отчёты (tmp/reports/, tmp/logs/, tmp/rag/)
-├── 📁 __skills/              # Навыки агентов (Antigravity)
+├── 📁 src/                   # Основной код (ai/, fastapi/, skills/, rag/, logger/, tts/...)
+│   ├── 📁 ai/providers/      # Провайдеры ИИ (gemini, foundry, onnx, windows_ai, ollama...)
+│   ├── 📁 fastapi/           # Роутеры FastAPI и webinterface
+│   └── 📁 rag/               # RAG-подсистема
+├── 📁 plugins/               # Плагины
+├── 📁 scripts/dev/           # Инструменты разработчика
+├── 📁 tmp/                   # Временные файлы и логи
+├── 📁 .agents/skills/        # Навыки агентов
 ├── 📁 tests/                 # Тесты (pytest)
-├── 📁 .gemini/               # Configuration Gemini AI
-└── 📁 .ai_instructions/      # Инструкции для ИИ
+└── 📁 .ai/instructions/      # Инструкции для ИИ
 ```
 
 ---
@@ -193,4 +194,4 @@ AI Breadboard/
 - [`manage_tools.py`](../../../manage_tools.py) — CLI для управления инструментами проекта
 - [`scripts_tools.md`](scripts_tools.md) — справочник скриптов
 - [`MODEL_SCRIPT_EXECUTION_GUIDE.md`](MODEL_SCRIPT_EXECUTION_GUIDE.md) — руководство для моделей ИИ
-- [`../../../tools/README.md`](../../../tools/README.md) — инструменты проекта
+

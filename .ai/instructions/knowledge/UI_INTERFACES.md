@@ -1,257 +1,81 @@
-# UI Интерфейсы ai-assistant
+# Web Interfaces & UI Architecture (`UI_INTERFACES.md`)
 
-## Обзор
+**Project:** `AI-Breadboard`  
+**Location:** [`src/fastapi/webinterface/`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/webinterface)  
+**Status:** ✅ Up to date (September 2026)
 
-Проект предоставляет комплексную систему веб-интерфейсов для разных сценариев использования. Все интерфейсы построены на Moduleной архитектуре с переиспользованием компонентов.
+The web interface is organized as a modular frontend built with modern ES Modules, vanilla JavaScript, and CSS Flex/Grid. The administrative panel dynamically loads dedicated tab components from `src/fastapi/webinterface/*_tab/`.
 
-## 🎯 Основные интерфейсы
+---
 
-### 1. `/user` — Основной пользовательский интерфейс
+## 🎯 Primary Interfaces
 
-**Путь:** `webinterface/user/`
-**Description:** Полнофункциональный интерфейс с AI-чатом, медиаплеером и управлением медиатекой.
+### 1. `/user` — Conversational AI & Multimedia Workspace
+**Path:** `src/fastapi/webinterface/user/`  
+**Features:**
+- Interactive AI chat with SSE streaming and WebSocket support
+- RAG semantic search and capability-based routing
+- Integrated media player (CosmicPlayer)
+- Speech-to-Text (STT) and voice control
 
-**Ключевые возможности:**
-- 🤖 **AI-чат с Gemini** — потоковая обработка, RAG-поиск по медиатеке
-- 🎬 **Интегрированный медиаплеер** — поддержка различных форматов, воспроизведение с паузой/продолжением
-- 🔍 **RAG-поиск** — семантический поиск по локальной медиатеке
-- 🧩 **Плагины** — расширяемая система через Function Calling
-- 🔊 **Голосовой ввод** — через Web Speech API
-- 🧲 **Управление торрентами** — Integration с qBittorrent
+### 2. `/admin` — Modular Administration Dashboard
+**Path:** `src/fastapi/webinterface/admin/`  
+**Features:**
+- Unified administrative container dynamically mounting modular tab controllers:
+  - **`models_tab`:** AI Provider configuration (Gemini, Foundry, ONNX, Ollama, Windows AI, OpenAI)
+  - **`skills_tab`:** Universal skills registry, tool tester, and JSON contract inspector
+  - **`mcp_tab`:** Model Context Protocol servers and live tool status
+  - **`rag_tab`:** Vector index status, search playground, and rebuild triggers
+  - **`agents_tab`:** Subagent memory, execution quotas, and scheduling
+  - **`google_accounts_tab`:** Google OAuth credentials and synchronization status
+  - **`plugins_tab`:** Extensible plugin activation and runtime options
+  - **`search_tab`:** Codebase and document search
+  - **`sources_tab`:** Connected drives and data source explorer
+  - **`tts_tab` & `voice_tab`:** Text-to-speech and voice input configuration
+  - **`users_tab`:** User management and access tokens
+  - **`instructions_tab`:** System prompt loader and rules viewer
 
-**Архитектура:**
-```javascript
-// Основные модули
-├── main.js              // Основная логика интерфейса
-├── index.html           // HTML-каркас
-├── css/                 // Стили
-└── components/          // Moduleные компоненты
-```
+### 3. `/rc` — Voice & Remote Control
+**Path:** `src/fastapi/webinterface/rc/`  
+**Features:**
+- Voice-activated command listener (Web Speech API)
+- Real-time player and assistant control via `/ws/control`
 
-### 2. `/admin` — Административный интерфейс
+### 4. `/user_tts` — Text-to-Speech Studio
+**Path:** `src/fastapi/webinterface/user_tts/`  
+**Features:**
+- Speech synthesis playground across Edge-TTS and Silero neural voices
+- Rate, pitch, and SSML tuning
 
-**Путь:** `webinterface/admin/`
-**Пароль:** `onela`
-**Description:** Полный контроль над системой, мониторинг и управление.
+---
 
-**Вкладки:**
-1. **💬 Чат** — административный AI-чат с расширенными возможностями
-2. **🧲 Торренты** — управление qBittorrent, мониторинг загрузок
-3. **🎬 Медиатека** — сканирование, классификация, аудит, RAG-индексы
-4. **⚙️ Управление** — системные настройки, управление агентами
-5. **📚 Справочник** — документация, справка, CODE_RULES
-
-**Особенности:**
-- 🔒 **Парольная защита** — доступ только с правильным паролем
-- 📊 **Панель мониторинга** — state системы управления медиа
-- ⚙️ **Configuration агентов** — настройка предзагрузки, очистки, квот
-- 🧠 **Управление RAG** — переиндексация, статистика поиска
-
-**Архитектура:**
-```javascript
-// Loading вкладок из модулей
-async function loadTabContent(tabName, url) {
-  // Динамическая Loading HTML и JS для каждой вкладки
-  // Используется Moduleный подход
-}
-```
-
-### 3. `/rc` — Пульт дистанционного управления
-
-**Путь:** `webinterface/rc/`
-**Description:** Упрощённый интерфейс для голосового управления.
-
-**Ключевые возможности:**
-- 🎤 **Голосовой ввод** — "ОК Google" стиль активации
-- 🔊 **Text-to-Speech** — озвучивание ответов AI
-- ▶️ **Быстрое управление** — пауза, продолжение, громкость
-- 📱 **Мобильная оптимизация** — крупные элементы для сенсорного управления
-
-### 4. `/tgmini` — Telegram Mini App
-
-**Путь:** `webinterface/tgmini/`
-**Description:** Интерфейс для интеграции с Telegram.
-
-**Функции:**
-- 📱 **Мобильная версия** — оптимизирована для мобильных устройств
-- 🔔 **Уведомления** — Integration с Telegram Notifications API
-- 🎮 **Удалённое управление** — контроль плеера из Telegram
-- 🔗 **Шаринг контента** — быстрая отправка медиа в чаты
-
-### 5. `/tv` — Телевизионный интерфейс
-
-**Путь:** `webinterface/tv/`
-**Description:** Упрощённый интерфейс для телевизоров и больших экранов.
-
-**Особенности:**
-- 📺 **TV-оптимизация** — крупные элементы, навигация стрелками
-- 🎮 **Поддержка пультов** — кнопочная навигация
-- 🎬 **Минимализм** — фокус на контенте, минимум интерфейса
-- ⚡ **Быстрая Loading** — оптимизация для слабых устройств
-
-### 6. `/user_tts` — TTS-тестирование
-
-**Путь:** `webinterface/user_tts/`
-**Description:** Специализированный интерфейс для тестирования Text-to-Speech.
-
-**Функции:**
-- 🔊 **Предпросмотр TTS** — тестирование разных голосов и настроек
-- 📝 **Редактор текста** — ввод текста для синтеза
-- 🎵 **Настройки аудио** — громкость, скорость, тон
-- 💾 **Сохранение пресетов** — профили TTS-настроек
-
-## 🧩 Moduleные компоненты
-
-### Общие компоненты (переиспользуются)
+## 📁 Webinterface Layout
 
 ```
-webinterface/
-├── chat/              # Компоненты чата
-│   ├── main.js        # Логика чата
-│   └── index.html     # HTML шаблон
-├── media/             # Компоненты медиатеки
-│   ├── main.js        # Логика управления медиа
-│   └── index.html     # HTML шаблон
-├── torrents/          # Компоненты торрентов
-│   ├── main.js        # Логика qBittorrent
-│   └── index.html     # HTML шаблон
-├── help/              # Справочные материалы
-│   ├── main.js        # Логика справки
-│   └── index.html     # HTML шаблон
-└── admin_tab/         # Административные компоненты
-    ├── main.js        # Логика управления
-    └── index.html     # HTML шаблон
+src/fastapi/webinterface/
+├── index.html                  # Landing page
+├── admin/                      # Admin shell and layout
+├── user/                       # User chat and multimedia interface
+├── rc/                         # Remote voice control
+├── user_tts/                   # Dedicated TTS studio
+├── admin_tab/                  # System administration settings
+├── agents_tab/                 # Subagent configuration tab
+├── google_accounts_tab/        # Google OAuth sync tab
+├── instructions_tab/           # Instructions & prompts tab
+├── mcp_tab/                    # MCP servers & tools tab
+├── models_tab/                 # AI model routing tab
+├── plugins_tab/                # Plugin manager tab
+├── rag_tab/                    # RAG vector index tab
+├── search_tab/                 # Code/media search tab
+├── skills_tab/                 # AI skills registry tab
+├── sources_tab/                # Data sources tab
+├── tts_tab/ & voice_tab/       # Audio & speech tabs
+├── users_tab/                  # User accounts tab
+├── js/ & css/                  # Shared utility libraries and styles
+└── locales/                    # Multilingual localization bundles
 ```
 
-### Система локализации
+---
 
-```
-webinterface/locales/
-├── en/                # Английский
-│   ├── common.json    # Общие фразы
-│   ├── chat.json      # Фразы чата
-│   └── media.json     # Фразы медиа
-└── ru/                # Русский
-    ├── common.json    # Общие фразы
-    ├── chat.json      # Фразы чата
-    └── media.json     # Фразы медиа
-```
-
-**Технология:** i18next для динамической смены языка.
-
-## 🔧 Техническая реализация
-
-### Loading и рендеринг
-
-```javascript
-// admin/main.js — пример Moduleной загрузки
-async function loadTabContent(tabName, url) {
-  // 1. Загружаем HTML
-  const response = await fetch(url);
-  const html = await response.text();
-  
-  // 2. Вставляем в контейнер
-  const container = document.getElementById(`tab-${tabName}`);
-  container.innerHTML = html;
-  
-  // 3. Загружаем JS Module
-  const script = document.createElement('script');
-  script.src = `/html/${tabName}/main.js`;
-  container.appendChild(script);
-}
-```
-
-### Коммуникация с бэкендом
-
-```javascript
-// Единый API Module
-window.api = {
-  async fetch(url, options = {}) {
-    const response = await fetch(url, options);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return response.json();
-  },
-  
-  // Специализированные методы
-  chat: {
-    async send(message) {
-      return this.fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message })
-      });
-    }
-  }
-};
-```
-
-### Authentication и безопасность
-
-```javascript
-// Admin защита паролем
-const ADMIN_PASSWORD = 'onela';
-
-function verifyPassword() {
-  const password = document.getElementById('admin-password').value;
-  if (password === ADMIN_PASSWORD) {
-    // Разрешить доступ
-    document.getElementById('admin-interface').style.display = 'block';
-    initInterface();
-  } else {
-    // Показать ошибку
-    showPasswordError();
-  }
-}
-```
-
-## 🚀 Разработка и расширение
-
-### Добавление нового интерфейса
-
-1. **Создать директорию** в `webinterface/`
-2. **Добавить роут** в `main.py`:
-   ```python
-   @app.get("/new-interface")
-   async def new_interface():
-       return FileResponse("webinterface/new-interface/index.html")
-   ```
-3. **Реализовать модули**:
-   - `index.html` — HTML каркас
-   - `main.js` — основная логика
-   - `css/` — стили (по необходимости)
-
-### Расширение существующего интерфейса
-
-1. **Добавить компоненты** в соответствующую директорию
-2. **Обновить локализацию** при добавлении текста
-3. **Протестировать** на всех поддерживаемых браузерах
-
-### Лучшие практики
-
-1. **Moduleность** — переиспользуйте компоненты между интерфейсами
-2. **Локализация** — все тексты через i18next
-3. **Обработка ошибок** — graceful degradation при проблемах с API
-4. **Оптимизация** — ленивая Loading компонентов
-5. **Доступность** — поддержка клавиатурной навигации, ARIA атрибуты
-
-## 📊 Мониторинг и отладка
-
-### Инструменты разработчика
-
-1. **Консоль браузера** — логи загрузки и ошибок
-2. **Network tab** — мониторинг API запросов
-3. **LocalStorage** — сохранённые настройки и язык
-
-### Распространённые проблемы
-
-1. **CORS ошибки** — проверьте настройки сервера
-2. **Проблемы с путями** — используйте абсолютные пути `/api/...`
-3. **Локализация** — проверьте загрузку JSON файлов локализации
-4. **Moduleная Loading** — убедитесь что JS файлы доступны по указанным путям
-
-## 📚 Полезные ссылки
-
-- [FastAPI документация](https://fastapi.tiangolo.com/)
-- [i18next документация](https://www.i18next.com/)
-- [Bootstrap 5 документация](https://getbootstrap.com/docs/5.3/)
-- [Web Speech API документация](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API)
+**Status:** ✅ Up to date (September 2026)  
+**Version:** 3.0

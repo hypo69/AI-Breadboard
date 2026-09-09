@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 from collections import defaultdict, Counter
 
-PROJECT_ROOT = Path(__file__).parent
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 def find_python_files():
     """Найти все Python файлы в корне проекта."""

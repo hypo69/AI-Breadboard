@@ -216,15 +216,16 @@ def run_skills_command(args: argparse.Namespace) -> int:
     """
     registry = SkillRegistry()
     sub = args.subcommand
+    lang = getattr(args, 'lang', None)
 
     if sub == 'list':
-        for skill in registry.discover():
-            print(f"{skill.name}\t{skill.description}")
+        for skill in registry.discover(lang=lang):
+            print(f"{skill.name}\t{skill.get_description(lang) if lang else skill.description}")
         return 0
 
     if sub == 'search':
-        for skill in registry.search(args.query):
-            print(f"{skill.name}\t{skill.description}")
+        for skill in registry.search(args.query, lang=lang):
+            print(f"{skill.name}\t{skill.get_description(lang) if lang else skill.description}")
         return 0
 
     if sub in ('show', 'export'):
@@ -233,13 +234,53 @@ def run_skills_command(args: argparse.Namespace) -> int:
                 skill = registry.get(args.name)
                 print(skill.prompt())
             else:
-                print(registry.export_json(args.name, include_instructions=not args.without_instructions))
+                print(registry.export_json(args.name, include_instructions=not args.without_instructions, lang=lang))
             return 0
         except KeyError as error:
             print(f"Error: {error}")
             return 1
 
     print(f"Unknown skills subcommand: {sub}")
+    return 1
+
+def run_plugins_command(args: argparse.Namespace) -> int:
+    """Plugin management and scaffolding commands.
+
+    Args:
+        args (argparse.Namespace): Command arguments.
+
+    Returns:
+        int: Exit code (0 on success, 1 on error).
+    """
+    sub = args.subcommand
+    if sub == 'list':
+        from plugins import load_plugins
+        loaded = load_plugins()
+        lang = getattr(args, 'lang', None)
+        print("\n--- INSTALLED PLUGINS ---")
+        for name, p in sorted(loaded.items()):
+            t = p.get_title(lang) if lang else p.title
+            d = p.get_description(lang) if lang else p.description
+            status = "enabled" if p.enabled else "disabled"
+            print(f"[{p.icon}] {name} ({t}) - {status}\n    {d}")
+        print("-------------------------\n")
+        return 0
+
+    if sub == 'create':
+        from scripts.dev.init_plugin import create_plugin
+        create_plugin(
+            name=args.name,
+            title=getattr(args, 'title', '') or '',
+            title_ru=getattr(args, 'title_ru', '') or '',
+            description=getattr(args, 'description', '') or '',
+            description_ru=getattr(args, 'description_ru', '') or '',
+            category=getattr(args, 'category', 'general') or 'general',
+            icon=getattr(args, 'icon', '🧩') or '🧩',
+            scope=getattr(args, 'scope', 'system') or 'system',
+        )
+        return 0
+
+    print(f"Unknown plugins subcommand: {sub}")
     return 1
 
 def run_db_command(args: argparse.Namespace) -> int:
@@ -367,14 +408,34 @@ Examples:
 
     skills_parser = subparsers.add_parser('skills', help='Universal skills registry')
     skills_subparsers = skills_parser.add_subparsers(dest='subcommand', help='Subcommands')
-    skills_subparsers.add_parser('list', help='List discovered skills')
+    skills_list = skills_subparsers.add_parser('list', help='List discovered skills')
+    skills_list.add_argument('--lang', '-l', help='Language code (e.g. en, ru, es)')
     skills_search = skills_subparsers.add_parser('search', help='Search skills by name or description')
     skills_search.add_argument('query', help='Search terms')
+    skills_search.add_argument('--lang', '-l', help='Language code for output (e.g. en, ru, es)')
     skills_show = skills_subparsers.add_parser('show', help='Print Markdown instructions')
     skills_show.add_argument('name', help='Skill name')
     skills_export = skills_subparsers.add_parser('export', help='Export a portable JSON skill contract')
     skills_export.add_argument('name', help='Skill name')
     skills_export.add_argument('--without-instructions', action='store_true', help='Exclude Markdown instructions')
+    skills_export.add_argument('--lang', '-l', help='Language code for exported description')
+
+    # ==========================================================================
+    # Plugins Management Subparser
+    # ==========================================================================
+    plugins_parser = subparsers.add_parser('plugins', help='System and user plugins management and scaffolding')
+    plugins_subparsers = plugins_parser.add_subparsers(dest='subcommand', help='Subcommands')
+    plugins_list = plugins_subparsers.add_parser('list', help='List installed plugins')
+    plugins_list.add_argument('--lang', '-l', help='Language code for localized title and description')
+    plugins_create = plugins_subparsers.add_parser('create', help='Scaffold a new plugin')
+    plugins_create.add_argument('name', help='Plugin name (e.g. audit_logger)')
+    plugins_create.add_argument('--title', '-t', default='', help='English display title')
+    plugins_create.add_argument('--title-ru', '-tru', default='', help='Russian display title')
+    plugins_create.add_argument('--description', '-d', default='', help='English description')
+    plugins_create.add_argument('--description-ru', '-ru', default='', help='Russian description')
+    plugins_create.add_argument('--category', '-c', default='general', help='Plugin category')
+    plugins_create.add_argument('--icon', '-i', default='🧩', help='Emoji icon')
+    plugins_create.add_argument('--scope', '-s', default='system', choices=['system', 'user'], help='Plugin scope')
 
     # ==========================================================================
     # Database Migration Subparser
@@ -426,6 +487,7 @@ Examples:
         'rag': run_rag_command,
         'docs': run_docs_command,
         'skills': run_skills_command,
+        'plugins': run_plugins_command,
         'db': run_db_command,
     }
 

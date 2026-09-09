@@ -1,6 +1,9 @@
 ---
 name: db-inspector
-description: Инструментарий для анализа, проверки и модификации SQLite базы данных медиатеки. Используйте для получения схемы, проверки целостности данных, поиска неполных записей и отладки RAG.
+description: Toolkit for analyzing, verifying, and modifying the media SQLite database. Use for schema retrieval, data integrity checks, finding incomplete records, and RAG debugging.
+description_i18n:
+  en: Toolkit for analyzing, verifying, and modifying the media SQLite database. Use for schema retrieval, data integrity checks, finding incomplete records, and RAG debugging.
+  ru: Инструментарий для анализа, проверки и модификации SQLite базы данных медиатеки. Используйте для получения схемы, проверки целостности данных, поиска неполных записей и отладки RAG.
 ---
 
 # DB Inspector

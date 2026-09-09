@@ -226,6 +226,37 @@ def compress_lines(lines: list, min_repeat: int = 2) -> list:
     
     return result
 
+class PrettyConsoleFormatter(logging.Formatter):
+    """
+    Консольный форматтер с автоматическим форматированием JSON и вложенных структур.
+    """
+
+    def format(self, record: logging.LogRecord) -> str:
+        """
+        Форматирует лог-запись для консоли с применением pformat к JSON и структурам данных.
+        
+        Args:
+            record: LogRecord для форматирования.
+            
+        Returns:
+            Отформатированная строка лога.
+        """
+        from src.utils.printer import pformat
+        try:
+            orig_msg = record.getMessage()
+            formatted_msg = pformat(orig_msg)
+            orig_record_msg = record.msg
+            orig_args = record.args
+            record.msg = formatted_msg
+            record.args = None
+            result = super().format(record)
+            record.msg = orig_record_msg
+            record.args = orig_args
+            return result
+        except Exception:
+            return super().format(record)
+
+
 class Logger(metaclass=SingletonMeta):
     """
     Универсальный логгер с поддержкой цветного вывода, файловых логов и JSON формата.
@@ -285,10 +316,25 @@ class Logger(metaclass=SingletonMeta):
                         self.playwright_log_path, self.yt_dlp_log_path]:
             log_path.touch(exist_ok=True)
 
-        # Консольный логгер
+        # Настройка консольного логгера и перехват root логгера (для SDK и сторонних библиотек)
+        console_formatter = PrettyConsoleFormatter("%(asctime)s - %(levelname)s - %(message)s")
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(console_formatter)
+
         self.logger_console: logging.Logger = logging.getLogger("logger_console")
         self.logger_console.setLevel(logging.DEBUG)
         self.logger_console.propagate = False
+        if not self.logger_console.handlers:
+            self.logger_console.addHandler(console_handler)
+
+        root_logger = logging.getLogger()
+        if not root_logger.handlers:
+            root_logger.addHandler(console_handler)
+            root_logger.setLevel(logging.INFO)
+        else:
+            for h in root_logger.handlers:
+                if isinstance(h, logging.StreamHandler):
+                    h.setFormatter(console_formatter)
 
         # Определение режима отладки
         self._setup_debug_mode()
@@ -400,28 +446,29 @@ class Logger(metaclass=SingletonMeta):
             pass
         return ("unknown", "unknown", 0)
 
-    def _format_message(self, message: str, ex: Optional[Exception] = None, 
+    def _format_message(self, message: Any, ex: Optional[Exception] = None, 
                        color: Optional[Tuple[str, str]] = None) -> str:
         """
         Форматирует сообщение с опциональным цветом и информацией об исключении.
         
         Args:
-            message: Текст сообщения.
+            message: Сообщение или объект для форматирования.
             ex: Exception для добавления.
             color: Tuple (текст_цвет, фон_цвет).
             
         Returns:
             Отформатированное сообщение.
         """
+        from src.utils.printer import pformat
+        formatted = pformat(message)
+        if ex:
+            formatted = f"{formatted} {str(ex)}"
         if color:
             text_color, bg_color = color
             text_color = TEXT_COLORS.get(text_color, colorama.Fore.RESET)
             bg_color = BG_COLORS.get(bg_color, colorama.Back.RESET)
-            ex_str = f" {str(ex)}" if ex else ""
-            message = f"{text_color}{bg_color}{message}{ex_str}{colorama.Style.RESET_ALL}"
-        elif ex:
-            message = f"{message} {str(ex)}"
-        return message
+            return f"{text_color}{bg_color}{formatted}{colorama.Style.RESET_ALL}"
+        return formatted
 
     def _route_to_module_logger(self, message: str, level: int, 
                                filename: str) -> None:
@@ -455,14 +502,14 @@ class Logger(metaclass=SingletonMeta):
                     pass
                 break
 
-    def log(self, level: int, message: str, ex: Optional[Exception] = None, 
+    def log(self, level: int, message: Any, ex: Optional[Exception] = None, 
             exc_info: bool = False, color: Optional[Tuple[str, str]] = None) -> None:
         """
         Логирует сообщение с заданным уровнем и параметрами.
         
         Args:
             level: Уровень логирования (logging.INFO, logging.ERROR и т.д.).
-            message: Текст сообщения.
+            message: Текст сообщения или структурированные данные.
             ex: Exception для логирования.
             exc_info: Включить полную информацию об исключении.
             color: Tuple (текст_цвет, фон_цвет) для окраски.
@@ -471,31 +518,33 @@ class Logger(metaclass=SingletonMeta):
         if level == logging.DEBUG and not self.is_debug_mode:
             return
 
-        formatted_message = self._format_message(message, ex, color)
+        from src.utils.printer import pformat
+        plain_formatted = pformat(message)
+        if ex:
+            plain_formatted = f"{plain_formatted} {str(ex)}"
+
+        colored_message = self._format_message(message, ex, color)
         
         # Логирование в консоль
         if self.logger_console:
-            self.logger_console.log(level, formatted_message, exc_info=exc_info)
+            self.logger_console.log(level, colored_message, exc_info=exc_info)
 
-        # Логирование в JSON (без форматирования)
+        # Логирование в JSON (без ANSI кодов)
         if self.logger_file_json:
-            self.logger_file_json.log(level, message, exc_info=exc_info)
+            self.logger_file_json.log(level, plain_formatted, exc_info=exc_info)
 
         # Логирование по типам
         if level == logging.INFO and self.logger_file_info:
-            self.logger_file_info.log(level, formatted_message)
+            self.logger_file_info.log(level, plain_formatted)
         elif level == logging.DEBUG and self.logger_file_debug:
-            self.logger_file_debug.log(level, formatted_message)
+            self.logger_file_debug.log(level, plain_formatted)
         elif level in [logging.ERROR, logging.CRITICAL] and self.logger_file_errors:
-            self.logger_file_errors.log(level, formatted_message)
+            self.logger_file_errors.log(level, plain_formatted)
 
         # Маршрутизация по модулям
         try:
             filename, func_name, line_no = self._get_caller_info(depth=3)
-            clean_msg = str(message)
-            if ex:
-                clean_msg += f" {str(ex)}"
-            self._route_to_module_logger(clean_msg, level, filename)
+            self._route_to_module_logger(plain_formatted, level, filename)
         except Exception:
             pass
 
@@ -514,38 +563,38 @@ class Logger(metaclass=SingletonMeta):
         except Exception:
             pass
 
-    def info(self, message: str, ex: Optional[Exception] = None, exc_info: bool = False,
+    def info(self, message: Any, ex: Optional[Exception] = None, exc_info: bool = False,
             text_color: str = "green", bg_color: str = "") -> None:
         """Логирует сообщение уровня INFO с зелёным цветом по умолчанию."""
         color = (text_color, bg_color) if bg_color else (text_color, "")
         self.log(logging.INFO, message, ex, exc_info, color)
 
-    def success(self, message: str, ex: Optional[Exception] = None, exc_info: bool = False,
+    def success(self, message: Any, ex: Optional[Exception] = None, exc_info: bool = False,
                text_color: str = "light_green", bg_color: str = "") -> None:
         """Логирует сообщение об успешной операции с жёлтым цветом по умолчанию."""
         color = (text_color, bg_color) if bg_color else (text_color, "")
         self.log(logging.INFO, message, ex, exc_info, color)
 
-    def warning(self, message: str, ex: Optional[Exception] = None, exc_info: bool = False,
+    def warning(self, message: Any, ex: Optional[Exception] = None, exc_info: bool = False,
                text_color: str = "black", bg_color: str = "yellow") -> None:
         """Логирует сообщение уровня WARNING с чёрным текстом на жёлтом фоне."""
         color = (text_color, bg_color)
         self.log(logging.WARNING, message, ex, exc_info, color)
 
-    def debug(self, message: str, ex: Optional[Exception] = None, exc_info: bool = False,
+    def debug(self, message: Any, ex: Optional[Exception] = None, exc_info: bool = False,
              text_color: str = "cyan", bg_color: str = "") -> None:
         """Логирует сообщение уровня DEBUG с голубым цветом."""
         color = (text_color, bg_color) if bg_color else (text_color, "")
         self.log(logging.DEBUG, message, ex, exc_info, color)
 
-    def error(self, message: str, ex: Optional[Exception] = None, exc_info: bool = True,
+    def error(self, message: Any, ex: Optional[Exception] = None, exc_info: bool = True,
              text_color: str = "red", bg_color: str = "") -> None:
         """Логирует сообщение уровня ERROR с красным цветом и информацией об исключении."""
         color = (text_color, bg_color) if bg_color else (text_color, "")
         self.log(logging.ERROR, message, ex, exc_info, color)
 
-    def critical(self, message: str, ex: Optional[Exception] = None, exc_info: bool = True,
-                text_color: str = "white", bg_color: str = "red") -> None:
+    def critical(self, message: Any, ex: Optional[Exception] = None, exc_info: bool = True,
+                 text_color: str = "white", bg_color: str = "red") -> None:
         """Логирует критическую ошибку с белым текстом на красном фоне."""
         color = (text_color, bg_color)
         self.log(logging.CRITICAL, message, ex, exc_info, color)

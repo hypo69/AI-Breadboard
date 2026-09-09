@@ -236,8 +236,8 @@ response_2 = await active_model.chat_stream(q2, generation_config={'response_typ
 
 **Получение ключа:**
 ```python
-from plugins.media_organizer.core.media_rag_functions import _get_gemini_api_key
-api_key = _get_gemini_api_key()
+from src.secrets import get_gemini_api_key
+api_key = get_gemini_api_key()
 ```
 
 **Роутер ключей:**

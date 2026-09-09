@@ -179,13 +179,13 @@ class LogAnalyzerPlugin(BasePlugin):
             },
         ]
 
-    def get_manifest(self) -> Dict[str, Any]:
+    def get_manifest(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
         """Return extended manifest for plugin.
 
         Returns:
             Dict[str, Any]: Manifest dictionary.
         """
-        manifest = super().get_manifest()
+        manifest = super().get_manifest(*args, **kwargs)
         manifest.update({
             "log_directory": str(get_default_log_dir()),
             "reports_directory": str(get_default_reports_dir()),

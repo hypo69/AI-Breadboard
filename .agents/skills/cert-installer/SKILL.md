@@ -1,6 +1,9 @@
 ---
 name: cert-installer
-description: Automates generation and installation of trusted SSL certificates for local breadboard environment
+description: Automates generation and installation of trusted SSL certificates for local breadboard environment.
+description_i18n:
+  en: Automates generation and installation of trusted SSL certificates for local breadboard environment.
+  ru: Автоматизирует генерацию и установку доверенных SSL-сертификатов для локального окружения Breadboard.
 ---
 
 # Cert Installer Skill

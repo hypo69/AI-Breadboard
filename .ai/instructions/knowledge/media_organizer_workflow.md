@@ -1,147 +1,113 @@
-# Workflow процесса сканирования и записи на диск
+# Media Organizer Plugin Workflow (`plugins/media_organizer`)
 
-## Основной процесс сканирования
+## 📋 Overview
+This document describes the media scanning, metadata classification, and database storage workflows utilized by the `plugins/media_organizer` plugin in AI Breadboard.
+
+---
+
+## 🔄 Main Scanning & Organization Pipeline
 
 ```
-1. Запуск сканирования
+1. Initiate Scan (/api/media/scan or CLI)
    ↓
-2. Initialization (TMDBClient, MediaDatabase, MediaScanner)
+2. Initialize Subsystems (TMDBClient, MediaDatabase, MediaScanner)
    ↓
-3. Базовое сканирование (сканируются папки "фильмы" и "сериалы")
+3. Base Directory Traversal (movies and TV series root directories)
    ↓
-4. Классификация медиа через TMDB + Gemini (PersistentGenreClassifier)
+4. Metadata Classification via TMDB + Gemini (PersistentGenreClassifier)
    ↓
-5. Поиск дубликатов между дисками (db.update_duplicates)
+5. Cross-Disk Duplicate Detection (db.update_duplicates)
    ↓
-6. Назначение порядковых номеров (db.assign_numbers)
+6. Sequential Media Indexing (db.assign_numbers)
    ↓
-7. Глубокое сканирование сериалов (эпизоды)
+7. TV Series Deep Inspection (seasons & episodes parsing)
    ↓
-8. Поиск торрентов и исправление путей
+8. Torrent Matching and Path Reconciliation
    ↓
-9. Генерация отчётов (JSON и Markdown)
+9. Report Generation (JSON and Markdown summaries)
    ↓
-10. Аудит (сверка с физическим наличием)
+10. Storage Audit (physical disk reconciliation)
    ↓
-11. Назначение категорий и меток торрентам
+11. Category & Label Assignment
    ↓
-12. Отчет о дубликатах
-   ↓
-13. Открытие отчёта в браузере
+12. Duplicate Analysis & Reporting
 ```
 
-## Модули
+---
 
-| Module | Назначение |
-| :--- | :--- |
-| `media_scanner.py` | Классы `TMDBClient` и `MediaScanner` для сканирования файловой структуры и получения данных из TMDB API |
-| `media_auditor.py` | Class `MediaAuditor` для сверки данных БД с физическим наличием файлов на диске и состоянием торрентов |
-| `genre_classifier.py` | Классы `GenreClassifier` и `PersistentGenreClassifier` для классификации медиа по жанрам через TMDB и Gemini |
-| `report_generator.py` | Функции `export_disk_json`, `export_disk_md` для экспорта данных из БД в JSON и Markdown |
-| `media_rebuild.py` | Function `rebuild_db` для консолидации дублирующихся записей в БД |
-| `media_tracker.py` | Утилиты для фильтрации путей, поиска торрентов, назначения категорий |
+## 📦 Core Plugin Modules
 
-
-
-## Структура базы данных
-
-**Правило: Структура записи определяется полем `media_type` — `[movie, serial, season, episode]`**
-
-Логическая иерархия: `episode → season → serial` (эпизод принадлежит сезону, сезон принадлежит сериалу)
-
-**Связи:**
-- Для `season`: `parent_id` указывает на `id` сериала
-- Для `episode`: `parent_id` указывает на `id` сезона
-
-**Структура таблицы `media`:**
-
-| Поле | Тип | Описание |
+| Module | Location | Purpose |
 | :--- | :--- | :--- |
-| `disk_name` | TEXT | Имя диска |
-| `path` | TEXT | Полный путь к файлу/папке |
-| `number` | INTEGER | Порядковый номер |
-| `title` | TEXT | Название медиа |
-| `title_orig` | TEXT | Оригинальное название |
-| `title_ru` | TEXT | Русское название |
-| `type` | TEXT | Тип: `movie`, `series`, `season`, `episode` |
-| `year` | INTEGER | Год |
-| `main_category` | TEXT | Основная категория |
-| `country` | TEXT | Страна |
-| `genres` | TEXT | JSON-массив жанров |
-| `directors` | TEXT | JSON-массив режиссёров |
-| `cast` | TEXT | JSON-массив актёров |
-| `num_of_seasons` | INTEGER | Количество сезонов (для сериалов) |
-| `num_episodes_per_season` | TEXT | JSON-массив количества серий по сезонам |
-| `status` | TEXT | Status (для сериалов) |
-| `rating` | TEXT | JSON-объект с оценками (IMDb, TMDB) |
-| `awards` | TEXT | JSON-массив наград |
-| `plot` | TEXT | Сюжет |
-| `atmosphere` | TEXT | Атмосфера |
-| `why_watch` | TEXT | Почему стоит смотреть |
-| `mood` | TEXT | Настроение |
-| `final_verdict` | TEXT | Финальный вердикт |
-| `can_stop_at` | TEXT | Можно остановиться после (сезон/серия) |
-| `quote` | TEXT | Цитата |
-| `facts` | TEXT | JSON-массив интересных фактов |
-| `similar` | TEXT | JSON-массив похожих медиа |
-| `parent_id` | INTEGER | ID родительского элемента (для season/episode) |
-| `episode_scan_skipped` | INTEGER | 1 если сканирование эпизодов пропущено для длинного сериала, 0 — если выполнено |
+| `media_scanner.py` | `plugins/media_organizer/` | Filesystem traversal and TMDB API metadata extraction |
+| `media_auditor.py` | `plugins/media_organizer/` | Database vs. physical disk consistency verification |
+| `genre_classifier.py` | `plugins/media_organizer/` | Genre classification and enrichment via TMDB & Gemini |
+| `report_generator.py` | `plugins/media_organizer/` | Markdown and JSON catalog export utilities |
+| `media_rebuild.py` | `plugins/media_organizer/` | Database and RAG index reconstruction and deduplication |
+| `media_tracker.py` | `plugins/media_organizer/` | Path sanitization, torrent matching, and categorization |
 
-**Правила заполнения полей по типам:**
+---
 
-| Тип | `num_of_seasons` | `num_episodes_per_season` | `parent_id` |
-| :--- | :--- | :--- | :--- |
-| `movie` | игнорируется | игнорируется | `0` или `NULL` |
-| `series` | количество сезонов сериала | JSON-массив количества серий по сезонам | `0` или `NULL` |
-| `season` | игнорируется | JSON-массив количества серий сезона (обычно `[n]`) | ID сериала |
-| `episode` | игнорируется | игнорируется | ID сезона |
+## 🗄️ Database Schema & Data Model
 
-**Примечания:**
-- Для `movie` и `series` поле `parent_id` равно `0` или `NULL`
-- Все JSON-поля хранятся как TEXT в SQLite и автоматически десериализуются при чтении
+**Primary Rule:** Record structure is governed by `type` — `[movie, series, season, episode]`.
 
-## Взаимодействие с моделью Gemini
+**Logical Hierarchy:** `episode → season → series` (an episode belongs to a season, a season belongs to a series).
 
-**Логика запросов:**
+**Relationships:**
+- For `season`: `parent_id` points to the `id` of the parent `series`.
+- For `episode`: `parent_id` points to the `id` of the parent `season`.
+- For `movie` and `series`: `parent_id` is `0` or `NULL`.
 
-### 1. Для фильма (`movie`)
-**Запрос:** "Напиши подробную карточку фильма [название]"
-**Ожидаемый формат:** JSON как в примере фильма в `instruction.md`
+### `media` Table Structure:
 
-### 2. Для сериала (`series`)
-**Запрос:** "Напиши подробную карточку сериала [название] (все сезоны)"
-**Ожидаемый формат:** JSON как в примере сериала в `instruction.md`, с массивом `seasons`
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `disk_name` | TEXT | Storage disk identifier / label |
+| `path` | TEXT | Absolute file or directory path |
+| `number` | INTEGER | Sequential library identifier |
+| `title` | TEXT | Primary title |
+| `title_orig` | TEXT | Original international title |
+| `title_ru` | TEXT | Localized title |
+| `type` | TEXT | Entity type: `movie`, `series`, `season`, `episode` |
+| `year` | INTEGER | Release year |
+| `main_category` | TEXT | Primary categorization tag |
+| `country` | TEXT | Country of origin |
+| `genres` | TEXT | JSON array of genre strings |
+| `directors` | TEXT | JSON array of director names |
+| `cast` | TEXT | JSON array of primary cast members |
+| `num_of_seasons` | INTEGER | Total season count (series only) |
+| `num_episodes_per_season` | TEXT | JSON array of episode counts per season |
+| `status` | TEXT | Production status (e.g. `Returning Series`, `Ended`) |
+| `rating` | TEXT | JSON object with IMDb / TMDB score metrics |
+| `awards` | TEXT | JSON array of accolades and awards |
+| `plot` | TEXT | Comprehensive plot summary (100–150 words) |
+| `atmosphere` | TEXT | Atmospheric / tonal keywords (~15 words) |
+| `why_watch` | TEXT | Curated recommendation rationale |
+| `mood` | TEXT | Mood descriptor tags |
+| `final_verdict` | TEXT | Concluding editorial summary |
+| `can_stop_at` | TEXT | Natural stopping point recommendation |
+| `quote` | TEXT | Key memorable quote |
+| `facts` | TEXT | JSON array of trivia facts |
+| `similar` | TEXT | JSON array of related titles |
+| `parent_id` | INTEGER | Foreign key ID to parent entity |
+| `episode_scan_skipped` | INTEGER | `1` if episode drill-down was skipped for large series, `0` otherwise |
 
-**Умное сканирование эпизодов:**
-- Система checks количество сезонов и общее количество эпизодов через TMDB API
-- Если сезонов > 15 ИЛИ общее количество эпизодов > 100, или сериал является длинным ежедневным шоу:
-  - Запрос детальных эпизодов к Gemini **пропускается** (или переключается на `overview`)
-  - В БД сохраняется `episode_scan_skipped = true`
-  - Аудит пропускает проверку количества эпизодов
+---
 
-### 3. Для сезона (`season`)
-**Запрос:** "Напиши подробную карточку [номер] сезона сериала [название]"
-**Ожидаемый формат:** JSON с полями:
-- Все поля как для фильма (`title`, `plot`, `atmosphere`, `rating`, `facts`, `similar`, `review` и т.д.)
-- `season_number` — номер сезона
-- `episodes` — массив эпизодов с `episode_number`, `begins`, `ends`, `final_verdict`
-- `final_verdict` — вердикт по сезону
-- `parent_id` указывает на ID сериала
+## 🤖 Gemini AI Enrichment Protocol
 
-### 4. Для эпизода (`episode`)
-**Запрос:** "Напиши подробное описание [номер] эпизода [номер] сезона сериала [название]"
-**Ожидаемый формат:** JSON с полями:
-- Все поля как для фильма (`title`, `plot`, `atmosphere`, `rating`, `facts`, `similar`, `review` и т.д.)
-- `episode_number` — номер эпизода
-- `season_number` — номер сезона
-- `parent_id` указывает на ID сезона
+### 1. Movie Request (`movie`)
+- Prompt: `"Write a detailed media card for the movie [title]"`
+- Output Schema: JSON formatted according to media card template.
 
-**Примечание:** Запросы для эпизодов и сезонов выполняются только если сериал прошёл проверку на длину (сезонов ≤ 15 и эпизодов ≤ 100). Для длинных сериалов генерация детальной разбивки пропускается.
+### 2. Series Request (`series`)
+- Prompt: `"Write a detailed media card for the TV series [title] (all seasons)"`
+- Output Schema: JSON with embedded `seasons` and episode overview metadata.
 
-**Общие правила:**
-- Для всех типов заполняются одинаковые поля (как для фильма)
-- Разница только в иерархии связи через `parent_id`
-- `num_of_seasons`, `num_episodes_per_season`, `status` — только для сериала
-- Размер `plot`: 100-150 слов
-- Размер `liked`, `disliked`: 10-20 слов каждый
-- Размер `atmosphere`: ~15 слов
+### 3. Adaptive Scanning for Long Shows
+- TMDB season and episode counts are checked prior to requesting full episode cards.
+- If seasons count > 15 OR total episode count > 100 (e.g., daily soaps or long-running animation):
+  - Deep per-episode LLM generation is skipped to preserve tokens and execution time.
+  - Record flagged with `episode_scan_skipped = 1`.
+

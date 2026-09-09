@@ -1,6 +1,9 @@
 ---
 name: smart-deletion-duplicates
-description: Безопасное двухэтапное удаление медиа-файлов: удаление файла с диска, затем удаление записи из базы данных. Используйте для консолидации дубликатов.
+description: Safe two-step media file deletion: deletes file from disk, then removes entry from database. Use for duplicate consolidation.
+description_i18n:
+  en: Safe two-step media file deletion: deletes file from disk, then removes entry from database. Use for duplicate consolidation.
+  ru: Безопасное двухэтапное удаление медиа-файлов: удаление файла с диска, затем удаление записи из базы данных. Используйте для консолидации дубликатов.
 ---
 
 # Smart Deletion Duplicates

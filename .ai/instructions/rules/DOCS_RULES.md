@@ -187,9 +187,9 @@ Exceptions:
 **Пример:**
 ```python
 Examples:
-    >>> from core.ai import UnifiedChatModel
-    >>> model = UnifiedChatModel(model_name='gemini-2.0-flash')
-    >>> response = model.chat('Привет, мир!')
+    >>> from src.ai import UnifiedChatModel
+    >>> model = UnifiedChatModel(model_name='gemini-2.5-flash')
+    >>> response = model.chat('Hello world')
     >>> print(len(response) > 0)
     True
 ```
@@ -229,12 +229,12 @@ class MyClass:
 #   Поддержка отправки запросов, потоковых ответов, обработки ошибок.
 #
 # Examples:
-#   >>> from core.ai.foundry import FoundryConnector
+#   >>> from src.ai.providers.foundry import FoundryConnector
 #   >>> conn = FoundryConnector(url='http://localhost:54837')
 #   >>> conn.initialize()
 #
 # File: foundry_connector.py
-# Module: core.ai.foundry
+# Module: src.ai.providers.foundry
 # Class: FoundryConnector
 # Author: hypo69
 # Copyright: © 2026 hypo69
@@ -289,8 +289,8 @@ class MyClass:
 
 ### Базовый пример
 
-\`\`\`python
-from core.module import ClassName
+```python
+from src.module import ClassName
 
 obj = ClassName(param='value')
 result = obj.method()

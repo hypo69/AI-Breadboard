@@ -9,5 +9,5 @@ Internal developer and agent utility scripts for code inspection, dependency ana
 ---
 
 ## Tool Categories
-- **`ai/`**: RAG index rebuilders, skill package tools, and code searchers.
-- **`setup/`**: Dependency verification and header compliance auditors.
+- **[`ai/`](ai/)**: RAG index rebuilders (`rebuild_rag.py`, `rebuild_dev_rag.py`), skill packager (`package_skill.py`), code search (`search_code.py`), and documentation validator (`update_docs.py`).
+- **[`setup/`](setup/)**: Dependency tree analysis (`analyze_dependencies.py`), header scanner (`scan_headers.py`), and Markdown converter (`convert_to_md.py`).

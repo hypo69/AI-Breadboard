@@ -96,9 +96,10 @@ assist status
 py manage_tools.py <group> <command> [arguments]
 
 # Examples
-py manage_tools.py media scan --disk "disk 2"
-py manage_tools.py torrents assign
-py manage_tools.py check db
+py manage_tools.py skills list
+py manage_tools.py rag build
+py manage_tools.py db check-integrity
+py manage_tools.py docs generate
 ```
 
 ### Testing
@@ -134,6 +135,13 @@ Public system settings stored in root configuration:
     "host": "0.0.0.0",
     "port": 8000,
     "workers": 1
+  },
+  "logging": {
+    "enable_log_analyzer": false,
+    "max_size_mb": 10.0
+  },
+  "pprint": {
+    "json_indent": 6
   },
   "ai": {
     "use_foundry": true,

@@ -1,6 +1,9 @@
 ---
 name: tdd-doc-gen
-description: Навык автоматизированной генерации исчерпывающих Moduleных тестов, анализа влияния изменений на зависимые блоки и обновления документации кода.
+description: Automated test-driven development (TDD) documentation and unit test generator. Analyzes change impact on dependent components and updates codebase documentation.
+description_i18n:
+  en: Automated test-driven development (TDD) documentation and unit test generator. Analyzes change impact on dependent components and updates codebase documentation.
+  ru: Навык автоматизированной генерации исчерпывающих модульных тестов, анализа влияния изменений на зависимые блоки и обновления документации кода.
 ---
 
 # Skill: tdd-doc-gen

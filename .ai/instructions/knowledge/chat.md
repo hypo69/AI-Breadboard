@@ -1,30 +1,35 @@
-  Вот основные аспекты реализации чат-логики:
+# Conversational AI Architecture (`chat.md`)
 
-  1. Единый интерфейс взаимодействия (UnifiedChatModel)
-  Ключевым компонентом является core/ai/unified_chat.py. Вместо прямой работы с API конкретного провайдера, приложение использует class UnifiedChatModel.
-   * Автоматическое переключение: Если Google Gemini недоступен (или Returns ошибку), система автоматически переключается на Microsoft AI Foundry (локально развернутый
-     qwen3-0.6b-generic-cpu).
-   * Управление ключами: UnifiedChatModel управляет ротацией API-ключей Gemini, которые хранятся в защищенном файле core/secrets/gemini_keys.json.
+**Project:** `AI-Breadboard`  
+**Status:** ✅ Up to date (September 2026)
 
-  2. Структура запросов к модели
-  В зависимости от типа задачи используются разные методы UnifiedChatModel:
-   * chat(message, system_instruction, model_name): Базовый чат. Системная инструкция (System Prompt) загружается из .ai_instructions/prompts/chat/system_instruction.md.
-   * ask_with_tools(question, tools, dispatch_tool_call): Сложные запросы, требующие доступа к инструментам (Function Calling). Модель receives list доступных функций, а
-     dispatch_tool_call отвечает за исполнение выбранного инструмента.
-   * embed(text): Используется для RAG (Retrieval-Augmented Generation), преобразуя текстовые запросы в векторные представления через Gemini Embeddings API.
+---
 
-  3. Integration API и Плагины
-   * Маршрутизация: API-запросы чата обрабатываются в core/fastapi/router_chat.py (поддерживаются WebSockets/SSE для потоковых ответов).
-   * Динамические плагины: Function load_plugins(ai_model) в plugins/__init__.py динамически сканирует директорию plugins/, импортирует каждый плагин и передает ему экземпляр
-     модели. Это позволяет легко добавлять новые инструменты без изменения ядра чата.
+## 1. Unified Interface & Capability Dispatch
 
-  4. RAG-поиск по медиатеке
-   * Логика RAG сосредоточена в core/ai/gemini/rag.py и media_rag.py.
-   * Используется комбинация FAISS (для векторного поиска) и Gemini Embeddings для глубокого поиска по данным SQLite-базы медиатеки. Это позволяет боту отвечать на вопросы,
-     опираясь на реальный состав библиотеки (например, "какие фильмы этого жанра есть на диске?").
+The core conversational routing lives under [`src/ai/`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/ai) and [`src/ai/providers/`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/ai/providers). Rather than calling provider SDKs directly in routers, workloads are dispatched through unified interfaces supporting capability-driven routing (`chat`, `vision`, `ocr`, `embedding`, `code`).
 
-  Резюме для разработки
-  При добавлении нового функционала:
-   1. Не обращайтесь к GoogleGenerativeAI напрямую, используйте UnifiedChatModel из core/ai/unified_chat.py.
-   2. Используйте инструменты (tools) для взаимодействия с базой или другими сервисами, а не просите модель "вычислить" данные.
-   3. Системные промпты должны находиться в .ai_instructions/prompts/.
+### Provider Fallback & Routing
+- **Cloud Providers:** Google Gemini, OpenAI-compatible APIs, HuggingFace Hub, AGY SDK.
+- **Local Runtimes:** Microsoft Foundry Local, Windows AI APIs, ONNX Runtime (DirectML / CPU), Ollama.
+- **Dynamic Fallback:** Automatically switches to local execution if cloud quotas are exceeded or internet connectivity is unavailable.
+
+---
+
+## 2. Request Handling & Interaction Modes
+
+1. **`chat(...)`:** Standard text generation and multi-turn conversation with system instruction injection.
+2. **`ask_with_tools(...)`:** Function calling / tool execution loop integrating discovered skills from [`src/skills/`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/skills) and MCP tools from [`src/fastapi/router_mcp.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_mcp.py).
+3. **`embed(...)`:** Text vectorization used by [`src/rag/`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/rag).
+
+---
+
+## 3. API & Router Integration
+
+- Conversational API requests are handled by [`src/fastapi/router_chat.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_chat.py) and [`src/fastapi/router_openai.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_openai.py).
+- Supported streaming modes: SSE (Server-Sent Events) and Full-Duplex WebSockets (`/api/chat/ws`).
+
+---
+
+**Status:** ✅ Up to date (September 2026)  
+**Version:** 3.0

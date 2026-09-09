@@ -41,8 +41,8 @@ class RAGCleanerPlugin(BasePlugin):
         else:
             yield {"status": "error", "text": f"Path not found: {message}"}
 
-    def get_manifest(self) -> Dict[str, Any]:
-        manifest = super().get_manifest()
+    def get_manifest(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+        manifest = super().get_manifest(*args, **kwargs)
         manifest.update({
             "supported_extensions": [".zip", ".tar", ".gz", ".tgz", ".docx", ".pdf", ".html", ".htm", ".csv", ".json", ".txt", ".md"],
             "actions": [

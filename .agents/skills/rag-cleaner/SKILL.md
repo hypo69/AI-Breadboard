@@ -1,6 +1,9 @@
 ---
 name: rag-cleaner
-description: Плагин и навык для очистки и разбора входных файлов (PDF, Word, ZIP, HTML, CSV, JSON, TXT) для RAG.
+description: Plugin and skill for cleaning and parsing input files (PDF, Word, ZIP, HTML, CSV, JSON, TXT) for RAG pipelines.
+description_i18n:
+  en: Plugin and skill for cleaning and parsing input files (PDF, Word, ZIP, HTML, CSV, JSON, TXT) for RAG pipelines.
+  ru: Плагин и навык для очистки и разбора входных файлов (PDF, Word, ZIP, HTML, CSV, JSON, TXT) для RAG.
 ---
 
 # RAG Document Cleaner & Ingestor

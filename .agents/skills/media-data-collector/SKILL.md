@@ -1,3 +1,11 @@
+---
+name: media-data-collector
+description: Automated collector for detailed, factual, and structured movie and TV series metadata across multiple languages for RAG.
+description_i18n:
+  en: Automated collector for detailed, factual, and structured movie and TV series metadata across multiple languages for RAG.
+  ru: Автоматический сборщик подробных, фактических и структурированных метаданных фильмов и сериалов на нескольких языках для RAG.
+---
+
 # Media Data Collector
 
 Этот навык предназначен для сбора максимально подробной, фактической и структурированной информации о фильмах и сериалах для RAG.

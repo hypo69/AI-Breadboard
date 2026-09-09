@@ -1,6 +1,9 @@
 ---
 name: project-installer
-description: Interactive full-project installer and environment configurator for AI Breadboard. Guides through pre-flight checks, venv creation, dependency installation, SSL certs, global CLI setup, error self-healing, and post-installation directory verification.
+description: Interactive full-project installer and environment configurator for AI Breadboard. Guides through pre-flight checks, venv creation, dependency installation, SSL certs, global CLI setup, and directory verification.
+description_i18n:
+  en: Interactive full-project installer and environment configurator for AI Breadboard. Guides through pre-flight checks, venv creation, dependency installation, SSL certs, global CLI setup, and directory verification.
+  ru: Интерактивный установщик проекта и конфигуратор окружения для AI Breadboard. Пошагово выполняет предварительные проверки, создание venv, установку зависимостей, SSL-сертификаты и глобальный CLI.
 ---
 
 # 🚀 AI Breadboard Project Installer Skill

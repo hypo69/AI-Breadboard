@@ -18,15 +18,14 @@ Pretty printing and text formatting module.
 
 Functions:
     - `_color_text`: Apply color and style to text
-    - `pprint`: Pretty print data in human-readable format
+    - `pformat`: Format data into a pretty string with optional styling
+    - `pprint`: Pretty print data in human-readable format to console
 """
 
 import json
 import csv
-import pandas as pd
 from pathlib import Path
-from typing import Any
-from pprint import pprint as pretty_print
+from typing import Any, Optional
 
 # ANSI escape codes
 RESET = "\033[0m"
@@ -69,76 +68,178 @@ FONT_STYLES = {
     "underline": "\033[4m",
 }
 
+
 def _color_text(text: str, text_color: str = "", bg_color: str = "", font_style: str = "") -> str:
     """Apply color, background, and font styling to the text.
 
-    This helper function applies the provided color and font styles to the given text using ANSI escape codes.
-
     Args:
-        text: The text to be styled.
-        text_color: The color to apply to the text. Default is empty string (no color).
-        bg_color: The background color to apply. Default is empty string (no background).
-        font_style: The font style to apply to the text. Default is empty string (no style).
+        text (str): The text to be styled.
+        text_color (str): The color to apply to the text. Default is empty string.
+        bg_color (str): The background color to apply. Default is empty string.
+        font_style (str): The font style to apply to the text. Default is empty string.
 
     Returns:
-        The styled text as a string with ANSI escape codes applied.
+        str: The styled text as a string with ANSI escape codes applied.
 
     Example:
         >>> _color_text("Hello, World!", text_color="green", font_style="bold")
-        '\033[1m\033[32mHello, World!\033[0m'
+        '\\033[1m\\033[32mHello, World!\\033[0m'
     """
+    if not (text_color or bg_color or font_style):
+        return text
     return f"{font_style}{text_color}{bg_color}{text}{RESET}"
 
-def pprint(print_data: Any = None, text_color: str = "white", bg_color: str = "", font_style: str = "") -> None:
-    """Pretty print the given data with optional color, background, and font style.
 
-    This function formats the input data based on its type and prints it to the console. The data is printed with optional 
-    text color, background color, and font style based on the specified parameters. The function can handle dictionaries, 
-    lists, strings, and file paths.
+def _get_default_indent() -> int:
+    """Retrieve default JSON indentation from pprint configuration without hardcoding.
+
+    Returns:
+        int: Indentation size in spaces (configured in config.json under pprint, default 6).
+    """
+    try:
+        from src.config import pprint_cfg
+        indent = getattr(pprint_cfg, "json_indent", None)
+        if indent is not None and isinstance(indent, int) and indent > 0:
+            return indent
+    except Exception:
+        pass
+    return 6
+
+
+def _format_embedded_json(text: str, indent: Optional[int] = None) -> str:
+    """Scan string for valid JSON objects/arrays and format them in-place with indentation.
 
     Args:
-        print_data: The data to be printed. Can be None, dict, list, str, or Path. Default is None.
-        text_color: The color to apply to the text. Default is 'white'. See TEXT_COLORS for options.
-        bg_color: The background color to apply. Default is empty (no background). See BG_COLORS for options.
-        font_style: The font style to apply (bold, underline, etc.). Default is empty (no style).
+        text (str): Input text possibly containing embedded JSON blocks.
+        indent (Optional[int]): Number of indentation spaces. Defaults to config value (6).
 
-    Raises:
-        Exception: If the data type is unsupported or an error occurs during printing.
+    Returns:
+        str: Text with all valid JSON structures formatted and indented.
+    """
+    actual_indent = indent if indent is not None else _get_default_indent()
+    decoder = json.JSONDecoder()
+    result = []
+    i = 0
+    length = len(text)
+
+    while i < length:
+        if text[i] in ("{", "["):
+            try:
+                obj, end_idx = decoder.raw_decode(text, i)
+                if isinstance(obj, (dict, list)):
+                    formatted = json.dumps(obj, indent=actual_indent, ensure_ascii=False)
+                    # Natural newline separation before JSON block
+                    if result and not "".join(result).endswith("\n"):
+                        last_part = result[-1].rstrip(" \t")
+                        result[-1] = last_part
+                        result.append("\n")
+                    result.append(formatted)
+                    # Natural newline separation after JSON block
+                    if end_idx < length and not text[end_idx:].startswith("\n"):
+                        result.append("\n")
+                        while end_idx < length and text[end_idx] in (" ", "\t"):
+                            end_idx += 1
+                    i = end_idx
+                    continue
+            except json.JSONDecodeError:
+                pass
+        result.append(text[i])
+        i += 1
+
+    return "".join(result)
+
+
+def pformat(
+    print_data: Any = None,
+    text_color: str = "",
+    bg_color: str = "",
+    font_style: str = "",
+    indent: Optional[int] = None,
+) -> str:
+    """Format data into a pretty string with optional color and style.
+
+    Automatically scans and extracts valid JSON objects/arrays embedded anywhere within
+    arbitrary strings (<text> <JSON> <text>), python dictionaries, and lists.
+    Indentation is loaded from config.json (json_indent: 6).
+
+    Args:
+        print_data (Any): The data to be formatted.
+        text_color (str): Text color name. Default is empty string.
+        bg_color (str): Background color name. Default is empty string.
+        font_style (str): Font style name. Default is empty string.
+        indent (Optional[int]): Indentation level for JSON. Default loads from config.json (6).
+
+    Returns:
+        str: Formatted string representation of the data.
+
+    Example:
+        >>> pformat("User info: {'id': 1} - verified", text_color="cyan")
+    """
+    clr = TEXT_COLORS.get(text_color.lower(), "") if text_color else ""
+    bg = BG_COLORS.get(bg_color.lower(), "") if bg_color else ""
+    font = FONT_STYLES.get(font_style.lower(), "") if font_style else ""
+    actual_indent = indent if indent is not None else _get_default_indent()
+
+    if print_data is None:
+        return _color_text("None", clr, bg, font)
+
+    try:
+        if isinstance(print_data, (dict, list)):
+            formatted = json.dumps(print_data, indent=actual_indent, ensure_ascii=False)
+            return _color_text(formatted, clr, bg, font)
+
+        if isinstance(print_data, str):
+            # Check for file path
+            try:
+                p = Path(print_data)
+                if p.is_file():
+                    ext = p.suffix.lower()
+                    if ext in [".csv", ".xls"]:
+                        return _color_text(f"File: {print_data} (supported: .csv, .xls)", clr, bg, font)
+                    return _color_text(f"File: {print_data}", clr, bg, font)
+            except Exception:
+                pass
+
+            formatted = _format_embedded_json(print_data, indent=actual_indent)
+            return _color_text(formatted, clr, bg, font)
+
+        # Fallback for other objects
+        formatted = _format_embedded_json(str(print_data), indent=actual_indent)
+        return _color_text(formatted, clr, bg, font)
+    except Exception as ex:
+        err_msg = f"Format Error: {ex}"
+        return _color_text(err_msg, TEXT_COLORS.get("red", ""), bg, font)
+
+
+def pprint(
+    print_data: Any = None,
+    text_color: str = "white",
+    bg_color: str = "",
+    font_style: str = "",
+    indent: Optional[int] = None,
+) -> None:
+    """Pretty print the given data with optional color, background, and font style.
+
+    Args:
+        print_data (Any): Data to be printed.
+        text_color (str): Text color name. Default is 'white'.
+        bg_color (str): Background color name. Default is empty string.
+        font_style (str): Font style name. Default is empty string.
+        indent (Optional[int]): Indentation level for JSON. Default loads from config.json (6).
 
     Example:
         >>> pprint({"name": "Alice", "age": 30}, text_color="green")
-        Prints colored JSON output.
-
-        >>> pprint(["apple", "banana", "cherry"], text_color="blue", font_style="bold")
-        Prints each item in colored bold text.
-
-        >>> pprint("text example", text_color="yellow", bg_color="bg_red", font_style="underline")
-        Prints styled underlined text with yellow foreground on red background.
     """
-    text_color = TEXT_COLORS.get(text_color.lower(), TEXT_COLORS["white"])
-    bg_color = BG_COLORS.get(bg_color.lower(), "")
-    font_style = FONT_STYLES.get(font_style.lower(), "")
+    formatted = pformat(
+        print_data=print_data,
+        text_color=text_color,
+        bg_color=bg_color,
+        font_style=font_style,
+        indent=indent,
+    )
+    print(formatted)
 
-    if print_data is None:
-        print(_color_text("No data to print!", text_color=TEXT_COLORS["red"]))
-        return
 
-    try:
-        if isinstance(print_data, dict):
-            print(_color_text(json.dumps(print_data, indent=4), text_color))
-        elif isinstance(print_data, list):
-            for item in print_data:
-                print(_color_text(str(item), text_color))
-        elif isinstance(print_data, (str, Path)) and Path(print_data).is_file():
-            ext = Path(print_data).suffix.lower()
-            if ext in ['.csv', '.xls']:
-                print(_color_text("File reading supported for .csv, .xls only.", text_color))
-            else:
-                print(_color_text("Unsupported file type.", text_color))
-        else:
-            print(_color_text(str(print_data), text_color))
-    except Exception as ex:
-        print(_color_text(f"Error: {ex}", text_color=TEXT_COLORS["red"]))
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     pprint({"name": "Alice", "age": 30}, text_color="green")
+
