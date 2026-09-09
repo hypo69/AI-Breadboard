@@ -122,3 +122,47 @@ class TestAdminUsersAPI:
         data = response.json()
         assert len(data["users"]) > 0
         assert any(u["email"] == "searchable_unique@test.com" for u in data["users"])
+
+    def test_partial_field_updates_via_patch(self):
+        """Check partial field updating (inline table editing) via PATCH endpoint."""
+        create_payload = {
+            "email": "test_user_admin_2@test.com",
+            "name": "Inline User",
+            "password": "SecurePassword123!",
+            "role": "user",
+        }
+        create_resp = client.post("/api/admin/users", json=create_payload)
+        user_id = create_resp.json()["user"]["id"]
+
+        # 1. Update only role
+        patch_role = client.patch(f"/api/admin/users/{user_id}", json={"role": "admin"})
+        assert patch_role.status_code == 200
+        assert patch_role.json()["user"]["role"] == "admin"
+        assert patch_role.json()["user"]["is_admin"] == 1
+        assert patch_role.json()["user"]["name"] == "Inline User"
+
+        # 2. Update only status (is_active)
+        patch_status = client.patch(f"/api/admin/users/{user_id}", json={"is_active": 0})
+        assert patch_status.status_code == 200
+        assert patch_status.json()["user"]["is_active"] == 0
+        assert patch_status.json()["user"]["role"] == "admin"
+
+        # 3. Update only telegram username
+        patch_tg = client.patch(f"/api/admin/users/{user_id}", json={"telegram_username": "@testadmin"})
+        assert patch_tg.status_code == 200
+        assert patch_tg.json()["user"]["telegram_username"] == "testadmin"
+
+    def test_oauth_user_default_role_is_user(self):
+        """Verify that user_manager.add_user creates a regular 'user' by default with is_admin=0."""
+        oauth_email = "test_user_admin_1@test.com"
+        user_id = user_manager.add_user(
+            email=oauth_email,
+            name="OAuth Registered User",
+            picture="https://example.com/photo.jpg",
+            role="user"
+        )
+        assert user_id > 0
+        created = user_manager.get_user_by_id(user_id)
+        assert created["role"] == "user"
+        assert created["is_admin"] == 0
+

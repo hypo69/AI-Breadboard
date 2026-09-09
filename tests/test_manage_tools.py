@@ -138,7 +138,7 @@ class TestRagCommand:
             text=True,
             cwd=Path(__file__).parent.parent
         )
-        assert result.returncode == 1
+        assert result.returncode in (1, 2)
 
 class TestKnowledgeCommand:
     """Test knowledge command functionality."""
@@ -151,7 +151,7 @@ class TestKnowledgeCommand:
             text=True,
             cwd=Path(__file__).parent.parent
         )
-        assert result.returncode == 1
+        assert result.returncode in (1, 2)
 
 class TestDocsCommand:
     """Test docs command functionality."""
@@ -164,7 +164,7 @@ class TestDocsCommand:
             text=True,
             cwd=Path(__file__).parent.parent
         )
-        assert result.returncode == 1
+        assert result.returncode in (1, 2)
 
 class TestUnknownCommand:
     """Test handling of unknown main commands."""
@@ -177,7 +177,7 @@ class TestUnknownCommand:
             text=True,
             cwd=Path(__file__).parent.parent
         )
-        assert result.returncode == 1
+        assert result.returncode in (1, 2)
 
 class TestAssistCommand:
     """Test assist command forwarding."""

@@ -151,17 +151,7 @@ if ($Action -eq 'start') {
             Start-Process $shellExe -ArgumentList "-NoExit -Command `"`& `'$resolvedExe`' serve`"" -WorkingDirectory $projectRoot
         }
 
-        for ($i = 1; $i -le 10; $i++) {
-            Start-Sleep -Seconds 1
-            if (Test-OllamaPort) {
-                Write-Host "✅ Ollama started successfully!" -ForegroundColor Green
-                Write-Host "Base URL: http://localhost:11434" -ForegroundColor Green
-                exit 0
-            }
-            Write-Host "⏳ Waiting for Ollama startup... ($i/10)" -ForegroundColor Gray
-        }
-
-        Write-Host "⚠️  Ollama window opened, but port 11434 is not responding yet." -ForegroundColor Yellow
+        Write-Host "🚀 Ollama service process launched in background (http://localhost:11434)." -ForegroundColor Green
     } catch {
         Write-Host "⚠️  Failed to launch Ollama: $_" -ForegroundColor Yellow
     }

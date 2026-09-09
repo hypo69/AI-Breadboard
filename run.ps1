@@ -199,6 +199,17 @@ if (-not $SkipUpdateCheck) {
                             $gitPullOut = git pull origin 2>&1
                             if ($LASTEXITCODE -eq 0) {
                                 Write-Host "    [OK] Приложение успешно обновлено!" -ForegroundColor Green
+                                
+                                # Автоматическое обновление структуры баз данных
+                                Write-Host "    Проверка и применение миграций баз данных..." -ForegroundColor Cyan
+                                $venvPy = Join-Path $scriptDir "venv\Scripts\python.exe"
+                                $pyExec = if (Test-Path $venvPy) { $venvPy } else { "python" }
+                                $migOut = & $pyExec -m src.db.migrations --apply 2>&1
+                                if ($LASTEXITCODE -eq 0) {
+                                    Write-Host "    [OK] Базы данных актуализированы." -ForegroundColor Green
+                                } else {
+                                    Write-Host "    [WARN] Ошибка применения миграций БД: $migOut" -ForegroundColor Yellow
+                                }
                             } else {
                                 Write-Host "    [WARN] Ошибка при обновлении: $gitPullOut" -ForegroundColor Yellow
                             }

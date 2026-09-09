@@ -242,6 +242,49 @@ def run_skills_command(args: argparse.Namespace) -> int:
     print(f"Unknown skills subcommand: {sub}")
     return 1
 
+def run_db_command(args: argparse.Namespace) -> int:
+    """Database schema migration and inspection commands.
+
+    Args:
+        args (argparse.Namespace): Parsed command arguments containing:
+            - subcommand (str): The db operation ('migrate', 'status', 'create').
+            - name (str): Migration name (for create).
+            - db (str): Database name.
+            - py (bool): Flag for Python migration format.
+
+    Returns:
+        int: Exit code (0 on success, 1 on error).
+    """
+    from src.db.migrations import get_migration_manager
+    mgr = get_migration_manager()
+    sub = args.subcommand
+
+    if sub == 'status':
+        status = mgr.get_status()
+        print("\n--- DATABASE MIGRATION STATUS ---")
+        for db_name, info in status.items():
+            print(f"[{db_name}] Up-to-date: {info['is_up_to_date']} | Applied: {info['applied_count']} | Pending: {info['pending_count']}")
+            if info['pending_migrations']:
+                print(f"  Pending: {', '.join(info['pending_migrations'])}")
+        print("---------------------------------\n")
+        return 0
+
+    if sub == 'migrate':
+        print("Applying pending database migrations...")
+        result = mgr.apply_all_pending()
+        for db_name, res in result['databases'].items():
+            status_tag = "[OK]" if res['success'] else "[ERROR]"
+            print(f"  {status_tag} {db_name}: {res['message']} ({res['applied_count']} applied)")
+        return 0 if result['success'] else 1
+
+    if sub == 'create':
+        path = mgr.create_migration(args.db, args.name, is_python=getattr(args, 'py', False))
+        print(f"Created migration file: {path}")
+        return 0
+
+    print(f"Unknown db subcommand: {sub}")
+    return 1
+
 def main() -> int:
     """Primary entry point for the universal CLI management system.
 
@@ -334,6 +377,18 @@ Examples:
     skills_export.add_argument('--without-instructions', action='store_true', help='Exclude Markdown instructions')
 
     # ==========================================================================
+    # Database Migration Subparser
+    # ==========================================================================
+    db_parser = subparsers.add_parser('db', help='Database migrations management')
+    db_subparsers = db_parser.add_subparsers(dest='subcommand', help='Subcommands')
+    db_subparsers.add_parser('status', help='Check database migration status')
+    db_subparsers.add_parser('migrate', help='Apply all pending database migrations')
+    db_create = db_subparsers.add_parser('create', help='Create new database migration')
+    db_create.add_argument('db', help='Database name (e.g. users)')
+    db_create.add_argument('name', help='Migration description name')
+    db_create.add_argument('--py', action='store_true', help='Create python migration script')
+
+    # ==========================================================================
     # Assistant CLI Subparser
     # ==========================================================================
     # Gateway to the main assistant CLI for process management including
@@ -371,6 +426,7 @@ Examples:
         'rag': run_rag_command,
         'docs': run_docs_command,
         'skills': run_skills_command,
+        'db': run_db_command,
     }
 
     # Resolve and execute the appropriate command handler

@@ -454,6 +454,26 @@ window.updateChatBadges = function(modelName, searchEngine) {
       savedCardBadge.title = 'Модель в профиле не выбрана, сервер использует системный дефолт';
     }
   }
+
+  // Update chat message input state based on model selection
+  const msgInputs = document.querySelectorAll('#message-input, #chat-popup-input');
+  const sendButtons = document.querySelectorAll('#send-button, #chat-popup-send-btn');
+  
+  msgInputs.forEach(input => {
+    if (!curModel) {
+      input.disabled = true;
+      input.placeholder = 'Ни одна модель не выбрана. Выберите модель во вкладке «Модели и API».';
+      input.classList.add('is-invalid');
+    } else {
+      input.disabled = false;
+      input.placeholder = 'Введите сообщение...';
+      input.classList.remove('is-invalid');
+    }
+  });
+
+  sendButtons.forEach(btn => {
+    btn.disabled = !curModel;
+  });
 };
 
 // Автоматически загружаем настройки и обновляем бейджи модели и поиска при загрузке страницы

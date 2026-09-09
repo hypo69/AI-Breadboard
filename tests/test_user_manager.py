@@ -149,3 +149,57 @@ class TestUserManagerStorage:
         success = custom_user_manager.delete_user(user_id)
         assert success is True
         assert not user_dir.exists()
+
+
+class TestFavoriteModels:
+    """Tests for user favorite models management and notes."""
+
+    @pytest.fixture
+    def user_mgr(self, tmp_path):
+        """Create an isolated UserManager with temporary DB."""
+        from src.user_manager import UserManager
+        db_path = tmp_path / "test_favorites.db"
+        users_dir = tmp_path / "fav_storage"
+        mgr = UserManager(db_path=db_path, users_dir=users_dir)
+        mgr.add_user(email="fav_test@example.com", name="Fav User")
+        return mgr
+
+    def test_add_and_get_favorite_models(self, user_mgr):
+        """Test adding and retrieving favorite models with notes."""
+        user_id = 1
+        assert user_mgr.get_favorite_models(user_id) == {}
+
+        # Add favorite model with note
+        success = user_mgr.set_favorite_model(user_id, "gemini-2.5-flash", "Fast model for general tasks")
+        assert success is True
+
+        favs = user_mgr.get_favorite_models(user_id)
+        assert "gemini-2.5-flash" in favs
+        assert favs["gemini-2.5-flash"]["note"] == "Fast model for general tasks"
+
+        # Update note
+        success = user_mgr.set_favorite_model(user_id, "gemini-2.5-flash", "Updated note for model")
+        assert success is True
+        favs2 = user_mgr.get_favorite_models(user_id)
+        assert favs2["gemini-2.5-flash"]["note"] == "Updated note for model"
+
+    def test_remove_favorite_model(self, user_mgr):
+        """Test removing favorite model."""
+        user_id = 1
+        user_mgr.set_favorite_model(user_id, "qwen2.5:7b", "Local model")
+        assert "qwen2.5:7b" in user_mgr.get_favorite_models(user_id)
+
+        removed = user_mgr.remove_favorite_model(user_id, "qwen2.5:7b")
+        assert removed is True
+        assert "qwen2.5:7b" not in user_mgr.get_favorite_models(user_id)
+
+    def test_settings_includes_favorite_models(self, user_mgr):
+        """Test that get_user_settings includes favorite_models dict."""
+        user_id = 1
+        user_mgr.set_favorite_model(user_id, "agy-flash", "Google Antigravity Flash")
+        settings = user_mgr.get_user_settings(user_id)
+
+        assert "favorite_models" in settings
+        assert "agy-flash" in settings["favorite_models"]
+        assert settings["favorite_models"]["agy-flash"]["note"] == "Google Antigravity Flash"
+

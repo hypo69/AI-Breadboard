@@ -30,7 +30,7 @@
             <span id="saved-default-model-badge" class="badge bg-secondary font-monospace px-2 py-1" style="font-size: 0.82rem;">Загрузка...</span>
           </div>
 
-          <div class="row g-2 mb-3">
+          <div class="row g-2 mb-2">
             <div class="col-sm-5">
               <label for="provider-tab-select" class="form-label small text-secondary mb-1">Провайдер ИИ:</label>
               <select class="form-select form-select-sm bg-dark text-white border-secondary" id="provider-tab-select">
@@ -45,9 +45,42 @@
                   <label class="form-check-label small text-secondary" for="show-all-models-check" style="cursor: pointer; font-size: 0.72rem;">Показать все</label>
                 </div>
               </div>
-              <select class="form-select form-select-sm bg-dark text-white border-secondary" id="models-tab-select">
-                <option value="">Загрузка...</option>
-              </select>
+              <div class="input-group input-group-sm">
+                <select class="form-select form-select-sm bg-dark text-white border-secondary" id="models-tab-select">
+                  <option value="">Загрузка...</option>
+                </select>
+                <button class="btn btn-outline-warning" type="button" id="btn-model-toggle-favorite" title="Добавить в избранное / Убрать из избранного">
+                  <i class="bi bi-star" id="favorite-star-icon"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Model User Note & Favorite Details -->
+          <div class="mb-3 p-2 rounded" id="model-note-box" style="background: rgba(255, 255, 255, 0.04); border: 1px dashed rgba(255, 255, 255, 0.15);">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label for="model-user-note" class="form-label small text-warning mb-0" style="font-size: 0.76rem;">
+                <i class="bi bi-journal-text me-1"></i> Заметка о модели:
+              </label>
+              <span id="model-fav-status-badge" class="badge bg-dark border border-secondary text-secondary" style="font-size: 0.68rem;">Не в избранном</span>
+            </div>
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control bg-dark text-white border-secondary" id="model-user-note" placeholder="Введите заметку о возможностях/особенностях модели..." autocomplete="off">
+              <button class="btn btn-sm btn-outline-info" id="btn-save-model-note" type="button" title="Сохранить заметку">
+                <i class="bi bi-floppy me-1"></i> Сохранить
+              </button>
+            </div>
+          </div>
+
+          <!-- Favorite Models Chips List -->
+          <div class="mb-3" id="favorite-models-section" style="display: none;">
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <span class="small text-secondary fw-semibold" style="font-size: 0.75rem;">
+                <i class="bi bi-star-fill text-warning me-1"></i> Избранные модели:
+              </span>
+            </div>
+            <div class="d-flex flex-wrap gap-1" id="favorite-models-list">
+              <!-- Rendered via JS -->
             </div>
           </div>
 
@@ -326,7 +359,7 @@
                         <div class="tab-content" id="gacc-input-mode-tabContent">
                           <div class="tab-pane fade show active" id="gacc-mode-file" role="tabpanel">
                             <input class="form-control form-control-sm" type="file" id="new-gacc-file" accept=".json,application/json">
-                            <div class="form-text small">Файл <code>credentials.json</code> или <code>service_account.json</code> из Google Cloud Console.</div>
+                            <div class="form-text small">Файл <code>credentials.json</code> или <code>service_account.json</code> из <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" class="text-info text-decoration-none">Google Cloud Console <i class="bi bi-box-arrow-up-right ms-1" style="font-size: 0.75rem;"></i></a>.</div>
                           </div>
                           <div class="tab-pane fade" id="gacc-mode-json" role="tabpanel">
                             <textarea class="form-control font-monospace form-control-sm" id="new-gacc-json" rows="4" placeholder='{"installed": {"client_id": "...", "client_secret": "..."}}'></textarea>

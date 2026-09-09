@@ -24,7 +24,7 @@
   },
   "ai": {
     "use_foundry": true,
-    "foundry_base_url": "http://localhost:63954",
+    "foundry_base_url": "http://localhost:61424",
     "foundry_model_id": "qwen2.5-1.5b",
     "use_ollama": true,
     "ollama_base_url": "http://localhost:11434",

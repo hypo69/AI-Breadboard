@@ -487,6 +487,18 @@ class VersionManager:
                     "message": f"Error merging: {merge_msg}"
                 }
             
+            # Apply database migrations
+            try:
+                from src.db.migrations import get_migration_manager
+                db_mgr = get_migration_manager(self.repo_path)
+                mig_res = db_mgr.apply_all_pending()
+                if not mig_res.get("success", False):
+                    logger.warning(f"Database migrations reported errors during update: {mig_res}")
+                else:
+                    logger.info(f"Database migrations applied: {mig_res.get('applied_total', 0)} migrations")
+            except Exception as mig_ex:
+                logger.error(f"Error applying database migrations during update: {mig_ex}")
+
             # Save update information
             update_info = {
                 "timestamp": datetime.now().isoformat(),

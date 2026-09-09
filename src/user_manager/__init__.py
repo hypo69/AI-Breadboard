@@ -136,6 +136,19 @@ class UserManager:
             except sqlite3.OperationalError:
                 pass
 
+            # Create favorite models table
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS user_favorite_models (
+                    user_id INTEGER NOT NULL,
+                    model_name TEXT NOT NULL,
+                    note TEXT DEFAULT '',
+                    created_at TEXT DEFAULT (datetime('now')),
+                    updated_at TEXT DEFAULT (datetime('now')),
+                    PRIMARY KEY (user_id, model_name),
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+            """)
+
             # Create temporary tokens table for Telegram linking
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS telegram_link_tokens (
@@ -962,6 +975,85 @@ class UserManager:
             ).fetchone()
             return dict(row) if row else {}
 
+    def get_favorite_models(self, user_id: int) -> Dict[str, Dict[str, str]]:
+        """Get favorite models and their notes for a user.
+        
+        Args:
+            user_id (int): User identifier.
+            
+        Returns:
+            Dict[str, Dict[str, str]]: Map of model_name -> {note, updated_at}.
+        """
+        with self._get_connection() as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                'SELECT model_name, note, updated_at FROM user_favorite_models WHERE user_id = ? ORDER BY updated_at DESC',
+                (user_id,)
+            ).fetchall()
+            return {
+                row['model_name']: {
+                    'note': row['note'] or '',
+                    'updated_at': row['updated_at'] or ''
+                }
+                for row in rows
+            }
+
+    def set_favorite_model(self, user_id: int, model_name: str, note: str = '') -> bool:
+        """Add or update a favorite model with custom note.
+        
+        Args:
+            user_id (int): User identifier.
+            model_name (str): Model name or identifier.
+            note (str): Custom user note about the model.
+            
+        Returns:
+            bool: True if saved successfully, False otherwise.
+        """
+        if not model_name or not model_name.strip():
+            return False
+        clean_model = model_name.strip()
+        with self._get_connection() as conn:
+            try:
+                conn.execute(
+                    '''
+                    INSERT INTO user_favorite_models (user_id, model_name, note, updated_at)
+                    VALUES (?, ?, ?, datetime('now'))
+                    ON CONFLICT(user_id, model_name) DO UPDATE SET
+                        note = excluded.note,
+                        updated_at = excluded.updated_at
+                    ''',
+                    (user_id, clean_model, note.strip())
+                )
+                conn.commit()
+                return True
+            except Exception as e:
+                logger.error(f'Error saving favorite model {clean_model} for user {user_id}:', e, False)
+                return False
+
+    def remove_favorite_model(self, user_id: int, model_name: str) -> bool:
+        """Remove model from user favorites.
+        
+        Args:
+            user_id (int): User identifier.
+            model_name (str): Model identifier.
+            
+        Returns:
+            bool: True if removed successfully, False otherwise.
+        """
+        if not model_name:
+            return False
+        with self._get_connection() as conn:
+            try:
+                conn.execute(
+                    'DELETE FROM user_favorite_models WHERE user_id = ? AND model_name = ?',
+                    (user_id, model_name.strip())
+                )
+                conn.commit()
+                return True
+            except Exception as e:
+                logger.error(f'Error removing favorite model {model_name} for user {user_id}:', e, False)
+                return False
+
     def get_user_settings(self, user_id: int) -> Dict:
         """Getting user settings."""
         with self._get_connection() as conn:
@@ -983,7 +1075,9 @@ class UserManager:
                     'SELECT * FROM user_settings WHERE user_id = ? LIMIT 1',
                     (user_id,)
                 ).fetchone()
-            return dict(row) if row else {'user_id': user_id, 'theme': 'dark', 'language': 'ru', 'tts_enabled': 1, 'system_instruction': None, 'model': None, 'tts_system': 'edge-tts', 'tts_voice': 'ru-RU-DmitryNeural', 'rag_enabled': 1}
+            res = dict(row) if row else {'user_id': user_id, 'theme': 'dark', 'language': 'ru', 'tts_enabled': 1, 'system_instruction': None, 'model': None, 'tts_system': 'edge-tts', 'tts_voice': 'ru-RU-DmitryNeural', 'rag_enabled': 1}
+            res['favorite_models'] = self.get_favorite_models(user_id)
+            return res
 
     def update_user_settings(self, user_id: int, **kwargs) -> bool:
         """Update user settings."""

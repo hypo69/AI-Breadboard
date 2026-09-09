@@ -112,3 +112,43 @@ class TestChatRagToggle(unittest.TestCase):
 
         # RAG engine evaluate should have been called
         mock_engine.evaluate.assert_called_once()
+
+    def test_auth_settings_local_access(self) -> None:
+        """Test that /auth/settings works for local requests and saves model."""
+        # 1. GET /auth/settings
+        response = self.client.get("/auth/settings")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("favorite_models", data)
+
+        # 2. POST /auth/settings to update model
+        response = self.client.post("/auth/settings", json={"model": "gemini-2.5-flash"})
+        self.assertEqual(response.status_code, 200)
+
+        # 3. Verify updated model
+        response = self.client.get("/auth/settings")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json().get("model"), "gemini-2.5-flash")
+
+    def test_auth_favorites_api(self) -> None:
+        """Test adding, getting, and deleting favorite models via API."""
+        # 1. Add favorite model with note
+        post_res = self.client.post("/auth/favorites", json={
+            "model": "qwen2.5:7b",
+            "note": "Fast local model for coding"
+        })
+        self.assertEqual(post_res.status_code, 200)
+        favs = post_res.json().get("favorites", {})
+        self.assertIn("qwen2.5:7b", favs)
+        self.assertEqual(favs["qwen2.5:7b"]["note"], "Fast local model for coding")
+
+        # 2. GET favorites
+        get_res = self.client.get("/auth/favorites")
+        self.assertEqual(get_res.status_code, 200)
+        self.assertIn("qwen2.5:7b", get_res.json().get("favorites", {}))
+
+        # 3. DELETE favorite
+        del_res = self.client.delete("/auth/favorites/qwen2.5:7b")
+        self.assertEqual(del_res.status_code, 200)
+        self.assertNotIn("qwen2.5:7b", del_res.json().get("favorites", {}))
+

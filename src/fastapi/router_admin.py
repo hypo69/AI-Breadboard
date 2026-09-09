@@ -700,12 +700,14 @@ class AdminUserCreateRequest(BaseModel):
     is_email_verified: int = 1
 
 class AdminUserUpdateRequest(BaseModel):
-    name: str = ''
-    email: str = ''
-    role: str = ''
-    is_admin: int = 0
-    is_active: int = 1
-    is_email_verified: int = 1
+    name: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[str] = None
+    is_admin: Optional[int] = None
+    is_active: Optional[int] = None
+    is_email_verified: Optional[int] = None
+    telegram_id: Optional[int] = None
+    telegram_username: Optional[str] = None
 
 class AdminUserPasswordRequest(BaseModel):
     password: str
@@ -818,8 +820,9 @@ async def get_admin_user_details(user_id: int, request: Request) -> Dict[str, An
     }
 
 @router.put('/users/{user_id}')
+@router.patch('/users/{user_id}')
 async def update_admin_user(user_id: int, data: AdminUserUpdateRequest, request: Request) -> Dict[str, Any]:
-    """Update данных пользователя."""
+    """Update данных пользователя (полное или частичное редактирование полей)."""
     _check_admin(request)
     from src.user_manager import user_manager
     user = user_manager.get_user_by_id(user_id)
@@ -827,24 +830,42 @@ async def update_admin_user(user_id: int, data: AdminUserUpdateRequest, request:
         raise HTTPException(status_code=404, detail='Пользователь не найден')
 
     updates: Dict[str, Any] = {}
-    if data.name:
+    if data.name is not None:
         updates['name'] = data.name.strip()
-    if data.email:
+    if data.email is not None:
         email_clean = data.email.strip().lower()
+        if not email_clean:
+            raise HTTPException(status_code=400, detail='Email не может быть пустым')
         if email_clean != user.get('email'):
             existing = user_manager.get_user_by_email(email_clean)
             if existing and existing.get('id') != user_id:
                 raise HTTPException(status_code=400, detail='Этот email уже занят другим пользователем')
             updates['email'] = email_clean
-    if data.role:
+    if data.role is not None:
         updates['role'] = data.role
-    updates['is_admin'] = data.is_admin
-    updates['is_active'] = data.is_active
-    updates['is_email_verified'] = data.is_email_verified
+        if data.is_admin is None:
+            updates['is_admin'] = 1 if data.role == 'admin' else 0
+    if data.is_admin is not None:
+        if user_id == 1 and data.is_admin == 0:
+            raise HTTPException(status_code=400, detail='Нельзя снять права у главного администратора (ID 1)')
+        updates['is_admin'] = data.is_admin
+        if data.role is None:
+            updates['role'] = 'admin' if data.is_admin == 1 else 'user'
+    if data.is_active is not None:
+        if user_id == 1 and data.is_active == 0:
+            raise HTTPException(status_code=400, detail='Нельзя деактивировать главного администратора (ID 1)')
+        updates['is_active'] = data.is_active
+    if data.is_email_verified is not None:
+        updates['is_email_verified'] = data.is_email_verified
+    if data.telegram_id is not None:
+        updates['telegram_id'] = data.telegram_id
+    if data.telegram_username is not None:
+        updates['telegram_username'] = data.telegram_username.strip().lstrip('@')
 
-    success = user_manager.update_user(user_id, **updates)
-    if not success:
-        raise HTTPException(status_code=500, detail='Error обновления пользователя')
+    if updates:
+        success = user_manager.update_user(user_id, **updates)
+        if not success:
+            raise HTTPException(status_code=500, detail='Error обновления пользователя')
 
     updated = user_manager.get_user_by_id(user_id)
     sanitized = {k: v for k, v in updated.items() if k != 'password_hash'}
