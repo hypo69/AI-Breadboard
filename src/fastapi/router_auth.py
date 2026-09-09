@@ -441,7 +441,7 @@ async def google_callback(request: Request, code: str, state: str) -> RedirectRe
         from src.user_manager import user_manager
         db_user = user_manager.get_user_by_email(user_email)
         if not db_user:
-            user_id = user_manager.add_user(email=user_email, name=user_name, picture=user_picture, role='admin')
+            user_id = user_manager.add_user(email=user_email, name=user_name, picture=user_picture, role='user')
         else:
             user_id = db_user['id']
             user_manager.update_user(user_id, name=user_name, picture=user_picture, last_login=datetime.utcnow().isoformat())
@@ -901,6 +901,10 @@ class SettingsUpdateRequest(BaseModel):
     search_engine: Optional[str] = ""
     rag_enabled: Optional[int] = None
 
+class FavoriteModelRequest(BaseModel):
+    model: str
+    note: Optional[str] = ""
+
 # ===========================================
 # Admin User Management API
 # ===========================================
@@ -1064,19 +1068,15 @@ async def get_link_token(request: Request) -> dict:
 @router.get('/settings')
 async def get_settings(request: Request) -> dict:
     """Получение настроек текущего пользователя."""
-    token = request.cookies.get('auth_token')
-    if not token:
-        raise HTTPException(status_code=401, detail='Не авторизован')
-    user_data = verify_jwt_token(token)
-    if not user_data or not user_data.email:
-        raise HTTPException(status_code=401, detail='Неверный сессионный токен')
-        
+    user_data = get_current_user_data(request)
     from src.user_manager import user_manager
-    db_user = user_manager.get_user_by_email(user_data.email)
-    if not db_user:
-        raise HTTPException(status_code=404, detail='Пользователь не найден')
+    user_id = user_data.id or 1
+    if user_data.email:
+        db_user = user_manager.get_user_by_email(user_data.email)
+        if db_user:
+            user_id = db_user['id']
         
-    settings = user_manager.get_user_settings(db_user['id'])
+    settings = user_manager.get_user_settings(user_id)
     
     # Добавляем актуальный поисковый движок из config.json
     try:
@@ -1096,20 +1096,16 @@ async def get_settings(request: Request) -> dict:
 @router.post('/settings')
 async def update_settings(request: Request, data: SettingsUpdateRequest) -> dict:
     """Update настроек текущего пользователя."""
-    token = request.cookies.get('auth_token')
-    if not token:
-        raise HTTPException(status_code=401, detail='Не авторизован')
-    user_data = verify_jwt_token(token)
-    if not user_data or not user_data.email:
-        raise HTTPException(status_code=401, detail='Неверный сессионный токен')
-        
+    user_data = get_current_user_data(request)
     from src.user_manager import user_manager
-    db_user = user_manager.get_user_by_email(user_data.email)
-    if not db_user:
-        raise HTTPException(status_code=404, detail='Пользователь не найден')
+    user_id = user_data.id or 1
+    if user_data.email:
+        db_user = user_manager.get_user_by_email(user_data.email)
+        if db_user:
+            user_id = db_user['id']
         
     success = user_manager.update_user_settings(
-        db_user['id'],
+        user_id,
         theme=data.theme,
         language=data.language,
         tts_enabled=data.tts_enabled,
@@ -1122,6 +1118,47 @@ async def update_settings(request: Request, data: SettingsUpdateRequest) -> dict
     if not success:
         raise HTTPException(status_code=500, detail='Не удалось сохранить настройки')
     return {'status': 'ok'}
+
+@router.get('/favorites')
+async def get_favorite_models(request: Request) -> dict:
+    """Получение списка избранных моделей и заметок текущего пользователя."""
+    user_data = get_current_user_data(request)
+    from src.user_manager import user_manager
+    user_id = user_data.id or 1
+    if user_data.email:
+        db_user = user_manager.get_user_by_email(user_data.email)
+        if db_user:
+            user_id = db_user['id']
+    favorites = user_manager.get_favorite_models(user_id)
+    return {'favorites': favorites}
+
+@router.post('/favorites')
+async def set_favorite_model(request: Request, data: FavoriteModelRequest) -> dict:
+    """Добавление или обновление избранной модели с заметкой."""
+    user_data = get_current_user_data(request)
+    from src.user_manager import user_manager
+    user_id = user_data.id or 1
+    if user_data.email:
+        db_user = user_manager.get_user_by_email(user_data.email)
+        if db_user:
+            user_id = db_user['id']
+    success = user_manager.set_favorite_model(user_id, data.model, data.note or '')
+    if not success:
+        raise HTTPException(status_code=400, detail='Не удалось сохранить избранную модель')
+    return {'status': 'ok', 'favorites': user_manager.get_favorite_models(user_id)}
+
+@router.delete('/favorites/{model_name:path}')
+async def delete_favorite_model(request: Request, model_name: str) -> dict:
+    """Удаление модели из избранного."""
+    user_data = get_current_user_data(request)
+    from src.user_manager import user_manager
+    user_id = user_data.id or 1
+    if user_data.email:
+        db_user = user_manager.get_user_by_email(user_data.email)
+        if db_user:
+            user_id = db_user['id']
+    user_manager.remove_favorite_model(user_id, model_name)
+    return {'status': 'ok', 'favorites': user_manager.get_favorite_models(user_id)}
 
 def init_router() -> APIRouter:
     """Initialization роутера авторизации.

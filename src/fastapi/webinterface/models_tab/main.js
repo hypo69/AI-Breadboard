@@ -72,6 +72,82 @@ async function initModelsTab() {
     };
   }
 
+  const favToggleBtn = document.getElementById('btn-model-toggle-favorite');
+  const saveNoteBtn = document.getElementById('btn-save-model-note');
+  const modelNoteInput = document.getElementById('model-user-note');
+
+  if (favToggleBtn && modelSelect) {
+    favToggleBtn.onclick = async () => {
+      const curModel = modelSelect.value;
+      if (!curModel) {
+        showModelsNotification('Сначала выберите модель', 'warning');
+        return;
+      }
+      favToggleBtn.disabled = true;
+      try {
+        const isFav = window.userFavoriteModels && Boolean(window.userFavoriteModels[curModel]);
+        if (isFav) {
+          await window.api.fetch(`/auth/favorites/${encodeURIComponent(curModel)}`, { method: 'DELETE' });
+          if (window.userFavoriteModels) delete window.userFavoriteModels[curModel];
+          showModelsNotification(`Модель "${curModel}" удалена из избранного`, 'info');
+        } else {
+          const noteText = modelNoteInput ? modelNoteInput.value.trim() : '';
+          const res = await window.api.fetch('/auth/favorites', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: curModel, note: noteText })
+          });
+          if (res && res.favorites) window.userFavoriteModels = res.favorites;
+          showModelsNotification(`Модель "${curModel}" добавлена в избранное ⭐`, 'success');
+        }
+        updateModelFavoriteUI(modelSelect);
+        updateModelSelectOptions(modelSelect);
+      } catch (err) {
+        console.error('Ошибка переключения избранного:', err);
+        showModelsNotification('Ошибка: ' + err.message, 'danger');
+      } finally {
+        favToggleBtn.disabled = false;
+      }
+    };
+  }
+
+  if (saveNoteBtn && modelSelect && modelNoteInput) {
+    saveNoteBtn.onclick = async () => {
+      const curModel = modelSelect.value;
+      if (!curModel) {
+        showModelsNotification('Сначала выберите модель', 'warning');
+        return;
+      }
+      saveNoteBtn.disabled = true;
+      const originalText = saveNoteBtn.innerHTML;
+      saveNoteBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Сохранение...';
+      try {
+        const noteText = modelNoteInput.value.trim();
+        const res = await window.api.fetch('/auth/favorites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: curModel, note: noteText })
+        });
+        if (res && res.favorites) window.userFavoriteModels = res.favorites;
+        showModelsNotification(`Заметка для модели "${curModel}" сохранена!`, 'success');
+        updateModelFavoriteUI(modelSelect);
+        updateModelSelectOptions(modelSelect);
+      } catch (err) {
+        console.error('Ошибка сохранения заметки:', err);
+        showModelsNotification('Ошибка сохранения заметки: ' + err.message, 'danger');
+      } finally {
+        saveNoteBtn.disabled = false;
+        saveNoteBtn.innerHTML = originalText;
+      }
+    };
+  }
+
+  if (modelSelect) {
+    modelSelect.addEventListener('change', () => {
+      updateModelFavoriteUI(modelSelect);
+    });
+  }
+
   if (testModelBtn) {
     testModelBtn.onclick = executeModelTest;
   }
@@ -557,6 +633,142 @@ async function executeModelTest() {
   }
 }
 
+// Favorite models storage in window state
+window.userFavoriteModels = window.userFavoriteModels || {};
+
+function updateModelFavoriteUI(modelSelect) {
+  if (!modelSelect) modelSelect = document.getElementById('models-tab-select');
+  const curModel = modelSelect ? modelSelect.value : '';
+  const starIcon = document.getElementById('favorite-star-icon');
+  const favBtn = document.getElementById('btn-model-toggle-favorite');
+  const statusBadge = document.getElementById('model-fav-status-badge');
+  const noteInput = document.getElementById('model-user-note');
+
+  const favData = curModel && window.userFavoriteModels ? window.userFavoriteModels[curModel] : null;
+  const isFav = Boolean(favData);
+
+  if (starIcon) {
+    starIcon.className = isFav ? 'bi bi-star-fill text-warning' : 'bi bi-star';
+  }
+  if (favBtn) {
+    if (isFav) {
+      favBtn.classList.remove('btn-outline-warning');
+      favBtn.classList.add('btn-warning', 'text-dark');
+      favBtn.title = 'Удалить модель из избранного';
+    } else {
+      favBtn.classList.remove('btn-warning', 'text-dark');
+      favBtn.classList.add('btn-outline-warning');
+      favBtn.title = 'Добавить модель в избранное';
+    }
+  }
+  if (statusBadge) {
+    if (isFav) {
+      statusBadge.textContent = 'В избранном ⭐';
+      statusBadge.className = 'badge bg-warning text-dark font-monospace';
+    } else {
+      statusBadge.textContent = 'Не в избранном';
+      statusBadge.className = 'badge bg-dark border border-secondary text-secondary';
+    }
+  }
+  if (noteInput && document.activeElement !== noteInput) {
+    noteInput.value = favData ? (favData.note || '') : '';
+  }
+
+  renderFavoriteModelsChips(modelSelect);
+}
+
+function updateModelSelectOptions(modelSelect) {
+  if (!modelSelect) return;
+  const options = modelSelect.querySelectorAll('option');
+  options.forEach(opt => {
+    const val = opt.value;
+    if (!val) return;
+    const isFav = window.userFavoriteModels && Boolean(window.userFavoriteModels[val]);
+    let text = opt.textContent.replace(/^⭐\s*/, '');
+    if (isFav) {
+      opt.textContent = `⭐ ${text}`;
+    } else {
+      opt.textContent = text;
+    }
+  });
+}
+
+function renderFavoriteModelsChips(modelSelect) {
+  const container = document.getElementById('favorite-models-list');
+  const section = document.getElementById('favorite-models-section');
+  if (!container || !section) return;
+
+  const favKeys = Object.keys(window.userFavoriteModels || {});
+  if (favKeys.length === 0) {
+    section.style.display = 'none';
+    container.innerHTML = '';
+    return;
+  }
+
+  section.style.display = 'block';
+  container.innerHTML = '';
+
+  favKeys.forEach(modelName => {
+    const data = window.userFavoriteModels[modelName] || {};
+    const note = data.note ? `\nЗаметка: ${data.note}` : '';
+    
+    const chip = document.createElement('div');
+    chip.className = 'btn-group btn-group-sm mb-1';
+    chip.role = 'group';
+
+    const btnSelect = document.createElement('button');
+    btnSelect.type = 'button';
+    btnSelect.className = modelSelect && modelSelect.value === modelName 
+      ? 'btn btn-sm btn-warning text-dark py-0 px-2 font-monospace'
+      : 'btn btn-sm btn-outline-warning py-0 px-2 font-monospace';
+    btnSelect.innerHTML = `<i class="bi bi-star-fill me-1 text-warning"></i>${escapeHtml(modelName)}`;
+    btnSelect.title = `Выбрать модель: ${modelName}${note}`;
+    btnSelect.onclick = () => {
+      if (modelSelect) {
+        // Try finding which provider has this model
+        const providerSelect = document.getElementById('provider-tab-select');
+        if (providerSelect && window._modelsGrouped) {
+          for (const p of Object.keys(window._modelsGrouped)) {
+            if (window._modelsGrouped[p]?.includes(modelName)) {
+              if (providerSelect.value !== p) {
+                providerSelect.value = p;
+                if (typeof window._populateModels === 'function') {
+                  window._populateModels(p, window._modelsGrouped[p]);
+                }
+              }
+              break;
+            }
+          }
+        }
+        modelSelect.value = modelName;
+        updateModelFavoriteUI(modelSelect);
+      }
+    };
+
+    const btnRemove = document.createElement('button');
+    btnRemove.type = 'button';
+    btnRemove.className = 'btn btn-sm btn-outline-danger py-0 px-1';
+    btnRemove.innerHTML = '<i class="bi bi-x"></i>';
+    btnRemove.title = `Удалить ${modelName} из избранного`;
+    btnRemove.onclick = async (e) => {
+      e.stopPropagation();
+      try {
+        await window.api.fetch(`/auth/favorites/${encodeURIComponent(modelName)}`, { method: 'DELETE' });
+        delete window.userFavoriteModels[modelName];
+        updateModelFavoriteUI(modelSelect);
+        updateModelSelectOptions(modelSelect);
+        showModelsNotification(`Модель "${modelName}" удалена из избранного`, 'info');
+      } catch (err) {
+        showModelsNotification('Ошибка удаления: ' + err.message, 'danger');
+      }
+    };
+
+    chip.appendChild(btnSelect);
+    chip.appendChild(btnRemove);
+    container.appendChild(chip);
+  });
+}
+
 // Helper to load models list
 async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
   const providerSelect = document.getElementById('provider-tab-select');
@@ -588,8 +800,24 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
   };
 
   modelsGrouped = await fetchModels(forceRefresh);
+  window._modelsGrouped = modelsGrouped;
   if (forceRefresh) {
     showModelsNotification('Список моделей успешно обновлен', 'success');
+  }
+
+  // Fetch favorite models and current settings
+  try {
+    const settingsData = await window.api.fetch('/auth/settings');
+    if (settingsData && settingsData.favorite_models) {
+      window.userFavoriteModels = settingsData.favorite_models;
+    } else {
+      const favRes = await window.api.fetch('/auth/favorites');
+      if (favRes && favRes.favorites) {
+        window.userFavoriteModels = favRes.favorites;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load favorite models:', e);
   }
 
   const providers = Object.keys(modelsGrouped).filter(p => modelsGrouped[p] && modelsGrouped[p].length > 0);
@@ -600,6 +828,7 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
     }
     modelSelect.innerHTML = '<option value="">Нет доступных моделей</option>';
     saveBtn.disabled = true;
+    updateModelFavoriteUI(modelSelect);
     return;
   }
   
@@ -631,17 +860,21 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
         else if (cleanName.startsWith('agy-')) cleanName = cleanName.substring(4);
         else if (cleanName.startsWith('onnx:')) cleanName = cleanName.substring(5);
         
+        const isFav = window.userFavoriteModels && Boolean(window.userFavoriteModels[modelName]);
         const isUnsupported = unsupList.includes(cleanName) || unsupList.includes(modelName);
-        if (isUnsupported) {
-          option.textContent = `${cleanName} ⚠️ [отфильтрована]`;
-        } else {
-          option.textContent = cleanName;
-        }
+        
+        let label = cleanName;
+        if (isFav) label = `⭐ ${label}`;
+        if (isUnsupported) label = `${label} ⚠️ [отфильтрована]`;
+
+        option.textContent = label;
         modelSelect.appendChild(option);
       });
       saveBtn.disabled = false;
     }
+    updateModelFavoriteUI(modelSelect);
   };
+  window._populateModels = populateModels;
 
   if (providerSelect) {
     providerSelect.onchange = async () => {
@@ -653,6 +886,7 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
         const updatedGrouped = await fetchModels(true);
         if (updatedGrouped && Object.keys(updatedGrouped).length > 0) {
           modelsGrouped = updatedGrouped;
+          window._modelsGrouped = modelsGrouped;
         }
       } catch (e) {
         console.warn('Failed to refresh models on provider change:', e);
@@ -666,10 +900,12 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
     allModels.forEach(modelName => {
         const option = document.createElement('option');
         option.value = modelName;
-        option.textContent = modelName;
+        const isFav = window.userFavoriteModels && Boolean(window.userFavoriteModels[modelName]);
+        option.textContent = isFav ? `⭐ ${modelName}` : modelName;
         modelSelect.appendChild(option);
     });
     saveBtn.disabled = allModels.length === 0;
+    updateModelFavoriteUI(modelSelect);
   }
 
   try {
@@ -688,6 +924,7 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
         populateModels(foundProvider, modelsGrouped[foundProvider]);
       }
       modelSelect.value = savedModel;
+      updateModelFavoriteUI(modelSelect);
     }
     if (typeof window.updateChatBadges === 'function') {
       window.updateChatBadges(savedModel);

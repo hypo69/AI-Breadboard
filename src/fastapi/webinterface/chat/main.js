@@ -593,6 +593,14 @@ async function sendMessage() {
 
   if (!input || !btn) return;
 
+  if (!window.activeModelName) {
+    input.disabled = true;
+    btn.disabled = true;
+    input.placeholder = 'Ни одна модель не выбрана. Выберите модель во вкладке «Модели и API».';
+    input.classList.add('is-invalid');
+    return;
+  }
+
   const msg = input.value.trim();
   if (!msg) return;
 
@@ -733,9 +741,18 @@ async function sendMessage() {
     setStatus('Ошибка исполнения', true);
     setTimeout(() => setStatus('', false), 4000);
   } finally {
-    input.disabled = false;
-    btn.disabled = false;
-    input.focus();
+    if (window.activeModelName) {
+      input.disabled = false;
+      btn.disabled = false;
+      input.placeholder = 'Введите сообщение...';
+      input.classList.remove('is-invalid');
+      input.focus();
+    } else {
+      input.disabled = true;
+      btn.disabled = true;
+      input.placeholder = 'Ни одна модель не выбрана. Выберите модель во вкладке «Модели и API».';
+      input.classList.add('is-invalid');
+    }
     if (win) win.scrollTop = win.scrollHeight;
   }
 }

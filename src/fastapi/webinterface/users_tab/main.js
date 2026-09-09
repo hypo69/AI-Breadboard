@@ -19,6 +19,8 @@
     filterRole: '',
     filterStatus: '',
     searchQuery: '',
+    editingUserId: null,
+    savingUserId: null,
     isLoading: false,
     initialized: false
   };
@@ -181,44 +183,17 @@
       const isActive = Boolean(user.is_active);
       const isEmailVerified = Boolean(user.is_email_verified);
       const hasPassword = Boolean(user.has_password);
+      const isRowEditing = (state.editingUserId === user.id);
+      const isSaving = (state.savingUserId === user.id);
 
       // User Initials or Avatar
       let avatarHtml = '';
       if (user.picture) {
-        avatarHtml = `<img src="${escapeHtml(user.picture)}" class="rounded-circle me-2" style="width:36px;height:36px;object-fit:cover;" alt="avatar">`;
+        avatarHtml = `<img src="${escapeHtml(user.picture)}" class="rounded-circle me-2 flex-shrink-0" style="width:36px;height:36px;object-fit:cover;" alt="avatar">`;
       } else {
         const initial = (user.name || user.email || 'U').charAt(0).toUpperCase();
         const bgClass = isAdmin ? 'bg-warning text-dark' : 'bg-primary text-white';
-        avatarHtml = `<div class="rounded-circle ${bgClass} d-flex align-items-center justify-content-center me-2 fw-bold" style="width:36px;height:36px;font-size:14px;">${escapeHtml(initial)}</div>`;
-      }
-
-      // Interactive Role Switch
-      const roleSwitchHtml = `
-        <div class="form-check form-switch d-inline-flex align-items-center justify-content-center m-0 gap-1" title="${isRoot ? 'Нельзя изменить роль Root' : (isAdmin ? 'Права Администратора активны. Нажмите для переключения на Пользователя.' : 'Обычный пользователь. Нажмите для выдачи прав Администратора.')}">
-          <input class="form-check-input role-toggle-switch" type="checkbox" role="switch"
-            id="role-switch-${user.id}"
-            data-user-id="${user.id}"
-            ${isAdmin ? 'checked' : ''}
-            ${isRoot ? 'disabled' : ''} style="cursor: ${isRoot ? 'not-allowed' : 'pointer'};">
-          <label class="form-check-label small fw-bold ms-1 ${isAdmin ? 'text-warning' : 'text-info'}" for="role-switch-${user.id}" style="cursor: ${isRoot ? 'not-allowed' : 'pointer'};">
-            ${isAdmin ? '<i class="bi bi-shield-lock-fill"></i> Admin' : '<i class="bi bi-person-fill"></i> User'}
-          </label>
-        </div>
-      `;
-
-      // Status badge & toggle button
-      const statusBadge = isActive
-        ? `<span class="badge bg-success bg-opacity-75"><i class="bi bi-check-circle-fill"></i> Активен</span>`
-        : `<span class="badge bg-danger bg-opacity-75"><i class="bi bi-slash-circle-fill"></i> Заблокирован</span>`;
-
-      // Telegram column
-      let tgHtml = '<span class="text-muted small">—</span>';
-      if (user.telegram_username) {
-        tgHtml = `<a href="https://t.me/${escapeHtml(user.telegram_username)}" target="_blank" class="text-info text-decoration-none small d-flex align-items-center gap-1">
-          <i class="bi bi-telegram"></i> @${escapeHtml(user.telegram_username)}
-        </a>`;
-      } else if (user.telegram_id) {
-        tgHtml = `<span class="text-muted small"><i class="bi bi-telegram text-info"></i> ID: ${escapeHtml(user.telegram_id)}</span>`;
+        avatarHtml = `<div class="rounded-circle ${bgClass} d-flex align-items-center justify-content-center me-2 flex-shrink-0 fw-bold" style="width:36px;height:36px;font-size:14px;">${escapeHtml(initial)}</div>`;
       }
 
       // Password column
@@ -231,43 +206,137 @@
         ? `<i class="bi bi-patch-check-fill text-success ms-1" title="Email подтвержден"></i>`
         : `<i class="bi bi-question-circle text-muted ms-1" title="Email не подтвержден"></i>`;
 
+      // If this row is in inline-edit mode:
+      if (isRowEditing) {
+        return `
+          <tr data-user-id="${user.id}" class="table-active border-primary">
+            <td class="text-center text-muted fw-bold align-middle">${user.id}</td>
+            <td class="align-middle">
+              <div class="d-flex align-items-center">
+                ${avatarHtml}
+                <div class="w-100">
+                  <div class="input-group input-group-sm mb-1">
+                    <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-person"></i></span>
+                    <input type="text" class="form-control bg-dark text-white border-primary inline-edit-name" value="${escapeHtml(user.name || '')}" placeholder="Имя пользователя">
+                  </div>
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-envelope"></i></span>
+                    <input type="email" class="form-control bg-dark text-white border-primary inline-edit-email" value="${escapeHtml(user.email || '')}" placeholder="Email">
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="text-center align-middle">
+              <select class="form-select form-select-sm bg-dark text-white border-primary inline-edit-role" ${isRoot ? 'disabled' : ''}>
+                <option value="user" ${user.role === 'user' ? 'selected' : ''}>👤 User</option>
+                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>🛡️ Admin</option>
+                <option value="guest" ${user.role === 'guest' ? 'selected' : ''}>👀 Guest</option>
+              </select>
+            </td>
+            <td class="text-center align-middle">
+              <select class="form-select form-select-sm bg-dark text-white border-primary inline-edit-status" ${isRoot ? 'disabled' : ''}>
+                <option value="1" ${isActive ? 'selected' : ''}>🟢 Активен</option>
+                <option value="0" ${!isActive ? 'selected' : ''}>🔴 Блок</option>
+              </select>
+            </td>
+            <td class="align-middle">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-telegram"></i></span>
+                <input type="text" class="form-control bg-dark text-white border-primary inline-edit-tg" value="${escapeHtml(user.telegram_username || '')}" placeholder="Username">
+              </div>
+            </td>
+            <td class="text-center align-middle">${pwdHtml}</td>
+            <td class="small align-middle">
+              <div><span class="text-muted">Создан:</span> ${formatDate(user.created_at)}</div>
+            </td>
+            <td class="text-center align-middle">
+              <div class="d-flex justify-content-center gap-1">
+                <button class="btn btn-success btn-sm btn-save-inline" data-id="${user.id}" title="Сохранить изменения (Enter)" ${isSaving ? 'disabled' : ''}>
+                  ${isSaving ? '<span class="spinner-border spinner-border-sm"></span>' : '<i class="bi bi-check-lg"></i>'}
+                </button>
+                <button class="btn btn-outline-secondary btn-sm btn-cancel-inline" data-id="${user.id}" title="Отмена (Esc)" ${isSaving ? 'disabled' : ''}>
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+
+      // Normal view mode with DIRECT editable table fields:
+      const roleSelectHtml = `
+        <select class="form-select form-select-sm bg-dark border-secondary user-table-role-select text-center ${isAdmin ? 'text-warning fw-bold' : 'text-info'}"
+          data-user-id="${user.id}"
+          ${isRoot ? 'disabled title="Нельзя изменить роль Root"' : 'title="Изменить роль прямо в таблице"'}>
+          <option value="user" ${user.role === 'user' ? 'selected' : ''} class="text-info">👤 User</option>
+          <option value="admin" ${isAdmin ? 'selected' : ''} class="text-warning">🛡️ Admin</option>
+          <option value="guest" ${user.role === 'guest' ? 'selected' : ''} class="text-secondary">👀 Guest</option>
+        </select>
+      `;
+
+      const statusSelectHtml = `
+        <select class="form-select form-select-sm bg-dark border-secondary user-table-status-select text-center ${isActive ? 'text-success' : 'text-danger'}"
+          data-user-id="${user.id}"
+          ${isRoot ? 'disabled title="Нельзя деактивировать Root"' : 'title="Изменить статус прямо в таблице"'}>
+          <option value="1" ${isActive ? 'selected' : ''} class="text-success">🟢 Активен</option>
+          <option value="0" ${!isActive ? 'selected' : ''} class="text-danger">🔴 Блок</option>
+        </select>
+      `;
+
+      // Telegram column
+      let tgHtml = '<span class="text-muted small">—</span>';
+      if (user.telegram_username) {
+        tgHtml = `<a href="https://t.me/${escapeHtml(user.telegram_username)}" target="_blank" class="text-info text-decoration-none small d-flex align-items-center gap-1" title="Открыть профиль Telegram">
+          <i class="bi bi-telegram"></i> @${escapeHtml(user.telegram_username)}
+        </a>`;
+      } else if (user.telegram_id) {
+        tgHtml = `<span class="text-muted small" title="Telegram ID"><i class="bi bi-telegram text-info"></i> ID: ${escapeHtml(user.telegram_id)}</span>`;
+      }
+
       return `
         <tr data-user-id="${user.id}">
-          <td class="text-center text-muted fw-bold">${user.id}</td>
-          <td>
-            <div class="d-flex align-items-center">
-              ${avatarHtml}
-              <div>
-                <div class="fw-bold text-white">${escapeHtml(user.name || 'Без имени')}</div>
-                <div class="small text-muted d-flex align-items-center">
-                  ${escapeHtml(user.email)} ${emailVerifiedBadge}
+          <td class="text-center text-muted fw-bold align-middle">${user.id}</td>
+          <td class="align-middle">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center">
+                ${avatarHtml}
+                <div>
+                  <div class="fw-bold text-white user-cell-name" title="Дважды кликните для быстрого редактирования" style="cursor: pointer;">
+                    ${escapeHtml(user.name || 'Без имени')}
+                    <i class="bi bi-pencil-fill text-muted ms-1 opacity-25 hover-opacity-100" style="font-size:10px;"></i>
+                  </div>
+                  <div class="small text-muted d-flex align-items-center user-cell-email" title="Дважды кликните для быстрого редактирования" style="cursor: pointer;">
+                    ${escapeHtml(user.email)} ${emailVerifiedBadge}
+                  </div>
                 </div>
               </div>
             </div>
           </td>
-          <td class="text-center">${roleSwitchHtml}</td>
-          <td class="text-center">
-            <div>${statusBadge}</div>
+          <td class="text-center align-middle" style="min-width: 130px;">${roleSelectHtml}</td>
+          <td class="text-center align-middle" style="min-width: 125px;">${statusSelectHtml}</td>
+          <td class="align-middle" style="min-width: 140px;">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="user-cell-tg" title="Дважды кликните для быстрого редактирования" style="cursor: pointer;">${tgHtml}</div>
+            </div>
           </td>
-          <td>${tgHtml}</td>
-          <td class="text-center">${pwdHtml}</td>
-          <td class="small">
+          <td class="text-center align-middle">${pwdHtml}</td>
+          <td class="small align-middle">
             <div><span class="text-muted">Создан:</span> ${formatDate(user.created_at)}</div>
             ${user.last_login ? `<div><span class="text-muted">Вход:</span> ${formatDate(user.last_login)}</div>` : ''}
           </td>
-          <td class="text-center">
+          <td class="text-center align-middle">
             <div class="btn-group btn-group-sm" role="group">
-              <button class="btn btn-outline-secondary btn-edit-user" data-id="${user.id}" title="Редактировать">
-                <i class="bi bi-pencil-fill"></i>
+              <button class="btn btn-outline-warning btn-inline-edit" data-id="${user.id}" title="Редактировать поля строки прямо в таблице">
+                <i class="bi bi-pencil-square"></i>
               </button>
               <button class="btn btn-outline-info btn-pwd-user" data-id="${user.id}" data-name="${escapeHtml(user.name || user.email)}" title="Сменить пароль">
                 <i class="bi bi-key-fill"></i>
               </button>
-              <button class="btn btn-outline-light btn-details-user" data-id="${user.id}" title="Настройки и профиль">
+              <button class="btn btn-outline-light btn-details-user" data-id="${user.id}" title="Профиль и настройки">
                 <i class="bi bi-info-circle-fill"></i>
               </button>
-              <button class="btn ${isActive ? 'btn-outline-warning' : 'btn-outline-success'} btn-toggle-active-user" data-id="${user.id}" data-active="${isActive ? '1' : '0'}" ${isRoot ? 'disabled title="Нельзя деактивировать Root"' : `title="${isActive ? 'Заблокировать' : 'Активировать'}"`}>
-                <i class="bi ${isActive ? 'bi-lock-fill' : 'bi-unlock-fill'}"></i>
+              <button class="btn btn-outline-secondary btn-edit-user-modal" data-id="${user.id}" title="Редактировать в модальном окне">
+                <i class="bi bi-sliders"></i>
               </button>
               <button class="btn btn-outline-danger btn-delete-user" data-id="${user.id}" data-name="${escapeHtml(user.name || user.email)}" ${isRoot ? 'disabled title="Нельзя удалить Root"' : 'title="Удалить"'}>
                 <i class="bi bi-trash-fill"></i>
@@ -282,23 +351,96 @@
 
   // Attach Table Action Button Events
   function attachTableEvents() {
-    // Role Toggle Switch
-    document.querySelectorAll('.role-toggle-switch').forEach(sw => {
-      sw.addEventListener('change', async (e) => {
+    // Direct Table Role Selector Change
+    document.querySelectorAll('.user-table-role-select').forEach(sel => {
+      sel.addEventListener('change', async (e) => {
         const userId = parseInt(e.target.getAttribute('data-user-id'), 10);
-        await handleToggleRole(userId, e.target);
+        const newRole = e.target.value;
+        const isAdmin = (newRole === 'admin') ? 1 : 0;
+        await handleUpdateField(userId, { role: newRole, is_admin: isAdmin }, `Роль изменена на "${newRole}"`);
       });
     });
 
-    // Edit User
-    document.querySelectorAll('.btn-edit-user').forEach(btn => {
+    // Direct Table Status Selector Change
+    document.querySelectorAll('.user-table-status-select').forEach(sel => {
+      sel.addEventListener('change', async (e) => {
+        const userId = parseInt(e.target.getAttribute('data-user-id'), 10);
+        const newStatus = parseInt(e.target.value, 10);
+        await handleUpdateField(userId, { is_active: newStatus }, `Статус изменен на "${newStatus ? 'Активен' : 'Заблокирован'}"`);
+      });
+    });
+
+    // Double-click row or name/email/tg to enter inline-edit mode
+    document.querySelectorAll('#users-table-body tr').forEach(row => {
+      const userId = parseInt(row.getAttribute('data-user-id'), 10);
+      if (!userId) return;
+
+      const nameEl = row.querySelector('.user-cell-name');
+      const emailEl = row.querySelector('.user-cell-email');
+      const tgEl = row.querySelector('.user-cell-tg');
+
+      [nameEl, emailEl, tgEl].forEach(el => {
+        if (el) {
+          el.addEventListener('dblclick', () => {
+            state.editingUserId = userId;
+            renderTable();
+          });
+        }
+      });
+    });
+
+    // Inline Edit Button
+    document.querySelectorAll('.btn-inline-edit').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const userId = parseInt(e.currentTarget.getAttribute('data-id'), 10);
+        state.editingUserId = userId;
+        renderTable();
+      });
+    });
+
+    // Inline Cancel Button
+    document.querySelectorAll('.btn-cancel-inline').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.editingUserId = null;
+        renderTable();
+      });
+    });
+
+    // Inline Save Button
+    document.querySelectorAll('.btn-save-inline').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const userId = parseInt(e.currentTarget.getAttribute('data-id'), 10);
+        await saveInlineRow(userId);
+      });
+    });
+
+    // Enter & Escape key handling in inline inputs
+    document.querySelectorAll('.inline-edit-name, .inline-edit-email, .inline-edit-tg').forEach(inp => {
+      inp.addEventListener('keydown', async (e) => {
+        const tr = inp.closest('tr');
+        const userId = tr ? parseInt(tr.getAttribute('data-user-id'), 10) : null;
+        if (!userId) return;
+
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          await saveInlineRow(userId);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          state.editingUserId = null;
+          renderTable();
+        }
+      });
+    });
+
+    // Modal Edit User Button
+    document.querySelectorAll('.btn-edit-user-modal').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const userId = parseInt(e.currentTarget.getAttribute('data-id'), 10);
         openEditModal(userId);
       });
     });
 
-    // Change Password
+    // Change Password Button
     document.querySelectorAll('.btn-pwd-user').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const userId = parseInt(e.currentTarget.getAttribute('data-id'), 10);
@@ -307,7 +449,7 @@
       });
     });
 
-    // View Details
+    // View Details Button
     document.querySelectorAll('.btn-details-user').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const userId = parseInt(e.currentTarget.getAttribute('data-id'), 10);
@@ -315,15 +457,7 @@
       });
     });
 
-    // Toggle Active
-    document.querySelectorAll('.btn-toggle-active-user').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const userId = parseInt(e.currentTarget.getAttribute('data-id'), 10);
-        await handleToggleActive(userId);
-      });
-    });
-
-    // Delete User
+    // Delete User Button
     document.querySelectorAll('.btn-delete-user').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const userId = parseInt(e.currentTarget.getAttribute('data-id'), 10);
@@ -333,22 +467,82 @@
     });
   }
 
-  // Toggle Role Handler
-  async function handleToggleRole(userId, switchEl) {
-    const originalChecked = !switchEl.checked;
+  // Save Inline Row Changes
+  async function saveInlineRow(userId) {
+    const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+    if (!row) return;
+
+    const nameInput = row.querySelector('.inline-edit-name');
+    const emailInput = row.querySelector('.inline-edit-email');
+    const roleSelect = row.querySelector('.inline-edit-role');
+    const statusSelect = row.querySelector('.inline-edit-status');
+    const tgInput = row.querySelector('.inline-edit-tg');
+
+    const name = nameInput ? nameInput.value.trim() : '';
+    const email = emailInput ? emailInput.value.trim() : '';
+    const role = roleSelect ? roleSelect.value : 'user';
+    const isActive = statusSelect ? parseInt(statusSelect.value, 10) : 1;
+    const tg = tgInput ? tgInput.value.trim().replace(/^@/, '') : '';
+
+    if (!email) {
+      showStatusAlert('Email не может быть пустым', 'warning');
+      return;
+    }
+    if (!name) {
+      showStatusAlert('Имя пользователя не может быть пустым', 'warning');
+      return;
+    }
+
+    const payload = {
+      name: name,
+      email: email,
+      role: role,
+      is_admin: (role === 'admin') ? 1 : 0,
+      is_active: isActive,
+      telegram_username: tg
+    };
+
+    state.savingUserId = userId;
+    const saveBtn = row.querySelector('.btn-save-inline');
+    if (saveBtn) saveBtn.disabled = true;
+
     try {
-      const res = await apiFetch(`/api/admin/users/${userId}/toggle-role`, { method: 'POST' });
-      const user = state.users.find(u => u.id === userId);
-      if (user) {
-        user.role = res.role;
-        user.is_admin = res.is_admin;
-      }
-      const roleText = res.is_admin ? 'Администратор (admin)' : 'Пользователь (user)';
-      showStatusAlert(`Роль пользователя #${userId} изменена на: <strong>${roleText}</strong>`, 'success');
+      const res = await apiFetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      state.editingUserId = null;
+      showStatusAlert(`Пользователь #${userId} (<strong>${escapeHtml(name)}</strong>) успешно сохранён!`, 'success');
       loadUsers();
     } catch (err) {
-      if (switchEl) switchEl.checked = originalChecked;
-      showStatusAlert(`Ошибка изменения роли: ${err.message}`, 'danger');
+      showStatusAlert(`Ошибка сохранения: ${err.message}`, 'danger');
+    } finally {
+      state.savingUserId = null;
+      if (saveBtn) saveBtn.disabled = false;
+    }
+  }
+
+  // Update a Single Field or Subset of Fields
+  async function handleUpdateField(userId, payload, successMsg = 'Данные сохранены') {
+    try {
+      const res = await apiFetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      // Update local state user
+      const user = state.users.find(u => u.id === userId);
+      if (user && res.user) {
+        Object.assign(user, res.user);
+      }
+      showStatusAlert(`Пользователь #${userId}: ${successMsg}`, 'success');
+      loadUsers();
+    } catch (err) {
+      showStatusAlert(`Ошибка обновления: ${err.message}`, 'danger');
+      loadUsers();
     }
   }
 
@@ -463,22 +657,6 @@
     const modalEl = document.getElementById('modal-delete-user');
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
     modal.show();
-  }
-
-  // Toggle Active Handler
-  async function handleToggleActive(userId) {
-    try {
-      const res = await apiFetch(`/api/admin/users/${userId}/toggle-active`, { method: 'POST' });
-      const user = state.users.find(u => u.id === userId);
-      if (user) {
-        user.is_active = res.is_active;
-        renderTable();
-      }
-      showStatusAlert(`Статус пользователя #${userId} изменён на: ${res.is_active ? 'Активен' : 'Заблокирован'}`, 'success');
-      loadUsers();
-    } catch (err) {
-      showStatusAlert(`Ошибка изменения статуса: ${err.message}`, 'danger');
-    }
   }
 
   // Initialize Event Listeners
@@ -633,7 +811,7 @@
       });
     }
 
-    // Edit User Form Submit
+    // Edit User Form Submit (Modal)
     const formEdit = document.getElementById('form-edit-user');
     if (formEdit) {
       formEdit.addEventListener('submit', async (e) => {
@@ -729,7 +907,7 @@
 
   // Global Init Function
   function initUsersTab() {
-    console.log('[UsersTab] Initializing user management tab...');
+    console.log('[UsersTab] Initializing user management tab with inline editing...');
     if (!state.initialized) {
       initListeners();
       state.initialized = true;

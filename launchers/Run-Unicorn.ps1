@@ -110,6 +110,22 @@ if (Test-Path $venvActivate) {
 }
 
 # ============================================
+# DATABASE MIGRATIONS
+# ============================================
+Write-Host ""
+Write-Host "[*] Checking database migrations..." -ForegroundColor Cyan
+try {
+    $dbMigOut = & $venvPython -m src.db.migrations --apply 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "    [OK] Database schema is up to date" -ForegroundColor Green
+    } else {
+        Write-Host "    [WARN] Migration check returned: $dbMigOut" -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host "    [WARN] Failed to run database migrations: $_" -ForegroundColor Yellow
+}
+
+# ============================================
 # LOADING CONFIGURATION
 # ============================================
 Write-Host ""
