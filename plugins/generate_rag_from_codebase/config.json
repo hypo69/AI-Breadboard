@@ -1,0 +1,51 @@
+{
+  "project_root": ".",
+  "index_name": "codebase",
+  "include_dirs": [
+    "src",
+    "plugins",
+    "integrations",
+    "launchers",
+    "scripts",
+    "install",
+    "docs",
+    "prompts"
+  ],
+  "include_files": [
+    "README.md",
+    "README.ru.md",
+    "CHANGELOG.md",
+    "pyproject.toml"
+  ],
+  "ignore_patterns": [
+    ".git/**",
+    ".github/**",
+    ".venv/**",
+    "venv/**",
+    "env/**",
+    "**/__pycache__/**",
+    "**/*.pyc",
+    "**/*.pyo",
+    "**/*.pyd",
+    ".pytest_cache/**",
+    ".mypy_cache/**",
+    ".ruff_cache/**",
+    ".coverage",
+    "htmlcov/**",
+    "dist/**",
+    "build/**",
+    "*.egg-info/**",
+    "logs/**",
+    "SANDBOX/**",
+    "site/**",
+    "**/*.log",
+    "**/.env",
+    "**/.env.*",
+    "**/*.key",
+    "**/*.pem",
+    "**/*secret*",
+    "**/*credential*"
+  ],
+  "min_chunk_length": 30,
+  "max_chunk_length": 3000
+}

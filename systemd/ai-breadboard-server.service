@@ -1,0 +1,29 @@
+[Unit]
+Description=AI Breadboard FastAPI Server
+Documentation=https://github.com/hypo69/AI-Breadboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+User=%u
+WorkingDirectory=%h/AI-Breadboard
+Environment="PATH=%h/AI-Breadboard/venv/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PYTHONPATH=%h/AI-Breadboard"
+Environment="AIBREADBOARD_DIR=%h/AI-Breadboard"
+Environment="PYTHONUTF8=1"
+ExecStart=%h/AI-Breadboard/venv/bin/python %h/AI-Breadboard/launchers/run_unicorn.py --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=10
+
+# Логирование
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=aibreadboard-server
+
+# Ограничения ресурсов (опционально)
+# MemoryLimit=2G
+# CPUQuota=50%
+
+[Install]
+WantedBy=default.target

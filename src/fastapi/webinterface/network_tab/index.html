@@ -1,0 +1,213 @@
+<!-- Network Terminal Application Tab -->
+<style>
+  .net-container {
+    padding: 1rem;
+  }
+  .net-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .net-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+  }
+  .net-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #f8fafc;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .net-panel {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .net-panel-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .net-packets-table {
+    width: 100%;
+    font-size: 0.8rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    border-collapse: collapse;
+  }
+  .net-packets-table th {
+    background: #1e293b;
+    padding: 6px 12px;
+    color: #94a3b8;
+    font-weight: 600;
+    border-bottom: 1px solid #334155;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  .net-packets-table td {
+    padding: 5px 12px;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+  }
+  .proto-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+  .proto-tcp { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #3b82f6; }
+  .proto-udp { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #a855f7; }
+  .proto-tls { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+  .proto-http { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+  .proto-dns { background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid #06b6d4; }
+  .proto-other { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid #64748b; }
+</style>
+
+<div class="net-container">
+  <!-- Header Alert & Status -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div>
+      <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
+        <span class="fs-4">🌐</span> Сетевой терминал (Network Packet & DPI Terminal)
+      </h5>
+      <p class="mb-0 small text-light" style="color: #cbd5e1 !important;">
+        Инспекция сетевых пакетов, анализ PCAP-файлов через TShark, распределение протоколов и обнаружение аномалий трафика.
+      </p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge rounded-pill bg-info-subtle text-info border border-info px-3 py-2" id="net-tshark-status">
+        TShark: Проверка...
+      </span>
+      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-refresh-net-interfaces">
+        <i class="bi bi-arrow-clockwise me-1"></i> Интерфейсы
+      </button>
+    </div>
+  </div>
+
+  <!-- Top Metrics Bar -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-3 col-sm-6">
+      <div class="net-card">
+        <span class="net-label">Всего пакетов</span>
+        <span class="net-value" id="net-total-packets">0</span>
+        <span class="small text-muted" id="net-duration-info">Длительность: 0.0s</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="net-card">
+        <span class="net-label">Объём трафика</span>
+        <span class="net-value" id="net-total-bytes">0 KB</span>
+        <span class="small text-muted" id="net-throughput-info">Скорость: 0 KB/s</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="net-card">
+        <span class="net-label">Активные протоколы</span>
+        <span class="net-value" id="net-top-proto" style="color: #38bdf8;">--</span>
+        <span class="small text-muted" id="net-proto-breakdown">TCP: 0% | UDP: 0%</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="net-card">
+        <span class="net-label">Аномалии & Эвристика</span>
+        <span class="net-value" id="net-anomalies-count" style="color: #4ade80;">0 аномалий</span>
+        <span class="small text-muted" id="net-ai-status">AI Inspector: Готов</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Capture Controls & PCAP Upload -->
+  <div class="row g-3 mb-3">
+    <div class="col-lg-6">
+      <div class="net-panel h-100">
+        <div class="net-panel-header">
+          <span><i class="bi bi-broadcast-pin me-1"></i> Захват сетевого интерфейса (Live Capture)</span>
+        </div>
+        <div class="p-3">
+          <div class="row g-2 mb-3">
+            <div class="col-md-7">
+              <label class="form-label small fw-semibold text-light">Интерфейс:</label>
+              <select class="form-select form-select-sm bg-dark text-white border-secondary" id="net-interface-select">
+                <option value="">Загрузка интерфейсов...</option>
+              </select>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label small fw-semibold text-light">Фильтр (BPF/Display):</label>
+              <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="net-capture-filter" placeholder="tcp port 80 or udp">
+            </div>
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button class="btn btn-sm btn-primary rounded-pill px-3" id="btn-start-live-capture">
+              <i class="bi bi-play-fill me-1"></i> Начать захват
+            </button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-stop-live-capture" disabled>
+              <i class="bi bi-stop-fill me-1"></i> Остановить
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="net-panel h-100">
+        <div class="net-panel-header">
+          <span><i class="bi bi-file-earmark-binary me-1"></i> Анализ PCAP-файла</span>
+        </div>
+        <div class="p-3">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-light">Выберите .pcap или .pcapng файл:</label>
+            <input type="file" class="form-control form-control-sm bg-dark text-white border-secondary" id="net-pcap-file" accept=".pcap,.pcapng,.cap">
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="small text-muted" id="net-upload-status">Файл не выбран</span>
+            <button class="btn btn-sm btn-info rounded-pill px-3 fw-bold" id="btn-analyze-pcap">
+              <i class="bi bi-cpu me-1"></i> Проанализировать PCAP
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Packets Stream & Diagnostics Table -->
+  <div class="net-panel">
+    <div class="net-panel-header">
+      <span><i class="bi bi-reception-4 me-1"></i> Поток пакетов (Live Packet Stream)</span>
+      <div class="d-flex align-items-center gap-2">
+        <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="net-table-filter" placeholder="Поиск по IP / протоколу..." style="max-width: 220px;">
+        <button class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0" id="btn-clear-packets">Очистить</button>
+      </div>
+    </div>
+    <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+      <table class="net-packets-table">
+        <thead>
+          <tr>
+            <th style="width: 60px;">#</th>
+            <th style="width: 90px;">Время</th>
+            <th style="width: 150px;">Источник</th>
+            <th style="width: 150px;">Назначение</th>
+            <th style="width: 90px;">Протокол</th>
+            <th style="width: 70px; text-align: right;">Размер</th>
+            <th>Информация</th>
+          </tr>
+        </thead>
+        <tbody id="net-packets-tbody">
+          <tr><td colspan="7" class="text-center py-4 text-muted">Нет захваченных пакетов. Запустите захват или загрузите PCAP.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

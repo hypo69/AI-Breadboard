@@ -1,0 +1,554 @@
+<!-- Models & APIs Management Tab -->
+<div class="container-fluid py-3">
+  <!-- Premium Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-0 fw-bold text-primary"><i class="bi bi-cpu"></i> Модели и API</h4>
+      <p class="text-muted small mb-0">Управление провайдерами, ключами и системными инструкциями</p>
+    </div>
+  </div>
+
+  <!-- Top Block: Active Model, Test Prompt & System Instruction -->
+  <div class="row mb-4">
+    <!-- Active Model & Testing Card -->
+    <div class="col-lg-6 mb-4 mb-lg-0">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-3 pb-0">
+          <h6 class="card-title fw-bold text-primary mb-0"><i class="bi bi-robot"></i> Активная модель и проверка</h6>
+          <button class="btn btn-outline-secondary btn-sm rounded-pill py-0 px-2" id="btn-refresh-models-list" title="Обновить список доступных моделей">
+            <i class="bi bi-arrow-clockwise"></i> Обновить список
+          </button>
+        </div>
+        <div class="card-body d-flex flex-column p-4">
+
+          <!-- Saved Default Model Indicator -->
+          <div class="mb-3 d-flex align-items-center justify-content-between p-2 rounded bg-body-tertiary border">
+            <div class="small text-secondary d-flex align-items-center gap-1">
+              <i class="bi bi-bookmark-check-fill text-success"></i>
+              <span>Модель по умолчанию:</span>
+            </div>
+            <span id="saved-default-model-badge" class="badge bg-secondary font-monospace px-2 py-1" style="font-size: 0.82rem;">Загрузка...</span>
+          </div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-sm-5">
+              <label for="provider-tab-select" class="form-label small text-secondary mb-1">Провайдер ИИ:</label>
+              <select class="form-select form-select-sm" id="provider-tab-select">
+                <option value="">Загрузка...</option>
+              </select>
+            </div>
+            <div class="col-sm-7">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label for="models-tab-select" class="form-label small text-secondary mb-0">Модель:</label>
+                <div class="form-check form-switch mb-0" title="Показать все модели, включая отфильтрованные / неподдерживаемые">
+                  <input class="form-check-input" type="checkbox" role="switch" id="show-all-models-check" style="cursor: pointer;">
+                  <label class="form-check-label small text-secondary" for="show-all-models-check" style="cursor: pointer; font-size: 0.72rem;">Показать все</label>
+                </div>
+              </div>
+              <div class="input-group input-group-sm">
+                <select class="form-select form-select-sm" id="models-tab-select">
+                  <option value="">Загрузка...</option>
+                </select>
+                <button class="btn btn-outline-warning" type="button" id="btn-model-toggle-favorite" title="Добавить в избранное / Убрать из избранного">
+                  <i class="bi bi-star" id="favorite-star-icon"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Model User Note & Favorite Details -->
+          <div class="mb-3 p-2 rounded bg-body-tertiary border" id="model-note-box" style="border-style: dashed !important;">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label for="model-user-note" class="form-label small text-warning-emphasis mb-0" style="font-size: 0.76rem;">
+                <i class="bi bi-journal-text me-1"></i> Заметка о модели:
+              </label>
+              <span id="model-fav-status-badge" class="badge bg-secondary-subtle text-secondary-emphasis border" style="font-size: 0.68rem;">Не в избранном</span>
+            </div>
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control" id="model-user-note" placeholder="Введите заметку о возможностях/особенностях модели..." autocomplete="off">
+              <button class="btn btn-sm btn-outline-info" id="btn-save-model-note" type="button" title="Сохранить заметку">
+                <i class="bi bi-floppy me-1"></i> Сохранить
+              </button>
+            </div>
+          </div>
+
+          <!-- Favorite Models Chips List -->
+          <div class="mb-3" id="favorite-models-section" style="display: none;">
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <span class="small text-secondary fw-semibold" style="font-size: 0.75rem;">
+                <i class="bi bi-star-fill text-warning me-1"></i> Избранные модели:
+              </span>
+            </div>
+            <div class="d-flex flex-wrap gap-1" id="favorite-models-list">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Model Test Area: Prompt -> Response -->
+          <div class="p-3 rounded-3 mb-3 bg-body-tertiary border">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label for="model-test-prompt" class="form-label small text-info fw-bold mb-0">
+                <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Проверочный запрос (Запрос &rarr; Ответ)
+              </label>
+              <span class="text-secondary small" style="font-size: 0.72rem;">Тест выбранной модели</span>
+            </div>
+
+            <div class="input-group input-group-sm mb-2">
+              <input type="text" class="form-control" id="model-test-prompt" value="Привет! Назови свою модель и провайдера, и подтверди готовность к работе." placeholder="Введите проверочное сообщение..." autocomplete="off" data-lpignore="true" data-1p-ignore="true">
+              <button class="btn btn-info fw-bold px-3" id="btn-model-test-send" type="button" title="Отправить тестовый запрос в выбранную модель">
+                <i class="bi bi-send-fill me-1"></i> Проверить
+              </button>
+              <button class="btn btn-outline-danger fw-bold px-3" id="btn-model-test-cancel" type="button" title="Отменить выполнение проверочного запроса" style="display: none;">
+                <i class="bi bi-stop-circle me-1"></i> Отмена
+              </button>
+            </div>
+
+            <div id="model-test-result" class="p-2 rounded small font-monospace bg-body border" style="display: none; max-height: 140px; overflow-y: auto;">
+              <!-- Dynamic output goes here -->
+            </div>
+          </div>
+
+          <div class="mt-auto d-grid">
+            <button class="btn btn-primary btn-sm rounded-pill fw-bold" id="btn-models-tab-save">
+              <i class="bi bi-check-circle"></i> Сохранить как модель по умолчанию
+            </button>
+            <div class="form-text text-secondary text-center mt-1" style="font-size: 0.72rem;">Эта модель будет использоваться ассистентом по умолчанию во всех чатах.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- System Instruction Card -->
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-3 pb-0">
+          <span class="fw-bold"><i class="bi bi-terminal"></i> Системная инструкция</span>
+          <div class="d-flex gap-2 align-items-center">
+            <span id="system-instruction-status" class="badge bg-secondary" style="display:none!important;"></span>
+            <button class="btn btn-light btn-sm rounded-pill" id="btn-reload-instruction" title="Обновить">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button class="btn btn-success btn-sm rounded-pill px-3" id="btn-save-instruction">
+              Сохранить
+            </button>
+          </div>
+        </div>
+        <div class="card-body d-flex flex-column">
+          <textarea
+            id="system-instruction-editor"
+            class="form-control font-monospace border-0 bg-body-tertiary flex-grow-1"
+            style="min-height: 220px; resize: none; font-size: 0.85rem;"
+            placeholder="Введите системную инструкцию..."
+            spellcheck="false"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Block: Provider Settings via Vertical Pills -->
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+      <div class="d-flex flex-column flex-md-row align-items-stretch">
+        
+        <!-- Sidebar Pills -->
+        <div class="nav flex-column nav-pills p-3 bg-light border-end" id="provider-pills-tab" role="tablist" aria-orientation="vertical" style="min-width: 250px; min-height: 400px; border-top-left-radius: 0.375rem; border-bottom-left-radius: 0.375rem;">
+          <h6 class="text-uppercase text-muted fw-bold small mb-3 ps-2">Настройки провайдеров</h6>
+          <button class="nav-link active text-start rounded-3 mb-2 fw-bold" id="pill-gemini-tab" data-bs-toggle="pill" data-bs-target="#pill-gemini" type="button" role="tab" aria-controls="pill-gemini" aria-selected="true">
+            ✨ Google Gemini
+          </button>
+          <button class="nav-link text-start rounded-3 mb-2 fw-bold" id="pill-agy-tab" data-bs-toggle="pill" data-bs-target="#pill-agy" type="button" role="tab" aria-controls="pill-agy" aria-selected="false">
+            🚀 Google Antigravity (AGY)
+          </button>
+          <button class="nav-link text-start rounded-3 mb-2 fw-bold" id="pill-google-accounts-tab" data-bs-toggle="pill" data-bs-target="#pill-google-accounts" type="button" role="tab" aria-controls="pill-google-accounts" aria-selected="false">
+            🌐 Google Workspace (Аккаунты)
+          </button>
+          <button class="nav-link text-start rounded-3 mb-2 fw-bold" id="pill-foundry-tab" data-bs-toggle="pill" data-bs-target="#pill-foundry" type="button" role="tab" aria-controls="pill-foundry" aria-selected="false">
+            ⚙️ Microsoft Foundry
+          </button>
+          <button class="nav-link text-start rounded-3 mb-2 fw-bold" id="pill-ollama-tab" data-bs-toggle="pill" data-bs-target="#pill-ollama" type="button" role="tab" aria-controls="pill-ollama" aria-selected="false">
+            🦙 Ollama (Local)
+          </button>
+          <button class="nav-link text-start rounded-3 fw-bold" id="pill-onnx-tab" data-bs-toggle="pill" data-bs-target="#pill-onnx" type="button" role="tab" aria-controls="pill-onnx" aria-selected="false">
+            🧠 Microsoft ONNX / Olive
+          </button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content flex-grow-1 p-4" id="provider-pills-tabContent">
+          
+          <!-- GEMINI TAB -->
+          <div class="tab-pane fade show active" id="pill-gemini" role="tabpanel" aria-labelledby="pill-gemini-tab">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="fw-bold mb-0">Ключи Google Gemini</h5>
+              <button class="btn btn-outline-warning btn-sm rounded-pill px-3" id="btn-refresh-keys">
+                <i class="bi bi-arrow-repeat"></i> Сбросить все ключи
+              </button>
+            </div>
+
+            <!-- Gemini Key Pool Alert -->
+            <div class="alert alert-info shadow-sm rounded-3 border-0 mb-4" role="alert">
+              <h6 class="alert-heading fw-bold mb-1"><i class="bi bi-key-fill me-2"></i>Пул ротации API-ключей (Round-Robin)</h6>
+              <p class="small mb-0">
+                Все активные ключи из таблицы ниже формируют единый пул. При исчерпании суточных лимитов запросов (ошибки <code>429 / ResourceExhausted</code>) система автоматически переключается на следующий свободный ключ без прерывания генерации.
+              </p>
+            </div>
+            
+            <div class="row g-4">
+              <!-- Add Key Form -->
+              <div class="col-lg-4">
+                <div class="card bg-light border-0 shadow-sm">
+                  <div class="card-body">
+                    <h6 class="fw-bold mb-3">Добавить новый ключ</h6>
+                    <form id="form-add-key" onsubmit="event.preventDefault();">
+                      <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">Имя владельца:</label>
+                        <input type="text" class="form-control form-control-sm" id="new-key-name" placeholder="Например: primary_key" autocomplete="off" data-lpignore="true" data-1p-ignore="true" required>
+                      </div>
+                      <div class="mb-4">
+                        <label class="form-label small text-muted fw-bold">API-ключ (AIzaSy...):</label>
+                        <input type="password" class="form-control form-control-sm" id="new-key-value" placeholder="Введите ключ" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" required>
+                      </div>
+                      <button type="button" class="btn btn-success btn-sm w-100 rounded-pill fw-bold" id="btn-add-key">Добавить ключ</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Keys Table -->
+              <div class="col-lg-8">
+                <div class="table-responsive shadow-sm rounded border bg-white">
+                  <table class="table table-hover align-middle mb-0" id="keys-table">
+                    <thead class="table-light">
+                      <tr>
+                        <th class="py-3 px-3 border-0">Название</th>
+                        <th class="py-3 px-3 border-0">Ключ</th>
+                        <th class="py-3 px-3 border-0">Статус</th>
+                        <th class="py-3 px-3 border-0">Квота</th>
+                        <th class="py-3 px-3 border-0 text-end">Действия</th>
+                      </tr>
+                    </thead>
+                    <tbody id="keys-list-body" class="border-top-0">
+                      <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">Загрузка ключей...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ANTIGRAVITY (AGY) TAB -->
+          <div class="tab-pane fade" id="pill-agy" role="tabpanel" aria-labelledby="pill-agy-tab">
+            <h5 class="fw-bold mb-3">Настройки Google Antigravity (AGY)</h5>
+            
+            <div class="row">
+              <div class="col-md-11 col-lg-9">
+                <!-- Info Alert -->
+                <div class="alert alert-warning shadow-sm rounded-3 border-0 mb-4" role="alert">
+                  <h6 class="alert-heading fw-bold"><i class="bi bi-rocket-takeoff me-2"></i>Что такое Antigravity (AGY)?</h6>
+                  <p class="small mb-2">
+                    <strong>Google Antigravity</strong> — передовая агентная платформа для автономных AI-воркфлоу, мультиагентных пайплайнов и глубокого веб-исследования.
+                  </p>
+                  <ul class="small mb-0 ps-3">
+                    <li>Включает встроенные агентные инструменты <code>BuiltinTools.SEARCH_WEB</code> и <code>READ_URL_CONTENT</code>.</li>
+                    <li>Поддерживает автономный вызов через Python SDK (<code>google.antigravity</code>) и утилиту <code>agy CLI</code>.</li>
+                    <li>Если отдельный ключ <code>AGY_API_KEY</code> не задан, провайдер автоматически использует ключи из пула Gemini.</li>
+                  </ul>
+                </div>
+
+                <form id="form-agy-config" onsubmit="event.preventDefault();">
+                  <div class="card border-0 bg-light shadow-sm mb-4">
+                    <div class="card-body p-4">
+                      <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom flex-wrap gap-2">
+                        <div class="form-check form-switch mb-0">
+                          <input class="form-check-input" type="checkbox" role="switch" id="agy-enabled" style="transform: scale(1.3); margin-left: -2.5em; cursor: pointer;">
+                          <label class="form-check-label fw-bold ms-2" for="agy-enabled" style="cursor: pointer;">Активировать провайдер Antigravity (AGY)</label>
+                        </div>
+                        <div class="form-check mb-0">
+                          <input class="form-check-input" type="checkbox" id="agy-remember" checked style="cursor: pointer;">
+                          <label class="form-check-label small text-muted ms-1" for="agy-remember" style="cursor: pointer;">Запомнить</label>
+                        </div>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">Модель Antigravity по умолчанию (динамически из SDK):</label>
+                        <select class="form-select form-select-sm" id="agy-model">
+                          <option value="">Загрузка доступных моделей через SDK...</option>
+                        </select>
+                      </div>
+
+                      <div class="mb-4">
+                        <label class="form-label small text-muted fw-bold">AGY API Key (опционально, иначе из пула Gemini):</label>
+                        <input type="password" class="form-control form-control-sm" id="agy-key" placeholder="Оставьте пустым для использования ключей Gemini" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true">
+                        <div class="form-text small text-muted">Сохраняется в защищенном файле <code>.env</code>.</div>
+                      </div>
+
+                      <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" id="btn-save-agy">
+                        <i class="bi bi-floppy me-1"></i> Сохранить настройки Antigravity
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- GOOGLE WORKSPACE ACCOUNTS POOL TAB -->
+          <div class="tab-pane fade" id="pill-google-accounts" role="tabpanel" aria-labelledby="pill-google-accounts-tab">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="fw-bold mb-0"><i class="bi bi-google text-danger me-2"></i>Учетные записи Google Workspace</h5>
+              <button class="btn btn-outline-primary btn-sm rounded-pill px-3" id="btn-refresh-gaccounts">
+                <i class="bi bi-arrow-clockwise"></i> Обновить список
+              </button>
+            </div>
+
+            <!-- Workspace Pool Info Alert -->
+            <div class="alert alert-info shadow-sm rounded-3 border-0 mb-4" role="alert">
+              <h6 class="alert-heading fw-bold mb-1"><i class="bi bi-collection-play-fill me-2"></i>Пул аккаунтов Google (OAuth 2.0 & Service Account)</h6>
+              <p class="small mb-2">
+                Интеграция с сервисами Google: <strong>Gmail</strong> (чтение, черновики), <strong>Google Drive</strong> (поиск файлов, чтение), <strong>Google Sheets</strong> (чтение/запись таблиц) и <strong>Google Docs</strong>.
+              </p>
+              <ul class="small mb-0 ps-3">
+                <li>При вызове инструментов ассистент использует аккаунт <code>account_name</code> или аккаунт по умолчанию (<span class="badge bg-warning text-dark"><i class="bi bi-star-fill"></i> Default</span>).</li>
+                <li>Файлы ключей и токенов безопасно сохраняются в <code>src/secrets/</code> и изолированы от публичной конфигурации.</li>
+              </ul>
+            </div>
+
+            <div class="row g-4">
+              <!-- Add Account Form -->
+              <div class="col-lg-5">
+                <div class="card bg-light border-0 shadow-sm">
+                  <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                      <i class="bi bi-person-plus-fill text-primary"></i> Добавить аккаунт в пул
+                    </h6>
+                    <form id="form-add-gaccount" onsubmit="event.preventDefault();">
+                      <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">Имя аккаунта (ID):</label>
+                        <input type="text" class="form-control form-control-sm" id="new-gacc-name" placeholder="Например: work, personal, bot" autocomplete="off" required>
+                        <div class="form-text small">Уникальный идентификатор аккаунта для маршрутизации агентов.</div>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">Тип аутентификации:</label>
+                        <select class="form-select form-select-sm" id="new-gacc-type">
+                          <option value="oauth2">OAuth 2.0 Client (User Login / Desktop App)</option>
+                          <option value="service_account">Service Account Key (Server JSON)</option>
+                        </select>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">Email (опционально):</label>
+                        <input type="email" class="form-control form-control-sm" id="new-gacc-email" placeholder="user@gmail.com или service-account@iam.gserviceaccount.com" autocomplete="off">
+                      </div>
+
+                      <!-- Credentials Input Mode Toggle -->
+                      <div class="mb-2">
+                        <label class="form-label small text-muted fw-bold">Учетные данные (Credentials JSON):</label>
+                        <ul class="nav nav-pills nav-fill mb-2" id="gacc-input-mode-tabs" role="tablist">
+                          <li class="nav-item" role="presentation">
+                            <button class="nav-link active py-1 small" id="gacc-mode-file-tab" data-bs-toggle="pill" data-bs-target="#gacc-mode-file" type="button" role="tab">📁 Загрузить файл</button>
+                          </li>
+                          <li class="nav-item" role="presentation">
+                            <button class="nav-link py-1 small" id="gacc-mode-json-tab" data-bs-toggle="pill" data-bs-target="#gacc-mode-json" type="button" role="tab">📝 Вставить JSON</button>
+                          </li>
+                        </ul>
+
+                        <div class="tab-content" id="gacc-input-mode-tabContent">
+                          <div class="tab-pane fade show active" id="gacc-mode-file" role="tabpanel">
+                            <input class="form-control form-control-sm" type="file" id="new-gacc-file" accept=".json,application/json">
+                            <div class="form-text small">Файл <code>credentials.json</code> или <code>service_account.json</code> из <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" class="text-info text-decoration-none">Google Cloud Console <i class="bi bi-box-arrow-up-right ms-1" style="font-size: 0.75rem;"></i></a>.</div>
+                          </div>
+                          <div class="tab-pane fade" id="gacc-mode-json" role="tabpanel">
+                            <textarea class="form-control font-monospace form-control-sm" id="new-gacc-json" rows="4" placeholder='{"installed": {"client_id": "...", "client_secret": "..."}}'></textarea>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="form-check mb-4 mt-3">
+                        <input class="form-check-input" type="checkbox" id="new-gacc-default" style="cursor: pointer;">
+                        <label class="form-check-label small fw-semibold" for="new-gacc-default" style="cursor: pointer;">
+                          Сделать аккаунтом по умолчанию (Default)
+                        </label>
+                      </div>
+
+                      <button type="button" class="btn btn-success btn-sm w-100 rounded-pill fw-bold" id="btn-add-gacc">
+                        <i class="bi bi-plus-circle me-1"></i> Сохранить аккаунт
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Accounts Table -->
+              <div class="col-lg-7">
+                <div class="table-responsive shadow-sm rounded border bg-white mb-3">
+                  <table class="table table-hover align-middle mb-0" id="gaccounts-table">
+                    <thead class="table-light">
+                      <tr>
+                        <th class="py-3 px-3 border-0">Аккаунт</th>
+                        <th class="py-3 px-3 border-0">Тип</th>
+                        <th class="py-3 px-3 border-0">Статус</th>
+                        <th class="py-3 px-3 border-0">Токен</th>
+                        <th class="py-3 px-3 border-0 text-end">Действия</th>
+                      </tr>
+                    </thead>
+                    <tbody id="gaccounts-list-body" class="border-top-0">
+                      <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">Загрузка аккаунтов...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Test & Diagnostics Output Card -->
+                <div class="card bg-dark text-white border-secondary shadow-sm" id="gaccount-test-card" style="display: none;">
+                  <div class="card-header border-secondary d-flex justify-content-between align-items-center py-2">
+                    <span class="small fw-bold text-info"><i class="bi bi-terminal me-1"></i> Результат проверки доступа</span>
+                    <button class="btn btn-sm btn-outline-secondary py-0 px-2 text-white-50" type="button" onclick="document.getElementById('gaccount-test-card').style.display='none'">✕</button>
+                  </div>
+                  <div class="card-body p-3 font-monospace small" id="gaccount-test-body" style="max-height: 180px; overflow-y: auto; white-space: pre-wrap;">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FOUNDRY TAB -->
+          <div class="tab-pane fade" id="pill-foundry" role="tabpanel" aria-labelledby="pill-foundry-tab">
+            <h5 class="fw-bold mb-4">Настройки Microsoft Foundry</h5>
+            <div class="row">
+              <div class="col-md-10 col-lg-8">
+                <div class="alert alert-info shadow-sm rounded-3 border-0 mb-4" role="alert">
+                  <h6 class="alert-heading fw-bold"><i class="bi bi-info-circle me-2"></i>Где взять модели Foundry?</h6>
+                  <p class="small mb-0">
+                    Microsoft Foundry (как и LM Studio) работает локально. Чтобы список моделей был не пустым, вам необходимо предварительно загрузить нужные GGUF или ONNX модели через интерфейс самого Foundry или CLI.
+                  </p>
+                </div>
+                <form id="form-foundry-config" onsubmit="event.preventDefault();">
+                  <div class="card border-0 bg-light shadow-sm mb-4">
+                    <div class="card-body p-4">
+                      <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom flex-wrap gap-2">
+                        <div class="form-check form-switch mb-0">
+                          <input class="form-check-input" type="checkbox" role="switch" id="foundry-enabled" style="transform: scale(1.3); margin-left: -2.5em; cursor: pointer;">
+                          <label class="form-check-label fw-bold ms-2" for="foundry-enabled" style="cursor: pointer;">Активировать провайдер Foundry</label>
+                        </div>
+                        <div class="form-check mb-0">
+                          <input class="form-check-input" type="checkbox" id="foundry-remember" checked style="cursor: pointer;">
+                          <label class="form-check-label small text-muted ms-1" for="foundry-remember" style="cursor: pointer;">Запомнить</label>
+                        </div>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">Base URL API:</label>
+                        <input type="text" class="form-control" id="foundry-url" placeholder="http://localhost:54837" autocomplete="off" data-lpignore="true" data-1p-ignore="true">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">API Key (опционально):</label>
+                        <input type="password" class="form-control" id="foundry-key" placeholder="Введите ключ" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true">
+                      </div>
+                      <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" id="btn-save-foundry">Сохранить настройки Foundry</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- OLLAMA TAB -->
+          <div class="tab-pane fade" id="pill-ollama" role="tabpanel" aria-labelledby="pill-ollama-tab">
+            <h5 class="fw-bold mb-4">Настройки Ollama (Local)</h5>
+            <div class="row">
+              <div class="col-md-10 col-lg-8">
+                <div class="alert alert-info shadow-sm rounded-3 border-0 mb-4" role="alert">
+                  <h6 class="alert-heading fw-bold"><i class="bi bi-info-circle me-2"></i>Как добавить новые модели в Ollama?</h6>
+                  <p class="small mb-0">
+                    Откройте терминал на сервере, где установлен Ollama, и выполните команду:<br>
+                    <code class="bg-white px-2 py-1 rounded text-dark mt-2 d-inline-block border">ollama pull llama3.1</code><br>
+                    После загрузки модель автоматически появится в выпадающем списке.
+                  </p>
+                </div>
+                <form id="form-ollama-config" onsubmit="event.preventDefault();">
+                  <div class="card border-0 bg-light shadow-sm mb-4">
+                    <div class="card-body p-4">
+                      <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom flex-wrap gap-2">
+                        <div class="form-check form-switch mb-0">
+                          <input class="form-check-input" type="checkbox" role="switch" id="ollama-enabled" style="transform: scale(1.3); margin-left: -2.5em; cursor: pointer;">
+                          <label class="form-check-label fw-bold ms-2" for="ollama-enabled" style="cursor: pointer;">Активировать провайдер Ollama</label>
+                        </div>
+                        <div class="form-check mb-0">
+                          <input class="form-check-input" type="checkbox" id="ollama-remember" checked style="cursor: pointer;">
+                          <label class="form-check-label small text-muted ms-1" for="ollama-remember" style="cursor: pointer;">Запомнить</label>
+                        </div>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">Base URL API:</label>
+                        <input type="text" class="form-control" id="ollama-url" placeholder="http://localhost:11434" autocomplete="off" data-lpignore="true" data-1p-ignore="true">
+                      </div>
+                      <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" id="btn-save-ollama">Сохранить настройки Ollama</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          <!-- ONNX / OLIVE TAB -->
+          <div class="tab-pane fade" id="pill-onnx" role="tabpanel" aria-labelledby="pill-onnx-tab">
+            <h5 class="fw-bold mb-4">Настройки Microsoft ONNX Runtime & Olive</h5>
+            <div class="row">
+              <div class="col-md-10 col-lg-8">
+                <div class="alert alert-info shadow-sm rounded-3 border-0 mb-4" role="alert">
+                  <h6 class="alert-heading fw-bold"><i class="bi bi-cpu me-2"></i>Аппаратное ускорение и оптимизация Olive</h6>
+                  <p class="small mb-0">
+                    Microsoft ONNX Runtime использует аппаратные ускорители Windows (DirectML GPU, Qualcomm QNN NPU, CUDA). Microsoft Olive выполняет автоматическое квантование (INT4/INT8) и оптимизацию графов для максимальной скорости локального инференса.
+                  </p>
+                </div>
+                <form id="form-onnx-config" onsubmit="event.preventDefault();">
+                  <div class="card border-0 bg-light shadow-sm mb-4">
+                    <div class="card-body p-4">
+                      <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom flex-wrap gap-2">
+                        <div class="form-check form-switch mb-0">
+                          <input class="form-check-input" type="checkbox" role="switch" id="onnx-enabled" style="transform: scale(1.3); margin-left: -2.5em; cursor: pointer;">
+                          <label class="form-check-label fw-bold ms-2" for="onnx-enabled" style="cursor: pointer;">Активировать провайдер ONNX / Olive</label>
+                        </div>
+                        <div class="form-check mb-0">
+                          <input class="form-check-input" type="checkbox" id="onnx-remember" checked style="cursor: pointer;">
+                          <label class="form-check-label small text-muted ms-1" for="onnx-remember" style="cursor: pointer;">Запомнить</label>
+                        </div>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">Execution Provider (Бэкенд ускорения):</label>
+                        <select class="form-select" id="onnx-execution-provider">
+                          <option value="DirectMLExecutionProvider">DirectML (AMD / Intel / NVIDIA GPU)</option>
+                          <option value="QNNExecutionProvider">Qualcomm QNN (NPU Copilot+)</option>
+                          <option value="CUDAExecutionProvider">NVIDIA CUDA</option>
+                          <option value="CPUExecutionProvider">CPU Execution Provider</option>
+                        </select>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">Директория локальных моделей ONNX:</label>
+                        <input type="text" class="form-control" id="onnx-models-dir" placeholder="models/onnx" autocomplete="off">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">Модель по умолчанию:</label>
+                        <input type="text" class="form-control" id="onnx-default-model" placeholder="phi-3.5-mini-instruct-onnx" autocomplete="off">
+                      </div>
+                      <div class="mb-4">
+                        <label class="form-label small text-muted fw-bold">Квантование Olive (Precision):</label>
+                        <select class="form-select" id="onnx-olive-precision">
+                          <option value="int4">INT4 (Максимальная компрессия и скорость)</option>
+                          <option value="int8">INT8 (Баланс точности и памяти)</option>
+                          <option value="fp16">FP16 (Половинная точность)</option>
+                        </select>
+                      </div>
+                      <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" id="btn-save-onnx">Сохранить настройки ONNX / Olive</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,22 @@
+{
+  "service_account_file": "src/secrets/google_sa_account_service_account.json",
+  "sync_interval_hours": 6,
+  "sync_on_startup": false,
+  "include_data": true,
+  "include_logs": true,
+  "include_secrets": true,
+  "include_configs": true,
+  "exclude_patterns": [
+    "*.pyc",
+    "__pycache__",
+    ".git",
+    ".pytest_cache",
+    "node_modules",
+    "venv"
+  ],
+  "drive_folder_name": "AI-Breadboard-Sync",
+  "max_file_size_mb": 100,
+  "compress_large_files": false,
+  "notification_email": null,
+  "log_level": "INFO"
+}

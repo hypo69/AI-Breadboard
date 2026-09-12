@@ -1,0 +1,4 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "provider": "gemini_cli"
+}

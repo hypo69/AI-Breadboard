@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Breadboard Helpdesk & Support Center</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/helpdesk/style.css" />
+</head>
+<body>
+  <div class="helpdesk-container d-flex flex-column vh-100 overflow-hidden">
+    <!-- Top Navbar -->
+    <header class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary px-3 py-2 flex-shrink-0">
+      <div class="container-fluid p-0 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3">
+          <a class="navbar-brand d-flex align-items-center gap-2 m-0 fw-bold" href="/helpdesk">
+            <span class="fs-4">🛟</span>
+            <span>Helpdesk Support Center</span>
+          </a>
+          <span class="badge bg-primary rounded-pill px-3 py-1 d-none d-md-inline" id="operatorBadge">Operator Mode</span>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          <!-- Metrics Overview Pills -->
+          <div class="d-none d-lg-flex align-items-center gap-2 me-3" id="quickStatsBar">
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" id="statOpen">Open: 0</span>
+            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1" id="statInProgress">In Progress: 0</span>
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" id="statResolved">Resolved: 0</span>
+          </div>
+
+          <button class="btn btn-outline-light btn-sm d-flex align-items-center gap-1" id="btnRefreshTickets" title="Refresh Tickets">
+            <i class="bi bi-arrow-clockwise"></i>
+            <span class="d-none d-sm-inline">Refresh</span>
+          </button>
+          <a href="/" class="btn btn-secondary btn-sm d-flex align-items-center gap-1" title="Back to Main Assistant">
+            <i class="bi bi-house-door"></i>
+            <span class="d-none d-sm-inline">Main App</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <div class="d-flex flex-grow-1 overflow-hidden" style="min-height: 0;">
+      <!-- Tickets Sidebar / Filter List -->
+      <aside class="helpdesk-sidebar d-flex flex-column border-end border-secondary bg-body-tertiary" style="width: 360px; min-width: 300px; max-width: 420px;">
+        <!-- Filter and Search Header -->
+        <div class="p-2 border-bottom border-secondary-subtle">
+          <div class="input-group input-group-sm mb-2">
+            <span class="input-group-text bg-body border-secondary-subtle"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control border-secondary-subtle" id="searchTicketInput" placeholder="Search ticket, user, #num..." />
+          </div>
+
+          <!-- Status Filters -->
+          <div class="btn-group btn-group-sm w-100" role="group" id="statusFilterGroup">
+            <button type="button" class="btn btn-outline-primary active" data-filter="all">All</button>
+            <button type="button" class="btn btn-outline-primary" data-filter="open">Open</button>
+            <button type="button" class="btn btn-outline-primary" data-filter="in_progress">Active</button>
+            <button type="button" class="btn btn-outline-primary" data-filter="resolved">Closed</button>
+          </div>
+        </div>
+
+        <!-- Ticket List Stream -->
+        <div class="ticket-list flex-grow-1 overflow-auto p-2 d-flex flex-column gap-2" id="ticketListContainer">
+          <div class="text-center text-muted p-4">Loading tickets...</div>
+        </div>
+      </aside>
+
+      <!-- Ticket Conversation and Management View -->
+      <main class="helpdesk-main d-flex flex-column flex-grow-1 overflow-hidden bg-body" id="ticketMainArea">
+        <!-- Empty State Placeholder -->
+        <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted p-4" id="noTicketSelected">
+          <i class="bi bi-chat-square-text fs-1 mb-2"></i>
+          <h5>Select a ticket to manage and reply</h5>
+          <p class="small">All incoming support requests and chat threads are coordinated here in real time.</p>
+        </div>
+
+        <!-- Ticket Detail Content (Hidden initially) -->
+        <div class="d-none flex-column h-100 overflow-hidden" id="activeTicketView">
+          <!-- Top Ticket Action Header -->
+          <div class="p-2 px-3 border-bottom border-secondary-subtle d-flex flex-wrap align-items-center justify-content-between gap-2 flex-shrink-0 bg-body-tertiary">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-secondary fs-6" id="ticketNumberBadge">#1001</span>
+              <div>
+                <h6 class="mb-0 fw-bold" id="ticketSubject">Ticket Subject</h6>
+                <small class="text-muted" id="ticketUserMeta">From: User (user@domain.com) • 10m ago</small>
+              </div>
+            </div>
+
+            <!-- Management Dropdowns & Actions -->
+            <div class="d-flex align-items-center gap-2">
+              <!-- Priority Selector -->
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="btnTicketPriority" data-bs-toggle="dropdown">
+                  Priority: <span id="currentPriorityLabel" class="fw-bold">Normal</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow">
+                  <li><a class="dropdown-item priority-opt" data-priority="low" href="#">🟢 Low</a></li>
+                  <li><a class="dropdown-item priority-opt" data-priority="normal" href="#">🔵 Normal</a></li>
+                  <li><a class="dropdown-item priority-opt" data-priority="high" href="#">🟠 High</a></li>
+                  <li><a class="dropdown-item priority-opt" data-priority="urgent" href="#">🔴 Urgent</a></li>
+                </ul>
+              </div>
+
+              <!-- Status Action Buttons -->
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-warning status-opt" data-status="in_progress" title="Mark In Progress">
+                  <i class="bi bi-play-circle me-1"></i>In Progress
+                </button>
+                <button class="btn btn-outline-success status-opt" data-status="resolved" title="Mark Resolved">
+                  <i class="bi bi-check2-circle me-1"></i>Resolve
+                </button>
+                <button class="btn btn-outline-secondary status-opt" data-status="closed" title="Close Ticket">
+                  <i class="bi bi-archive me-1"></i>Close
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message History Stream -->
+          <div class="chat-stream flex-grow-1 overflow-auto p-3 d-flex flex-column gap-3" id="messagesStream">
+            <!-- Messages rendered dynamically -->
+          </div>
+
+          <!-- Typing Indicator -->
+          <div class="px-3 py-1 small text-muted d-none" id="hdTypingIndicator">
+            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+            <span id="hdTypingText">User is typing...</span>
+          </div>
+
+          <!-- Reply and Internal Notes Bar -->
+          <div class="p-3 border-top border-secondary-subtle bg-body-tertiary flex-shrink-0">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <div class="form-check form-switch m-0">
+                <input class="form-check-input" type="checkbox" role="switch" id="switchInternalNote" />
+                <label class="form-check-label small fw-semibold text-warning" for="switchInternalNote">
+                  <i class="bi bi-lock-fill me-1"></i>Internal Note (Staff only)
+                </label>
+              </div>
+              <small class="text-muted">Press Ctrl+Enter to send</small>
+            </div>
+
+            <div class="input-group">
+              <textarea class="form-control" id="replyTextInput" rows="2" placeholder="Write response to user..."></textarea>
+              <button class="btn btn-primary px-4 d-flex align-items-center justify-content-center" id="btnSendReply">
+                <i class="bi bi-send-fill fs-5"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="/helpdesk/app.js"></script>
+</body>
+</html>

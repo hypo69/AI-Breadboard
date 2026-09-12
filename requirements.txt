@@ -1,0 +1,5 @@
+# ai-breadboard — Основные зависимости проекта
+-r install/req/requirements-core.txt
+-r install/req/requirements-ai.txt
+-r install/req/requirements-media.txt
+-r install/req/requirements-utils.txt

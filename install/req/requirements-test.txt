@@ -1,0 +1,10 @@
+# Test Suite
+pytest>=8.3.0
+pytest-asyncio>=0.24.0
+pytest-cov>=6.0.0
+pytest-mock>=3.14.0
+httpx>=0.28.0
+coverage>=7.6.0
+freezegun>=1.5.0
+mock>=5.1.0
+xlsxwriter>=3.2.0

@@ -1,0 +1,11 @@
+# Utilities, Documents & Data Converters
+Pillow>=10.0.0
+beautifulsoup4>=4.12.0
+feedparser>=6.0.0
+markdown2>=2.4.0
+pandas>=2.2.0
+reportlab>=4.2.0
+fpdf2>=2.7.0
+pdfminer.six>=20231228
+python-telegram-bot>=21.0
+pykeepass>=4.0.0

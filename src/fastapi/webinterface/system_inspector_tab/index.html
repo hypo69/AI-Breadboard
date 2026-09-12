@@ -1,0 +1,245 @@
+<!-- System & Hardware Inspector Application Tab -->
+<style>
+  .sys-container {
+    padding: 1rem;
+  }
+  .sys-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .sys-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+  }
+  .sys-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #f8fafc;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .sys-panel {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .sys-panel-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sys-tree-node {
+    margin-bottom: 8px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .sys-tree-title {
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.03);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #e2e8f0;
+  }
+  .sys-tree-title:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .sys-tree-body {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    border-top: 1px solid #334155;
+    background: #0b0f19;
+  }
+  .sys-prop-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3px;
+  }
+  .sys-prop-key {
+    color: #94a3b8;
+  }
+  .sys-prop-val {
+    font-weight: 500;
+    color: #f1f5f9;
+  }
+  .sys-proc-table {
+    width: 100%;
+    font-size: 0.8rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    border-collapse: collapse;
+  }
+  .sys-proc-table th {
+    background: #1e293b;
+    padding: 6px 10px;
+    color: #94a3b8;
+    font-weight: 600;
+    border-bottom: 1px solid #334155;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  .sys-proc-table td {
+    padding: 5px 10px;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+  }
+  .badge-cpu-high { color: #ef4444; font-weight: 700; }
+  .badge-cpu-med { color: #f59e0b; font-weight: 600; }
+  .anomaly-tag {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    margin-right: 6px;
+    margin-top: 4px;
+  }
+</style>
+
+<div class="sys-container">
+  <!-- Header Alert & Status -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div>
+      <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
+        <span class="fs-4">🖥️</span> Системный инспектор (System & Hardware Telemetry)
+      </h5>
+      <p class="mb-0 small text-light" style="color: #cbd5e1 !important;">
+        Мониторинг аппаратных компонентов, дерево спецификаций оборудования, процессы хоста и диагностика узких мест через ИИ.
+      </p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2" id="sys-conn-status">
+        ● Телеметрия активна
+      </span>
+      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-sys-refresh-hw">
+        <i class="bi bi-arrow-clockwise me-1"></i> Оборудование
+      </button>
+      <button class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" id="btn-sys-run-audit" style="background: linear-gradient(135deg, #a855f7, #6366f1); border: none;">
+        🤖 AI Аудит
+      </button>
+    </div>
+  </div>
+
+  <!-- Top Metrics Bar -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-3 col-sm-6">
+      <div class="sys-card">
+        <span class="sys-label">Загрузка CPU</span>
+        <span class="sys-value" id="sys-metric-cpu-val">0.0%</span>
+        <div class="progress" style="height: 4px; background: #334155;">
+          <div class="progress-bar bg-info" id="sys-metric-cpu-fill" style="width: 0%"></div>
+        </div>
+        <span class="small text-muted" id="sys-metric-cpu-sub">-- Ядер</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="sys-card">
+        <span class="sys-label">Оперативная память (RAM)</span>
+        <span class="sys-value" id="sys-metric-ram-val">0.0 GB</span>
+        <div class="progress" style="height: 4px; background: #334155;">
+          <div class="progress-bar bg-success" id="sys-metric-ram-fill" style="width: 0%"></div>
+        </div>
+        <span class="small text-muted" id="sys-metric-ram-sub">0% занято</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="sys-card">
+        <span class="sys-label">GPU Ускоритель</span>
+        <span class="sys-value" id="sys-metric-gpu-val">--</span>
+        <span class="small text-muted" id="sys-metric-gpu-sub">VRAM: -- / -- GB</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="sys-card">
+        <span class="sys-label">Дисковый I/O</span>
+        <span class="sys-value" id="sys-metric-disk-val">0.0 MB/s</span>
+        <span class="small text-muted" id="sys-metric-disk-sub">Чтение: 0 KB/s | Запись: 0 KB/s</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workspace Layout: Hardware Tree (Left) + Process Stream & AI Copilot (Right) -->
+  <div class="row g-3">
+    <!-- Left Column: Hardware Specification Tree -->
+    <div class="col-lg-4">
+      <div class="sys-panel h-100">
+        <div class="sys-panel-header">
+          <span><i class="bi bi-cpu-fill me-1"></i> Спецификация оборудования</span>
+          <span class="badge bg-secondary" id="sys-hw-count">AIDA64 Tree</span>
+        </div>
+        <div class="p-3" id="sys-hardware-tree-container" style="max-height: 520px; overflow-y: auto;">
+          <div class="text-center py-4 text-muted small">Загрузка дерева оборудования...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Process Stream + AI Diagnostics -->
+    <div class="col-lg-8 d-flex flex-column gap-3">
+      <!-- Process Stream Table -->
+      <div class="sys-panel flex-grow-1">
+        <div class="sys-panel-header">
+          <span><i class="bi bi-list-task me-1"></i> Топ процессов хоста (Live Stream)</span>
+          <div class="d-flex align-items-center gap-2">
+            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="sys-proc-search" placeholder="Фильтр по имени или PID..." style="max-width: 220px;">
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-sys-pause-proc">Пауза</button>
+          </div>
+        </div>
+        <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+          <table class="sys-proc-table">
+            <thead>
+              <tr>
+                <th style="width: 70px;">PID</th>
+                <th>Имя процесса</th>
+                <th style="width: 90px;">Статус</th>
+                <th style="width: 80px; text-align: right;">CPU %</th>
+                <th style="width: 100px; text-align: right;">Память</th>
+                <th style="width: 70px; text-align: right;">Потоки</th>
+                <th style="width: 110px;">Пользователь</th>
+              </tr>
+            </thead>
+            <tbody id="sys-proc-tbody">
+              <tr><td colspan="7" class="text-center py-3 text-muted">Ожидание потока процессов...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AI Copilot Diagnostic Drawer -->
+      <div class="sys-panel">
+        <div class="sys-panel-header">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-robot text-info"></i>
+            <span>AI Copilot: Анализ производительности и узких мест</span>
+            <span class="badge bg-success" id="sys-ai-health-badge">Health: 100/100</span>
+          </div>
+          <span class="small text-muted" id="sys-ai-model-tag">Heuristic Engine</span>
+        </div>
+        <div class="p-3">
+          <div id="sys-ai-anomalies-container" class="mb-2"></div>
+          <div class="small text-light" id="sys-ai-summary-text" style="line-height: 1.5; color: #cbd5e1 !important;">
+            Монитор телеметрии готов. Нажмите «AI Аудит» для глубокого анализа ресурсов и поиска узких мест системы.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,92 @@
+site_name: AI-Breadboard
+site_description: Interactive AI Model Testbench & Breadboard
+site_url: !ENV READTHEDOCS_CANONICAL_URL
+repo_url: https://github.com/hypo69/AI-Breadboard
+edit_uri: edit/master/docs/
+
+# Theme
+theme:
+  name: material
+  language: en
+  palette:
+    primary: indigo
+    accent: indigo
+  favicon: assets/favicon.png
+  logo: assets/logo.png
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - toc.integrate
+    - content.code.copy
+
+# Navigation: English only
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - API:
+      - Overview: api.md
+
+# Plugins
+plugins:
+  - search:
+      lang:
+        - en
+        - ru
+  - i18n:
+      docs_structure: folder
+      languages:
+        - locale: en
+          name: English
+          build: true
+          default: true
+        - locale: ru
+          name: Русский
+          build: true
+        - locale: es
+          name: Español
+          build: true
+        - locale: ar
+          name: العربية
+          build: true
+        - locale: he
+          name: עברית
+          build: true
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - .
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            members_order: source
+            show_signature_annotations: true
+
+# Markdown extensions
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+# Custom CSS / JS
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - js/chat.js
+
+# Site metadata
+extra:
+  version: 1.0.0
+  authors:
+    - hypo69
+  license: MIT
+  repository: github
+
+# Validation
+strict: false
+

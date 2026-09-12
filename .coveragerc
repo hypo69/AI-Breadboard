@@ -1,0 +1,34 @@
+; Configuration for coverage.py.
+; Specifies source packages to measure and directories to omit from code coverage analysis.
+
+[run]
+source = 
+    core
+    plugins
+    scripts
+branch = True
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    pass
+    raise ImportError
+    except ImportError
+    if False:
+    if __name__ == .__main__:
+omit =
+    */__pycache__/*
+    */venv/*
+    */tests/*
+    */migrations/*
+    */node_modules/*
+    *.pyc
+    .env
+    .env.*
+
+[html]
+directory = tests/coverage

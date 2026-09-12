@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 820" width="100%" height="100%" style="background-color: #0d1117; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="userGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#388bfd" />
+      <stop offset="100%" stop-color="#1f6feb" />
+    </linearGradient>
+    <linearGradient id="apiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8957e5" />
+      <stop offset="100%" stop-color="#6e40c9" />
+    </linearGradient>
+    <linearGradient id="switchGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0883e" />
+      <stop offset="100%" stop-color="#d29922" />
+    </linearGradient>
+    <linearGradient id="geminiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4facfe" />
+      <stop offset="100%" stop-color="#00f2fe" />
+    </linearGradient>
+    <linearGradient id="foundryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0078d4" />
+      <stop offset="100%" stop-color="#00bcf2" />
+    </linearGradient>
+    <linearGradient id="ollamaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2ea043" />
+      <stop offset="100%" stop-color="#238636" />
+    </linearGradient>
+    <linearGradient id="openaiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10a37f" />
+      <stop offset="100%" stop-color="#1a7f64" />
+    </linearGradient>
+    <linearGradient id="localGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#da3633" />
+      <stop offset="100%" stop-color="#f85149" />
+    </linearGradient>
+    <linearGradient id="contractGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#238636" />
+      <stop offset="100%" stop-color="#2ea043" />
+    </linearGradient>
+    
+    <!-- Filter for soft shadow -->
+    <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+
+    <!-- Marker Arrow -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#58a6ff" />
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#3fb950" />
+    </marker>
+  </defs>
+
+  <!-- Title & Header -->
+  <text x="500" y="40" text-anchor="middle" fill="#f0f6fc" font-size="22" font-weight="700" letter-spacing="0.5">АРХИТЕКТУРА ИНТЕРАКТИВНОЙ ПЛАТЫ: AIBREADBOARD</text>
+  <text x="500" y="65" text-anchor="middle" fill="#8b949e" font-size="13">Универсальный переключатель моделей через единый API</text>
+
+  <!-- 1. USER LAYER -->
+  <g filter="url(#dropShadow)">
+    <rect x="250" y="90" width="500" height="60" rx="10" fill="url(#userGrad)" stroke="#58a6ff" stroke-width="1.5" />
+    <text x="500" y="117" text-anchor="middle" fill="#ffffff" font-size="16" font-weight="600">👤 Пользователь (Web-интерфейс / API Client / CLI)</text>
+    <text x="500" y="137" text-anchor="middle" fill="#cce5ff" font-size="12">POST /api/chat  •  POST /v1/chat/completions</text>
+  </g>
+
+  <!-- Connection User -> API -->
+  <line x1="500" y1="150" x2="500" y2="185" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#arrow)" />
+
+  <!-- 2. FASTAPI GATEWAY LAYER -->
+  <g filter="url(#dropShadow)">
+    <rect x="250" y="190" width="500" height="60" rx="10" fill="url(#apiGrad)" stroke="#a371f7" stroke-width="1.5" />
+    <text x="500" y="217" text-anchor="middle" fill="#ffffff" font-size="16" font-weight="600">⚡ Маршрутизаторы FastAPI</text>
+    <text x="500" y="237" text-anchor="middle" fill="#e2d9f3" font-size="12">router_chat.py  •  router_openai.py (валидация, парсинг модели)</text>
+  </g>
+
+  <!-- Connection API -> Switch -->
+  <line x1="500" y1="250" x2="500" y2="285" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#arrow)" />
+
+  <!-- 3. UNIVERSAL SWITCH (BREADBOARD CORE) -->
+  <g filter="url(#dropShadow)">
+    <rect x="180" y="290" width="640" height="70" rx="12" fill="url(#switchGrad)" stroke="#f0883e" stroke-width="2" />
+    <text x="500" y="320" text-anchor="middle" fill="#1c1917" font-size="17" font-weight="700">🔌 Универсальный переключатель: UnifiedChatModel / get_chat_model()</text>
+    <text x="500" y="342" text-anchor="middle" fill="#431407" font-size="13" font-weight="500">Динамическая коммутация сокетов на макетной плате по префиксу модели</text>
+  </g>
+
+  <!-- Fan-out Connections to Models -->
+  <path d="M 500 360 L 500 380 L 100 380 L 100 425" fill="none" stroke="#4facfe" stroke-width="2" marker-end="url(#arrow)" />
+  <path d="M 500 360 L 500 380 L 300 380 L 300 425" fill="none" stroke="#00bcf2" stroke-width="2" marker-end="url(#arrow)" />
+  <path d="M 500 360 L 500 425" fill="none" stroke="#2ea043" stroke-width="2" marker-end="url(#arrow)" />
+  <path d="M 500 360 L 500 380 L 700 380 L 700 425" fill="none" stroke="#10a37f" stroke-width="2" marker-end="url(#arrow)" />
+  <path d="M 500 360 L 500 380 L 900 380 L 900 425" fill="none" stroke="#f85149" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- 4. MODEL SLOTS (BREADBOARD MODULES) -->
+  <!-- Gemini -->
+  <g filter="url(#dropShadow)">
+    <rect x="20" y="430" width="160" height="110" rx="8" fill="#161b22" stroke="#4facfe" stroke-width="1.5" />
+    <rect x="20" y="430" width="160" height="28" rx="8" fill="url(#geminiGrad)" />
+    <text x="100" y="449" text-anchor="middle" fill="#0d1117" font-size="12" font-weight="700">Google Gemini</text>
+    <text x="100" y="475" text-anchor="middle" fill="#f0f6fc" font-size="11" font-weight="600">Gemini SDK</text>
+    <text x="100" y="492" text-anchor="middle" fill="#8b949e" font-size="10">Gemini CLI</text>
+    <text x="100" y="508" text-anchor="middle" fill="#8b949e" font-size="10">Antigravity (AGY)</text>
+    <text x="100" y="527" text-anchor="middle" fill="#4facfe" font-size="9">gemini:* / agy-*</text>
+  </g>
+
+  <!-- Foundry -->
+  <g filter="url(#dropShadow)">
+    <rect x="220" y="430" width="160" height="110" rx="8" fill="#161b22" stroke="#00bcf2" stroke-width="1.5" />
+    <rect x="220" y="430" width="160" height="28" rx="8" fill="url(#foundryGrad)" />
+    <text x="300" y="449" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">AI Foundry</text>
+    <text x="300" y="475" text-anchor="middle" fill="#f0f6fc" font-size="11" font-weight="600">Local &amp; Cloud</text>
+    <text x="300" y="492" text-anchor="middle" fill="#8b949e" font-size="10">Phi-3.5 / Phi-4</text>
+    <text x="300" y="508" text-anchor="middle" fill="#8b949e" font-size="10">Llama / Mistral</text>
+    <text x="300" y="527" text-anchor="middle" fill="#00bcf2" font-size="9">foundry:*</text>
+  </g>
+
+  <!-- Ollama -->
+  <g filter="url(#dropShadow)">
+    <rect x="420" y="430" width="160" height="110" rx="8" fill="#161b22" stroke="#2ea043" stroke-width="1.5" />
+    <rect x="420" y="430" width="160" height="28" rx="8" fill="url(#ollamaGrad)" />
+    <text x="500" y="449" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">Ollama Local</text>
+    <text x="500" y="475" text-anchor="middle" fill="#f0f6fc" font-size="11" font-weight="600">Локальный хост</text>
+    <text x="500" y="492" text-anchor="middle" fill="#8b949e" font-size="10">Llama 3.1 / Qwen</text>
+    <text x="500" y="508" text-anchor="middle" fill="#8b949e" font-size="10">DeepSeek-R1</text>
+    <text x="500" y="527" text-anchor="middle" fill="#2ea043" font-size="9">ollama:*</text>
+  </g>
+
+  <!-- OpenAI Compat -->
+  <g filter="url(#dropShadow)">
+    <rect x="620" y="430" width="160" height="110" rx="8" fill="#161b22" stroke="#10a37f" stroke-width="1.5" />
+    <rect x="620" y="430" width="160" height="28" rx="8" fill="url(#openaiGrad)" />
+    <text x="700" y="449" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">OpenAI Compat</text>
+    <text x="700" y="475" text-anchor="middle" fill="#f0f6fc" font-size="11" font-weight="600">OpenAI &amp; Clones</text>
+    <text x="700" y="492" text-anchor="middle" fill="#8b949e" font-size="10">DeepSeek / Groq</text>
+    <text x="700" y="508" text-anchor="middle" fill="#8b949e" font-size="10">LM Studio / vLLM</text>
+    <text x="700" y="527" text-anchor="middle" fill="#10a37f" font-size="9">openai:* / deepseek:*</text>
+  </g>
+
+  <!-- HF / ONNX -->
+  <g filter="url(#dropShadow)">
+    <rect x="820" y="430" width="160" height="110" rx="8" fill="#161b22" stroke="#f85149" stroke-width="1.5" />
+    <rect x="820" y="430" width="160" height="28" rx="8" fill="url(#localGrad)" />
+    <text x="900" y="449" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">Прямой инференс</text>
+    <text x="900" y="475" text-anchor="middle" fill="#f0f6fc" font-size="11" font-weight="600">Без серверов</text>
+    <text x="900" y="492" text-anchor="middle" fill="#8b949e" font-size="10">HuggingFace Hub</text>
+    <text x="900" y="508" text-anchor="middle" fill="#8b949e" font-size="10">ONNX DirectML</text>
+    <text x="900" y="527" text-anchor="middle" fill="#f85149" font-size="9">hf:* / onnx:*</text>
+  </g>
+
+  <!-- Fan-in Connections to Contract -->
+  <path d="M 100 540 L 100 580 L 500 580 L 500 615" fill="none" stroke="#30363d" stroke-width="2" />
+  <path d="M 300 540 L 300 580 L 500 580 L 500 615" fill="none" stroke="#30363d" stroke-width="2" />
+  <path d="M 500 540 L 500 615" fill="none" stroke="#3fb950" stroke-width="2" marker-end="url(#arrowGreen)" />
+  <path d="M 700 540 L 700 580 L 500 580 L 500 615" fill="none" stroke="#30363d" stroke-width="2" />
+  <path d="M 900 540 L 900 580 L 500 580 L 500 615" fill="none" stroke="#30363d" stroke-width="2" />
+
+  <!-- 5. UNIFIED CONTRACT -->
+  <g filter="url(#dropShadow)">
+    <rect x="220" y="620" width="560" height="65" rx="10" fill="url(#contractGrad)" stroke="#3fb950" stroke-width="1.5" />
+    <text x="500" y="647" text-anchor="middle" fill="#ffffff" font-size="16" font-weight="700">📜 Единый интерфейсный контракт</text>
+    <text x="500" y="668" text-anchor="middle" fill="#dcffe4" font-size="13">chat(q, history)  •  ask(q)  •  stream_chat(q, history)</text>
+  </g>
+
+  <!-- Connection Contract -> Response -->
+  <line x1="500" y1="685" x2="500" y2="720" stroke="#3fb950" stroke-width="2.5" marker-end="url(#arrowGreen)" />
+
+  <!-- 6. RESPONSE OUTPUT -->
+  <g filter="url(#dropShadow)">
+    <rect x="260" y="725" width="480" height="55" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1.5" />
+    <text x="500" y="749" text-anchor="middle" fill="#58a6ff" font-size="14" font-weight="600">💬 Ответ пользователю (JSON Payload / SSE Token Stream)</text>
+    <text x="500" y="768" text-anchor="middle" fill="#8b949e" font-size="11">RAG Context + Автоиндексация + TTS озвучка</text>
+  </g>
+</svg>

@@ -1,0 +1,55 @@
+{
+  "title": "TTS Experiments (Text-to-Speech)",
+  "subtitle": "Compare the quality of speech synthesis of different models: Web Speech, Google, Edge and Silero.",
+  "form": {
+    "label_text": "Text for speech synthesis",
+    "placeholder": "Enter Russian text to generate speech...",
+    "label_engine": "Synthesis system",
+    "label_voice": "Voice / Speaker"
+  },
+  "options": {
+    "browser": "Web Speech API (Browser-based)",
+    "gtts": "Google TTS (Basic)",
+    "edge-tts": "Microsoft Edge TTS (Neural)",
+    "silero": "Silero TTS (Local offline)"
+  },
+  "voices": {
+    "ru_standard": "Russian (Google TTS)",
+    "en_standard": "English (Google TTS)",
+    "he_standard": "Hebrew (Google TTS)",
+    "de_standard": "German (Google TTS)",
+    "fr_standard": "French (Google TTS)",
+    "es_standard": "Spanish (Google TTS)",
+    "dmitry": "Dmitry (RU - Male)",
+    "svetlana": "Svetlana (RU - Female)",
+    "jenny": "Jenny (US - Female)",
+    "guy": "Guy (US - Male)",
+    "aria": "Aria (US - Female)",
+    "sonia": "Sonia (UK - Female)",
+    "ryan": "Ryan (UK - Male)",
+    "avri": "Avri (HE - אברי Male)",
+    "hila": "Hila (HE - הילה Female)",
+    "katja": "Katja (DE - Female)",
+    "conrad": "Conrad (DE - Male)",
+    "denise": "Denise (FR - Female)",
+    "henri": "Henri (FR - Male)",
+    "elvira": "Elvira (ES - Female)",
+    "alvaro": "Alvaro (ES - Male)",
+    "eugene": "Eugene (Silero RU)",
+    "aidar": "Aidar (Silero RU)",
+    "baya": "Baya (Silero RU)",
+    "kseniya": "Ksenia (Silero RU)",
+    "xenia": "Ksenia v2 (Silero RU)",
+    "random": "Random (Silero RU)",
+    "default": "Default system voice"
+  },
+  "button_speak": "Synthesize speech",
+  "status_generating": "Generating audio file on server...",
+  "label_result": "Generation result",
+  "back_link": "Back to media library",
+  "errors": {
+    "no_api": "Your browser does not support Web Speech API.",
+    "server_error": "Speech synthesis error on server",
+    "network_error": "Network error when requesting server"
+  }
+}

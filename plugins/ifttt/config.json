@@ -1,0 +1,10 @@
+{
+    "webhook_key": "",
+    "timeout_seconds": 10,
+    "default_events": {
+        "movie_mode": "movie_mode",
+        "lights_on": "living_room_lights_on",
+        "lights_off": "living_room_lights_off",
+        "ac_cool": "ac_cool"
+    }
+}

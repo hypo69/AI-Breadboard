@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Auto-sync config files to Google Drive",
+      "trigger": "PostFileSave",
+      "description": "Automatically synchronize config files to Google Drive when they are saved",
+      "matcher": "^(config\\.json|\\.env|sync_config\\.json)$",
+      "action": {
+        "type": "command",
+        "command": "cd \"$PWD\" && python scripts/setup_google_drive_sync.py --sync-now 2>&1 | tail -20",
+        "timeout": 300
+      }
+    }
+  ]
+}

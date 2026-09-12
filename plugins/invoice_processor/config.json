@@ -1,0 +1,8 @@
+{
+  "spreadsheet_id": "",
+  "sheet_name": "Invoices",
+  "enable_local_backup": true,
+  "backup_dir": "data/invoices_processed",
+  "default_currency": "USD",
+  "auto_create_header": true
+}

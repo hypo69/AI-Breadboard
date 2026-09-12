@@ -1,0 +1,78 @@
+<!-- Google Sign-In Component -->
+<div id="google-signin-container" class="d-flex align-items-center gap-2">
+  <button id="google-signin-btn" class="btn btn-outline-light btn-sm">
+    <i class="bi bi-google"></i>
+    <span data-i18n="auth.googleSignIn">Войти через Google</span>
+  </button>
+  <div id="user-profile" class="d-none flex-grow-1">
+    <div class="d-flex align-items-center gap-2">
+      <img id="user-avatar" src="" class="rounded-circle" width="32" height="32">
+      <span id="user-name" class="text-muted small"></span>
+      <button id="logout-btn" class="btn btn-sm btn-danger">
+        <i class="bi bi-box-arrow-right"></i> Выйти
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Google Sign-In Component Logic
+(async () => {
+  const googleSignInBtn = document.getElementById('google-signin-btn');
+  const logoutBtn = document.getElementById('logout-btn');
+  const userProfile = document.getElementById('user-profile');
+  const userAvatar = document.getElementById('user-avatar');
+  const userName = document.getElementById('user-name');
+
+  // Check authentication status
+  async function checkAuthStatus() {
+    try {
+      const response = await fetch('/auth/check');
+      const data = await response.json();
+      
+      if (data.authenticated) {
+        // User is authenticated
+        userProfile.classList.remove('d-none');
+        googleSignInBtn.classList.add('d-none');
+        
+        if (data.name) {
+          userName.textContent = data.name;
+        }
+        if (data.email) {
+          userName.textContent = data.email.split('@')[0];
+        }
+        if (data.picture) {
+          userAvatar.src = data.picture;
+        }
+      } else {
+        // User is not authenticated
+        userProfile.classList.add('d-none');
+        googleSignInBtn.classList.remove('d-none');
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      userProfile.classList.add('d-none');
+      googleSignInBtn.classList.remove('d-none');
+    }
+  }
+
+  // Handle Google Sign-In click
+  googleSignInBtn?.addEventListener('click', () => {
+    window.location.href = '/auth/google?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+  });
+
+  // Handle logout click
+  logoutBtn?.addEventListener('click', async () => {
+    try {
+      await fetch('/auth/logout', { method: 'POST' });
+      // Reload page to update UI
+      window.location.reload();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  });
+
+  // Initial auth check
+  checkAuthStatus();
+})();
+</script>

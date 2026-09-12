@@ -1,0 +1,11 @@
+# Lightweight AI & Core Requirements (Gemini, AGY, Cloud Only)
+-r requirements-core.txt
+
+# Google AI & AGY Providers Only
+google-antigravity>=0.1.16
+google-genai>=0.1.0
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-google-genai>=2.0.0
+langchain-mcp-adapters>=0.1.0
+mcp>=1.0.0

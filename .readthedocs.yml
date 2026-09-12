@@ -1,0 +1,41 @@
+# Read the Docs configuration file for AI-Breadboard
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+version: 2
+
+# Build environment configuration
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.10"
+
+# Configuration for MkDocs
+mkdocs:
+  configuration: mkdocs.yml
+  fail_on_warning: true
+
+# Python packages installation
+python:
+  install:
+    - requirements: install/req/requirements-docs.txt
+
+# Version management
+versions:
+  build: all
+  regular: latest
+  earliest: earliest
+
+# Conda configuration (if needed)
+conda:
+  environment: null
+
+# Documentation formats
+formats:
+  - pdf
+  - epub
+
+# Build jobs
+build_jobs:
+  post_build:
+    - printenv
+

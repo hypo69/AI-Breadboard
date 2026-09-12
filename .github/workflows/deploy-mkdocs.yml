@@ -1,0 +1,52 @@
+name: Deploy MkDocs to docs/ on master
+
+on:
+  push:
+    branches: [ master ]
+
+permissions:
+  contents: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          if [ -f docs/requirements.txt ]; then
+            pip install -r docs/requirements.txt
+          else
+            pip install mkdocs mkdocs-material
+          fi
+
+      - name: Build MkDocs site
+        run: mkdocs build --site-dir site
+
+      - name: Copy built site into docs/
+        run: |
+          # Remove previous built docs (keep source if any - adjust if needed)
+          rm -rf docs || true
+          mkdir -p docs
+          cp -r site/. docs/
+
+      - name: Commit and push docs/ to master
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs
+          if git diff --cached --quiet; then
+            echo "No changes to docs/ to commit"
+          else
+            git commit -m "chore(docs): update site [skip ci]"
+            git push origin HEAD:master
+          fi

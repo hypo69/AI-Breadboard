@@ -1,0 +1,8 @@
+{
+  "target_channel": "canozrimb",
+  "batch_size": 100,
+  "max_messages": 5000,
+  "index_name": "canozrimb",
+  "storage_dir": "data/telegram_rag",
+  "similarity_top_k": 5
+}

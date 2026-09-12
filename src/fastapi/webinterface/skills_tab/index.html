@@ -1,0 +1,595 @@
+<!-- Skills Tab Component -->
+<div class="container-fluid p-3" id="skills-tab-root">
+  <!-- Top Banner / Summary -->
+  <div class="alert alert-dark border-secondary bg-dark text-light d-flex flex-wrap align-items-center justify-content-between gap-3 shadow-sm">
+    <div class="d-flex align-items-center gap-3">
+      <div class="p-3 bg-black rounded border border-secondary text-warning display-6 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px;">
+        <i class="bi bi-lightning-charge-fill"></i>
+      </div>
+      <div>
+        <h5 class="mb-1 text-white d-flex align-items-center gap-2">
+          ⚡ Управление навыками (Agent Skills)
+          <span class="badge bg-primary rounded-pill small" id="skills-total-badge">0</span>
+        </h5>
+        <p class="mb-0 text-muted small">
+          Просмотр, создание, настройка и упаковка переиспользуемых навыков для AI-агентов (Antigravity, Gemini CLI, Breadboard).
+        </p>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <button type="button" class="btn btn-outline-light btn-sm d-flex align-items-center gap-1" id="btn-refresh-skills" onclick="window.skillsTab?.refresh()">
+        <i class="bi bi-arrow-clockwise"></i> Обновить
+      </button>
+      <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#createSkillModal">
+        <i class="bi bi-plus-circle-fill"></i> Новый навык
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Row -->
+  <div class="row g-2 mb-3" id="skills-stats-row">
+    <div class="col-6 col-md-3">
+      <div class="p-2 bg-dark rounded border border-secondary text-center">
+        <div class="h4 mb-0 text-white" id="stat-total-skills">0</div>
+        <div class="small text-muted">Всего навыков</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-2 bg-dark rounded border border-secondary text-center">
+        <div class="h4 mb-0 text-info" id="stat-scripts-skills">0</div>
+        <div class="small text-muted">С исполняемыми скриптами</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-2 bg-body-tertiary rounded border text-center">
+        <div class="h4 mb-0 text-warning" id="stat-refs-skills">0</div>
+        <div class="small text-muted">Со справочниками</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-2 bg-body-tertiary rounded border text-center">
+        <div class="h4 mb-0 text-success" id="stat-packaged-skills">0</div>
+        <div class="small text-muted">Скомпилировано (.skill)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & View Controls -->
+  <div class="card bg-body-tertiary border mb-3 shadow-sm">
+    <div class="card-body p-2 d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div class="input-group input-group-sm flex-grow-1" style="max-width: 450px;">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control" id="skills-search-input" placeholder="Поиск по названию или описанию навыка...">
+        <button class="btn btn-outline-secondary" type="button" id="skills-search-clear" onclick="window.skillsTab?.clearSearch()">✕</button>
+      </div>
+
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <select class="form-select form-select-sm" id="skills-filter-select" style="width: auto;" onchange="window.skillsTab?.applyFilters()">
+          <option value="all">Все навыки</option>
+          <option value="scripts">Только со скриптами</option>
+          <option value="references">Только со справочниками</option>
+          <option value="packaged">Собранные (.skill)</option>
+        </select>
+
+        <div class="btn-group btn-group-sm" role="group">
+          <button type="button" class="btn btn-outline-secondary active" id="btn-view-cards" onclick="window.skillsTab?.setViewMode('cards')">
+            <i class="bi bi-grid-fill"></i> Карточки
+          </button>
+          <button type="button" class="btn btn-outline-secondary" id="btn-view-table" onclick="window.skillsTab?.setViewMode('table')">
+            <i class="bi bi-table"></i> Таблица
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading & Empty Indicators -->
+  <div id="skills-loading" class="text-center py-5 text-muted d-none">
+    <div class="spinner-border text-primary mb-2" role="status"></div>
+    <div>Загрузка навыков...</div>
+  </div>
+
+  <div id="skills-empty" class="text-center py-5 text-muted d-none">
+    <i class="bi bi-folder-x display-4 d-block mb-2 text-secondary"></i>
+    <h5>Навыки не найдены</h5>
+    <p class="small">Попробуйте изменить поисковый запрос или создайте новый навык.</p>
+  </div>
+
+  <!-- Cards Container -->
+  <div class="row g-3" id="skills-cards-container"></div>
+
+  <!-- Table Container -->
+  <div class="card shadow-sm border d-none" id="skills-table-card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-uppercase small">
+            <tr>
+              <th scope="col" style="width: 25%;">Название навыка</th>
+              <th scope="col" style="width: 35%;">Описание</th>
+              <th scope="col" style="width: 15%;">Расположение</th>
+              <th scope="col" style="width: 10%;">Компоненты</th>
+              <th scope="col" style="width: 15%; text-align: right;">Действия</th>
+            </tr>
+          </thead>
+          <tbody id="skills-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Create New Skill Wizard -->
+<div class="modal fade" id="createSkillModal" tabindex="-1" aria-labelledby="createSkillModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+      <div class="modal-header border-secondary py-2 px-3 bg-black bg-opacity-40">
+        <div class="d-flex align-items-center gap-2">
+          <span class="fs-5 text-warning">⚡</span>
+          <div>
+            <h5 class="modal-title mb-0 fs-6 fw-bold" id="createSkillModalLabel">Мастер создания навыков (Skill Wizard)</h5>
+            <small class="text-muted">Создавайте переиспользуемые навыки для AI Breadboard, Gemini CLI и Antigravity</small>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Mode Selector Pills -->
+      <div class="px-3 pt-3 pb-2 bg-black bg-opacity-25 border-bottom border-secondary">
+        <ul class="nav nav-pills nav-fill gap-2" id="skillCreateModes" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active py-2 d-flex align-items-center justify-content-center gap-2" id="mode-wizard-tab" data-bs-toggle="pill" data-bs-target="#mode-wizard-pane" type="button" role="tab" onclick="window.skillsTab?.switchCreateMode('wizard')">
+              <i class="bi bi-magic text-primary"></i> <strong>🧙‍♂️ Пошаговый мастер</strong>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link py-2 d-flex align-items-center justify-content-center gap-2" id="mode-ai-tab" data-bs-toggle="pill" data-bs-target="#mode-ai-pane" type="button" role="tab" onclick="window.skillsTab?.switchCreateMode('ai')">
+              <i class="bi bi-robot text-info"></i> <strong>🤖 AI-Ассистент генерации</strong>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link py-2 d-flex align-items-center justify-content-center gap-2" id="mode-presets-tab" data-bs-toggle="pill" data-bs-target="#mode-presets-pane" type="button" role="tab" onclick="window.skillsTab?.switchCreateMode('presets')">
+              <i class="bi bi-collection text-warning"></i> <strong>📦 Готовые шаблоны</strong>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="modal-body p-3">
+        <div class="tab-content" id="skillCreateModesContent">
+
+          <!-- MODE 1: STEP-BY-STEP WIZARD -->
+          <div class="tab-pane fade show active" id="mode-wizard-pane" role="tabpanel">
+            <!-- Steps Stepper Header -->
+            <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+              <div class="d-flex align-items-center gap-2 cursor-pointer" onclick="window.skillsTab?.goToStep(1)">
+                <span class="badge rounded-circle p-2 bg-primary step-indicator" id="step-badge-1">1</span>
+                <span class="small fw-semibold" id="step-label-1">Основное</span>
+              </div>
+              <div class="flex-grow-1 mx-2 border-top border-secondary"></div>
+              <div class="d-flex align-items-center gap-2 cursor-pointer" onclick="window.skillsTab?.goToStep(2)">
+                <span class="badge rounded-circle p-2 bg-secondary step-indicator" id="step-badge-2">2</span>
+                <span class="small text-muted" id="step-label-2">Инструкции</span>
+              </div>
+              <div class="flex-grow-1 mx-2 border-top border-secondary"></div>
+              <div class="d-flex align-items-center gap-2 cursor-pointer" onclick="window.skillsTab?.goToStep(3)">
+                <span class="badge rounded-circle p-2 bg-secondary step-indicator" id="step-badge-3">3</span>
+                <span class="small text-muted" id="step-label-3">Скрипты и файлы</span>
+              </div>
+              <div class="flex-grow-1 mx-2 border-top border-secondary"></div>
+              <div class="d-flex align-items-center gap-2 cursor-pointer" onclick="window.skillsTab?.goToStep(4)">
+                <span class="badge rounded-circle p-2 bg-secondary step-indicator" id="step-badge-4">4</span>
+                <span class="small text-muted" id="step-label-4">Финализация</span>
+              </div>
+            </div>
+
+            <!-- Wizard Step 1: Basic Info -->
+            <div id="wizard-step-1" class="wizard-step">
+              <div class="card bg-black bg-opacity-50 border-secondary mb-3">
+                <div class="card-body p-3">
+                  <h6 class="text-primary mb-3"><i class="bi bi-info-circle"></i> Шаг 1: Название, назначение и расположение</h6>
+                  
+                  <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                      <label for="wizard-skill-name" class="form-label small fw-semibold">
+                        Идентификатор навыка (kebab-case) <span class="text-danger">*</span>
+                      </label>
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-dark border-secondary text-warning">⚡</span>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" id="wizard-skill-name" placeholder="напр. media-downloader или log-parser" required>
+                        <button class="btn btn-outline-secondary" type="button" title="Сгенерировать имя из описания" onclick="window.skillsTab?.generateSlugFromName()">
+                          <i class="bi bi-magic"></i>
+                        </button>
+                      </div>
+                      <small class="text-muted">Латиница, цифры, дефис и подчеркивания (используется агентом для вызова).</small>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                      <label for="wizard-skill-dir" class="form-label small fw-semibold">Целевой каталог</label>
+                      <select class="form-select form-select-sm bg-dark text-white border-secondary" id="wizard-skill-dir">
+                        <option value=".agents/skills" selected>.agents/skills (Проектный навык AI Breadboard)</option>
+                        <option value="~/.gemini/skills">~/.gemini/skills (Пользовательский — Gemini CLI / Antigravity)</option>
+                        <option value="~/.agents/skills">~/.agents/skills (Глобальный пользовательский навык)</option>
+                        <option value="skills">skills (Локальный каталог)</option>
+                      </select>
+                      <small class="text-muted">Определяет область видимости навыка в системе.</small>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                      <label for="wizard-skill-category" class="form-label small fw-semibold">Категория</label>
+                      <select class="form-select form-select-sm bg-dark text-white border-secondary" id="wizard-skill-category" onchange="window.skillsTab?.onCategoryChanged()">
+                        <option value="tools">🛠️ Инструмент и автоматизация (CLI / Script)</option>
+                        <option value="api">🌐 Интеграция с API и сервисами</option>
+                        <option value="data">📊 Анализ данных и парсинг</option>
+                        <option value="persona">🎭 AI-Персона / Специализированный эксперт</option>
+                        <option value="monitoring">🔔 Мониторинг и нотификации</option>
+                        <option value="docgen">📄 Генератор документов и отчетов</option>
+                        <option value="general" selected>⚡ Общего назначения</option>
+                      </select>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                      <label for="wizard-skill-desc-ru" class="form-label small fw-semibold">Назначение на русском</label>
+                      <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="wizard-skill-desc-ru" placeholder="Понятное описание для пользователя...">
+                    </div>
+
+                    <div class="col-12">
+                      <label for="wizard-skill-desc-en" class="form-label small fw-semibold">Описание для AI-агента (English description)</label>
+                      <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="wizard-skill-desc-en" placeholder="Concise description in English used by agent router...">
+                      <small class="text-muted">Агент использует это описание при маршрутизации и выборе навыка.</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Wizard Step 2: Instructions (SKILL.md) -->
+            <div id="wizard-step-2" class="wizard-step d-none">
+              <div class="card bg-black bg-opacity-50 border-secondary mb-3">
+                <div class="card-body p-3">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-primary mb-0"><i class="bi bi-file-text"></i> Шаг 2: Структура и логика инструкций (SKILL.md)</h6>
+                    <button type="button" class="btn btn-outline-info btn-sm" onclick="window.skillsTab?.fillStandardInstructions()">
+                      <i class="bi bi-arrow-repeat"></i> Заполнить стандартным шаблоном
+                    </button>
+                  </div>
+                  
+                  <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-6">
+                      <label for="wizard-inst-purpose" class="form-label small fw-semibold">🎯 Цель (Purpose):</label>
+                      <textarea class="form-control form-control-sm bg-dark text-white border-secondary" id="wizard-inst-purpose" rows="2" placeholder="Опишите главную цель работы навыка..."></textarea>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label for="wizard-inst-triggers" class="form-label small fw-semibold">🚀 Условия запуска (Triggers):</label>
+                      <textarea class="form-control form-control-sm bg-dark text-white border-secondary" id="wizard-inst-triggers" rows="2" placeholder="Когда агент должен активировать этот навык..."></textarea>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label for="wizard-inst-protocol" class="form-label small fw-semibold">📋 Протокол действий (Execution Protocol):</label>
+                      <textarea class="form-control form-control-sm bg-dark text-white border-secondary" id="wizard-inst-protocol" rows="4" placeholder="1. Проверить входные данные&#10;2. Запустить скрипт или обработку&#10;3. Сформировать ответ"></textarea>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label for="wizard-inst-rules" class="form-label small fw-semibold">⚙️ Правила и ограничения (Rules & Constraints):</label>
+                      <textarea class="form-control form-control-sm bg-dark text-white border-secondary" id="wizard-inst-rules" rows="4" placeholder="- Обрабатывать ошибки без падений&#10;- Возвращать четкий статус выполнения"></textarea>
+                    </div>
+                  </div>
+
+                  <label for="wizard-skill-instructions" class="form-label small fw-semibold">Полный текст Markdown для SKILL.md:</label>
+                  <textarea class="form-control bg-dark text-white border-secondary font-monospace" id="wizard-skill-instructions" rows="6" style="font-size: 0.85rem;" placeholder="Автоматически генерируется из блоков выше..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Wizard Step 3: Scripts & Files -->
+            <div id="wizard-step-3" class="wizard-step d-none">
+              <div class="card bg-black bg-opacity-50 border-secondary mb-3">
+                <div class="card-body p-3">
+                  <h6 class="text-primary mb-3"><i class="bi bi-folder-plus"></i> Шаг 3: Дополнительные скрипты, документация и справочники</h6>
+                  
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="wizard-enable-script" onchange="window.skillsTab?.toggleScriptEditor()">
+                        <label class="form-check-label fw-semibold small" for="wizard-enable-script">
+                          Добавить исполняемый Python-скрипт (<code>scripts/main.py</code>)
+                        </label>
+                      </div>
+                      <div id="wizard-script-container" class="d-none mt-2">
+                        <textarea class="form-control bg-dark text-info border-secondary font-monospace" id="wizard-script-code" rows="6" style="font-size: 0.85rem;" spellcheck="false"></textarea>
+                      </div>
+                    </div>
+
+                    <div class="col-12">
+                      <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="wizard-enable-ref" onchange="window.skillsTab?.toggleRefEditor()">
+                        <label class="form-check-label fw-semibold small" for="wizard-enable-ref">
+                          Добавить справочный документ (<code>references/guide.md</code>)
+                        </label>
+                      </div>
+                      <div id="wizard-ref-container" class="d-none mt-2">
+                        <textarea class="form-control bg-dark text-light border-secondary font-monospace" id="wizard-ref-content" rows="4" style="font-size: 0.85rem;" spellcheck="false"></textarea>
+                      </div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="wizard-skill-readme" class="form-label small fw-semibold">Документация <code>README.md</code> (на английском языке):</label>
+                      <textarea class="form-control bg-dark text-light border-secondary font-monospace" id="wizard-skill-readme" rows="4" style="font-size: 0.85rem;" spellcheck="false"></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Wizard Step 4: Finalize & Preview -->
+            <div id="wizard-step-4" class="wizard-step d-none">
+              <div class="card bg-black bg-opacity-50 border-secondary mb-3">
+                <div class="card-body p-3">
+                  <h6 class="text-success mb-3"><i class="bi bi-check2-circle"></i> Шаг 4: Предпросмотр создаваемого навыка</h6>
+                  
+                  <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-4">
+                      <div class="p-2 bg-dark rounded border border-secondary">
+                        <span class="text-muted small d-block">Имя:</span>
+                        <strong class="text-warning font-monospace" id="preview-skill-name">—</strong>
+                      </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <div class="p-2 bg-dark rounded border border-secondary">
+                        <span class="text-muted small d-block">Путь:</span>
+                        <code class="text-info" id="preview-skill-path">—</code>
+                      </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <div class="p-2 bg-dark rounded border border-secondary">
+                        <span class="text-muted small d-block">Компоненты:</span>
+                        <span class="badge bg-primary me-1">SKILL.md</span>
+                        <span class="badge bg-secondary me-1">README.md</span>
+                        <span class="badge bg-info d-none" id="preview-badge-script">scripts/</span>
+                        <span class="badge bg-warning d-none text-dark" id="preview-badge-ref">references/</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <label class="form-label small fw-semibold">Результирующий <code>SKILL.md</code> (Frontmatter + Markdown):</label>
+                  <pre class="bg-dark p-3 rounded border border-secondary text-info font-monospace" id="preview-skillmd-full" style="max-height: 220px; overflow-y: auto; font-size: 0.85rem;"></pre>
+                </div>
+              </div>
+            </div>
+
+            <!-- Wizard Navigation Bar -->
+            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-wizard-prev" onclick="window.skillsTab?.wizardPrevStep()" disabled>
+                <i class="bi bi-arrow-left"></i> Назад
+              </button>
+              
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-primary btn-sm" id="btn-wizard-next" onclick="window.skillsTab?.wizardNextStep()">
+                  Далее <i class="bi bi-arrow-right"></i>
+                </button>
+                <button type="button" class="btn btn-success btn-sm d-none" id="btn-wizard-submit" onclick="window.skillsTab?.createSkillFromWizard()">
+                  <span class="spinner-border spinner-border-sm d-none" id="wizard-submit-spinner" role="status"></span>
+                  <span><i class="bi bi-rocket-takeoff-fill"></i> Создать навык</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- MODE 2: AI ASSISTANT GENERATION -->
+          <div class="tab-pane fade" id="mode-ai-pane" role="tabpanel">
+            <div class="card bg-black bg-opacity-50 border-secondary mb-3">
+              <div class="card-body p-3">
+                <div class="d-flex align-items-center gap-2 mb-2 text-info">
+                  <i class="bi bi-robot fs-5"></i>
+                  <h6 class="mb-0">Генерация навыка с помощью ИИ (Natural Language to Skill)</h6>
+                </div>
+                <p class="text-muted small mb-3">
+                  Просто опишите задачу или идею навыка обычными словами на русском или английском. ИИ автоматически сформирует имя, структуру инструкций, описание, контракт и вспомогательные скрипты.
+                </p>
+
+                <div class="mb-3">
+                  <label for="ai-skill-prompt" class="form-label small fw-semibold">Описание задачи навыка <span class="text-danger">*</span></label>
+                  <textarea class="form-control bg-dark text-white border-secondary" id="ai-skill-prompt" rows="3" placeholder="например: Навык для автоматического анализа логов сервера Nginx, выявления подозрительных IP-адресов и выгрузки отчета в формате CSV"></textarea>
+                </div>
+
+                <div class="row g-2 mb-3">
+                  <div class="col-12 col-md-6">
+                    <label for="ai-skill-category" class="form-label small fw-semibold">Категория</label>
+                    <select class="form-select form-select-sm bg-dark text-white border-secondary" id="ai-skill-category">
+                      <option value="tools">🛠️ Инструмент и скрипт</option>
+                      <option value="api">🌐 API и интеграция</option>
+                      <option value="data">📊 Анализ данных</option>
+                      <option value="persona">🎭 AI-Эксперт</option>
+                      <option value="monitoring">🔔 Мониторинг</option>
+                      <option value="general" selected>⚡ Общий навык</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="ai-skill-dir" class="form-label small fw-semibold">Куда сохранить</label>
+                    <select class="form-select form-select-sm bg-dark text-white border-secondary" id="ai-skill-dir">
+                      <option value=".agents/skills" selected>.agents/skills (Проектный)</option>
+                      <option value="~/.gemini/skills">~/.gemini/skills (Gemini / Antigravity)</option>
+                      <option value="~/.agents/skills">~/.agents/skills (Глобальный)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button type="button" class="btn btn-info btn-sm d-flex align-items-center gap-2" id="btn-generate-ai" onclick="window.skillsTab?.generateSkillWithAi()">
+                  <span class="spinner-border spinner-border-sm d-none" id="ai-gen-spinner" role="status"></span>
+                  <i class="bi bi-sparkles"></i> <strong>Сгенерировать навык</strong>
+                </button>
+
+                <!-- AI Result Box -->
+                <div id="ai-result-box" class="d-none mt-3 pt-3 border-top border-secondary">
+                  <div class="alert alert-success py-2 d-flex align-items-center justify-content-between">
+                    <span><i class="bi bi-check-circle-fill me-1"></i> Навык успешно сгенерирован!</span>
+                    <span class="badge bg-dark font-monospace" id="ai-res-slug"></span>
+                  </div>
+
+                  <div class="mb-2">
+                    <label class="form-label small fw-semibold text-muted">Сгенерированные инструкции (SKILL.md):</label>
+                    <pre class="bg-dark p-3 rounded border border-secondary text-info font-monospace" id="ai-res-preview" style="max-height: 180px; overflow-y: auto; font-size: 0.85rem;"></pre>
+                  </div>
+
+                  <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="window.skillsTab?.applyAiResultToWizard()">
+                      <i class="bi bi-sliders"></i> Настроить в мастере
+                    </button>
+                    <button type="button" class="btn btn-success btn-sm" onclick="window.skillsTab?.saveAiSkillDirectly()">
+                      <i class="bi bi-plus-circle"></i> Создать сразу
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MODE 3: PRESETS LIBRARY -->
+          <div class="tab-pane fade" id="mode-presets-pane" role="tabpanel">
+            <div class="row g-3" id="presets-cards-container">
+              <!-- Preset Cards populated dynamically -->
+            </div>
+          </div>
+
+        </div>
+
+        <div id="create-skill-alert" class="alert d-none py-2 mt-3 mb-0"></div>
+      </div>
+      
+      <div class="modal-footer border-secondary py-2 px-3 bg-black bg-opacity-40">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal / Inspector: View, Edit & Live Test Skill -->
+<div class="modal fade" id="skillDetailsModal" tabindex="-1" aria-labelledby="skillDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="modal-title d-flex align-items-center gap-2 mb-0" id="skillDetailsModalLabel">
+            <i class="bi bi-lightning-charge-fill text-warning"></i>
+            <span id="detail-skill-title">Навык</span>
+          </h5>
+          <small class="text-muted" id="detail-skill-path">—</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-outline-info btn-sm d-flex align-items-center gap-1" id="btn-package-modal" onclick="window.skillsTab?.packageCurrentSkill()">
+            <i class="bi bi-box-seam"></i> Собрать .skill
+          </button>
+          <button type="button" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" id="btn-delete-modal" onclick="window.skillsTab?.deleteCurrentSkill()">
+            <i class="bi bi-trash"></i> Удалить
+          </button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+      </div>
+      <div class="modal-body p-3">
+        <!-- Navigation tabs in inspector -->
+        <ul class="nav nav-pills mb-3" id="skillDetailTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="detail-tab-skillmd" data-bs-toggle="pill" data-bs-target="#detail-pane-skillmd" type="button" role="tab">
+              📝 SKILL.md (Инструкции)
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="detail-tab-sandbox" data-bs-toggle="pill" data-bs-target="#detail-pane-sandbox" type="button" role="tab">
+              🧪 Тестирование (Sandbox)
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="detail-tab-readme" data-bs-toggle="pill" data-bs-target="#detail-pane-readme" type="button" role="tab">
+              📑 README.md
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="detail-tab-files" data-bs-toggle="pill" data-bs-target="#detail-pane-files" type="button" role="tab">
+              📁 Файлы и структура
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="detail-tab-contract" data-bs-toggle="pill" data-bs-target="#detail-pane-contract" type="button" role="tab">
+              ⚙️ JSON Contract / Метаданные
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="skillDetailTabContent">
+          <!-- SKILL.md Tab Pane -->
+          <div class="tab-pane fade show active" id="detail-pane-skillmd" role="tabpanel">
+            <div class="row g-2 mb-3">
+              <div class="col-12 col-md-6">
+                <label for="detail-skill-desc-input" class="form-label fw-semibold small text-muted">English Description (Frontmatter):</label>
+                <input type="text" class="form-control bg-black text-white border-secondary form-control-sm" id="detail-skill-desc-input">
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="detail-skill-desc-ru-input" class="form-label fw-semibold small text-muted">Описание на русском (RU):</label>
+                <input type="text" class="form-control bg-black text-white border-secondary form-control-sm" id="detail-skill-desc-ru-input">
+              </div>
+            </div>
+            <div class="mb-2 d-flex justify-content-between align-items-center">
+              <label for="detail-skill-instructions" class="form-label fw-semibold small text-muted mb-0">Тело инструкции (Markdown):</label>
+              <small class="text-muted">Редактируемый текст</small>
+            </div>
+            <textarea class="form-control bg-black text-white border-secondary font-monospace" id="detail-skill-instructions" rows="16" style="font-size: 0.9rem;" spellcheck="false"></textarea>
+          </div>
+
+          <!-- Live Sandbox Tester Tab Pane -->
+          <div class="tab-pane fade" id="detail-pane-sandbox" role="tabpanel">
+            <div class="p-3 bg-black rounded border border-secondary mb-3">
+              <h6 class="text-warning mb-2"><i class="bi bi-terminal"></i> Интерактивная песочница для тестирования навыка</h6>
+              <p class="text-muted small mb-3">
+                Введите тестовый запрос, чтобы проверить, как агент интерпретирует инструкции данного навыка и выполняет запрос.
+              </p>
+              <div class="mb-3">
+                <label for="sandbox-test-prompt" class="form-label small fw-semibold">Тестовый запрос агенту:</label>
+                <div class="input-group">
+                  <input type="text" class="form-control bg-dark text-white border-secondary" id="sandbox-test-prompt" placeholder="например: Выполни анализ данных или проверь состояние...">
+                  <button class="btn btn-warning text-dark fw-bold d-flex align-items-center gap-1" id="btn-run-sandbox" onclick="window.skillsTab?.runSandboxTest()">
+                    <span class="spinner-border spinner-border-sm d-none" id="sandbox-spinner" role="status"></span>
+                    <i class="bi bi-play-fill"></i> Запустить
+                  </button>
+                </div>
+              </div>
+
+              <label class="form-label small fw-semibold text-muted">Результат выполнения (Output):</label>
+              <div class="p-3 bg-dark rounded border border-secondary text-light font-monospace" id="sandbox-output-box" style="min-height: 140px; max-height: 320px; overflow-y: auto; white-space: pre-wrap; font-size: 0.85rem;">
+Готов к тестированию. Введите запрос и нажмите «Запустить».
+              </div>
+            </div>
+          </div>
+
+          <!-- README.md Tab Pane -->
+          <div class="tab-pane fade" id="detail-pane-readme" role="tabpanel">
+            <div class="mb-2 d-flex justify-content-between align-items-center">
+              <label for="detail-skill-readme" class="form-label fw-semibold small text-muted mb-0">README.md документация:</label>
+              <small class="text-muted">Англоязычная документация пакета</small>
+            </div>
+            <textarea class="form-control bg-black text-white border-secondary font-monospace" id="detail-skill-readme" rows="18" style="font-size: 0.9rem;" spellcheck="false"></textarea>
+          </div>
+
+          <!-- Files Structure Tab Pane -->
+          <div class="tab-pane fade" id="detail-pane-files" role="tabpanel">
+            <div class="p-3 bg-black rounded border border-secondary">
+              <h6 class="text-info mb-2"><i class="bi bi-folder2-open"></i> Содержимое папки навыка:</h6>
+              <div id="detail-files-list" class="list-group list-group-flush bg-transparent"></div>
+            </div>
+          </div>
+
+          <!-- JSON Contract Tab Pane -->
+          <div class="tab-pane fade" id="detail-pane-contract" role="tabpanel">
+            <pre class="bg-black p-3 rounded border border-secondary text-info mb-0" id="detail-json-contract" style="font-size: 0.85rem; max-height: 400px; overflow-y: auto;"></pre>
+          </div>
+        </div>
+
+        <div id="detail-skill-alert" class="alert d-none py-2 mt-3 mb-0"></div>
+      </div>
+      <div class="modal-footer border-secondary d-flex justify-content-between">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Закрыть</button>
+        <button type="button" class="btn btn-primary d-flex align-items-center gap-1" id="btn-save-skill" onclick="window.skillsTab?.saveCurrentSkill()">
+          <span class="spinner-border spinner-border-sm d-none" id="save-skill-spinner" role="status"></span>
+          <span><i class="bi bi-save"></i> Сохранить изменения</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,55 @@
+{
+  "tabs": {
+    "groupStandard": "Стандартные",
+    "groupExtended": "Расширенные",
+    "groupDialog": "Диалог и аудио",
+    "groupAi": "ИИ и Знания",
+    "groupPlugins": "Плагины и поиск",
+    "groupSystem": "Администрирование",
+    "groupApps": "Приложения",
+    "groupUserServices": "Сервисы",
+    "chat": "💬 Чат",
+    "voice": "🎙️ Голос и аудио",
+    "rag": "🧠 RAG",
+    "tts": "🗣️ Настройка TTS",
+    "skills": "⚡ Навыки",
+    "news": "📰 Новости",
+    "plugins": "🔌 Плагины",
+    "admin": "⚙️ Управление",
+    "users": "👥 Пользователи",
+    "models": "🤖 Модели и API",
+    "agents": "🧩 Агенты ИИ",
+    "search": "🌐 Веб-поиск",
+    "sources": "📑 Источники",
+    "logs": "📋 Логи",
+    "help": "📚 Справочник",
+    "instructions": "📝 Системные инструкции",
+    "mcp": "🔌 MCP Серверы",
+    "googleAccounts": "🌐 Google аккаунты",
+    "helpdesk": "🛟 Helpdesk",
+    "trading": "📈 Торговый терминал",
+    "network": "🌐 Сетевой терминал",
+    "systemInspector": "🖥️ Системный инспектор",
+    "player": "Плеер",
+    "cabinet": "Кабинет",
+    "settings": "Настройки"
+  },
+  "player": {
+    "noFiles": "No файлов",
+    "loadError": "Error загрузки файлов",
+    "prev": "⏮ Предыдущий",
+    "next": "Следующий ⏭",
+    "nowPlaying": "Сейчас играет:"
+  },
+  "chat": {
+    "placeholder": "Введите сообщение...",
+    "send": "Отправить",
+    "startPrompt": "Начните разговор с AI",
+    "error": "Error",
+    "typing": "Печатает..."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error"
+  }
+}

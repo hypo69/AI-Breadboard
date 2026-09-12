@@ -1,0 +1,204 @@
+{
+  "tools": [
+    {
+      "id": "flight_search",
+      "name": "Flight Search (MCP)",
+      "icon": "✈️",
+      "category": "travel",
+      "description": "Multi-engine flight search across airline schedules, aggregators, and web grounding.",
+      "parameters": {
+        "origin": "str",
+        "destination": "str",
+        "date": "str",
+        "return_date": "str",
+        "passengers": "int",
+        "travel_class": "str"
+      }
+    },
+    {
+      "id": "flight_price_calculator",
+      "name": "Flight Price Calculator",
+      "icon": "🧮",
+      "category": "finance",
+      "description": "Calculate exact multi-passenger ticket prices with baggage fees, taxes, discounts, and currency conversions.",
+      "parameters": {
+        "base_price": "float",
+        "currency": "str",
+        "baggage_fee": "float",
+        "passengers": "int",
+        "tax_rate": "float",
+        "discount_percent": "float"
+      }
+    },
+    {
+      "id": "web_search",
+      "name": "Web Search (MCP)",
+      "icon": "🌐",
+      "category": "search",
+      "description": "Search for current information on the internet via Google Grounding, AGY, or Playwright.",
+      "parameters": {
+        "query": "str"
+      }
+    },
+    {
+      "id": "rag_search",
+      "name": "Knowledge Base RAG",
+      "icon": "🧠",
+      "category": "rag",
+      "description": "Semantic search across knowledge base documents and conversation history.",
+      "parameters": {
+        "query": "str",
+        "top_k": "int"
+      }
+    },
+    {
+      "id": "python_eval",
+      "name": "Python Code Execution",
+      "icon": "🐍",
+      "category": "code",
+      "description": "Execute Python computations and scripts in a secure sandbox environment.",
+      "parameters": {
+        "code": "str"
+      }
+    },
+    {
+      "id": "tts_generate",
+      "name": "Text-to-Speech Synthesis (TTS)",
+      "icon": "🗣️",
+      "category": "voice",
+      "description": "Convert agent text responses to speech via Edge-TTS or Silero.",
+      "parameters": {
+        "text": "str",
+        "voice": "str"
+      }
+    },
+    {
+      "id": "file_system",
+      "name": "File Operations",
+      "icon": "📁",
+      "category": "files",
+      "description": "Read and parse data from local project files.",
+      "parameters": {
+        "file_path": "str"
+      }
+    },
+    {
+      "id": "gmail_search",
+      "name": "Gmail Search",
+      "icon": "✉️",
+      "category": "google_workspace",
+      "description": "Search, filter and retrieve emails from Gmail (is:unread, sender, subject, keywords).",
+      "parameters": {
+        "query": "str",
+        "limit": "int"
+      }
+    },
+    {
+      "id": "gmail_create_draft",
+      "name": "Gmail Create Draft",
+      "icon": "📝",
+      "category": "google_workspace",
+      "description": "Create an email draft in Gmail with recipient, subject, and body text.",
+      "parameters": {
+        "to": "str",
+        "subject": "str",
+        "body": "str"
+      }
+    },
+    {
+      "id": "gdrive_list_files",
+      "name": "Google Drive Search & List",
+      "icon": "📂",
+      "category": "google_workspace",
+      "description": "Search, list, and inspect files and folders on Google Drive.",
+      "parameters": {
+        "query": "str",
+        "limit": "int"
+      }
+    },
+    {
+      "id": "gdrive_download_file",
+      "name": "Google Drive File Exporter",
+      "icon": "📥",
+      "category": "google_workspace",
+      "description": "Download files or export Google Docs / Sheets to standard local formats (.docx, .xlsx, .pdf).",
+      "parameters": {
+        "file_id": "str",
+        "mime_type": "str",
+        "dest_path": "str"
+      }
+    },
+    {
+      "id": "gsheets_info",
+      "name": "Google Sheets Info",
+      "icon": "📊",
+      "category": "google_workspace",
+      "description": "Inspect Google Spreadsheet metadata, sheet titles, and grid dimensions.",
+      "parameters": {
+        "spreadsheet_id": "str"
+      }
+    },
+    {
+      "id": "gsheets_read",
+      "name": "Google Sheets Read Range",
+      "icon": "📑",
+      "category": "google_workspace",
+      "description": "Read row and column values from Google Sheets using A1 notation.",
+      "parameters": {
+        "spreadsheet_id": "str",
+        "range_name": "str"
+      }
+    },
+    {
+      "id": "gsheets_search",
+      "name": "Google Sheets Search",
+      "icon": "🔍",
+      "category": "google_workspace",
+      "description": "Search for text matching specific rows inside Google Sheets.",
+      "parameters": {
+        "spreadsheet_id": "str",
+        "query": "str",
+        "range_name": "str"
+      }
+    },
+    {
+      "id": "gsheets_append",
+      "name": "Google Sheets Append Row",
+      "icon": "➕",
+      "category": "google_workspace",
+      "description": "Append new rows of structured data to a Google Sheet.",
+      "parameters": {
+        "spreadsheet_id": "str",
+        "range_name": "str",
+        "values_json": "str"
+      }
+    }
+  ],
+  "providers": {
+    "gemini": {
+      "name": "Google Gemini",
+      "description": "Official Google GenAI SDK with API key pool",
+      "default_model": "gemini-2.5-flash"
+    },
+    "gemini_cli": {
+      "name": "Google Gemini CLI",
+      "description": "Standalone Gemini CLI environment (local agentic tool)",
+      "default_model": "gemini-3.1-flash-lite"
+    },
+    "agy": {
+      "name": "Google Antigravity (AGY)",
+      "description": "Antigravity agent environment with built-in search",
+      "default_model": "agy-flash"
+    },
+    "foundry": {
+      "name": "Microsoft Foundry",
+      "description": "Local models without internet data transmission",
+      "default_model": "qwen2.5-1.5b-instruct-generic-cpu:4"
+    },
+    "ollama": {
+      "name": "Ollama (Local)",
+      "description": "Local Ollama REST server",
+      "default_model": "qwen2.5:7b"
+    }
+  }
+}

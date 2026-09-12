@@ -1,0 +1,751 @@
+// Gemini Models & APIs management tab logic
+
+async function initModelsTab() {
+  const modelSelect = document.getElementById('models-tab-select');
+  const saveBtn = document.getElementById('btn-models-tab-save');
+  const keysListBody = document.getElementById('keys-list-body');
+  const refreshKeysBtn = document.getElementById('btn-refresh-keys');
+  const addKeyBtn = document.getElementById('btn-add-key');
+  const saveAgyBtn = document.getElementById('btn-save-agy');
+  const saveFoundryBtn = document.getElementById('btn-save-foundry');
+  const saveOllamaBtn = document.getElementById('btn-save-ollama');
+  const saveOnnxBtn = document.getElementById('btn-save-onnx');
+  const saveBtnInstr = document.getElementById('btn-save-instruction');
+  const reloadBtnInstr = document.getElementById('btn-reload-instruction');
+
+  // Ensure active provider pill tab pane has show active classes
+  const activePill = document.querySelector('#provider-pills-tab .nav-link.active') || document.getElementById('pill-gemini-tab');
+  if (activePill) {
+    const targetSelector = activePill.getAttribute('data-bs-target');
+    if (targetSelector) {
+      const targetPane = document.querySelector(targetSelector);
+      if (targetPane && !targetPane.classList.contains('active')) {
+        targetPane.classList.add('show', 'active');
+      }
+    }
+  }
+
+  // 1. Bind event handlers immediately
+  if (saveBtnInstr) saveBtnInstr.onclick = saveSystemInstruction;
+  if (reloadBtnInstr) reloadBtnInstr.onclick = loadSystemInstruction;
+
+  // Provider switch direct toggling
+  const agyEnabledSwitch = document.getElementById('agy-enabled');
+  if (agyEnabledSwitch) {
+    agyEnabledSwitch.onchange = async () => {
+      const enabled = agyEnabledSwitch.checked;
+      const remember = document.getElementById('agy-remember')?.checked ?? true;
+      const model = document.getElementById('agy-model')?.value || 'agy-flash';
+      const key = document.getElementById('agy-key')?.value.trim() || '';
+
+      try {
+        await window.api.fetch('/api/agy/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled, model, key, remember })
+        });
+        showModelsNotification(`Google Antigravity (AGY) ${enabled ? 'активирован' : 'деактивирован'}${remember ? ' (сохранено в config.json)' : ''}`, 'info');
+        if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
+      } catch (err) {
+        console.error('Ошибка переключения Antigravity:', err);
+        showModelsNotification('Ошибка переключения: ' + err.message, 'danger');
+      }
+    };
+  }
+
+  const foundryEnabledSwitch = document.getElementById('foundry-enabled');
+  if (foundryEnabledSwitch) {
+    foundryEnabledSwitch.onchange = async () => {
+      const enabled = foundryEnabledSwitch.checked;
+      const remember = document.getElementById('foundry-remember')?.checked ?? true;
+      const url = document.getElementById('foundry-url')?.value.trim() || 'http://localhost:54837';
+      const key = document.getElementById('foundry-key')?.value.trim() || '';
+      const model = document.getElementById('foundry-model')?.value?.trim() || 'qwen2.5-1.5b';
+
+      try {
+        await window.api.fetch('/api/foundry/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled, url, key, model, remember })
+        });
+        showModelsNotification(`Microsoft Foundry ${enabled ? 'активирован' : 'деактивирован'}${remember ? ' (сохранено в config.json)' : ''}`, 'info');
+        if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
+      } catch (err) {
+        console.error('Ошибка переключения Foundry:', err);
+        showModelsNotification('Ошибка переключения: ' + err.message, 'danger');
+      }
+    };
+  }
+
+  const ollamaEnabledSwitch = document.getElementById('ollama-enabled');
+  if (ollamaEnabledSwitch) {
+    ollamaEnabledSwitch.onchange = async () => {
+      const enabled = ollamaEnabledSwitch.checked;
+      const remember = document.getElementById('ollama-remember')?.checked ?? true;
+      const url = document.getElementById('ollama-url')?.value.trim() || 'http://localhost:11434';
+      const model = document.getElementById('ollama-model')?.value?.trim() || 'llama3.1';
+
+      try {
+        await window.api.fetch('/api/ollama/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled, url, model, remember })
+        });
+        showModelsNotification(`Ollama ${enabled ? 'активирован' : 'деактивирован'}${remember ? ' (сохранено в config.json)' : ''}`, 'info');
+        if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
+      } catch (err) {
+        console.error('Ошибка переключения Ollama:', err);
+        showModelsNotification('Ошибка переключения: ' + err.message, 'danger');
+      }
+    };
+  }
+
+  const onnxEnabledSwitch = document.getElementById('onnx-enabled');
+  if (onnxEnabledSwitch) {
+    onnxEnabledSwitch.onchange = async () => {
+      const enabled = onnxEnabledSwitch.checked;
+      const remember = document.getElementById('onnx-remember')?.checked ?? true;
+      const execution_provider = document.getElementById('onnx-execution-provider')?.value || 'DirectMLExecutionProvider';
+      const models_dir = document.getElementById('onnx-models-dir')?.value.trim() || 'models/onnx';
+      const default_model = document.getElementById('onnx-default-model')?.value.trim() || 'phi-3.5-mini-instruct-onnx';
+      const olive_precision = document.getElementById('onnx-olive-precision')?.value || 'int4';
+
+      try {
+        await window.api.fetch('/api/onnx/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            enabled,
+            execution_provider,
+            models_dir,
+            default_model,
+            olive_precision,
+            remember
+          })
+        });
+        showModelsNotification(`ONNX / Olive ${enabled ? 'активирован' : 'деактивирован'}${remember ? ' (сохранено в config.json)' : ''}`, 'info');
+        if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
+      } catch (err) {
+        console.error('Ошибка переключения ONNX / Olive:', err);
+        showModelsNotification('Ошибка переключения: ' + err.message, 'danger');
+      }
+    };
+  }
+
+  if (saveAgyBtn) {
+    saveAgyBtn.onclick = async () => {
+      const enabled = document.getElementById('agy-enabled')?.checked ?? true;
+      const remember = document.getElementById('agy-remember')?.checked ?? true;
+      const model = document.getElementById('agy-model')?.value || 'agy-flash';
+      const key = document.getElementById('agy-key')?.value.trim() || '';
+
+      saveAgyBtn.disabled = true;
+      try {
+        await window.api.fetch('/api/agy/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled, model, key, remember })
+        });
+        showModelsNotification(`Настройки Antigravity (AGY) успешно сохранены${remember ? ' в config.json' : ''}`, 'success');
+        if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
+      } catch (err) {
+        console.error('Ошибка сохранения Antigravity:', err);
+        showModelsNotification('Ошибка сохранения: ' + err.message, 'danger');
+      } finally {
+        saveAgyBtn.disabled = false;
+      }
+    };
+  }
+
+  if (saveFoundryBtn) {
+    saveFoundryBtn.onclick = async () => {
+      const enabled = document.getElementById('foundry-enabled')?.checked || false;
+      const remember = document.getElementById('foundry-remember')?.checked ?? true;
+      const url = document.getElementById('foundry-url')?.value.trim() || 'http://localhost:54837';
+      const key = document.getElementById('foundry-key')?.value.trim() || '';
+      const model = document.getElementById('foundry-model')?.value?.trim() || 'qwen2.5-1.5b';
+      
+      saveFoundryBtn.disabled = true;
+      try {
+        await window.api.fetch('/api/foundry/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled, url, key, model, remember })
+        });
+        showModelsNotification(`Настройки Microsoft Foundry успешно сохранены${remember ? ' в config.json' : ''}`, 'success');
+        if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
+      } catch (err) {
+        console.error('Ошибка сохранения Foundry:', err);
+        showModelsNotification('Ошибка сохранения: ' + err.message, 'danger');
+      } finally {
+        saveFoundryBtn.disabled = false;
+      }
+    };
+  }
+
+  if (saveOllamaBtn) {
+    saveOllamaBtn.onclick = async () => {
+      const enabled = document.getElementById('ollama-enabled')?.checked || false;
+      const remember = document.getElementById('ollama-remember')?.checked ?? true;
+      const url = document.getElementById('ollama-url')?.value.trim() || 'http://localhost:11434';
+      const model = document.getElementById('ollama-model')?.value?.trim() || 'llama3.1';
+      
+      saveOllamaBtn.disabled = true;
+      try {
+        await window.api.fetch('/api/ollama/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled, url, model, remember })
+        });
+        showModelsNotification(`Настройки Ollama успешно сохранены${remember ? ' в config.json' : ''}`, 'success');
+        if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
+      } catch (err) {
+        console.error('Ошибка сохранения Ollama:', err);
+        showModelsNotification('Ошибка сохранения: ' + err.message, 'danger');
+      } finally {
+        saveOllamaBtn.disabled = false;
+      }
+    };
+  }
+
+  if (saveOnnxBtn) {
+    saveOnnxBtn.onclick = async () => {
+      const enabled = document.getElementById('onnx-enabled')?.checked ?? true;
+      const remember = document.getElementById('onnx-remember')?.checked ?? true;
+      const execution_provider = document.getElementById('onnx-execution-provider')?.value || 'DirectMLExecutionProvider';
+      const models_dir = document.getElementById('onnx-models-dir')?.value.trim() || 'models/onnx';
+      const default_model = document.getElementById('onnx-default-model')?.value.trim() || 'phi-3.5-mini-instruct-onnx';
+      const olive_precision = document.getElementById('onnx-olive-precision')?.value || 'int4';
+
+      saveOnnxBtn.disabled = true;
+      try {
+        await window.api.fetch('/api/onnx/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            enabled,
+            execution_provider,
+            models_dir,
+            default_model,
+            olive_precision,
+            remember
+          })
+        });
+        showModelsNotification(`Настройки ONNX / Olive успешно сохранены${remember ? ' в config.json' : ''}`, 'success');
+        if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
+      } catch (err) {
+        console.error('Ошибка сохранения ONNX / Olive:', err);
+        showModelsNotification('Ошибка сохранения: ' + err.message, 'danger');
+      } finally {
+        saveOnnxBtn.disabled = false;
+      }
+    };
+  }
+
+  if (saveBtn && modelSelect) {
+    saveBtn.onclick = async () => {
+      const selectedModel = modelSelect.value;
+      saveBtn.disabled = true;
+      const originalText = saveBtn.textContent;
+      saveBtn.textContent = 'Сохранение...';
+      
+      try {
+        await window.api.fetch('/auth/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: selectedModel })
+        });
+        showModelsNotification('Модель успешно обновлена на: ' + selectedModel, 'success');
+        
+        const otherModelSelect = document.getElementById('admin-model-select');
+        if (otherModelSelect) {
+          otherModelSelect.value = selectedModel;
+        }
+      } catch (err) {
+        console.error('Ошибка сохранения модели:', err);
+        showModelsNotification('Ошибка сохранения: ' + err.message, 'danger');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalText;
+      }
+    };
+  }
+
+  if (refreshKeysBtn) {
+    refreshKeysBtn.onclick = async () => {
+      refreshKeysBtn.disabled = true;
+      const originalText = refreshKeysBtn.textContent;
+      refreshKeysBtn.textContent = '⏳ Сброс...';
+      try {
+        const res = await window.api.fetch('/api/keys/reset-all', { method: 'POST' });
+        showModelsNotification(res.message || 'Квоты всех ключей успешно сброшены', 'success');
+      } catch (err) {
+        console.error('Ошибка сброса квот:', err);
+        showModelsNotification('Ошибка сброса: ' + err.message, 'danger');
+      } finally {
+        refreshKeysBtn.disabled = false;
+        refreshKeysBtn.textContent = originalText;
+        if (keysListBody) await refreshKeysList(keysListBody);
+      }
+    };
+  }
+
+  if (addKeyBtn) {
+    addKeyBtn.onclick = async () => {
+      const nameInput = document.getElementById('new-key-name');
+      const valueInput = document.getElementById('new-key-value');
+      if (!nameInput || !valueInput) return;
+
+      const name = nameInput.value.trim();
+      const apiKey = valueInput.value.trim();
+
+      if (!name || !apiKey) {
+        showModelsNotification('Заполните все поля!', 'warning');
+        return;
+      }
+
+      addKeyBtn.disabled = true;
+      try {
+        await window.api.fetch('/api/keys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, api_key: apiKey, status: 'active' })
+        });
+        showModelsNotification(`Ключ "${name}" успешно добавлен`, 'success');
+        nameInput.value = '';
+        valueInput.value = '';
+        if (keysListBody) await refreshKeysList(keysListBody);
+      } catch (err) {
+        console.error('Ошибка добавления ключа:', err);
+        showModelsNotification('Ошибка добавления: ' + err.message, 'danger');
+      } finally {
+        addKeyBtn.disabled = false;
+      }
+    };
+  }
+
+  // 2. Load all components concurrently
+  await Promise.allSettled([
+    modelSelect && saveBtn ? loadTabModels(modelSelect, saveBtn) : Promise.resolve(),
+    keysListBody ? refreshKeysList(keysListBody) : Promise.resolve(),
+    loadFoundryConfig(),
+    loadOllamaConfig(),
+    loadAgyConfig(),
+    loadOnnxConfig(),
+    loadSystemInstruction()
+  ]);
+}
+
+// Helper to load models list
+async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
+  const providerSelect = document.getElementById('provider-tab-select');
+  if (providerSelect) providerSelect.innerHTML = '';
+  modelSelect.innerHTML = '';
+  
+  let modelsGrouped = {};
+  
+  const fetchModels = async (force = false) => {
+    try {
+      const url = force ? '/api/chat/models?refresh=true' : '/api/chat/models';
+      const modelsData = await window.api.fetch(url);
+      let grouped = modelsData.models || {};
+      if (Array.isArray(grouped)) {
+        grouped = { 'gemini': grouped };
+      }
+      return grouped;
+    } catch (err) {
+      console.error('Ошибка загрузки моделей:', err);
+      showModelsNotification('Ошибка загрузки моделей AI: ' + err.message, 'danger');
+      return {};
+    }
+  };
+
+  modelsGrouped = await fetchModels(forceRefresh);
+
+  const providers = Object.keys(modelsGrouped).filter(p => modelsGrouped[p] && modelsGrouped[p].length > 0);
+
+  if (providers.length === 0) {
+    if (providerSelect) {
+      providerSelect.innerHTML = '<option value="">Нет доступных провайдеров</option>';
+    }
+    modelSelect.innerHTML = '<option value="">Нет доступных моделей</option>';
+    saveBtn.disabled = true;
+    return;
+  }
+  
+  if (providerSelect) {
+    providerSelect.innerHTML = '';
+    providers.forEach(p => {
+      const option = document.createElement('option');
+      option.value = p;
+      option.textContent = p.charAt(0).toUpperCase() + p.slice(1);
+      providerSelect.appendChild(option);
+    });
+  }
+
+  const populateModels = (provider, providerModelsList) => {
+    modelSelect.innerHTML = '';
+    const providerModels = providerModelsList !== undefined ? providerModelsList : (modelsGrouped[provider] || []);
+    if (!providerModels || providerModels.length === 0) {
+      modelSelect.innerHTML = '<option value="">Нет моделей</option>';
+      saveBtn.disabled = true;
+    } else {
+      providerModels.forEach(modelName => {
+        const option = document.createElement('option');
+        option.value = modelName;
+        let cleanName = modelName;
+        if (cleanName.startsWith('foundry:')) cleanName = cleanName.substring(8);
+        else if (cleanName.startsWith('ollama:')) cleanName = cleanName.substring(7);
+        else if (cleanName.startsWith('agy-')) cleanName = cleanName.substring(4);
+        option.textContent = cleanName;
+        modelSelect.appendChild(option);
+      });
+      saveBtn.disabled = false;
+    }
+  };
+
+  if (providerSelect) {
+    providerSelect.onchange = async () => {
+      const chosenProvider = providerSelect.value;
+      modelSelect.innerHTML = '<option value="">Обновление списка моделей...</option>';
+      saveBtn.disabled = true;
+      try {
+        const updatedGrouped = await fetchModels(true);
+        if (updatedGrouped && Object.keys(updatedGrouped).length > 0) {
+          modelsGrouped = updatedGrouped;
+        }
+      } catch (e) {
+        console.warn('Failed to refresh models on provider change:', e);
+      }
+      populateModels(chosenProvider, modelsGrouped[chosenProvider]);
+    };
+    populateModels(providerSelect.value, modelsGrouped[providerSelect.value]);
+  } else {
+    let allModels = [];
+    providers.forEach(p => allModels = allModels.concat(modelsGrouped[p]));
+    allModels.forEach(modelName => {
+        const option = document.createElement('option');
+        option.value = modelName;
+        option.textContent = modelName;
+        modelSelect.appendChild(option);
+    });
+    saveBtn.disabled = allModels.length === 0;
+  }
+
+  try {
+    const settingsData = await window.api.fetch('/auth/settings');
+    if (settingsData && settingsData.model) {
+      let foundProvider = null;
+      for (const p of providers) {
+        if (modelsGrouped[p] && modelsGrouped[p].includes(settingsData.model)) {
+          foundProvider = p;
+          break;
+        }
+      }
+      if (foundProvider && providerSelect) {
+        providerSelect.value = foundProvider;
+        populateModels(foundProvider, modelsGrouped[foundProvider]);
+      }
+      modelSelect.value = settingsData.model;
+    }
+  } catch (err) {
+    console.error('Ошибка загрузки настроек AI пользователя:', err);
+  }
+}
+
+// Helper to refresh keys list table
+async function refreshKeysList(container) {
+  try {
+    container.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Загрузка ключей...</td></tr>';
+    const keysData = await window.api.fetch('/api/keys');
+    const keys = keysData.keys || [];
+
+    if (keys.length === 0) {
+      container.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Список ключей пуст</td></tr>';
+      return;
+    }
+
+    container.innerHTML = '';
+    keys.forEach(key => {
+      const row = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      tdName.innerHTML = `<strong>${key.name}</strong>`;
+      row.appendChild(tdName);
+
+      const tdKey = document.createElement('td');
+      tdKey.className = 'font-monospace text-muted small';
+      tdKey.textContent = key.api_key_masked;
+      row.appendChild(tdKey);
+
+      const tdStatus = document.createElement('td');
+      const isEnabled = key.status === 'active';
+      const statusClass = isEnabled ? 'bg-success' : 'bg-secondary';
+      const statusText = isEnabled ? 'Активен' : 'Отключен';
+      tdStatus.innerHTML = `<span class="badge ${statusClass}">${statusText}</span>`;
+      row.appendChild(tdStatus);
+
+      const tdQuota = document.createElement('td');
+      if (key.exhausted) {
+        let resetText = 'Лимит';
+        if (key.reset_in_seconds) {
+          const hours = Math.floor(key.reset_in_seconds / 3600);
+          const mins = Math.floor((key.reset_in_seconds % 3600) / 60);
+          resetText = `Сброс через ${hours}ч ${mins}м`;
+        }
+        tdQuota.innerHTML = `<span class="badge bg-danger d-block mb-1" title="Превышен лимит запросов в сутки">${resetText}</span>`;
+      } else {
+        tdQuota.innerHTML = `<span class="badge bg-success d-block mb-1">OK</span>`;
+      }
+      row.appendChild(tdQuota);
+
+      const tdActions = document.createElement('td');
+      tdActions.className = 'text-end';
+
+      const btnToggle = document.createElement('button');
+      btnToggle.className = `btn btn-xs btn-sm me-1 ${isEnabled ? 'btn-outline-secondary' : 'btn-outline-success'}`;
+      btnToggle.textContent = isEnabled ? 'Откл' : 'Вкл';
+      btnToggle.onclick = () => toggleKeyStatus(key.name, isEnabled ? 'disabled' : 'active', container);
+      tdActions.appendChild(btnToggle);
+
+      if (key.exhausted) {
+        const btnReset = document.createElement('button');
+        btnReset.className = 'btn btn-xs btn-outline-warning btn-sm me-1';
+        btnReset.innerHTML = 'Сброс';
+        btnReset.title = 'Сбросить 24-часовой бан квоты';
+        btnReset.onclick = () => resetKeyQuota(key.name, container);
+        tdActions.appendChild(btnReset);
+      }
+
+      const btnDelete = document.createElement('button');
+      btnDelete.className = 'btn btn-xs btn-outline-danger btn-sm';
+      btnDelete.textContent = 'Удалить';
+      btnDelete.onclick = () => deleteKey(key.name, container);
+      tdActions.appendChild(btnDelete);
+
+      row.appendChild(tdActions);
+      container.appendChild(row);
+    });
+
+  } catch (err) {
+    console.error('Ошибка загрузки ключей:', err);
+    container.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">Ошибка: ${err.message}</td></tr>`;
+  }
+}
+
+// API action helpers
+async function toggleKeyStatus(name, newStatus, container) {
+  try {
+    await window.api.fetch(`/api/keys/${name}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    });
+    showModelsNotification(`Статус ключа "${name}" изменен на ${newStatus === 'active' ? 'активный' : 'отключенный'}`, 'success');
+    await refreshKeysList(container);
+  } catch (err) {
+    console.error('Ошибка переключения статуса ключа:', err);
+    showModelsNotification('Ошибка изменения статуса: ' + err.message, 'danger');
+  }
+}
+
+async function resetKeyQuota(name, container) {
+  try {
+    await window.api.fetch(`/api/keys/${name}/reset-quota`, { method: 'POST' });
+    showModelsNotification(`Квота для ключа "${name}" успешно сброшена`, 'success');
+    await refreshKeysList(container);
+  } catch (err) {
+    console.error('Ошибка сброса квоты:', err);
+    showModelsNotification('Ошибка сброса квоты: ' + err.message, 'danger');
+  }
+}
+
+async function deleteKey(name, container) {
+  if (!confirm(`Вы уверены, что хотите удалить ключ "${name}"?`)) return;
+  try {
+    await window.api.fetch(`/api/keys/${name}`, { method: 'DELETE' });
+    showModelsNotification(`Ключ "${name}" успешно удален`, 'success');
+    await refreshKeysList(container);
+  } catch (err) {
+    console.error('Ошибка удаления ключа:', err);
+    showModelsNotification('Ошибка удаления: ' + err.message, 'danger');
+  }
+}
+
+function showModelsNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+  notification.style.zIndex = '9999';
+  notification.style.maxWidth = '400px';
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.remove();
+  }, 5000);
+}
+
+async function loadFoundryConfig() {
+  try {
+    const config = await window.api.fetch('/api/foundry/config');
+    const enabledInput = document.getElementById('foundry-enabled');
+    const urlInput = document.getElementById('foundry-url');
+    const keyInput = document.getElementById('foundry-key');
+    const modelInput = document.getElementById('foundry-model');
+    
+    if (enabledInput) enabledInput.checked = config.enabled || false;
+    if (urlInput) urlInput.value = config.url || '';
+    if (keyInput) keyInput.value = config.key || '';
+    if (modelInput) modelInput.value = config.model || '';
+  } catch (err) {
+    console.error('Ошибка загрузки настроек Foundry:', err);
+  }
+}
+
+async function loadOllamaConfig() {
+  try {
+    const config = await window.api.fetch('/api/ollama/config');
+    const enabledInput = document.getElementById('ollama-enabled');
+    const urlInput = document.getElementById('ollama-url');
+    const modelInput = document.getElementById('ollama-model');
+    
+    if (enabledInput) enabledInput.checked = config.enabled || false;
+    if (urlInput) urlInput.value = config.url || '';
+    if (modelInput) modelInput.value = config.model || '';
+  } catch (err) {
+    console.error('Ошибка загрузки настроек Ollama:', err);
+  }
+}
+
+async function loadAgyConfig() {
+  try {
+    const modelSelect = document.getElementById('agy-model');
+    if (modelSelect) {
+      try {
+        const modelsData = await window.api.fetch('/api/chat/models');
+        const agyList = modelsData.models?.agy || [];
+        if (agyList.length > 0) {
+          const curVal = modelSelect.value;
+          modelSelect.innerHTML = '';
+          agyList.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m;
+            opt.textContent = m;
+            modelSelect.appendChild(opt);
+          });
+          if (curVal && agyList.includes(curVal)) {
+            modelSelect.value = curVal;
+          }
+        }
+      } catch (e) {
+        console.error('Ошибка загрузки моделей AGY:', e);
+      }
+    }
+
+    const config = await window.api.fetch('/api/agy/config');
+    const enabledInput = document.getElementById('agy-enabled');
+    const keyInput = document.getElementById('agy-key');
+    
+    if (enabledInput) enabledInput.checked = config.enabled ?? true;
+    if (modelSelect && config.model) modelSelect.value = config.model;
+    if (keyInput) keyInput.value = config.key || '';
+  } catch (err) {
+    console.error('Ошибка загрузки настроек Antigravity (AGY):', err);
+  }
+}
+
+async function loadOnnxConfig() {
+  try {
+    const config = await window.api.fetch('/api/onnx/config');
+    const enabledInput = document.getElementById('onnx-enabled');
+    const epSelect = document.getElementById('onnx-execution-provider');
+    const dirInput = document.getElementById('onnx-models-dir');
+    const modelInput = document.getElementById('onnx-default-model');
+    const precSelect = document.getElementById('onnx-olive-precision');
+
+    if (enabledInput) enabledInput.checked = config.enabled ?? true;
+    if (epSelect && config.execution_provider) epSelect.value = config.execution_provider;
+    if (dirInput && config.models_dir) dirInput.value = config.models_dir;
+    if (modelInput && config.default_model) modelInput.value = config.default_model;
+    if (precSelect && config.olive_precision) precSelect.value = config.olive_precision;
+  } catch (err) {
+    console.error('Ошибка загрузки настроек ONNX / Olive:', err);
+  }
+}
+
+async function loadSystemInstruction() {
+  const editor = document.getElementById('system-instruction-editor');
+  const statusBadge = document.getElementById('system-instruction-status');
+  if (!editor) return;
+  
+  editor.disabled = true;
+  if (statusBadge) {
+    statusBadge.className = 'badge bg-warning text-dark';
+    statusBadge.textContent = 'Загрузка...';
+    statusBadge.style.removeProperty('display');
+  }
+  
+  try {
+    const data = await window.api.fetch('/api/admin/system_instruction');
+    editor.value = data.content || '';
+    if (statusBadge) {
+      statusBadge.className = 'badge bg-success';
+      statusBadge.textContent = 'Загружено';
+      setTimeout(() => {
+        if (statusBadge) statusBadge.style.display = 'none';
+      }, 2500);
+    }
+  } catch (err) {
+    console.error('Ошибка загрузки системной инструкции:', err);
+    if (statusBadge) {
+      statusBadge.className = 'badge bg-danger';
+      statusBadge.textContent = 'Ошибка';
+      statusBadge.style.removeProperty('display');
+    }
+    showModelsNotification('Ошибка загрузки системной инструкции: ' + err.message, 'danger');
+  } finally {
+    editor.disabled = false;
+  }
+}
+
+async function saveSystemInstruction() {
+  const editor = document.getElementById('system-instruction-editor');
+  const saveBtn = document.getElementById('btn-save-instruction');
+  const statusBadge = document.getElementById('system-instruction-status');
+  if (!editor || !saveBtn) return;
+
+  const originalHtml = saveBtn.innerHTML;
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Сохранение...';
+
+  try {
+    await window.api.fetch('/api/admin/system_instruction', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: editor.value })
+    });
+    showModelsNotification('✅ Системная инструкция успешно сохранена', 'success');
+    if (statusBadge) {
+      statusBadge.className = 'badge bg-success';
+      statusBadge.textContent = 'Сохранено';
+      statusBadge.style.removeProperty('display');
+      setTimeout(() => {
+        if (statusBadge) statusBadge.style.display = 'none';
+      }, 3000);
+    }
+  } catch (err) {
+    console.error('Ошибка сохранения системной инструкции:', err);
+    if (statusBadge) {
+      statusBadge.className = 'badge bg-danger';
+      statusBadge.textContent = 'Ошибка сохранения';
+      statusBadge.style.removeProperty('display');
+    }
+    showModelsNotification('Ошибка сохранения: ' + err.message, 'danger');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = originalHtml;
+  }
+}
+
+// Экспорт для загрузчика вкладок
+window.initModelsTab = initModelsTab;

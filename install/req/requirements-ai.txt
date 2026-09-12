@@ -1,0 +1,14 @@
+# AI, LangChain, RAG & Agents
+google-antigravity>=0.1.16
+google-genai>=0.1.0
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-google-genai>=2.0.0
+langchain-ollama>=0.3.0
+langchain-mcp-adapters>=0.1.0
+langgraph>=0.4.0
+mcp>=1.0.0
+sentence-transformers>=3.0.0
+faiss-cpu>=1.8.0
+chromadb>=0.5.0
+numpy>=1.26.0

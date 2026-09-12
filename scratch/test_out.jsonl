@@ -1,0 +1,3 @@
+{"content": "First document with тест data.", "source": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\scratch\\extracted_test_archive\\sample1.txt", "length": 30, "doc_type": "txt"}
+{"content": "# Header 1\n\nSome paragraph for RAG testing.", "source": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\scratch\\extracted_test_archive\\sub\\sample2.md", "length": 43, "doc_type": "md"}
+{"content": "## Subheader\n\nAnother detailed paragraph for RAG.", "source": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\scratch\\extracted_test_archive\\sub\\sample2.md", "length": 49, "doc_type": "md"}

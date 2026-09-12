@@ -1,0 +1,28 @@
+{
+  "refresh_interval_minutes": 30,
+  "default_min_relevance": 0.3,
+  "enable_ai_summary": true,
+  "max_items_per_feed": 25,
+  "rss_sources": [
+    {
+      "name": "Habr AI & IT",
+      "url": "https://habr.com/ru/rss/hubs/artificial_intelligence/all/",
+      "category": "ai"
+    },
+    {
+      "name": "TechCrunch AI",
+      "url": "https://techcrunch.com/category/artificial-intelligence/feed/",
+      "category": "ai"
+    },
+    {
+      "name": "Hacker News",
+      "url": "https://news.ycombinator.com/rss",
+      "category": "tech"
+    },
+    {
+      "name": "N+1 Наука",
+      "url": "https://nplus1.ru/rss",
+      "category": "science"
+    }
+  ]
+}

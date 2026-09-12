@@ -1,0 +1,885 @@
+<!-- Google Drive Sync Management Panel -->
+<div id="sync-panel" class="sync-panel">
+  <!-- Header -->
+  <div class="sync-header">
+    <h2>☁️ Google Drive Synchronization</h2>
+    <p class="sync-description">Manage data synchronization with Google Drive</p>
+  </div>
+
+  <!-- Status Section -->
+  <div class="sync-section">
+    <h3>📊 Synchronization Status</h3>
+    
+    <div class="status-grid">
+      <div class="status-card">
+        <span class="status-label">Scheduler Status</span>
+        <div class="status-value">
+          <span id="scheduler-status" class="status-badge status-inactive">Inactive</span>
+        </div>
+      </div>
+
+      <div class="status-card">
+        <span class="status-label">Last Sync</span>
+        <div class="status-value">
+          <span id="last-sync-time">Never</span>
+        </div>
+      </div>
+
+      <div class="status-card">
+        <span class="status-label">Next Sync</span>
+        <div class="status-value">
+          <span id="next-sync-time">Not scheduled</span>
+        </div>
+      </div>
+
+      <div class="status-card">
+        <span class="status-label">Sync Interval</span>
+        <div class="status-value">
+          <span id="sync-interval">6 hours</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box info-default">
+      <strong>Google Drive Folder:</strong>
+      <span id="drive-folder-link">
+        <a href="#" target="_blank" id="drive-url">Loading...</a>
+      </span>
+    </div>
+  </div>
+
+  <!-- Storage Stats Section -->
+  <div class="sync-section">
+    <h3>💾 Storage Statistics</h3>
+    
+    <div class="stats-grid">
+      <div class="stat-item">
+        <span class="stat-icon">📦</span>
+        <span class="stat-label">Total Size</span>
+        <span class="stat-value" id="total-size">-</span>
+      </div>
+
+      <div class="stat-item">
+        <span class="stat-icon">📄</span>
+        <span class="stat-label">Files Count</span>
+        <span class="stat-value" id="files-count">-</span>
+      </div>
+
+      <div class="stat-item">
+        <span class="stat-icon">📁</span>
+        <span class="stat-label">Folders Count</span>
+        <span class="stat-value" id="folders-count">-</span>
+      </div>
+
+      <div class="stat-item">
+        <span class="stat-icon">⚠️</span>
+        <span class="stat-label">Sync Errors</span>
+        <span class="stat-value" id="sync-errors">0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sync Controls Section -->
+  <div class="sync-section">
+    <h3>🎮 Synchronization Controls</h3>
+
+    <div class="control-group">
+      <label for="sync-interval-input">Sync Interval (hours):</label>
+      <div class="input-group">
+        <input 
+          type="number" 
+          id="sync-interval-input" 
+          min="1" 
+          max="24" 
+          value="6"
+          class="form-input"
+        >
+        <button class="btn btn-secondary" onclick="syncPanel.updateInterval()">
+          Update Interval
+        </button>
+      </div>
+    </div>
+
+    <div class="button-group">
+      <button 
+        id="start-scheduler-btn" 
+        class="btn btn-success" 
+        onclick="syncPanel.startScheduler()"
+      >
+        ▶️ Start Scheduler
+      </button>
+      
+      <button 
+        id="stop-scheduler-btn" 
+        class="btn btn-danger" 
+        onclick="syncPanel.stopScheduler()" 
+        disabled
+      >
+        ⏹️ Stop Scheduler
+      </button>
+
+      <button 
+        id="sync-now-btn" 
+        class="btn btn-primary" 
+        onclick="syncPanel.showSyncOptions()"
+      >
+        🔄 Sync Now
+      </button>
+
+      <button 
+        id="test-connection-btn" 
+        class="btn btn-info" 
+        onclick="syncPanel.testConnection()"
+      >
+        🔗 Test Connection
+      </button>
+    </div>
+  </div>
+
+  <!-- Sync Type Selection (Hidden) -->
+  <div id="sync-options-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4>Select Data to Sync</h4>
+        <span class="close" onclick="syncPanel.hideSyncOptions()">&times;</span>
+      </div>
+
+      <div class="modal-body">
+        <div class="checkbox-group">
+          <label>
+            <input type="radio" name="sync-type" value="all" checked>
+            <strong>All Data</strong> - Sync everything (data, logs, configs, secrets)
+          </label>
+        </div>
+
+        <div class="checkbox-group">
+          <label>
+            <input type="radio" name="sync-type" value="data">
+            <strong>Data Only</strong> - Databases and RAG indices
+          </label>
+        </div>
+
+        <div class="checkbox-group">
+          <label>
+            <input type="radio" name="sync-type" value="logs">
+            <strong>Logs Only</strong> - Application logs
+          </label>
+        </div>
+
+        <div class="checkbox-group">
+          <label>
+            <input type="radio" name="sync-type" value="secrets">
+            <strong>Secrets Only</strong> - Configuration and keys
+          </label>
+        </div>
+
+        <div class="checkbox-group">
+          <label>
+            <input type="radio" name="sync-type" value="configs">
+            <strong>Configs Only</strong> - Configuration files
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="syncPanel.hideSyncOptions()">
+          Cancel
+        </button>
+        <button class="btn btn-primary" onclick="syncPanel.performSync()">
+          Sync Selected
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Advanced Settings Section -->
+  <div class="sync-section">
+    <h3>⚙️ Advanced Settings</h3>
+
+    <div class="settings-group">
+      <div class="setting-item">
+        <label>
+          <input type="checkbox" id="sync-data-checkbox" checked>
+          Include Data Folder (databases, RAG indices)
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <label>
+          <input type="checkbox" id="sync-logs-checkbox" checked>
+          Include Logs Folder (application logs)
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <label>
+          <input type="checkbox" id="sync-secrets-checkbox" checked>
+          Include Secrets Folder (keys, credentials)
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <label>
+          <input type="checkbox" id="sync-configs-checkbox" checked>
+          Include Configs (config.json, .env)
+        </label>
+      </div>
+    </div>
+
+    <button class="btn btn-secondary" onclick="syncPanel.saveSettings()">
+      💾 Save Settings
+    </button>
+  </div>
+
+  <!-- Messages Section -->
+  <div id="sync-messages" class="messages-container">
+    <!-- Messages will appear here -->
+  </div>
+
+  <!-- Activity Log Section -->
+  <div class="sync-section">
+    <h3>📋 Recent Activity</h3>
+    <div id="activity-log" class="activity-log">
+      <p class="text-muted">No recent activity</p>
+    </div>
+  </div>
+</div>
+
+<style>
+.sync-panel {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.sync-header {
+  margin-bottom: 30px;
+  border-bottom: 2px solid #dee2e6;
+  padding-bottom: 15px;
+}
+
+.sync-header h2 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 24px;
+}
+
+.sync-description {
+  margin: 5px 0 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.sync-section {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.sync-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #1f2937;
+  font-size: 18px;
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 10px;
+}
+
+/* Status Grid */
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.status-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 15px;
+}
+
+.status-label {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.status-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.stat-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 15px;
+  text-align: center;
+}
+
+.stat-icon {
+  font-size: 24px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Button Groups */
+.button-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 15px 0;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #4b5563;
+}
+
+.btn-success {
+  background: #10b981;
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: #059669;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.btn-info {
+  background: #06b6d4;
+  color: white;
+}
+
+.btn-info:hover:not(:disabled) {
+  background: #0891b2;
+}
+
+/* Control Group */
+.control-group {
+  margin-bottom: 15px;
+}
+
+.control-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.form-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Settings Group */
+.settings-group {
+  background: #f9fafb;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.setting-item {
+  margin-bottom: 12px;
+}
+
+.setting-item label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 400;
+  color: #374151;
+}
+
+.setting-item input[type="checkbox"] {
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+/* Info Box */
+.info-box {
+  padding: 12px 15px;
+  border-left: 4px solid #3b82f6;
+  border-radius: 4px;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 14px;
+}
+
+.info-box strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.info-default {
+  border-left-color: #3b82f6;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: white;
+  margin: 10% auto;
+  padding: 0;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h4 {
+  margin: 0;
+  color: #1f2937;
+}
+
+.close {
+  font-size: 28px;
+  font-weight: bold;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #1f2937;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.checkbox-group {
+  margin-bottom: 15px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 4px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  font-weight: 400;
+  color: #374151;
+}
+
+.checkbox-group input[type="radio"] {
+  margin-right: 10px;
+  margin-top: 3px;
+  cursor: pointer;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Messages */
+.messages-container {
+  margin: 20px 0;
+}
+
+.message {
+  padding: 12px 15px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  border-left: 4px solid;
+}
+
+.message-success {
+  background: #dcfce7;
+  color: #166534;
+  border-left-color: #10b981;
+}
+
+.message-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border-left-color: #ef4444;
+}
+
+.message-info {
+  background: #dbeafe;
+  color: #1e40af;
+  border-left-color: #3b82f6;
+}
+
+.message-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border-left-color: #f59e0b;
+}
+
+/* Activity Log */
+.activity-log {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 15px;
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 13px;
+}
+
+.activity-item {
+  padding: 8px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-time {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.text-muted {
+  color: #9ca3af;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .status-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .input-group {
+    flex-direction: column;
+  }
+}
+</style>
+
+<script>
+const syncPanel = {
+  async init() {
+    // Load initial data
+    await this.updateStatus();
+    await this.updateStats();
+    
+    // Set up auto-refresh
+    setInterval(() => this.updateStatus(), 5000);
+    setInterval(() => this.updateStats(), 30000);
+  },
+
+  async updateStatus() {
+    try {
+      const response = await fetch('/api/admin/sync/status');
+      const data = await response.json();
+
+      // Update scheduler status
+      const badge = document.getElementById('scheduler-status');
+      badge.textContent = data.is_running ? 'Running' : 'Inactive';
+      badge.className = data.is_running 
+        ? 'status-badge status-active' 
+        : 'status-badge status-inactive';
+
+      // Update buttons
+      document.getElementById('start-scheduler-btn').disabled = data.is_running;
+      document.getElementById('stop-scheduler-btn').disabled = !data.is_running;
+
+      // Update times
+      document.getElementById('last-sync-time').textContent = data.last_sync_time || 'Never';
+      document.getElementById('next-sync-time').textContent = data.next_sync_time || 'Not scheduled';
+      document.getElementById('sync-interval').textContent = `${data.sync_interval_hours} hours`;
+
+      // Update Google Drive folder
+      const driveResponse = await fetch('/api/admin/sync/drive-info');
+      if (driveResponse.ok) {
+        const driveData = await driveResponse.json();
+        const driveLink = document.getElementById('drive-url');
+        driveLink.href = driveData.folder_url;
+        driveLink.textContent = 'Open Folder';
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  },
+
+  async updateStats() {
+    try {
+      const response = await fetch('/api/admin/sync/stats');
+      const data = await response.json();
+
+      document.getElementById('total-size').textContent = 
+        `${data.total_size_mb.toFixed(2)} MB`;
+      document.getElementById('files-count').textContent = data.files_count;
+      document.getElementById('folders-count').textContent = data.folders_count;
+      document.getElementById('sync-errors').textContent = data.sync_errors;
+    } catch (error) {
+      console.error('Error updating stats:', error);
+    }
+  },
+
+  async startScheduler() {
+    try {
+      const interval = parseInt(document.getElementById('sync-interval-input').value);
+      const response = await fetch('/api/admin/sync/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sync_interval_hours: interval })
+      });
+      
+      const data = await response.json();
+      this.showMessage(data.message, 'success');
+      await this.updateStatus();
+    } catch (error) {
+      this.showMessage('Error starting scheduler: ' + error, 'error');
+    }
+  },
+
+  async stopScheduler() {
+    try {
+      const response = await fetch('/api/admin/sync/stop', {
+        method: 'POST'
+      });
+      
+      const data = await response.json();
+      this.showMessage(data.message, 'success');
+      await this.updateStatus();
+    } catch (error) {
+      this.showMessage('Error stopping scheduler: ' + error, 'error');
+    }
+  },
+
+  async testConnection() {
+    try {
+      const response = await fetch('/api/admin/sync/test-connection', {
+        method: 'POST'
+      });
+      
+      const data = await response.json();
+      const type = data.connected ? 'success' : 'error';
+      this.showMessage(data.message, type);
+    } catch (error) {
+      this.showMessage('Error testing connection: ' + error, 'error');
+    }
+  },
+
+  showSyncOptions() {
+    document.getElementById('sync-options-modal').style.display = 'block';
+  },
+
+  hideSyncOptions() {
+    document.getElementById('sync-options-modal').style.display = 'none';
+  },
+
+  async performSync() {
+    const syncType = document.querySelector('input[name="sync-type"]:checked').value;
+    
+    try {
+      const response = await fetch('/api/admin/sync/sync-now', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sync_type: syncType })
+      });
+      
+      const data = await response.json();
+      this.showMessage(data.message, 'success');
+      this.hideSyncOptions();
+      
+      this.addActivityLog(`Started ${syncType} synchronization`);
+    } catch (error) {
+      this.showMessage('Error starting sync: ' + error, 'error');
+    }
+  },
+
+  async updateInterval() {
+    const interval = parseInt(document.getElementById('sync-interval-input').value);
+    
+    try {
+      const response = await fetch('/api/admin/sync/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sync_interval_hours: interval })
+      });
+      
+      const data = await response.json();
+      this.showMessage('Interval updated to ' + interval + ' hours', 'success');
+      await this.updateStatus();
+    } catch (error) {
+      this.showMessage('Error updating interval: ' + error, 'error');
+    }
+  },
+
+  async saveSettings() {
+    const config = {
+      include_data: document.getElementById('sync-data-checkbox').checked,
+      include_logs: document.getElementById('sync-logs-checkbox').checked,
+      include_secrets: document.getElementById('sync-secrets-checkbox').checked,
+      include_configs: document.getElementById('sync-configs-checkbox').checked
+    };
+
+    try {
+      const response = await fetch('/api/admin/sync/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+      });
+      
+      const data = await response.json();
+      this.showMessage('Settings saved successfully', 'success');
+    } catch (error) {
+      this.showMessage('Error saving settings: ' + error, 'error');
+    }
+  },
+
+  showMessage(text, type = 'info') {
+    const container = document.getElementById('sync-messages');
+    const message = document.createElement('div');
+    message.className = `message message-${type}`;
+    message.textContent = text;
+    
+    container.appendChild(message);
+    
+    setTimeout(() => message.remove(), 5000);
+  },
+
+  addActivityLog(text) {
+    const log = document.getElementById('activity-log');
+    const item = document.createElement('div');
+    item.className = 'activity-item';
+    
+    const now = new Date().toLocaleTimeString();
+    item.innerHTML = `<span class="activity-time">${now}</span> - ${text}`;
+    
+    if (log.textContent.includes('No recent activity')) {
+      log.innerHTML = '';
+    }
+    
+    log.insertBefore(item, log.firstChild);
+  }
+};
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', () => syncPanel.init());
+</script>

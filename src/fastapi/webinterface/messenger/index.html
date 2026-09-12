@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AI Breadboard Messenger & Rooms</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+</head>
+<body>
+  <div class="messenger-app">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="user-profile-badge">
+          <div class="avatar" id="myAvatar">
+            <span id="myAvatarText">U</span>
+            <div class="status-dot online"></div>
+          </div>
+          <div>
+            <div style="font-weight: 600; font-size: 15px;" id="myName">Loading...</div>
+            <div style="font-size: 12px; color: var(--text-secondary);" id="myStatus">Online</div>
+          </div>
+        </div>
+        <button class="btn-icon" id="btnNewChat" title="New Chat or Room">➕</button>
+      </div>
+
+      <div class="search-bar-container">
+        <input type="text" class="search-input" id="searchChatsInput" placeholder="Search chats, contacts, @bots..." />
+      </div>
+
+      <div class="chat-list" id="chatList">
+        <!-- Chat items rendered dynamically -->
+      </div>
+    </aside>
+
+    <!-- Main Chat Area -->
+    <main class="chat-main" id="chatMain">
+      <!-- Chat Header -->
+      <div class="chat-header" id="chatHeader" style="display: none;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div class="avatar" id="activeChatAvatar">
+            <span id="activeChatAvatarText">#</span>
+          </div>
+          <div>
+            <div style="font-weight: 600; font-size: 16px;" id="activeChatTitle">Select a chat</div>
+            <div style="font-size: 12px; color: var(--text-secondary);" id="activeChatSubtitle">...</div>
+          </div>
+        </div>
+        <div class="chat-header-actions">
+          <button class="btn-icon" id="btnStartAudioCall" title="Audio Call">📞</button>
+          <button class="btn-icon" id="btnStartVideoCall" title="Video Meeting">📹</button>
+        </div>
+      </div>
+
+      <!-- Messages Stream -->
+      <div class="messages-container" id="messagesContainer">
+        <div style="text-align: center; color: var(--text-secondary); margin-top: 40px;" id="emptyPlaceholder">
+          Select or create a conversation to start messaging.
+        </div>
+      </div>
+
+      <!-- Typing indicator -->
+      <div class="typing-indicator" id="typingIndicator" style="display: none;"></div>
+
+      <!-- Input Bar -->
+      <div class="chat-input-bar" id="chatInputBar" style="display: none;">
+        <input type="file" id="fileAttachmentInput" style="display: none;" multiple />
+        <button class="btn-icon" id="btnAttachFile" title="Attach file or photo">📎</button>
+        
+        <input type="text" class="message-input" id="messageInput" placeholder="Write a message... (Type @ai for bot)" autocomplete="off" />
+        
+        <button class="btn-icon" id="btnRecordVoice" title="Record voice note">🎤</button>
+        <button class="btn-icon" id="btnSendMessage" title="Send message" style="background: var(--accent-color);">➤</button>
+      </div>
+
+      <!-- WebRTC Meeting Room Overlay -->
+      <div class="video-call-overlay" id="videoCallOverlay" style="display: none;">
+        <div class="video-grid" id="videoGrid">
+          <div class="video-tile" id="localVideoTile">
+            <video id="localVideo" autoplay playsinline muted></video>
+            <span class="tile-label">You</span>
+          </div>
+          <div class="video-tile" id="remoteVideoTile" style="display: none;">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <span class="tile-label" id="remoteTileLabel">Participant</span>
+          </div>
+        </div>
+
+        <div class="call-controls">
+          <button class="btn-icon" id="btnToggleMic" title="Mute/Unmute Mic">🎤</button>
+          <button class="btn-icon" id="btnToggleCam" title="Toggle Camera">📷</button>
+          <button class="btn-icon" id="btnShareScreen" title="Share Screen">🖥️</button>
+          <button class="btn-icon btn-danger" id="btnEndCall" title="Hang Up">📞</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- New Chat Modal -->
+  <div class="modal-overlay" id="newChatModal" style="display: none;">
+    <div class="modal-card">
+      <h3>Create New Conversation</h3>
+      <div class="form-group">
+        <label>Room Type</label>
+        <select id="modalRoomType">
+          <option value="direct">Direct Message (1-on-1)</option>
+          <option value="group">Group Chat</option>
+          <option value="meeting">Video Meeting Room</option>
+        </select>
+      </div>
+      <div class="form-group" id="modalTitleGroup" style="display: none;">
+        <label>Room Title</label>
+        <input type="text" id="modalRoomTitle" placeholder="e.g. Project Discussion" />
+      </div>
+      <div class="form-group">
+        <label>Search User / Member</label>
+        <input type="text" id="modalUserSearch" placeholder="Type username or name..." />
+        <div id="modalUserResults" style="max-height: 120px; overflow-y: auto; margin-top: 8px;"></div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button class="btn-icon" style="width: auto; padding: 8px 16px; border-radius: 8px;" id="modalBtnCancel">Cancel</button>
+        <button class="btn-icon" style="width: auto; padding: 8px 16px; border-radius: 8px; background: var(--accent-color);" id="modalBtnCreate">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
