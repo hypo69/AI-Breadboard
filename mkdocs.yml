@@ -1,6 +1,6 @@
 site_name: AI-Breadboard
 site_description: Interactive AI Model Testbench & Breadboard
-site_url: !ENV READTHEDOCS_CANONICAL_URL
+site_url: !ENV [READTHEDOCS_CANONICAL_URL, 'http://localhost:8000']
 repo_url: https://github.com/hypo69/AI-Breadboard
 edit_uri: edit/master/docs/
 
@@ -64,9 +64,12 @@ nav:
       - Стратегия тестирования: ru/guides/testing-strategy.md
   - API Reference:
       - Обзор: ru/api/index.md
+      - AI оркестратор: ru/api/ai.md
+      - RAG-движок: ru/api/rag.md
+      - Плагины: ru/api/plugins.md
       - Агенты: ru/api/agents.md
-      - AI: ru/api/ai.md
       - Навыки: ru/api/skills.md
+      - REST API: ru/api/utils.md
   - Разработчику:
       - Обзор: ru/developer/index.md
       - Changelog: ru/changelog.md
@@ -98,6 +101,7 @@ plugins:
           name: עברית
           build: true
   - mkdocstrings:
+      default_handler: python
       handlers:
         python:
           paths:
@@ -106,8 +110,13 @@ plugins:
             docstring_style: google
             show_source: true
             show_root_heading: true
+            show_root_full_path: false
             members_order: source
             show_signature_annotations: true
+            show_if_no_docstring: false
+            heading_level: 2
+            preload_modules:
+              - src
 
 # Markdown extensions
 markdown_extensions:
