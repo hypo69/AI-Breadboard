@@ -1,2 +1,0 @@
-# Документация проекта ai-breadboard
--r install/req/requirements-docs.txt
