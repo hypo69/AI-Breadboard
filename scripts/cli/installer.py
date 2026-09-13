@@ -53,6 +53,7 @@ MESSAGES = {
         "step_deps": "[2/6] Installing dependencies...",
         "step_certs": "[3/6] Setting up SSL certificates...",
         "step_cli": "[4/6] Configuring CLI assistant...",
+        "step_user": "Configuring default administrator account...",
         "step_verify": "[5/6] Verifying installation...",
         "step_models": "[6/6] Downloading AI models (optional)...",
         "success": "✅ Installation completed successfully!",
@@ -65,6 +66,7 @@ MESSAGES = {
         "step_deps": "[2/6] Installing dependencies...",
         "step_certs": "[3/6] Setting up SSL certificates...",
         "step_cli": "[4/6] Configuring CLI assistant...",
+        "step_user": "Настройка учетной записи администратора по умолчанию...",
         "step_verify": "[5/6] Verifying installation...",
         "step_models": "[6/6] Downloading AI models (optional)...",
         "success": "✅ Installation completed successfully!",
@@ -352,6 +354,27 @@ class Installer:
         print()
         return True
     
+    def setup_initial_user(self) -> bool:
+        """Configure initial default administrator user"""
+        print(self.msg("step_user"))
+        try:
+            python_exe = self.venv_dir / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+            user_script = self.install_dir / "scripts" / "create_initial_user.py"
+            if user_script.exists():
+                subprocess.run(
+                    [str(python_exe), str(user_script), "--non-interactive"],
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+                print("  Administrator account initialized [OK]")
+            print()
+            return True
+        except Exception as e:
+            print(f"  [WARN] Failed to setup initial user: {e}")
+            print()
+            return True
+
     def run(self, skip_models: bool = False, skip_venv: bool = False, 
             skip_deps: bool = False, skip_certs: bool = False) -> int:
         """Run installation"""
@@ -367,6 +390,7 @@ class Installer:
                 (not skip_deps, self.install_dependencies, "dependencies"),
                 (not skip_certs, self.setup_ssl_certificates, "SSL certificates"),
                 (True, self.configure_cli, "CLI"),
+                (True, self.setup_initial_user, "initial user"),
                 (True, self.verify_installation, "verification"),
                 (True, lambda: self.download_models(skip=skip_models), "models"),
             ]

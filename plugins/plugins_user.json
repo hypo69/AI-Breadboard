@@ -1,0 +1,12 @@
+{
+  "entries": [
+    {"path": "user-plugins/facebook"},
+    {"path": "user-plugins/google_workspace"},
+    {"path": "user-plugins/ifttt"},
+    {"path": "user-plugins/invoice_processor"},
+    {"path": "user-plugins/media_organizer"},
+    {"path": "user-plugins/news_feed"},
+    {"path": "user-plugins/telegram_bot"},
+    {"path": "user-plugins/user_storage"}
+  ]
+}

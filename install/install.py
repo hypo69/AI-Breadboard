@@ -67,6 +67,8 @@ class I18N:
             "step_5_ok": "✓ SSL сертификаты найдены",
             "step_6": "[6/6] Финальная проверка...",
             "step_6_ok": "✓ Окружение готово к работе",
+            "step_user": "Настройка учетной записи администратора по умолчанию...",
+            "step_user_ok": "✓ Учетная запись администратора настроена",
             "finish": "✅ Установка завершена успешно!",
             "error": "✗ Ошибка: {msg}",
         },
@@ -94,6 +96,8 @@ class I18N:
             "step_5_ok": "✓ SSL certificates found",
             "step_6": "[6/6] Final verification...",
             "step_6_ok": "✓ Environment ready",
+            "step_user": "Configuring default administrator account...",
+            "step_user_ok": "✓ Administrator account configured",
             "finish": "✅ Installation completed successfully!",
             "error": "✗ Error: {msg}",
         },
@@ -121,6 +125,8 @@ class I18N:
             "step_5_ok": "✓ Certificados SSL encontrados",
             "step_6": "[6/6] Verificación final...",
             "step_6_ok": "✓ Entorno listo",
+            "step_user": "Configurando cuenta de administrador predeterminada...",
+            "step_user_ok": "✓ Cuenta de administrador configurada",
             "finish": "✅ ¡Instalación completada exitosamente!",
             "error": "✗ Error: {msg}",
         },
@@ -148,6 +154,8 @@ class I18N:
             "step_5_ok": "✓ תעודות SSL נמצאו",
             "step_6": "[6/6] אימות סופי...",
             "step_6_ok": "✓ סביבה מוכנה",
+            "step_user": "הגדרת חשבון מנהל מערכת ברירת מחדל...",
+            "step_user_ok": "✓ חשבון מנהל המערכת הוגדר בהצלחה",
             "finish": "✅ ההתקנה הושלמה בהצלחה!",
             "error": "✗ שגיאה: {msg}",
         },
@@ -345,6 +353,39 @@ class Installer:
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             return False
 
+    def setup_initial_user(self, email: str = "", name: str = "", password: str = "") -> bool:
+        """Настройка учетной записи администратора по умолчанию.
+
+        Args:
+            email (str): Email администратора.
+            name (str): Имя администратора.
+            password (str): Пароль администратора.
+
+        Returns:
+            bool: Успешность создания/настройки пользователя.
+        """
+        print(self.msg("step_user"))
+        user_script: Path = self.install_dir / "scripts" / "create_initial_user.py"
+        if not user_script.exists():
+            return True
+
+        cmd: List[str] = [str(self.python_path), str(user_script), "--non-interactive"]
+        if email:
+            cmd.extend(["--email", email])
+        if name:
+            cmd.extend(["--name", name])
+        if password:
+            cmd.extend(["--password", password])
+
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            if result.returncode == 0:
+                print(self.msg("step_user_ok"))
+                return True
+            return False
+        except Exception:
+            return False
+
     def verify_environment(self, light_version: bool = False) -> bool:
         """Финальная проверка окружения.
 
@@ -440,6 +481,8 @@ class Installer:
 
         if not self.install_dependencies(profile):
             return False
+
+        self.setup_initial_user()
 
         if not self.verify_environment():
             return False

@@ -89,7 +89,7 @@ class TestInstallationVerifier:
         assert len(result.missing_directories) == 0, (
             f"Missing required directories: {result.missing_directories}"
         )
-        assert "core" in result.existing_directories
+        assert "src" in result.existing_directories
         assert "scripts" in result.existing_directories
         assert "launchers" in result.existing_directories
         assert "install" in result.existing_directories

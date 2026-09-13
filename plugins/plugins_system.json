@@ -1,0 +1,6 @@
+{
+  "entries": [
+    {"path": "system-plugins/gdrive_sync"},
+    {"path": "system-plugins/log_analyzer"}
+  ]
+}

@@ -108,7 +108,12 @@ Generate local development SSL certificates for `localhost`, `127.0.0.1`, and lo
 4. Add directory to user `PATH`.
 5. Register helper functions in PowerShell profiles (`$PROFILE`) and shell rc files (`~/.bashrc`, `~/.zshrc`).
 
-### Step 7: Configuration & Verification
+### Step 7: Initial Administrator User Setup
+Create or update the primary administrator user in `src/user_manager/users.db`:
+- Cross-platform command: `python scripts/create_initial_user.py`
+- Default fallback values: `admin@localhost` / `Admin` / `onela` (role: `admin`, `is_admin=1`, `is_email_verified=1`).
+
+### Step 8: Configuration & Verification
 1. Ensure `.env` is initialized (copy `.env.example` if `.env` does not exist).
 2. Save language and default settings into `config.json`.
 3. Verify importability of core packages: `fastapi`, `uvicorn`, `dotenv`, `pydantic`, `cryptography`, `aiohttp`, `platformdirs`.

@@ -55,7 +55,7 @@ class BasePlugin(abc.ABC):
     category: str = "general"
     enabled: bool = True
     is_system: bool = True
-    scope: str = "system"  # 'system' or 'user'
+    scope: str = "system"  # 'system', 'developer', or 'user'
 
     def __init__(self, ai_model: Any = None, config: Optional[Dict[str, Any]] = None) -> None:
         """Initialize the plugin instance.

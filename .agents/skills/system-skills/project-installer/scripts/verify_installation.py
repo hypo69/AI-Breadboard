@@ -54,7 +54,6 @@ class InstallationVerifier:
     """Validates full structural integrity and runtime readiness of AI Breadboard."""
 
     REQUIRED_DIRECTORIES: List[str] = [
-        "core",
         "scripts",
         "install",
         "launchers",

@@ -135,11 +135,17 @@ if (Test-Path $wiresharkScript) {
     & $wiresharkScript -InstallDir $InstallDir -Config $config -InstallLightVersion:$InstallLightVersion
 }
 
-# 13. Модуль верификации и финализации
+# 13. Модуль настройки учетной записи администратора
+$userScript = Join-Path $installedModulesDir "Install-User.ps1"
+if (Test-Path $userScript) {
+    & $userScript -InstallDir $InstallDir -PythonPath $PythonPath -Config $config
+}
+
+# 14. Модуль верификации и финализации
 $verifyScript = Join-Path $installedModulesDir "Install-Verify.ps1"
 & $verifyScript -InstallDir $InstallDir -PythonPath $PythonPath -Config $config -InstallLightVersion:$InstallLightVersion
 
-# 14. Модуль выбора и скачивания моделей
+# 15. Модуль выбора и скачивания моделей
 $modelsScript = Join-Path $installedModulesDir "Install-Models.ps1"
 & $modelsScript -InstallDir $InstallDir -Config $config -InstallLightVersion:$InstallLightVersion
 

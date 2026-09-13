@@ -1,0 +1,7 @@
+{
+  "entries": [
+    {"path": "developer-plugins/generate_rag_from_codebase"},
+    {"path": "developer-plugins/rag_cleaner"},
+    {"path": "developer-plugins/telegram_channel_rag"}
+  ]
+}

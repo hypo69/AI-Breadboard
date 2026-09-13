@@ -342,10 +342,56 @@ $trayScriptBlock = {
         } catch {}
     }
 
+    $openOrRestoreAppWindow = {
+        $profileDir = Join-Path $SharedProjectRoot "data\browser_profile"
+
+        $restored = $false
+        try {
+            $edgeProcs = Get-CimInstance Win32_Process -Filter "Name = 'msedge.exe'" -ErrorAction SilentlyContinue |
+                Where-Object { $_.CommandLine -and ($_.CommandLine -like "*$profileDir*" -or $_.CommandLine -like "*browser_profile*") }
+
+            if ($edgeProcs) {
+                foreach ($proc in $edgeProcs) {
+                    $p = Get-Process -Id $proc.ProcessId -ErrorAction SilentlyContinue
+                    if ($p -and $p.MainWindowHandle -ne [IntPtr]::Zero) {
+                        [AIBreadboard.TrayWin32]::ShowWindow($p.MainWindowHandle, 9) | Out-Null # SW_RESTORE
+                        [AIBreadboard.TrayWin32]::SetForegroundWindow($p.MainWindowHandle) | Out-Null
+                        $restored = $true
+                        break
+                    }
+                }
+            }
+        } catch {}
+
+        if (-not $restored) {
+            $edgePaths = @(
+                "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe",
+                "${env:ProgramFiles}\Microsoft\Edge\Application\msedge.exe",
+                "${env:LocalAppData}\Microsoft\Edge\Application\msedge.exe",
+                "${env:ProgramFiles}\Google\Chrome\Application\chrome.exe",
+                "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe",
+                "${env:LocalAppData}\Google\Chrome\Application\chrome.exe"
+            )
+            $edgeExe = $edgePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+            if ($edgeExe) {
+                $edgeArgs = @(
+                    "--app=$SharedUrl",
+                    "--user-data-dir=`"$profileDir`"",
+                    "--window-size=1280,850"
+                )
+                Start-Process -FilePath $edgeExe -ArgumentList ($edgeArgs -join " ")
+            } else {
+                try {
+                    [System.Diagnostics.Process]::Start((New-Object System.Diagnostics.ProcessStartInfo($SharedUrl) -Property @{ UseShellExecute = $true })) | Out-Null
+                } catch {}
+            }
+        }
+    }
+
     $contextMenu = New-Object System.Windows.Forms.ContextMenuStrip
 
     # Menu items
-    $itemWeb = $contextMenu.Items.Add("🌐 Open Web UI")
+    $itemWeb = $contextMenu.Items.Add("🌐 Open App Window")
     $itemWeb.Font = New-Object System.Drawing.Font($itemWeb.Font, [System.Drawing.FontStyle]::Bold)
     $itemToggle = $contextMenu.Items.Add("💻 Show / Hide Console")
     $contextMenu.Items.Add("-") | Out-Null
@@ -355,9 +401,7 @@ $trayScriptBlock = {
 
     # Handlers
     $itemWeb.Add_Click({
-        try {
-            [System.Diagnostics.Process]::Start((New-Object System.Diagnostics.ProcessStartInfo($SharedUrl) -Property @{ UseShellExecute = $true })) | Out-Null
-        } catch {}
+        & $openOrRestoreAppWindow
     })
 
     $itemToggle.Add_Click({
@@ -374,10 +418,7 @@ $trayScriptBlock = {
     })
 
     $notifyIcon.Add_DoubleClick({
-        if ($SharedHwnd -ne [IntPtr]::Zero) {
-            [AIBreadboard.TrayWin32]::ShowWindow($SharedHwnd, 9) | Out-Null # SW_RESTORE
-            [AIBreadboard.TrayWin32]::SetForegroundWindow($SharedHwnd) | Out-Null
-        }
+        & $openOrRestoreAppWindow
     })
 
     $itemAssist.Add_Click({

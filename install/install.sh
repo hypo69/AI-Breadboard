@@ -63,6 +63,8 @@ declare -A MESSAGES_EN=(
     [step_5_ok]="✓ SSL certificates found"
     [step_6]="[6/6] Final verification..."
     [step_6_ok]="✓ Environment ready"
+    [step_user]="Configuring default administrator account..."
+    [step_user_ok]="✓ Administrator account configured"
     [finish]="✅ Installation completed successfully!"
     [error]="✗ Error: %s"
 )
@@ -91,6 +93,8 @@ declare -A MESSAGES_RU=(
     [step_5_ok]="✓ SSL сертификаты найдены"
     [step_6]="[6/6] Финальная проверка..."
     [step_6_ok]="✓ Окружение готово к работе"
+    [step_user]="Настройка учетной записи администратора по умолчанию..."
+    [step_user_ok]="✓ Учетная запись администратора настроена"
     [finish]="✅ Установка завершена успешно!"
     [error]="✗ Ошибка: %s"
 )
@@ -119,6 +123,8 @@ declare -A MESSAGES_ES=(
     [step_5_ok]="✓ Certificados SSL encontrados"
     [step_6]="[6/6] Verificación final..."
     [step_6_ok]="✓ Entorno listo"
+    [step_user]="Configurando cuenta de administrador predeterminada..."
+    [step_user_ok]="✓ Cuenta de administrador configurada"
     [finish]="✅ ¡Instalación completada exitosamente!"
     [error]="✗ Error: %s"
 )
@@ -267,6 +273,20 @@ verify_environment() {
     return 0
 }
 
+# Функция настройки пользователя по умолчанию
+setup_initial_user() {
+    echo -e "${BLUE}$(msg step_user)${NC}"
+    local python_path="$VENV_DIR/bin/python"
+    local user_script="$INSTALL_DIR/scripts/create_initial_user.py"
+
+    if [ -f "$user_script" ]; then
+        if "$python_path" "$user_script" --non-interactive 2>/dev/null; then
+            echo -e "${GREEN}$(msg step_user_ok)${NC}"
+        fi
+    fi
+    return 0
+}
+
 # Главная функция
 main() {
     echo -e "${BLUE}$(msg welcome)${NC}"
@@ -302,6 +322,9 @@ main() {
     echo ""
     
     install_dependencies "$profile" || return 1
+    echo ""
+
+    setup_initial_user || true
     echo ""
     
     verify_environment || return 1

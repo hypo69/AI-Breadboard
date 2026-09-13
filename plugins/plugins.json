@@ -1,0 +1,7 @@
+{
+  "categories": {
+    "system": "plugins/plugins_system.json",
+    "developer": "plugins/plugins_developer.json",
+    "user": "plugins/plugins_user.json"
+  }
+}

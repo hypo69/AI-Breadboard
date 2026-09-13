@@ -1,0 +1,13 @@
+{
+  "entries": [
+    {"path": "developer-skills/db-inspector"},
+    {"path": "developer-skills/file-saver"},
+    {"path": "developer-skills/log-analyzer"},
+    {"path": "developer-skills/media-data-collector"},
+    {"path": "developer-skills/pdf-exporter"},
+    {"path": "developer-skills/rag-cleaner"},
+    {"path": "developer-skills/rag-search-manager"},
+    {"path": "developer-skills/storage-tool"},
+    {"path": "developer-skills/web-chat-cli"}
+  ]
+}

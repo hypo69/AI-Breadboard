@@ -254,6 +254,39 @@ def register_pages(app: FastAPI) -> None:
         
         return FileResponse(file_path, media_type=media_type)
 
+    # === Applications Hub (/apps) ===
+
+    @app.get('/apps', response_class=HTMLResponse)
+    async def apps_interface(request: Request):
+        """Display the dedicated Applications Hub page (/apps)."""
+        auth_response = check_admin_auth(request)
+        if auth_response:
+            return auth_response
+        content = read_text_file(webinterface_dir / 'apps' / 'index.html')
+        if not content:
+            raise HTTPException(status_code=500, detail='Failed to read apps index page')
+        return HTMLResponse(content=content)
+
+    @app.get('/apps/{full_path:path}', response_class=HTMLResponse)
+    async def apps_static(full_path: str, request: Request):
+        """Serving apps portal static files."""
+        auth_response = check_admin_auth(request)
+        if auth_response:
+            return auth_response
+        file_path = webinterface_dir / 'apps' / full_path
+        if not file_path.exists() or not file_path.is_file():
+            raise HTTPException(status_code=404, detail='File not found')
+        media_type = "text/plain"
+        if full_path.endswith('.css'):
+            media_type = "text/css"
+        elif full_path.endswith('.js'):
+            media_type = "application/javascript"
+        elif full_path.endswith('.html'):
+            media_type = "text/html"
+        elif full_path.endswith('.json'):
+            media_type = "application/json"
+        return FileResponse(file_path, media_type=media_type)
+
     # === Admin Pages ===
     
     @app.get('/admin')

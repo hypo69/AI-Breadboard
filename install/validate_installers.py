@@ -73,6 +73,7 @@ class InstallerValidator:
             "create_venv",
             "upgrade_pip",
             "install_dependencies",
+            "setup_initial_user",
             "verify_environment",
             "run"
         ]
@@ -128,6 +129,7 @@ class InstallerValidator:
             "create_venv",
             "upgrade_pip",
             "install_dependencies",
+            "setup_initial_user",
             "verify_environment",
             "main"
         ]
