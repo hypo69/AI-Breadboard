@@ -1,7 +1,6 @@
 site_name: AI-Breadboard
 site_description: Interactive AI Model Testbench & Breadboard
 site_url: !ENV READTHEDOCS_CANONICAL_URL
-docs_dir: docs
 repo_url: https://github.com/hypo69/AI-Breadboard
 edit_uri: edit/master/docs/
 
