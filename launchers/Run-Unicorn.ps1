@@ -138,6 +138,7 @@ $workers    = 1
 $useSsl     = $false
 $reload     = $false
 $clientUrl  = $null
+$useCloudflared = $false
 
 if (Test-Path $configPath) {
     $cfg     = Get-Content $configPath | ConvertFrom-Json
@@ -146,6 +147,9 @@ if (Test-Path $configPath) {
     $useSsl  = $cfg.server.use_ssl
     $mode    = $cfg.server.mode.ToLower()
     $debug   = if ($cfg.server.debug) { "true" } else { "false" }
+    if ($cfg.server.PSObject.Properties['use_cloudflared']) {
+        $useCloudflared = [bool]$cfg.server.use_cloudflared
+    }
     if ($cfg.server.PSObject.Properties['client_url'] -and $cfg.server.client_url) {
         $clientUrl = [string]$cfg.server.client_url
     } elseif ($cfg.server.PSObject.Properties['user_domain'] -and $cfg.server.user_domain) {
@@ -193,6 +197,7 @@ if (Test-Path $envFile) {
             if ($key -eq "ENABLE_OAUTH") { $oauthEnabled = $val -in ("true","1","yes") }
             if ($key -in ("UNICORN_RELOAD", "RELOAD")) { $reload = $val -in ("true","1","yes") }
             if ($key -in ("UNICORN_WORKERS", "WORKERS")) { $workers = [int]$val }
+            if ($key -eq "USE_CLOUDFLARED") { $useCloudflared = $val -in ("true","1","yes") }
             if ($key -eq "CLIENT_URL" -and $val) { $clientUrl = $val }
             if ($key -eq "USER_DOMAIN" -and $val -and -not $clientUrl) { $clientUrl = "https://$val" }
         }
@@ -332,12 +337,15 @@ $lanIp = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
     Select-Object -ExpandProperty IPAddress -First 1)
 
 $browserProto = if ($useSsl) { "https" } else { "http" }
+$browserHost = if ($host_ -eq "0.0.0.0") { "localhost" } else { $host_ }
+$localAdminUrl = "${browserProto}://${browserHost}:${port}/admin"
+
 if ($OpenUrl) {
     $browserUrl = $OpenUrl
-} elseif ($clientUrl) {
+} elseif ($useCloudflared -and $clientUrl) {
     $browserUrl = "$($clientUrl.TrimEnd('/'))/admin"
 } else {
-    $browserUrl = "${browserProto}://localhost:${port}/admin"
+    $browserUrl = $localAdminUrl
 }
 
 Start-Job -ScriptBlock {

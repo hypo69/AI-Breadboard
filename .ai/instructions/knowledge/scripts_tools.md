@@ -29,7 +29,9 @@ py manage_tools.py <group> [<subcommand>] [arguments...]
 | `rag` | `rebuild`, `reindex`, `validate`, `status` | RAG vector index building, maintenance, and status inspection |
 | `knowledge` | `extract`, `add`, `init` | Knowledge base extraction and ingestion from documentation & chats |
 | `db` | `status`, `migrate`, `create` | SQLite database schema migrations (e.g. `users.db`) |
-| `docs` | *(subcommands)* | Documentation generation, validation, and updates |
+| `plugins` | `list`, `create` | System & user plugins management and scaffolding |
+| `network` | `status`, `interfaces`, `analyze` | Network traffic capture and TShark packet analysis |
+| `docs` | `generate`, `update`, `pdf` | Documentation generation, validation, and PDF export (`code.pdf`, `docs.pdf`) |
 | `assist` | `start`, `stop`, `status`, `providers`, `restart` | Assistant background service and provider lifecycle control |
 
 ---
@@ -122,7 +124,61 @@ py manage_tools.py db create users "migrate_user_storage" --py
 
 ---
 
-## 5. Assistant Daemon & Service Management (`manage_tools.py assist`)
+## 5. System & User Plugins (`manage_tools.py plugins`)
+
+Manages and scaffolds plugins within the project structure.
+
+### Commands
+
+```powershell
+# List all installed plugins with status and descriptions
+py manage_tools.py plugins list
+
+# Scaffold a new plugin
+py manage_tools.py plugins create custom_plugin --title "Custom Plugin" --description "Plugin description" --category "tools"
+```
+
+---
+
+## 6. Network Analysis (`manage_tools.py network`)
+
+Network packet inspection and TShark (Wireshark) integration.
+
+### Commands
+
+```powershell
+# Check TShark binary availability
+py manage_tools.py network status
+
+# List network capture interfaces
+py manage_tools.py network interfaces
+
+# Analyze PCAP traffic file
+py manage_tools.py network analyze --file capture.pcap --filter "http or tls"
+```
+
+---
+
+## 7. Documentation Management (`manage_tools.py docs`)
+
+Automated API documentation generation, validation checks, and PDF book exporting.
+
+### Commands
+
+```powershell
+# Generate and synchronize API & scripts documentation
+py manage_tools.py docs generate
+
+# Validate documentation on modified files
+py manage_tools.py docs update
+
+# Export project source code and docs to PDF books (code.pdf, docs.pdf)
+py manage_tools.py docs pdf --target all
+```
+
+---
+
+## 8. Assistant Daemon & Service Management (`manage_tools.py assist`)
 
 Forwards commands directly to `scripts/dev/assist_cli.py` for managing background daemons, servers, and provider statuses.
 

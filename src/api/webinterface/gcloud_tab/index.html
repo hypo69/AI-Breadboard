@@ -1,0 +1,144 @@
+<!-- Google Cloud Monitor Application Tab -->
+<style>
+  .gcloud-container {
+    padding: 1rem;
+  }
+  .gcloud-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .gcloud-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+  }
+  .gcloud-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #f8fafc;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .gcloud-panel {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .gcloud-panel-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .gcloud-log-terminal {
+    background: #020617;
+    color: #cbd5e1;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    padding: 0.75rem;
+    border-radius: 6px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+</style>
+
+<div class="gcloud-container">
+  <!-- Header Alert & Status -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div>
+      <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
+        <span class="fs-4">☁️</span> Google Cloud Monitor & Observability
+      </h5>
+      <p class="mb-0 small text-light" style="color: #cbd5e1 !important;">
+        Централизованный мониторинг Google Cloud: Cloud Logging, метрики Cloud Monitoring, аудит безопасности IAM и AI-диагностика.
+      </p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2" id="gcloud-status-badge">
+        ● GCP Подключен
+      </span>
+      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-gcloud-refresh">
+        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+      </button>
+      <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-gcloud-config">
+        <i class="bi bi-gear-fill me-1"></i> Настройки (config.json)
+      </button>
+    </div>
+  </div>
+
+  <!-- Top Metrics Bar -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-3 col-sm-6">
+      <div class="gcloud-card">
+        <span class="gcloud-label">Проект GCP</span>
+        <span class="gcloud-value text-info text-truncate" id="gcloud-project-id">-</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="gcloud-card">
+        <span class="gcloud-label">Тип авторизации</span>
+        <span class="gcloud-value text-light" style="font-size: 1.05rem;" id="gcloud-auth-type">-</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="gcloud-card">
+        <span class="gcloud-label">Служебный аккаунт</span>
+        <span class="gcloud-value text-secondary text-truncate" style="font-size: 0.9rem;" id="gcloud-client-email">-</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="gcloud-card">
+        <span class="gcloud-label">Здоровье инфраструктуры</span>
+        <span class="gcloud-value text-success" id="gcloud-health-score">100/100</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Panels Grid -->
+  <div class="row g-3">
+    <!-- Cloud Logging Terminal Panel -->
+    <div class="col-lg-7">
+      <div class="gcloud-panel h-100">
+        <div class="gcloud-panel-header">
+          <span>📜 Cloud Logging (Последние события)</span>
+          <span class="badge bg-secondary" id="gcloud-logs-count-badge">0 строк</span>
+        </div>
+        <div class="p-2">
+          <div class="gcloud-log-terminal" id="gcloud-log-terminal-output">
+            Загрузка журналов Cloud Logging...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Diagnostics & Recommendations Panel -->
+    <div class="col-lg-5">
+      <div class="gcloud-panel h-100">
+        <div class="gcloud-panel-header">
+          <span>🤖 AI-Диагностика и рекомендации</span>
+          <span class="badge bg-info text-dark">Gemini Diagnostics</span>
+        </div>
+        <div class="p-3">
+          <h6 class="fw-bold text-info mb-1" id="gcloud-diag-summary-title">Анализ телеметрии...</h6>
+          <p class="small text-light mb-3" id="gcloud-diag-summary-desc">Загрузка диагностического заключения...</p>
+          <div class="fw-semibold text-secondary small text-uppercase mb-2">Рекомендованные действия:</div>
+          <ul class="list-group list-group-flush small" id="gcloud-recommendations-list">
+            <li class="list-group-item bg-transparent text-light border-secondary py-1 px-0">• Ожидание данных телеметрии...</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

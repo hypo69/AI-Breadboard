@@ -6,9 +6,28 @@ The entire `src/secrets/` directory is listed in `.gitignore` (only this `README
 
 ---
 
-## Required Files
+## Directory Structure
 
-Place the following files here according to the instructions below. Do not rename them unless you update the corresponding loader in `src/secrets/`.
+```text
+src/secrets/
+├── gemini_keys.json         # Pool of Google Gemini API keys
+├── google_ouath_files/      # Google OAuth client secrets & credentials
+│   └── <user>_secret.json   # OAuth 2.0 client credentials for user (e.g. davidka_secret.json)
+└── google_oauth_tokens/     # Saved Google OAuth user tokens
+    └── <user>_token.json    # Cached user authentication tokens (e.g. davidka_token.json)
+```
+
+---
+
+## File Naming Conventions
+
+- **Credentials / Secrets:** Saved in `src/secrets/google_ouath_files/<user>_secret.json` where `<user>` is the username received from input.
+- **OAuth Tokens:** Saved in `src/secrets/google_oauth_tokens/<user>_token.json` where `<user>` is the username received from input.
+- **Gemini Keys:** Maintained in `src/secrets/gemini_keys.json`.
+
+---
+
+## Required Files
 
 ### `gemini_keys.json`
 Pool of Google Gemini API keys for automatic rotation.
@@ -20,28 +39,25 @@ Pool of Google Gemini API keys for automatic rotation.
 ]
 ```
 
-### `google_accounts.json`
-Google OAuth account pool (optional, used for Drive sync and Google Workspace integration).
+### `google_ouath_files/<user>_secret.json`
+Google OAuth 2.0 client credentials (downloaded from Google Cloud Console or provided via setup).
 
 ```json
-[
-  {
-    "account": "user@gmail.com",
-    "token": "ya29...",
-    "refresh_token": "1//...",
-    "token_uri": "https://oauth2.googleapis.com/token",
+{
+  "installed": {
     "client_id": "...",
-    "client_secret": "..."
+    "project_id": "...",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_secret": "...",
+    "redirect_uris": ["http://localhost"]
   }
-]
+}
 ```
 
-### `client_secret_*.json`
-Google OAuth 2.0 client credentials (downloaded from Google Cloud Console).
-
-1. Go to [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials)
-2. Create or download an existing **OAuth 2.0 Client ID** (type: Web application)
-3. Place the downloaded JSON file here as-is (filename starts with `client_secret_`)
+### `google_oauth_tokens/<user>_token.json`
+OAuth 2.0 tokens (access token, refresh token, expiry) generated during authorization.
 
 ---
 

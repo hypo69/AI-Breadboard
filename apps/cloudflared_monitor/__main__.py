@@ -46,6 +46,32 @@ def _load_config() -> SimpleNamespace:
     return j_loads_ns(config_path) if config_path.exists() else SimpleNamespace()
 
 
+def _get_server_mode(config: SimpleNamespace) -> str:
+    """Extract server mode ('dedicated' or 'shared') from configuration.
+
+    Args:
+        config: Application configuration namespace.
+
+    Returns:
+        str: 'dedicated' or 'shared'.
+    """
+    server_val = getattr(config, "server", None)
+    if isinstance(server_val, str):
+        return server_val.strip().lower()
+    if isinstance(server_val, SimpleNamespace):
+        dedicated_val = getattr(server_val, "dedicated", None)
+        if dedicated_val is not None:
+            return "dedicated" if dedicated_val in (True, "true", "True", 1) else "shared"
+        mode = getattr(server_val, "mode", getattr(server_val, "type", "dedicated"))
+        return str(mode).strip().lower()
+    if isinstance(server_val, dict):
+        if "dedicated" in server_val:
+            return "dedicated" if server_val["dedicated"] in (True, "true", "True", 1) else "shared"
+        mode = server_val.get("mode") or server_val.get("type", "dedicated")
+        return str(mode).strip().lower()
+    return "dedicated"
+
+
 def _run_standalone_server(
     host: str = "127.0.0.1",
     port: int = 8104,
@@ -286,10 +312,15 @@ def main() -> None:
 
     if args.mode == "server":
         server_cfg = getattr(config, "server", SimpleNamespace())
+        server_mode = _get_server_mode(config)
         effective_host = args.host if args.host != "127.0.0.1" else getattr(server_cfg, "host", "127.0.0.1")
         effective_port = args.port if args.port > 0 else getattr(server_cfg, "port", 8104)
         effective_reload = args.reload if args.reload else False
         effective_workers = args.workers if args.workers != 1 else getattr(server_cfg, "workers", 1)
+
+        if server_mode == "shared" and args.port == 0:
+            print("[Cloudflared Monitor] App configured in 'shared' server mode.")
+            print(f"[Cloudflared Monitor] API endpoints are routed via the main server (http://{effective_host}:8000).")
 
         _run_standalone_server(
             host=effective_host,

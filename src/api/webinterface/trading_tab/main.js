@@ -244,6 +244,8 @@
       const refreshBtn = document.getElementById('btn-refresh-trading');
       const killBtn = document.getElementById('btn-trigger-kill-switch');
 
+      const configBtn = document.getElementById('btn-trading-config');
+
       if (buyBtn) buyBtn.onclick = () => placeOrder('BUY');
       if (sellBtn) sellBtn.onclick = () => placeOrder('SELL');
       if (refreshBtn) refreshBtn.onclick = () => {
@@ -252,6 +254,11 @@
         fetchOrdersList();
       };
       if (killBtn) killBtn.onclick = triggerKillSwitch;
+      if (configBtn) configBtn.onclick = () => {
+        if (typeof window.openAppConfigModal === 'function') {
+          window.openAppConfigModal('trading_terminal', 'Exchange Trading Terminal');
+        }
+      };
 
       isTradingInitialized = true;
     }

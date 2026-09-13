@@ -36,14 +36,17 @@ from src.ai.agents.tools import (
 
 @pytest.fixture(autouse=True)
 def mock_accounts_storage(tmp_path, monkeypatch):
-    """Isolate accounts JSON and tokens dir to temp directory."""
+    """Isolate accounts JSON, oauth files, and tokens dir to temp directory."""
     temp_secrets = tmp_path / "test_secrets"
-    temp_tokens = temp_secrets / "test_tokens"
+    temp_oauth_files = temp_secrets / "google_ouath_files"
+    temp_tokens = temp_secrets / "google_oauth_tokens"
     temp_accounts = temp_secrets / "google_accounts.json"
     temp_secrets.mkdir(parents=True, exist_ok=True)
+    temp_oauth_files.mkdir(parents=True, exist_ok=True)
     temp_tokens.mkdir(parents=True, exist_ok=True)
 
     monkeypatch.setattr("src.ai.google_accounts_state._SECRETS_DIR", temp_secrets)
+    monkeypatch.setattr("src.ai.google_accounts_state._OAUTH_FILES_DIR", temp_oauth_files)
     monkeypatch.setattr("src.ai.google_accounts_state._TOKENS_DIR", temp_tokens)
     monkeypatch.setattr("src.ai.google_accounts_state._ACCOUNTS_FILE", temp_accounts)
 
@@ -119,6 +122,24 @@ class TestGoogleAccountsPoolManagement:
         deleted = delete_google_account("temp_acc")
         assert deleted is True
         assert len(list_google_accounts()) == 0
+
+    def test_bootstrap_from_user_files(self, tmp_path):
+        """Test auto-discovery of accounts from <user>_secret.json in google_ouath_files."""
+        from src.ai.google_accounts_state import _OAUTH_FILES_DIR, _TOKENS_DIR, _bootstrap_from_existing_files
+
+        # Simulate user secret file davidka_secret.json
+        sec_file = _OAUTH_FILES_DIR / "davidka_secret.json"
+        sec_file.write_text(json.dumps({"installed": {"client_id": "test_id"}}), encoding="utf-8")
+
+        # Simulate token file davidka_token.json
+        tok_file = _TOKENS_DIR / "davidka_token.json"
+        tok_file.write_text(json.dumps({"token": "ya29.test"}), encoding="utf-8")
+
+        bootstrapped = _bootstrap_from_existing_files()
+        assert "davidka" in bootstrapped["accounts"]
+        assert bootstrapped["accounts"]["davidka"]["name"] == "davidka"
+        assert "davidka_secret.json" in bootstrapped["accounts"]["davidka"]["credentials_file"]
+        assert "davidka_token.json" in bootstrapped["accounts"]["davidka"]["token_file"]
 
 
 class TestToolsWithAccountName:

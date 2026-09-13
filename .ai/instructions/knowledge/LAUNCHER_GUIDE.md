@@ -40,6 +40,7 @@
 | `launchers/Run-GeminiCli.ps1` | Gemini CLI | Google Gemini CLI агент | `-Action check\|install\|chat\|version`, `-Prompt "..."` |
 | `launchers/Run-Agy.ps1` | Antigravity AGY | Google Antigravity CLI агент | `-Action check\|chat\|models\|update\|version`, `-Prompt "..."` |
 | `launchers/Run-Terminals.ps1` | Мульти-терминалы | Сплит-панели Windows Terminal | `-Preset breadboard\|trading\|custom`, `-Layout grid\|tabs\|windows` |
+| `launchers/Run-GCloudMonitor.ps1` | Google Cloud Monitor | Standalone FastAPI микросервис & TUI дашборд | `-Port 8106`, `-HostIP 127.0.0.1`, `-TUI` |
 | `launchers/run_tests.ps1` | Pytest Runner | Запуск Moduleных и интеграционных тестов | `-Coverage`, `-Verbose`, `-Markers` |
 
 ---
@@ -167,6 +168,17 @@ switch ($Action) {
 | `install.cmd` | Установка (CMD вариант) |
 | `install_ssl_cert.ps1` | Генерация SSL-сертификата |
 | `launchers/run_tests.ps1` | Запуск тестов pytest |
+
+---
+
+## 🌐 Маршрутизация URL: Cloudflare Tunnel vs Localhost
+
+В скриптах `run.ps1` и `launchers/Run-Unicorn.ps1` целевой URL для встроенного окна приложения (`msedge.exe --app=...`) определяется на основе настроек туннелирования:
+
+- **Туннель включён (`"use_cloudflared": true`):**
+  Если задан `client_url` или `user_domain` (например, `https://kino.davidka.net`), окно приложения направляется на внешний URL через туннель Cloudflare.
+- **Туннель выключен (`"use_cloudflared": false`):**
+  Сервер поднимается на интерфейсе `0.0.0.0:8000`, окно приложения открывает локальный адрес `localhost:8000/admin` (или `${proto}://localhost:${port}/admin`), а процессы `cloudflared` и сопутствующий микросервис `Cloudflared Monitor` (8104) не запускаются.
 
 ---
 

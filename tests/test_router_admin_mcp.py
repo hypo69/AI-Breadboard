@@ -18,7 +18,8 @@ from fastapi.testclient import TestClient
 from header import __root__
 from main import app
 
-client = TestClient(app)
+client = TestClient(app, cookies={"admin_password_verified": "true"})
+
 
 
 class TestAdminMCPAPI:

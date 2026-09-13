@@ -1,0 +1,149 @@
+<!-- Cloudflare Tunnel Monitor Application Tab -->
+<style>
+  .cf-container {
+    padding: 1rem;
+  }
+  .cf-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .cf-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+  }
+  .cf-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #f8fafc;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .cf-panel {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .cf-panel-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .cf-log-terminal {
+    background: #020617;
+    color: #cbd5e1;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    padding: 0.75rem;
+    border-radius: 6px;
+    max-height: 380px;
+    overflow-y: auto;
+  }
+</style>
+
+<div class="cf-container">
+  <!-- Header Alert & Status -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div>
+      <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
+        <span class="fs-4">☁️</span> Cloudflare Tunnel Monitor & Diagnostics
+      </h5>
+      <p class="mb-0 small text-light" style="color: #cbd5e1 !important;">
+        Управление службой Cloudflare Tunnel, мониторинг доступности публичного URL, парсинг логов и AI-диагностика здоровья туннеля.
+      </p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2" id="cf-daemon-badge">
+        ● Туннель активен
+      </span>
+      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-cf-refresh">
+        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+      </button>
+      <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-cf-config">
+        <i class="bi bi-gear-fill me-1"></i> Настройки (config.json)
+      </button>
+      <button class="btn btn-sm btn-primary rounded-pill px-3" id="btn-cf-test-endpoint">
+        <i class="bi bi-broadcast me-1"></i> Проверить Ingress
+      </button>
+    </div>
+  </div>
+
+  <!-- Top Metrics Bar -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-3 col-sm-6">
+      <div class="cf-card">
+        <span class="cf-label">Публичный Ingress URL</span>
+        <span class="cf-value text-info text-truncate" id="cf-ingress-url" style="font-size: 0.95rem;">https://kino.davidka.net</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="cf-card">
+        <span class="cf-label">Доступность эндпоинта</span>
+        <span class="cf-value text-success" id="cf-endpoint-status">200 OK (32 ms)</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="cf-card">
+        <span class="cf-label">CPU / Память демона</span>
+        <span class="cf-value" id="cf-process-usage">0.5% / 45 MB</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="cf-card">
+        <span class="cf-label">Health Score (Здоровье)</span>
+        <span class="cf-value text-success" id="cf-health-score">100/100 (Optimal)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Tunnel Logs Tail Panel -->
+    <div class="col-lg-7">
+      <div class="cf-panel h-100">
+        <div class="cf-panel-header">
+          <span><i class="bi bi-terminal me-1"></i> Журнал cloudflared.log</span>
+          <span class="badge bg-secondary" id="cf-log-count-badge">50 строк</span>
+        </div>
+        <div class="p-3">
+          <div class="cf-log-terminal" id="cf-log-terminal-output">
+            Загрузка журналов...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Diagnostics & Recommendations Panel -->
+    <div class="col-lg-5">
+      <div class="cf-panel h-100">
+        <div class="cf-panel-header">
+          <span><i class="bi bi-heart-pulse-fill text-danger me-1"></i> Диагностика & Рекомендации</span>
+          <button class="btn btn-sm btn-outline-info py-0 px-2" id="btn-cf-run-diagnostics">Диагностировать</button>
+        </div>
+        <div class="p-3">
+          <div class="card bg-dark border-secondary p-3 mb-3">
+            <h6 class="fw-bold text-info mb-1" id="cf-diag-summary-title">Статус оптимален</h6>
+            <p class="small text-muted mb-0" id="cf-diag-summary-desc">Все туннельные соединения стабильны, аномалий не обнаружено.</p>
+          </div>
+          <h6 class="small text-uppercase text-muted fw-bold mb-2">Рекомендации:</h6>
+          <ul class="list-group list-group-flush bg-transparent small" id="cf-recommendations-list">
+            <li class="list-group-item bg-transparent text-light border-secondary py-1 px-0">• Поддерживайте актуальную версию cloudflared</li>
+            <li class="list-group-item bg-transparent text-light border-secondary py-1 px-0">• Проверяйте сертификат SSL домена</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

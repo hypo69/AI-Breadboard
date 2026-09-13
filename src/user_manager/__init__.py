@@ -363,11 +363,12 @@ class UserManager:
                     (perm_name, perm_desc, perm_cat)
                 )
 
-            # Insert default administrator (ID: 1) for local bypass
+            # Insert default administrator (ID: 1) for local bypass and standard login
+            default_admin_pw = self.hash_password('onela')
             conn.execute("""
-                INSERT OR IGNORE INTO users (id, email, name, is_admin, role)
-                VALUES (1, 'admin@localhost', 'Admin', 1, 'admin')
-            """)
+                INSERT OR IGNORE INTO users (id, email, name, is_admin, role, password_hash, is_email_verified)
+                VALUES (1, 'admin@localhost', 'Admin', 1, 'admin', ?, 1)
+            """, (default_admin_pw,))
 
             # Trigger for automatic user workspace cleanup on deletion
             conn.execute("""

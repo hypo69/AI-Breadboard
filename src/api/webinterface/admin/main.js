@@ -333,6 +333,21 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-system-inspector' && typeof window.initSystemInspectorTab === 'function') {
     console.log('[AdminInterface] Switching to system inspector tab...');
     window.initSystemInspectorTab();
+  } else if (cleanId === 'tab-windows-admin' && typeof window.initWindowsAdminTab === 'function') {
+    console.log('[AdminInterface] Switching to windows admin tab...');
+    window.initWindowsAdminTab();
+  } else if (cleanId === 'tab-cloudflared' && typeof window.initCloudflaredTab === 'function') {
+    console.log('[AdminInterface] Switching to cloudflared tab...');
+    window.initCloudflaredTab();
+  } else if (cleanId === 'tab-user-assistant' && typeof window.initUserAssistantTab === 'function') {
+    console.log('[AdminInterface] Switching to user assistant tab...');
+    window.initUserAssistantTab();
+  } else if (cleanId === 'tab-gcloud' && typeof window.initGCloudTab === 'function') {
+    console.log('[AdminInterface] Switching to gcloud tab...');
+    window.initGCloudTab();
+  } else if (cleanId === 'tab-website-monitor' && typeof window.initWebsiteMonitorTab === 'function') {
+    console.log('[AdminInterface] Switching to website monitor tab...');
+    window.initWebsiteMonitorTab();
   } else if (cleanId === 'tab-help' && typeof window.initHelpTab === 'function') {
     console.log('[AdminInterface] Switching to help tab...');
     window.initHelpTab();
@@ -528,6 +543,11 @@ async function initInterface() {
     loadTabContent('trading', `/html/trading_tab/index.html?v=${cb}`, `/html/trading_tab/main.js?v=${cb}`),
     loadTabContent('network', `/html/network_tab/index.html?v=${cb}`, `/html/network_tab/main.js?v=${cb}`),
     loadTabContent('system-inspector', `/html/system_inspector_tab/index.html?v=${cb}`, `/html/system_inspector_tab/main.js?v=${cb}`),
+    loadTabContent('windows-admin', `/html/windows_admin_tab/index.html?v=${cb}`, `/html/windows_admin_tab/main.js?v=${cb}`),
+    loadTabContent('cloudflared', `/html/cloudflared_tab/index.html?v=${cb}`, `/html/cloudflared_tab/main.js?v=${cb}`),
+    loadTabContent('user-assistant', `/html/user_assistant_tab/index.html?v=${cb}`, `/html/user_assistant_tab/main.js?v=${cb}`),
+    loadTabContent('gcloud', `/html/gcloud_tab/index.html?v=${cb}`, `/html/gcloud_tab/main.js?v=${cb}`),
+    loadTabContent('website-monitor', `/html/website_monitor_tab/index.html?v=${cb}`, `/html/website_monitor_tab/main.js?v=${cb}`),
     loadTabContent('logs', `/html/logs/index.html?v=${cb}`, `/html/logs/main.js?v=${cb}`),
     loadTabContent('help', `/html/help/index.html?v=${cb}`, `/html/help/main.js?v=${cb}`),
   ]);

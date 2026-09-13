@@ -125,6 +125,49 @@ $env:ASSIST_DIR = $scriptDir
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
+function Get-AppServerMode {
+    <#
+    .SYNOPSIS
+        Определяет режим сервера аппликации (dedicated / shared) из src/apps/<name>/config.json или apps/<name>/config.json.
+    #>
+    param (
+        [string]$AppName,
+        [string]$BaseDir = $scriptDir
+    )
+    $candidatePaths = @(
+        (Join-Path $BaseDir "src\apps\$AppName\config.json"),
+        (Join-Path $BaseDir "apps\$AppName\config.json")
+    )
+    foreach ($path in $candidatePaths) {
+        if (Test-Path $path) {
+            try {
+                $raw = Get-Content $path -Raw -Encoding UTF8 | ConvertFrom-Json
+                if ($raw.server) {
+                    if ($raw.server.PSObject.Properties['dedicated'] -ne $null) {
+                        if ($raw.server.dedicated -eq $true -or $raw.server.dedicated -eq 'true') {
+                            return "dedicated"
+                        } else {
+                            return "shared"
+                        }
+                    }
+                    if ($raw.server -is [string]) {
+                        return $raw.server.Trim().ToLower()
+                    }
+                    if ($raw.server.mode) {
+                        return $raw.server.mode.ToString().Trim().ToLower()
+                    }
+                    if ($raw.server.type) {
+                        return $raw.server.type.ToString().Trim().ToLower()
+                    }
+                }
+            } catch {
+                # Fallback to dedicated on parse error
+            }
+        }
+    }
+    return "dedicated"
+}
+
 # ============================================================================
 # STAGE 1 — ОБРАБОТКА ПАРАМЕТРОВ И СПРАВКИ
 # ----------------------------------------------------------------------------
@@ -658,7 +701,7 @@ if (-not $hasApiKey) {
 $proto = if ($useSsl) { "https" } else { "http" }
 $browserHost = if ($host_ -eq "0.0.0.0") { "localhost" } else { $host_ }
 $localUrl = "${proto}://${browserHost}:${port}/admin"
-$openUrl = if ($clientUrl) { "$($clientUrl.TrimEnd('/'))/admin" } else { $localUrl }
+$openUrl = if ($useCloudflared -and $clientUrl) { "$($clientUrl.TrimEnd('/'))/admin" } else { $localUrl }
 
 # Вывод параметров запуска (без задержки для автозапуска)
 if (-not $autoLaunchEnabled) {
@@ -673,19 +716,33 @@ Write-Host "  • Локальный URL:   $localUrl" -ForegroundColor Green
 if ($lanIp -and $host_ -eq "0.0.0.0") {
     Write-Host "  • Сетевой URL:     ${proto}://${lanIp}:${port}/admin" -ForegroundColor Yellow
 }
-if ($clientUrl) {
+if ($useCloudflared -and $clientUrl) {
     Write-Host "  • URL в браузере:  $openUrl" -ForegroundColor Cyan
+} else {
+    Write-Host "  • URL в браузере:  $localUrl" -ForegroundColor Cyan
 }
 Write-Host "  • AI Foundry:      $(if ($useFoundry) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
 Write-Host "  • Ollama:          $(if ($useOllama) {'ВКЛЮЧЕНА (localhost:11434)'} else {'ВЫКЛЮЧЕНА'})" -ForegroundColor White
 Write-Host "  • Google OAuth:    $(if ($enableOAuthVal) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН (по умолчанию)'})" -ForegroundColor White
 Write-Host "  • Telegram Bot:    $(if ($enableTelegramBotVal) {'ВКЛЮЧЁН (по умолчанию)'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
 Write-Host "  • Apps / Microservices: $(if ($enableAppsVal) {'ВКЛЮЧЕНЫ (все)'} else {'НАСТРОЕНЫ ИНДИВИДУАЛЬНО'})" -ForegroundColor White
-if ($enableWindowsAdminVal -or $enableAppsVal) { Write-Host "    - Windows Sysadmin:   http://localhost:8100" -ForegroundColor DarkCyan }
-if ($enableNetworkTerminalVal -or $enableAppsVal) { Write-Host "    - Network Terminal:   http://localhost:8101" -ForegroundColor DarkCyan }
-if ($enableSystemInspectorVal -or $enableAppsVal) { Write-Host "    - System Inspector:   http://localhost:8102" -ForegroundColor DarkCyan }
-if ($enableTradingTerminalVal -or $enableAppsVal) { Write-Host "    - Trading Terminal:   http://localhost:8103" -ForegroundColor DarkCyan }
-if ($enableCloudflaredMonitorVal -or $enableAppsVal) { Write-Host "    - Cloudflared Monitor: http://localhost:8104" -ForegroundColor DarkCyan }
+$appsOverviewList = @(
+    @{ Name = "Windows Sysadmin";   App = "windows_sysadmin";    Port = 8100; Enabled = ($enableWindowsAdminVal -or $enableAppsVal) },
+    @{ Name = "Network Terminal";   App = "network_terminal";    Port = 8101; Enabled = ($enableNetworkTerminalVal -or $enableAppsVal) },
+    @{ Name = "System Inspector";   App = "system_inspector";    Port = 8102; Enabled = ($enableSystemInspectorVal -or $enableAppsVal) },
+    @{ Name = "Trading Terminal";   App = "trading_terminal";    Port = 8103; Enabled = ($enableTradingTerminalVal -or $enableAppsVal) },
+    @{ Name = "Cloudflared Monitor"; App = "cloudflared_monitor"; Port = 8104; Enabled = ($useCloudflared -and ($enableCloudflaredMonitorVal -or $enableAppsVal)) }
+)
+foreach ($appItem in $appsOverviewList) {
+    if ($appItem.Enabled) {
+        $appMode = Get-AppServerMode $appItem.App
+        if ($appMode -eq "dedicated") {
+            Write-Host "    - $($appItem.Name) (dedicated): http://localhost:$($appItem.Port)" -ForegroundColor DarkCyan
+        } else {
+            Write-Host "    - $($appItem.Name) (shared):    http://localhost:$port (через основной сервер)" -ForegroundColor DarkGray
+        }
+    }
+}
 Write-Host "  • Assist Terminal: $(if ($enableAssistVal) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
 Write-Host "  • Cloudflare:      $(if ($useCloudflared -and $cfTunnelToken) {'ВКЛЮЧЁН (https://kino.davidka.net)'} elseif (-not $cfTunnelToken) {'ТОКЕН НЕ ЗАДАН'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
 if ($autoLaunchEnabled -and $autoLaunchDelay -gt 0) {
@@ -832,62 +889,39 @@ if ($enableTelegramBotVal) {
 # ----------------------------------------------------------------------------
 # SUBSTAGE 7.4.5 — STANDALONE APPS / MICROSERVICES (/apps)
 # ----------------------------------------------------------------------------
-# Запуск автономных микросервисов из /apps на собственных портах в отдельных окнах:
-# - Windows System Administrator (Port 8100)
-# - Network Analyzer Terminal (Port 8101)
-# - System Inspector (Port 8102)
-# - Exchange Trading Terminal (Port 8103)
-# - Cloudflare Tunnel Monitor (Port 8104)
+# Проверка режима (dedicated / shared) в src/apps/<appname>/config.json или apps/<appname>/config.json.
+# Если режим dedicated — запускается соответствующий автономный лончер на своём порту.
+# Если режим shared — микросервис обслуживается через основной FastAPI сервер.
 # ----------------------------------------------------------------------------
 $launchersDir = Join-Path $scriptDir "launchers"
 
-# 1. Windows System Administrator
-if ($enableWindowsAdminVal -or $enableAppsVal) {
-    $adminLauncher = Join-Path $launchersDir "Run-WindowsAdmin.ps1"
-    if (Test-Path $adminLauncher) {
-        Write-Host ""
-        Write-Host "    Запуск Windows System Administrator (8100) в отдельном окне..." -ForegroundColor Cyan
-        & $adminLauncher -Action start -NewWindow
-    }
-}
+$appLaunchConfigs = @(
+    @{ Name = "Windows System Administrator"; App = "windows_sysadmin";    Launcher = "Run-WindowsAdmin.ps1";        Port = 8100; Enabled = ($enableWindowsAdminVal -or $enableAppsVal) },
+    @{ Name = "Network Analyzer Terminal";    App = "network_terminal";    Launcher = "Run-NetworkTerminal.ps1";     Port = 8101; Enabled = ($enableNetworkTerminalVal -or $enableAppsVal) },
+    @{ Name = "System Inspector";             App = "system_inspector";    Launcher = "Run-SystemInspector.ps1";     Port = 8102; Enabled = ($enableSystemInspectorVal -or $enableAppsVal) },
+    @{ Name = "Exchange Trading Terminal";    App = "trading_terminal";    Launcher = "Run-TradingTerminal.ps1";     Port = 8103; Enabled = ($enableTradingTerminalVal -or $enableAppsVal) },
+    @{ Name = "Cloudflare Tunnel Monitor";    App = "cloudflared_monitor"; Launcher = "Run-CloudflaredMonitor.ps1"; Port = 8104; Enabled = ($useCloudflared -and ($enableCloudflaredMonitorVal -or $enableAppsVal)) }
+)
 
-# 2. Network Analyzer Terminal
-if ($enableNetworkTerminalVal -or $enableAppsVal) {
-    $netLauncher = Join-Path $launchersDir "Run-NetworkTerminal.ps1"
-    if (Test-Path $netLauncher) {
-        Write-Host ""
-        Write-Host "    Запуск Network Analyzer Terminal (8101) в отдельном окне..." -ForegroundColor Cyan
-        & $netLauncher -Action start -NewWindow
-    }
-}
-
-# 3. System Inspector
-if ($enableSystemInspectorVal -or $enableAppsVal) {
-    $sysLauncher = Join-Path $launchersDir "Run-SystemInspector.ps1"
-    if (Test-Path $sysLauncher) {
-        Write-Host ""
-        Write-Host "    Запуск System Inspector (8102) в отдельном окне..." -ForegroundColor Cyan
-        & $sysLauncher -Action start -NewWindow
-    }
-}
-
-# 4. Exchange Trading Terminal
-if ($enableTradingTerminalVal -or $enableAppsVal) {
-    $tradeLauncher = Join-Path $launchersDir "Run-TradingTerminal.ps1"
-    if (Test-Path $tradeLauncher) {
-        Write-Host ""
-        Write-Host "    Запуск Trading Terminal (8103) в отдельном окне..." -ForegroundColor Cyan
-        & $tradeLauncher -Action start -NewWindow
-    }
-}
-
-# 5. Cloudflared Monitor
-if ($enableCloudflaredMonitorVal -or $enableAppsVal) {
-    $cfmonLauncher = Join-Path $launchersDir "Run-CloudflaredMonitor.ps1"
-    if (Test-Path $cfmonLauncher) {
-        Write-Host ""
-        Write-Host "    Запуск Cloudflared Monitor (8104) в отдельном окне..." -ForegroundColor Cyan
-        & $cfmonLauncher -Action start -NewWindow
+foreach ($item in $appLaunchConfigs) {
+    if ($item.Enabled) {
+        $serverMode = Get-AppServerMode $item.App
+        if ($serverMode -eq "dedicated") {
+            $launcherPath = Join-Path $launchersDir $item.Launcher
+            if (-not (Test-Path $launcherPath)) {
+                $launcherPath = Join-Path $scriptDir $item.Launcher
+            }
+            if (Test-Path $launcherPath) {
+                Write-Host ""
+                Write-Host "    Запуск $($item.Name) ($($item.Port), dedicated) в отдельном окне..." -ForegroundColor Cyan
+                & $launcherPath -Action start -NewWindow
+            } else {
+                Write-Host "    [WARN] Лончер $($item.Launcher) не найден: $launcherPath" -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host ""
+            Write-Host "    [SHARED] $($item.Name) сконфигурирован в shared-режиме (маршрутизируется через основной FastAPI сервер)..." -ForegroundColor DarkGray
+        }
     }
 }
 

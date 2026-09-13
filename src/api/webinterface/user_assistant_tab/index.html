@@ -1,0 +1,134 @@
+﻿<!-- User Assistant Application Tab -->
+<style>
+  .assistant-container {
+    padding: 1rem;
+  }
+  .assistant-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .assistant-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+  }
+  .assistant-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #f8fafc;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .assistant-panel {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .assistant-panel-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .assistant-list-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+    transition: background 0.15s ease;
+  }
+  .assistant-list-item:hover {
+    background: rgba(30, 41, 59, 0.5);
+  }
+</style>
+
+<div class="assistant-container">
+  <!-- Header Alert & Status -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div>
+      <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
+        <span class="fs-4">🗓️</span> User Assistant (Agenda, Mail & Calendar)
+      </h5>
+      <p class="mb-0 small text-light" style="color: #cbd5e1 !important;">
+        Персональный ассистент продуктивности: расписание дня, сортировка входящих писем, события календаря и поиск документов.
+      </p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2" id="assistant-status-badge">
+        ● Готов к работе
+      </span>
+      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-assistant-refresh">
+        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+      </button>
+      <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-assistant-config">
+        <i class="bi bi-gear-fill me-1"></i> Настройки (config.json)
+      </button>
+    </div>
+  </div>
+
+  <!-- Top Metrics Bar -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-3 col-sm-6">
+      <div class="assistant-card">
+        <span class="assistant-label">Событий на сегодня</span>
+        <span class="assistant-value text-info" id="assistant-events-count">0</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="assistant-card">
+        <span class="assistant-label">Непрочитанных писем</span>
+        <span class="assistant-value text-warning" id="assistant-unread-count">0</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="assistant-card">
+        <span class="assistant-label">Недавних файлов</span>
+        <span class="assistant-value text-success" id="assistant-files-count">0</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="assistant-card">
+        <span class="assistant-label">Рабочее пространство</span>
+        <span class="assistant-value text-light" style="font-size: 1.05rem;" id="assistant-workspace-status">Активно</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Panels Grid -->
+  <div class="row g-3">
+    <!-- Calendar & Agenda Panel -->
+    <div class="col-lg-6">
+      <div class="assistant-panel h-100">
+        <div class="assistant-panel-header">
+          <span>📅 Повестка дня и ближайшие события</span>
+          <span class="badge bg-secondary" id="assistant-events-badge">0 событий</span>
+        </div>
+        <div class="p-0" id="assistant-events-list" style="max-height: 450px; overflow-y: auto;">
+          <div class="p-3 text-muted text-center small">Загрузка повестки дня...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Email Triage Panel -->
+    <div class="col-lg-6">
+      <div class="assistant-panel h-100">
+        <div class="assistant-panel-header">
+          <span>✉️ Непрочитанные сообщения</span>
+          <span class="badge bg-secondary" id="assistant-mail-badge">0 писем</span>
+        </div>
+        <div class="p-0" id="assistant-mail-list" style="max-height: 450px; overflow-y: auto;">
+          <div class="p-3 text-muted text-center small">Загрузка почты...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

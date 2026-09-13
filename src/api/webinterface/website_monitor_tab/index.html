@@ -1,0 +1,159 @@
+<!-- Website Intelligence Monitor Application Tab -->
+<style>
+  .webmon-container {
+    padding: 1rem;
+  }
+  .webmon-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .webmon-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+  }
+  .webmon-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #f8fafc;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .webmon-panel {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .webmon-panel-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .webmon-table {
+    width: 100%;
+    font-size: 0.82rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    border-collapse: collapse;
+  }
+  .webmon-table th {
+    background: #1e293b;
+    padding: 6px 12px;
+    color: #94a3b8;
+    font-weight: 600;
+    border-bottom: 1px solid #334155;
+  }
+  .webmon-table td {
+    padding: 6px 12px;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+  }
+</style>
+
+<div class="webmon-container">
+  <!-- Header Alert & Status -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div>
+      <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
+        <span class="fs-4">📊</span> Website Intelligence & Traffic Monitor
+      </h5>
+      <p class="mb-0 small text-light" style="color: #cbd5e1 !important;">
+        Сквозной мониторинг сайта: Google Analytics 4 (Realtime/Источники), Google Search Console (CTR/Клики), доступность сервера и AI-анализ аномалий.
+      </p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2" id="webmon-status-badge">
+        ● Монитор активен
+      </span>
+      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-webmon-refresh">
+        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+      </button>
+      <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-webmon-config">
+        <i class="bi bi-gear-fill me-1"></i> Настройки (config.json)
+      </button>
+    </div>
+  </div>
+
+  <!-- Top Metrics Bar -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-3 col-sm-6">
+      <div class="webmon-card">
+        <span class="webmon-label">Онлайн сейчас (Realtime)</span>
+        <span class="webmon-value text-success" id="webmon-realtime-users">0</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="webmon-card">
+        <span class="webmon-label">Доступность сайта / Ping</span>
+        <span class="webmon-value text-info" id="webmon-availability">100% (24 ms)</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="webmon-card">
+        <span class="webmon-label">Search Console CTR</span>
+        <span class="webmon-value text-warning" id="webmon-ctr-score">4.2%</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="webmon-card">
+        <span class="webmon-label">Индекс здоровья сайта</span>
+        <span class="webmon-value text-light" id="webmon-health-score">98/100</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Panels Grid -->
+  <div class="row g-3">
+    <!-- Top Pages Panel -->
+    <div class="col-lg-6">
+      <div class="webmon-panel h-100">
+        <div class="webmon-panel-header">
+          <span>📄 Популярные страницы (GA4)</span>
+          <span class="badge bg-secondary" id="webmon-pages-badge">Топ-10</span>
+        </div>
+        <div class="table-responsive">
+          <table class="webmon-table">
+            <thead>
+              <tr>
+                <th>Путь страницы</th>
+                <th class="text-end">Просмотры</th>
+                <th class="text-end">Пользователи</th>
+              </tr>
+            </thead>
+            <tbody id="webmon-pages-table-body">
+              <tr><td colspan="3" class="text-center text-muted p-3">Загрузка популярных страниц...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Traffic Sources & Diagnostics Panel -->
+    <div class="col-lg-6">
+      <div class="webmon-panel h-100">
+        <div class="webmon-panel-header">
+          <span>🌐 Каналы трафика и AI Диагностика</span>
+          <span class="badge bg-info text-dark">GA4 & Anomalies</span>
+        </div>
+        <div class="p-3">
+          <div id="webmon-traffic-channels" class="mb-3">
+            <div class="text-muted small text-center">Загрузка источников...</div>
+          </div>
+          <hr class="border-secondary my-2">
+          <h6 class="fw-bold text-info mb-1" id="webmon-diag-title">Анализ трендов трафика...</h6>
+          <p class="small text-light mb-0" id="webmon-diag-summary">Ожидание нормализованного отчёта...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

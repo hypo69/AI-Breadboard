@@ -80,80 +80,13 @@ async def metrics_middleware(request: Request, call_next: Callable) -> Response:
 
 
 # ---------------------------------------------------------------------------
-# Auto-login middleware
+# Auto-login middleware (disabled - explicit authentication required)
 # ---------------------------------------------------------------------------
 
 async def auto_login_local_user(request: Request, call_next: Callable) -> Response:
-    """Automatically authenticate localhost / LAN requests as user_id=1.
+    """Pass-through middleware preserving explicit OAuth and credential authentication.
 
-    Works correctly in both modes:
-    - Single-user (localhost): every request gets a fresh token for user 1
-    - Multi-user (server):     external requests are untouched (not local)
+    Automatic localhost token generation is disabled in favor of proper OAuth/JWT authentication.
     """
-    hostname: str = request.url.hostname or ""
-    is_local: bool = (
-        hostname in ("127.0.0.1", "localhost", "::1", "testserver", "0.0.0.0")
-        or hostname.startswith("192.168.")
-        or hostname.startswith("10.")
-        or hostname.startswith("172.")
-    )
-
-    skip = ("/login", "/auth/")
-    if not is_local or any(request.url.path == p or request.url.path.startswith(p) for p in skip):
-        return await call_next(request)
-
-    # Validate existing token
-    token: str = request.cookies.get("auth_token", "")
-    token_valid = False
-    if token:
-        try:
-            from src.api.router_auth import verify_jwt_token
-            token_valid = bool(verify_jwt_token(token))
-        except Exception:
-            pass
-
-    if token_valid:
-        return await call_next(request)
-
-    # Issue a fresh token for user_id=1
-    try:
-        from src.user_manager import user_manager
-        db_user = user_manager.get_user_by_id(1)
-        if db_user:
-            from src.api.router_auth import TokenData, create_jwt_token
-            token = create_jwt_token(
-                TokenData(
-                    email=db_user["email"],
-                    name=db_user["name"],
-                    picture=db_user.get("picture", ""),
-                    id=db_user["id"],
-                )
-            )
-            # Inject into request scope so handlers see it immediately
-            raw_headers = list(request.scope.get("headers", []))
-            cookie_bytes = f"auth_token={token}".encode("utf-8")
-            new_headers = []
-            found = False
-            for k, v in raw_headers:
-                if k.lower() == b"cookie":
-                    new_headers.append((k, v + b"; " + cookie_bytes))
-                    found = True
-                else:
-                    new_headers.append((k, v))
-            if not found:
-                new_headers.append((b"cookie", cookie_bytes))
-            request.scope["headers"] = new_headers
-            if hasattr(request, "_cookies"):
-                delattr(request, "_cookies")
-
-            response = await call_next(request)
-            response.set_cookie(
-                "auth_token", token,
-                httponly=True, secure=False, samesite="lax",
-                max_age=3600 * 24 * 30,
-            )
-            return response
-    except Exception as exc:
-        logger.error(f"[auto_login_local_user] error: {exc}")
-
     return await call_next(request)
+

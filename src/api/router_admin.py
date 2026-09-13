@@ -71,21 +71,8 @@ def _check_admin(request: Request) -> bool:
                 return True
             raise HTTPException(status_code=403, detail='Только администраторы имеют доступ')
 
-    # Fallback для локальных / доверенных обращений к панели администратора
-    hostname: str = request.url.hostname or ''
-    is_local: bool = (
-        hostname in ('127.0.0.1', 'localhost', '::1', 'testserver', '0.0.0.0')
-        or hostname.startswith('192.168.')
-        or hostname.startswith('10.')
-        or hostname.startswith('172.')
-    )
-    if is_local:
-        from src.user_manager import user_manager
-        db_user = user_manager.get_user_by_id(1)
-        if db_user and (db_user.get('is_admin', 0) or db_user.get('role') == 'admin'):
-            return True
-
     raise HTTPException(status_code=401, detail='Не авторизован')
+
 
 def _get_active_file(mode: str) -> Path:
     """Returns путь к активному файлу инструкции по режиму."""
@@ -386,7 +373,7 @@ def _get_app_plugins(request: Request) -> Dict[str, Any]:
     return request.app.state.plugins
 
 def _get_request_user(request: Request) -> Optional[Dict[str, Any]]:
-    """Retrieve user dictionary if authenticated or local fallback."""
+    """Retrieve user dictionary if authenticated."""
     try:
         from src.api.router_auth import verify_jwt_token
         from src.user_manager import user_manager
@@ -402,19 +389,10 @@ def _get_request_user(request: Request) -> Optional[Dict[str, Any]]:
                 if user_data.id:
                     return user_manager.get_user_by_id(user_data.id)
                 return user_manager.get_user_by_email(user_data.email)
-
-        hostname: str = request.url.hostname or ''
-        is_local: bool = (
-            hostname in ('127.0.0.1', 'localhost', '::1', 'testserver', '0.0.0.0')
-            or hostname.startswith('192.168.')
-            or hostname.startswith('10.')
-            or hostname.startswith('172.')
-        )
-        if is_local:
-            return user_manager.get_user_by_id(1)
     except Exception:
         pass
     return None
+
 
 plugins_router = APIRouter(prefix='/api/plugins', tags=['plugins'])
 
@@ -538,6 +516,71 @@ async def update_plugin_status(plugin_name: str, data: PluginStateUpdate, reques
     plugin.update_config({'enabled': data.enabled})
     logger.info(f'Plugin {plugin_name} enabled state changed to {data.enabled}')
     return {'name': plugin_name, 'enabled': plugin.enabled}
+
+
+# ============================================================================
+# /apps Configuration Endpoints
+# ============================================================================
+
+class AppConfigUpdateRequest(BaseModel):
+    """Payload for updating /apps application configuration."""
+    config: Dict[str, Any]
+
+
+@router.get('/apps/{app_name}/config')
+async def get_app_config(app_name: str, request: Request) -> Dict[str, Any]:
+    """Get configuration for specified application under /apps."""
+    _check_admin(request)
+
+    safe_name = "".join(c for c in app_name if c.isalnum() or c in ("_", "-"))
+    if not safe_name:
+        raise HTTPException(status_code=400, detail="Invalid application name")
+
+    candidates = [
+        __root__ / "src" / "apps" / safe_name / "config.json",
+        __root__ / "apps" / safe_name / "config.json",
+    ]
+
+    for path in candidates:
+        if path.exists():
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    return {"status": "ok", "app": safe_name, "config": json.load(f), "path": str(path)}
+            except Exception as e:
+                logger.error(f"Error reading app config {path}: {e}")
+                raise HTTPException(status_code=500, detail=f"Failed to read configuration: {e}")
+
+    raise HTTPException(status_code=404, detail=f"Application config for '{safe_name}' not found")
+
+
+@router.post('/apps/{app_name}/config')
+async def set_app_config(app_name: str, data: AppConfigUpdateRequest, request: Request) -> Dict[str, Any]:
+    """Update configuration for specified application under /apps."""
+    _check_admin(request)
+
+    safe_name = "".join(c for c in app_name if c.isalnum() or c in ("_", "-"))
+    if not safe_name:
+        raise HTTPException(status_code=400, detail="Invalid application name")
+
+    candidates = [
+        __root__ / "src" / "apps" / safe_name / "config.json",
+        __root__ / "apps" / safe_name / "config.json",
+    ]
+
+    target_paths = [p for p in candidates if p.exists()]
+    if not target_paths:
+        target_paths = [__root__ / "apps" / safe_name / "config.json"]
+
+    for path in target_paths:
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data.config, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            logger.error(f"Error saving app config {path}: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to save configuration: {e}")
+
+    return {"status": "ok", "app": safe_name, "config": data.config, "message": "Конфигурация успешно сохранена"}
 
 
 # ============================================================================
@@ -1572,13 +1615,14 @@ async def package_admin_skill(name: str, request: Request) -> Dict[str, Any]:
 
     return {
         'status': 'ok',
-        'message': f"Skill '{name}' packaged successfully",
+        'message': f"Skill '{skill.name}' packaged successfully",
         'archive': {
-            'filename': archive_file.name,
+            'filename': f"{skill.name}.skill",
             'path': rel_archive,
             'size': size,
         }
     }
+
 
 # ============================================================================
 # Initialization

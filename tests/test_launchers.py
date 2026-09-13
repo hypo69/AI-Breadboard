@@ -171,6 +171,27 @@ class TestLauncherContent:
             f"{launcher} must determine project root through projectRoot"
         )
 
+    def test_run_ps1_guards_cloudflared_routing(self):
+        """run.ps1 must conditionally use clientUrl only when use_cloudflared is enabled."""
+        path = PROJECT_ROOT / "run.ps1"
+        content = path.read_text(encoding="utf-8", errors="ignore")
+        assert "$openUrl = if ($useCloudflared -and $clientUrl)" in content, (
+            "run.ps1 must guard $openUrl with $useCloudflared"
+        )
+        assert "$useCloudflared -and ($enableCloudflaredMonitorVal -or $enableAppsVal)" in content, (
+            "run.ps1 must guard Cloudflared Monitor with $useCloudflared"
+        )
+
+    def test_run_unicorn_guards_cloudflared_routing(self):
+        """Run-Unicorn.ps1 must conditionally use clientUrl only when use_cloudflared is enabled."""
+        path = LAUNCHERS_DIR / "Run-Unicorn.ps1"
+        content = path.read_text(encoding="utf-8", errors="ignore")
+        assert "$useCloudflared = $false" in content
+        assert "$useCloudflared = [bool]$cfg.server.use_cloudflared" in content
+        assert "elseif ($useCloudflared -and $clientUrl)" in content, (
+            "Run-Unicorn.ps1 must guard $browserUrl with $useCloudflared"
+        )
+
 class TestLauncherAccessibility:
     """Test launcher accessibility and documentation."""
 
@@ -195,3 +216,4 @@ class TestLauncherAccessibility:
         assert "run.ps1" in content, "LAUNCHER_GUIDE.md does not reference run.ps1"
         for launcher in REQUIRED_LAUNCHERS:
             assert launcher in content, f"LAUNCHER_GUIDE.md does not reference {launcher}"
+

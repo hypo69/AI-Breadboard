@@ -21,4 +21,5 @@ __all__ = [
     "system_inspector",
     "windows_sysadmin",
     "cloudflared_monitor",
+    "gcloud_monitor",
 ]

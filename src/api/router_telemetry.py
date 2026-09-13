@@ -75,21 +75,8 @@ def _get_authenticated_user_id(request: Request) -> Optional[int]:
             if db_user and 'id' in db_user:
                 return db_user['id']
 
-    # Local development auto-authenticated user (ID: 1)
-    hostname = request.url.hostname or ''
-    is_local = (
-        hostname in ('127.0.0.1', 'localhost', '::1', 'testserver', '0.0.0.0')
-        or hostname.startswith('192.168.')
-        or hostname.startswith('10.')
-        or hostname.startswith('172.')
-    )
-    if is_local:
-        # Check if local user 1 exists
-        user1 = user_manager.get_user_by_id(1)
-        if user1 and user1.get('is_active', 1):
-            return 1
-
     return None
+
 
 
 def _forward_events_to_central_collector(

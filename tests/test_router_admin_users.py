@@ -17,7 +17,8 @@ from fastapi.testclient import TestClient
 from main import app
 from src.user_manager import user_manager
 
-client = TestClient(app)
+client = TestClient(app, cookies={"admin_password_verified": "true"})
+
 
 class TestAdminUsersAPI:
     """Testing user management endpoints in admin panel."""

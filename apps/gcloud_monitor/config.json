@@ -1,0 +1,39 @@
+{
+  "server": {
+    "dedicated": false,
+    "host": "127.0.0.1",
+    "port": 8105,
+    "use_ssl": false,
+    "workers": 1
+  },
+  "gcloud": {
+    "project_id": "",
+    "poll_interval_seconds": 5.0,
+    "max_log_entries": 100,
+    "default_severity": "DEFAULT",
+    "enable_mock_fallback": true,
+    "log_filters": {
+      "errors_only": "severity >= ERROR",
+      "cloud_run": "resource.type = \"cloud_run_revision\"",
+      "audit_admin": "logName =~ \"cloudaudit.googleapis.com%2Factivity\"",
+      "http_5xx": "httpRequest.status >= 500"
+    },
+    "alert_thresholds": {
+      "error_count_5m": 20,
+      "latency_p95_ms": 1500,
+      "cpu_percent": 85.0
+    }
+  },
+  "cors": {
+    "allow_origins": [
+      "*"
+    ],
+    "allow_credentials": true,
+    "allow_methods": [
+      "*"
+    ],
+    "allow_headers": [
+      "*"
+    ]
+  }
+}

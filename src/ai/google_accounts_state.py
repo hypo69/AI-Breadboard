@@ -26,7 +26,8 @@ from header import __root__
 from src.logger.logger import logger
 
 _SECRETS_DIR: Path = __root__ / 'src' / 'secrets'
-_TOKENS_DIR: Path = _SECRETS_DIR / 'tokens'
+_OAUTH_FILES_DIR: Path = _SECRETS_DIR / 'google_ouath_files'
+_TOKENS_DIR: Path = _SECRETS_DIR / 'google_oauth_tokens'
 _ACCOUNTS_FILE: Path = _SECRETS_DIR / 'google_accounts.json'
 _DAY_SECONDS: float = 86400.0
 
@@ -43,6 +44,7 @@ def _ensure_dirs() -> None:
     """Ensure secrets and tokens directories exist."""
     try:
         _SECRETS_DIR.mkdir(parents=True, exist_ok=True)
+        _OAUTH_FILES_DIR.mkdir(parents=True, exist_ok=True)
         _TOKENS_DIR.mkdir(parents=True, exist_ok=True)
     except Exception as ex:
         logger.error(f"Failed to create Google accounts directories: {ex}")
@@ -98,8 +100,47 @@ def _load_accounts_data() -> Dict[str, Any]:
 
 
 def _bootstrap_from_existing_files() -> Dict[str, Any]:
-    """Discover existing credentials in src/secrets or root."""
+    """Discover existing credentials in google_ouath_files, google_oauth_tokens, src/secrets, or root."""
     accounts: Dict[str, Any] = {}
+
+    # 1. Check google_ouath_files directory for <user>_secret.json
+    if _OAUTH_FILES_DIR.exists():
+        for f in _OAUTH_FILES_DIR.glob("*.json"):
+            if f.name == "gemini_keys.json":
+                continue
+            acc_name = f.stem.removesuffix("_secret").removesuffix("_credentials")
+            if not acc_name:
+                acc_name = f.stem
+            token_cand = _TOKENS_DIR / f"{acc_name}_token.json"
+            accounts[acc_name] = {
+                "name": acc_name,
+                "email": "",
+                "type": "oauth2",
+                "credentials_file": str(f.relative_to(__root__)) if str(f).startswith(str(__root__)) else str(f),
+                "token_file": str(token_cand.relative_to(__root__)) if str(token_cand).startswith(str(__root__)) else str(token_cand),
+                "status": "active",
+                "last_run": "",
+                "exhausted_at": "",
+            }
+
+    # 2. Check google_oauth_tokens directory for <user>_token.json
+    if _TOKENS_DIR.exists():
+        for f in _TOKENS_DIR.glob("*_token.json"):
+            acc_name = f.stem.removesuffix("_token")
+            if acc_name not in accounts:
+                secret_cand = _OAUTH_FILES_DIR / f"{acc_name}_secret.json"
+                accounts[acc_name] = {
+                    "name": acc_name,
+                    "email": "",
+                    "type": "oauth2",
+                    "credentials_file": str(secret_cand.relative_to(__root__)) if str(secret_cand).startswith(str(__root__)) else str(secret_cand),
+                    "token_file": str(f.relative_to(__root__)) if str(f).startswith(str(__root__)) else str(f),
+                    "status": "active",
+                    "last_run": "",
+                    "exhausted_at": "",
+                }
+
+    # 3. Fallback candidates in root and secrets
     candidates = [
         (_SECRETS_DIR / "credentials.json", "oauth2"),
         (_SECRETS_DIR / "service_account.json", "service_account"),
@@ -110,16 +151,17 @@ def _bootstrap_from_existing_files() -> Dict[str, Any]:
     for cand_path, acc_type in candidates:
         if cand_path.exists():
             acc_name = "default" if "default" not in accounts else cand_path.stem
-            accounts[acc_name] = {
-                "name": acc_name,
-                "email": "",
-                "type": acc_type,
-                "credentials_file": str(cand_path.relative_to(__root__)),
-                "token_file": str((_TOKENS_DIR / f"{acc_name}_token.json").relative_to(__root__)),
-                "status": "active",
-                "last_run": "",
-                "exhausted_at": "",
-            }
+            if acc_name not in accounts:
+                accounts[acc_name] = {
+                    "name": acc_name,
+                    "email": "",
+                    "type": acc_type,
+                    "credentials_file": str(cand_path.relative_to(__root__)) if str(cand_path).startswith(str(__root__)) else str(cand_path),
+                    "token_file": str((_TOKENS_DIR / f"{acc_name}_token.json").relative_to(__root__)) if str(_TOKENS_DIR).startswith(str(__root__)) else str(_TOKENS_DIR / f"{acc_name}_token.json"),
+                    "status": "active",
+                    "last_run": "",
+                    "exhausted_at": "",
+                }
 
     default_name = next(iter(accounts.keys()), "")
     return {"default_account": default_name, "accounts": accounts}
@@ -234,9 +276,9 @@ def save_google_account(
     data = _load_accounts_data()
     accounts = data.setdefault('accounts', {})
 
-    # Determine credential file destination in _SECRETS_DIR
-    creds_filename = f"google_{clean_name}_{account_type}.json"
-    dest_file = _SECRETS_DIR / creds_filename
+    # Determine credential file destination in _OAUTH_FILES_DIR (<user>_secret.json)
+    creds_filename = f"{clean_name}_secret.json"
+    dest_file = _OAUTH_FILES_DIR / creds_filename
 
     if isinstance(credentials_path_or_dict, dict):
         dest_file.write_text(json.dumps(credentials_path_or_dict, indent=2, ensure_ascii=False), encoding='utf-8')

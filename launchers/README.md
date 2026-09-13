@@ -49,6 +49,6 @@ On Windows systems, `run.ps1` and `Run-Unicorn.ps1` automatically open the admin
 
 ### Admin URL Routing: Tunnel vs. Localhost
 - **Tunnel / External Domain (`kino.davidka.net/admin` / `davidka.net/admin`):**
-  When Cloudflare Tunnel is enabled and `client_url` is configured in `config.json`, the launcher directs the app window to the public domain through the tunnel.
+  When Cloudflare Tunnel is enabled (`use_cloudflared: true`) and `client_url` is configured in `config.json`, the launcher directs the app window to the public domain through the tunnel.
 - **Direct Localhost (`http://localhost:8000/admin` / `https://localhost:8000/admin`):**
-  For completely offline, air-gapped, or strictly internal execution without sending admin traffic through external Cloudflare routing, remove `client_url` or use the local server address directly.
+  When Cloudflare Tunnel is disabled (`use_cloudflared: false` in `config.json` or `.env`), the launcher automatically binds to `0.0.0.0:8000` and opens `localhost:8000/admin` in the standalone application window without invoking `cloudflared` or directing traffic to external tunnel URLs.

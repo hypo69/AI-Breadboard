@@ -174,6 +174,27 @@ def process_user_data(data: dict) -> bool:
 ### 4.4 Ограничение размера функций и файлов (Function & Module Size Limit)
 Физический размер любой функции или функционального модуля (без учета строк комментариев и docstrings) **MUST NOT** превышать **500 строк кода** (допускается расширение до **+15%** / ~575 строк при обоснованной необходимости сохранения целостности контекста). Если объем тела функции или модуля превышает установленный лимит, они **ОБЯЗАНЫ (MUST)** быть декомпозированы. Весь процесс должен быть разбит на несколько изолированных и легко тестируемых вспомогательных функций/модулей меньшего размера, а основная функция/координатор выполняет роль диспетчера согласно сценарию (workflow).
 
+### 4.5 Регламент интеграции и жизненного цикла приложений (Application Lifecycle & Integration Standard)
+При создании нового приложения в каталоге `apps/<app_name>` разработчик или ИИ-ассистент **MUST** выполнить полный протокол интеграции, чтобы приложение стало активно на общем ресурсе сервера и доступно в административном веб-интерфейсе:
+
+```mermaid
+flowchart LR
+    A["1. Logic & TUI<br/>apps/<app>/"] --> B["2. FastAPI Router<br/>router.py (/api/v1/...)"]
+    B --> C["3. Server Mount<br/>src/app/__init__.py"]
+    C --> D["4. Web Tab<br/>src/api/webinterface/<app>_tab/"]
+    D --> E["5. Admin Nav & Panes<br/>admin/index.html + main.js"]
+    E --> F["6. TDD & Docs<br/>pytest + README.md"]
+```
+
+1. **Шаг 1: Реализация приложения (`apps/<app_name>/`)** — Разработка бизнес-логики (`engine.py` или `src/`), конфигурации (`config.json`), CLI/TUI точки входа (`__main__.py`, `tui.py`) и англоязычной документации (`README.md`).
+2. **Шаг 2: FastAPI Router (`router.py`)** — Экспорт `init_router() -> APIRouter` или `router` со стандартизированным префиксом (`/api/v1/<app_name>` или `/api/<app_name>`).
+3. **Шаг 3: Регистрация на общем сервере (`src/app/__init__.py`)** — Включение роутера приложения в функцию `register_routers(app, state)`.
+4. **Шаг 4: Создание фронтенд-вкладки (`src/api/webinterface/<app_name>_tab/`)** — Создание `index.html` и контроллера `main.js` с экспортом функции инициализации `window.init<AppName>Tab()`.
+5. **Шаг 5: Интеграция в системное меню администратора:**
+   * В `src/api/webinterface/admin/index.html` добавить кнопку в выпадающий список `#appsTabsDropdown` (`data-tab="tab-<app-name>"`) и контейнер `<div id="tab-<app-name>" class="tab-pane fade"></div>`.
+   * В `src/api/webinterface/admin/main.js` добавить загрузку в `initInterface()` (`loadTabContent(...)`) и диспетчеризацию в `onTabSwitched(...)`.
+6. **Шаг 6: TDD и верификация** — Запуск полного набора тестов (`pytest tests/ apps/<app_name>/tests/`) и проверка работы приложения через веб-панель.
+
 ---
 
 ## 5. Стандарты комментирования и документирования

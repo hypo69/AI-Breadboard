@@ -26,14 +26,17 @@ from src.ai.google_accounts_state import save_google_account
 
 @pytest.fixture(autouse=True)
 def isolate_google_accounts(tmp_path, monkeypatch):
-    """Isolate accounts storage and tokens dir to temporary directory."""
+    """Isolate accounts storage, oauth files, and tokens dir to temporary directory."""
     temp_secrets = tmp_path / "test_secrets"
-    temp_tokens = temp_secrets / "test_tokens"
+    temp_oauth_files = temp_secrets / "google_ouath_files"
+    temp_tokens = temp_secrets / "google_oauth_tokens"
     temp_accounts = temp_secrets / "google_accounts.json"
     temp_secrets.mkdir(parents=True, exist_ok=True)
+    temp_oauth_files.mkdir(parents=True, exist_ok=True)
     temp_tokens.mkdir(parents=True, exist_ok=True)
 
     monkeypatch.setattr("src.ai.google_accounts_state._SECRETS_DIR", temp_secrets)
+    monkeypatch.setattr("src.ai.google_accounts_state._OAUTH_FILES_DIR", temp_oauth_files)
     monkeypatch.setattr("src.ai.google_accounts_state._TOKENS_DIR", temp_tokens)
     monkeypatch.setattr("src.ai.google_accounts_state._ACCOUNTS_FILE", temp_accounts)
 

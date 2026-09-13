@@ -233,9 +233,15 @@
       const auditBtn = document.getElementById('btn-sys-run-audit');
       const pauseBtn = document.getElementById('btn-sys-pause-proc');
       const procSearch = document.getElementById('sys-proc-search');
+      const configBtn = document.getElementById('btn-sys-config');
 
       if (refreshHwBtn) refreshHwBtn.onclick = fetchHardwareTree;
       if (auditBtn) auditBtn.onclick = runAiDiagnostics;
+      if (configBtn) configBtn.onclick = () => {
+        if (typeof window.openAppConfigModal === 'function') {
+          window.openAppConfigModal('system_inspector', 'System & Hardware Inspector');
+        }
+      };
       if (pauseBtn) {
         pauseBtn.onclick = () => {
           isSysPaused = !isSysPaused;

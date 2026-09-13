@@ -50,6 +50,9 @@ pip install rich  # Для TUI-интерфейса
 
 **Требуется TShark** для захвата реального сетевого трафика:
 - Установите [Wireshark](https://www.wireshark.org/)
+  ```powershell
+  winget install WiresharkFoundation.Wireshark
+  ```
 - Или установите TShark отдельно
 
 ---

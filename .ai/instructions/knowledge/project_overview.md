@@ -109,15 +109,57 @@ All functional code resides under [`src/`](file:///C:/Users/onela/AppData/Local/
 
 ---
 
-## 🧩 Plugins (`plugins/`)
+## 🌐 External Integration & Peripheral Layers
 
-Modular extensions located in [`plugins/`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/plugins):
-- `rag_cleaner`: Document sanitizer for parsing PDF, DOCX, ZIP, HTML into clean RAG chunks.
-- `generate_rag_from_codebase`: Automated RAG index generator from source code files.
-- `log_analyzer`: Intelligent log clustering and error diagnosis.
-- `telegram_bot`: Telegram notifications and remote interaction.
-- `media_organizer`: Media indexing and metadata categorization.
-- `facebook`: Facebook graph integration adapter.
+The core system (`src/`) is isolated from direct external side-effects following the **Hub & Spoke** architecture. External world interaction, automation, interfaces, and protocols are grouped into four specialized extension layers:
+
+```
+                  ┌─────────────────────────────────────────┐
+                  │          External Interfaces            │
+                  │   (Web, Cloud, OS, IoT, Messengers)    │
+                  └────────────────────┬────────────────────┘
+                                       │
+        ┌───────────────────┬──────────┴──────────┬───────────────────┐
+        │                   │                     │                   │
+  ┌─────▼──────┐      ┌─────▼──────┐        ┌─────▼──────┐      ┌─────▼──────┐
+  │  Plugins   │      │    Apps    │        │ MCP Servers│      │   Skills   │
+  │ `/plugins` │      │  `/apps`   │        │  `/.mcp`   │      │`/.agents/..`│
+  └─────┬──────┘      └─────┬──────┘        └─────┬──────┘      └─────┬──────┘
+        │                   │                     │                   │
+        └───────────────────┼─────────────────────┼───────────────────┘
+                            │
+                  ┌─────────▼─────────┐
+                  │    Core (`src/`)  │
+                  │ Dispatcher/Engine │
+                  └───────────────────┘
+```
+
+### 1. 🔌 Plugins ([`plugins/`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/plugins)) — *Events, Third-Party APIs & Background Pipelines*
+Background integration adapters with external web platforms, social networks, user data providers, and automation triggers:
+- **User Documents & File Storage:** `user_storage` (per-user sandboxed personal documents, upload/download quotas, and attachments).
+- **Cloud Accounts & Workspace:** `google_workspace` (multi-account OAuth2 & Service Account pool for Gmail, Drive, Sheets, Docs).
+- **Cloud Backup & Sync:** `gdrive_sync` (automated and scheduled database, config, and document sync to Google Drive).
+- **Messengers & Social:** Telegram bots (`telegram_bot`, `telegram_channel_rag`), Facebook Graph API (`facebook`).
+- **Automation & IoT:** `ifttt` webhook connector for smart devices and home automation.
+- **Data & Processing Pipelines:** `invoice_processor` (document ingestion and parsing), `news_feed` (content curation), `rag_cleaner` (file sanitization), `log_analyzer` (system diagnostics).
+
+### 2. 📱 Applications ([`apps/`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/apps)) — *Operator Workspaces & Microservices*
+Self-contained user applications and system administration microservices running alongside the main engine:
+- **Personal Productivity Desk:** `user_assistant` (unified daily agenda, email triage/drafts via Gmail, Google Calendar scheduling, and personal document search).
+- **Infrastructure & Network:** `cloudflared_monitor` (secure tunnel management), `network_terminal` (remote network interface).
+- **System Administration:** `windows_sysadmin`, `system_inspector` (host telemetry, hardware monitoring, OS administration).
+- **Domain Tools:** `trading_terminal` (market data feed and execution UI).
+
+### 3. 🌐 MCP Servers ([`.mcp/`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/.mcp)) — *Model Context Protocol Bridges*
+Standardized protocol servers exposing tools and resources to LLMs and external autonomous agents:
+- **Browser Automation:** `playwright/` (headless/headful web browsing and DOM extraction).
+- **Search & Runtime Bridges:** `gemini_search_mcp_server`, `agy_search_mcp_server`, `unicorn_mcp_server`, `fastapi_mcp_server`.
+
+### 4. 🧠 Agent Skills ([`.agents/skills/`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/.agents/skills)) — *Reusable Agent Capabilities & Action Protocols*
+Standardized YAML+Markdown skill definitions allowing AI agents to perform structured multi-step tasks across host and cloud:
+- **Cloud & Productivity:** `google-workspace` (Gmail, Docs, Sheets, Drive), `gdrive-organizer`, `invoice-extractor`.
+- **Media & Downloads:** `torrent-controller`, `news-reader`, `media-manager`, `media-card-builder`.
+- **System & Security Operations:** `storage-controller` (drive auditing and mounting), `cert-installer` (SSL certificates), `system-updater`.
 
 ---
 

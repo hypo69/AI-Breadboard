@@ -244,6 +244,7 @@
       const refreshIfacesBtn = document.getElementById('btn-refresh-net-interfaces');
       const clearBtn = document.getElementById('btn-clear-packets');
       const tableFilter = document.getElementById('net-table-filter');
+      const configBtn = document.getElementById('btn-network-config');
 
       if (startBtn) startBtn.onclick = startLiveCapture;
       if (stopBtn) stopBtn.onclick = stopLiveCapture;
@@ -255,6 +256,11 @@
         renderPacketsTable();
       };
       if (tableFilter) tableFilter.oninput = renderPacketsTable;
+      if (configBtn) configBtn.onclick = () => {
+        if (typeof window.openAppConfigModal === 'function') {
+          window.openAppConfigModal('network_terminal', 'Network Analyzer Terminal');
+        }
+      };
 
       isNetInitialized = true;
     }

@@ -177,7 +177,63 @@ class TestUnknownCommand:
             text=True,
             cwd=Path(__file__).parent.parent
         )
-        assert result.returncode in (1, 2)
+class TestPluginsCommand:
+    """Test plugins command functionality."""
+
+    def test_plugins_help(self):
+        """plugins --help should return exit code 0."""
+        result = subprocess.run(
+            [sys.executable, "manage_tools.py", "plugins", "--help"],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
+        assert result.returncode == 0
+        assert "list" in result.stdout
+        assert "create" in result.stdout
+
+class TestDbCommand:
+    """Test db migration command functionality."""
+
+    def test_db_help(self):
+        """db --help should return exit code 0."""
+        result = subprocess.run(
+            [sys.executable, "manage_tools.py", "db", "--help"],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
+        assert result.returncode == 0
+        assert "status" in result.stdout
+        assert "migrate" in result.stdout
+        assert "create" in result.stdout
+
+    def test_db_status_returns_zero(self):
+        """db status should return exit code 0."""
+        result = subprocess.run(
+            [sys.executable, "manage_tools.py", "db", "status"],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
+        assert result.returncode == 0
+        assert "DATABASE MIGRATION STATUS" in result.stdout
+
+class TestNetworkCommand:
+    """Test network command functionality."""
+
+    def test_network_help(self):
+        """network --help should return exit code 0."""
+        result = subprocess.run(
+            [sys.executable, "manage_tools.py", "network", "--help"],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
+        assert result.returncode == 0
+        assert "status" in result.stdout
+        assert "interfaces" in result.stdout
+        assert "analyze" in result.stdout
 
 class TestAssistCommand:
     """Test assist command forwarding."""

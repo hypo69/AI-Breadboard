@@ -65,7 +65,7 @@ class MCPTestRequestModel(BaseModel):
 # =============================================================================
 
 def _check_admin(request: Request) -> bool:
-    """Verify administrator permissions or local loopback access."""
+    """Verify administrator permissions."""
     if request.cookies.get('admin_password_verified') == 'true':
         return True
 
@@ -85,20 +85,8 @@ def _check_admin(request: Request) -> bool:
                 return True
             raise HTTPException(status_code=403, detail='Only administrators have access')
 
-    hostname: str = request.url.hostname or ''
-    is_local: bool = (
-        hostname in ('127.0.0.1', 'localhost', '::1', 'testserver', '0.0.0.0')
-        or hostname.startswith('192.168.')
-        or hostname.startswith('10.')
-        or hostname.startswith('172.')
-    )
-    if is_local:
-        from src.user_manager import user_manager
-        db_user = user_manager.get_user_by_id(1)
-        if db_user and (db_user.get('is_admin', 0) or db_user.get('role') == 'admin'):
-            return True
-
     raise HTTPException(status_code=401, detail='Not authenticated')
+
 
 
 def _load_config_raw() -> Dict[str, Any]:

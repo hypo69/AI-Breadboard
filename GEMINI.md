@@ -35,6 +35,7 @@ This file serves as the **primary instruction index** for the project. It links 
 - **Dynamic Discovery & Hardware Awareness:** Automatically probes CPU, GPU (CUDA, DirectML), NPU (QNN, DirectML), Windows AI Component availability, and local daemon ports without crashing on unsupported hardware.
 - **Provider Modularization:** Each provider resides in its own package under `src/ai/providers/` with dedicated logic and an English `README.md`.
 - **Zero-Hardcode Configuration:** Model behaviors and routing rules are declared in JSON configuration and policy files.
+- **Hub & Spoke Peripheral Ecosystem:** The core (`src/`) is shielded from direct side-effects, while external interactions (web, OS, messengers, cloud) are cleanly delegated across 4 outer layers: Plugins (`plugins/`), Micro-Apps (`apps/`), MCP Servers (`.mcp/`), and Agent Skills (`.agents/skills/`).
 - **Direct Host Execution:** Everything runs natively on the Windows host with full observability.
 
 ---
@@ -122,6 +123,7 @@ pytest tests/ --cov                # Pytest with coverage reporting
 | **DRY & Reuse** | Search existing codebase first; reuse/extend existing components | REUSE_RULES.md § 1-3 |
 | **English Only** | Code, docstrings, comments, and docs in English | CODE_RULES.md § 5.1 |
 | **500-Line Limit** | Maximum 500 lines of functional code (up to +15% allowance when needed) | CODE_RULES.md § 4.4 |
+| **App Lifecycle** | Standard 6-step integration protocol for `/apps` to shared server & admin menu | CODE_RULES.md § 4.5 |
 | **Documentation** | English Docstrings + README.md per directory | DOCS_RULES.md § 3-4 |
 
 ---
@@ -177,6 +179,7 @@ Before every commit, verify:
 - [ ] Logging is executed via `src.logger.logger` (no raw `print` calls)
 
 - [ ] All credentials and secrets are managed via `.env`
+- [ ] New applications in `/apps` are registered in shared server (`src/app/__init__.py`) and admin menu (`index.html`, `main.js`) (CODE_RULES.md § 4.5)
 - [ ] Commit represents a **logically complete, verified state** of working code
 - [ ] Tests pass: `pytest tests/ --cov`
 - [ ] New directories contain an English `README.md`

@@ -58,7 +58,9 @@ def load_google_oauth_config() -> dict:
     
     from src.config import server_cfg
     port = getattr(server_cfg, 'port', 8000)
-    default_redirect = f'http://localhost:{port}/auth/google/callback'
+    use_ssl = getattr(server_cfg, 'use_ssl', True)
+    scheme = 'https' if use_ssl else 'http'
+    default_redirect = f'{scheme}://localhost:{port}/auth/google/callback'
 
     # Если в .env есть заглушки, пробуем загрузить из secrets файла
     if env_client_id and env_client_id.startswith('YOUR_'):
@@ -108,11 +110,10 @@ JWT_ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 часа
 
 def get_oauth_redirect_uri(request: Request) -> str:
-    """Determine the Google OAuth redirect URI dynamically based on the incoming request.
+    """Determine the Google OAuth redirect URI strictly using localhost.
     
-    If the request originates from localhost or 127.0.0.1, use the local URL so local
-    development redirects back to localhost. Otherwise, use GOOGLE_REDIRECT_URI if configured,
-    or the request's forwarded host.
+    If GOOGLE_REDIRECT_URI is set, use it. Otherwise, construct strictly
+    as {scheme}://localhost:{port}/auth/google/callback.
     
     Args:
         request: FastAPI Request instance.
@@ -120,21 +121,14 @@ def get_oauth_redirect_uri(request: Request) -> str:
     Returns:
         str: Absolute callback redirect URI.
     """
-    host = request.headers.get('x-forwarded-host') or request.headers.get('host') or request.url.netloc
-    scheme = request.headers.get('x-forwarded-proto') or request.url.scheme
-
-    # Extract hostname without port
-    raw_host = host.split(':')[0].lower() if host else ''
-
-    # If the user accessed via localhost or loopback IP, always redirect back to localhost
-    if raw_host in ('localhost', '127.0.0.1'):
-        return f'{scheme}://{host}/auth/google/callback'
-
-    # If an explicit public redirect URI is configured, use it for non-localhost requests
-    if GOOGLE_REDIRECT_URI and not ('localhost' in GOOGLE_REDIRECT_URI or '127.0.0.1' in GOOGLE_REDIRECT_URI):
+    if GOOGLE_REDIRECT_URI:
         return GOOGLE_REDIRECT_URI
 
-    return f'{scheme}://{host}/auth/google/callback'
+    from src.config import server_cfg
+    port = getattr(server_cfg, 'port', 8000)
+    use_ssl = getattr(server_cfg, 'use_ssl', True)
+    scheme = 'https' if use_ssl else 'http'
+    return f'{scheme}://localhost:{port}/auth/google/callback'
 
 # Configuration Google OAuth (загружаем из .env или secrets)
 _oauth_config = load_google_oauth_config()
@@ -189,8 +183,7 @@ def is_local_request(request: Request) -> bool:
 def get_current_user_data(request: Request) -> TokenData:
     """Extract authenticated user data from cookies or Authorization header.
     
-    Falls back to local default user (id=1) if the request originates from localhost/LAN.
-    Raises HTTPException 401 if unauthenticated and not local.
+    Raises HTTPException 401 if unauthenticated.
     """
     token: str = request.cookies.get('auth_token', '')
     if not token:
@@ -205,29 +198,10 @@ def get_current_user_data(request: Request) -> TokenData:
         if user_data:
             return user_data
 
-    if is_local_request(request):
-        try:
-            db_user = user_manager.get_user_by_id(1)
-            if db_user:
-                return TokenData(
-                    email=db_user.get('email', 'admin@localhost'),
-                    name=db_user.get('name', 'Local Admin'),
-                    picture=db_user.get('picture', ''),
-                    id=db_user.get('id', 1)
-                )
-        except Exception as e:
-            logger.warning(f"Error fetching local default user: {e}")
-        return TokenData(
-            email='admin@localhost',
-            name='Local Admin',
-            picture='',
-            id=1
-        )
-
     raise HTTPException(status_code=401, detail='Authentication required')
 
 def get_current_user_optional(request: Request) -> Optional[TokenData]:
-    """Retrieve current user data if authenticated or local, without raising 401."""
+    """Retrieve current user data if authenticated, without raising 401."""
     try:
         return get_current_user_data(request)
     except HTTPException:
@@ -236,14 +210,13 @@ def get_current_user_optional(request: Request) -> Optional[TokenData]:
 def require_admin_user(request: Request) -> TokenData:
     """Ensure current request has administrative privileges."""
     user_data = get_current_user_data(request)
-    if is_local_request(request):
-        return user_data
 
     db_user = user_manager.get_user_by_email(user_data.email)
     if db_user and (db_user.get('is_admin', 0) or db_user.get('role') == 'admin'):
         return user_data
 
     raise HTTPException(status_code=403, detail='Admin privileges required')
+
 
 # Хранилище for OAuth state (in production use Redis or similar)
 oauth_states: dict[str, dict] = {}

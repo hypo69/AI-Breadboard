@@ -159,6 +159,14 @@ class BasePlugin(abc.ABC):
         """
         return []
 
+    def get_router(self) -> Optional[Any]:
+        """Return optional FastAPI APIRouter instance exposed by this plugin.
+
+        Returns:
+            Optional[APIRouter]: Router instance if this plugin provides HTTP endpoints.
+        """
+        return None
+
     def update_config(self, new_config: Dict[str, Any]) -> None:
         """Update runtime configuration dictionary.
 

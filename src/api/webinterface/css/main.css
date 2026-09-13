@@ -628,6 +628,19 @@ body {
   --bs-table-color: var(--text-color);
 }
 
+[data-theme="dark"] .table-light,
+[data-theme="dark"] thead.table-light,
+[data-theme="dark"] thead.table-light th {
+  background-color: #21262d !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .table {
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
 /* ── BADGES ──────────────────────────────────────────────────────────────────── */
 .badge {
   font-weight: 500;

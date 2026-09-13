@@ -138,6 +138,21 @@
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-system-inspector" data-bs-target="#tab-system-inspector" type="button" data-i18n="tabs.systemInspector">
             🖥️ Системный инспектор
           </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-windows-admin" data-bs-target="#tab-windows-admin" type="button">
+            🛡️ Windows Sysadmin
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-user-assistant" data-bs-target="#tab-user-assistant" type="button">
+            🗓️ User Assistant
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-gcloud" data-bs-target="#tab-gcloud" type="button">
+            ☁️ Google Cloud Monitor
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-website-monitor" data-bs-target="#tab-website-monitor" type="button">
+            📊 Website Intelligence
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-cloudflared" data-bs-target="#tab-cloudflared" type="button">
+            ☁️ Cloudflared Monitor
+          </button>
         </div>
       </li>
 
@@ -252,12 +267,6 @@
         </ul>
       </div>
 
-      <!-- Quick Language Selector -->
-      <select class="form-select form-select-sm lang-selector" id="nav-lang-selector" style="width: auto;" title="Язык интерфейса" data-i18n-title="userSettings.language">
-        <option value="ru">RU</option>
-        <option value="en">EN</option>
-        <option value="he">HE</option>
-      </select>
 
       <!-- Quick Settings Gear Button -->
       <button class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center p-0 rounded-circle" id="user-settings-gear-btn" data-bs-toggle="modal" data-bs-target="#userSettingsModal" title="Настройки" style="width: 32px; height: 32px;" data-i18n-title="userSettings.title">
@@ -333,10 +342,26 @@
 
     <!-- System Inspector Tab -->
     <div id="tab-system-inspector" class="tab-pane fade"></div>
+
+    <!-- Windows System Administrator Tab -->
+    <div id="tab-windows-admin" class="tab-pane fade"></div>
+
+    <!-- Cloudflared Monitor Tab -->
+    <div id="tab-cloudflared" class="tab-pane fade"></div>
+
+    <!-- User Assistant Tab -->
+    <div id="tab-user-assistant" class="tab-pane fade"></div>
+
+    <!-- Google Cloud Monitor Tab -->
+    <div id="tab-gcloud" class="tab-pane fade"></div>
+
+    <!-- Website Intelligence Monitor Tab -->
+    <div id="tab-website-monitor" class="tab-pane fade"></div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/html/js/appConfigEditor.js"></script>
 <script src="/html/js/chatService.js?v=20260908_clean_v6"></script>
 <script type="module" src="/html/admin/main.js?v=20260908_clean_v6"></script>
 

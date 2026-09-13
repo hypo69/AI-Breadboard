@@ -290,10 +290,7 @@ password.txt
 *.kdbx
 ___*.*
 
-# Ignore secret data files in secrets directories, but keep README.md
-src/secrets/*
-!src/secrets/README.md
-!src/secrets/*.example.json
+
 
 # Database files (runtime data — not source code)
 data/*.db
@@ -433,14 +430,18 @@ rag/documents.json
 plugins/media_organizer/data/*.faiss
 plugins/media_organizer/data/generated_plots_cache.json
 
-core/ai/gemini/secrets.json
-core/ai/gemini/secrets*.json
+# Ignore secret data files in secrets directories, but keep README.md
+src/secrets/
+src/secrets/*
+!src/secrets/README.md
+!src/secrets/*.example.json
 **/secrets.json
 **/secrets*.json
 **/secrets*.yaml
-
 # Пул API для gemini
-gemini_keys.json
+rc/secrets/gemini_keys.json
+
+
 
 # На других языках
 docs

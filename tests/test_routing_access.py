@@ -15,7 +15,8 @@
 
 import pytest
 from fastapi.testclient import TestClient
-from main import app, is_localhost, get_request_hostname
+from main import app
+from src.app.middleware import is_localhost, get_request_hostname
 
 
 @pytest.fixture

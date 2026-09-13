@@ -86,15 +86,60 @@ Write-Host "║              AI BREADBOARD — /apps MICROSERVICES              
 Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
 
+function Get-AppServerMode {
+    param (
+        [string]$AppName,
+        [string]$BaseDir = $projectRoot
+    )
+    $candidatePaths = @(
+        (Join-Path $BaseDir "src\apps\$AppName\config.json"),
+        (Join-Path $BaseDir "apps\$AppName\config.json")
+    )
+    foreach ($path in $candidatePaths) {
+        if (Test-Path $path) {
+            try {
+                $raw = Get-Content $path -Raw -Encoding UTF8 | ConvertFrom-Json
+                if ($raw.server) {
+                    if ($raw.server.PSObject.Properties['dedicated'] -ne $null) {
+                        if ($raw.server.dedicated -eq $true -or $raw.server.dedicated -eq 'true') {
+                            return "dedicated"
+                        } else {
+                            return "shared"
+                        }
+                    }
+                    if ($raw.server -is [string]) {
+                        return $raw.server.Trim().ToLower()
+                    }
+                    if ($raw.server.mode) {
+                        return $raw.server.mode.ToString().Trim().ToLower()
+                    }
+                    if ($raw.server.type) {
+                        return $raw.server.type.ToString().Trim().ToLower()
+                    }
+                }
+            } catch {
+                # Fallback to dedicated
+            }
+        }
+    }
+    return "dedicated"
+}
+
 $appScripts = @(
-    @{ Name = "Windows System Administrator"; File = "Run-WindowsAdmin.ps1"; Port = 8100 },
-    @{ Name = "Network Analyzer Terminal";    File = "Run-NetworkTerminal.ps1"; Port = 8101 },
-    @{ Name = "System Inspector";             File = "Run-SystemInspector.ps1"; Port = 8102 },
-    @{ Name = "Exchange Trading Terminal";    File = "Run-TradingTerminal.ps1"; Port = 8103 },
-    @{ Name = "Cloudflared Monitor";          File = "Run-CloudflaredMonitor.ps1"; Port = 8104 }
+    @{ Name = "Windows System Administrator"; Folder = "windows_sysadmin";    File = "Run-WindowsAdmin.ps1";        Port = 8100 },
+    @{ Name = "Network Analyzer Terminal";    Folder = "network_terminal";    File = "Run-NetworkTerminal.ps1";     Port = 8101 },
+    @{ Name = "System Inspector";             Folder = "system_inspector";    File = "Run-SystemInspector.ps1";     Port = 8102 },
+    @{ Name = "Exchange Trading Terminal";    Folder = "trading_terminal";    File = "Run-TradingTerminal.ps1";     Port = 8103 },
+    @{ Name = "Cloudflared Monitor";          Folder = "cloudflared_monitor"; File = "Run-CloudflaredMonitor.ps1"; Port = 8104 }
 )
 
 foreach ($app in $appScripts) {
+    $serverMode = Get-AppServerMode $app.Folder
+    if ($Action -in @('start', 'restart') -and $serverMode -ne "dedicated") {
+        Write-Host "▶ $($app.Name) (Port: $($app.Port))... [SHARED MODE — skipped standalone launcher]" -ForegroundColor DarkGray
+        continue
+    }
+
     $launcherPath = Join-Path $projectRoot "launchers\$($app.File)"
     if (-not (Test-Path $launcherPath)) {
         $launcherPath = Join-Path $projectRoot $app.File

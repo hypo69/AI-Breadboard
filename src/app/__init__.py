@@ -190,12 +190,54 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
 
     app.include_router(router_openai)
 
-    # apps/ — registered here only
+    # apps/ — registered here for shared software server mode
     try:
         from apps.trading_terminal import init_router as init_trading_router
         app.include_router(init_trading_router())
-    except ImportError:
-        pass
+    except (ImportError, Exception) as e:
+        logger.debug(f"Trading terminal router not registered: {e}")
+
+    try:
+        from apps.cloudflared_monitor.router import init_router as init_cloudflared_router
+        app.include_router(init_cloudflared_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"Cloudflared monitor router not registered: {e}")
+
+    try:
+        from apps.windows_sysadmin.router import init_router as init_sysadmin_app_router
+        app.include_router(init_sysadmin_app_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"Windows sysadmin app router not registered: {e}")
+
+    try:
+        from apps.network_terminal.router import init_router as init_network_app_router
+        app.include_router(init_network_app_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"Network terminal app router not registered: {e}")
+
+    try:
+        from apps.system_inspector.router import init_router as init_system_app_router
+        app.include_router(init_system_app_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"System inspector app router not registered: {e}")
+
+    try:
+        from apps.user_assistant.router import init_router as init_user_assistant_router
+        app.include_router(init_user_assistant_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"User assistant app router not registered: {e}")
+
+    try:
+        from apps.gcloud_monitor.router import router as gcloud_router
+        app.include_router(gcloud_router)
+    except (ImportError, Exception) as e:
+        logger.debug(f"Google Cloud monitor app router not registered: {e}")
+
+    try:
+        from apps.website_monitor.router import init_router as init_website_monitor_router
+        app.include_router(init_website_monitor_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"Website monitor app router not registered: {e}")
 
     # Auto-discover additional routers in src/app/routers/
     _auto_discover_routers(app)

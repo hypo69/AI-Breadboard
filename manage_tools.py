@@ -165,7 +165,7 @@ def run_rag_command(args: argparse.Namespace) -> int:
 def run_docs_command(args: argparse.Namespace) -> int:
     """Delegation of documentation management operations to external scripts.
 
-    Handles project documentation updates and maintenance through
+    Handles project documentation updates, generation, and maintenance through
     dedicated development scripts.
 
     Args:
@@ -177,13 +177,24 @@ def run_docs_command(args: argparse.Namespace) -> int:
         int: Exit code from the delegated documentation script.
 
     Subcommands:
-        update: Run documentation update pipeline and regeneration scripts
+        generate: Run API and scripts documentation generation
+        update: Run documentation validity check on modified files
     """
     sub = args.subcommand
     extra = getattr(args, 'rest', [])
 
+    if sub == 'generate':
+        api_code = _run_script('scripts/docs/generate_api.py', extra)
+        if api_code != 0:
+            return api_code
+        scripts_code = _run_script('scripts/dev/update_scripts_documentation.py', extra)
+        return scripts_code
+
     if sub == 'update':
         return _run_script('scripts/dev/update_docs.py', extra)
+
+    if sub == 'pdf':
+        return _run_script('scripts/dev/export_pdf.py', extra)
 
     print(f"Unknown docs subcommand: {sub}")
     return 1
@@ -455,6 +466,12 @@ Examples:
 
     docs_parser = subparsers.add_parser('docs', help='Documentation management')
     docs_subparsers = docs_parser.add_subparsers(dest='subcommand', help='Subcommands')
+    docs_generate = docs_subparsers.add_parser('generate', help='Generate and synchronize API and scripts documentation')
+    docs_generate.add_argument('rest', nargs=argparse.REMAINDER, help='Additional generator options')
+    docs_update = docs_subparsers.add_parser('update', help='Validate documentation validity of modified files')
+    docs_update.add_argument('rest', nargs=argparse.REMAINDER, help='Additional validator options')
+    docs_pdf = docs_subparsers.add_parser('pdf', help='Export project code and documentation into code.pdf and docs.pdf')
+    docs_pdf.add_argument('rest', nargs=argparse.REMAINDER, help='PDF exporter options (--target all|docs|code, --output-dir, etc.)')
 
     # ==========================================================================
     # Skills Registry Subparser
@@ -531,7 +548,22 @@ Examples:
     # ==========================================================================
     # Parse arguments and route to the appropriate handler based on command type.
 
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
+
+    # Calculate exact unconsumed trailing CLI arguments for sub-command delegation
+    if args.command in ('knowledge', 'rag', 'docs', 'plugins', 'db') and getattr(args, 'subcommand', None):
+        # Find index where subcommand appears in sys.argv
+        argv_list = list(sys.argv[1:])
+        if args.subcommand in argv_list:
+            sub_idx = argv_list.index(args.subcommand)
+            args.rest = argv_list[sub_idx + 1:]
+        else:
+            args.rest = unknown
+    elif unknown:
+        if hasattr(args, 'rest') and isinstance(args.rest, list):
+            args.rest = args.rest + unknown
+        else:
+            args.rest = unknown
 
     # Display help when no command is provided
     if not args.command:
