@@ -7,12 +7,11 @@ REST API для управления синхронизацией на Google Dr
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
 from pydantic import BaseModel
 from typing import Optional, Dict, List
-import logging
 
 from .google_drive_sync import GoogleDriveSync
 from .sync_scheduler import SyncScheduler, get_scheduler, ManualSyncHandler
 
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 # Создание роутера
 router = APIRouter(prefix="/api/sync", tags=["sync"])

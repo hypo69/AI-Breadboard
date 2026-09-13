@@ -54,7 +54,7 @@ async def web_search(query: str) -> str:
         query: Поисковый запрос.
     """
     try:
-        from src.fastapi.router_chat import get_chat_model
+        from src.api.router_chat import get_chat_model
         model = get_chat_model()
         response = await model.ask(f"Найди в интернете актуальную информацию по запросу: {query}")
         return response
@@ -129,7 +129,7 @@ async def flight_search(
         travel_class: Класс обслуживания ('economy', 'premium_economy', 'business', 'first').
     """
     try:
-        from src.fastapi.router_chat import get_chat_model
+        from src.api.router_chat import get_chat_model
         
         # Build search query
         query_parts = [

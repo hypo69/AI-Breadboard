@@ -42,7 +42,7 @@ class TestRouterAuth:
 
     def test_create_jwt_token(self):
         """Тест создания JWT токена."""
-        from src.fastapi.router_auth import TokenData, create_jwt_token
+        from src.api.router_auth import TokenData, create_jwt_token
         
         token_data = TokenData(
             email="test@example.com",
@@ -57,7 +57,7 @@ class TestRouterAuth:
 
     def test_verify_jwt_token(self):
         """Тест верификации JWT токена."""
-        from src.fastapi.router_auth import TokenData, create_jwt_token, verify_jwt_token
+        from src.api.router_auth import TokenData, create_jwt_token, verify_jwt_token
         
         token_data = TokenData(
             email="test@example.com",
@@ -73,7 +73,7 @@ class TestRouterAuth:
 
     def test_verify_jwt_token_invalid(self):
         """Тест верификации невалидного токена."""
-        from src.fastapi.router_auth import verify_jwt_token
+        from src.api.router_auth import verify_jwt_token
         
         result = verify_jwt_token("invalid_token")
         
@@ -82,7 +82,7 @@ class TestRouterAuth:
     @pytest.mark.asyncio
     async def test_get_settings_search_engine(self):
         """Тест получения настроек пользователя с актуальным search_engine."""
-        from src.fastapi.router_auth import get_settings, TokenData, create_jwt_token
+        from src.api.router_auth import get_settings, TokenData, create_jwt_token
         from fastapi import Request
 
         token_data = TokenData(email="test@example.com", name="Test User", id=1)
@@ -102,7 +102,7 @@ class TestRouterChat:
 
     def test_init_router(self, app_client):
         """Тест инициализации чат-роутера."""
-        from src.fastapi.router_chat import init_router
+        from src.api.router_chat import init_router
         
         mock_model = Mock()
         mock_model.chat = AsyncMock()
@@ -117,7 +117,7 @@ class TestRouterChat:
     @pytest.mark.asyncio
     async def test_get_models_logging(self):
         """Тест получения списка моделей."""
-        from src.fastapi.router_chat import init_router
+        from src.api.router_chat import init_router
         
         mock_model = Mock()
         router = init_router(mock_model, mock_model, {})
@@ -137,7 +137,7 @@ class TestRouterChat:
     @pytest.mark.asyncio
     async def test_chat_stream_excludes_search_engine_for_model(self):
         """Тест checks, что search_engine из generation_config не попадает в chat_stream модели."""
-        from src.fastapi.router_chat import init_router, ChatRequest
+        from src.api.router_chat import init_router, ChatRequest
         from fastapi import Request
 
         called_kwargs = {}
@@ -162,8 +162,8 @@ class TestRouterChat:
         mock_fastapi_req.cookies = {}
         mock_fastapi_req.client = Mock(host="127.0.0.1")
 
-        with patch('src.fastapi.router_chat._extract_user_auth', return_value=("user1", "", "gemini-2.5-flash", {})), \
-             patch('src.fastapi.router_chat.get_chat_model', return_value=mock_model):
+        with patch('src.api.router_chat._extract_user_auth', return_value=("user1", "", "gemini-2.5-flash", {})), \
+             patch('src.api.router_chat.get_chat_model', return_value=mock_model):
             resp = await chat_endpoint(chat_req=req, request=mock_fastapi_req)
             # Читаем стриминг-генератор
             chunks = []
@@ -178,7 +178,7 @@ class TestRouterTTS:
 
     def test_init_router(self):
         """Тест инициализации tts-роутера."""
-        from src.fastapi.router_tts import init_router
+        from src.api.router_tts import init_router
         
         router = init_router(prefix='/api/tts')
         
@@ -190,7 +190,7 @@ class TestRouterControl:
 
     def test_connection_manager(self):
         """Тест ConnectionManager."""
-        from src.fastapi.router_control import ControlConnectionManager
+        from src.api.router_control import ControlConnectionManager
         
         # Экземпляр менеджера подключений
         manager = ControlConnectionManager()
@@ -199,18 +199,20 @@ class TestRouterControl:
         assert manager is not None
         assert len(manager.rooms) == 0
 
-    @pytest.mark.asyncio
-    async def test_remote_mic_interface_rendering(self):
+    def test_remote_mic_interface_rendering(self):
         """Happy path: рендеринг страницы голосового пульта /mic."""
-        import main
+        from src.app import create_app, register_pages
+        from fastapi.testclient import TestClient
         
-        # Вызов хендлера интерфейса голосового пульта
-        resp = await main.remote_mic_interface()
+        app = create_app()
+        register_pages(app)
+        client = TestClient(app)
+        resp = client.get('/mic')
         
         # Проверка статус-кода ответа
         assert resp.status_code == 200
         # Проверка наличия ключевых элементов интерфейса в ответе
-        decoded_body: str = resp.body.decode('utf-8')
+        decoded_body = resp.text
         assert "Голосовой Пульт" in decoded_body
         assert "btn-mic-giant" in decoded_body
         assert "btn-upload-audio" in decoded_body
@@ -218,44 +220,42 @@ class TestRouterControl:
         assert "audio-file-input" in decoded_body
         assert "media-file-input" in decoded_body
 
-    @pytest.mark.asyncio
-    async def test_remote_mic_interface_missing_file_raises_http_500(self):
-        """Error scenario: вызов исключения HTTPException(500) при отсутствии файла index.html."""
-        import main
-        from fastapi import HTTPException
-        
-        # Мокируем функцию чтения файла, возвращающую пустую строку (ошибка чтения)
-        with patch('main.read_text_file', return_value=""):
-            with pytest.raises(HTTPException) as exc_info:
-                await main.remote_mic_interface()
-            # Проверка статус-кода исключения
-            assert exc_info.value.status_code == 500
-            assert "Failed to read Voice Remote Control page" in exc_info.value.detail
+    def test_root_page_serves_html(self):
+        """Happy path: корневой маршрут / отдает HTML страницу."""
+        from src.app import create_app, register_pages
+        from fastapi.testclient import TestClient
 
-    @pytest.mark.asyncio
-    async def test_remote_mic_static_success(self):
+        app = create_app()
+        register_pages(app)
+        client = TestClient(app)
+        resp = client.get('/')
+        assert resp.status_code == 200
+        assert "text/html" in resp.headers.get("content-type", "")
+
+    def test_remote_mic_static_success(self):
         """Happy path: отдача статического файла голосового пульта."""
-        import main
-        
-        # Запрос существующего статического файла
-        static_resp = await main.remote_mic_static('index.html')
+        from src.app import create_app, register_pages
+        from fastapi.testclient import TestClient
+
+        app = create_app()
+        register_pages(app)
+        client = TestClient(app)
+        static_resp = client.get('/remote_mic/index.html')
         
         # Проверка корректности возвращенного контента
         assert static_resp.status_code == 200
-        assert len(static_resp.body) > 0
+        assert len(static_resp.text) > 0
 
-    @pytest.mark.asyncio
-    async def test_remote_mic_static_not_found_raises_http_404(self):
+    def test_remote_mic_static_not_found_raises_http_404(self):
         """Error scenario: вызов HTTPException(404) при запросе несуществующего статического ресурса."""
-        import main
-        from fastapi import HTTPException
-        
-        # Запрос несуществующего ресурса
-        with pytest.raises(HTTPException) as exc_info:
-            await main.remote_mic_static('non_existent_file.xyz')
-        # Проверка статус-кода ошибки
-        assert exc_info.value.status_code == 404
-        assert exc_info.value.detail == "File not found"
+        from src.app import create_app, register_pages
+        from fastapi.testclient import TestClient
+
+        app = create_app()
+        register_pages(app)
+        client = TestClient(app)
+        resp = client.get('/remote_mic/non_existent_file.xyz')
+        assert resp.status_code == 404
 
 
 class TestCorsConfig:
@@ -263,9 +263,23 @@ class TestCorsConfig:
 
     def test_build_cors_config(self):
         """Test building CORS configuration from server config."""
-        from main import _build_cors_config
+        from src.app.cors import build_cors_config
+        from types import SimpleNamespace
         
-        cors_config = _build_cors_config()
+        server_cfg = SimpleNamespace(
+            cors=SimpleNamespace(
+                allow_origins=[],
+                allow_origin_regex=None,
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"]
+            ),
+            client_url="",
+            user_domain="",
+            cors_origins=[]
+        )
+        
+        cors_config = build_cors_config(server_cfg)
         assert "allow_origins" in cors_config
         assert "allow_origin_regex" in cors_config
         assert "allow_credentials" in cors_config

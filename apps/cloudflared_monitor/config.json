@@ -1,0 +1,24 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8104,
+    "use_ssl": false,
+    "workers": 1
+  },
+  "cloudflared": {
+    "public_url": "https://kino.davidka.net",
+    "log_file": "logs/cloudflared.log",
+    "poll_interval_seconds": 2.0,
+    "metrics_port": 20241,
+    "max_log_lines": 500
+  },
+  "server_cors_origins": [],
+  "server_cors_allow_credentials": true,
+  "cors": {
+    "allow_origins": [],
+    "allow_origin_regex": null,
+    "allow_credentials": true,
+    "allow_methods": ["*"],
+    "allow_headers": ["*"]
+  }
+}

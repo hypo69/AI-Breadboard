@@ -29,8 +29,16 @@ import asyncio
 import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 from .tui import run_sysadmin_dashboard
+
+
+def _load_config() -> SimpleNamespace:
+    """Load app-specific configuration from config.json."""
+    config_path = Path(__file__).parent / "config.json"
+    from src.utils.jjson import j_loads_ns
+    return j_loads_ns(config_path) if config_path.exists() else SimpleNamespace()
 
 
 def main() -> None:
@@ -140,8 +148,18 @@ def main() -> None:
         return
 
     if args.mode == "server":
+        # Load config and override with CLI args if provided
+        config = _load_config()
+        server_cfg = getattr(config, "server", SimpleNamespace())
+        
+        # Use CLI args if provided, otherwise use config values
+        effective_host = args.host if args.host != "127.0.0.1" else getattr(server_cfg, "host", "127.0.0.1")
+        effective_port = args.port if args.port != 8001 else getattr(server_cfg, "port", 8001)
+        effective_reload = args.reload if args.reload else False
+        effective_workers = args.workers if args.workers != 1 else getattr(server_cfg, "workers", 1)
+        
         # Launch as standalone FastAPI server
-        _run_standalone_server(host=args.host, port=args.port, reload=args.reload, workers=args.workers)
+        _run_standalone_server(host=effective_host, port=effective_port, reload=effective_reload, workers=effective_workers)
         return
 
     # Default: launch interactive dashboard

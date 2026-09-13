@@ -72,7 +72,7 @@ class NewsFeedPlugin(BasePlugin):
             "enable_ai_summary": True,
         }
 
-    async def get_tools(self) -> List[Dict[str, Any]]:
+    def get_tools(self) -> List[Dict[str, Any]]:
         """Return function calling tools available to LLM agents."""
         return [
             {
@@ -161,6 +161,60 @@ class NewsFeedPlugin(BasePlugin):
             self.engine.learner.save_profile(new_profile)
             return {"status": "ok", "message": "Профиль обучения успешно сброшен к базовым настройкам."}
         return {"status": "error", "message": f"Action '{action_id}' not found."}
+
+    async def handle(
+        self, message: str, **kwargs: Any
+    ) -> AsyncGenerator[Dict[str, Any], None]:
+        """Handle incoming request or message stream for news queries and digests.
+
+        Args:
+            message (str): Incoming query or request text.
+            **kwargs (Any): Additional parameters (e.g. user_id, limit).
+
+        Yields:
+            Dict[str, Any]: Streamed output events and result chunks.
+        """
+        user_id = kwargs.get("user_id", "default")
+        limit = kwargs.get("limit", 5)
+
+        yield {"status": "started", "text": "Fetching relevant personalized news feed..."}
+
+        lower_msg = message.lower()
+        if "digest" in lower_msg or "дайджест" in lower_msg or "summary" in lower_msg:
+            digest = await self.engine.generate_user_digest(user_id=user_id)
+            yield {
+                "status": "complete",
+                "text": digest,
+                "type": "digest",
+            }
+            return
+
+        articles = self.engine.get_personalized_feed(user_id=user_id, limit=limit)
+        feed_data = [a.model_dump() for a in articles]
+
+        if not articles:
+            yield {
+                "status": "complete",
+                "text": "No news articles found matching your interests at this time.",
+                "articles": [],
+            }
+            return
+
+        lines = [f"### 📰 Top News ({len(articles)} articles)\n"]
+        for idx, art in enumerate(articles, 1):
+            score_pct = int(art.relevance_score * 100)
+            lines.append(f"{idx}. **[{art.title}]({art.link})** ({score_pct}% match)")
+            if art.summary:
+                lines.append(f"   > {art.summary}")
+            elif art.content:
+                lines.append(f"   > {art.content[:150]}...")
+            lines.append("")
+
+        yield {
+            "status": "complete",
+            "text": "\n".join(lines).strip(),
+            "articles": feed_data,
+        }
 
 
 def plugin(ai_model: Any = None, config: Optional[Dict[str, Any]] = None) -> NewsFeedPlugin:

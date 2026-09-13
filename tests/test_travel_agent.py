@@ -61,7 +61,7 @@ class TestFlightTools:
     @pytest.mark.asyncio
     async def test_flight_search_tool(self):
         """Test flight_search tool with mocked unified chat model."""
-        with patch("src.fastapi.router_chat.get_chat_model") as mock_get_chat_model:
+        with patch("src.api.router_chat.get_chat_model") as mock_get_chat_model:
             mock_model = MagicMock()
             mock_model.ask = AsyncMock(return_value="Найден рейс El Al TLV-CDG 420$ прямым рейсом.")
             mock_get_chat_model.return_value = mock_model

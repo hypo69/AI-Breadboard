@@ -23,6 +23,7 @@ execution, and AI routing.
 from __future__ import annotations
 
 import abc
+import inspect
 from datetime import datetime
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
@@ -128,9 +129,9 @@ class BasePlugin(abc.ABC):
             "is_system": getattr(self, "is_system", True),
             "scope": getattr(self, "scope", "system" if getattr(self, "is_system", True) else "user"),
             "is_running": self.is_running,
-            "actions": self.get_actions(),
-            "tools": self.get_tools(),
-            "fields": self.get_config_fields(),
+            "actions": self.get_actions() if not inspect.iscoroutinefunction(self.get_actions) else [],
+            "tools": self.get_tools() if not inspect.iscoroutinefunction(self.get_tools) else [],
+            "fields": self.get_config_fields() if not inspect.iscoroutinefunction(self.get_config_fields) else [],
             "config": self.config,
         }
 

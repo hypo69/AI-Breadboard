@@ -129,11 +129,17 @@ if (Test-Path $geminiCliScript) {
     & $geminiCliScript -InstallDir $InstallDir -Config $config
 }
 
-# 12. Модуль верификации и финализации
+# 12. Модуль установки Wireshark / TShark
+$wiresharkScript = Join-Path $installedModulesDir "Install-Wireshark.ps1"
+if (Test-Path $wiresharkScript) {
+    & $wiresharkScript -InstallDir $InstallDir -Config $config -InstallLightVersion:$InstallLightVersion
+}
+
+# 13. Модуль верификации и финализации
 $verifyScript = Join-Path $installedModulesDir "Install-Verify.ps1"
 & $verifyScript -InstallDir $InstallDir -PythonPath $PythonPath -Config $config -InstallLightVersion:$InstallLightVersion
 
-# 13. Модуль выбора и скачивания моделей
+# 14. Модуль выбора и скачивания моделей
 $modelsScript = Join-Path $installedModulesDir "Install-Models.ps1"
 & $modelsScript -InstallDir $InstallDir -Config $config -InstallLightVersion:$InstallLightVersion
 

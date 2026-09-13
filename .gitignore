@@ -293,6 +293,17 @@ ___*.*
 # Ignore secret data files in secrets directories, but keep README.md
 src/secrets/*
 !src/secrets/README.md
+!src/secrets/*.example.json
+
+# Database files (runtime data — not source code)
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/backups/
+src/**/*.db
+src/**/*.db-shm
+src/**/*.db-wal
+src/**/*.db.backup_*
 
 
 # =============================================================================

@@ -21,7 +21,7 @@ from unittest.mock import Mock, patch
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.testclient import TestClient
 
-from src.fastapi.router_auth import (
+from src.api.router_auth import (
     TokenData,
     create_jwt_token,
     verify_jwt_token,
@@ -114,7 +114,7 @@ class TestEndpointProtection:
 
     def test_keys_router_requires_auth(self):
         """Tests that /api/keys blocks unauthenticated external access."""
-        from src.fastapi.router_keys import init_router
+        from src.api.router_keys import init_router
         app = FastAPI()
         app.include_router(init_router())
         client = TestClient(app, base_url="http://external.domain.com")
@@ -124,7 +124,7 @@ class TestEndpointProtection:
 
     def test_keys_router_allows_admin(self):
         """Tests that /api/keys allows admin access with token."""
-        from src.fastapi.router_keys import init_router
+        from src.api.router_keys import init_router
         token = create_jwt_token(TokenData(email="admin@test.com", name="Admin", id=1))
         app = FastAPI()
         app.include_router(init_router())
@@ -136,7 +136,7 @@ class TestEndpointProtection:
 
     def test_openai_models_requires_auth(self):
         """Tests that /v1/models blocks unauthenticated external calls."""
-        from src.fastapi.router_openai import router as router_openai
+        from src.api.router_openai import router as router_openai
         app = FastAPI()
         app.include_router(router_openai)
         client = TestClient(app, base_url="http://external.domain.com")

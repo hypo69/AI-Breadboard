@@ -19,7 +19,7 @@ from unittest.mock import AsyncMock, patch, MagicMock
 from src.ai.gemini_cli_chat import GeminiCliChatBase
 from src.ai.model_manager import get_available_models, load_unsupported_models, add_unsupported_model
 from src.ai.unified_chat import UnifiedChatModel
-from src.fastapi.router_chat import get_chat_model
+from src.api.router_chat import get_chat_model
 
 class TestGeminiCliChat:
     """Tests for GeminiCliChatBase class."""

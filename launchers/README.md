@@ -14,6 +14,12 @@ Server startup scripts for AI Breadboard. Each launcher targets a specific runti
 - `Run-GeminiCli.ps1` — PowerShell wrapper for Gemini CLI mode
 - `Run-LightServer.ps1` — PowerShell wrapper for light server mode
 - `Run-TelegramBot.ps1` — PowerShell wrapper for standalone Telegram bot service
+- `Run-WindowsAdmin.ps1` — Standalone microservice launcher for Windows System Administrator (port 8100)
+- `Run-NetworkTerminal.ps1` — Standalone microservice launcher for Network Analyzer Terminal (port 8101)
+- `Run-SystemInspector.ps1` — Standalone microservice launcher for System & Hardware Inspector (port 8102)
+- `Run-TradingTerminal.ps1` — Standalone microservice launcher for Exchange Trading Terminal (port 8103)
+- `Run-CloudflaredMonitor.ps1` — Standalone microservice launcher for Cloudflare Tunnel Monitor (port 8104)
+- `Run-Apps.ps1` — Universal multi-app orchestrator to start/stop/check all `/apps` microservices
 - `Run-Terminals.ps1` — PowerShell wrapper for multi-terminal workspace (Windows Terminal split-panes or tabs)
 - `Run-Unicorn.ps1` — PowerShell wrapper for Uvicorn mode
 - `run_tests.ps1` — PowerShell script for running the test suite

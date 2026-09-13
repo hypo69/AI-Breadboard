@@ -13,13 +13,10 @@
 # =============================================================================
 
 import asyncio
-import logging
 import time
 from typing import Optional, List, Dict, Any
 
 from src.logger.logger import logger
-
-logger = logging.getLogger(__name__)
 
 class OllamaChatBase:
     """

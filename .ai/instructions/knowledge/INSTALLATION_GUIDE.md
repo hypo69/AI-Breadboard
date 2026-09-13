@@ -23,6 +23,23 @@ Comprehensive setup, configuration, and initialization guide for **AI Breadboard
   > When installing Python on Windows, ensure the **"Add python.exe to PATH"** checkbox is checked.
 * **Version Control:** Git ([git-scm.com](https://git-scm.com/)).
 * **Network Ports:** Port `8000` for FastAPI server and `54837` for local Microsoft AI Foundry service.
+* **Optional Network Analysis Tools (Wireshark / TShark):** Required for PCAP inspection and live network capture features (`src/network/tshark_wrapper.py`):
+  - **Windows (Recommended via winget):**
+    ```powershell
+    winget install --id WiresharkFoundation.Wireshark
+    ```
+    *Note:* TShark (`tshark.exe`) and Npcap driver are bundled within Wireshark. Alternatively download from [wireshark.org/download.html](https://www.wireshark.org/download.html).
+  - **Verification:**
+    ```powershell
+    tshark --version
+    python -c "import shutil; print(shutil.which('tshark'))"
+    # Output: C:\Program Files\Wireshark\tshark.exe
+    ```
+  - **Linux / macOS:**
+    ```bash
+    sudo apt-get install tshark wireshark -y   # Debian/Ubuntu
+    brew install wireshark                     # macOS
+    ```
 
 ---
 

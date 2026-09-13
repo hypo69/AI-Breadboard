@@ -122,7 +122,7 @@ async def test_plugin_handle_stream():
 
 def test_oauth_state_with_telegram():
     """Verify Google OAuth state generation stores and retrieves Telegram ID."""
-    from src.fastapi.router_auth import generate_state_token, get_state_payload, validate_state_token
+    from src.api.router_auth import generate_state_token, get_state_payload, validate_state_token
 
     state = generate_state_token(tg_id=12345678, tg_username="alex_user")
     assert isinstance(state, str)

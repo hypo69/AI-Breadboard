@@ -1,42 +1,201 @@
-# System & Hardware Inspector Application (`apps/system_inspector`)
+# 🖥️ System Inspector
 
-An interactive system telemetry monitor combining **AIDA64-grade hardware inspection** with **Wireshark-style real-time process streaming** and **AI performance diagnostics**.
+Интерактивный инструмент для мониторинга системной производительности, аппаратного обеспечения, потоков процессов в реальном времени, диагностики производительности с помощью AI и просмотра спецификаций оборудования по формату AIDA64.
 
-## Features
-- **Wireshark-Style Live Process Stream**: Real-time scrolling table tracking PID, process binary, CPU%, Memory MB/%, thread count, user ownership, and disk I/O.
-- **AIDA64 Hardware Specification Tree**: Deep breakdown of Host, Motherboard, BIOS, CPU Cores/Threads/Frequencies, GPU Accelerators (CUDA/DirectML), Storage Drives, and Network Adapters.
-- **Thermal & Voltage Sensors**: Dynamic integration with NVIDIA SMI, Windows ACPI thermal zones, and LibreHardwareMonitor/OpenHardwareMonitor.
-- **AI Performance Copilot**: Heuristic anomaly detector with optional LLM reasoning for bottleneck diagnosis and optimization suggestions.
-- **FastAPI REST & WebSocket API**: Full integration with the AI Breadboard web platform.
+## 📋 Оглавление
+- [Возможности](#возможности)
+- [Архитектура](#архитектура)
+- [Установка](#установка)
+- [Использование](#использование)
+- [FastAPI endpoints](#fastapi-endpoints)
+- [Конфигурация](#конфигурация)
 
-## CLI Usage
+---
 
-### Interactive Terminal TUI
-```powershell
-# Launch default live dashboard (1s refresh, sorted by CPU)
-py -m apps.system_inspector
+## Возможности
 
-# Sort by memory with 2-second interval
-py -m apps.system_inspector --sort memory --interval 2.0
+- **Live Process Stream** — отображение процессов в реальном времени (PID, CPU, RAM, потоки, пользователь)
+- **Hardware Tree** — дерево оборудования по формату AIDA64 (процессор, память, GPU, сенсоры)
+- **AI Performance Copilot** — диагностика производительности и выявление аномалий
+- **FastAPI REST API** — программный доступ к системной информации
+- **Интерактивная TUI** — визуализация данных в терминале с Rich
+
+---
+
+## Архитектура
+
+```
+apps/system_inspector/
+├── tui.py                # TUI-рендерер и цикл сбора телеметрии
+├── router.py             # FastAPI endpoints для REST API
+├── __main__.py           # Точка входа (CLI + standalone server)
+├── __init__.py           # Экспорт пакета
+└── config.json           # Конфигурация сервера (порт 8102)
 ```
 
-### One-Shot Commands
-```powershell
-# AI Performance Diagnosis Audit
-py -m apps.system_inspector --diagnose
+**Разделение ответственности:**
+- `tui.py` — TUI-рендеринг, управление состоянием (`SystemInspectorState`)
+- `router.py` — FastAPI HTTP-роутеры и обработчики запросов
+- `__main__.py` — CLI-интерфейс и запуск standalone-сервера
 
-# Dump AIDA64 Hardware Specification Tree
-py -m apps.system_inspector --hardware
+---
 
-# Dump Snapshot JSON
-py -m apps.system_inspector --json
+## Установка
+
+```bash
+cd apps/system_inspector
+pip install -r ../../requirements.txt
+pip install rich  # Для TUI-интерфейса
 ```
 
-## REST & WebSocket API
-The application is automatically mounted on the FastAPI server:
-- `GET /api/v1/system/summary` - Snapshot of system state.
-- `GET /api/v1/system/processes` - Active process stream.
-- `GET /api/v1/system/hardware` - Complete hardware device tree.
-- `GET /api/v1/system/sensors` - Thermal and sensor metrics.
-- `POST /api/v1/system/diagnose` - AI performance audit report.
-- `WS /api/v1/system/stream` - Live WebSocket telemetry feed.
+---
+
+## Использование
+
+### Интерактивный dashboard (TUI)
+
+```bash
+python -m apps.system_inspector --interval 1.0 --sort cpu
+```
+
+Аргументы:
+- `--interval` — интервал обновления в секундах (по умолчанию: 1.0)
+- `--sort` — сортировка по `cpu` или `memory` (по умолчанию: cpu)
+- `--limit` — количество процессов (по умолчанию: 20)
+
+Клавиши управления:
+- `Q` — выход
+- `S` — переключение сортировки (CPU/RAM)
+- `D` — запуск AI-диагностики
+
+### FastAPI сервер
+
+```bash
+python -m apps.system_inspector --mode server
+```
+
+По умолчанию сервер запускается на `http://127.0.0.1:8102`.
+
+### CLI-команды
+
+```bash
+# Одноразовая диагностика
+python -m apps.system_inspector --diagnose
+
+# Просмотр оборудования
+python -m apps.system_inspector --hardware
+
+# JSON output
+python -m apps.system_inspector --json
+```
+
+---
+
+## FastAPI endpoints
+
+### `GET /api/system/status`
+
+```json
+{
+  "hostname": "WORKSTATION",
+  "os_name": "Windows 11",
+  "uptime_seconds": 86400,
+  "cpu": {...},
+  "memory": {...},
+  "process_count": 150
+}
+```
+
+### `GET /api/system/processes`
+
+```json
+{
+  "processes": [
+    {
+      "pid": 1234,
+      "name": "chrome.exe",
+      "status": "Running",
+      "cpu_percent": 25.5,
+      "memory_mb": 512.3,
+      "memory_percent": 12.5,
+      "num_threads": 23,
+      "username": "Administrator"
+    }
+  ],
+  "sort_by": "cpu"
+}
+```
+
+### `GET /api/system/hardware`
+
+```json
+{
+  "hardware": [
+    {
+      "category": "CPU",
+      "name": "Intel Core i7-12700K",
+      "properties": {
+        "Cores": 12,
+        "Threads": 20,
+        "Base Clock": "3.6 GHz"
+      }
+    }
+  ],
+  "sensors": [
+    {
+      "name": "CPU Core 0",
+      "value": 65.0,
+      "unit": "°C"
+    }
+  ]
+}
+```
+
+### `GET /api/system/diagnostic`
+
+```json
+{
+  "health_score": 85,
+  "summary": "System Health: 85/100. Telemetry stream nominal.",
+  "ai_model_used": "Heuristic Monitor",
+  "anomalies": [],
+  "recommendations": []
+}
+```
+
+---
+
+## Конфигурация
+
+Файл `config.json`:
+
+```json
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8102,
+    "use_ssl": false,
+    "workers": 1
+  },
+  "cors": {
+    "allow_origins": [],
+    "allow_origin_regex": null,
+    "allow_credentials": true,
+    "allow_methods": ["*"],
+    "allow_headers": ["*"]
+  }
+}
+```
+
+### Порт по умолчанию
+
+Каждое приложение запускается на своем порту:
+- `windows_sysadmin`: **8100**
+- `network_terminal`: **8101**
+- `system_inspector`: **8102**
+
+---
+
+## Лицензия
+
+© 2026 hypo69. Все права защищены.

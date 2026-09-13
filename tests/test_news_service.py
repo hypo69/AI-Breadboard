@@ -161,3 +161,18 @@ def test_fastapi_news_endpoints():
     feed_res = client.get("/api/news/feed?limit=10")
     assert feed_res.status_code == 200
     assert isinstance(feed_res.json(), list)
+
+
+@pytest.mark.asyncio
+async def test_news_feed_plugin():
+    from plugins.news_feed.plugin import NewsFeedPlugin, plugin
+    p = plugin()
+    assert isinstance(p, NewsFeedPlugin)
+    assert p.name == "news_feed"
+
+    # Test handle generator
+    events = []
+    async for item in p.handle("Show me top news"):
+        events.append(item)
+    assert len(events) >= 1
+    assert any(e.get("status") in ("started", "complete") for e in events)

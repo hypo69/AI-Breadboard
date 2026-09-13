@@ -38,7 +38,7 @@ def refresh_google_access_token(user_id: int) -> str:
         logger.warning(f'Refresh token отсутствует для user_id={user_id}')
         return ''
 
-    from src.fastapi.router_auth import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+    from src.api.router_auth import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
         logger.error('Google OAuth Client ID или Secret не настроены')
         return ''

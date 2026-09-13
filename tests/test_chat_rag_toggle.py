@@ -22,8 +22,8 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from src.user_manager import user_manager
-from src.fastapi.router_auth import init_router as init_auth_router
-from src.fastapi.router_chat import init_router as init_chat_router
+from src.api.router_auth import init_router as init_auth_router
+from src.api.router_chat import init_router as init_chat_router
 from src.rag.models import RAGRouteDecision, RAGDecisionType
 
 class TestChatRagToggle(unittest.TestCase):

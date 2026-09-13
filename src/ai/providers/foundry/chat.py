@@ -26,13 +26,10 @@ Example usage:
 """
 
 import asyncio
-import logging
 import time
 from typing import Any, AsyncIterator, Dict, List, Optional
 
 from src.logger.logger import logger
-
-logger = logging.getLogger(__name__)
 
 class FoundryChatBase:
     """Chat interface for Foundry models.

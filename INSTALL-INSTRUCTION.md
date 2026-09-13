@@ -35,6 +35,23 @@ This document specifies the exact installation lifecycle, platform rules, prereq
   - Probe via `python3.13`, `python3.12`, `python3.11`, `python3.10`, `python3`, `python`.
   - Validate package headers (`python3-dev` / `python3-devel`) and virtual environment support (`python3-venv`).
 
+### 1.3 Optional Network Analysis Tools (Wireshark & TShark)
+For network packet inspection, PCAP reading, and live network capture features (`src/network/tshark_wrapper.py`):
+- **Windows Installation (Recommended via winget):**
+  ```powershell
+  winget install --id WiresharkFoundation.Wireshark
+  ```
+  *Note:* TShark (`tshark.exe`) and Npcap driver are bundled within the standard Wireshark installer. Manual installer available at [Wireshark Official Downloads](https://www.wireshark.org/download.html).
+- **Verification:**
+  ```powershell
+  tshark --version
+  python -c "import shutil; print(shutil.which('tshark'))"
+  ```
+  Expected Python output: `C:\Program Files\Wireshark\tshark.exe` (or in system `PATH`).
+- **Linux / macOS Installation:**
+  - Debian/Ubuntu: `sudo apt-get install tshark wireshark -y`
+  - macOS (Homebrew): `brew install wireshark`
+
 ---
 
 ## 🚀 Phase 2: Step-by-Step Installation Lifecycle

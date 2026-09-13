@@ -38,7 +38,7 @@ def isolated_rag_manager(monkeypatch):
     index_dir.mkdir(parents=True, exist_ok=True)
 
     isolated_mgr = DocumentRAGManager(docs_dir=docs_dir, index_dir=index_dir)
-    monkeypatch.setattr("src.fastapi.router_rag.get_document_rag_manager", lambda: isolated_mgr)
+    monkeypatch.setattr("src.api.router_rag.get_document_rag_manager", lambda: isolated_mgr)
     monkeypatch.setattr("src.rag.document_rag._doc_rag_manager", isolated_mgr)
 
     yield isolated_mgr

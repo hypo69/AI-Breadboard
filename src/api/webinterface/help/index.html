@@ -1,0 +1,124 @@
+<!-- Interactive Reference and Help Center -->
+<div class="container-fluid py-2">
+  <div class="row g-3">
+    <!-- Left Navigation & Search Panel -->
+    <div class="col-lg-3 col-md-4">
+      <div class="card shadow-sm border-secondary-subtle h-100">
+        <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between py-2">
+          <div class="fw-bold d-flex align-items-center gap-2" data-i18n="help.title">
+            <i class="bi bi-book-half"></i> Справочник и руководства
+          </div>
+          <span class="badge bg-light text-primary rounded-pill" id="help-topic-count">9</span>
+        </div>
+        
+        <!-- Live Search Bar -->
+        <div class="p-2 border-bottom border-secondary-subtle bg-body-tertiary">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-transparent border-end-0 text-muted">
+              <i class="bi bi-search"></i>
+            </span>
+            <input type="text" class="form-control border-start-0 ps-0" id="help-search-input" placeholder="Поиск по руководствам..." data-i18n-placeholder="help.searchPlaceholder" autocomplete="off">
+            <button class="btn btn-outline-secondary border-start-0" type="button" id="help-search-clear" style="display: none;" title="Очистить">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Topics List Group -->
+        <div class="list-group list-group-flush" id="help-nav" style="max-height: 650px; overflow-y: auto;">
+          <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between active py-2" data-target="overview">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-rocket-takeoff-fill text-primary"></i>
+              <span class="fw-semibold" data-i18n="help.overview">🚀 Быстрый старт и обзор</span>
+            </div>
+            <span class="badge bg-secondary-subtle text-secondary small">Старт</span>
+          </a>
+
+          <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2" data-target="google_oauth">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-google text-danger"></i>
+              <span class="fw-semibold" data-i18n="help.google_oauth">🔑 Google OAuth и аккаунты</span>
+            </div>
+            <span class="badge bg-danger-subtle text-danger small">OAuth</span>
+          </a>
+
+          <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2" data-target="ai_models">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-cpu-fill text-info"></i>
+              <span class="fw-semibold" data-i18n="help.ai_models">🤖 ИИ Провайдеры и Модели</span>
+            </div>
+            <span class="badge bg-info-subtle text-info small">LLM</span>
+          </a>
+
+          <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2" data-target="gdrive_sync">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-cloud-arrow-up-fill text-success"></i>
+              <span class="fw-semibold" data-i18n="help.gdrive_sync">☁️ Google Drive Sync</span>
+            </div>
+            <span class="badge bg-success-subtle text-success small">Бэкап</span>
+          </a>
+
+          <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2" data-target="rag_knowledge">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-journal-bookmark-fill text-warning"></i>
+              <span class="fw-semibold" data-i18n="help.rag_knowledge">📚 База знаний и RAG</span>
+            </div>
+            <span class="badge bg-warning-subtle text-warning small">RAG</span>
+          </a>
+
+          <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2" data-target="voice_tts">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-mic-fill text-primary"></i>
+              <span class="fw-semibold" data-i18n="help.voice_tts">🎙️ Голос, Диаризация и TTS</span>
+            </div>
+            <span class="badge bg-primary-subtle text-primary small">Аудио</span>
+          </a>
+
+          <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2" data-target="plugins_skills">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-plugin text-secondary"></i>
+              <span class="fw-semibold" data-i18n="help.plugins_skills">🔌 Плагины, Навыки и MCP</span>
+            </div>
+            <span class="badge bg-secondary-subtle text-secondary small">Модули</span>
+          </a>
+
+          <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2" data-target="storage_disks">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-hdd-network-fill text-dark"></i>
+              <span class="fw-semibold" data-i18n="help.storage_disks">💾 Диски и Хранилище</span>
+            </div>
+            <span class="badge bg-dark-subtle text-dark small">Медиа</span>
+          </a>
+
+          <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2" data-target="troubleshooting">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-question-diamond-fill text-danger"></i>
+              <span class="fw-semibold" data-i18n="help.troubleshooting">❓ Решение проблем (FAQ)</span>
+            </div>
+            <span class="badge bg-danger-subtle text-danger small">FAQ</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Reading & Guide Content Area -->
+    <div class="col-lg-9 col-md-8">
+      <div class="card shadow-sm border-secondary-subtle">
+        <div class="card-header bg-body-tertiary border-bottom border-secondary-subtle d-flex align-items-center justify-content-between py-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary rounded-pill"><i class="bi bi-file-earmark-text"></i></span>
+            <h5 class="mb-0 fw-bold" id="help-title">🚀 Быстрый старт и обзор</h5>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0" type="button" onclick="window.print()" title="Распечатать статью">
+              <i class="bi bi-printer"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-4" id="help-content" style="min-height: 500px; max-height: 720px; overflow-y: auto;">
+          <p class="lead" data-i18n="help.welcome">Выберите раздел справочника слева для просмотра информации.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

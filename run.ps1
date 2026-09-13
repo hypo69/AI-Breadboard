@@ -74,6 +74,24 @@ param (
     [Alias('Assist', 'enable_assist')]
     [Nullable[bool]]$EnableAssist = $null,
 
+    [Alias('Apps', 'enable_apps')]
+    [Nullable[bool]]$EnableApps = $null,
+
+    [Alias('WindowsAdmin', 'sysadmin')]
+    [Nullable[bool]]$EnableWindowsAdmin = $null,
+
+    [Alias('NetworkTerminal', 'netterm')]
+    [Nullable[bool]]$EnableNetworkTerminal = $null,
+
+    [Alias('SystemInspector', 'sysinspect')]
+    [Nullable[bool]]$EnableSystemInspector = $null,
+
+    [Alias('TradingTerminal', 'trading')]
+    [Nullable[bool]]$EnableTradingTerminal = $null,
+
+    [Alias('CloudflaredMonitor', 'cfmon')]
+    [Nullable[bool]]$EnableCloudflaredMonitor = $null,
+
     [Alias('Tray', 'tray_mode', 'SystemTray')]
     [Nullable[bool]]$EnableTray = $null,
 
@@ -143,6 +161,12 @@ if ($Help) {
     Write-Host "  -Cloudflared, -cf     Включить туннель Cloudflare Tunnel (по умолчанию выключен)."
     Write-Host "  -EnableOAuth, -OAuth  Включить авторизацию через Google OAuth (по умолчанию включена)."
     Write-Host "  -EnableTelegramBot    Включить запуск Telegram-бота (по умолчанию включен, алиас: -tg)."
+    Write-Host "  -EnableApps           Включить все микросервисы из /apps (порты 8100-8104)."
+    Write-Host "  -EnableWindowsAdmin   Запустить Windows System Administrator (порт 8100)."
+    Write-Host "  -EnableNetworkTerminal Запустить Network Analyzer Terminal (порт 8101)."
+    Write-Host "  -EnableSystemInspector Запустить System Inspector (порт 8102)."
+    Write-Host "  -EnableTradingTerminal Запустить Trading Terminal (порт 8103)."
+    Write-Host "  -EnableCloudflaredMonitor Запустить Cloudflared Monitor (порт 8104)."
     Write-Host "  -EnableAssist, -Assist Включить терминал с assist.ps1 (по умолчанию выключен, алиас: -enable_assist)."
     Write-Host "  -SkipUpdateCheck      Пропустить предварительную проверку обновлений."
     Write-Host "  -Help, -h, --help     Показать эту справку и выйти."
@@ -254,6 +278,12 @@ $useOllama = $false
 $useCloudflared = $true
 $enableOAuthVal = $true
 $enableTelegramBotVal = $true
+$enableAppsVal = $false
+$enableWindowsAdminVal = $false
+$enableNetworkTerminalVal = $false
+$enableSystemInspectorVal = $false
+$enableTradingTerminalVal = $false
+$enableCloudflaredMonitorVal = $false
 $enableAssistVal = $false
 $enableTrayVal = $true
 $preloadSilero = $false
@@ -267,6 +297,15 @@ if (Test-Path $configPath) {
         if ($cfg.server.use_ssl -ne $null) { $useSsl = [bool]$cfg.server.use_ssl }
         if ($cfg.server.enable_oauth -ne $null) { $enableOAuthVal = [bool]$cfg.server.enable_oauth }
         if ($cfg.server.enable_telegram_bot -ne $null) { $enableTelegramBotVal = [bool]$cfg.server.enable_telegram_bot }
+        if ($cfg.server.enable_apps -ne $null) { $enableAppsVal = [bool]$cfg.server.enable_apps }
+        if ($cfg.apps) {
+            if ($cfg.apps.enable_all -ne $null) { $enableAppsVal = [bool]$cfg.apps.enable_all }
+            if ($cfg.apps.enable_windows_admin -ne $null) { $enableWindowsAdminVal = [bool]$cfg.apps.enable_windows_admin }
+            if ($cfg.apps.enable_network_terminal -ne $null) { $enableNetworkTerminalVal = [bool]$cfg.apps.enable_network_terminal }
+            if ($cfg.apps.enable_system_inspector -ne $null) { $enableSystemInspectorVal = [bool]$cfg.apps.enable_system_inspector }
+            if ($cfg.apps.enable_trading_terminal -ne $null) { $enableTradingTerminalVal = [bool]$cfg.apps.enable_trading_terminal }
+            if ($cfg.apps.enable_cloudflared_monitor -ne $null) { $enableCloudflaredMonitorVal = [bool]$cfg.apps.enable_cloudflared_monitor }
+        }
         if ($cfg.server.enable_assist -ne $null) { $enableAssistVal = [bool]$cfg.server.enable_assist }
         if ($cfg.server.auto_start_assist_cli -ne $null) { $enableAssistVal = [bool]$cfg.server.auto_start_assist_cli }
         if ($cfg.server.enable_tray -ne $null) { $enableTrayVal = [bool]$cfg.server.enable_tray }
@@ -327,6 +366,26 @@ if ($EnableTelegramBot -ne $null) {
 # Если передан явный CLI-параметр -EnableAssist, он переопределяет значение
 if ($EnableAssist -ne $null) {
     $enableAssistVal = [bool]$EnableAssist
+}
+
+# Если переданы явные CLI-параметры для аппликаций
+if ($EnableApps -ne $null) {
+    $enableAppsVal = [bool]$EnableApps
+}
+if ($EnableWindowsAdmin -ne $null) {
+    $enableWindowsAdminVal = [bool]$EnableWindowsAdmin
+}
+if ($EnableNetworkTerminal -ne $null) {
+    $enableNetworkTerminalVal = [bool]$EnableNetworkTerminal
+}
+if ($EnableSystemInspector -ne $null) {
+    $enableSystemInspectorVal = [bool]$EnableSystemInspector
+}
+if ($EnableTradingTerminal -ne $null) {
+    $enableTradingTerminalVal = [bool]$EnableTradingTerminal
+}
+if ($EnableCloudflaredMonitor -ne $null) {
+    $enableCloudflaredMonitorVal = [bool]$EnableCloudflaredMonitor
 }
 
 # Если передан явный CLI-параметр -EnableTray, он переопределяет значение
@@ -491,6 +550,19 @@ if ($isInteractive -and -not $autoLaunchEnabled) {
         }
     }
 
+    # Пользователь подтверждает запуск микросервисов /apps (если не передан явный ключ -EnableApps)
+    if ($EnableApps -eq $null) {
+        $appsDefaultHint = if ($enableAppsVal) { "y" } else { "n" }
+        $appsPrompt = if ($enableAppsVal) { "Y/n" } else { "y/N" }
+        $appsChoice = Read-Host "Запустить все микросервисы /apps (порты 8100-8104) в отдельных окнах? ($appsPrompt) [Enter = $appsDefaultHint]"
+        $appsChoice = $appsChoice.Trim().ToLower()
+        if ($appsChoice -in @("y", "yes", "д", "да", "1")) {
+            $enableAppsVal = $true
+        } elseif ($appsChoice -in @("n", "no", "н", "нет", "0")) {
+            $enableAppsVal = $false
+        }
+    }
+
     # Пользователь подтверждает запуск терминала Assist (если не передан явный ключ -EnableAssist)
     if ($EnableAssist -eq $null) {
         $assistDefaultHint = if ($enableAssistVal) { "y" } else { "n" }
@@ -608,6 +680,12 @@ Write-Host "  • AI Foundry:      $(if ($useFoundry) {'ВКЛЮЧЁН'} else {'
 Write-Host "  • Ollama:          $(if ($useOllama) {'ВКЛЮЧЕНА (localhost:11434)'} else {'ВЫКЛЮЧЕНА'})" -ForegroundColor White
 Write-Host "  • Google OAuth:    $(if ($enableOAuthVal) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН (по умолчанию)'})" -ForegroundColor White
 Write-Host "  • Telegram Bot:    $(if ($enableTelegramBotVal) {'ВКЛЮЧЁН (по умолчанию)'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
+Write-Host "  • Apps / Microservices: $(if ($enableAppsVal) {'ВКЛЮЧЕНЫ (все)'} else {'НАСТРОЕНЫ ИНДИВИДУАЛЬНО'})" -ForegroundColor White
+if ($enableWindowsAdminVal -or $enableAppsVal) { Write-Host "    - Windows Sysadmin:   http://localhost:8100" -ForegroundColor DarkCyan }
+if ($enableNetworkTerminalVal -or $enableAppsVal) { Write-Host "    - Network Terminal:   http://localhost:8101" -ForegroundColor DarkCyan }
+if ($enableSystemInspectorVal -or $enableAppsVal) { Write-Host "    - System Inspector:   http://localhost:8102" -ForegroundColor DarkCyan }
+if ($enableTradingTerminalVal -or $enableAppsVal) { Write-Host "    - Trading Terminal:   http://localhost:8103" -ForegroundColor DarkCyan }
+if ($enableCloudflaredMonitorVal -or $enableAppsVal) { Write-Host "    - Cloudflared Monitor: http://localhost:8104" -ForegroundColor DarkCyan }
 Write-Host "  • Assist Terminal: $(if ($enableAssistVal) {'ВКЛЮЧЁН'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
 Write-Host "  • Cloudflare:      $(if ($useCloudflared -and $cfTunnelToken) {'ВКЛЮЧЁН (https://kino.davidka.net)'} elseif (-not $cfTunnelToken) {'ТОКЕН НЕ ЗАДАН'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
 if ($autoLaunchEnabled -and $autoLaunchDelay -gt 0) {
@@ -748,6 +826,68 @@ if ($enableTelegramBotVal) {
     }
     if (Test-Path $tgScript) {
         & $tgScript -Action stop
+    }
+}
+
+# ----------------------------------------------------------------------------
+# SUBSTAGE 7.4.5 — STANDALONE APPS / MICROSERVICES (/apps)
+# ----------------------------------------------------------------------------
+# Запуск автономных микросервисов из /apps на собственных портах в отдельных окнах:
+# - Windows System Administrator (Port 8100)
+# - Network Analyzer Terminal (Port 8101)
+# - System Inspector (Port 8102)
+# - Exchange Trading Terminal (Port 8103)
+# - Cloudflare Tunnel Monitor (Port 8104)
+# ----------------------------------------------------------------------------
+$launchersDir = Join-Path $scriptDir "launchers"
+
+# 1. Windows System Administrator
+if ($enableWindowsAdminVal -or $enableAppsVal) {
+    $adminLauncher = Join-Path $launchersDir "Run-WindowsAdmin.ps1"
+    if (Test-Path $adminLauncher) {
+        Write-Host ""
+        Write-Host "    Запуск Windows System Administrator (8100) в отдельном окне..." -ForegroundColor Cyan
+        & $adminLauncher -Action start -NewWindow
+    }
+}
+
+# 2. Network Analyzer Terminal
+if ($enableNetworkTerminalVal -or $enableAppsVal) {
+    $netLauncher = Join-Path $launchersDir "Run-NetworkTerminal.ps1"
+    if (Test-Path $netLauncher) {
+        Write-Host ""
+        Write-Host "    Запуск Network Analyzer Terminal (8101) в отдельном окне..." -ForegroundColor Cyan
+        & $netLauncher -Action start -NewWindow
+    }
+}
+
+# 3. System Inspector
+if ($enableSystemInspectorVal -or $enableAppsVal) {
+    $sysLauncher = Join-Path $launchersDir "Run-SystemInspector.ps1"
+    if (Test-Path $sysLauncher) {
+        Write-Host ""
+        Write-Host "    Запуск System Inspector (8102) в отдельном окне..." -ForegroundColor Cyan
+        & $sysLauncher -Action start -NewWindow
+    }
+}
+
+# 4. Exchange Trading Terminal
+if ($enableTradingTerminalVal -or $enableAppsVal) {
+    $tradeLauncher = Join-Path $launchersDir "Run-TradingTerminal.ps1"
+    if (Test-Path $tradeLauncher) {
+        Write-Host ""
+        Write-Host "    Запуск Trading Terminal (8103) в отдельном окне..." -ForegroundColor Cyan
+        & $tradeLauncher -Action start -NewWindow
+    }
+}
+
+# 5. Cloudflared Monitor
+if ($enableCloudflaredMonitorVal -or $enableAppsVal) {
+    $cfmonLauncher = Join-Path $launchersDir "Run-CloudflaredMonitor.ps1"
+    if (Test-Path $cfmonLauncher) {
+        Write-Host ""
+        Write-Host "    Запуск Cloudflared Monitor (8104) в отдельном окне..." -ForegroundColor Cyan
+        & $cfmonLauncher -Action start -NewWindow
     }
 }
 

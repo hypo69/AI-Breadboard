@@ -80,9 +80,19 @@ def get_terminal_profiles() -> Dict[str, List[Dict[str, str]]]:
                 "title": "Network Traffic Stream",
                 "command": f'"{python_exe}" -m apps.network_terminal --simulate',
             },
+        ],
+        "cloudflared": [
             {
-                "title": "Security Diagnostics Feed",
-                "command": f'powershell.exe -NoExit -Command "Write-Host \'[Security & Anomaly Feed Active]\' -ForegroundColor Cyan; Start-Sleep 1"',
+                "title": "Cloudflared Monitor Dashboard",
+                "command": f'"{python_exe}" -m apps.cloudflared_monitor',
+            },
+            {
+                "title": "Cloudflared Live Log Stream",
+                "command": f'powershell.exe -NoExit -Command "Get-Content -Path \'{PROJECT_ROOT / "logs" / "cloudflared.log"}\' -Wait -Tail 30 -ErrorAction SilentlyContinue"',
+            },
+            {
+                "title": "Tunnel Launcher Control",
+                "command": f'powershell.exe -NoExit -ExecutionPolicy Bypass -File "{PROJECT_ROOT / "launchers" / "Run-Cloudflared.ps1"}"',
             },
         ],
     }
@@ -132,7 +142,7 @@ def build_wt_command(profile_name: str = "breadboard") -> Optional[List[str]]:
 def main() -> None:
     """CLI entrypoint for terminal manager."""
     parser = argparse.ArgumentParser(description="Terminal Workspace Manager")
-    parser.add_argument("--profile", type=str, default="breadboard", choices=["breadboard", "trading", "network"], help="Workspace layout profile")
+    parser.add_argument("--profile", type=str, default="breadboard", choices=["breadboard", "trading", "network", "cloudflared"], help="Workspace layout profile")
     parser.add_argument("--list", action="store_true", help="List available profiles")
     args = parser.parse_args()
 

@@ -60,8 +60,8 @@ class TelegramChannelRagPlugin(BasePlugin):
     icon: str = "💬"
     category: str = "tools"
     enabled: bool = True
-    is_system: bool = True
-    scope: str = "system"
+    is_system: bool = False
+    scope: str = "general"
 
     def __init__(self, ai_model: Any = None, config: Optional[Dict[str, Any]] = None) -> None:
         """Initialize the Telegram Channel RAG plugin.

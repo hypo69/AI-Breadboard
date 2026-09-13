@@ -65,7 +65,7 @@ def test_root_unauthenticated_serves_login_page(client):
 
 def test_root_authenticated_serves_user_interface(client):
     """Test that root endpoint serves full User Interface when authenticated."""
-    from src.fastapi.router_auth import create_jwt_token, TokenData
+    from src.api.router_auth import create_jwt_token, TokenData
     token = create_jwt_token(TokenData(email="test@example.com", name="Test User", id=1))
     client.cookies.set("auth_token", token)
     response = client.get("/", headers={"host": "kino.davidka.net"})
@@ -88,7 +88,7 @@ def test_login_endpoint():
 
     # Authenticated -> redirect to /
     auth_client = TestClient(app)
-    from src.fastapi.router_auth import create_jwt_token, TokenData
+    from src.api.router_auth import create_jwt_token, TokenData
     token = create_jwt_token(TokenData(email="test@example.com", name="Test User", id=1))
     auth_client.cookies.set("auth_token", token)
     resp_auth = auth_client.get("/login", follow_redirects=False)

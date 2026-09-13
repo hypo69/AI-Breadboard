@@ -14,10 +14,9 @@
 
 import os
 import aiohttp
-import logging
 from typing import Optional, Dict, Any, List
 
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 class OllamaClient:
     """Клиент для работы с Ollama."""

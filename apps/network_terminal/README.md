@@ -1,91 +1,188 @@
-# Network Analyzer Terminal (`apps/network_terminal`)
+# 🌐 Network Terminal
 
-**Status:** ✅ Active  
-**Language:** English  
-**Authors:** hypo69  
-**Package:** `apps.network_terminal`  
+Интерактивный инструмент для глубокого анализа сетевого трафика, мониторинга пакетов в реальном времени, статистики трафика, анализа протоколов и обнаружения аномалий с помощью AI.
 
----
-
-## 📋 Overview
-
-The **Network Analyzer Terminal** is an interactive, deep packet inspection (DPI) and live network observability desk. It wraps the native host **TShark (Wireshark CLI)** engine with AI anomaly detection, security heuristics, protocol distribution metrics, and WebSocket streaming.
-
-It operates seamlessly as:
-1. **Interactive Rich TUI** for real-time packet inspection in console and Windows Terminal split-pane grids.
-2. **FastAPI Microservice** mounted under `/api/v1/network` with PCAP file analysis and live WebSocket streaming (`/ws/live`).
+## 📋 Оглавление
+- [Возможности](#возможности)
+- [Архитектура](#архитектура)
+- [Установка](#установка)
+- [Использование](#использование)
+- [FastAPI endpoints](#fastapi-endpoints)
+- [Конфигурация](#конфигурация)
 
 ---
 
-## 🏛️ Architecture
+## Возможности
+
+- **Deep Packet Inspection** — детальный анализ сетевых пакетов в реальном времени
+- **Live Traffic Monitor** — отображение потока пакетов в терминале
+- **Traffic Statistics** — расчёт скорости, объёма, распределения протоколов
+- **AI Security Detection** — обнаружение аномалий и угроз с помощью TShark
+- **FastAPI REST API** — программный доступ к сетевым данным
+
+---
+
+## Архитектура
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                 apps.network_terminal                       │
-├──────────────────────────────┬──────────────────────────────┤
-│     Rich TUI Dashboard       │     FastAPI Router           │
-│     (tui.py / __main__.py)   │     (router.py)              │
-│    • Live DPI packet stream  │    • REST: /status, /analyze │
-│    • Protocols & bandwidth   │    • REST: /interfaces       │
-│    • Security alerts & AI    │    • WebSocket: /ws/live     │
-└──────────────┬───────────────┴──────────────┬───────────────┘
-               │                              │
-               └──────────────┬───────────────┘
-                              ▼
-               ┌──────────────────────────────┐
-               │         src.network          │
-               │  • TSharkWrapper             │
-               │  • TrafficAnalyzer           │
-               │  • AIDetector (Anomaly LLM)  │
-               └──────────────────────────────┘
+apps/network_terminal/
+├── tui.py                # TUI-рендерер и цикл захвата пакетов
+├── router.py             # FastAPI endpoints для REST API
+├── __main__.py           # Точка входа (CLI + standalone server)
+├── __init__.py           # Экспорт пакета
+└── config.json           # Конфигурация сервера (порт 8101)
 ```
+
+**Разделение ответственности:**
+- `tui.py` — TUI-рендеринг, управление состоянием (`NetworkTerminalState`)
+- `router.py` — FastAPI HTTP-роутеры и обработчики запросов
+- `__main__.py` — CLI-интерфейс и запуск standalone-сервера
 
 ---
 
-## 🚀 CLI Usage
+## Установка
 
-### Launch Interactive TUI
-```powershell
-# Default interface capture (or simulation if TShark is not installed)
-python -m apps.network_terminal
+```bash
+cd apps/network_terminal
+pip install -r ../../requirements.txt
+pip install rich  # Для TUI-интерфейса
+```
 
-# Custom interface and filter
-python -m apps.network_terminal --interface 1 --filter "tcp or udp"
+**Требуется TShark** для захвата реального сетевого трафика:
+- Установите [Wireshark](https://www.wireshark.org/)
+- Или установите TShark отдельно
 
-# Force simulation mode for demos/tests
-python -m apps.network_terminal --simulate
+---
 
-# List available host network interfaces
+## Использование
+
+### Интерактивный dashboard (TUI)
+
+```bash
+python -m apps.network_terminal --interface 1 --filter "tcp port 80"
+```
+
+Аргументы:
+- `--interface` — номер или имя сетевого интерфейса (по умолчанию: 1)
+- `--filter` — фильтр Wireshark (например, `tcp port 80`, `http`, `tls`)
+- `--simulate` — запуск в режиме симуляции без TShark
+
+Клавиши управления:
+- `Ctrl+C` — остановка и выход
+
+### FastAPI сервер
+
+```bash
+python -m apps.network_terminal --mode server
+```
+
+По умолчанию сервер запускается на `http://127.0.0.1:8101`.
+
+### CLI-команды
+
+```bash
+# Список доступных интерфейсов
 python -m apps.network_terminal --list-interfaces
+
+# Режим симуляции (без TShark)
+python -m apps.network_terminal --simulate
 ```
-
-### CLI Flags Reference
-
-| Flag | Short | Type | Default | Description |
-|---|---|---|---|---|
-| `--interface` | `-i` | `str` | `1` | Capture interface index or name. |
-| `--filter` | `-f` | `str` | `""` | Wireshark display filter expression (e.g. `tcp port 443`, `http`, `dns`). |
-| `--simulate` | `-s` | `switch` | `False` | Run synthetic packet generator for demonstration / headless testing. |
-| `--list-interfaces` | `-l` | `switch` | `False` | Print available interfaces and exit. |
 
 ---
 
-## 🔌 FastAPI REST & WebSocket Endpoints
+## FastAPI endpoints
 
-Base URL: `/api/v1/network`
+### `GET /api/network/status`
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/network/status` | Verify TShark binary presence and resolve host path. |
-| `GET` | `/api/v1/network/interfaces` | List available network capture adapters on the host. |
-| `POST` | `/api/v1/network/analyze/pcap` | Upload a `.pcap` / `.pcapng` file for stats, heuristics & AI threat diagnosis. |
-| `WS` | `/api/v1/network/ws/live` | WebSocket streaming live captured packets in real-time. |
+```json
+{
+  "interface": "1",
+  "filter": "",
+  "total_packets": 1234,
+  "total_bytes": 567890,
+  "protocol_counts": {"TCP": 800, "UDP": 400, "TLS": 34},
+  "latest_ai_report": null,
+  "latest_heuristics": []
+}
+```
+
+### `GET /api/network/packets`
+
+```json
+{
+  "packets": [
+    {
+      "packet_number": 1,
+      "timestamp": "2024-01-15T10:30:00Z",
+      "source": "192.168.1.15",
+      "destination": "142.250.180.206",
+      "protocol": "TCP",
+      "length": 128,
+      "source_port": 443,
+      "destination_port": 52000,
+      "info": "HTTP/1.1 200 OK"
+    }
+  ]
+}
+```
+
+### `GET /api/network/stats`
+
+```json
+{
+  "total_packets": 1234,
+  "total_bytes": 567890,
+  "avg_packet_size": 460.2,
+  "avg_bps": 4523.5,
+  "avg_pps": 12.3,
+  "top_protocols": ["TCP", "UDP", "TLS"],
+  "top_sources": ["192.168.1.15"],
+  "top_destinations": ["142.250.180.206"]
+}
+```
+
+### `GET /api/network/security`
+
+```json
+{
+  "heuristics": ["Multiple connection attempts to single port"],
+  "ai_report": null
+}
+```
 
 ---
 
-## 🧪 Testing
+## Конфигурация
 
-Run dedicated test suite:
-```powershell
-pytest tests/test_apps_network.py tests/test_network.py -v
+Файл `config.json`:
+
+```json
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8101,
+    "use_ssl": false,
+    "workers": 1
+  },
+  "cors": {
+    "allow_origins": [],
+    "allow_origin_regex": null,
+    "allow_credentials": true,
+    "allow_methods": ["*"],
+    "allow_headers": ["*"]
+  }
+}
 ```
+
+### Порт по умолчанию
+
+Каждое приложение запускается на своем порту:
+- `windows_sysadmin`: **8100**
+- `network_terminal`: **8101**
+- `system_inspector`: **8102**
+
+---
+
+## Лицензия
+
+© 2026 hypo69. Все права защищены.

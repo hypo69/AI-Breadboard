@@ -20,8 +20,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from main import app
-from src.fastapi.messenger.sync_bridge import create_sso_token, verify_sso_token
-from src.fastapi.messenger.database import init_db, get_db
+from src.api.messenger.sync_bridge import create_sso_token, verify_sso_token
+from src.api.messenger.database import init_db, get_db
 
 
 @pytest.fixture(scope="module", autouse=True)

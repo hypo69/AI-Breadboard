@@ -6,7 +6,6 @@ Google Drive Synchronization Service
 
 import os
 import json
-import logging
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List, Tuple
@@ -22,7 +21,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 import googleapiclient.discovery
 from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 
 class GoogleDriveSync:

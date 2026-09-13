@@ -1,0 +1,17 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8102,
+    "use_ssl": false,
+    "workers": 1
+  },
+  "server_cors_origins": [],
+  "server_cors_allow_credentials": true,
+  "cors": {
+    "allow_origins": [],
+    "allow_origin_regex": null,
+    "allow_credentials": true,
+    "allow_methods": ["*"],
+    "allow_headers": ["*"]
+  }
+}

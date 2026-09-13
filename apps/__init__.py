@@ -18,4 +18,7 @@
 __all__ = [
     "trading_terminal",
     "network_terminal",
+    "system_inspector",
+    "windows_sysadmin",
+    "cloudflared_monitor",
 ]

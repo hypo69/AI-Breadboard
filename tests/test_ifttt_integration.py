@@ -26,7 +26,7 @@ from fastapi import FastAPI
 
 from plugins.ifttt import IFTTTClient, send_ifttt_event
 from src.ai.agents.tools import ifttt_trigger_event
-from src.fastapi.router_ifttt import init_router
+from src.api.router_ifttt import init_router
 
 
 @pytest.fixture

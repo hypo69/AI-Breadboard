@@ -37,7 +37,7 @@ def isolated_rag(monkeypatch):
     index_dir.mkdir(parents=True, exist_ok=True)
 
     mgr = DocumentRAGManager(docs_dir=docs_dir, index_dir=index_dir)
-    monkeypatch.setattr("src.fastapi.router_audio.get_document_rag_manager", lambda: mgr)
+    monkeypatch.setattr("src.api.router_audio.get_document_rag_manager", lambda: mgr)
 
     yield mgr
 
@@ -47,7 +47,7 @@ def isolated_rag(monkeypatch):
 class TestRouterAudio:
     """Test suite for /api/audio endpoints."""
 
-    @patch("src.fastapi.router_audio.get_audio_diarization_service")
+    @patch("src.api.router_audio.get_audio_diarization_service")
     def test_diarize_endpoint(self, mock_get_service):
         mock_service = MagicMock()
         mock_get_service.return_value = mock_service

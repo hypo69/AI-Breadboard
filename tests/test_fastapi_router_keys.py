@@ -20,7 +20,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 import pytest
 
-from src.fastapi.router_keys import (
+from src.api.router_keys import (
     KeyCreateRequest,
     KeyEntry,
     KeyUpdateRequest,
@@ -59,7 +59,7 @@ class TestRouterKeysEndpoints:
 
     def test_list_keys_empty(self):
         """Test listing keys when storage is empty."""
-        with patch('src.fastapi.router_keys._load_keys_file', return_value={}):
+        with patch('src.api.router_keys._load_keys_file', return_value={}):
             router = init_router()
             app = FastAPI()
             app.include_router(router)
@@ -125,7 +125,7 @@ class TestRouterKeysLogic:
 
     def test_check_exhaustion_not_exhausted(self):
         """Test checking non-exhausted key."""
-        with patch('src.fastapi.router_keys._load_keys_file') as mock_data:
+        with patch('src.api.router_keys._load_keys_file') as mock_data:
             mock_data.return_value = {'GEMINI_API_KEY': {'value': 'k1', 'status': 'active', 'exhausted_at': ''}}
 
             exhausted, reset_in = _check_exhaustion('GEMINI_API_KEY')
@@ -136,7 +136,7 @@ class TestRouterKeysLogic:
         """Test checking exhausted key."""
         recent_time = datetime.now(timezone.utc).isoformat()
 
-        with patch('src.fastapi.router_keys._load_keys_file') as mock_data:
+        with patch('src.api.router_keys._load_keys_file') as mock_data:
             mock_data.return_value = {'GEMINI_API_KEY': {'value': 'k1', 'status': 'exhausted', 'exhausted_at': recent_time}}
 
             exhausted, reset_in = _check_exhaustion('GEMINI_API_KEY')
@@ -145,7 +145,7 @@ class TestRouterKeysLogic:
 
     def test_check_exhaustion_key_not_found(self):
         """Test checking nonexistent key."""
-        with patch('src.fastapi.router_keys._load_keys_file') as mock_data:
+        with patch('src.api.router_keys._load_keys_file') as mock_data:
             mock_data.return_value = {}
 
             exhausted, reset_in = _check_exhaustion('nonexistent')

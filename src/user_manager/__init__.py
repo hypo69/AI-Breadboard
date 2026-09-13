@@ -230,13 +230,35 @@ class UserManager:
                     user_agent TEXT,
                     timestamp TEXT DEFAULT (datetime('now')),
                     details TEXT,
+                    event_type TEXT DEFAULT 'action',
+                    tab_name TEXT,
+                    target_element TEXT,
+                    duration_ms INTEGER DEFAULT 0,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 )
             """)
 
+            # Add telemetry columns if missing (migration)
+            for col, col_type in [
+                ("event_type", "TEXT DEFAULT 'action'"),
+                ("tab_name", "TEXT"),
+                ("target_element", "TEXT"),
+                ("duration_ms", "INTEGER DEFAULT 0"),
+            ]:
+                try:
+                    conn.execute(f"ALTER TABLE user_activity_log ADD COLUMN {col} {col_type}")
+                except sqlite3.OperationalError:
+                    pass
+
             # Create index for fast user and time lookup
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_activity_user_time ON user_activity_log(user_id, timestamp)
+            """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_activity_event_type ON user_activity_log(event_type)
+            """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_activity_tab_name ON user_activity_log(tab_name)
             """)
 
             # Create roles table for role and permission management
@@ -971,15 +993,30 @@ class UserManager:
             ).fetchone()
             return row is not None
 
-    def log_user_activity(self, user_id: int, action: str, ip_address: str = '', user_agent: str = '', details: str = '') -> bool:
-        """Logging user activity.
+    def log_user_activity(
+        self,
+        user_id: int,
+        action: str,
+        ip_address: str = '',
+        user_agent: str = '',
+        details: str = '',
+        event_type: str = 'action',
+        tab_name: str = '',
+        target_element: str = '',
+        duration_ms: int = 0
+    ) -> bool:
+        """Logging user activity with structured telemetry data.
 
         Args:
             user_id (int): User ID.
-            action (str): Action (login, logout, api_call, etc).
+            action (str): Action description or event title.
             ip_address (str): IP address.
-            user_agent (str): User-Agent.
-            details (str): Additional details.
+            user_agent (str): User-Agent header.
+            details (str): Additional details (JSON or text).
+            event_type (str): Event category ('tab_view', 'click', 'action', 'navigation').
+            tab_name (str): Associated tab identifier.
+            target_element (str): Clicked or interacted UI element identifier.
+            duration_ms (int): Dwell/interaction duration in milliseconds.
 
         Returns:
             bool: True on success.
@@ -988,16 +1025,171 @@ class UserManager:
             try:
                 conn.execute(
                     '''
-                    INSERT INTO user_activity_log (user_id, action, ip_address, user_agent, details)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO user_activity_log (
+                        user_id, action, ip_address, user_agent, details,
+                        event_type, tab_name, target_element, duration_ms
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ''',
-                    (user_id, action, ip_address, user_agent, details)
+                    (
+                        user_id, action, ip_address, user_agent, details,
+                        event_type, tab_name, target_element, duration_ms
+                    )
                 )
                 conn.commit()
                 return True
             except Exception as e:
                 logger.error('Error logging activity:', e, False)
                 return False
+
+    def log_telemetry_batch(
+        self,
+        user_id: int,
+        events: List[Dict[str, Any]],
+        ip_address: str = '',
+        user_agent: str = ''
+    ) -> int:
+        """Log a batch of telemetry events for a registered user.
+
+        Args:
+            user_id (int): User ID.
+            events (List[Dict[str, Any]]): List of telemetry event objects.
+            ip_address (str): Client IP address.
+            user_agent (str): Client User-Agent.
+
+        Returns:
+            int: Number of successfully inserted records.
+        """
+        if not events:
+            return 0
+        inserted = 0
+        with self._get_connection() as conn:
+            for ev in events:
+                try:
+                    action = str(ev.get('action') or ev.get('event_type') or 'event')
+                    event_type = str(ev.get('event_type') or 'action')
+                    tab_name = str(ev.get('tab_name') or ev.get('tab') or '')
+                    target_element = str(ev.get('target_element') or ev.get('target') or '')
+                    duration_ms = int(ev.get('duration_ms') or ev.get('duration') or 0)
+                    details = ev.get('details')
+                    if isinstance(details, (dict, list)):
+                        import json
+                        details_str = json.dumps(details, ensure_ascii=False)
+                    else:
+                        details_str = str(details or '')
+
+                    conn.execute(
+                        '''
+                        INSERT INTO user_activity_log (
+                            user_id, action, ip_address, user_agent, details,
+                            event_type, tab_name, target_element, duration_ms
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ''',
+                        (
+                            user_id, action, ip_address, user_agent, details_str,
+                            event_type, tab_name, target_element, duration_ms
+                        )
+                    )
+                    inserted += 1
+                except Exception as ex:
+                    logger.error(f'Error inserting telemetry event for user {user_id}:', ex, False)
+            conn.commit()
+        return inserted
+
+    def get_telemetry_stats(self, days: int = 30, user_id: Optional[int] = None) -> Dict[str, Any]:
+        """Aggregate telemetry statistics for reporting and admin dashboard.
+
+        Args:
+            days (int): Number of previous days to analyze.
+            user_id (Optional[int]): Filter by specific user ID if provided.
+
+        Returns:
+            Dict[str, Any]: Aggregated stats including tab views, popular actions, and recent events.
+        """
+        stats: Dict[str, Any] = {
+            "total_events": 0,
+            "tab_views": {},
+            "top_clicks": {},
+            "active_users_count": 0,
+            "recent_events": [],
+        }
+        with self._get_connection() as conn:
+            conn.row_factory = sqlite3.Row
+            where_clauses = ["timestamp >= datetime('now', ?)"]
+            params: List[Any] = [f"-{days} days"]
+
+            if user_id is not None:
+                where_clauses.append("user_id = ?")
+                params.append(user_id)
+
+            where_sql = " AND ".join(where_clauses)
+
+            # Total events count & distinct users
+            row = conn.execute(
+                f"SELECT COUNT(*) as total, COUNT(DISTINCT user_id) as users_count FROM user_activity_log WHERE {where_sql}",
+                params
+            ).fetchone()
+            if row:
+                stats["total_events"] = row["total"]
+                stats["active_users_count"] = row["users_count"]
+
+            # Tab views aggregation
+            tab_rows = conn.execute(
+                f"""
+                SELECT tab_name, COUNT(*) as count, AVG(duration_ms) as avg_duration
+                FROM user_activity_log
+                WHERE {where_sql} AND (event_type = 'tab_view' OR (tab_name IS NOT NULL AND tab_name != ''))
+                GROUP BY tab_name
+                ORDER BY count DESC
+                LIMIT 20
+                """,
+                params
+            ).fetchall()
+            stats["tab_views"] = {
+                (r["tab_name"] or "unknown"): {
+                    "count": r["count"],
+                    "avg_duration_ms": round(r["avg_duration"] or 0, 1)
+                }
+                for r in tab_rows if r["tab_name"]
+            }
+
+            # Top clicked elements
+            click_rows = conn.execute(
+                f"""
+                SELECT target_element, action, COUNT(*) as count
+                FROM user_activity_log
+                WHERE {where_sql} AND event_type = 'click' AND target_element IS NOT NULL AND target_element != ''
+                GROUP BY target_element
+                ORDER BY count DESC
+                LIMIT 20
+                """,
+                params
+            ).fetchall()
+            stats["top_clicks"] = {
+                (r["target_element"] or "unknown"): {
+                    "action": r["action"],
+                    "count": r["count"]
+                }
+                for r in click_rows
+            }
+
+            # Recent events
+            recent = conn.execute(
+                f"""
+                SELECT l.id, l.user_id, u.email, u.name, l.action, l.event_type,
+                       l.tab_name, l.target_element, l.duration_ms, l.details, l.timestamp, l.ip_address
+                FROM user_activity_log l
+                LEFT JOIN users u ON l.user_id = u.id
+                WHERE {where_sql}
+                ORDER BY l.timestamp DESC
+                LIMIT 50
+                """,
+                params
+            ).fetchall()
+            stats["recent_events"] = [dict(r) for r in recent]
+
+        return stats
 
     def log_audit(self, user_id: int, action: str, target_type: str = '', target_id: int = 0, old_values: str = '', new_values: str = '', ip_address: str = '') -> bool:
         """Logging audit of important operations.

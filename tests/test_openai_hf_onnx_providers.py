@@ -20,7 +20,7 @@ import pytest
 from unittest.mock import AsyncMock, patch
 from starlette.testclient import TestClient
 
-from src.fastapi.router_openai import map_to_openai_id, map_from_openai_id
+from src.api.router_openai import map_to_openai_id, map_from_openai_id
 from src.ai.hf_chat import hf_client, HFChatBase
 from src.ai.onnx_chat import onnx_client, ONNXChatBase
 from src.ai.openai_compat_chat import OpenAICompatChat
@@ -115,7 +115,7 @@ def test_router_openai_chat_completions():
     Verifies that the endpoint processes chat completion requests correctly.
     """
     client = TestClient(app)
-    with patch("src.fastapi.router_openai.get_chat_model") as mock_get_model:
+    with patch("src.api.router_openai.get_chat_model") as mock_get_model:
         mock_chat = AsyncMock()
         mock_chat.generate_content = AsyncMock(return_value="Universal assistant reply")
         mock_get_model.return_value = mock_chat

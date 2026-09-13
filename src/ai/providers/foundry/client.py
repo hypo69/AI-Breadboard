@@ -15,10 +15,9 @@
 
 import os
 import aiohttp
-import logging
 from typing import Optional, Dict, Any, List
 
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 class FoundryClient:
     """Client for working with Microsoft AI Foundry."""

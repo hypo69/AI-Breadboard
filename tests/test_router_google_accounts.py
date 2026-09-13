@@ -37,13 +37,13 @@ def isolate_google_accounts(tmp_path, monkeypatch):
     monkeypatch.setattr("src.ai.google_accounts_state._TOKENS_DIR", temp_tokens)
     monkeypatch.setattr("src.ai.google_accounts_state._ACCOUNTS_FILE", temp_accounts)
 
-    monkeypatch.setattr("src.fastapi.router_google_accounts._TOKENS_DIR", temp_tokens)
+    monkeypatch.setattr("src.api.router_google_accounts._TOKENS_DIR", temp_tokens)
 
 
 @pytest.fixture
 def client():
     """Create test client with mock admin authentication."""
-    with patch("src.fastapi.router_auth.require_admin_user", return_value={"id": 1, "username": "admin", "role": "admin"}):
+    with patch("src.api.router_auth.require_admin_user", return_value={"id": 1, "username": "admin", "role": "admin"}):
         yield TestClient(app)
 
 
@@ -155,7 +155,7 @@ class TestGoogleAccountsRouter:
             "credentials_dict": {"installed": {"client_id": "t"}}
         })
 
-        with patch("src.fastapi.router_google_accounts.load_account_credentials") as mock_load:
+        with patch("src.api.router_google_accounts.load_account_credentials") as mock_load:
             mock_creds = MagicMock()
             mock_creds.valid = True
             mock_creds.expired = False

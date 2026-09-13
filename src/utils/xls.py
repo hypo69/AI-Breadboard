@@ -40,10 +40,8 @@ import pandas as pd
 import json
 from typing import List, Dict, Union
 from pathlib import Path
-import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+from src.logger import logger
 
 def read_xls_as_dict(
     xls_file: str,
@@ -57,7 +55,7 @@ def read_xls_as_dict(
     try:
         xls_file_path = Path(xls_file)
         if not xls_file_path.exists():
-            logging.error(f"Excel file not found: {xls_file}")
+            logger.error(f"Excel file not found: {xls_file}")
             return False  # Indicate failure
 
         xls = pd.ExcelFile(xls_file)
@@ -69,7 +67,7 @@ def read_xls_as_dict(
                     df = pd.read_excel(xls, sheet_name=sheet)
                     data_dict[sheet] = df.to_dict(orient='records')
                 except Exception as e:
-                    logging.error(f"Error processing sheet '{sheet}': {e}")
+                    logger.error(f"Error processing sheet '{sheet}': {e}")
                     return False
 
         else:
@@ -77,21 +75,21 @@ def read_xls_as_dict(
                 df = pd.read_excel(xls, sheet_name=sheet_name)
                 data_dict = df.to_dict(orient='records')
             except Exception as e:
-                logging.error(f"Error processing sheet '{sheet_name}': {e}")
+                logger.error(f"Error processing sheet '{sheet_name}': {e}")
                 return False
 
         if json_file:
             with open(json_file, 'w', encoding='utf-8') as f:
                 json.dump(data_dict, f, ensure_ascii=False, indent=4)
-                logging.info(f"JSON data saved to {json_file}")
+                logger.info(f"JSON data saved to {json_file}")
 
         return data_dict
 
     except FileNotFoundError as e:
-        logging.error(f"File not found: {e}")
+        logger.error(f"File not found: {e}")
         return False
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
         return False
 
 def save_xls_file(data: Dict[str, List[Dict]], file_path: str) -> bool:
@@ -101,9 +99,9 @@ def save_xls_file(data: Dict[str, List[Dict]], file_path: str) -> bool:
             for sheet_name, rows in data.items():
                 df = pd.DataFrame(rows)
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
-                logging.info(f"Sheet '{sheet_name}' saved to {file_path}")
+                logger.info(f"Sheet '{sheet_name}' saved to {file_path}")
         return True
     except Exception as e:
-        logging.error(f"Error saving Excel file: {e}")
+        logger.error(f"Error saving Excel file: {e}")
         return False
 

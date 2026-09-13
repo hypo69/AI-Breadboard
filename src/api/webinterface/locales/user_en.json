@@ -1,0 +1,57 @@
+{
+  "tabs": {
+    "groupStandard": "Standard",
+    "groupExtended": "Extended",
+    "groupDialog": "Dialog & Audio",
+    "groupAi": "AI & Knowledge",
+    "groupPlugins": "Plugins & Search",
+    "groupSystem": "Administration",
+    "groupApps": "Applications",
+    "groupUserServices": "Services",
+    "chat": "💬 Chat",
+    "voice": "🎙️ Audio Processing",
+    "rag": "🧠 RAG",
+    "tts": "🗣️ TTS Settings",
+    "skills": "⚡ Skills",
+    "news": "📰 News",
+    "plugins": "🔌 Plugins",
+    "managePlugins": "⚙️ Manage",
+    "managePluginsLong": "⚙️ Manage Plugins",
+    "admin": "⚙️ Admin",
+    "users": "👥 Users",
+    "models": "🤖 Models & APIs",
+    "agents": "🧩 AI Agents",
+    "search": "🌐 Web Search",
+    "sources": "📑 Sources",
+    "logs": "📋 Logs",
+    "help": "📚 Reference",
+    "instructions": "📝 System Instructions",
+    "mcp": "🔌 MCP Servers",
+    "googleAccounts": "🌐 Google Accounts",
+    "helpdesk": "🛟 Helpdesk",
+    "trading": "📈 Trading Terminal",
+    "network": "🌐 Network Terminal",
+    "systemInspector": "🖥️ System Inspector",
+    "player": "Player",
+    "cabinet": "Cabinet",
+    "settings": "Settings"
+  },
+  "player": {
+    "noFiles": "No files",
+    "loadError": "Failed to load files",
+    "prev": "⏮ Previous",
+    "next": "Next ⏭",
+    "nowPlaying": "Now playing:"
+  },
+  "chat": {
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "startPrompt": "Start a conversation with AI",
+    "error": "Error",
+    "typing": "Typing..."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error"
+  }
+}

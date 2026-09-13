@@ -6,7 +6,6 @@
 
 import os
 import json
-import logging
 from datetime import datetime, timedelta
 from typing import Optional, Callable
 import time
@@ -21,7 +20,7 @@ except ImportError:
 
 from .google_drive_sync import GoogleDriveSync
 
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 
 class SyncScheduler:

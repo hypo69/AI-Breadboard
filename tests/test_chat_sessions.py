@@ -21,8 +21,8 @@ from unittest.mock import Mock, patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from src.fastapi import chat_sessions_db
-from src.fastapi.router_chat import init_router as init_chat_router
+from src.api import chat_sessions_db
+from src.api.router_chat import init_router as init_chat_router
 
 
 @pytest.fixture(autouse=True)

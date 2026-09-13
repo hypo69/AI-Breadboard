@@ -17,7 +17,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from main import app
-from src.fastapi.helpdesk.database import init_db, get_db
+from src.api.helpdesk.database import init_db, get_db
 
 
 @pytest.fixture(autouse=True)

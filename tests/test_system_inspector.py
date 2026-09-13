@@ -20,7 +20,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from apps.system_inspector.tui import SystemInspectorState, render_ui
-from src.fastapi.router_system import init_router
+from src.api.router_system import init_router
 from src.system import (
     CpuMetrics,
     GpuMetrics,

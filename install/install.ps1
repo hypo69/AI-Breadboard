@@ -86,6 +86,21 @@ $I18N = @{
         step_5_not_found      = "    [INFO] SSL-сертификаты не найдены. Вызов мастера создания сертификатов..."
         step_5_missing_script = "    [WARN] Скрипт {0} не найден. Сервер будет запускаться без SSL."
         
+        step_wireshark_header = "║       УСТАНОВКА И ПРОВЕРКА WIRESHARK / TSHARK                 ║"
+        step_wireshark_light_skip = "    [LIGHT MODE] Пропуск проверки сетевых утилит Wireshark/TShark."
+        step_wireshark_already_installed = "    [OK] TShark / Wireshark уже установлен: {0}"
+        step_wireshark_not_found = "    [INFO] TShark / Wireshark не найден в системе."
+        step_wireshark_prompt = "    Wireshark/TShark требуется для модуля анализа сетевого трафика (src/network/)."
+        step_wireshark_opt_1 = "      [1] Установить Wireshark через winget (включает TShark и Npcap) [По умолчанию]"
+        step_wireshark_opt_2 = "      [2] Пропустить установку Wireshark"
+        step_wireshark_choice_prompt = "    Ваш выбор [Enter = 1]"
+        step_wireshark_skipped = "    [INFO] Установка Wireshark пропущена пользователем."
+        step_wireshark_installing_winget = "    Установка Wireshark через winget (пожалуйста, подтвердите запрос UAC при необходимости)..."
+        step_wireshark_success = "    [OK] Wireshark / TShark успешно установлен: {0}"
+        step_wireshark_post_install_hint = "    [INFO] Wireshark установлен. Перезапустите PowerShell для обновления путей в терминале."
+        step_wireshark_winget_missing = "    [WARN] winget не найден. Установите Wireshark вручную:"
+        step_wireshark_error = "    [ERROR] Ошибка при установке Wireshark: {0}"
+
         step_6                = "[6/6] Проверка установленного окружения..."
         step_6_ok             = "    [OK] Основные библиотеки успешно инициализированы"
         step_6_py_path        = "    [OK] Python интерпретатор: {0}"
@@ -150,6 +165,21 @@ $I18N = @{
         step_5_not_found      = "    [INFO] SSL certificates not found. Invoking certificate wizard..."
         step_5_missing_script = "    [WARN] Script {0} not found. Server will run without SSL."
         
+        step_wireshark_header = "║       WIRESHARK / TSHARK INSTALLATION & VERIFICATION         ║"
+        step_wireshark_light_skip = "    [LIGHT MODE] Skipping Wireshark/TShark network tools check."
+        step_wireshark_already_installed = "    [OK] TShark / Wireshark is already installed: {0}"
+        step_wireshark_not_found = "    [INFO] TShark / Wireshark not found on this system."
+        step_wireshark_prompt = "    Wireshark/TShark is required for network traffic analysis features (src/network/)."
+        step_wireshark_opt_1 = "      [1] Install Wireshark via winget (includes TShark and Npcap) [Default]"
+        step_wireshark_opt_2 = "      [2] Skip Wireshark installation"
+        step_wireshark_choice_prompt = "    Your choice [Enter = 1]"
+        step_wireshark_skipped = "    [INFO] Wireshark installation skipped by user."
+        step_wireshark_installing_winget = "    Installing Wireshark via winget (please accept UAC prompt if requested)..."
+        step_wireshark_success = "    [OK] Wireshark / TShark installed successfully: {0}"
+        step_wireshark_post_install_hint = "    [INFO] Wireshark installed. Restart PowerShell to refresh terminal PATH."
+        step_wireshark_winget_missing = "    [WARN] winget not found. Please install Wireshark manually:"
+        step_wireshark_error = "    [ERROR] Error installing Wireshark: {0}"
+
         step_6                = "[6/6] Verifying installed environment..."
         step_6_ok             = "    [OK] Core libraries successfully initialized"
         step_6_py_path        = "    [OK] Python interpreter: {0}"
@@ -508,6 +538,14 @@ if ((Test-Path $certFile) -and (Test-Path $keyFile)) {
     } else {
         Write-Host (Msg "step_5_missing_script" @($sslScript)) -ForegroundColor Yellow
     }
+}
+
+# ============================================================
+# Проверка и установка Wireshark / TShark
+# ============================================================
+$wiresharkModule = Join-Path $ScriptRoot "Install-Wireshark.ps1"
+if (Test-Path $wiresharkModule) {
+    & $wiresharkModule -InstallDir $ScriptRoot -InstallLightVersion:$InstallLightVersion
 }
 
 # ============================================================
