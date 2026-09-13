@@ -1,3 +1,4 @@
+
 # Google Drive Sync Admin Panel Integration
 
 ## 📋 Описание
@@ -7,6 +8,7 @@
 ## 🎯 Компоненты интеграции
 
 ### REST API
+
 - **Модуль**: `src/fastapi/router_sync.py`
 - **Эндпоинты**:
   - `GET /api/admin/sync/status` - Статус синхронизации
@@ -20,6 +22,7 @@
   - `POST /api/admin/sync/config` - Обновить конфигурацию
 
 ### Фронтенд компоненты
+
 - **HTML**: `src/fastapi/webinterface/admin/sync.html` - Полная вкладка (standalone)
 - **JavaScript**: `src/fastapi/webinterface/admin/sync-tab.js` - JS класс для интеграции
 - **Интеграция в main.py**: Автоматически подключается через `include_router`
@@ -35,6 +38,7 @@
 ### Управление синхронизацией через админ-панель
 
 #### 📊 Статус синхронизации
+
 - Текущий статус планировщика (Running/Inactive)
 - Время последней синхронизации
 - Время следующей синхронизации
@@ -42,12 +46,14 @@
 - Прямая ссылка на Google Drive папку
 
 #### 💾 Статистика хранилища
+
 - Общий размер синхронизированных данных
 - Количество файлов
 - Количество папок
 - Количество ошибок
 
 #### 🎮 Управление
+
 - **Запустить/остановить планировщик** - Автоматическая синхронизация
 - **Синхронизировать сейчас** - Выбрать тип данных для синхронизации:
   - All Data - все (данные, логи, конфиги, секреты)
@@ -59,6 +65,7 @@
 - **Изменить интервал** - Настроить интервал между синхронизациями (1-24 часов)
 
 #### 📋 Лог активности
+
 - История недавних операций синхронизации
 - Временные метки операций
 
@@ -69,6 +76,7 @@
 Если вы хотите интегрировать вкладку в существующий index.html:
 
 1. Добавить вкладку в меню:
+
 ```html
 <button class="dropdown-item d-flex align-items-center gap-2" 
         data-tab="tab-sync" 
@@ -79,6 +87,7 @@
 ```
 
 2. Добавить контейнер вкладки:
+
 ```html
 <div class="tab-pane fade" id="tab-sync" role="tabpanel">
   <!-- Содержимое загружается JS -->
@@ -86,6 +95,7 @@
 ```
 
 3. Подключить JS модуль:
+
 ```html
 <script src="/admin/sync-tab.js"></script>
 ```
@@ -102,11 +112,13 @@
 ## 📖 API Примеры
 
 ### Получить статус синхронизации
+
 ```bash
 curl http://localhost:8000/api/admin/sync/status
 ```
 
 Ответ:
+
 ```json
 {
   "is_running": true,
@@ -119,6 +131,7 @@ curl http://localhost:8000/api/admin/sync/status
 ```
 
 ### Запустить синхронизацию
+
 ```bash
 curl -X POST http://localhost:8000/api/admin/sync/sync-now \
   -H "Content-Type: application/json" \
@@ -126,6 +139,7 @@ curl -X POST http://localhost:8000/api/admin/sync/sync-now \
 ```
 
 Ответ:
+
 ```json
 {
   "status": "syncing",
@@ -134,11 +148,13 @@ curl -X POST http://localhost:8000/api/admin/sync/sync-now \
 ```
 
 ### Получить статистику
+
 ```bash
 curl http://localhost:8000/api/admin/sync/stats
 ```
 
 Ответ:
+
 ```json
 {
   "total_size_mb": 254.32,
@@ -175,6 +191,7 @@ curl http://localhost:8000/api/admin/sync/stats
 ## 📊 Обновления в реальном времени
 
 Админ-панель автоматически обновляет:
+
 - Статус синхронизации каждые 5 секунд
 - Статистику хранилища каждые 30 секунд
 - Логи активности в реальном времени
@@ -190,6 +207,7 @@ curl http://localhost:8000/api/admin/sync/stats
 ### API возвращает 503
 
 Google Drive синхронизация не настроена. Убедитесь:
+
 - Установлены зависимости: `pip install -r req/sync_requirements.txt`
 - Подготовлен Google Service Account
 - Запущено приложение с синхром-модулями
@@ -203,7 +221,7 @@ Google Drive синхронизация не настроена. Убедите�
 
 ## 📝 Структура компонентов
 
-```
+```text
 src/fastapi/
 ├── router_sync.py              # REST API эндпоинты
 └── webinterface/admin/
@@ -224,6 +242,7 @@ app.include_router(init_sync_router())
 ```
 
 Синхронизация доступна по адресам:
+
 - REST API: `/api/admin/sync/*`
 - Веб-интерфейс: `/admin` (вкладка "Google Drive Synchronization")
 
@@ -275,6 +294,6 @@ async def create_backup():
 - ✅ Обработка ошибок добавлена
 - ✅ Документация полная
 
-## 🎉 Готово!
+## 🎉 Готово
 
 Администраторская вкладка для управления Google Drive синхронизацией полностью готова к использованию!
