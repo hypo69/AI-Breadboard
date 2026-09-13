@@ -527,7 +527,7 @@ assist logs 100   # последние 100 строк через CLI
 - [Разработка плагинов](docs/ru/plugins/development.md)
 - [Разработка навыков](docs/ru/skills/development.md)
 
-Онлайн-документация: [Read the Docs](https://readthedocs.org/) (после публикации)
+Онлайн-документация: [Read the Docs](https://hypo69.github.io/aibreadboard/ru/) · [Локально](http://localhost:8000/docs) (после запуска `mkdocs serve`)
 
 ---
 

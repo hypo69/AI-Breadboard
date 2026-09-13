@@ -23,6 +23,7 @@ This file serves as the **primary instruction index** for the project. It links 
 - **CLI Tools Reference:** [`.ai/instructions/knowledge/scripts_tools.md`](.ai/instructions/knowledge/scripts_tools.md)
 - **RAG Document Cleaner:** [`.ai/instructions/knowledge/rag_cleaner.md`](.ai/instructions/knowledge/rag_cleaner.md)
 - **TDD & Doc Standards:** [`.ai/instructions/knowledge/tdd_standards.md`](.ai/instructions/knowledge/tdd_standards.md)
+- **Agent Skills:** [`.agents/skills/`](.agents/skills/) (Developer, System, User)
 
 ---
 

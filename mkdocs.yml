@@ -1,6 +1,7 @@
 site_name: AI-Breadboard
 site_description: Interactive AI Model Testbench & Breadboard
 site_url: !ENV READTHEDOCS_CANONICAL_URL
+docs_dir: AI-Breadboard/docs
 repo_url: https://github.com/hypo69/AI-Breadboard
 edit_uri: edit/master/docs/
 
@@ -20,12 +21,57 @@ theme:
     - toc.integrate
     - content.code.copy
 
-# Navigation: English only
+# Navigation
 nav:
-  - Home: index.md
-  - Getting Started: getting-started.md
-  - API:
-      - Overview: api.md
+  - Главная: ru/index.md
+  - Руководство:
+      - Начало работы: ru/manual/getting-started.md
+      - Установка: ru/manual/installation.md
+      - Запуск сервера: ru/manual/RUN.md
+      - Конфигурация и секреты: ru/manual/configuration.md
+      - Справочник config.json: ru/manual/config.md
+      - Примеры использования: ru/manual/usage-examples.md
+      - Решение проблем: ru/manual/troubleshooting.md
+  - Плагины:
+      - Обзор: ru/plugins/index.md
+      - Каталог: ru/plugins/catalog.md
+      - Архитектура: ru/plugins/architecture.md
+      - Разработка: ru/plugins/development.md
+  - Навыки (Skills):
+      - Обзор: ru/skills/index.md
+      - Каталог: ru/skills/catalog.md
+      - Архитектура: ru/skills/architecture.md
+      - Разработка: ru/skills/development.md
+  - Приложения (Apps):
+      - Обзор: ru/apps/index.md
+      - Каталог: ru/apps/catalog.md
+  - MCP Серверы:
+      - Обзор: ru/mcp/index.md
+      - Каталог: ru/mcp/catalog.md
+      - Руководство: ru/mcp/guide.md
+  - Архитектура:
+      - Обзор: ru/architecture/overview.md
+      - Компоненты: ru/architecture/components.md
+      - Безопасность API: ru/architecture/api-security.md
+      - Модели данных: ru/architecture/data-models.md
+      - Провайдер Gemini: ru/architecture/gemini-provider.md
+  - Гайды:
+      - Создание агентов: ru/guides/creating-agents.md
+      - Разработка плагинов: ru/guides/developing-plugins.md
+      - Разработка навыков: ru/guides/developing-skills.md
+      - Чат-интерфейс: ru/guides/chat-interface.md
+      - Google OAuth: ru/guides/google-oauth-setup.md
+      - Google Workspace: ru/guides/google-workspace.md
+      - Стратегия тестирования: ru/guides/testing-strategy.md
+  - API Reference:
+      - Обзор: ru/api/index.md
+      - Агенты: ru/api/agents.md
+      - AI: ru/api/ai.md
+      - Навыки: ru/api/skills.md
+  - Разработчику:
+      - Обзор: ru/developer/index.md
+      - Changelog: ru/changelog.md
+      - Контрибуция: ru/contributing.md
 
 # Plugins
 plugins:
