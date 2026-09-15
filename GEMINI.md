@@ -20,6 +20,7 @@ This file serves as the **primary instruction index** for the project. It links 
 - **Developer Guide:** [`docs/en/developer/index.md`](docs/en/developer/index.md)
 - **Installation Guide:** [`.ai/instructions/knowledge/INSTALLATION_GUIDE.md`](.ai/instructions/knowledge/INSTALLATION_GUIDE.md)
 - **Launcher Guide:** [`.ai/instructions/knowledge/LAUNCHER_GUIDE.md`](.ai/instructions/knowledge/LAUNCHER_GUIDE.md)
+- **Menu Systems Guide:** [`.ai/instructions/knowledge/MENU_CREATION_AND_USAGE_GUIDE.md`](.ai/instructions/knowledge/MENU_CREATION_AND_USAGE_GUIDE.md) | [`docs/en/menus_guide.md`](docs/en/menus_guide.md)
 - **CLI Tools Reference:** [`.ai/instructions/knowledge/scripts_tools.md`](.ai/instructions/knowledge/scripts_tools.md)
 - **RAG Document Cleaner:** [`.ai/instructions/knowledge/rag_cleaner.md`](.ai/instructions/knowledge/rag_cleaner.md)
 - **TDD & Doc Standards:** [`.ai/instructions/knowledge/tdd_standards.md`](.ai/instructions/knowledge/tdd_standards.md)

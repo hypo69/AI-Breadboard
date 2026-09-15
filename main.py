@@ -40,7 +40,7 @@ app.state.ws_hub = state.ws_hub
 
 # Initialize AI models (will be set during startup)
 try:
-    from src.ai.unified_chat_model import UnifiedChatModel
+    from src.ai import UnifiedChatModel
     state.chat_model = UnifiedChatModel()
     state.narrator_model = UnifiedChatModel()
     app.state.chat_model = state.chat_model
@@ -67,7 +67,29 @@ async def startup_event():
     # Start WebSocket heartbeat
     if state.ws_hub:
         await state.ws_hub.start_heartbeat()
-    
+
+    # Load system and user plugins
+    try:
+        from plugins import load_plugins
+        state.plugins = load_plugins(ai_model=state.chat_model)
+        app.state.plugins = state.plugins
+        logger.info(f"Loaded {len(state.plugins)} plugins during startup.")
+    except Exception as exc:
+        logger.error(f"Failed to load plugins during startup: {exc}")
+        state.plugins = {}
+        app.state.plugins = {}
+
+    # Initialize and start Telegram Bot if enabled
+    enable_tg_env = os.getenv("ENABLE_TELEGRAM_BOT", "").lower() in ("true", "1", "yes")
+    tg_plugin = state.plugins.get("telegram_bot")
+    if tg_plugin and enable_tg_env:
+        try:
+            tg_plugin.set_plugins(state.plugins)
+            await tg_plugin.start()
+            logger.info("Telegram Bot plugin started successfully inside FastAPI lifecycle.")
+        except Exception as exc:
+            logger.error(f"Failed to start Telegram Bot plugin: {exc}")
+
     try:
         result = check_updates()
         if result.get("is_update_available"):
@@ -81,6 +103,15 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Application shutdown tasks."""
+    # Stop Telegram Bot if running
+    tg_plugin = getattr(state, "plugins", {}).get("telegram_bot")
+    if tg_plugin:
+        try:
+            await tg_plugin.stop()
+            logger.info("Telegram Bot plugin stopped cleanly.")
+        except Exception as exc:
+            logger.error(f"Error while stopping Telegram Bot plugin: {exc}")
+
     # Stop WebSocket hub
     if state.ws_hub:
         await state.ws_hub.stop()

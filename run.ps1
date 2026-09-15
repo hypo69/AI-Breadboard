@@ -857,26 +857,19 @@ if ($useCloudflared) {
 }
 
 # ----------------------------------------------------------------------------
-# SUBSTAGE 7.4 — TELEGRAM BOT (scripts/dev/bot_runner.py)
+# SUBSTAGE 7.4 — TELEGRAM BOT (Embedded in FastAPI Server Lifecycle)
 # ----------------------------------------------------------------------------
-# Проверяется наличие Run-TelegramBot.ps1 и передаётся ему команда запуска.
-# При отключённом Telegram-боте этот блок полностью пропускается.
+# Telegram-бот теперь интегрирован напрямую в жизненный цикл FastAPI (main.py)
+# как плагин telegram_bot с единым доступом ко всем плагинам и моделям.
+# При $enableTelegramBotVal = $true он запустится вместе с сервером.
 # ----------------------------------------------------------------------------
 if ($enableTelegramBotVal) {
     Write-Host ""
-    Write-Host "    Запуск Telegram-бота в отдельном окне терминала..." -ForegroundColor Cyan
-    $tgScript = Join-Path $scriptDir "launchers\Run-TelegramBot.ps1"
-    if (-not (Test-Path $tgScript)) {
-        $tgScript = Join-Path $scriptDir "Run-TelegramBot.ps1"
-    }
-    if (Test-Path $tgScript) {
-        Write-Host "    Вызов Run-TelegramBot.ps1 (-NewWindow)..." -ForegroundColor DarkGray
-        & $tgScript -Action start -NewWindow
-    } else {
-        Write-Host "    [WARN] Run-TelegramBot.ps1 не найден: $tgScript" -ForegroundColor Yellow
-    }
+    Write-Host "    [INTEGRATED] Telegram-бот будет запущен внутри жизненного цикла FastAPI..." -ForegroundColor Green
+    $env:ENABLE_TELEGRAM_BOT = "true"
 } else {
-    # Если бот отключён, убеждаемся что фоновые процессы бота остановлены
+    $env:ENABLE_TELEGRAM_BOT = "false"
+    # Убеждаемся что автономные фоновые процессы бота (если были) остановлены
     $tgScript = Join-Path $scriptDir "launchers\Run-TelegramBot.ps1"
     if (-not (Test-Path $tgScript)) {
         $tgScript = Join-Path $scriptDir "Run-TelegramBot.ps1"
@@ -1001,9 +994,10 @@ if (Test-Path $unicornScript) {
         OpenUrl = $openUrl
     }
     if ($enableOAuthVal -ne $null) { $unicornCallArgs['EnableOAuth'] = $enableOAuthVal }
+    if ($enableTelegramBotVal -ne $null) { $unicornCallArgs['EnableTelegramBot'] = $enableTelegramBotVal }
     if ($Workers -ne $null) { $unicornCallArgs['Workers'] = $Workers }
     if ($Reload -ne $null) { $unicornCallArgs['Reload'] = $Reload }
-    Write-Host "    Запуск Run-Unicorn.ps1 с параметрами -Host_ $host_ -Port $port -OpenUrl $openUrl -EnableOAuth $enableOAuthVal..." -ForegroundColor DarkGray
+    Write-Host "    Запуск Run-Unicorn.ps1 с параметрами -Host_ $host_ -Port $port -OpenUrl $openUrl -EnableOAuth $enableOAuthVal -EnableTelegramBot $enableTelegramBotVal..." -ForegroundColor DarkGray
     & $unicornScript @unicornCallArgs
 } else {
     Write-Host "    [ERROR] Run-Unicorn.ps1 не найден: $unicornScript" -ForegroundColor Red

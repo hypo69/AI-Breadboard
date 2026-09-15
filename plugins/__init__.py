@@ -22,23 +22,60 @@ under plugins/, checking configuration toggles and environment variables.
 from __future__ import annotations
 
 import importlib
+import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+import pkgutil
+from typing import Any, Dict, List, Optional
 
 from header import __root__
 from src.logger import logger
 from src.config import global_settings
 from plugins.base import BasePlugin
 
+# Extend __path__ to include all plugin subcategory folders (e.g. user-plugins, developer-plugins, system-plugins)
+_plugins_dir: Path = __root__ / "plugins"
+if _plugins_dir.exists() and _plugins_dir.is_dir():
+    for _sub in _plugins_dir.iterdir():
+        if _sub.is_dir() and not _sub.name.startswith(("_", ".")):
+            if str(_sub) not in __path__:
+                __path__.append(str(_sub))
+
 __all__ = ["BasePlugin", "load_plugins"]
+
+
+def _discover_plugin_directories(plugins_dir: Path) -> List[Path]:
+    """Discover all valid plugin directories either directly under plugins/ or inside category folders.
+
+    Args:
+        plugins_dir (Path): Root plugins directory.
+
+    Returns:
+        List[Path]: List of plugin directories containing an __init__.py file.
+    """
+    discovered: List[Path] = []
+    if not plugins_dir.exists() or not plugins_dir.is_dir():
+        return discovered
+
+    for item in plugins_dir.iterdir():
+        if not item.is_dir() or item.name.startswith(("_", ".")):
+            continue
+        # Direct plugin folder
+        if (item / "__init__.py").exists():
+            discovered.append(item)
+        else:
+            # Subcategory folder (e.g., developer-plugins, system-plugins, user-plugins)
+            for sub_item in item.iterdir():
+                if sub_item.is_dir() and not sub_item.name.startswith(("_", ".")) and (sub_item / "__init__.py").exists():
+                    discovered.append(sub_item)
+    return discovered
 
 
 def load_plugins(ai_model: Any = None) -> Dict[str, BasePlugin]:
     """Discover, load, and instantiate all available plugins in the plugins directory.
 
-    Scans the plugins/ folder for directories containing __init__.py, imports each
-    module, instantiates the plugin using module.plugin(ai_model=ai_model), and checks
+    Scans the plugins/ folder and its category subdirectories for modules containing __init__.py,
+    imports each module, instantiates the plugin using module.plugin(ai_model=ai_model), and checks
     activation state from config.json and DISABLED_PLUGINS environment variable.
 
     Args:
@@ -76,14 +113,7 @@ def load_plugins(ai_model: Any = None) -> Dict[str, BasePlugin]:
         except Exception:
             plugins_cfg = {}
 
-    for item in plugins_dir.iterdir():
-        if not item.is_dir() or item.name.startswith(("_", ".")):
-            continue
-
-        init_file = item / "__init__.py"
-        if not init_file.exists():
-            continue
-
+    for item in _discover_plugin_directories(plugins_dir):
         plugin_mod_name = f"plugins.{item.name}"
         try:
             module = importlib.import_module(plugin_mod_name)

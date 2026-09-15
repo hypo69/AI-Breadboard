@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-SKILL_DIR = PROJECT_ROOT / ".agents" / "skills" / "project-installer"
+SKILL_DIR = PROJECT_ROOT / ".agents" / "skills" / "system-skills" / "project-installer"
 VERIFIER_SCRIPT = SKILL_DIR / "scripts" / "verify_installation.py"
 
 # Import InstallationVerifier dynamically

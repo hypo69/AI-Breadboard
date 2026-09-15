@@ -43,9 +43,9 @@ class UnifiedChatModel:
 
     def __init__(
         self,
-        api_key_names: List[str],
-        system_instruction: str,
-        foundry_model_id: str,
+        api_key_names: Optional[List[str]] = None,
+        system_instruction: str = "",
+        foundry_model_id: str = "qwen2.5-1.5b-instruct-generic-cpu:4",
         use_foundry: bool = False,
         use_ollama: bool = False,
         ollama_model_id: str = "llama3.1",
@@ -55,7 +55,7 @@ class UnifiedChatModel:
 
         # --- always-available providers ---
         self.gemini_model = GoogleGenerativeAI(
-            api_key_names=api_key_names,
+            api_key_names=api_key_names or [],
             system_instruction=system_instruction,
             sleep_on_exhausted=False,
         )

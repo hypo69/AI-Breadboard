@@ -34,6 +34,9 @@ class AppState:
     # Plugin registry for hot-reload support
     plugin_registry: Optional[Any] = None
 
+    # Loaded plugins dictionary
+    plugins: Optional[Any] = None
+
     # Server start timestamp for uptime calculation
     started_at: float = field(default_factory=time.time)
 

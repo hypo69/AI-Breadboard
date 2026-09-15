@@ -34,6 +34,9 @@ param (
     [Alias('OAuth')]
     [Nullable[bool]]$EnableOAuth = $null,
 
+    [Alias('TelegramBot', 'TG', 'Telegram')]
+    [Nullable[bool]]$EnableTelegramBot = $null,
+
     [Alias('Worker', 'UnicornWorkers', 'unicorn_workers')]
     [Nullable[int]]$Workers = $null,
 
@@ -140,50 +143,54 @@ $reload     = $false
 $clientUrl  = $null
 $useCloudflared = $false
 
-if (Test-Path $configPath) {
-    $cfg     = Get-Content $configPath | ConvertFrom-Json
-    if ($cfg.server.host) { $cfgHost = [string]$cfg.server.host }
-    if ($cfg.server.port) { $cfgPort = [string]$cfg.server.port }
-    $useSsl  = $cfg.server.use_ssl
-    $mode    = $cfg.server.mode.ToLower()
-    $debug   = if ($cfg.server.debug) { "true" } else { "false" }
-    if ($cfg.server.PSObject.Properties['use_cloudflared']) {
-        $useCloudflared = [bool]$cfg.server.use_cloudflared
-    }
-    if ($cfg.server.PSObject.Properties['client_url'] -and $cfg.server.client_url) {
-        $clientUrl = [string]$cfg.server.client_url
-    } elseif ($cfg.server.PSObject.Properties['user_domain'] -and $cfg.server.user_domain) {
-        $clientUrl = "https://$($cfg.server.user_domain)"
-    }
-    
-    # Priority: unicorn_reload -> reload (default: false)
-    if ($cfg.server.PSObject.Properties['unicorn_reload']) {
-        $reload = [bool]$cfg.server.unicorn_reload
-    } elseif ($cfg.server.PSObject.Properties['reload']) {
-        $reload = [bool]$cfg.server.reload
-    } else {
-        $reload = $false
-    }
+$mode    = "dev"
+$debug   = "false"
 
-    # Priority: unicorn_workers -> workers (default: 1)
-    if ($cfg.server.PSObject.Properties['unicorn_workers']) {
-        $workers = [int]$cfg.server.unicorn_workers
-    } elseif ($cfg.server.PSObject.Properties['workers']) {
-        $workers = [int]$cfg.server.workers
-    } else {
-        $workers = 1
+if (Test-Path $configPath) {
+    try {
+        $cfg = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($cfg -and $cfg.server) {
+            if ($cfg.server.host) { $cfgHost = [string]$cfg.server.host }
+            if ($cfg.server.port) { $cfgPort = [string]$cfg.server.port }
+            if ($cfg.server.use_ssl -ne $null) { $useSsl = [bool]$cfg.server.use_ssl }
+            if ($cfg.server.mode) { $mode = [string]$cfg.server.mode.ToString().ToLower() }
+            if ($cfg.server.debug -ne $null) { $debug = if ($cfg.server.debug) { "true" } else { "false" } }
+            if ($cfg.server.PSObject.Properties['use_cloudflared'] -and $cfg.server.use_cloudflared -ne $null) {
+                $useCloudflared = [bool]$cfg.server.use_cloudflared
+            }
+            if ($cfg.server.PSObject.Properties['client_url'] -and $cfg.server.client_url) {
+                $clientUrl = [string]$cfg.server.client_url
+            } elseif ($cfg.server.PSObject.Properties['user_domain'] -and $cfg.server.user_domain) {
+                $clientUrl = "https://$($cfg.server.user_domain)"
+            }
+            
+            # Priority: unicorn_reload -> reload (default: false)
+            if ($cfg.server.PSObject.Properties['unicorn_reload'] -and $cfg.server.unicorn_reload -ne $null) {
+                $reload = [bool]$cfg.server.unicorn_reload
+            } elseif ($cfg.server.PSObject.Properties['reload'] -and $cfg.server.reload -ne $null) {
+                $reload = [bool]$cfg.server.reload
+            }
+
+            # Priority: unicorn_workers -> workers (default: 1)
+            if ($cfg.server.PSObject.Properties['unicorn_workers'] -and $cfg.server.unicorn_workers -ne $null) {
+                $workers = [int]$cfg.server.unicorn_workers
+            } elseif ($cfg.server.PSObject.Properties['workers'] -and $cfg.server.workers -ne $null) {
+                $workers = [int]$cfg.server.workers
+            }
+        }
+    } catch {
+        Write-Host "    [WARN] Could not parse config.json, using defaults: $_" -ForegroundColor Yellow
     }
-} else {
-    $mode = "dev"
-    $debug = "true"
-    $reload = $false
-    $workers = 1
 }
 
-# Reading .env
 $oauthEnabled = $false
-if ($cfg.server -and $cfg.server.enable_oauth -ne $null) {
+if ($cfg -and $cfg.server -and $cfg.server.enable_oauth -ne $null) {
     $oauthEnabled = [bool]$cfg.server.enable_oauth
+}
+
+$tgBotEnabled = $false
+if ($cfg -and $cfg.server -and $cfg.server.enable_telegram_bot -ne $null) {
+    $tgBotEnabled = [bool]$cfg.server.enable_telegram_bot
 }
 
 if (Test-Path $envFile) {
@@ -195,6 +202,7 @@ if (Test-Path $envFile) {
             if ($key -eq "USE_SSL") { $useSsl = $val -in ("true","1","yes") }
             if ($key -eq "MODE") { $mode = $val.ToLower() }
             if ($key -eq "ENABLE_OAUTH") { $oauthEnabled = $val -in ("true","1","yes") }
+            if ($key -eq "ENABLE_TELEGRAM_BOT") { $tgBotEnabled = $val -in ("true","1","yes") }
             if ($key -in ("UNICORN_RELOAD", "RELOAD")) { $reload = $val -in ("true","1","yes") }
             if ($key -in ("UNICORN_WORKERS", "WORKERS")) { $workers = [int]$val }
             if ($key -eq "USE_CLOUDFLARED") { $useCloudflared = $val -in ("true","1","yes") }
@@ -208,6 +216,11 @@ if ($EnableOAuth -ne $null) {
     $oauthEnabled = [bool]$EnableOAuth
 }
 $env:ENABLE_OAUTH = if ($oauthEnabled) { "true" } else { "false" }
+
+if ($EnableTelegramBot -ne $null) {
+    $tgBotEnabled = [bool]$EnableTelegramBot
+}
+$env:ENABLE_TELEGRAM_BOT = if ($tgBotEnabled) { "true" } else { "false" }
 
 if ($Workers -ne $null) {
     $workers = [int]$Workers
@@ -236,6 +249,7 @@ Write-Host "    Host:       $host_" -ForegroundColor Gray
 Write-Host "    Port:       $port"  -ForegroundColor Gray
 Write-Host "    AI Keys:    $(if ($hasApiKey) { 'FOUND' } else { 'NOT CONFIGURED (https://aistudio.google.com/app/apikey)' })" -ForegroundColor $(if ($hasApiKey) { 'Green' } else { 'Yellow' })
 Write-Host "    OAuth:      $(if ($oauthEnabled) { 'ENABLED' } else { 'DISABLED (default)' })" -ForegroundColor $(if ($oauthEnabled) { 'Green' } else { 'Yellow' })
+Write-Host "    Telegram:   $(if ($tgBotEnabled) { 'ENABLED (FastAPI Lifecycle)' } else { 'DISABLED (default)' })" -ForegroundColor $(if ($tgBotEnabled) { 'Green' } else { 'Yellow' })
 Write-Host "    Autoreload: $(if ($reload) { 'ENABLED (config.json)' } else { 'DISABLED (config.json)' })" -ForegroundColor $(if ($reload) { 'Green' } else { 'Yellow' })
 if (-not $reload) {
     Write-Host "    Workers:    $workers" -ForegroundColor Gray

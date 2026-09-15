@@ -17,7 +17,7 @@ import pytest
 import sys
 
 # Ensure scripts can be imported
-skill_scripts = Path(__file__).resolve().parent.parent / '.agents' / 'skills' / 'employee-offboarding-monitor' / 'scripts'
+skill_scripts = Path(__file__).resolve().parent.parent / '.agents' / 'skills' / 'user-skills' / 'employee-offboarding-monitor' / 'scripts'
 if str(skill_scripts) not in sys.path:
     sys.path.insert(0, str(skill_scripts))
 

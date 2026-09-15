@@ -19,7 +19,7 @@ from unittest.mock import MagicMock
 import pytest
 
 # Ensure skill scripts directory is on sys.path
-_SKILL_SCRIPTS = Path(__file__).resolve().parents[1] / ".agents" / "skills" / "gdrive-organizer" / "scripts"
+_SKILL_SCRIPTS = Path(__file__).resolve().parents[1] / ".agents" / "skills" / "user-skills" / "gdrive-organizer" / "scripts"
 if str(_SKILL_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SKILL_SCRIPTS))
 

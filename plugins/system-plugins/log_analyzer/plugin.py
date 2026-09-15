@@ -37,7 +37,9 @@ from src.logger import logger
 from plugins.base import BasePlugin
 
 # Import core parsing and clustering engine from log-analyzer skill
-SKILL_SCRIPTS_PATH = __root__ / ".agents" / "skills" / "log-analyzer" / "scripts"
+SKILL_SCRIPTS_PATH = __root__ / ".agents" / "skills" / "developer-skills" / "log-analyzer" / "scripts"
+if not SKILL_SCRIPTS_PATH.exists():
+    SKILL_SCRIPTS_PATH = __root__ / ".agents" / "skills" / "log-analyzer" / "scripts"
 if str(SKILL_SCRIPTS_PATH) not in sys.path:
     sys.path.insert(0, str(SKILL_SCRIPTS_PATH))
 
