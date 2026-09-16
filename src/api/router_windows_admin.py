@@ -82,6 +82,45 @@ class GroupPolicyDTO(BaseModel):
     applied_to: List[str]
 
 
+class AppExecutionDTO(BaseModel):
+    """Execution history data transfer object."""
+    last_run_time: Optional[str] = None
+    run_count: int = 0
+    focus_time_seconds: int = 0
+    source_artifact: str = "UserAssist"
+    raw_path: str = ""
+
+
+class InstalledAppDTO(BaseModel):
+    """Installed software application data transfer object."""
+    name: str
+    display_name: str
+    version: str = ""
+    publisher: str = ""
+    install_date: Optional[str] = None
+    install_location: str = ""
+    uninstall_string: str = ""
+    size_mb: float = 0.0
+    architecture: str = "x64"
+    category: str = "Прочее"
+    purpose_description: str = ""
+    is_system_component: bool = False
+    execution_info: Optional[AppExecutionDTO] = None
+
+
+class SoftwareAuditReportDTO(BaseModel):
+    """Software audit summary report data transfer object."""
+    timestamp: str
+    total_apps: int
+    active_apps_count: int
+    unused_apps_count: int
+    categories_breakdown: Dict[str, int]
+    recently_launched: List[InstalledAppDTO]
+    top_launched: List[InstalledAppDTO]
+    never_launched_or_dormant_count: int
+
+
+
 def init_router(chat_model: Optional[Any] = None) -> APIRouter:
     """Initialize and configure Windows System Administrator router.
 
@@ -250,6 +289,107 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
                 applied_to=["Domain Controllers"],
             ),
         ]
+
+    @router.get("/software", response_model=List[InstalledAppDTO])
+    async def list_installed_software(
+        category: Optional[str] = Query(default=None, description="Filter by software category"),
+        unused_only: bool = Query(default=False, description="Filter only unused or dormant applications"),
+        limit: int = Query(default=50, ge=1, le=500, description="Max applications count"),
+    ) -> List[InstalledAppDTO]:
+        """Retrieve list of installed software applications with execution history and purpose."""
+        try:
+            from apps.windows.core.software_audit import SoftwareAuditEngine
+            engine = SoftwareAuditEngine()
+            apps = engine.get_installed_applications()
+            
+            if category:
+                c_lower = category.lower()
+                apps = [a for a in apps if c_lower in a.category.value.lower()]
+            if unused_only:
+                apps = [a for a in apps if not a.was_launched]
+                
+            return [
+                InstalledAppDTO(
+                    name=a.name,
+                    display_name=a.display_name,
+                    version=a.version,
+                    publisher=a.publisher,
+                    install_date=a.install_date,
+                    install_location=a.install_location,
+                    uninstall_string=a.uninstall_string,
+                    size_mb=round(a.size_mb, 2),
+                    architecture=a.architecture,
+                    category=a.category.value if hasattr(a.category, "value") else str(a.category),
+                    purpose_description=a.purpose_description,
+                    is_system_component=a.is_system_component,
+                    execution_info=AppExecutionDTO(
+                        last_run_time=a.execution_info.last_run_time.isoformat() if a.execution_info.last_run_time else None,
+                        run_count=a.execution_info.run_count,
+                        focus_time_seconds=a.execution_info.focus_time_seconds,
+                        source_artifact=a.execution_info.source_artifact,
+                        raw_path=a.execution_info.raw_path,
+                    ) if a.execution_info else None,
+                )
+                for a in apps[:limit]
+            ]
+        except Exception as e:
+            logger.error(f"Error retrieving installed software: {e}")
+            return []
+
+    @router.get("/software/audit", response_model=SoftwareAuditReportDTO)
+    async def get_software_audit_report() -> SoftwareAuditReportDTO:
+        """Retrieve comprehensive software audit report with usage analytics."""
+        try:
+            from apps.windows.core.software_audit import SoftwareAuditEngine
+            engine = SoftwareAuditEngine()
+            report = engine.generate_audit_report()
+            
+            def _to_dto(a):
+                return InstalledAppDTO(
+                    name=a.name,
+                    display_name=a.display_name,
+                    version=a.version,
+                    publisher=a.publisher,
+                    install_date=a.install_date,
+                    install_location=a.install_location,
+                    uninstall_string=a.uninstall_string,
+                    size_mb=round(a.size_mb, 2),
+                    architecture=a.architecture,
+                    category=a.category.value if hasattr(a.category, "value") else str(a.category),
+                    purpose_description=a.purpose_description,
+                    is_system_component=a.is_system_component,
+                    execution_info=AppExecutionDTO(
+                        last_run_time=a.execution_info.last_run_time.isoformat() if a.execution_info.last_run_time else None,
+                        run_count=a.execution_info.run_count,
+                        focus_time_seconds=a.execution_info.focus_time_seconds,
+                        source_artifact=a.execution_info.source_artifact,
+                        raw_path=a.execution_info.raw_path,
+                    ) if a.execution_info else None,
+                )
+
+            return SoftwareAuditReportDTO(
+                timestamp=report.timestamp.isoformat(),
+                total_apps=report.total_apps,
+                active_apps_count=report.active_apps_count,
+                unused_apps_count=report.unused_apps_count,
+                categories_breakdown=report.categories_breakdown,
+                recently_launched=[_to_dto(a) for a in report.recently_launched[:10]],
+                top_launched=[_to_dto(a) for a in report.top_launched[:10]],
+                never_launched_or_dormant_count=len(report.never_launched_or_dormant),
+            )
+        except Exception as e:
+            logger.error(f"Error generating software audit report: {e}")
+            return SoftwareAuditReportDTO(
+                timestamp=datetime.now().isoformat(),
+                total_apps=0,
+                active_apps_count=0,
+                unused_apps_count=0,
+                categories_breakdown={},
+                recently_launched=[],
+                top_launched=[],
+                never_launched_or_dormant_count=0,
+            )
+
 
     @router.post("/command/lock-session")
     async def lock_user_session(session_id: int) -> Dict[str, Any]:

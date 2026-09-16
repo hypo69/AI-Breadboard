@@ -1,0 +1,147 @@
+<!-- News Tab Component -->
+<div class="container-fluid p-3" id="news-tab-root">
+  <!-- Top Banner / Digest Generator Bar -->
+  <div class="card border mb-3 shadow-sm">
+    <div class="card-body p-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="p-3 rounded border text-primary display-6 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; background: var(--bg-color);">
+          <i class="bi bi-newspaper"></i>
+        </div>
+        <div>
+          <h5 class="mb-1 d-flex align-items-center gap-2">
+            📰 Интеллектуальная лента новостей
+            <span class="badge bg-primary rounded-pill small" id="news-total-badge">0</span>
+          </h5>
+          <p class="mb-0 text-muted small">
+            Только релевантные новости с непрерывным обучением под ваши личные интересы и AI-выжимками.
+          </p>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" id="btn-refresh-news" onclick="window.newsTab?.refreshNews(true)">
+          <i class="bi bi-arrow-repeat"></i> Обновить
+        </button>
+        <button type="button" class="btn btn-outline-info btn-sm d-flex align-items-center gap-1 shadow-sm" id="btn-preferences-news" data-bs-toggle="modal" data-bs-target="#newsPreferencesModal">
+          <i class="bi bi-sliders"></i> Мои интересы
+        </button>
+        <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1 shadow-sm" id="btn-generate-digest" onclick="window.newsTab?.generateDigest()">
+          <i class="bi bi-stars"></i> ИИ-дайджест
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Digest Section (Appears when generated) -->
+  <div class="card border-primary mb-3 shadow-sm d-none" id="news-digest-card">
+    <div class="card-header d-flex justify-content-between align-items-center border-primary py-2">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-stars text-warning fs-5"></i>
+        <strong id="news-digest-title">Персональный ИИ-дайджест</strong>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="news-digest-tts-btn" title="Озвучить дайджест" onclick="window.newsTab?.speakDigest()">
+          <i class="bi bi-volume-up me-1"></i>Слушать
+        </button>
+        <button type="button" class="btn-close" aria-label="Close" onclick="document.getElementById('news-digest-card').classList.add('d-none')"></button>
+      </div>
+    </div>
+    <div class="card-body p-3">
+      <div id="news-digest-content" class="small" style="line-height: 1.6; white-space: pre-line;"></div>
+    </div>
+  </div>
+
+  <!-- Filter & Learning Feedback Bar -->
+  <div class="card mb-3">
+    <div class="card-body p-2 d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div class="d-flex align-items-center gap-2 flex-grow-1" style="max-width: 480px;">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control" id="news-search-input" placeholder="Фильтр новостей по тексту..." oninput="window.newsTab?.filterNews()">
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <label class="small text-muted text-nowrap" for="news-category-filter">Категория:</label>
+        <select class="form-select form-select-sm" id="news-category-filter" style="width: auto;" onchange="window.newsTab?.filterNews()">
+          <option value="all">Все категории</option>
+          <option value="ai">ИИ & ML</option>
+          <option value="dev">Разработка</option>
+          <option value="tech">Технологии</option>
+          <option value="science">Наука</option>
+          <option value="world">Мировые</option>
+        </select>
+
+        <label class="small text-muted text-nowrap ms-2" for="news-min-score">Мин. совпадение:</label>
+        <select class="form-select form-select-sm" id="news-min-score" style="width: auto;" onchange="window.newsTab?.filterNews()">
+          <option value="0">Все (0%)</option>
+          <option value="0.25" selected>Релевантные (>= 25%)</option>
+          <option value="0.5">Высокое (>= 50%)</option>
+          <option value="0.7">Только топ (>= 70%)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- News Stream Grid -->
+  <div class="row g-3" id="news-articles-container">
+    <div class="col-12 text-center text-muted p-5" id="news-loading-spinner">
+      <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+      <div>Сбор и ранжирование релевантных новостей под ваши интересы...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Preferences & Topics Modal -->
+<div class="modal fade" id="newsPreferencesModal" tabindex="-1" aria-labelledby="newsPreferencesModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="newsPreferencesModalLabel">
+          <i class="bi bi-sliders text-info"></i> Настройка интересов и профиля обучения
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3">
+        <!-- Learned Weights Section -->
+        <div class="mb-3">
+          <label class="form-label small text-muted fw-semibold">
+            <i class="bi bi-lightning-charge text-warning me-1"></i>Накопленные веса интересов (адаптируются на основе лайков):
+          </label>
+          <div class="p-2 border rounded d-flex flex-wrap gap-2" id="news-learned-tags-container" style="max-height: 140px; overflow-y: auto; background: var(--bg-color);">
+            <!-- Badges rendered via JS -->
+          </div>
+        </div>
+
+        <!-- Preferred Topics Input -->
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" for="news-pref-topics-input">
+            Явные ключевые темы (через запятую):
+          </label>
+          <input type="text" class="form-control" id="news-pref-topics-input" placeholder="например: ai, python, robotics, neuroscience, opensource">
+          <small class="text-muted">Новости с этими словами получат приоритетный буст в вашей ленте.</small>
+        </div>
+
+        <!-- Negative Keywords Input -->
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" for="news-neg-topics-input">
+            Стоп-слова и нежелательные темы (через запятую):
+          </label>
+          <input type="text" class="form-control" id="news-neg-topics-input" placeholder="например: криминал, шоу-бизнес, скандалы">
+          <small class="text-muted">Статьи с этими словами будут скрываться или получать минимальный скор.</small>
+        </div>
+
+        <!-- Stats & Reset -->
+        <div class="d-flex align-items-center justify-content-between p-2 rounded border" style="background: var(--bg-color);">
+          <span class="small text-muted" id="news-interactions-count-label">Обработано реакций: 0</span>
+          <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.newsTab?.resetProfile()">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>Сбросить обучение
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+        <button type="button" class="btn btn-sm btn-primary" onclick="window.newsTab?.savePreferences()">Сохранить интересы</button>
+      </div>
+    </div>
+  </div>
+</div>

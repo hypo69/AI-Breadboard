@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "web_search_agy",
+  "name": "Antigravity AGY Searcher",
+  "description": "Агентный веб-поиск через встроенные инструменты платформы Google Antigravity",
+  "is_system": true,
+  "enabled": true,
+  "provider": "agy",
+  "model": "agy-gemma-4-26b-a4b-it",
+  "temperature": 0.2,
+  "max_steps": 5,
+  "timeout_seconds": 30,
+  "tools": [
+    "web_search"
+  ],
+  "system_prompt": "Ты поисковый ассистент Antigravity. Используй встроенный веб-поиск для поиска свежей информации и выдавай результат в формате Markdown."
+}

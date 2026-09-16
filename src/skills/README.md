@@ -9,7 +9,7 @@ The `core.skills` package provides a unified registry for discovering, inspectin
 
 1. `SkillRegistry` automatically scans skill directories in:
    - `.gemini/skills/`
-   - `.agents/skills/`
+   - `skills/`
    - `.github/skills/`
    - `skills/`
 2. Each valid skill folder must contain a `SKILL.md` file with YAML frontmatter.

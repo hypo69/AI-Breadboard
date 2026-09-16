@@ -32,7 +32,7 @@ class TestProjectInstallerSkillStructure:
     """Test the structure and completeness of the project-installer skill."""
 
     def test_skill_directory_exists(self):
-        """Check that .agents/skills/project-installer directory exists."""
+        """Check that skills/project-installer directory exists."""
         assert SKILL_DIR.is_dir(), f"Skill directory not found at {SKILL_DIR}"
 
     def test_skill_md_exists_and_valid(self):

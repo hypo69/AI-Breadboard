@@ -147,11 +147,17 @@ def sample_torrents():
 @pytest.fixture(autouse=True)
 def setup_env():
     """Configure environment for each test."""
-    with patch.dict(os.environ, {
+    preserved = {
+        k: v for k, v in os.environ.items()
+        if k in ('APPDATA', 'LOCALAPPDATA', 'USERPROFILE', 'USERNAME', 'SYSTEMROOT', 'WINDIR', 'PATH', 'TEMP', 'TMP')
+    }
+    preserved.update({
         'GOOGLE_CLIENT_ID': 'test_client_id',
         'GOOGLE_CLIENT_SECRET': 'test_secret',
         'JWT_SECRET': 'test_jwt_secret',
         'NGROK_AUTOTOKEN': 'test_ngrok',
         'GEMINI_API_KEY_NAMES': 'test_key',
-    }, clear=True):
+    })
+    with patch.dict(os.environ, preserved, clear=True):
         yield
+

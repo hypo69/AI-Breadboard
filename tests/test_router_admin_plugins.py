@@ -88,3 +88,29 @@ class TestPluginsAPI:
         if rag_cleaner:
             assert rag_cleaner.get("is_system") is False
             assert rag_cleaner.get("scope") == "user"
+
+    def test_news_tab_in_admin_and_user_html(self) -> None:
+        """Verify tab-news presence in admin and user interfaces."""
+        webinterface_dir = __root__ / "src" / "api" / "webgui"
+        admin_html = (webinterface_dir / "admin" / "index.html").read_text(encoding="utf-8")
+        user_html = (webinterface_dir / "user" / "index.html").read_text(encoding="utf-8")
+        main_html = (webinterface_dir / "index.html").read_text(encoding="utf-8")
+
+        assert 'id="tab-news"' in admin_html
+        assert 'id="tab-news"' in user_html
+        assert 'id="tab-news"' in main_html
+
+    def test_dropdown_navigation_supports_data_plugin(self) -> None:
+        """Verify that dropdown setup in main.js files handles data-plugin attribute."""
+        webinterface_dir = __root__ / "src" / "api" / "webgui"
+        main_js = (webinterface_dir / "js" / "main.js").read_text(encoding="utf-8")
+        admin_js = (webinterface_dir / "admin" / "main.js").read_text(encoding="utf-8")
+        user_js = (webinterface_dir / "user" / "main.js").read_text(encoding="utf-8")
+        plugins_tab_js = (webinterface_dir / "plugins_tab" / "main.js").read_text(encoding="utf-8")
+
+        assert "data-plugin" in main_js
+        assert "data-plugin" in admin_js
+        assert "data-plugin" in user_js
+        assert "data-plugin" in plugins_tab_js
+        assert "openPluginFromDropdown" in plugins_tab_js
+

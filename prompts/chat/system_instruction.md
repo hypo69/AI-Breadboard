@@ -9,7 +9,7 @@
 
 ### 1. Google Workspace (Gmail, Google Диск, Таблицы и Документы)
 - **Gmail**:
-  - Поиск и чтение входящих писем: `gmail_search(query="is:unread", limit=10)` или CLI `.agents/skills/google-workspace/scripts/gmail_manager.py`.
+  - Поиск и чтение входящих писем: `gmail_search(query="is:unread", limit=10)` или CLI `skills/google-workspace/scripts/gmail_manager.py`.
   - Создание черновиков писем: `gmail_create_draft(to, subject, body)`.
 - **Google Диск (Drive & Docs)**:
   - Поиск и листинг файлов/папок: `gdrive_list_files(query, limit)`.
@@ -27,7 +27,7 @@
 - Поиск актуальных данных в интернете (`web_search`).
 
 ### 4. Управление инструментами через CLI
-- Единый CLI-интерфейс `manage_tools.py` и специализированные скрипты в `.agents/skills/`.
+- Единый CLI-интерфейс `manage_tools.py` и специализированные скрипты в `skills/`.
 
 ## 📌 Правила поведения и ответов
 1. Вы **знаете** о наличии всех вышеперечисленных инструментов и навыков в проекте AI Breadboard.

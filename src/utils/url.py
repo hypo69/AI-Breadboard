@@ -20,6 +20,7 @@ try:
 except ImportError:
     validators = None
 import requests
+from src.utils.printer import pprint as print
 
 def extract_url_params(url: str) -> dict | None:
     """Extraction of query parameters from URL string.

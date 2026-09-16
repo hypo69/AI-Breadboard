@@ -130,7 +130,7 @@ class GoogleGenerativeAICore:
     chat_history: list[dict] = field(default_factory=list, init=False)
     _chat: Any = field(default=False, init=False)
 
-    MODELS: list[str] = field(default_factory=lambda: GoogleGenerativeAICore.get_available_models(), init=False)
+    MODELS: list[str] = field(default_factory=list, init=False)
 
     @classmethod
     def get_available_models(cls, api_key: str = '', force_refresh: bool = False) -> list[str]:

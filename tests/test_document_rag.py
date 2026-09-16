@@ -173,3 +173,54 @@ class TestDocumentRAGManager:
         assert len(remaining) == 1
         assert remaining[0].name == "subfolder/doc2.txt"
 
+    def test_document_versioning_and_incremental_updates(self, temp_rag_dirs):
+        docs_dir, index_dir = temp_rag_dirs
+        manager = DocumentRAGManager(docs_dir=docs_dir, index_dir=index_dir)
+
+        # 1. Initial version
+        v1_content = b"# Document Version 1\nInitial baseline guidelines for architecture."
+        info_v1 = manager.save_document("guidelines.md", v1_content)
+        assert info_v1.version == 1
+        assert info_v1.is_latest is True
+        assert len(info_v1.content_hash) == 64
+
+        manager.build_index(provider="local_tfidf")
+        history_v1 = manager.get_document_history("guidelines.md")
+        assert history_v1["found"] is True
+        assert history_v1["current_version"] == 1
+        assert len(history_v1["versions"]) == 1
+
+        # 2. Saving identical content returns same version
+        info_same = manager.save_document("guidelines.md", v1_content)
+        assert info_same.version == 1
+
+        # 3. Update document with modified content -> creates Version 2
+        v2_content = b"# Document Version 2\nUpdated modern microservices architecture guidelines."
+        info_v2 = manager.save_document("guidelines.md", v2_content)
+        assert info_v2.version == 2
+        assert info_v2.is_latest is True
+
+        manager.build_index(provider="local_tfidf")
+        history_v2 = manager.get_document_history("guidelines.md")
+        assert history_v2["current_version"] == 2
+        assert len(history_v2["versions"]) == 2
+
+        # 4. Search latest vs all versions
+        results_latest = manager.search("architecture", top_k=5, version_filter="latest")
+        assert len(results_latest) > 0
+        for r in results_latest:
+            assert r["is_latest"] is True
+            assert r["version"] == 2
+
+        results_all = manager.search("architecture", top_k=10, version_filter="all")
+        assert len(results_all) >= 2
+        versions_found = {r["version"] for r in results_all}
+        assert 1 in versions_found and 2 in versions_found
+
+        # 5. Search specific version filter
+        results_v1 = manager.search("architecture", top_k=5, version_filter="v1")
+        assert len(results_v1) > 0
+        for r in results_v1:
+            assert r["version"] == 1
+
+

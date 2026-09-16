@@ -4,7 +4,37 @@
 # =============================================================================
 
 import os
+import sys
 from pathlib import Path
+
+# =============================================================================
+# Патч для подавления WinError 10054 в asyncio на Windows (Proactor Event Loop)
+# =============================================================================
+# Причина: Когда браузер/клиент принудительно разрывает TCP-соединение (RST-пакет
+# при смене страницы, закрытии вкладки или перезагрузке WebSocket), ProactorEventLoop
+# в Windows пытается выполнить shutdown() на уже сброшенном сокете.
+# Это вызывает исключение ConnectionResetError: [WinError 10054] внутри системного
+# коллбэка _ProactorBasePipeTransport._call_connection_lost(), засоряя логи консоли.
+# Патч безопасно перехватывает и подавляет именно WinError 10054, не влияя на другие ошибки.
+if sys.platform == "win32":
+    try:
+        from asyncio.proactor_events import _ProactorBasePipeTransport
+
+        _orig_call_connection_lost = _ProactorBasePipeTransport._call_connection_lost
+
+        def _patched_call_connection_lost(self, exc=None):
+            try:
+                _orig_call_connection_lost(self, exc)
+            except ConnectionResetError:
+                pass
+            except OSError as err:
+                # 10054 = WSAECONNRESET (Удаленный хост принудительно разорвал существующее подключение)
+                if getattr(err, "winerror", None) != 10054:
+                    raise
+
+        _ProactorBasePipeTransport._call_connection_lost = _patched_call_connection_lost
+    except Exception:
+        pass
 
 from dotenv import load_dotenv
 

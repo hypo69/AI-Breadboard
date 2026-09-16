@@ -1,0 +1,182 @@
+/* Floating Chat button for Documentation */
+.chat-toggle-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: rgba(13, 110, 253, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 26px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 9999;
+}
+.chat-toggle-btn:hover {
+  transform: scale(1.1);
+  background: #0b5ed7;
+  box-shadow: 0 6px 20px rgba(13, 110, 253, 0.5);
+}
+.chat-popup {
+  position: fixed;
+  bottom: 100px;
+  right: 30px;
+  width: 380px;
+  height: 500px;
+  max-width: 90vw;
+  max-height: 80vh;
+  background: rgba(30, 30, 30, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.165, 0.84, 0.44, 1), transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  overflow: hidden;
+}
+.chat-popup.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+.chat-popup.maximized {
+  width: 90vw;
+  height: 85vh;
+  bottom: 5vh;
+  right: 5vw;
+}
+.chat-popup-header {
+  padding: 12px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 14px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.3);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+.chat-window-controls {
+  display: flex;
+  gap: 6px;
+}
+.chat-window-btn {
+  background: transparent;
+  border: none;
+  color: #aaa;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chat-window-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+.chat-window-btn.settings {
+  color: #0d6efd;
+}
+.chat-window-btn.maximize {
+  color: #e0c044;
+}
+.chat-window-btn.minimize {
+  color: #e0a044;
+}
+.chat-window-btn.close {
+  color: #f44336;
+}
+.chat-window-btn.close:hover {
+  background: #f44336;
+  color: #fff;
+}
+.chat-popup-messages {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.chat-popup-msg {
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.chat-popup-msg.bot {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e0e0e0;
+  align-self: flex-start;
+  border-bottom-left-radius: 2px;
+}
+.chat-popup-msg.user {
+  background: #0d6efd;
+  color: #fff;
+  align-self: flex-end;
+  border-bottom-right-radius: 2px;
+}
+.chat-popup-input-area {
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+.chat-popup-input-area input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+}
+.chat-popup-input-area input:focus {
+  border-color: #0d6efd;
+  background: rgba(255, 255, 255, 0.08);
+}
+.chat-popup-input-area button {
+  padding: 8px 15px;
+  background: #0d6efd;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.chat-popup-input-area button:hover {
+  background: #0b5ed7;
+}
+.chat-popup-input-area button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.d-none {
+  display: none !important;
+}

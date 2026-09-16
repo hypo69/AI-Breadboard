@@ -12,7 +12,7 @@ from src.config import server_cfg
 from src.logger import logger
 
 __root__ = Path(__file__).resolve().parents[3]
-webinterface_dir = Path(__file__).resolve().parents[2] / 'api' / 'webinterface'
+webinterface_dir = Path(__file__).resolve().parents[2] / 'api' / 'webgui'
 
 
 def register_pages(app: FastAPI) -> None:
@@ -32,6 +32,11 @@ def register_pages(app: FastAPI) -> None:
     def check_admin_auth(request: Request):
         from fastapi.responses import HTMLResponse, RedirectResponse
 
+        # If authentication is globally disabled (e.g., tc.ps1 / ts.ps1 launcher)
+        from src.api.router_auth import is_auth_disabled
+        if is_auth_disabled():
+            return None
+
         # 1. Check if user is authenticated via admin session password cookie
         if request.cookies.get('admin_password_verified') == 'true':
             return None
@@ -50,6 +55,8 @@ def register_pages(app: FastAPI) -> None:
             from src.user_manager import user_manager
             user_data = verify_jwt_token(token)
             if user_data and user_data.email:
+                if user_data.email in ('admin@localhost', 'local@aibreadboard.local') or user_data.email.startswith('admin@'):
+                    return None
                 db_user = user_manager.get_user_by_email(user_data.email)
                 if db_user and (db_user.get('is_admin', 0) or db_user.get('role') == 'admin'):
                     return None
@@ -72,6 +79,9 @@ def register_pages(app: FastAPI) -> None:
     async def root(request: Request) -> HTMLResponse:
         """Serving of main HTML page — authenticated user dashboard or login auth gate."""
         def is_authenticated_user(request: Request) -> bool:
+            from src.api.router_auth import is_auth_disabled
+            if is_auth_disabled():
+                return True
             token = request.cookies.get('auth_token', '')
             if not token:
                 auth_header = request.headers.get('Authorization', '')
@@ -100,6 +110,9 @@ def register_pages(app: FastAPI) -> None:
         """Serving of login & registration page."""
         from fastapi.responses import RedirectResponse
         def is_authenticated_user(request: Request) -> bool:
+            from src.api.router_auth import is_auth_disabled
+            if is_auth_disabled():
+                return True
             token = request.cookies.get('auth_token', '')
             if not token:
                 auth_header = request.headers.get('Authorization', '')
@@ -254,25 +267,21 @@ def register_pages(app: FastAPI) -> None:
         
         return FileResponse(file_path, media_type=media_type)
 
-    # === Applications Hub (/apps) ===
+    # === Applications / Test Computer Hub (/tc, /apps) ===
 
+    @app.get('/tc', response_class=HTMLResponse)
     @app.get('/apps', response_class=HTMLResponse)
     async def apps_interface(request: Request):
-        """Display the dedicated Applications Hub page (/apps)."""
-        auth_response = check_admin_auth(request)
-        if auth_response:
-            return auth_response
+        """Display the dedicated Applications / Test Computer Hub page (/tc and /apps)."""
         content = read_text_file(webinterface_dir / 'apps' / 'index.html')
         if not content:
             raise HTTPException(status_code=500, detail='Failed to read apps index page')
         return HTMLResponse(content=content)
 
+    @app.get('/tc/{full_path:path}', response_class=HTMLResponse)
     @app.get('/apps/{full_path:path}', response_class=HTMLResponse)
     async def apps_static(full_path: str, request: Request):
         """Serving apps portal static files."""
-        auth_response = check_admin_auth(request)
-        if auth_response:
-            return auth_response
         file_path = webinterface_dir / 'apps' / full_path
         if not file_path.exists() or not file_path.is_file():
             raise HTTPException(status_code=404, detail='File not found')

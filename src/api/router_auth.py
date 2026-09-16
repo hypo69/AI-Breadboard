@@ -85,12 +85,34 @@ def load_google_oauth_config() -> dict:
         'redirect_uri': env_redirect_uri or default_redirect
     }
 
+def is_auth_disabled() -> bool:
+    """Check if authentication is disabled globally via environment variable or config.json.
+    
+    Returns:
+        bool: True if authentication is disabled, False otherwise (default False).
+    """
+    env_val = os.getenv('DISABLE_AUTH')
+    if env_val is not None:
+        return env_val.strip().lower() in ('true', '1', 'yes')
+    try:
+        from src.config import server_cfg
+        cfg_val = getattr(server_cfg, 'disable_auth', None)
+        if cfg_val is not None:
+            if isinstance(cfg_val, bool):
+                return cfg_val
+            return str(cfg_val).strip().lower() in ('true', '1', 'yes')
+    except Exception:
+        pass
+    return False
+
 def is_oauth_enabled() -> bool:
     """Check if Google OAuth is enabled via environment variable or config.json.
     
     Returns:
         bool: True if OAuth is explicitly enabled, False otherwise (default False).
     """
+    if is_auth_disabled():
+        return False
     from src.config import server_cfg
     env_val = os.getenv('ENABLE_OAUTH')
     if env_val is not None:
@@ -198,6 +220,10 @@ def get_current_user_data(request: Request) -> TokenData:
         if user_data:
             return user_data
 
+    # Allow local requests or when authentication is globally disabled
+    if is_auth_disabled() or is_local_request(request):
+        return TokenData(email='local@aibreadboard.local', name='Local User', id=1)
+
     raise HTTPException(status_code=401, detail='Authentication required')
 
 def get_current_user_optional(request: Request) -> Optional[TokenData]:
@@ -210,6 +236,9 @@ def get_current_user_optional(request: Request) -> Optional[TokenData]:
 def require_admin_user(request: Request) -> TokenData:
     """Ensure current request has administrative privileges."""
     user_data = get_current_user_data(request)
+
+    if is_auth_disabled() or is_local_request(request):
+        return user_data
 
     db_user = user_manager.get_user_by_email(user_data.email)
     if db_user and (db_user.get('is_admin', 0) or db_user.get('role') == 'admin'):

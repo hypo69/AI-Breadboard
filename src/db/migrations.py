@@ -35,6 +35,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from header import __root__
 from src.logger import logger
+from src.utils.printer import pprint as print
 
 
 class MigrationManager:

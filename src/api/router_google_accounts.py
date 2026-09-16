@@ -288,9 +288,11 @@ async def list_gdrive_files_for_account(
     if not info:
         raise HTTPException(status_code=404, detail=f"Account '{name}' not found")
 
-    scripts_dir = Path(__file__).resolve().parents[2] / ".agents" / "skills" / "google-workspace" / "scripts"
+    scripts_dir = Path(__file__).resolve().parents[2] / ".agents" / "skills" / "user-skills" / "google-workspace" / "scripts"
+    if not scripts_dir.exists():
+        scripts_dir = Path(__file__).resolve().parents[2] / ".agents" / "skills" / "google-workspace" / "scripts"
     import sys
-    if str(scripts_dir) not in sys.path:
+    if scripts_dir.exists() and str(scripts_dir) not in sys.path:
         sys.path.insert(0, str(scripts_dir))
 
     try:
@@ -322,9 +324,11 @@ class GoogleSheetValuesRequest(BaseModel):
 @router.get("/{name}/sheets/{spreadsheet_id}", response_model=Dict[str, Any])
 async def get_google_sheet_info(name: str, spreadsheet_id: str) -> Dict[str, Any]:
     """Get metadata and sheets list for a spreadsheet."""
-    scripts_dir = Path(__file__).resolve().parents[2] / ".agents" / "skills" / "google-workspace" / "scripts"
+    scripts_dir = Path(__file__).resolve().parents[2] / ".agents" / "skills" / "user-skills" / "google-workspace" / "scripts"
+    if not scripts_dir.exists():
+        scripts_dir = Path(__file__).resolve().parents[2] / ".agents" / "skills" / "google-workspace" / "scripts"
     import sys
-    if str(scripts_dir) not in sys.path:
+    if scripts_dir.exists() and str(scripts_dir) not in sys.path:
         sys.path.insert(0, str(scripts_dir))
 
     try:
@@ -350,9 +354,11 @@ async def read_google_sheet_values(
     payload: GoogleSheetRangeRequest
 ) -> Dict[str, Any]:
     """Read values from specified sheet range."""
-    scripts_dir = Path(__file__).resolve().parents[2] / ".agents" / "skills" / "google-workspace" / "scripts"
+    scripts_dir = Path(__file__).resolve().parents[2] / ".agents" / "skills" / "user-skills" / "google-workspace" / "scripts"
+    if not scripts_dir.exists():
+        scripts_dir = Path(__file__).resolve().parents[2] / ".agents" / "skills" / "google-workspace" / "scripts"
     import sys
-    if str(scripts_dir) not in sys.path:
+    if scripts_dir.exists() and str(scripts_dir) not in sys.path:
         sys.path.insert(0, str(scripts_dir))
 
     try:
@@ -374,9 +380,11 @@ async def append_google_sheet_values(
     payload: GoogleSheetValuesRequest
 ) -> Dict[str, Any]:
     """Append row values to specified sheet."""
-    scripts_dir = Path(__file__).resolve().parents[2] / ".agents" / "skills" / "google-workspace" / "scripts"
+    scripts_dir = Path(__file__).resolve().parents[2] / ".agents" / "skills" / "user-skills" / "google-workspace" / "scripts"
+    if not scripts_dir.exists():
+        scripts_dir = Path(__file__).resolve().parents[2] / ".agents" / "skills" / "google-workspace" / "scripts"
     import sys
-    if str(scripts_dir) not in sys.path:
+    if scripts_dir.exists() and str(scripts_dir) not in sys.path:
         sys.path.insert(0, str(scripts_dir))
 
     try:

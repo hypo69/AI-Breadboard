@@ -1,88 +1,175 @@
-# Unified AI Instructions Hub (`.ai/instructions`)
+# 🎯 Инструкции для моделей (Model Instructions Hub)
 
-## Purpose
-This directory is the single source of truth for general instructions, engineering standards, workflows, architecture references, and roadmap planning across all AI assistants.
+Это главный навигатор для AI-ассистентов. Здесь сконцентрированы **все чёткие инструкции** для работы с проектом без дублирования и перекрытий.
 
-Tool-specific agent configuration directories (`.amazonq`, `.kiro`, `.gemini`, `.chatgpt`) link to files here instead of duplicating behavioral rules.
+**Статус:** ✅ Актуально (сентябрь 2026)  
+**Версия:** 2.0 (переорганизовано)
 
 ---
 
-## Directory Structure
+## 📚 Быстрая навигация
 
+### 🚀 Начни отсюда (для всех)
+Выбери что нужно:
+
+| Нужно | Смотри |
+|------|--------|
+| **Кодить правильно** | → [`standards/ENGINEERING.md`](standards/ENGINEERING.md) |
+| **Документировать код** | → [`standards/DOCUMENTATION.md`](standards/DOCUMENTATION.md) |
+| **Переиспользовать код** | → [`standards/REUSE.md`](standards/REUSE.md) |
+| **Писать тесты** | → [`workflows/TDD.md`](workflows/TDD.md) |
+| **Интегрировать новое приложение** | → [`workflows/INTEGRATION.md`](workflows/INTEGRATION.md) |
+| **Понять архитектуру системы** | → [`reference/ARCHITECTURE.md`](reference/ARCHITECTURE.md) |
+| **Узнать API endpoints** | → [`reference/API_REFERENCE.md`](reference/API_REFERENCE.md) |
+| **Установить проект** | → [`guides/INSTALLATION.md`](guides/INSTALLATION.md) |
+| **Запустить сервисы** | → [`guides/LAUNCHERS.md`](guides/LAUNCHERS.md) |
+| **Использовать CLI tools** | → [`guides/CLI_TOOLS.md`](guides/CLI_TOOLS.md) |
+
+---
+
+## 📖 Структура директорий
+
+### `/standards/` — Фундаментальные стандарты
+**Один стандарт = одна задача. Без дублирования.**
+
+- **`ENGINEERING.md`**  
+  Как кодить: архитектурные принципы, стиль кода, языковые стандарты (Python 3.12+, JS/TS, PHP 8.3+, HTML/CSS), правила проектирования.  
+  ⚠️ **Обязательно перед**: написанием любого кода.
+
+- **`DOCUMENTATION.md`**  
+  Как документировать: docstrings (`hypo69 docblock`), README.md, комментарии ("почему", а не "что"), языковой стандарт (русский).  
+  ⚠️ **Обязательно перед**: добавлением функций/классов.
+
+- **`REUSE.md`**  
+  Zero-divergence protocol: как искать существующий код, 4-фазный аудит prior art, запрет на дублирование.  
+  ⚠️ **Обязательно перед**: созданием нового компонента/функции.
+
+---
+
+### `/workflows/` — Рабочие процессы
+**Когда и как выполнять определённые задачи.**
+
+- **`TDD.md`**  
+  Test-Driven Development: 6-шаговый протокол документирования через тесты, структура тестов, проверка покрытия (70%+).  
+  ⚠️ **Применяется к**: новым функциям, изменениям сигнатур, рефакторингу.
+
+- **`INTEGRATION.md`**  
+  Как добавить новое приложение в проект: 6 этапов от логики до веб-панели администратора.  
+  ⚠️ **Применяется к**: новым приложениям в `apps/`.
+
+---
+
+### `/reference/` — Знание о системе
+**Как устроена система и её компоненты.**
+
+- **`ARCHITECTURE.md`**  
+  Система в целом: основные компоненты, слои, поток данных, модульная структура `src/`, FastAPI роутеры, AI провайдеры.
+
+- **`API_REFERENCE.md`**  
+  Все REST/WebSocket endpoints: роутеры, пути, назначение, параметры.
+
+- **`CHAT_IMPLEMENTATION.md`**  
+  Как работает `UnifiedChatModel`: переключение провайдеров, RAG интеграция, потоковые ответы.
+
+- **`PLUGIN_SYSTEM.md`**  
+  Архитектура плагинов и система расширений.
+
+- **`LEGACY_CONTEXT.md`**  
+  Историческое знание о проекте (зачем сделано так, а не иначе).
+
+---
+
+### `/guides/` — Практические руководства
+**Как делать конкретные вещи.**
+
+- **`INSTALLATION.md`**  
+  Установка и подготовка (Windows/Linux/macOS).
+
+- **`LAUNCHERS.md`**  
+  Запуск сервисов, PowerShell launchers, создание новых скриптов запуска.
+
+- **`CLI_TOOLS.md`**  
+  Использование `manage_tools.py`, доступные команды и скрипты.
+
+- **`MODEL_SCRIPTS.md`**  
+  Когда и как моделям запускать скрипты автоматически.
+
+---
+
+## 🔄 Типичные рабочие процессы
+
+### Сценарий 1: Добавить новую функцию в существующий модуль
 ```
-.ai/instructions/
-├── README.md                    ← You are here
-├── rules/
-│   ├── CODE_RULES.md            ← Engineering standards and code style
-│   ├── DOCS_RULES.md            ← Documentation rules, TDD workflow, docstrings
-│   └── REUSE_RULES.md           ← Codebase reuse and prior art audit standard
-└── knowledge/
-    ├── project_overview.md      ← System architecture and components
-    ├── legacy_project_knowledge.md ← Historical context (August 2026 snapshot)
-    ├── LAUNCHER_GUIDE.md        ← Service launchers and scripts
-    ├── INSTALLATION_GUIDE.md    ← Installation and setup guide
-    ├── scripts_tools.md         ← CLI tools reference (manage_tools.py)
-    ├── MODEL_SCRIPT_EXECUTION_GUIDE.md ← AI models script automation rules
-    ├── api_documentation.md     ← REST API & WebSocket endpoints reference
-    ├── chat.md                  ← Chat implementation and UnifiedChatModel
-    ├── UI_INTERFACES.md         ← Web UI frontend tabs and architecture
-    ├── plugins_documentation.md ← Plugin system overview
-    ├── rag_cleaner.md           ← Document cleaning pipeline for RAG
-    ├── media_organizer_workflow.md ← Media organization plugin workflow
-    └── codex/                   ← Legacy codebase reference archive
+1. Прочитай standards/REUSE.md    (Есть ли уже такое?)
+2. Прочитай standards/ENGINEERING.md (Как правильно кодить)
+3. Прочитай standards/DOCUMENTATION.md (Как документировать)
+4. Прочитай workflows/TDD.md      (Как писать тесты)
+5. Код → Тесты → Документация
+```
+
+### Сценарий 2: Создать новое приложение
+```
+1. Прочитай standards/ENGINEERING.md  (Архитектура)
+2. Прочитай workflows/INTEGRATION.md  (6 этапов интеграции)
+3. Реализуй согласно 6-этапному протоколу
+```
+
+### Сценарий 3: Понять как работает система
+```
+1. reference/ARCHITECTURE.md    (Общая архитектура)
+2. reference/API_REFERENCE.md   (API)
+3. Специфичный guide из /guides/
+```
+
+### Сценарий 4: Отладить проблему с провайдером
+```
+1. reference/ARCHITECTURE.md    (Как провайдеры встроены)
+2. reference/CHAT_IMPLEMENTATION.md (Как выбираются провайдеры)
+3. guides/LAUNCHERS.md         (Как запустить для отладки)
 ```
 
 ---
 
-## Key Documents
+## ✅ Ключевые правила (инвариант)
 
-### Engineering Standards
-- **`rules/CODE_RULES.md`**: Mandatory coding standards, architecture principles, language-specific rules (Python 3.12+, JS/TS, HTML/CSS)
-- **`rules/DOCS_RULES.md`**: Documentation standards, TDD workflow, docstring format (`hypo69 docblock`), README.md requirements
-- **`rules/REUSE_RULES.md`**: Codebase reuse, prior art search, zero-divergence protocol
+1. **Одна инструкция = одна ответственность**  
+   Нет дублирования между файлами.
 
-### Architecture & Design
-- **`knowledge/project_overview.md`**: Overall system design, key components, data flow, modular `src/` layout
-- **`knowledge/legacy_project_knowledge.md`**: Historical context and evolution of the project
+2. **Чистые, атомарные документы**  
+   Каждый файл можно читать независимо.
 
-### Operational Guides
-- **`knowledge/INSTALLATION_GUIDE.md`**: Complete setup and installation procedures for Windows/Linux/macOS
-- **`knowledge/LAUNCHER_GUIDE.md`**: PowerShell launchers, service startup, creating new launchers
-- **`knowledge/scripts_tools.md`**: Reference for `manage_tools.py` CLI, script groups, and AI auto-execution guidelines
-- **`knowledge/MODEL_SCRIPT_EXECUTION_GUIDE.md`**: When and how AI models should automatically run scripts
+3. **Русский язык везде**  
+   Все инструкции, примеры, комментарии на русском.
 
-### Implementation Details
-- **`knowledge/api_documentation.md`**: REST API endpoints, WebSockets, authentication, request/response formats
-- **`knowledge/chat.md`**: UnifiedChatModel implementation, provider switching, RAG integration
-- **`knowledge/plugins_documentation.md`**: Plugin architecture and system
-- **`knowledge/rag_cleaner.md`**: RAG document cleaning and preprocessing
-- **`knowledge/media_organizer_workflow.md`**: Media library organization plugin workflow
-- **`knowledge/UI_INTERFACES.md`**: Detailed UI/UX tab architecture
+4. **Примеры рабочие**  
+   Все code snippets можно копировать и использовать.
+
+5. **Актуальность**  
+   Если меняется система, сразу обновляются инструкции.
 
 ---
 
-## Agent Usage Rules
-1. **All new general instructions** must be added exclusively within this directory.
-2. **Specific IDE assistants** should reference these documents directly via relative links.
-3. **Tool-specific configurations** (e.g. `.kiro/hooks/`, `.gemini/settings.json`) remain inside their respective directories.
-4. **Cross-references**: Use relative links from `.md` files for navigation between documents.
+## 🏗️ Устаревшие файлы (архивированы)
+
+Следующие файлы **удалены как устаревшие и заменены на новую структуру**:
+
+- ~~`rules/CODE_RULES.md`~~ → [`standards/ENGINEERING.md`](standards/ENGINEERING.md) (часть содержимого)
+- ~~`rules/DOCS_RULES.md`~~ → [`standards/DOCUMENTATION.md`](standards/DOCUMENTATION.md) + [`workflows/TDD.md`](workflows/TDD.md)
+- ~~`rules/REUSE_RULES.md`~~ → [`standards/REUSE.md`](standards/REUSE.md)
+- ~~`knowledge/tdd_standards.md`~~ → [`workflows/TDD.md`](workflows/TDD.md)
+- ~~`knowledge/project_overview.md`~~ → [`reference/ARCHITECTURE.md`](reference/ARCHITECTURE.md)
 
 ---
 
-## Quick Navigation
+## 📞 Как обновлять инструкции
 
-| Need | Document |
-|------|----------|
-| How to code? | `rules/CODE_RULES.md` |
-| How to document? | `rules/DOCS_RULES.md` |
-| How to reuse code? | `rules/REUSE_RULES.md` |
-| How to set up? | `knowledge/INSTALLATION_GUIDE.md` |
-| How to run services? | `knowledge/LAUNCHER_GUIDE.md` |
-| How to use CLI tools? | `knowledge/scripts_tools.md` |
-| How is the system designed? | `knowledge/project_overview.md` |
-| What are the API endpoints? | `knowledge/api_documentation.md` |
-| How does chat work? | `knowledge/chat.md` |
+1. **Обнаружил дублирование** → Объедини в один файл, убери дублирование.
+2. **Что-то непонятно** → Добавь пример или уточни в соответствующем файле.
+3. **Система изменилась** → Обнови один соответствующий файл в `/standards/`, `/workflows/` или `/reference/`.
+4. **Коммит**: `docs: update instructions [description]`
 
 ---
 
-**Status:** ✅ Current and actively maintained
+**Сделано:** сентябрь 2026  
+**Автор:** hypo69  
+**Версия:** 2.0

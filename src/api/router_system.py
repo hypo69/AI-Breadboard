@@ -30,11 +30,13 @@ from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
 from src.logger import logger
-from src.system import (
+from apps.windows.telemetry import (
+    # (используйте src.ai.observability.system_engine для SystemDiagnosticEngine)
+
     HardwareNode,
     HardwareSensor,
     ProcessMetrics,
-    SystemAIDiagnostician,
+    SystemDiagnosticEngine,
     SystemCollector,
     SystemDiagnosticReport,
     SystemSnapshot,
@@ -52,7 +54,7 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
     """
     router = APIRouter(prefix="/api/v1/system", tags=["System & Hardware Inspector"])
     collector = SystemCollector()
-    diagnostician = SystemAIDiagnostician(chat_model=chat_model)
+    diagnostician = SystemDiagnosticEngine(chat_model=chat_model)
 
     @router.get("/summary", response_model=SystemSnapshot)
     async def get_system_summary(
@@ -77,7 +79,7 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
     @router.get("/sensors", response_model=List[HardwareSensor])
     async def get_sensors() -> List[HardwareSensor]:
         """Retrieve thermal, fan, and voltage sensor readings."""
-        from src.system.sensors import get_hardware_sensors
+        from apps.windows.telemetry.sensors import get_hardware_sensors
 
         return get_hardware_sensors()
 

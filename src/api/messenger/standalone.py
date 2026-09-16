@@ -45,7 +45,7 @@ app.add_middleware(
 app.include_router(init_router())
 
 # Mount webinterface for web app and widget
-webinterface_dir = Path(__file__).resolve().parents[1] / "webinterface" / "messenger"
+webinterface_dir = Path(__file__).resolve().parents[1] / "webgui" / "messenger"
 if webinterface_dir.exists():
     app.mount("/messenger", StaticFiles(directory=webinterface_dir, html=True), name="messenger_ui")
 

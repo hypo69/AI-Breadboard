@@ -255,14 +255,14 @@ AI-Breadboard/
 ├── 📄 main.py                # FastAPI application
 ├── 📄 run.ps1                # Main interactive/service launcher
 ├── 📁 launchers/             # Dedicated service launchers (Run-*.ps1)
-├── 📁 src/                   # Main source code (ai/, fastapi/, rag/, skills/, logger/, tts/, db/)
+├── 📁 src/                   # Main source code (ai/, fastapi/, rag/, .skills/, logger/, tts/, db/)
 │   ├── 📁 ai/providers/      # Modular AI providers (gemini, foundry, agy, ollama, onnx, windows_ai...)
 │   ├── 📁 fastapi/           # FastAPI routers and webinterface
-│   ├── 📁 skills/            # Universal skills discovery & registry
+│   ├── 📁 .skills/            # Universal skills discovery & registry
 │   └── 📁 rag/               # RAG vector index & retrieval
 ├── 📁 plugins/               # Extensible plugins
 ├── 📁 scripts/dev/           # Developer utility tools
-├── 📁 .agents/skills/        # Portable AI skills (SKILL.md)
+├── 📁 .skills/        # Portable AI skills (SKILL.md)
 ├── 📁 tests/                 # Pytest test suite
 └── 📁 .ai/instructions/      # AI engineering rules & knowledge base
 ```

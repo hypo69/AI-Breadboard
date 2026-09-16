@@ -54,6 +54,8 @@ __all__ = [
     'jjson',
     'pdf',
     'pdf_extractor',
+    'pformat',
+    'pprint',
     'printer',
     'smtp',
     'url',
@@ -61,3 +63,5 @@ __all__ = [
     'video',
     'xls',
 ]
+
+from .printer import pformat, pprint

@@ -19,7 +19,7 @@ from fastapi.testclient import TestClient
 from fastapi import FastAPI
 
 from src.user_manager import user_manager
-from src.system.ngrok_tunnel import NgrokTunnelManager, ngrok_manager
+from apps.windows.telemetry.ngrok_tunnel import NgrokTunnelManager, ngrok_manager
 from src.api.router_telemetry import init_router as init_telemetry_router
 from src.api.router_auth import create_jwt_token, TokenData
 

@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InvoiceData",
+  "description": "Schema for structured invoice and receipt extraction",
+  "type": "object",
+  "properties": {
+    "file_name": {
+      "type": "string",
+      "description": "Original source file name"
+    },
+    "invoice_number": {
+      "type": "string",
+      "description": "Identifier or invoice number"
+    },
+    "invoice_date": {
+      "type": "string",
+      "description": "Invoice issuance date (YYYY-MM-DD)"
+    },
+    "due_date": {
+      "type": "string",
+      "description": "Payment due date (YYYY-MM-DD)"
+    },
+    "vendor_name": {
+      "type": "string",
+      "description": "Company / Supplier issuing the invoice"
+    },
+    "vendor_tax_id": {
+      "type": "string",
+      "description": "VAT ID, Tax Number, or INN"
+    },
+    "customer_name": {
+      "type": "string",
+      "description": "Client / Buyer receiving the invoice"
+    },
+    "total_amount": {
+      "type": "string",
+      "description": "Total grand amount"
+    },
+    "currency": {
+      "type": "string",
+      "description": "ISO currency code (USD, EUR, RUB, etc.)"
+    },
+    "tax_amount": {
+      "type": "string",
+      "description": "Tax / VAT amount"
+    },
+    "line_items_summary": {
+      "type": "string",
+      "description": "Summary of purchased products or services"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes, terms, or remarks"
+    }
+  },
+  "required": ["invoice_number", "vendor_name", "total_amount"]
+}

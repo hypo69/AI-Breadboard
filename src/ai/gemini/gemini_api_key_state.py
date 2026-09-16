@@ -144,8 +144,7 @@ def _bootstrap_from_env() -> Dict[str, Dict[str, Any]]:
                 if (
                     k_clean == 'GEMINI_API_KEY'
                     or (k_clean.startswith('GEMINI_API_KEY_') and k_clean not in ('GEMINI_API_KEY_NAMES', 'GEMINI_API_KEYS'))
-                    or k_clean in ('GEMINI_ANTIGRAVITY_API_KEY', 'AGY_API_KEY')
-                    or k_clean.startswith('AGY_API_KEY_')
+                    or k_clean == 'GEMINI_ANTIGRAVITY_API_KEY'
                 ):
                     if v_clean and v_clean != '*':
                         keys[k_clean] = {

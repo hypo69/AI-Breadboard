@@ -129,29 +129,89 @@ def _save_raw_config(data: dict) -> None:
         logger.error(f'[router_agents] Error saving config.json: {e}')
         raise HTTPException(status_code=500, detail='Failed to save configuration')
 
-def _get_agents_list() -> List[dict]:
-    """Get list of agents from config.json.
-    
-    Returns:
-        List[dict]: List of agent configurations.
-    """
+_AGENTS_DIR = __root__ / 'src' / 'ai' / 'agents'
+
+def _get_enabled_agents_status() -> dict[str, bool]:
+    """Получить статус включения/отключения агентов из config.json."""
     cfg = _load_raw_config()
     agents_cfg = cfg.get('agents', {})
-    if isinstance(agents_cfg, dict):
-        return agents_cfg.get('items', [])
-    return []
+    enabled_list = agents_cfg.get('enabled', []) if isinstance(agents_cfg, dict) else []
+    disabled_list = agents_cfg.get('disabled', []) if isinstance(agents_cfg, dict) else []
+    
+    status = {}
+    for a_id in enabled_list:
+        status[a_id] = True
+    for a_id in disabled_list:
+        status[a_id] = False
+    return status
+
+def _save_agent_toggle(agent_id: str, enabled: bool) -> None:
+    """Сохранить статус enabled/disabled агента в секции agents файла config.json."""
+    cfg = _load_raw_config()
+    if 'agents' not in cfg or not isinstance(cfg['agents'], dict) or 'enabled' not in cfg['agents']:
+        cfg['agents'] = {'enabled': [], 'disabled': []}
+    
+    enabled_set = set(cfg['agents'].get('enabled', []))
+    disabled_set = set(cfg['agents'].get('disabled', []))
+    
+    if enabled:
+        enabled_set.add(agent_id)
+        disabled_set.discard(agent_id)
+    else:
+        disabled_set.add(agent_id)
+        enabled_set.discard(agent_id)
+        
+    cfg['agents']['enabled'] = sorted(list(enabled_set))
+    cfg['agents']['disabled'] = sorted(list(disabled_set))
+    _save_raw_config(cfg)
+
+def _get_agents_list() -> List[dict]:
+    """Загрузить список конфигураций агентов из индивидуальных файлов src/ai/agents/*.json.
+    
+    Returns:
+        List[dict]: Список конфигураций агентов.
+    """
+    if not _AGENTS_DIR.exists():
+        return []
+
+    status_map = _get_enabled_agents_status()
+    agents = []
+
+    for conf_file in sorted(_AGENTS_DIR.glob('*.json')):
+        try:
+            with open(conf_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                if isinstance(data, dict) and data.get('id'):
+                    agent_id = data['id']
+                    # Если статус явно переопределен в config.json
+                    if agent_id in status_map:
+                        data['enabled'] = status_map[agent_id]
+                    elif 'enabled' not in data:
+                        data['enabled'] = True
+                    agents.append(data)
+        except Exception as e:
+            logger.error(f'[router_agents] Error loading agent config from {conf_file}: {e}')
+
+    return agents
 
 def _save_agents_list(items: List[dict]) -> None:
-    """Save updated agents list to config.json.
+    """Сохранить конфигурации агентов в индивидуальные файлы src/ai/agents/<agent_id>.json.
     
     Args:
-        items: List of agent configurations to save.
+        items: Список конфигураций агентов для сохранения.
     """
-    cfg = _load_raw_config()
-    if 'agents' not in cfg or not isinstance(cfg['agents'], dict):
-        cfg['agents'] = {}
-    cfg['agents']['items'] = items
-    _save_raw_config(cfg)
+    _AGENTS_DIR.mkdir(parents=True, exist_ok=True)
+    for agent_data in items:
+        agent_id = agent_data.get('id')
+        if not agent_id:
+            continue
+        file_path = _AGENTS_DIR / f"{agent_id}.json"
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(agent_data, f, ensure_ascii=False, indent=2)
+            _save_agent_toggle(agent_id, bool(agent_data.get('enabled', True)))
+        except Exception as e:
+            logger.error(f'[router_agents] Error saving agent config to {file_path}: {e}')
 
 # ============================================================================
 # FastAPI Router
@@ -316,7 +376,19 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
             raise HTTPException(status_code=403, detail='System agents cannot be deleted. You can disable them.')
 
         items = [i for i in items if i.get('id') != agent_id]
-        _save_agents_list(items)
+        file_path = _AGENTS_DIR / f"{agent_id}.json"
+        if file_path.exists():
+            try:
+                file_path.unlink()
+            except Exception as e:
+                logger.error(f'[router_agents] Error deleting file {file_path}: {e}')
+        
+        cfg = _load_raw_config()
+        if 'agents' in cfg and isinstance(cfg['agents'], dict):
+            cfg['agents']['enabled'] = [a for a in cfg['agents'].get('enabled', []) if a != agent_id]
+            cfg['agents']['disabled'] = [a for a in cfg['agents'].get('disabled', []) if a != agent_id]
+            _save_raw_config(cfg)
+
         logger.info(f'[router_agents] Deleted agent: {agent_id}')
         return {'status': 'ok', 'deleted_id': agent_id}
 

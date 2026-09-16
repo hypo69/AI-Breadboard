@@ -3,13 +3,9 @@
     Standalone applications launcher for AI Breadboard (/apps microservices and web portal).
 
 .DESCRIPTION
-    Launches only the applications block (standalone /apps microservices & dedicated /apps web interface):
-    - Windows System Administrator (Port 8100)
-    - Network Analyzer Terminal (Port 8101)
-    - System Inspector (Port 8102)
-    - Exchange Trading Terminal (Port 8103)
-    - Cloudflare Tunnel Monitor (Port 8104)
-    - Shared Applications Web Interface (/apps)
+    Launches only the applications block configured in config_tc.json or config.json:
+    - Dedicated /apps web interface
+    - Configured microservices (Network, System Inspector, Sysadmin, Cloudflared, GCloud, Website Monitor)
 
 .PARAMETER Action
     Action to perform: 'start' (default), 'stop', 'restart', 'status'.
@@ -20,11 +16,14 @@
 .PARAMETER Background
     Launch microservices in background processes without opening visible windows.
 
+.PARAMETER ConfigFile
+    Custom configuration JSON file name (default: config_tc.json or config.json).
+
 .PARAMETER Port
-    Override server bind port (default: from config.json or 8000).
+    Override server bind port (default: from config_tc.json / config.json or 8000).
 
 .PARAMETER HostAddress
-    Override server bind address (default: 0.0.0.0 or 127.0.0.1).
+    Override server bind address (default: from config_tc.json / config.json or 127.0.0.1).
 
 .PARAMETER NoBrowser
     Do not automatically open the web browser.
@@ -40,6 +39,7 @@
     .\tc.ps1 -Action status
     .\tc.ps1 -Action stop
     .\tc.ps1 -Action restart
+    .\tc.ps1 -ConfigFile config_tc.json
     .\tc.ps1 -Background
     .\tc.ps1 -Interactive
     .\tc.ps1 --help
@@ -56,6 +56,9 @@ param (
 
     [Alias('bg')]
     [switch]$Background,
+
+    [Alias('Config', 'Cfg')]
+    [string]$ConfigFile = 'config_tc.json',
 
     [Parameter(Position = 1)]
     [string]$Port,
@@ -93,6 +96,8 @@ if ([string]::IsNullOrEmpty($scriptDir)) {
 
 $env:AIBREADBOARD_DIR = $scriptDir
 $env:ASSIST_DIR = $scriptDir
+$env:ENABLE_OAUTH = "false"
+$env:DISABLE_AUTH = "true"
 
 # ============================================================================
 # STAGE 1 — СПРАВКА И ПАРАМЕТРЫ
@@ -105,26 +110,23 @@ if ($Help) {
     Write-Host ""
     Write-Host "НАЗНАЧЕНИЕ:" -ForegroundColor Yellow
     Write-Host "  Запуск ТОЛЬКО блока приложений и автономных микросервисов из /apps,"
-    Write-Host "  а также специализированного веб-интерфейса /apps:"
+    Write-Host "  настроенных в config_tc.json или config.json:"
     Write-Host "  • Веб-интерфейс приложений       (/apps)" -ForegroundColor White
-    Write-Host "  • Windows System Administrator   (порт 8100)" -ForegroundColor White
-    Write-Host "  • Network Analyzer Terminal      (порт 8101)" -ForegroundColor White
-    Write-Host "  • System Inspector               (порт 8102)" -ForegroundColor White
-    Write-Host "  • Exchange Trading Terminal      (порт 8103)" -ForegroundColor White
-    Write-Host "  • Cloudflare Tunnel Monitor      (порт 8104)" -ForegroundColor White
+    Write-Host "  • Настройки запуска приложений   (config_tc.json)" -ForegroundColor White
     Write-Host ""
     Write-Host "СИНТАКСИС:" -ForegroundColor Yellow
-    Write-Host "  .\tc.ps1 [-Action start|stop|restart|status] [-NewWindow] [-Background] [-NoBrowser]"
+    Write-Host "  .\tc.ps1 [-Action start|stop|restart|status] [-ConfigFile <config_tc.json>] [-NewWindow] [-Background] [-NoBrowser]"
     Write-Host "  .\tc.ps1 -Interactive"
     Write-Host "  .\tc.ps1 --help"
     Write-Host ""
     Write-Host "ПРИМЕРЫ:" -ForegroundColor Yellow
-    Write-Host "  .\tc.ps1                  # Запуск приложений и открытие веб-интерфейса /apps"
-    Write-Host "  .\tc.ps1 -Action status   # Проверка статуса работы всех микросервисов"
-    Write-Host "  .\tc.ps1 -Action stop     # Остановка сервисов"
-    Write-Host "  .\tc.ps1 -Action restart  # Перезапуск сервисов"
-    Write-Host "  .\tc.ps1 -Background      # Фоновый запуск без открытия окон"
-    Write-Host "  .\tc.ps1 -Interactive     # Интерактивное меню управления"
+    Write-Host "  .\tc.ps1                               # Запуск приложений по config_tc.json"
+    Write-Host "  .\tc.ps1 -Action status                # Проверка статуса работы всех микросервисов"
+    Write-Host "  .\tc.ps1 -ConfigFile config_tc.json    # Явное указание файла конфигурации"
+    Write-Host "  .\tc.ps1 -Action stop                  # Остановка сервисов"
+    Write-Host "  .\tc.ps1 -Action restart               # Перезапуск сервисов"
+    Write-Host "  .\tc.ps1 -Background                   # Фоновый запуск без открытия окон"
+    Write-Host "  .\tc.ps1 -Interactive                  # Интерактивное меню управления"
     Write-Host ""
     exit 0
 }
@@ -136,26 +138,45 @@ Write-Host "╚═════════════════════�
 Write-Host ""
 
 # ============================================================================
-# STAGE 2 — ЗАГРУЗКА КОНФИГУРАЦИИ
+# STAGE 2 — ЗАГРУЗКА КОНФИГУРАЦИИ (config_tc.json -> config.json)
 # ============================================================================
-$configPath = Join-Path $scriptDir "config.json"
-$envFile = Join-Path $scriptDir ".env"
-$cfgHost = "0.0.0.0"
-$cfgPort = "8000"
-$useSsl = $false
-$clientUrl = $null
-$useCloudflared = $false
+$activeConfigFile = "config.json"
+if ($ConfigFile -and (Test-Path (Join-Path $scriptDir $ConfigFile))) {
+    $activeConfigFile = $ConfigFile
+} elseif (Test-Path (Join-Path $scriptDir "config_ts.json")) {
+    $activeConfigFile = "config_ts.json"
+} elseif (Test-Path (Join-Path $scriptDir "config_tc.json")) {
+    $activeConfigFile = "config_tc.json"
+}
 
-if (Test-Path $configPath) {
+$cfgPath = Join-Path $scriptDir $activeConfigFile
+$env:CONFIG_FILE = $activeConfigFile
+$env:AIBREADBOARD_CONFIG = $activeConfigFile
+$envFile = Join-Path $scriptDir ".env"
+$cfgHost = "127.0.0.1"
+$cfgPort = "8000"
+$useSsl  = $false
+$cfgApps = $null
+
+if (Test-Path $cfgPath) {
     try {
-        $cfg = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-        if ($cfg.server.host) { $cfgHost = [string]$cfg.server.host }
-        if ($cfg.server.port) { $cfgPort = [string]$cfg.server.port }
-        if ($cfg.server.use_ssl -ne $null) { $useSsl = [bool]$cfg.server.use_ssl }
-        if ($cfg.server.use_cloudflared -ne $null) { $useCloudflared = [bool]$cfg.server.use_cloudflared }
-        if ($cfg.server.client_url) { $clientUrl = [string]$cfg.server.client_url }
-        elseif ($cfg.server.user_domain) { $clientUrl = "https://$($cfg.server.user_domain)" }
-    } catch {}
+        $cfg = Get-Content $cfgPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($cfg.server) {
+            if ($cfg.server.host) { $cfgHost = [string]$cfg.server.host }
+            if ($cfg.server.port) { $cfgPort = [string]$cfg.server.port }
+            if ($cfg.server.protocol) {
+                $useSsl = ([string]$cfg.server.protocol.ToString().ToLower() -eq "https")
+            } elseif ($cfg.server.use_ssl -ne $null) {
+                $useSsl = [bool]$cfg.server.use_ssl
+            }
+        }
+        if ($cfg.apps) {
+            $cfgApps = $cfg.apps
+        }
+        Write-Host "  [OK] Загружена конфигурация: $($activeConfigFile)" -ForegroundColor Green
+    } catch {
+        Write-Host "  [WARN] Ошибка чтения $($activeConfigFile): $_" -ForegroundColor Yellow
+    }
 }
 
 if (Test-Path $envFile) {
@@ -164,10 +185,8 @@ if (Test-Path $envFile) {
         if ($line -and -not $line.StartsWith('#') -and $line -match "^([^=]+)=(.*)$") {
             $key = $Matches[1].Trim()
             $val = $Matches[2].Trim().Trim('"').Trim("'")
+            if ($key -eq "PROTOCOL") { $useSsl = ($val.ToLower() -eq "https") }
             if ($key -eq "USE_SSL") { $useSsl = $val -in ("true","1","yes") }
-            if ($key -eq "USE_CLOUDFLARED") { $useCloudflared = $val -in ("true","1","yes") }
-            if ($key -eq "CLIENT_URL" -and $val) { $clientUrl = $val }
-            if ($key -eq "USER_DOMAIN" -and $val -and -not $clientUrl) { $clientUrl = "https://$val" }
         }
     }
 }
@@ -176,7 +195,7 @@ $host_ = if ($HostAddress) { $HostAddress } else { $cfgHost }
 $port_ = if ($Port) { [string]$Port } else { [string]$cfgPort }
 $proto = if ($useSsl) { "https" } else { "http" }
 $browserHost = if ($host_ -eq "0.0.0.0") { "localhost" } else { $host_ }
-$appsUrl = "${proto}://${browserHost}:${port_}/apps"
+$appsUrl = "${proto}://${browserHost}:${port_}/tc"
 
 # ============================================================================
 # STAGE 3 — ИНТЕРАКТИВНЫЙ РЕЖИМ (ЕСЛИ -Interactive)
@@ -185,9 +204,9 @@ $isInteractive = $Interactive -and (-not $NonInteractive)
 
 if ($isInteractive) {
     Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkCyan
-    Write-Host " 📱 УПРАВЛЕНИЕ МИКРОСЕРВИСАМИ И ВЕБ-ИНТЕРФЕЙСОМ /apps" -ForegroundColor Yellow
+    Write-Host " 📱 УПРАВЛЕНИЕ МИКРОСЕРВИСАМИ И ВЕБ-ИНТЕРФЕЙСОМ /tc" -ForegroundColor Yellow
     Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkCyan
-    Write-Host "  [1] Start   - Запустить приложения и открыть веб-интерфейс /apps" -ForegroundColor White
+    Write-Host "  [1] Start   - Запустить приложения и открыть веб-интерфейс /tc" -ForegroundColor White
     Write-Host "  [2] Status  - Проверить статус запущенных микросервисов и сервера" -ForegroundColor White
     Write-Host "  [3] Stop    - Остановить микросервисы" -ForegroundColor White
     Write-Host "  [4] Restart - Перезапустить микросервисы" -ForegroundColor White
@@ -254,14 +273,17 @@ function Open-AppsBrowser {
     }
 }
 
-# 1. Проверяем автономные микросервисы через Run-Apps.ps1
+# 1. Проверяем и запускаем микросервисы через Run-Apps.ps1 с учетом config_tc.json
 $appsLauncher = Join-Path $scriptDir "launchers\Run-Apps.ps1"
 if (-not (Test-Path $appsLauncher)) {
     $appsLauncher = Join-Path $scriptDir "Run-Apps.ps1"
 }
 
 if (Test-Path $appsLauncher) {
-    $callArgs = @{ Action = $Action }
+    $callArgs = @{
+        Action     = $Action
+        ConfigFile = $activeConfigFile
+    }
     if ($openNewWindow -and $Action -in @('start', 'restart')) {
         $callArgs['NewWindow'] = $true
     }
@@ -304,9 +326,11 @@ if ($Action -in @('start', 'restart')) {
 
         if (Test-Path $unicornScript) {
             $unicornCallArgs = @{
-                Host_   = $host_
-                Port    = $port_
-                OpenUrl = $appsUrl
+                Host_       = $host_
+                Port        = $port_
+                OpenUrl     = $appsUrl
+                EnableOAuth = $false
+                ConfigFile  = $activeConfigFile
             }
             & $unicornScript @unicornCallArgs
         } else {

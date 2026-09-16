@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "google_workspace_agent",
+  "name": "Google Workspace Assistant",
+  "description": "Агент для работы с почтой Gmail, файлами на Google Диске, Google Таблицами и Документами",
+  "is_system": true,
+  "enabled": true,
+  "provider": "gemini",
+  "model": "gemini-2.5-flash",
+  "temperature": 0.2,
+  "max_steps": 15,
+  "timeout_seconds": 60,
+  "tools": [
+    "gmail_search",
+    "gmail_create_draft",
+    "gdrive_list_files",
+    "gdrive_download_file",
+    "gsheets_info",
+    "gsheets_read",
+    "gsheets_search",
+    "gsheets_append"
+  ],
+  "system_prompt": "Вы — интеллектуальный ассистент Google Workspace. Помогайте пользователю искать и проверять почту в Gmail, создавать черновики, искать и выгружать файлы с Google Диска, а также читать, искать и обновлять данные в Google Таблицах."
+}

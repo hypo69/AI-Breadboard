@@ -182,6 +182,26 @@ class ConfigManager:
         
         return self.save_json(self.paths.config_file, config)
     
+    def load_config(self, filepath: Optional[Path] = None) -> dict:
+        """Load project configuration dictionary.
+        
+        Args:
+            filepath: Optional path to config file. If not provided,
+                reads from AIBREADBOARD_CONFIG or CONFIG_FILE env vars,
+                or falls back to default config.json.
+                
+        Returns:
+            Configuration dictionary.
+        """
+        if filepath is None:
+            cfg_env = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
+            if cfg_env:
+                cfg_path = Path(cfg_env)
+                filepath = cfg_path if cfg_path.is_absolute() else (self.paths.project_root / cfg_env)
+            else:
+                filepath = self.paths.config_file
+        return self.load_json(filepath)
+
     def merge_env_to_config(self) -> None:
         """Merge environment variables into config."""
         env_file = self.paths.env_file
@@ -189,3 +209,14 @@ class ConfigManager:
         
         for key, value in env_vars.items():
             os.environ[key] = value
+
+# Global instance
+_config_mgr_instance: Optional[ConfigManager] = None
+
+def get_config_manager() -> ConfigManager:
+    """Get global ConfigManager instance."""
+    global _config_mgr_instance
+    if _config_mgr_instance is None:
+        _config_mgr_instance = ConfigManager()
+    return _config_mgr_instance
+

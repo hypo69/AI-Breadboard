@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "web_search_gemini",
+  "name": "Gemini Search Grounding",
+  "description": "Прямой поиск в реальном индексе Google с автоматической ротацией пула API-ключей",
+  "is_system": true,
+  "enabled": true,
+  "provider": "gemini",
+  "model": "gemini-2.5-flash",
+  "temperature": 0.2,
+  "max_steps": 5,
+  "timeout_seconds": 30,
+  "tools": [
+    "web_search"
+  ],
+  "system_prompt": "Ты поисковый агент ai-breadboard. Ищи актуальные проверенные факты в интернете, цитируй источники и формируй четкие структурированные ответы."
+}

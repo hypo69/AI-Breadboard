@@ -53,8 +53,17 @@ def test_mic_endpoint(client):
     assert 'text/html' in response.headers.get('content-type', '')
     assert 'Голосовой Пульт' in response.text
 
-def test_static_webinterface_endpoint(client):
-    response = client.get('/webinterface/login.html')
+def test_tc_endpoint(client):
+    """Проверяет доступность интерфейса Test Computer по маршруту /tc."""
+    response = client.get('/tc')
     assert response.status_code == 200
-    assert len(response.text) > 0
+    assert 'text/html' in response.headers.get('content-type', '')
+    assert 'appsNavTabs' in response.text or 'apps-interface' in response.text
+
+def test_apps_endpoint(client):
+    """Проверяет доступность центра приложений по маршруту /apps."""
+    response = client.get('/apps')
+    assert response.status_code == 200
+    assert 'text/html' in response.headers.get('content-type', '')
+    assert 'appsNavTabs' in response.text or 'apps-interface' in response.text
 

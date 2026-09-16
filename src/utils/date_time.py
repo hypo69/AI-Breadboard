@@ -16,6 +16,7 @@
 
 from datetime import datetime, time
 import threading
+from src.utils.printer import pprint as print
 
 class TimeoutCheck:
     def __init__(self):

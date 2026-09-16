@@ -21,10 +21,14 @@ import pytest
 
 # Ensure skill directory is importable
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-SKILL_DIR = PROJECT_ROOT / ".agents" / "skills" / "log-analyzer" / "scripts"
-
-if str(SKILL_DIR) not in sys.path:
-    sys.path.insert(0, str(SKILL_DIR))
+_candidate_dirs = [
+    PROJECT_ROOT / ".skills" / "log-analyzer" / "scripts",
+    PROJECT_ROOT / ".agents" / "skills" / "log-analyzer" / "scripts",
+    PROJECT_ROOT / ".gemini" / "skills" / "log-analyzer" / "scripts",
+]
+for _candidate in _candidate_dirs:
+    if _candidate.exists() and str(_candidate) not in sys.path:
+        sys.path.insert(0, str(_candidate))
 
 from analyze import LogParser, LogAnalyzer, LogEntry, format_markdown_report
 

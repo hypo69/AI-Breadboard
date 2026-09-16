@@ -34,11 +34,44 @@ class BackgroundScheduler:
         """Initialize the background scheduler."""
         self._running: bool = False
         self._tasks: List[asyncio.Task] = []
-        self._rag_interval_seconds: float = 24 * 3600.0  # 24 hours
-        self._email_interval_seconds: float = 5 * 60.0    # 5 minutes
+        self.enabled: bool = True
+        self.rag_enabled: bool = True
+        self._rag_interval_seconds: float = 24 * 3600.0
+        self.email_enabled: bool = True
+        self._email_interval_seconds: float = 5 * 60.0
         self._last_rag_run: Optional[datetime] = None
         self._last_email_run: Optional[datetime] = None
         self._latest_unread_emails: List[Dict[str, Any]] = []
+        
+        self.load_from_config()
+
+    def load_from_config(self) -> None:
+        """Reload scheduler configuration parameters from config.json."""
+        try:
+            from src.config import schedulers_cfg
+            self.enabled = getattr(schedulers_cfg, "enabled", True)
+            
+            rag_cfg = getattr(schedulers_cfg, "rag_reindex", getattr(schedulers_cfg, "rag", None))
+            email_cfg = getattr(schedulers_cfg, "email_check", getattr(schedulers_cfg, "email", None))
+            
+            self.rag_enabled = getattr(rag_cfg, "enabled", True) if rag_cfg is not None else True
+            rag_hours = getattr(rag_cfg, "interval_hours", 24) if rag_cfg is not None else 24
+            self._rag_interval_seconds = max(60.0, float(rag_hours) * 3600.0)
+            
+            self.email_enabled = getattr(email_cfg, "enabled", True) if email_cfg is not None else True
+            email_minutes = getattr(email_cfg, "interval_minutes", 5) if email_cfg is not None else 5
+            self._email_interval_seconds = max(10.0, float(email_minutes) * 60.0)
+        except Exception as ex:
+            logger.error(f"[Scheduler] Failed to load configuration: {ex}")
+
+    async def restart(self) -> None:
+        """Reload configuration and restart running tasks."""
+        was_running = self._running
+        if was_running:
+            await self.stop()
+        self.load_from_config()
+        if self.enabled:
+            await self.start()
 
     @property
     def is_running(self) -> bool:
@@ -50,7 +83,10 @@ class BackgroundScheduler:
         """Return diagnostic status of scheduled jobs."""
         return {
             "running": self._running,
+            "enabled": self.enabled,
+            "rag_enabled": self.rag_enabled,
             "rag_interval_hours": self._rag_interval_seconds / 3600.0,
+            "email_enabled": self.email_enabled,
             "email_interval_minutes": self._email_interval_seconds / 60.0,
             "last_rag_run": self._last_rag_run.isoformat() if self._last_rag_run else None,
             "last_email_run": self._last_email_run.isoformat() if self._last_email_run else None,
@@ -60,14 +96,19 @@ class BackgroundScheduler:
 
     async def start(self) -> None:
         """Start periodic background tasks."""
-        if self._running:
+        if self._running or not self.enabled:
             return
 
         self._running = True
-        logger.info("Starting BackgroundScheduler (24h RAG recheck, 5m Gmail check)...")
+        logger.info(
+            f"Starting BackgroundScheduler (RAG enabled={self.rag_enabled} [{self._rag_interval_seconds/3600:.1f}h], "
+            f"Email enabled={self.email_enabled} [{self._email_interval_seconds/60:.1f}m])..."
+        )
         
-        self._tasks.append(asyncio.create_task(self._run_rag_periodically()))
-        self._tasks.append(asyncio.create_task(self._run_email_check_periodically()))
+        if self.rag_enabled:
+            self._tasks.append(asyncio.create_task(self._run_rag_periodically()))
+        if self.email_enabled:
+            self._tasks.append(asyncio.create_task(self._run_email_check_periodically()))
 
     async def stop(self) -> None:
         """Stop all running background tasks gracefully."""
@@ -164,9 +205,11 @@ class BackgroundScheduler:
         Returns:
             List[Dict[str, Any]]: List of unread message summaries.
         """
-        scripts_dir = __root__ / ".agents" / "skills" / "google-workspace" / "scripts"
+        scripts_dir = __root__ / ".agents" / "skills" / "user-skills" / "google-workspace" / "scripts"
+        if not scripts_dir.exists():
+            scripts_dir = __root__ / ".agents" / "skills" / "google-workspace" / "scripts"
         import sys
-        if str(scripts_dir) not in sys.path:
+        if scripts_dir.exists() and str(scripts_dir) not in sys.path:
             sys.path.insert(0, str(scripts_dir))
 
         def _fetch_messages():

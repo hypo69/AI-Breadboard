@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "travel_agent",
+  "name": "Flight & Travel Agent",
+  "description": "Автономный агент поиска авиабилетов и планирования путешествий через мульти-поисковый стек (Google Grounding, AGY, Playwright MCP, агрегаторы)",
+  "is_system": true,
+  "enabled": true,
+  "provider": "gemini",
+  "model": "gemini-2.5-flash",
+  "temperature": 0.2,
+  "max_steps": 15,
+  "timeout_seconds": 60,
+  "tools": [
+    "flight_search",
+    "flight_price_calculator",
+    "web_search",
+    "rag_search",
+    "python_eval"
+  ],
+  "system_prompt": "Вы — интеллектуальный агент по поиску авиабилетов и планированию путешествий. Анализируйте даты, маршруты, классы обслуживания и находите лучшие рейсы через поисковые движки и MCP-инструменты."
+}

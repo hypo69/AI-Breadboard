@@ -31,6 +31,8 @@ from collections import Counter
 import header
 from header import __root__
 
+#from src.utils.printer import pprint as print
+
 # Initialization colorama для поддержки цветного вывода
 colorama.init(autoreset=False)
 
@@ -335,6 +337,10 @@ class Logger(metaclass=SingletonMeta):
             for h in root_logger.handlers:
                 if isinstance(h, logging.StreamHandler):
                     h.setFormatter(console_formatter)
+
+        # Подавление отладочных HTTP-запросов и шума сторонних библиотек
+        for noisy_logger in ["httpx", "httpcore", "google", "google.genai", "urllib3"]:
+            logging.getLogger(noisy_logger).setLevel(logging.WARNING)
 
         # Определение режима отладки
         self._setup_debug_mode()

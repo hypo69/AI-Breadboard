@@ -46,6 +46,9 @@ param (
     [Alias('Url', 'ClientUrl', 'TargetUrl')]
     [string]$OpenUrl,
 
+    [Alias('Config', 'Cfg')]
+    [string]$ConfigFile,
+
     [Alias('h', '-help')]
     [switch]$Help
 )
@@ -133,7 +136,17 @@ try {
 # ============================================
 Write-Host ""
 Write-Host "[2/4] Loading configuration..." -ForegroundColor Cyan
-$configPath = Join-Path $projectRoot "config.json"
+$cfgFileName = "config.json"
+if ($ConfigFile) {
+    $cfgFileName = $ConfigFile
+} elseif ($env:AIBREADBOARD_CONFIG) {
+    $cfgFileName = $env:AIBREADBOARD_CONFIG
+} elseif ($env:CONFIG_FILE) {
+    $cfgFileName = $env:CONFIG_FILE
+}
+$env:AIBREADBOARD_CONFIG = $cfgFileName
+$env:CONFIG_FILE = $cfgFileName
+$configPath = if ([System.IO.Path]::IsPathRooted($cfgFileName)) { $cfgFileName } else { Join-Path $projectRoot $cfgFileName }
 $envFile    = Join-Path $projectRoot ".env"
 $cfgHost    = "0.0.0.0"
 $cfgPort    = "8000"
@@ -152,7 +165,11 @@ if (Test-Path $configPath) {
         if ($cfg -and $cfg.server) {
             if ($cfg.server.host) { $cfgHost = [string]$cfg.server.host }
             if ($cfg.server.port) { $cfgPort = [string]$cfg.server.port }
-            if ($cfg.server.use_ssl -ne $null) { $useSsl = [bool]$cfg.server.use_ssl }
+            if ($cfg.server.protocol) {
+                $useSsl = ([string]$cfg.server.protocol.ToString().ToLower() -eq "https")
+            } elseif ($cfg.server.use_ssl -ne $null) {
+                $useSsl = [bool]$cfg.server.use_ssl
+            }
             if ($cfg.server.mode) { $mode = [string]$cfg.server.mode.ToString().ToLower() }
             if ($cfg.server.debug -ne $null) { $debug = if ($cfg.server.debug) { "true" } else { "false" } }
             if ($cfg.server.PSObject.Properties['use_cloudflared'] -and $cfg.server.use_cloudflared -ne $null) {
@@ -179,7 +196,7 @@ if (Test-Path $configPath) {
             }
         }
     } catch {
-        Write-Host "    [WARN] Could not parse config.json, using defaults: $_" -ForegroundColor Yellow
+        Write-Host "    [WARN] Could not parse $configPath, using defaults: $_" -ForegroundColor Yellow
     }
 }
 
@@ -199,6 +216,7 @@ if (Test-Path $envFile) {
         if ($line -and -not $line.StartsWith('#') -and $line -match "^([^=]+)=(.*)$") {
             $key = $Matches[1].Trim()
             $val = $Matches[2].Trim().Trim('"').Trim("'")
+            if ($key -eq "PROTOCOL") { $useSsl = ($val.ToLower() -eq "https") }
             if ($key -eq "USE_SSL") { $useSsl = $val -in ("true","1","yes") }
             if ($key -eq "MODE") { $mode = $val.ToLower() }
             if ($key -eq "ENABLE_OAUTH") { $oauthEnabled = $val -in ("true","1","yes") }
@@ -232,25 +250,14 @@ if ($Reload -ne $null) {
 $host_ = if ($HostAddress) { $HostAddress } else { $cfgHost }
 $port  = if ($Port)        { [string]$Port }   else { [string]$cfgPort }
 
-# Check for Gemini API key
-$hasApiKey = $false
-if ($env:GEMINI_API_KEY -or $env:GEMINI_ANTIGRAVITY_API_KEY -or $env:AGY_API_KEY) { $hasApiKey = $true }
-if (-not $hasApiKey -and (Test-Path $envFile)) {
-    Get-Content $envFile | ForEach-Object {
-        $line = $_.Trim()
-        if ($line -and -not $line.StartsWith('#') -and $line -match "^(GEMINI_API_KEY|GEMINI_API_KEY_\d+|GEMINI_ANTIGRAVITY_API_KEY|AGY_API_KEY)=(.*)$") {
-            $val = $Matches[2].Trim().Trim('"').Trim("'")
-            if ($val -and $val.Length -ge 10) { $hasApiKey = $true }
-        }
-    }
-}
-
+$protoDisplay = if ($useSsl) { "HTTPS (SSL)" } else { "HTTP" }
+Write-Host "    Config:     $cfgFileName" -ForegroundColor Gray
 Write-Host "    Host:       $host_" -ForegroundColor Gray
 Write-Host "    Port:       $port"  -ForegroundColor Gray
-Write-Host "    AI Keys:    $(if ($hasApiKey) { 'FOUND' } else { 'NOT CONFIGURED (https://aistudio.google.com/app/apikey)' })" -ForegroundColor $(if ($hasApiKey) { 'Green' } else { 'Yellow' })
+Write-Host "    Protocol:   $protoDisplay" -ForegroundColor Gray
 Write-Host "    OAuth:      $(if ($oauthEnabled) { 'ENABLED' } else { 'DISABLED (default)' })" -ForegroundColor $(if ($oauthEnabled) { 'Green' } else { 'Yellow' })
 Write-Host "    Telegram:   $(if ($tgBotEnabled) { 'ENABLED (FastAPI Lifecycle)' } else { 'DISABLED (default)' })" -ForegroundColor $(if ($tgBotEnabled) { 'Green' } else { 'Yellow' })
-Write-Host "    Autoreload: $(if ($reload) { 'ENABLED (config.json)' } else { 'DISABLED (config.json)' })" -ForegroundColor $(if ($reload) { 'Green' } else { 'Yellow' })
+Write-Host "    Autoreload: $(if ($reload) { 'ENABLED' } else { 'DISABLED' })" -ForegroundColor $(if ($reload) { 'Green' } else { 'Yellow' })
 if (-not $reload) {
     Write-Host "    Workers:    $workers" -ForegroundColor Gray
 }
@@ -416,6 +423,6 @@ Start-Job -ScriptBlock {
 Write-Host "[INFO] Server starting. App window will open automatically: $browserUrl" -ForegroundColor Green
 Write-Host "[INFO] Launching uvicorn in current window..." -ForegroundColor Green
 Push-Location $projectRoot
-$cmdToRun = "set CONNECTED_DRIVES=$env:CONNECTED_DRIVES && `"$venvPython`" $argStr 2>&1"
+$cmdToRun = "set CONNECTED_DRIVES=$env:CONNECTED_DRIVES && set AIBREADBOARD_CONFIG=$env:AIBREADBOARD_CONFIG && set CONFIG_FILE=$env:CONFIG_FILE && `"$venvPython`" $argStr 2>&1"
 cmd /c $cmdToRun | Tee-Object -FilePath $logFilePath
 Pop-Location

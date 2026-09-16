@@ -40,6 +40,18 @@ class SearchRequest(BaseModel):
     top_k: int = Field(default=5, ge=1, le=50, description="Number of results to return")
     min_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Minimum similarity threshold")
     api_key: Optional[str] = Field(default="", description="Gemini API Key if using Gemini search")
+    version_filter: str = Field(default="latest", description="Version filter: 'latest', 'all', 'v1', 'v2', etc.")
+
+
+class ScanDirectoryRequest(BaseModel):
+    """Payload for scanning and incrementally indexing an external directory."""
+    directory_path: str = Field(..., min_length=1, description="Directory path to scan (e.g. 'G:\\My Drive' or 'data/rag_documents')")
+    provider: str = Field(default="auto", description="Vector provider: 'auto', 'gemini', or 'local_tfidf'")
+    api_key: Optional[str] = Field(default="", description="Gemini API Key if using Gemini embedding provider")
+    chunk_size: int = Field(default=500, ge=100, le=4000, description="Max character length per chunk")
+    chunk_overlap: int = Field(default=50, ge=0, le=1000, description="Overlap characters between chunks")
+    recursive: bool = Field(default=True, description="Whether to scan subdirectories")
+    extensions: Optional[List[str]] = Field(default=None, description="Optional list of file extensions (e.g. ['.md', '.txt'])")
 
 
 class BuildCodebaseIndexRequest(BaseModel):
@@ -207,13 +219,51 @@ def init_router() -> APIRouter:
             top_k=req.top_k,
             min_score=req.min_score,
             api_key=api_key,
+            version_filter=req.version_filter,
         )
         return {
             "status": "success",
             "query": req.query,
+            "version_filter": req.version_filter,
             "count": len(results),
             "results": results,
         }
+
+    @router.post("/scan-directory", summary="Scan and incrementally index an external directory")
+    async def scan_directory(req: ScanDirectoryRequest, request: Request) -> Dict[str, Any]:
+        """Scan any local or external directory (e.g. G:\\My Drive), track file changes, and index versions."""
+        _get_current_user_id(request)
+        manager = get_document_rag_manager()
+        api_key = req.api_key or ""
+        if not api_key:
+            api_key = os.getenv("GEMINI_API_KEY_1", "") or os.getenv("GEMINI_API_KEY", "")
+
+        try:
+            result = manager.scan_and_index_directory(
+                dir_path=Path(req.directory_path),
+                provider=req.provider,
+                api_key=api_key,
+                chunk_size=req.chunk_size,
+                chunk_overlap=req.chunk_overlap,
+                recursive=req.recursive,
+                extensions=req.extensions,
+            )
+            return {"status": "success", "result": result}
+        except FileNotFoundError as e:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        except Exception as e:
+            logger.error(f"[router_rag] Scan directory failed: {e}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+    @router.get("/documents/{filename:path}/history", summary="Get version history of a document")
+    async def get_document_history_endpoint(filename: str, request: Request) -> Dict[str, Any]:
+        """Retrieve complete version history and chunk statistics for a document."""
+        _get_current_user_id(request)
+        manager = get_document_rag_manager()
+        history = manager.get_document_history(filename)
+        if not history.get("found"):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Document '{filename}' not found in registry")
+        return {"status": "success", "data": history}
 
     # --- Codebase RAG Endpoints (Admin & User) ---
 

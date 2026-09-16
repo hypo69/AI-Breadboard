@@ -39,12 +39,12 @@ The cleaner pipeline automatically executes:
 
 #### Process a Single File or Archive and Preview Chunks:
 ```powershell
-python .agents/skills/rag-cleaner/scripts/rag_cleaner.py --input "path/to/document.pdf"
+python .skills/rag-cleaner/scripts/rag_cleaner.py --input "path/to/document.pdf"
 ```
 
 #### Process an Entire Directory or Archive to a JSONL Output:
 ```powershell
-python .agents/skills/rag-cleaner/scripts/rag_cleaner.py --input "path/to/archive_or_folder" --output "cleaned_rag_chunks.jsonl"
+python .skills/rag-cleaner/scripts/rag_cleaner.py --input "path/to/archive_or_folder" --output "cleaned_rag_chunks.jsonl"
 ```
 
 #### CLI Options:

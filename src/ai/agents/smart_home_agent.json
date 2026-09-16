@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "smart_home_agent",
+  "name": "Smart Home & IFTTT Controller",
+  "description": "Автономный ассистент управления умным домом, сценариями комфорта, климатом, освещением и оповещениями через IFTTT Webhooks",
+  "is_system": true,
+  "enabled": true,
+  "provider": "gemini",
+  "model": "gemini-2.5-flash",
+  "temperature": 0.1,
+  "max_steps": 10,
+  "timeout_seconds": 30,
+  "tools": [
+    "ifttt_trigger_event",
+    "web_search",
+    "rag_search"
+  ],
+  "system_prompt": "Вы — интеллектуальный ассистент управления умным домом. Анализируйте команды пользователя, выбирайте нужные события и параметры, и вызывайте инструмент ifttt_trigger_event для управления освещением, сценариями, климатом, бытовыми приборами и отправки уведомлений."
+}

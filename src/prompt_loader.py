@@ -18,6 +18,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from src.utils.printer import pprint as print
+
 ## Base paths
 _PROMPTS_ROOT: Path = Path(__file__).resolve().parent.parent / "prompts"
 _RAG_DIR: Path = Path(__file__).resolve().parent.parent / "tmp" / "rag"

@@ -376,7 +376,7 @@ class Admin_Settings {
 All UI menus must follow the strict standards:
 1. **Localization:** Every visible menu item must include `data-i18n="tabs.<key>"` for dynamic runtime translation using `i18next`.
 2. **Icons:** Use standard Bootstrap Icons (`bi bi-...`) or clean Unicode emojis for consistent visual hierarchy.
-3. **No Cyrillic in source code:** Code comments, IDs, and attributes must remain strictly English; Russian translations are loaded from JSON localization files (`locales/ru.json`, `locales/en.json`).
+3. **Docstrings & Comments:** Code comments and docstrings must be written in Russian; HTML attributes, element IDs, and class names remain in standard ASCII/English. Visible UI strings use `data-i18n` localization.
 4. **Theme Compatibility:** Menus must utilize CSS custom properties (`var(--bg-card)`, `var(--text-primary)`, `var(--border-color)`) to support dark and light themes seamlessly.
 
 ---

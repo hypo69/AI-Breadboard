@@ -217,9 +217,11 @@ def flight_price_calculator(
 
 def _get_google_workspace_managers():
     """Dynamically import Google Workspace managers from skill scripts."""
-    scripts_dir = __root__ / ".agents" / "skills" / "google-workspace" / "scripts"
+    scripts_dir = __root__ / ".agents" / "skills" / "user-skills" / "google-workspace" / "scripts"
+    if not scripts_dir.exists():
+        scripts_dir = __root__ / ".agents" / "skills" / "google-workspace" / "scripts"
     import sys
-    if str(scripts_dir) not in sys.path:
+    if scripts_dir.exists() and str(scripts_dir) not in sys.path:
         sys.path.insert(0, str(scripts_dir))
     try:
         from gmail_manager import GmailManager
@@ -440,6 +442,121 @@ def gsheets_append(spreadsheet_id: str, range_name: str, values_json: str, accou
     except Exception as e:
         logger.error(f"[google_workspace_tools] Error in gsheets_append: {e}")
         return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+# --- System Logs & OS Diagnostics Tools ---
+
+@tool
+async def system_logs_analyzer(
+    days: int = 20,
+    level: str = "Critical,Error",
+    channel: str = "System,Application",
+    search_query: str = "",
+    limit: int = 150,
+) -> str:
+    """Анализ системных логов и критических ошибок операционной системы Windows.
+
+    Собирает события из журналов Windows Event Log (System, Application) за указанный
+    период (в днях), группирует повторяющиеся сбои по источникам и кодам событий (Event ID),
+    подсчитывает частотность и возвращает структурированный аналитический дайджест.
+
+    Args:
+        days: Глубина выборки в днях (по умолчанию 20 дней).
+        level: Уровни важности событий (например: 'Critical,Error' или 'Critical').
+        channel: Журналы Windows (например: 'System,Application' или 'System').
+        search_query: Опциональная фильтрация по тексту сообщения или имени провайдера.
+        limit: Максимальное количество анализируемых событий.
+    """
+    try:
+        hours = max(1, min(days * 24, 720))
+        channels = [c.strip() for c in channel.split(",") if c.strip()] or ["System", "Application"]
+        all_events = []
+
+        # Преобразование уровней для фильтрации в PowerShell
+        level_filter = ""
+        lvl_lower = level.lower()
+        if "crit" in lvl_lower and "err" in lvl_lower:
+            level_filter = "; Level=1,2"
+        elif "crit" in lvl_lower:
+            level_filter = "; Level=1"
+        elif "err" in lvl_lower:
+            level_filter = "; Level=2"
+        elif "warn" in lvl_lower:
+            level_filter = "; Level=3"
+
+        select_expr = (
+            "@{N='timestamp';E={$_.TimeCreated.ToString('yyyy-MM-dd HH:mm:ss')}}, "
+            "@{N='level';E={$_.LevelDisplayName}}, "
+            "@{N='event_id';E={$_.Id}}, "
+            "@{N='provider';E={$_.ProviderName}}, "
+            "@{N='channel';E={$_.LogName}}, "
+            "@{N='message';E={$_.Message}}"
+        )
+
+        for chan in channels:
+            ps_query = (
+                f"Get-WinEvent -FilterHashtable @{{LogName='{chan}'{level_filter}; "
+                f"StartTime=(Get-Date).AddHours(-{hours})}} -MaxEvents {limit} -ErrorAction SilentlyContinue"
+            )
+            ps_script = f"{ps_query} | Select-Object {select_expr} | ConvertTo-Json -Compress -Depth 2"
+            cmd = ["powershell", "-NoProfile", "-Command", ps_script]
+            try:
+                import subprocess
+                res = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+                if res.returncode == 0 and res.stdout.strip():
+                    raw = json.loads(res.stdout.strip())
+                    items = [raw] if isinstance(raw, dict) else raw
+                    all_events.extend(items)
+            except Exception as ex:
+                logger.debug(f"[system_logs_analyzer] Error querying channel '{chan}': {ex}")
+
+        if search_query:
+            sq_lower = search_query.lower()
+            all_events = [
+                ev for ev in all_events
+                if sq_lower in str(ev.get("message", "")).lower()
+                or sq_lower in str(ev.get("provider", "")).lower()
+                or sq_lower in str(ev.get("event_id", ""))
+            ]
+
+        # Агрегация и статистика
+        total_count = len(all_events)
+        critical_count = len([e for e in all_events if "crit" in str(e.get("level", "")).lower() or e.get("level") == 1])
+        error_count = len([e for e in all_events if "err" in str(e.get("level", "")).lower() or e.get("level") == 2])
+        
+        # Группировка по источникам и Event ID
+        clusters: Dict[str, Dict[str, Any]] = {}
+        for ev in all_events:
+            provider = ev.get("provider") or "Unknown"
+            ev_id = ev.get("event_id") or 0
+            key = f"{provider} (Event ID: {ev_id})"
+            if key not in clusters:
+                clusters[key] = {
+                    "source": provider,
+                    "event_id": ev_id,
+                    "count": 0,
+                    "level": ev.get("level", "Error"),
+                    "sample_message": (ev.get("message") or "")[:250].strip(),
+                    "latest_timestamp": ev.get("timestamp", ""),
+                }
+            clusters[key]["count"] += 1
+
+        sorted_clusters = sorted(clusters.values(), key=lambda x: x["count"], reverse=True)
+
+        summary_data = {
+            "period_days": days,
+            "period_hours": hours,
+            "channels": channels,
+            "total_events_found": total_count,
+            "critical_events": critical_count,
+            "error_events": error_count,
+            "top_incident_clusters": sorted_clusters[:10],
+            "recent_events_sample": all_events[:8],
+        }
+
+        return json.dumps(summary_data, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"[system_logs_analyzer] Execution error: {e}", exc_info=True)
+        return json.dumps({"status": "error", "error": str(e), "period_days": days}, ensure_ascii=False)
 
 # --- IFTTT & Smart Home Tools ---
 

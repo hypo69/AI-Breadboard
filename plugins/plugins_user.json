@@ -1,7 +1,6 @@
 {
   "entries": [
     {"path": "user-plugins/facebook"},
-    {"path": "user-plugins/google_workspace"},
     {"path": "user-plugins/ifttt"},
     {"path": "user-plugins/invoice_processor"},
     {"path": "user-plugins/media_organizer"},

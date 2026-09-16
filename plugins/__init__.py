@@ -71,18 +71,51 @@ def _discover_plugin_directories(plugins_dir: Path) -> List[Path]:
     return discovered
 
 
-def load_plugins(ai_model: Any = None) -> Dict[str, BasePlugin]:
-    """Discover, load, and instantiate all available plugins in the plugins directory.
-
-    Scans the plugins/ folder and its category subdirectories for modules containing __init__.py,
-    imports each module, instantiates the plugin using module.plugin(ai_model=ai_model), and checks
-    activation state from config.json and DISABLED_PLUGINS environment variable.
+def _parse_plugins_config(plugins_cfg: Any) -> tuple[Optional[set[str]], set[str], Dict[str, Any]]:
+    """Парсинг секции конфигурации плагинов (списки enabled/disabled, плоский список или словарь).
 
     Args:
-        ai_model (Any): Optional AI model instance to inject into plugins.
+        plugins_cfg (Any): Данные конфигурации плагинов из config.json.
 
     Returns:
-        Dict[str, BasePlugin]: Mapping of plugin names to initialized plugin instances.
+        tuple[Optional[set[str]], set[str], Dict[str, Any]]:
+            Кортеж из (множество включенных плагинов или None, множество отключенных, словарь индивидуальных настроек).
+    """
+    enabled_set: Optional[set[str]] = None
+    disabled_set: set[str] = set()
+    plugin_configs: Dict[str, Any] = {}
+
+    if isinstance(plugins_cfg, list):
+        # Формат плоского списка активных плагинов
+        enabled_set = {str(item).strip().lower() for item in plugins_cfg if item}
+    elif isinstance(plugins_cfg, dict):
+        has_enabled_key = "enabled" in plugins_cfg and isinstance(plugins_cfg["enabled"], list)
+        has_disabled_key = "disabled" in plugins_cfg and isinstance(plugins_cfg["disabled"], list)
+
+        if has_enabled_key:
+            enabled_set = {str(item).strip().lower() for item in plugins_cfg["enabled"] if item}
+        if has_disabled_key:
+            disabled_set = {str(item).strip().lower() for item in plugins_cfg["disabled"] if item}
+
+        # Сбор индивидуальных конфигураций плагинов, если они заданы как вложенные словари
+        for k, v in plugins_cfg.items():
+            if k not in ("enabled", "disabled") and isinstance(v, dict):
+                plugin_configs[k.strip().lower()] = v
+    return enabled_set, disabled_set, plugin_configs
+
+
+def load_plugins(ai_model: Any = None) -> Dict[str, BasePlugin]:
+    """Обнаружение, загрузка и инициализация всех доступных плагинов в директории plugins.
+
+    Выполняет сканирование папки plugins/ и категориальных поддиректорий, импортирует модули,
+    создает экземпляры через фабрику module.plugin(ai_model=ai_model) и определяет статус активности
+    на основе секции plugins в config.json (списки enabled/disabled) и переменной окружения DISABLED_PLUGINS.
+
+    Args:
+        ai_model (Any): Опциональный экземпляр модели ИИ для внедрения в плагины.
+
+    Returns:
+        Dict[str, BasePlugin]: Словарь соответствия имен плагинов их инициализированным экземплярам.
 
     Examples:
         >>> from plugins import load_plugins
@@ -94,10 +127,10 @@ def load_plugins(ai_model: Any = None) -> Dict[str, BasePlugin]:
     plugins: Dict[str, BasePlugin] = {}
 
     if not plugins_dir.exists() or not plugins_dir.is_dir():
-        logger.warning(f"Plugins directory not found at {plugins_dir}")
+        logger.warning(f"Директория плагинов не найдена по пути {plugins_dir}")
         return plugins
 
-    # Parse disabled plugins from environment variable (comma or space separated)
+    # Переменная окружения для отключения плагинов (через запятую или пробел)
     disabled_env_raw = os.getenv("DISABLED_PLUGINS", "")
     disabled_env = {
         name.strip().lower()
@@ -105,46 +138,111 @@ def load_plugins(ai_model: Any = None) -> Dict[str, BasePlugin]:
         if name.strip()
     }
 
-    # Extract plugins section from config.json if available
-    plugins_cfg: Dict[str, Any] = getattr(global_settings, "plugins", {})
-    if not isinstance(plugins_cfg, dict):
+    # Чтение секции plugins из активного конфигурационного файла
+    cfg_env = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
+    active_path: Optional[Path] = None
+    if cfg_env:
+        p = Path(cfg_env)
+        active_path = p if p.is_absolute() else (__root__ / cfg_env)
+
+    if not active_path or not active_path.exists():
+        if (__root__ / "config_tc.json").exists() and not (__root__ / "config.json").exists():
+            active_path = __root__ / "config_tc.json"
+        else:
+            active_path = __root__ / "config.json"
+
+    raw_plugins_cfg: Any = {}
+    if active_path and active_path.exists():
         try:
-            plugins_cfg = dict(plugins_cfg.__dict__)
-        except Exception:
-            plugins_cfg = {}
+            with open(active_path, "r", encoding="utf-8") as f:
+                root_cfg = json.load(f)
+                raw_plugins_cfg = root_cfg.get("plugins", {})
+        except Exception as e:
+            logger.error(f"Ошибка чтения конфигурации плагинов из {active_path}: {e}")
+    else:
+        raw_plugins_cfg = getattr(global_settings, "plugins", {})
+        if hasattr(raw_plugins_cfg, "__dict__"):
+            raw_plugins_cfg = dict(raw_plugins_cfg.__dict__)
+
+    if hasattr(raw_plugins_cfg, "__dict__"):
+        raw_plugins_cfg = dict(raw_plugins_cfg.__dict__)
+
+    enabled_set, disabled_set, plugin_configs = _parse_plugins_config(raw_plugins_cfg)
 
     for item in _discover_plugin_directories(plugins_dir):
+        plugin_key = item.name.lower()
+
+        # Быстрая предварительная фильтрация по имени директории плагина
+        if plugin_key in disabled_env:
+            logger.debug(f"Плагин '{plugin_key}' отключен переменной DISABLED_PLUGINS (пропуск загрузки).")
+            continue
+        if plugin_key in disabled_set:
+            logger.debug(f"Плагин '{plugin_key}' отключен в конфигурации (disabled) (пропуск загрузки).")
+            continue
+        if enabled_set is not None and plugin_key not in enabled_set:
+            # Проверим, вдруг имя плагина внутри отличается от имени папки
+            # Если enabled_set пустой (enabled: []), то ни один плагин не должен загружаться
+            if len(enabled_set) == 0:
+                logger.debug(f"Список enabled пуст, плагин '{plugin_key}' не загружается.")
+                continue
+
         plugin_mod_name = f"plugins.{item.name}"
         try:
             module = importlib.import_module(plugin_mod_name)
             if not hasattr(module, "plugin") or not callable(module.plugin):
-                logger.debug(f"Module {plugin_mod_name} does not expose a callable 'plugin' factory.")
+                logger.debug(f"Модуль {plugin_mod_name} не предоставляет вызываемую фабрику 'plugin'.")
                 continue
 
             instance: BasePlugin = module.plugin(ai_model=ai_model)
             if not isinstance(instance, BasePlugin):
                 logger.warning(
-                    f"Factory {plugin_mod_name}.plugin() returned object of type {type(instance)}, expected BasePlugin."
+                    f"Фабрика {plugin_mod_name}.plugin() вернула объект типа {type(instance)}, ожидался BasePlugin."
                 )
                 continue
 
-            # Determine enabled status: config.json > env > default
-            is_disabled_env = instance.name.lower() in disabled_env or item.name.lower() in disabled_env
-            plugin_specific_cfg = plugins_cfg.get(instance.name, {})
-            is_enabled_cfg = True
-            if isinstance(plugin_specific_cfg, dict) and "enabled" in plugin_specific_cfg:
-                is_enabled_cfg = bool(plugin_specific_cfg["enabled"])
+            # Определение псевдонимов и ключей плагина
+            aliases = {instance.name.lower(), item.name.lower()}
+            plugin_specific_cfg = plugin_configs.get(instance.name.lower()) or plugin_configs.get(item.name.lower()) or {}
 
-            instance.enabled = (not is_disabled_env) and is_enabled_cfg
+            # 1. Проверка переменной окружения DISABLED_PLUGINS
+            if aliases.intersection(disabled_env):
+                logger.debug(f"Плагин '{instance.name}' отключен через DISABLED_PLUGINS (пропуск).")
+                continue
+            # 2. Проверка списка disabled в конфигурации (наивысший приоритет)
+            if aliases.intersection(disabled_set):
+                logger.debug(f"Плагин '{instance.name}' отключен через disabled список (пропуск).")
+                continue
+            # 3. Проверка списка enabled в конфигурации: если задан список enabled, загружаем ТОЛЬКО перечисленные
+            if enabled_set is not None and not aliases.intersection(enabled_set):
+                logger.debug(f"Плагин '{instance.name}' отсутствует в списке enabled (пропуск).")
+                continue
+            # 4. Проверка индивидуального флага в legacy словаре настроек
+            if isinstance(plugin_specific_cfg, dict) and plugin_specific_cfg.get("enabled") is False:
+                logger.debug(f"Плагин '{instance.name}' отключен через plugin_specific_cfg.enabled=False (пропуск).")
+                continue
 
-            # Merge config from config.json if present
+            # 5. Проверка локального config.json плагина на явное отключение
+            local_cfg_path = item / "config.json"
+            if local_cfg_path.exists():
+                try:
+                    with open(local_cfg_path, "r", encoding="utf-8") as lf:
+                        local_data = json.load(lf)
+                        if local_data.get("enabled") is False or local_data.get("active") is False:
+                            logger.debug(f"Плагин '{instance.name}' отключен в локальном config.json (пропуск).")
+                            continue
+                except Exception:
+                    pass
+
+            instance.enabled = True
+
+            # Объединение настроек из глобальной конфигурации
             if isinstance(plugin_specific_cfg, dict) and "config" in plugin_specific_cfg:
                 instance.update_config(plugin_specific_cfg["config"])
 
             plugins[instance.name] = instance
-            logger.info(f"Loaded plugin: '{instance.name}' (v{instance.version}, enabled={instance.enabled})")
+            logger.info(f"Загружен плагин: '{instance.name}' (v{instance.version}, enabled={instance.enabled})")
 
         except Exception as exc:
-            logger.error(f"Failed to load plugin from '{item.name}': {exc}", exc_info=True)
+            logger.error(f"Не удалось загрузить плагин из '{item.name}': {exc}", exc_info=True)
 
     return plugins

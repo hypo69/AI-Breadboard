@@ -1,7 +1,0 @@
-{
-  "categories": {
-    "system": "skills/skills_system.json",
-    "developer": "skills/skills_developer.json",
-    "user": "skills/skills_user.json"
-  }
-}

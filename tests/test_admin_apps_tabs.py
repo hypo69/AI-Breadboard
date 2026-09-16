@@ -29,7 +29,8 @@ class TestAdminAppsTabs:
 
     def test_admin_html_contains_apps_tabs(self):
         """Admin HTML should contain navigation entries and tab panes for /apps."""
-        admin_html_path = __root__ / "src" / "api" / "webinterface" / "admin" / "index.html"
+        webinterface_dir = (__root__ / "src" / "api" / "webgui") if (__root__ / "src" / "api" / "webgui").exists() else (__root__ / "src" / "api" / "webinterface")
+        admin_html_path = webinterface_dir / "admin" / "index.html"
         assert admin_html_path.exists(), "Admin index.html must exist"
         content = admin_html_path.read_text(encoding="utf-8")
 
@@ -44,7 +45,8 @@ class TestAdminAppsTabs:
 
     def test_admin_main_js_loads_apps_tabs(self):
         """Admin main.js should register and load /apps tabs."""
-        admin_js_path = __root__ / "src" / "api" / "webinterface" / "admin" / "main.js"
+        webinterface_dir = (__root__ / "src" / "api" / "webgui") if (__root__ / "src" / "api" / "webgui").exists() else (__root__ / "src" / "api" / "webinterface")
+        admin_js_path = webinterface_dir / "admin" / "main.js"
         assert admin_js_path.exists(), "Admin main.js must exist"
         content = admin_js_path.read_text(encoding="utf-8")
 
@@ -57,7 +59,7 @@ class TestAdminAppsTabs:
 
     def test_apps_tab_static_files_exist(self):
         """Static index.html and main.js files must exist for each app tab."""
-        webinterface_dir = __root__ / "src" / "api" / "webinterface"
+        webinterface_dir = (__root__ / "src" / "api" / "webgui") if (__root__ / "src" / "api" / "webgui").exists() else (__root__ / "src" / "api" / "webinterface")
 
         for tab in ["trading_tab", "network_tab", "system_inspector_tab"]:
             tab_dir = webinterface_dir / tab
@@ -68,7 +70,8 @@ class TestAdminAppsTabs:
 
     def test_locales_contain_apps_tab_keys(self):
         """Localization JSON files should contain translations for apps tabs."""
-        locales_dir = __root__ / "src" / "api" / "webinterface" / "locales"
+        webinterface_dir = (__root__ / "src" / "api" / "webgui") if (__root__ / "src" / "api" / "webgui").exists() else (__root__ / "src" / "api" / "webinterface")
+        locales_dir = webinterface_dir / "locales"
 
         for lang_file in ["ru.json", "en.json", "he.json"]:
             path = locales_dir / lang_file

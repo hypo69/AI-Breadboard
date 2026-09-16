@@ -286,10 +286,16 @@ class ServerLauncher:
         # Loading конфигурации
         print("[3/5] Loading конфигурации...")
         env_vars = self.load_env_vars()
-        use_ssl = bool(self.server_cfg.get("use_ssl", True))
-        if "USE_SSL" in env_vars:
+        protocol = self.server_cfg.get("protocol")
+        if protocol is not None:
+            use_ssl = str(protocol).strip().lower() == "https"
+        else:
+            use_ssl = bool(self.server_cfg.get("use_ssl", True))
+        if "PROTOCOL" in env_vars:
+            use_ssl = env_vars["PROTOCOL"].lower() == "https"
+        elif "USE_SSL" in env_vars:
             use_ssl = env_vars["USE_SSL"].lower() in ("true", "1", "yes")
-        print(f"    [OK] Configuration загружена (SSL: {'ВКЛ' if use_ssl else 'ВЫКЛ'})")
+        print(f"    [OK] Configuration загружена (Протокол: {'https' if use_ssl else 'http'}, SSL: {'ВКЛ' if use_ssl else 'ВЫКЛ'})")
         print()
         
         # Определение параметров

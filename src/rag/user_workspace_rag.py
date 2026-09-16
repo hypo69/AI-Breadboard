@@ -675,9 +675,11 @@ class UserWorkspaceRAGManager:
         Returns:
             Dict[str, Any]: Synchronization summary with downloaded files and chunks.
         """
-        scripts_dir = __root__ / ".agents" / "skills" / "google-workspace" / "scripts"
+        scripts_dir = __root__ / ".agents" / "skills" / "user-skills" / "google-workspace" / "scripts"
+        if not scripts_dir.exists():
+            scripts_dir = __root__ / ".agents" / "skills" / "google-workspace" / "scripts"
         import sys
-        if str(scripts_dir) not in sys.path:
+        if scripts_dir.exists() and str(scripts_dir) not in sys.path:
             sys.path.insert(0, str(scripts_dir))
 
         try:

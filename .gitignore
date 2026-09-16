@@ -444,7 +444,7 @@ rc/secrets/gemini_keys.json
 
 
 # На других языках
-docs
+!docs
 docs\es
 docs\fr
 docs\it

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "web_search_gemini_cli",
+  "name": "Gemini CLI Searcher",
+  "description": "Поиск в интернете через локальный терминальный агент Google Gemini CLI",
+  "is_system": true,
+  "enabled": true,
+  "provider": "gemini_cli",
+  "model": "gemini-3.1-flash-lite",
+  "temperature": 0.2,
+  "max_steps": 5,
+  "timeout_seconds": 30,
+  "tools": [
+    "web_search"
+  ],
+  "system_prompt": "Ты поисковый ассистент Google Gemini CLI. Используй веб-поиск для поиска свежей информации и выдавай результат в формате Markdown."
+}

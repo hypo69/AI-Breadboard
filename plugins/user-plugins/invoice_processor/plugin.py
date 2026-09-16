@@ -255,9 +255,11 @@ class InvoiceProcessorPlugin(BasePlugin):
                 logger.warning(f"Failed to append to Google Sheets via google_services: {ex}")
                 # Fallback to GSheetsManager
                 try:
-                    sys_path = Path(__file__).resolve().parents[2] / ".agents" / "skills" / "google-workspace" / "scripts"
+                    sys_path = Path(__file__).resolve().parents[3] / ".agents" / "skills" / "user-skills" / "google-workspace" / "scripts"
+                    if not sys_path.exists():
+                        sys_path = Path(__file__).resolve().parents[3] / ".agents" / "skills" / "google-workspace" / "scripts"
                     import sys
-                    if str(sys_path) not in sys.path:
+                    if sys_path.exists() and str(sys_path) not in sys.path:
                         sys.path.insert(0, str(sys_path))
                     from gsheets_manager import GSheetsManager
                     mgr = GSheetsManager()

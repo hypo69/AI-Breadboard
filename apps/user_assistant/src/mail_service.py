@@ -36,7 +36,16 @@ class MailService:
             List[Dict[str, Any]]: List of email summaries.
         """
         try:
-            from .agents.skills.google_workspace.scripts.gmail_manager import GmailManager
+            import sys
+            from pathlib import Path
+            from header import __root__
+            scripts_dir = __root__ / ".agents" / "skills" / "user-skills" / "google-workspace" / "scripts"
+            if not scripts_dir.exists():
+                scripts_dir = __root__ / ".agents" / "skills" / "google-workspace" / "scripts"
+            if scripts_dir.exists() and str(scripts_dir) not in sys.path:
+                sys.path.insert(0, str(scripts_dir))
+
+            from gmail_manager import GmailManager
             mgr = GmailManager(account_name=self.account_name)
             return mgr.search_messages(query=query, max_results=max_results)
         except Exception:
@@ -62,7 +71,16 @@ class MailService:
             Dict[str, Any]: Creation status and draft metadata.
         """
         try:
-            from .agents.skills.google_workspace.scripts.gmail_manager import GmailManager
+            import sys
+            from pathlib import Path
+            from header import __root__
+            scripts_dir = __root__ / ".agents" / "skills" / "user-skills" / "google-workspace" / "scripts"
+            if not scripts_dir.exists():
+                scripts_dir = __root__ / ".agents" / "skills" / "google-workspace" / "scripts"
+            if scripts_dir.exists() and str(scripts_dir) not in sys.path:
+                sys.path.insert(0, str(scripts_dir))
+
+            from gmail_manager import GmailManager
             mgr = GmailManager(account_name=self.account_name)
             return mgr.create_draft(to=to, subject=subject, body=body)
         except Exception as ex:

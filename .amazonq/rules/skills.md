@@ -1,4 +1,4 @@
-# Project Skills (адаптировано из .gemini/skills/)
+# Project Skills (адаптировано из .gemini/.skills/)
 
 Этот файл агрегирует все навыки проекта. Применяй соответствующий навык при получении задачи, совпадающей с его описанием.
 
@@ -7,9 +7,9 @@
 ## 🔄 Правило автосинхронизации навыков
 
 В начале КАЖДОГО диалога:
-1. Прочитать list директорий `.gemini/skills/`
+1. Прочитать list директорий `.gemini/.skills/`
 2. Сравнить с навыками, перечисленными в этом файле (секции `## skill: *`)
-3. Если найден новый навык (есть папка в `.gemini/skills/`, но нет секции здесь) — прочитать его `SKILL.md` и добавить новую секцию в этот файл
+3. Если найден новый навык (есть папка в `.gemini/.skills/`, но нет секции здесь) — прочитать его `SKILL.md` и добавить новую секцию в этот файл
 4. Сообщить пользователю: «Обнаружен новый навык `<name>`, добавлен в `.amazonq/rules/skills.md`»
 
 Текущий эталонный list навыков (обновляется автоматически):
@@ -83,7 +83,7 @@
 **Когда использовать:** поиск медиа.
 
 Приоритет:
-1. RAG-индекс: `python .gemini/skills/rag-search-manager/scripts/search_media.py --query "запрос"`
+1. RAG-индекс: `python .gemini/.skills/rag-search-manager/scripts/search_media.py --query "запрос"`
 2. Интернет — только если RAG не дал результатов
 
 ---
@@ -91,7 +91,7 @@
 ## skill: skill-factory
 **Когда использовать:** создание и упаковка новых навыков.
 
-- Упаковка: `python .gemini/skills/skill-factory/scripts/pack.py <путь_к_навыку>`
+- Упаковка: `python .gemini/.skills/skill-factory/scripts/pack.py <путь_к_навыку>`
 - Скрипт creates `dist/` внутри папки навыка
 
 ---
@@ -157,4 +157,4 @@
 ## skill: web-chat-cli
 **Когда использовать:** консольный чат с RAG-интеграцией.
 
-- `python .gemini/skills/web-chat-cli/src/chat.py`
+- `python .gemini/.skills/web-chat-cli/src/chat.py`

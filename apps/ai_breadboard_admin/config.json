@@ -1,0 +1,19 @@
+{
+  "name": "ai_breadboard_admin",
+  "title": "Панель администратора AI Breadboard",
+  "version": "1.0.0",
+  "enabled": true,
+  "server": {
+    "dedicated": false,
+    "host": "127.0.0.1",
+    "port": 8110,
+    "use_ssl": false,
+    "workers": 1
+  },
+  "cors": {
+    "allow_origins": ["*"],
+    "allow_credentials": true,
+    "allow_methods": ["*"],
+    "allow_headers": ["*"]
+  }
+}

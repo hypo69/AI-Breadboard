@@ -94,7 +94,12 @@ class UnicornLauncher:
         print("[3/3] Запуск uvicorn...")
         print()
         
-        use_ssl = bool(self.server_cfg.get("use_ssl", True))
+        protocol = self.server_cfg.get("protocol")
+        if protocol is not None:
+            use_ssl = str(protocol).strip().lower() == "https"
+        else:
+            use_ssl = bool(self.server_cfg.get("use_ssl", True))
+
         use_reload = bool(self.server_cfg.get("reload", True))
         debug = bool(self.server_cfg.get("debug", True))
         
@@ -127,8 +132,10 @@ class UnicornLauncher:
                     "--ssl-certfile", str(cert_file),
                 ])
         
+        proto_str = "https" if use_ssl else "http"
         print(f"  Хост: {host}")
         print(f"  Порт: {port}")
+        print(f"  Протокол: {proto_str}")
         print(f"  SSL: {'ВКЛ' if use_ssl else 'ВЫКЛ'}")
         print(f"  АвтоLoading: {'ВКЛ' if use_reload else 'ВЫКЛ'}")
         print(f"  Отладка: {'ВКЛ' if debug else 'ВЫКЛ'}")

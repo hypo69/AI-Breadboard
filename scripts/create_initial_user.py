@@ -44,13 +44,13 @@ class InitialUserManager:
     DEFAULT_NAME: str = "Admin"
     DEFAULT_PASSWORD: str = "onela"
 
-    def __init__(self, db_path: Optional[Path] = Path("")) -> None:
+    def __init__(self, db_path: Optional[Path] = None) -> None:
         """Initialize user manager with database location.
 
         Args:
             db_path (Optional[Path]): Specific path to SQLite database.
         """
-        if db_path and str(db_path):
+        if db_path and str(db_path).strip() and str(db_path) != ".":
             self.db_path: Path = Path(db_path)
         else:
             self.db_path = PROJECT_ROOT / "src" / "user_manager" / "users.db"

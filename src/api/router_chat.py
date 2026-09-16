@@ -722,6 +722,40 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                     yield f"data: {json.dumps({'text': debug_text})}\n\n"
                     return
 
+                # Интеллектуальный роутинг: Агент анализа системных логов Windows (System Logs Analyzer Agent)
+                msg_lower = chat_req.message.lower()
+                is_system_logs_request = any(
+                    phrase in msg_lower for phrase in (
+                        'критические ошибки в операционной системе',
+                        'критических ошибок в операционной системе',
+                        'ошибки в операционной системе',
+                        'ошибок в операционной системе',
+                        'критические ошибки в ос',
+                        'критических ошибок в ос',
+                        'ошибки в ос',
+                        'ошибок в ос',
+                        'system logs analyzer',
+                        'журнал событий windows',
+                        'журналы событий windows',
+                        'системные логи windows',
+                        'системных логах windows',
+                    )
+                )
+
+                if is_system_logs_request:
+                    yield f"data: {json.dumps({'status': '🚀 Запуск System Logs Analyzer Agent...'})}\n\n"
+                    from src.ai.agents.system_logs_agent import SystemLogsAgent
+                    agent = SystemLogsAgent()
+                    
+                    selected_model_name = chat_req.generation_config.get('model') or selected_model or 'gemini-2.5-flash'
+                    active_model = get_chat_model(selected_model_name, system_instruction or "", user_id=user_identifier)
+                    
+                    yield f"data: {json.dumps({'status': '🔍 Сбор и кластеризация событий из Windows Event Log...'})}\n\n"
+                    agent_report = await agent.run(chat_req.message, active_llm=active_model)
+                    
+                    yield f"data: {json.dumps({'text': agent_report})}\n\n"
+                    return
+
                 token = request.cookies.get('auth_token')
                 from src.api.router_control import get_room_id
                 room_id = get_room_id(token, None)

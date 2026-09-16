@@ -332,17 +332,96 @@ $enableTrayVal = $true
 $preloadSilero = $false
 $clientUrl = $null
 
+$cfgAppsEnabled = @()
+$cfgAppsDisabled = @()
+$hasAppsEnabledList = $false
+$hasAppsDisabledList = $false
+$cfgAppsObj = $null
+
+function Get-IsAppConfigEnabled {
+    param(
+        [string]$AppKey,
+        [string]$AppFolder,
+        [string[]]$Aliases = @()
+    )
+    $allAliases = @($AppKey.ToLower(), $AppFolder.ToLower())
+    foreach ($al in $Aliases) {
+        if ($al) { $allAliases += $al.ToLower() }
+    }
+
+    # 1. Проверка явного отключения в disabled
+    foreach ($al in $allAliases) {
+        if ($cfgAppsDisabled -contains $al) {
+            return $false
+        }
+    }
+
+    # 2. Проверка включения в список enabled
+    if ($hasAppsEnabledList) {
+        foreach ($al in $allAliases) {
+            if ($cfgAppsEnabled -contains $al) {
+                return $true
+            }
+        }
+        return $false
+    }
+
+    # 3. Проверка индивидуального булева флага в словаре
+    if ($cfgAppsObj) {
+        if ($cfgAppsObj.PSObject.Properties[$AppKey] -ne $null) {
+            return [bool]$cfgAppsObj.$AppKey
+        }
+        if ($cfgAppsObj.PSObject.Properties[$AppFolder] -ne $null) {
+            return [bool]$cfgAppsObj.$AppFolder
+        }
+    }
+
+    return [bool]$enableAppsVal
+}
+
 if (Test-Path $configPath) {
     try {
         $cfg = Get-Content $configPath | ConvertFrom-Json
         if ($cfg.server.host) { $cfgHost = [string]$cfg.server.host }
         if ($cfg.server.port) { $cfgPort = [string]$cfg.server.port }
-        if ($cfg.server.use_ssl -ne $null) { $useSsl = [bool]$cfg.server.use_ssl }
+        if ($cfg.server.protocol) {
+            $useSsl = ([string]$cfg.server.protocol.ToString().ToLower() -eq "https")
+        } elseif ($cfg.server.use_ssl -ne $null) {
+            $useSsl = [bool]$cfg.server.use_ssl
+        }
         if ($cfg.server.enable_oauth -ne $null) { $enableOAuthVal = [bool]$cfg.server.enable_oauth }
         if ($cfg.server.enable_telegram_bot -ne $null) { $enableTelegramBotVal = [bool]$cfg.server.enable_telegram_bot }
         if ($cfg.server.enable_apps -ne $null) { $enableAppsVal = [bool]$cfg.server.enable_apps }
         if ($cfg.apps) {
-            if ($cfg.apps.enable_all -ne $null) { $enableAppsVal = [bool]$cfg.apps.enable_all }
+            $cfgAppsObj = $cfg.apps
+            $isAppsArray = ($cfg.apps -is [System.Collections.IEnumerable]) -and ($cfg.apps -isnot [string]) -and ($cfg.apps.PSObject.Properties['enable_all'] -eq $null) -and ($cfg.apps.PSObject.Properties['enabled'] -eq $null)
+            $hasEnabledProp = ($cfg.apps.PSObject.Properties['enabled'] -ne $null -and ($cfg.apps.enabled -is [System.Collections.IEnumerable]))
+            $hasDisabledProp = ($cfg.apps.PSObject.Properties['disabled'] -ne $null -and ($cfg.apps.disabled -is [System.Collections.IEnumerable]))
+
+            if ($isAppsArray) {
+                $hasAppsEnabledList = $true
+                foreach ($item in $cfg.apps) {
+                    if ($item) { $cfgAppsEnabled += $item.ToString().Trim().ToLower() }
+                }
+            } elseif ($hasEnabledProp) {
+                $hasAppsEnabledList = $true
+                foreach ($item in $cfg.apps.enabled) {
+                    if ($item) { $cfgAppsEnabled += $item.ToString().Trim().ToLower() }
+                }
+            }
+
+            if ($hasDisabledProp) {
+                $hasAppsDisabledList = $true
+                foreach ($item in $cfg.apps.disabled) {
+                    if ($item) { $cfgAppsDisabled += $item.ToString().Trim().ToLower() }
+                }
+            }
+
+            if ($isAppsArray -or $hasEnabledProp) {
+                $enableAppsVal = $false
+            } elseif ($cfg.apps.enable_all -ne $null) {
+                $enableAppsVal = [bool]$cfg.apps.enable_all
+            }
             if ($cfg.apps.enable_windows_admin -ne $null) { $enableWindowsAdminVal = [bool]$cfg.apps.enable_windows_admin }
             if ($cfg.apps.enable_network_terminal -ne $null) { $enableNetworkTerminalVal = [bool]$cfg.apps.enable_network_terminal }
             if ($cfg.apps.enable_system_inspector -ne $null) { $enableSystemInspectorVal = [bool]$cfg.apps.enable_system_inspector }
@@ -373,6 +452,7 @@ if (Test-Path $envFile) {
         if ($line -and -not $line.StartsWith('#') -and $line -match "^([^=]+)=(.*)$") {
             $key = $Matches[1].Trim()
             $val = $Matches[2].Trim().Trim('"').Trim("'")
+            if ($key -eq "PROTOCOL") { $useSsl = ($val.ToLower() -eq "https") }
             if ($key -eq "USE_SSL") { $useSsl = $val -in ("true","1","yes") }
             if ($key -eq "ENABLE_OAUTH") { $enableOAuthVal = $val -in ("true","1","yes") }
             if ($key -eq "ENABLE_TELEGRAM_BOT") { $enableTelegramBotVal = $val -in ("true","1","yes") }
@@ -624,72 +704,7 @@ if ($isInteractive -and -not $autoLaunchEnabled) {
     $port  = if ($Port)        { [string]$Port }        else { [string]$cfgPort }
 }
 
-# ============================================================================
-# STAGE 4 — ПРОВЕРКА КОНФИГУРАЦИИ AI
-# ----------------------------------------------------------------------------
-# ============================================================================
-# STAGE 4.4 — ПРОВЕРКА НАЛИЧИЯ API-КЛЮЧА GOOGLE GEMINI (AI)
-# ----------------------------------------------------------------------------
-# Проверяется наличие API-ключа Gemini в переменных окружения и .env.
-# Если ключ отсутствует и запуск интерактивный, пользователю предлагается ввести
-# его и сохранить в .env.
-# ============================================================================
-$hasApiKey = $false
 
-if ($env:GEMINI_API_KEY -or $env:GEMINI_ANTIGRAVITY_API_KEY -or $env:AGY_API_KEY) {
-    $hasApiKey = $true
-}
-
-if (-not $hasApiKey -and (Test-Path $envFile)) {
-    Get-Content $envFile | ForEach-Object {
-        $line = $_.Trim()
-        if ($line -and -not $line.StartsWith('#') -and $line -match "^(GEMINI_API_KEY|GEMINI_API_KEY_\d+|GEMINI_ANTIGRAVITY_API_KEY|AGY_API_KEY)=(.*)$") {
-            $val = $Matches[2].Trim().Trim('"').Trim("'")
-            if ($val -and $val.Length -ge 10) { $hasApiKey = $true }
-        }
-    }
-}
-
-if (-not $hasApiKey) {
-    if ($isInteractive) {
-        Write-Host ""
-        Write-Host "┌─────────────────────────────────────────────────────────────┐" -ForegroundColor Yellow
-        Write-Host " 🔑 НАСТРОЙКА API-КЛЮЧА GOOGLE GEMINI (AI)" -ForegroundColor Yellow
-        Write-Host "  API-ключ не найден. Для работы чата и ИИ-моделей нужен ключ." -ForegroundColor White
-        Write-Host "  Бесплатный ключ можно получить: https://aistudio.google.com/app/apikey" -ForegroundColor Cyan
-        Write-Host "└─────────────────────────────────────────────────────────────┘" -ForegroundColor Yellow
-        Write-Host ""
-        $keyInput = Read-Host "Введите Gemini API Key (Enter — пропустить и настроить позже)"
-        $keyInput = $keyInput.Trim().Trim('"').Trim("'")
-        if ($keyInput) {
-            # Обновляется файл .env: существующие значения заменяются, отсутствующие параметры добавляются.
-            $envLines = @()
-            if (Test-Path $envFile) { $envLines = Get-Content $envFile }
-            $hasGemini = $false
-            $newLines = @()
-            foreach ($line in $envLines) {
-                if ($line -match "^GEMINI_API_KEY=") {
-                    $newLines += "GEMINI_API_KEY=$keyInput"
-                    $hasGemini = $true
-                } else {
-                    $newLines += $line
-                }
-            }
-            if (-not $hasGemini) {
-                $newLines += "GEMINI_API_KEY=$keyInput"
-            }
-            Set-Content -Path $envFile -Value $newLines -Encoding UTF8
-            $hasApiKey = $true
-            Write-Host "    [OK] API-ключ сохранён в .env" -ForegroundColor Green
-        } else {
-            Write-Host "    [WARN] Запуск без API-ключа. ИИ-функции будут ограничены." -ForegroundColor Yellow
-        }
-    } else {
-        Write-Host "    [WARN] API-ключ Gemini не настроен. Настройте в .env или Web UI" -ForegroundColor Yellow
-    }
-} else {
-    Write-Host "    [OK] API-ключ ИИ обнаружен" -ForegroundColor Green
-}
 
 # ============================================================================
 # STAGE 5 — ФОРМИРОВАНИЕ ИТОГОВОЙ КОНФИГУРАЦИИ
@@ -727,11 +742,15 @@ Write-Host "  • Google OAuth:    $(if ($enableOAuthVal) {'ВКЛЮЧЁН'} els
 Write-Host "  • Telegram Bot:    $(if ($enableTelegramBotVal) {'ВКЛЮЧЁН (по умолчанию)'} else {'ВЫКЛЮЧЕН'})" -ForegroundColor White
 Write-Host "  • Apps / Microservices: $(if ($enableAppsVal) {'ВКЛЮЧЕНЫ (все)'} else {'НАСТРОЕНЫ ИНДИВИДУАЛЬНО'})" -ForegroundColor White
 $appsOverviewList = @(
-    @{ Name = "Windows Sysadmin";   App = "windows_sysadmin";    Port = 8100; Enabled = ($enableWindowsAdminVal -or $enableAppsVal) },
-    @{ Name = "Network Terminal";   App = "network_terminal";    Port = 8101; Enabled = ($enableNetworkTerminalVal -or $enableAppsVal) },
-    @{ Name = "System Inspector";   App = "system_inspector";    Port = 8102; Enabled = ($enableSystemInspectorVal -or $enableAppsVal) },
-    @{ Name = "Trading Terminal";   App = "trading_terminal";    Port = 8103; Enabled = ($enableTradingTerminalVal -or $enableAppsVal) },
-    @{ Name = "Cloudflared Monitor"; App = "cloudflared_monitor"; Port = 8104; Enabled = ($useCloudflared -and ($enableCloudflaredMonitorVal -or $enableAppsVal)) }
+    @{ Name = "Windows Sysadmin";         App = "windows_sysadmin";        Port = 8100; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_windows_admin" -AppFolder "windows_sysadmin" -Aliases @("windows_admin", "windowsadmin", "sysadmin", "enable_windows_sysadmin")) },
+    @{ Name = "Network Terminal";         App = "network_terminal";        Port = 8101; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_network_terminal" -AppFolder "network_terminal" -Aliases @("network")) },
+    @{ Name = "System Inspector";         App = "system_inspector";        Port = 8102; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_system_inspector" -AppFolder "system_inspector" -Aliases @("inspector")) },
+    @{ Name = "Trading Terminal";         App = "trading_terminal";        Port = 8103; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_trading_terminal" -AppFolder "trading_terminal" -Aliases @("trading")) },
+    @{ Name = "Cloudflared Monitor";      App = "cloudflared_monitor";     Port = 8104; Enabled = ($useCloudflared -and (Get-IsAppConfigEnabled -AppKey "enable_cloudflared_monitor" -AppFolder "cloudflared_monitor" -Aliases @("cloudflared"))) },
+    @{ Name = "Google Cloud Monitor";     App = "gcloud_monitor";          Port = 8106; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_gcloud_monitor" -AppFolder "gcloud_monitor" -Aliases @("gcloud", "google_cloud")) },
+    @{ Name = "Website Monitor";          App = "website_monitor";         Port = 8107; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_website_monitor" -AppFolder "website_monitor" -Aliases @("website", "website_intelligence")) },
+    @{ Name = "System Log Viewer";        App = "system_log_viewer";       Port = 8108; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_system_log_viewer" -AppFolder "system_log_viewer" -Aliases @("system_logs", "system_log", "log_viewer", "logs_viewer")) },
+    @{ Name = "System Control Center";    App = "system_control_center";   Port = 8109; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_system_control_center" -AppFolder "system_control_center" -Aliases @("system_control", "control_center")) }
 )
 foreach ($appItem in $appsOverviewList) {
     if ($appItem.Enabled) {
@@ -889,11 +908,15 @@ if ($enableTelegramBotVal) {
 $launchersDir = Join-Path $scriptDir "launchers"
 
 $appLaunchConfigs = @(
-    @{ Name = "Windows System Administrator"; App = "windows_sysadmin";    Launcher = "Run-WindowsAdmin.ps1";        Port = 8100; Enabled = ($enableWindowsAdminVal -or $enableAppsVal) },
-    @{ Name = "Network Analyzer Terminal";    App = "network_terminal";    Launcher = "Run-NetworkTerminal.ps1";     Port = 8101; Enabled = ($enableNetworkTerminalVal -or $enableAppsVal) },
-    @{ Name = "System Inspector";             App = "system_inspector";    Launcher = "Run-SystemInspector.ps1";     Port = 8102; Enabled = ($enableSystemInspectorVal -or $enableAppsVal) },
-    @{ Name = "Exchange Trading Terminal";    App = "trading_terminal";    Launcher = "Run-TradingTerminal.ps1";     Port = 8103; Enabled = ($enableTradingTerminalVal -or $enableAppsVal) },
-    @{ Name = "Cloudflare Tunnel Monitor";    App = "cloudflared_monitor"; Launcher = "Run-CloudflaredMonitor.ps1"; Port = 8104; Enabled = ($useCloudflared -and ($enableCloudflaredMonitorVal -or $enableAppsVal)) }
+    @{ Name = "Windows System Administrator"; App = "windows_sysadmin";        Launcher = "Run-WindowsAdmin.ps1";        Port = 8100; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_windows_admin" -AppFolder "windows_sysadmin" -Aliases @("windows_admin", "windowsadmin", "sysadmin", "enable_windows_sysadmin")) },
+    @{ Name = "Network Analyzer Terminal";    App = "network_terminal";        Launcher = "Run-NetworkTerminal.ps1";     Port = 8101; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_network_terminal" -AppFolder "network_terminal" -Aliases @("network")) },
+    @{ Name = "System Inspector";             App = "system_inspector";        Launcher = "Run-SystemInspector.ps1";     Port = 8102; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_system_inspector" -AppFolder "system_inspector" -Aliases @("inspector")) },
+    @{ Name = "Exchange Trading Terminal";    App = "trading_terminal";        Launcher = "Run-TradingTerminal.ps1";     Port = 8103; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_trading_terminal" -AppFolder "trading_terminal" -Aliases @("trading")) },
+    @{ Name = "Cloudflare Tunnel Monitor";    App = "cloudflared_monitor";     Launcher = "Run-CloudflaredMonitor.ps1"; Port = 8104; Enabled = ($useCloudflared -and (Get-IsAppConfigEnabled -AppKey "enable_cloudflared_monitor" -AppFolder "cloudflared_monitor" -Aliases @("cloudflared"))) },
+    @{ Name = "Google Cloud Monitor";         App = "gcloud_monitor";          Launcher = "Run-GCloudMonitor.ps1";       Port = 8106; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_gcloud_monitor" -AppFolder "gcloud_monitor" -Aliases @("gcloud", "google_cloud")) },
+    @{ Name = "Website Intelligence Monitor"; App = "website_monitor";         Launcher = "Run-WebsiteMonitor.ps1";      Port = 8107; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_website_monitor" -AppFolder "website_monitor" -Aliases @("website", "website_intelligence")) },
+    @{ Name = "System Log Center";            App = "system_log_viewer";       Launcher = "Run-SystemLogViewer.ps1";     Port = 8108; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_system_log_viewer" -AppFolder "system_log_viewer" -Aliases @("system_logs", "system_log", "log_viewer", "logs_viewer")) },
+    @{ Name = "System Control Center";        App = "system_control_center";   Launcher = "Run-SystemControlCenter.ps1"; Port = 8109; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_system_control_center" -AppFolder "system_control_center" -Aliases @("system_control", "control_center")) }
 )
 
 foreach ($item in $appLaunchConfigs) {

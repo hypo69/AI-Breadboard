@@ -29,7 +29,7 @@
 │          Исходные данные (Source Layer)                     │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │ docs/ru/        Python docstrings                      │ │
-│  │ ├── manual/     ├── skills/                            │ │
+│  │ ├── manual/     ├── .skills/                            │ │
 │  │ ├── api/        ├── agents/                            │ │
 │  │ ├── guides/     └── core/                              │ │
 │  │ └── conf.py                                            │ │

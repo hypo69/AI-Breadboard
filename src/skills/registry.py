@@ -22,7 +22,7 @@ from typing import Any, Iterable
 from header import __root__
 
 _FRONTMATTER_PATTERN = re.compile(r"\A---\s*\n(?P<body>.*?)\n---\s*(?:\n|\Z)", re.DOTALL)
-_DEFAULT_SKILL_DIRS = (".agents/skills", ".github/skills", "skills", ".gemini/skills")
+_DEFAULT_SKILL_DIRS = (".skills", ".agents/skills", ".gemini/skills", "skills")
 
 def _get_home_dir() -> Path | None:
     """Safely retrieves user home directory across platforms."""
@@ -188,7 +188,7 @@ class SkillRegistry:
             skills_root = self.project_root / relative_dir
             if not skills_root.is_dir():
                 continue
-            for skill_file in sorted(skills_root.glob("*/SKILL.md")):
+            for skill_file in sorted(skills_root.rglob("SKILL.md")):
                 definition = self._load(skill_file)
                 if definition.name and definition.name not in found:
                     found[definition.name] = definition
@@ -198,7 +198,7 @@ class SkillRegistry:
             for g_dir in self.global_dirs:
                 if not g_dir.is_dir():
                     continue
-                for skill_file in sorted(g_dir.glob("*/SKILL.md")):
+                for skill_file in sorted(g_dir.rglob("SKILL.md")):
                     definition = self._load(skill_file)
                     if definition.name and definition.name not in found:
                         found[definition.name] = definition

@@ -19,7 +19,7 @@ The core conversational routing lives under [`src/ai/`](file:///C:/Users/onela/A
 ## 2. Request Handling & Interaction Modes
 
 1. **`chat(...)`:** Standard text generation and multi-turn conversation with system instruction injection.
-2. **`ask_with_tools(...)`:** Function calling / tool execution loop integrating discovered skills from [`src/skills/`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/skills) and MCP tools from [`src/fastapi/router_mcp.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_mcp.py).
+2. **`ask_with_tools(...)`:** Function calling / tool execution loop integrating discovered skills from [`src/.skills/`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/skills) and MCP tools from [`src/fastapi/router_mcp.py`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/fastapi/router_mcp.py).
 3. **`embed(...)`:** Text vectorization used by [`src/rag/`](file:///C:/Users/onela/AppData/Local/AI-Breadboard/src/rag).
 
 ---

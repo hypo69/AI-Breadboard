@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 
-**Updated:** 13 September 2026  
+**Updated:** 15 September 2026  
 
 **Status:** Current (auto-updated)
 
@@ -10,10 +10,10 @@
 
 | Category | Count | Status |
 |----------|-------|--------|
-| Other scripts | 11 | 🔶 Miscellaneous |
+| Other scripts | 12 | 🔶 Miscellaneous |
 | Main launch scripts | 1 | ✅ Critical |
 | Media library processing | 1 | ✅ Important |
-| **Total active scripts** | **13** | |
+| **Total active scripts** | **14** | |
 
 
 ## Other scripts
@@ -43,6 +43,18 @@
 **Lines of code:** 61  
 
 **Modified:** 2026-08-31 22:09  
+
+**Purpose:** Description:
+
+
+### **export_pdf.py**
+**Type:** Python script  
+
+**Size:** 2,852 bytes  
+
+**Lines of code:** 90  
+
+**Modified:** 2026-09-13 21:25  
 
 **Purpose:** Description:
 
@@ -222,7 +234,7 @@ python analyze_dependencies.py
 
 **Project:** ai-breadboard  
 
-**Last updated:** 13 September 2026 21:23  
+**Last updated:** 15 September 2026 16:34  
 
 **Update script:** `update_scripts_documentation.py`  
 

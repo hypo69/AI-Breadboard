@@ -1,6 +1,13 @@
 {
   "app_name": "User Assistant",
   "version": "1.0.0",
+  "server": {
+    "dedicated": false,
+    "host": "127.0.0.1",
+    "port": 8105,
+    "use_ssl": false,
+    "workers": 1
+  },
   "port": 8105,
   "mail": {
     "enabled": true,

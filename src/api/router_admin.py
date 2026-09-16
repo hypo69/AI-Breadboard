@@ -52,6 +52,10 @@ _SOURCES_FILE = __root__ / 'plugins' / 'movie_search_sources' / 'sources.json'
 
 def _check_admin(request: Request) -> bool:
     """Check прав администратора. Бросает HTTPException если нет доступа."""
+    from src.api.router_auth import is_auth_disabled
+    if is_auth_disabled():
+        return True
+
     if request.cookies.get('admin_password_verified') == 'true':
         return True
 
@@ -519,12 +523,266 @@ async def update_plugin_status(plugin_name: str, data: PluginStateUpdate, reques
 
 
 # ============================================================================
-# /apps Configuration Endpoints
+# /apps Configuration & Status Endpoints
 # ============================================================================
+
+router_apps = APIRouter(prefix='/api/apps', tags=['apps'])
+
+APPS_REGISTRY: List[Dict[str, Any]] = [
+    {
+        "id": "chat",
+        "key": "enable_chat",
+        "tab": "tab-chat",
+        "folder": "chat",
+        "aliases": ["chat", "enable_chat", "tab-chat", "dialog", "ai_chat"],
+        "name": "AI Chat Assistant",
+        "ru_name": "Чат ИИ",
+        "icon": "💬",
+    },
+    {
+        "id": "trading_terminal",
+        "key": "enable_trading_terminal",
+        "tab": "tab-trading",
+        "folder": "trading_terminal",
+        "aliases": ["trading_terminal", "trading", "enable_trading_terminal", "tab-trading"],
+        "name": "Exchange Trading Terminal",
+        "ru_name": "Торговый терминал",
+        "icon": "📈",
+    },
+    {
+        "id": "network_terminal",
+        "key": "enable_network_terminal",
+        "tab": "tab-network",
+        "folder": "network_terminal",
+        "aliases": ["network_terminal", "network", "enable_network_terminal", "tab-network"],
+        "name": "Network Analyzer Terminal",
+        "ru_name": "Сетевой терминал",
+        "icon": "🌐",
+    },
+    {
+        "id": "system_inspector",
+        "key": "enable_system_inspector",
+        "tab": "tab-system-inspector",
+        "folder": "system_inspector",
+        "aliases": ["system_inspector", "inspector", "enable_system_inspector", "tab-system-inspector"],
+        "name": "System Inspector",
+        "ru_name": "Системный инспектор",
+        "icon": "🖥️",
+    },
+    {
+        "id": "windows_sysadmin",
+        "key": "enable_windows_admin",
+        "tab": "tab-windows-admin",
+        "folder": "windows_sysadmin",
+        "aliases": ["windows_sysadmin", "windows_admin", "windowsadmin", "sysadmin", "enable_windows_admin", "enable_windows_sysadmin", "tab-windows-admin"],
+        "name": "Windows System Administrator",
+        "ru_name": "Windows Sysadmin",
+        "icon": "🛡️",
+    },
+    {
+        "id": "user_assistant",
+        "key": "enable_user_assistant",
+        "tab": "tab-user-assistant",
+        "folder": "user_assistant",
+        "aliases": ["user_assistant", "assistant", "userassistant", "enable_user_assistant", "tab-user-assistant"],
+        "name": "User Assistant",
+        "ru_name": "User Assistant",
+        "icon": "🗓️",
+    },
+    {
+        "id": "gcloud_monitor",
+        "key": "enable_gcloud_monitor",
+        "tab": "tab-gcloud",
+        "folder": "gcloud_monitor",
+        "aliases": ["gcloud_monitor", "gcloud", "google_cloud", "enable_gcloud_monitor", "tab-gcloud"],
+        "name": "Google Cloud Monitor",
+        "ru_name": "Google Cloud Monitor",
+        "icon": "☁️",
+    },
+    {
+        "id": "website_monitor",
+        "key": "enable_website_monitor",
+        "tab": "tab-website-monitor",
+        "folder": "website_monitor",
+        "aliases": ["website_monitor", "website", "website_intelligence", "enable_website_monitor", "tab-website-monitor"],
+        "name": "Website Intelligence Monitor",
+        "ru_name": "Website Intelligence",
+        "icon": "📊",
+    },
+    {
+        "id": "cloudflared_monitor",
+        "key": "enable_cloudflared_monitor",
+        "tab": "tab-cloudflared",
+        "folder": "cloudflared_monitor",
+        "aliases": ["cloudflared_monitor", "cloudflared", "enable_cloudflared_monitor", "tab-cloudflared"],
+        "name": "Cloudflared Monitor",
+        "ru_name": "Cloudflared Monitor",
+        "icon": "☁️",
+    },
+    {
+        "id": "system_control_center",
+        "key": "enable_system_control_center",
+        "tab": "tab-system-control",
+        "folder": "system_control_center",
+        "aliases": ["system_control_center", "system_control", "control_center", "enable_system_control_center", "tab-system-control"],
+        "name": "System Control Center",
+        "ru_name": "System Control Center",
+        "icon": "🛠️",
+    },
+    {
+        "id": "system_log_viewer",
+        "key": "enable_system_log_viewer",
+        "tab": "tab-system-logs",
+        "folder": "system_log_viewer",
+        "aliases": ["system_log_viewer", "system_logs", "system_log", "log_viewer", "logs_viewer", "enable_system_log_viewer", "tab-system-logs"],
+        "name": "System Log Viewer",
+        "ru_name": "Журналы системы (All Logs)",
+        "icon": "📜",
+    },
+    {
+        "id": "wikipedia_research",
+        "key": "enable_wikipedia_research",
+        "tab": "tab-wikipedia-research",
+        "folder": "wikipedia_research",
+        "aliases": ["wikipedia_research", "wikipedia", "wiki_lab", "enable_wikipedia_research", "tab-wikipedia-research"],
+        "name": "Wikipedia Research Lab",
+        "ru_name": "Wikipedia Research (Сравнение языков и моделей)",
+        "icon": "🌐",
+    },
+    {
+        "id": "ai_breadboard_admin",
+        "key": "enable_ai_breadboard_admin",
+        "tab": "tab-admin",
+        "folder": "ai_breadboard_admin",
+        "aliases": ["ai_breadboard_admin", "admin", "admin_panel", "enable_ai_breadboard_admin", "tab-admin"],
+        "name": "AI Breadboard Admin",
+        "ru_name": "Панель администратора",
+        "icon": "⚙️",
+    },
+]
+
+
+def get_apps_status() -> Dict[str, Any]:
+    """Retrieve enabled/disabled status for all /apps applications based on active configuration file."""
+    import os
+    cfg_env = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
+    active_path: Optional[Path] = None
+    if cfg_env:
+        p = Path(cfg_env)
+        active_path = p if p.is_absolute() else (__root__ / cfg_env)
+
+    if not active_path or not active_path.exists():
+        if (__root__ / "config_tc.json").exists() and not (__root__ / "config.json").exists():
+            active_path = __root__ / "config_tc.json"
+        else:
+            active_path = __root__ / "config.json"
+
+    apps_cfg: Any = {}
+    config_filename = active_path.name if active_path else "config.json"
+    if active_path and active_path.exists():
+        try:
+            with open(active_path, "r", encoding="utf-8") as f:
+                root_cfg = json.load(f)
+                apps_cfg = root_cfg.get("apps", {})
+        except Exception as e:
+            logger.error(f"Error reading apps config from {active_path}: {e}")
+
+    result_apps: Dict[str, Any] = {}
+
+    # Анализ формата конфигурации apps (списки enabled/disabled, плоский список или legacy dict)
+    enabled_set: Optional[set] = None
+    disabled_set: set = set()
+    enable_all = True
+
+    if isinstance(apps_cfg, list):
+        # Формат плоского списка активных приложений (например, config_tc.json)
+        enabled_set = {str(item).strip().lower() for item in apps_cfg if item}
+        enable_all = False
+    elif isinstance(apps_cfg, dict):
+        has_enabled_key = "enabled" in apps_cfg and isinstance(apps_cfg["enabled"], list)
+        has_disabled_key = "disabled" in apps_cfg and isinstance(apps_cfg["disabled"], list)
+
+        if has_enabled_key:
+            enabled_set = {str(item).strip().lower() for item in apps_cfg["enabled"] if item}
+            enable_all = False
+        if has_disabled_key:
+            disabled_set = {str(item).strip().lower() for item in apps_cfg["disabled"] if item}
+
+        if "enable_all" in apps_cfg and isinstance(apps_cfg["enable_all"], bool):
+            enable_all = apps_cfg["enable_all"]
+        elif not has_enabled_key:
+            enable_all = True
+    else:
+        enable_all = True
+
+    for app in APPS_REGISTRY:
+        app_id = app["id"]
+        key = app["key"]
+        aliases = {a.lower() for a in app.get("aliases", [app_id, key, app["folder"], app["tab"]])}
+
+        # 1. Проверка явного исключения в disabled
+        if aliases.intersection(disabled_set):
+            is_enabled = False
+        # 2. Проверка включения в список enabled
+        elif enabled_set is not None:
+            is_enabled = bool(aliases.intersection(enabled_set))
+        # 3. Проверка индивидуального булева флага в словаре
+        elif isinstance(apps_cfg, dict) and key in apps_cfg and isinstance(apps_cfg[key], bool):
+            is_enabled = apps_cfg[key]
+        elif isinstance(apps_cfg, dict) and app_id in apps_cfg and isinstance(apps_cfg[app_id], bool):
+            is_enabled = apps_cfg[app_id]
+        else:
+            is_enabled = bool(enable_all)
+
+        # Проверка локального config.json микроприложения на явное отключение
+        local_cfg_paths = [
+            __root__ / "apps" / app["folder"] / "config.json",
+            __root__ / "src" / "apps" / app["folder"] / "config.json",
+        ]
+        for lcp in local_cfg_paths:
+            if lcp.exists():
+                try:
+                    with open(lcp, "r", encoding="utf-8") as lf:
+                        local_data = json.load(lf)
+                        if local_data.get("enabled") is False or local_data.get("active") is False:
+                            is_enabled = False
+                except Exception:
+                    pass
+
+        result_apps[app_id] = {
+            "id": app_id,
+            "key": key,
+            "tab": app["tab"],
+            "folder": app["folder"],
+            "name": app["name"],
+            "ru_name": app["ru_name"],
+            "icon": app["icon"],
+            "enabled": is_enabled,
+        }
+
+    return {
+        "status": "ok",
+        "config_file": config_filename,
+        "enable_all": enable_all,
+        "apps": result_apps,
+    }
+
 
 class AppConfigUpdateRequest(BaseModel):
     """Payload for updating /apps application configuration."""
     config: Dict[str, Any]
+
+
+@router.get('/apps/status')
+async def get_admin_apps_status_endpoint() -> Dict[str, Any]:
+    """Get enabled/disabled status for all /apps applications."""
+    return get_apps_status()
+
+
+@router_apps.get('/status')
+async def get_public_apps_status_endpoint() -> Dict[str, Any]:
+    """Get enabled/disabled status for all /apps applications (public endpoint)."""
+    return get_apps_status()
 
 
 @router.get('/apps/{app_name}/config')
@@ -1620,8 +1878,122 @@ async def package_admin_skill(name: str, request: Request) -> Dict[str, Any]:
             'filename': f"{skill.name}.skill",
             'path': rel_archive,
             'size': size,
+        },
+    }
+
+# ============================================================================
+# Scheduler Settings & Trigger API
+# ============================================================================
+
+class RagReindexConfig(BaseModel):
+    enabled: bool = True
+    interval_hours: float = 24.0
+
+class EmailCheckConfig(BaseModel):
+    enabled: bool = True
+    interval_minutes: float = 5.0
+
+class SchedulersConfigRequest(BaseModel):
+    enabled: bool = True
+    rag_reindex: RagReindexConfig = Field(default_factory=RagReindexConfig)
+    email_check: EmailCheckConfig = Field(default_factory=EmailCheckConfig)
+
+
+@router.get('/schedulers')
+async def get_schedulers_config(request: Request) -> Dict[str, Any]:
+    """Retrieve current background scheduler configuration and diagnostic status."""
+    _check_admin(request)
+    from src.utils.scheduler import scheduler
+    
+    cfg_file = __root__ / 'config.json'
+    sched_cfg = {}
+    if cfg_file.exists():
+        try:
+            with open(cfg_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                sched_cfg = data.get('schedulers', {})
+        except Exception as e:
+            logger.error(f"Error reading schedulers config: {e}")
+
+    return {
+        'config': {
+            'enabled': sched_cfg.get('enabled', True),
+            'rag_reindex': sched_cfg.get('rag_reindex', {
+                'enabled': True,
+                'interval_hours': 24.0
+            }),
+            'email_check': sched_cfg.get('email_check', {
+                'enabled': True,
+                'interval_minutes': 5.0
+            }),
+        },
+        'status': scheduler.status
+    }
+
+
+@router.post('/schedulers')
+async def save_schedulers_config(data: SchedulersConfigRequest, request: Request) -> Dict[str, Any]:
+    """Save background scheduler configuration to config.json and restart running jobs."""
+    _check_admin(request)
+    from src.utils.scheduler import scheduler
+    import src.config as app_config
+    
+    cfg_file = __root__ / 'config.json'
+    try:
+        with open(cfg_file, 'r', encoding='utf-8') as f:
+            cfg_data = json.load(f)
+    except Exception:
+        cfg_data = {}
+
+    sched_dict = {
+        'enabled': data.enabled,
+        'rag_reindex': {
+            'enabled': data.rag_reindex.enabled,
+            'interval_hours': data.rag_reindex.interval_hours
+        },
+        'email_check': {
+            'enabled': data.email_check.enabled,
+            'interval_minutes': data.email_check.interval_minutes
         }
     }
+
+    cfg_data['schedulers'] = sched_dict
+
+    with open(cfg_file, 'w', encoding='utf-8') as f:
+        json.dump(cfg_data, f, indent=4, ensure_ascii=False)
+
+    # Обновление глобального SimpleNamespace
+    from src.utils.jjson import j_loads_ns
+    app_config.global_settings = j_loads_ns(cfg_file)
+    app_config.schedulers_cfg = getattr(app_config.global_settings, "schedulers", getattr(app_config.global_settings, "scheduler", None))
+
+    # Перезапуск планировщика с новыми параметрами
+    await scheduler.restart()
+
+    logger.info("Scheduler configuration saved and service restarted successfully.")
+    return {
+        'status': 'ok',
+        'message': 'Настройки планировщика успешно сохранены',
+        'schedulers': scheduler.status
+    }
+
+
+@router.post('/schedulers/trigger/{job_name}')
+async def trigger_scheduler_job(job_name: str, request: Request) -> Dict[str, Any]:
+    """Manually trigger an immediate execution of a scheduled job."""
+    _check_admin(request)
+    from src.utils.scheduler import scheduler
+    
+    if job_name == 'rag':
+        summary = await scheduler.recheck_and_update_all_rags()
+        scheduler._last_rag_run = datetime.now()
+        return {'status': 'ok', 'job': 'rag', 'result': summary}
+    elif job_name == 'email':
+        messages = await scheduler.check_emails()
+        scheduler._last_email_run = datetime.now()
+        return {'status': 'ok', 'job': 'email', 'count': len(messages), 'messages': messages[:5]}
+    else:
+        raise HTTPException(status_code=400, detail=f"Неизвестная задача: {job_name}. Доступны: 'rag', 'email'")
 
 
 # ============================================================================
@@ -1631,6 +2003,10 @@ async def package_admin_skill(name: str, request: Request) -> Dict[str, Any]:
 def init_router() -> APIRouter:
     """Initialization роутера управления системными инструкциями и источниками."""
     return router
+
+def init_apps_router() -> APIRouter:
+    """Initialization of /apps public status and management router."""
+    return router_apps
 
 def init_skills_router() -> APIRouter:
     """Initialization of agent skills router."""

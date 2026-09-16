@@ -100,7 +100,14 @@ class TSharkWrapper:
                 errors="replace",
             )
             if result.returncode != 0:
-                logger.error(f"Failed to list interfaces with TShark: {result.stderr}")
+                err_msg = result.stderr.strip()
+                if "Unable to load Npcap" in err_msg or "wpcap.dll" in err_msg:
+                    logger.warning(
+                        "TShark requires Npcap driver for live capture, but Npcap (wpcap.dll) is not installed. "
+                        "Live capture is disabled until Npcap is installed: https://npcap.com/"
+                    )
+                else:
+                    logger.error(f"Failed to list interfaces with TShark: {err_msg}")
                 return []
 
             interfaces: List[NetworkInterface] = []

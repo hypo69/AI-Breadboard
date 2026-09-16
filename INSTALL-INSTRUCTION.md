@@ -3,7 +3,7 @@
 This document specifies the exact installation lifecycle, platform rules, prerequisite validations, configuration steps, and troubleshooting remedies for **AI Breadboard** on Windows, Linux, and macOS.
 
 > [!NOTE]
-> This instruction is used by the **`project-installer`** AI agent skill (`.agents/skills/project-installer/SKILL.md`) and by humans for manual or automated installation.
+> This instruction is used by the **`project-installer`** AI agent skill (`skills/project-installer/SKILL.md`) and by humans for manual or automated installation.
 
 ---
 
@@ -125,7 +125,7 @@ Create or update the primary administrator user in `src/user_manager/users.db`:
 Run the verification test script to ensure complete structural and environment integrity:
 ```powershell
 # Run verification script
-python .agents/skills/project-installer/scripts/verify_installation.py
+python skills/project-installer/scripts/verify_installation.py
 
 # Or via pytest
 pytest tests/test_project_installer.py -v
@@ -140,7 +140,7 @@ pytest tests/test_project_installer.py -v
 - `tests/` (Test suite)
 - `webinterface/` (Web frontend & static UI assets)
 - `.ai/` (Rules, knowledge, architecture standards)
-- `.agents/skills/` (Registered agent skills)
+- `skills/` (Registered agent skills)
 - `tmp/` & `logs/` (Logging & runtime scratchpad)
 - `venv/` (Virtual environment)
 

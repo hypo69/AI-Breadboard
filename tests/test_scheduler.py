@@ -79,3 +79,12 @@ async def test_scheduler_check_emails():
         assert results[0]["subject"] == "Test Email"
         assert len(scheduler.status["latest_unread_emails"]) == 1
 
+
+@pytest.mark.asyncio
+async def test_scheduler_check_emails_real_import():
+    """Verify check_emails finds gmail_manager module from user-skills path without raising ModuleNotFoundError."""
+    scheduler = BackgroundScheduler()
+    # When credentials are not set or auth fails, it returns empty list instead of failing with ModuleNotFoundError
+    results = await scheduler.check_emails()
+    assert isinstance(results, list)
+

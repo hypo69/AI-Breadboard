@@ -54,7 +54,7 @@ if TYPE_CHECKING:
     from src.app.state import AppState
 
 __root__ = Path(__file__).resolve().parents[2]
-webinterface_dir = Path(__file__).resolve().parents[1] / 'api' / 'webinterface'
+webinterface_dir = Path(__file__).resolve().parents[1] / 'api' / 'webgui'
 
 # Re-export for convenience
 from src.app.state import AppState
@@ -135,6 +135,7 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_admin_router,
         init_skills_router,
         init_plugins_router,
+        init_apps_router,
         init_admin_mcp_router,
         init_user_mcp_router,
         init_agents_router,
@@ -150,6 +151,7 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_windows_admin_router,
         init_telegram_rag_router,
         init_telemetry_router,
+        init_system_logs_router,
         router_openai,
     )
     from src.api.router_version import init_router as init_version_router
@@ -171,6 +173,7 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_admin_router,
         init_skills_router,
         init_plugins_router,
+        init_apps_router,
         init_admin_mcp_router,
         init_user_mcp_router,
         init_agents_router,
@@ -178,13 +181,13 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_audio_router,
         init_user_storage_router,
         init_messenger_router,
-        init_helpdesk_router,
         init_network_router,
         init_ifttt_router,
         init_windows_admin_router,
         init_telegram_rag_router,
         init_version_router,
         init_telemetry_router,
+        init_system_logs_router,
     ):
         app.include_router(factory())
 
@@ -204,40 +207,23 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         logger.debug(f"Cloudflared monitor router not registered: {e}")
 
     try:
-        from apps.windows_sysadmin.router import init_router as init_sysadmin_app_router
-        app.include_router(init_sysadmin_app_router())
+        from apps.windows.router import init_router as init_windows_router
+        app.include_router(init_windows_router(app, state))
     except (ImportError, Exception) as e:
-        logger.debug(f"Windows sysadmin app router not registered: {e}")
+        logger.debug(f"Windows AI center router not registered: {e}")
+
 
     try:
-        from apps.network_terminal.router import init_router as init_network_app_router
-        app.include_router(init_network_app_router())
+        from apps.research_and_statistic.router import init_router as init_research_app_router
+        app.include_router(init_research_app_router(state))
     except (ImportError, Exception) as e:
-        logger.debug(f"Network terminal app router not registered: {e}")
+        logger.debug(f"Research and statistic app router not registered: {e}")
 
     try:
-        from apps.system_inspector.router import init_router as init_system_app_router
-        app.include_router(init_system_app_router())
+        from apps.wikipedia_research.router import init_router as init_wiki_app_router
+        app.include_router(init_wiki_app_router(state))
     except (ImportError, Exception) as e:
-        logger.debug(f"System inspector app router not registered: {e}")
-
-    try:
-        from apps.user_assistant.router import init_router as init_user_assistant_router
-        app.include_router(init_user_assistant_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"User assistant app router not registered: {e}")
-
-    try:
-        from apps.gcloud_monitor.router import router as gcloud_router
-        app.include_router(gcloud_router)
-    except (ImportError, Exception) as e:
-        logger.debug(f"Google Cloud monitor app router not registered: {e}")
-
-    try:
-        from apps.website_monitor.router import init_router as init_website_monitor_router
-        app.include_router(init_website_monitor_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"Website monitor app router not registered: {e}")
+        logger.debug(f"Wikipedia research app router not registered: {e}")
 
     # Auto-discover additional routers in src/app/routers/
     _auto_discover_routers(app)

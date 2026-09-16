@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -27,7 +28,12 @@ def get_server_config():
     cert_file = Path(_cert_str).expanduser() if _cert_str else _default_certs / 'localhost+2.pem'
     key_file = Path(_key_str).expanduser() if _key_str else _default_certs / 'localhost+2-key.pem'
 
-    use_ssl = getattr(server_cfg, "use_ssl", True)
+    protocol = getattr(server_cfg, "protocol", None)
+    if protocol is not None:
+        use_ssl = str(protocol).strip().lower() == "https"
+    else:
+        use_ssl = getattr(server_cfg, "use_ssl", True)
+
     host = getattr(server_cfg, "host", "0.0.0.0")
     reload = bool(getattr(server_cfg, "reload", True))
 
@@ -36,14 +42,18 @@ def get_server_config():
         ssl_kwargs = {'ssl_certfile': str(cert_file), 'ssl_keyfile': str(key_file)}
         logger.info(f'Server starting https://{host}:{port} (SSL enabled)')
     else:
-        logger.warning('Starting without HTTPS (SSL disabled or certificates not found)')
-        logger.info(f'Запуск сервера http://{host}:{port}')
+        if use_ssl:
+            logger.warning('Starting without HTTPS (SSL enabled but certificates not found)')
+        else:
+            logger.info('Starting HTTP server (SSL disabled)')
+        logger.info(f'Server starting http://{host}:{port}')
 
     logger.info(f"Uvicorn autoreload: {'ON' if reload else 'OFF'}")
     
     return {
         'host': host,
         'port': port,
+        'protocol': 'https' if ssl_kwargs else 'http',
         'reload': reload,
         'ssl_kwargs': ssl_kwargs,
         'branch': str(os.getenv('GIT_BRANCH', 'main'))

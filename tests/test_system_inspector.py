@@ -21,14 +21,16 @@ from fastapi.testclient import TestClient
 
 from apps.system_inspector.tui import SystemInspectorState, render_ui
 from src.api.router_system import init_router
-from src.system import (
+from apps.windows.telemetry import (
+    # (используйте src.ai.observability.system_engine для SystemDiagnosticEngine)
+
     CpuMetrics,
     GpuMetrics,
     HardwareNode,
     HardwareSensor,
     MemoryMetrics,
     ProcessMetrics,
-    SystemAIDiagnostician,
+    SystemDiagnosticEngine,
     SystemCollector,
     SystemSnapshot,
     get_hardware_sensors,
@@ -120,10 +122,10 @@ class TestAIDiagnostician:
     """Test suite for heuristic and AI diagnostic logic."""
 
     @pytest.fixture
-    def diagnostician(self) -> SystemAIDiagnostician:
-        return SystemAIDiagnostician()
+    def diagnostician(self) -> SystemDiagnosticEngine:
+        return SystemDiagnosticEngine()
 
-    def test_heuristic_evaluation_nominal(self, diagnostician: SystemAIDiagnostician):
+    def test_heuristic_evaluation_nominal(self, diagnostician: SystemDiagnosticEngine):
         snap = SystemSnapshot(
             hostname="test-host",
             cpu=CpuMetrics(total_percent=15.0),
@@ -133,7 +135,7 @@ class TestAIDiagnostician:
         assert score == 100
         assert len(anomalies) == 0
 
-    def test_heuristic_evaluation_critical_bottlenecks(self, diagnostician: SystemAIDiagnostician):
+    def test_heuristic_evaluation_critical_bottlenecks(self, diagnostician: SystemDiagnosticEngine):
         snap = SystemSnapshot(
             hostname="test-host",
             cpu=CpuMetrics(total_percent=95.0),
@@ -150,7 +152,7 @@ class TestAIDiagnostician:
         assert "Thermals" in subsystems
 
     @pytest.mark.asyncio
-    async def test_diagnose_report_structure(self, diagnostician: SystemAIDiagnostician):
+    async def test_diagnose_report_structure(self, diagnostician: SystemDiagnosticEngine):
         snap = SystemSnapshot(
             hostname="test-host",
             cpu=CpuMetrics(total_percent=20.0),
@@ -158,7 +160,7 @@ class TestAIDiagnostician:
         )
         report = await diagnostician.diagnose(snap)
         assert report.health_score == 100
-        assert "System health is rated at 100/100" in report.summary
+        assert "Health score: 100/100" in report.summary
 
 
 class TestSystemInspectorTUI:

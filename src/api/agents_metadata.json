@@ -172,6 +172,19 @@
         "range_name": "str",
         "values_json": "str"
       }
+    },
+    {
+      "id": "system_logs_analyzer",
+      "name": "System Logs Analyzer",
+      "icon": "📊",
+      "category": "system",
+      "description": "Анализ системных логов Windows Event Log, выявление критических ошибок, сбоев драйверов и сервисов за указанный период.",
+      "parameters": {
+        "days": "int",
+        "level": "str",
+        "channel": "str",
+        "search_query": "str"
+      }
     }
   ],
   "providers": {

@@ -15,15 +15,28 @@
 ```
 <project_root>\
 ├── run.ps1                       ← ГЛАВНЫЙ лончер (запускает всё)
+├── tc.ps1                        ← Лончер блока приложений и веб-интерфейса /apps (по config_tc.json)
 ├── run_terminals.ps1             ← Лончер мульти-терминального окна
+├── config.json                   ← Основная конфигурация проекта
+├── config_tc.json                ← Конфигурация для Test Computer / лончера tc.ps1
 └── launchers/
+    ├── Run-Apps.ps1              ← Оркестратор запуска всех микросервисов из /apps
     ├── Run-Unicorn.ps1           ← FastAPI сервер (uvicorn)
     ├── Run-Foundry.ps1           ← Azure AI Foundry (локальная LLM)
     ├── Run-LightServer.ps1       ← Лёгкий HTTP-сервер
     ├── Run-GeminiCli.ps1         ← Google Gemini CLI агент
     ├── Run-Agy.ps1               ← Google Antigravity (AGY) агент
     ├── Run-Terminals.ps1         ← Мульти-терминальное окно / сплит-панели
-    └── run_tests.ps1             ← Запуск тестов
+    ├── Run-WindowsAdmin.ps1      ← Windows System Administrator (порт 8100)
+    ├── Run-NetworkTerminal.ps1   ← Network Analyzer Terminal (порт 8101)
+    ├── Run-SystemInspector.ps1   ← System Inspector (порт 8102)
+    ├── Run-TradingTerminal.ps1   ← Exchange Trading Terminal (порт 8103)
+    ├── Run-CloudflaredMonitor.ps1← Cloudflare Tunnel Monitor (порт 8104)
+    ├── Run-GCloudMonitor.ps1     ← Google Cloud Monitor (порт 8106)
+    ├── Run-WebsiteMonitor.ps1    ← Website Intelligence Monitor (порт 8107)
+ │   ├── Run-SystemLogViewer.ps1   ← Windows Event & System Log Center (порт 8108)
+│   ├── Run-SystemControlCenter.ps1← Windows System Control Center (порт 8109)
+│   └── run_tests.ps1             ← Запуск тестов
 ```
 
 ---
@@ -32,16 +45,26 @@
 
 | Лончер | Сервис | Что запускает | Parameters |
 |--------|--------|--------------|-----------|
-| `run.ps1` | Всё (Интерактивный) | Foundry + uvicorn | `-Host 0.0.0.0\|127.0.0.1`, `-Port 8000`, `-NonInteractive` |
-| `run_terminals.ps1` | Мульти-терминалы | Единое окно терминалов (wt.exe split/tabs) | `-Preset breadboard\|trading\|custom`, `-Layout grid\|tabs\|windows`, `-Interactive` |
-| `launchers/Run-Unicorn.ps1` | FastAPI | `uvicorn main:app` на порту из `config.json` | `-Host 0.0.0.0\|127.0.0.1`, `-Port 8000` |
+| `run.ps1` | Всё (Интерактивный) | FastAPI + Foundry + Ollama + Бот + Сервисы | `-Host 0.0.0.0\|127.0.0.1`, `-Port 8000`, `-NonInteractive`, `-Cloudflared` |
+| `tc.ps1` | Блок приложений (`/apps`) | Только микросервисы и веб-интерфейс `/apps` (по `config_tc.json`) | `-Action start\|stop\|restart\|status`, `-ConfigFile <file.json>`, `-NewWindow`, `-Background`, `-NoBrowser` |
+| `run_terminals.ps1` | Мульти-терминалы | Единое окно терминалов (wt.exe split/tabs) | `-Preset breadboard\|trading\|network\|custom`, `-Layout grid\|tabs\|windows`, `-Interactive` |
+| `launchers/Run-Apps.ps1` | Оркестратор `/apps` | Запуск приложений по `config_tc.json` или `config.json` | `-Action start\|stop\|restart\|status`, `-ConfigFile <file.json>`, `-NewWindow` |
+| `launchers/Run-Unicorn.ps1` | FastAPI | `uvicorn main:app` на порту из `config.json` | `-Host 0.0.0.0\|127.0.0.1`, `-Port 8000`, `-OpenUrl <url>` |
 | `launchers/Run-Foundry.ps1` | AI Foundry | Локальная LLM-служба | `-Action start\|stop\|status` |
 | `launchers/Run-LightServer.ps1` | FastAPI / Uvicorn | Лёгкий сервер (1 воркер, без туннелей) | `-mode 0.0.0.0\|localhost` (по умолчанию `0.0.0.0`), `-port 8000` |
 | `launchers/Run-GeminiCli.ps1` | Gemini CLI | Google Gemini CLI агент | `-Action check\|install\|chat\|version`, `-Prompt "..."` |
 | `launchers/Run-Agy.ps1` | Antigravity AGY | Google Antigravity CLI агент | `-Action check\|chat\|models\|update\|version`, `-Prompt "..."` |
-| `launchers/Run-Terminals.ps1` | Мульти-терминалы | Сплит-панели Windows Terminal | `-Preset breadboard\|trading\|custom`, `-Layout grid\|tabs\|windows` |
-| `launchers/Run-GCloudMonitor.ps1` | Google Cloud Monitor | Standalone FastAPI микросервис & TUI дашборд | `-Port 8106`, `-HostIP 127.0.0.1`, `-TUI` |
-| `launchers/run_tests.ps1` | Pytest Runner | Запуск Moduleных и интеграционных тестов | `-Coverage`, `-Verbose`, `-Markers` |
+| `launchers/Run-Terminals.ps1` | Мульти-терминалы | Сплит-панели Windows Terminal | `-Preset breadboard\|trading\|network\|custom`, `-Layout grid\|tabs\|windows` |
+| `launchers/Run-WindowsAdmin.ps1` | Windows Sysadmin | Standalone FastAPI & TUI (порт 8100) | `-Action start\|stop\|restart\|status`, `-Mode server\|dashboard`, `-NewWindow` |
+| `launchers/Run-NetworkTerminal.ps1` | Network Analyzer | Standalone FastAPI & TUI (порт 8101) | `-Action start\|stop\|restart\|status`, `-Mode server\|dashboard`, `-NewWindow` |
+| `launchers/Run-SystemInspector.ps1` | System Inspector | Standalone FastAPI & TUI (порт 8102) | `-Action start\|stop\|restart\|status`, `-Mode server\|dashboard`, `-NewWindow` |
+| `launchers/Run-TradingTerminal.ps1` | Trading Desk | Standalone FastAPI & TUI (порт 8103) | `-Action start\|stop\|restart\|status`, `-Mode server\|dashboard`, `-NewWindow` |
+| `launchers/Run-CloudflaredMonitor.ps1` | Cloudflare Monitor | Standalone FastAPI & TUI (порт 8104) | `-Action start\|stop\|restart\|status`, `-Mode server\|dashboard`, `-NewWindow` |
+| `launchers/Run-GCloudMonitor.ps1` | Google Cloud Monitor | Standalone FastAPI & TUI (порт 8106) | `-Action start\|stop\|restart\|status`, `-Mode server\|dashboard`, `-NewWindow` |
+| `launchers/Run-WebsiteMonitor.ps1` | Website Intelligence | Standalone FastAPI & TUI (порт 8107) | `-Action start\|stop\|restart\|status`, `-Mode server\|dashboard`, `-NewWindow` |
+| `launchers/Run-SystemLogViewer.ps1` | System Log Viewer | Standalone FastAPI & TUI (порт 8108) | `-Action start\|stop\|restart\|status`, `-Mode server\|dashboard`, `-NewWindow` |
+| `launchers/Run-SystemControlCenter.ps1` | System Control Center | Standalone FastAPI & TUI (порт 8109) | `-Action start\|stop\|restart\|status`, `-Mode server\|dashboard`, `-NewWindow` |
+| `launchers/run_tests.ps1` | Pytest Runner | Запуск модульных и интеграционных тестов | `-Coverage`, `-Verbose`, `-Markers` |
 
 ---
 
@@ -191,14 +214,14 @@ AI-Breadboard/
 ├── 📄 main.py                # FastAPI приложение
 ├── 📄 manage_tools.py        # Универсальный CLI агентов
 ├── 📄 header.py              # Определение __root__ проекта
-├── 📁 src/                   # Основной код (ai/, fastapi/, skills/, rag/, logger/, tts/...)
+├── 📁 src/                   # Основной код (ai/, fastapi/, .skills/, rag/, logger/, tts/...)
 │   ├── 📁 ai/providers/      # Провайдеры ИИ (gemini, foundry, onnx, windows_ai, ollama...)
 │   ├── 📁 fastapi/           # Роутеры FastAPI и webinterface
 │   └── 📁 rag/               # RAG-подсистема
 ├── 📁 plugins/               # Плагины
 ├── 📁 scripts/dev/           # Инструменты разработчика
 ├── 📁 tmp/                   # Временные файлы и логи
-├── 📁 .agents/skills/        # Навыки агентов
+├── 📁 .skills/        # Навыки агентов
 ├── 📁 tests/                 # Тесты (pytest)
 └── 📁 .ai/instructions/      # Инструкции для ИИ
 ```

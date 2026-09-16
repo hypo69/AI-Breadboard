@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "playwright_agent",
+  "name": "Playwright Browser Agent",
+  "description": "Автономный браузерный парсинг и сбор контента сайтов через Headless Chromium",
+  "is_system": true,
+  "enabled": true,
+  "provider": "gemini",
+  "model": "gemini-2.5-flash",
+  "temperature": 0.1,
+  "max_steps": 10,
+  "timeout_seconds": 60,
+  "tools": [
+    "web_search"
+  ],
+  "system_prompt": "Ты браузерный агент Playwright. Выполняй навигацию по веб-страницам, извлекай полезный текст и структурируй данные."
+}

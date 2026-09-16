@@ -61,3 +61,81 @@ def test_base_plugin_i18n_fallback() -> None:
     assert manifest_ru["title"] == "Демо заголовок"
     assert manifest_ru["description"] == "Демо описание"
     assert manifest_ru["title_i18n"]["en"] == "Demo Title"
+
+
+def test_parse_plugins_config_lists() -> None:
+    """Проверка парсинга списков enabled и disabled."""
+    from plugins import _parse_plugins_config
+    cfg = {
+        "enabled": ["user_storage", "telegram_bot", "log_analyzer"],
+        "disabled": ["generate_rag_from_codebase", "rag_cleaner", "log_analyzer"],
+    }
+    enabled, disabled, plugin_configs = _parse_plugins_config(cfg)
+    assert enabled == {"user_storage", "telegram_bot", "log_analyzer"}
+    assert disabled == {"generate_rag_from_codebase", "rag_cleaner", "log_analyzer"}
+
+
+def test_load_plugins_with_enabled_disabled_priorities(monkeypatch, tmp_path) -> None:
+    """Проверка загрузки только включенных в enabled плагинов и игнорирования disabled."""
+    import json
+    from plugins import load_plugins
+
+    test_cfg = {
+        "plugins": {
+            "enabled": [
+                "user_storage",
+                "telegram_bot",
+                "log_analyzer"
+            ],
+            "disabled": [
+                "generate_rag_from_codebase",
+                "rag_cleaner",
+                "telegram_channel_rag",
+                "log_analyzer",
+                "invoice_processor"
+            ]
+        }
+    }
+    cfg_file = tmp_path / "config_plugins_test.json"
+    cfg_file.write_text(json.dumps(test_cfg), encoding="utf-8")
+
+    monkeypatch.setenv("CONFIG_FILE", str(cfg_file))
+    monkeypatch.delenv("DISABLED_PLUGINS", raising=False)
+
+    plugins = load_plugins()
+    assert len(plugins) > 0
+
+    if "user_storage" in plugins:
+        assert plugins["user_storage"].enabled is True
+    if "telegram_bot" in plugins:
+        assert plugins["telegram_bot"].enabled is True
+
+    # log_analyzer в обоих списках (disabled имеет приоритет) -> не должен загрузиться
+    assert "log_analyzer" not in plugins
+
+    # Не включенные или отключенные плагины не загружаются
+    assert "generate_rag_from_codebase" not in plugins
+    assert "rag_cleaner" not in plugins
+    assert "facebook" not in plugins
+
+
+def test_load_plugins_empty_enabled(monkeypatch, tmp_path) -> None:
+    """Проверка того, что если enabled: [] (пустой список), ни один плагин не загружается."""
+    import json
+    from plugins import load_plugins
+
+    test_cfg = {
+        "plugins": {
+            "enabled": [],
+            "disabled": ["facebook", "telegram_bot"]
+        }
+    }
+    cfg_file = tmp_path / "config_tc_empty_test.json"
+    cfg_file.write_text(json.dumps(test_cfg), encoding="utf-8")
+
+    monkeypatch.setenv("CONFIG_FILE", str(cfg_file))
+    monkeypatch.delenv("DISABLED_PLUGINS", raising=False)
+
+    plugins = load_plugins()
+    assert len(plugins) == 0
+

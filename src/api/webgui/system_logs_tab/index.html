@@ -1,0 +1,405 @@
+<!--
+===============================================================================
+Process Name: Windows System Log Center Layout
+===============================================================================
+Description:
+    Universal Windows OS Log Explorer, dynamic channel discovery, incident
+    correlation engine, timeline analysis, and AI diagnostic assistant.
+
+File: index.html
+Project: AI-Breadboard
+Module: WebInterface.SystemLogsTab
+Author: hypo69
+Copyright: © 2026 hypo69
+===============================================================================
+-->
+<style>
+  .slc-container {
+    padding: 1rem;
+  }
+  .slc-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .slc-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+  }
+  .slc-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f8fafc;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .slc-panel {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .slc-panel-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .slc-tree-list {
+    max-height: 580px;
+    overflow-y: auto;
+    font-size: 0.8rem;
+  }
+  .slc-tree-item {
+    padding: 0.4rem 0.75rem;
+    cursor: pointer;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    color: #cbd5e1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.15s ease;
+  }
+  .slc-tree-item:hover {
+    background: rgba(56, 189, 248, 0.1);
+    color: #38bdf8;
+  }
+  .slc-tree-item.active {
+    background: #0284c7;
+    color: #fff;
+    font-weight: 600;
+  }
+  .slc-table {
+    width: 100%;
+    margin-bottom: 0;
+    color: #e2e8f0;
+    font-size: 0.8rem;
+  }
+  .slc-table th {
+    background: #1e293b;
+    color: #94a3b8;
+    border-bottom: 1px solid #334155;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    padding: 0.5rem 0.75rem;
+  }
+  .slc-table td {
+    border-bottom: 1px solid #1e293b;
+    padding: 0.45rem 0.75rem;
+    vertical-align: middle;
+  }
+  .slc-table tr:hover td {
+    background: rgba(56, 189, 248, 0.06);
+    cursor: pointer;
+  }
+  .slc-table tr.selected td,
+  .slc-table tr.table-active td {
+    background: rgba(56, 189, 248, 0.2) !important;
+    color: #fff !important;
+  }
+  .badge-crit { background: #dc2626 !important; color: #fff !important; }
+  .badge-err { background: #ef4444 !important; color: #fff !important; }
+  .badge-warn { background: #f59e0b !important; color: #000 !important; }
+  .badge-inf { background: #10b981 !important; color: #fff !important; }
+  .badge-verb { background: #64748b !important; color: #fff !important; }
+</style>
+
+<div class="slc-container">
+  <!-- Header Alert & Scan Status -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div>
+      <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
+        <span class="fs-4">🛡️</span> Windows System Log Center
+      </h5>
+      <p class="mb-0 small text-light" style="color: #cbd5e1 !important;">
+        Universal Windows OS log explorer, dynamic channel discovery (1,000+), multi-source incident correlator, and AI contextual diagnosis.
+      </p>
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-slc-scan">
+        <i class="bi bi-radar me-1"></i> Scan System
+      </button>
+      <div class="form-check form-switch text-light mb-0 d-flex align-items-center gap-2">
+        <input class="form-check-input" type="checkbox" role="switch" id="slc-live-switch">
+        <label class="form-check-label small" for="slc-live-switch">Live Stream</label>
+      </div>
+      <button class="btn btn-sm btn-primary rounded-pill px-3" id="btn-slc-refresh">
+        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+      </button>
+      <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill px-3 text-light" type="button" data-bs-toggle="dropdown">
+          <i class="bi bi-download me-1"></i> Export
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark shadow">
+          <li><a class="dropdown-item" href="#" id="btn-slc-export-json"><i class="bi bi-filetype-json me-2"></i>Export as JSON</a></li>
+          <li><a class="dropdown-item" href="#" id="btn-slc-export-csv"><i class="bi bi-filetype-csv me-2"></i>Export as CSV</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Metrics Bar -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-3 col-sm-6">
+      <div class="slc-card">
+        <span class="slc-label">Discovered Sources</span>
+        <span class="slc-value text-info" id="slc-stat-sources">1,247 channels</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="slc-card">
+        <span class="slc-label">Active Channel</span>
+        <span class="slc-value text-warning text-truncate" id="slc-stat-channel" style="font-size: 1.05rem;">System</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="slc-card">
+        <span class="slc-label">Events Loaded</span>
+        <span class="slc-value text-light" id="slc-stat-events">0</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="slc-card">
+        <span class="slc-label">Faults / Incidents</span>
+        <span class="slc-value text-danger" id="slc-stat-incidents">0 errors / 0 inc</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & View Mode Navigation -->
+  <div class="slc-panel mb-3 p-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2 border-bottom border-secondary">
+      <!-- Mode Tabs -->
+      <ul class="nav nav-pills gap-1" id="slc-mode-tabs">
+        <li class="nav-item">
+          <button class="nav-link active py-1 px-3 small rounded-pill" data-mode="live">● Live Events</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link py-1 px-3 small rounded-pill text-light" data-mode="audit">🔬 Аудит (Smart Digest)</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link py-1 px-3 small rounded-pill text-light" data-mode="rag">🧠 RAG Поиск</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link py-1 px-3 small rounded-pill text-light" data-mode="errors">⚠️ Errors Only</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link py-1 px-3 small rounded-pill text-light" data-mode="incidents">🧩 Incidents</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link py-1 px-3 small rounded-pill text-light" data-mode="timeline">📊 Timeline</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link py-1 px-3 small rounded-pill text-light" data-mode="raw">📄 Raw Record</button>
+        </li>
+      </ul>
+
+      <!-- Action Buttons -->
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-slc-ask-ai">
+          <i class="bi bi-robot me-1"></i> Ask AI: "What happened?"
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Inputs Grid -->
+    <div class="row g-2 align-items-center">
+      <div class="col-lg-4 col-md-6">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-dark text-secondary border-secondary"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control bg-dark text-light border-secondary" id="slc-search-input" placeholder="Search message, provider, or crash...">
+        </div>
+      </div>
+      <div class="col-lg-2 col-md-3">
+        <select class="form-select form-select-sm bg-dark text-light border-secondary" id="slc-level-select">
+          <option value="">All Severities</option>
+          <option value="Critical">Critical</option>
+          <option value="Error">Error</option>
+          <option value="Warning">Warning</option>
+          <option value="Information">Information</option>
+        </select>
+      </div>
+      <div class="col-lg-2 col-md-3">
+        <select class="form-select form-select-sm bg-dark text-light border-secondary" id="slc-hours-select">
+          <option value="1">Last 1 hour</option>
+          <option value="6">Last 6 hours</option>
+          <option value="24" selected>Last 24 hours</option>
+          <option value="168">Last 7 days</option>
+          <option value="0">All available</option>
+        </select>
+      </div>
+      <div class="col-lg-2 col-md-6">
+        <input type="number" class="form-control form-control-sm bg-dark text-light border-secondary" id="slc-eventid-input" placeholder="Event ID (e.g. 1000, 41)">
+      </div>
+      <div class="col-lg-2 col-md-6">
+        <select class="form-select form-select-sm bg-dark text-light border-secondary" id="slc-limit-select">
+          <option value="50">50 records</option>
+          <option value="100" selected>100 records</option>
+          <option value="250">250 records</option>
+          <option value="500">500 records</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Multi-Column View -->
+  <div class="row g-3">
+    <!-- Channel & Source Tree Sidebar -->
+    <div class="col-lg-3">
+      <div class="slc-panel h-100">
+        <div class="slc-panel-header">
+          <span><i class="bi bi-folder2-open me-2"></i>Log Channels Tree</span>
+          <span class="badge bg-secondary" id="slc-channel-count-badge">0</span>
+        </div>
+        <div class="p-2 border-bottom border-secondary">
+          <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="slc-channel-filter-input" placeholder="Filter channels...">
+        </div>
+        <div class="p-2 slc-tree-list" id="slc-channel-tree-container">
+          <!-- Dynamic channels injected here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Events / Incidents Main Stream -->
+    <div class="col-lg-9">
+      <div class="slc-panel h-100">
+        <div class="slc-panel-header">
+          <span id="slc-main-view-title"><i class="bi bi-list-columns-reverse me-2"></i>Live Windows Event Stream</span>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-info rounded-pill px-3 fw-bold text-dark" id="btn-slc-audit" title="Провести аудит текущего журнала логов">
+              <i class="bi bi-shield-check me-1"></i> Аудит
+            </button>
+            <span class="badge bg-secondary" id="slc-stream-count-badge">0 entries</span>
+          </div>
+        </div>
+
+        <!-- Table View Container -->
+        <div class="table-responsive" style="max-height: 580px; overflow-y: auto;" id="slc-table-container">
+          <table class="table slc-table">
+            <thead>
+              <tr>
+                <th style="width: 155px;">Timestamp</th>
+                <th style="width: 90px;">Level</th>
+                <th style="width: 65px;">ID</th>
+                <th style="width: 160px;">Provider</th>
+                <th style="width: 65px;">PID</th>
+                <th>Message</th>
+              </tr>
+            </thead>
+            <tbody id="slc-table-body">
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                  <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
+                  Loading system events...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Audit Digest View Container (Hidden by default) -->
+        <div class="p-3 d-none" id="slc-audit-container" style="max-height: 580px; overflow-y: auto;">
+          <div id="slc-audit-content"></div>
+        </div>
+
+        <!-- Dynamic Log RAG Search Container (Hidden by default) -->
+        <div class="p-3 d-none" id="slc-rag-container" style="max-height: 580px; overflow-y: auto;">
+          <div class="card bg-dark border-info mb-3 shadow">
+            <div class="card-header bg-black d-flex justify-content-between align-items-center">
+              <span class="text-info fw-bold"><i class="bi bi-search me-2"></i>Семантический RAG-поиск по логам</span>
+              <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-slc-rag-rebuild">
+                <i class="bi bi-arrow-repeat me-1"></i> Перестроить RAG-индекс
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="input-group mb-2">
+                <span class="input-group-text bg-black text-info border-secondary"><i class="bi bi-chat-left-dots"></i></span>
+                <input type="text" class="form-control bg-dark text-light border-secondary" id="slc-rag-input" placeholder="Введите естественный запрос (например: 'почему завис BITS', 'ошибки DCOM 10016', 'сетевые сбои')...">
+                <button class="btn btn-info px-4 fw-bold text-dark" id="btn-slc-rag-search">Найти</button>
+              </div>
+              <div class="small text-muted">
+                Поиск использует динамический TF-IDF/BM25 индекс кластеров, аномалий и сводок с нулевым расходом токенов LLM.
+              </div>
+            </div>
+          </div>
+
+          <div id="slc-rag-results">
+            <div class="card bg-dark border-secondary p-4 text-center text-muted">
+              Введите запрос для поиска по динамическому RAG-индексу логов или нажмите «Перестроить RAG-индекс».
+            </div>
+          </div>
+        </div>
+
+        <!-- Incidents View Container (Hidden by default) -->
+        <div class="p-3 d-none" id="slc-incidents-container" style="max-height: 580px; overflow-y: auto;">
+          <div id="slc-incidents-list"></div>
+        </div>
+
+        <!-- Timeline Histogram View Container (Hidden by default) -->
+        <div class="p-3 d-none" id="slc-timeline-container" style="max-height: 580px; overflow-y: auto;">
+          <div id="slc-timeline-list"></div>
+        </div>
+
+        <!-- Raw Record Container (Hidden by default) -->
+        <div class="p-3 d-none" id="slc-raw-container" style="max-height: 580px; overflow-y: auto;">
+          <pre class="bg-black text-info p-3 rounded font-monospace small" id="slc-raw-text">Select an event from the list to view raw structured XML/JSON data.</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Event Details & AI Diagnostics -->
+<div class="modal fade" id="slc-event-detail-modal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content bg-dark text-light border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title fw-bold text-info" id="slc-modal-title">Log Event Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2 mb-3 small font-monospace">
+          <div class="col-sm-6"><strong class="text-secondary">Timestamp:</strong> <span id="slc-modal-time"></span></div>
+          <div class="col-sm-6"><strong class="text-secondary">Severity:</strong> <span id="slc-modal-level"></span></div>
+          <div class="col-sm-6"><strong class="text-secondary">Event ID:</strong> <span id="slc-modal-id"></span></div>
+          <div class="col-sm-6"><strong class="text-secondary">Provider:</strong> <span id="slc-modal-provider"></span></div>
+          <div class="col-sm-6"><strong class="text-secondary">Computer:</strong> <span id="slc-modal-computer"></span></div>
+          <div class="col-sm-6"><strong class="text-secondary">Process ID:</strong> <span id="slc-modal-pid"></span></div>
+          <div class="col-sm-12"><strong class="text-secondary">Channel:</strong> <span id="slc-modal-channel"></span></div>
+        </div>
+
+        <div class="card bg-black border-secondary p-3 mb-3">
+          <h6 class="small text-uppercase text-muted fw-bold mb-2">Message Body</h6>
+          <div class="small font-monospace text-light" id="slc-modal-message" style="white-space: pre-wrap; word-break: break-word;"></div>
+        </div>
+
+        <!-- AI Diagnostic Response Section -->
+        <div class="card border-info bg-dark p-3" id="slc-modal-ai-section">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-bold text-info mb-0"><i class="bi bi-robot me-1"></i> AI Contextual Explanation</h6>
+            <button class="btn btn-sm btn-outline-info py-0 px-2 rounded-pill" id="btn-slc-modal-diagnose">Analyze Context</button>
+          </div>
+          <div class="small text-light" id="slc-modal-ai-explanation">
+            Click "Analyze Context" to inspect surrounding events and identify the root cause of this incident.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

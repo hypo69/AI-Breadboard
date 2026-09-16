@@ -1,0 +1,75 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "tc": {
+        "name": "Test Computer (tc)",
+        "description": "Configuration profile for test computer apps runner (tc.ps1)"
+    },
+    "server": {
+        "host": "127.0.0.1",
+        "port": 8000,
+        "protocol": "http",
+        "use_ssl": false,
+        "open_browser": true,
+        "enable_oauth": false
+    },
+    "ai": {
+        "provider": "agy",
+        "model": "gemini-3.6-flash",
+        "effort": "medium",
+        "use_agy": true,
+        "agy_model_id": "gemini-3.6-flash"
+    },
+    "apps": {
+        "enabled": [
+            "chat",
+            "enable_chat",
+            "windows_admin",
+            "enable_windows_admin",
+            "windows_sysadmin",
+            "system_inspector",
+            "enable_system_inspector",
+            "system_control_center",
+            "enable_system_control_center",
+            "system_log_viewer",
+            "enable_system_log_viewer",
+            "network_terminal",
+            "enable_network_terminal",
+            "wikipedia_research",
+            "enable_wikipedia_research",
+            "cloudflared_monitor",
+            "enable_cloudflared_monitor",
+            "gcloud_monitor",
+            "enable_gcloud_monitor",
+            "website_monitor",
+            "enable_website_monitor"
+        ],
+        "disabled": [
+            "trading",
+            "trading_terminal",
+            "enable_trading_terminal",
+            "helpdesk",
+            "enable_helpdesk",
+            "user_assistant",
+            "enable_user_assistant",
+            "lawyer_assistant",
+            "enable_lawyer_assistant"
+        ]
+    },
+    "plugins": {
+        "enabled": [],
+        "disabled": [
+            "application_log_analyzer",
+            "facebook",
+            "gdrive_sync",
+            "generate_rag_from_codebase",
+            "google_workspace",
+            "ifttt",
+            "invoice_processor",
+            "news_feed",
+            "rag_cleaner",
+            "telegram_bot",
+            "telegram_channel_rag",
+            "user_storage"
+        ]
+    }
+}

@@ -212,34 +212,70 @@ def pformat(
 
 
 def pprint(
-    print_data: Any = None,
-    text_color: str = "white",
+    *args: Any,
+    text_color: str = "",
     bg_color: str = "",
     font_style: str = "",
     indent: Optional[int] = None,
+    sep: str = " ",
+    end: str = "\n",
+    file: Any = None,
+    flush: bool = False,
+    **kwargs: Any,
 ) -> None:
-    """Pretty print the given data with optional color, background, and font style.
+    """Выводит форматированные данные в консоль с поддержкой цветов ANSI и структурированного JSON.
+
+    Может использоваться как прямая замена стандартной функции `print`:
+    `from src.utils.printer import pprint as print`
 
     Args:
-        print_data (Any): Data to be printed.
-        text_color (str): Text color name. Default is 'white'.
-        bg_color (str): Background color name. Default is empty string.
-        font_style (str): Font style name. Default is empty string.
-        indent (Optional[int]): Indentation level for JSON. Default loads from config.json (6).
+        *args (Any): Объекты для вывода.
+        text_color (str): Название цвета текста (например, 'green', 'yellow', 'white'). По умолчанию без изменения цвета.
+        bg_color (str): Название цвета фона. По умолчанию пустая строка.
+        font_style (str): Стиль шрифта ('bold', 'underline'). По умолчанию пустая строка.
+        indent (Optional[int]): Уровень отступа JSON. По умолчанию загружается из config.json (json_indent: 6).
+        sep (str): Разделитель между аргументами. По умолчанию пробел (' ').
+        end (str): Символ окончания строки. По умолчанию перенос строки ('\\n').
+        file (Any): Целевой поток вывода. По умолчанию sys.stdout.
+        flush (bool): Флаг принудительного сброса буфера. По умолчанию False.
+        **kwargs (Any): Дополнительные параметры для обратной совместимости (например, print_data).
 
     Example:
         >>> pprint({"name": "Alice", "age": 30}, text_color="green")
+        >>> from src.utils.printer import pprint as print
+        >>> print("Response:", {"status": "ok", "code": 200})
     """
-    formatted = pformat(
-        print_data=print_data,
-        text_color=text_color,
-        bg_color=bg_color,
-        font_style=font_style,
-        indent=indent,
-    )
-    print(formatted)
+    import sys
+
+    # Поддержка вызова с именованным аргументом print_data для обратной совместимости
+    if not args and "print_data" in kwargs:
+        args = (kwargs.pop("print_data"),)
+
+    target_file = file if file is not None else sys.stdout
+
+    if not args:
+        target_file.write(end)
+        if flush:
+            target_file.flush()
+        return
+
+    formatted_parts = [
+        pformat(
+            print_data=arg,
+            text_color=text_color,
+            bg_color=bg_color,
+            font_style=font_style,
+            indent=indent,
+        )
+        for arg in args
+    ]
+    output_str = sep.join(formatted_parts)
+    target_file.write(f"{output_str}{end}")
+    if flush:
+        target_file.flush()
 
 
 if __name__ == "__main__":
     pprint({"name": "Alice", "age": 30}, text_color="green")
+
 

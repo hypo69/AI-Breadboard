@@ -30,7 +30,12 @@ from .router_control import init_router as init_control_router
 from .router_tts import init_router as init_tts_router
 from .router_logs import init_router as init_logs_router
 from .router_keys import init_router as init_keys_router
-from .router_admin import init_router as init_admin_router, init_skills_router, init_plugins_router
+from .router_admin import (
+    init_router as init_admin_router,
+    init_skills_router,
+    init_plugins_router,
+    init_apps_router,
+)
 from .router_mcp import init_admin_mcp_router, init_user_mcp_router
 from .router_agents import init_agents_router
 from .router_rag import init_router as init_rag_router
@@ -48,6 +53,7 @@ from .router_windows_admin import init_router as init_windows_admin_router
 from .router_telegram_rag import init_router as init_telegram_rag_router
 from .router_version import init_router as init_version_router
 from .router_telemetry import init_router as init_telemetry_router
+from .router_system_logs import init_router as init_system_logs_router
 
 __all__ = [
     "init_auth_router",
@@ -65,6 +71,7 @@ __all__ = [
     "init_admin_router",
     "init_skills_router",
     "init_plugins_router",
+    "init_apps_router",
     "init_admin_mcp_router",
     "init_user_mcp_router",
     "init_agents_router",
@@ -81,6 +88,7 @@ __all__ = [
     "init_telegram_rag_router",
     "init_version_router",
     "init_telemetry_router",
+    "init_system_logs_router",
     "router_openai",
 ]
 

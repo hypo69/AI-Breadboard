@@ -31,6 +31,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from src.logger import logger
+from src.ai.observability.trading_engine import TradingDiagnosticEngine
 
 
 class OrderRequest(BaseModel):
@@ -106,7 +107,25 @@ class TradingDeskEngine:
             f"[{datetime.now().strftime('%H:%M:%S')}] Engine initialized for {self.symbol} with ${self.balance:,.2f}",
             f"[{datetime.now().strftime('%H:%M:%S')}] Market data feed connected (Ready)",
         ]
+        self.diagnostician = TradingDiagnosticEngine()
         logger.info(f"TradingDeskEngine started for symbol {self.symbol} with balance ${self.balance:,.2f}")
+
+    async def run_diagnostics(self) -> SystemDiagnosticReport:
+        """Run diagnostics on current trading state."""
+        from src.ai.observability.models import SystemDiagnosticReport
+        state = TradingState(
+            symbol=self.symbol,
+            current_price=self.current_price,
+            balance=self.balance,
+            position_size=self.position_size,
+            entry_price=self.entry_price,
+            unrealized_pnl=self.unrealized_pnl,
+            realized_pnl=self.realized_pnl,
+            total_equity=self.balance + self.unrealized_pnl,
+            recent_logs=self.logs[-10:],
+            recent_orders=self.orders
+        )
+        return await self.diagnostician.diagnose(state)
 
     def update_market(self, delta_pct: Optional[float] = None) -> float:
         """Update market price and recalculate unrealized PnL.

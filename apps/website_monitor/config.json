@@ -1,6 +1,13 @@
 {
   "app_name": "Website Intelligence Monitor",
   "version": "1.0.0",
+  "server": {
+    "dedicated": false,
+    "host": "127.0.0.1",
+    "port": 8107,
+    "use_ssl": false,
+    "workers": 1
+  },
   "default_property_id": "properties/123456789",
   "target_site_url": "https://example.com",
   "auth": {

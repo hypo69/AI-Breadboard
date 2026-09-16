@@ -1,0 +1,480 @@
+[
+  {
+    "id": "summary_Microsoft-Windows-SMBServer/Operational_2026-09-16 17",
+    "type": "executive_summary",
+    "channel": "Microsoft-Windows-SMBServer/Operational",
+    "title": "Сводка аудита Microsoft-Windows-SMBServer/Operational от 2026-09-16 17:38:29",
+    "text": "Канал журнала: Microsoft-Windows-SMBServer/Operational\nВремя среза: 2026-09-16 17:38:29\nВсего просканировано событий: 0\nУникальных шаблонов: 0\nСтепень сжатия данных: 0%\nОшибок / Критических сбоев: 0\nПредупреждений: 0\nШтатных информационных: 0\nРезюме аудита: Канал «Microsoft-Windows-SMBServer/Operational» пуст или нет доступных записей в выбранном интервале.",
+    "timestamp": "2026-09-16 17:38:29",
+    "meta": {
+      "channel": "Microsoft-Windows-SMBServer/Operational",
+      "total_scanned": 0,
+      "error_count": 0,
+      "warning_count": 0
+    }
+  },
+  {
+    "id": "cluster_Microsoft-Windows-SMBServer/Operational_Microsoft-Windows-SMBServer_1040_8604fb5f",
+    "type": "clustered_pattern",
+    "channel": "Microsoft-Windows-SMBServer/Operational",
+    "title": "Шаблон Information [Microsoft-Windows-SMBServer (ID 1040) x20]",
+    "text": "Кластер шаблона логов Microsoft-Windows-SMBServer/Operational.\nПоставщик: Microsoft-Windows-SMBServer\nEvent ID: 1040\nУровень: Information\nКоличество событий: 20\nВременное окно: 2026-09-16 15:43:33 -> 2026-09-16 15:45:37\nШаблон сообщения: Received Mib notification type MibParameterNotification for interface <NUM>",
+    "timestamp": "2026-09-16 17:37:04",
+    "meta": {
+      "channel": "Microsoft-Windows-SMBServer/Operational",
+      "provider": "Microsoft-Windows-SMBServer",
+      "event_id": 1040,
+      "level": "Information",
+      "count": 20
+    }
+  },
+  {
+    "id": "cluster_Microsoft-Windows-SMBServer/Operational_Microsoft-Windows-SMBServer_1040_c1468c39",
+    "type": "clustered_pattern",
+    "channel": "Microsoft-Windows-SMBServer/Operational",
+    "title": "Шаблон Information [Microsoft-Windows-SMBServer (ID 1040) x12]",
+    "text": "Кластер шаблона логов Microsoft-Windows-SMBServer/Operational.\nПоставщик: Microsoft-Windows-SMBServer\nEvent ID: 1040\nУровень: Information\nКоличество событий: 12\nВременное окно: 2026-09-16 15:43:33 -> 2026-09-16 15:45:34\nШаблон сообщения: Received Mib notification type MibAddInstance for interface <NUM>",
+    "timestamp": "2026-09-16 17:37:04",
+    "meta": {
+      "channel": "Microsoft-Windows-SMBServer/Operational",
+      "provider": "Microsoft-Windows-SMBServer",
+      "event_id": 1040,
+      "level": "Information",
+      "count": 12
+    }
+  },
+  {
+    "id": "cluster_Microsoft-Windows-SMBServer/Operational_Microsoft-Windows-SMBServer_1034_f6f4a152",
+    "type": "clustered_pattern",
+    "channel": "Microsoft-Windows-SMBServer/Operational",
+    "title": "Шаблон Information [Microsoft-Windows-SMBServer (ID 1034) x9]",
+    "text": "Кластер шаблона логов Microsoft-Windows-SMBServer/Operational.\nПоставщик: Microsoft-Windows-SMBServer\nEvent ID: 1034\nУровень: Information\nКоличество событий: 9\nВременное окно: 2026-09-16 15:43:33 -> 2026-09-16 15:45:34\nШаблон сообщения: Send RDMA Endpoint notification failure - DadState is different from IpDadStatePreferred for interface <NUM>. Current DadState: <NUM>.",
+    "timestamp": "2026-09-16 17:37:04",
+    "meta": {
+      "channel": "Microsoft-Windows-SMBServer/Operational",
+      "provider": "Microsoft-Windows-SMBServer",
+      "event_id": 1034,
+      "level": "Information",
+      "count": 9
+    }
+  },
+  {
+    "id": "cluster_Microsoft-Windows-SMBServer/Operational_Microsoft-Windows-SMBServer_1040_14e5ad36",
+    "type": "clustered_pattern",
+    "channel": "Microsoft-Windows-SMBServer/Operational",
+    "title": "Шаблон Information [Microsoft-Windows-SMBServer (ID 1040) x9]",
+    "text": "Кластер шаблона логов Microsoft-Windows-SMBServer/Operational.\nПоставщик: Microsoft-Windows-SMBServer\nEvent ID: 1040\nУровень: Information\nКоличество событий: 9\nВременное окно: 2026-09-16 15:43:34 -> 2026-09-16 15:45:34\nШаблон сообщения: Received Mib notification type MibDeleteInstance for interface <NUM>",
+    "timestamp": "2026-09-16 17:37:04",
+    "meta": {
+      "channel": "Microsoft-Windows-SMBServer/Operational",
+      "provider": "Microsoft-Windows-SMBServer",
+      "event_id": 1040,
+      "level": "Information",
+      "count": 9
+    }
+  },
+  {
+    "id": "cluster_Microsoft-Windows-SMBServer/Operational_Microsoft-Windows-SMBServer_1034_ede65fc4",
+    "type": "clustered_pattern",
+    "channel": "Microsoft-Windows-SMBServer/Operational",
+    "title": "Шаблон Information [Microsoft-Windows-SMBServer (ID 1034) x8]",
+    "text": "Кластер шаблона логов Microsoft-Windows-SMBServer/Operational.\nПоставщик: Microsoft-Windows-SMBServer\nEvent ID: 1034\nУровень: Information\nКоличество событий: 8\nВременное окно: 2026-09-16 15:43:33 -> 2026-09-16 15:45:34\nШаблон сообщения: Send RDMA Endpoint notification failure - Error updating transport list for device \\Device\\RdmaSmbIpv4_172.<NUM>.<NUM>.<NUM>. Object Name not found..",
+    "timestamp": "2026-09-16 17:37:04",
+    "meta": {
+      "channel": "Microsoft-Windows-SMBServer/Operational",
+      "provider": "Microsoft-Windows-SMBServer",
+      "event_id": 1034,
+      "level": "Information",
+      "count": 8
+    }
+  },
+  {
+    "id": "cluster_Microsoft-Windows-SMBServer/Operational_Microsoft-Windows-SMBServer_1033_c18d436f",
+    "type": "clustered_pattern",
+    "channel": "Microsoft-Windows-SMBServer/Operational",
+    "title": "Шаблон Information [Microsoft-Windows-SMBServer (ID 1033) x8]",
+    "text": "Кластер шаблона логов Microsoft-Windows-SMBServer/Operational.\nПоставщик: Microsoft-Windows-SMBServer\nEvent ID: 1033\nУровень: Information\nКоличество событий: 8\nВременное окно: 2026-09-16 15:43:33 -> 2026-09-16 15:45:34\nШаблон сообщения: Sent RDMA disabled event to LanmanServer for interface \\Device\\RdmaSmbIpv4_172.<NUM>.<NUM>.<NUM>.",
+    "timestamp": "2026-09-16 17:37:04",
+    "meta": {
+      "channel": "Microsoft-Windows-SMBServer/Operational",
+      "provider": "Microsoft-Windows-SMBServer",
+      "event_id": 1033,
+      "level": "Information",
+      "count": 8
+    }
+  },
+  {
+    "id": "cluster_Microsoft-Windows-SMBServer/Operational_Microsoft-Windows-SMBServer_1010_e5bd8948",
+    "type": "clustered_pattern",
+    "channel": "Microsoft-Windows-SMBServer/Operational",
+    "title": "Шаблон Information [Microsoft-Windows-SMBServer (ID 1010) x6]",
+    "text": "Кластер шаблона логов Microsoft-Windows-SMBServer/Operational.\nПоставщик: Microsoft-Windows-SMBServer\nEvent ID: 1010\nУровень: Information\nКоличество событий: 6\nВременное окно: 2026-09-16 15:43:40 -> 2026-09-16 15:45:44\nШаблон сообщения: Endpoint added. Name: DELL-VOSTRO Domain Name: WORKGROUP Transport Name: \\Device\\NetBT_Tcpip_{<GUID>} Transport Flags: <HEX> Guidance: You should expect this event when the server starts listening on an interface, such as during system restart or when enabling a network adaptor. No user action is required.",
+    "timestamp": "2026-09-16 17:37:04",
+    "meta": {
+      "channel": "Microsoft-Windows-SMBServer/Operational",
+      "provider": "Microsoft-Windows-SMBServer",
+      "event_id": 1010,
+      "level": "Information",
+      "count": 6
+    }
+  },
+  {
+    "id": "cluster_Microsoft-Windows-SMBServer/Operational_Microsoft-Windows-SMBServer_1011_cc7bc9d9",
+    "type": "clustered_pattern",
+    "channel": "Microsoft-Windows-SMBServer/Operational",
+    "title": "Шаблон Information [Microsoft-Windows-SMBServer (ID 1011) x5]",
+    "text": "Кластер шаблона логов Microsoft-Windows-SMBServer/Operational.\nПоставщик: Microsoft-Windows-SMBServer\nEvent ID: 1011\nУровень: Information\nКоличество событий: 5\nВременное окно: 2026-09-16 15:43:33 -> 2026-09-16 15:45:34\nШаблон сообщения: Endpoint removed. Name: Domain Name: Transport Name: \\Device\\NetBT_Tcpip_{<GUID>} Guidance: You should expect this event when the server stops listening on an interface, such as during shutdown or when disabling a network adaptor. No user action is required.",
+    "timestamp": "2026-09-16 17:37:04",
+    "meta": {
+      "channel": "Microsoft-Windows-SMBServer/Operational",
+      "provider": "Microsoft-Windows-SMBServer",
+      "event_id": 1011,
+      "level": "Information",
+      "count": 5
+    }
+  },
+  {
+    "id": "cluster_Microsoft-Windows-SMBServer/Operational_Microsoft-Windows-SMBServer_1034_5b610435",
+    "type": "clustered_pattern",
+    "channel": "Microsoft-Windows-SMBServer/Operational",
+    "title": "Шаблон Information [Microsoft-Windows-SMBServer (ID 1034) x3]",
+    "text": "Кластер шаблона логов Microsoft-Windows-SMBServer/Operational.\nПоставщик: Microsoft-Windows-SMBServer\nEvent ID: 1034\nУровень: Information\nКоличество событий: 3\nВременное окно: 2026-09-16 15:45:34 -> 2026-09-16 15:45:34\nШаблон сообщения: Send RDMA Endpoint notification failure - Error updating transport list for device \\Device\\RdmaSmbIpv6_fe80::a8db:86d7:89a1:a0a8. Object Name not found..",
+    "timestamp": "2026-09-16 17:37:04",
+    "meta": {
+      "channel": "Microsoft-Windows-SMBServer/Operational",
+      "provider": "Microsoft-Windows-SMBServer",
+      "event_id": 1034,
+      "level": "Information",
+      "count": 3
+    }
+  },
+  {
+    "id": "cluster_Microsoft-Windows-SMBServer/Operational_Microsoft-Windows-SMBServer_1033_a729175a",
+    "type": "clustered_pattern",
+    "channel": "Microsoft-Windows-SMBServer/Operational",
+    "title": "Шаблон Information [Microsoft-Windows-SMBServer (ID 1033) x3]",
+    "text": "Кластер шаблона логов Microsoft-Windows-SMBServer/Operational.\nПоставщик: Microsoft-Windows-SMBServer\nEvent ID: 1033\nУровень: Information\nКоличество событий: 3\nВременное окно: 2026-09-16 15:45:34 -> 2026-09-16 15:45:34\nШаблон сообщения: Sent RDMA disabled event to LanmanServer for interface \\Device\\RdmaSmbIpv6_fe80::a8db:86d7:89a1:a0a8.",
+    "timestamp": "2026-09-16 17:37:04",
+    "meta": {
+      "channel": "Microsoft-Windows-SMBServer/Operational",
+      "provider": "Microsoft-Windows-SMBServer",
+      "event_id": 1033,
+      "level": "Information",
+      "count": 3
+    }
+  },
+  {
+    "id": "summary_System_2026-09-16 17",
+    "type": "executive_summary",
+    "channel": "System",
+    "title": "Сводка аудита System от 2026-09-16 17:30:13",
+    "text": "Канал журнала: System\nВремя среза: 2026-09-16 17:30:13\nВсего просканировано событий: 100\nУникальных шаблонов: 59\nСтепень сжатия данных: 41.0%\nОшибок / Критических сбоев: 0\nПредупреждений: 6\nШтатных информационных: 94\nРезюме аудита: Критических ошибок не обнаружено, зафиксировано 6 предупреждений. Массив из 100 записей агрегирован в 59 шаблонов (сжатие 41.0%).",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "total_scanned": 100,
+      "error_count": 0,
+      "warning_count": 6
+    }
+  },
+  {
+    "id": "anomaly_System_Microsoft-Windows-Bits-Client_16393_Warning",
+    "type": "anomaly_pattern",
+    "channel": "System",
+    "title": "Аномалия Warning [Microsoft-Windows-Bits-Client (ID 16393)]",
+    "text": "Обнаружена аномалия в канале System.\nУровень: Warning\nПоставщик (Provider): Microsoft-Windows-Bits-Client\nКод события (Event ID): 16393\nКоличество повторений: 1\nИнтервал наблюдения: 2026-09-16 15:50:46 -> 2026-09-16 15:50:46\nОбразец сообщения: BITS has encountered an error communicating with an Internet Gateway Device.  Please check that the device is functioning properly. BITS will not attempt to use this device until the next system reboo",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "provider": "Microsoft-Windows-Bits-Client",
+      "event_id": 16393,
+      "level": "Warning",
+      "count": 1
+    }
+  },
+  {
+    "id": "anomaly_System_Microsoft-Windows-DistributedCOM_10016_Warning",
+    "type": "anomaly_pattern",
+    "channel": "System",
+    "title": "Аномалия Warning [Microsoft-Windows-DistributedCOM (ID 10016)]",
+    "text": "Обнаружена аномалия в канале System.\nУровень: Warning\nПоставщик (Provider): Microsoft-Windows-DistributedCOM\nКод события (Event ID): 10016\nКоличество повторений: 2\nИнтервал наблюдения: 2026-09-16 07:20:21 -> 2026-09-16 15:43:42\nОбразец сообщения: The application-specific permission settings do not grant Local Activation permission for the COM Server application with CLSID \r\n{2593F8B9-4EAF-457C-B68A-50F6B8EA6B54}\r\n and APPID \r\n{15C20B67-12E7-4B",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "provider": "Microsoft-Windows-DistributedCOM",
+      "event_id": 10016,
+      "level": "Warning",
+      "count": 2
+    }
+  },
+  {
+    "id": "anomaly_System_rt640x64_1_Warning",
+    "type": "anomaly_pattern",
+    "channel": "System",
+    "title": "Аномалия Warning [rt640x64 (ID 1)]",
+    "text": "Обнаружена аномалия в канале System.\nУровень: Warning\nПоставщик (Provider): rt640x64\nКод события (Event ID): 1\nКоличество повторений: 1\nИнтервал наблюдения: 2026-09-16 15:43:27 -> 2026-09-16 15:43:27\nОбразец сообщения: Realtek PCIe GbE Family Controller is disconnected from network.",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "provider": "rt640x64",
+      "event_id": 1,
+      "level": "Warning",
+      "count": 1
+    }
+  },
+  {
+    "id": "anomaly_System_Microsoft-Windows-Time-Service_134_Warning",
+    "type": "anomaly_pattern",
+    "channel": "System",
+    "title": "Аномалия Warning [Microsoft-Windows-Time-Service (ID 134)]",
+    "text": "Обнаружена аномалия в канале System.\nУровень: Warning\nПоставщик (Provider): Microsoft-Windows-Time-Service\nКод события (Event ID): 134\nКоличество повторений: 1\nИнтервал наблюдения: 2026-09-16 15:43:24 -> 2026-09-16 15:43:24\nОбразец сообщения: NtpClient was unable to set a manual peer to use as a time source because of DNS resolution error on 'time.windows.com,0x9'. NtpClient will try again in 15 minutes and double the reattempt interval th",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "provider": "Microsoft-Windows-Time-Service",
+      "event_id": 134,
+      "level": "Warning",
+      "count": 1
+    }
+  },
+  {
+    "id": "anomaly_System_BTHUSB_34_Warning",
+    "type": "anomaly_pattern",
+    "channel": "System",
+    "title": "Аномалия Warning [BTHUSB (ID 34)]",
+    "text": "Обнаружена аномалия в канале System.\nУровень: Warning\nПоставщик (Provider): BTHUSB\nКод события (Event ID): 34\nКоличество повторений: 1\nИнтервал наблюдения: 2026-09-16 15:43:23 -> 2026-09-16 15:43:23\nОбразец сообщения: The local adapter does not support an important Low Energy controller state to support peripheral mode.  The minimum required supported state mask is 0x2491f7fffff, got 0x1fffffff.  Low Energy periphe",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "provider": "BTHUSB",
+      "event_id": 34,
+      "level": "Warning",
+      "count": 1
+    }
+  },
+  {
+    "id": "cluster_System_Microsoft-Windows-Bits-Client_16393_85c5331d",
+    "type": "clustered_pattern",
+    "channel": "System",
+    "title": "Шаблон Warning [Microsoft-Windows-Bits-Client (ID 16393) x1]",
+    "text": "Кластер шаблона логов System.\nПоставщик: Microsoft-Windows-Bits-Client\nEvent ID: 16393\nУровень: Warning\nКоличество событий: 1\nВременное окно: 2026-09-16 15:50:46 -> 2026-09-16 15:50:46\nШаблон сообщения: BITS has encountered an error communicating with an Internet Gateway Device. Please check that the device is functioning properly. BITS will not attempt to use this device until the next system reboot. Error code: <HEX>.",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "provider": "Microsoft-Windows-Bits-Client",
+      "event_id": 16393,
+      "level": "Warning",
+      "count": 1
+    }
+  },
+  {
+    "id": "cluster_System_Microsoft-Windows-DistributedCOM_10016_5ef7c344",
+    "type": "clustered_pattern",
+    "channel": "System",
+    "title": "Шаблон Warning [Microsoft-Windows-DistributedCOM (ID 10016) x2]",
+    "text": "Кластер шаблона логов System.\nПоставщик: Microsoft-Windows-DistributedCOM\nEvent ID: 10016\nУровень: Warning\nКоличество событий: 2\nВременное окно: 2026-09-16 07:20:21 -> 2026-09-16 15:43:42\nШаблон сообщения: The application-specific permission settings do not grant Local Activation permission for the COM Server application with CLSID {<GUID>} and APPID {<GUID>} to the user DELL-VOSTRO\\onela SID (S-<NUM>-<NUM>-<NUM>-<NUM>-<NUM>-<NUM>-<NUM>) from address LocalHost (Using LRPC) running in the application container Unavailable SID (Unavailable). This security permission can be modified using the Component Services administrative tool.",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "provider": "Microsoft-Windows-DistributedCOM",
+      "event_id": 10016,
+      "level": "Warning",
+      "count": 2
+    }
+  },
+  {
+    "id": "cluster_System_rt640x64_1_376dcd7b",
+    "type": "clustered_pattern",
+    "channel": "System",
+    "title": "Шаблон Warning [rt640x64 (ID 1) x1]",
+    "text": "Кластер шаблона логов System.\nПоставщик: rt640x64\nEvent ID: 1\nУровень: Warning\nКоличество событий: 1\nВременное окно: 2026-09-16 15:43:27 -> 2026-09-16 15:43:27\nШаблон сообщения: Realtek PCIe GbE Family Controller is disconnected from network.",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "provider": "rt640x64",
+      "event_id": 1,
+      "level": "Warning",
+      "count": 1
+    }
+  },
+  {
+    "id": "cluster_System_Microsoft-Windows-Time-Service_134_820f3e31",
+    "type": "clustered_pattern",
+    "channel": "System",
+    "title": "Шаблон Warning [Microsoft-Windows-Time-Service (ID 134) x1]",
+    "text": "Кластер шаблона логов System.\nПоставщик: Microsoft-Windows-Time-Service\nEvent ID: 134\nУровень: Warning\nКоличество событий: 1\nВременное окно: 2026-09-16 15:43:24 -> 2026-09-16 15:43:24\nШаблон сообщения: NtpClient was unable to set a manual peer to use as a time source because of DNS resolution error on 'time.windows.com,<HEX>'. NtpClient will try again in <NUM> minutes and double the reattempt interval thereafter. The error was: No such host is known. (<HEX>)",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "provider": "Microsoft-Windows-Time-Service",
+      "event_id": 134,
+      "level": "Warning",
+      "count": 1
+    }
+  },
+  {
+    "id": "cluster_System_BTHUSB_34_18ac1a8a",
+    "type": "clustered_pattern",
+    "channel": "System",
+    "title": "Шаблон Warning [BTHUSB (ID 34) x1]",
+    "text": "Кластер шаблона логов System.\nПоставщик: BTHUSB\nEvent ID: 34\nУровень: Warning\nКоличество событий: 1\nВременное окно: 2026-09-16 15:43:23 -> 2026-09-16 15:43:23\nШаблон сообщения: The local adapter does not support an important Low Energy controller state to support peripheral mode. The minimum required supported state mask is <HEX>, got <HEX>. Low Energy peripheral role functionality will not be available.",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "provider": "BTHUSB",
+      "event_id": 34,
+      "level": "Warning",
+      "count": 1
+    }
+  },
+  {
+    "id": "cluster_System_Service Control Manager_7040_34c77bca",
+    "type": "clustered_pattern",
+    "channel": "System",
+    "title": "Шаблон Information [Service Control Manager (ID 7040) x3]",
+    "text": "Кластер шаблона логов System.\nПоставщик: Service Control Manager\nEvent ID: 7040\nУровень: Information\nКоличество событий: 3\nВременное окно: 2026-09-16 07:59:10 -> 2026-09-16 16:59:10\nШаблон сообщения: The start type of the Background Intelligent Transfer Service service was changed from auto start to demand start.",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "provider": "Service Control Manager",
+      "event_id": 7040,
+      "level": "Information",
+      "count": 3
+    }
+  },
+  {
+    "id": "cluster_System_Microsoft-Windows-Kernel-Power_566_75200163",
+    "type": "clustered_pattern",
+    "channel": "System",
+    "title": "Шаблон Information [Microsoft-Windows-Kernel-Power (ID 566) x8]",
+    "text": "Кластер шаблона логов System.\nПоставщик: Microsoft-Windows-Kernel-Power\nEvent ID: 566\nУровень: Information\nКоличество событий: 8\nВременное окно: 2026-09-16 07:40:24 -> 2026-09-16 17:14:16\nШаблон сообщения: The system session has transitioned from <NUM> to <NUM>. Reason SessionUnlock BootId: <NUM>",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "provider": "Microsoft-Windows-Kernel-Power",
+      "event_id": 566,
+      "level": "Information",
+      "count": 8
+    }
+  },
+  {
+    "id": "cluster_System_Microsoft-Windows-Kernel-Power_566_6fcb45eb",
+    "type": "clustered_pattern",
+    "channel": "System",
+    "title": "Шаблон Information [Microsoft-Windows-Kernel-Power (ID 566) x6]",
+    "text": "Кластер шаблона логов System.\nПоставщик: Microsoft-Windows-Kernel-Power\nEvent ID: 566\nУровень: Information\nКоличество событий: 6\nВременное окно: 2026-09-16 07:40:31 -> 2026-09-16 17:15:40\nШаблон сообщения: The system session has transitioned from <NUM> to <NUM>. Reason InputHid BootId: <NUM>",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "provider": "Microsoft-Windows-Kernel-Power",
+      "event_id": 566,
+      "level": "Information",
+      "count": 6
+    }
+  },
+  {
+    "id": "cluster_System_Microsoft-Windows-Hyper-V-VmSwitch_234_e50b65b7",
+    "type": "clustered_pattern",
+    "channel": "System",
+    "title": "Шаблон Information [Microsoft-Windows-Hyper-V-VmSwitch (ID 234) x4]",
+    "text": "Кластер шаблона логов System.\nПоставщик: Microsoft-Windows-Hyper-V-VmSwitch\nEvent ID: 234\nУровень: Information\nКоличество событий: 4\nВременное окно: 2026-09-16 15:43:33 -> 2026-09-16 15:45:34\nШаблон сообщения: NIC <GUID> successfully disconnected from port .",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "provider": "Microsoft-Windows-Hyper-V-VmSwitch",
+      "event_id": 234,
+      "level": "Information",
+      "count": 4
+    }
+  },
+  {
+    "id": "cluster_System_Microsoft-Windows-IsolatedUserMode_2_065e1ffe",
+    "type": "clustered_pattern",
+    "channel": "System",
+    "title": "Шаблон Information [Microsoft-Windows-IsolatedUserMode (ID 2) x3]",
+    "text": "Кластер шаблона логов System.\nПоставщик: Microsoft-Windows-IsolatedUserMode\nEvent ID: 2\nУровень: Information\nКоличество событий: 3\nВременное окно: 2026-09-16 16:36:27 -> 2026-09-16 17:29:32\nШаблон сообщения: Secure Trustlet Id <NUM> and Pid <NUM> stopped with status STATUS_SUCCESS.",
+    "timestamp": "2026-09-16 17:30:13",
+    "meta": {
+      "channel": "System",
+      "provider": "Microsoft-Windows-IsolatedUserMode",
+      "event_id": 2,
+      "level": "Information",
+      "count": 3
+    }
+  },
+  {
+    "id": "anomaly_System_Tcpip_4231_Warning",
+    "type": "anomaly_pattern",
+    "channel": "System",
+    "title": "Аномалия Warning [Tcpip (ID 4231)]",
+    "text": "Обнаружена аномалия в канале System.\nУровень: Warning\nПоставщик (Provider): Tcpip\nКод события (Event ID): 4231\nКоличество повторений: 1\nИнтервал наблюдения: 2026-09-16 06:04:49 -> 2026-09-16 06:04:49\nОбразец сообщения: A request to allocate an ephemeral port number from the global TCP port space has failed due to all such ports being in use.",
+    "timestamp": "2026-09-16 17:08:46",
+    "meta": {
+      "channel": "System",
+      "provider": "Tcpip",
+      "event_id": 4231,
+      "level": "Warning",
+      "count": 1
+    }
+  },
+  {
+    "id": "cluster_System_Tcpip_4231_5aba942c",
+    "type": "clustered_pattern",
+    "channel": "System",
+    "title": "Шаблон Warning [Tcpip (ID 4231) x1]",
+    "text": "Кластер шаблона логов System.\nПоставщик: Tcpip\nEvent ID: 4231\nУровень: Warning\nКоличество событий: 1\nВременное окно: 2026-09-16 06:04:49 -> 2026-09-16 06:04:49\nШаблон сообщения: A request to allocate an ephemeral port number from the global TCP port space has failed due to all such ports being in use.",
+    "timestamp": "2026-09-16 17:08:46",
+    "meta": {
+      "channel": "System",
+      "provider": "Tcpip",
+      "event_id": 4231,
+      "level": "Warning",
+      "count": 1
+    }
+  },
+  {
+    "id": "cluster_System_Service Control Manager_7040_7b1db4aa",
+    "type": "clustered_pattern",
+    "channel": "System",
+    "title": "Шаблон Information [Service Control Manager (ID 7040) x8]",
+    "text": "Кластер шаблона логов System.\nПоставщик: Service Control Manager\nEvent ID: 7040\nУровень: Information\nКоличество событий: 8\nВременное окно: 2026-09-16 06:02:09 -> 2026-09-16 16:56:53\nШаблон сообщения: The start type of the Background Intelligent Transfer Service service was changed from demand start to auto start.",
+    "timestamp": "2026-09-16 17:08:46",
+    "meta": {
+      "channel": "System",
+      "provider": "Service Control Manager",
+      "event_id": 7040,
+      "level": "Information",
+      "count": 8
+    }
+  },
+  {
+    "id": "cluster_System_Microsoft-Windows-Hyper-V-VmSwitch_234_52cef586",
+    "type": "clustered_pattern",
+    "channel": "System",
+    "title": "Шаблон Information [Microsoft-Windows-Hyper-V-VmSwitch (ID 234) x8]",
+    "text": "Кластер шаблона логов System.\nПоставщик: Microsoft-Windows-Hyper-V-VmSwitch\nEvent ID: 234\nУровень: Information\nКоличество событий: 8\nВременное окно: 2026-09-16 06:45:11 -> 2026-09-16 06:52:23\nШаблон сообщения: NIC <GUID>--<GUID> successfully disconnected from port .",
+    "timestamp": "2026-09-16 17:08:46",
+    "meta": {
+      "channel": "System",
+      "provider": "Microsoft-Windows-Hyper-V-VmSwitch",
+      "event_id": 234,
+      "level": "Information",
+      "count": 8
+    }
+  },
+  {
+    "id": "cluster_System_Microsoft-Windows-Hyper-V-VmSwitch_291_93bf966c",
+    "type": "clustered_pattern",
+    "channel": "System",
+    "title": "Шаблон Information [Microsoft-Windows-Hyper-V-VmSwitch (ID 291) x8]",
+    "text": "Кластер шаблона логов System.\nПоставщик: Microsoft-Windows-Hyper-V-VmSwitch\nEvent ID: 291\nУровень: Information\nКоличество событий: 8\nВременное окно: 2026-09-16 06:43:51 -> 2026-09-16 06:51:04\nШаблон сообщения: RSC offload modified for NIC <GUID>--<GUID> (Friendly Name: ) Previous IPv4: Disabled, Current IPv4: Disabled, Previous IPv6: Disabled, Current IPv6: Disabled. Reason: NIC create",
+    "timestamp": "2026-09-16 17:08:46",
+    "meta": {
+      "channel": "System",
+      "provider": "Microsoft-Windows-Hyper-V-VmSwitch",
+      "event_id": 291,
+      "level": "Information",
+      "count": 8
+    }
+  }
+]
