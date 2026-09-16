@@ -659,6 +659,26 @@ APPS_REGISTRY: List[Dict[str, Any]] = [
         "ru_name": "Панель администратора",
         "icon": "⚙️",
     },
+    {
+        "id": "research_and_statistic",
+        "key": "enable_research_and_statistic",
+        "tab": "tab-research",
+        "folder": "research_and_statistic",
+        "aliases": ["research_and_statistic", "research_stat", "research", "enable_research_and_statistic", "tab-research"],
+        "name": "Research & Statistics Desk",
+        "ru_name": "Анализ данных и статистика",
+        "icon": "📈",
+    },
+    {
+        "id": "helpdesk",
+        "key": "enable_helpdesk",
+        "tab": "tab-helpdesk",
+        "folder": "helpdesk",
+        "aliases": ["helpdesk", "support", "enable_helpdesk", "tab-helpdesk"],
+        "name": "Helpdesk & Support",
+        "ru_name": "Служба поддержки (Helpdesk)",
+        "icon": "🎧",
+    },
 ]
 
 

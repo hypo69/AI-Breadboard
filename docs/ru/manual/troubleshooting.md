@@ -130,4 +130,4 @@ pytest tests/ -x -q   # запуск тестов
 
 ---
 
-Смотрите также: [Конфигурация](configuration.md) · [Запуск сервера](RUN.md) · [Начало работы](getting-started.md)
+Смотрите также: [Конфигурация](secrets.md) · [Запуск сервера](RUN.md) · [Начало работы](getting-started.md)

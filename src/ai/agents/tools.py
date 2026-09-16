@@ -618,13 +618,69 @@ def get_streaming_sources(title: str) -> str:
     """Устаревший инструмент (артефакт удален)."""
     return json.dumps({}, ensure_ascii=False)
 
-@tool
-def build_player_url(url: str, provider: str = "") -> str:
-    """Устаревший инструмент (артефакт удален)."""
-    return json.dumps({}, ensure_ascii=False)
+# --- Инструменты сбора счетов-фактур из почты ---
 
 @tool
-async def add_torrent_download(url: str, source: str = "", title: str = "") -> str:
-    """Устаревший инструмент (артефакт удален)."""
-    return "Функциональность торрентов удалена."
+def mail_invoices_test_connection() -> str:
+    """Проверяет подключение к почтовому ящику, используя учетные данные из secrets.json навыка mail-invoice-collector.
+
+    Returns:
+        str: JSON-строка с результатом проверки соединения.
+    """
+    try:
+        import sys
+        skill_scripts = __root__ / ".agents" / "skills" / "mail-invoice-collector" / "scripts"
+        if not skill_scripts.exists():
+            skill_scripts = __root__ / ".skills" / "mail-invoice-collector" / "scripts"
+        if skill_scripts.exists() and str(skill_scripts) not in sys.path:
+            sys.path.insert(0, str(skill_scripts))
+
+        from mail_client import MailClient, load_mail_config
+        cfg = load_mail_config()
+        client = MailClient(cfg)
+        result = client.test_connection()
+        return json.dumps(result, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"[mail_invoice_tools] Ошибка проверки соединения: {e}")
+        return json.dumps({"success": False, "error": str(e)}, ensure_ascii=False)
+
+
+@tool
+def mail_invoices_collect(
+    output_csv: str = "data/invoices_collected/mail_invoices_summary.csv",
+    max_emails: int = 100,
+    folder: str = "INBOX",
+) -> str:
+    """Подключается к почтовому ящику через secrets.json, находит входящие счета-фактуры (invoices, חשבונית, счета) и сохраняет их в CSV.
+
+    Args:
+        output_csv: Относительный или абсолютный путь для сохранения результирующего CSV файла.
+        max_emails: Максимальное количество последних писем для анализа.
+        folder: Папка в почтовом ящике (по умолчанию INBOX).
+
+    Returns:
+        str: JSON-строка с отчетом о найденных и извлеченных счетах-фактурах.
+    """
+    try:
+        import sys
+        skill_scripts = __root__ / ".agents" / "skills" / "mail-invoice-collector" / "scripts"
+        if not skill_scripts.exists():
+            skill_scripts = __root__ / ".skills" / "mail-invoice-collector" / "scripts"
+        if skill_scripts.exists() and str(skill_scripts) not in sys.path:
+            sys.path.insert(0, str(skill_scripts))
+
+        from collector import MailInvoiceCollector
+        from mail_client import load_mail_config
+
+        cfg = load_mail_config(folder=folder)
+        collector = MailInvoiceCollector(cfg)
+        result = collector.run(
+            output_csv=output_csv,
+            max_emails=max_emails,
+        )
+        return json.dumps(result, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"[mail_invoice_tools] Ошибка сбора счетов: {e}")
+        return json.dumps({"success": False, "error": str(e)}, ensure_ascii=False)
+
 

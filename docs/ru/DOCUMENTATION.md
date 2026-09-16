@@ -35,7 +35,7 @@ docs/ru/
 
 - [Установка и требования](manual/installation.md) — установка за 5 минут на Windows и Linux
 - [Руководство по запуску (`RUN.md`)](manual/RUN.md) — запуск веб-сервера и сопутствующих служб
-- [Справочник конфигурации (`config.json`)](manual/config.md) — `config.json`, `.env`, пути
+- [Справочник конфигурации (`config.json`)](manual/config-reference.md) — `config.json`, `.env`, пути
 - [Первые шаги](manual/getting-started.md) — обзор функций и сценариев
 
 ---

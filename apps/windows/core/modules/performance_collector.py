@@ -124,20 +124,57 @@ class PerformanceCollector:
                 )
             )
 
-        # 5. Поиск ресурсоёмких процессов
+        # 5. Поиск ресурсоёмких процессов (расширенная диагностика памяти)
         top_procs = []
+        memory_leak_candidates = []
         try:
             proc_list = []
-            for p in psutil.process_iter(['pid', 'name', 'memory_percent']):
+            for p in psutil.process_iter(['pid', 'name', 'memory_percent', 'memory_info']):
                 try:
-                    proc_list.append(p.info)
+                    info = p.info
+                    proc_list.append(info)
+                    # Выявление потенциальной утечки памяти (процесс потребляет > 500 MB)
+                    if info.get('memory_info'):
+                        rss_mb = round(info['memory_info'].rss / (1024 * 1024), 1)
+                        if rss_mb > 500 and rss_mb < mem_total * 0.5:  # Исключаем системные сервисы
+                            memory_leak_candidates.append({
+                                "pid": info.get('pid'),
+                                "name": info.get('name'),
+                                "memory_mb": rss_mb,
+                                "memory_percent": info.get('memory_percent'),
+                            })
                 except Exception:
                     continue
             top_procs = sorted(proc_list, key=lambda x: x.get('memory_percent') or 0, reverse=True)[:5]
+            
+            # Если найдены кандидаты на утечку, добавить finding
+            if memory_leak_candidates:
+                findings.append(
+                    AuditFinding(
+                        domain="performance",
+                        category="memory_leak_candidates",
+                        title="Обнаружены процессы-кандидаты на утечку памяти",
+                        description=f"Найдено {len(memory_leak_candidates)} процессов, потребляющих > 500 MB.",
+                        severity=RiskLevel.CAUTION,
+                        evidence={"candidates": memory_leak_candidates[:5]},
+                    )
+                )
         except Exception as e:
             logger.debug(f"Ошибка при итерации процессов: {e}")
 
+        # 6. Анализ дисковой нагрузки (I/O операции)
+        try:
+            disk_io = psutil.disk_io_counters()
+            if disk_io:
+                io_read_mb_s = round(disk_io.read_bytes / (1024 * 1024), 2)
+                io_write_mb_s = round(disk_io.write_bytes / (1024 * 1024), 2)
+                metrics["disk_io_read_mb"] = io_read_mb_s
+                metrics["disk_io_write_mb"] = io_write_mb_s
+        except Exception:
+            pass
+
         metrics["top_cpu_processes"] = top_procs
+        metrics["memory_leak_candidates"] = memory_leak_candidates
 
         duration_ms = (time.perf_counter() - start_t) * 1000
         status = "ok"

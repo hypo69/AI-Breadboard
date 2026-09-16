@@ -145,4 +145,4 @@ print(response.json())
 
 ---
 
-Смотрите также: [Каталог навыков](../skills/catalog.md) · [Каталог плагинов](../plugins/catalog.md) · [Конфигурация](configuration.md)
+Смотрите также: [Каталог навыков](../skills/catalog.md) · [Каталог плагинов](../plugins/catalog.md) · [Конфигурация](secrets.md)

@@ -28,7 +28,10 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
-from src.system import SystemAIDiagnostician, SystemCollector
+from apps.windows.telemetry import (
+    SystemDiagnosticEngine as SystemAIDiagnostician,
+    SystemCollector,
+)
 from .tui import run_system_inspector
 
 

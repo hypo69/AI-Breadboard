@@ -28,8 +28,8 @@ from fastapi.responses import JSONResponse
 from fastapi import Request
 from src.api.router_auth import require_admin_user
 
-from src.system import (
-    SystemAIDiagnostician,
+from apps.windows.telemetry import (
+    SystemDiagnosticEngine as SystemAIDiagnostician,
     SystemCollector,
 )
 

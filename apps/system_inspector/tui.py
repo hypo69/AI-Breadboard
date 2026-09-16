@@ -28,12 +28,12 @@ import time
 from typing import Any, List, Optional
 
 from src.logger import logger
-from src.system import (
+from apps.windows.telemetry import (
     AnomalyItem,
     HardwareNode,
     HardwareSensor,
     ProcessMetrics,
-    SystemAIDiagnostician,
+    SystemDiagnosticEngine as SystemAIDiagnostician,
     SystemCollector,
     SystemDiagnosticReport,
     SystemSnapshot,

@@ -1,0 +1,11 @@
+{
+  "app_name": "system_log_viewer",
+  "display_name": "System Log Center",
+  "description": "Центр системных журналов Windows, корреляция инцидентов и RAG аудит логов",
+  "version": "1.0.0",
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8108,
+    "dedicated": false
+  }
+}

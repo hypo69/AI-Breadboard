@@ -44,8 +44,9 @@ class ProcessCollector:
         findings: List[AuditFinding] = []
         processes = []
         suspicious_paths = [r"c:\users\default", r"c:\windows\temp", r"appdata\local\temp"]
+        handle_leak_candidates = []
 
-        for proc in psutil.process_iter(['pid', 'name', 'exe', 'cmdline', 'username', 'cpu_percent', 'memory_percent']):
+        for proc in psutil.process_iter(['pid', 'name', 'exe', 'cmdline', 'username', 'cpu_percent', 'memory_percent', 'num_threads']):
             try:
                 info = proc.info
                 processes.append(info)
@@ -73,11 +74,32 @@ class ProcessCollector:
                             actions=[action],
                         )
                     )
+                
+                # Проверка утечки дескрипторов (handle leak) - процесс с аномально большим числом потоков
+                num_threads = info.get('num_threads') or 0
+                if num_threads > 500:
+                    handle_leak_candidates.append({
+                        "pid": info.get('pid'),
+                        "name": info.get('name'),
+                        "thread_count": num_threads,
+                    })
+                    findings.append(
+                        AuditFinding(
+                            domain="processes",
+                            category="handle_leak_candidate",
+                            title=f"Потенциальная утечка дескрипторов: {info.get('name')}",
+                            description=f"Процесс {info.get('name')} (PID {info.get('pid')}) имеет аномально большое количество потоков: {num_threads}.",
+                            severity=RiskLevel.CAUTION,
+                            evidence=info,
+                        )
+                    )
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
 
         metrics: Dict[str, Any] = {
             "total_processes_count": len(processes),
+            "handle_leak_candidates_count": len(handle_leak_candidates),
+            "handle_leak_candidates": handle_leak_candidates,
         }
 
         duration_ms = (time.perf_counter() - start_t) * 1000

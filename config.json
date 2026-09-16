@@ -32,20 +32,21 @@
   },
   "apps": {
     "enabled": [
-      "enable_windows_admin",
-      "enable_system_inspector",
-      "enable_system_control_center",
-      "enable_system_log_viewer",
-      "enable_network_terminal",
-      "enable_user_assistant",
-      "enable_gcloud_monitor",
-      "enable_website_monitor",
-      "enable_cloudflared_monitor",
-      "enable_wikipedia_research"
+      "windows_sysadmin",
+      "system_inspector",
+      "system_control_center",
+      "system_log_viewer",
+      "network_terminal",
+      "user_assistant",
+      "gcloud_monitor",
+      "website_monitor",
+      "cloudflared_monitor",
+      "wikipedia_research",
+      "ai_breadboard_admin",
+      "research_and_statistic"
     ],
     "disabled": [
-      "enable_trading_terminal",
-      "enable_helpdesk",
+      "trading_terminal",
       "helpdesk"
     ]
   },

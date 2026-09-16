@@ -444,6 +444,14 @@ class SystemCollector:
             top_processes=top_procs,
         )
 
+    def get_hardware_sensors(self) -> List[HardwareSensor]:
+        """Collect real-time hardware sensors readings.
+
+        Returns:
+            List[HardwareSensor]: Hardware sensors and temperatures.
+        """
+        return get_hardware_sensors()
+
     def get_hardware_tree(self) -> List[HardwareNode]:
         """Generate AIDA64-like hierarchical component specification tree.
 

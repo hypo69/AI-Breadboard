@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "mail_invoice_agent",
+  "name": "Mail Invoice Collector Agent",
+  "description": "Автономный агент для подключения к почтовому ящику, поиска входящих счетов-фактур (invoices, חשבונית, счета) и формирования сводной таблицы в CSV.",
+  "is_system": true,
+  "enabled": true,
+  "provider": "gemini",
+  "model": "gemini-2.5-flash",
+  "temperature": 0.1,
+  "max_steps": 10,
+  "timeout_seconds": 120,
+  "tools": [
+    "mail_invoices_collect",
+    "mail_invoices_test_connection"
+  ],
+  "system_prompt": "Вы — автономный финансовый ассистент по обработке электронной почты. Вы подключаетесь к почтовому ящику (параметры берутся изолированно из secrets.json навыка mail-invoice-collector), находите входящие счета-фактуры, квитанции и инвойсы на русском, английском и иврите, извлекаете реквизиты (номера, суммы, даты, поставщиков, НДС) и сохраняете их в CSV-файл."
+}

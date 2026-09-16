@@ -100,12 +100,12 @@ Write-Host ""
 $activeCfgFile = "config.json"
 if ($ConfigFile -and (Test-Path (Join-Path $projectRoot $ConfigFile))) {
     $activeCfgFile = $ConfigFile
+} elseif (Test-Path (Join-Path $projectRoot "config.json")) {
+    $activeCfgFile = "config.json"
 } elseif (Test-Path (Join-Path $projectRoot "config_ts.json")) {
     $activeCfgFile = "config_ts.json"
 } elseif (Test-Path (Join-Path $projectRoot "config_tc.json")) {
     $activeCfgFile = "config_tc.json"
-} elseif (Test-Path (Join-Path $projectRoot "config.json")) {
-    $activeCfgFile = "config.json"
 }
 
 $activeCfgPath = Join-Path $projectRoot $activeCfgFile
@@ -164,11 +164,15 @@ $appScripts = @(
     @{ Name = "System Inspector";             Folder = "system_inspector";    File = "Run-SystemInspector.ps1";     Port = 8102; Key = "enable_system_inspector" },
     @{ Name = "Exchange Trading Terminal";    Folder = "trading_terminal";    File = "Run-TradingTerminal.ps1";     Port = 8103; Key = "enable_trading_terminal" },
     @{ Name = "Cloudflared Monitor";          Folder = "cloudflared_monitor"; File = "Run-CloudflaredMonitor.ps1"; Port = 8104; Key = "enable_cloudflared_monitor" },
+    @{ Name = "User Assistant";               Folder = "user_assistant";      File = "Run-UserAssistant.ps1";       Port = 8105; Key = "enable_user_assistant" },
     @{ Name = "Google Cloud Monitor";         Folder = "gcloud_monitor";      File = "Run-GCloudMonitor.ps1";       Port = 8106; Key = "enable_gcloud_monitor" },
     @{ Name = "Website Intelligence Monitor"; Folder = "website_monitor";     File = "Run-WebsiteMonitor.ps1";      Port = 8107; Key = "enable_website_monitor" },
     @{ Name = "System Log Viewer";            Folder = "system_log_viewer";   File = "Run-SystemLogViewer.ps1";     Port = 8108; Key = "enable_system_log_viewer" },
     @{ Name = "System Control Center";        Folder = "system_control_center"; File = "Run-SystemControlCenter.ps1"; Port = 8109; Key = "enable_system_control_center" },
-    @{ Name = "Wikipedia Research Lab";       Folder = "wikipedia_research";   File = "Run-WikipediaResearch.ps1";  Port = 8110; Key = "enable_wikipedia_research" }
+    @{ Name = "Wikipedia Research Lab";       Folder = "wikipedia_research";   File = "Run-WikipediaResearch.ps1";  Port = 8110; Key = "enable_wikipedia_research" },
+    @{ Name = "AI Breadboard Admin";          Folder = "ai_breadboard_admin";  File = "Run-Admin.ps1";              Port = 8110; Key = "enable_ai_breadboard_admin" },
+    @{ Name = "Research & Statistics";        Folder = "research_and_statistic"; File = "Run-ResearchStatistic.ps1"; Port = 8111; Key = "enable_research_and_statistic" },
+    @{ Name = "Helpdesk & Support";           Folder = "helpdesk";            File = "Run-Helpdesk.ps1";           Port = 8110; Key = "enable_helpdesk" }
 )
 
 $isAppsArray = ($cfgObj -and $cfgObj.apps -and ($cfgObj.apps -is [System.Collections.IEnumerable]) -and ($cfgObj.apps -isnot [string]) -and ($cfgObj.apps.PSObject.Properties['enable_all'] -eq $null) -and ($cfgObj.apps.PSObject.Properties['enabled'] -eq $null))
@@ -258,7 +262,7 @@ foreach ($app in $appScripts) {
     }
 
     $serverMode = Get-AppServerMode $app.Folder
-    if ($Action -in @('start', 'restart') -and $serverMode -ne "dedicated") {
+    if ($serverMode -ne "dedicated") {
         Write-Host "▶ $($app.Name) (Port: $($app.Port))... [SHARED MODE — routed via main server]" -ForegroundColor DarkCyan
         continue
     }

@@ -92,6 +92,33 @@ param (
     [Alias('CloudflaredMonitor', 'cfmon')]
     [Nullable[bool]]$EnableCloudflaredMonitor = $null,
 
+    [Alias('GCloudMonitor', 'gcloud')]
+    [Nullable[bool]]$EnableGCloudMonitor = $null,
+
+    [Alias('WebsiteMonitor', 'webmon')]
+    [Nullable[bool]]$EnableWebsiteMonitor = $null,
+
+    [Alias('SystemLogViewer', 'syslogs', 'logs_viewer')]
+    [Nullable[bool]]$EnableSystemLogViewer = $null,
+
+    [Alias('SystemControlCenter', 'syscontrol', 'control_center')]
+    [Nullable[bool]]$EnableSystemControlCenter = $null,
+
+    [Alias('WikipediaResearch', 'wiki_lab', 'wikipedia')]
+    [Nullable[bool]]$EnableWikipediaResearch = $null,
+
+    [Alias('UserAssistant', 'assistant')]
+    [Nullable[bool]]$EnableUserAssistant = $null,
+
+    [Alias('AIBreadboardAdmin', 'admin_app')]
+    [Nullable[bool]]$EnableAIBreadboardAdmin = $null,
+
+    [Alias('ResearchAndStatistic', 'research_stat')]
+    [Nullable[bool]]$EnableResearchAndStatistic = $null,
+
+    [Alias('Helpdesk', 'it_support')]
+    [Nullable[bool]]$EnableHelpdesk = $null,
+
     [Alias('Tray', 'tray_mode', 'SystemTray')]
     [Nullable[bool]]$EnableTray = $null,
 
@@ -510,6 +537,33 @@ if ($EnableTradingTerminal -ne $null) {
 if ($EnableCloudflaredMonitor -ne $null) {
     $enableCloudflaredMonitorVal = [bool]$EnableCloudflaredMonitor
 }
+if ($EnableGCloudMonitor -ne $null) {
+    $enableGCloudMonitorVal = [bool]$EnableGCloudMonitor
+}
+if ($EnableWebsiteMonitor -ne $null) {
+    $enableWebsiteMonitorVal = [bool]$EnableWebsiteMonitor
+}
+if ($EnableSystemLogViewer -ne $null) {
+    $enableSystemLogViewerVal = [bool]$EnableSystemLogViewer
+}
+if ($EnableSystemControlCenter -ne $null) {
+    $enableSystemControlCenterVal = [bool]$EnableSystemControlCenter
+}
+if ($EnableWikipediaResearch -ne $null) {
+    $enableWikipediaResearchVal = [bool]$EnableWikipediaResearch
+}
+if ($EnableUserAssistant -ne $null) {
+    $enableUserAssistantVal = [bool]$EnableUserAssistant
+}
+if ($EnableAIBreadboardAdmin -ne $null) {
+    $enableAIBreadboardAdminVal = [bool]$EnableAIBreadboardAdmin
+}
+if ($EnableResearchAndStatistic -ne $null) {
+    $enableResearchAndStatisticVal = [bool]$EnableResearchAndStatistic
+}
+if ($EnableHelpdesk -ne $null) {
+    $enableHelpdeskVal = [bool]$EnableHelpdesk
+}
 
 # Если передан явный CLI-параметр -EnableTray, он переопределяет значение
 if ($EnableTray -ne $null) {
@@ -747,10 +801,15 @@ $appsOverviewList = @(
     @{ Name = "System Inspector";         App = "system_inspector";        Port = 8102; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_system_inspector" -AppFolder "system_inspector" -Aliases @("inspector")) },
     @{ Name = "Trading Terminal";         App = "trading_terminal";        Port = 8103; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_trading_terminal" -AppFolder "trading_terminal" -Aliases @("trading")) },
     @{ Name = "Cloudflared Monitor";      App = "cloudflared_monitor";     Port = 8104; Enabled = ($useCloudflared -and (Get-IsAppConfigEnabled -AppKey "enable_cloudflared_monitor" -AppFolder "cloudflared_monitor" -Aliases @("cloudflared"))) },
+    @{ Name = "User Assistant";           App = "user_assistant";          Port = 8105; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_user_assistant" -AppFolder "user_assistant" -Aliases @("assistant", "userassistant")) },
     @{ Name = "Google Cloud Monitor";     App = "gcloud_monitor";          Port = 8106; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_gcloud_monitor" -AppFolder "gcloud_monitor" -Aliases @("gcloud", "google_cloud")) },
     @{ Name = "Website Monitor";          App = "website_monitor";         Port = 8107; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_website_monitor" -AppFolder "website_monitor" -Aliases @("website", "website_intelligence")) },
     @{ Name = "System Log Viewer";        App = "system_log_viewer";       Port = 8108; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_system_log_viewer" -AppFolder "system_log_viewer" -Aliases @("system_logs", "system_log", "log_viewer", "logs_viewer")) },
-    @{ Name = "System Control Center";    App = "system_control_center";   Port = 8109; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_system_control_center" -AppFolder "system_control_center" -Aliases @("system_control", "control_center")) }
+    @{ Name = "System Control Center";    App = "system_control_center";   Port = 8109; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_system_control_center" -AppFolder "system_control_center" -Aliases @("system_control", "control_center")) },
+    @{ Name = "Wikipedia Research Lab";   App = "wikipedia_research";      Port = 8110; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_wikipedia_research" -AppFolder "wikipedia_research" -Aliases @("wikipedia", "wiki_lab")) },
+    @{ Name = "AI Breadboard Admin";      App = "ai_breadboard_admin";      Port = 8110; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_ai_breadboard_admin" -AppFolder "ai_breadboard_admin" -Aliases @("admin", "admin_panel")) },
+    @{ Name = "Research & Statistics";    App = "research_and_statistic";  Port = 8111; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_research_and_statistic" -AppFolder "research_and_statistic" -Aliases @("research_stat", "research")) },
+    @{ Name = "Helpdesk & Support";       App = "helpdesk";                Port = 8110; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_helpdesk" -AppFolder "helpdesk" -Aliases @("helpdesk", "it_support")) }
 )
 foreach ($appItem in $appsOverviewList) {
     if ($appItem.Enabled) {
@@ -913,10 +972,15 @@ $appLaunchConfigs = @(
     @{ Name = "System Inspector";             App = "system_inspector";        Launcher = "Run-SystemInspector.ps1";     Port = 8102; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_system_inspector" -AppFolder "system_inspector" -Aliases @("inspector")) },
     @{ Name = "Exchange Trading Terminal";    App = "trading_terminal";        Launcher = "Run-TradingTerminal.ps1";     Port = 8103; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_trading_terminal" -AppFolder "trading_terminal" -Aliases @("trading")) },
     @{ Name = "Cloudflare Tunnel Monitor";    App = "cloudflared_monitor";     Launcher = "Run-CloudflaredMonitor.ps1"; Port = 8104; Enabled = ($useCloudflared -and (Get-IsAppConfigEnabled -AppKey "enable_cloudflared_monitor" -AppFolder "cloudflared_monitor" -Aliases @("cloudflared"))) },
+    @{ Name = "User Assistant";               App = "user_assistant";          Launcher = "Run-Apps.ps1";               Port = 8105; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_user_assistant" -AppFolder "user_assistant" -Aliases @("assistant", "userassistant")) },
     @{ Name = "Google Cloud Monitor";         App = "gcloud_monitor";          Launcher = "Run-GCloudMonitor.ps1";       Port = 8106; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_gcloud_monitor" -AppFolder "gcloud_monitor" -Aliases @("gcloud", "google_cloud")) },
     @{ Name = "Website Intelligence Monitor"; App = "website_monitor";         Launcher = "Run-WebsiteMonitor.ps1";      Port = 8107; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_website_monitor" -AppFolder "website_monitor" -Aliases @("website", "website_intelligence")) },
     @{ Name = "System Log Center";            App = "system_log_viewer";       Launcher = "Run-SystemLogViewer.ps1";     Port = 8108; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_system_log_viewer" -AppFolder "system_log_viewer" -Aliases @("system_logs", "system_log", "log_viewer", "logs_viewer")) },
-    @{ Name = "System Control Center";        App = "system_control_center";   Launcher = "Run-SystemControlCenter.ps1"; Port = 8109; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_system_control_center" -AppFolder "system_control_center" -Aliases @("system_control", "control_center")) }
+    @{ Name = "System Control Center";        App = "system_control_center";   Launcher = "Run-SystemControlCenter.ps1"; Port = 8109; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_system_control_center" -AppFolder "system_control_center" -Aliases @("system_control", "control_center")) },
+    @{ Name = "Wikipedia Research Lab";       App = "wikipedia_research";      Launcher = "Run-WikipediaResearch.ps1";  Port = 8110; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_wikipedia_research" -AppFolder "wikipedia_research" -Aliases @("wikipedia", "wiki_lab")) },
+    @{ Name = "AI Breadboard Admin";          App = "ai_breadboard_admin";      Launcher = "Run-Apps.ps1";               Port = 8110; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_ai_breadboard_admin" -AppFolder "ai_breadboard_admin" -Aliases @("admin", "admin_panel")) },
+    @{ Name = "Research & Statistics";        App = "research_and_statistic";  Launcher = "Run-Apps.ps1";               Port = 8111; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_research_and_statistic" -AppFolder "research_and_statistic" -Aliases @("research_stat", "research")) },
+    @{ Name = "Helpdesk & Support";           App = "helpdesk";                Launcher = "Run-Helpdesk.ps1";           Port = 8110; Enabled = (Get-IsAppConfigEnabled -AppKey "enable_helpdesk" -AppFolder "helpdesk" -Aliases @("helpdesk", "it_support")) }
 )
 
 foreach ($item in $appLaunchConfigs) {

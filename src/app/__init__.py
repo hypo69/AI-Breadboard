@@ -212,6 +212,53 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
     except (ImportError, Exception) as e:
         logger.debug(f"Windows AI center router not registered: {e}")
 
+    try:
+        from apps.windows_sysadmin.router import init_router as init_windows_sysadmin_router
+        app.include_router(init_windows_sysadmin_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"Windows sysadmin router not registered: {e}")
+
+    try:
+        from apps.network_terminal.router import init_router as init_network_terminal_router
+        app.include_router(init_network_terminal_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"Network terminal router not registered: {e}")
+
+    try:
+        from apps.system_inspector.router import init_router as init_system_inspector_router
+        app.include_router(init_system_inspector_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"System inspector router not registered: {e}")
+
+    try:
+        from apps.system_control_center.router import init_router as init_system_control_center_router
+        app.include_router(init_system_control_center_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"System control center router not registered: {e}")
+
+    try:
+        from apps.system_log_viewer.router import init_router as init_system_log_viewer_router
+        app.include_router(init_system_log_viewer_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"System log viewer router not registered: {e}")
+
+    try:
+        from apps.gcloud_monitor.router import router as gcloud_monitor_router
+        app.include_router(gcloud_monitor_router)
+    except (ImportError, Exception) as e:
+        logger.debug(f"Google Cloud monitor router not registered: {e}")
+
+    try:
+        from apps.website_monitor.router import init_router as init_website_monitor_router
+        app.include_router(init_website_monitor_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"Website monitor router not registered: {e}")
+
+    try:
+        from apps.user_assistant.router import init_router as init_user_assistant_router
+        app.include_router(init_user_assistant_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"User assistant router not registered: {e}")
 
     try:
         from apps.research_and_statistic.router import init_router as init_research_app_router
@@ -224,6 +271,12 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         app.include_router(init_wiki_app_router(state))
     except (ImportError, Exception) as e:
         logger.debug(f"Wikipedia research app router not registered: {e}")
+
+    try:
+        from apps.ai_breadboard_admin.router import init_router as init_ai_breadboard_admin_router
+        app.include_router(init_ai_breadboard_admin_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"AI Breadboard admin router not registered: {e}")
 
     # Auto-discover additional routers in src/app/routers/
     _auto_discover_routers(app)

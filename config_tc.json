@@ -34,8 +34,6 @@
             "enable_system_log_viewer",
             "network_terminal",
             "enable_network_terminal",
-            "wikipedia_research",
-            "enable_wikipedia_research",
             "cloudflared_monitor",
             "enable_cloudflared_monitor",
             "gcloud_monitor",
@@ -44,6 +42,8 @@
             "enable_website_monitor"
         ],
         "disabled": [
+            "wikipedia_research",
+            "enable_wikipedia_research",
             "trading",
             "trading_terminal",
             "enable_trading_terminal",

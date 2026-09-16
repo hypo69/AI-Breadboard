@@ -435,11 +435,10 @@ src/secrets/
 src/secrets/*
 !src/secrets/README.md
 !src/secrets/*.example.json
-**/secrets.json
-**/secrets*.json
-**/secrets*.yaml
-# Пул API для gemini
-rc/secrets/gemini_keys.json
+**/secret*.json
+**/secret*.json
+**/secret*.yaml
+
 
 
 

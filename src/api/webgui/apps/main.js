@@ -59,6 +59,24 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-system-logs' && typeof window.initSystemLogsTab === 'function') {
     console.log('[AppsHub] Switching to system logs tab...');
     window.initSystemLogsTab();
+  } else if (cleanId === 'tab-cloudflared' && typeof window.initCloudflaredTab === 'function') {
+    console.log('[AppsHub] Switching to cloudflared tab...');
+    window.initCloudflaredTab();
+  } else if (cleanId === 'tab-gcloud' && typeof window.initGcloudTab === 'function') {
+    console.log('[AppsHub] Switching to gcloud tab...');
+    window.initGcloudTab();
+  } else if (cleanId === 'tab-website-monitor' && typeof window.initWebsiteMonitorTab === 'function') {
+    console.log('[AppsHub] Switching to website monitor tab...');
+    window.initWebsiteMonitorTab();
+  } else if (cleanId === 'tab-trading' && typeof window.initTradingTab === 'function') {
+    console.log('[AppsHub] Switching to trading tab...');
+    window.initTradingTab();
+  } else if (cleanId === 'tab-user-assistant' && typeof window.initUserAssistantTab === 'function') {
+    console.log('[AppsHub] Switching to user assistant tab...');
+    window.initUserAssistantTab();
+  } else if (cleanId === 'tab-helpdesk' && typeof window.initHelpdeskTab === 'function') {
+    console.log('[AppsHub] Switching to helpdesk tab...');
+    window.initHelpdeskTab();
   } else if (cleanId === 'tab-wikipedia-research' && typeof window.initWikipediaResearchTab === 'function') {
     console.log('[AppsHub] Switching to wikipedia research tab...');
     window.initWikipediaResearchTab();
@@ -231,6 +249,12 @@ async function initAppsHub() {
     { id: 'windows_sysadmin', tab: 'windows-admin', tabId: 'tab-windows-admin', html: '/html/windows_admin_tab/index.html', js: '/html/windows_admin_tab/main.js' },
     { id: 'system_control_center', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html', js: '/html/system_control_tab/main.js' },
     { id: 'system_log_viewer', tab: 'system-logs', tabId: 'tab-system-logs', html: '/html/system_logs_tab/index.html', js: '/html/system_logs_tab/main.js' },
+    { id: 'cloudflared_monitor', tab: 'cloudflared', tabId: 'tab-cloudflared', html: '/html/cloudflared_tab/index.html', js: '/html/cloudflared_tab/main.js' },
+    { id: 'gcloud_monitor', tab: 'gcloud', tabId: 'tab-gcloud', html: '/html/gcloud_tab/index.html', js: '/html/gcloud_tab/main.js' },
+    { id: 'website_monitor', tab: 'website-monitor', tabId: 'tab-website-monitor', html: '/html/website_monitor_tab/index.html', js: '/html/website_monitor_tab/main.js' },
+    { id: 'trading_terminal', tab: 'trading', tabId: 'tab-trading', html: '/html/trading_tab/index.html', js: '/html/trading_tab/main.js' },
+    { id: 'user_assistant', tab: 'user-assistant', tabId: 'tab-user-assistant', html: '/html/user_assistant_tab/index.html', js: '/html/user_assistant_tab/main.js' },
+    { id: 'helpdesk', tab: 'helpdesk', tabId: 'tab-helpdesk', html: '/html/helpdesk_tab/index.html', js: '/html/helpdesk_tab/main.js' },
     { id: 'wikipedia_research', tab: 'wikipedia-research', tabId: 'tab-wikipedia-research', html: '/html/wikipedia_research_tab/index.html', js: '/html/wikipedia_research_tab/main.js' },
   ];
 

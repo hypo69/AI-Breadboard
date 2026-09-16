@@ -137,8 +137,8 @@ docs/
 | `launchers/` | [Запуск сервисов](manual/RUN.md) |
 | `plugins/` | [Каталог плагинов](plugins/catalog.md) |
 | `.agents/skills/` | [Каталог навыков](skills/catalog.md) |
-| `config.json` | [Справочник конфигурации](manual/config.md) |
-| `secrets` | [Управление секретами](manual/configuration.md) |
+| `config.json` | [Справочник конфигурации](manual/config-reference.md) |
+| `secrets` | [Управление секретами](manual/secrets-management.md) |
 
 ---
 
