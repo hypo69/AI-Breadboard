@@ -38,7 +38,9 @@
     "googleAccounts": "🌐 חשבונות Google",
     "trading": "📈 מסוף מסחר",
     "network": "🌐 מסוף רשת",
-    "systemInspector": "🖥️ בודק מערכת"
+    "systemInspector": "🖥️ בודק מערכת",
+    "aboutSystem": "ℹ️ אודות המערכת",
+    "scenarios": "💬🎬 צ'אט ותרחישים"
   },
   "movieSearch": {
     "title": "🔍 חיפוש סרטים בטורנט",

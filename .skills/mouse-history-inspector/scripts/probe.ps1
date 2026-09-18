@@ -1,0 +1,1 @@
+Get-PnpDevice -Class Mouse -ErrorAction SilentlyContinue | Select-Object Status, Class, FriendlyName, InstanceId | ConvertTo-Json

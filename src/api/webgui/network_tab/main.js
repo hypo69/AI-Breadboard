@@ -73,7 +73,8 @@
       );
     });
 
-    tbody.innerHTML = filtered.slice(-100).map(p => {
+    const pagePackets = filtered.slice(-100);
+    tbody.innerHTML = pagePackets.map((p, idx) => {
       const proto = (p.protocol || 'OTHER').toUpperCase();
       let protoClass = 'proto-other';
       if (proto.includes('TCP')) protoClass = 'proto-tcp';
@@ -83,7 +84,7 @@
       else if (proto.includes('DNS')) protoClass = 'proto-dns';
 
       return `
-        <tr>
+        <tr class="net-packet-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для детального AI-анализа сетевого пакета">
           <td class="text-muted">${p.number || '--'}</td>
           <td>${p.timestamp ? new Date(p.timestamp * 1000).toLocaleTimeString() : '--'}</td>
           <td style="color: #38bdf8;">${p.source || '--'}</td>
@@ -94,6 +95,45 @@
         </tr>
       `;
     }).join('');
+
+    tbody.querySelectorAll('.net-packet-row').forEach(row => {
+      row.onclick = () => {
+        const idx = parseInt(row.getAttribute('data-idx'), 10);
+        const p = pagePackets[idx];
+        if (!p) return;
+
+        if (window.AITableModal) {
+          window.AITableModal.show({
+            icon: '🌐',
+            title: `Сетевой пакет #${p.number || 'N/A'} [${p.protocol || 'TCP'}]`,
+            subtitle: `${p.source || '0.0.0.0'} ➔ ${p.destination || '0.0.0.0'}`,
+            tableType: 'network',
+            badges: [
+              { text: (p.protocol || 'TCP').toUpperCase(), class: 'badge bg-primary' },
+              { text: `${p.length || 0} Bytes`, class: 'badge bg-secondary' }
+            ],
+            metadata: [
+              { label: 'Номер пакета', value: String(p.number || '-') },
+              { label: 'Протокол', value: (p.protocol || 'TCP').toUpperCase() },
+              { label: 'Источник (Source)', value: p.source || 'Не указан' },
+              { label: 'Назначение (Destination)', value: p.destination || 'Не указано' },
+              { label: 'Размер полезной нагрузки', value: `${p.length || 0} байт` },
+              { label: 'Время фиксации', value: p.timestamp ? new Date(p.timestamp * 1000).toLocaleString() : 'N/A' },
+              { label: 'Сводка заголовка (Info)', value: p.info || 'Нет данных', fullWidth: true }
+            ],
+            rawTitle: 'Сырые данные пакета / Флаги / Детали',
+            rawContent: p.info || JSON.stringify(p, null, 2),
+            requestData: {
+              source: p.source,
+              destination: p.destination,
+              protocol: p.protocol,
+              length: p.length,
+              info: p.info
+            }
+          });
+        }
+      };
+    });
   }
 
   function startLiveCapture() {

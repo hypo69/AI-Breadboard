@@ -19,6 +19,7 @@ from apps.windows.core.modules.clean_collector import CleanCollector
 from apps.windows.core.modules.driver_collector import DriverCollector
 from apps.windows.core.modules.eventlog_collector import EventLogCollector
 from apps.windows.core.modules.integrity_collector import IntegrityCollector
+from apps.windows.core.modules.log_discovery_engine import LogDiscoveryEngine, LogSource
 from apps.windows.core.modules.network_collector import NetworkCollector
 from apps.windows.core.modules.performance_collector import PerformanceCollector
 from apps.windows.core.modules.postinstall_collector import PostInstallCollector
@@ -46,4 +47,6 @@ __all__ = [
     "UpdateCollector",
     "BaselineCollector",
     "PostInstallCollector",
+    "LogDiscoveryEngine",
+    "LogSource",
 ]

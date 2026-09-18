@@ -105,5 +105,215 @@ def run_tui() -> None:
     render_dashboard(report, console)
 
 
+async def run_log_dashboard(
+    interval: float = 2.0,
+    channel: str = "System",
+    level: str = "",
+    search: str = "",
+    limit: int = 15,
+    hours: int = 24,
+) -> None:
+    """Запуск интерактивного дашборда системных журналов в терминале (System Log Viewer)."""
+    import asyncio
+    import datetime
+    from apps.windows.core.modules.log_discovery_engine import LogDiscoveryEngine
+
+    discovery = LogDiscoveryEngine()
+    level_display = level.capitalize() if level else "Все"
+    title_header = f"Windows Logs Monitor (Канал/Файл: {channel} | Уровень: {level_display})"
+
+    if Console is None:
+        print(f"[System Log Center] {title_header}. Запуск базового цикла...")
+        while True:
+            events = discovery.read_source_events(channel, limit=limit, level=level, search=search, hours=hours)
+            print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Получено событий: {len(events)}")
+            await asyncio.sleep(interval)
+
+    from rich.live import Live
+
+    console = Console()
+    with Live(console=console, refresh_per_second=1) as live:
+        while True:
+            events = discovery.read_source_events(channel, limit=limit, level=level, search=search, hours=hours)
+            table = Table(title=f"📜 Windows System Log Center — {channel} ({level_display})", expand=True)
+            table.add_column("Время", style="cyan", width=19, no_wrap=True)
+            table.add_column("Уровень", style="magenta", width=12)
+            table.add_column("ID", style="green", width=8)
+            table.add_column("Источник", style="yellow", width=22)
+            table.add_column("Сообщение", style="white")
+
+            for ev in events:
+                lvl = str(ev.get("level") or "Info")
+                lvl_style = "red" if "Crit" in lvl or "Err" in lvl else ("yellow" if "Warn" in lvl else "green")
+                table.add_row(
+                    str(ev.get("timestamp") or ""),
+                    f"[{lvl_style}]{lvl}[/{lvl_style}]",
+                    str(ev.get("event_id") or "0"),
+                    str(ev.get("provider") or "-")[:20],
+                    str(ev.get("message") or "-").replace("\r", " ").replace("\n", " ")[:80],
+                )
+
+            live.update(Panel(table, title=title_header, border_style="red" if level and "err" in level.lower() else "blue"))
+            await asyncio.sleep(interval)
+
+
+async def run_hardware_monitor_dashboard(interval: float = 1.0) -> None:
+    """Запуск интерактивного TUI дашборда мониторинга аппаратных ресурсов в реальном времени."""
+    import asyncio
+    import datetime
+    from apps.windows.hardware.hardware_monitor import HardwareMonitor
+
+    monitor = HardwareMonitor()
+
+    if Console is None:
+        print("[Hardware Monitor] Запуск базового монитора оборудования (Rich не обнаружен)...")
+        while True:
+            snap = monitor.get_snapshot(include_smart=False)
+            print(
+                f"[{datetime.datetime.now().strftime('%H:%M:%S')}] "
+                f"CPU: {snap.cpu.utilization_pct}% | "
+                f"RAM: {snap.memory.used_gb}/{snap.memory.total_gb} GB ({snap.memory.utilization_pct}%) | "
+                f"GPU: {len(snap.gpus)} шт | Диски: {len(snap.storage.partitions)} шт"
+            )
+            await asyncio.sleep(interval)
+
+    from rich.live import Live
+    from rich.columns import Columns
+
+    console = Console()
+    with Live(console=console, refresh_per_second=int(1 / max(0.2, interval))) as live:
+        while True:
+            snap = monitor.get_snapshot(include_smart=False)
+
+            # 1. CPU & Memory Таблица
+            cpu_ram_table = Table(title="💻 CPU & Память", expand=True)
+            cpu_ram_table.add_column("Компонент", style="cyan")
+            cpu_ram_table.add_column("Значение", style="green")
+            cpu_ram_table.add_column("Нагрузка", style="yellow")
+
+            cpu_color = "red" if snap.cpu.utilization_pct > 85 else "green"
+            freq_str = f"{snap.cpu.frequency_current_mhz} MHz" if snap.cpu.frequency_current_mhz else "N/A"
+            cpu_ram_table.add_row(
+                "CPU (Всего)",
+                f"{snap.cpu.physical_cores}C / {snap.cpu.logical_cores}T @ {freq_str}",
+                f"[{cpu_color}]{snap.cpu.utilization_pct}%[/{cpu_color}]",
+            )
+
+            ram_color = "red" if snap.memory.utilization_pct > 85 else "green"
+            cpu_ram_table.add_row(
+                "RAM (ОЗУ)",
+                f"{snap.memory.used_gb} GB / {snap.memory.total_gb} GB",
+                f"[{ram_color}]{snap.memory.utilization_pct}%[/{ram_color}]",
+            )
+
+            swap_color = "red" if snap.memory.swap_utilization_pct > 80 else "cyan"
+            cpu_ram_table.add_row(
+                "Swap (Подкачка)",
+                f"{snap.memory.swap_used_gb} GB / {snap.memory.swap_total_gb} GB",
+                f"[{swap_color}]{snap.memory.swap_utilization_pct}%[/{swap_color}]",
+            )
+
+            # 2. GPU Таблица
+            gpu_table = Table(title="🎮 Видеокарты (GPU)", expand=True)
+            gpu_table.add_column("Имя", style="magenta")
+            gpu_table.add_column("Температура", justify="center")
+            gpu_table.add_column("GPU / VRAM", justify="center")
+            gpu_table.add_column("Питание / Fan", justify="center")
+
+            if snap.gpus:
+                for g in snap.gpus:
+                    temp_str = f"{g.temperature_gpu_c}°C" if g.temperature_gpu_c else "N/A"
+                    t_style = "red" if g.temperature_gpu_c and g.temperature_gpu_c > 80 else "green"
+                    vram_str = f"{round(g.memory_used_mb / 1024, 1)} / {round(g.memory_total_mb / 1024, 1)} GB" if g.memory_used_mb and g.memory_total_mb else "-"
+                    gpu_util = f"{g.utilization_gpu_pct}%" if g.utilization_gpu_pct is not None else "-"
+                    power_str = f"{g.power_draw_w} W" if g.power_draw_w else "-"
+                    fan_str = f"{g.fan_speed_pct}%" if g.fan_speed_pct is not None else "-"
+                    gpu_table.add_row(
+                        f"{g.name[:24]}",
+                        f"[{t_style}]{temp_str}[/{t_style}]",
+                        f"{gpu_util} | {vram_str}",
+                        f"{power_str} | {fan_str}",
+                    )
+            else:
+                gpu_table.add_row("Дискретные GPU не обнаружены (WMI/Intel)", "-", "-", "-")
+
+            # 3. Накопители Таблица
+            disk_table = Table(title="💽 Диски и Накопители", expand=True)
+            disk_table.add_column("Том", style="cyan")
+            disk_table.add_column("ФС / Размер", style="white")
+            disk_table.add_column("Занято / Свободно", style="yellow")
+            disk_table.add_column("Загрузка", justify="center")
+
+            for p in snap.storage.partitions:
+                p_style = "red" if p.utilization_pct > 90 else "green"
+                disk_table.add_row(
+                    f"{p.mountpoint} ({p.device})",
+                    f"{p.fstype} | {p.total_gb} GB",
+                    f"{p.used_gb} GB / {p.free_gb} GB",
+                    f"[{p_style}]{p.utilization_pct}%[/{p_style}]",
+                )
+
+            # Скорости ввода-вывода диска и сети
+            io_table = Table(title="⚡ Сеть и Дисковый I/O", expand=True)
+            io_table.add_column("Метрика", style="cyan")
+            io_table.add_column("Скорость", style="green")
+
+            if snap.storage.io_rates:
+                io_table.add_row(
+                    "Диск Чтение / Запись",
+                    f"{round(snap.storage.io_rates.read_bytes_sec / (1024*1024), 2)} MB/s | {round(snap.storage.io_rates.write_bytes_sec / (1024*1024), 2)} MB/s",
+                )
+            io_table.add_row(
+                "Сеть Прием / Отдача",
+                f"{round(snap.network.bytes_recv_sec / 1024, 1)} KB/s | {round(snap.network.bytes_sent_sec / 1024, 1)} KB/s",
+            )
+            io_table.add_row("Активные соединения", f"{snap.network.active_connections_count} сокетов")
+            if snap.battery.has_battery:
+                ac_status = "Сеть подключена" if snap.battery.power_plugged else "Работа от батареи"
+                io_table.add_row("Батарея", f"{snap.battery.percent}% ({ac_status})")
+
+            # Сенсоры
+            sensor_table = Table(title="🌡️ Датчики и Вентиляторы", expand=True)
+            sensor_table.add_column("Датчик", style="cyan")
+            sensor_table.add_column("Тип", style="magenta")
+            sensor_table.add_column("Показание", style="green")
+
+            if snap.sensors:
+                for s in snap.sensors[:6]:
+                    sensor_table.add_row(s.name[:25], s.category, f"{s.value} {s.unit}")
+            else:
+                sensor_table.add_row("Датчики WMI/LHM в спящем режиме", "-", "-")
+
+            # Главный контейнер
+            status_text = snap.status_summary.get("status", "HEALTHY")
+            status_color = "green" if status_text == "HEALTHY" else ("yellow" if status_text == "WARNING" else "red")
+            main_header = (
+                f"🎛️ Windows Hardware Monitor | Статус: [{status_color}]{status_text}[/{status_color}] | "
+                f"Время: {snap.timestamp[11:19]}"
+            )
+
+            col1 = Columns([cpu_ram_table, gpu_table], expand=True)
+            col2 = Columns([disk_table, io_table], expand=True)
+            main_panel = Panel(
+                Text.from_markup(
+                    f"{main_header}\n\n"
+                ) + Columns([col1, col2, sensor_table], expand=True),
+                title="[bold blue]AI BREADBOARD HARDWARE CENTER[/bold blue]",
+                border_style=status_color,
+            )
+
+            live.update(main_panel)
+            await asyncio.sleep(interval)
+
+
+__all__ = [
+    "render_dashboard",
+    "run_hardware_monitor_dashboard",
+    "run_log_dashboard",
+    "run_tui",
+]
+
+
 if __name__ == "__main__":
     run_tui()
+

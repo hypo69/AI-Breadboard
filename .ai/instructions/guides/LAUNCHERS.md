@@ -17,8 +17,10 @@
 
 | Launcher | Назначение |
 |----------|-----------|
-| `Run-Server.ps1` | Запуск FastAPI сервера |
-| `Run-Tests.ps1` | Запуск тестов |
+| `run.ps1` | Главный лончер (запуск всех сервисов) |
+| `tc.ps1` | Лончер сценария Test Computer (`/tc`, блок приложений `/apps` по `config_tc.json`) |
+| `Run-Server.ps1` / `Run-Unicorn.ps1` | Запуск FastAPI сервера |
+| `Run-Tests.ps1` / `run_tests.ps1` | Запуск тестов |
 | `Run-Dev.ps1` | Запуск в режиме разработки (с hot reload) |
 | `Run-Worker.ps1` | Запуск фоновых рабочих процессов |
 

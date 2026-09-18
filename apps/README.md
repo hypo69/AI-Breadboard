@@ -32,6 +32,9 @@ apps/
 ├── helpdesk/                  # 🎧 IT Support and Helpdesk Ticket System
 ├── wikipedia_research/        # 📚 Research & Fact-Checking Engine
 ├── research_and_statistic/    # 📈 Data Analysis & Statistical Research Desk
+├── windows_startup_auditor/   # 🚀 Windows Startup & Persistence Auditor
+├── windows_backup_manager/    # 💾 Windows Backup, Libraries & File History Manager
+├── windows_defender/          # 🛡️ Microsoft Defender & AI Security Diagnostic Center
 ├── dashboard/                 # 🖥️ Interactive System Dashboard
 └── ai_breadboard_admin/       # ⚙️ Platform Administration Workspace
 ```
@@ -43,8 +46,18 @@ apps/
 | Application | CLI Command | Port | FastAPI Endpoints | Description |
 |---|---|---|---|---|
 | **AI Windows Diagnostic Center** | `python -m apps.windows` | `8105` | `/api/windows/*` | Комплексная диагностика Windows, аудит драйверов, SMART дисков (`smartctl`), GPU (`nvidia-smi`/`amd-smi`), CPU-Z/AIDA64, стресс-тесты, журналы событий и безопасное администрирование. |
+| **AIDA64 Diagnostic App** | `python -m apps.aida64` | `8120` | `/api/v1/aida64/*` | Мониторинг датчиков через Shared Memory (`AIDA64_SensorValues`), WMI, CLI генерация XML отчетов. |
+| **HWiNFO Diagnostic App** | `python -m apps.hwinfo` | `8121` | `/api/v1/hwinfo/*` | Подключение к Shared Memory HWiNFO, CLI JSON логирование и отчеты. |
+| **CPU-Z Processor App** | `python -m apps.cpuz` | `8122` | `/api/v1/cpuz/*` | Глубокий аудит процессора, топологии ядер, кэшей и таймингов памяти. |
+| **GPU-Z Graphics App** | `python -m apps.gpuz` | `8123` | `/api/v1/gpuz/*` | Мониторинг графических процессоров и разбор логов сенсоров. |
+| **smartmontools Storage App** | `python -m apps.smartmontools` | `8124` | `/api/v1/smartmontools/*` | Автоматическая SMART диагностика всех дисков через `smartctl --json -x`, расчет износа NVMe/SSD. |
+| **LibreHardwareMonitor App** | `python -m apps.librehardwaremonitor` | `8126` | `/api/v1/lhm/*` | Сбор телеметрии через Web REST JSON API (`http://localhost:8085/data.json`) и WMI. |
+| **Microsoft Defender Security Center** | `python -m apps.windows_defender` | `8113` | `/api/v1/defender/*` | Мониторинг и управление Microsoft Defender Antivirus, правила ASR, Controlled Folder Access (Ransomware), аудит исключений, детекция Fileless и корреляция событий. |
+| **Windows Startup Auditor** | `python -m apps.windows_startup_auditor` | `8112` | `/api/v1/startup-auditor/*` | Полный поиск всех точек автозагрузки и персистентности Windows (реестр Run/RunOnce, папки Startup, Winlogon, IFEO, службы, задачи), аудит безопасности и оптимизация старта. |
+| **Windows Backup Manager** | `python -m apps.windows_backup_manager` | `8114` | `/api/v1/backup-manager/*` | Управление библиотеками Windows, File History, теневыми копиями VSS и RAG-поиском по резервным копиям. |
 | **Network Terminal** | `python -m apps.network_terminal` | `8101` | `/api/v1/network/*` | Live packet capture, protocol distribution, and traffic anomaly detection. |
 | **Trading Terminal** | `python -m apps.trading_terminal` | `8103` | `/api/v1/trading/*` | Interactive exchange desk with real-time tickers, orderbook, position & PnL tracking. |
 | **Google Cloud Monitor** | `python -m apps.gcloud_monitor` | `8104` | `/api/gcloud/*` | Cloud Logging, metrics, IAM security audit, and AI diagnostics. |
 | **Website Monitor** | `python -m apps.website_monitor` | `8106` | `/api/v1/website-monitor/*` | GA4 Data API, Google Search Console metrics, and latency/uptime probes. |
 | **User Assistant** | `python -m apps.user_assistant` | `8107` | `/api/v1/assistant/*` | Personal agenda, Gmail and Google Calendar integration. |
+

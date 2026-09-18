@@ -7,7 +7,7 @@
 ## Запуск и Configuration
 
 - `main.py` loads `.env` и `core/fastapi/config.json`, creates `FastAPI`, подключает CORS и отдаёт `webinterface/` как `/webinterface`.
-- Сервер подключает маршруты чата, qBittorrent, медиатеки и OAuth-авторизации. Страницы: `/`, `/user`, `/tgmini`, `/admin`, `/rc`, `/tv`, `/user_tts`.
+- Сервер подключает маршруты чата, qBittorrent, медиатеки и OAuth-авторизации. Страницы: `/`, `/user`, `/tgmini`, `/admin`, `/rc`, `/tv`, `/user_tts`, `/tc` (сценарий Test Computer, лончер `tc.ps1`).
 - В `main.py` системная инструкция чата загружается из `.ai_instructions/prompts/chat/system_instruction.md`.
 - `GoogleGenerativeAI` receives имена ключей из `GEMINI_API_KEY_NAMES` (переменная окружения), а фактические ключи — через `core.secrets.api_key_state`.
 
@@ -107,6 +107,14 @@ webinterface/user/main.js
   - Тестирование TTS функций
   - Настройка голосового синтеза
   - Предпросмотр аудио-ответов
+
+### 7. Интерфейс Test Computer (`/tc`)
+- **Файлы:** `apps/`, `config_tc.json`, лончер `tc.ps1`
+- **Description:** Сценарий Test Computer (tc) для запуска и проверки блока приложений и микросервисов
+- **Функции:**
+  - Запуск приложений по `config_tc.json`
+  - Веб-роут `/tc` для доступа к интерфейсу Test Computer
+  - Управление через лончер `tc.ps1`
 
 ### Moduleные вкладки
 

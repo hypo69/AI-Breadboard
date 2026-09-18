@@ -1,235 +1,103 @@
-# Architecture Documentation
+# 🪟 Архитектура AI Windows Diagnostic & Administration Center
 
-## System Overview
+## 📌 Обзор системы
+
+Центр диагностики и администрирования Windows построен на основе **4-уровневой иерархии доступа к системным интерфейсам**, протокола безопасности **SafeOps** и слоя аналитического интеллекта (AI).
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│          Windows Diagnostic Dashboard                   │
-│  (Central Hub - apps/dashboard/)                        │
-└─────────────────────────────────────────────────────────┘
-                           │
-         ┌─────────────────┼─────────────────┐
-         │                 │                 │
-    ┌────▼──────┐  ┌──────▼───┐  ┌─────▼────┐
-    │ Process   │  │ Memory   │  │ Network  │
-    │ Explorer  │  │ Monitor  │  │ Diag.    │
-    └────┬──────┘  └──────┬───┘  └─────┬────┘
-         │                 │            │
-    ┌────▼──────────────────┼────────────▼────┐
-    │  Process Intelligence Module             │
-    │  (Unified System API)                    │
-    └────┬────────────────────────────────────┘
-         │
-    ┌────▼──────────────────────────────────────┐
-    │      Core WinAPI Layer                    │
-    │  (kernel32, psapi, advapi32, ntdll, etw) │
-    └─────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        AI WINDOWS DIAGNOSTIC & ADMINISTRATION CENTER                   │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+                                           │
+         ┌─────────────────────────────────┼─────────────────────────────────┐
+         ▼                                 ▼                                 ▼
+┌──────────────────┐             ┌──────────────────┐             ┌──────────────────┐
+│ Presentation/API │             │   AI & SafeOps   │             │   15 Коллекторов │
+│ • CLI / TUI      │             │ • Diagnostician  │             │ • Clean/Drivers  │
+│ • FastAPI REST   │             │ • Root-Cause     │             │ • Network/Sec    │
+│ • Hardware Mon   │             │ • System Restore │             │ • SCM/Tasks/Disk │
+└────────┬─────────┘             └────────┬─────────┘             └────────┬─────────┘
+         │                                │                                │
+         └────────────────────────────────┼────────────────────────────────┘
+                                          │
+                                          ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                   НАТИВНЫЙ СЛОЙ WINDOWS API (apps/windows/api/)                        │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ • Tier 1 (Native Win32/NT): kernel32.dll, psapi.dll, advapi32.dll, iphlpapi.dll,      │
+│                            setupapi.dll, cfgmgr32.dll, ntdll.dll, wevtapi.dll, pdh.dll │
+│ • Tier 2 (COM API):        Schedule.Service, HNetCfg.FwPolicy2, INetworkListManager   │
+│ • Tier 3 (WMI / CIM):      Win32_ShadowStorage, Win32_PnPEntity, Win32_Process        │
+│ • Tier 4 (PowerShell/Safe): SafeOps fallback подпроцессы с ограничением прав            │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Directory Structure
+---
+
+## 📂 Структура директории `apps/windows/`
 
 ```
 apps/windows/
-├── __init__.py
-├── README.md
-├── ARCHITECTURE.md
-├── INSTALLATION.md
-├── TESTING.md
-├── core/
-│   ├── winapi.py (Capability detection)
-│   ├── data_model.py (Normalized structures)
-│   ├── correlation_engine.py (Analysis)
-│   ├── diagnostics.py (80+ checks)
-│   └── __init__.py
-├── api/
-│   ├── kernel32.py (Process enumeration)
-│   ├── psapi.py (Memory & modules)
-│   ├── advapi32.py (Registry, services)
-│   ├── ntdll.py (Native NT API)
-│   ├── etw.py (Event tracing)
-│   └── __init__.py
-├── process_intelligence.py (Unified API)
-├── apps/
-│   ├── dashboard/ (Central hub - Task #12)
-│   ├── process_explorer/ (Task #3)
-│   ├── memory_monitor/ (Task #5)
-│   ├── network_diagnostics/ (Task #6)
-│   ├── services_manager/ (Task #4)
-│   ├── registry_viewer/ (Task #7)
-│   ├── security_analyzer/ (Task #8)
-│   ├── hardware_explorer/ (Task #9)
-│   ├── baseline_detector/ (Task #10)
-│   └── realtime_monitor/ (Task #11)
-└── tests/
-    ├── test_core.py
-    ├── test_api.py
-    ├── test_apps.py
-    └── __init__.py
+├── __init__.py                      # Регистрация приложения
+├── README.md                        # Руководство пользователя и эндпоинты
+├── ARCHITECTURE.md                  # Данная архитектурная спецификация
+├── NATIVE_API_REGISTRY.md           # Полный реестр нативных функций Windows API
+├── AUDIT_REPORT.md                  # Отчет аудита платформы
+├── router.py                        # FastAPI REST API (20+ эндпоинтов)
+├── cli.py                           # CLI интерфейс (python -m apps.windows)
+├── tui.py                           # Rich TUI дашборд реального времени
+│
+├── api/                             # Низкоуровневые API wrappers
+│   ├── scm.py                       # Service Control Manager (advapi32.dll)
+│   ├── tasksched.py                 # Task Scheduler 2.0 COM API
+│   ├── nethelper.py                 # IP Helper API (iphlpapi.dll)
+│   ├── setupapi.py                  # SetupAPI & CfgMgr32 (PnP устройства)
+│   ├── kernel32.py                  # Toolhelp32, снимки процессов, память
+│   ├── psapi.py                     # Анализ рабочих наборов памяти и модулей
+│   ├── advapi32.py                  # Реестр, токены и безопасность
+│   ├── ntdll.py                     # Native NT API функции
+│   ├── etw.py                       # Event Tracing for Windows
+│   └── wevtapi.py                   # Windows Event Log API (wevtapi.dll)
+│
+├── core/                            # Ядро и безопасное управление
+│   ├── system_param_manager.py      # Управление настройками системы с точками отката
+│   ├── system_restore.py            # Создание точек восстановления и VSS-снимков
+│   ├── safe_executor.py             # SafeOps Dry-Run симуляция и изоляция рисков
+│   ├── root_cause_engine.py         # Движок расследования первопричин
+│   ├── correlation_engine.py        # Междоменная корреляция фактов
+│   ├── models.py                    # Нормализованные модели данных
+│   └── modules/                     # 15 Доменных коллекторов фактов
+│       ├── clean_collector.py       # (1) Очистка дисков и кэшей
+│       ├── performance_collector.py # (2) Анализ CPU/RAM и автозагрузки
+│       ├── driver_collector.py      # (3) Драйверы и PnP устройства (SetupAPI)
+│       ├── software_collector.py    # (4) Инвентарь ПО
+│       ├── integrity_collector.py   # (5) Целостность (SFC/DISM)
+│       ├── storage_collector.py     # (6) Диски, тома, VSS хранилище
+│       ├── security_collector.py    # (7) Defender, UAC, персистентность
+│       ├── eventlog_collector.py    # (8) Корреляция журналов Event Log
+│       ├── process_collector.py     # (9) Процессы и дескрипторы
+│       ├── services_collector.py    # (10) Службы Windows (SCM)
+│       ├── tasks_collector.py       # (11) Задачи планировщика (COM)
+│       ├── network_collector.py     # (12) Сеть, сокеты, Firewall (IP Helper)
+│       ├── update_collector.py      # (13) Центр обновления Windows
+│       ├── baseline_collector.py    # (14) Конфигурационный эталон и Drift
+│       └── postinstall_collector.py # (15) Post-install готовность ОС
+│
+├── ai/                              # Слой искусственного интеллекта
+│   ├── diagnostician.py             # AI-диагност и расчет Health Score
+│   ├── root_cause_analyzer.py       # Анализатор первопричин сбоев
+│   └── prompt_templates.py          # Шаблоны промптов для моделей
+│
+└── hardware/                        # Аппаратный мониторинг в реальном времени
+    ├── monitor.py                   # Сбор телеметрии датчиков, CPU, GPU, дисков
+    └── sensors.py                   # Чтение показаний температуры, вольтажа, вентиляторов
 ```
 
-## Component Details
+---
 
-### Core Layer (core/)
-- **winapi.py**: Capability level detection (Kernel to Driver)
-- **data_model.py**: ProcessInfo, ThreadInfo, MemoryInfo
-- **correlation_engine.py**: Cross-component relationships
-- **diagnostics.py**: 80+ checks across 10 categories
+## 🛡️ Безопасность и SafeOps
 
-### API Layer (api/)
-- **kernel32.py**: Toolhelp32, process/thread/module enumeration
-- **psapi.py**: Memory info, module enumeration
-- **advapi32.py**: Registry, services, security
-- **ntdll.py**: Native NT API, version info
-- **etw.py**: Event Tracing for Windows
-
-### Process Intelligence (process_intelligence.py)
-Unified interface combining all APIs:
-- Process enumeration with full details
-- Memory trend analysis
-- Dependency tracking
-- Real-time monitoring
-
-### Application Modules (apps/)
-
-#### Process Explorer
-- Tree view with parent-child relationships
-- Real-time memory monitoring
-- Thread and module enumeration
-- Interactive CLI
-
-#### Memory & Performance Monitor
-- System and process metrics
-- Memory leak detection
-- Alert system
-- Trend analysis
-
-#### Network & Firewall Diagnostics
-- Connection enumeration
-- Firewall rule inspection
-- Suspicious activity detection
-- Adapter information
-
-#### Services & Drivers Manager
-- Service enumeration and filtering
-- Driver analysis (unsigned detection)
-- Dependency tracking
-- Registry-based configuration
-
-#### Registry & Events Viewer
-- Registry browser with search
-- Event log querying
-- Statistics and trending
-- PowerShell integration
-
-#### Security & Tokens Analyzer
-- Process elevation status
-- Token information
-- Privilege enumeration
-- Risk identification
-
-#### Hardware & Devices Explorer
-- CPU, RAM, storage info
-- Device enumeration
-- WMIC integration
-
-#### Baseline Detector
-- Configuration snapshot
-- Drift detection
-- Change tracking
-- Baseline persistence
-
-#### Real-Time Monitor
-- Process lifecycle tracking
-- Service changes
-- Event notification
-- Change history
-
-#### Dashboard
-- Central hub
-- Module aggregation
-- System overview
-- Unified interface
-
-## Data Flow
-
-```
-System Events
-    ↓
-WinAPI Layer (kernel32, psapi, etc.)
-    ↓
-Process Intelligence (unified interface)
-    ↓
-Application Modules (PE, Memory, Network, etc.)
-    ↓
-User Interface (CLI)
-```
-
-## Design Patterns
-
-### 1. Capability Level Detection
-Auto-selects best available API based on system
-
-### 2. Normalized Data Model
-Consistent structures across all modules
-
-### 3. Correlation Engine
-Analyzes relationships between components
-
-### 4. Registry Pattern (Diagnostics)
-Registers checks by ID for easy extension
-
-### 5. Event-Driven Monitoring
-Real-time updates via background threads
-
-### 6. Pluggable Architecture
-Modules independent, can be used standalone
-
-## Technology Stack
-
-- **Language**: Python 3.8+
-- **Windows APIs**: ctypes (kernel32, psapi, advapi32, ntdll)
-- **System Integration**: WMI, PowerShell, ETW
-- **CLI**: Python cmd module
-- **Threading**: threading, collections.deque
-- **Data Processing**: dataclasses, enums
-
-## Performance Characteristics
-
-- **Process enumeration**: ~100-200ms
-- **Memory monitoring**: ~50-100ms per cycle
-- **Network connection scan**: ~500-1000ms
-- **Registry search**: 1-5 seconds (depth-dependent)
-- **Memory overhead**: ~50-100 MB
-- **CPU usage**: <2% idle, <5% during enumeration
-
-## Security Considerations
-
-1. **Privilege Requirements**: Some operations need admin
-2. **Data Sensitivity**: Handles process/security info
-3. **System Impact**: Minimal (read-only operations mostly)
-4. **API Safe Usage**: All calls have error handling
-
-## Extensibility
-
-### Adding New Checks
-1. Define in diagnostics.py
-2. Register in DiagnosticsEngine
-3. Return DiagnosticResult
-
-### Adding New Application
-1. Create module in apps/
-2. Implement analyzer/explorer
-3. Create CLI interface
-4. Add to dashboard
-
-### Custom Metrics
-1. Define in data_model.py
-2. Collect in process_intelligence.py
-3. Display in application
-
-## Testing Strategy
-
-- **Unit Tests**: Core and API layers
-- **Integration Tests**: Multi-module workflows
-- **Manual Tests**: Each CLI application
-- **Regression Tests**: Known issue cases
+1. **Read-Only аудит**: все 15 коллекторов работают исключительно на чтение и не модифицируют систему.
+2. **Точки восстановления (System Restore & VSS)**: перед применением любого чувствительного параметра создается точка отката в Windows.
+3. **Локальные снимки (Immutable State Snapshots)**: при достижении системного лимита частоты точек восстановления параметры фиксируются в неизменяемом JSON.
+4. **Dry-Run симуляция**: предварительный расчет эффектов перед внесением изменений.

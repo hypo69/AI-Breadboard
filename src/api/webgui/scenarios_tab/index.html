@@ -1,0 +1,213 @@
+<!-- Scenarios & Automated Diagnostics Tab Template -->
+<div class="container-fluid p-0 scenarios-tab-wrapper">
+  
+  <!-- Header & Quick Actions -->
+  <div class="card bg-dark bg-opacity-50 border-secondary-subtle mb-3 shadow-sm">
+    <div class="card-body p-3">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-2">
+          <div class="fs-2">🎬</div>
+          <div>
+            <h5 class="mb-0 fw-bold text-white d-flex align-items-center gap-2">
+              <span>Сценарии тестирования и автоматизации</span>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle small fs-6">Test Computer (/tc)</span>
+            </h5>
+            <div class="text-muted small">
+              Центр управления: экспресс-сценарии проверки хоста, аудит логов, диагностика оборудования и интеллектуальный ассистент навыков.
+            </div>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <button class="btn btn-outline-info btn-sm d-flex align-items-center gap-1 shadow-sm" id="btn-scenario-refresh-list" title="Обновить список сценариев">
+            <i class="bi bi-arrow-clockwise"></i>
+            <span>Обновить</span>
+          </button>
+          <button class="btn btn-success btn-sm d-flex align-items-center gap-1 shadow-sm fw-semibold" id="btn-run-quick-check" title="Запустить экспресс-проверку окружения">
+            <span>⚡ Быстрая проверка</span>
+            <span class="badge bg-white text-dark ms-1">Рекомендуется</span>
+          </button>
+          <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 shadow-sm" id="btn-run-all-scenarios" title="Последовательно выполнить все доступные сценарии">
+            <i class="bi bi-play-fill"></i>
+            <span>Запустить все</span>
+          </button>
+          <button class="btn btn-primary btn-sm d-flex align-items-center gap-1.5 shadow-sm fw-semibold" id="btn-open-scenarios-drawer" data-bs-toggle="offcanvas" data-bs-target="#scenariosOffcanvas" aria-controls="scenariosOffcanvas" title="Открыть выдвижную панель со сценариями">
+            <i class="bi bi-layout-sidebar-reverse"></i>
+            <span>Сценарии</span>
+            <span class="badge bg-white text-dark ms-1" id="scenarios-count-badge-header">6</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main View: AI Assistant Mini-Chat (expanded to full panel width and >= 80% height) -->
+  <div class="row g-3">
+    <div class="col-12">
+      <div class="card bg-dark bg-opacity-75 border-secondary-subtle shadow-sm d-flex flex-column" style="min-height: 80vh; height: calc(100vh - 170px);">
+        
+        <!-- Chat Header -->
+        <div class="card-header bg-transparent border-secondary-subtle py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fs-5">💬</span>
+            <div>
+              <h6 class="mb-0 fw-bold text-white">AI Ассистент сценариев & Навыков</h6>
+              <div class="text-muted small" style="font-size: 0.75rem;">Спросите что угодно о компьютере — система проверит и создаст навык</div>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-info btn-sm py-0.5 px-2 text-info border-info border-opacity-50 d-flex align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#scenariosOffcanvas" aria-controls="scenariosOffcanvas" title="Открыть выдвижную панель со сценариями" style="font-size: 0.75rem;">
+              <i class="bi bi-layout-sidebar-reverse"></i>
+              <span>Сценарии</span>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm py-0.5 px-2 text-light border-secondary" id="btn-scenario-new-chat" title="Очистить контекст и начать новую сессию диалога" style="font-size: 0.75rem;">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>Новая сессия
+            </button>
+            <span class="badge bg-success-subtle text-success border border-success-subtle small">Online</span>
+          </div>
+        </div>
+
+        <!-- Mini-Chat Suggestions / Prompt Pills -->
+        <div class="p-2 border-bottom border-secondary-subtle bg-black bg-opacity-25">
+          <div class="small text-muted mb-1" style="font-size: 0.72rem;">Быстрые запросы:</div>
+          <div class="d-flex flex-wrap gap-1" id="chat-quick-prompts">
+            <button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-prompt-btn" style="font-size: 0.75rem;">
+              🖱️ Какие мыши были подключены?
+            </button>
+            <button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-prompt-btn" style="font-size: 0.75rem;">
+              🔌 Покажи USB устройства
+            </button>
+            <button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-prompt-btn" style="font-size: 0.75rem;">
+              📜 Проверь ошибки в логах
+            </button>
+            <button class="btn btn-outline-secondary btn-sm py-0 px-2 quick-prompt-btn" style="font-size: 0.75rem;">
+              ⚡ Сделай быструю проверку
+            </button>
+          </div>
+        </div>
+
+        <!-- Chat Messages History Container -->
+        <div class="card-body p-3 overflow-y-auto flex-grow-1" id="scenario-chat-history" style="min-height: 480px; max-height: none;">
+          <div class="d-flex gap-2 mb-3">
+            <div class="fs-5">🤖</div>
+            <div class="bg-secondary bg-opacity-25 p-2 rounded border border-secondary-subtle small text-light flex-grow-1">
+              Привет! Я интеллектуальный ассистент Test Computer. Вы можете задать мне любой вопрос о конфигурации хоста, например:
+              <br><br>
+              <div id="chat-greeting-prompts" class="d-flex flex-column gap-1">
+                <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt="Какие мыши были подключены к этому компьютеру?">«Какие мыши были подключены к этому компьютеру?»</a></div>
+                <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt="Покажи список сетевых портов и активных соединений">«Покажи список сетевых портов и активных соединений»</a></div>
+                <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt="Проверь автозапуск и службы Windows">«Проверь автозапуск и службы Windows»</a></div>
+              </div>
+              <br>
+              Если для вопроса нет готового сценария, я опрошу оборудование через PowerShell/WMI, сформирую для вас ответ и **автоматически сохраню новый навык** в каталог <code>.skills/</code>.
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input Form -->
+        <div class="card-footer bg-transparent border-secondary-subtle p-2 flex-shrink-0">
+          <form id="scenario-chat-form" class="d-flex flex-column gap-2">
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control bg-dark text-white border-secondary" id="scenario-chat-input" placeholder="Задайте вопрос или введите /skills list..." autocomplete="off">
+              <button class="btn btn-primary d-flex align-items-center gap-1" type="submit" id="btn-scenario-chat-send">
+                <span>Отправить</span>
+                <i class="bi bi-send-fill"></i>
+              </button>
+            </div>
+            <div class="d-flex align-items-center justify-content-between px-1 flex-wrap gap-2">
+              <span class="text-muted" style="font-size: 0.72rem;" id="chat-status-indicator">Готов к работе</span>
+              <div class="d-flex align-items-center gap-3">
+                <div class="form-check form-switch m-0">
+                  <input class="form-check-input" type="checkbox" id="check-auto-create-skill">
+                  <label class="form-check-label text-muted" for="check-auto-create-skill" style="font-size: 0.75rem;">Автосохранение навыков без кнопки</label>
+                </div>
+                <div class="form-check form-switch m-0">
+                  <input class="form-check-input" type="checkbox" id="check-voice-output">
+                  <label class="form-check-label text-muted" for="check-voice-output" style="font-size: 0.75rem;">
+                    <i class="bi bi-volume-up me-1"></i>Озвучивать ответ
+                  </label>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Slide-out Drawer (Offcanvas): Scenarios List & Execution Results -->
+  <div class="offcanvas offcanvas-end text-bg-dark border-start border-secondary-subtle shadow-lg" tabindex="-1" id="scenariosOffcanvas" aria-labelledby="scenariosOffcanvasLabel" style="width: 560px; max-width: 95vw;">
+    <div class="offcanvas-header border-bottom border-secondary-subtle py-3 px-3">
+      <div class="d-flex align-items-center gap-2">
+        <span class="fs-4">🎬</span>
+        <div>
+          <h5 class="offcanvas-title fw-bold text-white mb-0" id="scenariosOffcanvasLabel">Сценарии тестирования</h5>
+          <div class="text-muted small" style="font-size: 0.75rem;">Экспресс-диагностика и системные проверки</div>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Закрыть"></button>
+      </div>
+    </div>
+    
+    <div class="offcanvas-body d-flex flex-column gap-3 p-3">
+      
+      <!-- Filter Bar & Count Badge -->
+      <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+        <div class="btn-group btn-group-sm" role="group" id="scenario-category-filters">
+          <button type="button" class="btn btn-outline-secondary active" data-filter="all">Все (6)</button>
+          <button type="button" class="btn btn-outline-secondary" data-filter="quick">⚡ Экспресс</button>
+          <button type="button" class="btn btn-outline-secondary" data-filter="logs">📜 Логи</button>
+          <button type="button" class="btn btn-outline-secondary" data-filter="diagnostics">🖥️ Система</button>
+          <button type="button" class="btn btn-outline-secondary" data-filter="security">🛡️ Безопасность</button>
+        </div>
+        <span class="text-muted small" id="scenarios-count-badge">Доступно: 6</span>
+      </div>
+
+      <!-- Execution Console & Results (shown on run) -->
+      <div class="card bg-dark bg-opacity-75 border-secondary-subtle shadow-sm" id="scenario-result-panel" style="display: none;">
+        <div class="card-header bg-transparent border-secondary-subtle d-flex align-items-center justify-content-between py-2 px-3">
+          <div class="d-flex align-items-center gap-2">
+            <span id="result-status-icon" class="fs-5">⏳</span>
+            <div>
+              <strong id="result-scenario-title" class="text-white">Выполнение сценария...</strong>
+              <div class="text-muted small" id="result-scenario-meta">Инициализация шагов...</div>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-secondary" id="result-duration-badge">0.0 ms</span>
+            <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="btn-close-result-panel" title="Скрыть панель результатов">✕</button>
+          </div>
+        </div>
+        <div class="card-body p-3">
+          <!-- Overall Summary Banner -->
+          <div class="alert alert-secondary py-2 px-3 mb-3 small d-flex align-items-start gap-2" id="result-summary-banner">
+            <i class="bi bi-info-circle-fill mt-1"></i>
+            <span id="result-summary-text">Результат проверки будет отображен здесь...</span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="progress mb-3" style="height: 6px;" id="scenario-progress-container">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 100%" id="scenario-progress-bar"></div>
+          </div>
+
+          <!-- Step Results List -->
+          <div class="d-flex flex-column gap-2" id="scenario-steps-container">
+            <!-- Dynamic step rows injected here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Scenarios Cards Container -->
+      <div class="row g-2" id="scenarios-cards-container">
+        <!-- Injected dynamically by main.js -->
+        <div class="col-12 text-center py-5 text-muted small">
+          <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+          <div>Загрузка сценариев тестирования...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

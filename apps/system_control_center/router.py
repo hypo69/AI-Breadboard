@@ -40,9 +40,13 @@ from apps.windows.core.modules import (
     UpdateCollector,
 )
 from apps.windows.core.safe_executor import SafeExecutor
+from apps.windows.core.system_restore import WindowsSystemRestoreManager
+from apps.windows.core.system_param_manager import SafeSystemParamManager
 
 router = APIRouter(prefix="/api/system-control", tags=["System Control Center"])
 _executor = SafeExecutor()
+_restore_mgr = WindowsSystemRestoreManager()
+_param_mgr = SafeSystemParamManager(restore_manager=_restore_mgr)
 _clean_collector = CleanCollector()
 _integrity_collector = IntegrityCollector()
 _postinstall_collector = PostInstallCollector()
@@ -68,6 +72,28 @@ class ActionRequest(BaseModel):
     action: str
     target: Optional[str] = None
     force: Optional[bool] = False
+
+
+class ParamApplyRequest(BaseModel):
+    param_id: str
+    new_value: Any
+    force: Optional[bool] = False
+    custom_description: Optional[str] = None
+
+
+class ParamPreviewRequest(BaseModel):
+    param_id: str
+    new_value: Any
+
+
+class RestorePointCreateRequest(BaseModel):
+    description: str
+    restore_point_type: Optional[str] = "MODIFY_SETTINGS"
+
+
+class RollbackRequest(BaseModel):
+    change_id: str
+
 
 
 @router.get("/status")
@@ -168,9 +194,11 @@ async def get_system_control_status() -> Dict[str, Any]:
     }
 
     # Restore Points
+    rp_list = _restore_mgr.list_restore_points()
+    protection_status = _restore_mgr.check_protection_status()
     restore_info = {
-        "restore_points_count": 1,
-        "system_protection_enabled": True,
+        "restore_points_count": len(rp_list),
+        "system_protection_enabled": protection_status.get("system_protection_enabled", True),
     }
 
     return {
@@ -188,16 +216,70 @@ async def get_system_control_status() -> Dict[str, Any]:
 @router.get("/restore-points")
 async def get_restore_points() -> Dict[str, Any]:
     """Получение списка точек восстановления Windows."""
-    return {
-        "restore_points": [
-            {
-                "sequence_number": 1,
-                "description": "AI-Breadboard System Baseline",
-                "restore_point_type": "CHECKPOINT",
-                "creation_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            }
-        ]
-    }
+    points = _restore_mgr.list_restore_points()
+    return {"restore_points": points}
+
+
+@router.post("/restore-points")
+async def create_restore_point(payload: RestorePointCreateRequest) -> Dict[str, Any]:
+    """Создание новой точки восстановления Windows вручную."""
+    res = _restore_mgr.create_restore_point(
+        description=payload.description,
+        restore_point_type=payload.restore_point_type or "MODIFY_SETTINGS",
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=500, detail=res.get("message", "Ошибка создания точки восстановления"))
+    return res
+
+
+@router.get("/params")
+async def list_system_parameters(category: Optional[str] = Query(None)) -> Dict[str, Any]:
+    """Получение каталога параметров системы с флагами чувствительности и текущими значениями."""
+    params = _param_mgr.list_parameters(category=category)
+    return {"parameters": params, "total": len(params)}
+
+
+@router.post("/params/preview")
+async def preview_param_change(payload: ParamPreviewRequest) -> Dict[str, Any]:
+    """Симуляция и предварительный просмотр изменения параметра (Dry-Run)."""
+    res = _param_mgr.preview_change(param_id=payload.param_id, new_value=payload.new_value)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Ошибка симуляции параметра"))
+    return res
+
+
+@router.post("/params/apply")
+async def apply_param_change(payload: ParamApplyRequest) -> Dict[str, Any]:
+    """Безопасное применение изменения системного параметра.
+    
+    При изменении чувствительного параметра автоматически создается точка восстановления Windows.
+    """
+    res = _param_mgr.apply_change(
+        param_id=payload.param_id,
+        new_value=payload.new_value,
+        force=payload.force or False,
+        custom_description=payload.custom_description,
+    )
+    if res.get("status") != "SUCCESS":
+        raise HTTPException(status_code=500, detail=res.get("message", "Ошибка применения параметра"))
+    return res
+
+
+@router.get("/params/history")
+async def get_param_change_history(limit: int = Query(50, ge=1, le=200)) -> Dict[str, Any]:
+    """Получение журнала аудита изменений параметров и связанных точек восстановления."""
+    history = _param_mgr.get_history(limit=limit)
+    return {"history": history, "total": len(history)}
+
+
+@router.post("/params/rollback")
+async def rollback_param_change(payload: RollbackRequest) -> Dict[str, Any]:
+    """Откат изменения параметра к предыдущему сохраненному значению."""
+    res = _param_mgr.rollback_change(change_id=payload.change_id)
+    if res.get("status") != "SUCCESS":
+        raise HTTPException(status_code=400, detail=res.get("message", "Ошибка отката параметра"))
+    return res
+
 
 
 @router.get("/profiles")

@@ -16,18 +16,27 @@
 """Standalone applications and terminal workspaces."""
 
 __all__ = [
-    "ai_breadboard_admin",
+    "aida64",
     "cloudflared_monitor",
+    "cpuz",
     "dashboard",
     "gcloud_monitor",
+    "gpuz",
     "helpdesk",
+    "hwinfo",
     "lawyer_assistant",
+    "librehardwaremonitor",
     "network_terminal",
     "research_and_statistic",
+    "smartmontools",
     "trading_terminal",
     "user_assistant",
     "website_monitor",
     "wikipedia_research",
     "windows",
+    "windows_backup_manager",
+    "windows_defender",
+    "windows_startup_auditor",
+    "windows_sysadmin",
 ]
 

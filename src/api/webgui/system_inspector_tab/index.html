@@ -1,208 +1,348 @@
 <!-- System & Hardware Inspector Application Tab -->
 <style>
+  /* Все цвета через переменные main.css — адаптируется к обеим темам */
   .sys-container {
-    padding: 1rem;
+    padding: 0.5rem 0.75rem;
   }
+  /* Метрические карточки (CPU, RAM, GPU, Disk) */
   .sys-card {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
-    border-radius: 10px;
-    padding: 1rem;
+    background: var(--surface-1) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 6px;
+    padding: 0.4rem 0.7rem;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    justify-content: space-between;
+    min-height: 54px;
+    gap: 0.2rem;
   }
   .sys-label {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #94a3b8;
+    color: var(--text-muted);
+    line-height: 1.1;
   }
   .sys-value {
-    font-size: 1.35rem;
+    font-size: 1.2rem;
     font-weight: 700;
-    color: #f8fafc;
+    color: var(--text-color);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    line-height: 1.15;
   }
+  /* Панели (дерево оборудования, процессы, AI Copilot) */
   .sys-panel {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  .sys-panel-header {
-    background: #1e293b !important;
-    border-bottom: 1px solid #334155 !important;
-    padding: 0.75rem 1rem;
-    font-weight: 600;
-    font-size: 0.88rem;
-    color: #38bdf8;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .sys-tree-node {
-    margin-bottom: 8px;
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: var(--surface-1) !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: 6px;
     overflow: hidden;
   }
-  .sys-tree-title {
-    padding: 6px 10px;
-    font-size: 0.82rem;
+  .sys-panel-header {
+    background: var(--surface-2) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    padding: 0.4rem 0.75rem;
     font-weight: 600;
-    cursor: pointer;
-    background: rgba(255, 255, 255, 0.03);
+    font-size: 0.82rem;
+    color: var(--nav-active);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    color: #e2e8f0;
   }
-  .sys-tree-title:hover {
-    background: rgba(255, 255, 255, 0.08);
+  /* Сенсоры LHM */
+  .sys-sensor-group {
+    margin-bottom: 6px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    overflow: hidden;
   }
-  .sys-tree-body {
-    padding: 6px 10px;
-    font-size: 0.78rem;
-    border-top: 1px solid #334155;
-    background: #0b0f19;
+  .sys-sensor-group-title {
+    padding: 4px 8px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--nav-active);
+    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.05));
   }
-  .sys-prop-row {
+  .sys-sensor-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 3px;
+    align-items: center;
+    padding: 3px 8px;
+    font-size: 0.76rem;
+    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.04));
+    background: var(--bg-color);
   }
-  .sys-prop-key {
-    color: #94a3b8;
+  .sys-sensor-row:last-child {
+    border-bottom: none;
   }
-  .sys-prop-val {
-    font-weight: 500;
-    color: #f1f5f9;
+  .sys-sensor-name {
+    color: var(--text-color);
+    max-width: 55%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
+  .sys-sensor-value {
+    font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.78rem;
+    text-align: right;
+  }
+  /* Таблица процессов */
   .sys-proc-table {
     width: 100%;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     border-collapse: collapse;
   }
   .sys-proc-table th {
-    background: #1e293b;
-    padding: 6px 10px;
-    color: #94a3b8;
+    background: var(--surface-2);
+    padding: 4px 8px;
+    color: var(--text-muted);
     font-weight: 600;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 5;
   }
   .sys-proc-table td {
-    padding: 5px 10px;
-    border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-color);
   }
+  /* Статусы загрузки */
   .badge-cpu-high { color: #ef4444; font-weight: 700; }
-  .badge-cpu-med { color: #f59e0b; font-weight: 600; }
+  .badge-cpu-med  { color: #f59e0b; font-weight: 600; }
+  /* Аномалии */
   .anomaly-tag {
     display: inline-block;
-    font-size: 0.75rem;
-    padding: 2px 8px;
+    font-size: 0.72rem;
+    padding: 1px 6px;
     border-radius: 4px;
-    background: rgba(239, 68, 68, 0.2);
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    margin-right: 4px;
+    margin-top: 2px;
+  }
+  [data-theme="dark"] .anomaly-tag {
+    background: rgba(239, 68, 68, 0.18);
     color: #f87171;
-    border: 1px solid rgba(239, 68, 68, 0.4);
-    margin-right: 6px;
-    margin-top: 4px;
+    border-color: rgba(239, 68, 68, 0.35);
   }
 </style>
 
 <div class="sys-container">
-  <!-- Header Alert & Status -->
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
-    <div>
-      <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
-        <span class="fs-4">🖥️</span> Системный инспектор (System & Hardware Telemetry)
-      </h5>
-      <p class="mb-0 small text-light" style="color: #cbd5e1 !important;">
-        Мониторинг аппаратных компонентов, дерево спецификаций оборудования, процессы хоста и диагностика узких мест через ИИ.
-      </p>
+  <!-- Header Alert & Status (Compact Strip) -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 py-1 px-3 rounded-2"
+       style="background: var(--surface-2); border: 1px solid var(--border-color);">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="fs-5">📡</span>
+      <span class="fw-bold small" style="font-size: 0.92rem; color: var(--text-color);">Телеметрия хоста и оборудования</span>
+      <span class="badge bg-secondary fw-normal" style="font-size: 0.7rem;">Live Telemetry</span>
+      <span class="d-none d-lg-inline" style="font-size: 0.76rem; color: var(--text-muted);">| Комплексный мониторинг CPU, RAM, GPU, дисков, питания и процессов</span>
     </div>
-    <div class="d-flex align-items-center gap-2">
-      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2" id="sys-conn-status">
-        ● Телеметрия активна
+    <div class="d-flex align-items-center gap-1 flex-wrap">
+      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1" style="font-size: 0.72rem;" id="sys-conn-status">
+        ● Активна
       </span>
-      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-sys-refresh-hw">
-        <i class="bi bi-arrow-clockwise me-1"></i> Оборудование
+      <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-sys-refresh-sensors">
+        <i class="bi bi-arrow-clockwise me-1"></i> Сенсоры
       </button>
-      <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-sys-config">
-        <i class="bi bi-gear-fill me-1"></i> Настройки (config.json)
+      <button class="btn btn-xs btn-outline-warning rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-sys-config">
+        <i class="bi bi-gear-fill me-1"></i> Настройки
       </button>
-      <button class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" id="btn-sys-run-audit" style="background: linear-gradient(135deg, #a855f7, #6366f1); border: none;">
+      <button class="btn btn-xs btn-primary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.75rem; background: linear-gradient(135deg, #a855f7, #6366f1); border: none;" id="btn-sys-run-audit">
         🤖 AI Аудит
       </button>
     </div>
   </div>
 
-  <!-- Top Metrics Bar -->
-  <div class="row g-3 mb-3">
-    <div class="col-md-3 col-sm-6">
+  <!-- Top Metrics Bar (Compact Density Grid) -->
+  <div class="row g-2 mb-2">
+    <div class="col-6 col-md-3">
       <div class="sys-card">
-        <span class="sys-label">Загрузка CPU</span>
-        <span class="sys-value" id="sys-metric-cpu-val">0.0%</span>
-        <div class="progress" style="height: 4px; background: #334155;">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="sys-label">Загрузка CPU</span>
+          <span class="small" style="font-size: 0.68rem; color: var(--text-muted);" id="sys-metric-cpu-sub">-- Ядер</span>
+        </div>
+        <div class="d-flex align-items-baseline justify-content-between">
+          <span class="sys-value" id="sys-metric-cpu-val">0.0%</span>
+        </div>
+        <div class="progress" style="height: 3px; background: var(--border-color);">
           <div class="progress-bar bg-info" id="sys-metric-cpu-fill" style="width: 0%"></div>
         </div>
-        <span class="small text-muted" id="sys-metric-cpu-sub">-- Ядер</span>
       </div>
     </div>
-    <div class="col-md-3 col-sm-6">
+    <div class="col-6 col-md-3">
       <div class="sys-card">
-        <span class="sys-label">Оперативная память (RAM)</span>
-        <span class="sys-value" id="sys-metric-ram-val">0.0 GB</span>
-        <div class="progress" style="height: 4px; background: #334155;">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="sys-label">Память (RAM)</span>
+          <span class="small" style="font-size: 0.68rem; color: var(--text-muted);" id="sys-metric-ram-sub">0% занято</span>
+        </div>
+        <div class="d-flex align-items-baseline justify-content-between">
+          <span class="sys-value" id="sys-metric-ram-val">0.0 GB</span>
+        </div>
+        <div class="progress" style="height: 3px; background: var(--border-color);">
           <div class="progress-bar bg-success" id="sys-metric-ram-fill" style="width: 0%"></div>
         </div>
-        <span class="small text-muted" id="sys-metric-ram-sub">0% занято</span>
       </div>
     </div>
-    <div class="col-md-3 col-sm-6">
+    <div class="col-6 col-md-3">
       <div class="sys-card">
-        <span class="sys-label">GPU Ускоритель</span>
-        <span class="sys-value" id="sys-metric-gpu-val">--</span>
-        <span class="small text-muted" id="sys-metric-gpu-sub">VRAM: -- / -- GB</span>
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="sys-label">GPU Ускоритель</span>
+        </div>
+        <div class="d-flex align-items-baseline justify-content-between">
+          <span class="sys-value text-warning" style="font-size: 1.0rem;" id="sys-metric-gpu-val">--</span>
+        </div>
+        <div class="progress" style="height: 3px; background: var(--border-color);">
+          <div class="progress-bar bg-warning" id="sys-metric-gpu-fill" style="width: 0%"></div>
+        </div>
       </div>
     </div>
-    <div class="col-md-3 col-sm-6">
+    <div class="col-6 col-md-3">
       <div class="sys-card">
-        <span class="sys-label">Дисковый I/O</span>
-        <span class="sys-value" id="sys-metric-disk-val">0.0 MB/s</span>
-        <span class="small text-muted" id="sys-metric-disk-sub">Чтение: 0 KB/s | Запись: 0 KB/s</span>
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="sys-label">Диск (I/O)</span>
+          <span class="small" style="font-size: 0.68rem; color: var(--text-muted);" id="sys-metric-disk-sub">0 MB/s</span>
+        </div>
+        <div class="d-flex align-items-baseline justify-content-between">
+          <span class="sys-value text-info" id="sys-metric-disk-val">0 MB/s</span>
+        </div>
+        <div class="progress" style="height: 3px; background: var(--border-color);">
+          <div class="progress-bar bg-info" id="sys-metric-disk-fill" style="width: 0%"></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Workspace Layout: Hardware Tree (Left) + Process Stream & AI Copilot (Right) -->
-  <div class="row g-3">
-    <!-- Left Column: Hardware Specification Tree -->
-    <div class="col-lg-4">
-      <div class="sys-panel h-100">
-        <div class="sys-panel-header">
-          <span><i class="bi bi-cpu-fill me-1"></i> Спецификация оборудования</span>
-          <span class="badge bg-secondary" id="sys-hw-count">AIDA64 Tree</span>
+  <!-- Extended Hardware & Health Status Strip -->
+  <div class="row g-2 mb-2">
+    <!-- Physical Storage & NVMe Health -->
+    <div class="col-md-6 col-lg-3">
+      <div class="sys-panel p-2 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="small fw-bold" style="font-size: 0.76rem; color: var(--text-color);"><i class="bi bi-hdd-network text-info me-1"></i> Здоровье дисков (NVMe/SSD)</span>
+          <span class="badge bg-success-subtle text-success border border-success" style="font-size: 0.65rem;" id="sys-disk-health-badge">SMART OK</span>
         </div>
-        <div class="p-3" id="sys-hardware-tree-container" style="max-height: 520px; overflow-y: auto;">
-          <div class="text-center py-4 text-muted small">Загрузка дерева оборудования...</div>
+        <div id="sys-physical-disks-container" class="small text-muted" style="font-size: 0.72rem; line-height: 1.3;">
+          Опрос состояния физических дисков...
+        </div>
+      </div>
+    </div>
+
+    <!-- Power & Battery -->
+    <div class="col-md-6 col-lg-3">
+      <div class="sys-panel p-2 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="small fw-bold" style="font-size: 0.76rem; color: var(--text-color);"><i class="bi bi-battery-charging text-warning me-1"></i> Питание и Энергия</span>
+          <span class="badge bg-secondary" style="font-size: 0.65rem;" id="sys-power-status-badge">AC Mains</span>
+        </div>
+        <div id="sys-power-info-container" class="small text-muted" style="font-size: 0.72rem; line-height: 1.3;">
+          Питание от электросети (Стационарный ПК)
+        </div>
+      </div>
+    </div>
+
+    <!-- RAM SPD Sticks -->
+    <div class="col-md-6 col-lg-3">
+      <div class="sys-panel p-2 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="small fw-bold" style="font-size: 0.76rem; color: var(--text-color);"><i class="bi bi-memory text-primary me-1"></i> Модули RAM (SPD)</span>
+          <span class="badge bg-dark border border-secondary text-info" style="font-size: 0.65rem;" id="sys-ram-sticks-badge">Слоты</span>
+        </div>
+        <div id="sys-ram-sticks-container" class="small text-muted" style="font-size: 0.72rem; line-height: 1.3;">
+          Опрос конфигурации планок памяти...
+        </div>
+      </div>
+    </div>
+
+    <!-- Reliability & Open Ports -->
+    <div class="col-md-6 col-lg-3">
+      <div class="sys-panel p-2 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="small fw-bold" style="font-size: 0.76rem; color: var(--text-color);"><i class="bi bi-shield-check text-success me-1"></i> Стабильность и Сеть</span>
+          <span class="badge bg-info-subtle text-info border border-info" style="font-size: 0.65rem;" id="sys-alerts-badge">Стабильно</span>
+        </div>
+        <div id="sys-alerts-ports-container" class="small text-muted" style="font-size: 0.72rem; line-height: 1.3;">
+          Службы активны. Ожидание телеметрии портов.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workspace Layout: LHM Sensors (Left) + Process Stream & AI Copilot (Right) -->
+  <div class="row g-2">
+    <!-- Left Column: LibreHardwareMonitor Sensors Card -->
+    <div class="col-lg-4">
+      <div class="sys-panel h-100 d-flex flex-column">
+        <div class="sys-panel-header">
+          <div class="d-flex align-items-center gap-1.5">
+            <i class="bi bi-thermometer-half text-danger"></i>
+            <span>Сенсоры LibreHardwareMonitor</span>
+          </div>
+          <div class="d-flex align-items-center gap-1">
+            <span class="badge bg-secondary" id="sys-lhm-status-badge">LHM</span>
+            <span class="badge bg-dark border border-secondary text-info" id="sys-lhm-sensors-count">0 шт.</span>
+          </div>
+        </div>
+
+        <!-- Sensor filter and action bar -->
+        <div class="p-2 border-bottom d-flex align-items-center justify-content-between gap-1 flex-wrap" style="background: var(--surface-2); border-color: var(--border-color) !important;">
+          <input type="text" class="form-control form-control-sm" id="sys-lhm-search"
+                 placeholder="Фильтр сенсоров..." style="max-width: 130px; font-size: 0.74rem; padding: 2px 6px;">
+          <div class="d-flex align-items-center gap-1">
+            <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-0.5" id="btn-sys-refresh-lhm" title="Обновить сенсоры">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button class="btn btn-xs btn-outline-success rounded-pill px-2 py-0.5 d-none" id="btn-sys-launch-lhm" title="Запустить службу LibreHardwareMonitor">
+              <i class="bi bi-play-fill me-1"></i> Запуск LHM
+            </button>
+          </div>
+        </div>
+
+        <!-- Category filter pills & Analyze Button -->
+        <div class="px-2 pt-1 pb-1 d-flex gap-1 overflow-x-auto border-bottom align-items-center justify-content-between" id="sys-lhm-cat-filters" style="border-color: var(--border-subtle, rgba(255, 255, 255, 0.05)) !important; font-size: 0.72rem;">
+          <div class="d-flex gap-1 overflow-x-auto flex-grow-1">
+            <button class="btn btn-xs btn-outline-primary active py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="all">Все</button>
+            <button class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="temperature">🌡️ t°</button>
+            <button class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="load">⚡ Нагрузка</button>
+            <button class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="fan">🌪️ Вентиляторы</button>
+            <button class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="voltage">🔋 Вольтаж</button>
+            <button class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="clock">⏱️ Частоты</button>
+          </div>
+          <button class="btn btn-xs btn-primary rounded-pill px-2.5 py-0.5 fw-bold text-nowrap flex-shrink-0 ms-1 shadow-sm"
+                  id="btn-sys-sensor-analyze"
+                  style="font-size: 0.72rem; background: linear-gradient(135deg, #0284c7, #6366f1); border: none;"
+                  title="Комплексный анализ сенсоров и общий отчет с рекомендациями">
+            <i class="bi bi-magic me-1"></i> Анализ
+          </button>
+        </div>
+
+        <!-- Sensors list container -->
+        <div class="p-2 flex-grow-1" id="sys-lhm-sensors-container" style="max-height: 520px; overflow-y: auto;">
+          <div class="text-center py-4 small" style="color: var(--text-muted);">
+            <div class="spinner-border spinner-border-sm text-info mb-2" role="status"></div>
+            <div>Опрос сенсоров LibreHardwareMonitor...</div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Right Column: Process Stream + AI Diagnostics -->
-    <div class="col-lg-8 d-flex flex-column gap-3">
+    <div class="col-lg-8 d-flex flex-column gap-2">
       <!-- Process Stream Table -->
       <div class="sys-panel flex-grow-1">
         <div class="sys-panel-header">
           <span><i class="bi bi-list-task me-1"></i> Топ процессов хоста (Live Stream)</span>
           <div class="d-flex align-items-center gap-2">
-            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="sys-proc-search" placeholder="Фильтр по имени или PID..." style="max-width: 220px;">
+            <input type="text" class="form-control form-control-sm" id="sys-proc-search"
+                   placeholder="Фильтр по имени или PID..." style="max-width: 200px;">
             <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-sys-pause-proc">Пауза</button>
           </div>
         </div>
@@ -220,7 +360,7 @@
               </tr>
             </thead>
             <tbody id="sys-proc-tbody">
-              <tr><td colspan="7" class="text-center py-3 text-muted">Ожидание потока процессов...</td></tr>
+              <tr><td colspan="7" class="text-center py-3" style="color: var(--text-muted);">Ожидание потока процессов...</td></tr>
             </tbody>
           </table>
         </div>
@@ -234,13 +374,106 @@
             <span>AI Copilot: Анализ производительности и узких мест</span>
             <span class="badge bg-success" id="sys-ai-health-badge">Health: 100/100</span>
           </div>
-          <span class="small text-muted" id="sys-ai-model-tag">Heuristic Engine</span>
+          <span class="small" style="color: var(--text-muted);" id="sys-ai-model-tag">Heuristic Engine</span>
         </div>
-        <div class="p-3">
+        <div class="p-2">
           <div id="sys-ai-anomalies-container" class="mb-2"></div>
-          <div class="small text-light" id="sys-ai-summary-text" style="line-height: 1.5; color: #cbd5e1 !important;">
+          <div class="small" id="sys-ai-summary-text" style="line-height: 1.5; color: var(--text-muted);">
             Монитор телеметрии готов. Нажмите «AI Аудит» для глубокого анализа ресурсов и поиска узких мест системы.
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sensor Analysis & Recommendations Modal -->
+<div class="modal fade" id="sysSensorAnalysisModal" tabindex="-1" aria-labelledby="sysSensorAnalysisModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content text-white border-secondary shadow-lg" style="background: var(--surface-1); border-color: var(--border-color) !important;">
+      <div class="modal-header py-2 px-3 border-secondary" style="background: var(--surface-2); border-color: var(--border-color) !important;">
+        <h6 class="modal-title d-flex align-items-center gap-2 mb-0" id="sysSensorAnalysisModalLabel">
+          <i class="bi bi-shield-check text-info"></i>
+          <span>Комплексный анализ сенсоров и оборудования</span>
+          <span class="badge bg-success ms-1" id="modal-sensor-health-badge">Health: 100/100</span>
+        </h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3" style="max-height: 70vh; overflow-y: auto;">
+        <!-- Status Banner -->
+        <div class="p-2.5 rounded mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2" id="modal-sensor-status-banner" style="background: var(--surface-2); border: 1px solid var(--border-color);">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fs-4" id="modal-sensor-status-icon">✅</span>
+            <div>
+              <div class="fw-bold" style="font-size: 0.88rem;" id="modal-sensor-status-title">Все подсистемы работают в штатном режиме</div>
+              <div class="small text-muted" style="font-size: 0.75rem;" id="modal-sensor-status-sub">Анализ выполнен на основе текущих показаний LibreHardwareMonitor и WMI</div>
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <div class="text-end">
+              <div class="small text-muted" style="font-size: 0.7rem;">СЕНСОРОВ В АНАЛИЗЕ</div>
+              <div class="fw-bold font-monospace" id="modal-sensor-count-stat">0</div>
+            </div>
+            <div class="text-end ps-2 border-start border-secondary">
+              <div class="small text-muted" style="font-size: 0.7rem;">МАКС. ТЕМПЕРАТУРА</div>
+              <div class="fw-bold font-monospace" id="modal-sensor-max-temp">-- °C</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric Grid Breakdown -->
+        <div class="row g-2 mb-3" id="modal-sensor-breakdown-grid">
+          <!-- CPU Status -->
+          <div class="col-12 col-md-4">
+            <div class="p-2 rounded border" style="background: var(--bg-color); border-color: var(--border-color) !important;">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-semibold text-info"><i class="bi bi-cpu me-1"></i> Процессор (CPU)</span>
+                <span class="badge bg-secondary" id="modal-cpu-temp-badge">-- °C</span>
+              </div>
+              <div class="small text-muted" id="modal-cpu-analysis-text" style="font-size: 0.74rem;">Анализ теплового режима и нагрузки...</div>
+            </div>
+          </div>
+          <!-- GPU Status -->
+          <div class="col-12 col-md-4">
+            <div class="p-2 rounded border" style="background: var(--bg-color); border-color: var(--border-color) !important;">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-semibold text-warning"><i class="bi bi-gpu-card me-1"></i> Видеокарта (GPU)</span>
+                <span class="badge bg-secondary" id="modal-gpu-temp-badge">-- °C</span>
+              </div>
+              <div class="small text-muted" id="modal-gpu-analysis-text" style="font-size: 0.74rem;">Анализ видеопамяти и графического чипа...</div>
+            </div>
+          </div>
+          <!-- Cooling & Motherboard -->
+          <div class="col-12 col-md-4">
+            <div class="p-2 rounded border" style="background: var(--bg-color); border-color: var(--border-color) !important;">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-semibold text-success"><i class="bi bi-fan me-1"></i> Охлаждение и Плата</span>
+                <span class="badge bg-secondary" id="modal-fan-status-badge">ОК</span>
+              </div>
+              <div class="small text-muted" id="modal-fan-analysis-text" style="font-size: 0.74rem;">Анализ оборотов кулеров и напряжений...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recommendations and Findings Section -->
+        <div class="mb-2">
+          <h6 class="small fw-bold text-uppercase text-muted mb-2" style="letter-spacing: 0.05em; font-size: 0.72rem;">
+            <i class="bi bi-card-checklist text-primary me-1"></i> Экспертные рекомендации и выводы
+          </h6>
+          <div id="modal-sensor-recommendations-list" class="d-flex flex-column gap-1.5">
+            <!-- Will be populated dynamically -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer py-1.5 px-3 border-secondary d-flex justify-content-between" style="background: var(--surface-2); border-color: var(--border-color) !important;">
+        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-copy-sensor-report">
+          <i class="bi bi-clipboard me-1"></i> Копировать отчёт
+        </button>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-re-analyze-sensors">
+            <i class="bi bi-arrow-clockwise me-1"></i> Повторить анализ
+          </button>
+          <button class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Закрыть</button>
         </div>
       </div>
     </div>

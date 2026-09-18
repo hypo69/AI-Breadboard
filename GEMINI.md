@@ -41,7 +41,7 @@
 Вся разработка **ДОЛЖНА** следовать инструкциям в `.ai/instructions/`:
 
 ### 1. **Инженерные стандарты**
-📄 [`.ai/instructions/rules/CODE_RULES.md`](.ai/instructions/rules/CODE_RULES.md)
+📄 [`.ai/instructions/standards/ENGINEERING.md`](.ai/instructions/standards/ENGINEERING.md)
 
 Ключевые требования:
 - Архитектурные принципы: Явное внедрение зависимостей (DI), Fail-Fast, DRY, Single Responsibility
@@ -52,14 +52,14 @@
 
 
 ### 2. **Повторное использование кода и аудит существующего кода**
-📄 [`.ai/instructions/rules/REUSE_RULES.md`](.ai/instructions/rules/REUSE_RULES.md)
+📄 [`.ai/instructions/standards/REUSE.md`](.ai/instructions/standards/REUSE.md)
 
 Ключевые требования:
 - **Обязательный предварительный аудит:** Перед разработкой новых функций, компонентов UI или утилит выполните поиск по кодовой базе (`grep_search`, `find_by_name`) для поиска готовых реализаций.
 - **Единообразие кода:** Повторно используйте или расширяйте существующие реализации (выпадающие списки, модальные окна, паттерны API); не создавайте дублирующие реализации.
 
 ### 3. **Документирование и TDD**
-📄 [`.ai/instructions/rules/DOCS_RULES.md`](.ai/instructions/rules/DOCS_RULES.md)
+📄 [`.ai/instructions/standards/DOCUMENTATION.md`](.ai/instructions/standards/DOCUMENTATION.md)
 
 Ключевые требования:
 - Обязательный рабочий процесс TDD для всех изменений Python
@@ -80,6 +80,9 @@
 ```powershell
 # Единый запуск (всё)
 .\run.ps1
+
+# Сценарий Test Computer (роут /tc, приложения /apps по config_tc.json)
+.\tc.ps1
 
 # Запуск только сервера FastAPI
 .\launchers\Run-Unicorn.ps1

@@ -38,10 +38,12 @@ class TestAdminAppsTabs:
         assert 'data-tab="tab-trading"' in content
         assert 'data-tab="tab-network"' in content
         assert 'data-tab="tab-system-inspector"' in content
+        assert 'data-tab="tab-about-system"' in content
 
         assert 'id="tab-trading"' in content
         assert 'id="tab-network"' in content
         assert 'id="tab-system-inspector"' in content
+        assert 'id="tab-about-system"' in content
 
     def test_admin_main_js_loads_apps_tabs(self):
         """Admin main.js should register and load /apps tabs."""
@@ -53,15 +55,17 @@ class TestAdminAppsTabs:
         assert "initTradingTab" in content
         assert "initNetworkTab" in content
         assert "initSystemInspectorTab" in content
+        assert "initAboutSystemTab" in content
         assert "trading_tab" in content
         assert "network_tab" in content
         assert "system_inspector_tab" in content
+        assert "about_system_tab" in content
 
     def test_apps_tab_static_files_exist(self):
         """Static index.html and main.js files must exist for each app tab."""
         webinterface_dir = (__root__ / "src" / "api" / "webgui") if (__root__ / "src" / "api" / "webgui").exists() else (__root__ / "src" / "api" / "webinterface")
 
-        for tab in ["trading_tab", "network_tab", "system_inspector_tab"]:
+        for tab in ["trading_tab", "network_tab", "system_inspector_tab", "about_system_tab"]:
             tab_dir = webinterface_dir / tab
             assert tab_dir.exists(), f"Tab directory {tab} must exist"
             assert (tab_dir / "index.html").exists(), f"{tab}/index.html must exist"
@@ -83,4 +87,5 @@ class TestAdminAppsTabs:
             assert "trading" in tabs, f"trading missing in {lang_file}"
             assert "network" in tabs, f"network missing in {lang_file}"
             assert "systemInspector" in tabs, f"systemInspector missing in {lang_file}"
+            assert "aboutSystem" in tabs, f"aboutSystem missing in {lang_file}"
 

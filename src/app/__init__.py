@@ -144,7 +144,6 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_user_storage_router,
         init_news_router,
         init_messenger_router,
-        init_helpdesk_router,
         init_network_router,
         init_system_router,
         init_ifttt_router,
@@ -152,6 +151,10 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_telegram_rag_router,
         init_telemetry_router,
         init_system_logs_router,
+        init_registry_viewer_router,
+        init_diagnostics_router,
+        init_scenarios_router,
+        get_pixel_rag_router,
         router_openai,
     )
     from src.api.router_version import init_router as init_version_router
@@ -188,6 +191,10 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_version_router,
         init_telemetry_router,
         init_system_logs_router,
+        init_registry_viewer_router,
+        init_diagnostics_router,
+        init_scenarios_router,
+        get_pixel_rag_router,
     ):
         app.include_router(factory())
 
@@ -237,12 +244,6 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         logger.debug(f"System control center router not registered: {e}")
 
     try:
-        from apps.system_log_viewer.router import init_router as init_system_log_viewer_router
-        app.include_router(init_system_log_viewer_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"System log viewer router not registered: {e}")
-
-    try:
         from apps.gcloud_monitor.router import router as gcloud_monitor_router
         app.include_router(gcloud_monitor_router)
     except (ImportError, Exception) as e:
@@ -277,6 +278,60 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         app.include_router(init_ai_breadboard_admin_router())
     except (ImportError, Exception) as e:
         logger.debug(f"AI Breadboard admin router not registered: {e}")
+
+    try:
+        from apps.windows_startup_auditor.router import init_router as init_startup_auditor_router
+        app.include_router(init_startup_auditor_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"Windows startup auditor router not registered: {e}")
+
+    try:
+        from apps.windows_backup_manager.router import init_router as init_backup_manager_router
+        app.include_router(init_backup_manager_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"Windows backup manager router not registered: {e}")
+
+    try:
+        from apps.windows_defender.router import init_router as init_windows_defender_router
+        app.include_router(init_windows_defender_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"Windows defender router not registered: {e}")
+
+    try:
+        from apps.aida64.router import init_router as init_aida64_router
+        app.include_router(init_aida64_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"AIDA64 router not registered: {e}")
+
+    try:
+        from apps.hwinfo.router import init_router as init_hwinfo_router
+        app.include_router(init_hwinfo_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"HWiNFO router not registered: {e}")
+
+    try:
+        from apps.smartmontools.router import init_router as init_smartmontools_router
+        app.include_router(init_smartmontools_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"smartmontools router not registered: {e}")
+
+    try:
+        from apps.cpuz.router import init_router as init_cpuz_router
+        app.include_router(init_cpuz_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"CPU-Z router not registered: {e}")
+
+    try:
+        from apps.gpuz.router import init_router as init_gpuz_router
+        app.include_router(init_gpuz_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"GPU-Z router not registered: {e}")
+
+    try:
+        from apps.librehardwaremonitor.router import init_router as init_lhm_router
+        app.include_router(init_lhm_router())
+    except (ImportError, Exception) as e:
+        logger.debug(f"LibreHardwareMonitor router not registered: {e}")
 
     # Auto-discover additional routers in src/app/routers/
     _auto_discover_routers(app)

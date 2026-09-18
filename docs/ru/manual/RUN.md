@@ -73,6 +73,8 @@
 | `-EnableOAuth` | `-OAuth` | `bool` | Включить авторизацию через Google OAuth. По умолчанию выключен (`$false`). |
 | `-EnableTelegramBot` | `-Telegram`, `-EnableTelegram`, `-TelegramBot`, `-tg` | `bool` | Включить запуск фоновой службы Telegram-бота. По умолчанию выключен (`$false`). |
 | `-Cloudflared` | `-Tunnel`, `-cf` | `switch` | Включить Cloudflare Tunnel (`kino.davidka.net`). По умолчанию выключен (`$false`). |
+| `-EnableTray` | `-Tray`, `-SystemTray`, `-tray_mode` | `bool` | Включить иконку и контекстное меню в системном трее Windows (`ShowHide-InTray.ps1`). По умолчанию включен (`$true`). |
+| `-DisableCloseButton` | `-ProtectClose`, `-NoClose` | `switch` | Заблокировать кнопку закрытия консольного окна `[X]`, предотвращая аварийное завершение процесса. |
 | `-Interactive` | `-i` | `switch` | Принудительное включение диалогового режима с вопросами. |
 | `-NonInteractive` | — | `switch` | Явное отключение диалогов (поведение по умолчанию). |
 | `-Help` | `-h`, `--help` | `switch` | Вывод справки по параметрам и завершение работы. |
@@ -164,6 +166,25 @@ flowchart TD
 .\launchers\Run-Cloudflared.ps1
 ```
 *Требует наличие переменной `CLOUDFLARE_TUNNEL_TOKEN` в файле `.env`.*
+
+### 5. Системный трей Windows (`ShowHide-InTray.ps1`)
+Интегрирует приложение в системный трей (System Tray) Windows:
+```powershell
+.\launchers\ShowHide-InTray.ps1 -Action start -WebUrl "http://localhost:8000/admin" -DisableCloseButton
+```
+- Скрывает и восстанавливает окно приложения при кликах по иконке трея.
+- Блокирует кнопку `[X]` на консоли (`-DisableCloseButton`), защищая сервер от случайного закрытия.
+- Позволяет корректно завершить работу сервера через пункт контекстного меню *Stop Server and Exit*.
+
+### 6. Лончер сценария Test Computer (`tc.ps1`)
+Запуск автономного блока микросервисов `/apps` и веб-интерфейса `/tc` (по `config_tc.json`):
+```powershell
+.\tc.ps1                         # Обычный запуск (с треем и отдельным окном)
+.\tc.ps1 -DisableCloseButton     # Запуск с защитой кнопки [X]
+.\tc.ps1 -Background             # Фоновый запуск
+.\tc.ps1 -Action status          # Проверка состояния сервисов
+.\tc.ps1 -Action stop            # Остановка
+```
 
 ---
 

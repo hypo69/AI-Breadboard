@@ -16,6 +16,19 @@ from .data_model import (
 )
 from .correlation_engine import CorrelationEngine
 from .diagnostics import DiagnosticsEngine
+from .system_restore import WindowsSystemRestoreManager
+from .system_param_manager import (
+    ParameterCategory,
+    ParameterChangeRecord,
+    ParameterType,
+    SafeSystemParamManager,
+    SystemParameter,
+)
+from .process_audit_manager import (
+    ProcessAuditManager,
+    ProcessTreeNode,
+    TelemetrySensorStatus,
+)
 
 __all__ = [
     "WinAPI",
@@ -30,4 +43,14 @@ __all__ = [
     "SystemState",
     "CorrelationEngine",
     "DiagnosticsEngine",
+    "WindowsSystemRestoreManager",
+    "SafeSystemParamManager",
+    "SystemParameter",
+    "ParameterCategory",
+    "ParameterType",
+    "ParameterChangeRecord",
+    "ProcessAuditManager",
+    "ProcessTreeNode",
+    "TelemetrySensorStatus",
 ]
+

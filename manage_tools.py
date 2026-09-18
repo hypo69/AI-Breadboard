@@ -394,6 +394,213 @@ def run_network_command(args: argparse.Namespace) -> int:
     print(f"Unknown network subcommand: {sub}")
     return 1
 
+def run_sys_param_command(args: argparse.Namespace) -> int:
+    """Управление параметрами системы и точками восстановления Windows.
+
+    Args:
+        args (argparse.Namespace): Аргументы команды CLI.
+
+    Returns:
+        int: Код возврата (0 - успешно, 1 - ошибка).
+    """
+    from apps.windows.core.system_param_manager import SafeSystemParamManager
+    from apps.windows.core.system_restore import WindowsSystemRestoreManager
+
+    restore_mgr = WindowsSystemRestoreManager()
+    manager = SafeSystemParamManager(restore_manager=restore_mgr)
+    sub = args.subcommand
+
+    if sub == 'list':
+        category = getattr(args, 'category', None)
+        params = manager.list_parameters(category=category)
+        print(f"\n{'ID':<25} | {'SENSITIVE':<10} | {'RISK':<9} | {'CURRENT VALUE':<20} | NAME")
+        print("-" * 90)
+        for p in params:
+            sens_str = "YES [RP]" if p['is_sensitive'] else "NO"
+            print(f"{p['param_id']:<25} | {sens_str:<10} | {p['risk'].upper():<9} | {str(p['current_value']):<20} | {p['name']}")
+        print(f"\nВсего параметров: {len(params)}\n")
+        return 0
+
+    if sub == 'preview':
+        param_id = getattr(args, 'param_id', '')
+        val = getattr(args, 'value', '')
+        res = manager.preview_change(param_id, val)
+        if not res.get('success'):
+            print(f"Ошибка: {res.get('error')}")
+            return 1
+        print(f"\n--- СИМУЛЯЦИЯ ИЗМЕНЕНИЯ ПАРАМЕТРА ---")
+        print(f"Параметр:          {res['name']} ({res['param_id']})")
+        print(f"Текущее значение:  {res['current_value']}")
+        print(f"Новое значение:    {res['new_value']}")
+        print(f"Чувствительный:    {'ДА' if res['is_sensitive'] else 'НЕТ'}")
+        print(f"Уровень риска:     {res['risk'].upper()}")
+        print(f"Точка восстан.:    {'БУДЕТ СОЗДАНА АВТОМАТИЧЕСКИ' if res['will_create_restore_point'] else 'Не требуется'}")
+        if res.get('restore_point_description'):
+            print(f"Описание точки:    {res['restore_point_description']}")
+        print("------------------------------------\n")
+        return 0
+
+    if sub == 'set':
+        param_id = getattr(args, 'param_id', '')
+        val = getattr(args, 'value', '')
+        if val.lower() == 'true':
+            parsed_val = True
+        elif val.lower() == 'false':
+            parsed_val = False
+        elif val.isdigit():
+            parsed_val = int(val)
+        else:
+            parsed_val = val
+
+        print(f"Применение изменения для '{param_id}' -> '{parsed_val}'...")
+        res = manager.apply_change(param_id, parsed_val)
+        if res.get('status') == 'SUCCESS':
+            print(f"\n[OK] {res.get('message')}")
+            if res.get('restore_point'):
+                rp = res['restore_point']
+                print(f"  [RP] Точка восстановления Windows: {rp.get('message', 'Создана')} (Статус: {rp.get('success')})")
+            print(f"  Change ID: {res.get('change_id')}\n")
+            return 0
+        else:
+            print(f"\n[ERROR] {res.get('message')}\n")
+            return 1
+
+    if sub == 'restore-points':
+        points = restore_mgr.list_restore_points()
+        status = restore_mgr.check_protection_status()
+        print(f"\n--- ТОЧКИ ВОССТАНОВЛЕНИЯ WINDOWS ---")
+        print(f"Защита системы (Диск C:): {'ВКЛЮЧЕНА' if status.get('system_protection_enabled') else 'ОТКЛЮЧЕНА / НЕДОСТУПНА'}")
+        print(f"{'#':<6} | {'ДАТА СОЗДАНИЯ':<22} | {'ТИП':<20} | ОПИСАНИЕ")
+        print("-" * 80)
+        for pt in points:
+            print(f"{pt['sequence_number']:<6} | {pt['creation_time']:<22} | {pt['restore_point_type']:<20} | {pt['description']}")
+        print(f"\nВсего точек: {len(points)}\n")
+        return 0
+
+    if sub == 'create-rp':
+        desc = getattr(args, 'description', '')
+        if not desc:
+            desc = "AI-Breadboard Manual Checkpoint"
+        print(f"Создание точки восстановления Windows: '{desc}'...")
+        res = restore_mgr.create_restore_point(desc)
+        if res.get('success'):
+            print(f"[OK] {res.get('message')}")
+            return 0
+        else:
+            print(f"[ERROR] {res.get('message')}")
+            return 1
+
+    if sub == 'history':
+        history = manager.get_history(limit=getattr(args, 'limit', 20))
+        print(f"\n--- ЖУРНАЛ ИЗМЕНЕНИЙ ПАРАМЕТРОВ ---")
+        for h in history:
+            rb_tag = " [ROLLED BACK]" if h.get('rolled_back') else ""
+            rp_tag = " [RP CREATED]" if h.get('restore_point') and h['restore_point'].get('success') else ""
+            print(f"[{h.get('timestamp')}] {h.get('param_name')} ({h.get('param_id')}){rb_tag}{rp_tag}")
+            print(f"   {h.get('old_value')} -> {h.get('new_value')} | Status: {h.get('status')} | ID: {h.get('change_id')}")
+        print(f"\nВсего записей: {len(history)}\n")
+        return 0
+
+    if sub == 'rollback':
+        cid = getattr(args, 'change_id', '')
+        res = manager.rollback_change(cid)
+        if res.get('status') == 'SUCCESS':
+            print(f"[OK] {res.get('message')}")
+            return 0
+        else:
+            print(f"[ERROR] {res.get('message')}")
+            return 1
+
+    print(f"Неизвестная подкоманда sys-param: {sub}")
+    return 1
+
+
+def run_telemetry_command(args: argparse.Namespace) -> int:
+    """Управление посекундным логгированием системной телеметрии и процессами в SQLite.
+
+    Args:
+        args (argparse.Namespace): Аргументы команды CLI.
+
+    Returns:
+        int: Код возврата (0 - успешно, 1 - ошибка).
+    """
+    from apps.windows.telemetry import SystemCollector, TelemetryStorage, TelemetryLoggerService
+    import time
+
+    storage = TelemetryStorage()
+    sub = args.subcommand
+
+    if sub == 'status':
+        stats = storage.get_storage_stats()
+        print("\n--- СТАТУС БАЗЫ ДАННЫХ ТЕЛЕМЕТРИИ ---")
+        print(f"Путь к базе данных:    {stats['db_path']}")
+        print(f"Всего снимков системы: {stats['snapshots_count']}")
+        print(f"Всего записей процессов:{stats['process_snapshots_count']}")
+        print(f"Размер файла базы:     {stats['file_size_mb']} MB")
+        print("-------------------------------------\n")
+        return 0
+
+    if sub == 'history':
+        limit = getattr(args, 'limit', 20) or 20
+        snaps = storage.get_snapshots(limit=limit)
+        print(f"\n--- ПОСЛЕДНИЕ {len(snaps)} СНИМКОВ ТЕЛЕМЕТРИИ ---")
+        print(f"{'#ID':<6} | {'ВРЕМЯ (UTC)':<20} | {'CPU %':<7} | {'RAM %':<7} | {'DISK R (KB/s)':<14} | {'DISK W (KB/s)':<14}")
+        print("-" * 80)
+        for s in snaps:
+            r_kb = round(s.get('disk_read_bytes_sec', 0.0) / 1024, 1)
+            w_kb = round(s.get('disk_write_bytes_sec', 0.0) / 1024, 1)
+            ts = s.get('timestamp', '')[:19].replace('T', ' ')
+            print(f"{s.get('id'):<6} | {ts:<20} | {s.get('cpu_total_percent', 0.0):<7.1f} | {s.get('memory_percent', 0.0):<7.1f} | {r_kb:<14.1f} | {w_kb:<14.1f}")
+        print("------------------------------------------------\n")
+        return 0
+
+    if sub == 'cleanup':
+        days = getattr(args, 'days', 7) or 7
+        print(f"Очистка записей телеметрии старше {days} дней...")
+        deleted = storage.cleanup_old_records(retention_days=days)
+        print(f"[OK] Удалено устаревших снимков: {deleted}\n")
+        return 0
+
+    if sub == 'start':
+        interval = float(getattr(args, 'interval', 1.0) or 1.0)
+        procs_limit = int(getattr(args, 'processes', 20) or 20)
+        collector = SystemCollector()
+
+        print(f"\n[+] Запуск посекундного логгирования телеметрии в SQLite...")
+        print(f"    Интервал: {interval} сек | Top-процессов: {procs_limit} | База: {storage.db_path}")
+        print(f"    Нажмите Ctrl+C для остановки.\n")
+        print(f"{'ВРЕМЯ':<10} | {'CPU %':<7} | {'RAM %':<7} | {'DISK READ':<12} | {'DISK WRITE':<12} | ТОП-1 ПРОЦЕСС")
+        print("-" * 85)
+
+        try:
+            while True:
+                t0 = time.time()
+                snap = collector.get_snapshot(process_limit=procs_limit)
+                snap_id = storage.save_snapshot(snap, top_n=procs_limit)
+
+                now_str = time.strftime("%H:%M:%S")
+                cpu = f"{snap.cpu.total_percent:.1f}%"
+                ram = f"{snap.memory.percent:.1f}%"
+                r_rate = f"{snap.disk_io.read_bytes_per_sec / (1024*1024):.2f} MB/s"
+                w_rate = f"{snap.disk_io.write_bytes_per_sec / (1024*1024):.2f} MB/s"
+                top_p = snap.top_processes[0].name if snap.top_processes else "N/A"
+                top_p_cpu = f"({snap.top_processes[0].cpu_percent:.1f}%)" if snap.top_processes else ""
+
+                print(f"{now_str:<10} | {cpu:<7} | {ram:<7} | {r_rate:<12} | {w_rate:<12} | {top_p} {top_p_cpu}")
+
+                elapsed = time.time() - t0
+                time.sleep(max(0.01, interval - elapsed))
+        except KeyboardInterrupt:
+            print("\n[!] Логгирование телеметрии остановлено пользователем.\n")
+            return 0
+        except Exception as e:
+            print(f"\n[ERROR] Ошибка сбора телеметрии: {e}\n")
+            return 1
+
+    print(f"Неизвестная подкоманда telemetry: {sub}")
+    return 1
+
+
 def main() -> int:
     """Primary entry point for the universal CLI management system.
 
@@ -535,6 +742,52 @@ Examples:
     network_analyze.add_argument('--filter', '-Y', default='', help='Wireshark display filter')
 
     # ==========================================================================
+    # System Parameters & Restore Points Subparser
+    # ==========================================================================
+    sys_param_parser = subparsers.add_parser('sys-param', help='Safe system parameter management & Windows restore points')
+    sys_param_subparsers = sys_param_parser.add_subparsers(dest='subcommand', help='Subcommands')
+    
+    sys_param_list = sys_param_subparsers.add_parser('list', help='List system parameters')
+    sys_param_list.add_argument('--category', '-c', help='Filter by category')
+    
+    sys_param_preview = sys_param_subparsers.add_parser('preview', help='Preview/dry-run parameter change')
+    sys_param_preview.add_argument('param_id', help='Parameter ID (e.g. sec.uac_level)')
+    sys_param_preview.add_argument('value', help='New parameter value')
+    
+    sys_param_set = sys_param_subparsers.add_parser('set', help='Apply parameter change safely (auto restore point)')
+    sys_param_set.add_argument('param_id', help='Parameter ID (e.g. sec.uac_level)')
+    sys_param_set.add_argument('value', help='New parameter value')
+    
+    sys_param_subparsers.add_parser('restore-points', help='List Windows restore points')
+    
+    sys_param_rp_create = sys_param_subparsers.add_parser('create-rp', help='Create Windows restore point manually')
+    sys_param_rp_create.add_argument('description', nargs='?', default='AI-Breadboard Manual Checkpoint', help='Description')
+    
+    sys_param_history = sys_param_subparsers.add_parser('history', help='View parameter change history')
+    sys_param_history.add_argument('--limit', '-n', type=int, default=20, help='Limit history items')
+    
+    sys_param_rollback = sys_param_subparsers.add_parser('rollback', help='Rollback parameter change')
+    sys_param_rollback.add_argument('change_id', help='Change ID from history')
+
+    # ==========================================================================
+    # Telemetry SQLite Logger Subparser
+    # ==========================================================================
+    telemetry_parser = subparsers.add_parser('telemetry', help='System metrics 1Hz SQLite logging (CPU, RAM, Disk I/O, Top-20 procs)')
+    telemetry_subparsers = telemetry_parser.add_subparsers(dest='subcommand', help='Subcommands')
+
+    telemetry_start = telemetry_subparsers.add_parser('start', help='Start 1Hz telemetry logging loop')
+    telemetry_start.add_argument('--interval', '-i', type=float, default=1.0, help='Logging interval in seconds (default: 1.0)')
+    telemetry_start.add_argument('--processes', '-p', type=int, default=20, help='Top processes limit (default: 20)')
+
+    telemetry_subparsers.add_parser('status', help='View telemetry SQLite database statistics')
+
+    telemetry_history = telemetry_subparsers.add_parser('history', help='View recent telemetry snapshots')
+    telemetry_history.add_argument('--limit', '-n', type=int, default=20, help='Limit snapshots count')
+
+    telemetry_cleanup = telemetry_subparsers.add_parser('cleanup', help='Delete old telemetry records')
+    telemetry_cleanup.add_argument('--days', '-d', type=int, default=7, help='Retention days (default: 7)')
+
+    # ==========================================================================
     # Assistant CLI Subparser
     # ==========================================================================
     # Gateway to the main assistant CLI for process management including
@@ -551,7 +804,7 @@ Examples:
     args, unknown = parser.parse_known_args()
 
     # Calculate exact unconsumed trailing CLI arguments for sub-command delegation
-    if args.command in ('knowledge', 'rag', 'docs', 'plugins', 'db') and getattr(args, 'subcommand', None):
+    if args.command in ('knowledge', 'rag', 'docs', 'plugins', 'db', 'sys-param', 'telemetry') and getattr(args, 'subcommand', None):
         # Find index where subcommand appears in sys.argv
         argv_list = list(sys.argv[1:])
         if args.subcommand in argv_list:
@@ -590,6 +843,8 @@ Examples:
         'plugins': run_plugins_command,
         'db': run_db_command,
         'network': run_network_command,
+        'sys-param': run_sys_param_command,
+        'telemetry': run_telemetry_command,
     }
 
     # Resolve and execute the appropriate command handler
@@ -599,6 +854,7 @@ Examples:
         return 1
 
     return handler(args)
+
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -530,164 +530,247 @@ router_apps = APIRouter(prefix='/api/apps', tags=['apps'])
 
 APPS_REGISTRY: List[Dict[str, Any]] = [
     {
+        "id": "scenarios",
+        "key": "scenarios",
+        "tab": "tab-scenarios",
+        "folder": "scenarios",
+        "aliases": ["scenarios", "scenario", "tab-scenarios", "сценарии"],
+        "name": "Test & Automation Scenarios",
+        "ru_name": "Сценарии",
+        "icon": "🎬",
+    },
+    {
         "id": "chat",
-        "key": "enable_chat",
+        "key": "chat",
         "tab": "tab-chat",
         "folder": "chat",
-        "aliases": ["chat", "enable_chat", "tab-chat", "dialog", "ai_chat"],
+        "aliases": ["chat", "tab-chat", "dialog", "ai_chat"],
         "name": "AI Chat Assistant",
         "ru_name": "Чат ИИ",
         "icon": "💬",
     },
     {
         "id": "trading_terminal",
-        "key": "enable_trading_terminal",
+        "key": "trading_terminal",
         "tab": "tab-trading",
         "folder": "trading_terminal",
-        "aliases": ["trading_terminal", "trading", "enable_trading_terminal", "tab-trading"],
+        "aliases": ["trading_terminal", "trading", "tab-trading"],
         "name": "Exchange Trading Terminal",
         "ru_name": "Торговый терминал",
         "icon": "📈",
     },
     {
         "id": "network_terminal",
-        "key": "enable_network_terminal",
+        "key": "network_terminal",
         "tab": "tab-network",
         "folder": "network_terminal",
-        "aliases": ["network_terminal", "network", "enable_network_terminal", "tab-network"],
+        "aliases": ["network_terminal", "network", "tab-network"],
         "name": "Network Analyzer Terminal",
         "ru_name": "Сетевой терминал",
         "icon": "🌐",
     },
     {
         "id": "system_inspector",
-        "key": "enable_system_inspector",
+        "key": "system_inspector",
         "tab": "tab-system-inspector",
         "folder": "system_inspector",
-        "aliases": ["system_inspector", "inspector", "enable_system_inspector", "tab-system-inspector"],
+        "aliases": ["system_inspector", "inspector", "tab-system-inspector"],
         "name": "System Inspector",
-        "ru_name": "Системный инспектор",
+        "ru_name": "Потребление ресурсов",
         "icon": "🖥️",
     },
     {
+        "id": "about_system",
+        "key": "about_system",
+        "tab": "tab-about-system",
+        "folder": "about_system_tab",
+        "aliases": ["about_system", "system_info", "sysinfo", "tab-about-system", "about"],
+        "name": "About System",
+        "ru_name": "О Системе",
+        "icon": "ℹ️",
+    },
+    {
         "id": "windows_sysadmin",
-        "key": "enable_windows_admin",
+        "key": "windows_sysadmin",
         "tab": "tab-windows-admin",
         "folder": "windows_sysadmin",
-        "aliases": ["windows_sysadmin", "windows_admin", "windowsadmin", "sysadmin", "enable_windows_admin", "enable_windows_sysadmin", "tab-windows-admin"],
+        "aliases": ["windows_sysadmin", "windows_admin", "windowsadmin", "sysadmin", "tab-windows-admin"],
         "name": "Windows System Administrator",
         "ru_name": "Windows Sysadmin",
         "icon": "🛡️",
     },
     {
         "id": "user_assistant",
-        "key": "enable_user_assistant",
+        "key": "user_assistant",
         "tab": "tab-user-assistant",
         "folder": "user_assistant",
-        "aliases": ["user_assistant", "assistant", "userassistant", "enable_user_assistant", "tab-user-assistant"],
+        "aliases": ["user_assistant", "assistant", "userassistant", "tab-user-assistant"],
         "name": "User Assistant",
         "ru_name": "User Assistant",
         "icon": "🗓️",
     },
     {
         "id": "gcloud_monitor",
-        "key": "enable_gcloud_monitor",
+        "key": "gcloud_monitor",
         "tab": "tab-gcloud",
         "folder": "gcloud_monitor",
-        "aliases": ["gcloud_monitor", "gcloud", "google_cloud", "enable_gcloud_monitor", "tab-gcloud"],
+        "aliases": ["gcloud_monitor", "gcloud", "google_cloud", "tab-gcloud"],
         "name": "Google Cloud Monitor",
         "ru_name": "Google Cloud Monitor",
         "icon": "☁️",
     },
     {
         "id": "website_monitor",
-        "key": "enable_website_monitor",
+        "key": "website_monitor",
         "tab": "tab-website-monitor",
         "folder": "website_monitor",
-        "aliases": ["website_monitor", "website", "website_intelligence", "enable_website_monitor", "tab-website-monitor"],
+        "aliases": ["website_monitor", "website", "website_intelligence", "tab-website-monitor"],
         "name": "Website Intelligence Monitor",
         "ru_name": "Website Intelligence",
         "icon": "📊",
     },
     {
         "id": "cloudflared_monitor",
-        "key": "enable_cloudflared_monitor",
+        "key": "cloudflared_monitor",
         "tab": "tab-cloudflared",
         "folder": "cloudflared_monitor",
-        "aliases": ["cloudflared_monitor", "cloudflared", "enable_cloudflared_monitor", "tab-cloudflared"],
+        "aliases": ["cloudflared_monitor", "cloudflared", "tab-cloudflared"],
         "name": "Cloudflared Monitor",
         "ru_name": "Cloudflared Monitor",
         "icon": "☁️",
     },
     {
         "id": "system_control_center",
-        "key": "enable_system_control_center",
+        "key": "system_control_center",
         "tab": "tab-system-control",
         "folder": "system_control_center",
-        "aliases": ["system_control_center", "system_control", "control_center", "enable_system_control_center", "tab-system-control"],
+        "aliases": ["system_control_center", "system_control", "control_center", "tab-system-control"],
         "name": "System Control Center",
         "ru_name": "System Control Center",
         "icon": "🛠️",
     },
     {
         "id": "system_log_viewer",
-        "key": "enable_system_log_viewer",
+        "key": "system_log_viewer",
         "tab": "tab-system-logs",
         "folder": "system_log_viewer",
-        "aliases": ["system_log_viewer", "system_logs", "system_log", "log_viewer", "logs_viewer", "enable_system_log_viewer", "tab-system-logs"],
+        "aliases": ["system_log_viewer", "system_logs", "system_log", "log_viewer", "logs_viewer", "tab-system-logs", "log_analyzer", "application_log_analyzer"],
         "name": "System Log Viewer",
-        "ru_name": "Журналы системы (All Logs)",
+        "ru_name": "Анализатор логов (All Logs)",
         "icon": "📜",
     },
     {
         "id": "wikipedia_research",
-        "key": "enable_wikipedia_research",
+        "key": "wikipedia_research",
         "tab": "tab-wikipedia-research",
         "folder": "wikipedia_research",
-        "aliases": ["wikipedia_research", "wikipedia", "wiki_lab", "enable_wikipedia_research", "tab-wikipedia-research"],
+        "aliases": ["wikipedia_research", "wikipedia", "wiki_lab", "tab-wikipedia-research"],
         "name": "Wikipedia Research Lab",
         "ru_name": "Wikipedia Research (Сравнение языков и моделей)",
         "icon": "🌐",
     },
     {
         "id": "ai_breadboard_admin",
-        "key": "enable_ai_breadboard_admin",
+        "key": "ai_breadboard_admin",
         "tab": "tab-admin",
         "folder": "ai_breadboard_admin",
-        "aliases": ["ai_breadboard_admin", "admin", "admin_panel", "enable_ai_breadboard_admin", "tab-admin"],
+        "aliases": ["ai_breadboard_admin", "admin", "admin_panel", "tab-admin"],
         "name": "AI Breadboard Admin",
         "ru_name": "Панель администратора",
         "icon": "⚙️",
     },
     {
         "id": "research_and_statistic",
-        "key": "enable_research_and_statistic",
+        "key": "research_and_statistic",
         "tab": "tab-research",
         "folder": "research_and_statistic",
-        "aliases": ["research_and_statistic", "research_stat", "research", "enable_research_and_statistic", "tab-research"],
+        "aliases": ["research_and_statistic", "research_stat", "research", "tab-research"],
         "name": "Research & Statistics Desk",
         "ru_name": "Анализ данных и статистика",
         "icon": "📈",
     },
     {
         "id": "helpdesk",
-        "key": "enable_helpdesk",
+        "key": "helpdesk",
         "tab": "tab-helpdesk",
         "folder": "helpdesk",
-        "aliases": ["helpdesk", "support", "enable_helpdesk", "tab-helpdesk"],
+        "aliases": ["helpdesk", "support", "tab-helpdesk"],
         "name": "Helpdesk & Support",
         "ru_name": "Служба поддержки (Helpdesk)",
         "icon": "🎧",
     },
+    {
+        "id": "software_audit",
+        "key": "software_audit",
+        "tab": "tab-software-audit",
+        "folder": "software_audit",
+        "aliases": ["software_audit", "software", "audit_software", "installed_software", "tab-software-audit"],
+        "name": "Software Audit",
+        "ru_name": "Аудит программного обеспечения",
+        "icon": "📊",
+    },
+    {
+        "id": "registry_viewer",
+        "key": "registry_viewer",
+        "tab": "tab-registry-viewer",
+        "folder": "registry_viewer",
+        "aliases": ["registry_viewer", "registry", "regedit", "reg_viewer", "tab-registry-viewer"],
+        "name": "Registry Viewer",
+        "ru_name": "Просмотр реестра (Registry Viewer)",
+        "icon": "🗝️",
+    },
+    {
+        "id": "windows_startup_auditor",
+        "key": "windows_startup_auditor",
+        "tab": "tab-startup-auditor",
+        "folder": "windows_startup_auditor",
+        "aliases": ["windows_startup_auditor", "startup_auditor", "startup", "autoruns", "tab-startup-auditor"],
+        "name": "Windows Startup Auditor",
+        "ru_name": "Аудит автозапуска Windows",
+        "icon": "🚀",
+    },
+    {
+        "id": "windows_defender",
+        "key": "windows_defender",
+        "tab": "tab-defender",
+        "folder": "windows_defender",
+        "aliases": ["windows_defender", "defender", "tab-defender"],
+        "name": "Windows Defender Security",
+        "ru_name": "Безопасность Windows Defender",
+        "icon": "🛡️",
+    },
+    {
+        "id": "windows_backup_manager",
+        "key": "windows_backup_manager",
+        "tab": "tab-windows-backup",
+        "folder": "windows_backup_manager",
+        "aliases": ["windows_backup_manager", "backup_manager", "windows_backup", "backup", "tab-windows-backup"],
+        "name": "Windows Backup & Libraries",
+        "ru_name": "Резервное копирование и библиотеки Windows",
+        "icon": "💾",
+    },
+    {
+        "id": "hardware_monitor",
+        "key": "hardware_monitor",
+        "tab": "tab-hardware-monitor",
+        "folder": "windows",
+        "aliases": ["hardware_monitor", "hardware", "sensors", "hw_monitor", "tab-hardware-monitor"],
+        "name": "Hardware & Sensors Monitor",
+        "ru_name": "Монитор оборудования и сенсоров",
+        "icon": "⚡",
+    },
 ]
 
 
-def get_apps_status() -> Dict[str, Any]:
+def get_apps_status(profile: Optional[str] = None) -> Dict[str, Any]:
     """Retrieve enabled/disabled status for all /apps applications based on active configuration file."""
     import os
     cfg_env = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
     active_path: Optional[Path] = None
-    if cfg_env:
+    if profile in ("tc", "test-computer", "test_computer", "apps_tc"):
+        if (__root__ / "config_tc.json").exists():
+            active_path = __root__ / "config_tc.json"
+    elif cfg_env:
         p = Path(cfg_env)
         active_path = p if p.is_absolute() else (__root__ / cfg_env)
 
@@ -780,11 +863,21 @@ def get_apps_status() -> Dict[str, Any]:
             "enabled": is_enabled,
         }
 
+    ai_cfg = {}
+    if active_path and active_path.exists():
+        try:
+            with open(active_path, "r", encoding="utf-8") as f:
+                root_data = json.load(f)
+                ai_cfg = root_data.get("ai", {})
+        except Exception:
+            pass
+
     return {
         "status": "ok",
         "config_file": config_filename,
         "enable_all": enable_all,
         "apps": result_apps,
+        "ai": ai_cfg,
     }
 
 
@@ -794,15 +887,15 @@ class AppConfigUpdateRequest(BaseModel):
 
 
 @router.get('/apps/status')
-async def get_admin_apps_status_endpoint() -> Dict[str, Any]:
+async def get_admin_apps_status_endpoint(profile: Optional[str] = None) -> Dict[str, Any]:
     """Get enabled/disabled status for all /apps applications."""
-    return get_apps_status()
+    return get_apps_status(profile=profile)
 
 
 @router_apps.get('/status')
-async def get_public_apps_status_endpoint() -> Dict[str, Any]:
+async def get_public_apps_status_endpoint(profile: Optional[str] = None) -> Dict[str, Any]:
     """Get enabled/disabled status for all /apps applications (public endpoint)."""
-    return get_apps_status()
+    return get_apps_status(profile=profile)
 
 
 @router.get('/apps/{app_name}/config')

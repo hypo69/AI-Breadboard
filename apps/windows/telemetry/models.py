@@ -108,6 +108,57 @@ class ProcessMetrics(BaseModel):
     write_bytes_sec: float = Field(default=0.0, description="Disk write rate in bytes/sec")
 
 
+class BatteryMetrics(BaseModel):
+    """Battery and power state telemetry."""
+
+    has_battery: bool = Field(default=False, description="Whether host has battery power")
+    percent: Optional[float] = Field(default=None, description="Battery charge percentage")
+    power_plugged: Optional[bool] = Field(default=None, description="Whether AC power is connected")
+    secs_left: Optional[int] = Field(default=None, description="Seconds of battery remaining")
+    power_profile: str = Field(default="Balanced", description="Active Windows power scheme")
+
+
+class PhysicalDiskHealth(BaseModel):
+    """Physical drive SMART and health telemetry."""
+
+    device_id: str = Field(default="", description="Drive identifier or disk index")
+    model: str = Field(default="Physical Drive", description="Drive model name")
+    media_type: str = Field(default="SSD", description="Media type (NVMe, SSD, HDD)")
+    size_gb: float = Field(default=0.0, description="Drive total capacity in GB")
+    health_status: str = Field(default="Healthy", description="Drive health status (Healthy, Warning, Unhealthy)")
+    operational_status: str = Field(default="OK", description="Operational status")
+    temperature_celsius: Optional[float] = Field(default=None, description="Drive temperature if available")
+
+
+class RamStickInfo(BaseModel):
+    """Physical RAM stick SPD details."""
+
+    bank_label: str = Field(default="DIMM", description="Memory slot label")
+    capacity_gb: float = Field(default=0.0, description="Module capacity in GB")
+    speed_mhz: int = Field(default=0, description="Configured clock speed in MHz/MTs")
+    manufacturer: str = Field(default="Generic", description="Memory manufacturer")
+    part_number: str = Field(default="", description="Module part number")
+    memory_type: str = Field(default="DDR4/DDR5", description="Memory technology type")
+
+
+class NetworkPortMetrics(BaseModel):
+    """Active listening TCP/UDP port item."""
+
+    port: int = Field(..., description="Listening port number")
+    protocol: str = Field(default="TCP", description="Protocol: TCP / UDP")
+    address: str = Field(default="0.0.0.0", description="Bind IP address")
+    pid: Optional[int] = Field(default=None, description="Owning process PID")
+    process_name: Optional[str] = Field(default=None, description="Owning process executable name")
+
+
+class SystemHealthAlerts(BaseModel):
+    """System reliability and event log alerts."""
+
+    reboot_pending: bool = Field(default=False, description="Whether a system reboot is pending")
+    critical_events_count: int = Field(default=0, description="Critical event logs in last 24h")
+    latest_alert: str = Field(default="Система стабильна", description="Summary of latest health event")
+
+
 class HardwareSensor(BaseModel):
     """Hardware sensor reading (AIDA64 style)."""
 
@@ -137,14 +188,27 @@ class SystemSnapshot(BaseModel):
         description="ISO 8601 UTC timestamp of snapshot",
     )
     hostname: str = Field(default="", description="Machine host name")
+    username: str = Field(default="", description="Current logged in username")
     os_name: str = Field(default="Windows", description="Operating system name and version")
+    os_build: str = Field(default="", description="Operating system build number")
+    system_language: str = Field(default="", description="System UI language")
+    user_locale: str = Field(default="", description="User locale")
+    system_locale: str = Field(default="", description="System locale")
+    timezone: str = Field(default="", description="System timezone")
+    codepage: str = Field(default="", description="Active system code pages")
+    input_languages: List[str] = Field(default_factory=list, description="Installed keyboard input layouts")
     uptime_seconds: float = Field(default=0.0, description="System uptime in seconds")
     cpu: CpuMetrics = Field(default_factory=CpuMetrics, description="CPU metrics")
     memory: MemoryMetrics = Field(default_factory=MemoryMetrics, description="RAM and Swap metrics")
+    ram_sticks: List[RamStickInfo] = Field(default_factory=list, description="Installed physical RAM modules")
     gpus: List[GpuMetrics] = Field(default_factory=list, description="Detected GPU accelerators")
     disks: List[DiskPartitionMetrics] = Field(default_factory=list, description="Disk partitions")
+    physical_disks: List[PhysicalDiskHealth] = Field(default_factory=list, description="Physical storage disks and SMART health")
     disk_io: DiskIoMetrics = Field(default_factory=DiskIoMetrics, description="Aggregate disk I/O rates")
     network: List[NetworkInterfaceMetrics] = Field(default_factory=list, description="Network interfaces")
+    listening_ports: List[NetworkPortMetrics] = Field(default_factory=list, description="Active listening ports and sockets")
+    battery: BatteryMetrics = Field(default_factory=BatteryMetrics, description="Battery and power state")
+    alerts: SystemHealthAlerts = Field(default_factory=SystemHealthAlerts, description="System health and reliability alerts")
     sensors: List[HardwareSensor] = Field(default_factory=list, description="Hardware sensor readings")
     top_processes: List[ProcessMetrics] = Field(default_factory=list, description="Top active processes")
 

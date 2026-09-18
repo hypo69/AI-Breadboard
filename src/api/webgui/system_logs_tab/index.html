@@ -15,25 +15,42 @@ Copyright: © 2026 hypo69
 -->
 <style>
   .slc-container {
-    padding: 1rem;
+    padding: 0.25rem 0.5rem;
+  }
+  .slc-compact-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 0.4rem 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  .slc-metric-pill {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
   }
   .slc-card {
     background: #0f172a !important;
     border: 1px solid #334155 !important;
-    border-radius: 10px;
-    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 0.1rem;
   }
   .slc-label {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     color: #94a3b8;
   }
   .slc-value {
-    font-size: 1.25rem;
+    font-size: 1.05rem;
     font-weight: 700;
     color: #f8fafc;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -41,7 +58,7 @@ Copyright: © 2026 hypo69
   .slc-panel {
     background: #0f172a !important;
     border: 1px solid #334155 !important;
-    border-radius: 10px;
+    border-radius: 8px;
     overflow: hidden;
   }
   .slc-panel-header {
@@ -115,116 +132,147 @@ Copyright: © 2026 hypo69
   .badge-warn { background: #f59e0b !important; color: #000 !important; }
   .badge-inf { background: #10b981 !important; color: #fff !important; }
   .badge-verb { background: #64748b !important; color: #fff !important; }
+
+  /* Interactive Channel Description Popover Tooltip */
+  .slc-tooltip-popup {
+    position: fixed;
+    z-index: 99999;
+    max-width: 320px;
+    background: #0f172a;
+    border: 1px solid #38bdf8;
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 0 15px rgba(56, 189, 248, 0.2);
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    opacity: 0;
+    transform: translateY(4px);
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: #e2e8f0;
+  }
+  .slc-tooltip-popup.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .slc-tooltip-title {
+    font-weight: 700;
+    color: #38bdf8;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .slc-tooltip-meta {
+    color: #94a3b8;
+    font-size: 0.7rem;
+    border-top: 1px solid #334155;
+    padding-top: 0.35rem;
+    margin-top: 0.35rem;
+    display: flex;
+    justify-content: space-between;
+  }
 </style>
 
 <div class="slc-container">
-  <!-- Header Alert & Scan Status -->
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
-    <div>
-      <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
-        <span class="fs-4">🛡️</span> Windows System Log Center
-      </h5>
-      <p class="mb-0 small text-light" style="color: #cbd5e1 !important;">
-        Universal Windows OS log explorer, dynamic channel discovery (1,000+), multi-source incident correlator, and AI contextual diagnosis.
-      </p>
-    </div>
+  <!-- Compact Header Bar with Inline Stats & Actions -->
+  <div class="slc-compact-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <!-- Title & Inline Metrics -->
     <div class="d-flex align-items-center gap-2 flex-wrap">
-      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-slc-scan">
-        <i class="bi bi-radar me-1"></i> Scan System
-      </button>
-      <div class="form-check form-switch text-light mb-0 d-flex align-items-center gap-2">
-        <input class="form-check-input" type="checkbox" role="switch" id="slc-live-switch">
-        <label class="form-check-label small" for="slc-live-switch">Live Stream</label>
+      <div class="d-flex align-items-center gap-1.5 me-1">
+        <span class="fs-6">🛡️</span>
+        <span class="fw-bold text-white small">Windows System Log Center</span>
       </div>
-      <button class="btn btn-sm btn-primary rounded-pill px-3" id="btn-slc-refresh">
-        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+
+      <!-- Quick Metrics Pills -->
+      <div class="slc-metric-pill" title="Discovered Log Sources">
+        <span class="text-secondary small"><i class="bi bi-diagram-3 me-1"></i>Sources:</span>
+        <span class="fw-bold text-info font-monospace" id="slc-stat-sources">1,247</span>
+      </div>
+      <div class="slc-metric-pill" title="Active Log Channel">
+        <span class="text-secondary small"><i class="bi bi-folder-fill me-1"></i>Channel:</span>
+        <span class="fw-bold text-warning font-monospace text-truncate" id="slc-stat-channel" style="max-width: 140px;">System</span>
+      </div>
+      <div class="slc-metric-pill" title="Events Loaded in View">
+        <span class="text-secondary small"><i class="bi bi-list-ol me-1"></i>Loaded:</span>
+        <span class="fw-bold text-light font-monospace" id="slc-stat-events">0</span>
+      </div>
+      <div class="slc-metric-pill" title="Errors and Incidents Detected">
+        <span class="text-secondary small"><i class="bi bi-exclamation-triangle-fill me-1"></i>Faults:</span>
+        <span class="fw-bold text-danger font-monospace" id="slc-stat-incidents">0</span>
+      </div>
+    </div>
+
+    <!-- Actions Toolbar -->
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <button class="btn btn-outline-info rounded-pill px-2.5 py-1 small d-flex align-items-center gap-1" id="btn-slc-scan" style="font-size: 0.78rem;">
+        <i class="bi bi-radar"></i> <span>Scan</span>
+      </button>
+      <div class="form-check form-switch text-light mb-0 d-inline-flex align-items-center" style="font-size: 0.78rem; min-height: auto;">
+        <input class="form-check-input me-1" type="checkbox" role="switch" id="slc-live-switch" style="cursor: pointer;">
+        <label class="form-check-label text-secondary small user-select-none" for="slc-live-switch">Live</label>
+      </div>
+      <button class="btn btn-primary rounded-pill px-2.5 py-1 small d-flex align-items-center gap-1" id="btn-slc-refresh" style="font-size: 0.78rem;">
+        <i class="bi bi-arrow-clockwise"></i> <span>Refresh</span>
       </button>
       <div class="dropdown">
-        <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill px-3 text-light" type="button" data-bs-toggle="dropdown">
-          <i class="bi bi-download me-1"></i> Export
+        <button class="btn btn-xs btn-outline-secondary dropdown-toggle rounded-pill px-2.5 py-1 text-light small d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" style="font-size: 0.78rem;">
+          <i class="bi bi-download"></i> <span>Export</span>
         </button>
-        <ul class="dropdown-menu dropdown-menu-dark shadow">
-          <li><a class="dropdown-item" href="#" id="btn-slc-export-json"><i class="bi bi-filetype-json me-2"></i>Export as JSON</a></li>
-          <li><a class="dropdown-item" href="#" id="btn-slc-export-csv"><i class="bi bi-filetype-csv me-2"></i>Export as CSV</a></li>
+        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow" style="font-size: 0.8rem;">
+          <li><a class="dropdown-item" href="#" id="btn-slc-export-json"><i class="bi bi-filetype-json me-2"></i>JSON</a></li>
+          <li><a class="dropdown-item" href="#" id="btn-slc-export-csv"><i class="bi bi-filetype-csv me-2"></i>CSV</a></li>
         </ul>
       </div>
     </div>
   </div>
 
-  <!-- Top Metrics Bar -->
-  <div class="row g-3 mb-3">
-    <div class="col-md-3 col-sm-6">
-      <div class="slc-card">
-        <span class="slc-label">Discovered Sources</span>
-        <span class="slc-value text-info" id="slc-stat-sources">1,247 channels</span>
-      </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-      <div class="slc-card">
-        <span class="slc-label">Active Channel</span>
-        <span class="slc-value text-warning text-truncate" id="slc-stat-channel" style="font-size: 1.05rem;">System</span>
-      </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-      <div class="slc-card">
-        <span class="slc-label">Events Loaded</span>
-        <span class="slc-value text-light" id="slc-stat-events">0</span>
-      </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-      <div class="slc-card">
-        <span class="slc-label">Faults / Incidents</span>
-        <span class="slc-value text-danger" id="slc-stat-incidents">0 errors / 0 inc</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Search & View Mode Navigation -->
-  <div class="slc-panel mb-3 p-3">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2 border-bottom border-secondary">
+  <!-- Search & View Mode Navigation (Compact) -->
+  <div class="slc-panel mb-2 p-2">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-1 mb-2 pb-1 border-bottom border-secondary">
       <!-- Mode Tabs -->
       <ul class="nav nav-pills gap-1" id="slc-mode-tabs">
         <li class="nav-item">
-          <button class="nav-link active py-1 px-3 small rounded-pill" data-mode="live">● Live Events</button>
+          <button class="nav-link active py-0.5 px-2.5 small rounded-pill" data-mode="live" style="font-size: 0.78rem;">● Live Events</button>
         </li>
         <li class="nav-item">
-          <button class="nav-link py-1 px-3 small rounded-pill text-light" data-mode="audit">🔬 Аудит (Smart Digest)</button>
+          <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="audit" style="font-size: 0.78rem;">🔬 Аудит (Smart Digest)</button>
         </li>
         <li class="nav-item">
-          <button class="nav-link py-1 px-3 small rounded-pill text-light" data-mode="rag">🧠 RAG Поиск</button>
+          <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="rag" style="font-size: 0.78rem;">🧠 RAG Поиск</button>
         </li>
         <li class="nav-item">
-          <button class="nav-link py-1 px-3 small rounded-pill text-light" data-mode="errors">⚠️ Errors Only</button>
+          <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="errors" style="font-size: 0.78rem;">⚠️ Errors Only</button>
         </li>
         <li class="nav-item">
-          <button class="nav-link py-1 px-3 small rounded-pill text-light" data-mode="incidents">🧩 Incidents</button>
+          <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="incidents" style="font-size: 0.78rem;">🧩 Incidents</button>
         </li>
         <li class="nav-item">
-          <button class="nav-link py-1 px-3 small rounded-pill text-light" data-mode="timeline">📊 Timeline</button>
+          <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="timeline" style="font-size: 0.78rem;">📊 Timeline</button>
         </li>
         <li class="nav-item">
-          <button class="nav-link py-1 px-3 small rounded-pill text-light" data-mode="raw">📄 Raw Record</button>
+          <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="raw" style="font-size: 0.78rem;">📄 Raw Record</button>
         </li>
       </ul>
 
-      <!-- Action Buttons -->
+      <!-- Action AI Button -->
       <div class="d-flex align-items-center gap-2">
-        <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-slc-ask-ai">
-          <i class="bi bi-robot me-1"></i> Ask AI: "What happened?"
+        <button class="btn btn-xs btn-outline-warning rounded-pill px-2.5 py-1 small d-flex align-items-center gap-1" id="btn-slc-ask-ai" style="font-size: 0.78rem;">
+          <i class="bi bi-robot"></i> <span>Ask AI</span>
         </button>
       </div>
     </div>
 
     <!-- Filter Inputs Grid -->
-    <div class="row g-2 align-items-center">
-      <div class="col-lg-4 col-md-6">
+    <div class="row g-1.5 align-items-center">
+      <div class="col-lg-4 col-md-5">
         <div class="input-group input-group-sm">
-          <span class="input-group-text bg-dark text-secondary border-secondary"><i class="bi bi-search"></i></span>
-          <input type="text" class="form-control bg-dark text-light border-secondary" id="slc-search-input" placeholder="Search message, provider, or crash...">
+          <span class="input-group-text bg-dark text-secondary border-secondary py-0 px-2"><i class="bi bi-search" style="font-size: 0.75rem;"></i></span>
+          <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary py-1" id="slc-search-input" placeholder="Search message, provider..." style="font-size: 0.8rem;">
         </div>
       </div>
-      <div class="col-lg-2 col-md-3">
-        <select class="form-select form-select-sm bg-dark text-light border-secondary" id="slc-level-select">
+      <div class="col-lg-2 col-md-2 col-6">
+        <select class="form-select form-select-sm bg-dark text-light border-secondary py-1" id="slc-level-select" style="font-size: 0.8rem;">
           <option value="">All Severities</option>
           <option value="Critical">Critical</option>
           <option value="Error">Error</option>
@@ -232,8 +280,8 @@ Copyright: © 2026 hypo69
           <option value="Information">Information</option>
         </select>
       </div>
-      <div class="col-lg-2 col-md-3">
-        <select class="form-select form-select-sm bg-dark text-light border-secondary" id="slc-hours-select">
+      <div class="col-lg-2 col-md-2 col-6">
+        <select class="form-select form-select-sm bg-dark text-light border-secondary py-1" id="slc-hours-select" style="font-size: 0.8rem;">
           <option value="1">Last 1 hour</option>
           <option value="6">Last 6 hours</option>
           <option value="24" selected>Last 24 hours</option>
@@ -241,11 +289,11 @@ Copyright: © 2026 hypo69
           <option value="0">All available</option>
         </select>
       </div>
-      <div class="col-lg-2 col-md-6">
-        <input type="number" class="form-control form-control-sm bg-dark text-light border-secondary" id="slc-eventid-input" placeholder="Event ID (e.g. 1000, 41)">
+      <div class="col-lg-2 col-md-1.5 col-6">
+        <input type="number" class="form-control form-control-sm bg-dark text-light border-secondary py-1" id="slc-eventid-input" placeholder="Event ID" style="font-size: 0.8rem;">
       </div>
-      <div class="col-lg-2 col-md-6">
-        <select class="form-select form-select-sm bg-dark text-light border-secondary" id="slc-limit-select">
+      <div class="col-lg-2 col-md-1.5 col-6">
+        <select class="form-select form-select-sm bg-dark text-light border-secondary py-1" id="slc-limit-select" style="font-size: 0.8rem;">
           <option value="50">50 records</option>
           <option value="100" selected>100 records</option>
           <option value="250">250 records</option>
@@ -383,7 +431,7 @@ Copyright: © 2026 hypo69
 
         <div class="card bg-black border-secondary p-3 mb-3">
           <h6 class="small text-uppercase text-muted fw-bold mb-2">Message Body</h6>
-          <div class="small font-monospace text-light" id="slc-modal-message" style="white-space: pre-wrap; word-break: break-word;"></div>
+          <div class="small font-monospace" id="slc-modal-message" style="white-space: pre-wrap; word-break: break-word;"></div>
         </div>
 
         <!-- AI Diagnostic Response Section -->
@@ -392,7 +440,7 @@ Copyright: © 2026 hypo69
             <h6 class="fw-bold text-info mb-0"><i class="bi bi-robot me-1"></i> AI Contextual Explanation</h6>
             <button class="btn btn-sm btn-outline-info py-0 px-2 rounded-pill" id="btn-slc-modal-diagnose">Analyze Context</button>
           </div>
-          <div class="small text-light" id="slc-modal-ai-explanation">
+          <div class="small" id="slc-modal-ai-explanation">
             Click "Analyze Context" to inspect surrounding events and identify the root cause of this incident.
           </div>
         </div>

@@ -335,6 +335,9 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-system-inspector' && typeof window.initSystemInspectorTab === 'function') {
     console.log('[AdminInterface] Switching to system inspector tab...');
     window.initSystemInspectorTab();
+  } else if (cleanId === 'tab-about-system' && typeof window.initAboutSystemTab === 'function') {
+    console.log('[AdminInterface] Switching to about system tab...');
+    window.initAboutSystemTab();
   } else if (cleanId === 'tab-windows-admin' && typeof window.initWindowsAdminTab === 'function') {
     console.log('[AdminInterface] Switching to windows admin tab...');
     window.initWindowsAdminTab();
@@ -571,6 +574,7 @@ async function initInterface() {
     loadTabContent('sources', `/html/sources_tab/index.html?v=${cb}`, `/html/sources_tab/main.js?v=${cb}`),
     loadTabContent('skills', `/html/skills_tab/index.html?v=${cb}`, `/html/skills_tab/main.js?v=${cb}`),
     loadTabContent('mcp', `/html/mcp_tab/index.html?v=${cb}`, `/html/mcp_tab/main.js?v=${cb}`),
+    loadTabContent('observability', `/html/system_inspector_tab/index.html?v=${cb}`, `/html/system_inspector_tab/main.js?v=${cb}`),
     loadTabContent('news', `/html/news_tab/index.html?v=${cb}`, `/html/news_tab/main.js?v=${cb}`),
     loadTabContent('logs', `/html/logs/index.html?v=${cb}`, `/html/logs/main.js?v=${cb}`),
     loadTabContent('help', `/html/help/index.html?v=${cb}`, `/html/help/main.js?v=${cb}`),
@@ -578,9 +582,11 @@ async function initInterface() {
 
   // Определение и фильтрация вкладок микроприложений (/apps)
   const appTabDefs = [
+    { id: 'scenarios', tab: 'scenarios', html: '/html/scenarios_tab/index.html', js: '/html/scenarios_tab/main.js' },
     { id: 'trading_terminal', tab: 'trading', html: '/html/trading_tab/index.html', js: '/html/trading_tab/main.js' },
     { id: 'network_terminal', tab: 'network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
     { id: 'system_inspector', tab: 'system-inspector', html: '/html/system_inspector_tab/index.html', js: '/html/system_inspector_tab/main.js' },
+    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html', js: '/html/about_system_tab/main.js' },
     { id: 'windows_sysadmin', tab: 'windows-admin', html: '/html/windows_admin_tab/index.html', js: '/html/windows_admin_tab/main.js' },
     { id: 'cloudflared_monitor', tab: 'cloudflared', html: '/html/cloudflared_tab/index.html', js: '/html/cloudflared_tab/main.js' },
     { id: 'user_assistant', tab: 'user-assistant', html: '/html/user_assistant_tab/index.html', js: '/html/user_assistant_tab/main.js' },

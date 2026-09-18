@@ -22,17 +22,20 @@
 
 from __future__ import annotations
 
-import json
-import subprocess
 import time
 from typing import Any, Dict, List
 
 from src.logger import logger
+from apps.windows.api.wevtapi import WevtAPI
 from apps.windows.core.models import AuditFinding, DomainAuditResult, RiskLevel
 
 
 class EventLogCollector:
     """Коллектор фактов из журналов событий Windows."""
+
+    def __init__(self) -> None:
+        """Инициализация коллектора с нативным WevtAPI."""
+        self.wevtapi = WevtAPI()
 
     def collect(self, hours: int = 24) -> DomainAuditResult:
         """Сбор недавних критических событий и ошибок.
@@ -49,15 +52,15 @@ class EventLogCollector:
 
         metrics: Dict[str, Any] = {
             "time_window_hours": hours,
-            "critical_events_count": len([e for e in events if e.get("Level") in (1, "Critical")]),
-            "error_events_count": len([e for e in events if e.get("Level") in (2, "Error")]),
+            "critical_events_count": len([e for e in events if str(e.get("level", "")).lower() in ("critical", "1")]),
+            "error_events_count": len([e for e in events if str(e.get("level", "")).lower() in ("error", "2")]),
             "total_events": len(events),
         }
 
         # Группировка ошибок по источникам
         sources: Dict[str, int] = {}
         for ev in events:
-            src = ev.get("ProviderName", "Unknown")
+            src = ev.get("provider", "Unknown") or "Unknown"
             sources[src] = sources.get(src, 0) + 1
 
         for src, count in sources.items():
@@ -84,21 +87,15 @@ class EventLogCollector:
         )
 
     def _get_recent_errors(self, hours: int = 24) -> List[Dict[str, Any]]:
-        """Получение ошибок за последние N часов через Get-WinEvent."""
-        cmd = [
-            "powershell",
-            "-NoProfile",
-            "-Command",
-            f"Get-WinEvent -FilterHashtable @{{LogName='System','Application'; Level=1,2; StartTime=(Get-Date).AddHours(-{hours})}} -MaxEvents 50 -ErrorAction SilentlyContinue | Select-Object TimeCreated, Id, ProviderName, LevelDisplayName, Message | ConvertTo-Json -Compress",
-        ]
+        """Получение ошибок через нативный WevtAPI без использования PowerShell."""
+        events: List[Dict[str, Any]] = []
         try:
-            res = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
-            if res.returncode == 0 and res.stdout.strip():
-                data = json.loads(res.stdout.strip())
-                if isinstance(data, dict):
-                    return [data]
-                elif isinstance(data, list):
-                    return data
+            for chan in ("System", "Application"):
+                errs = self.wevtapi.read_events(channel=chan, limit=25, level="Error", hours=hours)
+                events.extend(errs)
+                crits = self.wevtapi.read_events(channel=chan, limit=25, level="Critical", hours=hours)
+                events.extend(crits)
         except Exception as e:
-            logger.debug(f"Ошибка при вызове Get-WinEvent: {e}")
-        return []
+            logger.debug(f"Ошибка при сборе системных ошибок через WevtAPI: {e}")
+        return events
+

@@ -1,0 +1,9 @@
+{
+  "server": {
+    "dedicated": false,
+    "host": "127.0.0.1",
+    "port": 8122,
+    "use_ssl": false,
+    "workers": 1
+  }
+}

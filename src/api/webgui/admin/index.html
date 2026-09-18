@@ -82,6 +82,9 @@
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-mcp" data-bs-target="#tab-mcp" type="button" data-i18n="tabs.mcp">
             🔌 MCP Серверы
           </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-observability" data-bs-target="#tab-observability" type="button">
+            🔍 Observability & Диагностика
+          </button>
         </div>
       </li>
 
@@ -129,14 +132,23 @@
           <span data-i18n="tabs.groupApps">Приложения</span>
         </button>
         <div class="dropdown-menu shadow border-secondary-subtle">
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-trading" data-bs-target="#tab-trading" type="button" data-i18n="tabs.trading">
-            📈 Торговый терминал
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-about-system" data-bs-target="#tab-about-system" type="button" data-i18n="tabs.aboutSystem">
+            ℹ️ О Системе
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-scenarios" data-bs-target="#tab-scenarios" type="button" data-i18n="tabs.scenarios">
+            💬🎬 Чат и сценарии
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-chat" data-bs-target="#tab-chat" type="button" data-i18n="tabs.chat">
+            💬 Чат
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-system-inspector" data-bs-target="#tab-system-inspector" type="button" data-i18n="tabs.systemInspector">
+            📡 Телеметрия
           </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-network" data-bs-target="#tab-network" type="button" data-i18n="tabs.network">
             🌐 Сетевой терминал
           </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-system-inspector" data-bs-target="#tab-system-inspector" type="button" data-i18n="tabs.systemInspector">
-            🖥️ Системный инспектор
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-trading" data-bs-target="#tab-trading" type="button" data-i18n="tabs.trading">
+            📈 Торговый терминал
           </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-windows-admin" data-bs-target="#tab-windows-admin" type="button">
             🛡️ Windows Sysadmin
@@ -158,6 +170,12 @@
           </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-system-logs" data-bs-target="#tab-system-logs" type="button">
             📜 Журналы системы (All Logs)
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-software-audit" data-bs-target="#tab-software-audit" type="button">
+            📊 Software Audit
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-registry-viewer" data-bs-target="#tab-registry-viewer" type="button">
+            🗝️ Registry Viewer
           </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-wikipedia-research" data-bs-target="#tab-wikipedia-research" type="button">
             🌐 Wikipedia Research Lab
@@ -274,6 +292,12 @@
       </div>
 
 
+      <!-- Mode Switcher: Test Computer (/tc) -->
+      <a href="/tc" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1.5 px-2.5 py-1 rounded-pill shadow-sm" title="Перейти в режим Test Computer (/tc)">
+        <i class="bi bi-display"></i>
+        <span class="small fw-semibold">Test Computer</span>
+      </a>
+
       <!-- Quick Settings Gear Button -->
       <button class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center p-0 rounded-circle" id="user-settings-gear-btn" data-bs-toggle="modal" data-bs-target="#userSettingsModal" title="Настройки" style="width: 32px; height: 32px;" data-i18n-title="userSettings.title">
         <i class="bi bi-gear-fill"></i>
@@ -349,6 +373,12 @@
     <!-- System Inspector Tab -->
     <div id="tab-system-inspector" class="tab-pane fade"></div>
 
+    <!-- About System Tab -->
+    <div id="tab-about-system" class="tab-pane fade"></div>
+
+    <!-- Observability & Diagnostics Tab -->
+    <div id="tab-observability" class="tab-pane fade"></div>
+
     <!-- Windows System Administrator Tab -->
     <div id="tab-windows-admin" class="tab-pane fade"></div>
 
@@ -369,6 +399,15 @@
 
     <!-- System Log Viewer Tab -->
     <div id="tab-system-logs" class="tab-pane fade"></div>
+
+    <!-- Software Audit Tab -->
+    <div id="tab-software-audit" class="tab-pane fade"></div>
+
+    <!-- Registry Viewer Tab -->
+    <div id="tab-registry-viewer" class="tab-pane fade"></div>
+
+    <!-- Scenarios Tab -->
+    <div id="tab-scenarios" class="tab-pane fade"></div>
 
     <!-- Wikipedia Research Lab Tab -->
     <div id="tab-wikipedia-research" class="tab-pane fade"></div>

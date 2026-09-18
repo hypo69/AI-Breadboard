@@ -1,0 +1,301 @@
+<!-- Windows Backup & Libraries Manager Tab -->
+<style>
+  .wb-container {
+    padding: 0.5rem 0.75rem;
+  }
+  .wb-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+    padding: 0.45rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    min-height: 58px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .wb-card:hover {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  .wb-card-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    line-height: 1.1;
+  }
+  .wb-card-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    line-height: 1.15;
+  }
+  .wb-card-sub {
+    font-size: 0.7rem;
+    color: #64748b;
+    line-height: 1.1;
+  }
+
+  .wb-panel {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 0.75rem;
+  }
+  .wb-panel-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    padding: 0.45rem 0.85rem;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .wb-table {
+    margin-bottom: 0;
+    font-size: 0.8rem;
+  }
+  .wb-table th {
+    background: #1e293b;
+    color: #94a3b8;
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    border-bottom: 1px solid #334155;
+    padding: 0.4rem 0.6rem;
+  }
+  .wb-table td {
+    border-bottom: 1px solid #1e293b;
+    padding: 0.45rem 0.6rem;
+    vertical-align: middle;
+  }
+</style>
+
+<div class="wb-container">
+  <!-- Header Bar -->
+  <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+    <div>
+      <h6 class="mb-0 fw-bold text-white d-flex align-items-center gap-2">
+        <span>💾</span> Резервное копирование и библиотеки Windows
+      </h6>
+      <div class="small text-muted" style="font-size: 0.72rem;">
+        Управление системными библиотеками Windows (.library-ms), службой File History (fhsvc) и теневыми копиями VSS
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="wb-btn-trigger-backup" title="Принудительный запуск архивации через fhexec">
+        <i class="bi bi-play-fill"></i>
+        <span>Запустить бэкап</span>
+      </button>
+      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="wb-btn-refresh">
+        <i class="bi bi-arrow-clockwise"></i>
+        <span>Обновить</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Stats Row -->
+  <div class="row g-2 mb-2">
+    <div class="col-6 col-md-3">
+      <div class="wb-card">
+        <div class="wb-card-label">
+          <span>Health Score</span>
+          <span class="badge bg-secondary" id="wb-badge-status">-</span>
+        </div>
+        <div class="wb-card-value text-info" id="wb-val-health">- / 100</div>
+        <div class="wb-card-sub" id="wb-sub-health">Готовность защиты данных</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="wb-card">
+        <div class="wb-card-label">
+          <span>Служба File History</span>
+          <span>⚙️</span>
+        </div>
+        <div class="wb-card-value text-white" id="wb-val-service">-</div>
+        <div class="wb-card-sub text-truncate" id="wb-sub-service">fhsvc статус</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="wb-card">
+        <div class="wb-card-label">
+          <span>Библиотеки / VSS</span>
+          <span>📁</span>
+        </div>
+        <div class="wb-card-value text-success" id="wb-val-libraries">-</div>
+        <div class="wb-card-sub" id="wb-sub-libraries">Библиотек / VSS снимков</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="wb-card">
+        <div class="wb-card-label">
+          <span>Аудит удаления (24ч)</span>
+          <button class="btn btn-xs btn-outline-primary py-0 px-1" id="wb-btn-enable-auditpol" title="Включить auditpol /subcategory:File System" style="font-size: 0.65rem;">Вкл</button>
+        </div>
+        <div class="wb-card-value text-danger" id="wb-val-deletions">0</div>
+        <div class="wb-card-sub" id="wb-sub-deletions">Event 4663 / 4660</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Panels -->
+  <div class="row g-2">
+    <!-- Left Column: Libraries & Folders -->
+    <div class="col-12 col-lg-7">
+      <div class="wb-panel">
+        <div class="wb-panel-header">
+          <span class="d-flex align-items-center gap-1.5">
+            <i class="bi bi-folder-symlink text-info"></i>
+            <span>Системные библиотеки Windows (.library-ms)</span>
+          </span>
+          <span class="badge bg-dark border border-secondary text-muted" id="wb-lib-count">0 шт.</span>
+        </div>
+        <div class="table-responsive" style="max-height: 240px; overflow-y: auto;">
+          <table class="table table-dark table-hover wb-table">
+            <thead>
+              <tr>
+                <th>Библиотека</th>
+                <th>Папки / Источники</th>
+                <th>Папка сохранения</th>
+                <th>Закреплена</th>
+              </tr>
+            </thead>
+            <tbody id="wb-libraries-body">
+              <tr>
+                <td colspan="4" class="text-center py-3 text-muted">Загрузка библиотек...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VSS Snapshots -->
+      <div class="wb-panel">
+        <div class="wb-panel-header">
+          <span class="d-flex align-items-center gap-1.5">
+            <i class="bi bi-camera text-warning"></i>
+            <span>Теневые копии томов VSS (Volume Shadow Copies)</span>
+          </span>
+          <span class="badge bg-dark border border-secondary text-muted" id="wb-vss-count">0 шт.</span>
+        </div>
+        <div class="table-responsive" style="max-height: 180px; overflow-y: auto;">
+          <table class="table table-dark table-hover wb-table">
+            <thead>
+              <tr>
+                <th>ID снимка</th>
+                <th>Исходный том</th>
+                <th>Время создания</th>
+                <th>Состояние</th>
+              </tr>
+            </thead>
+            <tbody id="wb-vss-body">
+              <tr>
+                <td colspan="4" class="text-center py-3 text-muted">Загрузка VSS снимков...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: File History Status & Storage Audit -->
+    <div class="col-12 col-lg-5">
+      <!-- File History Config & Target -->
+      <div class="wb-panel">
+        <div class="wb-panel-header">
+          <span class="d-flex align-items-center gap-1.5">
+            <i class="bi bi-clock-history text-primary"></i>
+            <span>Конфигурация File History</span>
+          </span>
+        </div>
+        <div class="p-2.5" style="font-size: 0.8rem;" id="wb-fh-details">
+          <div class="mb-2">
+            <div class="text-muted small">Целевой каталог бэкапа:</div>
+            <div class="fw-semibold text-break font-monospace small text-info" id="wb-fh-target">Не настроено</div>
+          </div>
+          <div class="mb-2">
+            <div class="text-muted small">Файл конфигурации:</div>
+            <div class="text-break font-monospace small text-muted" id="wb-fh-config">-</div>
+          </div>
+          <div class="row g-2 mb-1">
+            <div class="col-6">
+              <div class="text-muted small">Интервал архивации:</div>
+              <div class="fw-bold text-white" id="wb-fh-interval">-</div>
+            </div>
+            <div class="col-6">
+              <div class="text-muted small">Срок хранения версий:</div>
+              <div class="fw-bold text-white" id="wb-fh-retention">-</div>
+            </div>
+          </div>
+          <div class="mt-2 pt-2 border-top border-secondary">
+            <div class="text-muted small">Последняя успешная архивация:</div>
+            <div class="fw-semibold text-warning" id="wb-fh-last-backup">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommendations and Health Checklist -->
+      <div class="wb-panel">
+        <div class="wb-panel-header">
+          <span class="d-flex align-items-center gap-1.5">
+            <i class="bi bi-shield-check text-success"></i>
+            <span>Рекомендации безопасности данных</span>
+          </span>
+        </div>
+        <div class="p-2.5" style="max-height: 180px; overflow-y: auto;">
+          <ul class="list-unstyled mb-0" id="wb-recommendations-list" style="font-size: 0.78rem;">
+            <li class="text-muted text-center py-2">Загрузка рекомендаций...</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: File Deletion Auditing (Event 4663 / 4660) -->
+  <div class="row g-2 mt-1">
+    <div class="col-12">
+      <div class="wb-panel mb-0">
+        <div class="wb-panel-header">
+          <div class="d-flex align-items-center gap-2">
+            <span class="d-flex align-items-center gap-1.5">
+              <i class="bi bi-trash3-fill text-danger"></i>
+              <span>Аудит удаления файлов (Event 4663 / 4660)</span>
+            </span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-xs btn-outline-info py-0 px-2" id="wb-btn-configure-sacl" title="Настроить SACL Delete для папки" style="font-size: 0.72rem;">
+              <i class="bi bi-folder-check me-1"></i> Настроить SACL папки
+            </button>
+            <span class="badge bg-danger-subtle text-danger" id="wb-deletions-badge">0 удалений</span>
+          </div>
+        </div>
+        <div class="p-0 table-responsive" style="max-height: 280px; overflow-y: auto;">
+          <table class="table table-dark table-hover wb-table">
+            <thead>
+              <tr>
+                <th>Время</th>
+                <th>ID</th>
+                <th>Файл / Папка</th>
+                <th>Процесс</th>
+                <th>Пользователь</th>
+              </tr>
+            </thead>
+            <tbody id="wb-deletions-tbody">
+              <tr><td colspan="5" class="text-center text-muted p-3">Поиск событий удаления файлов...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

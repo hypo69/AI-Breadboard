@@ -1,11 +1,11 @@
 <#
 .SYNOPSIS
-    Standalone applications launcher for AI Breadboard (/apps microservices and web portal).
+    Standalone applications launcher for AI Breadboard (/tc and /apps Test Computer microservices).
 
 .DESCRIPTION
-    Launches only the applications block configured in config_tc.json or config.json:
-    - Dedicated /apps web interface
-    - Configured microservices (Network, System Inspector, Sysadmin, Cloudflared, GCloud, Website Monitor)
+    Launches only the test computer applications block configured in config_tc.json:
+    - Dedicated /tc web interface
+    - Configured system test microservices (Network, System Inspector, Sysadmin, Control Center, Log Viewer, Software Audit, Registry Viewer, Startup Auditor)
 
 .PARAMETER Action
     Action to perform: 'start' (default), 'stop', 'restart', 'status'.
@@ -28,6 +28,14 @@
 .PARAMETER NoBrowser
     Do not automatically open the web browser.
 
+.PARAMETER EnableTray
+    Включить интеграцию с системным треем Windows (по умолчанию: $true).
+    Алиасы: -Tray, -SystemTray, -tray_mode.
+
+.PARAMETER DisableCloseButton
+    Отключить кнопку закрытия консоли ([X]) для предотвращения случайного завершения процесса.
+    Алиасы: -ProtectClose, -NoClose.
+
 .PARAMETER Interactive
     Run in interactive menu selection mode (-i).
 
@@ -42,6 +50,7 @@
     .\tc.ps1 -ConfigFile config_tc.json
     .\tc.ps1 -Background
     .\tc.ps1 -Interactive
+    .\tc.ps1 -DisableCloseButton
     .\tc.ps1 --help
 #>
 
@@ -73,6 +82,12 @@ param (
     [switch]$Interactive,
 
     [switch]$NonInteractive,
+
+    [Alias('Tray', 'SystemTray', 'tray_mode')]
+    [Nullable[bool]]$EnableTray = $null,
+
+    [Alias('ProtectClose', 'NoClose')]
+    [switch]$DisableCloseButton,
 
     [Alias('h', '-help', '?')]
     [switch]$Help
@@ -138,15 +153,17 @@ Write-Host "╚═════════════════════�
 Write-Host ""
 
 # ============================================================================
-# STAGE 2 — ЗАГРУЗКА КОНФИГУРАЦИИ (config_tc.json -> config.json)
+# STAGE 2 — ЗАГРУЗКА КОНФИГУРАЦИИ (config_tc.json)
 # ============================================================================
-$activeConfigFile = "config.json"
+$activeConfigFile = "config_tc.json"
 if ($ConfigFile -and (Test-Path (Join-Path $scriptDir $ConfigFile))) {
     $activeConfigFile = $ConfigFile
-} elseif (Test-Path (Join-Path $scriptDir "config_ts.json")) {
-    $activeConfigFile = "config_ts.json"
 } elseif (Test-Path (Join-Path $scriptDir "config_tc.json")) {
     $activeConfigFile = "config_tc.json"
+} elseif (Test-Path (Join-Path $scriptDir "config_ts.json")) {
+    $activeConfigFile = "config_ts.json"
+} elseif (Test-Path (Join-Path $scriptDir "config.json")) {
+    $activeConfigFile = "config.json"
 }
 
 $cfgPath = Join-Path $scriptDir $activeConfigFile
@@ -157,6 +174,7 @@ $cfgHost = "127.0.0.1"
 $cfgPort = "8000"
 $useSsl  = $false
 $cfgApps = $null
+$enableTrayVal = $true
 
 if (Test-Path $cfgPath) {
     try {
@@ -168,6 +186,9 @@ if (Test-Path $cfgPath) {
                 $useSsl = ([string]$cfg.server.protocol.ToString().ToLower() -eq "https")
             } elseif ($cfg.server.use_ssl -ne $null) {
                 $useSsl = [bool]$cfg.server.use_ssl
+            }
+            if ($cfg.server.enable_tray -ne $null) {
+                $enableTrayVal = [bool]$cfg.server.enable_tray
             }
         }
         if ($cfg.apps) {
@@ -187,8 +208,13 @@ if (Test-Path $envFile) {
             $val = $Matches[2].Trim().Trim('"').Trim("'")
             if ($key -eq "PROTOCOL") { $useSsl = ($val.ToLower() -eq "https") }
             if ($key -eq "USE_SSL") { $useSsl = $val -in ("true","1","yes") }
+            if ($key -eq "ENABLE_TRAY") { $enableTrayVal = $val -in ("true","1","yes") }
         }
     }
+}
+
+if ($EnableTray -ne $null) {
+    $enableTrayVal = [bool]$EnableTray
 }
 
 $host_ = if ($HostAddress) { $HostAddress } else { $cfgHost }
@@ -265,9 +291,9 @@ function Open-AppsBrowser {
         $edgeArgs = @(
             "--app=$Url",
             "--user-data-dir=`"$profileDir`"",
-            "--window-size=1280,850"
+            "--start-maximized"
         )
-        Start-Process -FilePath $edgeExe -ArgumentList ($edgeArgs -join " ")
+        Start-Process -FilePath $edgeExe -ArgumentList ($edgeArgs -join " ") -WindowStyle Maximized
     } else {
         Start-Process $Url
     }
@@ -288,6 +314,16 @@ if (Test-Path $appsLauncher) {
         $callArgs['NewWindow'] = $true
     }
     & $appsLauncher @callArgs
+}
+
+# 1.1 Запуск LibreHardwareMonitor в скрытом фоновом режиме для сбора аппаратных метрик
+$lhmLauncher = Join-Path $scriptDir "launchers\Run-LHM.ps1"
+if (-not (Test-Path $lhmLauncher)) {
+    $lhmLauncher = Join-Path $scriptDir "Run-LHM.ps1"
+}
+if (Test-Path $lhmLauncher) {
+    Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkCyan
+    & $lhmLauncher -Action $Action
 }
 
 # 2. Проверяем состояние основного сервера (для shared-режима)
@@ -311,6 +347,33 @@ if ($Action -eq 'stop') {
 }
 
 if ($Action -in @('start', 'restart')) {
+    # Инициализация системного трея (ShowHide-InTray.ps1)
+    if ($enableTrayVal) {
+        Write-Host ""
+        Write-Host "    Инициализация системного трея (ShowHide-InTray.ps1)..." -ForegroundColor Cyan
+        $trayScript = Join-Path $scriptDir "launchers\ShowHide-InTray.ps1"
+        if (-not (Test-Path $trayScript)) {
+            $trayScript = Join-Path $scriptDir "ShowHide-InTray.ps1"
+        }
+        if (Test-Path $trayScript) {
+            try {
+                $trayCallArgs = @{
+                    Action = 'start'
+                    WebUrl = $appsUrl
+                    Title  = "AI Breadboard - Test Computer (/tc)"
+                }
+                if ($DisableCloseButton) {
+                    $trayCallArgs['DisableCloseButton'] = $true
+                }
+                & $trayScript @trayCallArgs
+            } catch {
+                Write-Host "    [WARN] Не удалось инициализировать системный трей: $_" -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host "    [WARN] ShowHide-InTray.ps1 не найден: $trayScript" -ForegroundColor Yellow
+        }
+    }
+
     if ($isServerRunning) {
         Write-Host "✅ Веб-сервер уже работает на порту $port_." -ForegroundColor Green
         Open-AppsBrowser -Url $appsUrl

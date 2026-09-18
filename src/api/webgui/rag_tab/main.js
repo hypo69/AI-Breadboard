@@ -45,6 +45,13 @@ import {
   syncGoogleDocsIntoActiveRag
 } from './modules/userRagPipeline.js';
 
+import {
+  loadPixelRagStatus,
+  uploadAndIndexPixelImages,
+  analyzePixelQuery,
+  executePixelRagSearch
+} from './modules/pixelRag.js';
+
 /**
  * Initialize all RAG tab components, event listeners, and data feeds.
  *
@@ -56,6 +63,7 @@ export async function initRagTab() {
   loadRagStatus();
   loadRagDocuments();
   loadCodebaseIndexes();
+  loadPixelRagStatus();
 }
 
 // Expose globals for external tab orchestrators and inline handlers
@@ -79,6 +87,74 @@ function setupEventListeners() {
       loadRagStatus();
       loadRagDocuments();
       loadCodebaseIndexes();
+      loadPixelRagStatus();
+    });
+  }
+
+  // --- PixelRAG Listeners ---
+  const refreshPixelStatsBtn = document.getElementById('btn-refresh-pixel-stats');
+  if (refreshPixelStatsBtn) {
+    refreshPixelStatsBtn.addEventListener('click', loadPixelRagStatus);
+  }
+
+  const pixelFileInput = document.getElementById('pixel-file-input');
+  if (pixelFileInput) {
+    pixelFileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        uploadAndIndexPixelImages(Array.from(e.target.files));
+        pixelFileInput.value = '';
+      }
+    });
+  }
+
+  const pixelDropzone = document.getElementById('pixel-dropzone');
+  if (pixelDropzone) {
+    ['dragenter', 'dragover'].forEach(eventName => {
+      pixelDropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        pixelDropzone.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      pixelDropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        pixelDropzone.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+      }, false);
+    });
+
+    pixelDropzone.addEventListener('drop', async (e) => {
+      const dt = e.dataTransfer;
+      if (dt) {
+        const files = await getAllFilesFromDataTransfer(dt);
+        if (files && files.length > 0) {
+          uploadAndIndexPixelImages(files);
+        }
+      }
+    }, false);
+  }
+
+  const btnPixelAnalyze = document.getElementById('btn-pixel-analyze-query');
+  const inputPixelAnalyze = document.getElementById('pixel-analyze-query-input');
+  if (btnPixelAnalyze) {
+    btnPixelAnalyze.addEventListener('click', analyzePixelQuery);
+  }
+  if (inputPixelAnalyze) {
+    inputPixelAnalyze.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') analyzePixelQuery();
+    });
+  }
+
+  const btnPixelSearch = document.getElementById('btn-pixel-search');
+  const inputPixelSearch = document.getElementById('pixel-search-query');
+  if (btnPixelSearch) {
+    btnPixelSearch.addEventListener('click', executePixelRagSearch);
+  }
+  if (inputPixelSearch) {
+    inputPixelSearch.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') executePixelRagSearch();
     });
   }
 

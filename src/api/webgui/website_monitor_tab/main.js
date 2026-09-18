@@ -67,13 +67,48 @@
           tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted p-3">Нет данных о просмотрах.</td></tr>';
           return;
         }
-        tbody.innerHTML = pages.map(p => `
-          <tr>
+        tbody.innerHTML = pages.map((p, idx) => `
+          <tr class="webmon-page-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для AI-анализа страницы">
             <td class="text-info text-truncate" style="max-width: 240px;" title="${p.page_path || '/'}">${p.page_path || '/'}</td>
             <td class="text-end text-light">${p.screen_page_views || p.views || 0}</td>
             <td class="text-end text-secondary">${p.active_users || p.users || 0}</td>
           </tr>
         `).join('');
+
+        tbody.querySelectorAll('.webmon-page-row').forEach(row => {
+          row.onclick = () => {
+            const idx = parseInt(row.getAttribute('data-idx'), 10);
+            const p = pages[idx];
+            if (!p) return;
+
+            if (window.AITableModal) {
+              window.AITableModal.show({
+                icon: '🌐',
+                title: `Веб-страница ${p.page_path || '/'}`,
+                subtitle: `Просмотров: ${p.screen_page_views || p.views || 0} | Пользователей: ${p.active_users || p.users || 0}`,
+                tableType: 'website',
+                badges: [
+                  { text: `${p.screen_page_views || 0} views`, class: 'badge bg-info text-dark' },
+                  { text: `${p.active_users || 0} users`, class: 'badge bg-success' }
+                ],
+                metadata: [
+                  { label: 'URL / Путь страницы', value: p.page_path || '/' },
+                  { label: 'Просмотры страниц', value: String(p.screen_page_views || p.views || 0) },
+                  { label: 'Активные пользователи', value: String(p.active_users || p.users || 0) },
+                  { label: 'Показатель отказов', value: p.bounce_rate ? `${p.bounce_rate}%` : 'N/A' },
+                  { label: 'Средняя длительность', value: p.avg_session_duration ? `${p.avg_session_duration} сек` : 'N/A' }
+                ],
+                rawTitle: 'Аналитика веб-страницы',
+                rawContent: JSON.stringify(p, null, 2),
+                requestData: {
+                  url: p.page_path,
+                  views: p.screen_page_views || p.views,
+                  users: p.active_users || p.users
+                }
+              });
+            }
+          };
+        });
       }
     } catch (e) {
       console.error('[WebsiteMonitorTab] Failed to fetch pages:', e);

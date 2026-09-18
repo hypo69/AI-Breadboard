@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="dark">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,236 +7,283 @@
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/html/css/main.css?v=20260915_light_v2" rel="stylesheet">
+  <link href="/html/css/main.css?v=20260917_refactor_v1" rel="stylesheet">
   <style>
+    /* ── Страница входа: центрирование и лёгкий фон ── */
     body {
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background: radial-gradient(circle at 50% 20%, rgba(99, 102, 241, 0.12), transparent 70%), var(--bg-color);
       margin: 0;
-      padding: 1.5rem;
+      padding: 1rem;
+      /* Лёгкий градиентный акцент поверх --bg-color из main.css */
+      background:
+        radial-gradient(circle at 50% 15%, rgba(99, 102, 241, 0.08), transparent 65%),
+        var(--bg-color);
     }
+
+    /* ── Карточка входа ── */
     .auth-card {
       width: 100%;
-      max-width: 440px;
-      background: var(--card-bg);
+      max-width: 400px;
+      background: var(--surface-1);
       border: 1px solid var(--border-color);
-      border-radius: 16px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
       overflow: hidden;
-      transition: all 0.3s ease;
     }
+
+    /* ── Шапка карточки ── */
     .auth-header {
-      padding: 2rem 2rem 1.25rem;
+      padding: 1.5rem 1.5rem 1rem;
       text-align: center;
-      background: rgba(99, 102, 241, 0.04);
+      background: var(--surface-2);
       border-bottom: 1px solid var(--border-color);
     }
+
+    /* ── Логотип-бейдж ── */
     .auth-logo-badge {
-      width: 56px;
-      height: 56px;
-      border-radius: 14px;
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
       background: linear-gradient(135deg, #6366f1, #3b82f6);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.75rem;
+      font-size: 1.5rem;
       color: #fff;
-      box-shadow: 0 8px 16px rgba(99, 102, 241, 0.35);
-      margin-bottom: 1rem;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      margin-bottom: 0.75rem;
     }
+
+    /* ── Навигационные вкладки входа/регистрации ── */
     .auth-nav-tabs .nav-link {
       border: none;
       border-bottom: 2px solid transparent;
       color: var(--text-color);
-      opacity: 0.7;
+      opacity: 0.65;
       font-weight: 600;
-      padding: 0.75rem 1rem;
-      transition: all 0.2s;
+      font-size: 0.85rem;
+      padding: 0.55rem 1rem;
+      background: transparent;
+      transition: all 0.18s;
     }
+
     .auth-nav-tabs .nav-link.active {
       background: transparent;
       border-bottom: 2px solid #6366f1;
       color: #6366f1;
       opacity: 1;
     }
+
+    [data-theme="dark"] .auth-nav-tabs .nav-link.active {
+      color: #818cf8;
+      border-bottom-color: #818cf8;
+    }
+
+    /* ── Google OAuth кнопка ── */
     .btn-google {
-      background: #ffffff;
-      color: #1f2937;
-      border: 1px solid rgba(0, 0, 0, 0.15);
+      background: var(--surface-1);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
       font-weight: 500;
-      transition: all 0.2s;
+      font-size: 0.85rem;
+      transition: all 0.18s;
     }
+
     .btn-google:hover {
-      background: #f8fafc;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      color: #111827;
+      background: var(--surface-2);
+      box-shadow: var(--shadow-sm);
+      color: var(--text-color);
     }
-    [data-theme="dark"] .btn-google {
-      background: #21262d;
-      color: #e6edf3;
-      border-color: #30363d;
-    }
-    [data-theme="dark"] .btn-google:hover {
-      background: #30363d;
-      color: #ffffff;
-    }
+
+    /* ── Разделитель «или по почте» ── */
     .divider-text {
       display: flex;
       align-items: center;
       text-align: center;
-      color: var(--text-color);
-      opacity: 0.5;
-      font-size: 0.8rem;
-      margin: 1.25rem 0;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      margin: 1rem 0;
     }
-    .divider-text::before, .divider-text::after {
+
+    .divider-text::before,
+    .divider-text::after {
       content: '';
       flex: 1;
       border-bottom: 1px solid var(--border-color);
     }
-    .divider-text:not(:empty)::before {
-      margin-right: 0.75em;
-    }
-    .divider-text:not(:empty)::after {
-      margin-left: 0.75em;
-    }
+
+    .divider-text:not(:empty)::before { margin-right: 0.6em; }
+    .divider-text:not(:empty)::after  { margin-left:  0.6em; }
+
+    /* ── Кнопки управления (тема + язык) в правом верхнем углу ── */
     .top-controls {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
+      position: fixed;
+      top: 0.75rem;
+      right: 0.75rem;
       display: flex;
-      gap: 0.5rem;
-      z-index: 10;
+      gap: 0.375rem;
+      z-index: 100;
     }
   </style>
 </head>
 <body>
 
-  <!-- Controls (Theme & Lang) -->
+  <!-- Управление: тема и язык -->
   <div class="top-controls">
-    <select class="form-select form-select-sm bg-body-tertiary border-secondary-subtle lang-selector" id="auth-lang-selector" style="width: auto;">
+    <select class="form-select form-select-sm" id="auth-lang-selector" style="width: auto; font-size: 0.78rem; padding: 0.2rem 0.4rem;">
       <option value="ru">RU</option>
       <option value="en">EN</option>
       <option value="he">HE</option>
     </select>
-    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center rounded-circle" id="theme-toggle-btn" style="width: 32px; height: 32px;" title="Сменить тему">
-      <i class="bi bi-moon-stars" id="theme-toggle-icon"></i>
+    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center rounded-circle"
+            id="theme-toggle"
+            title="Переключить тему"
+            style="width: 28px; height: 28px; padding: 0;">
+      <i class="bi bi-circle-half" id="theme-icon"></i>
     </button>
   </div>
 
   <div class="auth-card">
+    <!-- Шапка -->
     <div class="auth-header">
       <div class="auth-logo-badge">
         <i class="bi bi-cpu-fill"></i>
       </div>
-      <h4 class="fw-bold mb-1" id="title-app-name">AI Breadboard</h4>
-      <p class="text-secondary small mb-0" id="title-app-desc">Авторизуйтесь для доступа к сервисам ИИ</p>
+      <h5 class="fw-bold mb-1" id="title-app-name">AI Breadboard</h5>
+      <p class="small mb-0" style="color: var(--text-muted);" id="title-app-desc">Авторизуйтесь для доступа к сервисам ИИ</p>
     </div>
 
-    <!-- Navigation Tabs -->
+    <!-- Вкладки: Войти / Регистрация -->
     <ul class="nav nav-tabs auth-nav-tabs nav-fill px-3 pt-2" id="authTabs" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link active" id="tab-login-btn" data-bs-toggle="tab" data-bs-target="#pane-login" type="button" role="tab">
-          <i class="bi bi-box-arrow-in-right me-1"></i> <span id="label-tab-login">Войти</span>
+          <i class="bi bi-box-arrow-in-right me-1"></i>
+          <span id="label-tab-login">Войти</span>
         </button>
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link" id="tab-register-btn" data-bs-toggle="tab" data-bs-target="#pane-register" type="button" role="tab">
-          <i class="bi bi-person-plus me-1"></i> <span id="label-tab-register">Регистрация</span>
+          <i class="bi bi-person-plus me-1"></i>
+          <span id="label-tab-register">Регистрация</span>
         </button>
       </li>
     </ul>
 
-    <div class="card-body p-4">
-      <!-- Status Alerts -->
+    <!-- Тело карточки -->
+    <div class="card-body p-3">
+      <!-- Статус-алерт -->
       <div id="auth-alert" class="alert d-none mb-3 py-2 small" role="alert"></div>
 
-      <!-- Google OAuth Button -->
-      <button type="button" class="btn btn-google w-100 py-2 d-flex align-items-center justify-content-center gap-2 shadow-sm rounded-3" id="btn-google-auth">
-        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+      <!-- Google OAuth -->
+      <button type="button"
+              class="btn btn-google w-100 d-flex align-items-center justify-content-center gap-2 rounded-3 mb-0"
+              style="padding: 0.45rem 0.75rem;"
+              id="btn-google-auth">
+        <svg width="16" height="16" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
         <span id="label-google-auth">Продолжить с Google</span>
       </button>
 
       <div class="divider-text" id="label-or-email">или по почте</div>
 
-      <!-- Tab Content -->
+      <!-- Контент вкладок -->
       <div class="tab-content" id="authTabsContent">
-        <!-- LOGIN PANE -->
+
+        <!-- ВХОД -->
         <div class="tab-pane fade show active" id="pane-login" role="tabpanel">
           <form id="form-login">
-            <div class="mb-3">
-              <label class="form-label small fw-semibold" id="label-email-login" for="login-email">Email</label>
-              <div class="input-group">
-                <span class="input-group-text bg-body-tertiary border-secondary-subtle"><i class="bi bi-envelope"></i></span>
-                <input type="email" class="form-control" id="login-email" required placeholder="name@example.com" autocomplete="email">
+            <div class="mb-2">
+              <label class="form-label fw-semibold" id="label-email-login" for="login-email">Email</label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                <input type="email" class="form-control form-control-sm" id="login-email"
+                       required placeholder="name@example.com" autocomplete="email">
               </div>
             </div>
             <div class="mb-3">
-              <label class="form-label small fw-semibold" id="label-pass-login" for="login-password">Пароль</label>
-              <div class="input-group">
-                <span class="input-group-text bg-body-tertiary border-secondary-subtle"><i class="bi bi-key"></i></span>
-                <input type="password" class="form-control" id="login-password" required placeholder="••••••••" autocomplete="current-password">
+              <label class="form-label fw-semibold" id="label-pass-login" for="login-password">Пароль</label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-key"></i></span>
+                <input type="password" class="form-control form-control-sm" id="login-password"
+                       required placeholder="••••••••" autocomplete="current-password">
               </div>
             </div>
-            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold rounded-3 shadow-sm" id="btn-submit-login">
+            <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold" id="btn-submit-login"
+                    style="padding: 0.45rem;">
               <span class="spinner-border spinner-border-sm d-none me-1" id="login-spinner"></span>
               <span id="label-btn-login">Войти в аккаунт</span>
             </button>
           </form>
         </div>
 
-        <!-- REGISTER PANE -->
+        <!-- РЕГИСТРАЦИЯ -->
         <div class="tab-pane fade" id="pane-register" role="tabpanel">
           <form id="form-register">
             <div class="mb-2">
-              <label class="form-label small fw-semibold" id="label-reg-name" for="reg-name">Ваше имя</label>
-              <div class="input-group">
-                <span class="input-group-text bg-body-tertiary border-secondary-subtle"><i class="bi bi-person"></i></span>
-                <input type="text" class="form-control" id="reg-name" required placeholder="Иван Иванов" autocomplete="name">
+              <label class="form-label fw-semibold" id="label-reg-name" for="reg-name">Ваше имя</label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <input type="text" class="form-control form-control-sm" id="reg-name"
+                       required placeholder="Иван Иванов" autocomplete="name">
               </div>
             </div>
             <div class="mb-2">
-              <label class="form-label small fw-semibold" id="label-reg-email" for="reg-email">Email</label>
-              <div class="input-group">
-                <span class="input-group-text bg-body-tertiary border-secondary-subtle"><i class="bi bi-envelope"></i></span>
-                <input type="email" class="form-control" id="reg-email" required placeholder="name@example.com" autocomplete="email">
+              <label class="form-label fw-semibold" id="label-reg-email" for="reg-email">Email</label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                <input type="email" class="form-control form-control-sm" id="reg-email"
+                       required placeholder="name@example.com" autocomplete="email">
               </div>
             </div>
             <div class="mb-3">
-              <label class="form-label small fw-semibold" id="label-reg-pass" for="reg-password">Придумайте пароль</label>
-              <div class="input-group">
-                <span class="input-group-text bg-body-tertiary border-secondary-subtle"><i class="bi bi-lock"></i></span>
-                <input type="password" class="form-control" id="reg-password" required placeholder="Минимум 6 символов" minlength="6" autocomplete="new-password">
+              <label class="form-label fw-semibold" id="label-reg-pass" for="reg-password">Придумайте пароль</label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <input type="password" class="form-control form-control-sm" id="reg-password"
+                       required placeholder="Минимум 6 символов" minlength="6" autocomplete="new-password">
               </div>
             </div>
-            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold rounded-3 shadow-sm" id="btn-submit-reg">
+            <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold" id="btn-submit-reg"
+                    style="padding: 0.45rem;">
               <span class="spinner-border spinner-border-sm d-none me-1" id="reg-spinner"></span>
               <span id="label-btn-reg">Зарегистрироваться</span>
             </button>
           </form>
         </div>
+
       </div>
     </div>
   </div>
 
-  <!-- Email Verification Code Modal -->
+  <!-- Модальное окно подтверждения email -->
   <div class="modal fade" id="verifyModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-      <div class="modal-content shadow border-secondary-subtle">
-        <div class="modal-header border-secondary-subtle">
-          <h6 class="modal-title fw-bold"><i class="bi bi-shield-check text-primary me-1"></i> Подтверждение почты</h6>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title fw-bold">
+            <i class="bi bi-shield-check text-primary me-1"></i> Подтверждение почты
+          </h6>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body p-3 text-center">
-          <p class="small text-muted mb-3" id="verify-modal-desc">Введите код подтверждения, отправленный на ваш email:</p>
+        <div class="modal-body text-center">
+          <p class="small mb-3" style="color: var(--text-muted);" id="verify-modal-desc">
+            Введите код подтверждения, отправленный на ваш email:
+          </p>
           <div class="mb-3">
-            <input type="text" class="form-control text-center fs-4 letter-spacing-2" id="verify-code-input" placeholder="123456" maxlength="6" autofocus>
+            <input type="text" class="form-control form-control-sm text-center"
+                   id="verify-code-input" placeholder="123456" maxlength="6"
+                   autofocus style="letter-spacing: 0.2em; font-size: 1.1rem;">
           </div>
           <div id="verify-alert" class="alert d-none py-1 small"></div>
-          <button type="button" class="btn btn-primary w-100 py-2 fw-semibold" id="btn-submit-verify">
+          <button type="button" class="btn btn-primary btn-sm w-100 fw-semibold" id="btn-submit-verify"
+                  style="padding: 0.45rem;">
             <span class="spinner-border spinner-border-sm d-none me-1" id="verify-spinner"></span>
             Подтвердить
           </button>
@@ -250,72 +297,78 @@
     (function() {
       'use strict';
 
-      // --- Theme Setup ---
-      function initTheme() {
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        applyTheme(savedTheme);
+      // ── Тема: системная по умолчанию ────────────────────────────────────────
+      function getSystemTheme() {
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark' : 'light';
       }
-      function applyTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        const icon = document.getElementById('theme-toggle-icon');
+
+      function applyTheme(mode) {
+        // mode: 'light' | 'dark' | 'system'
+        const resolved = (mode === 'system') ? getSystemTheme() : mode;
+        document.documentElement.setAttribute('data-theme', resolved);
+        document.documentElement.setAttribute('data-bs-theme', resolved);
+
+        const icon = document.getElementById('theme-icon');
         if (icon) {
-          icon.className = theme === 'dark' ? 'bi bi-moon-stars' : 'bi bi-sun';
+          if (mode === 'light')        icon.className = 'bi bi-sun-fill text-warning';
+          else if (mode === 'dark')    icon.className = 'bi bi-moon-stars-fill text-primary';
+          else                         icon.className = 'bi bi-circle-half text-info';
         }
       }
-      document.getElementById('theme-toggle-btn').addEventListener('click', () => {
-        const cur = document.documentElement.getAttribute('data-theme') || 'dark';
-        const next = cur === 'dark' ? 'light' : 'dark';
+
+      function initTheme() {
+        const saved = localStorage.getItem('theme') || 'system';
+        applyTheme(saved);
+
+        // Следим за изменениями ОС в системном режиме
+        if (window.matchMedia) {
+          window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if ((localStorage.getItem('theme') || 'system') === 'system') {
+              applyTheme('system');
+            }
+          });
+        }
+      }
+
+      // Кнопка переключения темы: цикл system → light → dark → system
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const cur = localStorage.getItem('theme') || 'system';
+        const next = { system: 'light', light: 'dark', dark: 'system' }[cur] || 'system';
         localStorage.setItem('theme', next);
         applyTheme(next);
       });
+
       initTheme();
 
-      // --- I18n Dictionaries ---
+      // ── I18n ────────────────────────────────────────────────────────────────
       const i18nDict = {
         ru: {
           appDesc: 'Авторизуйтесь для доступа к сервисам ИИ',
-          tabLogin: 'Войти',
-          tabReg: 'Регистрация',
-          btnGoogle: 'Продолжить с Google',
-          orEmail: 'или по почте',
-          email: 'Email',
-          pass: 'Пароль',
-          regName: 'Ваше имя',
-          regPass: 'Придумайте пароль',
-          btnLogin: 'Войти в аккаунт',
-          btnReg: 'Зарегистрироваться',
-          passPlaceholder: 'Минимум 6 символов',
-          namePlaceholder: 'Иван Иванов'
+          tabLogin: 'Войти', tabReg: 'Регистрация',
+          btnGoogle: 'Продолжить с Google', orEmail: 'или по почте',
+          email: 'Email', pass: 'Пароль',
+          regName: 'Ваше имя', regPass: 'Придумайте пароль',
+          btnLogin: 'Войти в аккаунт', btnReg: 'Зарегистрироваться',
+          passPlaceholder: 'Минимум 6 символов', namePlaceholder: 'Иван Иванов'
         },
         en: {
           appDesc: 'Sign in to access AI Breadboard services',
-          tabLogin: 'Sign In',
-          tabReg: 'Sign Up',
-          btnGoogle: 'Continue with Google',
-          orEmail: 'or via Email',
-          email: 'Email',
-          pass: 'Password',
-          regName: 'Full Name',
-          regPass: 'Create Password',
-          btnLogin: 'Sign In',
-          btnReg: 'Create Account',
-          passPlaceholder: 'Minimum 6 characters',
-          namePlaceholder: 'John Doe'
+          tabLogin: 'Sign In', tabReg: 'Sign Up',
+          btnGoogle: 'Continue with Google', orEmail: 'or via Email',
+          email: 'Email', pass: 'Password',
+          regName: 'Full Name', regPass: 'Create Password',
+          btnLogin: 'Sign In', btnReg: 'Create Account',
+          passPlaceholder: 'Minimum 6 characters', namePlaceholder: 'John Doe'
         },
         he: {
           appDesc: 'התחבר כדי לגשת לשירותי AI',
-          tabLogin: 'התחברות',
-          tabReg: 'הרשמה',
-          btnGoogle: 'המשך עם Google',
-          orEmail: 'או באמצעות דוא"ל',
-          email: 'דוא"ל',
-          pass: 'סיסמה',
-          regName: 'שם מלא',
-          regPass: 'צור סיסמה',
-          btnLogin: 'התחבר',
-          btnReg: 'הרשמה',
-          passPlaceholder: 'לפחות 6 תווים',
-          namePlaceholder: 'ישראל ישראלי'
+          tabLogin: 'התחברות', tabReg: 'הרשמה',
+          btnGoogle: 'המשך עם Google', orEmail: 'או באמצעות דוא"ל',
+          email: 'דוא"ל', pass: 'סיסמה',
+          regName: 'שם מלא', regPass: 'צור סיסמה',
+          btnLogin: 'התחבר', btnReg: 'הרשמה',
+          passPlaceholder: 'לפחות 6 תווים', namePlaceholder: 'ישראל ישראלי'
         }
       };
 
@@ -332,24 +385,24 @@
 
       function updateLanguageTexts(lang) {
         const d = i18nDict[lang] || i18nDict.ru;
-        document.getElementById('title-app-desc').textContent = d.appDesc;
-        document.getElementById('label-tab-login').textContent = d.tabLogin;
+        document.getElementById('title-app-desc').textContent   = d.appDesc;
+        document.getElementById('label-tab-login').textContent  = d.tabLogin;
         document.getElementById('label-tab-register').textContent = d.tabReg;
         document.getElementById('label-google-auth').textContent = d.btnGoogle;
-        document.getElementById('label-or-email').textContent = d.orEmail;
+        document.getElementById('label-or-email').textContent   = d.orEmail;
         document.getElementById('label-email-login').textContent = d.email;
         document.getElementById('label-pass-login').textContent = d.pass;
-        document.getElementById('label-reg-name').textContent = d.regName;
-        document.getElementById('label-reg-email').textContent = d.email;
-        document.getElementById('label-reg-pass').textContent = d.regPass;
-        document.getElementById('label-btn-login').textContent = d.btnLogin;
-        document.getElementById('label-btn-reg').textContent = d.btnReg;
-        document.getElementById('reg-password').placeholder = d.passPlaceholder;
-        document.getElementById('reg-name').placeholder = d.namePlaceholder;
+        document.getElementById('label-reg-name').textContent   = d.regName;
+        document.getElementById('label-reg-email').textContent  = d.email;
+        document.getElementById('label-reg-pass').textContent   = d.regPass;
+        document.getElementById('label-btn-login').textContent  = d.btnLogin;
+        document.getElementById('label-btn-reg').textContent    = d.btnReg;
+        document.getElementById('reg-password').placeholder     = d.passPlaceholder;
+        document.getElementById('reg-name').placeholder         = d.namePlaceholder;
       }
       updateLanguageTexts(savedLang);
 
-      // --- Helper Alert Functions ---
+      // ── Алерты ──────────────────────────────────────────────────────────────
       function showAlert(msg, type = 'danger') {
         const el = document.getElementById('auth-alert');
         el.className = `alert alert-${type} mb-3 py-2 small`;
@@ -357,31 +410,27 @@
         el.classList.remove('d-none');
       }
       function hideAlert() {
-        const el = document.getElementById('auth-alert');
-        el.classList.add('d-none');
+        document.getElementById('auth-alert').classList.add('d-none');
       }
 
-      // --- Google OAuth ---
+      // ── Google OAuth ─────────────────────────────────────────────────────────
       document.getElementById('btn-google-auth').addEventListener('click', () => {
         window.location.href = '/auth/google?next=/';
       });
 
-      // --- Login Handler ---
+      // ── Вход ─────────────────────────────────────────────────────────────────
       let pendingVerificationEmail = '';
-      const loginForm = document.getElementById('form-login');
-      loginForm.addEventListener('submit', async (e) => {
+      document.getElementById('form-login').addEventListener('submit', async (e) => {
         e.preventDefault();
         hideAlert();
-        const email = document.getElementById('login-email').value.trim();
+        const email    = document.getElementById('login-email').value.trim();
         const password = document.getElementById('login-password').value;
-        const spinner = document.getElementById('login-spinner');
-        const btn = document.getElementById('btn-submit-login');
-
+        const spinner  = document.getElementById('login-spinner');
+        const btn      = document.getElementById('btn-submit-login');
         btn.disabled = true;
         spinner.classList.remove('d-none');
-
         try {
-          const res = await fetch('/auth/login/email', {
+          const res  = await fetch('/auth/login/email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
@@ -389,47 +438,39 @@
           const data = await res.json();
           if (!res.ok) {
             if (res.status === 403 && data.detail && data.detail.includes('не подтверждена')) {
-              // Show verification modal
               pendingVerificationEmail = email;
-              const modalDesc = document.getElementById('verify-modal-desc');
-              if (modalDesc) modalDesc.textContent = `Код подтверждения отправлен на ${email}:`;
-              const modal = new bootstrap.Modal(document.getElementById('verifyModal'));
-              modal.show();
+              const desc = document.getElementById('verify-modal-desc');
+              if (desc) desc.textContent = `Код подтверждения отправлен на ${email}:`;
+              new bootstrap.Modal(document.getElementById('verifyModal')).show();
               showAlert(data.detail, 'warning');
             } else {
               showAlert(data.detail || 'Ошибка авторизации', 'danger');
             }
             return;
           }
-
           showAlert('Вход выполнен! Перенаправление...', 'success');
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 400);
+          setTimeout(() => { window.location.href = '/'; }, 400);
         } catch (err) {
-          showAlert('Ошибка соединения с сервером: ' + err.message, 'danger');
+          showAlert('Ошибка соединения: ' + err.message, 'danger');
         } finally {
           btn.disabled = false;
           spinner.classList.add('d-none');
         }
       });
 
-      // --- Register Handler ---
-      const regForm = document.getElementById('form-register');
-      regForm.addEventListener('submit', async (e) => {
+      // ── Регистрация ───────────────────────────────────────────────────────────
+      document.getElementById('form-register').addEventListener('submit', async (e) => {
         e.preventDefault();
         hideAlert();
-        const name = document.getElementById('reg-name').value.trim();
-        const email = document.getElementById('reg-email').value.trim();
+        const name     = document.getElementById('reg-name').value.trim();
+        const email    = document.getElementById('reg-email').value.trim();
         const password = document.getElementById('reg-password').value;
-        const spinner = document.getElementById('reg-spinner');
-        const btn = document.getElementById('btn-submit-reg');
-
+        const spinner  = document.getElementById('reg-spinner');
+        const btn      = document.getElementById('btn-submit-reg');
         btn.disabled = true;
         spinner.classList.remove('d-none');
-
         try {
-          const res = await fetch('/auth/register', {
+          const res  = await fetch('/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password, name })
@@ -439,40 +480,35 @@
             showAlert(data.detail || 'Ошибка регистрации', 'danger');
             return;
           }
-
           pendingVerificationEmail = email;
-          // Prompt for verification code
-          const modalDesc = document.getElementById('verify-modal-desc');
-          if (modalDesc) modalDesc.textContent = `Код подтверждения отправлен на ${email}:`;
-          const modal = new bootstrap.Modal(document.getElementById('verifyModal'));
-          modal.show();
+          const desc = document.getElementById('verify-modal-desc');
+          if (desc) desc.textContent = `Код подтверждения отправлен на ${email}:`;
+          new bootstrap.Modal(document.getElementById('verifyModal')).show();
           showAlert('Регистрация начата. Введите код из письма.', 'info');
         } catch (err) {
-          showAlert('Ошибка соединения с сервером: ' + err.message, 'danger');
+          showAlert('Ошибка соединения: ' + err.message, 'danger');
         } finally {
           btn.disabled = false;
           spinner.classList.add('d-none');
         }
       });
 
-      // --- Verify Code Handler ---
-      const btnVerify = document.getElementById('btn-submit-verify');
-      btnVerify.addEventListener('click', async () => {
+      // ── Подтверждение кода ────────────────────────────────────────────────────
+      document.getElementById('btn-submit-verify').addEventListener('click', async () => {
         const codeInput = document.getElementById('verify-code-input');
-        const alertEl = document.getElementById('verify-alert');
+        const alertEl   = document.getElementById('verify-alert');
+        const spinner   = document.getElementById('verify-spinner');
+        const btnVerify = document.getElementById('btn-submit-verify');
         const code = codeInput.value.trim();
         if (!code) return;
-
         alertEl.classList.add('d-none');
-        const spinner = document.getElementById('verify-spinner');
         btnVerify.disabled = true;
         spinner.classList.remove('d-none');
-
         try {
-          const res = await fetch('/auth/verify', {
+          const res  = await fetch('/auth/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: pendingVerificationEmail, code: code })
+            body: JSON.stringify({ email: pendingVerificationEmail, code })
           });
           const data = await res.json();
           if (!res.ok) {
@@ -481,15 +517,12 @@
             alertEl.classList.remove('d-none');
             return;
           }
-
           alertEl.className = 'alert alert-success py-1 small';
           alertEl.textContent = 'Почта подтверждена! Войдите под своими данными.';
           alertEl.classList.remove('d-none');
           setTimeout(() => {
-            const modalEl = document.getElementById('verifyModal');
-            const modal = bootstrap.Modal.getInstance(modalEl);
+            const modal = bootstrap.Modal.getInstance(document.getElementById('verifyModal'));
             if (modal) modal.hide();
-            // Switch to login tab
             document.getElementById('tab-login-btn').click();
             document.getElementById('login-email').value = pendingVerificationEmail;
             showAlert('Почта подтверждена. Введите пароль для входа.', 'success');

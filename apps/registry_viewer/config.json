@@ -1,0 +1,18 @@
+{
+  "app_name": "Windows Registry Viewer",
+  "version": "1.0.0",
+  "description": "Автономное приложение для безопасного аудита, навигации и поиска по реестру Windows",
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8114,
+    "cors_origins": ["*"]
+  },
+  "limits": {
+    "max_subkeys_display": 1000,
+    "max_values_display": 500,
+    "max_search_results": 100,
+    "max_search_depth": 3
+  },
+  "default_hive": "HKEY_LOCAL_MACHINE",
+  "default_path": "SOFTWARE"
+}

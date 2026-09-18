@@ -1,0 +1,410 @@
+<!-- Microsoft Defender & AI Security Diagnostic Center Tab -->
+<style>
+  .def-container {
+    padding: 0.5rem 0.75rem;
+  }
+  .def-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    min-height: 62px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .def-card:hover {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  .def-card-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    line-height: 1.1;
+  }
+  .def-card-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    line-height: 1.15;
+  }
+  .def-card-sub {
+    font-size: 0.7rem;
+    color: #64748b;
+    line-height: 1.1;
+  }
+  .def-panel {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  .def-panel-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    padding: 0.45rem 0.85rem;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .def-badge-active { background: #166534; color: #86efac; border: 1px solid #22c55e; }
+  .def-badge-disabled { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
+  .def-badge-audit { background: #854d0e; color: #fde047; border: 1px solid #eab308; }
+  .def-badge-warn { background: #c2410c; color: #fdba74; border: 1px solid #f97316; }
+  .def-badge-critical { background: #991b1b; color: #fecaca; border: 1px solid #f87171; font-weight: bold; }
+</style>
+
+<div class="def-container">
+  <!-- Top Stat Cards -->
+  <div class="row g-2 mb-2">
+    <div class="col-6 col-md-3 col-xl">
+      <div class="def-card">
+        <div class="def-card-label"><span>Индекс защиты</span> 🛡️</div>
+        <div class="def-card-value" id="def-score-val">--/100</div>
+        <div class="def-card-sub" id="def-score-sub">Загрузка...</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 col-xl">
+      <div class="def-card">
+        <div class="def-card-label"><span>Real-time Shield</span> ⚡</div>
+        <div class="def-card-value text-success" id="def-realtime-val">--</div>
+        <div class="def-card-sub" id="def-realtime-sub">MsMpEng.exe</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 col-xl">
+      <div class="def-card">
+        <div class="def-card-label"><span>Cloud & Tamper</span> ☁️</div>
+        <div class="def-card-value" id="def-cloud-val">--</div>
+        <div class="def-card-sub" id="def-cloud-sub">MAPS Protection</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 col-xl">
+      <div class="def-card">
+        <div class="def-card-label"><span>PUA & Ransomware</span> 🔒</div>
+        <div class="def-card-value" id="def-pua-cfa-val">--</div>
+        <div class="def-card-sub" id="def-pua-cfa-sub">CFA Folder Guard</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 col-xl">
+      <div class="def-card">
+        <div class="def-card-label"><span>Исключения</span> ⚠️</div>
+        <div class="def-card-value text-warning" id="def-exclusions-val">0</div>
+        <div class="def-card-sub" id="def-exclusions-sub">0 подозрительных</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 col-xl">
+      <div class="def-card">
+        <div class="def-card-label"><span>Активные угрозы</span> 🚨</div>
+        <div class="def-card-value text-danger" id="def-threats-val">0</div>
+        <div class="def-card-sub" id="def-threats-sub">Карантин: 0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Bar -->
+  <div class="def-panel mb-2 p-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <button class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="btn-def-quick-scan">
+        <i class="bi bi-play-circle-fill"></i> <span>Быстрое сканирование</span>
+      </button>
+      <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" id="btn-def-full-scan">
+        <i class="bi bi-shield-shaded"></i> <span>Полное сканирование</span>
+      </button>
+      <button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1" id="btn-def-update-sigs">
+        <i class="bi bi-cloud-arrow-down-fill"></i> <span>Обновить сигнатуры</span>
+      </button>
+      <button class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1" id="btn-def-ai-diag">
+        <i class="bi bi-cpu-fill"></i> <span>AI Диагностика</span>
+      </button>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-dark border border-secondary" id="def-engine-ver-badge">Движок: --</span>
+      <span class="badge bg-dark border border-secondary" id="def-sigs-ver-badge">Базы: --</span>
+      <button class="btn btn-sm btn-outline-secondary" id="btn-def-refresh" title="Обновить">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Scan Execution Progress / Notification Alert -->
+  <div id="def-alert-box" class="d-none alert alert-info py-2 px-3 mb-2 small"></div>
+
+  <!-- Sub Navigation Tabs -->
+  <ul class="nav nav-tabs mb-2 border-secondary" id="defSubTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active py-1 px-3 small" id="def-tab-overview-btn" data-bs-toggle="tab" data-bs-target="#def-pane-overview" type="button">📊 Обзор и Службы</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link py-1 px-3 small" id="def-tab-asr-btn" data-bs-toggle="tab" data-bs-target="#def-pane-asr" type="button">🛡️ Правила ASR</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link py-1 px-3 small" id="def-tab-cfa-btn" data-bs-toggle="tab" data-bs-target="#def-pane-cfa" type="button">🔒 Ransomware / CFA</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link py-1 px-3 small" id="def-tab-exclusions-btn" data-bs-toggle="tab" data-bs-target="#def-pane-exclusions" type="button">⚠️ Исключения</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link py-1 px-3 small" id="def-tab-threats-btn" data-bs-toggle="tab" data-bs-target="#def-pane-threats" type="button">🚨 Угрозы и Карантин</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link py-1 px-3 small" id="def-tab-procs-btn" data-bs-toggle="tab" data-bs-target="#def-pane-procs" type="button">🌳 Дерево Процессов / Fileless</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link py-1 px-3 small" id="def-tab-events-btn" data-bs-toggle="tab" data-bs-target="#def-pane-events" type="button">📜 Журнал Событий</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link py-1 px-3 small text-warning fw-semibold" id="def-tab-diag-btn" data-bs-toggle="tab" data-bs-target="#def-pane-diag" type="button">🎯 AI Диагностика</button>
+    </li>
+  </ul>
+
+  <!-- Tab Content Panes -->
+  <div class="tab-content" id="defTabPanes">
+
+    <!-- 1. Overview & Services Pane -->
+    <div class="tab-pane fade show active" id="def-pane-overview" role="tabpanel">
+      <div class="row g-2">
+        <div class="col-md-7">
+          <div class="def-panel h-100">
+            <div class="def-panel-header">
+              <span>Эшелоны Защиты Microsoft Defender</span>
+            </div>
+            <div class="table-responsive p-0">
+              <table class="table table-dark table-sm table-hover mb-0 align-middle small">
+                <thead>
+                  <tr class="text-secondary">
+                    <th>Компонент</th>
+                    <th class="text-center">Статус</th>
+                    <th>Описание</th>
+                  </tr>
+                </thead>
+                <tbody id="def-shields-tbody">
+                  <tr><td colspan="3" class="text-center text-muted py-3">Загрузка данных...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="def-panel h-100">
+            <div class="def-panel-header">
+              <span>Системные Службы и Процессы</span>
+            </div>
+            <div class="table-responsive p-0">
+              <table class="table table-dark table-sm table-hover mb-0 align-middle small">
+                <thead>
+                  <tr class="text-secondary">
+                    <th>Процесс</th>
+                    <th class="text-center">Статус</th>
+                    <th class="text-end">PID</th>
+                    <th class="text-end">Память</th>
+                  </tr>
+                </thead>
+                <tbody id="def-services-tbody">
+                  <tr><td colspan="4" class="text-center text-muted py-3">Загрузка данных...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. ASR Rules Pane -->
+    <div class="tab-pane fade" id="def-pane-asr" role="tabpanel">
+      <div class="def-panel">
+        <div class="def-panel-header">
+          <span>Правила Attack Surface Reduction (ASR)</span>
+          <span class="badge bg-secondary" id="def-asr-count-badge">Всего: 0</span>
+        </div>
+        <div class="table-responsive p-0">
+          <table class="table table-dark table-sm table-hover mb-0 align-middle small">
+            <thead>
+              <tr class="text-secondary">
+                <th>Правило ASR</th>
+                <th>Категория</th>
+                <th class="text-center">Состояние</th>
+                <th>Рекомендация</th>
+                <th>GUID</th>
+              </tr>
+            </thead>
+            <tbody id="def-asr-tbody">
+              <tr><td colspan="5" class="text-center text-muted py-3">Загрузка правил ASR...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. CFA (Ransomware) Pane -->
+    <div class="tab-pane fade" id="def-pane-cfa" role="tabpanel">
+      <div class="row g-2">
+        <div class="col-md-6">
+          <div class="def-panel h-100">
+            <div class="def-panel-header">
+              <span>Защищенные Каталоги (Protected Folders)</span>
+            </div>
+            <div class="p-2" id="def-cfa-folders-list">
+              <div class="text-muted small">Загрузка...</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="def-panel h-100">
+            <div class="def-panel-header">
+              <span>Доверенные Приложения (Allowed Apps)</span>
+            </div>
+            <div class="p-2" id="def-cfa-apps-list">
+              <div class="text-muted small">Загрузка...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Exclusions Security Audit Pane -->
+    <div class="tab-pane fade" id="def-pane-exclusions" role="tabpanel">
+      <div class="def-panel">
+        <div class="def-panel-header">
+          <span>Аудит Исключений из Проверки</span>
+          <span class="badge bg-warning text-dark" id="def-exc-summary-badge">0 исключений</span>
+        </div>
+        <div class="p-2 mb-1 bg-dark text-muted small border-bottom border-secondary" id="def-exc-recommendation-box">
+          Анализ исключений...
+        </div>
+        <div class="table-responsive p-0">
+          <table class="table table-dark table-sm table-hover mb-0 align-middle small">
+            <thead>
+              <tr class="text-secondary">
+                <th>Тип</th>
+                <th>Значение</th>
+                <th class="text-center">Уровень Риска</th>
+                <th>Обоснование</th>
+              </tr>
+            </thead>
+            <tbody id="def-exclusions-tbody">
+              <tr><td colspan="4" class="text-center text-muted py-3">Загрузка исключений...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Threats History Pane -->
+    <div class="tab-pane fade" id="def-pane-threats" role="tabpanel">
+      <div class="def-panel">
+        <div class="def-panel-header">
+          <span>Журнал Обнаружения Угроз и Карантин</span>
+          <span class="badge bg-danger" id="def-threats-count-badge">0 записей</span>
+        </div>
+        <div class="table-responsive p-0">
+          <table class="table table-dark table-sm table-hover mb-0 align-middle small">
+            <thead>
+              <tr class="text-secondary">
+                <th>Угроза</th>
+                <th>Категория</th>
+                <th class="text-center">Опасность</th>
+                <th>Статус</th>
+                <th>Время</th>
+                <th>Ресурсы</th>
+              </tr>
+            </thead>
+            <tbody id="def-threats-tbody">
+              <tr><td colspan="6" class="text-center text-muted py-3">Угроз не обнаружено.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Process Trees / Fileless Activity Pane -->
+    <div class="tab-pane fade" id="def-pane-procs" role="tabpanel">
+      <div class="def-panel">
+        <div class="def-panel-header">
+          <span>Инспекция Цепочек Процессов и Индикаторы Fileless-атак</span>
+          <span class="badge bg-secondary" id="def-procs-count-badge">0 аномалий</span>
+        </div>
+        <div class="table-responsive p-0">
+          <table class="table table-dark table-sm table-hover mb-0 align-middle small">
+            <thead>
+              <tr class="text-secondary">
+                <th>Родительский Процесс</th>
+                <th>Дочерний Процесс</th>
+                <th>PID</th>
+                <th>Опасность</th>
+                <th>Причина срабатывания</th>
+              </tr>
+            </thead>
+            <tbody id="def-procs-tbody">
+              <tr><td colspan="5" class="text-center text-muted py-3">Подозрительных цепочек процессов не обнаружено.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Operational Events Pane -->
+    <div class="tab-pane fade" id="def-pane-events" role="tabpanel">
+      <div class="def-panel">
+        <div class="def-panel-header">
+          <span>Журнал Microsoft-Windows-Windows Defender/Operational</span>
+          <span class="badge bg-secondary" id="def-events-count-badge">0 событий</span>
+        </div>
+        <div class="table-responsive p-0" style="max-height: 480px; overflow-y: auto;">
+          <table class="table table-dark table-sm table-hover mb-0 align-middle small">
+            <thead>
+              <tr class="text-secondary">
+                <th>Event ID</th>
+                <th>Время</th>
+                <th>Уровень</th>
+                <th>Категория</th>
+                <th>Сообщение</th>
+              </tr>
+            </thead>
+            <tbody id="def-events-tbody">
+              <tr><td colspan="5" class="text-center text-muted py-3">Загрузка журнала событий...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. AI Diagnostics Pane -->
+    <div class="tab-pane fade" id="def-pane-diag" role="tabpanel">
+      <div class="row g-2">
+        <div class="col-md-4">
+          <div class="def-panel h-100 p-3 text-center d-flex flex-column justify-content-center">
+            <div class="text-secondary small mb-1">Security Posture Score</div>
+            <div class="display-4 fw-bold text-success" id="def-diag-score-display">--</div>
+            <div class="fw-semibold mt-2" id="def-diag-summary-display">Анализ состояния...</div>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <div class="def-panel h-100 p-3">
+            <h6 class="text-warning fw-bold mb-2">🎯 Рекомендации AI по Усилению Защиты:</h6>
+            <div id="def-diag-recs-container" class="small">
+              <div class="text-muted">Загрузка рекомендаций...</div>
+            </div>
+            <hr class="border-secondary my-2">
+            <h6 class="text-danger fw-bold mb-2">⚠️ Критические уязвимости и риски:</h6>
+            <div id="def-diag-criticals-container" class="small">
+              <div class="text-muted">Нет критических уязвимостей.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

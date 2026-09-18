@@ -16,6 +16,7 @@
 
 from .models import (
     AnomalyItem,
+    BatteryMetrics,
     CpuMetrics,
     DiskIoMetrics,
     DiskPartitionMetrics,
@@ -24,21 +25,32 @@ from .models import (
     HardwareSensor,
     MemoryMetrics,
     NetworkInterfaceMetrics,
+    NetworkPortMetrics,
+    PhysicalDiskHealth,
     ProcessMetrics,
+    RamStickInfo,
     SystemDiagnosticReport,
+    SystemHealthAlerts,
     SystemSnapshot,
 )
 from .sensors import get_hardware_sensors
 from .collector import SystemCollector
+from .storage import TelemetryStorage
+from .service import TelemetryLoggerService
 from src.ai.observability.system_engine import SystemDiagnosticEngine
 
 __all__ = [
     "CpuMetrics",
     "MemoryMetrics",
+    "RamStickInfo",
     "GpuMetrics",
     "DiskPartitionMetrics",
+    "PhysicalDiskHealth",
     "DiskIoMetrics",
     "NetworkInterfaceMetrics",
+    "NetworkPortMetrics",
+    "BatteryMetrics",
+    "SystemHealthAlerts",
     "ProcessMetrics",
     "HardwareSensor",
     "HardwareNode",
@@ -48,4 +60,6 @@ __all__ = [
     "get_hardware_sensors",
     "SystemCollector",
     "SystemDiagnosticEngine",
+    "TelemetryStorage",
+    "TelemetryLoggerService",
 ]

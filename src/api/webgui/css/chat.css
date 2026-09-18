@@ -1,0 +1,245 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   CHAT — AI Breadboard WebGUI
+   Стили диалогового окна, сайдбара сессий, сообщений и дебаггера
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Основной макет вкладки чата ─────────────────────────────────────────── */
+#tab-chat {
+  height: calc(100vh - 55px);
+  max-height: calc(100vh - 55px);
+  min-height: 80vh;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+#tab-chat.active {
+  display: flex !important;
+  flex-direction: column;
+  height: calc(100vh - 55px);
+  max-height: calc(100vh - 55px);
+  min-height: 80vh;
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  min-height: 0;
+  gap: 8px;
+  position: relative;
+}
+
+/* ── Сайдбар чата (история диалогов) ───────────────────────────────────────── */
+.chat-sidebar {
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px;
+  transition: margin-left 0.22s ease, opacity 0.18s ease;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+.chat-sidebar.collapsed {
+  margin-left: -232px;
+  opacity: 0;
+  pointer-events: none;
+  display: none !important;
+}
+
+.chat-sessions-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  padding-right: 2px;
+}
+
+.chat-session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 7px;
+  border-radius: 5px;
+  cursor: pointer;
+  color: var(--text-color);
+  font-size: 0.8rem;
+  border: 1px solid transparent;
+  transition: background 0.12s ease, border-color 0.12s ease;
+  user-select: none;
+}
+
+.chat-session-item:hover {
+  background: rgba(128, 128, 128, 0.1);
+}
+
+.chat-session-item.active {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.25);
+  font-weight: 500;
+}
+
+[data-theme="dark"] .chat-session-item.active {
+  background: rgba(88, 166, 255, 0.1);
+  border-color: rgba(88, 166, 255, 0.2);
+}
+
+.chat-session-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1 1 auto;
+  margin-right: 3px;
+}
+
+.chat-session-actions {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.chat-session-item:hover .chat-session-actions,
+.chat-session-item.active .chat-session-actions {
+  display: flex;
+}
+
+.chat-session-action-btn {
+  background: transparent;
+  border: none;
+  padding: 0 2px;
+  color: var(--text-muted);
+  border-radius: 3px;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 0.75rem;
+}
+
+.chat-session-action-btn:hover {
+  color: var(--text-color);
+  background: rgba(128, 128, 128, 0.18);
+}
+
+/* ── Главная область чата ─────────────────────────────────────────────────── */
+.chat-main-area {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Хедер-бар чата */
+.chat-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 8px;
+  margin-bottom: 5px;
+  border-radius: 5px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+/* Окно чата */
+.chat-window {
+  height: calc(100vh - 260px);
+  min-height: 160px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  padding: 8px 10px;
+  background: var(--surface-1);
+}
+
+#tab-chat .chat-window {
+  height: auto;
+  flex: 1 1 auto;
+  min-height: calc(80vh - 120px);
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  margin-bottom: 5px !important;
+}
+
+#tab-chat .media-controls        { flex-shrink: 0; margin-bottom: 5px !important; }
+#tab-chat #chat-debugger-toolbar { flex-shrink: 0; margin-bottom: 5px !important; }
+#tab-chat .input-group           { flex-shrink: 0; margin-bottom: 2px !important; }
+
+/* ── Сообщения ───────────────────────────────────────────────────────────── */
+.message {
+  margin-bottom: 5px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 1.16rem;
+  line-height: 1.55;
+}
+
+/* ── Поле ввода чата ─────────────────────────────────────────────────────── */
+#message-input,
+.chat-main-area #message-input,
+#chat-popup-input,
+#scenario-chat-input {
+  font-size: 1.15rem;
+}
+
+.user-message {
+  background: var(--chat-user-bg);
+  color: var(--chat-user-text);
+  text-align: right;
+}
+
+.bot-message {
+  background: var(--chat-bot-bg);
+  color: var(--chat-bot-text);
+}
+
+/* Чипы сообщений в чате */
+.chat-window .badge,
+.message .badge,
+.bot-message .badge,
+.user-message .badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.chat-window .badge.bg-secondary,
+.chat-window .badge.bg-primary,
+.chat-window .badge.bg-danger,
+.chat-window .badge.bg-success,
+.chat-window .badge.bg-dark,
+.message .badge.bg-secondary,
+.message .badge.bg-primary,
+.message .badge.bg-danger,
+.message .badge.bg-success,
+.message .badge.bg-dark {
+  color: #ffffff !important;
+}
+
+/* ── Дебаггер-тулбар чата ─────────────────────────────────────────────────── */
+#chat-debugger-toolbar {
+  background-color: var(--surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  font-size: 0.8rem;
+}
+
+[data-theme="light"] #chat-debugger-toolbar {
+  background-color: var(--surface-2) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] #chat-debugger-toolbar select {
+  background-color: var(--surface-1) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}

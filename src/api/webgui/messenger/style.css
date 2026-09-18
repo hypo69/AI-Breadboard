@@ -1,49 +1,33 @@
-/* Messenger Global Styles */
-:root {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-sidebar: #111827;
-  --bg-chat: #0b1120;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --accent-color: #3b82f6;
-  --accent-hover: #2563eb;
-  --msg-outgoing: #2563eb;
-  --msg-incoming: #334155;
-  --border-color: #334155;
-  --online-color: #10b981;
-  --offline-color: #64748b;
-  --danger-color: #ef4444;
-  --glass-bg: rgba(30, 41, 59, 0.85);
+/* ═══════════════════════════════════════════════════════════════════════════
+   messenger/style.css — Дочерние стили Messenger (наследует main.css)
+   Версия: 20260917_refactor_v1
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Messenger наследует переменные из main.css.
+   Локальные псевдонимы для удобства внутри компонента: */
+.messenger-app {
+  --msg-outgoing: var(--chat-user-bg);
+  --msg-incoming: var(--chat-bot-bg);
+  --msg-incoming-text: var(--chat-bot-text);
+  --online-color:  #10b981;
+  --offline-color: #6b7280;
+  --danger-color:  #ef4444;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-
-body, html {
-  height: 100%;
-  width: 100%;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  overflow: hidden;
-}
-
+/* ── Основной контейнер ──────────────────────────────────────────────────── */
 .messenger-app {
   display: flex;
   height: 100vh;
-  width: 100vw;
-  background: var(--bg-chat);
+  width: 100%;
+  background: var(--bg-color);
+  font-size: 0.85rem;
 }
 
-/* Sidebar */
+/* ── Боковая панель ──────────────────────────────────────────────────────── */
 .sidebar {
-  width: 380px;
-  min-width: 320px;
-  background: var(--bg-sidebar);
+  width: 320px;
+  min-width: 260px;
+  background: var(--surface-1);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
@@ -51,66 +35,71 @@ body, html {
 }
 
 .sidebar-header {
-  padding: 16px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border-color);
 }
 
+/* ── Профиль пользователя ────────────────────────────────────────────────── */
 .user-profile-badge {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .avatar {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: #475569;
+  background: var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-color);
   position: relative;
   object-fit: cover;
+  flex-shrink: 0;
 }
 
 .avatar .status-dot {
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  border: 2px solid var(--bg-sidebar);
+  border: 2px solid var(--surface-1);
 }
 
-.status-dot.online { background-color: var(--online-color); }
+.status-dot.online  { background-color: var(--online-color); }
 .status-dot.offline { background-color: var(--offline-color); }
 
+/* ── Строка поиска ───────────────────────────────────────────────────────── */
 .search-bar-container {
-  padding: 12px 16px;
+  padding: 8px 10px;
   border-bottom: 1px solid var(--border-color);
 }
 
 .search-input {
   width: 100%;
-  padding: 10px 16px;
-  background: var(--bg-secondary);
+  padding: 6px 12px;
+  background: var(--surface-2);
   border: 1px solid var(--border-color);
-  border-radius: 20px;
-  color: #fff;
+  border-radius: 16px;
+  color: var(--text-color);
   outline: none;
-  font-size: 14px;
+  font-size: 0.82rem;
+  transition: border-color 0.15s;
 }
 
-.search-input:focus {
-  border-color: var(--accent-color);
-}
+.search-input::placeholder { color: var(--text-muted); }
+.search-input:focus { border-color: var(--nav-active); }
 
+/* ── Список чатов ────────────────────────────────────────────────────────── */
 .chat-list {
   flex: 1;
   overflow-y: auto;
@@ -119,45 +108,48 @@ body, html {
 .chat-item {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 16px;
+  gap: 10px;
+  padding: 9px 12px;
   cursor: pointer;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  transition: background 0.15s ease;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.12s ease;
 }
 
 .chat-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--nav-hover-bg);
 }
 
 .chat-item.active {
-  background: rgba(59, 130, 246, 0.15);
-  border-left: 4px solid var(--accent-color);
+  background: rgba(37, 99, 235, 0.08);
+  border-left: 3px solid var(--nav-active);
 }
 
-.chat-info {
-  flex: 1;
-  min-width: 0;
+[data-theme="dark"] .chat-item.active {
+  background: rgba(88, 166, 255, 0.08);
 }
+
+.chat-info { flex: 1; min-width: 0; }
 
 .chat-title-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .chat-title {
   font-weight: 600;
-  font-size: 15px;
+  font-size: 0.85rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--text-color);
 }
 
 .chat-time {
-  font-size: 12px;
-  color: var(--text-secondary);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .chat-snippet-row {
@@ -167,34 +159,35 @@ body, html {
 }
 
 .chat-snippet {
-  font-size: 13px;
-  color: var(--text-secondary);
+  font-size: 0.78rem;
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .unread-badge {
-  background: var(--accent-color);
+  background: var(--nav-active);
   color: #fff;
-  font-size: 11px;
-  font-weight: bold;
-  padding: 2px 7px;
-  border-radius: 12px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  flex-shrink: 0;
 }
 
-/* Chat Main Area */
+/* ── Главная область чата ────────────────────────────────────────────────── */
 .chat-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--bg-chat);
+  background: var(--bg-color);
   position: relative;
 }
 
 .chat-header {
-  padding: 14px 20px;
-  background: var(--bg-sidebar);
+  padding: 8px 16px;
+  background: var(--surface-1);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
@@ -204,128 +197,141 @@ body, html {
 
 .chat-header-actions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
 }
 
 .btn-icon {
-  background: var(--bg-secondary);
+  background: var(--surface-2);
   border: 1px solid var(--border-color);
-  color: #fff;
-  width: 40px;
-  height: 40px;
+  color: var(--text-color);
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  transition: background 0.15s, color 0.15s;
 }
 
 .btn-icon:hover {
-  background: var(--accent-color);
+  background: var(--nav-active);
+  color: #fff;
+  border-color: var(--nav-active);
 }
 
-.btn-danger {
-  background: var(--danger-color) !important;
-}
+.btn-danger { background: var(--danger-color) !important; color: #fff !important; }
 
-/* Messages container */
+/* ── Контейнер сообщений ─────────────────────────────────────────────────── */
 .messages-container {
   flex: 1;
-  padding: 20px;
+  padding: 12px 16px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .message-bubble {
   max-width: 70%;
-  padding: 10px 14px;
-  border-radius: 16px;
+  padding: 8px 12px;
+  border-radius: 14px;
   position: relative;
-  line-height: 1.4;
-  font-size: 14px;
+  line-height: 1.45;
+  font-size: 1.15rem;
   word-break: break-word;
 }
 
 .message-bubble.incoming {
   align-self: flex-start;
   background: var(--msg-incoming);
-  color: #fff;
+  color: var(--msg-incoming-text);
   border-bottom-left-radius: 4px;
 }
 
 .message-bubble.outgoing {
   align-self: flex-end;
   background: var(--msg-outgoing);
-  color: #fff;
+  color: var(--chat-user-text);
   border-bottom-right-radius: 4px;
 }
 
 .message-meta {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.7);
+  gap: 4px;
   margin-top: 4px;
+  font-size: 0.72rem;
+  opacity: 0.75;
 }
 
-.message-sender {
-  font-weight: bold;
-  font-size: 12px;
-  margin-bottom: 4px;
-  color: #93c5fd;
+.message-bubble.outgoing .message-meta {
+  justify-content: flex-end;
 }
 
-/* Typing Indicator */
+.message-status {
+  font-size: 0.75rem;
+}
+
+.audio-preview {
+  margin-top: 6px;
+  width: 100%;
+  max-width: 240px;
+}
+
+/* ── Индикатор набора текста ─────────────────────────────────────────────── */
 .typing-indicator {
-  padding: 8px 20px;
-  font-size: 13px;
-  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 16px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
   font-style: italic;
 }
 
-/* Chat Input Bar */
+/* ── Поле ввода ──────────────────────────────────────────────────────────── */
 .chat-input-bar {
-  padding: 14px 20px;
-  background: var(--bg-sidebar);
+  padding: 8px 12px;
+  background: var(--surface-1);
   border-top: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.message-input {
-  flex: 1;
-  padding: 12px 18px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 24px;
-  color: #fff;
-  outline: none;
-  font-size: 14px;
-}
-
-.voice-recording-status {
-  color: var(--danger-color);
-  font-weight: bold;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* WebRTC Video Call Overlay */
+.message-input {
+  flex: 1;
+  padding: 8px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  color: var(--text-color);
+  outline: none;
+  font-size: 1.15rem;
+  transition: border-color 0.15s;
+}
+
+.message-input::placeholder { color: var(--text-muted); }
+.message-input:focus { border-color: var(--nav-active); }
+
+.voice-recording-status {
+  color: var(--danger-color);
+  font-weight: 600;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Оверлей видеозвонка ─────────────────────────────────────────────────── */
 .video-call-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(11, 17, 32, 0.95);
-  backdrop-filter: blur(15px);
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(12px);
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -334,63 +340,59 @@ body, html {
 .video-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
-  padding: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  padding: 16px;
   align-items: center;
   justify-items: center;
 }
 
 .video-tile {
-  width: 100%;
-  height: 100%;
-  max-height: 480px;
-  background: #1e293b;
-  border-radius: 16px;
+  width: 100%; height: 100%;
+  max-height: 440px;
+  background: var(--surface-1);
+  border-radius: 12px;
   overflow: hidden;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid var(--border-color);
 }
 
-.video-tile video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.video-tile video { width: 100%; height: 100%; object-fit: cover; }
 
 .video-tile .tile-label {
   position: absolute;
-  bottom: 12px;
-  left: 12px;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 13px;
+  bottom: 10px; left: 10px;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  color: #fff;
 }
 
 .call-controls {
-  height: 90px;
-  background: var(--bg-sidebar);
+  height: 72px;
+  background: var(--surface-1);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 16px;
   border-top: 1px solid var(--border-color);
 }
 
 .audio-player-custom {
-  margin-top: 6px;
+  margin-top: 4px;
   width: 100%;
-  max-width: 260px;
+  max-width: 240px;
 }
 
-/* Modal */
+/* ── Модальное окно ──────────────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
-  top:0; left:0; width:100%; height:100%;
-  background: rgba(0,0,0,0.7);
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -398,22 +400,37 @@ body, html {
 }
 
 .modal-card {
-  background: var(--bg-secondary);
+  background: var(--surface-1);
   border: 1px solid var(--border-color);
-  padding: 24px;
-  border-radius: 18px;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
   width: 90%;
-  max-width: 440px;
+  max-width: 420px;
 }
 
-.modal-card h3 { margin-bottom: 16px; }
-.form-group { margin-bottom: 14px; }
-.form-group label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
-.form-group input, .form-group select {
+.modal-card h3 { margin-bottom: 12px; font-size: 1rem; font-weight: 600; }
+
+.form-group { margin-bottom: 10px; }
+.form-group label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.form-group input,
+.form-group select {
   width: 100%;
-  padding: 10px 14px;
-  background: var(--bg-sidebar);
+  padding: 7px 10px;
+  background: var(--surface-2);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  color: #fff;
+  border-radius: 6px;
+  color: var(--text-color);
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--nav-active);
 }

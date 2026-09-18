@@ -207,3 +207,6 @@ def test_router_initialization():
     assert "/api/windows/health" in routes
     assert "/api/windows/audit/full" in routes
     assert "/api/windows/investigate" in routes
+    assert "/api/windows/software" in routes
+    assert "/api/windows/software/audit" in routes
+

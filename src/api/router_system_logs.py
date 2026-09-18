@@ -22,6 +22,7 @@ import csv
 import datetime
 import io
 import json
+import re
 import subprocess
 import time
 from pathlib import Path
@@ -35,12 +36,14 @@ from src.logger import logger
 from apps.windows.log_intelligence.src.models import LogEntry
 from apps.windows.log_intelligence.src.pipeline import LogIntelligencePipeline
 from apps.windows.core.modules.eventlog_collector import EventLogCollector
+from apps.windows.core.modules.log_discovery_engine import LogDiscoveryEngine, LogSource
 
 router = APIRouter(prefix="/api/v1/system_logs", tags=["System Log Center"])
 
-# Инициализация единого пайплайна
+# Инициализация единого пайплайна и движка обнаружения логов
 _intelligence_pipeline = LogIntelligencePipeline()
 _eventlog_collector = EventLogCollector()
+_discovery_engine = LogDiscoveryEngine()
 
 
 # -----------------------------------------------------------------------------
@@ -50,13 +53,19 @@ _eventlog_collector = EventLogCollector()
 class ChannelInfo(BaseModel):
     channel_name: str
     display_name: str
-    record_count: int
-    is_enabled: bool
+    description: str = ""
+    record_count: int = 0
+    is_enabled: bool = True
+    category: str = "Windows Event Log"
+    source_type: str = "channel"
+    location: str = ""
+    last_modified: str = ""
 
 
 class ScanResponse(BaseModel):
     channels: List[ChannelInfo]
     total_sources: int
+    categories: Dict[str, int] = {}
     scanned_at: str
 
 
@@ -70,6 +79,7 @@ class ExplainRequest(BaseModel):
     message: Optional[str] = ""
     target_entry: Optional[Dict[str, Any]] = None
     query_text: Optional[str] = ""
+    model: Optional[str] = ""
 
 
 class QueryRAGRequest(BaseModel):
@@ -91,67 +101,16 @@ def _fetch_windows_events(
     event_id: int = 0,
     file_path: str = "",
 ) -> List[Dict[str, Any]]:
-    """Получение событий Windows Event Log через PowerShell Get-WinEvent."""
-    limit = max(1, min(limit, 2000))
-    hours = max(1, min(hours, 720))
-
-    level_filter = ""
-    if level:
-        lvl_lower = level.lower()
-        if "crit" in lvl_lower:
-            level_filter = "; Level=1"
-        elif "err" in lvl_lower:
-            level_filter = "; Level=2"
-        elif "warn" in lvl_lower:
-            level_filter = "; Level=3"
-        elif "inf" in lvl_lower:
-            level_filter = "; Level=4"
-        elif "verb" in lvl_lower:
-            level_filter = "; Level=5"
-
-    id_filter = f"; Id={event_id}" if event_id > 0 else ""
-
-    if file_path and Path(file_path).exists():
-        ps_query = f"Get-WinEvent -Path '{file_path}' -MaxEvents {limit} -ErrorAction SilentlyContinue"
-    else:
-        target_chan = channel if channel else "System"
-        ps_query = (
-            f"Get-WinEvent -FilterHashtable @{{LogName='{target_chan}'{level_filter}{id_filter}; "
-            f"StartTime=(Get-Date).AddHours(-{hours})}} -MaxEvents {limit} -ErrorAction SilentlyContinue"
-        )
-
-    select_expr = (
-        "@{N='timestamp';E={$_.TimeCreated.ToString('yyyy-MM-dd HH:mm:ss')}}, "
-        "@{N='level';E={$_.LevelDisplayName}}, "
-        "@{N='event_id';E={$_.Id}}, "
-        "@{N='provider';E={$_.ProviderName}}, "
-        "@{N='computer';E={$_.MachineName}}, "
-        "@{N='process_id';E={$_.ProcessId}}, "
-        "@{N='thread_id';E={$_.ThreadId}}, "
-        "@{N='channel';E={$_.LogName}}, "
-        "@{N='message';E={$_.Message}}"
+    """Получение событий логов напрямую через нативный WevtAPI / LogDiscoveryEngine."""
+    target_source = file_path if (file_path and Path(file_path).exists()) else channel
+    return _discovery_engine.read_source_events(
+        source_id_or_loc=target_source,
+        limit=limit,
+        level=level,
+        search=search,
+        event_id=event_id,
+        hours=hours,
     )
-    ps_script = f"{ps_query} | Select-Object {select_expr} | ConvertTo-Json -Compress -Depth 2"
-
-    cmd = ["powershell", "-NoProfile", "-Command", ps_script]
-    try:
-        res = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
-        if res.returncode == 0 and res.stdout.strip():
-            raw_data = json.loads(res.stdout.strip())
-            items = [raw_data] if isinstance(raw_data, dict) else raw_data
-            if search:
-                s_lower = search.lower()
-                items = [
-                    it for it in items
-                    if s_lower in str(it.get("message", "")).lower()
-                    or s_lower in str(it.get("provider", "")).lower()
-                    or s_lower in str(it.get("event_id", ""))
-                ]
-            return items
-    except Exception as ex:
-        logger.debug(f"Ошибка при получении событий Windows ({channel}): {ex}")
-
-    return []
 
 
 def _dict_to_log_entry(data: Dict[str, Any]) -> LogEntry:
@@ -177,51 +136,31 @@ def _dict_to_log_entry(data: Dict[str, Any]) -> LogEntry:
 
 @router.get("/scan", response_model=ScanResponse)
 async def scan_log_channels(force: bool = False) -> ScanResponse:
-    """Динамическое обнаружение каналов журналов Windows."""
-    channels_list: List[ChannelInfo] = [
-        ChannelInfo(channel_name="System", display_name="System (Системный)", record_count=0, is_enabled=True),
-        ChannelInfo(channel_name="Application", display_name="Application (Приложения)", record_count=0, is_enabled=True),
-        ChannelInfo(channel_name="Security", display_name="Security (Безопасность)", record_count=0, is_enabled=True),
-        ChannelInfo(channel_name="Setup", display_name="Setup (Установка)", record_count=0, is_enabled=True),
-        ChannelInfo(channel_name="Microsoft-Windows-WindowsUpdateClient/Operational", display_name="Windows Update Client", record_count=0, is_enabled=True),
-        ChannelInfo(channel_name="Microsoft-Windows-Kernel-PnP/Configuration", display_name="Kernel PnP Configuration", record_count=0, is_enabled=True),
-        ChannelInfo(channel_name="Microsoft-Windows-Kernel-Power/Operational", display_name="Kernel Power", record_count=0, is_enabled=True),
-        ChannelInfo(channel_name="Microsoft-Windows-TaskScheduler/Operational", display_name="Task Scheduler", record_count=0, is_enabled=True),
-        ChannelInfo(channel_name="Microsoft-Windows-Windows Defender/Operational", display_name="Windows Defender", record_count=0, is_enabled=True),
-        ChannelInfo(channel_name="Microsoft-Windows-Hyper-V-Compute-Operational", display_name="Hyper-V Compute", record_count=0, is_enabled=True),
-    ]
+    """Полное динамическое обнаружение всех каналов Windows и файлов логов приложений."""
+    discovered_sources = _discovery_engine.discover_all_sources()
+    channels_list: List[ChannelInfo] = []
+    category_counts: Dict[str, int] = {}
 
-    # Дополнительно считываем через Get-WinEvent -ListLog
-    try:
-        cmd = [
-            "powershell",
-            "-NoProfile",
-            "-Command",
-            "Get-WinEvent -ListLog * -ErrorAction SilentlyContinue | Where-Object { $_.RecordCount -gt 0 -and $_.IsEnabled } | Select-Object -First 35 LogName, RecordCount | ConvertTo-Json -Compress",
-        ]
-        res = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-        if res.returncode == 0 and res.stdout.strip():
-            scanned = json.loads(res.stdout.strip())
-            scanned_items = [scanned] if isinstance(scanned, dict) else scanned
-            seen = {c.channel_name.lower() for c in channels_list}
-            for sc in scanned_items:
-                log_name = sc.get("LogName", "")
-                if log_name and log_name.lower() not in seen:
-                    channels_list.append(
-                        ChannelInfo(
-                            channel_name=log_name,
-                            display_name=log_name,
-                            record_count=int(sc.get("RecordCount") or 0),
-                            is_enabled=True,
-                        )
-                    )
-                    seen.add(log_name.lower())
-    except Exception as ex:
-        logger.debug(f"Ошибка при сканировании списка каналов: {ex}")
+    for src in discovered_sources:
+        category_counts[src.category] = category_counts.get(src.category, 0) + 1
+        channels_list.append(
+            ChannelInfo(
+                channel_name=src.location,
+                display_name=src.display_name,
+                description=src.description,
+                record_count=src.record_count,
+                is_enabled=src.is_enabled,
+                category=src.category,
+                source_type=src.source_type,
+                location=src.location,
+                last_modified=src.last_modified,
+            )
+        )
 
     return ScanResponse(
         channels=channels_list,
         total_sources=len(channels_list),
+        categories=category_counts,
         scanned_at=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
 
@@ -236,7 +175,7 @@ async def get_events(
     event_id: int = 0,
     file_path: str = "",
 ) -> Dict[str, Any]:
-    """Получение потока событий для текущего канала и фильтров."""
+    """Получение потока событий для текущего канала или файла без использования PowerShell."""
     raw_events = _fetch_windows_events(
         channel=channel,
         limit=limit,
@@ -361,25 +300,210 @@ async def get_events_timeline() -> Dict[str, Any]:
 
 @router.post("/explain")
 async def explain_event(req: ExplainRequest) -> Dict[str, Any]:
-    """AI диагностика и объяснение выбранной записи журнала."""
-    msg = req.message or (req.target_entry.get("message") if req.target_entry else "")
-    prov = req.provider or (req.target_entry.get("provider") if req.target_entry else "System")
-    lvl = req.level or (req.target_entry.get("level") if req.target_entry else "Information")
-    ev_id = req.event_id or (req.target_entry.get("event_id") if req.target_entry else 0)
+    """AI диагностика и глубокое объяснение выбранной записи системного журнала."""
+    target = req.target_entry or {}
+    msg = (req.message or target.get("message") or "").strip()
+    prov = req.provider or target.get("provider") or target.get("source") or "System"
+    lvl = req.level or target.get("level") or "Information"
+    ev_id = req.event_id or target.get("event_id") or target.get("Id") or 0
+    channel = req.channel or target.get("channel") or "System"
+    ts = req.target_timestamp or target.get("timestamp") or ""
+    comp = target.get("computer") or target.get("MachineName") or ""
+    pid = target.get("process_id") or target.get("ProcessId") or ""
+    raw_data = str(target.get("raw_data") or "")
 
-    summary = f"Событие {prov} (Event ID: {ev_id}, Уровень: {lvl})."
-    root_cause = f"Сообщение журнала: {msg if msg else 'Служебное уведомление операционной системы.'}"
+    # Попытка вызова реальной модели через UnifiedChat / get_chat_model
+    try:
+        from src.api.router_chat import get_chat_model
+        from src.config import ai_cfg
+
+        model_key = req.model or getattr(ai_cfg, "gemini_model_id", "gemini-3.1-flash-lite")
+        if getattr(ai_cfg, "use_gemini_cli", False) and not model_key.startswith(
+            ("gemini_cli:", "gemini-cli-", "foundry:", "ollama:", "openai:", "hf:", "onnx:", "agy-")
+        ):
+            cli_id = getattr(ai_cfg, "gemini_cli_model_id", "gemini-3.1-flash-lite")
+            model_key = f"gemini_cli:{cli_id}"
+
+        system_prompt = (
+            "Вы — ведущий инженер по надёжности систем (Site Reliability Engineer) и эксперт по ядру и службам Windows.\n"
+            "Ваша задача — провести глубокую техническую диагностику переданной записи системного журнала Windows Event Log.\n"
+            "Обязательно расшифруйте код события (Event ID), имя провайдера, а также код ошибки (ErrorCode в hex / dec), если он присутствует.\n"
+            "Предоставьте чёткий, технически грамотный и готовый к исполнению анализ на русском языке.\n\n"
+            "Ответ СТРОГО должен быть в формате валидного JSON-объекта со следующей структурой без лишнего обрамления:\n"
+            "{\n"
+            '  "summary": "Краткая, ёмкая сводка события (1-2 предложения)",\n'
+            '  "root_cause": "Детальный анализ первопричины с расшифровкой кода ошибки, службы и механизма сбоя",\n'
+            '  "recommendations": [\n'
+            '    "Конкретная рекомендация или команда PowerShell/CMD",\n'
+            '    "Следующий шаг диагностики"\n'
+            "  ]\n"
+            "}"
+        )
+
+        llm = get_chat_model(model_key, system_instruction=system_prompt)
+
+        user_prompt = (
+            f"Проведите диагностику следующего события журнала Windows:\n\n"
+            f"Канал: {channel}\n"
+            f"Провайдер/Источник: {prov}\n"
+            f"Event ID: {ev_id}\n"
+            f"Уровень: {lvl}\n"
+            f"Время: {ts}\n"
+            f"Компьютер: {comp}\n"
+            f"Process ID: {pid}\n"
+            f"Сообщение / Данные:\n{msg}\n"
+        )
+        if raw_data and raw_data != msg:
+            user_prompt += f"Дополнительные данные события: {raw_data[:1000]}\n"
+
+        user_prompt += "\nВерните ТОЛЬКО валидный JSON с ключами summary, root_cause, recommendations."
+
+        resp_text = ""
+        if hasattr(llm, "ask"):
+            resp_text = await llm.ask(user_prompt)
+        elif hasattr(llm, "chat"):
+            resp_text = await llm.chat(user_prompt)
+        elif hasattr(llm, "generate_response"):
+            resp_text = await llm.generate_response(user_prompt)
+
+        if resp_text:
+            cleaned = resp_text.strip()
+            if cleaned.startswith("```"):
+                cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
+                cleaned = re.sub(r"\s*```$", "", cleaned)
+            parsed = json.loads(cleaned)
+            if isinstance(parsed, dict) and "summary" in parsed:
+                recs = parsed.get("recommendations", [])
+                if isinstance(recs, str):
+                    recs = [recs]
+                return {
+                    "summary": str(parsed.get("summary", "")),
+                    "root_cause": str(parsed.get("root_cause", "")),
+                    "recommendations": [str(r) for r in recs if r],
+                }
+    except Exception as e:
+        logger.warning(f"[/explain] Сбой вызова реальной LLM ({e}), применение интеллектуального эвристического анализа.")
+
+    return _generate_log_heuristic_explanation(
+        prov=prov,
+        ev_id=int(ev_id) if str(ev_id).isdigit() else 0,
+        lvl=lvl,
+        msg=msg,
+        target_entry=target,
+    )
+
+
+def _generate_log_heuristic_explanation(
+    prov: str,
+    ev_id: int,
+    lvl: str,
+    msg: str,
+    target_entry: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Генерация экспертного эвристического анализа лога Windows при недоступности внешнего LLM."""
+    msg_clean = msg.strip()
+    summary = f"Событие поставщика {prov} (Event ID: {ev_id}, Уровень: {lvl})."
+    
+    # Поиск числовых кодов ошибок (dec или hex)
+    hex_code = ""
+    dec_code = ""
+    err_match = re.search(r'(?:ErrorCode|Error|HRESULT|Status|Code)[:\s=]+([0-9xXxa-fA-F\-]+)', msg_clean, re.IGNORECASE)
+    if err_match:
+        val_str = err_match.group(1).strip()
+        if val_str.startswith(("0x", "0X")):
+            hex_code = val_str
+        elif val_str.lstrip("-").isdigit():
+            dec_code = val_str
+            try:
+                num = int(val_str)
+                # Беззнаковое 32-битное представление
+                u32 = num & 0xFFFFFFFF
+                hex_code = f"0x{u32:08X}"
+            except Exception:
+                pass
+
+    prov_lower = prov.lower()
+
+    # BITS Client
+    if "bits-client" in prov_lower or "bits" in prov_lower:
+        summary = f"Фоновая служба передачи BITS ({prov}) зафиксировала предупреждение или сбой передачи данных (Event ID: {ev_id})."
+        code_info = f" с кодом ошибки {dec_code} ({hex_code})" if hex_code else ""
+        root_cause = (
+            f"Фоновая передача файлов BITS (загрузка обновлений Windows Update, Defender или фоновый трансфер приложения) "
+            f"была приостановлена или прервана{code_info}. Как правило, это связано с разрывом сетевого подключения, "
+            f"блокировкой прокси-сервером или сбросом сессии передачи."
+        )
+        recs = [
+            "Проверьте активные и зависшие задания передачи: Get-BitsTransfer -AllUsers",
+            "Очистите зависшие или поврежденные фоновые задания: Get-BitsTransfer -AllUsers | Remove-BitsTransfer",
+            "Перезапустите службу фоновой интеллектуальной передачи: Restart-Service BITS",
+            "Если событие единичное, BITS автоматически возобновит передачу после стабилизации сети.",
+        ]
+        return {"summary": summary, "root_cause": root_cause, "recommendations": recs}
+
+    # DistributedCOM (DCOM 10016)
+    if "distributedcom" in prov_lower or ev_id == 10016:
+        summary = f"Событие безопасности DCOM (Event ID: 10016): Недостаточно локальных прав активации/запуска компонента."
+        root_cause = (
+            "Служба или приложение попытались активировать COM-сервер через DCOM без явных прав в дескрипторе безопасности. "
+            "По официальной документации Microsoft, события DCOM 10016 являются штатными и не влияют на стабильность системы, "
+            "если приложение работает корректно."
+        )
+        recs = [
+            "Согласно рекомендациям Microsoft, события Event ID 10016 можно безопасно игнорировать, если функциональность системы не нарушена.",
+            "Если требуется устранить запись: откройте `dcomcnfg`, найдите указанный AppID/CLSID в 'Настройка DCOM' и выдайте права учетной записи (SYSTEM / Local Service).",
+        ]
+        return {"summary": summary, "root_cause": root_cause, "recommendations": recs}
+
+    # Kernel-Power (41)
+    if "kernel-power" in prov_lower or ev_id == 41:
+        summary = "Критический сбой Kernel-Power (Event ID: 41): Система перезагрузилась без предварительного корректного завершения работы."
+        root_cause = (
+            "Компьютер внезапно отключился, завис или потерял питание. Возможные причины: сбой питания (БП), "
+            "аппаратный перегрев, синий экран (BSOD) или нестабильность драйвера/памяти."
+        )
+        recs = [
+            "Проверьте дампы памяти (BSOD) в каталоге `C:\\Windows\\Minidump\\`.",
+            "Выполните проверку целостности системных файлов: `sfc /scannow` и `DISM /Online /Cleanup-Image /RestoreHealth`.",
+            "Проверьте температурные показатели процессора/видеокарты и состояние блока питания.",
+        ]
+        return {"summary": summary, "root_cause": root_cause, "recommendations": recs}
+
+    # Service Control Manager
+    if "service control manager" in prov_lower:
+        summary = f"Служба управления службами (SCM) зафиксировала изменение состояния или сбой (Event ID: {ev_id})."
+        root_cause = (
+            f"Служба Windows аварийно завершилась или не ответила на запрос управления вовремя. "
+            f"Детали из журнала: {msg_clean or 'Таймаут или непредвиденная остановка службы.'}"
+        )
+        recs = [
+            "Проверьте журнал Application на наличие сбоев приложения (Event ID 1000/1002) в этот же момент времени.",
+            "Проверьте тип запуска и учетную запись службы: `Get-Service | Where-Object {$_.Status -ne 'Running'}`.",
+            "Попробуйте запустить службу вручную и проверить код возврата.",
+        ]
+        return {"summary": summary, "root_cause": root_cause, "recommendations": recs}
+
+    # Windows Update Client
+    if "windowsupdateclient" in prov_lower:
+        summary = f"Центр обновления Windows зафиксировал событие обновления (Event ID: {ev_id})."
+        root_cause = f"Процесс установки или загрузки пакета обновлений Windows: {msg_clean}"
+        recs = [
+            "Проверьте журнал Центра обновлений Windows в параметрах системы.",
+            "При повторяющихся ошибках сбросьте кэш обновлений: `net stop wuauserv`, очистите `C:\\Windows\\SoftwareDistribution` и `net start wuauserv`.",
+        ]
+        return {"summary": summary, "root_cause": root_cause, "recommendations": recs}
+
+    # Общий анализ по умолчанию
+    root_cause = f"Сообщение журнала: {msg_clean if msg_clean else 'Служебное уведомление операционной системы.'}"
+    if hex_code or dec_code:
+        root_cause += f" Зафиксирован код результата/ошибки: {dec_code or ''} (Hex: {hex_code or 'N/A'})."
+
     recs = [
-        "Проверьте актуальность соответствующих драйверов и обновлений Windows.",
+        "Проверьте сопутствующие события в этот же временной интервал в каналах System и Application.",
         "Убедитесь в корректности прав доступа службы или учётной записи.",
         "При регулярных повторах создайте правило мониторинга или SafeOps задачу.",
     ]
-
-    return {
-        "summary": summary,
-        "root_cause": root_cause,
-        "recommendations": recs,
-    }
+    return {"summary": summary, "root_cause": root_cause, "recommendations": recs}
 
 
 @router.post("/rag/query")

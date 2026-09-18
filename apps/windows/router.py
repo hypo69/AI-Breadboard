@@ -125,6 +125,36 @@ async def get_software_audit() -> Dict[str, Any]:
     return collector.collect().to_dict()
 
 
+@router.get("/software")
+async def get_installed_software(
+    category: Optional[str] = None,
+    unused_only: bool = False,
+    limit: int = 500,
+) -> List[Dict[str, Any]]:
+    """Получение списка установленных программ с историей запусков и назначением."""
+    from apps.windows.core.software_audit import SoftwareAuditEngine
+    engine = SoftwareAuditEngine()
+    apps = engine.get_installed_applications()
+    if category:
+        c_lower = category.lower()
+        apps = [
+            a for a in apps
+            if c_lower in (a.category.value if hasattr(a.category, "value") else str(a.category)).lower()
+        ]
+    if unused_only:
+        apps = [a for a in apps if not a.was_launched]
+    return [a.to_dict() for a in apps[:limit]]
+
+
+@router.get("/software/audit")
+async def get_software_audit_summary() -> Dict[str, Any]:
+    """Сводный аналитический отчет аудита программного обеспечения."""
+    from apps.windows.core.software_audit import SoftwareAuditEngine
+    engine = SoftwareAuditEngine()
+    report = engine.generate_audit_report()
+    return report.to_dict()
+
+
 @router.get("/audit/integrity")
 async def get_integrity_audit() -> Dict[str, Any]:
     """Аудит целостности системы (SFC / DISM / Servicing)."""
@@ -243,8 +273,105 @@ async def execute_action(request: Request, req: ActionExecuteRequest) -> Dict[st
 
 
 # -----------------------------------------------------------------------------
+# Microsoft Defender Antivirus & Security Endpoints
+# -----------------------------------------------------------------------------
+
+class DefenderScanRequest(BaseModel):
+    """Модель запроса сканирования Defender."""
+    scan_type: str = "quick"  # quick, full, custom
+    custom_path: Optional[str] = None
+
+
+class DefenderToggleFeatureRequest(BaseModel):
+    """Модель запроса переключения CFA / PUA."""
+    mode: str = "enabled"  # enabled, audit, disabled
+
+
+@router.get("/defender/status")
+async def get_defender_detailed_status() -> Dict[str, Any]:
+    """Детальный статус Microsoft Defender: защита, версионность и ASR."""
+    from apps.windows.core.defender_manager import DefenderManager
+    mgr = DefenderManager()
+    status = mgr.get_detailed_status()
+    prefs = mgr.get_preferences()
+    return {"status": status, "preferences": prefs}
+
+
+@router.get("/defender/threats")
+async def get_defender_threats() -> Dict[str, Any]:
+    """История обнаружений и активных угроз Microsoft Defender."""
+    from apps.windows.core.defender_manager import DefenderManager
+    mgr = DefenderManager()
+    threats = mgr.get_threat_detections()
+    return {"threats": threats, "count": len(threats)}
+
+
+@router.post("/defender/scan")
+async def start_defender_scan(request: Request, req: DefenderScanRequest) -> Dict[str, Any]:
+    """Запуск сканирования Microsoft Defender (MpCmdRun.exe)."""
+    require_admin_user(request)
+    from apps.windows.core.defender_manager import DefenderManager
+    mgr = DefenderManager()
+    return mgr.start_scan(scan_type=req.scan_type, custom_path=req.custom_path)
+
+
+@router.post("/defender/update-signatures")
+async def update_defender_signatures(request: Request) -> Dict[str, Any]:
+    """Принудительное обновление баз сигнатур Defender."""
+    require_admin_user(request)
+    from apps.windows.core.defender_manager import DefenderManager
+    mgr = DefenderManager()
+    return mgr.update_signatures()
+
+
+@router.post("/defender/cfa")
+async def toggle_controlled_folder_access(request: Request, req: DefenderToggleFeatureRequest) -> Dict[str, Any]:
+    """Управление Controlled Folder Access (Защита от программ-вымогателей)."""
+    require_admin_user(request)
+    from apps.windows.core.defender_manager import DefenderManager
+    mgr = DefenderManager()
+    return mgr.set_controlled_folder_access(mode=req.mode)
+
+
+@router.post("/defender/pua")
+async def toggle_pua_protection(request: Request, req: DefenderToggleFeatureRequest) -> Dict[str, Any]:
+    """Управление защитой от нежелательного ПО (PUA Protection)."""
+    require_admin_user(request)
+    from apps.windows.core.defender_manager import DefenderManager
+    mgr = DefenderManager()
+    return mgr.set_pua_protection(mode=req.mode)
+
+
+# -----------------------------------------------------------------------------
 # Hardware Diagnostics & Benchmark Endpoints
 # -----------------------------------------------------------------------------
+
+@router.get("/hardware/monitor")
+async def get_hardware_monitor_snapshot(include_smart: bool = True) -> Dict[str, Any]:
+    """Полный моментальный снимок аппаратного состояния системы (CPU, RAM, GPU, Disks, Sensors, Network, Battery)."""
+    from apps.windows.hardware.hardware_monitor import HardwareMonitor
+    monitor = HardwareMonitor()
+    snapshot = monitor.get_snapshot(include_smart=include_smart)
+    return snapshot.to_dict()
+
+
+@router.get("/hardware/monitor/summary")
+async def get_hardware_monitor_summary() -> Dict[str, Any]:
+    """Краткая сводка здоровья и пороговых предупреждений оборудования."""
+    from apps.windows.hardware.hardware_monitor import HardwareMonitor
+    monitor = HardwareMonitor()
+    summary = monitor.get_summary()
+    return summary
+
+
+@router.get("/hardware/sensors")
+async def get_hardware_sensors_list() -> Dict[str, Any]:
+    """Список всех обнаруженных аппаратных датчиков (температуры, кулеры, напряжения)."""
+    from apps.windows.hardware.hardware_monitor import HardwareMonitor
+    monitor = HardwareMonitor()
+    sensors = monitor.get_sensor_metrics()
+    return {"sensors": [s.__dict__ for s in sensors], "count": len(sensors)}
+
 
 @router.get("/hardware/smart")
 async def get_storage_smart() -> Dict[str, Any]:
@@ -262,6 +389,27 @@ async def get_gpu_telemetry() -> Dict[str, Any]:
     prober = GpuProber()
     gpus = prober.probe_all()
     return {"gpus": [g.__dict__ for g in gpus]}
+
+
+@router.get("/hardware/providers")
+async def get_hardware_providers() -> Dict[str, Any]:
+    """Получение списка всех аппаратных провайдеров и их статуса."""
+    from apps.windows.hardware.registry import HardwareProviderRegistry
+    reg = HardwareProviderRegistry()
+    return {
+        "providers": [p.get_provider_info() for p in reg.get_all_providers()],
+        "total": len(reg.get_all_providers()),
+        "available_count": len(reg.get_available_providers()),
+    }
+
+
+@router.get("/hardware/cross-check")
+async def get_hardware_cross_check() -> Dict[str, Any]:
+    """Запуск перекрестной проверки данных оборудования от всех провайдеров."""
+    from apps.windows.hardware.cross_validator import CrossValidator
+    validator = CrossValidator()
+    report = validator.run_cross_check()
+    return report.to_dict()
 
 
 @router.get("/hardware/audit")
@@ -291,6 +439,48 @@ async def run_stress_benchmark(req: StressTestRequest) -> Dict[str, Any]:
     return res.__dict__
 
 
+@router.get("/audit/process-telemetry/status")
+async def get_process_telemetry_status() -> Dict[str, Any]:
+    """Проверка доступности и статуса сенсоров телеметрии (Sysmon, Security 4688, CommandLine)."""
+    from apps.windows.core.process_audit_manager import ProcessAuditManager
+    manager = ProcessAuditManager()
+    status = manager.get_telemetry_status()
+    return status.to_dict()
+
+
+@router.get("/audit/process-telemetry/history")
+async def get_process_telemetry_history(
+    limit: int = 100,
+    process: Optional[str] = None,
+    user: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """Получение структурированной истории запуска процессов с командной строкой и PID."""
+    from apps.windows.core.process_audit_manager import ProcessAuditManager
+    manager = ProcessAuditManager()
+    return manager.get_process_execution_history(
+        limit=limit,
+        filter_process=process,
+        filter_user=user,
+    )
+
+
+@router.get("/audit/process-telemetry/tree")
+async def get_process_telemetry_tree(limit: int = 100) -> List[Dict[str, Any]]:
+    """Построение иерархического дерева выполнения процессов (Parent -> Child)."""
+    from apps.windows.core.process_audit_manager import ProcessAuditManager
+    manager = ProcessAuditManager()
+    tree = manager.build_process_tree(limit=limit)
+    return [node.to_dict() for node in tree]
+
+
+@router.get("/audit/process-telemetry/file-activity")
+async def get_process_telemetry_file_activity(limit: int = 50) -> List[Dict[str, Any]]:
+    """Получение файловых операций (создание/удаление) с привязкой к процессам."""
+    from apps.windows.core.process_audit_manager import ProcessAuditManager
+    manager = ProcessAuditManager()
+    return manager.get_file_activity_with_processes(limit=limit)
+
+
 def init_router(app: Optional[Any] = None, state: Optional[Any] = None) -> APIRouter:
     """Инициализация FastAPI роутера."""
     return router
@@ -300,4 +490,5 @@ __all__ = [
     "init_router",
     "router",
 ]
+
 

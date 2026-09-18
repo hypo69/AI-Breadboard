@@ -94,6 +94,15 @@ python -m apps.windows --mode full --json
 # Запуск интерактивного TUI Dashboard
 python -m apps.windows --tui
 
+# Запуск интерактивного TUI монитора оборудования (Hardware Monitor)
+python -m apps.windows --hardware
+
+# Получение аппаратного снимка в формате JSON
+python -m apps.windows --hw-json
+
+# Запуск интерактивного монитора системных логов
+python -m apps.windows --logs --channel System
+
 # Запуск автономного REST API сервера
 python -m apps.windows --server --port 8105
 ```
@@ -105,6 +114,13 @@ python -m apps.windows --server --port 8105
 | Метод | Эндпоинт | Описание |
 |---|---|---|
 | `GET` | `/api/windows/health?mode=quick` | Сводная оценка Health Score (0-100) |
+| `GET` | `/api/windows/hardware/monitor` | Полный слепок аппаратного мониторинга (CPU, RAM, GPU, Диски, Сеть, Датчики) |
+| `GET` | `/api/windows/hardware/monitor/summary` | Сводка здоровья и пороговых предупреждений оборудования |
+| `GET` | `/api/windows/hardware/sensors` | Показания всех активных датчиков температуры, вентиляторов и вольтажа |
+| `GET` | `/api/windows/hardware/gpu` | Телеметрия видеокарт NVIDIA / AMD / Intel / WMI |
+| `GET` | `/api/windows/hardware/smart` | Диагностика накопителей и S.M.A.R.T. |
+| `GET` | `/api/windows/hardware/audit` | Аппаратный аудит через CPU-Z / AIDA64 / WMI |
+| `POST` | `/api/windows/benchmark/stress` | Стресс-тест CPU / GPU с защитой от перегрева |
 | `GET` | `/api/windows/audit/full` | Полный глубокий отчет по 15 доменам |
 | `GET` | `/api/windows/audit/clean` | Аудит кэшей, %TEMP% и корзины |
 | `GET` | `/api/windows/audit/performance` | Аудит нагрузки CPU/RAM и автозагрузки |
@@ -130,7 +146,7 @@ python -m apps.windows --server --port 8105
 ## 🧪 Тестирование
 
 ```powershell
-pytest apps/windows/tests/test_ai_diagnostic_center.py -v
+pytest apps/windows/tests/test_hardware_monitor.py apps/windows/tests/test_ai_diagnostic_center.py -v
 ```
 
 ---
@@ -138,3 +154,4 @@ pytest apps/windows/tests/test_ai_diagnostic_center.py -v
 ## 📜 Лицензия
 
 © 2026 hypo69. Все права защищены.
+

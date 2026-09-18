@@ -35,7 +35,7 @@ ALL_APPS = [
     ("user_assistant", 8105),
     ("gcloud_monitor", 8106),
     ("website_monitor", 8107),
-    ("system_log_viewer", 8108),
+    ("windows", 8108),
     ("system_control_center", 8109),
 ]
 

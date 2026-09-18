@@ -1,41 +1,45 @@
 <!-- Network Terminal Application Tab -->
 <style>
   .net-container {
-    padding: 1rem;
+    padding: 0.5rem 0.75rem;
   }
   .net-card {
     background: #0f172a !important;
     border: 1px solid #334155 !important;
-    border-radius: 10px;
-    padding: 1rem;
+    border-radius: 8px;
+    padding: 0.45rem 0.75rem;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    justify-content: space-between;
+    min-height: 58px;
+    gap: 0.2rem;
   }
   .net-label {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: #94a3b8;
+    line-height: 1.1;
   }
   .net-value {
-    font-size: 1.35rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #f8fafc;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    line-height: 1.15;
   }
   .net-panel {
     background: #0f172a !important;
     border: 1px solid #334155 !important;
-    border-radius: 10px;
+    border-radius: 8px;
     overflow: hidden;
   }
   .net-panel-header {
     background: #1e293b !important;
     border-bottom: 1px solid #334155 !important;
-    padding: 0.75rem 1rem;
+    padding: 0.45rem 0.85rem;
     font-weight: 600;
-    font-size: 0.88rem;
+    font-size: 0.82rem;
     color: #38bdf8;
     display: flex;
     align-items: center;
@@ -43,13 +47,13 @@
   }
   .net-packets-table {
     width: 100%;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     border-collapse: collapse;
   }
   .net-packets-table th {
     background: #1e293b;
-    padding: 6px 12px;
+    padding: 5px 8px;
     color: #94a3b8;
     font-weight: 600;
     border-bottom: 1px solid #334155;
@@ -58,14 +62,14 @@
     z-index: 5;
   }
   .net-packets-table td {
-    padding: 5px 12px;
+    padding: 4px 8px;
     border-bottom: 1px solid rgba(51, 65, 85, 0.4);
   }
   .proto-badge {
     display: inline-block;
-    padding: 2px 6px;
+    padding: 1px 6px;
     border-radius: 4px;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 600;
   }
   .proto-tcp { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #3b82f6; }
@@ -77,57 +81,63 @@
 </style>
 
 <div class="net-container">
-  <!-- Header Alert & Status -->
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
-    <div>
-      <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
-        <span class="fs-4">🌐</span> Сетевой терминал (Network Packet & DPI Terminal)
-      </h5>
-      <p class="mb-0 small text-light" style="color: #cbd5e1 !important;">
-        Инспекция сетевых пакетов, анализ PCAP-файлов через TShark, распределение протоколов и обнаружение аномалий трафика.
-      </p>
+  <!-- Header Alert & Status (Compact Strip) -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 py-1.5 px-3 rounded-2 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="fs-5">🌐</span>
+      <span class="fw-bold text-white small" style="font-size: 0.92rem;">Сетевой терминал</span>
+      <span class="badge bg-dark border border-secondary text-info fw-normal" style="font-size: 0.7rem;">Network & DPI</span>
+      <span class="text-secondary small d-none d-lg-inline" style="font-size: 0.76rem;">| Инспекция пакетов, TShark и аномалии трафика</span>
     </div>
-    <div class="d-flex align-items-center gap-2">
-      <span class="badge rounded-pill bg-info-subtle text-info border border-info px-3 py-2" id="net-tshark-status">
+    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+      <span class="badge rounded-pill bg-info-subtle text-info border border-info px-2 py-1" style="font-size: 0.72rem;" id="net-tshark-status">
         TShark: Проверка...
       </span>
-      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-refresh-net-interfaces">
+      <button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1" style="font-size: 0.75rem;" id="btn-refresh-net-interfaces">
         <i class="bi bi-arrow-clockwise me-1"></i> Интерфейсы
       </button>
-      <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-network-config">
-        <i class="bi bi-gear-fill me-1"></i> Настройки (config.json)
+      <button class="btn btn-xs btn-outline-warning rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-network-config">
+        <i class="bi bi-gear-fill me-1"></i> Настройки
       </button>
     </div>
   </div>
 
-  <!-- Top Metrics Bar -->
-  <div class="row g-3 mb-3">
-    <div class="col-md-3 col-sm-6">
+  <!-- Top Metrics Bar (Compact Density Grid) -->
+  <div class="row g-2 mb-2">
+    <div class="col-6 col-md-3">
       <div class="net-card">
         <span class="net-label">Всего пакетов</span>
-        <span class="net-value" id="net-total-packets">0</span>
-        <span class="small text-muted" id="net-duration-info">Длительность: 0.0s</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="net-value" id="net-total-packets">0</span>
+          <span class="small text-muted" style="font-size: 0.68rem;" id="net-duration-info">0.0s</span>
+        </div>
       </div>
     </div>
-    <div class="col-md-3 col-sm-6">
+    <div class="col-6 col-md-3">
       <div class="net-card">
         <span class="net-label">Объём трафика</span>
-        <span class="net-value" id="net-total-bytes">0 KB</span>
-        <span class="small text-muted" id="net-throughput-info">Скорость: 0 KB/s</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="net-value" id="net-total-bytes">0 KB</span>
+          <span class="small text-muted" style="font-size: 0.68rem;" id="net-throughput-info">0 KB/s</span>
+        </div>
       </div>
     </div>
-    <div class="col-md-3 col-sm-6">
+    <div class="col-6 col-md-3">
       <div class="net-card">
         <span class="net-label">Активные протоколы</span>
-        <span class="net-value" id="net-top-proto" style="color: #38bdf8;">--</span>
-        <span class="small text-muted" id="net-proto-breakdown">TCP: 0% | UDP: 0%</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="net-value" id="net-top-proto" style="color: #38bdf8;">--</span>
+          <span class="small text-muted" style="font-size: 0.68rem;" id="net-proto-breakdown">TCP/UDP</span>
+        </div>
       </div>
     </div>
-    <div class="col-md-3 col-sm-6">
+    <div class="col-6 col-md-3">
       <div class="net-card">
         <span class="net-label">Аномалии & Эвристика</span>
-        <span class="net-value" id="net-anomalies-count" style="color: #4ade80;">0 аномалий</span>
-        <span class="small text-muted" id="net-ai-status">AI Inspector: Готов</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="net-value" id="net-anomalies-count" style="color: #4ade80;">0</span>
+          <span class="small text-muted" style="font-size: 0.68rem;" id="net-ai-status">Готов</span>
+        </div>
       </div>
     </div>
   </div>

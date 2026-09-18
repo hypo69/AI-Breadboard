@@ -1,0 +1,1 @@
+Get-CimInstance Win32_Printer | Select-Object Name, DriverName, PortName, @{Name='Status';Expression={if($_.PrinterState -eq 0 -or -not $_.PrinterState){'OK'}else{'Warning'}}}, Default, Shared, DeviceID | ConvertTo-Json

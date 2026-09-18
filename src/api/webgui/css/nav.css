@@ -1,0 +1,272 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   NAVIGATION — AI Breadboard WebGUI
+   Главная панель навигации, вкладки, выпадающие меню и элементы управления
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Главная панель навигации ────────────────────────────────────────────── */
+.main-nav-container {
+  background-color: var(--nav-bg);
+  border-bottom: 1px solid var(--border-color);
+  min-height: 34px;
+  position: relative;
+  z-index: 1020;
+  overflow: visible !important;
+  box-shadow: var(--shadow-xs);
+}
+
+.nav-tabs {
+  border-bottom: none;
+  background-color: transparent;
+  flex-wrap: nowrap;
+  overflow: visible !important;
+}
+
+.nav-tabs .nav-item {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.nav-tabs .nav-item.dropdown {
+  position: relative;
+}
+
+/* Nav-links — компактные */
+.nav-tabs .nav-link {
+  color: var(--nav-text);
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  padding: 5px 10px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+  border-radius: 4px 4px 0 0;
+}
+
+.nav-tabs .nav-link:hover {
+  color: var(--nav-active);
+  background-color: var(--nav-hover-bg);
+  border-bottom-color: transparent;
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--nav-active);
+  background: transparent;
+  border-bottom-color: var(--nav-active);
+}
+
+/* ── Выпадающие меню навбара ─────────────────────────────────────────────── */
+.nav-tabs .dropdown-menu {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  margin-top: 3px !important;
+  z-index: 9999 !important;
+  min-width: 180px;
+  display: none !important;
+  padding: 4px;
+  border-radius: 8px;
+  background-color: var(--surface-1);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md) !important;
+}
+
+.nav-tabs .dropdown-menu.show {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.nav-tabs .dropdown-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-color);
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.nav-tabs .dropdown-item:hover,
+.nav-tabs .dropdown-item:focus {
+  background-color: var(--nav-hover-bg);
+  color: var(--nav-active);
+}
+
+.nav-tabs .dropdown-item.active {
+  background-color: rgba(37, 99, 235, 0.1);
+  color: var(--nav-active);
+  font-weight: 600;
+}
+
+[data-theme="dark"] .nav-tabs .dropdown-item.active {
+  background-color: rgba(88, 166, 255, 0.12);
+  color: var(--nav-active);
+}
+
+/* ── Разделители и метки групп ───────────────────────────────────────────── */
+.nav-group-divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--divider-color);
+  margin: 0 6px;
+  opacity: 0.7;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.nav-group-label {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  padding: 2px 6px;
+  background-color: var(--surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  user-select: none;
+}
+
+/* ── Выпадающие меню Bootstrap (глобально) ─────────────────────────────────── */
+[data-theme="light"] .dropdown-menu {
+  background-color: var(--surface-1);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="light"] .dropdown-item {
+  color: var(--text-color);
+  border-radius: 4px;
+  font-size: 0.82rem;
+}
+
+[data-theme="light"] .dropdown-item:hover,
+[data-theme="light"] .dropdown-item:focus {
+  background-color: var(--nav-hover-bg);
+  color: var(--nav-active);
+}
+
+[data-theme="light"] .dropdown-item.active {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .dropdown-menu {
+  background-color: var(--surface-1);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .dropdown-item {
+  color: var(--text-color);
+  border-radius: 4px;
+  font-size: 0.82rem;
+}
+
+[data-theme="dark"] .dropdown-item:hover,
+[data-theme="dark"] .dropdown-item:focus {
+  background-color: var(--nav-hover-bg);
+  color: var(--nav-active);
+}
+
+[data-theme="dark"] .dropdown-item.active {
+  background-color: #1f6feb;
+  color: #ffffff;
+}
+
+/* ── Кнопки и контролы навбара ───────────────────────────────────────────── */
+.main-nav-container .lang-selector {
+  background-color: var(--nav-bg);
+  border-color: var(--border-color);
+  color: var(--nav-text);
+  font-size: 0.8rem;
+}
+
+#nav-google-btn {
+  background: #ffffff;
+  color: #1f2937 !important;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 3px 10px;
+  transition: all 0.18s ease;
+}
+
+#nav-google-btn:hover {
+  background: #f8fafc;
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] #nav-google-btn {
+  background: var(--surface-2);
+  color: var(--text-color) !important;
+  border-color: var(--border-color);
+}
+
+#user-settings-btn {
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 20px;
+  color: var(--nav-text);
+  border-color: var(--border-color);
+  transition: all 0.18s ease;
+  padding: 3px 10px;
+}
+
+#user-settings-btn:hover {
+  background-color: var(--nav-hover-bg);
+  color: var(--nav-active);
+  border-color: var(--nav-active);
+}
+
+#user-settings-gear-btn,
+#theme-toggle-btn {
+  color: var(--nav-text);
+  border-color: var(--border-color);
+  transition: all 0.18s ease;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.85rem;
+}
+
+#user-settings-gear-btn:hover {
+  background-color: var(--nav-hover-bg);
+  color: var(--nav-active);
+  border-color: var(--nav-active);
+  transform: rotate(30deg);
+}
+
+#theme-toggle-btn:hover {
+  background-color: var(--nav-hover-bg);
+  color: var(--nav-active);
+  border-color: var(--nav-active);
+}
+
+/* ── Переключатель темы (Dropdown / иконки) ─────────────────────────────────── */
+#theme-dropdown-container .dropdown-menu {
+  min-width: 140px;
+  padding: 3px;
+}
+
+.theme-check-icon {
+  font-size: 0.85rem;
+}
+
+.theme-check-icon.d-none {
+  display: none !important;
+}

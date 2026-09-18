@@ -1,0 +1,121 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME VARIABLES — AI Breadboard WebGUI
+   Переменные оформления и дизайн-токены
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Светлая тема (по умолчанию) ──────────────────────────────────────────── */
+:root,
+[data-theme="light"] {
+  /* Фоны (иерархия поверхностей) */
+  --bg-color:        #f2f4f7;   /* страница */
+  --surface-1:       #ffffff;   /* карточки, панели */
+  --surface-2:       #f7f8fa;   /* хедеры карточек, тулбары */
+  --card-bg:         #ffffff;
+  --card-text:       #1e2328;
+  --nav-bg:          #ffffff;
+
+  /* Текст */
+  --text-color:      #1e2328;
+  --text-muted:      #6b7280;
+  --nav-text:        #4b5563;
+  --nav-active:      #2563eb;
+  --nav-hover-bg:    #eff2f6;
+
+  /* Линии и границы */
+  --border-color:    #e4e6eb;
+  --border-subtle:   #eef0f3;
+  --divider-color:   #dde1e7;
+  --modal-border:    #e4e6eb;
+
+  /* Тени (лёгкие) */
+  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm:  0 1px 4px rgba(0, 0, 0, 0.07);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.09);
+  --shadow-lg:  0 8px 24px rgba(0, 0, 0, 0.11);
+
+  /* Чат */
+  --chat-user-bg:    #2563eb;
+  --chat-user-text:  #ffffff;
+  --chat-bot-bg:     #f0f2f5;
+  --chat-bot-text:   #1e2328;
+
+  /* Скроллбар */
+  --scrollbar-track: #f0f2f5;
+  --scrollbar-thumb: #ced4da;
+
+  /* Модальные окна */
+  --modal-bg:        #ffffff;
+  --modal-text:      #1e2328;
+
+  /* Алерты — светлая тема */
+  --alert-success-bg:     #f0fdf4;
+  --alert-success-border: #86efac;
+  --alert-success-text:   #166534;
+  --alert-danger-bg:      #fff1f2;
+  --alert-danger-border:  #fca5a5;
+  --alert-danger-text:    #991b1b;
+  --alert-warning-bg:     #fffbeb;
+  --alert-warning-border: #fcd34d;
+  --alert-warning-text:   #92400e;
+  --alert-info-bg:        #eff6ff;
+  --alert-info-border:    #93c5fd;
+  --alert-info-text:      #1e40af;
+}
+
+/* ── Тёмная тема ───────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  /* Фоны (иерархия поверхностей) */
+  --bg-color:        #0d1117;   /* страница — GitHub dark */
+  --surface-1:       #161b22;   /* карточки */
+  --surface-2:       #1c2128;   /* хедеры карточек */
+  --card-bg:         #161b22;
+  --card-text:       #c9d1d9;
+  --nav-bg:          #161b22;
+
+  /* Текст */
+  --text-color:      #c9d1d9;
+  --text-muted:      #8b949e;
+  --nav-text:        #8b949e;
+  --nav-active:      #58a6ff;
+  --nav-hover-bg:    #21262d;
+
+  /* Линии и границы */
+  --border-color:    #30363d;
+  --border-subtle:   #21262d;
+  --divider-color:   #30363d;
+  --modal-border:    #30363d;
+
+  /* Тени (глубже) */
+  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm:  0 1px 4px rgba(0, 0, 0, 0.35);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-lg:  0 8px 24px rgba(0, 0, 0, 0.55);
+
+  /* Чат */
+  --chat-user-bg:    #1f6feb;
+  --chat-user-text:  #ffffff;
+  --chat-bot-bg:     #21262d;
+  --chat-bot-text:   #c9d1d9;
+
+  /* Скроллбар */
+  --scrollbar-track: #0d1117;
+  --scrollbar-thumb: #484f58;
+
+  /* Модальные окна */
+  --modal-bg:        #161b22;
+  --modal-text:      #c9d1d9;
+
+  /* Алерты — тёмная тема */
+  --alert-success-bg:     #132c1e;
+  --alert-success-border: #2ea043;
+  --alert-success-text:   #7ee787;
+  --alert-danger-bg:      #2d1218;
+  --alert-danger-border:  #da3633;
+  --alert-danger-text:    #ff7b72;
+  --alert-warning-bg:     #2d2008;
+  --alert-warning-border: #d29922;
+  --alert-warning-text:   #e3b341;
+  --alert-info-bg:        #0d1f38;
+  --alert-info-border:    #1f6feb;
+  --alert-info-text:      #79c0ff;
+}

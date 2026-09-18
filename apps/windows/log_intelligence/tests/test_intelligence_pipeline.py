@@ -78,3 +78,25 @@ def test_adaptive_rag_pipeline(tmp_path: Path) -> None:
     search_res = pipeline.search_rag("почему отключился сетевой адаптер?")
     assert len(search_res) > 0
     assert "Realtek" in search_res[0]["text"] or "network" in search_res[0]["text"].lower() or "сбо" in search_res[0]["text"].lower()
+
+
+def test_wevtapi_channel_enumeration() -> None:
+    """Проверка нативного перечисления каналов через WevtAPI."""
+    from apps.windows.api.wevtapi import WevtAPI
+    api = WevtAPI()
+    channels = api.enumerate_channels()
+    assert len(channels) >= 10
+    names = [c.channel_name.lower() for c in channels]
+    assert "system" in names
+    assert "application" in names
+
+
+def test_log_discovery_engine_sources() -> None:
+    """Проверка обнаружения всех источников логов в системе через LogDiscoveryEngine."""
+    from apps.windows.core.modules.log_discovery_engine import LogDiscoveryEngine
+    engine = LogDiscoveryEngine()
+    sources = engine.discover_all_sources()
+    assert len(sources) > 50
+    categories = {s.category for s in sources}
+    assert "Windows Event Log" in categories
+

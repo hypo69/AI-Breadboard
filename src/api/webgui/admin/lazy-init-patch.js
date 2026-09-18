@@ -71,6 +71,7 @@ window.addEventListener('load', async () => {
     { tabName: 'agents', htmlUrl: `/html/agents_tab/index.html`, jsUrl: `/html/agents_tab/main.js` },
     { tabName: 'skills', htmlUrl: `/html/skills_tab/index.html`, jsUrl: `/html/skills_tab/main.js` },
     { tabName: 'mcp', htmlUrl: `/html/mcp_tab/index.html`, jsUrl: `/html/mcp_tab/main.js` },
+    { tabName: 'observability', htmlUrl: `/html/system_inspector_tab/index.html`, jsUrl: `/html/system_inspector_tab/main.js` },
     { tabName: 'telegram-rag', htmlUrl: `/html/telegram_rag_tab/index.html`, jsUrl: `/html/telegram_rag_tab/main.js` },
     { tabName: 'sources', htmlUrl: `/html/sources_tab/index.html`, jsUrl: `/html/sources_tab/main.js` },
     { tabName: 'search', htmlUrl: `/html/search_tab/index.html`, jsUrl: `/html/search_tab/main.js` },
@@ -89,6 +90,7 @@ window.addEventListener('load', async () => {
     { tabName: 'trading', htmlUrl: `/html/trading_tab/index.html`, jsUrl: `/html/trading_tab/main.js` },
     { tabName: 'network', htmlUrl: `/html/network_tab/index.html`, jsUrl: `/html/network_tab/main.js` },
     { tabName: 'system-inspector', htmlUrl: `/html/system_inspector_tab/index.html`, jsUrl: `/html/system_inspector_tab/main.js` },
+    { tabName: 'about-system', htmlUrl: `/html/about_system_tab/index.html`, jsUrl: `/html/about_system_tab/main.js` },
     { tabName: 'windows-admin', htmlUrl: `/html/windows_admin_tab/index.html`, jsUrl: `/html/windows_admin_tab/main.js` },
     { tabName: 'cloudflared', htmlUrl: `/html/cloudflared_tab/index.html`, jsUrl: `/html/cloudflared_tab/main.js` },
     { tabName: 'user-assistant', htmlUrl: `/html/user_assistant_tab/index.html`, jsUrl: `/html/user_assistant_tab/main.js` },
@@ -96,6 +98,8 @@ window.addEventListener('load', async () => {
     { tabName: 'website-monitor', htmlUrl: `/html/website_monitor_tab/index.html`, jsUrl: `/html/website_monitor_tab/main.js` },
     { tabName: 'system-control', htmlUrl: `/html/system_control_tab/index.html`, jsUrl: `/html/system_control_tab/main.js` },
     { tabName: 'system-logs', htmlUrl: `/html/system_logs_tab/index.html`, jsUrl: `/html/system_logs_tab/main.js` },
+    { tabName: 'software-audit', htmlUrl: `/html/software_audit_tab/index.html`, jsUrl: `/html/software_audit_tab/main.js` },
+    { tabName: 'registry-viewer', htmlUrl: `/html/registry_viewer_tab/index.html`, jsUrl: `/html/registry_viewer_tab/main.js` },
     { tabName: 'wikipedia-research', htmlUrl: `/html/wikipedia_research_tab/index.html`, jsUrl: `/html/wikipedia_research_tab/main.js` },
   ];
 
@@ -108,7 +112,7 @@ window.addEventListener('load', async () => {
     console.log(`  Remaining tabs will load in background: ${restTabs.length} tabs`);
 
     // Восстанавливаем последнюю открытую вкладку
-    const restored = await restoreLastTab('tab-chat');
+    const restored = await restoreLastTab('tab-about-system');
     console.log(`[LazyInitPatch] Last tab restored: ${restored}`);
 
   } catch (error) {

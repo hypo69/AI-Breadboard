@@ -1,0 +1,22 @@
+{
+  "app_name": "windows_startup_auditor",
+  "display_name": "Windows Startup Auditor",
+  "description": "Комплексный аудит всех точек автозапуска и персистентности Windows, анализ безопасности и оптимизация загрузки",
+  "version": "1.0.0",
+  "enabled": true,
+  "tab": "tab-startup-auditor",
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8112,
+    "use_ssl": false,
+    "workers": 1
+  },
+  "scan_settings": {
+    "scan_registry": true,
+    "scan_folders": true,
+    "scan_tasks": true,
+    "scan_services": true,
+    "scan_ifeo": true,
+    "scan_winlogon": true
+  }
+}

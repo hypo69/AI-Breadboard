@@ -34,7 +34,9 @@
     "helpdesk": "🛟 Helpdesk",
     "trading": "📈 Trading Terminal",
     "network": "🌐 Network Terminal",
-    "systemInspector": "🖥️ System Inspector"
+    "systemInspector": "🖥️ System Inspector",
+    "aboutSystem": "ℹ️ About System",
+    "scenarios": "💬🎬 Chat & Scenarios"
   },
   "movieSearch": {
     "title": "🔍 Search Movies on Trackers",

@@ -1,0 +1,584 @@
+<!-- About System Application Tab -->
+<style>
+  .about-sys-wrapper {
+    padding: 0.75rem;
+    color: var(--text-color, #f8fafc);
+  }
+  .about-sys-top-header {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+    border: 1px solid var(--border-color, #334155);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+  }
+  .about-sys-card {
+    background: var(--surface-1, #0f172a) !important;
+    border: 1px solid var(--border-color, #334155) !important;
+    border-radius: 8px;
+    padding: 0.75rem 0.9rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 80px;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .about-sys-card:hover {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  }
+  .about-sys-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted, #94a3b8);
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .about-sys-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-color, #f8fafc);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    line-height: 1.25;
+  }
+  .about-sys-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted, #94a3b8);
+    line-height: 1.2;
+  }
+  .about-sys-panel {
+    background: var(--surface-1, #0f172a) !important;
+    border: 1px solid var(--border-color, #334155) !important;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  .about-sys-panel-header {
+    background: var(--surface-2, #1e293b) !important;
+    border-bottom: 1px solid var(--border-color, #334155) !important;
+    padding: 0.55rem 0.9rem;
+    font-weight: 600;
+    font-size: 0.84rem;
+    color: var(--nav-active, #38bdf8);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .about-sys-spec-table {
+    width: 100%;
+    margin-bottom: 0;
+    font-size: 0.82rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .about-sys-spec-table td {
+    padding: 6px 12px;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.35);
+    vertical-align: middle;
+  }
+  .about-sys-spec-table tr:last-child td {
+    border-bottom: none;
+  }
+  .about-sys-spec-key {
+    color: var(--text-muted, #94a3b8);
+    width: 32%;
+    font-weight: 500;
+  }
+  .about-sys-spec-val {
+    color: var(--text-color, #f8fafc);
+    font-weight: 600;
+  }
+  .about-sys-progress-track {
+    background: rgba(51, 65, 85, 0.6);
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+    min-width: 100px;
+  }
+  .about-sys-progress-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+  .about-sys-badge-ok {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid #22c55e;
+    font-size: 0.72rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .about-sys-badge-warn {
+    background: rgba(234, 179, 8, 0.15);
+    color: #fde047;
+    border: 1px solid #eab308;
+    font-size: 0.72rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .about-sys-tree-node {
+    margin-bottom: 6px;
+    background: var(--surface-2, #1e293b);
+    border: 1px solid var(--border-color, #334155);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .about-sys-tree-title {
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-color, #f8fafc);
+    transition: background 0.12s;
+  }
+  .about-sys-tree-title:hover {
+    background: rgba(56, 189, 248, 0.08);
+  }
+  .about-sys-tree-body {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    border-top: 1px solid var(--border-color, #334155);
+    background: var(--bg-color, #090d16);
+  }
+  .about-sys-prop-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+  }
+  .about-sys-prop-row:last-child {
+    border-bottom: none;
+  }
+</style>
+
+<div class="about-sys-wrapper">
+  <!-- Top Navigation / Refresh & Status Bar -->
+  <div class="about-sys-top-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="fs-5">ℹ️</span>
+      <h6 class="mb-0 fw-bold" style="font-size: 1rem; color: #38bdf8;">О Системе (System Specification & Telemetry)</h6>
+      <span class="badge rounded-pill bg-info-subtle text-info border border-info px-2.5 py-1" style="font-size: 0.72rem;" id="about-sys-live-badge">
+        ● Live Host Telemetry
+      </span>
+      <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary px-2.5 py-1" style="font-size: 0.72rem;" id="about-sys-privilege-badge">
+        🔍 Privilege Check
+      </span>
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1" id="btn-about-sys-refresh" title="Обновить всю информацию">
+        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+      </button>
+      <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1" id="btn-about-sys-live-toggle" title="Приостановить или возобновить поток">
+        <i class="bi bi-pause-fill me-1" id="icon-about-sys-live"></i> <span id="txt-about-sys-live">Пауза</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Top 4 Summary KPI Cards (From Screenshot 1) -->
+  <div class="row g-2 mb-3">
+    <!-- Card 1: Operating System -->
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="about-sys-card">
+        <div class="about-sys-label">
+          <span>Operating System</span>
+          <i class="bi bi-windows text-info"></i>
+        </div>
+        <div class="about-sys-value text-info text-truncate mt-1" id="about-kpi-os-title">Windows 11 (AMD64)</div>
+        <div class="about-sys-sub text-truncate" id="about-kpi-os-host">Host: DELL-VOSTRO</div>
+      </div>
+    </div>
+
+    <!-- Card 2: Security & Defender -->
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="about-sys-card">
+        <div class="about-sys-label">
+          <span>Security & Defender</span>
+          <i class="bi bi-shield-check text-success"></i>
+        </div>
+        <div class="about-sys-value text-success text-truncate mt-1" id="about-kpi-sec-title">Active & Protected</div>
+        <div class="about-sys-sub text-truncate" id="about-kpi-sec-sub">Firewall: ON | UAC: ON</div>
+      </div>
+    </div>
+
+    <!-- Card 3: System Protection -->
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="about-sys-card">
+        <div class="about-sys-label">
+          <span>System Protection</span>
+          <i class="bi bi-shield-lock text-warning"></i>
+        </div>
+        <div class="about-sys-value text-warning text-truncate mt-1" id="about-kpi-prot-title">3 Checkpoints</div>
+        <div class="about-sys-sub text-truncate" id="about-kpi-prot-sub">Protection: Active</div>
+      </div>
+    </div>
+
+    <!-- Card 4: System Storage (C:) -->
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="about-sys-card">
+        <div class="about-sys-label">
+          <span>System Storage (C:)</span>
+          <i class="bi bi-hdd-fill text-primary"></i>
+        </div>
+        <div class="about-sys-value text-white text-truncate mt-1" id="about-kpi-stor-title">1014.8 GB Free</div>
+        <div class="about-sys-sub text-info text-truncate" id="about-kpi-stor-clean">Cleanable: ~190 MB</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Special Identity, User & Localization Card -->
+  <div class="about-sys-panel">
+    <div class="about-sys-panel-header">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-person-badge-fill text-info"></i>
+        <span class="text-white">Идентификация системы и региональные параметры</span>
+      </div>
+      <div class="d-flex align-items-center gap-2 small text-muted">
+        <span id="about-ident-time-badge">Локальное время: --:--:--</span>
+      </div>
+    </div>
+    <div class="p-2.5">
+      <div class="row g-2">
+        <!-- Computer Name -->
+        <div class="col-12 col-md-6 col-lg-3">
+          <div class="p-2 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
+            <div class="small text-muted mb-1"><i class="bi bi-laptop me-1 text-info"></i> Название компьютера:</div>
+            <div class="fw-bold fs-6 text-white" id="about-ident-hostname">DELL-VOSTRO</div>
+            <div class="small text-muted mt-1" id="about-ident-domain">Workgroup / Host: DELL-VOSTRO</div>
+          </div>
+        </div>
+        <!-- User Name -->
+        <div class="col-12 col-md-6 col-lg-3">
+          <div class="p-2 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
+            <div class="small text-muted mb-1"><i class="bi bi-person-circle me-1 text-success"></i> Имя пользователя:</div>
+            <div class="fw-bold fs-6 text-white" id="about-ident-username">onela</div>
+            <div class="small text-muted mt-1" id="about-ident-privilege">Права: Standard / Admin</div>
+          </div>
+        </div>
+        <!-- System Language -->
+        <div class="col-12 col-md-6 col-lg-3">
+          <div class="p-2 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
+            <div class="small text-muted mb-1"><i class="bi bi-translate me-1 text-warning"></i> Язык системы:</div>
+            <div class="fw-bold fs-6 text-white" id="about-ident-language">Русский / English / עברית</div>
+            <div class="small text-muted mt-1" id="about-ident-locales">Локали: User: he-IL | Sys: en-US</div>
+          </div>
+        </div>
+        <!-- Locale & Timezone -->
+        <div class="col-12 col-md-6 col-lg-3">
+          <div class="p-2 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
+            <div class="small text-muted mb-1"><i class="bi bi-clock me-1 text-primary"></i> Локальные установки:</div>
+            <div class="fw-bold fs-6 text-white" id="about-ident-timezone">Jerusalem (UTC+03:00)</div>
+            <div class="small text-muted mt-1 text-truncate" id="about-ident-codepage">Кодировка: UTF-8 (ACP: 65001)</div>
+          </div>
+        </div>
+      </div>
+      <!-- Installed Keyboards / Input Languages row -->
+      <div class="mt-2 pt-2 border-top border-secondary-subtle d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="small text-muted">
+          <i class="bi bi-keyboard me-1 text-info"></i> Раскладки ввода клавиатуры:
+          <span id="about-ident-inputs" class="text-white fw-semibold ms-1">Русский (RU), English (US), עברית (IL)</span>
+        </div>
+        <div class="small text-muted">
+          <i class="bi bi-cpu me-1 text-primary"></i> Сборка Windows:
+          <span id="about-ident-os-build" class="text-white fw-semibold ms-1">Windows 11 (Build 10.0.26200)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Resource Telemetry Bar (From Screenshot 2) -->
+  <div class="row g-2 mb-3">
+    <!-- CPU Utilization -->
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="about-sys-card">
+        <div class="about-sys-label">
+          <span>Загрузка CPU</span>
+          <span id="about-telemetry-cpu-cores" class="small text-muted">6 физ. / 12 Потоков</span>
+        </div>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <div class="about-sys-value text-info" id="about-telemetry-cpu-val">22.2%</div>
+          <span class="small text-muted" id="about-telemetry-cpu-freq">2900 MHz</span>
+        </div>
+        <div class="about-sys-progress-track mt-1.5">
+          <div class="about-sys-progress-bar bg-info" id="about-telemetry-cpu-bar" style="width: 22%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Memory RAM -->
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="about-sys-card">
+        <div class="about-sys-label">
+          <span>Память (RAM)</span>
+          <span id="about-telemetry-ram-sub" class="small text-muted">58.0% занято (13.1 GB свободно)</span>
+        </div>
+        <div class="about-sys-value text-warning text-truncate mt-1" id="about-telemetry-ram-val">18.7 / 31.8 GB</div>
+        <div class="about-sys-progress-track mt-1.5">
+          <div class="about-sys-progress-bar bg-warning" id="about-telemetry-ram-bar" style="width: 58%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GPU Accelerator -->
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="about-sys-card">
+        <div class="about-sys-label">
+          <span>GPU Ускоритель</span>
+          <span id="about-telemetry-gpu-badge" class="badge bg-success-subtle text-success border border-success" style="font-size: 0.68rem;">CUDA + DirectML</span>
+        </div>
+        <div class="about-sys-value text-danger text-truncate mt-1" id="about-telemetry-gpu-name">GeForce GT 710</div>
+        <div class="about-sys-sub text-truncate" id="about-telemetry-gpu-vram">VRAM: 2.0 GB | Нагрузка: 0%</div>
+      </div>
+    </div>
+
+    <!-- Disk I/O Rate -->
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="about-sys-card">
+        <div class="about-sys-label">
+          <span>Диск (C:) I/O</span>
+          <i class="bi bi-speedometer2 text-info"></i>
+        </div>
+        <div class="about-sys-value text-white text-truncate mt-1" id="about-telemetry-disk-val">0.28 MB/s</div>
+        <div class="about-sys-sub text-truncate" id="about-telemetry-disk-rates">Чтение: 2 КБ/с | Запись: 280 КБ/с</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Specification & Security & Firewall Profiles (From Screenshot 1) -->
+  <div class="row g-2 mb-3">
+    <!-- Left: System Specification -->
+    <div class="col-12 col-lg-6">
+      <div class="about-sys-panel h-100">
+        <div class="about-sys-panel-header">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-cpu-fill text-info"></i>
+            <span class="text-white">System Specification</span>
+          </div>
+          <span class="badge bg-dark border border-secondary text-info" id="about-spec-uptime">Uptime: 65h 25m</span>
+        </div>
+        <table class="about-sys-spec-table">
+          <tbody>
+            <tr>
+              <td class="about-sys-spec-key">Hostname</td>
+              <td class="about-sys-spec-val" id="about-spec-host">DELL-VOSTRO</td>
+            </tr>
+            <tr>
+              <td class="about-sys-spec-key">OS Version</td>
+              <td class="about-sys-spec-val" id="about-spec-os">Windows 11 (Build 10.0.26200)</td>
+            </tr>
+            <tr>
+              <td class="about-sys-spec-key">CPU Processor</td>
+              <td class="about-sys-spec-val" id="about-spec-cpu">Intel64 Family 6 Model 165 Stepping 3, GenuineIntel (12 logical cores)</td>
+            </tr>
+            <tr>
+              <td class="about-sys-spec-key">RAM Memory</td>
+              <td class="about-sys-spec-val" id="about-spec-ram">13.2 GB free / 31.8 GB total (58.6% used)</td>
+            </tr>
+            <tr>
+              <td class="about-sys-spec-key">Power Scheme</td>
+              <td class="about-sys-spec-val" id="about-spec-power">Balanced (Сбалансированная)</td>
+            </tr>
+            <tr>
+              <td class="about-sys-spec-key">Windows Update</td>
+              <td class="about-sys-spec-val" id="about-spec-update">Up to date (5 KBs installed)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right: Security & Firewall Profiles -->
+    <div class="col-12 col-lg-6">
+      <div class="about-sys-panel h-100">
+        <div class="about-sys-panel-header">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-shield-check text-success"></i>
+            <span class="text-white">Security & Firewall Profiles</span>
+          </div>
+          <span class="about-sys-badge-ok">SECURE</span>
+        </div>
+        <table class="about-sys-spec-table">
+          <tbody>
+            <tr>
+              <td class="about-sys-spec-key">Windows Defender</td>
+              <td class="about-sys-spec-val text-success" id="about-sec-defender">Enabled</td>
+            </tr>
+            <tr>
+              <td class="about-sys-spec-key">Real Time Protection</td>
+              <td class="about-sys-spec-val text-success" id="about-sec-realtime">Enabled</td>
+            </tr>
+            <tr>
+              <td class="about-sys-spec-key">Domain Firewall</td>
+              <td class="about-sys-spec-val text-success" id="about-sec-fw-domain">Active</td>
+            </tr>
+            <tr>
+              <td class="about-sys-spec-key">Private Firewall</td>
+              <td class="about-sys-spec-val text-success" id="about-sec-fw-private">Active</td>
+            </tr>
+            <tr>
+              <td class="about-sys-spec-key">Public Firewall</td>
+              <td class="about-sys-spec-val text-success" id="about-sec-fw-public">Active</td>
+            </tr>
+            <tr>
+              <td class="about-sys-spec-key">User Account Control (UAC)</td>
+              <td class="about-sys-spec-val text-success" id="about-sec-uac">Enabled</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Storage Volumes & Partitions Table (From Screenshot 1) -->
+  <div class="about-sys-panel mb-3">
+    <div class="about-sys-panel-header">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-hdd-stack-fill text-primary"></i>
+        <span class="text-white">Storage Volumes & Partitions</span>
+      </div>
+      <span class="badge bg-secondary" id="about-disks-count">7 Drives</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-dark table-hover mb-0" style="font-size: 0.82rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+        <thead>
+          <tr class="text-secondary border-secondary">
+            <th style="width: 10%;">Drive</th>
+            <th style="width: 14%;">File System</th>
+            <th style="width: 14%;">Total Size</th>
+            <th style="width: 14%;">Used</th>
+            <th style="width: 16%;">Free Space</th>
+            <th style="width: 20%;">Usage %</th>
+            <th style="width: 12%;">SMART Health</th>
+          </tr>
+        </thead>
+        <tbody id="about-sys-disks-tbody">
+          <!-- Injected dynamically -->
+          <tr>
+            <td colspan="7" class="text-center py-3 text-muted">Загрузка разделов дисков...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Dual Panel: LibreHardwareMonitor Sensors + Live Process Stream (From Screenshot 2) -->
+  <div class="row g-2 mb-3">
+    <!-- Left: Sensors LibreHardwareMonitor -->
+    <div class="col-12 col-lg-5">
+      <div class="about-sys-panel h-100">
+        <div class="about-sys-panel-header">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-activity text-danger"></i>
+            <span class="text-white">Сенсоры LibreHardwareMonitor</span>
+          </div>
+          <span class="badge bg-success-subtle text-success border border-success" id="about-sensors-count-badge">LHM Active</span>
+        </div>
+        <div class="p-2 border-bottom border-secondary-subtle d-flex align-items-center justify-content-between flex-wrap gap-1">
+          <!-- Filter Buttons -->
+          <div class="btn-group btn-group-sm" role="group" id="about-sensor-filter-group">
+            <button type="button" class="btn btn-outline-info active py-0.5 px-2" data-sensor-cat="all" style="font-size: 0.72rem;">Все</button>
+            <button type="button" class="btn btn-outline-secondary py-0.5 px-2" data-sensor-cat="voltage" style="font-size: 0.72rem;">Вольтаж</button>
+            <button type="button" class="btn btn-outline-secondary py-0.5 px-2" data-sensor-cat="clock" style="font-size: 0.72rem;">Частоты</button>
+            <button type="button" class="btn btn-outline-secondary py-0.5 px-2" data-sensor-cat="temperature" style="font-size: 0.72rem;">Температуры</button>
+            <button type="button" class="btn btn-outline-secondary py-0.5 px-2" data-sensor-cat="power" style="font-size: 0.72rem;">Нагрузка</button>
+          </div>
+          <input type="text" class="form-control form-control-sm" id="about-sensor-search" placeholder="Фильтр..." style="max-width: 130px; font-size: 0.72rem; height: 26px;">
+        </div>
+        <div class="p-2" id="about-sensors-container" style="max-height: 400px; overflow-y: auto;">
+          <div class="text-center py-4 text-muted small">Опрос сенсоров оборудования...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Top Process Stream (Live Stream) -->
+    <div class="col-12 col-lg-7">
+      <div class="about-sys-panel h-100">
+        <div class="about-sys-panel-header">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-list-task text-info"></i>
+            <span class="text-white">Топ процессов хоста (Live Stream)</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <input type="text" class="form-control form-control-sm" id="about-proc-search" placeholder="Фильтр по имени или PID" style="max-width: 180px; font-size: 0.75rem; height: 26px;">
+          </div>
+        </div>
+        <div class="table-responsive" style="max-height: 440px; overflow-y: auto;">
+          <table class="table table-dark table-hover table-sm mb-0" style="font-size: 0.78rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+            <thead>
+              <tr class="text-secondary border-secondary">
+                <th>PID</th>
+                <th>Имя процесса</th>
+                <th>Статус</th>
+                <th>CPU %</th>
+                <th>Память</th>
+                <th>Потоки</th>
+                <th>Пользователь</th>
+              </tr>
+            </thead>
+            <tbody id="about-sys-procs-tbody">
+              <!-- Injected dynamically -->
+              <tr>
+                <td colspan="7" class="text-center py-4 text-muted">Загрузка процессов...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Copilot Diagnostics Card (From Screenshot 2) -->
+  <div class="about-sys-panel mb-3">
+    <div class="about-sys-panel-header">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-robot text-info"></i>
+        <span class="text-white">AI Copilot: Анализ производительности и узких мест</span>
+        <span class="badge bg-success-subtle text-success border border-success ms-2" id="about-ai-health-badge">Health: 100/100</span>
+      </div>
+      <span class="small text-muted" id="about-ai-engine-name">Heuristic Engine</span>
+    </div>
+    <div class="p-3">
+      <p class="mb-0 small text-light" id="about-ai-summary-text">
+        Монитор телеметрии готов. Система функционирует в штатном режиме, узких мест производительности не обнаружено.
+      </p>
+    </div>
+  </div>
+
+  <!-- Full Hardware Specification Tree Panel (AIDA64 Tree) -->
+  <div class="about-sys-panel">
+    <div class="about-sys-panel-header">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-diagram-3-fill text-info"></i>
+        <span class="text-white">Полная иерархическая спецификация оборудования (AIDA64 Hardware Tree)</span>
+        <span class="badge bg-secondary" id="about-sys-node-count">AIDA64 Tree</span>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5" style="font-size: 0.72rem;" id="btn-about-sys-expand-all">
+          <i class="bi bi-arrows-expand me-1"></i> Развернуть все
+        </button>
+        <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5" style="font-size: 0.72rem;" id="btn-about-sys-collapse-all">
+          <i class="bi bi-arrows-collapse me-1"></i> Свернуть все
+        </button>
+        <input type="text" class="form-control form-control-sm" id="about-sys-search"
+               placeholder="Поиск компонентов..." style="max-width: 220px; font-size: 0.76rem; height: 26px;">
+      </div>
+    </div>
+    <div class="p-3" id="about-sys-tree-container" style="max-height: 500px; overflow-y: auto;">
+      <div class="text-center py-4 small text-muted">
+        <div class="spinner-border spinner-border-sm text-info mb-2" role="status"></div>
+        <div>Загрузка спецификации оборудования...</div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -22,6 +22,11 @@ export async function initializeInterface() {
     // Apply translations
     applyTranslations();
 
+    // Обновляем бейджи активной модели и поиска
+    if (typeof window.updateChatBadges === 'function') {
+      window.updateChatBadges();
+    }
+
     console.log('[AdminInterface] Core components initialized');
   } catch (error) {
     console.error('[AdminInterface] Initialization error:', error);

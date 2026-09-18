@@ -34,6 +34,10 @@ class SmartDriveInfo:
 class SmartProber:
     """Prober for storage health via smartctl CLI or WMI."""
 
+    _CACHE_DRIVES: List[SmartDriveInfo] = []
+    _CACHE_TIME: float = 0.0
+    _CACHE_TTL_SEC: float = 30.0
+
     def __init__(self, custom_smartctl_path: Optional[str] = None) -> None:
         """Initialize smartctl path resolution."""
         self._smartctl_bin = custom_smartctl_path or shutil.which("smartctl") or shutil.which("smartctl.exe")
@@ -43,18 +47,29 @@ class SmartProber:
         """Check if smartctl executable is present."""
         return self._smartctl_bin is not None
 
-    def scan_drives(self) -> List[SmartDriveInfo]:
-        """Scan all drives and return their SMART health status."""
+    def scan_drives(self, force_refresh: bool = False) -> List[SmartDriveInfo]:
+        """Scan all drives and return their SMART health status with caching."""
+        import time
+        now = time.time()
+        if not force_refresh and SmartProber._CACHE_DRIVES and (now - SmartProber._CACHE_TIME < SmartProber._CACHE_TTL_SEC):
+            return SmartProber._CACHE_DRIVES
+
         if not self.is_available:
-            logger.warning("smartctl utility not found in PATH; falling back to WMI disk probe")
-            return self._fallback_wmi_scan()
+            logger.debug("smartctl utility not found in PATH; falling back to WMI disk probe")
+            drives = self._fallback_wmi_scan()
+            SmartProber._CACHE_DRIVES = drives
+            SmartProber._CACHE_TIME = now
+            return drives
 
         try:
             cmd = [str(self._smartctl_bin), "--scan", "--json"]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             if result.returncode != 0 and not result.stdout:
                 logger.error(f"smartctl --scan failed: {result.stderr}")
-                return self._fallback_wmi_scan()
+                drives = self._fallback_wmi_scan()
+                SmartProber._CACHE_DRIVES = drives
+                SmartProber._CACHE_TIME = now
+                return drives
 
             data = json.loads(result.stdout)
             devices = data.get("devices", [])
@@ -67,10 +82,16 @@ class SmartProber:
                     if info:
                         drives.append(info)
 
-            return drives if drives else self._fallback_wmi_scan()
+            res = drives if drives else self._fallback_wmi_scan()
+            SmartProber._CACHE_DRIVES = res
+            SmartProber._CACHE_TIME = now
+            return res
         except Exception as e:
             logger.error(f"Failed to probe SMART drives via smartctl: {e}")
-            return self._fallback_wmi_scan()
+            drives = self._fallback_wmi_scan()
+            SmartProber._CACHE_DRIVES = drives
+            SmartProber._CACHE_TIME = now
+            return drives
 
     def probe_device(self, device_name: str) -> Optional[SmartDriveInfo]:
         """Probe a specific device for detailed SMART data."""
@@ -124,8 +145,33 @@ class SmartProber:
             return None
 
     def _fallback_wmi_scan(self) -> List[SmartDriveInfo]:
-        """Fallback disk probe using PowerShell / WMI Win32_DiskDrive."""
+        """Fallback disk probe using Python WMI or PowerShell Win32_DiskDrive."""
         drives: List[SmartDriveInfo] = []
+
+        # 1. Быстрый in-process WMI COM запрос (<10мс)
+        try:
+            import wmi  # type: ignore
+            w = wmi.WMI()
+            for disk in w.Win32_DiskDrive():
+                size_bytes = int(getattr(disk, "Size", 0) or 0)
+                status_str = str(getattr(disk, "Status", "OK") or "OK")
+                drives.append(
+                    SmartDriveInfo(
+                        device=str(getattr(disk, "DeviceID", "Disk")),
+                        model=str(getattr(disk, "Model", "Generic Disk")),
+                        serial=str(getattr(disk, "SerialNumber", "N/A")).strip(),
+                        firmware="WMI-COM",
+                        protocol="WMI",
+                        capacity_gb=round(size_bytes / (1024**3), 2),
+                        health_status="PASSED" if status_str.upper() == "OK" else "WARNING",
+                    )
+                )
+            if drives:
+                return drives
+        except Exception:
+            pass
+
+        # 2. Fallback через PowerShell при отсутствии модуля WMI
         try:
             ps_cmd = (
                 "Get-CimInstance Win32_DiskDrive | "

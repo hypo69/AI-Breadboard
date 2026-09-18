@@ -1,0 +1,153 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME OVERRIDES & COMPATIBILITY — AI Breadboard WebGUI
+   Адаптивные переопределения Bootstrap и специфичных компонентов для тем оформления
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Light Theme — Переопределения Bootstrap и общих утилит ────────────────── */
+[data-theme="light"] {
+  /* Инпуты, к которым JS или Bootstrap добавил bg-dark */
+  input.bg-dark,
+  textarea.bg-dark,
+  select.bg-dark,
+  .form-control.bg-dark,
+  .form-select.bg-dark {
+    background-color: var(--surface-1) !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  /* div/section с bg-dark (не кнопки и не бейджи) */
+  div.bg-dark,
+  section.bg-dark,
+  aside.bg-dark,
+  article.bg-dark {
+    background-color: var(--surface-1) !important;
+    color: var(--text-color) !important;
+  }
+
+  /* Bootstrap bg-dark / bg-black */
+  .bg-dark:not(.btn):not(.badge):not(.navbar) {
+    background-color: var(--surface-1) !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .bg-black:not(.btn) {
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+  }
+
+  /* text-white / text-light в карточках и панелях */
+  .card .text-white,
+  .card .text-light,
+  [class*="-panel"] .text-white,
+  [class*="-panel"] .text-light,
+  [class*="-card"] .text-white,
+  [class*="-card"] .text-light,
+  .tab-pane .text-white,
+  .tab-pane .text-light,
+  .tab-pane .text-white:not(.btn):not(.badge),
+  .card .text-white:not(.btn):not(.badge) {
+    color: var(--text-color) !important;
+  }
+
+  /* Бейджи bg-dark → нейтральный цвет */
+  .badge.bg-dark {
+    background-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+  }
+
+  /* pre/code без явного светлого фона (кроме prompt-dump) */
+  pre:not(.prompt-dump-details pre) {
+    background-color: var(--surface-2) !important;
+    color: #1e2328 !important;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+  }
+
+  code.bg-dark {
+    background-color: var(--surface-2) !important;
+    color: #1e2328 !important;
+    border: 1px solid var(--border-color);
+  }
+
+  /* Прогресс-бар: трек */
+  .progress:not([style]),
+  .progress {
+    background-color: var(--border-color) !important;
+  }
+
+  /* ── Системный инспектор, трейдинг, сеть и дерево компонентов ── */
+  .sys-card,
+  .sys-panel,
+  .sys-panel-header,
+  .sys-tree-node,
+  .sys-tree-body,
+  .sys-proc-table th {
+    background-color: var(--surface-1) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+  }
+
+  .sys-panel-header {
+    background-color: var(--surface-2) !important;
+    color: var(--nav-active) !important;
+  }
+
+  .sys-tree-title {
+    color: var(--text-color) !important;
+    background: transparent !important;
+  }
+
+  .sys-tree-body {
+    background-color: var(--bg-color) !important;
+  }
+
+  .sys-proc-table th {
+    background-color: var(--surface-2) !important;
+    color: var(--text-muted) !important;
+  }
+
+  .sys-value {
+    color: var(--text-color) !important;
+  }
+
+  /* ── Карточки агентов, моделей, плагинов ── */
+  .agent-card,
+  .model-card,
+  .plugin-card,
+  [class$="-card"]:not(.btn):not(.badge) {
+    background-color: var(--surface-1) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+  }
+
+  /* ── card-header с тёмным фоном ── */
+  .card-header.bg-dark,
+  .card-header[style*="background"],
+  .card-header[style*="#0"],
+  .card-header[style*="#1"] {
+    background-color: var(--surface-2) !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  /* ── Логи (textarea/div с моноширинным шрифтом) ── */
+  #media-log,
+  [id$="-log"]:not(canvas),
+  .log-output {
+    background-color: #f1f3f5 !important;
+    color: #1e2328 !important;
+    border-color: var(--border-color) !important;
+  }
+
+  /* ── Stripe-полосы в таблицах ── */
+  .table-striped > tbody > tr:nth-of-type(odd) {
+    --bs-table-bg-type: var(--surface-2);
+  }
+
+  /* ── border-secondary ── */
+  .border-secondary {
+    border-color: var(--border-color) !important;
+  }
+}

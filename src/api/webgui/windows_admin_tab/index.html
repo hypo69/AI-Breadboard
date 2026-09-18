@@ -1,41 +1,45 @@
 <!-- Windows System Administrator Application Tab -->
 <style>
   .winadmin-container {
-    padding: 1rem;
+    padding: 0.5rem 0.75rem;
   }
   .winadmin-card {
     background: #0f172a !important;
     border: 1px solid #334155 !important;
-    border-radius: 10px;
-    padding: 1rem;
+    border-radius: 8px;
+    padding: 0.45rem 0.75rem;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    justify-content: space-between;
+    min-height: 58px;
+    gap: 0.2rem;
   }
   .winadmin-label {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: #94a3b8;
+    line-height: 1.1;
   }
   .winadmin-value {
-    font-size: 1.35rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #f8fafc;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    line-height: 1.15;
   }
   .winadmin-panel {
     background: #0f172a !important;
     border: 1px solid #334155 !important;
-    border-radius: 10px;
+    border-radius: 8px;
     overflow: hidden;
   }
   .winadmin-panel-header {
     background: #1e293b !important;
     border-bottom: 1px solid #334155 !important;
-    padding: 0.75rem 1rem;
+    padding: 0.45rem 0.85rem;
     font-weight: 600;
-    font-size: 0.88rem;
+    font-size: 0.82rem;
     color: #38bdf8;
     display: flex;
     align-items: center;
@@ -43,76 +47,83 @@
   }
   .winadmin-table {
     width: 100%;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     border-collapse: collapse;
   }
   .winadmin-table th {
     background: #1e293b;
-    padding: 6px 12px;
+    padding: 5px 8px;
     color: #94a3b8;
     font-weight: 600;
     border-bottom: 1px solid #334155;
   }
   .winadmin-table td {
-    padding: 6px 12px;
+    padding: 4px 8px;
     border-bottom: 1px solid rgba(51, 65, 85, 0.4);
   }
 </style>
 
 <div class="winadmin-container">
-  <!-- Header Alert & Status -->
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
-    <div>
-      <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
-        <span class="fs-4">🛡️</span> Windows System Administrator (AD & Host Management)
-      </h5>
-      <p class="mb-0 small text-light" style="color: #cbd5e1 !important;">
-        Управление сессиями пользователей, аудит Active Directory, мониторинг журналов событий безопасности и управление политиками.
-      </p>
+  <!-- Header Alert & Status (Compact Strip) -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 py-1.5 px-3 rounded-2 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="fs-5">🛡️</span>
+      <span class="fw-bold text-white small" style="font-size: 0.92rem;">Windows System Administrator</span>
+      <span class="badge bg-dark border border-secondary text-info fw-normal" style="font-size: 0.7rem;">AD & File Auditing</span>
+      <span class="text-secondary small d-none d-lg-inline" style="font-size: 0.76rem;">| Сессии, Active Directory & Аудит удаления файлов (4663 / 4660)</span>
     </div>
-    <div class="d-flex align-items-center gap-2">
-      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2" id="winadmin-status-badge">
-        ● Статус: Готов
+    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1" style="font-size: 0.72rem;" id="winadmin-status-badge">
+        ● Готов
       </span>
-      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-winadmin-refresh">
+      <button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1" style="font-size: 0.75rem;" id="btn-winadmin-refresh">
         <i class="bi bi-arrow-clockwise me-1"></i> Обновить
       </button>
-      <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-winadmin-config">
-        <i class="bi bi-gear-fill me-1"></i> Настройки (config.json)
+      <button class="btn btn-xs btn-outline-warning rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-winadmin-config">
+        <i class="bi bi-gear-fill me-1"></i> Настройки
       </button>
     </div>
   </div>
 
-  <!-- Top Metrics Bar -->
-  <div class="row g-3 mb-3">
-    <div class="col-md-3 col-sm-6">
+  <!-- Top Metrics Bar (Compact Density Grid) -->
+  <div class="row g-2 mb-2">
+    <div class="col-6 col-md-3">
       <div class="winadmin-card">
-        <span class="winadmin-label">Имя хоста / Домен</span>
-        <span class="winadmin-value" id="winadmin-hostname" style="font-size: 1.05rem;">-</span>
+        <span class="winadmin-label">Хост / Домен</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="winadmin-value text-truncate" id="winadmin-hostname" style="font-size: 0.95rem;">-</span>
+        </div>
       </div>
     </div>
-    <div class="col-md-3 col-sm-6">
+    <div class="col-6 col-md-3">
       <div class="winadmin-card">
         <span class="winadmin-label">Active Directory</span>
-        <span class="winadmin-value text-info" id="winadmin-ad-status" style="font-size: 1.05rem;">Локальный режим</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="winadmin-value text-info text-truncate" id="winadmin-ad-status" style="font-size: 0.9rem;">Standalone</span>
+        </div>
       </div>
     </div>
-    <div class="col-md-3 col-sm-6">
+    <div class="col-6 col-md-3">
       <div class="winadmin-card">
         <span class="winadmin-label">Активные пользователи</span>
-        <span class="winadmin-value text-success" id="winadmin-user-count">0</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="winadmin-value text-success" id="winadmin-user-count">0</span>
+        </div>
       </div>
     </div>
-    <div class="col-md-3 col-sm-6">
+    <div class="col-6 col-md-3">
       <div class="winadmin-card">
-        <span class="winadmin-label">События безопасности (24ч)</span>
-        <span class="winadmin-value text-warning" id="winadmin-event-count">0</span>
+        <span class="winadmin-label">События безопасности</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="winadmin-value text-warning" id="winadmin-events-count">0</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="row g-3">
+  <!-- Main Panels Row 1: Users & Security Log -->
+  <div class="row g-3 mb-3">
     <!-- Active User Sessions Panel -->
     <div class="col-lg-6">
       <div class="winadmin-panel h-100">
@@ -120,7 +131,7 @@
           <span><i class="bi bi-people-fill me-1"></i> Сессии пользователей Windows</span>
           <span class="badge bg-secondary" id="winadmin-users-badge">0 сессий</span>
         </div>
-        <div class="p-0 table-responsive" style="max-height: 420px; overflow-y: auto;">
+        <div class="p-0 table-responsive" style="max-height: 280px; overflow-y: auto;">
           <table class="winadmin-table">
             <thead>
               <tr>
@@ -143,10 +154,10 @@
     <div class="col-lg-6">
       <div class="winadmin-panel h-100">
         <div class="winadmin-panel-header">
-          <span><i class="bi bi-shield-exclamation me-1"></i> Журнал событий безопасности</span>
+          <span><i class="bi bi-shield-exclamation me-1"></i> Общий журнал безопасности</span>
           <span class="badge bg-secondary" id="winadmin-events-badge">0 записей</span>
         </div>
-        <div class="p-0 table-responsive" style="max-height: 420px; overflow-y: auto;">
+        <div class="p-0 table-responsive" style="max-height: 280px; overflow-y: auto;">
           <table class="winadmin-table">
             <thead>
               <tr>
@@ -158,6 +169,33 @@
             </thead>
             <tbody id="winadmin-events-tbody">
               <tr><td colspan="4" class="text-center text-muted p-3">Загрузка журнала событий...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Panels Row 2: Live Changes -->
+  <div class="row g-3">
+    <!-- Live Directory Watcher (ReadDirectoryChangesW) -->
+    <div class="col-12">
+      <div class="winadmin-panel h-100">
+        <div class="winadmin-panel-header">
+          <span><i class="bi bi-activity text-info me-1"></i> Real-Time Live Watcher</span>
+          <span class="badge bg-info-subtle text-info" id="winadmin-live-badge">ReadDirectoryChangesW</span>
+        </div>
+        <div class="p-0 table-responsive" style="max-height: 320px; overflow-y: auto;">
+          <table class="winadmin-table">
+            <thead>
+              <tr>
+                <th>Время</th>
+                <th>Действие</th>
+                <th>Путь</th>
+              </tr>
+            </thead>
+            <tbody id="winadmin-live-tbody">
+              <tr><td colspan="3" class="text-center text-muted p-3">Мониторинг файловых событий...</td></tr>
             </tbody>
           </table>
         </div>

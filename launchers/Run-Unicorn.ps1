@@ -159,6 +159,26 @@ $useCloudflared = $false
 $mode    = "dev"
 $debug   = "false"
 
+if (Test-Path $envFile) {
+    Get-Content $envFile | ForEach-Object {
+        $line = $_.Trim()
+        if ($line -and -not $line.StartsWith('#') -and $line -match "^([^=]+)=(.*)$") {
+            $key = $Matches[1].Trim()
+            $val = $Matches[2].Trim().Trim('"').Trim("'")
+            if ($key -eq "PROTOCOL") { $useSsl = ($val.ToLower() -eq "https") }
+            if ($key -eq "USE_SSL") { $useSsl = $val -in ("true","1","yes") }
+            if ($key -eq "MODE") { $mode = $val.ToLower() }
+            if ($key -eq "ENABLE_OAUTH") { $oauthEnabled = $val -in ("true","1","yes") }
+            if ($key -eq "ENABLE_TELEGRAM_BOT") { $tgBotEnabled = $val -in ("true","1","yes") }
+            if ($key -in ("UNICORN_RELOAD", "RELOAD")) { $reload = $val -in ("true","1","yes") }
+            if ($key -in ("UNICORN_WORKERS", "WORKERS")) { $workers = [int]$val }
+            if ($key -eq "USE_CLOUDFLARED") { $useCloudflared = $val -in ("true","1","yes") }
+            if ($key -eq "CLIENT_URL" -and $val) { $clientUrl = $val }
+            if ($key -eq "USER_DOMAIN" -and $val -and -not $clientUrl) { $clientUrl = "https://$val" }
+        }
+    }
+}
+
 if (Test-Path $configPath) {
     try {
         $cfg = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -170,6 +190,8 @@ if (Test-Path $configPath) {
             } elseif ($cfg.server.use_ssl -ne $null) {
                 $useSsl = [bool]$cfg.server.use_ssl
             }
+            if ($cfg.server.enable_oauth -ne $null) { $oauthEnabled = [bool]$cfg.server.enable_oauth }
+            if ($cfg.server.enable_telegram_bot -ne $null) { $tgBotEnabled = [bool]$cfg.server.enable_telegram_bot }
             if ($cfg.server.mode) { $mode = [string]$cfg.server.mode.ToString().ToLower() }
             if ($cfg.server.debug -ne $null) { $debug = if ($cfg.server.debug) { "true" } else { "false" } }
             if ($cfg.server.PSObject.Properties['use_cloudflared'] -and $cfg.server.use_cloudflared -ne $null) {
@@ -197,36 +219,6 @@ if (Test-Path $configPath) {
         }
     } catch {
         Write-Host "    [WARN] Could not parse $configPath, using defaults: $_" -ForegroundColor Yellow
-    }
-}
-
-$oauthEnabled = $false
-if ($cfg -and $cfg.server -and $cfg.server.enable_oauth -ne $null) {
-    $oauthEnabled = [bool]$cfg.server.enable_oauth
-}
-
-$tgBotEnabled = $false
-if ($cfg -and $cfg.server -and $cfg.server.enable_telegram_bot -ne $null) {
-    $tgBotEnabled = [bool]$cfg.server.enable_telegram_bot
-}
-
-if (Test-Path $envFile) {
-    Get-Content $envFile | ForEach-Object {
-        $line = $_.Trim()
-        if ($line -and -not $line.StartsWith('#') -and $line -match "^([^=]+)=(.*)$") {
-            $key = $Matches[1].Trim()
-            $val = $Matches[2].Trim().Trim('"').Trim("'")
-            if ($key -eq "PROTOCOL") { $useSsl = ($val.ToLower() -eq "https") }
-            if ($key -eq "USE_SSL") { $useSsl = $val -in ("true","1","yes") }
-            if ($key -eq "MODE") { $mode = $val.ToLower() }
-            if ($key -eq "ENABLE_OAUTH") { $oauthEnabled = $val -in ("true","1","yes") }
-            if ($key -eq "ENABLE_TELEGRAM_BOT") { $tgBotEnabled = $val -in ("true","1","yes") }
-            if ($key -in ("UNICORN_RELOAD", "RELOAD")) { $reload = $val -in ("true","1","yes") }
-            if ($key -in ("UNICORN_WORKERS", "WORKERS")) { $workers = [int]$val }
-            if ($key -eq "USE_CLOUDFLARED") { $useCloudflared = $val -in ("true","1","yes") }
-            if ($key -eq "CLIENT_URL" -and $val) { $clientUrl = $val }
-            if ($key -eq "USER_DOMAIN" -and $val -and -not $clientUrl) { $clientUrl = "https://$val" }
-        }
     }
 }
 
@@ -411,9 +403,9 @@ Start-Job -ScriptBlock {
             $edgeArgs = @(
                 "--app=$targetOpenUrl",
                 "--user-data-dir=`"$profileDir`"",
-                "--window-size=1280,850"
+                "--start-maximized"
             )
-            Start-Process -FilePath $edgeExe -ArgumentList ($edgeArgs -join " ")
+            Start-Process -FilePath $edgeExe -ArgumentList ($edgeArgs -join " ") -WindowStyle Maximized
         } else {
             Start-Process $targetOpenUrl
         }

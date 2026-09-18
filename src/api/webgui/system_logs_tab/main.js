@@ -70,14 +70,15 @@
       const data = await response.json();
 
       cachedChannels = data.channels || [];
+      const activeChannels = cachedChannels.filter((c) => (c.record_count || 0) > 0);
       const sourcesBadge = document.getElementById('slc-stat-sources');
       const countBadge = document.getElementById('slc-channel-count-badge');
 
       if (sourcesBadge) {
-        sourcesBadge.textContent = `${data.total_sources.toLocaleString()} sources`;
+        sourcesBadge.textContent = `${activeChannels.length.toLocaleString()} active / ${data.total_sources.toLocaleString()} sources`;
       }
       if (countBadge) {
-        countBadge.textContent = String(cachedChannels.length);
+        countBadge.textContent = String(activeChannels.length);
       }
 
       renderChannelsTree();
@@ -86,8 +87,65 @@
     }
   }
 
+  // Singleton global popup tooltip element
+  let globalTooltipEl = null;
+
+  function getOrCreateTooltipEl() {
+    if (!globalTooltipEl) {
+      globalTooltipEl = document.createElement('div');
+      globalTooltipEl.className = 'slc-tooltip-popup';
+      document.body.appendChild(globalTooltipEl);
+    }
+    return globalTooltipEl;
+  }
+
+  function showChannelTooltip(e, channel) {
+    const tip = getOrCreateTooltipEl();
+    const countFormatted = (channel.record_count || 0).toLocaleString();
+    const descText = channel.description || 'Служебный журнал операционной системы Windows.';
+    const typeLabel = channel.source_type === 'channel' ? 'Windows Event Channel' : 'Log File';
+
+    tip.innerHTML = `
+      <div class="slc-tooltip-title">
+        <i class="bi bi-info-circle text-info"></i>
+        <span>${escapeHtml(channel.display_name)}</span>
+      </div>
+      <div style="color: #cbd5e1; margin-bottom: 0.35rem;">${escapeHtml(descText)}</div>
+      <div class="slc-tooltip-meta">
+        <span><strong class="text-info">${countFormatted}</strong> записей</span>
+        <span class="text-muted font-monospace">${typeLabel}</span>
+      </div>
+    `;
+
+    tip.classList.add('show');
+    positionTooltip(e, tip);
+  }
+
+  function hideChannelTooltip() {
+    if (globalTooltipEl) {
+      globalTooltipEl.classList.remove('show');
+    }
+  }
+
+  function positionTooltip(e, tip) {
+    const margin = 12;
+    let x = e.clientX + margin;
+    let y = e.clientY + margin;
+
+    const tipRect = tip.getBoundingClientRect();
+    if (x + tipRect.width > window.innerWidth) {
+      x = e.clientX - tipRect.width - margin;
+    }
+    if (y + tipRect.height > window.innerHeight) {
+      y = e.clientY - tipRect.height - margin;
+    }
+
+    tip.style.left = `${Math.max(10, x)}px`;
+    tip.style.top = `${Math.max(10, y)}px`;
+  }
+
   /**
-   * Render channels tree list in sidebar.
+   * Render channels tree list in sidebar with category grouping, record count badges, and hover tooltips.
    */
   function renderChannelsTree() {
     const container = document.getElementById('slc-channel-tree-container');
@@ -98,29 +156,86 @@
     container.innerHTML = '';
 
     const filtered = cachedChannels.filter((c) => {
+      // Не выводить каналы и источники, в которых 0 записей
+      if (c.record_count === 0) return false;
+
       if (!filterText) return true;
       return (
         c.channel_name.toLowerCase().includes(filterText) ||
-        c.display_name.toLowerCase().includes(filterText)
+        c.display_name.toLowerCase().includes(filterText) ||
+        (c.description && c.description.toLowerCase().includes(filterText)) ||
+        (c.category && c.category.toLowerCase().includes(filterText))
       );
     });
 
-    filtered.slice(0, 100).forEach((c) => {
-      const item = document.createElement('div');
-      item.className = `slc-tree-item ${c.channel_name === currentChannel && !currentFilePath ? 'active' : ''}`;
-      item.innerHTML = `
-        <span class="text-truncate" title="${escapeHtml(c.channel_name)}">${escapeHtml(c.display_name)}</span>
-        <span class="badge bg-dark text-secondary font-monospace">${c.record_count > 0 ? c.record_count : '-'}</span>
+    // Group by category
+    const grouped = {};
+    filtered.forEach((c) => {
+      const cat = c.category || 'Windows Event Log';
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(c);
+    });
+
+    const categoryIcons = {
+      'Windows Event Log': '🛡️',
+      'Windows OS Logs': '📁',
+      'Application Logs': '💻',
+      'AI-Breadboard Logs': '🤖',
+    };
+
+    Object.keys(grouped).forEach((catName) => {
+      const catHeader = document.createElement('div');
+      catHeader.className = 'd-flex justify-content-between align-items-center px-2 py-1 mt-2 mb-1 rounded bg-dark border border-secondary text-info small fw-bold';
+      const icon = categoryIcons[catName] || '📜';
+      catHeader.innerHTML = `
+        <span>${icon} ${escapeHtml(catName)}</span>
+        <span class="badge bg-secondary font-monospace">${grouped[catName].length}</span>
       `;
-      item.onclick = () => {
-        currentChannel = c.channel_name;
-        currentFilePath = '';
-        const statChan = document.getElementById('slc-stat-channel');
-        if (statChan) statChan.textContent = c.display_name;
-        renderChannelsTree();
-        loadEvents();
-      };
-      container.appendChild(item);
+      container.appendChild(catHeader);
+
+      grouped[catName].slice(0, 400).forEach((c) => {
+        const item = document.createElement('div');
+        const isActive = (c.channel_name === currentChannel && !currentFilePath) || (currentFilePath && currentFilePath === c.location);
+        item.className = `slc-tree-item ${isActive ? 'active' : ''}`;
+        
+        let subBadge = '0';
+        let badgeStyle = 'bg-dark text-secondary';
+        if (c.record_count > 0) {
+          subBadge = c.record_count >= 1000 ? `${(c.record_count / 1000).toFixed(1)}k` : String(c.record_count);
+          badgeStyle = c.record_count > 1000 ? 'bg-primary text-white' : 'bg-dark text-info border border-secondary';
+        } else if (c.source_type !== 'channel') {
+          subBadge = 'FILE';
+        }
+
+        item.innerHTML = `
+          <span class="text-truncate me-2" style="max-width: 175px;">${escapeHtml(c.display_name)}</span>
+          <span class="badge ${badgeStyle} font-monospace" style="font-size: 0.72rem; min-width: 32px; text-align: right;">${subBadge}</span>
+        `;
+
+        // Tooltip events
+        item.onmouseenter = (e) => showChannelTooltip(e, c);
+        item.onmousemove = (e) => {
+          const tip = getOrCreateTooltipEl();
+          if (tip.classList.contains('show')) positionTooltip(e, tip);
+        };
+        item.onmouseleave = () => hideChannelTooltip();
+
+        item.onclick = () => {
+          hideChannelTooltip();
+          if (c.source_type === 'channel') {
+            currentChannel = c.channel_name;
+            currentFilePath = '';
+          } else {
+            currentChannel = c.display_name;
+            currentFilePath = c.location;
+          }
+          const statChan = document.getElementById('slc-stat-channel');
+          if (statChan) statChan.textContent = c.display_name;
+          renderChannelsTree();
+          loadEvents();
+        };
+        container.appendChild(item);
+      });
     });
   }
 
@@ -428,50 +543,57 @@
         `;
       }).join('');
 
+      const totalScanned = data.total_analyzed ?? data.total_scanned ?? 0;
+      const uniqueCount = data.unique_patterns_count ?? (data.top_clusters ? data.top_clusters.length : 0);
+      const redundancyPct = data.redundancy_pct !== undefined ? `${data.redundancy_pct.toFixed(1)}%` : (data.compression_ratio || '0%');
+      const errSum = (data.error_count || 0) + (data.critical_count || 0);
+      const warnSum = data.warning_count || 0;
+      const summaryText = data.strategy_rationale || data.executive_summary || `Стратегия обработки: ${data.strategy || 'Стандартная'}. Найдено ${uniqueCount} ключевых шаблонов.`;
+
       contentEl.innerHTML = `
-        <!-- Executive Summary Card -->
-        <div class="card bg-dark border-info mb-3 shadow">
-          <div class="card-header bg-black text-info fw-bold d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-cpu me-2"></i>Сводка аудита: ${escapeHtml(data.channel)}</span>
-            <span class="badge bg-info text-dark font-monospace">Сжатие: ${data.compression_ratio}</span>
+        <!-- Executive Summary Card (Compact) -->
+        <div class="card bg-dark border-info mb-2 shadow-sm">
+          <div class="card-header bg-black text-info fw-bold py-1 px-3 d-flex justify-content-between align-items-center small">
+            <span><i class="bi bi-cpu me-1"></i>Сводка аудита: ${escapeHtml(data.channel)}</span>
+            <span class="badge bg-info text-dark font-monospace">Дублирование: ${redundancyPct}</span>
           </div>
-          <div class="card-body">
-            <div class="row g-3 text-center mb-3">
+          <div class="card-body p-2">
+            <div class="row g-2 text-center mb-2">
               <div class="col-sm-3 col-6">
-                <div class="p-2 rounded bg-black border border-secondary">
-                  <div class="small text-muted">Просканировано</div>
-                  <div class="fs-4 fw-bold text-light font-monospace">${data.total_scanned}</div>
+                <div class="p-1 rounded bg-black border border-secondary">
+                  <div class="small text-muted" style="font-size: 0.72rem;">Просканировано</div>
+                  <div class="fs-5 fw-bold text-light font-monospace">${totalScanned}</div>
                 </div>
               </div>
               <div class="col-sm-3 col-6">
-                <div class="p-2 rounded bg-black border border-secondary">
-                  <div class="small text-muted">Уникальных шаблонов</div>
-                  <div class="fs-4 fw-bold text-info font-monospace">${data.unique_patterns_count}</div>
+                <div class="p-1 rounded bg-black border border-secondary">
+                  <div class="small text-muted" style="font-size: 0.72rem;">Шаблонов</div>
+                  <div class="fs-5 fw-bold text-info font-monospace">${uniqueCount}</div>
                 </div>
               </div>
               <div class="col-sm-3 col-6">
-                <div class="p-2 rounded bg-black border border-secondary">
-                  <div class="small text-muted">Ошибок / Сбоев</div>
-                  <div class="fs-4 fw-bold text-danger font-monospace">${data.error_count + data.critical_count}</div>
+                <div class="p-1 rounded bg-black border border-secondary">
+                  <div class="small text-muted" style="font-size: 0.72rem;">Ошибок / Сбоев</div>
+                  <div class="fs-5 fw-bold text-danger font-monospace">${errSum}</div>
                 </div>
               </div>
               <div class="col-sm-3 col-6">
-                <div class="p-2 rounded bg-black border border-secondary">
-                  <div class="small text-muted">Предупреждений</div>
-                  <div class="fs-4 fw-bold text-warning font-monospace">${data.warning_count}</div>
+                <div class="p-1 rounded bg-black border border-secondary">
+                  <div class="small text-muted" style="font-size: 0.72rem;">Предупреждений</div>
+                  <div class="fs-5 fw-bold text-warning font-monospace">${warnSum}</div>
                 </div>
               </div>
             </div>
-            <p class="mb-0 text-light fw-medium"><i class="bi bi-info-circle text-info me-2"></i>${escapeHtml(data.executive_summary)}</p>
+            <p class="mb-0 text-light small"><i class="bi bi-info-circle text-info me-1"></i>${escapeHtml(summaryText)}</p>
           </div>
         </div>
 
         <!-- Detected Anomalies Section -->
-        <div class="card bg-dark border-secondary mb-3">
-          <div class="card-header bg-black text-warning fw-bold">
-            <i class="bi bi-exclamation-triangle me-2"></i>Обнаруженные аномалии и всплески
+        <div class="card bg-dark border-secondary mb-2 shadow-sm">
+          <div class="card-header bg-black text-warning fw-bold py-1 px-3 small">
+            <i class="bi bi-exclamation-triangle me-1"></i>Обнаруженные аномалии и всплески
           </div>
-          <div class="card-body">
+          <div class="card-body p-2">
             ${anomaliesHtml}
           </div>
         </div>

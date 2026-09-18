@@ -1,0 +1,1 @@
+Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object { $_.InstanceId -like 'USB*' -or $_.Class -eq 'USB' -or $_.Class -eq 'USBDevice' } | Select-Object Status, Class, FriendlyName, InstanceId | ConvertTo-Json

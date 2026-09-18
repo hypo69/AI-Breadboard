@@ -267,21 +267,29 @@ def register_pages(app: FastAPI) -> None:
         
         return FileResponse(file_path, media_type=media_type)
 
-    # === Applications / Test Computer Hub (/tc, /apps) ===
+    # === Applications Hub & Test Computer (/tc, /apps, /log_audit) ===
 
     @app.get('/tc', response_class=HTMLResponse)
     @app.get('/apps', response_class=HTMLResponse)
-    async def apps_interface(request: Request):
-        """Display the dedicated Applications / Test Computer Hub page (/tc and /apps)."""
+    @app.get('/log_audit', response_class=HTMLResponse)
+    @app.get('/log-audit', response_class=HTMLResponse)
+    async def apps_interface(request: Request) -> HTMLResponse:
+        """Display the Applications Container / Test Computer page (/tc, /apps, /log_audit)."""
         content = read_text_file(webinterface_dir / 'apps' / 'index.html')
         if not content:
             raise HTTPException(status_code=500, detail='Failed to read apps index page')
-        return HTMLResponse(content=content)
+        response = HTMLResponse(content=content)
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
 
     @app.get('/tc/{full_path:path}', response_class=HTMLResponse)
     @app.get('/apps/{full_path:path}', response_class=HTMLResponse)
+    @app.get('/log_audit/{full_path:path}', response_class=HTMLResponse)
+    @app.get('/log-audit/{full_path:path}', response_class=HTMLResponse)
     async def apps_static(full_path: str, request: Request):
-        """Serving apps portal static files."""
+        """Serving apps / test-computer portal static files."""
         file_path = webinterface_dir / 'apps' / full_path
         if not file_path.exists() or not file_path.is_file():
             raise HTTPException(status_code=404, detail='File not found')

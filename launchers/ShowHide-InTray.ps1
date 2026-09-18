@@ -377,9 +377,9 @@ $trayScriptBlock = {
                 $edgeArgs = @(
                     "--app=$SharedUrl",
                     "--user-data-dir=`"$profileDir`"",
-                    "--window-size=1280,850"
+                    "--start-maximized"
                 )
-                Start-Process -FilePath $edgeExe -ArgumentList ($edgeArgs -join " ")
+                Start-Process -FilePath $edgeExe -ArgumentList ($edgeArgs -join " ") -WindowStyle Maximized
             } else {
                 try {
                     [System.Diagnostics.Process]::Start((New-Object System.Diagnostics.ProcessStartInfo($SharedUrl) -Property @{ UseShellExecute = $true })) | Out-Null

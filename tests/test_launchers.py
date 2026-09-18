@@ -35,6 +35,7 @@ LAUNCHERS_DIR = PROJECT_ROOT / "launchers"
 # Main launcher in root
 ROOT_LAUNCHERS = [
     "run.ps1",
+    "tc.ps1",
     "run_terminals.ps1",
 ]
 
@@ -178,8 +179,20 @@ class TestLauncherContent:
         assert "$openUrl = if ($useCloudflared -and $clientUrl)" in content, (
             "run.ps1 must guard $openUrl with $useCloudflared"
         )
-        assert "$useCloudflared -and ($enableCloudflaredMonitorVal -or $enableAppsVal)" in content, (
+        assert "$useCloudflared -and (Get-IsAppConfigEnabled" in content, (
             "run.ps1 must guard Cloudflared Monitor with $useCloudflared"
+        )
+
+    def test_tc_ps1_supports_tray_and_close_protection(self):
+        """tc.ps1 must support -EnableTray, -DisableCloseButton and invoke ShowHide-InTray.ps1."""
+        path = PROJECT_ROOT / "tc.ps1"
+        assert path.is_file(), "tc.ps1 not found"
+        content = path.read_text(encoding="utf-8", errors="ignore")
+        assert "EnableTray" in content, "tc.ps1 must have EnableTray parameter"
+        assert "DisableCloseButton" in content, "tc.ps1 must have DisableCloseButton parameter"
+        assert "ShowHide-InTray.ps1" in content, "tc.ps1 must reference ShowHide-InTray.ps1"
+        assert "$trayCallArgs" in content or "& $trayScript" in content, (
+            "tc.ps1 must invoke ShowHide-InTray.ps1 when tray is enabled"
         )
 
     def test_run_unicorn_guards_cloudflared_routing(self):

@@ -94,13 +94,96 @@ def main() -> None:
         action="store_true",
         help="Запустить интерактивный TUI интерфейс",
     )
+    parser.add_argument(
+        "--logs",
+        action="store_true",
+        help="Запустить интерактивный монитор системных логов в терминале (System Log Viewer)",
+    )
+    parser.add_argument(
+        "--channel",
+        type=str,
+        default="System",
+        help="Канал логов для монитора (по умолчанию: System)",
+    )
+    parser.add_argument(
+        "--hardware",
+        "--hw-monitor",
+        action="store_true",
+        dest="hardware_monitor",
+        help="Запустить интерактивный TUI монитор оборудования (Hardware Monitor)",
+    )
+    parser.add_argument(
+        "--hw-json",
+        action="store_true",
+        help="Вывести текущий слепок состояния оборудования в формате JSON",
+    )
+
+    parser.add_argument(
+        "--providers",
+        action="store_true",
+        help="Отобразить статус всех аппаратных провайдеров и утилит в /bin",
+    )
+    parser.add_argument(
+        "--cross-check",
+        action="store_true",
+        help="Запустить перекрестную проверку (cross-check) данных оборудования",
+    )
 
     args = parser.parse_args()
+
+    if args.providers:
+        from apps.windows.hardware.registry import HardwareProviderRegistry
+        reg = HardwareProviderRegistry()
+        print("\n=== АППАРАТНЫЕ ПРОВАЙДЕРЫ WINDOWS DIAGNOSTIC ENGINE ===")
+        for p in reg.get_all_providers():
+            info = p.get_provider_info()
+            status_symbol = "🟢" if info["status"] == "AVAILABLE" or info["status"] == "RUNNING" else "⚪"
+            print(f"{status_symbol} [{info['tier_label']}] {info['name']}: {info['status']}")
+            if info["binary_path"]:
+                print(f"   Файл: {info['binary_path']}")
+            print(f"   Возможности: {', '.join(info['capabilities'])}")
+        return
+
+    if args.cross_check:
+        from apps.windows.hardware.cross_validator import CrossValidator
+        validator = CrossValidator()
+        report = validator.run_cross_check()
+        print("\n=== РЕЗУЛЬТАТЫ КРОСС-ВАЛИДАЦИИ ОБОРУДОВАНИЯ ===")
+        print(f"Уровень согласованности: {report.consensus_score_pct:.1f}%")
+        print(f"Активные провайдеры: {', '.join(report.active_providers)}")
+        if report.discrepancies:
+            print("\n[!] Обнаружены расхождения:")
+            for d in report.discrepancies:
+                print(f" - [{d.severity}] {d.component} -> {d.parameter}: {d.sources} ({d.explanation})")
+        else:
+            print("✅ Все аппаратные данные согласованы между провайдерами.")
+        return
+
+    if args.hw_json:
+        from apps.windows.hardware.hardware_monitor import HardwareMonitor
+        monitor = HardwareMonitor()
+        snap = monitor.get_snapshot(include_smart=True)
+        print(json.dumps(snap.to_dict(), ensure_ascii=False, indent=2))
+        return
+
+    if args.hardware_monitor:
+        from apps.windows.tui import run_hardware_monitor_dashboard
+        try:
+            asyncio.run(run_hardware_monitor_dashboard())
+        except (KeyboardInterrupt, SystemExit):
+            print("\n[!] Мониторинг оборудования остановлен.")
+        return
+
+    if args.logs:
+        from apps.windows.tui import run_log_dashboard
+        asyncio.run(run_log_dashboard(channel=args.channel))
+        return
 
     if args.tui:
         from apps.windows.tui import run_tui
         run_tui()
         return
+
 
     if args.server:
         import uvicorn

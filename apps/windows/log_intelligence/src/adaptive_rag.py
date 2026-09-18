@@ -40,11 +40,11 @@ def get_default_storage_dir() -> Path:
     """Получить стандартный путь к локальному хранилищу в %APPDATA%."""
     appdata_env = os.environ.get("APPDATA")
     if appdata_env:
-        base_dir = Path(appdata_env) / "AI-Breadboard" / "apps" / "system_log_viewer"
+        base_dir = Path(appdata_env) / "AI-Breadboard" / "apps" / "windows" / "log_intelligence"
     else:
         user_profile = os.environ.get("USERPROFILE") or os.environ.get("HOME")
         if user_profile:
-            base_dir = Path(user_profile) / "AppData" / "Roaming" / "AI-Breadboard" / "apps" / "system_log_viewer"
+            base_dir = Path(user_profile) / "AppData" / "Roaming" / "AI-Breadboard" / "apps" / "windows" / "log_intelligence"
         else:
             base_dir = Path(".").resolve() / "data" / "system_logs_rag"
 

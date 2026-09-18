@@ -18,8 +18,18 @@
       "user_assistant": 8105,
       "gcloud_monitor": 8106,
       "website_monitor": 8107,
-      "system_log_viewer": 8108,
-      "system_control_center": 8109
+      "windows": 8108,
+      "system_control_center": 8109,
+      "windows_startup_auditor": 8112,
+      "windows_defender": 8113,
+      "windows_backup_manager": 8114,
+      "aida64": 8120,
+      "hwinfo": 8121,
+      "cpuz": 8122,
+      "gpuz": 8123,
+      "smartmontools": 8124,
+      "crystaldiskinfo": 8125,
+      "librehardwaremonitor": 8126
     },
     "services": {
       "lmstudio": 1234,

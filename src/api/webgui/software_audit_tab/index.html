@@ -1,0 +1,231 @@
+<!-- Software Audit Application Tab -->
+<style>
+  .sw-audit-container {
+    padding: 0.5rem 0.75rem;
+  }
+  .sw-audit-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+    padding: 0.45rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 58px;
+    transition: border-color 0.15s ease;
+  }
+  .sw-audit-card:hover {
+    border-color: #38bdf8 !important;
+  }
+  .sw-audit-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    line-height: 1.1;
+  }
+  .sw-audit-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f8fafc;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    line-height: 1.15;
+  }
+  .sw-audit-panel {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .sw-audit-panel-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    padding: 0.45rem 0.85rem;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .sw-audit-table {
+    width: 100%;
+    font-size: 0.78rem;
+    border-collapse: collapse;
+  }
+  .sw-audit-table th {
+    background: #1e293b;
+    padding: 6px 10px;
+    color: #94a3b8;
+    font-weight: 600;
+    border-bottom: 1px solid #334155;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  .sw-audit-table td {
+    padding: 6px 10px;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+    vertical-align: middle;
+  }
+  .sw-audit-table tbody tr:hover {
+    background: rgba(56, 189, 248, 0.05);
+  }
+  .sw-badge-category {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #1e293b;
+    border: 1px solid #475569;
+    color: #e2e8f0;
+  }
+  .sw-badge-active {
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    color: #4ade80;
+  }
+  .sw-badge-dormant {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+  }
+</style>
+
+<div class="sw-audit-container">
+  <!-- Header Alert & Controls (Compact Strip) -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 py-1.5 px-3 rounded-2 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="fs-5">📊</span>
+      <span class="fw-bold text-white small" style="font-size: 0.92rem;">Аудит программного обеспечения</span>
+      <span class="badge bg-dark border border-secondary text-info fw-normal" style="font-size: 0.7rem;">Software Audit</span>
+      <span class="text-secondary small d-none d-lg-inline" style="font-size: 0.76rem;">| Инвентаризация ПО, UserAssist & Prefetch</span>
+    </div>
+    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1" style="font-size: 0.72rem;" id="sw-audit-status-badge">
+        ● Готов
+      </span>
+      <button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1" style="font-size: 0.75rem;" id="btn-sw-audit-refresh">
+        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+      </button>
+      <button class="btn btn-xs btn-outline-light rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-sw-audit-export">
+        <i class="bi bi-download me-1"></i> Экспорт JSON
+      </button>
+    </div>
+  </div>
+
+  <!-- Metric Statistics Cards (Compact Density Grid) -->
+  <div class="row g-2 mb-2">
+    <div class="col-6 col-lg-3">
+      <div class="sw-audit-card">
+        <span class="sw-audit-label">Всего программ</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="sw-audit-value text-info" id="sw-metric-total">0</span>
+          <small class="text-muted" style="font-size: 0.7rem;">В реестре</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="sw-audit-card">
+        <span class="sw-audit-label">Активно используются</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="sw-audit-value text-success" id="sw-metric-active">0</span>
+          <small class="text-muted" style="font-size: 0.7rem;">Недавние запуски</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="sw-audit-card">
+        <span class="sw-audit-label">Неиспользуемые (>90 дн)</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="sw-audit-value text-warning" id="sw-metric-dormant">0</span>
+          <small class="text-muted" style="font-size: 0.7rem;">Кандидаты на удаление</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="sw-audit-card">
+        <span class="sw-audit-label">Категоризировано</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="sw-audit-value text-info" id="sw-metric-categorized">0%</span>
+          <small class="text-muted" style="font-size: 0.7rem;">AI эвристика</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters & Controls Bar -->
+  <div class="card bg-dark border-secondary p-2 mb-2" style="border-radius: 8px;">
+    <div class="row g-2 align-items-center">
+      <div class="col-md-5">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-dark border-secondary text-light"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control bg-dark text-white border-secondary" id="sw-search-input" placeholder="Поиск по названию, издателю или назначению...">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select class="form-select form-select-sm bg-dark text-white border-secondary" id="sw-category-filter">
+          <option value="">Все категории</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select class="form-select form-select-sm bg-dark text-white border-secondary" id="sw-status-filter">
+          <option value="all">Все программы</option>
+          <option value="active">Только активные</option>
+          <option value="dormant">Только неиспользуемые</option>
+        </select>
+      </div>
+      <div class="col-md-2 text-end">
+        <span class="badge bg-secondary" id="sw-filtered-count-badge">0 / 0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Table Panel -->
+  <div class="sw-audit-panel">
+    <div class="sw-audit-panel-header">
+      <span><i class="bi bi-table me-1"></i> Список установленных программных продуктов</span>
+      <span class="small text-muted" id="sw-last-scanned-time">Сканирование...</span>
+    </div>
+    <div class="p-0 table-responsive" style="max-height: 540px; overflow-y: auto;">
+      <table class="sw-audit-table">
+        <thead>
+          <tr>
+            <th>Программа</th>
+            <th>Категория</th>
+            <th>Издатель / Версия</th>
+            <th>Последний запуск</th>
+            <th>Запусков</th>
+            <th>Время работы</th>
+            <th>Размер / Арх</th>
+            <th style="text-align: right;">Действия</th>
+          </tr>
+        </thead>
+        <tbody id="sw-audit-tbody">
+          <tr><td colspan="8" class="text-center text-muted p-4"><i class="bi bi-arrow-repeat spin me-1"></i> Загрузка аудита программного обеспечения...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: App Details -->
+<div class="modal fade" id="swAppDetailModal" tabindex="-1" aria-labelledby="swAppDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="swAppDetailModalLabel">
+          <span class="fs-5">📦</span> <span id="sw-modal-app-name">Детали программы</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3" id="sw-modal-app-body">
+        <!-- Content will be injected by main.js -->
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>

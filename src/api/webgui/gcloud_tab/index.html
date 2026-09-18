@@ -1,41 +1,45 @@
 <!-- Google Cloud Monitor Application Tab -->
 <style>
   .gcloud-container {
-    padding: 1rem;
+    padding: 0.5rem 0.75rem;
   }
   .gcloud-card {
     background: #0f172a !important;
     border: 1px solid #334155 !important;
-    border-radius: 10px;
-    padding: 1rem;
+    border-radius: 8px;
+    padding: 0.45rem 0.75rem;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    justify-content: space-between;
+    min-height: 58px;
+    gap: 0.2rem;
   }
   .gcloud-label {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: #94a3b8;
+    line-height: 1.1;
   }
   .gcloud-value {
-    font-size: 1.35rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #f8fafc;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    line-height: 1.15;
   }
   .gcloud-panel {
     background: #0f172a !important;
     border: 1px solid #334155 !important;
-    border-radius: 10px;
+    border-radius: 8px;
     overflow: hidden;
   }
   .gcloud-panel-header {
     background: #1e293b !important;
     border-bottom: 1px solid #334155 !important;
-    padding: 0.75rem 1rem;
+    padding: 0.45rem 0.85rem;
     font-weight: 600;
-    font-size: 0.88rem;
+    font-size: 0.82rem;
     color: #38bdf8;
     display: flex;
     align-items: center;
@@ -47,7 +51,7 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.78rem;
     line-height: 1.45;
-    padding: 0.75rem;
+    padding: 0.5rem 0.75rem;
     border-radius: 6px;
     max-height: 400px;
     overflow-y: auto;
@@ -55,53 +59,59 @@
 </style>
 
 <div class="gcloud-container">
-  <!-- Header Alert & Status -->
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
-    <div>
-      <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
-        <span class="fs-4">☁️</span> Google Cloud Monitor & Observability
-      </h5>
-      <p class="mb-0 small text-light" style="color: #cbd5e1 !important;">
-        Централизованный мониторинг Google Cloud: Cloud Logging, метрики Cloud Monitoring, аудит безопасности IAM и AI-диагностика.
-      </p>
+  <!-- Header Alert & Status (Compact Strip) -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 py-1.5 px-3 rounded-2 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="fs-5">☁️</span>
+      <span class="fw-bold text-white small" style="font-size: 0.92rem;">Google Cloud Monitor</span>
+      <span class="badge bg-dark border border-secondary text-info fw-normal" style="font-size: 0.7rem;">Observability</span>
+      <span class="text-secondary small d-none d-lg-inline" style="font-size: 0.76rem;">| Cloud Logging, метрики Cloud Monitoring & IAM</span>
     </div>
-    <div class="d-flex align-items-center gap-2">
-      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2" id="gcloud-status-badge">
+    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1" style="font-size: 0.72rem;" id="gcloud-status-badge">
         ● GCP Подключен
       </span>
-      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-gcloud-refresh">
+      <button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1" style="font-size: 0.75rem;" id="btn-gcloud-refresh">
         <i class="bi bi-arrow-clockwise me-1"></i> Обновить
       </button>
-      <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-gcloud-config">
-        <i class="bi bi-gear-fill me-1"></i> Настройки (config.json)
+      <button class="btn btn-xs btn-outline-warning rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-gcloud-config">
+        <i class="bi bi-gear-fill me-1"></i> Настройки
       </button>
     </div>
   </div>
 
-  <!-- Top Metrics Bar -->
-  <div class="row g-3 mb-3">
-    <div class="col-md-3 col-sm-6">
+  <!-- Top Metrics Bar (Compact Density Grid) -->
+  <div class="row g-2 mb-2">
+    <div class="col-6 col-md-3">
       <div class="gcloud-card">
         <span class="gcloud-label">Проект GCP</span>
-        <span class="gcloud-value text-info text-truncate" id="gcloud-project-id">-</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="gcloud-value text-info text-truncate" id="gcloud-project-id">-</span>
+        </div>
       </div>
     </div>
-    <div class="col-md-3 col-sm-6">
+    <div class="col-6 col-md-3">
       <div class="gcloud-card">
         <span class="gcloud-label">Тип авторизации</span>
-        <span class="gcloud-value text-light" style="font-size: 1.05rem;" id="gcloud-auth-type">-</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="gcloud-value text-light" style="font-size: 1.05rem;" id="gcloud-auth-type">-</span>
+        </div>
       </div>
     </div>
-    <div class="col-md-3 col-sm-6">
+    <div class="col-6 col-md-3">
       <div class="gcloud-card">
         <span class="gcloud-label">Служебный аккаунт</span>
-        <span class="gcloud-value text-secondary text-truncate" style="font-size: 0.9rem;" id="gcloud-client-email">-</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="gcloud-value text-secondary text-truncate" style="font-size: 0.85rem;" id="gcloud-client-email">-</span>
+        </div>
       </div>
     </div>
-    <div class="col-md-3 col-sm-6">
+    <div class="col-6 col-md-3">
       <div class="gcloud-card">
         <span class="gcloud-label">Здоровье инфраструктуры</span>
-        <span class="gcloud-value text-success" id="gcloud-health-score">100/100</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="gcloud-value text-success" id="gcloud-health-score">100/100</span>
+        </div>
       </div>
     </div>
   </div>

@@ -1,18 +1,59 @@
 # -*- coding: utf-8 -*-
-"""Hardware diagnostic and stress-testing package."""
+# =============================================================================
+# Process Name: Hardware Module Init
+# =============================================================================
+# Description:
+#   Инициализация пакета аппаратного обеспечения (apps/windows/hardware).
+#   Экспортирует основные провайдеры, модели, валидатор и реестр.
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: apps.windows.hardware
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
 
-from apps.windows.hardware.smartctl_probe import SmartProber, SmartDriveInfo
-from apps.windows.hardware.gpu_prober import GpuProber, GpuDeviceTelemetry
-from apps.windows.hardware.cpuz_aida_prober import CpuzAidaProber, HardwareAuditReport
-from apps.windows.hardware.stress_benchmark import StressBenchmarkEngine, StressTestResult
+"""Пакет аппаратного мониторинга, диагностики и провайдеров внешних утилит."""
+
+from __future__ import annotations
+
+from apps.windows.hardware.base import (
+    BaseHardwareProvider,
+    ProviderCapability,
+    ProviderStatus,
+    ProviderTier,
+)
+from apps.windows.hardware.cross_validator import CrossValidator, ValidationReport
+from apps.windows.hardware.discovery import UtilityDiscovery
+from apps.windows.hardware.models import (
+    CpuInventory,
+    GpuInventory,
+    MemoryInventory,
+    MotherboardInventory,
+    SensorReading,
+    SensorSnapshot,
+    StorageDeviceInventory,
+    StorageInventory,
+    SystemHardwareInventory,
+)
+from apps.windows.hardware.registry import HardwareProviderRegistry
 
 __all__ = [
-    "SmartProber",
-    "SmartDriveInfo",
-    "GpuProber",
-    "GpuDeviceTelemetry",
-    "CpuzAidaProber",
-    "HardwareAuditReport",
-    "StressBenchmarkEngine",
-    "StressTestResult",
+    "BaseHardwareProvider",
+    "ProviderCapability",
+    "ProviderStatus",
+    "ProviderTier",
+    "HardwareProviderRegistry",
+    "UtilityDiscovery",
+    "CrossValidator",
+    "ValidationReport",
+    "CpuInventory",
+    "GpuInventory",
+    "MemoryInventory",
+    "MotherboardInventory",
+    "StorageInventory",
+    "StorageDeviceInventory",
+    "SensorReading",
+    "SensorSnapshot",
+    "SystemHardwareInventory",
 ]

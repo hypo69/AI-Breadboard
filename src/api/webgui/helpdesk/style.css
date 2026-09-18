@@ -1,90 +1,81 @@
-/* Helpdesk Management Styles */
-:root {
-  --hd-bg: #0f172a;
-  --hd-card-bg: #1e293b;
-  --hd-border: #334155;
-  --hd-primary: #3b82f6;
-  --hd-user-msg: #1e293b;
-  --hd-operator-msg: #1d4ed8;
-  --hd-note-msg: #78350f;
-}
+/* ═══════════════════════════════════════════════════════════════════════════
+   helpdesk/style.css — Дочерние стили Helpdesk (наследует main.css)
+   Версия: 20260917_refactor_v1
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-body {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: #0f172a;
-  color: #f8fafc;
-}
+/* Helpdesk использует переменные из main.css — хардкод убран */
 
 .helpdesk-sidebar {
-  background-color: #0b1120 !important;
-  border-color: #1e293b !important;
+  background-color: var(--surface-2) !important;
+  border-color: var(--border-color) !important;
 }
 
+/* ── Карточка тикета ─────────────────────────────────────────────────────── */
 .ticket-card {
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: #1e293b;
-  border: 1px solid #334155;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
   cursor: pointer;
-  transition: all 0.15s ease-in-out;
+  transition: background 0.12s ease, border-color 0.12s ease;
+  font-size: 0.82rem;
 }
 
 .ticket-card:hover {
-  background: #273549;
-  border-color: #475569;
+  background: var(--nav-hover-bg);
+  border-color: var(--nav-active);
 }
 
 .ticket-card.active {
-  background: #1e3a5f;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 1px #3b82f6;
+  background: rgba(37, 99, 235, 0.08);
+  border-color: var(--nav-active);
+  box-shadow: 0 0 0 1px var(--nav-active);
 }
 
+[data-theme="dark"] .ticket-card.active {
+  background: rgba(88, 166, 255, 0.08);
+}
+
+/* ── Пузыри чата ─────────────────────────────────────────────────────────── */
 .chat-bubble {
   max-width: 80%;
-  padding: 10px 14px;
-  border-radius: 12px;
+  padding: 7px 12px;
+  border-radius: 10px;
   position: relative;
   word-break: break-word;
+  font-size: 0.83rem;
+  line-height: 1.5;
 }
 
 .bubble-user {
   align-self: flex-start;
-  background: #1e293b;
-  border: 1px solid #334155;
-  color: #f8fafc;
+  background: var(--chat-bot-bg);
+  border: 1px solid var(--border-color);
+  color: var(--chat-bot-text);
 }
 
 .bubble-operator {
   align-self: flex-end;
-  background: #2563eb;
-  color: #ffffff;
+  background: var(--chat-user-bg);
+  color: var(--chat-user-text);
 }
 
 .bubble-note {
   align-self: center;
   width: 90%;
-  background: rgba(245, 158, 11, 0.12);
+  background: rgba(245, 158, 11, 0.08);
   border: 1px dashed #f59e0b;
+  color: #92400e;
+  font-size: 0.8rem;
+}
+
+[data-theme="dark"] .bubble-note {
+  background: rgba(245, 158, 11, 0.1);
   color: #fbbf24;
 }
 
-.badge-priority-urgent {
-  background-color: #dc2626;
-  color: #fff;
-}
-
-.badge-priority-high {
-  background-color: #ea580c;
-  color: #fff;
-}
-
-.badge-priority-normal {
-  background-color: #3b82f6;
-  color: #fff;
-}
-
-.badge-priority-low {
-  background-color: #10b981;
-  color: #fff;
-}
+/* ── Приоритеты ──────────────────────────────────────────────────────────── */
+.badge-priority-urgent { background-color: #dc2626; color: #fff; }
+.badge-priority-high   { background-color: #ea580c; color: #fff; }
+.badge-priority-normal { background-color: var(--nav-active); color: #fff; }
+.badge-priority-low    { background-color: #10b981; color: #fff; }

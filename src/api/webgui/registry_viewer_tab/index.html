@@ -1,0 +1,321 @@
+<!-- Windows Registry Viewer Tab -->
+<style>
+  .reg-container {
+    padding: 1rem;
+  }
+  .reg-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+  }
+  .reg-path-bar {
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+  }
+  .reg-tree-pane {
+    background: #0b1329;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    height: 580px;
+    overflow-y: auto;
+    font-size: 0.82rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .reg-tree-item {
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #cbd5e1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .reg-tree-item:hover {
+    background: rgba(56, 189, 248, 0.1);
+    color: #38bdf8;
+  }
+  .reg-tree-item.active {
+    background: rgba(56, 189, 248, 0.25);
+    color: #38bdf8;
+    font-weight: 600;
+  }
+  .reg-values-pane {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    height: 580px;
+    overflow-y: auto;
+  }
+  .reg-table {
+    width: 100%;
+    font-size: 0.8rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    border-collapse: collapse;
+  }
+  .reg-table th {
+    background: #1e293b;
+    padding: 8px 12px;
+    color: #94a3b8;
+    font-weight: 600;
+    border-bottom: 1px solid #334155;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  .reg-table td {
+    padding: 6px 12px;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+    vertical-align: top;
+  }
+  .reg-table tbody tr:hover {
+    background: rgba(56, 189, 248, 0.05);
+  }
+  .reg-type-badge {
+    font-size: 0.68rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #1e293b;
+    border: 1px solid #475569;
+    color: #38bdf8;
+  }
+  .reg-bookmark-btn {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    transition: all 0.2s ease;
+  }
+  .reg-bookmark-btn:hover {
+    background: #334155;
+    color: #38bdf8;
+    border-color: #38bdf8;
+  }
+</style>
+
+<div class="reg-container">
+  <!-- Header Alert & Status -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div>
+      <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
+        <span class="fs-4">🗝️</span> Просмотр реестра (Windows Registry Viewer)
+      </h5>
+      <p class="mb-0 small text-light" style="color: #cbd5e1 !important;">
+        Безопасный навигатор по системному реестру Windows (HKLM, HKCU, HKCR, HKU, HKCC), быстрый переход к ключевым веткам автозагрузки, служб и политик.
+      </p>
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2" id="reg-status-badge">
+        ● Реестр: Подключено
+      </span>
+      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-reg-refresh">
+        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+      </button>
+      <button class="btn btn-sm btn-outline-light rounded-pill px-3" id="btn-reg-copy-path">
+        <i class="bi bi-clipboard me-1"></i> Копировать путь
+      </button>
+      <button class="btn btn-sm btn-warning rounded-pill px-3" id="btn-reg-backups-modal">
+        <i class="bi bi-shield-check me-1"></i> Бэкапы и откат
+      </button>
+    </div>
+  </div>
+
+  <!-- Bookmarks Quick Bar -->
+  <div class="mb-3 d-flex align-items-center gap-1 flex-wrap p-2 rounded bg-dark border border-secondary" id="reg-bookmarks-container">
+    <span class="text-muted small me-2"><i class="bi bi-bookmark-star-fill text-warning me-1"></i> Закладки:</span>
+    <!-- Bookmarks will be loaded here -->
+  </div>
+
+  <!-- Navigation Path Bar -->
+  <div class="reg-path-bar mb-3">
+    <div class="row g-2 align-items-center">
+      <div class="col-md-3 col-sm-4">
+        <select class="form-select form-select-sm bg-dark text-white border-secondary font-monospace" id="reg-hive-select">
+          <option value="HKEY_LOCAL_MACHINE">HKEY_LOCAL_MACHINE (HKLM)</option>
+          <option value="HKEY_CURRENT_USER">HKEY_CURRENT_USER (HKCU)</option>
+          <option value="HKEY_CLASSES_ROOT">HKEY_CLASSES_ROOT (HKCR)</option>
+          <option value="HKEY_USERS">HKEY_USERS (HKU)</option>
+          <option value="HKEY_CURRENT_CONFIG">HKEY_CURRENT_CONFIG (HKCC)</option>
+        </select>
+      </div>
+      <div class="col-md-7 col-sm-6">
+        <div class="input-group input-group-sm">
+          <button class="btn btn-outline-secondary" id="btn-reg-up" title="На уровень выше">
+            <i class="bi bi-arrow-up-short fs-6"></i>
+          </button>
+          <input type="text" class="form-control bg-dark text-white border-secondary font-monospace" id="reg-path-input" placeholder="SOFTWARE\Microsoft\Windows..." value="SOFTWARE">
+          <button class="btn btn-primary" id="btn-reg-go">
+            Перейти
+          </button>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-2 text-end">
+        <div class="input-group input-group-sm">
+          <input type="text" class="form-control bg-dark text-white border-secondary" id="reg-filter-input" placeholder="Фильтр параметров...">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Explorer View (Subkeys Tree + Values Table) -->
+  <div class="row g-3">
+    <!-- Subkeys Tree Pane (Left) -->
+    <div class="col-md-4">
+      <div class="reg-tree-pane p-2">
+        <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-secondary">
+          <span class="text-muted small fw-bold"><i class="bi bi-folder2-open me-1"></i> Подразделы (Subkeys)</span>
+          <div class="d-flex gap-1 align-items-center">
+            <span class="badge bg-secondary" id="reg-subkeys-count-badge">0</span>
+            <button class="btn btn-xs btn-outline-success py-0 px-2" id="btn-reg-add-key" title="Создать подраздел" style="font-size: 0.75rem;">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+            <button class="btn btn-xs btn-outline-danger py-0 px-2" id="btn-reg-delete-current-key" title="Удалить текущий раздел" style="font-size: 0.75rem;">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+        <div id="reg-subkeys-list">
+          <div class="text-muted text-center py-4 small">Загрузка ключей...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Values & Data Pane (Right) -->
+    <div class="col-md-8">
+      <div class="reg-values-pane p-0">
+        <div class="d-flex justify-content-between align-items-center p-2 border-bottom border-secondary bg-dark">
+          <span class="text-muted small fw-bold"><i class="bi bi-card-list me-1"></i> Параметры и значения (Values)</span>
+          <div class="d-flex gap-2 align-items-center">
+            <span class="badge bg-secondary" id="reg-values-count-badge">0</span>
+            <button class="btn btn-sm btn-success py-1 px-3" id="btn-reg-add-value">
+              <i class="bi bi-plus-circle me-1"></i> Создать параметр
+            </button>
+          </div>
+        </div>
+        <div class="table-responsive" style="max-height: 535px; overflow-y: auto;">
+          <table class="reg-table">
+            <thead>
+              <tr>
+                <th style="width: 28%;">Имя параметра</th>
+                <th style="width: 18%;">Тип</th>
+                <th style="width: 42%;">Значение</th>
+                <th style="width: 12%; text-align: center;">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="reg-values-tbody">
+              <tr><td colspan="4" class="text-center text-muted p-4">Выберите ключ реестра для просмотра параметров</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Редактировать / Создать параметр -->
+  <div class="modal fade" id="regValueModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title" id="regValueModalTitle">✏️ Редактирование параметра</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="regValueForm">
+            <div class="mb-3">
+              <label class="form-label small text-muted">Имя параметра</label>
+              <input type="text" class="form-control bg-secondary text-white border-dark font-monospace" id="regModalValueName" placeholder="Оставьте пустым для (По умолчанию)">
+            </div>
+            <div class="mb-3">
+              <label class="form-label small text-muted">Тип данных</label>
+              <select class="form-select bg-secondary text-white border-dark font-monospace" id="regModalValueType">
+                <option value="REG_SZ">REG_SZ (Строка)</option>
+                <option value="REG_DWORD">REG_DWORD (Число 32-бит)</option>
+                <option value="REG_QWORD">REG_QWORD (Число 64-бит)</option>
+                <option value="REG_EXPAND_SZ">REG_EXPAND_SZ (Расширяемая строка)</option>
+                <option value="REG_MULTI_SZ">REG_MULTI_SZ (Многострочный текст)</option>
+                <option value="REG_BINARY">REG_BINARY (Двоичные данные / HEX)</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small text-muted">Значение</label>
+              <textarea class="form-control bg-secondary text-white border-dark font-monospace" id="regModalValueData" rows="4" placeholder="Введите значение параметра"></textarea>
+              <div class="form-text text-muted small">Для REG_MULTI_SZ разделяйте строки новой строкой. Для REG_BINARY вводите HEX байты.</div>
+            </div>
+            <div class="form-check form-switch mb-2">
+              <input class="form-check-input" type="checkbox" id="regModalBackupCheck" checked>
+              <label class="form-check-label small text-light" for="regModalBackupCheck">
+                🛡️ Создать резервную копию ветки перед сохранением
+              </label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-secondary">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="button" class="btn btn-primary" id="btn-reg-modal-save">Сохранить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Создать подраздел -->
+  <div class="modal fade" id="regKeyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title">📁 Новый подраздел реестра</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small text-muted">Имя нового подраздела</label>
+            <input type="text" class="form-control bg-secondary text-white border-dark font-monospace" id="regModalNewKeyName" placeholder="MyNewSubkey">
+          </div>
+          <p class="small text-muted mb-0">Ключ будет создан внутри текущего пути.</p>
+        </div>
+        <div class="modal-footer border-secondary">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="button" class="btn btn-success" id="btn-reg-modal-create-key">Создать</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Резервные копии и откат -->
+  <div class="modal fade" id="regBackupsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title">🛡️ Точки восстановления и история бэкапов</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-0">
+          <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+            <table class="table table-dark table-hover mb-0 font-monospace small">
+              <thead>
+                <tr>
+                  <th>Время</th>
+                  <th>Ветка и путь</th>
+                  <th>Операция</th>
+                  <th>Действие</th>
+                </tr>
+              </thead>
+              <tbody id="reg-backups-tbody">
+                <tr><td colspan="4" class="text-center py-4 text-muted">Загрузка списка бэкапов...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer border-secondary">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

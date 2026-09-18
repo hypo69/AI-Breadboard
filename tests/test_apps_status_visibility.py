@@ -41,6 +41,7 @@ class TestAppsStatusVisibility:
         assert len(apps) == len(APPS_REGISTRY)
 
         # Check key apps exist
+        assert "scenarios" in apps
         assert "chat" in apps
         assert "trading_terminal" in apps
         assert "network_terminal" in apps
@@ -59,7 +60,7 @@ class TestAppsStatusVisibility:
             assert "tab" in app_info
             assert app_info["tab"].startswith("tab-")
             assert "key" in app_info
-            assert app_info["key"].startswith("enable_")
+            assert app_info["key"] == app_id
 
     def test_apps_status_endpoint_public_and_admin(self):
         """Both /api/apps/status and /api/admin/apps/status should be accessible and return valid json."""
@@ -81,16 +82,16 @@ class TestAppsStatusVisibility:
         tc_cfg = {
             "apps": {
                 "enable_all": False,
-                "enable_windows_admin": True,
-                "enable_system_inspector": True,
-                "enable_system_control_center": True,
-                "enable_system_log_viewer": True,
-                "enable_network_terminal": True,
-                "enable_trading_terminal": True,
-                "enable_user_assistant": True,
-                "enable_gcloud_monitor": True,
-                "enable_website_monitor": True,
-                "enable_cloudflared_monitor": False,
+                "windows_sysadmin": True,
+                "system_inspector": True,
+                "system_control_center": True,
+                "system_log_viewer": True,
+                "network_terminal": True,
+                "trading_terminal": True,
+                "user_assistant": True,
+                "gcloud_monitor": True,
+                "website_monitor": True,
+                "cloudflared_monitor": False,
             }
         }
         cfg_file = tmp_path / "config_tc_test.json"
@@ -189,13 +190,13 @@ class TestAppsStatusVisibility:
         new_format_cfg = {
             "apps": {
                 "enabled": [
-                    "enable_windows_admin",
-                    "enable_system_inspector",
-                    "enable_trading_terminal",
-                    "enable_cloudflared_monitor",
+                    "windows_sysadmin",
+                    "system_inspector",
+                    "trading_terminal",
+                    "cloudflared_monitor",
                 ],
                 "disabled": [
-                    "enable_cloudflared_monitor",
+                    "cloudflared_monitor",
                 ],
             }
         }
@@ -241,15 +242,63 @@ class TestAppsStatusVisibility:
         assert status["apps"]["windows_sysadmin"]["enabled"] is True
         assert status["apps"]["system_inspector"]["enabled"] is True
 
-    def test_config_tc_json_has_chat_enabled(self, monkeypatch):
-        """When actual config_tc.json is active, chat and test computer apps should be enabled."""
+    def test_config_tc_json_has_chat_disabled(self, monkeypatch):
+        """When actual config_tc.json is active, chat should be disabled while test computer apps are enabled."""
         tc_path = __root__ / "config_tc.json"
         if tc_path.exists():
             monkeypatch.setenv("CONFIG_FILE", "config_tc.json")
             status = get_apps_status()
             assert status["status"] == "ok"
-            assert status["apps"]["chat"]["enabled"] is True
+            assert status["apps"]["scenarios"]["enabled"] is True
+            assert status["apps"]["chat"]["enabled"] is False
             assert status["apps"]["windows_sysadmin"]["enabled"] is True
+            assert status["apps"]["system_inspector"]["enabled"] is True
+            assert status["apps"]["system_control_center"]["enabled"] is True
+            assert status["apps"]["network_terminal"]["enabled"] is False
+            assert status["apps"]["software_audit"]["enabled"] is True
+            assert status["apps"]["registry_viewer"]["enabled"] is True
+            assert status["apps"]["windows_startup_auditor"]["enabled"] is True
+
+    def test_config_tc_non_computer_apps_disabled(self, monkeypatch):
+        """Non-computer / external / user apps must be disabled in tc.ps1 scenario (config_tc.json)."""
+        tc_path = __root__ / "config_tc.json"
+        if tc_path.exists():
+            monkeypatch.setenv("CONFIG_FILE", "config_tc.json")
+            status = get_apps_status()
+            assert status["status"] == "ok"
+            assert status["apps"]["network_terminal"]["enabled"] is False
+            assert status["apps"]["cloudflared_monitor"]["enabled"] is False
+            assert status["apps"]["gcloud_monitor"]["enabled"] is False
+            assert status["apps"]["website_monitor"]["enabled"] is False
+            assert status["apps"]["user_assistant"]["enabled"] is False
+            assert status["apps"]["wikipedia_research"]["enabled"] is False
+            assert status["apps"]["trading_terminal"]["enabled"] is False
+            assert status["apps"]["helpdesk"]["enabled"] is False
+
+    def test_get_apps_status_with_profile_param(self):
+        """Passing profile=tc must explicitly load config_tc.json regardless of env CONFIG_FILE."""
+        status = get_apps_status(profile="tc")
+        assert status["status"] == "ok"
+        assert status["config_file"] == "config_tc.json"
+        assert status["apps"]["cloudflared_monitor"]["enabled"] is False
+        assert status["apps"]["gcloud_monitor"]["enabled"] is False
+        assert status["apps"]["website_monitor"]["enabled"] is False
+        assert status["apps"]["user_assistant"]["enabled"] is False
+        assert status["apps"]["wikipedia_research"]["enabled"] is False
+
+    def test_api_status_endpoint_with_profile_param(self):
+        """Querying /api/apps/status?profile=tc must return config_tc.json status."""
+        res = client.get("/api/apps/status?profile=tc")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "ok"
+        assert data["config_file"] == "config_tc.json"
+        assert data["apps"]["cloudflared_monitor"]["enabled"] is False
+        assert data["apps"]["gcloud_monitor"]["enabled"] is False
+        assert data["apps"]["website_monitor"]["enabled"] is False
+        assert data["apps"]["user_assistant"]["enabled"] is False
+        assert data["apps"]["wikipedia_research"]["enabled"] is False
+
 
 
 

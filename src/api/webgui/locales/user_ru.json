@@ -31,7 +31,8 @@
     "helpdesk": "🛟 Helpdesk",
     "trading": "📈 Торговый терминал",
     "network": "🌐 Сетевой терминал",
-    "systemInspector": "🖥️ Системный инспектор",
+    "systemInspector": "📡 Телеметрия",
+    "aboutSystem": "ℹ️ О Системе",
     "player": "Плеер",
     "cabinet": "Кабинет",
     "settings": "Настройки"

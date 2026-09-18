@@ -122,8 +122,8 @@
         if (parts.length === 0) {
           disksTbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted p-3">No active drives detected</td></tr>';
         } else {
-          disksTbody.innerHTML = parts.map(p => `
-            <tr>
+          disksTbody.innerHTML = parts.map((p, idx) => `
+            <tr class="scc-disk-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для AI-диагностики диска">
               <td class="fw-bold text-white"><i class="bi bi-hdd me-1"></i> ${p.mountpoint}</td>
               <td class="font-monospace text-muted">${p.fstype}</td>
               <td>${p.total_gb} GB</td>
@@ -140,6 +140,44 @@
               <td><span class="badge scc-badge-secure">${p.health_status}</span></td>
             </tr>
           `).join('');
+
+          disksTbody.querySelectorAll('.scc-disk-row').forEach(row => {
+            row.onclick = () => {
+              const idx = parseInt(row.getAttribute('data-idx'), 10);
+              const p = parts[idx];
+              if (!p) return;
+              if (window.AITableModal) {
+                window.AITableModal.show({
+                  icon: '💾',
+                  title: `Диск ${p.mountpoint}`,
+                  subtitle: `Файловая система: ${p.fstype} | Здоровье: ${p.health_status}`,
+                  tableType: 'disk',
+                  badges: [
+                    { text: p.health_status || 'OK', class: 'badge bg-success' },
+                    { text: `${p.percent_used}% занято`, class: p.percent_used > 80 ? 'badge bg-warning text-dark' : 'badge bg-info text-dark' }
+                  ],
+                  metadata: [
+                    { label: 'Точка монтирования', value: p.mountpoint },
+                    { label: 'Файловая система', value: p.fstype },
+                    { label: 'Общий объем', value: `${p.total_gb} GB` },
+                    { label: 'Использовано', value: `${p.used_gb} GB` },
+                    { label: 'Свободно', value: `${p.free_gb} GB` },
+                    { label: 'Процент заполнения', value: `${p.percent_used}%` },
+                    { label: 'Статус диска', value: p.health_status || 'Исправен' }
+                  ],
+                  rawTitle: 'Параметры накопителя',
+                  rawContent: JSON.stringify(p, null, 2),
+                  requestData: {
+                    mountpoint: p.mountpoint,
+                    fstype: p.fstype,
+                    total_gb: p.total_gb,
+                    free_gb: p.free_gb,
+                    percent: p.percent_used
+                  }
+                });
+              }
+            };
+          });
         }
       }
 
@@ -164,14 +202,41 @@
           tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted p-3">No restore points found. Click "Create Restore Point" to generate one.</td></tr>';
           return;
         }
-        tbody.innerHTML = points.map(p => `
-          <tr>
+        tbody.innerHTML = points.map((p, idx) => `
+          <tr class="scc-restore-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для анализа точки восстановления">
             <td class="font-monospace text-info fw-bold">#${p.sequence_number}</td>
             <td class="fw-semibold text-white">${p.description}</td>
             <td class="small text-muted font-monospace">${p.restore_point_type}</td>
             <td class="small text-muted">${p.creation_time}</td>
           </tr>
         `).join('');
+
+        tbody.querySelectorAll('.scc-restore-row').forEach(row => {
+          row.onclick = () => {
+            const idx = parseInt(row.getAttribute('data-idx'), 10);
+            const p = points[idx];
+            if (!p) return;
+            if (window.AITableModal) {
+              window.AITableModal.show({
+                icon: '🔄',
+                title: `Точка восстановления #${p.sequence_number}`,
+                subtitle: p.description,
+                tableType: 'generic',
+                badges: [
+                  { text: p.restore_point_type || 'System Checkpoint', class: 'badge bg-info text-dark' }
+                ],
+                metadata: [
+                  { label: 'Номер', value: String(p.sequence_number) },
+                  { label: 'Описание', value: p.description },
+                  { label: 'Тип', value: p.restore_point_type },
+                  { label: 'Дата создания', value: p.creation_time }
+                ],
+                rawTitle: 'Метаданные точки восстановления',
+                rawContent: JSON.stringify(p, null, 2)
+              });
+            }
+          };
+        });
       }
     } catch (e) {
       console.error('[SystemControl] Failed to fetch restore points:', e);

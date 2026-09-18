@@ -45,7 +45,6 @@ from .router_openai import router as router_openai
 from .router_user_storage import init_router as init_user_storage_router
 from .router_news import init_router as init_news_router
 from .messenger import init_router as init_messenger_router
-from .helpdesk import init_router as init_helpdesk_router
 from .router_network import init_router as init_network_router
 from .router_system import init_router as init_system_router
 from .router_ifttt import init_router as init_ifttt_router
@@ -54,8 +53,15 @@ from .router_telegram_rag import init_router as init_telegram_rag_router
 from .router_version import init_router as init_version_router
 from .router_telemetry import init_router as init_telemetry_router
 from .router_system_logs import init_router as init_system_logs_router
+from .router_registry_viewer import init_router as init_registry_viewer_router
+from .router_diagnostics import init_router as init_diagnostics_router
+from .router_scenarios import init_router as init_scenarios_router
+from .pixel_rag_router import get_pixel_rag_router
 
 __all__ = [
+    "get_pixel_rag_router",
+    "init_diagnostics_router",
+    "init_scenarios_router",
     "init_auth_router",
     "is_local_request",
     "get_current_user_data",
@@ -80,7 +86,6 @@ __all__ = [
     "init_user_storage_router",
     "init_news_router",
     "init_messenger_router",
-    "init_helpdesk_router",
     "init_network_router",
     "init_system_router",
     "init_ifttt_router",
@@ -89,6 +94,7 @@ __all__ = [
     "init_version_router",
     "init_telemetry_router",
     "init_system_logs_router",
+    "init_registry_viewer_router",
     "router_openai",
 ]
 

@@ -24,6 +24,11 @@
             <i class="bi bi-code-slash me-1"></i> Код проектов (AST)
           </button>
         </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link rounded-pill btn-sm px-3 py-1" id="pills-pixel-rag-tab" data-bs-toggle="pill" data-bs-target="#pills-pixel-rag" type="button" role="tab">
+            <i class="bi bi-image me-1 text-warning"></i> PixelRAG (Визуальный поиск)
+          </button>
+        </li>
       </ul>
       <button class="btn btn-outline-primary btn-sm rounded-pill ms-2" id="btn-refresh-rag">
         <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="common.refresh">Обновить</span>
@@ -641,5 +646,149 @@
       </div>
     </div>
 
+    <!-- SUB-TAB 3: PIXELRAG VISUAL HYBRID SEARCH -->
+    <div class="tab-pane fade" id="pills-pixel-rag" role="tabpanel">
+      <!-- Top Metrics Bar -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-3 col-sm-6">
+          <div class="card shadow-sm border-0 bg-body-secondary bg-opacity-25 h-100 p-3 text-center">
+            <div class="small text-muted mb-1"><i class="bi bi-images text-primary me-1"></i>Всего изображений</div>
+            <div class="fw-bold fs-4 text-primary" id="pixel-stat-images">0</div>
+            <div class="small text-muted" id="pixel-stat-size">0.0 MB</div>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="card shadow-sm border-0 bg-body-secondary bg-opacity-25 h-100 p-3 text-center">
+            <div class="small text-muted mb-1"><i class="bi bi-layers text-success me-1"></i>Чанков в индексе</div>
+            <div class="fw-bold fs-4 text-success" id="pixel-stat-chunks">0</div>
+            <div class="small text-muted">FAISS Hybrid Vector Index</div>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="card shadow-sm border-0 bg-body-secondary bg-opacity-25 h-100 p-3 text-center">
+            <div class="small text-muted mb-1"><i class="bi bi-robot text-info me-1"></i>Провайдер векторизации</div>
+            <div class="fw-bold fs-6 text-info mt-1" id="pixel-stat-provider">FAISS / Visual Embeddings</div>
+            <div class="small text-muted" id="pixel-stat-status">Статус: Загрузка...</div>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="card shadow-sm border-0 bg-body-secondary bg-opacity-25 h-100 p-3 text-center">
+            <div class="small text-muted mb-1"><i class="bi bi-clock-history text-warning me-1"></i>Индекс обновлен</div>
+            <div class="small fw-bold mt-2 text-truncate" id="pixel-stat-updated">—</div>
+            <button class="btn btn-link btn-sm text-decoration-none p-0 mt-1" id="btn-refresh-pixel-stats">
+              <i class="bi bi-arrow-clockwise"></i> Обновить
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <!-- LEFT COLUMN: Image Ingestion & Smart Query Router -->
+        <div class="col-lg-5 col-md-12">
+          <!-- Ingest Images Card -->
+          <div class="card shadow-sm border-0 mb-3">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+              <span class="fw-semibold"><i class="bi bi-cloud-arrow-up me-2"></i>Загрузка и индексация изображений</span>
+            </div>
+            <div class="card-body">
+              <div id="pixel-dropzone" class="border border-2 border-dashed rounded p-4 text-center cursor-pointer mb-3 bg-body-secondary bg-opacity-25" style="border-style: dashed !important; transition: all 0.2s; cursor: pointer;">
+                <i class="bi bi-file-earmark-image fs-1 text-primary mb-2 d-block"></i>
+                <h6 class="fw-bold mb-1">Перетащите изображения сюда или нажмите для выбора</h6>
+                <div class="small text-muted mb-3">Поддерживаются .png, .jpg, .jpeg, .webp, .bmp, .gif, .pdf</div>
+                <input type="file" id="pixel-file-input" multiple class="d-none" accept="image/*,.pdf">
+                <button class="btn btn-outline-primary btn-sm px-3 rounded-pill" type="button" onclick="document.getElementById('pixel-file-input').click();">
+                  <i class="bi bi-image me-1"></i> Выбрать изображения
+                </button>
+              </div>
+
+              <div id="pixel-upload-progress" class="d-none mb-3">
+                <div class="d-flex justify-content-between small text-muted mb-1">
+                  <span>Индексация через PixelRAG...</span>
+                  <span id="pixel-upload-percent">0%</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                  <div id="pixel-upload-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <div id="pixel-upload-status-alert" class="d-none alert p-2 small mb-0"></div>
+            </div>
+          </div>
+
+          <!-- Smart Query Router & Analyzer -->
+          <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+              <span class="fw-semibold"><i class="bi bi-signpost-split me-2"></i>Smart Query Router (Анализ запроса)</span>
+            </div>
+            <div class="card-body">
+              <p class="small text-muted mb-2">Автоматическое определение типа запроса (Text vs Visual vs Hybrid) перед поиском.</p>
+              <div class="input-group input-group-sm mb-2">
+                <input type="text" class="form-control" id="pixel-analyze-query-input" placeholder="Например: схема авторизации или синий график продаж">
+                <button class="btn btn-outline-primary" id="btn-pixel-analyze-query">
+                  <i class="bi bi-cpu me-1"></i> Анализ
+                </button>
+              </div>
+              <div id="pixel-analyze-result" class="p-2 border rounded bg-body-tertiary small d-none">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span>Тип маршрутизации: <strong id="pixel-routing-type" class="badge bg-primary">HYBRID</strong></span>
+                  <span>Уверенность: <strong id="pixel-routing-confidence" class="text-success">95%</strong></span>
+                </div>
+                <div class="text-muted" id="pixel-routing-reason" style="font-size: 0.8rem;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Visual Search Playground -->
+        <div class="col-lg-7 col-md-12">
+          <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+              <span class="fw-semibold"><i class="bi bi-search me-2"></i>Интерактивный поиск PixelRAG</span>
+              <div class="form-check form-switch m-0" title="Использовать Smart Query Routing">
+                <input class="form-check-input" type="checkbox" id="pixel-search-routing-toggle" checked>
+                <label class="form-check-label text-light small ms-1" for="pixel-search-routing-toggle">Smart Routing</label>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="row g-2 mb-3">
+                <div class="col-md-8">
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="pixel-search-query" placeholder="Введите поисковый запрос (текст или описание картинки)...">
+                    <button class="btn btn-primary px-3" id="btn-pixel-search">
+                      <i class="bi bi-search me-1"></i> Искать
+                    </button>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <select class="form-select" id="pixel-search-topk" title="Количество результатов">
+                    <option value="3">Top 3</option>
+                    <option value="5" selected>Top 5</option>
+                    <option value="10">Top 10</option>
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <select class="form-select" id="pixel-search-minscore" title="Минимальный порог">
+                    <option value="0.0" selected>Score ≥ 0.0</option>
+                    <option value="0.3">Score ≥ 0.3</option>
+                    <option value="0.5">Score ≥ 0.5</option>
+                    <option value="0.7">Score ≥ 0.7</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Search Results List -->
+              <div id="pixel-search-results" class="border rounded p-3 bg-body-tertiary" style="min-height: 280px; max-height: 480px; overflow-y: auto;">
+                <div class="text-center text-muted py-5">
+                  <i class="bi bi-images fs-1 d-block mb-2 opacity-50"></i>
+                  <span>Введите запрос для поиска по текстовым чанкам и визуальным индексам изображений.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
+

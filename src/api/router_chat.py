@@ -182,31 +182,36 @@ def get_chat_model(selected_model_name: str, system_instruction: str = "", user_
     return inst
 
 async def _extract_user_auth(fastapi_req: Request) -> tuple[str, str, str, dict]:
-    """Извлекает идентификатор пользователя, системную инструкцию, модель и настройки из JWT/IP."""
-    user_identifier = ""
+    """Извлекает идентификатор пользователя, системную инструкцию, модель и настройки из JWT/IP без обязательной авторизации."""
+    user_identifier = "1"
     system_instruction = ""
     selected_model = ""
     settings = {}
 
-    from src.api.router_auth import get_current_user_data
-    user_data = get_current_user_data(fastapi_req)
+    try:
+        from src.api.router_auth import get_current_user_optional
+        user_data = get_current_user_optional(fastapi_req) if fastapi_req is not None else None
 
-    from src.user_manager import user_manager
-    db_user = None
-    if user_data.id:
-        db_user = await asyncio.to_thread(user_manager.get_user_by_id, user_data.id)
-    if not db_user and user_data.email:
-        db_user = await asyncio.to_thread(user_manager.get_user_by_email, user_data.email)
+        from src.user_manager import user_manager
+        db_user = None
+        if user_data:
+            if getattr(user_data, 'id', None):
+                db_user = await asyncio.to_thread(user_manager.get_user_by_id, user_data.id)
+            if not db_user and getattr(user_data, 'email', None):
+                db_user = await asyncio.to_thread(user_manager.get_user_by_email, user_data.email)
 
-    if db_user:
-        user_identifier = str(db_user.get('id', 1))
-        settings = await asyncio.to_thread(user_manager.get_user_settings, db_user.get('id', 1)) or {}
-        if settings.get('system_instruction'):
-            system_instruction = settings['system_instruction']
-        if settings.get('model'):
-            selected_model = settings['model']
-    else:
-        user_identifier = str(user_data.id or 1)
+        if not db_user:
+            db_user = await asyncio.to_thread(user_manager.get_user_by_id, 1)
+
+        if db_user:
+            user_identifier = str(db_user.get('id', 1))
+            settings = await asyncio.to_thread(user_manager.get_user_settings, db_user.get('id', 1)) or {}
+            if settings.get('system_instruction'):
+                system_instruction = settings['system_instruction']
+            if settings.get('model'):
+                selected_model = settings['model']
+    except Exception as e:
+        logger.debug(f"[router_chat] Failed to extract optional user auth: {e}")
 
     if not system_instruction:
         system_instruction = _get_default_system_instruction()
@@ -325,9 +330,6 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
     @router.get('/models')
     async def get_models(fastapi_req: Request, refresh: bool = False, include_unsupported: bool = False) -> dict:
         """Получение списка доступных моделей, сгруппированных по провайдеру."""
-        if fastapi_req is not None:
-            from src.api.router_auth import get_current_user_data
-            get_current_user_data(fastapi_req)
         from src.ai.model_manager import get_available_models, load_unsupported_models
 
         gemini_models = get_available_models('gemini', force_refresh=refresh, include_unsupported=include_unsupported)
@@ -375,12 +377,86 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
             }
         }
 
+    @router.get('/active-model')
+    async def get_active_model_endpoint(fastapi_req: Request, profile: str = "") -> dict:
+        """Получение текущей активной модели и провайдера ИИ на основе профиля и пользовательских настроек."""
+        import json
+        from pathlib import Path
+        
+        # 1. Сначала проверяем активный конфигурационный файл
+        cfg_env = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
+        active_path = None
+        if profile in ("tc", "test-computer", "test_computer", "apps_tc"):
+            if (__root__ / "config_tc.json").exists():
+                active_path = __root__ / "config_tc.json"
+        elif cfg_env:
+            p = Path(cfg_env)
+            active_path = p if p.is_absolute() else (__root__ / cfg_env)
+
+        if not active_path or not active_path.exists():
+            if (__root__ / "config_tc.json").exists() and not (__root__ / "config.json").exists():
+                active_path = __root__ / "config_tc.json"
+            else:
+                active_path = __root__ / "config.json"
+
+        provider = "GEMINI"
+        model_name = "gemini-2.5-flash"
+        config_file = active_path.name if active_path else "config.json"
+
+        if active_path and active_path.exists():
+            try:
+                with open(active_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    ai_sec = data.get("ai", {})
+                    if ai_sec.get("provider"):
+                        provider = str(ai_sec["provider"]).upper()
+                        model_name = ai_sec.get("model") or ai_sec.get(f"{provider.lower()}_model_id") or "default"
+                    elif ai_sec.get("use_agy"):
+                        provider = "AGY"
+                        model_name = ai_sec.get("agy_model_id") or ai_sec.get("model") or "gemini-3.6-flash"
+                    elif ai_sec.get("use_gemini"):
+                        provider = "GEMINI"
+                        model_name = ai_sec.get("gemini_model_id") or ai_sec.get("model") or "gemini-2.5-flash"
+                    elif ai_sec.get("use_ollama"):
+                        provider = "OLLAMA"
+                        model_name = ai_sec.get("ollama_model_id") or ai_sec.get("model") or "llama3.1"
+                    elif ai_sec.get("use_foundry"):
+                        provider = "FOUNDRY"
+                        model_name = ai_sec.get("foundry_model_id") or ai_sec.get("model") or "local"
+                    elif ai_sec.get("model"):
+                        model_name = ai_sec.get("model")
+                        provider = "AI"
+            except Exception as e:
+                logger.debug(f"[router_chat] Could not read active config {active_path}: {e}")
+
+        # 2. Если профиль общий (не tc), проверяем настройки текущего пользователя (user_manager)
+        if profile not in ("tc", "test-computer", "test_computer", "apps_tc"):
+            try:
+                _, _, user_selected_model, _ = await _extract_user_auth(fastapi_req)
+                if user_selected_model:
+                    model_name = user_selected_model
+                    if ':' in user_selected_model:
+                        p_prefix, m_suffix = user_selected_model.split(':', 1)
+                        provider = p_prefix.upper()
+                        model_name = m_suffix
+                    elif user_selected_model.startswith('agy-'):
+                        provider = "AGY"
+                    elif 'gemini' in user_selected_model.lower():
+                        provider = "GEMINI"
+            except Exception:
+                pass
+
+        return {
+            "status": "ok",
+            "provider": provider,
+            "model": model_name,
+            "display": f"{provider}: {model_name}",
+            "config_file": config_file,
+        }
+
     @router.post('/test-model')
     async def test_model(req: TestModelRequest, fastapi_req: Request) -> dict:
         """Проверочный запрос к указанной AI-модели для валидации связи (Запрос -> Ответ)."""
-        if fastapi_req is not None:
-            from src.api.router_auth import get_current_user_data
-            get_current_user_data(fastapi_req)
         start_time = time.perf_counter()
         target_model = req.model.strip()
         provider = req.provider.strip().lower()
@@ -456,10 +532,6 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
     @router.post('/comment-responder')
     async def respond_to_comment(req: CommentResponderRequest, fastapi_req: Request) -> dict:
         """Endpoint for WordPress AI Responder plugin to generate context-aware replies to user comments."""
-        if fastapi_req is not None:
-            from src.api.router_auth import get_current_user_data
-            get_current_user_data(fastapi_req)
-
         start_time = time.perf_counter()
         target_model = req.model.strip() or 'gemini-2.5-flash'
         provider = req.provider.strip().lower()
@@ -670,12 +742,8 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
 
                 api_key = getattr(chat_model, 'api_key', '') or os.getenv('GEMINI_API_KEY', '')
 
-                # 1. RAG-First: Поиск по базе знаний (при включенном RAG)
-                rag_enabled_config = chat_req.generation_config.get('rag_enabled')
-                if rag_enabled_config is not None:
-                    is_rag_active = bool(rag_enabled_config)
-                else:
-                    is_rag_active = bool(settings.get('rag_enabled', 1))
+                # 1. RAG: Поиск по базе знаний (опционально, по умолчанию отключен)
+                is_rag_active = bool(chat_req.generation_config.get('rag_enabled', False))
 
                 context_text = ""
                 if is_rag_active:
@@ -698,16 +766,11 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                     if decision.is_direct:
                         yield f"data: {json.dumps({'status': decision.status_message or '⚡ Ответ найден в базе знаний...'})}\n\n"
                         yield f"data: {json.dumps({'text': decision.direct_text})}\n\n"
-                        if decision.direct_voice:
-                            yield f"data: {json.dumps({'voice': decision.direct_voice})}\n\n"
                         return
                     context_text = decision.context_text
 
                 # 3. Подготовка контекста для LLM
-                voice_gender_instruction = _get_voice_gender_rule(settings)
                 dynamic_context_parts = []
-                if voice_gender_instruction:
-                    dynamic_context_parts.append(f"[Правило]: {voice_gender_instruction}")
                 if context_text:
                     dynamic_context_parts.append(context_text)
 
@@ -717,6 +780,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
 
                 # Режим отладки (DEBUG MODE)
                 if chat_req.generation_config.get('debug_mode', False):
+                    voice_gender_instruction = _get_voice_gender_rule(settings)
                     debug_text = _build_debug_prompt(chat_req, context_text, voice_gender_instruction)
                     yield f"data: {json.dumps({'status': 'DEBUG MODE: Промпт сформирован, не отправляется в модель'})}\n\n"
                     yield f"data: {json.dumps({'text': debug_text})}\n\n"
@@ -756,7 +820,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                     yield f"data: {json.dumps({'text': agent_report})}\n\n"
                     return
 
-                token = request.cookies.get('auth_token')
+                token = request.cookies.get('auth_token') if request else None
                 from src.api.router_control import get_room_id
                 room_id = get_room_id(token, None)
 
@@ -778,55 +842,30 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                 else:
                     active_model = chat_model
 
-                yield f"data: {json.dumps({'status': 'Генерация ответа (этап 1)...'})}\n\n"
+                yield f"data: {json.dumps({'status': 'Генерация ответа...'})}\n\n"
 
-                chat_kwargs_1 = kwargs.copy()
-                chat_kwargs_1.pop('room_id', '')
-                chat_kwargs_1.pop('search_engine', None)
-                gen_cfg_1 = chat_req.generation_config.copy()
-                gen_cfg_1['response_type'] = 'chat'
-                chat_kwargs_1['generation_config'] = gen_cfg_1
+                chat_kwargs = kwargs.copy()
+                chat_kwargs.pop('room_id', '')
+                chat_kwargs.pop('search_engine', None)
+                gen_cfg = chat_req.generation_config.copy()
+                gen_cfg['response_type'] = 'chat'
+                chat_kwargs['generation_config'] = gen_cfg
 
-                stream_generator_1 = active_model.chat_stream(user_msg_with_context, **chat_kwargs_1)
+                stream_generator = active_model.chat_stream(user_msg_with_context, **chat_kwargs)
 
                 chat_response = ""
-                async for chunk in stream_generator_1:
+                async for chunk in stream_generator:
                     if chunk:
                         c = chunk.replace("[CHAT]", "").replace("[VOICE]", "")
                         if c:
                             chat_response += c
                             yield f"data: {json.dumps({'text': c})}\n\n"
 
-                output_mode = chat_req.generation_config.get('output_mode', 'text_and_voice')
-                need_voice = output_mode in ('voice_only', 'text_and_voice', 'voice') or bool(chat_req.generation_config.get('tts_enabled', False))
-
-                voice_response = ""
-                if chat_response and need_voice:
-                    yield f"data: {json.dumps({'status': 'Генерация голоса (этап 2)...'})}\n\n"
-
-                    chat_kwargs_2 = kwargs.copy()
-                    chat_kwargs_2.pop('room_id', '')
-                    chat_kwargs_2.pop('search_engine', None)
-                    chat_kwargs_2['history'] = []
-
-                    gen_cfg_2 = chat_req.generation_config.copy()
-                    gen_cfg_2['response_type'] = 'voice'
-                    chat_kwargs_2['generation_config'] = gen_cfg_2
-
-                    stream_generator_2 = narrator_model.chat_stream(chat_response, **chat_kwargs_2)
-                    async for chunk in stream_generator_2:
-                        if chunk:
-                            c = chunk.replace("[CHAT]", "").replace("[VOICE]", "")
-                            if c:
-                                voice_response += c
-                                yield f"data: {json.dumps({'voice': c})}\n\n"
-
-                # 4. Автоматическая фоновая индексация взаимодействия в RAG (только при включенном RAG)
-                content_to_index = voice_response if voice_response.strip() else chat_response
-                if is_rag_active and content_to_index and api_key and user_identifier:
+                # 4. Фоновая индексация взаимодействия в RAG (только если RAG был явно включен)
+                if is_rag_active and chat_response and api_key and user_identifier:
                     from src.rag import index_user_interaction
                     asyncio.ensure_future(asyncio.to_thread(
-                        index_user_interaction, user_identifier, api_key, chat_req.message, content_to_index
+                        index_user_interaction, user_identifier, api_key, chat_req.message, chat_response
                     ))
 
             except Exception as ex:

@@ -5,6 +5,7 @@
 # Description:
 #   Диагностика драйверов, устройств с ошибками PnP (Code 10/31/43/28),
 #   проверка цифровых подписей и аудит пакетов в хранилище DriverStore.
+#   Использует SetupAPI & CfgMgr32 нативный слой с fallback на PowerShell.
 #
 # Examples:
 #   >>> from apps.windows.core.modules.driver_collector import DriverCollector
@@ -18,7 +19,7 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""Коллектор аудита драйверов и устройств Windows."""
+"""Коллектор аудита драйверов и устройств Windows с поддержкой SetupAPI."""
 
 from __future__ import annotations
 
@@ -28,11 +29,16 @@ import time
 from typing import Any, Dict, List
 
 from src.logger import logger
+from apps.windows.api.setupapi import SetupAPI
 from apps.windows.core.models import ActionType, AuditFinding, DomainAuditResult, RemediationAction, RiskLevel
 
 
 class DriverCollector:
-    """Коллектор фактов о драйверах и статусе устройств PnP."""
+    """Коллектор фактов о драйверах и статусе устройств PnP с поддержкой SetupAPI."""
+
+    def __init__(self) -> None:
+        """Инициализация коллектора с поддержкой нативного SetupAPI."""
+        self._setupapi = SetupAPI()
 
     def collect(self) -> DomainAuditResult:
         """Сбор данных о драйверах и проблемных устройствах.
@@ -48,7 +54,7 @@ class DriverCollector:
             "old_driver_packages_count": 0,
         }
 
-        # 1. Проверка проблемных устройств через PowerShell Get-PnpDevice
+        # 1. Проверка проблемных устройств через нативный SetupAPI / CfgMgr32
         problem_devices = self._get_problem_devices()
         metrics["problem_devices_count"] = len(problem_devices)
 
@@ -66,7 +72,7 @@ class DriverCollector:
                     evidence=dev,
                     actions=[
                         RemediationAction(
-                            action_id=f"restart_pnp_{dev.get('InstanceId', 'dev')[:20]}",
+                            action_id=f"restart_pnp_{dev.get('InstanceId', 'dev')[:20].replace(' ', '_')}",
                             action_type=ActionType.CUSTOM_COMMAND,
                             title=f"Перезапустить устройство {name}",
                             description="Попытка перезапуска PnP устройства через PowerShell",
@@ -99,7 +105,25 @@ class DriverCollector:
         )
 
     def _get_problem_devices(self) -> List[Dict[str, Any]]:
-        """Получение списка устройств со статусом Error или Degraded."""
+        """Получение списка устройств со сбоями через SetupAPI с fallback на PowerShell."""
+        # 1. Попытка нативного сбора через SetupAPI / CfgMgr32 (Tier 1 Native Win32)
+        try:
+            native_problems = self._setupapi.get_problem_devices()
+            if native_problems:
+                return [
+                    {
+                        "FriendlyName": d.friendly_name,
+                        "InstanceId": d.device_instance_id,
+                        "Status": f"Problem (Code {d.problem_code})",
+                        "ProblemCode": d.problem_code,
+                        "Class": d.device_class,
+                    }
+                    for d in native_problems
+                ]
+        except Exception as ex:
+            logger.debug(f"Нативный сбор SetupAPI завершился с ошибкой: {ex}")
+
+        # 2. Fallback на PowerShell (Tier 4)
         cmd = [
             "powershell",
             "-NoProfile",

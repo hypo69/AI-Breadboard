@@ -14,9 +14,10 @@
 # =============================================================================
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from main import app
+from src.api.helpdesk.router_helpdesk import init_router
 from src.api.helpdesk.database import init_db, get_db
 
 
@@ -32,8 +33,10 @@ def setup_helpdesk_db():
 
 @pytest.fixture
 def client():
-    """FastAPI TestClient fixture."""
-    return TestClient(app)
+    """Isolated FastAPI TestClient fixture for Helpdesk."""
+    test_app = FastAPI()
+    test_app.include_router(init_router())
+    return TestClient(test_app)
 
 
 def test_create_and_get_ticket(client: TestClient):
@@ -144,22 +147,24 @@ def test_helpdesk_stats_and_filtering(client: TestClient):
     assert len(res_filter.json()["tickets"]) == 1
 
 
-def test_helpdesk_ui_routes(client: TestClient):
+def test_helpdesk_ui_routes():
     """Test that /helpdesk web interface routes and admin helpdesk_tab assets are accessible."""
-    res_page = client.get("/helpdesk")
+    from main import app as main_app
+    main_client = TestClient(main_app)
+    res_page = main_client.get("/helpdesk")
     assert res_page.status_code == 200
     assert "Helpdesk" in res_page.text
 
-    res_css = client.get("/helpdesk/style.css")
+    res_css = main_client.get("/helpdesk/style.css")
     assert res_css.status_code == 200
     assert "helpdesk" in res_css.text.lower()
 
     # Verify admin helpdesk_tab files are served via static /html
-    res_tab_html = client.get("/html/helpdesk_tab/index.html")
+    res_tab_html = main_client.get("/html/helpdesk_tab/index.html")
     assert res_tab_html.status_code == 200, f"helpdesk_tab/index.html not found: {res_tab_html.status_code}"
     assert "Helpdesk" in res_tab_html.text
 
-    res_tab_js = client.get("/html/helpdesk_tab/main.js")
+    res_tab_js = main_client.get("/html/helpdesk_tab/main.js")
     assert res_tab_js.status_code == 200, f"helpdesk_tab/main.js not found: {res_tab_js.status_code}"
     assert "initHelpdeskTab" in res_tab_js.text
 

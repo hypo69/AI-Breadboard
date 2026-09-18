@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Диагностика физических и логических дисков, файловой системы NTFS/ReFS,
-#   свободного места, статуса TRIM, BitLocker и обнаружение дисковых аномалий.
+#   свободного места, статуса VSS (Volume Shadow Storage) и точек восстановления.
 #
 # Examples:
 #   >>> from apps.windows.core.modules.storage_collector import StorageCollector
@@ -18,7 +18,7 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""Коллектор аудита дисковой подсистемы и файловых томов."""
+"""Коллектор аудита дисковой подсистемы, VSS и файловых томов."""
 
 from __future__ import annotations
 
@@ -29,13 +29,18 @@ import psutil
 
 from src.logger import logger
 from apps.windows.core.models import AuditFinding, DomainAuditResult, RiskLevel
+from apps.windows.core.system_restore import WindowsSystemRestoreManager
 
 
 class StorageCollector:
-    """Коллектор фактов о состоянии дисков и томов."""
+    """Коллектор фактов о состоянии дисков, томов и теневых хранилищ VSS."""
+
+    def __init__(self) -> None:
+        """Инициализация коллектора с менеджером System Restore & VSS."""
+        self._restore_mgr = WindowsSystemRestoreManager(timeout_seconds=10)
 
     def collect(self) -> DomainAuditResult:
-        """Сбор данных о дисках и свободном пространстве.
+        """Сбор данных о дисках, свободном пространстве и теневом хранилище VSS.
 
         Returns:
             DomainAuditResult: Результат аудита дисковой подсистемы.
@@ -75,9 +80,27 @@ class StorageCollector:
             except (PermissionError, OSError):
                 continue
 
+        # Проверка состояния теневого хранилища VSS и System Protection
+        vss_storage = self._restore_mgr.get_shadow_storage_info()
+        protection_status = self._restore_mgr.check_protection_status()
+
+        if vss_storage.get("at_risk_of_eviction", False):
+            findings.append(
+                AuditFinding(
+                    domain="storage",
+                    category="vss_storage_pressure",
+                    title="Переполнение хранилища теневых копий VSS",
+                    description=f"Хранилище теневых копий VSS заполнено на {vss_storage.get('usage_percent')}%, что создает риск вытеснения точек восстановления.",
+                    severity=RiskLevel.CAUTION,
+                    evidence=vss_storage,
+                )
+            )
+
         metrics: Dict[str, Any] = {
             "volumes_count": len(volumes),
             "volumes": volumes,
+            "vss_shadow_storage": vss_storage,
+            "system_protection": protection_status,
         }
 
         duration_ms = (time.perf_counter() - start_t) * 1000
@@ -89,7 +112,7 @@ class StorageCollector:
 
         return DomainAuditResult(
             domain_name="storage",
-            title_ru="Диски и файловая система",
+            title_ru="Диски, VSS и файловая система",
             status=status,
             findings=findings,
             metrics=metrics,

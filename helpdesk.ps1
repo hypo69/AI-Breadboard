@@ -300,9 +300,9 @@ function Open-HelpdeskBrowser {
         $edgeArgs = @(
             "--app=$Url",
             "--user-data-dir=`"$profileDir`"",
-            "--window-size=1280,850"
+            "--start-maximized"
         )
-        Start-Process -FilePath $edgeExe -ArgumentList ($edgeArgs -join " ")
+        Start-Process -FilePath $edgeExe -ArgumentList ($edgeArgs -join " ") -WindowStyle Maximized
     } else {
         Start-Process $Url
     }

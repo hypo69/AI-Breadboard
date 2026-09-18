@@ -1,0 +1,48 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE STYLES & SCROLLBARS — AI Breadboard WebGUI
+   Базовые стили страницы, скроллбары и контейнеры вкладок
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Базовый шрифт — 14px для компактного вида */
+html {
+  font-size: 14px;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-size: 0.9375rem; /* ≈ 13.125px */
+  line-height: 1.5;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   СКРОЛЛБАРЫ
+   ═══════════════════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: var(--scrollbar-track); border-radius: 3px; }
+::-webkit-scrollbar-thumb  { background: var(--scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { opacity: 0.8; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ВКЛАДКИ (TAB PANES)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.tab-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-pane {
+  min-height: auto;
+  overflow-y: visible;
+  overflow-x: hidden;
+  padding-bottom: 16px;
+}
+
+.tab-pane.active {
+  display: block;
+}

@@ -159,20 +159,30 @@ function Get-AppServerMode {
 }
 
 $appScripts = @(
-    @{ Name = "Windows System Administrator"; Folder = "windows_sysadmin";    File = "Run-WindowsAdmin.ps1";        Port = 8100; Key = "enable_windows_admin" },
-    @{ Name = "Network Analyzer Terminal";    Folder = "network_terminal";    File = "Run-NetworkTerminal.ps1";     Port = 8101; Key = "enable_network_terminal" },
-    @{ Name = "System Inspector";             Folder = "system_inspector";    File = "Run-SystemInspector.ps1";     Port = 8102; Key = "enable_system_inspector" },
-    @{ Name = "Exchange Trading Terminal";    Folder = "trading_terminal";    File = "Run-TradingTerminal.ps1";     Port = 8103; Key = "enable_trading_terminal" },
-    @{ Name = "Cloudflared Monitor";          Folder = "cloudflared_monitor"; File = "Run-CloudflaredMonitor.ps1"; Port = 8104; Key = "enable_cloudflared_monitor" },
-    @{ Name = "User Assistant";               Folder = "user_assistant";      File = "Run-UserAssistant.ps1";       Port = 8105; Key = "enable_user_assistant" },
-    @{ Name = "Google Cloud Monitor";         Folder = "gcloud_monitor";      File = "Run-GCloudMonitor.ps1";       Port = 8106; Key = "enable_gcloud_monitor" },
-    @{ Name = "Website Intelligence Monitor"; Folder = "website_monitor";     File = "Run-WebsiteMonitor.ps1";      Port = 8107; Key = "enable_website_monitor" },
-    @{ Name = "System Log Viewer";            Folder = "system_log_viewer";   File = "Run-SystemLogViewer.ps1";     Port = 8108; Key = "enable_system_log_viewer" },
-    @{ Name = "System Control Center";        Folder = "system_control_center"; File = "Run-SystemControlCenter.ps1"; Port = 8109; Key = "enable_system_control_center" },
-    @{ Name = "Wikipedia Research Lab";       Folder = "wikipedia_research";   File = "Run-WikipediaResearch.ps1";  Port = 8110; Key = "enable_wikipedia_research" },
-    @{ Name = "AI Breadboard Admin";          Folder = "ai_breadboard_admin";  File = "Run-Admin.ps1";              Port = 8110; Key = "enable_ai_breadboard_admin" },
-    @{ Name = "Research & Statistics";        Folder = "research_and_statistic"; File = "Run-ResearchStatistic.ps1"; Port = 8111; Key = "enable_research_and_statistic" },
-    @{ Name = "Helpdesk & Support";           Folder = "helpdesk";            File = "Run-Helpdesk.ps1";           Port = 8110; Key = "enable_helpdesk" }
+    @{ Name = "Windows System Administrator"; Folder = "windows_sysadmin";    File = "Run-WindowsAdmin.ps1";        Port = 8100; Key = "windows_sysadmin" },
+    @{ Name = "Network Analyzer Terminal";    Folder = "network_terminal";    File = "Run-NetworkTerminal.ps1";     Port = 8101; Key = "network_terminal" },
+    @{ Name = "System Inspector";             Folder = "system_inspector";    File = "Run-SystemInspector.ps1";     Port = 8102; Key = "system_inspector" },
+    @{ Name = "Exchange Trading Terminal";    Folder = "trading_terminal";    File = "Run-TradingTerminal.ps1";     Port = 8103; Key = "trading_terminal" },
+    @{ Name = "Cloudflared Monitor";          Folder = "cloudflared_monitor"; File = "Run-CloudflaredMonitor.ps1"; Port = 8104; Key = "cloudflared_monitor" },
+    @{ Name = "User Assistant";               Folder = "user_assistant";      File = "Run-UserAssistant.ps1";       Port = 8105; Key = "user_assistant" },
+    @{ Name = "Google Cloud Monitor";         Folder = "gcloud_monitor";      File = "Run-GCloudMonitor.ps1";       Port = 8106; Key = "gcloud_monitor" },
+    @{ Name = "Website Intelligence Monitor"; Folder = "website_monitor";     File = "Run-WebsiteMonitor.ps1";      Port = 8107; Key = "website_monitor" },
+    @{ Name = "System Control Center";        Folder = "system_control_center"; File = "Run-SystemControlCenter.ps1"; Port = 8109; Key = "system_control_center" },
+    @{ Name = "Wikipedia Research Lab";       Folder = "wikipedia_research";   File = "Run-WikipediaResearch.ps1";  Port = 8110; Key = "wikipedia_research" },
+    @{ Name = "AI Breadboard Admin";          Folder = "ai_breadboard_admin";  File = "Run-Admin.ps1";              Port = 8110; Key = "ai_breadboard_admin" },
+    @{ Name = "Research & Statistics";        Folder = "research_and_statistic"; File = "Run-ResearchStatistic.ps1"; Port = 8111; Key = "research_and_statistic" },
+    @{ Name = "Software Audit";               Folder = "software_audit";      File = "Run-SoftwareAudit.ps1";      Port = 8113; Key = "software_audit" },
+    @{ Name = "Registry Viewer";              Folder = "registry_viewer";     File = "Run-RegistryViewer.ps1";     Port = 8114; Key = "registry_viewer" },
+    @{ Name = "Windows Startup Auditor";      Folder = "windows_startup_auditor"; File = "Run-StartupAuditor.ps1"; Port = 8112; Key = "windows_startup_auditor" },
+    @{ Name = "Windows Defender Center";      Folder = "windows_defender";    File = "Run-Defender.ps1";           Port = 8113; Key = "windows_defender" },
+    @{ Name = "Windows Backup Manager";       Folder = "windows_backup_manager"; File = "Run-BackupManager.ps1";   Port = 8115; Key = "windows_backup_manager" },
+    @{ Name = "Hardware & Sensors Monitor";   Folder = "windows";             File = "Run-HardwareMonitor.ps1";    Port = 8116; Key = "hardware_monitor" },
+    @{ Name = "AIDA64 Diagnostic App";        Folder = "aida64";              File = "Run-Aida64.ps1";             Port = 8120; Key = "aida64" },
+    @{ Name = "HWiNFO Diagnostic App";        Folder = "hwinfo";              File = "Run-Hwinfo.ps1";             Port = 8121; Key = "hwinfo" },
+    @{ Name = "CPU-Z Processor App";          Folder = "cpuz";                File = "Run-Cpuz.ps1";               Port = 8122; Key = "cpuz" },
+    @{ Name = "GPU-Z Graphics App";           Folder = "gpuz";                File = "Run-Gpuz.ps1";               Port = 8123; Key = "gpuz" },
+    @{ Name = "smartmontools Storage App";    Folder = "smartmontools";       File = "Run-Smartmontools.ps1";      Port = 8124; Key = "smartmontools" },
+    @{ Name = "LibreHardwareMonitor App";     Folder = "librehardwaremonitor"; File = "Run-LHM.ps1";               Port = 8126; Key = "librehardwaremonitor" }
 )
 
 $isAppsArray = ($cfgObj -and $cfgObj.apps -and ($cfgObj.apps -is [System.Collections.IEnumerable]) -and ($cfgObj.apps -isnot [string]) -and ($cfgObj.apps.PSObject.Properties['enable_all'] -eq $null) -and ($cfgObj.apps.PSObject.Properties['enabled'] -eq $null))
@@ -216,18 +226,21 @@ foreach ($app in $appScripts) {
         $app.Folder.Replace('_viewer', '').ToLower(),
         $app.Folder.Replace('_viewer', 's').ToLower()
     )
-    if ($app.Folder -eq "windows_sysadmin") { $aliases += @("windows_admin", "windowsadmin", "sysadmin", "enable_windows_admin", "enable_windows_sysadmin", "tab-windows-admin") }
-    if ($app.Folder -eq "system_control_center") { $aliases += @("system_control", "control_center", "enable_system_control_center", "tab-system-control") }
-    if ($app.Folder -eq "system_log_viewer") { $aliases += @("system_logs", "system_log", "log_viewer", "logs_viewer", "enable_system_log_viewer", "tab-system-logs") }
-    if ($app.Folder -eq "trading_terminal") { $aliases += @("trading", "enable_trading_terminal", "tab-trading") }
-    if ($app.Folder -eq "network_terminal") { $aliases += @("network", "enable_network_terminal", "tab-network-terminal") }
-    if ($app.Folder -eq "system_inspector") { $aliases += @("inspector", "enable_system_inspector", "tab-system-inspector") }
-    if ($app.Folder -eq "cloudflared_monitor") { $aliases += @("cloudflared", "enable_cloudflared_monitor", "tab-cloudflared") }
-    if ($app.Folder -eq "gcloud_monitor") { $aliases += @("gcloud", "google_cloud", "enable_gcloud_monitor", "tab-gcloud") }
-    if ($app.Folder -eq "website_monitor") { $aliases += @("website", "website_intelligence", "enable_website_monitor", "tab-website-monitor") }
-    if ($app.Folder -eq "user_assistant") { $aliases += @("assistant", "userassistant", "enable_user_assistant", "tab-user-assistant") }
-    if ($app.Folder -eq "helpdesk") { $aliases += @("enable_helpdesk", "tab-helpdesk") }
-    if ($app.Folder -eq "wikipedia_research") { $aliases += @("wikipedia", "wiki_lab", "enable_wikipedia_research", "tab-wikipedia-research") }
+    if ($app.Folder -eq "windows_sysadmin") { $aliases += @("windows_admin", "windowsadmin", "sysadmin", "tab-windows-admin") }
+    if ($app.Folder -eq "system_control_center") { $aliases += @("system_control", "control_center", "tab-system-control") }
+    if ($app.Folder -eq "trading_terminal") { $aliases += @("trading", "tab-trading") }
+    if ($app.Folder -eq "network_terminal") { $aliases += @("network", "tab-network-terminal") }
+    if ($app.Folder -eq "system_inspector") { $aliases += @("inspector", "tab-system-inspector") }
+    if ($app.Folder -eq "cloudflared_monitor") { $aliases += @("cloudflared", "tab-cloudflared") }
+    if ($app.Folder -eq "gcloud_monitor") { $aliases += @("gcloud", "google_cloud", "tab-gcloud") }
+    if ($app.Folder -eq "website_monitor") { $aliases += @("website", "website_intelligence", "tab-website-monitor") }
+    if ($app.Folder -eq "user_assistant") { $aliases += @("assistant", "userassistant", "tab-user-assistant") }
+    if ($app.Folder -eq "wikipedia_research") { $aliases += @("wikipedia", "wiki_lab", "tab-wikipedia-research") }
+    if ($app.Folder -eq "software_audit") { $aliases += @("software", "audit_software", "installed_software", "tab-software-audit") }
+    if ($app.Folder -eq "registry_viewer") { $aliases += @("registry", "regedit", "reg_viewer", "tab-registry-viewer") }
+    if ($app.Folder -eq "windows_startup_auditor") { $aliases += @("startup_auditor", "startup", "autoruns", "tab-startup-auditor") }
+    if ($app.Folder -eq "windows_backup_manager") { $aliases += @("backup_manager", "windows_backup", "backup", "tab-windows-backup") }
+    if ($app.Key -eq "hardware_monitor") { $aliases += @("hardware", "sensors", "hw_monitor", "tab-hardware-monitor") }
 
     $isExplicitlyDisabled = $false
     foreach ($al in $aliases) {

@@ -47,6 +47,14 @@ The web interface is organized as a modular frontend built with modern ES Module
 - Speech synthesis playground across Edge-TTS and Silero neural voices
 - Rate, pitch, and SSML tuning
 
+### 5. `/tc` — Test Computer Interface
+**Path:** `src/fastapi/webinterface/` / `apps/` (Launcher: `tc.ps1`, Config: `config_tc.json`)  
+**Features:**
+- Сценарий **Test Computer (tc)**
+- Запуск и тестирование блока приложений и микросервисов (`/apps`)
+- Автономный запуск через лончер `tc.ps1`
+
+
 ---
 
 ## 📁 Webinterface Layout

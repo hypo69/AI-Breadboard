@@ -71,10 +71,15 @@ class SecurityCollector:
                 )
             )
 
-        # 2. Проверка статуса Microsoft Defender
-        defender_status = self._get_defender_status()
-        metrics["defender"] = defender_status
-        if defender_status.get("realtime_protection") is False:
+        # 2. Комплексный аудит Microsoft Defender Antivirus
+        from apps.windows.core.defender_manager import DefenderManager
+        defender_mgr = DefenderManager()
+        defender_status = defender_mgr.get_detailed_status()
+        defender_prefs = defender_mgr.get_preferences()
+        metrics["defender"] = {**defender_status, **defender_prefs}
+
+        # Проверка: Real-Time Protection
+        if not defender_status.get("realtime_protection", False):
             findings.append(
                 AuditFinding(
                     domain="security",
@@ -83,6 +88,100 @@ class SecurityCollector:
                     description="Real-Time Protection выключена, что подвергает систему риску заражения вредоносным ПО.",
                     severity=RiskLevel.CRITICAL,
                     evidence=defender_status,
+                    actions=[
+                        RemediationAction(
+                            action_id="enable_defender_realtime",
+                            action_type=ActionType.APPLY_CONFIG,
+                            title="Включить Real-Time Protection Defender",
+                            description="Включение защиты файловой системы и процессов в реальном времени",
+                            target="Microsoft Defender",
+                            risk=RiskLevel.SAFE,
+                            execution_command="Set-MpPreference -DisableRealtimeMonitoring $false",
+                        )
+                    ],
+                )
+            )
+
+        # Проверка: Cloud Protection
+        if not defender_status.get("cloud_protection_enabled", False):
+            findings.append(
+                AuditFinding(
+                    domain="security",
+                    category="cloud_protection",
+                    title="Облачная защита Defender (MAPS) отключена",
+                    description="Cloud-delivered protection отключена. Система не получает оперативную информацию о новейших угрозах от Microsoft Threat Intelligence.",
+                    severity=RiskLevel.CAUTION,
+                    actions=[
+                        RemediationAction(
+                            action_id="enable_defender_cloud",
+                            action_type=ActionType.APPLY_CONFIG,
+                            title="Включить Cloud Protection (MAPS Advanced)",
+                            description="Включение расширенной облачной защиты Microsoft Defender",
+                            target="Microsoft Defender",
+                            risk=RiskLevel.SAFE,
+                            execution_command="Set-MpPreference -MAPSReporting Advanced",
+                        )
+                    ],
+                )
+            )
+
+        # Проверка: Потенциально опасные исключения
+        suspicious_ex = defender_prefs.get("exclusions", {}).get("suspicious_paths", [])
+        if suspicious_ex:
+            findings.append(
+                AuditFinding(
+                    domain="security",
+                    category="exclusions_risk",
+                    title=f"Обнаружены рискованные исключения Defender ({len(suspicious_ex)})",
+                    description=f"В исключения добавлены критические или глобальные пути: {', '.join(suspicious_ex[:3])}. Вредоносный код в этих каталогах не проверяется.",
+                    severity=RiskLevel.CRITICAL if any("C:" in p for p in suspicious_ex) else RiskLevel.CAUTION,
+                    evidence={"suspicious_exclusions": suspicious_ex},
+                )
+            )
+
+        # Проверка: Защита от программ-вымогателей (Controlled Folder Access)
+        if defender_status.get("controlled_folder_access") == "disabled":
+            findings.append(
+                AuditFinding(
+                    domain="security",
+                    category="ransomware_protection",
+                    title="Controlled Folder Access (Защита от Ransomware) отключена",
+                    description="Защита пользовательских папок (Документы, Рабочий стол) от шифровальщиков и несанкционированного изменения выключена.",
+                    severity=RiskLevel.INFO,
+                    actions=[
+                        RemediationAction(
+                            action_id="enable_defender_cfa_audit",
+                            action_type=ActionType.APPLY_CONFIG,
+                            title="Включить Controlled Folder Access в режиме аудита",
+                            description="Включение CFA в режиме AuditMode для безопасной оценки без блокировок",
+                            target="Microsoft Defender",
+                            risk=RiskLevel.SAFE,
+                            execution_command="Set-MpPreference -EnableControlledFolderAccess AuditMode",
+                        )
+                    ],
+                )
+            )
+
+        # Проверка: PUA Protection
+        if defender_prefs.get("pua_protection") == "disabled":
+            findings.append(
+                AuditFinding(
+                    domain="security",
+                    category="pua_protection",
+                    title="Защита от нежелательного ПО (PUA) отключена",
+                    description="Defender не блокирует установку сомнительных рекламных модулей, трекеров и bundle-приложений.",
+                    severity=RiskLevel.INFO,
+                    actions=[
+                        RemediationAction(
+                            action_id="enable_defender_pua",
+                            action_type=ActionType.APPLY_CONFIG,
+                            title="Включить защиту от PUA",
+                            description="Включение блокировки Potentially Unwanted Applications",
+                            target="Microsoft Defender",
+                            risk=RiskLevel.SAFE,
+                            execution_command="Set-MpPreference -PUAProtection Enabled",
+                        )
+                    ],
                 )
             )
 

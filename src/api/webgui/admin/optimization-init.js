@@ -146,7 +146,7 @@ export async function initLazyTabLoading(tabDefinitions) {
   };
 
   // Определяем стартовые вкладки (которые грузим сразу)
-  const priorityTabs = ['chat', 'admin', 'users'];
+  const priorityTabs = ['about-system', 'chat', 'admin', 'users'];
   const restTabs = tabDefinitions
     .map(def => def.tabName)
     .filter(name => !priorityTabs.includes(name));

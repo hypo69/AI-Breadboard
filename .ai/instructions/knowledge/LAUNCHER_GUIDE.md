@@ -46,7 +46,7 @@
 | Лончер | Сервис | Что запускает | Parameters |
 |--------|--------|--------------|-----------|
 | `run.ps1` | Всё (Интерактивный) | FastAPI + Foundry + Ollama + Бот + Сервисы | `-Host 0.0.0.0\|127.0.0.1`, `-Port 8000`, `-NonInteractive`, `-Cloudflared` |
-| `tc.ps1` | Блок приложений (`/apps`) | Только микросервисы и веб-интерфейс `/apps` (по `config_tc.json`) | `-Action start\|stop\|restart\|status`, `-ConfigFile <file.json>`, `-NewWindow`, `-Background`, `-NoBrowser` |
+| `tc.ps1` | Test Computer (`/tc`, `/apps`) | Сценарий Test Computer: запуск блока приложений и веб-интерфейса `/tc` (по `config_tc.json`) | `-Action start\|stop\|restart\|status`, `-ConfigFile <file.json>`, `-NewWindow`, `-Background`, `-NoBrowser`, `-EnableTray`, `-DisableCloseButton` |
 | `run_terminals.ps1` | Мульти-терминалы | Единое окно терминалов (wt.exe split/tabs) | `-Preset breadboard\|trading\|network\|custom`, `-Layout grid\|tabs\|windows`, `-Interactive` |
 | `launchers/Run-Apps.ps1` | Оркестратор `/apps` | Запуск приложений по `config_tc.json` или `config.json` | `-Action start\|stop\|restart\|status`, `-ConfigFile <file.json>`, `-NewWindow` |
 | `launchers/Run-Unicorn.ps1` | FastAPI | `uvicorn main:app` на порту из `config.json` | `-Host 0.0.0.0\|127.0.0.1`, `-Port 8000`, `-OpenUrl <url>` |

@@ -1,0 +1,102 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   TORRENTS & MEDIA — AI Breadboard WebGUI
+   Стили управления торрентами, поиска релизов и логов медиатеки
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Таблица и статусы торрентов ─────────────────────────────────────────── */
+#torrents-table th[data-col] {
+  cursor: pointer;
+  user-select: none;
+}
+
+.state-missingFiles { color: #dc3545; font-weight: 600; }
+.state-uploading,
+.state-seeding      { color: #16a34a; }
+.state-downloading  { color: #2563eb; }
+.state-checkingUP,
+.state-checkingDL   { color: #ea580c; }
+
+.progress           { height: 5px; }
+.path-cell          { font-size: 0.78rem; color: var(--text-muted); }
+.path-edit          { display: none; }
+.path-edit.active   { display: flex; }
+
+/* ── Панель отсутствующих файлов ──────────────────────────────────────────── */
+#missing-panel        { border-left: 2px solid #dc3545; }
+.missing-row          { cursor: pointer; }
+.missing-row:hover    { background: rgba(255, 200, 0, 0.08); }
+.missing-row.selected { background: rgba(37, 99, 235, 0.1); }
+
+/* ── Лог медиатеки ────────────────────────────────────────────────────────── */
+#media-log {
+  font-size: 0.78rem;
+  font-family: 'Consolas', monospace;
+  background: #0d1117;
+  color: #d4d4d4;
+  border-radius: 5px;
+  padding: 8px;
+  height: 160px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+.dup-badge       { font-size: 0.72rem; }
+.integrity-ok    { color: #16a34a; }
+.integrity-warn  { color: #dc3545; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ТОРРЕНТ-ПОИСК
+   ═══════════════════════════════════════════════════════════════════════════ */
+.torrent-card {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--surface-1);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow-xs);
+  transition: transform 0.15s, box-shadow 0.15s;
+  color: var(--card-text);
+}
+
+.torrent-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.torrent-badge {
+  display: inline-block;
+  padding: 0.2em 0.5em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: 50rem;
+  margin-right: 3px;
+  margin-bottom: 3px;
+}
+
+.badge-rutracker { background-color: #6e7a8a; color: #fff; }
+.badge-nnmclub   { background-color: #16a34a; color: #fff; }
+.badge-seeds     { background-color: #22c55e; color: #fff; }
+.badge-peers     { background-color: #6b7280; color: #fff; }
+.badge-size      { background-color: #2563eb; color: #fff; }
+
+.torrent-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text-color);
+}
+
+.torrent-title a {
+  color: var(--nav-active);
+  text-decoration: none;
+}
+
+.torrent-title a:hover {
+  text-decoration: underline;
+}
+
+.torrent-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}

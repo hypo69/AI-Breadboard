@@ -13,3 +13,4 @@
 - [Network Diagnostics](network_diagnostics.md)
 - [Process Explorer](process_explorer.md)
 - [Realtime Monitor](realtime_monitor.md)
+- [Сценарии тестирования и автогенератор навыков (Scenarios)](scenarios.md)

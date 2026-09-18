@@ -135,13 +135,13 @@ export async function loadRagDocuments() {
       return;
     }
 
-    tbody.innerHTML = docs.map(d => {
+    tbody.innerHTML = docs.map((d, idx) => {
       const statusBadge = d.status === 'indexed'
         ? '<span class="badge bg-success">Индексирован</span>'
         : (d.status === 'error' ? '<span class="badge bg-danger">Ошибка</span>' : '<span class="badge bg-warning text-dark">Ожидание</span>');
 
       return `
-        <tr>
+        <tr class="rag-doc-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для AI-анализа документа RAG">
           <td class="ps-3 text-truncate" style="max-width: 200px;" title="${escapeHtml(d.name)}">
             <i class="bi bi-file-earmark-code me-1 text-primary"></i> ${escapeHtml(d.name)}
           </td>
@@ -149,13 +149,59 @@ export async function loadRagDocuments() {
           <td><span class="badge bg-secondary-subtle text-secondary">${d.chunks_count || 0}</span></td>
           <td>${statusBadge}</td>
           <td class="text-end pe-3">
-            <button class="btn btn-outline-danger btn-sm p-1 py-0" onclick="window.deleteRagDocument('${escapeHtml(d.name)}')" title="Удалить">
+            <button class="btn btn-outline-danger btn-sm p-1 py-0 btn-del-rag-doc" data-name="${escapeHtml(d.name)}" title="Удалить">
               <i class="bi bi-trash"></i>
             </button>
           </td>
         </tr>
       `;
     }).join('');
+
+    tbody.querySelectorAll('.rag-doc-row').forEach(row => {
+      row.onclick = (evt) => {
+        if (evt.target.closest('.btn-del-rag-doc')) return;
+        const idx = parseInt(row.getAttribute('data-idx'), 10);
+        const d = docs[idx];
+        if (!d) return;
+
+        if (window.AITableModal) {
+          window.AITableModal.show({
+            icon: '🧠',
+            title: d.name,
+            subtitle: `Размер: ${formatBytes(d.size_bytes)} | Чанков: ${d.chunks_count || 0}`,
+            tableType: 'rag_doc',
+            badges: [
+              { text: d.status || 'Indexed', class: d.status === 'indexed' ? 'badge bg-success' : 'badge bg-secondary' },
+              { text: `${d.chunks_count || 0} chunks`, class: 'badge bg-info text-dark' }
+            ],
+            metadata: [
+              { label: 'Имя документа', value: d.name },
+              { label: 'Статус индексации', value: d.status || 'Indexed' },
+              { label: 'Количество чанков', value: String(d.chunks_count || 0) },
+              { label: 'Размер файла', value: formatBytes(d.size_bytes) },
+              { label: 'Дата индексации', value: d.updated_at || d.created_at || 'N/A' },
+              { label: 'Путь источника', value: d.source_path || d.name, isCode: true, fullWidth: true }
+            ],
+            rawTitle: 'Метаданные документа',
+            rawContent: JSON.stringify(d, null, 2),
+            requestData: {
+              name: d.name,
+              chunks_count: d.chunks_count,
+              size: formatBytes(d.size_bytes),
+              status: d.status
+            }
+          });
+        }
+      };
+    });
+
+    tbody.querySelectorAll('.btn-del-rag-doc').forEach(btn => {
+      btn.onclick = (evt) => {
+        evt.stopPropagation();
+        const docName = btn.getAttribute('data-name');
+        deleteRagDocument(docName);
+      };
+    });
   } catch (err) {
     console.error('[RAG] Error loading documents:', err);
   }

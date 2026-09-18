@@ -5,6 +5,7 @@
 # Description:
 #   Аудит задач Планировщика заданий Windows (Task Scheduler), обнаружение
 #   сломанных задач, подозрительных скрытых скриптов PowerShell и неактивных триггеров.
+#   Использует многоуровневый каскад: Task Scheduler 2.0 COM API -> PowerShell Fallback.
 #
 # Examples:
 #   >>> from apps.windows.core.modules.tasks_collector import TasksCollector
@@ -28,11 +29,16 @@ import time
 from typing import Any, Dict, List
 
 from src.logger import logger
+from apps.windows.api.tasksched import TaskSchedulerAPI
 from apps.windows.core.models import ActionType, AuditFinding, DomainAuditResult, RemediationAction, RiskLevel
 
 
 class TasksCollector:
-    """Коллектор фактов о задачах планировщика Windows."""
+    """Коллектор фактов о задачах планировщика Windows с поддержкой COM API."""
+
+    def __init__(self) -> None:
+        """Инициализация коллектора с поддержкой COM API."""
+        self._com_api = TaskSchedulerAPI()
 
     def collect(self) -> DomainAuditResult:
         """Сбор данных о задачах планировщика.
@@ -48,7 +54,8 @@ class TasksCollector:
         for t in tasks:
             action_str = str(t.get("Actions", "") or t.get("TaskPath", ""))
             task_name = t.get("TaskName", "Unknown")
-            if "-encodedcommand" in action_str.lower() or "-enc " in action_str.lower() or "-windowstyle hidden" in action_str.lower():
+            action_lower = action_str.lower()
+            if "-encodedcommand" in action_lower or "-enc " in action_lower or "-windowstyle hidden" in action_lower:
                 suspicious_tasks.append(t)
                 findings.append(
                     AuditFinding(
@@ -75,6 +82,7 @@ class TasksCollector:
         metrics: Dict[str, Any] = {
             "total_tasks_count": len(tasks),
             "suspicious_tasks_count": len(suspicious_tasks),
+            "engine": "Task Scheduler 2.0 COM API" if self._com_api.is_available else "PowerShell Fallback",
         }
 
         duration_ms = (time.perf_counter() - start_t) * 1000
@@ -88,7 +96,17 @@ class TasksCollector:
         )
 
     def _get_scheduled_tasks(self) -> List[Dict[str, Any]]:
-        """Получение задач планировщика через PowerShell Get-ScheduledTask."""
+        """Получение задач планировщика через каскад: COM API -> PowerShell."""
+        # 1. Попытка высокоскоростного сбора через COM API (Tier 2)
+        if self._com_api.is_available:
+            try:
+                tasks = self._com_api.get_all_tasks(max_tasks=500)
+                if tasks:
+                    return tasks
+            except Exception as ex:
+                logger.debug(f"Сбой COM сбора задач, fallback на PowerShell: {ex}")
+
+        # 2. Fallback на PowerShell (Tier 4)
         cmd = [
             "powershell",
             "-NoProfile",
