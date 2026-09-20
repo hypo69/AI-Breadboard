@@ -38,10 +38,13 @@ from apps.website_monitor.src.gsc_service import GSCService
 from apps.website_monitor.src.normalizer import MetricsNormalizer
 from apps.website_monitor.src.technical_service import TechnicalService
 from src.logger import logger
+from apps.common.csv_logger import AppCsvLogger
 
 router = APIRouter(prefix="/api/v1/website-monitor", tags=["Website Intelligence Monitor"])
+_csv_logger = AppCsvLogger("website_monitor")
 
 # Singleton services
+
 auth_manager = WebsiteMonitorAuthManager()
 ga4_service = GA4Service(auth_mgr=auth_manager)
 gsc_service = GSCService(auth_mgr=auth_manager)
@@ -60,7 +63,7 @@ def init_router() -> APIRouter:
 async def get_status() -> Dict[str, Any]:
     """Get current connection and authentication status."""
     status = auth_manager.get_status()
-    return {
+    res = {
         "authenticated": status.authenticated,
         "auth_type": status.auth_type,
         "property_id": status.property_id,
@@ -69,12 +72,32 @@ async def get_status() -> Dict[str, Any]:
         "is_mock": status.is_mock,
         "details": status.details,
     }
+    _csv_logger.log_poll(
+        poll_type="auth_status",
+        metric_name="authenticated",
+        value=status.authenticated,
+        unit="bool",
+        status="AUTHENTICATED" if status.authenticated else "UNAUTHENTICATED",
+        details={"site_url": status.site_url, "property_id": status.property_id},
+        filename="website_monitor_polls.csv",
+    )
+    return res
 
 
 @router.get("/realtime")
 async def get_realtime() -> Dict[str, Any]:
     """Get current active visitors, locations, and pages in realtime (last 30m)."""
-    return ga4_service.get_realtime_data().to_dict()
+    data = ga4_service.get_realtime_data().to_dict()
+    _csv_logger.log_poll(
+        poll_type="realtime_visitors",
+        metric_name="active_users_last_30m",
+        value=data.get("active_users", 0),
+        unit="users",
+        status="OK",
+        details={"top_pages": data.get("top_pages", [])[:3]},
+        filename="website_monitor_polls.csv",
+    )
+    return data
 
 
 @router.get("/summary")
@@ -118,6 +141,13 @@ async def get_active_alerts() -> List[Dict[str, Any]]:
     """Get active anomaly alerts across traffic, conversion, and technical layers."""
     report = normalizer.build_unified_report()
     alerts = anomaly_detector.detect_anomalies(report)
+    if alerts:
+        _csv_logger.log_event(
+            event_type="anomalies_detected",
+            status="ALERT",
+            details={"count": len(alerts), "titles": [a.title for a in alerts]},
+            filename="website_monitor_anomalies.csv",
+        )
     return [a.to_dict() for a in alerts]
 
 
@@ -125,4 +155,14 @@ async def get_active_alerts() -> List[Dict[str, Any]]:
 async def get_ai_diagnostic() -> Dict[str, Any]:
     """Get AI root-cause diagnosis, health score, and recommended actions."""
     assessment = diagnostics_engine.evaluate_site_health()
+    _csv_logger.log_poll(
+        poll_type="site_health_diagnostic",
+        metric_name="health_score",
+        value=getattr(assessment, "health_score", 100),
+        unit="score",
+        status=getattr(assessment, "status", "OK"),
+        details={"summary": getattr(assessment, "summary", "")},
+        filename="website_monitor_polls.csv",
+    )
     return assessment.to_dict()
+

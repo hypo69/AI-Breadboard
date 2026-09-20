@@ -37,10 +37,13 @@ from apps.gcloud_monitor.src.error_reporting import GCloudErrorReporter
 from apps.gcloud_monitor.src.logging_service import GCloudLoggingService
 from apps.gcloud_monitor.src.metrics_service import GCloudMetricsService
 from src.logger import logger
+from apps.common.csv_logger import AppCsvLogger
 
 router = APIRouter(prefix='/api/gcloud', tags=['Google Cloud Monitor'])
+_csv_logger = AppCsvLogger('gcloud_monitor')
 
 # Initialize singleton services
+
 auth_manager = GCloudAuthManager()
 logging_service = GCloudLoggingService(auth_mgr=auth_manager)
 metrics_service = GCloudMetricsService(auth_mgr=auth_manager)
@@ -70,7 +73,7 @@ class LogQueryRequest(BaseModel):
 async def get_gcloud_status() -> Dict[str, Any]:
     """Get current GCP authentication and connectivity status."""
     status = auth_manager.get_status()
-    return {
+    res = {
         'authenticated': status.authenticated,
         'auth_type': status.auth_type,
         'project_id': status.project_id,
@@ -78,6 +81,16 @@ async def get_gcloud_status() -> Dict[str, Any]:
         'is_mock': status.is_mock,
         'details': status.details,
     }
+    _csv_logger.log_poll(
+        poll_type="auth_status",
+        metric_name="authenticated",
+        value=status.authenticated,
+        unit="bool",
+        status="AUTHENTICATED" if status.authenticated else "UNAUTHENTICATED",
+        details={"project_id": status.project_id, "auth_type": status.auth_type},
+        filename="gcloud_status_polls.csv",
+    )
+    return res
 
 
 @router.get('/logs')
@@ -103,7 +116,17 @@ async def post_query_logs(req: LogQueryRequest) -> List[Dict[str, Any]]:
 async def get_metrics() -> Dict[str, Any]:
     """Get real-time Cloud Monitoring metrics dashboard."""
     summary = metrics_service.get_metrics_summary()
-    return summary.to_dict()
+    res = summary.to_dict()
+    _csv_logger.log_poll(
+        poll_type="metrics_summary",
+        metric_name="metrics_total",
+        value=len(res.get("series", [])),
+        unit="count",
+        status="OK",
+        details={"metrics": list(res.keys())},
+        filename="gcloud_metric_polls.csv",
+    )
+    return res
 
 
 @router.get('/audit')
@@ -135,4 +158,11 @@ async def get_incidents() -> List[Dict[str, Any]]:
 async def get_diagnostic() -> Dict[str, Any]:
     """Run comprehensive AI diagnostics and health assessment."""
     assessment = diagnostics_engine.evaluate_health()
+    _csv_logger.log_event(
+        event_type="diagnostics_assessment",
+        status=getattr(assessment, "status", "OK"),
+        details={"score": getattr(assessment, "health_score", 100)},
+        filename="gcloud_status_polls.csv",
+    )
     return assessment.to_dict()
+

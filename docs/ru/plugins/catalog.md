@@ -19,6 +19,7 @@ graph LR
     
     Social --> P1["telegram_bot (Бот, Voice TTS)"]
     Social --> P2["facebook (Graph API, Постинг)"]
+    Social --> P14["whatsapp (Meta Cloud API, Сообщения)"]
     
     RAG --> P3["rag_cleaner (Очистка PDF/DOCX)"]
     RAG --> P4["generate_rag_from_codebase (AST-индексатор)"]
@@ -193,3 +194,18 @@ graph LR
 - **Ключевые действия (Actions):**
   - `scan_user_files` — сканирование персонального каталога.
   - `recalculate_quotas` — пересчет лимитов использования диска.
+
+---
+
+## 14. `whatsapp` (Интеграция с WhatsApp Messenger)
+
+- **Путь:** `plugins/user-plugins/whatsapp/`
+- **Категория:** `communication`
+- **Назначение:** Отправка текстовых сообщений, мгновенных уведомлений и автоматическая пересылка дайджестов входящих писем в чаты WhatsApp.
+- **Поддерживаемые протоколы:** Meta WhatsApp Cloud API (Graph API), Green API, Generic Webhooks.
+- **Ключевые действия (Actions):**
+  - `send_message` — отправка текстового сообщения на указанный номер в международном формате.
+  - `send_email_alert` — форматирование и отправка структурированного дайджеста о входящем письме.
+  - `test_connection` — проверка валидности токенов и доступности WhatsApp API.
+- **Инструменты агентов:** `whatsapp_send_message`, `whatsapp_test_connection`.
+

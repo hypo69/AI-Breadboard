@@ -20,8 +20,10 @@ from pydantic import BaseModel, Field
 
 from apps.user_assistant.engine import UserAssistantEngine
 from src.logger import logger
+from apps.common.csv_logger import AppCsvLogger
 
 router = APIRouter(prefix="/api/v1/assistant", tags=["User Assistant"])
+csv_logger = AppCsvLogger("user_assistant")
 
 
 class DraftRequest(BaseModel):
@@ -50,7 +52,17 @@ def _get_engine(request: Request) -> UserAssistantEngine:
 async def get_agenda(request: Request) -> Dict[str, Any]:
     """Retrieve daily agenda overview (events, unread emails, recent files)."""
     engine = _get_engine(request)
-    return engine.get_daily_agenda()
+    agenda = engine.get_daily_agenda()
+    csv_logger.log_poll(
+        poll_type="agenda",
+        metric_name="agenda_events_count",
+        value=len(agenda.get("events", [])),
+        unit="count",
+        status="ok",
+        details=f"unread_mail={len(agenda.get('unread_emails', []))}",
+        filename="user_assistant_polls.csv",
+    )
+    return agenda
 
 
 @router.get("/mail")
@@ -62,6 +74,15 @@ async def list_mail(
     """Search and retrieve user email messages."""
     engine = _get_engine(request)
     messages = engine.mail.list_messages(query=query, max_results=limit)
+    csv_logger.log_poll(
+        poll_type="mail",
+        metric_name="messages_count",
+        value=len(messages),
+        unit="count",
+        status="ok",
+        details=f"query={query},limit={limit}",
+        filename="user_assistant_polls.csv",
+    )
     return {"status": "ok", "count": len(messages), "messages": messages}
 
 
@@ -70,6 +91,12 @@ async def create_mail_draft(request: Request, body: DraftRequest) -> Dict[str, A
     """Create a new email draft."""
     engine = _get_engine(request)
     res = engine.mail.create_draft(to=body.to, subject=body.subject, body=body.body)
+    csv_logger.log_event(
+        event_type="mail_draft_created",
+        status="success" if res.get("status") == "ok" else "error",
+        details=f"to={body.to},subject={body.subject}",
+        filename="user_assistant_events.csv",
+    )
     return res
 
 
@@ -81,6 +108,15 @@ async def list_calendar_events(
     """List upcoming calendar events."""
     engine = _get_engine(request)
     events = engine.calendar.list_upcoming_events(days_ahead=days)
+    csv_logger.log_poll(
+        poll_type="calendar",
+        metric_name="upcoming_events_count",
+        value=len(events),
+        unit="count",
+        status="ok",
+        details=f"days_ahead={days}",
+        filename="user_assistant_polls.csv",
+    )
     return {"status": "ok", "count": len(events), "events": events}
 
 
@@ -95,6 +131,12 @@ async def create_calendar_event(request: Request, body: EventCreateRequest) -> D
         description=body.description or "",
         location=body.location or "",
     )
+    csv_logger.log_event(
+        event_type="calendar_event_created",
+        status="success" if res.get("status") == "ok" else "error",
+        details=f"summary={body.summary},start={body.start_time}",
+        filename="user_assistant_events.csv",
+    )
     return res
 
 
@@ -106,6 +148,15 @@ async def list_documents(
     """List user personal document files."""
     engine = _get_engine(request)
     files = engine.docs.list_user_files(subfolder=subfolder)
+    csv_logger.log_poll(
+        poll_type="documents",
+        metric_name="files_count",
+        value=len(files),
+        unit="count",
+        status="ok",
+        details=f"subfolder={subfolder}",
+        filename="user_assistant_polls.csv",
+    )
     return {"status": "ok", "count": len(files), "files": files}
 
 

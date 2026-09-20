@@ -113,6 +113,33 @@ class DirectoryWatcher:
         logger.info(f"DirectoryWatcher запущен для: {self.watch_dir}")
         return True
 
+    def set_watch_dir(self, new_dir: str) -> bool:
+        """Сменить отслеживаемую директорию и перезапустить наблюдение.
+
+        Args:
+            new_dir: Новый путь к папке.
+
+        Returns:
+            bool: True если каталог существует и мониторинг успешно переключён.
+        """
+        if not self.is_windows:
+            logger.warning("DirectoryWatcher поддерживается только на Windows")
+            return False
+
+        if not os.path.exists(new_dir) or not os.path.isdir(new_dir):
+            logger.warning(f"Каталог для мониторинга не существует или не является папкой: {new_dir}")
+            return False
+
+        self.stop()
+        if self._thread and self._thread.is_alive():
+            self._thread.join(timeout=1.0)
+
+        with self._lock:
+            self.watch_dir = str(Path(new_dir).resolve())
+            self.events_history.clear()
+
+        return self.start()
+
     def stop(self) -> None:
         """Остановить мониторинг."""
         self._is_running = False

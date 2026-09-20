@@ -38,11 +38,13 @@ from apps.software_transparency_scanner.core.models import (
 )
 from apps.software_transparency_scanner.core.network_tracker import NetworkTracker
 from apps.software_transparency_scanner.core.storage_analyzer import StorageAnalyzer
+from apps.common.csv_logger import AppCsvLogger
 
 
 def init_router(chat_provider: Optional[Any] = None) -> APIRouter:
     """Инициализация FastAPI роутера сканера прозрачности ПО."""
     router = APIRouter(prefix="/api/v1/software-scanner", tags=["AI Software Transparency Scanner"])
+    csv_logger = AppCsvLogger("software_transparency_scanner")
 
     inventory = SoftwareInventory()
     storage_analyzer = StorageAnalyzer()
@@ -57,6 +59,15 @@ def init_router(chat_provider: Optional[Any] = None) -> APIRouter:
     @router.get("/status")
     async def get_status() -> Dict[str, Any]:
         """Возвращает статус доступности сканера прозрачности."""
+        csv_logger.log_poll(
+            poll_type="status",
+            metric_name="cached_apps_count",
+            value=len(_cache),
+            unit="count",
+            status="online",
+            details="service_status_check",
+            filename="software_transparency_polls.csv",
+        )
         return {
             "status": "online",
             "service": "AI Software Transparency Scanner",
@@ -106,6 +117,12 @@ def init_router(chat_provider: Optional[Any] = None) -> APIRouter:
                 scan_duration_sec=dur,
                 last_scan_time=time.strftime("%Y-%m-%dT%H:%M:%S"),
             )
+            csv_logger.log_event(
+                event_type="full_scan_completed",
+                status="success",
+                details=f"apps={len(_cache)},configs={total_configs},domains={total_domains},storage_mb={round(total_bytes/(1024*1024),2)},duration_s={dur}",
+                filename="software_transparency_scans.csv",
+            )
 
         return FullScanReport(
             summary=_last_summary or ScanSummary(total_apps=len(_cache)),
@@ -149,6 +166,12 @@ def init_router(chat_provider: Optional[Any] = None) -> APIRouter:
                     break
 
         if not target_app:
+            csv_logger.log_event(
+                event_type="app_research_failed",
+                status="not_found",
+                details=f"app_id={req.app_id}",
+                filename="software_transparency_scans.csv",
+            )
             raise HTTPException(status_code=404, detail=f"Программа '{req.app_id}' не найдена для исследования")
 
         if target_app.ai_research and not req.force_refresh:
@@ -156,6 +179,12 @@ def init_router(chat_provider: Optional[Any] = None) -> APIRouter:
 
         research_res = await researcher.research_software(target_app)
         target_app.ai_research = research_res
+        csv_logger.log_event(
+            event_type="app_research_completed",
+            status="success",
+            details=f"app_id={req.app_id},app_name={target_app.name},risk={getattr(research_res, 'risk_score', 'N/A')}",
+            filename="software_transparency_scans.csv",
+        )
         return research_res
 
     return router

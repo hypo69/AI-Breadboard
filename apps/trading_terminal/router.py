@@ -29,7 +29,9 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect
 
 from src.logger import logger
+from apps.common.csv_logger import AppCsvLogger
 from .engine import (
+
     MarketTicker,
     OrderRecord,
     OrderRequest,
@@ -71,7 +73,19 @@ def init_router(engine: Optional[TradingDeskEngine] = None) -> APIRouter:
     @router.get("/status", response_model=TradingState)
     async def get_trading_status() -> TradingState:
         """Retrieve full status of the trading desk."""
-        return active_engine.get_state()
+        st = active_engine.get_state()
+        _default_csv_log = AppCsvLogger("trading_terminal")
+        _default_csv_log.log_poll(
+            poll_type="desk_status",
+            metric_name="equity",
+            value=st.total_equity,
+            unit="USD",
+            status="OK",
+            details={"balance": st.balance, "position": st.position_size, "unrealized_pnl": st.unrealized_pnl},
+            filename="trading_terminal_status_polls.csv",
+        )
+        return st
+
 
     @router.get("/ticker", response_model=MarketTicker)
     async def get_ticker() -> MarketTicker:

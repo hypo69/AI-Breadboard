@@ -498,24 +498,20 @@
     const chatHistory = document.getElementById('scenario-chat-history');
     const sendBtn = document.getElementById('btn-scenario-chat-send');
     const statusInd = document.getElementById('chat-status-indicator');
-    const autoSkillCheck = document.getElementById('check-auto-create-skill');
-    const voiceCheck = document.getElementById('check-voice-output');
+    const ragCheck = document.getElementById('check-scenario-rag');
 
     if (!chatForm || !chatInput || !chatHistory) return;
 
     // Fetch and render questions dynamically from external configuration
     loadQuestionsFromConfig();
 
-    if (voiceCheck) {
-      const savedVoiceState = localStorage.getItem('tc_scenario_voice_output');
-      if (savedVoiceState !== null) {
-        voiceCheck.checked = savedVoiceState === 'true';
+    if (ragCheck) {
+      const savedRagState = localStorage.getItem('tc_scenario_use_rag');
+      if (savedRagState !== null) {
+        ragCheck.checked = savedRagState === 'true';
       }
-      voiceCheck.addEventListener('change', (e) => {
-        localStorage.setItem('tc_scenario_voice_output', e.target.checked);
-        if (!e.target.checked && window.chatService?.stop) {
-          window.chatService.stop();
-        }
+      ragCheck.addEventListener('change', (e) => {
+        localStorage.setItem('tc_scenario_use_rag', e.target.checked);
       });
     }
 
@@ -687,6 +683,22 @@
                       <span>${escapeHtml(st.message || '')}</span>
                     </div>
                     ${st.details ? `<div class="text-secondary ps-3 font-monospace" style="font-size: 0.68rem; word-break: break-all;">↳ ${escapeHtml(st.details)}</div>` : ''}
+                    ${st.generated_prompt ? `
+                      <div class="mt-1 ps-3">
+                        <button class="btn btn-sm btn-outline-warning py-0 px-2 d-inline-flex align-items-center gap-1 font-monospace" type="button" onclick="event.stopPropagation(); const p=document.getElementById('${msgId}-stage-prompt-${sIdx}'); const ic=document.getElementById('${msgId}-stage-prompt-ic-${sIdx}'); if(p){p.classList.toggle('d-none'); if(ic){ic.classList.toggle('bi-chevron-down'); ic.classList.toggle('bi-chevron-up');}}" style="font-size: 0.68rem;">
+                          <i class="bi bi-cpu-fill"></i>
+                          <span>Показать отправленный промпт</span>
+                          <i class="bi bi-chevron-down text-warning" id="${msgId}-stage-prompt-ic-${sIdx}" style="font-size:0.6rem;"></i>
+                        </button>
+                        <div id="${msgId}-stage-prompt-${sIdx}" class="d-none mt-1.5 p-2 bg-black bg-opacity-70 border border-warning border-opacity-40 rounded text-start" onclick="event.stopPropagation();">
+                          <div class="d-flex justify-content-between align-items-center text-warning mb-1" style="font-size: 0.68rem;">
+                            <span><i class="bi bi-terminal me-1"></i>Точный текст промпта, отправленный модели:</span>
+                            <button class="btn btn-dark btn-sm py-0 px-1.5 text-secondary border border-secondary-subtle" type="button" onclick="navigator.clipboard.writeText(this.closest('#${msgId}-stage-prompt-${sIdx}').querySelector('pre')?.innerText || ''); this.innerText='Скопировано!'; setTimeout(()=>this.innerText='Копировать', 1500);" style="font-size: 0.65rem;">Копировать</button>
+                          </div>
+                          <pre class="m-0 p-1.5 bg-dark bg-opacity-75 text-light border border-secondary border-opacity-30 rounded font-monospace" style="font-size: 0.70rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">${escapeHtml(st.generated_prompt)}</pre>
+                        </div>
+                      </div>
+                    ` : ''}
                   </div>
                 `;
               }).join('')}
@@ -715,14 +727,17 @@
       chatHistory.scrollTop = chatHistory.scrollHeight;
 
       try {
-        const autoCreate = autoSkillCheck ? autoSkillCheck.checked : false;
+        const useRag = ragCheck ? ragCheck.checked : true;
+
         const res = await fetch('/api/v1/scenarios/chat/stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: message,
             conversation_id: currentConversationId,
-            auto_create_skill: autoCreate,
+            auto_create_skill: false,
+            keep_context: true,
+            use_rag: useRag,
           }),
         });
 
@@ -949,6 +964,38 @@
           `;
         }
 
+        let promptInfoHtml = '';
+        const generatedPromptText = finalData.generated_prompt || (stagesLog.find(s => s.stage === 'synthesizing' && s.generated_prompt)?.generated_prompt);
+        if (generatedPromptText) {
+          const promptCollapseId = `prompt-details-${msgId}`;
+          const promptCodeId = `prompt-code-${msgId}`;
+          promptInfoHtml = `
+            <div class="mt-2.5 pt-2 border-top border-secondary border-opacity-25" id="prompt-container-${msgId}">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                <button class="btn btn-sm btn-link p-0 text-warning text-decoration-none d-flex align-items-center gap-1.5" type="button" onclick="const el=document.getElementById('${promptCollapseId}'); const ic=document.getElementById('prompt-icon-${msgId}'); if(el){el.classList.toggle('d-none'); if(ic) { ic.classList.toggle('bi-chevron-down'); ic.classList.toggle('bi-chevron-up'); }}" style="font-size: 0.75rem;">
+                  <i class="bi bi-cpu-fill text-warning"></i>
+                  <span><strong>Сформированный промпт модели</strong></span>
+                  <i class="bi bi-chevron-down text-muted" id="prompt-icon-${msgId}" style="font-size: 0.7rem;"></i>
+                </button>
+                <div class="d-flex align-items-center gap-1">
+                  <button class="btn btn-dark btn-sm py-0 px-2 text-secondary border border-secondary-subtle d-flex align-items-center gap-1" type="button" onclick="navigator.clipboard.writeText(document.getElementById('${promptCodeId}')?.innerText || ''); const s=this.querySelector('span'); if(s){s.innerText='Скопировано!'; setTimeout(()=>s.innerText='Копировать', 1800);}" style="font-size: 0.68rem;" title="Скопировать отправленный промпт">
+                    <i class="bi bi-clipboard"></i>
+                    <span>Копировать</span>
+                  </button>
+                </div>
+              </div>
+
+              <div id="${promptCollapseId}" class="d-none mt-2 p-2.5 bg-black bg-opacity-60 border border-warning border-opacity-40 rounded">
+                <div class="d-flex align-items-center justify-content-between text-warning small mb-1.5" style="font-size: 0.72rem;">
+                  <span><i class="bi bi-terminal me-1"></i>Точный текст запроса, отправленный языковой модели:</span>
+                  <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 font-monospace" style="font-size: 0.65rem;">${generatedPromptText.length} симв.</span>
+                </div>
+                <pre class="m-0 p-2 bg-dark bg-opacity-75 text-light border border-secondary border-opacity-30 rounded font-monospace small" id="${promptCodeId}" style="font-size: 0.72rem; line-height: 1.4; max-height: 280px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">${escapeHtml(generatedPromptText)}</pre>
+              </div>
+            </div>
+          `;
+        }
+
         const bodyElem = document.getElementById(`${msgId}-body`);
         if (bodyElem) {
           bodyElem.innerHTML = `
@@ -957,6 +1004,7 @@
             ${remediationHtml}
             ${skillActionHtml}
             ${metaInfoHtml}
+            ${promptInfoHtml}
           `;
         }
         chatHistory.scrollTop = chatHistory.scrollHeight;

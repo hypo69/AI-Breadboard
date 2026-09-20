@@ -51,8 +51,10 @@ from apps.windows.core.modules import (
 )
 from apps.windows.core.root_cause_engine import RootCauseEngine
 from apps.windows.core.safe_executor import SafeExecutor
+from apps.common.csv_logger import AppCsvLogger
 
 router = APIRouter(prefix="/api/windows", tags=["windows-diagnostics"])
+_csv_logger = AppCsvLogger("windows")
 
 # Синглтоны сервисов
 _diagnostician = WindowsAIDiagnostician()
@@ -82,6 +84,15 @@ class ActionExecuteRequest(BaseModel):
 async def get_system_health(mode: str = "quick") -> Dict[str, Any]:
     """Быстрая оценка здоровья системы (Health Score)."""
     report = _engine.run_full_audit(mode=mode)
+    _csv_logger.log_poll(
+        poll_type="health",
+        metric_name="health_score",
+        value=report.health_score.score,
+        unit="score",
+        status="ok",
+        details=f"label={report.health_score.status_label},mode={mode}",
+        filename="windows_audit_polls.csv",
+    )
     return {
         "health_score": report.health_score.to_dict(),
         "mode": mode,
@@ -94,6 +105,12 @@ async def get_system_health(mode: str = "quick") -> Dict[str, Any]:
 async def get_full_audit() -> Dict[str, Any]:
     """Полный глубокий аудит по всем 15 доменам системы."""
     report = await _diagnostician.diagnose_system(mode="full")
+    _csv_logger.log_event(
+        event_type="full_windows_audit",
+        status="completed",
+        details=f"anomalies_count={len(getattr(report, 'anomalies', [])) if hasattr(report, 'anomalies') else 0}",
+        filename="windows_audit_events.csv",
+    )
     return report.to_dict()
 
 
@@ -101,21 +118,48 @@ async def get_full_audit() -> Dict[str, Any]:
 async def get_clean_audit() -> Dict[str, Any]:
     """Аудит временных файлов, кэшей и корзины."""
     collector = CleanCollector()
-    return collector.collect().to_dict()
+    res = collector.collect()
+    _csv_logger.log_poll(
+        poll_type="clean_audit",
+        metric_name="clean_findings",
+        value=len(getattr(res, "findings", [])),
+        unit="count",
+        status="ok",
+        filename="windows_audit_polls.csv",
+    )
+    return res.to_dict()
 
 
 @router.get("/audit/performance")
 async def get_performance_audit() -> Dict[str, Any]:
     """Аудит производительности, автозагрузки и очередей."""
     collector = PerformanceCollector()
-    return collector.collect().to_dict()
+    res = collector.collect()
+    _csv_logger.log_poll(
+        poll_type="performance_audit",
+        metric_name="perf_findings",
+        value=len(getattr(res, "findings", [])),
+        unit="count",
+        status="ok",
+        filename="windows_audit_polls.csv",
+    )
+    return res.to_dict()
 
 
 @router.get("/audit/drivers")
 async def get_drivers_audit() -> Dict[str, Any]:
     """Аудит драйверов, устройств PnP и пакетов DriverStore."""
     collector = DriverCollector()
-    return collector.collect().to_dict()
+    res = collector.collect()
+    _csv_logger.log_poll(
+        poll_type="drivers_audit",
+        metric_name="driver_findings",
+        value=len(getattr(res, "findings", [])),
+        unit="count",
+        status="ok",
+        filename="windows_audit_polls.csv",
+    )
+    return res.to_dict()
 
 
 @router.get("/audit/software")
@@ -269,6 +313,14 @@ async def execute_action(request: Request, req: ActionExecuteRequest) -> Dict[st
         execution_command=req.execution_command,
     )
     result_action = _executor.execute(action, confirmed_by_user=req.confirmed_by_user)
+    _csv_logger.log_param_change(
+        param_name=f"safeops_{req.action_id}_{req.action_type}",
+        old_value="before_execution",
+        new_value=req.target,
+        status="success" if getattr(result_action, "status", None) == "success" else "executed",
+        details=f"title={req.title},risk={req.risk}",
+        filename="windows_safeops_actions.csv",
+    )
     return result_action.to_dict()
 
 
@@ -294,6 +346,14 @@ async def get_defender_detailed_status() -> Dict[str, Any]:
     mgr = DefenderManager()
     status = mgr.get_detailed_status()
     prefs = mgr.get_preferences()
+    _csv_logger.log_poll(
+        poll_type="defender_status",
+        metric_name="real_time_protection",
+        value=status.get("real_time_protection_enabled", False),
+        unit="bool",
+        status="ok",
+        filename="windows_defender_polls.csv",
+    )
     return {"status": status, "preferences": prefs}
 
 
@@ -303,6 +363,14 @@ async def get_defender_threats() -> Dict[str, Any]:
     from apps.windows.core.defender_manager import DefenderManager
     mgr = DefenderManager()
     threats = mgr.get_threat_detections()
+    _csv_logger.log_poll(
+        poll_type="defender_threats",
+        metric_name="threats_count",
+        value=len(threats),
+        unit="count",
+        status="ok",
+        filename="windows_defender_polls.csv",
+    )
     return {"threats": threats, "count": len(threats)}
 
 
@@ -312,7 +380,14 @@ async def start_defender_scan(request: Request, req: DefenderScanRequest) -> Dic
     require_admin_user(request)
     from apps.windows.core.defender_manager import DefenderManager
     mgr = DefenderManager()
-    return mgr.start_scan(scan_type=req.scan_type, custom_path=req.custom_path)
+    res = mgr.start_scan(scan_type=req.scan_type, custom_path=req.custom_path)
+    _csv_logger.log_event(
+        event_type="defender_scan_started",
+        status="ok",
+        details=f"scan_type={req.scan_type},custom_path={req.custom_path}",
+        filename="windows_defender_events.csv",
+    )
+    return res
 
 
 @router.post("/defender/update-signatures")
@@ -321,7 +396,14 @@ async def update_defender_signatures(request: Request) -> Dict[str, Any]:
     require_admin_user(request)
     from apps.windows.core.defender_manager import DefenderManager
     mgr = DefenderManager()
-    return mgr.update_signatures()
+    res = mgr.update_signatures()
+    _csv_logger.log_event(
+        event_type="defender_signatures_updated",
+        status="ok",
+        details="signature_update_requested",
+        filename="windows_defender_events.csv",
+    )
+    return res
 
 
 @router.post("/defender/cfa")
@@ -330,7 +412,16 @@ async def toggle_controlled_folder_access(request: Request, req: DefenderToggleF
     require_admin_user(request)
     from apps.windows.core.defender_manager import DefenderManager
     mgr = DefenderManager()
-    return mgr.set_controlled_folder_access(mode=req.mode)
+    res = mgr.set_controlled_folder_access(mode=req.mode)
+    _csv_logger.log_param_change(
+        param_name="defender_controlled_folder_access",
+        old_value="unknown",
+        new_value=req.mode,
+        status="success",
+        details="cfa_toggle",
+        filename="windows_defender_param_changes.csv",
+    )
+    return res
 
 
 @router.post("/defender/pua")
@@ -339,7 +430,16 @@ async def toggle_pua_protection(request: Request, req: DefenderToggleFeatureRequ
     require_admin_user(request)
     from apps.windows.core.defender_manager import DefenderManager
     mgr = DefenderManager()
-    return mgr.set_pua_protection(mode=req.mode)
+    res = mgr.set_pua_protection(mode=req.mode)
+    _csv_logger.log_param_change(
+        param_name="defender_pua_protection",
+        old_value="unknown",
+        new_value=req.mode,
+        status="success",
+        details="pua_toggle",
+        filename="windows_defender_param_changes.csv",
+    )
+    return res
 
 
 # -----------------------------------------------------------------------------

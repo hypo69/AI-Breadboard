@@ -120,6 +120,13 @@ async def startup_event():
         except Exception as exc:
             logger.error(f"Failed to start Telegram Bot plugin: {exc}")
 
+    # Start Applications CSV Auto-Logging Engine
+    try:
+        from apps.common.autolog_engine import autolog_engine
+        await autolog_engine.start()
+    except Exception as exc:
+        logger.warning(f"Не удалось запустить движок автологгирования приложений: {exc}")
+
     try:
         result = check_updates()
         if result.get("is_update_available"):
@@ -133,6 +140,13 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Application shutdown tasks."""
+    # Stop Applications Auto-Logging Engine
+    try:
+        from apps.common.autolog_engine import autolog_engine
+        await autolog_engine.stop()
+    except Exception as exc:
+        logger.error(f"Ошибка при остановке автологгера приложений: {exc}")
+
     # Stop Telegram Bot if running
     tg_plugin = getattr(state, "plugins", {}).get("telegram_bot")
     if tg_plugin:

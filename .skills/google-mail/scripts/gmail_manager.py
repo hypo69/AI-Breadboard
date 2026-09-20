@@ -137,6 +137,20 @@ class GmailManager:
             logger.error(f"Ошибка отправки письма {to}: {e}")
             return None
 
+    def delete_message(self, message_id: str) -> bool:
+        """Удаление письма по ID."""
+        if not self.service:
+            logger.error("Gmail сервис недоступен.")
+            return False
+
+        try:
+            self.service.users().messages().delete(userId="me", id=message_id).execute()
+            logger.info(f"Письмо {message_id} успешно удалено.")
+            return True
+        except Exception as e:
+            logger.error(f"Ошибка удаления письма {message_id}: {e}")
+            return False
+
 
 def main():
     parser = argparse.ArgumentParser(description="Gmail Agent CLI")
@@ -162,6 +176,11 @@ def main():
     send_p.add_argument("--body", required=True, help="Текст письма")
     send_p.add_argument("--account", "-a", default=None, help="Имя аккаунта")
 
+    # Delete
+    delete_p = subparsers.add_parser("delete", help="Удалить письмо")
+    delete_p.add_argument("--id", required=True, help="ID письма для удаления")
+    delete_p.add_argument("--account", "-a", default=None, help="Имя аккаунта")
+
     args = parser.parse_args()
     manager = GmailManager(account_name=getattr(args, "account", None))
 
@@ -175,7 +194,8 @@ def main():
         print(f"🔍 Поиск писем по запросу: '{query}' (лимит: {limit})...")
         messages = manager.search_messages(query=query, max_results=limit)
         for i, msg in enumerate(messages, 1):
-            print(f"\n[{i}] От: {msg.get('from')}")
+            print(f"\n[{i}] ID: {msg.get('id')}")
+            print(f"    От: {msg.get('from')}")
             print(f"    Тема: {msg.get('subject')}")
             print(f"    Дата: {msg.get('date')}")
             print(f"    Сниппет: {msg.get('snippet')}")
@@ -187,6 +207,11 @@ def main():
         res = manager.send_email(args.to, args.subject, args.body)
         if res:
             print(f"✅ Письмо отправлено на {args.to}. ID: {res.get('id')}")
+    elif args.command == "delete":
+        if manager.delete_message(args.id):
+            print(f"✅ Письмо {args.id} удалено.")
+        else:
+            print(f"❌ Ошибка удаления письма {args.id}.")
 
 
 if __name__ == "__main__":

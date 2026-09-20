@@ -31,7 +31,7 @@ if str(current_dir) not in sys.path:
     sys.path.insert(0, str(current_dir))
 
 from collector import MailInvoiceCollector
-from mail_client import MailClient, load_mail_config
+from mail_client import MailClient, load_mail_config, load_mail_config_central
 
 
 def parse_args() -> argparse.Namespace:
@@ -40,6 +40,7 @@ def parse_args() -> argparse.Namespace:
         description="Сбор счетов-фактур (invoices, חשבונית) из почты в CSV.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
+    parser.add_argument("--account", type=str, help="Имя или алиас ящика из src/secrets/mailboxes.json")
     parser.add_argument("--host", type=str, help="Хост IMAP-сервера (напр. imap.gmail.com)")
     parser.add_argument("--port", type=int, default=None, help="Порт IMAP (по умолчанию 993)")
     parser.add_argument("--user", "--username", dest="username", type=str, help="Имя пользователя / Email")
@@ -49,6 +50,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", "--csv", dest="output_csv", type=str, help="Путь к итоговому CSV файлу")
     parser.add_argument("--max-emails", type=int, default=100, help="Максимальное количество писем для проверки")
     parser.add_argument("--attachments-dir", type=str, help="Директория для сохранения вложений")
+    parser.add_argument("--keywords", nargs='+', help="Список ключевых слов для поиска через пробел")
     parser.add_argument("--test-only", action="store_true", help="Только проверить подключение к почте")
     parser.add_argument("--json", action="store_true", help="Вывод результатов в формате JSON")
     return parser.parse_args()
@@ -59,14 +61,17 @@ def main() -> int:
     args = parse_args()
 
     try:
-        config = load_mail_config(
-            explicit_path=args.secrets,
-            host=args.host,
-            username=args.username,
-            password=args.password,
-            port=args.port,
-            folder=args.folder,
-        )
+        if args.account:
+            config = load_mail_config_central(args.account)
+        else:
+            config = load_mail_config(
+                explicit_path=args.secrets,
+                host=args.host,
+                username=args.username,
+                password=args.password,
+                port=args.port,
+                folder=args.folder,
+            )
     except Exception as ex:
         if args.json:
             print(json.dumps({"success": False, "error": str(ex)}, ensure_ascii=False))
@@ -93,6 +98,7 @@ def main() -> int:
         output_csv=args.output_csv,
         max_emails=args.max_emails,
         attachments_dir=args.attachments_dir,
+        keywords=args.keywords,
     )
 
     if args.json:

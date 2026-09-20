@@ -68,3 +68,10 @@
 ## IFTTTPlugin
 
 ::: plugins.ifttt.plugin.IFTTTPlugin
+
+---
+
+## WhatsAppPlugin
+
+::: plugins.whatsapp.plugin.WhatsAppPlugin
+

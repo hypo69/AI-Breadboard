@@ -92,13 +92,19 @@ class UnifiedChatModel:
         from src.ai.gemini.generative_ai import _DEFAULT_MODEL
         from src.config import ai_cfg
 
-        if use_foundry and not use_ollama:
-            self.default_model = f"foundry:{foundry_model_id}"
-        elif use_ollama and not use_foundry:
-            self.default_model = f"ollama:{ollama_model_id}"
-        else:
-            cfg_default = getattr(ai_cfg, "default_model", "") if ai_cfg else ""
-            self.default_model = cfg_default or _DEFAULT_MODEL
+        # New unified format: use ai_cfg.provider
+        provider = getattr(ai_cfg, "provider", "gemini").lower()
+        
+        if provider == "foundry":
+            self.default_model = f"foundry:{getattr(ai_cfg, 'foundry_model_id', foundry_model_id)}"
+        elif provider == "ollama":
+            self.default_model = f"ollama:{getattr(ai_cfg, 'ollama_model_id', ollama_model_id)}"
+        elif provider == "gemini_cli":
+            self.default_model = f"gemini_cli:{getattr(ai_cfg, 'gemini_cli_model_id', gemini_cli_model_id)}"
+        elif provider == "agy":
+            self.default_model = getattr(ai_cfg, "agy_model_id", "agy-gemini-3.6-flash")
+        else:  # gemini or default
+            self.default_model = getattr(ai_cfg, "gemini_model_id", _DEFAULT_MODEL)
 
         self._model_name = self.default_model
 

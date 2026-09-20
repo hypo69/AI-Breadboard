@@ -118,8 +118,17 @@ JWT_SECRET=your_generated_jwt_secret
 
 # Дополнительные внешние провайдеры
 OPENAI_API_KEY=your_openai_key
-HF_TOKEN=your_hf_token
+# Мессенджеры и уведомления
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+WHATSAPP_TOKEN=your_meta_whatsapp_access_token
+WHATSAPP_PHONE_NUMBER_ID=your_whatsapp_phone_number_id
+WHATSAPP_RECIPIENT_DEFAULT=79991234567
+
+# Почтовые учетные данные (IMAP)
+MAIL_IMAP_HOST=imap.gmail.com
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_app_password
+MAIL_TARGET_SENDER=boss@company.com
 
 # (Опционально) Дополнительные ключи пула Gemini через окружение:
 # GEMINI_API_KEY_1=AIzaSy...
@@ -128,6 +137,10 @@ TELEGRAM_BOT_TOKEN=your_telegram_bot_token
 
 ## Правила именования файлов секретов
 Все файлы, содержащие пароли, API-ключи или другую чувствительную информацию, **ДОЛЖНЫ** называться `secrets.json`. Использование других имен для новых файлов с чувствительными данными запрещено для обеспечения безопасности и предотвращения случайной коммитации в репозиторий.
+
+Локальные конфигурации навыков и плагинов сохраняются в:
+- `.agents/skills/mail-watcher/secrets.json` — учетные данные почты IMAP;
+- `plugins/user-plugins/whatsapp/secrets.json` — токены Meta WhatsApp Cloud API / Green API.
 
 ---
 

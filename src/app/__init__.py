@@ -154,6 +154,7 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_registry_viewer_router,
         init_diagnostics_router,
         init_scenarios_router,
+        init_autolog_router,
         get_pixel_rag_router,
         router_openai,
     )
@@ -194,6 +195,7 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_registry_viewer_router,
         init_diagnostics_router,
         init_scenarios_router,
+        init_autolog_router,
         get_pixel_rag_router,
     ):
         app.include_router(factory())
@@ -296,6 +298,12 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         app.include_router(init_windows_defender_router())
     except (ImportError, Exception) as e:
         logger.debug(f"Windows defender router not registered: {e}")
+
+    try:
+        from apps.software_transparency_scanner.router import init_router as init_transparency_scanner_router
+        app.include_router(init_transparency_scanner_router(state.chat_model if hasattr(state, "chat_model") else None))
+    except (ImportError, Exception) as e:
+        logger.debug(f"Software transparency scanner router not registered: {e}")
 
     try:
         from apps.aida64.router import init_router as init_aida64_router

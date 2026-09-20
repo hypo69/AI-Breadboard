@@ -24,8 +24,10 @@
 
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import asdict
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Body, HTTPException, Query
 from fastapi.responses import JSONResponse
@@ -33,13 +35,16 @@ from pydantic import BaseModel, Field
 
 from src.api.router_auth import require_admin_user
 from src.logger import logger
+from apps.common.csv_logger import AppCsvLogger
 from .src.directory_watcher import get_directory_watcher
 from .src.file_auditor import WindowsFileAuditor
 from .src.state import SecurityEvent, SystemAdminState
 
 router = APIRouter(prefix="/api/sysadmin", tags=["sysadmin"])
+_csv_logger = AppCsvLogger("windows_sysadmin")
 state = SystemAdminState()
 file_auditor = WindowsFileAuditor()
+
 
 
 class AuditPolicyRequest(BaseModel):
@@ -62,7 +67,7 @@ async def get_status(request: None = None) -> dict:
     """Получить общий статус системного администрирования и аудита."""
     state.refresh()
     policy_status = file_auditor.get_audit_policy_status()
-    return {
+    res = {
         "hostname": state.hostname,
         "domain": state.domain,
         "ad_connected": state.ad_connected,
@@ -76,6 +81,16 @@ async def get_status(request: None = None) -> dict:
             "raw_output": policy_status.raw_output,
         },
     }
+    _csv_logger.log_poll(
+        poll_type="sysadmin_status",
+        metric_name="user_count",
+        value=len(state.users),
+        unit="count",
+        status="OK",
+        details={"ad_connected": state.ad_connected, "ad_status": state.ad_status},
+        filename="windows_sysadmin_status_polls.csv",
+    )
+    return res
 
 
 @router.get("/users")
@@ -133,6 +148,14 @@ async def set_file_audit_policy(body: AuditPolicyRequest) -> dict:
     result = file_auditor.set_audit_policy(
         enable_success=body.enable_success, enable_failure=body.enable_failure
     )
+    _csv_logger.log_param_change(
+        param_name="auditpol.filesystem_policy",
+        old_value="unknown",
+        new_value={"success": body.enable_success, "failure": body.enable_failure},
+        status="SUCCESS" if result.get("success") else "FAILED",
+        user="admin",
+        filename="windows_sysadmin_events.csv",
+    )
     if not result.get("success"):
         raise HTTPException(
             status_code=400,
@@ -156,12 +179,19 @@ async def configure_folder_sacl(body: SaclConfigRequest) -> dict:
         principal=body.principal,
         enable=body.enable,
     )
+    _csv_logger.log_event(
+        event_type="configure_folder_sacl",
+        status="SUCCESS" if result.get("Success") else "FAILED",
+        details={"path": body.path, "principal": body.principal, "enable": body.enable},
+        filename="windows_sysadmin_events.csv",
+    )
     if not result.get("Success"):
         raise HTTPException(
             status_code=400,
             detail=result.get("Error") or "Failed to configure folder SACL",
         )
     return result
+
 
 
 @router.get("/file-audit/deletions")
@@ -184,16 +214,71 @@ async def get_deletion_events(
     }
 
 
+class WatchDirRequest(BaseModel):
+    """Модель запроса изменения отслеживаемой папки."""
+
+    path: str = Field(..., description="Абсолютный путь к отслеживаемой папке")
+
+
+def _get_configured_watch_dir() -> str:
+    """Получить путь отслеживаемой директории из config.json или по умолчанию."""
+    cfg_file = Path(__file__).resolve().parent / "config.json"
+    if cfg_file.exists():
+        try:
+            with open(cfg_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                custom_path = data.get("watch_directory", "").strip()
+                if custom_path and os.path.isdir(custom_path):
+                    return custom_path
+        except Exception as e:
+            logger.warning(f"Не удалось прочитать watch_directory из config.json: {e}")
+    return os.getcwd()
+
+
 @router.get("/file-audit/live-events")
 async def get_live_file_events(limit: int = Query(50, ge=1, le=200)) -> dict:
     """Получить события файловой системы в реальном времени (ReadDirectoryChangesW)."""
-    watcher = get_directory_watcher(os.getcwd())
+    watcher = get_directory_watcher(_get_configured_watch_dir())
     live_events = watcher.get_recent_events(limit=limit)
     return {
         "watch_dir": watcher.watch_dir,
         "is_running": watcher._is_running,
         "events_count": len(live_events),
         "events": [asdict(e) for e in live_events],
+    }
+
+
+@router.post("/file-audit/watch-dir")
+async def set_live_watch_dir(payload: WatchDirRequest) -> dict:
+    """Изменить отслеживаемую папку для ReadDirectoryChangesW и сохранить в config.json."""
+    target_path = os.path.abspath(payload.path.strip())
+    if not os.path.exists(target_path):
+        raise HTTPException(status_code=400, detail=f"Указанный путь не существует: {target_path}")
+    if not os.path.isdir(target_path):
+        raise HTTPException(status_code=400, detail=f"Указанный путь не является директорией: {target_path}")
+
+    watcher = get_directory_watcher()
+    success = watcher.set_watch_dir(target_path)
+    if not success:
+        raise HTTPException(status_code=500, detail="Не удалось запустить мониторинг для указанной директории")
+
+    # Сохраняем в apps/windows_sysadmin/config.json
+    cfg_file = Path(__file__).resolve().parent / "config.json"
+    try:
+        cfg_data = {}
+        if cfg_file.exists():
+            with open(cfg_file, "r", encoding="utf-8") as f:
+                cfg_data = json.load(f)
+        cfg_data["watch_directory"] = target_path
+        with open(cfg_file, "w", encoding="utf-8") as f:
+            json.dump(cfg_data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"Не удалось сохранить watch_directory в config.json: {e}")
+
+    return {
+        "success": True,
+        "watch_dir": watcher.watch_dir,
+        "message": f"Отслеживаемая папка успешно переключена на: {target_path}",
     }
 
 

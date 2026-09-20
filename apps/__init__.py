@@ -29,6 +29,7 @@ __all__ = [
     "network_terminal",
     "research_and_statistic",
     "smartmontools",
+    "software_transparency_scanner",
     "trading_terminal",
     "user_assistant",
     "website_monitor",

@@ -28,10 +28,13 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 
 from src.api.router_auth import require_admin_user
+from apps.common.csv_logger import AppCsvLogger
 from .src.state import CloudflaredState
 
 router = APIRouter(prefix="/api/cloudflared", tags=["cloudflared"])
 _state: Optional[CloudflaredState] = None
+_csv_logger = AppCsvLogger("cloudflared_monitor")
+
 
 
 def get_state() -> CloudflaredState:
@@ -56,7 +59,7 @@ async def get_status(request: Request) -> Dict[str, Any]:
     state = get_state()
     state.refresh(probe_network=False)
 
-    return {
+    res = {
         "is_running": state.process.is_running,
         "pid": state.process.pid,
         "uptime_seconds": state.process.uptime_seconds,
@@ -78,6 +81,16 @@ async def get_status(request: Request) -> Dict[str, Any]:
         "health_status": state.report.status if state.report else "UNKNOWN",
         "last_refreshed": state.last_refreshed,
     }
+    _csv_logger.log_poll(
+        poll_type="tunnel_status",
+        metric_name="is_running",
+        value=state.process.is_running,
+        unit="bool",
+        status="OK" if state.process.is_running else "STOPPED",
+        details={"pid": state.process.pid, "cpu": state.process.cpu_percent, "mem_mb": state.process.memory_mb},
+        filename="cloudflared_status_polls.csv",
+    )
+    return res
 
 
 @router.get("/logs")
@@ -172,6 +185,13 @@ async def get_diagnostic(request: Request) -> Dict[str, Any]:
     state.refresh(probe_network=False)
     report = state.evaluate_diagnostics()
 
+    _csv_logger.log_event(
+        event_type="diagnostics_evaluated",
+        status=report.status,
+        details={"health_score": report.health_score, "anomalies_count": len(report.anomalies)},
+        filename="cloudflared_diagnostic_events.csv",
+    )
+
     return {
         "health_score": report.health_score,
         "status": report.status,
@@ -199,6 +219,16 @@ async def test_endpoint(request: Request) -> Dict[str, Any]:
     state = get_state()
     health = state.probe_endpoint()
 
+    _csv_logger.log_poll(
+        poll_type="endpoint_probe",
+        metric_name="reachability",
+        value=health.is_reachable,
+        unit="bool",
+        status="REACHABLE" if health.is_reachable else "UNREACHABLE",
+        details={"status_code": health.status_code, "latency_ms": health.response_time_ms, "url": health.url},
+        filename="cloudflared_endpoint_probes.csv",
+    )
+
     return {
         "url": health.url,
         "is_reachable": health.is_reachable,
@@ -215,6 +245,12 @@ async def start_tunnel(request: Request) -> Dict[str, Any]:
     require_admin_user(request)
     state = get_state()
     success, msg = state.start_tunnel()
+    _csv_logger.log_event(
+        event_type="start_tunnel",
+        status="SUCCESS" if success else "FAILED",
+        details=msg,
+        filename="cloudflared_service_events.csv",
+    )
     if not success:
         raise HTTPException(status_code=500, detail=msg)
     return {"success": True, "message": msg}
@@ -226,6 +262,12 @@ async def stop_tunnel(request: Request) -> Dict[str, Any]:
     require_admin_user(request)
     state = get_state()
     success, msg = state.stop_tunnel()
+    _csv_logger.log_event(
+        event_type="stop_tunnel",
+        status="SUCCESS" if success else "FAILED",
+        details=msg,
+        filename="cloudflared_service_events.csv",
+    )
     return {"success": True, "message": msg}
 
 
@@ -235,9 +277,16 @@ async def restart_tunnel(request: Request) -> Dict[str, Any]:
     require_admin_user(request)
     state = get_state()
     success, msg = state.restart_tunnel()
+    _csv_logger.log_event(
+        event_type="restart_tunnel",
+        status="SUCCESS" if success else "FAILED",
+        details=msg,
+        filename="cloudflared_service_events.csv",
+    )
     if not success:
         raise HTTPException(status_code=500, detail=msg)
     return {"success": True, "message": msg}
+
 
 
 def init_router() -> APIRouter:

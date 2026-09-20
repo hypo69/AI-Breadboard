@@ -15,13 +15,22 @@ window.initUserSettings = initUserSettings;
 window.refreshUserProfile = refreshUserProfile;
 window.trackTabSwitch = trackTabSwitch;
 
-// Helper to open plugin from top navbar dropdown
+// Helper to open plugin from top navbar dropdown / drawer
 window.openPluginFromDropdown = function(pluginName) {
   if (!pluginName) return;
   document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((m) => {
     m.classList.remove('show');
     m.closest('.dropdown')?.querySelector('.dropdown-toggle')?.classList.remove('show');
   });
+
+  // Закрываем offcanvas, если открыт
+  const offcanvasEl = document.getElementById('rightSideNavOffcanvas');
+  if (offcanvasEl && typeof bootstrap !== 'undefined' && bootstrap.Offcanvas) {
+    const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
+    if (bsOffcanvas) {
+      bsOffcanvas.hide();
+    }
+  }
 
   const normalized = pluginName.toLowerCase().replace(/-/g, '_');
 
@@ -257,106 +266,121 @@ if (cleanId === 'tab-chat') {
 
 // Programmatic tab switcher
 function switchTab(targetId) {
-if (!targetId) return;
-const cleanId = targetId.startsWith('#') ? targetId.slice(1) : targetId;
-const tabId = cleanId.startsWith('tab-') ? cleanId : `tab-${cleanId}`;
+  if (!targetId) return;
+  const cleanId = targetId.startsWith('#') ? targetId.slice(1) : targetId;
+  const tabId = cleanId.startsWith('tab-') ? cleanId : `tab-${cleanId}`;
 
-// 1. Update active state on dropdown items & toggles
-document.querySelectorAll('#mainTabs .dropdown-item').forEach((item) => {
-  const itemTarget = item.getAttribute('data-tab') || item.getAttribute('data-bs-target')?.replace('#', '');
-  if (itemTarget === tabId || itemTarget === cleanId) {
-    item.classList.add('active');
-  } else {
-    item.classList.remove('active');
-  }
-});
-
-document.querySelectorAll('#mainTabs .dropdown').forEach((dropdown) => {
-  const toggle = dropdown.querySelector('.dropdown-toggle');
-  const hasActiveChild = dropdown.querySelector('.dropdown-item.active');
-  if (toggle) {
-    if (hasActiveChild) {
-      toggle.classList.add('active');
+  // 1. Update active state on drawer list-group-items, dropdown items & toggles
+  document.querySelectorAll('#mainTabs .list-group-item, #mainTabs .dropdown-item, #mainTabs [data-tab], #mainTabs [data-bs-target]').forEach((item) => {
+    const itemTarget = item.getAttribute('data-tab') || item.getAttribute('data-bs-target')?.replace('#', '');
+    if (itemTarget === tabId || itemTarget === cleanId) {
+      item.classList.add('active');
+      
+      // Обновляем бейдж текущего раздела в верхней шапке
+      const activeBadge = document.getElementById('active-tab-title-badge');
+      if (activeBadge) {
+        activeBadge.innerHTML = item.innerHTML;
+      }
     } else {
-      toggle.classList.remove('active');
+      item.classList.remove('active');
+    }
+  });
+
+  document.querySelectorAll('#mainTabs .dropdown').forEach((dropdown) => {
+    const toggle = dropdown.querySelector('.dropdown-toggle');
+    const hasActiveChild = dropdown.querySelector('.dropdown-item.active, .list-group-item.active');
+    if (toggle) {
+      if (hasActiveChild) {
+        toggle.classList.add('active');
+      } else {
+        toggle.classList.remove('active');
+      }
+    }
+  });
+
+  // 2. Switch tab-pane (scoped to top-level container to preserve nested subtabs)
+  const mainTabContent = document.getElementById('mainTabContent');
+  if (mainTabContent) {
+    Array.from(mainTabContent.children).forEach((pane) => {
+      if (pane.classList.contains('tab-pane')) {
+        pane.classList.remove('show', 'active');
+      }
+    });
+  } else {
+    document.querySelectorAll('#mainTabContent > .tab-pane, body > .container-fluid > .tab-content > .tab-pane').forEach((pane) => {
+      pane.classList.remove('show', 'active');
+    });
+  }
+  const targetPane = document.getElementById(tabId) || document.getElementById(cleanId);
+  if (targetPane) {
+    targetPane.classList.add('show', 'active');
+  }
+
+  // 3. Закрываем offcanvas, если переключение вызвано из выпадающей панели
+  const offcanvasEl = document.getElementById('rightSideNavOffcanvas');
+  if (offcanvasEl && typeof bootstrap !== 'undefined' && bootstrap.Offcanvas) {
+    const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
+    if (bsOffcanvas) {
+      bsOffcanvas.hide();
     }
   }
-});
 
-// 2. Switch tab-pane (scoped to top-level container to preserve nested subtabs)
-const mainTabContent = document.getElementById('mainTabContent');
-if (mainTabContent) {
-  Array.from(mainTabContent.children).forEach((pane) => {
-    if (pane.classList.contains('tab-pane')) {
-      pane.classList.remove('show', 'active');
-    }
-  });
-} else {
-  document.querySelectorAll('#mainTabContent > .tab-pane, body > .container-fluid > .tab-content > .tab-pane').forEach((pane) => {
-    pane.classList.remove('show', 'active');
-  });
-}
-const targetPane = document.getElementById(tabId) || document.getElementById(cleanId);
-if (targetPane) {
-  targetPane.classList.add('show', 'active');
-}
-
-// 3. Notify lifecycle callback
-onTabSwitched(tabId);
+  // 4. Notify lifecycle callback
+  onTabSwitched(tabId);
 }
 window.switchTab = switchTab;
 window.switchToTab = switchTab;
 
-// Setup dropdowns navigation
+// Setup dropdowns & drawer navigation
 function setupDropdownTabs() {
-const mainTabs = document.getElementById('mainTabs');
-if (!mainTabs) return;
+  const mainTabs = document.getElementById('mainTabs');
+  if (!mainTabs) return;
 
-// 1. Dropdown Toggle Buttons
-mainTabs.querySelectorAll('.dropdown-toggle').forEach((btn) => {
-  btn.onclick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const dropdown = btn.closest('.dropdown');
-    const menu = dropdown?.querySelector('.dropdown-menu');
-    const isAlreadyOpen = menu?.classList.contains('show');
-
-    // Close all dropdowns
-    document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((m) => {
-      m.classList.remove('show');
-      m.closest('.dropdown')?.querySelector('.dropdown-toggle')?.classList.remove('show');
-    });
-
-    // Toggle clicked dropdown
-    if (!isAlreadyOpen && menu) {
-      menu.classList.add('show');
-      btn.classList.add('show');
-    }
-  };
-});
-
-// 2. Dropdown Item Buttons (Tab Switchers & Action Buttons)
-mainTabs.querySelectorAll('.dropdown-item').forEach((item) => {
-  item.onclick = (e) => {
-    const targetId = item.getAttribute('data-tab') || item.getAttribute('data-bs-target')?.replace('#', '');
-    const pluginName = item.getAttribute('data-plugin');
-
-    // Close dropdown menu
-    item.closest('.dropdown-menu')?.classList.remove('show');
-    item.closest('.dropdown')?.querySelector('.dropdown-toggle')?.classList.remove('show');
-
-    if (pluginName && typeof window.openPluginFromDropdown === 'function') {
+  // 1. Dropdown Toggle Buttons (if any)
+  mainTabs.querySelectorAll('.dropdown-toggle').forEach((btn) => {
+    btn.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      window.openPluginFromDropdown(pluginName);
-    } else if (targetId) {
-      e.preventDefault();
-      e.stopPropagation();
-      switchTab(targetId);
-    }
-  };
-});
+
+      const dropdown = btn.closest('.dropdown');
+      const menu = dropdown?.querySelector('.dropdown-menu');
+      const isAlreadyOpen = menu?.classList.contains('show');
+
+      // Close all dropdowns
+      document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((m) => {
+        m.classList.remove('show');
+        m.closest('.dropdown')?.querySelector('.dropdown-toggle')?.classList.remove('show');
+      });
+
+      // Toggle clicked dropdown
+      if (!isAlreadyOpen && menu) {
+        menu.classList.add('show');
+        btn.classList.add('show');
+      }
+    };
+  });
+
+  // 2. Navigation Items (Tab Switchers & Action Buttons)
+  mainTabs.querySelectorAll('.list-group-item, .dropdown-item, [data-tab], [data-bs-target], [data-plugin]').forEach((item) => {
+    item.onclick = (e) => {
+      const targetId = item.getAttribute('data-tab') || item.getAttribute('data-bs-target')?.replace('#', '');
+      const pluginName = item.getAttribute('data-plugin');
+
+      // Close dropdown menu if inside dropdown
+      item.closest('.dropdown-menu')?.classList.remove('show');
+      item.closest('.dropdown')?.querySelector('.dropdown-toggle')?.classList.remove('show');
+
+      if (pluginName && typeof window.openPluginFromDropdown === 'function') {
+        e.preventDefault();
+        e.stopPropagation();
+        window.openPluginFromDropdown(pluginName);
+      } else if (targetId) {
+        e.preventDefault();
+        e.stopPropagation();
+        switchTab(targetId);
+      }
+    };
+  });
 
   // 3. Document Click to Close Dropdowns
   if (!document.body.dataset.dropdownOutsideBound) {

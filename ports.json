@@ -23,6 +23,7 @@
       "windows_startup_auditor": 8112,
       "windows_defender": 8113,
       "windows_backup_manager": 8114,
+      "software_transparency_scanner": 8115,
       "aida64": 8120,
       "hwinfo": 8121,
       "cpuz": 8122,

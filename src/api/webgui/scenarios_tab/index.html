@@ -115,15 +115,11 @@
             </div>
             <div class="d-flex align-items-center justify-content-between px-1 flex-wrap gap-2">
               <span class="text-muted" style="font-size: 0.72rem;" id="chat-status-indicator">Готов к работе</span>
-              <div class="d-flex align-items-center gap-3">
-                <div class="form-check form-switch m-0">
-                  <input class="form-check-input" type="checkbox" id="check-auto-create-skill">
-                  <label class="form-check-label text-muted" for="check-auto-create-skill" style="font-size: 0.75rem;">Автосохранение навыков без кнопки</label>
-                </div>
-                <div class="form-check form-switch m-0">
-                  <input class="form-check-input" type="checkbox" id="check-voice-output">
-                  <label class="form-check-label text-muted" for="check-voice-output" style="font-size: 0.75rem;">
-                    <i class="bi bi-volume-up me-1"></i>Озвучивать ответ
+              <div class="d-flex align-items-center gap-2">
+                <div class="form-check form-switch m-0 d-flex align-items-center gap-1">
+                  <input class="form-check-input mt-0" type="checkbox" role="switch" id="check-scenario-rag" checked title="Использовать базу знаний (RAG)">
+                  <label class="form-check-label text-muted user-select-none" for="check-scenario-rag" style="font-size: 0.75rem;" title="Использовать базу знаний (RAG)">
+                    <i class="bi bi-database-check text-info me-1"></i>RAG
                   </label>
                 </div>
               </div>

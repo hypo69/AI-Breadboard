@@ -34,6 +34,7 @@ from fastapi import (
 from fastapi.responses import JSONResponse
 
 from src.logger import logger
+from apps.common.csv_logger import AppCsvLogger
 from .database import get_db, init_db, get_next_ticket_number
 from .models import (
     HelpdeskUser,
@@ -47,6 +48,7 @@ from .models import (
 from .ws_manager import hub
 
 router = APIRouter(prefix="/api/helpdesk", tags=["helpdesk"])
+_csv_logger = AppCsvLogger("helpdesk")
 
 
 def get_current_helpdesk_user(
@@ -148,6 +150,16 @@ async def list_tickets(
             ticket_dict["last_message"] = last_msg
             tickets.append(ticket_dict)
 
+    _csv_logger.log_poll(
+        poll_type="tickets",
+        metric_name="tickets_count",
+        value=len(tickets),
+        unit="count",
+        status="ok",
+        details=f"status_filter={status},priority_filter={priority}",
+        filename="helpdesk_polls.csv",
+    )
+
     return {"status": "success", "tickets": tickets, "count": len(tickets)}
 
 
@@ -198,6 +210,13 @@ async def create_ticket(
         "created_at": now_str,
         "updated_at": now_str,
     }
+
+    _csv_logger.log_event(
+        event_type="ticket_created",
+        status="success",
+        details=f"ticket_id={ticket_id},number={ticket_num},subject={payload.subject},priority={payload.priority}",
+        filename="helpdesk_events.csv",
+    )
 
     # Broadcast notification to all online operators
     asyncio.create_task(hub.broadcast_to_operators({
@@ -294,6 +313,13 @@ async def send_ticket_message(
         "created_at": now_str,
     }
 
+    _csv_logger.log_event(
+        event_type="ticket_message_sent",
+        status="success",
+        details=f"ticket_id={ticket_id},sender_type={sender_type},msg_id={msg_id}",
+        filename="helpdesk_events.csv",
+    )
+
     # Broadcast message to ticket subscribers and operators
     asyncio.create_task(hub.broadcast_to_ticket(ticket_id, {
         "type": "new_ticket_message",
@@ -350,6 +376,16 @@ async def update_ticket(
 
     updated_dict = dict(updated_row)
 
+    if payload.status is not None:
+        _csv_logger.log_param_change(
+            param_name=f"ticket_{ticket_id}_status",
+            old_value=t_row["status"],
+            new_value=payload.status,
+            status="success",
+            details=f"priority={updated_dict.get('priority')}",
+            filename="helpdesk_param_changes.csv",
+        )
+
     # Broadcast update event
     asyncio.create_task(hub.broadcast_to_ticket(ticket_id, {
         "type": "ticket_updated",
@@ -399,6 +435,17 @@ async def get_helpdesk_stats() -> Dict[str, Any]:
         closed_tickets=closed,
         urgent_tickets=urgent,
     )
+
+    _csv_logger.log_poll(
+        poll_type="stats",
+        metric_name="total_tickets",
+        value=total,
+        unit="count",
+        status="ok",
+        details=f"open={open_cnt},in_prog={in_prog},resolved={resolved},urgent={urgent}",
+        filename="helpdesk_polls.csv",
+    )
+
     return {"status": "success", "stats": stats.model_dump()}
 
 

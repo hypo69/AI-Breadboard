@@ -6,6 +6,7 @@
     {"path": "user-plugins/media_organizer"},
     {"path": "user-plugins/news_feed"},
     {"path": "user-plugins/telegram_bot"},
-    {"path": "user-plugins/user_storage"}
+    {"path": "user-plugins/user_storage"},
+    {"path": "user-plugins/whatsapp"}
   ]
 }

@@ -39,24 +39,6 @@ except ImportError:
     logger = logging.getLogger("mail_invoice_collector")
 
 
-DEFAULT_INVOICE_KEYWORDS: List[str] = [
-    "invoice",
-    "tax invoice",
-    "bill",
-    "receipt",
-    "חשבונית",
-    "חשבונית מס",
-    "קבלה",
-    "חשבונית עסקה",
-    "счет-фактура",
-    "счёт-фактура",
-    "счет",
-    "счёт",
-    "акт",
-    "квитанция",
-]
-
-
 @dataclass
 class MailAccountConfig:
     """Конфигурация параметров подключения к почтовому ящику."""
@@ -71,6 +53,24 @@ class MailAccountConfig:
     smtp_port: int = 587
     folder: str = "INBOX"
     timeout: int = 30
+    keywords: List[str] = field(
+        default_factory=lambda: [
+            "invoice",
+            "tax invoice",
+            "bill",
+            "receipt",
+            "חשבונית",
+            "חשבונית מס",
+            "קבלה",
+            "счет",
+            "счёт",
+            "счет-фактура",
+            "счёт-фактура",
+            "заказ",
+            "квитанция",
+            "акт",
+        ]
+    )
     extra: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -86,6 +86,41 @@ class MailAccountConfig:
             raise ValueError("Параметр 'username' не может быть пустым.")
         if not self.password:
             raise ValueError("Параметр 'password' не может быть пустым.")
+
+
+def load_mail_config_central(
+    account_key: str,
+    explicit_path: str | Path = Path("src/secrets/mailboxes.json"),
+) -> MailAccountConfig:
+    """Загрузка конфигурации из централизованного файла."""
+    if not Path(explicit_path).exists():
+        raise FileNotFoundError(f"Файл конфигурации не найден: {explicit_path}")
+
+    with open(explicit_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # Ищем по прямому ключу или по алиасам
+    config_data = None
+    if account_key in data:
+        config_data = data[account_key]
+    else:
+        for key, val in data.items():
+            if account_key.lower() in [a.lower() for a in val.get("aliases", [])]:
+                config_data = val
+                break
+    
+    if not config_data:
+        raise ValueError(f"Почтовый ящик '{account_key}' не найден в конфигурации.")
+
+    return MailAccountConfig(
+        host=config_data["imap_host"],
+        username=config_data["username"],
+        password=config_data["password"],
+        port=int(config_data.get("imap_port", 993)),
+        smtp_host=config_data.get("smtp_host"),
+        smtp_port=int(config_data.get("smtp_port", 587)),
+        keywords=config_data.get("keywords", ["invoice", "счет", "заказ"]),
+    )
 
 
 def load_mail_config(
@@ -290,7 +325,7 @@ class MailClient:
         Returns:
             List[Dict[str, Any]]: Список извлеченных сообщений и вложений.
         """
-        search_terms = list(keywords) if keywords else list(DEFAULT_INVOICE_KEYWORDS)
+        search_terms = list(keywords) if keywords else self.config.keywords
         search_terms_lower = [t.lower() for t in search_terms]
 
         if download_dir:

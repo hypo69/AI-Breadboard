@@ -317,12 +317,13 @@ async def explain_event(req: ExplainRequest) -> Dict[str, Any]:
         from src.api.router_chat import get_chat_model
         from src.config import ai_cfg
 
-        model_key = req.model or getattr(ai_cfg, "gemini_model_id", "gemini-3.1-flash-lite")
-        if getattr(ai_cfg, "use_gemini_cli", False) and not model_key.startswith(
-            ("gemini_cli:", "gemini-cli-", "foundry:", "ollama:", "openai:", "hf:", "onnx:", "agy-")
-        ):
-            cli_id = getattr(ai_cfg, "gemini_cli_model_id", "gemini-3.1-flash-lite")
-            model_key = f"gemini_cli:{cli_id}"
+        # New unified format: check ai_cfg.provider
+        provider = getattr(ai_cfg, "provider", "gemini").lower()
+        
+        if provider == "gemini_cli":
+            model_key = req.model or f"gemini_cli:{getattr(ai_cfg, 'gemini_cli_model_id', 'gemini-3.1-flash-lite')}"
+        else:
+            model_key = req.model or getattr(ai_cfg, "gemini_model_id", "gemini-3.1-flash-lite")
 
         system_prompt = (
             "Вы — ведущий инженер по надёжности систем (Site Reliability Engineer) и эксперт по ядру и службам Windows.\n"

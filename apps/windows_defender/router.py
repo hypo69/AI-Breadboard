@@ -49,6 +49,9 @@ from apps.windows_defender.core.models import (
 )
 from apps.windows_defender.core.process_tree_watcher import ProcessTreeWatcher
 from apps.windows_defender.core.threat_manager import ThreatManager
+from apps.common.csv_logger import AppCsvLogger
+
+_csv_logger = AppCsvLogger("windows_defender")
 
 
 def init_router() -> APIRouter:
@@ -58,6 +61,7 @@ def init_router() -> APIRouter:
         APIRouter: Сконфигурированный роутер приложения.
     """
     router = APIRouter(prefix="/api/v1/defender", tags=["Windows Defender Security"])
+
 
     defender_svc = DefenderService()
     asr_mgr = ASRManager(defender_svc)
@@ -80,7 +84,17 @@ def init_router() -> APIRouter:
     async def get_status() -> DefenderStatus:
         """Возвращает комплексное состояние защиты Microsoft Defender, версии баз и связанных процессов."""
         try:
-            return defender_svc.get_defender_status()
+            st = defender_svc.get_defender_status()
+            _csv_logger.log_poll(
+                poll_type="defender_status",
+                metric_name="realtime_protection",
+                value=st.realtime_protection_enabled,
+                unit="bool",
+                status="OK" if st.realtime_protection_enabled else "ATTENTION",
+                details={"antivirus_enabled": st.antivirus_enabled, "engine_ver": st.engine_version},
+                filename="windows_defender_status_polls.csv",
+            )
+            return st
         except Exception as e:
             logger.error(f"Ошибка получения статуса Defender: {e}")
             raise HTTPException(
@@ -92,7 +106,14 @@ def init_router() -> APIRouter:
     async def run_scan(req: ScanRequest) -> ScanResponse:
         """Запускает быстрое, полное или выборочное сканирование файловой системы через MpCmdRun / PowerShell."""
         try:
-            return defender_svc.trigger_scan(req)
+            res = defender_svc.trigger_scan(req)
+            _csv_logger.log_event(
+                event_type="scan_triggered",
+                status="SUCCESS" if res.success else "FAILED",
+                details={"scan_type": req.scan_type.value, "path": req.custom_path, "msg": res.message},
+                filename="windows_defender_scan_events.csv",
+            )
+            return res
         except Exception as e:
             logger.error(f"Ошибка запуска сканирования: {e}")
             raise HTTPException(
@@ -104,13 +125,21 @@ def init_router() -> APIRouter:
     async def update_signatures() -> ScanResponse:
         """Инициирует загрузку и применение свежих баз сигнатур Defender."""
         try:
-            return defender_svc.update_signatures()
+            res = defender_svc.update_signatures()
+            _csv_logger.log_event(
+                event_type="signatures_update",
+                status="SUCCESS" if res.success else "FAILED",
+                details={"message": res.message},
+                filename="windows_defender_scan_events.csv",
+            )
+            return res
         except Exception as e:
             logger.error(f"Ошибка обновления сигнатур: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Ошибка обновления баз: {e}",
             )
+
 
     @router.get("/asr", response_model=List[ASRRuleInfo], summary="Аудит правил Attack Surface Reduction")
     async def get_asr_rules() -> List[ASRRuleInfo]:

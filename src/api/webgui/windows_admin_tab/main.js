@@ -249,29 +249,142 @@
     }
   }
 
+  let currentWatchDir = '';
+
   async function fetchLiveFileEvents() {
     try {
       const res = await fetch('/api/sysadmin/file-audit/live-events?limit=30');
       if (!res.ok) return;
       const data = await res.json();
       const events = data.events || [];
+      currentWatchDir = data.watch_dir || '';
       
+      const dirPathEl = document.getElementById('winadmin-watch-dir-path');
+      if (dirPathEl) {
+        dirPathEl.innerText = currentWatchDir ? (currentWatchDir.split('\\').pop() || currentWatchDir) : 'Рабочая папка';
+        const badge = document.getElementById('winadmin-watch-dir-badge');
+        if (badge) badge.title = `Отслеживаемая директория:\n${currentWatchDir}\n(Нажмите для смены папки)`;
+      }
+
       const tbody = document.getElementById('winadmin-live-tbody');
       if (tbody) {
         if (events.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted p-2">Ожидание изменений в рабочей директории...</td></tr>';
+          tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted p-2">Ожидание изменений в папке <code>${currentWatchDir || 'проекта'}</code>...</td></tr>`;
           return;
         }
-        tbody.innerHTML = events.map(e => `
-          <tr>
+        tbody.innerHTML = events.map((e, idx) => `
+          <tr class="winadmin-live-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для AI-диагностики события">
             <td class="font-monospace text-muted small">${e.timestamp?.slice(11, 19) || ''}</td>
             <td><span class="badge ${e.is_deletion ? 'bg-danger' : (e.action === 'Created' ? 'bg-success' : 'bg-secondary')}">${e.action}</span></td>
-            <td class="font-monospace text-truncate small" style="max-width: 180px;" title="${e.path}">${e.path.split('\\').pop() || e.path}</td>
+            <td class="font-monospace text-truncate small" style="max-width: 240px;" title="${e.path}">${e.path.split('\\').pop() || e.path}</td>
           </tr>
         `).join('');
+
+        tbody.querySelectorAll('.winadmin-live-row').forEach(row => {
+          row.onclick = () => {
+            const idx = parseInt(row.getAttribute('data-idx'), 10);
+            const e = events[idx];
+            if (!e) return;
+
+            if (window.AITableModal) {
+              window.AITableModal.show({
+                icon: '⚡',
+                title: `Файловое событие: ${e.action}`,
+                subtitle: `${e.path.split('\\').pop() || e.path} | ${e.timestamp}`,
+                tableType: 'file_event',
+                badges: [
+                  { text: e.action, class: e.is_deletion ? 'badge bg-danger' : (e.action === 'Created' ? 'badge bg-success' : 'badge bg-info text-dark') },
+                  { text: 'WinAPI ReadDirectoryChangesW', class: 'badge bg-dark border border-secondary text-info' }
+                ],
+                metadata: [
+                  { label: 'Действие', value: e.action },
+                  { label: 'Полный путь', value: e.path },
+                  { label: 'Время события', value: e.timestamp },
+                  { label: 'Признак удаления', value: e.is_deletion ? 'Да (Файл удален/переименован)' : 'Нет' },
+                  { label: 'Отслеживаемый корень', value: currentWatchDir }
+                ],
+                rawTitle: 'Детали события WinAPI',
+                rawContent: JSON.stringify(e, null, 2),
+                requestData: e
+              });
+            }
+          };
+        });
       }
     } catch (e) {
       console.error('[WinAdminTab] Failed to fetch live file events:', e);
+    }
+  }
+
+  async function promptChangeWatchDir() {
+    const defaultVal = currentWatchDir || 'C:\\Users\\onela\\AppData\\Local\\AI-Breadboard';
+    const newPath = prompt('Укажите абсолютный путь к папке для мониторинга в реальном времени:\n(Путь будет сохранен в config.json)', defaultVal);
+    if (!newPath || newPath.trim() === '' || newPath.trim() === currentWatchDir) return;
+
+    try {
+      const res = await fetch('/api/sysadmin/file-audit/watch-dir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: newPath.trim() })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(`✅ ${data.message}`);
+        fetchLiveFileEvents();
+      } else {
+        alert(`❌ Ошибка: ${data.detail || data.error || 'Не удалось сменить директорию'}`);
+      }
+    } catch (err) {
+      alert(`❌ Ошибка подключения: ${err.message}`);
+    }
+  }
+
+  function showLiveWatcherHelpModal() {
+    if (window.AITableModal) {
+      window.AITableModal.show({
+        icon: 'ℹ️',
+        title: 'Справка: Real-Time Live Watcher',
+        subtitle: 'Низкоуровневый мониторинг файловой системы Windows через WinAPI ReadDirectoryChangesW',
+        tableType: 'help',
+        badges: [
+          { text: 'WinAPI', class: 'badge bg-info text-dark' },
+          { text: 'Real-Time Streaming', class: 'badge bg-success' },
+          { text: 'Рекурсивно', class: 'badge bg-warning text-dark' }
+        ],
+        metadata: [
+          { label: 'Технология', value: 'WinAPI ReadDirectoryChangesW (нативный вызов ядра Windows kernel32.dll)' },
+          { label: 'Область слежения', value: 'Выбранная папка и ВСЕ её подкаталоги рекурсивно (bWatchSubtree = True)' },
+          { label: 'Текущий путь', value: currentWatchDir || 'Рабочая папка проекта' },
+          { label: 'Хранение настроек', value: 'apps/windows_sysadmin/config.json (ключ watch_directory)' }
+        ],
+        rawTitle: 'Подробное руководство по панели мониторинга',
+        rawContent: `# Панель Real-Time Live Watcher
+
+### 1. Что это такое?
+Это компонент модуля Windows SysAdmin для мгновенного перехвата операций файловой системы в режиме реального времени без обращения к журналам событий Windows Security Log (где требуется включение SACL/auditpol).
+
+### 2. Типы отслеживаемых действий:
+- Created: Создание нового файла или папки (FILE_ACTION_ADDED).
+- Modified: Модификация содержимого, атрибутов или размера файла (FILE_ACTION_MODIFIED).
+- Deleted: Удаление файла или папки с диска (FILE_ACTION_REMOVED).
+- Renamed: Переименование объекта (старое и новое имя).
+
+### 3. Почему видны файлы History-journal, Cache_Data, f_000xxx?
+ReadDirectoryChangesW регистрирует ЛЮБЫЕ изменения внутри указанной папки. Если внутри директории работает браузер, Electron, WebView2 или SQLite базы данных:
+- *-journal, *-wal: Это временные журналы транзакций баз данных SQLite/LevelDB.
+- Cache_Data, f_000xxx: Это кэш веб-движка и сетевых запросов.
+
+### 4. Как сменить отслеживаемую папку?
+1. Нажмите кнопку «Папка» в заголовке панели (или кликните по бэджу с путем).
+2. Введите желаемый путь (например, D:\\Shared, C:\\Users\\...\\Downloads).
+3. Путь автоматически сохранится в конфиге и мониторинг переключится мгновенно.`,
+        requestData: {
+          current_watch_dir: currentWatchDir,
+          engine: 'ReadDirectoryChangesW'
+        }
+      });
+    } else {
+      alert('Мониторинг файловой системы Real-Time Live Watcher работает на базе WinAPI ReadDirectoryChangesW.\nТекущая папка: ' + currentWatchDir);
     }
   }
 
@@ -288,6 +401,9 @@
       const configBtn = document.getElementById('btn-winadmin-config');
       const enableAuditBtn = document.getElementById('btn-enable-auditpol');
       const configureSaclBtn = document.getElementById('btn-configure-project-sacl');
+      const changeWatchDirBtn = document.getElementById('btn-winadmin-change-watch-dir');
+      const watchDirBadge = document.getElementById('winadmin-watch-dir-badge');
+      const liveHelpBtn = document.getElementById('btn-winadmin-live-help');
 
       if (refreshBtn) {
         refreshBtn.onclick = () => {
@@ -297,6 +413,16 @@
           fetchFileDeletions();
           fetchLiveFileEvents();
         };
+      }
+
+      if (changeWatchDirBtn) {
+        changeWatchDirBtn.onclick = promptChangeWatchDir;
+      }
+      if (watchDirBadge) {
+        watchDirBadge.onclick = promptChangeWatchDir;
+      }
+      if (liveHelpBtn) {
+        liveHelpBtn.onclick = showLiveWatcherHelpModal;
       }
 
       if (enableAuditBtn) {

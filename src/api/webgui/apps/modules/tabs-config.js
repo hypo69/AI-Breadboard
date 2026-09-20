@@ -1,4 +1,4 @@
-﻿/**
+/**
  * apps/modules/tabs-config.js — Реестр определений вкладок для интерфейса /apps
  */
 
@@ -24,6 +24,8 @@ export const APP_TAB_DEFS = [
   { id: 'user_assistant', tab: 'user-assistant', tabId: 'tab-user-assistant', html: '/html/user_assistant_tab/index.html', js: '/html/user_assistant_tab/main.js' },
   { id: 'helpdesk', tab: 'helpdesk', tabId: 'tab-helpdesk', html: '/html/helpdesk_tab/index.html', js: '/html/helpdesk_tab/main.js' },
   { id: 'wikipedia_research', tab: 'wikipedia-research', tabId: 'tab-wikipedia-research', html: '/html/wikipedia_research_tab/index.html', js: '/html/wikipedia_research_tab/main.js' },
+  { id: 'autolog_manager', tab: 'autolog', tabId: 'tab-autolog', html: '/html/autolog_tab/index.html', js: '/html/autolog_tab/main.js' },
+  { id: 'software_transparency_scanner', tab: 'software-transparency', tabId: 'tab-software-transparency', html: '/html/software_transparency_tab/index.html', js: '/html/software_transparency_tab/main.js' },
 ];
 
 export const TC_EXCLUDES = new Set([

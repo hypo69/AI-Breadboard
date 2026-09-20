@@ -750,6 +750,16 @@ APPS_REGISTRY: List[Dict[str, Any]] = [
         "icon": "💾",
     },
     {
+        "id": "software_transparency_scanner",
+        "key": "software_transparency_scanner",
+        "tab": "tab-software-transparency",
+        "folder": "software_transparency_scanner",
+        "aliases": ["software_transparency_scanner", "transparency_scanner", "software_transparency", "tab-software-transparency"],
+        "name": "Software Transparency Scanner",
+        "ru_name": "Инвентаризатор и прозрачность ПО (AI Transparency)",
+        "icon": "🔍",
+    },
+    {
         "id": "hardware_monitor",
         "key": "hardware_monitor",
         "tab": "tab-hardware-monitor",

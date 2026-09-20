@@ -684,3 +684,159 @@ def mail_invoices_collect(
         return json.dumps({"success": False, "error": str(e)}, ensure_ascii=False)
 
 
+# --- Инструменты мониторинга почты (Mail Watcher) ---
+
+@tool
+def mail_watch_test_connection(account: str = "default") -> str:
+    """Проверяет подключение к почтовому ящику IMAP, используя учетные данные из mailboxes.json или secrets.json.
+
+    Args:
+        account: Имя или алиас почтового ящика из src/secrets/mailboxes.json (по умолчанию 'default').
+
+    Returns:
+        str: JSON-строка с результатом проверки соединения.
+    """
+    try:
+        import sys
+        skill_scripts = __root__ / ".agents" / "skills" / "mail-watcher" / "scripts"
+        if not skill_scripts.exists():
+            skill_scripts = __root__ / ".skills" / "mail-watcher" / "scripts"
+        if skill_scripts.exists() and str(skill_scripts) not in sys.path:
+            sys.path.insert(0, str(skill_scripts))
+
+        from mail_watcher import MailWatcher, load_mail_watcher_config
+        cfg = load_mail_watcher_config(account=account)
+        watcher = MailWatcher(cfg)
+        result = watcher.test_connection()
+        return json.dumps(result, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"[mail_watcher_tools] Ошибка проверки соединения: {e}")
+        return json.dumps({"success": False, "error": str(e)}, ensure_ascii=False)
+
+
+@tool
+def mail_watch_check_sender(
+    sender: str,
+    account: str = "default",
+    unread_only: bool = True,
+    mark_as_read: bool = False,
+    max_emails: int = 30,
+    folder: str = "INBOX",
+    notify_toast: bool = False,
+    forward_whatsapp: str = "",
+) -> str:
+    """Проверяет входящую почту по IMAP на наличие писем от определенного отправителя (по адресу, имени или домену).
+
+    Args:
+        sender: Email-адрес, имя или маска искомого отправителя.
+        account: Имя или алиас почтового ящика из src/secrets/mailboxes.json (по умолчанию 'default').
+        unread_only: Искать только среди непрочитанных писем (по умолчанию True).
+        mark_as_read: Помечать ли найденные письма как прочитанные на сервере (по умолчанию False).
+        max_emails: Максимальное количество последних писем для анализа (по умолчанию 30).
+        folder: Папка в почтовом ящике (по умолчанию INBOX).
+        notify_toast: Отправлять ли всплывающее системное уведомление Windows Toast (по умолчанию False).
+        forward_whatsapp: Опциональный номер WhatsApp для автоматической пересылки найденных писем (напр. '+79991234567').
+
+    Returns:
+        str: JSON-строка со списком найденных писем, темой, датой и превью содержимого.
+    """
+    try:
+        import sys
+        skill_scripts = __root__ / ".agents" / "skills" / "mail-watcher" / "scripts"
+        if not skill_scripts.exists():
+            skill_scripts = __root__ / ".skills" / "mail-watcher" / "scripts"
+        if skill_scripts.exists() and str(skill_scripts) not in sys.path:
+            sys.path.insert(0, str(skill_scripts))
+
+        from mail_watcher import MailWatcher, load_mail_watcher_config
+        cfg = load_mail_watcher_config(
+            account=account,
+            sender=sender,
+            folder=folder,
+            unread_only=unread_only,
+            mark_as_read=mark_as_read,
+            max_emails=max_emails,
+            whatsapp_recipient=forward_whatsapp or None,
+        )
+        watcher = MailWatcher(cfg)
+        messages = watcher.check_messages(
+            sender=sender,
+            unread_only=unread_only,
+            max_emails=max_emails,
+            mark_as_read=mark_as_read,
+            notify_toast=notify_toast,
+            forward_whatsapp=forward_whatsapp or None,
+        )
+        report = {
+            "success": True,
+            "target_sender": sender,
+            "folder": folder,
+            "found_count": len(messages),
+            "messages": [m.to_dict() for m in messages],
+            "alerts": [m.format_alert() for m in messages],
+            "whatsapp_forwarded_to": forward_whatsapp or cfg.whatsapp_recipient or None,
+        }
+        return json.dumps(report, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"[mail_watcher_tools] Ошибка проверки писем: {e}")
+        return json.dumps({"success": False, "error": str(e)}, ensure_ascii=False)
+
+
+# --- Инструменты WhatsApp Messenger ---
+
+@tool
+def whatsapp_test_connection() -> str:
+    """Проверяет доступность и валидность параметров подключения к API WhatsApp.
+
+    Returns:
+        str: JSON-строка с результатом проверки соединения.
+    """
+    try:
+        try:
+            from plugins.whatsapp.client import WhatsAppClient
+        except ImportError:
+            import sys
+            plugin_dir = __root__ / "plugins" / "user-plugins" / "whatsapp"
+            if plugin_dir.exists() and str(plugin_dir) not in sys.path:
+                sys.path.insert(0, str(plugin_dir))
+            from client import WhatsAppClient
+
+        client = WhatsAppClient()
+        result = client.test_connection()
+        return json.dumps(result, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"[whatsapp_tools] Ошибка проверки подключения WhatsApp: {e}")
+        return json.dumps({"success": False, "error": str(e)}, ensure_ascii=False)
+
+
+@tool
+def whatsapp_send_message(to: str, message: str) -> str:
+    """Отправляет текстовое сообщение в мессенджер WhatsApp на указанный номер телефона.
+
+    Args:
+        to: Номер телефона получателя в международном формате (например: '+79991234567' или '972501234567').
+        message: Текст сообщения для отправки.
+
+    Returns:
+        str: JSON-строка с подтверждением отправки.
+    """
+    try:
+        try:
+            from plugins.whatsapp.client import WhatsAppClient
+        except ImportError:
+            import sys
+            plugin_dir = __root__ / "plugins" / "user-plugins" / "whatsapp"
+            if plugin_dir.exists() and str(plugin_dir) not in sys.path:
+                sys.path.insert(0, str(plugin_dir))
+            from client import WhatsAppClient
+
+        client = WhatsAppClient()
+        result = client.send_message(to=to, message=message)
+        return json.dumps(result, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"[whatsapp_tools] Ошибка отправки сообщения в WhatsApp: {e}")
+        return json.dumps({"success": False, "error": str(e)}, ensure_ascii=False)
+
+
+
+

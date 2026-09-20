@@ -270,3 +270,106 @@
 .theme-check-icon.d-none {
   display: none !important;
 }
+
+/* ── Выдвижной боковой ярлычок (Правая вкладка-триггер) ─────────────────────── */
+.right-drawer-tab-trigger {
+  position: fixed;
+  top: 48%;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 1040;
+  background-color: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  padding: 10px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--nav-text);
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.right-drawer-tab-trigger:hover {
+  background-color: var(--nav-hover-bg);
+  color: var(--nav-active);
+  padding-left: 10px;
+  box-shadow: var(--shadow-lg);
+}
+
+.right-drawer-tab-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ── Правая выдвижная панель навигации (Offcanvas Drawer) ──────────────────── */
+.right-drawer-nav {
+  width: 320px !important;
+  background-color: var(--surface-1);
+  color: var(--text-color);
+  border-left: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  z-index: 1060;
+}
+
+.right-drawer-nav .offcanvas-header {
+  background-color: var(--surface-2);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.nav-drawer-group-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  padding: 0 4px;
+}
+
+.right-drawer-nav .list-group-item {
+  background-color: var(--surface-1);
+  border-color: var(--border-color);
+  color: var(--text-color);
+  font-size: 0.85rem;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  cursor: pointer;
+  border-radius: 6px;
+  margin-bottom: 3px;
+  border: 1px solid transparent;
+}
+
+.right-drawer-nav .list-group-item:hover {
+  background-color: var(--nav-hover-bg);
+  color: var(--nav-active);
+  transform: translateX(-2px);
+}
+
+.right-drawer-nav .list-group-item.active {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .right-drawer-nav .list-group-item.active {
+  background-color: #1f6feb;
+  border-color: #1f6feb;
+  color: #ffffff;
+}
+
+.right-drawer-nav .list-group-item.active:hover {
+  background-color: #1d4ed8;
+}
+
+[data-theme="dark"] .right-drawer-nav .list-group-item.active:hover {
+  background-color: #388bfd;
+}
+

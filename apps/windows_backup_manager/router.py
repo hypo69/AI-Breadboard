@@ -29,6 +29,7 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
 from src.logger import logger
+from apps.common.csv_logger import AppCsvLogger
 from apps.windows_backup_manager.core.file_history_manager import FileHistoryManager
 from apps.windows_backup_manager.core.file_history_rag import WindowsFileHistoryRAG, get_file_history_rag
 from apps.windows_backup_manager.core.health_checker import BackupHealthChecker
@@ -51,6 +52,7 @@ from apps.windows_backup_manager.core.models import (
 from apps.windows_backup_manager.core.storage_auditor import BackupStorageAuditor
 from apps.windows_backup_manager.core.vss_manager import VssManager
 
+_csv_logger = AppCsvLogger("windows_backup_manager")
 
 
 def init_router() -> APIRouter:
@@ -71,7 +73,18 @@ def init_router() -> APIRouter:
     @router.get("/health", response_model=BackupHealthReport)
     async def get_backup_health_report() -> BackupHealthReport:
         """Сводная оценка готовности системы резервного копирования Windows (Health Score)."""
-        return checker.generate_report()
+        report = checker.generate_report()
+        _csv_logger.log_poll(
+            poll_type="backup_health",
+            metric_name="health_score",
+            value=report.health_score,
+            unit="score",
+            status=report.status,
+            details={"service_running": report.service_running, "libraries_count": report.libraries_count},
+            filename="windows_backup_events.csv",
+        )
+        return report
+
 
     @router.get("/libraries", response_model=List[WindowsLibrary])
     async def list_libraries() -> List[WindowsLibrary]:
@@ -82,11 +95,18 @@ def init_router() -> APIRouter:
     async def create_library(payload: CreateLibraryRequest) -> WindowsLibrary:
         """Создать новую системную библиотеку Windows (.library-ms)."""
         try:
-            return lib_mgr.create_library(
+            lib = lib_mgr.create_library(
                 name=payload.name,
                 folders=payload.folders,
                 is_pinned=payload.is_pinned,
             )
+            _csv_logger.log_event(
+                event_type="create_library",
+                status="SUCCESS",
+                details={"name": payload.name, "folders": payload.folders},
+                filename="windows_backup_events.csv",
+            )
+            return lib
         except Exception as ex:
             logger.error(f"Ошибка создания библиотеки {payload.name}: {ex}")
             raise HTTPException(status_code=500, detail=str(ex))
@@ -101,6 +121,12 @@ def init_router() -> APIRouter:
         )
         if not res:
             raise HTTPException(status_code=404, detail=f"Библиотека '{library_name}' не найдена.")
+        _csv_logger.log_event(
+            event_type="add_folder_to_library",
+            status="SUCCESS",
+            details={"library": library_name, "folder": payload.folder_path},
+            filename="windows_backup_events.csv",
+        )
         return res
 
     @router.get("/file-history/status", response_model=FileHistoryStatus)
@@ -112,9 +138,16 @@ def init_router() -> APIRouter:
     async def trigger_file_history_backup() -> Dict[str, Any]:
         """Принудительно запустить цикл резервного копирования Истории файлов (fhexec -f)."""
         success, message = fh_mgr.trigger_backup_now()
+        _csv_logger.log_event(
+            event_type="file_history_trigger_backup",
+            status="SUCCESS" if success else "FAILED",
+            details=message,
+            filename="windows_backup_events.csv",
+        )
         if not success:
             raise HTTPException(status_code=500, detail=message)
         return {"success": True, "message": message}
+
 
     @router.get("/storage/audit", response_model=StorageBackupAudit)
     async def audit_backup_storage(target_path: Optional[str] = None) -> StorageBackupAudit:

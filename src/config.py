@@ -30,7 +30,8 @@ else:
 if not CONFIG_FILE.exists() and (__root__ / "config.json").exists():
     CONFIG_FILE = __root__ / "config.json"
 
-# Loading global configuration
+
+# Load configuration
 global_settings = j_loads_ns(CONFIG_FILE)
 
 # Exposure of main sections for easier import

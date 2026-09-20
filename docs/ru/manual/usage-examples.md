@@ -145,4 +145,38 @@ print(response.json())
 
 ---
 
+## Мониторинг почты и пересылка в WhatsApp (`mail-watcher` & `whatsapp`)
+
+Автоматическое отслеживание важных писем от конкретного адресата (руководителя, партнера или сервиса) и пересылка их текста в WhatsApp:
+
+### 1. Разовая проверка с выводом превью
+```powershell
+python .agents/skills/mail-watcher/scripts/mail_watcher_cli.py --sender "boss@company.com" --check-once
+```
+
+### 2. Фоновый мониторинг с пересылкой в WhatsApp
+```powershell
+# Проверка почты каждые 60 секунд, отправка всплывающего окна Toast и пересылка текста письма в WhatsApp
+python .agents/skills/mail-watcher/scripts/mail_watcher_cli.py `
+  --sender "director@company.com" `
+  --interval 60 `
+  --whatsapp "+79991234567" `
+  --toast
+```
+
+### 3. Отправка сообщений в WhatsApp через AI-агента
+```python
+# Использование инструмента агентом
+from src.ai.agents.tools import mail_watch_check_sender, whatsapp_send_message
+
+# Проверить почту и переслать новые письма
+mail_watch_check_sender.invoke({
+    "sender": "partner@domain.com",
+    "unread_only": True,
+    "forward_whatsapp": "+79991234567"
+})
+```
+
+---
+
 Смотрите также: [Каталог навыков](../skills/catalog.md) · [Каталог плагинов](../plugins/catalog.md) · [Конфигурация](secrets.md)

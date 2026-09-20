@@ -29,11 +29,14 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi import Request
 from src.api.router_auth import require_admin_user
+from apps.common.csv_logger import AppCsvLogger
 
 from .tui import NetworkTerminalState
 
 router = APIRouter(prefix="/api/network", tags=["network"])
+_csv_logger = AppCsvLogger("network_terminal")
 _state: NetworkTerminalState | None = None
+
 
 
 def get_state() -> NetworkTerminalState:
@@ -51,6 +54,16 @@ async def get_status(request: Request) -> dict:
     state.evaluate_security()
     stats = state.compute_stats()
     
+    _csv_logger.log_poll(
+        poll_type="network_status",
+        metric_name="total_packets",
+        value=state.total_packets_captured,
+        unit="packets",
+        status="OK",
+        details={"interface": state.interface, "bytes": state.total_bytes_captured},
+        filename="network_terminal_status_polls.csv",
+    )
+
     return {
         "interface": state.interface,
         "filter": state.display_filter,
@@ -141,7 +154,12 @@ async def start_capture(
     require_admin_user(request)
     global _state
     _state = NetworkTerminalState(interface=interface, display_filter=display_filter)
-    
+    _csv_logger.log_event(
+        event_type="start_capture",
+        status="SUCCESS",
+        details={"interface": interface, "filter": display_filter},
+        filename="network_terminal_events.csv",
+    )
     return {
         "success": True,
         "message": f"Capture started on interface {interface}",
@@ -154,11 +172,17 @@ async def stop_capture(request: Request) -> dict:
     require_admin_user(request)
     global _state
     _state = None
-    
+    _csv_logger.log_event(
+        event_type="stop_capture",
+        status="SUCCESS",
+        details="Capture stopped",
+        filename="network_terminal_events.csv",
+    )
     return {
         "success": True,
         "message": "Capture stopped",
     }
+
 
 
 def init_router() -> APIRouter:

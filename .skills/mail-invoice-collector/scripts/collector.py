@@ -29,10 +29,10 @@ from typing import Any, Dict, List, Optional, Sequence
 
 try:
     from .invoice_parser import INVOICE_CSV_COLUMNS, InvoiceParser
-    from .mail_client import DEFAULT_INVOICE_KEYWORDS, MailAccountConfig, MailClient
+    from .mail_client import MailAccountConfig, MailClient
 except (ImportError, ValueError):
     from invoice_parser import INVOICE_CSV_COLUMNS, InvoiceParser
-    from mail_client import DEFAULT_INVOICE_KEYWORDS, MailAccountConfig, MailClient
+    from mail_client import MailAccountConfig, MailClient
 
 try:
     from src.logger.logger import logger
@@ -96,7 +96,7 @@ class MailInvoiceCollector:
 
         # 2. Поиск и извлечение писем
         emails = self.client.fetch_invoice_emails(
-            keywords=keywords or DEFAULT_INVOICE_KEYWORDS,
+            keywords=keywords,
             max_emails=max_emails,
             download_dir=att_path,
         )

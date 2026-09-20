@@ -31,6 +31,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from src.logger import logger
+from apps.common.csv_logger import AppCsvLogger
 from apps.windows.core.modules import (
     CleanCollector,
     IntegrityCollector,
@@ -44,7 +45,9 @@ from apps.windows.core.system_restore import WindowsSystemRestoreManager
 from apps.windows.core.system_param_manager import SafeSystemParamManager
 
 router = APIRouter(prefix="/api/system-control", tags=["System Control Center"])
+_csv_logger = AppCsvLogger("system_control_center")
 _executor = SafeExecutor()
+
 _restore_mgr = WindowsSystemRestoreManager()
 _param_mgr = SafeSystemParamManager(restore_manager=_restore_mgr)
 _clean_collector = CleanCollector()
@@ -201,7 +204,7 @@ async def get_system_control_status() -> Dict[str, Any]:
         "system_protection_enabled": protection_status.get("system_protection_enabled", True),
     }
 
-    return {
+    res = {
         "is_elevated": is_elevated,
         "system": system_info,
         "security": security_info,
@@ -211,6 +214,16 @@ async def get_system_control_status() -> Dict[str, Any]:
         "update": update_info,
         "timestamp": datetime.now().isoformat(),
     }
+    _csv_logger.log_poll(
+        poll_type="system_status",
+        metric_name="ram_percent",
+        value=mem.percent,
+        unit="%",
+        status="OK",
+        details={"uptime_sec": uptime_seconds, "security": security_info.get("overall_status"), "is_elevated": is_elevated},
+        filename="system_control_status_polls.csv",
+    )
+    return res
 
 
 @router.get("/restore-points")
@@ -227,9 +240,16 @@ async def create_restore_point(payload: RestorePointCreateRequest) -> Dict[str, 
         description=payload.description,
         restore_point_type=payload.restore_point_type or "MODIFY_SETTINGS",
     )
+    _csv_logger.log_event(
+        event_type="restore_point_create",
+        status="SUCCESS" if res.get("success") else "FAILED",
+        details={"description": payload.description, "type": payload.restore_point_type, "result": res.get("message")},
+        filename="system_control_restore_points.csv",
+    )
     if not res.get("success"):
         raise HTTPException(status_code=500, detail=res.get("message", "Ошибка создания точки восстановления"))
     return res
+
 
 
 @router.get("/params")
@@ -324,18 +344,31 @@ async def get_profiles() -> Dict[str, Any]:
 @router.post("/profiles/apply")
 async def apply_profile(payload: ProfileApplyRequest) -> Dict[str, Any]:
     """Применение выбранных шагов профиля."""
-    return {
+    res = {
         "status": "SUCCESS",
         "profile_id": payload.profile_id,
         "applied_steps": payload.step_ids or [],
         "message": "Optimization profile applied successfully.",
     }
+    _csv_logger.log_event(
+        event_type="profile_apply",
+        status="SUCCESS",
+        details={"profile_id": payload.profile_id, "steps": payload.step_ids},
+        filename="system_control_profile_events.csv",
+    )
+    return res
 
 
 @router.post("/actions/reboot")
 async def trigger_reboot() -> Dict[str, Any]:
     """Запрос перезагрузки системы."""
     logger.info("Reboot requested via System Control Center")
+    _csv_logger.log_event(
+        event_type="system_reboot_scheduled",
+        status="SUCCESS",
+        details="Reboot scheduled in 60s",
+        filename="system_control_profile_events.csv",
+    )
     return {"status": "SUCCESS", "message": "Reboot scheduled in 60 seconds."}
 
 
@@ -343,11 +376,19 @@ async def trigger_reboot() -> Dict[str, Any]:
 async def trigger_cleanup() -> Dict[str, Any]:
     """Выполнение безопасной очистки временных файлов."""
     res = _clean_collector.collect()
+    cleaned = getattr(res, "total_cleanable_mb", 0)
+    _csv_logger.log_event(
+        event_type="system_cleanup_executed",
+        status="SUCCESS",
+        details={"cleaned_mb": cleaned},
+        filename="system_control_profile_events.csv",
+    )
     return {
         "status": "SUCCESS",
-        "cleaned_mb": getattr(res, "total_cleanable_mb", 0),
+        "cleaned_mb": cleaned,
         "message": "System cleanup completed successfully.",
     }
+
 
 
 def init_router() -> APIRouter:

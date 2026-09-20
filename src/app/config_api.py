@@ -46,9 +46,10 @@ class OnnxConfigRequest(BaseModel):
 
 
 def get_foundry_config() -> dict:
+    """Get Foundry config in new format (provider: 'foundry')."""
     return {
-        "enabled": getattr(ai_cfg, "use_foundry", False) if ai_cfg else False,
-        "url": getattr(ai_cfg, "foundry_base_url", "http://localhost:54837") if ai_cfg else "http://localhost:54837",
+        "enabled": False,
+        "url": "http://localhost:54837",
         "key": os.getenv("FOUNDRY_API_KEY", ""),
         "model": getattr(ai_cfg, "foundry_model_id", "qwen2.5-1.5b") if ai_cfg else "qwen2.5-1.5b"
     }
@@ -63,7 +64,7 @@ def save_foundry_config(data: FoundryConfigRequest) -> dict:
         set_key(env_path, "FOUNDRY_API_KEY", data.key)
         os.environ["FOUNDRY_API_KEY"] = data.key
     
-    # Non-secrets go to config.json when remember is True
+    # Save to config.json in new format (provider-based)
     if data.remember:
         config_path = __root__ / 'config.json'
         try:
@@ -74,31 +75,34 @@ def save_foundry_config(data: FoundryConfigRequest) -> dict:
             
         if "ai" not in cfg_data:
             cfg_data["ai"] = {}
-            
-        cfg_data["ai"]["use_foundry"] = data.enabled
+        
+        # New format: provider string + nested models
+        cfg_data["ai"]["provider"] = "foundry"
+        cfg_data["ai"]["foundry"] = {"model": data.model}
         if data.url:
             cfg_data["ai"]["foundry_base_url"] = data.url
-        if data.model:
-            cfg_data["ai"]["foundry_model_id"] = data.model
         
         with open(config_path, 'w', encoding='utf-8') as f:
             json.dump(cfg_data, f, indent=2, ensure_ascii=False)
         
     # Update in-memory config
     if ai_cfg:
-        ai_cfg.use_foundry = data.enabled
+        ai_cfg.provider = "foundry"
+        if hasattr(ai_cfg, 'foundry'):
+            ai_cfg.foundry.model = data.model
+        else:
+            ai_cfg.foundry = type('obj', (object,), {'model': data.model})()
         if data.url:
             ai_cfg.foundry_base_url = data.url
-        if data.model:
-            ai_cfg.foundry_model_id = data.model
     
     return {"status": "ok"}
 
 
 def get_ollama_config() -> dict:
+    """Get Ollama config in new format (provider: 'ollama')."""
     return {
-        "enabled": getattr(ai_cfg, "use_ollama", False) if ai_cfg else False,
-        "url": getattr(ai_cfg, "ollama_base_url", "http://localhost:11434") if ai_cfg else "http://localhost:11434",
+        "enabled": False,
+        "url": "http://localhost:11434",
         "model": getattr(ai_cfg, "ollama_model_id", "llama3.1") if ai_cfg else "llama3.1"
     }
 
@@ -113,32 +117,36 @@ def save_ollama_config(data: OllamaConfigRequest) -> dict:
         
     if "ai" not in cfg_data:
         cfg_data["ai"] = {}
-        
-    cfg_data["ai"]["use_ollama"] = data.enabled
+    
+    # New format: provider string + nested models
+    cfg_data["ai"]["provider"] = "ollama"
+    cfg_data["ai"]["ollama"] = {"model": data.model}
     if data.url:
         cfg_data["ai"]["ollama_base_url"] = data.url
-    if data.model:
-        cfg_data["ai"]["ollama_model_id"] = data.model
     
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(cfg_data, f, indent=2, ensure_ascii=False)
     
     # Update in-memory config
     if ai_cfg:
-        ai_cfg.use_ollama = data.enabled
+        ai_cfg.provider = "ollama"
+        if hasattr(ai_cfg, 'ollama'):
+            ai_cfg.ollama.model = data.model
+        else:
+            ai_cfg.ollama = type('obj', (object,), {'model': data.model})()
         if data.url:
             ai_cfg.ollama_base_url = data.url
-        if data.model:
-            ai_cfg.ollama_model_id = data.model
     
     return {"status": "ok"}
 
 
 def get_agy_config() -> dict:
+    """Get AGY config in new format (provider: 'agy')."""
     return {
-        "enabled": getattr(ai_cfg, "use_agy", True) if ai_cfg else True,
+        "enabled": False,
         "key": os.getenv("AGY_API_KEY", "") or os.getenv("GEMINI_ANTIGRAVITY_API_KEY", ""),
-        "model": getattr(ai_cfg, "agy_model_id", "agy-flash") if ai_cfg else "agy-flash"
+        "model": getattr(ai_cfg, "agy_model_id", "agy-flash"),
+        "effort": getattr(ai_cfg, "agy_effort", "medium"),
     }
 
 
@@ -152,7 +160,6 @@ def save_agy_config(data: AgyConfigRequest) -> dict:
         os.environ["AGY_API_KEY"] = data.key
     
     if data.remember:
-        # Non-secrets go to config.json
         config_path = __root__ / 'config.json'
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
@@ -162,19 +169,28 @@ def save_agy_config(data: AgyConfigRequest) -> dict:
             
         if "ai" not in cfg_data:
             cfg_data["ai"] = {}
-            
-        cfg_data["ai"]["use_agy"] = data.enabled
-        if data.model:
-            cfg_data["ai"]["agy_model_id"] = data.model
+        
+        # New format: provider string + nested models
+        cfg_data["ai"]["provider"] = "agy"
+        cfg_data["ai"]["agy"] = {"model": data.model}
+        if hasattr(data, 'effort') and data.effort:
+            cfg_data["ai"]["agy"]["effort"] = data.effort
         
         with open(config_path, 'w', encoding='utf-8') as f:
             json.dump(cfg_data, f, indent=2, ensure_ascii=False)
         
     # Update in-memory config
     if ai_cfg:
-        ai_cfg.use_agy = data.enabled
-        if data.model:
-            ai_cfg.agy_model_id = data.model
+        ai_cfg.provider = "agy"
+        if hasattr(ai_cfg, 'agy'):
+            ai_cfg.agy.model = data.model
+        else:
+            ai_cfg.agy = type('obj', (object,), {'model': data.model})()
+        if hasattr(data, 'effort') and data.effort:
+            if hasattr(ai_cfg, 'agy'):
+                ai_cfg.agy.effort = data.effort
+            else:
+                ai_cfg.agy = type('obj', (object,), {'model': data.model, 'effort': data.effort})()
     
     return {"status": "ok"}
 

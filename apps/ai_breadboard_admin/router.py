@@ -34,13 +34,16 @@ from apps.ai_breadboard_admin.src import (
     UserAdminService,
 )
 from src.logger import logger
+from apps.common.csv_logger import AppCsvLogger
 
 router = APIRouter(prefix="/api/v1/ai_breadboard_admin", tags=["ai_breadboard_admin"])
+_csv_logger = AppCsvLogger("ai_breadboard_admin")
 
 config_mgr = AdminConfigManager()
 instructions_mgr = InstructionsManager()
 sources_mgr = SourcesManager()
 user_svc = UserAdminService()
+
 
 
 def _check_admin_auth(request: Request) -> bool:
@@ -160,7 +163,7 @@ async def get_admin_status(request: Request) -> Dict[str, Any]:
     rag_cfg = config_mgr.get_rag_config()
     search_cfg = config_mgr.get_web_search_config()
 
-    return {
+    res = {
         "status": "ok",
         "service": "ai_breadboard_admin",
         "rag_mode": rag_cfg.get("mode"),
@@ -168,6 +171,16 @@ async def get_admin_status(request: Request) -> Dict[str, Any]:
         "total_users": users_data.get("stats", {}).get("total", 0),
         "active_users": users_data.get("stats", {}).get("active", 0),
     }
+    _csv_logger.log_poll(
+        poll_type="admin_status",
+        metric_name="total_users",
+        value=res["total_users"],
+        unit="count",
+        status="OK",
+        details={"rag_mode": res["rag_mode"], "search_engine": res["search_engine"], "active_users": res["active_users"]},
+        filename="admin_status_polls.csv",
+    )
+    return res
 
 
 # ============================================================================
@@ -185,7 +198,17 @@ async def get_rag_settings(request: Request) -> Dict[str, str]:
 async def set_rag_settings(data: RagModeRequest, request: Request) -> Dict[str, Any]:
     """Установка конфигурации режима RAG."""
     _check_admin_auth(request)
+    old_cfg = config_mgr.get_rag_config()
+    old_mode = old_cfg.get("mode")
     success = config_mgr.set_rag_config(data.mode)
+    _csv_logger.log_param_change(
+        param_name="rag.mode",
+        old_value=old_mode,
+        new_value=data.mode,
+        status="SUCCESS" if success else "FAILED",
+        user="admin",
+        filename="admin_config_param_changes.csv",
+    )
     if not success:
         raise HTTPException(status_code=500, detail="Не удалось сохранить параметры RAG")
     return {"status": "ok", "mode": data.mode}
@@ -202,11 +225,20 @@ async def get_web_search_settings(request: Request) -> Dict[str, str]:
 async def set_web_search_settings(data: WebSearchConfigRequest, request: Request) -> Dict[str, Any]:
     """Установка параметров веб-поиска."""
     _check_admin_auth(request)
+    old_cfg = config_mgr.get_web_search_config()
     success = config_mgr.set_web_search_config(
         engine=data.engine,
         gemini_model=data.gemini_model,
         gemini_cli_model=data.gemini_cli_model,
         agy_model=data.agy_model,
+    )
+    _csv_logger.log_param_change(
+        param_name="web_search.config",
+        old_value=old_cfg,
+        new_value=data.model_dump(),
+        status="SUCCESS" if success else "FAILED",
+        user="admin",
+        filename="admin_config_param_changes.csv",
     )
     if not success:
         raise HTTPException(status_code=500, detail="Не удалось сохранить настройки поиска")
@@ -227,10 +259,20 @@ async def get_app_settings(app_name: str, request: Request) -> Dict[str, Any]:
 async def set_app_settings(app_name: str, data: AppConfigUpdateRequest, request: Request) -> Dict[str, Any]:
     """Обновление конфигурации микроприложения из /apps."""
     _check_admin_auth(request)
+    old_cfg = config_mgr.get_app_config(app_name)
     success = config_mgr.set_app_config(app_name, data.config)
+    _csv_logger.log_param_change(
+        param_name=f"apps.{app_name}.config",
+        old_value=old_cfg,
+        new_value=data.config,
+        status="SUCCESS" if success else "FAILED",
+        user="admin",
+        filename="admin_config_param_changes.csv",
+    )
     if not success:
         raise HTTPException(status_code=500, detail=f"Не удалось сохранить конфигурацию для '{app_name}'")
     return {"status": "ok", "app": app_name, "config": data.config}
+
 
 
 # ============================================================================
@@ -253,6 +295,15 @@ async def save_system_instruction(data: InstructionSaveRequest, request: Request
     _check_admin_auth(request)
     try:
         res = instructions_mgr.save_instruction(data.mode, data.content)
+        _csv_logger.log_param_change(
+            param_name=f"instruction.{data.mode}",
+            old_value="(previous_version)",
+            new_value=data.content[:100] + "...",
+            status="SUCCESS",
+            user="admin",
+            details={"version_file": res.get("version_file")},
+            filename="admin_instruction_param_changes.csv",
+        )
         # Динамическое обновление активной модели в памяти
         if data.mode == "chat" and hasattr(request.app.state, "chat_model") and request.app.state.chat_model:
             request.app.state.chat_model.update_system_instruction(data.content)
@@ -260,6 +311,7 @@ async def save_system_instruction(data: InstructionSaveRequest, request: Request
             request.app.state.narrator_model.update_system_instruction(data.content)
         return res
     except ValueError as ex:
+        _csv_logger.log_event("instruction_save_error", status="FAILED", details=str(ex), filename="admin_instruction_param_changes.csv")
         raise HTTPException(status_code=400, detail=str(ex))
 
 
@@ -280,6 +332,14 @@ async def activate_instruction_version(data: InstructionActivateRequest, request
     try:
         res = instructions_mgr.activate_version(data.mode, data.filename)
         content = res.get("content", "")
+        _csv_logger.log_param_change(
+            param_name=f"instruction.{data.mode}.active_version",
+            old_value="",
+            new_value=data.filename,
+            status="SUCCESS",
+            user="admin",
+            filename="admin_instruction_param_changes.csv",
+        )
         if data.mode == "chat" and hasattr(request.app.state, "chat_model") and request.app.state.chat_model:
             request.app.state.chat_model.update_system_instruction(content)
         elif data.mode == "narrator" and hasattr(request.app.state, "narrator_model") and request.app.state.narrator_model:
@@ -308,6 +368,7 @@ async def save_raw_sources_endpoint(data: RawSourcesUpdate, request: Request) ->
     _check_admin_auth(request)
     try:
         sources_mgr.save_sources_raw(data.content)
+        _csv_logger.log_event("sources_raw_saved", status="SUCCESS", details="Updated sources JSON", filename="admin_config_param_changes.csv")
         return {"status": "ok"}
     except ValueError as ex:
         raise HTTPException(status_code=400, detail=str(ex))
@@ -336,7 +397,7 @@ async def create_user_endpoint(data: AdminUserCreateRequest, request: Request) -
     """Создание нового пользователя."""
     _check_admin_auth(request)
     try:
-        return user_svc.create_user(
+        res = user_svc.create_user(
             email=data.email,
             name=data.name,
             password=data.password,
@@ -345,7 +406,15 @@ async def create_user_endpoint(data: AdminUserCreateRequest, request: Request) -
             is_active=data.is_active,
             is_email_verified=data.is_email_verified,
         )
+        _csv_logger.log_event(
+            event_type="user_create",
+            status="SUCCESS",
+            details={"email": data.email, "role": data.role, "is_admin": data.is_admin},
+            filename="admin_user_events.csv",
+        )
+        return res
     except ValueError as ex:
+        _csv_logger.log_event("user_create_failed", status="FAILED", details={"email": data.email, "error": str(ex)}, filename="admin_user_events.csv")
         raise HTTPException(status_code=400, detail=str(ex))
     except RuntimeError as ex:
         raise HTTPException(status_code=500, detail=str(ex))
@@ -368,7 +437,14 @@ async def update_user_endpoint(user_id: int, data: AdminUserUpdateRequest, reque
     _check_admin_auth(request)
     updates = {k: v for k, v in data.model_dump().items() if v is not None}
     try:
-        return user_svc.update_user(user_id, **updates)
+        res = user_svc.update_user(user_id, **updates)
+        _csv_logger.log_event(
+            event_type="user_update",
+            status="SUCCESS",
+            details={"user_id": user_id, "updates": list(updates.keys())},
+            filename="admin_user_events.csv",
+        )
+        return res
     except KeyError:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
     except ValueError as ex:
@@ -381,6 +457,7 @@ async def set_user_password_endpoint(user_id: int, data: AdminUserPasswordReques
     _check_admin_auth(request)
     try:
         user_svc.set_user_password(user_id, data.password)
+        _csv_logger.log_event("user_password_reset", status="SUCCESS", details={"user_id": user_id}, filename="admin_user_events.csv")
         return {"status": "ok", "message": "Пароль успешно обновлен"}
     except KeyError:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
@@ -394,6 +471,7 @@ async def toggle_user_active_endpoint(user_id: int, request: Request) -> Dict[st
     _check_admin_auth(request)
     try:
         new_status = user_svc.toggle_user_active(user_id)
+        _csv_logger.log_event("user_toggle_active", status="SUCCESS", details={"user_id": user_id, "is_active": new_status}, filename="admin_user_events.csv")
         return {"status": "ok", "is_active": new_status}
     except KeyError:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
@@ -407,6 +485,7 @@ async def toggle_user_role_endpoint(user_id: int, request: Request) -> Dict[str,
     _check_admin_auth(request)
     try:
         res = user_svc.toggle_user_role(user_id)
+        _csv_logger.log_event("user_toggle_role", status="SUCCESS", details={"user_id": user_id, "result": res}, filename="admin_user_events.csv")
         return {"status": "ok", **res}
     except KeyError:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
@@ -420,11 +499,13 @@ async def delete_user_endpoint(user_id: int, request: Request) -> Dict[str, Any]
     _check_admin_auth(request)
     try:
         user_svc.delete_user(user_id)
+        _csv_logger.log_event("user_delete", status="SUCCESS", details={"user_id": user_id}, filename="admin_user_events.csv")
         return {"status": "ok", "message": f"Пользователь ID {user_id} удален"}
     except KeyError:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
     except ValueError as ex:
         raise HTTPException(status_code=400, detail=str(ex))
+
 
 
 @router.get("/users/orphaned/dirs")

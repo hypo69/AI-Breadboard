@@ -137,13 +137,20 @@ if ($geminiApiKey) {
     $env:GEMINI_API_KEY = $geminiApiKey
 }
 
-$configPath = Join-Path $projectRoot "config.json"
+$configPath = if ($env:AIBREADBOARD_CONFIG) {
+    $cfgPath = Join-Path $projectRoot $env:AIBREADBOARD_CONFIG
+    if (Test-Path $cfgPath) { $cfgPath } else { $configPath }
+} else {
+    $configPath
+}
+
 $defaultModel = "gemini-2.5-flash"
 if (Test-Path $configPath) {
     try {
         $cfg = Get-Content $configPath -Raw | ConvertFrom-Json
-        if ($cfg.ai.gemini_cli_model_id) {
-            $defaultModel = [string]$cfg.ai.gemini_cli_model_id
+        # New format: config_tc.json style
+        if ($cfg.ai -and $cfg.ai.gemini -and $cfg.ai.gemini.model) {
+            $defaultModel = [string]$cfg.ai.gemini.model
         } elseif ($cfg.web_search.gemini_cli_model) {
             $defaultModel = [string]$cfg.web_search.gemini_cli_model
         }

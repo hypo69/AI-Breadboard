@@ -167,6 +167,8 @@ class ScenarioChatRequest(BaseModel):
     message: str = Field(description="Текст запроса или вопроса на естественном языке")
     conversation_id: Optional[str] = Field(default=None, description="Идентификатор диалога")
     auto_create_skill: bool = Field(default=False, description="Автоматически генерировать навык без подтверждения")
+    keep_context: bool = Field(default=True, description="Сохранять и учитывать контекст предыдущих сообщений диалога")
+    use_rag: bool = Field(default=True, description="Использовать базу знаний RAG для поиска контекста")
 
 
 class ScenarioChatResponse(BaseModel):
@@ -174,6 +176,7 @@ class ScenarioChatResponse(BaseModel):
     reply: str = Field(description="Форматированный ответ в Markdown")
     command_executed: Optional[str] = Field(default=None, description="Выполненная системная команда или скрипт")
     created_skill: Optional[ScenarioCreatedSkillInfo] = Field(default=None, description="Данные о созданном/обновленном навыке")
+    generated_prompt: Optional[str] = Field(default=None, description="Сформированный промпт, переданный языковой модели")
     tool_plan: Optional[ScenarioToolPlanInfo] = Field(default=None, description="Метаданные плана инструмента для ручного сохранения")
     remediation_actions: List[ScenarioRemediationActionInfo] = Field(default_factory=list, description="Список доступных действий по исправлению")
     raw_data: Optional[Any] = Field(default=None, description="Сырые структурированные данные")
@@ -1029,10 +1032,13 @@ async def _handle_scenario_chat(req: ScenarioChatRequest) -> ScenarioChatRespons
     """Обрабатывает запросы в мини-чате, динамически генерируя инструмент/зонд через подсистему apps/windows."""
     engine = _get_dynamic_tool_engine()
     if engine:
+        effective_conv_id = req.conversation_id if req.keep_context else None
         res = await engine.process_query(
             query=req.message,
             auto_create_skill=req.auto_create_skill,
-            conversation_id=req.conversation_id,
+            conversation_id=effective_conv_id,
+            keep_context=req.keep_context,
+            use_rag=req.use_rag,
         )
         created_skill_obj = None
         if res.get("created_skill"):
@@ -1075,6 +1081,7 @@ async def _handle_scenario_chat(req: ScenarioChatRequest) -> ScenarioChatRespons
             reply=res.get("reply", ""),
             command_executed=res.get("command_executed"),
             created_skill=created_skill_obj,
+            generated_prompt=res.get("generated_prompt"),
             tool_plan=tool_plan_obj,
             remediation_actions=actions_list,
             raw_data=res.get("raw_data"),
@@ -1187,12 +1194,16 @@ def init_router() -> APIRouter:
         if not engine:
             raise HTTPException(status_code=500, detail="Движок DynamicWindowsToolEngine недоступен.")
 
+        effective_conv_id = req.conversation_id if req.keep_context else None
+
         async def event_generator():
             try:
                 async for evt in engine.process_query_stream(
                     query=req.message,
                     auto_create_skill=req.auto_create_skill,
-                    conversation_id=req.conversation_id,
+                    conversation_id=effective_conv_id,
+                    keep_context=req.keep_context,
+                    use_rag=req.use_rag,
                 ):
                     yield f"data: {json.dumps(evt, ensure_ascii=False)}\n\n"
             except Exception as e:

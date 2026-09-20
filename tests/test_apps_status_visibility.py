@@ -124,12 +124,18 @@ class TestAppsStatusVisibility:
             assert app_info["enabled"] is False
 
     def test_apps_hub_js_contains_filtering_logic(self):
-        """apps/main.js must contain status fetching, visibility toggling, and fallback handling."""
+        """apps/main.js and its modules must contain status fetching, visibility toggling, and fallback handling."""
         hub_js = __root__ / "src" / "api" / "webgui" / "apps" / "main.js"
         if not hub_js.exists():
             hub_js = __root__ / "src" / "api" / "webinterface" / "apps" / "main.js"
         assert hub_js.exists()
         content = hub_js.read_text(encoding="utf-8")
+        
+        # Include modules for modular apps architecture
+        modules_dir = hub_js.parent / "modules"
+        if modules_dir.exists():
+            for mod_file in modules_dir.glob("*.js"):
+                content += "\n" + mod_file.read_text(encoding="utf-8")
 
         assert "fetchAppsStatus" in content
         assert "/api/apps/status" in content
@@ -139,12 +145,18 @@ class TestAppsStatusVisibility:
         assert "tab-windows-admin" in content
 
     def test_admin_main_js_contains_apps_sync_logic(self):
-        """admin/main.js must contain syncAppsTabsVisibility logic for hiding disabled dropdown items."""
+        """admin/main.js and its modules must contain syncAppsTabsVisibility logic for hiding disabled dropdown items."""
         admin_js = __root__ / "src" / "api" / "webgui" / "admin" / "main.js"
         if not admin_js.exists():
             admin_js = __root__ / "src" / "api" / "webinterface" / "admin" / "main.js"
         assert admin_js.exists()
         content = admin_js.read_text(encoding="utf-8")
+
+        # Include modules for modular admin architecture
+        modules_dir = admin_js.parent / "modules"
+        if modules_dir.exists():
+            for mod_file in modules_dir.glob("*.js"):
+                content += "\n" + mod_file.read_text(encoding="utf-8")
 
         assert "syncAppsTabsVisibility" in content
         assert "/api/apps/status" in content

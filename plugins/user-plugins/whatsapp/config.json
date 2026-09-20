@@ -1,0 +1,8 @@
+{
+  "provider": "cloud_api",
+  "phone_number_id": "",
+  "api_version": "v18.0",
+  "default_recipient": "",
+  "timeout": 15,
+  "enabled": true
+}

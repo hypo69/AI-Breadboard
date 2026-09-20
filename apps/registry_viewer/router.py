@@ -31,6 +31,7 @@ from apps.registry_viewer.models import (
     SetValueRequestDTO,
 )
 from apps.registry_viewer.viewer import RegistryViewer
+from apps.common.csv_logger import AppCsvLogger
 
 
 
@@ -38,11 +39,20 @@ def init_router(viewer: Optional[RegistryViewer] = None) -> APIRouter:
     """Инициализировать и вернуть FastAPI роутер Registry Viewer."""
     registry_engine = viewer or RegistryViewer()
     router = APIRouter(prefix="/api/registry", tags=["registry-viewer"])
+    csv_logger = AppCsvLogger("registry_viewer")
 
     @router.get("/bookmarks")
     async def get_bookmarks() -> Dict[str, Any]:
         """Получить список быстрых системных закладок реестра."""
         bookmarks = registry_engine.get_bookmarks()
+        csv_logger.log_poll(
+            poll_type="bookmarks",
+            metric_name="bookmarks_count",
+            value=len(bookmarks),
+            unit="count",
+            status="ok",
+            filename="registry_viewer_polls.csv",
+        )
         return {
             "status": "ok",
             "bookmarks": [bm.model_dump() for bm in bookmarks],
@@ -72,12 +82,19 @@ def init_router(viewer: Optional[RegistryViewer] = None) -> APIRouter:
     ) -> SearchResponseDTO:
         """Поиск ключей, параметров и значений в системном реестре."""
         try:
-            return registry_engine.search(
+            res = registry_engine.search(
                 query=query,
                 hive=hive,
                 path=path,
                 max_results=max_results,
             )
+            csv_logger.log_event(
+                event_type="registry_search",
+                status="ok",
+                details=f"hive={hive},path={path},query={query},results={res.total_found}",
+                filename="registry_viewer_events.csv",
+            )
+            return res
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
@@ -90,6 +107,12 @@ def init_router(viewer: Optional[RegistryViewer] = None) -> APIRouter:
         """Экспорт параметров ключа реестра в JSON или CSV."""
         try:
             details = registry_engine.read_key(hive=hive, path=path)
+            csv_logger.log_event(
+                event_type="registry_export",
+                status="ok",
+                details=f"hive={hive},path={path},format={format},values_count={len(details.values)}",
+                filename="registry_viewer_events.csv",
+            )
             if format == "csv":
                 csv_data = registry_engine.export_key_to_csv(details)
                 return Response(
@@ -114,7 +137,16 @@ def init_router(viewer: Optional[RegistryViewer] = None) -> APIRouter:
     async def set_value(req: SetValueRequestDTO) -> EditOperationResultDTO:
         """Создать или изменить параметр реестра с созданием снимка резервной копии."""
         try:
-            return registry_engine.set_value(req)
+            res = registry_engine.set_value(req)
+            csv_logger.log_param_change(
+                param_name=f"{req.hive}\\{req.path}\\{req.name}",
+                old_value="<previous>",
+                new_value=str(req.value),
+                status="success" if res.success else "error",
+                details=f"type={req.value_type},backup={res.backup_id}",
+                filename="registry_viewer_param_changes.csv",
+            )
+            return res
         except PermissionError as e:
             raise HTTPException(status_code=403, detail=str(e))
         except ValueError as e:
@@ -126,7 +158,16 @@ def init_router(viewer: Optional[RegistryViewer] = None) -> APIRouter:
     async def delete_value(req: DeleteValueRequestDTO) -> EditOperationResultDTO:
         """Удалить параметр реестра с созданием снимка резервной копии."""
         try:
-            return registry_engine.delete_value(req)
+            res = registry_engine.delete_value(req)
+            csv_logger.log_param_change(
+                param_name=f"{req.hive}\\{req.path}\\{req.name}",
+                old_value="<deleted>",
+                new_value="<null>",
+                status="success" if res.success else "error",
+                details=f"backup={res.backup_id}",
+                filename="registry_viewer_param_changes.csv",
+            )
+            return res
         except KeyError as e:
             raise HTTPException(status_code=404, detail=str(e))
         except PermissionError as e:
@@ -138,7 +179,14 @@ def init_router(viewer: Optional[RegistryViewer] = None) -> APIRouter:
     async def create_key(req: CreateKeyRequestDTO) -> EditOperationResultDTO:
         """Создать новый раздел в реестре."""
         try:
-            return registry_engine.create_key(req)
+            res = registry_engine.create_key(req)
+            csv_logger.log_event(
+                event_type="create_key",
+                status="success" if res.success else "error",
+                details=f"hive={req.hive},parent={req.parent_path},name={req.new_key_name}",
+                filename="registry_viewer_events.csv",
+            )
+            return res
         except PermissionError as e:
             raise HTTPException(status_code=403, detail=str(e))
         except Exception as e:
@@ -148,7 +196,14 @@ def init_router(viewer: Optional[RegistryViewer] = None) -> APIRouter:
     async def delete_key(req: DeleteKeyRequestDTO) -> EditOperationResultDTO:
         """Удалить раздел реестра с созданием снимка резервной копии."""
         try:
-            return registry_engine.delete_key(req)
+            res = registry_engine.delete_key(req)
+            csv_logger.log_event(
+                event_type="delete_key",
+                status="success" if res.success else "error",
+                details=f"hive={req.hive},path={req.path},backup={res.backup_id}",
+                filename="registry_viewer_events.csv",
+            )
+            return res
         except KeyError as e:
             raise HTTPException(status_code=404, detail=str(e))
         except PermissionError as e:
@@ -161,6 +216,14 @@ def init_router(viewer: Optional[RegistryViewer] = None) -> APIRouter:
         """Получить список всех резервных копий реестра."""
         try:
             backups = registry_engine.list_backups()
+            csv_logger.log_poll(
+                poll_type="backups",
+                metric_name="backups_count",
+                value=len(backups),
+                unit="count",
+                status="ok",
+                filename="registry_viewer_polls.csv",
+            )
             return {
                 "status": "ok",
                 "total": len(backups),
@@ -175,7 +238,14 @@ def init_router(viewer: Optional[RegistryViewer] = None) -> APIRouter:
     ) -> RestoreBackupResponseDTO:
         """Восстановить раздел реестра из снимка бэкапа."""
         try:
-            return registry_engine.restore_backup(backup_id)
+            res = registry_engine.restore_backup(backup_id)
+            csv_logger.log_event(
+                event_type="restore_backup",
+                status="success" if res.success else "error",
+                details=f"backup_id={backup_id},restored_keys={res.restored_keys_count},restored_values={res.restored_values_count}",
+                filename="registry_viewer_events.csv",
+            )
+            return res
         except KeyError as e:
             raise HTTPException(status_code=404, detail=str(e))
         except FileNotFoundError as e:

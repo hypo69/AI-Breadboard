@@ -13,80 +13,25 @@
 <body>
 <div class="container-fluid mt-1">
 
-  <div class="d-flex align-items-center justify-content-between mb-1 main-nav-container rounded px-2 py-0">
-    <ul class="nav nav-tabs flex-nowrap flex-grow-1 border-0 me-2 align-items-center" id="mainTabs">
-      <!-- Группа: Стандартные -->
-      <li class="nav-item dropdown">
-        <button class="nav-link dropdown-toggle active d-flex align-items-center gap-1" type="button" id="standardTabsDropdown">
-          <i class="bi bi-grid-fill text-primary me-1"></i>
-          <span data-i18n="tabs.groupStandard">Стандартные</span>
-        </button>
-        <div class="dropdown-menu shadow border-secondary-subtle">
-          <button class="dropdown-item active d-flex align-items-center gap-2" data-tab="tab-chat" data-bs-target="#tab-chat" type="button" data-i18n="tabs.chat">
-            💬 Чат
-          </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-voice" data-bs-target="#tab-voice" type="button" data-i18n="tabs.voice">
-            🎙️ Голос и диаризация
-          </button>
-        </div>
-      </li>
+  <div class="d-flex align-items-center justify-content-between mb-1 main-nav-container rounded px-2 py-1">
+    <!-- Брендинг и индикатор активного раздела -->
+    <div class="d-flex align-items-center gap-2">
+      <span class="fw-bold d-flex align-items-center gap-2 text-primary fs-6 user-select-none" style="letter-spacing: 0.3px;">
+        <i class="bi bi-cpu-fill fs-5"></i>
+        <span class="d-none d-sm-inline">AI Breadboard</span>
+      </span>
+      <span id="active-tab-title-badge" class="badge bg-body-secondary text-secondary-emphasis border rounded-pill px-2 py-1 small fw-normal d-flex align-items-center gap-1" title="Текущий активный раздел">
+        💬 Чат
+      </span>
+    </div>
 
-      <!-- Разделитель -->
-      <li class="nav-item d-flex align-items-center">
-        <div class="nav-group-divider"></div>
-      </li>
-
-      <!-- Группа: Расширенные -->
-      <li class="nav-item dropdown">
-        <button class="nav-link dropdown-toggle d-flex align-items-center gap-1" type="button" id="extendedTabsDropdown">
-          <i class="bi bi-sliders2 text-info me-1"></i>
-          <span data-i18n="tabs.groupExtended">Расширенные</span>
-        </button>
-        <div class="dropdown-menu shadow border-secondary-subtle">
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-rag" data-bs-target="#tab-rag" type="button" data-i18n="tabs.rag">
-            🧠 RAG
-          </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-news" data-bs-target="#tab-news" type="button" data-i18n="tabs.news">
-            📰 Новости
-          </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-admin" data-bs-target="#tab-admin" type="button" data-i18n="tabs.admin">
-            ⚙️ Управление
-          </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-help" data-bs-target="#tab-help" type="button" data-i18n="tabs.help">
-            📚 Справочник
-          </button>
-        </div>
-      </li>
-
-      <!-- Разделитель -->
-      <li class="nav-item d-flex align-items-center">
-        <div class="nav-group-divider"></div>
-      </li>
-
-      <!-- Группа: Плагины -->
-      <li class="nav-item dropdown" id="pluginsNavDropdownWrapper">
-        <button class="nav-link dropdown-toggle d-flex align-items-center gap-1" type="button" id="pluginsTabsDropdown">
-          <i class="bi bi-puzzle-fill text-warning me-1"></i>
-          <span data-i18n="tabs.plugins">Плагины</span>
-        </button>
-        <div class="dropdown-menu shadow border-secondary-subtle" id="nav-plugins-dropdown-menu">
-          <div id="nav-enabled-plugins-list" class="nav-enabled-plugins-list">
-            <!-- Dynamic enabled plugins will be injected here -->
-          </div>
-          <hr class="dropdown-divider my-1">
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-plugins" data-bs-target="#tab-plugins" type="button" data-i18n="tabs.managePlugins">
-            ⚙️ Управление
-          </button>
-        </div>
-      </li>
-    </ul>
-
-    <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-auto pb-1" id="nav-auth-container">
+    <!-- Правая часть панели: статусы, профиль, настройки и кнопка меню -->
+    <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-auto" id="nav-auth-container">
       <!-- Active Model & Search Badges -->
-      <span id="chat-model-badge" class="badge rounded-pill align-items-center gap-1 px-3 py-2 shadow-sm border" style="font-size: 0.8rem; display: none; cursor: pointer;" title="Текущая модель ИИ">
+      <span id="chat-model-badge" class="badge rounded-pill align-items-center gap-1 px-3 py-1 shadow-sm border" style="font-size: 0.8rem; display: none; cursor: pointer;" title="Текущая модель ИИ">
         🤖 Загрузка...
       </span>
-      <span id="chat-search-badge" class="badge rounded-pill align-items-center gap-1 px-3 py-2 shadow-sm border" style="font-size: 0.8rem; display: none;" title="Провайдер поиска">
+      <span id="chat-search-badge" class="badge rounded-pill align-items-center gap-1 px-3 py-1 shadow-sm border" style="font-size: 0.8rem; display: none;" title="Провайдер поиска">
       </span>
 
       <!-- Google OAuth Register / Sign-in Button (Shown when not logged in) -->
@@ -154,7 +99,6 @@
         </ul>
       </div>
 
-
       <!-- Кнопка переключения темы (☀️/🌙/🌓) -->
       <button class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center rounded-circle"
               id="theme-toggle"
@@ -167,8 +111,112 @@
       <button class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center rounded-circle" id="user-settings-gear-btn" data-bs-toggle="modal" data-bs-target="#userSettingsModal" title="Настройки" style="width: 28px; height: 28px; padding: 0;" data-i18n-title="userSettings.title">
         <i class="bi bi-gear-fill"></i>
       </button>
-    </div>
 
+      <!-- Кнопка открытия правого выдвижного меню -->
+      <button class="btn btn-sm btn-primary d-flex align-items-center gap-2 px-2 py-1 rounded shadow-sm"
+              id="right-drawer-toggle-btn"
+              type="button"
+              data-bs-toggle="offcanvas"
+              data-bs-target="#rightSideNavOffcanvas"
+              aria-controls="rightSideNavOffcanvas"
+              title="Открыть меню разделов"
+              style="font-size: 0.82rem; font-weight: 500;">
+        <i class="bi bi-layout-sidebar-reverse"></i>
+        <span>Меню</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Плавающий боковой ярлычок (вкладка) справа -->
+  <button class="right-drawer-tab-trigger btn shadow" 
+          type="button" 
+          data-bs-toggle="offcanvas" 
+          data-bs-target="#rightSideNavOffcanvas" 
+          aria-controls="rightSideNavOffcanvas" 
+          title="Открыть меню навигации">
+    <i class="bi bi-layout-sidebar-reverse"></i>
+    <span class="right-drawer-tab-text">МЕНЮ</span>
+  </button>
+
+  <!-- Правая выдвижная вкладка / панель навигации (Offcanvas) -->
+  <div class="offcanvas offcanvas-end right-drawer-nav" tabindex="-1" id="rightSideNavOffcanvas" aria-labelledby="rightSideNavOffcanvasLabel">
+    <div class="offcanvas-header border-bottom py-2 px-3">
+      <h5 class="offcanvas-title d-flex align-items-center gap-2 fs-6 fw-bold" id="rightSideNavOffcanvasLabel">
+        <i class="bi bi-grid-fill text-primary"></i>
+        <span>Навигация и разделы</span>
+      </h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Закрыть"></button>
+    </div>
+    <div class="offcanvas-body p-3 d-flex flex-column justify-content-between" id="mainTabs">
+      <div class="drawer-sections-wrapper">
+        <!-- Группа: Стандартные -->
+        <div class="nav-drawer-group mb-3">
+          <div class="nav-drawer-group-title d-flex align-items-center gap-1 mb-2">
+            <i class="bi bi-grid-fill text-primary"></i>
+            <span data-i18n="tabs.groupStandard">Стандартные</span>
+          </div>
+          <div class="list-group list-group-flush rounded border">
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3 active" data-tab="tab-chat" data-bs-target="#tab-chat" type="button">
+              <span class="fs-6">💬</span>
+              <span class="fw-medium" data-i18n="tabs.chat">Чат</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-voice" data-bs-target="#tab-voice" type="button">
+              <span class="fs-6">🎙️</span>
+              <span class="fw-medium" data-i18n="tabs.voice">Голос и диаризация</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Группа: Расширенные -->
+        <div class="nav-drawer-group mb-3">
+          <div class="nav-drawer-group-title d-flex align-items-center gap-1 mb-2">
+            <i class="bi bi-sliders2 text-info"></i>
+            <span data-i18n="tabs.groupExtended">Расширенные</span>
+          </div>
+          <div class="list-group list-group-flush rounded border">
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-rag" data-bs-target="#tab-rag" type="button">
+              <span class="fs-6">🧠</span>
+              <span class="fw-medium" data-i18n="tabs.rag">RAG</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-news" data-bs-target="#tab-news" type="button">
+              <span class="fs-6">📰</span>
+              <span class="fw-medium" data-i18n="tabs.news">Новости</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-admin" data-bs-target="#tab-admin" type="button">
+              <span class="fs-6">⚙️</span>
+              <span class="fw-medium" data-i18n="tabs.admin">Управление</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-help" data-bs-target="#tab-help" type="button">
+              <span class="fs-6">📚</span>
+              <span class="fw-medium" data-i18n="tabs.help">Справочник</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Группа: Плагины -->
+        <div class="nav-drawer-group mb-3" id="pluginsNavDropdownWrapper">
+          <div class="nav-drawer-group-title d-flex align-items-center gap-1 mb-2">
+            <i class="bi bi-puzzle-fill text-warning"></i>
+            <span data-i18n="tabs.plugins">Плагины</span>
+          </div>
+          <div class="list-group list-group-flush rounded border" id="nav-plugins-dropdown-menu">
+            <div id="nav-enabled-plugins-list" class="nav-enabled-plugins-list">
+              <!-- Dynamic enabled plugins will be injected here -->
+            </div>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-plugins" data-bs-target="#tab-plugins" type="button">
+              <span class="fs-6">🧩</span>
+              <span class="fw-medium" data-i18n="tabs.managePlugins">Управление плагинами</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Drawer -->
+      <div class="nav-drawer-footer border-top pt-2 mt-auto d-flex align-items-center justify-content-between text-muted small">
+        <span class="fw-semibold">AI Breadboard</span>
+        <span>v3.1</span>
+      </div>
+    </div>
   </div>
  
   <div class="tab-content" id="mainTabContent">

@@ -27,6 +27,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi import Request
 from src.api.router_auth import require_admin_user
+from apps.common.csv_logger import AppCsvLogger
 
 from apps.windows.telemetry import (
     SystemDiagnosticEngine as SystemAIDiagnostician,
@@ -34,6 +35,7 @@ from apps.windows.telemetry import (
 )
 
 router = APIRouter(prefix="/api/system", tags=["system"])
+_csv_logger = AppCsvLogger("system_inspector")
 _collector: SystemCollector | None = None
 _diagnostician: SystemAIDiagnostician | None = None
 
@@ -59,6 +61,16 @@ async def get_status(request: Request) -> dict:
     """Get current system status."""
     collector = get_collector()
     snapshot = collector.get_snapshot(process_limit=15)
+    
+    _csv_logger.log_poll(
+        poll_type="status",
+        metric_name="system_snapshot",
+        value=f"cpu={snapshot.cpu.total_percent}%,mem={snapshot.memory.percent}%",
+        unit="summary",
+        status="ok",
+        details=f"hostname={snapshot.hostname},processes={len(snapshot.top_processes)}",
+        filename="system_inspector_polls.csv",
+    )
     
     return {
         "hostname": snapshot.hostname,
@@ -89,6 +101,16 @@ async def get_processes(request: Request, limit: int = 20, sort_by: str = "cpu")
             "username": p.username,
         })
     
+    _csv_logger.log_poll(
+        poll_type="processes",
+        metric_name="top_processes_count",
+        value=len(processes),
+        unit="count",
+        status="ok",
+        details=f"limit={limit},sort_by={sort_by}",
+        filename="system_inspector_polls.csv",
+    )
+    
     return {
         "processes": processes,
         "sort_by": sort_by,
@@ -118,6 +140,16 @@ async def get_hardware(request: Request) -> dict:
             "unit": s.unit,
         })
     
+    _csv_logger.log_poll(
+        poll_type="hardware",
+        metric_name="hardware_nodes_count",
+        value=len(hardware),
+        unit="count",
+        status="ok",
+        details=f"sensors_count={len(sensors_list)}",
+        filename="system_inspector_polls.csv",
+    )
+    
     return {
         "hardware": hardware,
         "sensors": sensors_list,
@@ -132,6 +164,13 @@ async def get_diagnostic(request: Request, process_limit: int = 20) -> dict:
     
     snapshot = collector.get_snapshot(process_limit=process_limit)
     score, anomalies, recommendations = diagnostician.evaluate_heuristics(snapshot)
+    
+    _csv_logger.log_event(
+        event_type="diagnostic_report",
+        status="ok",
+        details=f"health_score={score},anomalies={len(anomalies)},recs={len(recommendations)}",
+        filename="system_inspector_events.csv",
+    )
     
     return {
         "health_score": score,
@@ -193,6 +232,13 @@ async def trigger_diagnostic(request: Request, process_limit: int = 20) -> dict:
     
     snapshot = collector.get_snapshot(process_limit=process_limit)
     score, anomalies, recommendations = diagnostician.evaluate_heuristics(snapshot)
+    
+    _csv_logger.log_event(
+        event_type="trigger_diagnostic",
+        status="ok",
+        details=f"health_score={score},anomalies_count={len(anomalies)},recommendations_count={len(recommendations)}",
+        filename="system_inspector_events.csv",
+    )
     
     return {
         "success": True,

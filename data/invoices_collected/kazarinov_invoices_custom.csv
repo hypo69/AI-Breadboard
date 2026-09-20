@@ -1,0 +1,5 @@
+﻿email_date,email_from,email_subject,invoice_number,invoice_date,due_date,vendor_name,vendor_tax_id,customer_name,total_amount,currency,tax_amount,items_summary,attachment_file,status
+"Sun, 30 Aug 2026 07:02:01 +0000",Yoram - MorLeviLtd <zipi@morlevi.co.il>,NextERP: חשבונית מס      No 16/624018  : מיי מאסטר סרגיי,16/624018,,,,,,,ILS,,,Doc_NextERPNo16624018_0001.pdf,attachment_saved
+"Wed, 26 Aug 2026 09:00:57 +0000",Irena Zlotin <irena@morlevi.co.il>,NextERP: חשבונית מס      No 16/623748  : מיי מאסטר סרגיי,16/623748,,,,,,,ILS,,,Doc_NextERPNo16623748_0001.pdf,attachment_saved
+"Wed, 12 Aug 2026 17:32:47 +0000",Компьютеры Grand Advance <support@grandadvance.co.il>,Новый заказ с веб-сайта №70451,,12.08.2026,,</td>,511285272,,,ILS,,,,body_parsed
+"Wed, 12 Aug 2026 17:28:00 +0000",Компьютеры Grand Advance <support@grandadvance.co.il>,Новый заказ с веб-сайта №70450,,12.08.2026,,</td>,511285272,,,ILS,,,,body_parsed

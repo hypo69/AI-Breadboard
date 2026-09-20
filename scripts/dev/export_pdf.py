@@ -52,6 +52,12 @@ def main(args_list: list[str] | None = None) -> int:
         default='.',
         help='Root directory to scan (default: project root)'
     )
+    parser.add_argument(
+        '--exclude',
+        nargs='*',
+        default=['bin/*', 'data/*'],
+        help='List of folder patterns to exclude from code PDF (default: bin/*, data/*)'
+    )
 
     raw_args = args_list if args_list is not None else sys.argv[1:]
     args = parser.parse_args(raw_args)
@@ -75,7 +81,7 @@ def main(args_list: list[str] | None = None) -> int:
     if args.target in ('all', 'code'):
         code_pdf = output_dir / 'code.pdf'
         logger.info(f"Generating source code PDF: {code_pdf}...")
-        ok_code = PDFUtils.build_code_pdf(root_dir=root_dir, output_file=code_pdf)
+        ok_code = PDFUtils.build_code_pdf(root_dir=root_dir, output_file=code_pdf, excludes=args.exclude)
         if ok_code:
             print(f"✅ Saved source code PDF: {code_pdf}")
         else:

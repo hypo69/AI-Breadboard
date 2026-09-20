@@ -130,31 +130,45 @@ async function switchTab(targetId) {
  * Обновить визуальное состояние UI
  */
 function updateTabUI(cleanId) {
+  const tabId = cleanId.startsWith('tab-') ? cleanId : `tab-${cleanId}`;
+
   // Скрываем все вкладки
-  document.querySelectorAll('[role="tabpanel"]').forEach(tab => {
+  document.querySelectorAll('#mainTabContent > .tab-pane, body > .container-fluid > .tab-content > .tab-pane, [role="tabpanel"]').forEach(tab => {
     tab.classList.remove('active', 'show');
     tab.setAttribute('aria-hidden', 'true');
   });
 
   // Показываем целевую вкладку
-  const targetTab = document.getElementById(cleanId);
+  const targetTab = document.getElementById(tabId) || document.getElementById(cleanId);
   if (targetTab) {
     targetTab.classList.add('active', 'show');
     targetTab.setAttribute('aria-hidden', 'false');
   }
 
-  // Обновляем состояние кнопок
-  document.querySelectorAll('[role="tab"]').forEach(tab => {
-    tab.classList.remove('active');
-    tab.setAttribute('aria-selected', 'false');
+  // Обновляем состояние элементов меню
+  document.querySelectorAll('#mainTabs .list-group-item, #mainTabs .dropdown-item, #mainTabs [data-tab], #mainTabs [data-bs-target]').forEach(item => {
+    const itemTarget = item.getAttribute('data-tab') || item.getAttribute('data-bs-target')?.replace('#', '');
+    if (itemTarget === tabId || itemTarget === cleanId) {
+      item.classList.add('active');
+      item.setAttribute('aria-selected', 'true');
+    } else {
+      item.classList.remove('active');
+      item.setAttribute('aria-selected', 'false');
+    }
   });
 
-  const targetButton = document.querySelector(`[aria-controls="${cleanId}"]`) ||
-                      document.querySelector(`[data-bs-target="#${cleanId}"]`);
-  if (targetButton) {
-    targetButton.classList.add('active');
-    targetButton.setAttribute('aria-selected', 'true');
-  }
+  // Обновляем активность родительских кнопок dropdown-toggle
+  document.querySelectorAll('#mainTabs .dropdown').forEach(dropdown => {
+    const toggle = dropdown.querySelector('.dropdown-toggle');
+    const hasActiveChild = dropdown.querySelector('.dropdown-item.active, .list-group-item.active');
+    if (toggle) {
+      if (hasActiveChild) {
+        toggle.classList.add('active');
+      } else {
+        toggle.classList.remove('active');
+      }
+    }
+  });
 }
 
 // ============================================================================

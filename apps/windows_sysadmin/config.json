@@ -14,5 +14,6 @@
     "allow_credentials": true,
     "allow_methods": ["*"],
     "allow_headers": ["*"]
-  }
+  },
+  "watch_directory": ""
 }

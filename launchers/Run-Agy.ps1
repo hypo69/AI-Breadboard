@@ -143,12 +143,22 @@ if ($agyApiKey) {
     $env:GEMINI_API_KEY = $agyApiKey
 }
 
-$configPath = Join-Path $projectRoot "config.json"
+$configPath = if ($env:AIBREADBOARD_CONFIG) {
+    $cfgPath = Join-Path $projectRoot $env:AIBREADBOARD_CONFIG
+    if (Test-Path $cfgPath) { $cfgPath } else { $configPath }
+} else {
+    $configPath
+}
+
 $defaultModel = "agy-flash"
 if (Test-Path $configPath) {
     try {
         $cfg = Get-Content $configPath -Raw | ConvertFrom-Json
-        if ($cfg.ai.agy_model_id) {
+        # New format: config_tc.json style
+        if ($cfg.ai -and $cfg.ai.agy -and $cfg.ai.agy.model) {
+            $defaultModel = [string]$cfg.ai.agy.model
+        } elseif ($cfg.ai.agy_model_id) {
+            # Old format: config.json style
             $defaultModel = [string]$cfg.ai.agy_model_id
         } elseif ($cfg.web_search.agy_model) {
             $defaultModel = [string]$cfg.web_search.agy_model

@@ -244,6 +244,34 @@ def test_extract_remediation_actions_structured_and_audit():
     assert actions3[0]["action_type"] == "disable_service"
 
 
+def test_scenario_chat_with_use_rag(client, monkeypatch):
+    """Проверка передачи флага use_rag в эндпоинты чата."""
+    from apps.windows.core.dynamic_tool_engine import DynamicWindowsToolEngine
+
+    async def mock_get_model(self):
+        return None
+    monkeypatch.setattr(DynamicWindowsToolEngine, "_get_model", mock_get_model)
+
+    # 1. Запрос со включенным RAG
+    resp_rag = client.post(
+        "/api/v1/scenarios/chat",
+        json={"message": "покажи список принтеров", "use_rag": True},
+    )
+    assert resp_rag.status_code == 200
+    data_rag = resp_rag.json()
+    knowledge_types = [k.get("type") for k in data_rag.get("knowledge_used", [])]
+    assert "rag" in knowledge_types
+
+    # 2. Потоковый запрос со включенным RAG
+    resp_stream = client.post(
+        "/api/v1/scenarios/chat/stream",
+        json={"message": "покажи список принтеров", "use_rag": True},
+    )
+    assert resp_stream.status_code == 200
+    assert '"stage": "rag"' in resp_stream.text
+
+
+
 
 
 

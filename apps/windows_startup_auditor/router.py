@@ -32,8 +32,12 @@ from fastapi import APIRouter, HTTPException, Query, Response, WebSocket, WebSoc
 from fastapi.responses import PlainTextResponse
 
 from src.logger import logger
+from apps.common.csv_logger import AppCsvLogger
 from apps.windows_startup_auditor.core.auditor import StartupAuditor
 from apps.windows_startup_auditor.core.manager import StartupManager
+
+_csv_logger = AppCsvLogger("windows_startup_auditor")
+
 from apps.windows_startup_auditor.core.models import (
     AuditReport,
     AuditSummary,
@@ -79,7 +83,17 @@ def init_router() -> APIRouter:
     async def run_full_audit() -> AuditReport:
         """Запускает полный аудит автозапуска и возвращает структурированный отчет."""
         try:
-            return auditor.run_audit()
+            rep = auditor.run_audit()
+            _csv_logger.log_poll(
+                poll_type="startup_audit",
+                metric_name="health_score",
+                value=rep.summary.health_score,
+                unit="score",
+                status="OK",
+                details={"total": rep.summary.total_entries, "critical": rep.summary.critical_count},
+                filename="windows_startup_audits.csv",
+            )
+            return rep
         except Exception as e:
             logger.error(f"Ошибка при выполнении аудита автозагрузки: {e}")
             raise HTTPException(status_code=500, detail=str(e))
@@ -198,7 +212,18 @@ def init_router() -> APIRouter:
         if not target_entry:
             raise HTTPException(status_code=404, detail=f"Элемент с ID '{req.entry_id}' не найден")
 
-        return manager.toggle_item(target_entry, req.enable)
+        res = manager.toggle_item(target_entry, req.enable)
+        _csv_logger.log_param_change(
+            param_name=f"startup_entry.{target_entry.name}",
+            old_value=target_entry.is_enabled,
+            new_value=req.enable,
+            status="SUCCESS" if res.success else "FAILED",
+            user="user",
+            details={"entry_id": req.entry_id, "msg": res.message},
+            filename="windows_startup_param_changes.csv",
+        )
+        return res
+
 
     @router.get("/export")
     async def export_report(

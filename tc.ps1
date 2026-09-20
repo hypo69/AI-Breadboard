@@ -169,12 +169,49 @@ if ($ConfigFile -and (Test-Path (Join-Path $scriptDir $ConfigFile))) {
 $cfgPath = Join-Path $scriptDir $activeConfigFile
 $env:CONFIG_FILE = $activeConfigFile
 $env:AIBREADBOARD_CONFIG = $activeConfigFile
+# Set environment variables for Python AI models
+$env:AIBREADBOARD_CONFIG = $activeConfigFile
+$env:CONFIG_FILE = $activeConfigFile
+$env:AI_PROVIDER = $aiProvider
+$env:AI_GEMINI_MODEL = $aiGeminiModel
+$env:AI_GEMINI_CLI_MODEL = $aiGeminiCliModel
+$env:AI_AGY_MODEL = $aiAgyModel
+$env:AI_AGY_EFFORT = $aiAgyEffort
+Write-Host "  [OK] Переменные окружения для AI модели установлены:" -ForegroundColor Cyan
+Write-Host "    AI_PROVIDER: $aiProvider" -ForegroundColor DarkGray
+Write-Host "    AI_GEMINI_MODEL: $aiGeminiModel" -ForegroundColor DarkGray
+Write-Host "    AI_GEMINI_CLI_MODEL: $aiGeminiCliModel" -ForegroundColor DarkGray
+Write-Host "    AI_AGY_MODEL: $aiAgyModel" -ForegroundColor DarkGray
+Write-Host "    AI_AGY_EFFORT: $aiAgyEffort" -ForegroundColor DarkGray
 $envFile = Join-Path $scriptDir ".env"
 $cfgHost = "127.0.0.1"
 $cfgPort = "8000"
 $useSsl  = $false
 $cfgApps = $null
 $enableTrayVal = $true
+
+# AI configuration
+$aiProvider = "gemini"
+$aiGeminiModel = "gemini-2.5-flash"
+$aiGeminiCliModel = "gemini-3.1-flash-lite"
+$aiAgyModel = "gemini-3.6-flash"
+$aiAgyEffort = "medium"
+
+# Set environment variables for Python AI models
+$env:AIBREADBOARD_CONFIG = $activeConfigFile
+$env:CONFIG_FILE = $activeConfigFile
+$env:AI_PROVIDER = $aiProvider
+$env:AI_GEMINI_MODEL = $aiGeminiModel
+$env:AI_GEMINI_CLI_MODEL = $aiGeminiCliModel
+$env:AI_AGY_MODEL = $aiAgyModel
+$env:AI_AGY_EFFORT = $aiAgyEffort
+
+Write-Host "  [OK] Переменные окружения для AI модели установлены:" -ForegroundColor Cyan
+Write-Host "    AI_PROVIDER: $aiProvider" -ForegroundColor DarkGray
+Write-Host "    AI_GEMINI_MODEL: $aiGeminiModel" -ForegroundColor DarkGray
+Write-Host "    AI_GEMINI_CLI_MODEL: $aiGeminiCliModel" -ForegroundColor DarkGray
+Write-Host "    AI_AGY_MODEL: $aiAgyModel" -ForegroundColor DarkGray
+Write-Host "    AI_AGY_EFFORT: $aiAgyEffort" -ForegroundColor DarkGray
 
 if (Test-Path $cfgPath) {
     try {
@@ -189,6 +226,30 @@ if (Test-Path $cfgPath) {
             }
             if ($cfg.server.enable_tray -ne $null) {
                 $enableTrayVal = [bool]$cfg.server.enable_tray
+            }
+        }
+        if ($cfg.ai) {
+            # Load AI configuration from config_tc.json format
+            if ($cfg.ai.provider) {
+                $aiProvider = [string]$cfg.ai.provider
+            }
+            if ($cfg.ai.gemini) {
+                if ($cfg.ai.gemini.model) {
+                    $aiGeminiModel = [string]$cfg.ai.gemini.model
+                }
+            }
+            if ($cfg.ai.gemini_cli) {
+                if ($cfg.ai.gemini_cli.model) {
+                    $aiGeminiCliModel = [string]$cfg.ai.gemini_cli.model
+                }
+            }
+            if ($cfg.ai.agy) {
+                if ($cfg.ai.agy.model) {
+                    $aiAgyModel = [string]$cfg.ai.agy.model
+                }
+                if ($cfg.ai.agy.effort) {
+                    $aiAgyEffort = [string]$cfg.ai.agy.effort
+                }
             }
         }
         if ($cfg.apps) {

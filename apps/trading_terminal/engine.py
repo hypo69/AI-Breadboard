@@ -32,6 +32,10 @@ from pydantic import BaseModel, Field
 
 from src.logger import logger
 from src.ai.observability.trading_engine import TradingDiagnosticEngine
+from apps.common.csv_logger import AppCsvLogger
+
+_csv_logger = AppCsvLogger("trading_terminal")
+
 
 
 class OrderRequest(BaseModel):
@@ -216,12 +220,18 @@ class TradingDeskEngine:
                     status="FILLED",
                 )
             )
+            _csv_logger.log_custom(
+                "trading_terminal_orders.csv",
+                ["timestamp", "order_id", "symbol", "side", "amount", "price", "cost", "status", "pnl"],
+                [datetime.now(timezone.utc).isoformat(), order_id, self.symbol, "BUY", amount, exec_price, cost, "FILLED", ""],
+            )
 
         else:  # SELL
             if self.position_size < amount:
                 msg = f"[{now_str}] [WARN] Insufficient position to SELL {amount:.4f} {self.symbol} (Holding: {self.position_size:.4f})"
                 self._add_log(msg)
                 logger.warning(msg)
+                _csv_logger.log_event("order_rejected", status="FAILED", details=msg, filename="trading_terminal_orders.csv")
                 return False
 
             self.balance = round(self.balance + cost, 2)
@@ -250,6 +260,11 @@ class TradingDeskEngine:
                     pnl=trade_pnl,
                 )
             )
+            _csv_logger.log_custom(
+                "trading_terminal_orders.csv",
+                ["timestamp", "order_id", "symbol", "side", "amount", "price", "cost", "status", "pnl"],
+                [datetime.now(timezone.utc).isoformat(), order_id, self.symbol, "SELL", amount, exec_price, cost, "FILLED", trade_pnl],
+            )
 
         if len(self.orders) > 50:
             self.orders.pop(0)
@@ -269,16 +284,18 @@ class TradingDeskEngine:
             msg = f"[{now_str}] [KILL-SWITCH] Closed entire open position ({closed_amount:.4f} {self.symbol})!"
             self._add_log(msg)
             logger.warning(msg)
+            _csv_logger.log_event("kill_switch_triggered", status="EXECUTED", details=msg, filename="trading_terminal_kill_switch.csv")
             return {"status": "executed", "closed_amount": closed_amount, "symbol": self.symbol}
 
         msg = f"[{now_str}] [KILL-SWITCH] No open positions to close."
         self._add_log(msg)
+        _csv_logger.log_event("kill_switch_noop", status="NOOP", details=msg, filename="trading_terminal_kill_switch.csv")
         return {"status": "noop", "message": "No open positions to liquidate", "symbol": self.symbol}
 
     def get_ticker(self) -> MarketTicker:
         """Return current market ticker data."""
         spread = round(self.current_price * 0.0002, 2)
-        return MarketTicker(
+        ticker = MarketTicker(
             symbol=self.symbol,
             price=self.current_price,
             timestamp=datetime.now(timezone.utc).isoformat(),
@@ -286,6 +303,17 @@ class TradingDeskEngine:
             ask=round(self.current_price + spread, 2),
             volume_24h=round(12450.5 + random.uniform(-10.0, 10.0), 2),
         )
+        _csv_logger.log_poll(
+            poll_type="ticker_poll",
+            metric_name="price",
+            value=self.current_price,
+            unit="USD",
+            status="OK",
+            details={"bid": ticker.bid, "ask": ticker.ask, "vol": ticker.volume_24h},
+            filename="trading_terminal_market_polls.csv",
+        )
+        return ticker
+
 
     def get_orderbook(self, depth: int = 5) -> Dict[str, List[List[float]]]:
         """Generate or retrieve simulated Level 2 orderbook depth.

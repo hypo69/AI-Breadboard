@@ -122,8 +122,8 @@ param (
     [Alias('Tray', 'tray_mode', 'SystemTray')]
     [Nullable[bool]]$EnableTray = $null,
 
-    [Alias('TestComputer', 'tc', 'apps_mode')]
-    [switch]$TestComputer,
+    # [Alias('TestComputer', 'tc', 'apps_mode')]
+    # [switch]$TestComputer,
 
     [Alias('Config', 'Cfg')]
     [string]$ConfigFile,

@@ -40,6 +40,10 @@ from typing import Any, Dict, List, Optional
 from src.logger import logger
 from apps.windows.core.models import RiskLevel
 from apps.windows.core.system_restore import WindowsSystemRestoreManager
+from apps.common.csv_logger import AppCsvLogger
+
+_csv_logger = AppCsvLogger("system_control_center")
+
 
 
 class ParameterType(str, Enum):
@@ -451,6 +455,17 @@ class SafeSystemParamManager:
             error_message=apply_err,
         )
         self._append_history(record)
+
+        _csv_logger.log_param_change(
+            param_name=param.param_id,
+            old_value=old_value,
+            new_value=new_value,
+            status=status_str,
+            user="system",
+            details={"change_id": change_id, "name": param.name, "sensitive": is_sensitive, "error": apply_err},
+            filename="system_control_param_changes.csv",
+        )
+
 
         return {
             "status": status_str,

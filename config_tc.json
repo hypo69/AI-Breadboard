@@ -13,11 +13,17 @@
         "enable_oauth": false
     },
     "ai": {
-        "provider": "gemini",
-        "model": "gemini-2.5-flash",
-        "effort": "medium",
-        "use_agy": false,
-        "agy_model_id": "gemini-3.6-flash"
+        "gemini": {
+            "model": "gemini-2.5-flash"
+        },
+        "gemini_cli": {
+            "model": "gemini-3.1-flash-lite"
+        },
+        "agy": {
+            "model": "gemini-3.6-flash",
+            "effort": "medium"
+        },
+        "provider": "gemini"
     },
     "apps": {
         "enabled": [
@@ -33,12 +39,9 @@
             "windows_defender",
             "windows_backup_manager",
             "hardware_monitor",
-            "aida64",
-            "hwinfo",
             "smartmontools",
-            "cpuz",
-            "gpuz",
-            "librehardwaremonitor"
+            "librehardwaremonitor",
+            "autolog_manager"
         ],
         "disabled": [
             "chat",
@@ -52,7 +55,11 @@
             "helpdesk",
             "lawyer_assistant",
             "ai_breadboard_admin",
-            "research_and_statistic"
+            "research_and_statistic",
+            "aida64",
+            "hwinfo",
+            "cpuz",
+            "gpuz"
         ]
     },
     "plugins": {
@@ -71,5 +78,91 @@
             "telegram_channel_rag",
             "user_storage"
         ]
+    },
+    "logging": {
+        "enable_autolog": true,
+        "default_interval": "1 minute",
+        "loggers": {
+            "system_inspector": {
+                "interval": "5 seconds",
+                "enabled": true
+            },
+            "hardware_monitor": {
+                "interval": "5 seconds",
+                "enabled": true
+            },
+            "librehardwaremonitor": {
+                "interval": "5 seconds",
+                "enabled": true
+            },
+            "aida64": {
+                "interval": "10 seconds",
+                "enabled": false
+            },
+            "hwinfo": {
+                "interval": "10 seconds",
+                "enabled": false
+            },
+            "cpuz": {
+                "interval": "1 minute",
+                "enabled": false
+            },
+            "gpuz": {
+                "interval": "5 seconds",
+                "enabled": false
+            },
+            "smartmontools": {
+                "interval": "10 minutes",
+                "enabled": false
+            },
+            "website_monitor": {
+                "interval": "5 minutes",
+                "enabled": false
+            },
+            "gcloud_monitor": {
+                "interval": "5 minutes",
+                "enabled": false
+            },
+            "cloudflared_monitor": {
+                "interval": "30 seconds",
+                "enabled": false
+            },
+            "windows_sysadmin": {
+                "interval": "1 minute",
+                "enabled": true
+            },
+            "windows_defender": {
+                "interval": "12 hour",
+                "enabled": true
+            },
+            "windows_startup_auditor": {
+                "interval": "1 hour",
+                "enabled": true
+            },
+            "windows_backup_manager": {
+                "interval": "6 hours",
+                "enabled": true
+            },
+            "trading_terminal": {
+                "interval": "10 seconds",
+                "enabled": false
+            },
+            "user_assistant": {
+                "interval": "5 minutes",
+                "enabled": true
+            },
+            "helpdesk": {
+                "interval": "1 minute",
+                "enabled": false
+            },
+            "registry_viewer": {
+                "interval": "12 hour",
+                "enabled": true
+            },
+            "software_audit": {
+                "interval": "1 hour",
+                "enabled": true
+            }
+        }
     }
 }

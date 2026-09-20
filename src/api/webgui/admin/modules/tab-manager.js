@@ -18,45 +18,50 @@ function setupDropdownTabs() {
       e.preventDefault();
       e.stopPropagation();
 
+      const parentDropdown = dropdown.closest('.dropdown');
+      const menu = dropdown.nextElementSibling || parentDropdown?.querySelector('.dropdown-menu');
+      const isAlreadyOpen = menu?.classList.contains('show');
+
       // Close other dropdowns
-      dropdowns.forEach((other) => {
-        if (other !== dropdown) {
-          other.classList.remove('show');
-          const menu = other.nextElementSibling;
-          if (menu) menu.classList.remove('show');
-        }
+      document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((otherMenu) => {
+        otherMenu.classList.remove('show');
+        otherMenu.closest('.dropdown')?.querySelector('.dropdown-toggle')?.classList.remove('show');
       });
 
       // Toggle current dropdown
-      dropdown.classList.toggle('show');
-      const menu = dropdown.nextElementSibling;
-      if (menu) {
-        menu.classList.toggle('show');
+      if (!isAlreadyOpen && menu) {
+        dropdown.classList.add('show');
+        menu.classList.add('show');
       }
     });
+  });
 
-    // Handle dropdown items clicks
-    const menu = dropdown.nextElementSibling;
-    if (menu) {
-      const items = menu.querySelectorAll('.dropdown-item');
-      items.forEach((item) => {
-        item.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
+  // Handle all clickable navigation items inside mainTabs (tabs and dropdown items)
+  mainTabs.querySelectorAll('.dropdown-item, .list-group-item, [data-tab], [data-bs-target], [data-plugin]').forEach((item) => {
+    item.addEventListener('click', (e) => {
+      const pluginName = item.getAttribute('data-plugin');
+      const targetId = item.getAttribute('data-tab') || 
+                      item.getAttribute('data-bs-target')?.replace('#', '');
 
-          const targetId = item.getAttribute('data-tab') || 
-                          item.getAttribute('data-bs-target')?.replace('#', '');
-          
-          if (targetId) {
-            window.switchTab(targetId);
-            
-            // Close dropdown
-            dropdown.classList.remove('show');
-            menu.classList.remove('show');
-          }
-        });
-      });
-    }
+      // Close parent dropdown menu
+      const menu = item.closest('.dropdown-menu');
+      if (menu) {
+        menu.classList.remove('show');
+        menu.closest('.dropdown')?.querySelector('.dropdown-toggle')?.classList.remove('show');
+      }
+
+      if (pluginName && typeof window.openPluginFromDropdown === 'function') {
+        e.preventDefault();
+        e.stopPropagation();
+        window.openPluginFromDropdown(pluginName);
+      } else if (targetId) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.switchTab === 'function') {
+          window.switchTab(targetId);
+        }
+      }
+    });
   });
 
   // Close dropdowns on outside click

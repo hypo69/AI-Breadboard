@@ -17,7 +17,7 @@
 | 💾 **Хранилища и диски** | `storage-controller`, `storage-tool`, `smart-deletion-duplicates` |
 | 📊 **Диагностика и логи** | `log-analyzer` |
 | 🎬 **Медиаконтент** | `media-card-builder`, `media-data-collector`, `media-manager` |
-| ☁️ **Интеграции и автоматизация** | `google-workspace`, `gdrive-organizer`, `invoice-extractor`, `ifttt-controller`, `torrent-controller` |
+| ☁️ **Интеграции и автоматизация** | `google-workspace`, `gdrive-organizer`, `invoice-extractor`, `ifttt-controller`, `torrent-controller`, `mail-watcher`, `mail-invoice-collector`, `smtp-mail-agent` |
 | 👥 **Бизнес-процессы** | `employee-offboarding-monitor` |
 | 📰 **Информация и путешествия** | `news-reader`, `travel-agent` |
 | 💬 **Интерфейсы** | `web-chat-cli` |
@@ -213,3 +213,11 @@
 - **Путь:** `.agents/skills/web-chat-cli/`
 - **Назначение:** Консольный интерактивный интерфейс для прямого диалога с моделями, поддержкой истории сессий и интеграцией с RAG-индексом.
 - **Триггер активации:** CLI-тестирование диалоговых моделей в терминале.
+
+---
+
+### 28. `mail-watcher` (Мониторинг почты и уведомления)
+- **Путь:** `.agents/skills/mail-watcher/`
+- **Назначение:** Подключение к почтовому ящику через IMAP (SSL/TLS), фильтрация входящих писем от заданного отправителя, трекинг прочитанных сообщений, всплывающие уведомления Windows Toast и автоматическая пересылка дайджеста в WhatsApp.
+- **Триггер активации:** Проверка новых писем от конкретного адресата, фоновый мониторинг почты, отправка дайджестов в мессенджеры.
+

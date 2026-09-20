@@ -552,7 +552,7 @@ function syncPluginTabsVisibility(plugins) {
   enabledContainers.forEach(container => {
     if (enabledPlugins.length === 0) {
       container.innerHTML = `
-        <div class="dropdown-item text-muted small py-1 fst-italic">
+        <div class="list-group-item dropdown-item text-muted small py-2 px-3 fst-italic">
           Нет активных плагинов
         </div>
       `;
@@ -563,7 +563,7 @@ function syncPluginTabsVisibility(plugins) {
         const title = p.title || p.name;
         const desc = p.description || title;
         html += `
-          <button class="dropdown-item d-flex align-items-center gap-2 py-1 text-truncate" 
+          <button class="list-group-item list-group-item-action dropdown-item d-flex align-items-center gap-2 py-2 px-3 text-truncate" 
                   type="button" 
                   data-plugin="${p.name}"
                   title="${desc}"
