@@ -6,11 +6,11 @@
     },
     "server": {
         "host": "127.0.0.1",
-        "port": 8000,
-        "protocol": "http",
-        "use_ssl": false,
+        "port": 8080,
+        "protocol": "https",
+        "use_ssl": true,
         "open_browser": true,
-        "enable_oauth": false
+        "enable_oauth": true
     },
     "ai": {
         "gemini": {
@@ -41,7 +41,8 @@
             "hardware_monitor",
             "smartmontools",
             "librehardwaremonitor",
-            "autolog_manager"
+            "autolog_manager",
+            "ai_benchmark"
         ],
         "disabled": [
             "chat",
@@ -55,11 +56,7 @@
             "helpdesk",
             "lawyer_assistant",
             "ai_breadboard_admin",
-            "research_and_statistic",
-            "aida64",
-            "hwinfo",
-            "cpuz",
-            "gpuz"
+            "research_and_statistic"
         ]
     },
     "plugins": {
@@ -94,22 +91,6 @@
             "librehardwaremonitor": {
                 "interval": "5 seconds",
                 "enabled": true
-            },
-            "aida64": {
-                "interval": "10 seconds",
-                "enabled": false
-            },
-            "hwinfo": {
-                "interval": "10 seconds",
-                "enabled": false
-            },
-            "cpuz": {
-                "interval": "1 minute",
-                "enabled": false
-            },
-            "gpuz": {
-                "interval": "5 seconds",
-                "enabled": false
             },
             "smartmontools": {
                 "interval": "10 minutes",

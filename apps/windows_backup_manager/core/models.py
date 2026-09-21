@@ -130,6 +130,7 @@ class BackupHealthReport(BaseModel):
     vss_snapshots: List[VssSnapshot] = Field(default_factory=list, description="Список теневых копий томов")
     health_score: int = Field(default=100, description="Общий индекс готовности бэкапов (0-100)")
     recommendations: List[str] = Field(default_factory=list, description="Рекомендации по улучшению защиты данных")
+    service_running: bool = Field(default=True, description="Запущена ли служба резервного копирования")
 
 
 class FileHistoryRAGSyncRequest(BaseModel):
@@ -177,3 +178,55 @@ class FileHistoryRAGStatus(BaseModel):
     dimension: int = Field(default=0, description="Размерность вектора TF-IDF")
     last_sync_time: Optional[datetime] = Field(default=None, description="Время последней синхронизации")
     is_ready: bool = Field(default=False, description="Готов ли индекс для поиска")
+
+
+class UserFolderInfo(BaseModel):
+    """Сведения о пользовательской системной папке Windows."""
+    folder_id: str = Field(description="Идентификатор или ключ папки (Desktop, Personal, Downloads, etc.)")
+    name: str = Field(description="Отображаемое имя папки (Рабочий стол, Документы и т.д.)")
+    current_path: str = Field(description="Текущий абсолютный путь к папке")
+    drive_letter: str = Field(description="Буква текущего диска")
+    size_bytes: int = Field(default=0, description="Физический размер папки в байтах")
+    size_mb: float = Field(default=0.0, description="Размер папки в МБ")
+    size_gb: float = Field(default=0.0, description="Размер папки в ГБ")
+    file_count: int = Field(default=0, description="Количество файлов")
+    exists: bool = Field(default=True, description="Существует ли папка на диске")
+    library_associated: Optional[str] = Field(default=None, description="Связанная системная библиотека")
+
+
+class TargetDriveInfo(BaseModel):
+    """Сведения о доступном диске для возможного переноса данных."""
+    drive_letter: str = Field(description="Буква диска (например, D:\\)")
+    mount_point: str = Field(description="Точка монтирования")
+    fstype: str = Field(description="Файловая система (NTFS, FAT32, etc.)")
+    total_space_gb: float = Field(description="Общий объем диска в ГБ")
+    free_space_gb: float = Field(description="Свободное место на диске в ГБ")
+    used_space_gb: float = Field(description="Занятое место на диске в ГБ")
+    is_system_drive: bool = Field(default=False, description="Является ли системным диском (C:\\)")
+
+
+class UserFoldersOverviewResponse(BaseModel):
+    """Сводка по пользовательским папкам и доступным дискам."""
+    folders: List[UserFolderInfo] = Field(default_factory=list, description="Список пользовательских папок")
+    total_user_size_mb: float = Field(default=0.0, description="Суммарный объем пользовательских папок в МБ")
+    total_user_size_gb: float = Field(default=0.0, description="Суммарный объем пользовательских папок в ГБ")
+    drives: List[TargetDriveInfo] = Field(default_factory=list, description="Список обнаруженных дисков")
+    available_target_drives: List[TargetDriveInfo] = Field(default_factory=list, description="Вторичные диски с доступным местом")
+
+
+class RelocateFolderRequest(BaseModel):
+    """Запрос на перенос пользовательской папки на другой диск."""
+    folder_id: str = Field(description="Ключ/ID папки (Desktop, Personal, Downloads, My Pictures, My Music, My Video)")
+    target_drive_letter: str = Field(description="Целевой диск для переноса (например, 'D:' или 'D:\\')")
+    delete_source_after: bool = Field(default=False, description="Удалить исходные файлы после успешного копирования")
+
+
+class RelocateFolderResponse(BaseModel):
+    """Результат переноса пользовательской папки."""
+    success: bool = Field(description="Успешность операции переноса")
+    folder_id: str = Field(description="Идентификатор папки")
+    old_path: str = Field(description="Старый путь")
+    new_path: str = Field(description="Новый путь")
+    message: str = Field(description="Информационное сообщение")
+    files_copied: int = Field(default=0, description="Количество скопированных файлов")
+    bytes_copied: int = Field(default=0, description="Количество скопированных байт")

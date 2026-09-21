@@ -53,6 +53,42 @@ from src.app.server_config import run_server
 from src.app.versioning import check_updates, prompt_and_perform_update
 from src.logger import logger
 
+
+def load_app_config() -> dict:
+    import json
+    script_dir = Path(__file__).parent
+    config_file = None
+    env_cfg = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
+    if env_cfg:
+        p = Path(env_cfg)
+        if p.is_absolute() and p.exists():
+            config_file = p
+        elif (script_dir / env_cfg).exists():
+            config_file = script_dir / env_cfg
+    
+    if config_file is None:
+        for candidate in ("config_tc.json", "config.json"):
+            p = script_dir / candidate
+            if p.exists():
+                config_file = p
+                break
+    
+    if config_file and config_file.exists():
+        with open(config_file, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+APP_CONFIG = load_app_config()
+
+
+def is_app_disabled(app_name: str) -> bool:
+    """Проверяет, добавлено ли приложение в список disabled в конфигурации."""
+    apps_section = APP_CONFIG.get("apps", {})
+    disabled_list = []
+    if isinstance(apps_section, dict):
+        disabled_list = apps_section.get("disabled", [])
+    return app_name.lower() in [item.lower() for item in disabled_list if item]
+
 # Create FastAPI app
 app = create_app()
 
@@ -72,13 +108,20 @@ app.state.ws_hub = state.ws_hub
 try:
     from src.ai import UnifiedChatModel
     state.chat_model = UnifiedChatModel()
-    state.narrator_model = UnifiedChatModel()
+    
+    # Инициализация нарратора только если разрешено в конфиге
+    if APP_CONFIG.get("ai", {}).get("enable_narrator", True):
+        state.narrator_model = UnifiedChatModel()
+    else:
+        state.narrator_model = None
+        
     app.state.chat_model = state.chat_model
     app.state.narrator_model = state.narrator_model
 except Exception as e:
     logger.warning(f"Failed to initialize AI models: {e}")
     state.chat_model = None
     state.narrator_model = None
+
 
 # Register routers with state
 register_routers(app, state)
@@ -121,11 +164,15 @@ async def startup_event():
             logger.error(f"Failed to start Telegram Bot plugin: {exc}")
 
     # Start Applications CSV Auto-Logging Engine
-    try:
-        from apps.common.autolog_engine import autolog_engine
-        await autolog_engine.start()
-    except Exception as exc:
-        logger.warning(f"Не удалось запустить движок автологгирования приложений: {exc}")
+    # Проверяем, не отключен ли autolog_manager в config.json
+    if not is_app_disabled("autolog_manager"):
+        try:
+            from apps.common.autolog_engine import autolog_engine
+            await autolog_engine.start()
+        except Exception as exc:
+            logger.warning(f"Не удалось запустить движок автологгирования приложений: {exc}")
+    else:
+        logger.info("AutoLogEngine пропущен: autolog_manager отключен в apps.disabled")
 
     try:
         result = check_updates()

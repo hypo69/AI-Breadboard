@@ -48,4 +48,13 @@ data/users/<user_id>/
 
 - Passwords and sensitive session hashes are never stored in plaintext.
 - User personal directories are automatically partitioned and created during registration, admin user creation, and OAuth logins.
-- Default users and initial permission tables are initialized automatically if `users.db` does not exist.
+---
+
+## Интеграция с Auth API (`src/api/router_auth.py`)
+`UserManager` является основным провайдером данных для модуля аутентификации.
+
+- **Аутентификация**: Используется для проверки учетных данных при входе, верификации прав (is_admin, role) и управления сессиями.
+- **OAuth**: Делегирует сохранение токенов доступа к сервисам Google (Drive, Calendar, Docs) после успешной авторизации.
+- **CLI Support**: Поддерживает проверки прав администратора, инициированные через `router_auth`, позволяя CLI-инструментам выполнять действия от имени админа при передаче корректного `ADMIN_PASSWORD` в заголовке `Authorization`.
+- **Настройки**: Хранит и предоставляет пользовательские предпочтения (тема, язык, tts-настройки, избранные модели) через методы `get_user_settings` и `update_user_settings`.
+

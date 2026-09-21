@@ -33,14 +33,38 @@ import psutil
 from src.logger import logger
 from apps.windows.api.nethelper import IPHelperAPI
 from apps.windows.core.models import AuditFinding, DomainAuditResult, RiskLevel
+from apps.windows.telemetry.models import HardwareSensor, TelemetryProvider
 
 
-class NetworkCollector:
+class NetworkCollector(TelemetryProvider):
     """Коллектор фактов о сетевых адаптерах и подключениях."""
 
     def __init__(self) -> None:
         """Инициализация коллектора с поддержкой нативного IP Helper API."""
         self._net_api = IPHelperAPI()
+        self._last_result: Optional[DomainAuditResult] = None
+
+    def get_sensors(self) -> List[HardwareSensor]:
+        """Возвращает сетевые показатели как сенсоры."""
+        sensors: List[HardwareSensor] = []
+        if self._last_result and self._last_result.metrics:
+            metrics = self._last_result.metrics
+            sensors.append(HardwareSensor(
+                sensor_id="net_listening_ports",
+                name="Слушающих портов",
+                category="network",
+                value=float(metrics.get("listening_ports_count", 0)),
+                unit="count"
+            ))
+            sensors.append(HardwareSensor(
+                sensor_id="net_established_conns",
+                name="Установленных подключений",
+                category="network",
+                value=float(metrics.get("established_connections_count", 0)),
+                unit="count"
+            ))
+        return sensors
+
 
     def collect(self) -> DomainAuditResult:
         """Сбор данных о сетевых соединениях и портах.
@@ -147,7 +171,7 @@ class NetworkCollector:
         }
 
         duration_ms = (time.perf_counter() - start_t) * 1000
-        return DomainAuditResult(
+        result = DomainAuditResult(
             domain_name="network",
             title_ru="Сетевая телеметрия и порты",
             status="critical" if findings else "ok",
@@ -155,6 +179,9 @@ class NetworkCollector:
             metrics=metrics,
             scan_duration_ms=round(duration_ms, 2),
         )
+        self._last_result = result
+        return result
+
 
     def _get_firewall_status(self) -> Dict[str, Any]:
         """Получение статуса встроенного брандмауэра Windows через COM / PowerShell."""

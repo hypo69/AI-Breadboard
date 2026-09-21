@@ -45,11 +45,7 @@ apps/
 
 | Application | CLI Command | Port | FastAPI Endpoints | Description |
 |---|---|---|---|---|
-| **AI Windows Diagnostic Center** | `python -m apps.windows` | `8105` | `/api/windows/*` | Комплексная диагностика Windows, аудит драйверов, SMART дисков (`smartctl`), GPU (`nvidia-smi`/`amd-smi`), CPU-Z/AIDA64, стресс-тесты, журналы событий и безопасное администрирование. |
-| **AIDA64 Diagnostic App** | `python -m apps.aida64` | `8120` | `/api/v1/aida64/*` | Мониторинг датчиков через Shared Memory (`AIDA64_SensorValues`), WMI, CLI генерация XML отчетов. |
-| **HWiNFO Diagnostic App** | `python -m apps.hwinfo` | `8121` | `/api/v1/hwinfo/*` | Подключение к Shared Memory HWiNFO, CLI JSON логирование и отчеты. |
-| **CPU-Z Processor App** | `python -m apps.cpuz` | `8122` | `/api/v1/cpuz/*` | Глубокий аудит процессора, топологии ядер, кэшей и таймингов памяти. |
-| **GPU-Z Graphics App** | `python -m apps.gpuz` | `8123` | `/api/v1/gpuz/*` | Мониторинг графических процессоров и разбор логов сенсоров. |
+| **AI Windows Diagnostic Center** | `python -m apps.windows` | `8105` | `/api/windows/*` | Комплексная диагностика Windows, аудит драйверов, SMART дисков (`smartctl`), GPU (`nvidia-smi`/`amd-smi`), стресс-тесты, журналы событий и безопасное администрирование. |
 | **smartmontools Storage App** | `python -m apps.smartmontools` | `8124` | `/api/v1/smartmontools/*` | Автоматическая SMART диагностика всех дисков через `smartctl --json -x`, расчет износа NVMe/SSD. |
 | **LibreHardwareMonitor App** | `python -m apps.librehardwaremonitor` | `8126` | `/api/v1/lhm/*` | Сбор телеметрии через Web REST JSON API (`http://localhost:8085/data.json`) и WMI. |
 | **Microsoft Defender Security Center** | `python -m apps.windows_defender` | `8113` | `/api/v1/defender/*` | Мониторинг и управление Microsoft Defender Antivirus, правила ASR, Controlled Folder Access (Ransomware), аудит исключений, детекция Fileless и корреляция событий. |

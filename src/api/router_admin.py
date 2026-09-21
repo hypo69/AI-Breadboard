@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field
 from header import __root__
 from src.config import ai_cfg
 from src.logger import logger
+from src.api.router_auth import require_admin_user
 
 router = APIRouter(prefix='/api/admin', tags=['admin'])
 
@@ -50,105 +51,12 @@ _SOURCES_FILE = __root__ / 'plugins' / 'movie_search_sources' / 'sources.json'
 # Helper functions
 # ============================================================================
 
-def _check_admin(request: Request) -> bool:
-    """Check прав администратора. Бросает HTTPException если нет доступа."""
-    from src.api.router_auth import is_auth_disabled
-    if is_auth_disabled():
-        return True
-
-    if request.cookies.get('admin_password_verified') == 'true':
-        return True
-
-    from src.api.router_auth import verify_jwt_token
-    token: str = request.cookies.get('auth_token', '')
-    if not token:
-        auth_header: str = request.headers.get('Authorization', '')
-        if auth_header.startswith('Bearer '):
-            token = auth_header[7:].strip()
-
-    if token:
-        user_data = verify_jwt_token(token)
-        if user_data:
-            from src.user_manager import user_manager
-            db_user = user_manager.get_user_by_email(user_data.email)
-            if db_user and (db_user.get('is_admin', 0) or db_user.get('role') == 'admin'):
-                return True
-            raise HTTPException(status_code=403, detail='Только администраторы имеют доступ')
-
-    raise HTTPException(status_code=401, detail='Не авторизован')
-
-
-def _get_active_file(mode: str) -> Path:
-    """Returns путь к активному файлу инструкции по режиму."""
-    path = _INSTRUCTION_FILES.get(mode)
-    if not path:
-        raise HTTPException(status_code=400, detail=f'Неизвестный режим: {mode}. Допустимые: chat, narrator')
-    return path
-
-def _get_versions_dir(mode: str) -> Path:
-    """Returns путь к папке версий и creates её если нет."""
-    path = _VERSIONS_DIRS.get(mode)
-    if not path:
-        raise HTTPException(status_code=400, detail=f'Неизвестный режим: {mode}')
-    path.mkdir(parents=True, exist_ok=True)
-    return path
-
-def _next_version_number(versions_dir: Path) -> int:
-    """Вычисляет следующий номер версии на основе файлов в папке."""
-    existing = list(versions_dir.glob('v*.md'))
-    numbers = []
-    for f in existing:
-        m = re.match(r'^v(\d+)_', f.name)
-        if m:
-            numbers.append(int(m.group(1)))
-    return max(numbers, default=0) + 1
-
-def _load_sources_raw() -> str:
-    """Loads сырой текст из sources.json."""
-    if _SOURCES_FILE.exists():
-        try:
-            return _SOURCES_FILE.read_text(encoding='utf-8')
-        except Exception as ex:
-            logger.error('Error чтения sources.json', ex)
-    return '{}'
-
-def _save_sources_raw(content: str) -> None:
-    """Saves сырой текст в sources.json."""
-    try:
-        json.loads(content)
-        _SOURCES_FILE.write_text(content, encoding='utf-8')
-    except json.JSONDecodeError as ex:
-        raise HTTPException(status_code=400, detail=f'Неверный формат JSON: {ex}')
-    except Exception as ex:
-        logger.error('Error записи sources.json', ex)
-        raise HTTPException(status_code=500, detail='Не удалось сохранить источники')
-
-# ============================================================================
-# Pydantic Models
-# ============================================================================
-
-class SystemInstructionUpdate(BaseModel):
-    content: str
-
-class RawSourcesUpdate(BaseModel):
-    content: str
-
-class InstructionRoleUpdate(BaseModel):
-    mode: str   # 'chat' | 'narrator'
-    content: str
-
-class InstructionActivateRequest(BaseModel):
-    mode: str       # 'chat' | 'narrator'
-    filename: str   # имя файла из папки versions/, например 'v2_2026-08-07.md'
-
-# ============================================================================
-# Legacy System Instruction Endpoints (backward compat)
-# ============================================================================
+# ... (удалено _check_admin) ...
 
 @router.get('/system_instruction')
 async def get_system_instruction(request: Request) -> Dict[str, str]:
     """Получение текста системной инструкции чата (legacy endpoint)."""
-    _check_admin(request)
+    require_admin_user(request)
     active_file = _get_active_file('chat')
     try:
         content = active_file.read_text(encoding='utf-8') if active_file.exists() else ''
@@ -160,7 +68,7 @@ async def get_system_instruction(request: Request) -> Dict[str, str]:
 @router.post('/system_instruction')
 async def update_system_instruction(request: Request, data: SystemInstructionUpdate) -> Dict[str, str]:
     """Update текста системной инструкции чата (legacy endpoint)."""
-    _check_admin(request)
+    require_admin_user(request)
     active_file = _get_active_file('chat')
     try:
         active_file.parent.mkdir(parents=True, exist_ok=True)
@@ -180,7 +88,7 @@ async def update_system_instruction(request: Request, data: SystemInstructionUpd
 @router.get('/instructions')
 async def get_instruction(request: Request, mode: str = 'chat') -> Dict[str, str]:
     """Получение активной инструкции по режиму из файла."""
-    _check_admin(request)
+    require_admin_user(request)
     active_file = _get_active_file(mode)
     try:
         content = active_file.read_text(encoding='utf-8') if active_file.exists() else ''
@@ -192,7 +100,7 @@ async def get_instruction(request: Request, mode: str = 'chat') -> Dict[str, str
 @router.post('/instructions/save')
 async def save_instruction(request: Request, data: InstructionRoleUpdate) -> Dict[str, str]:
     """Сохранение новой версии инструкции в файл и update активного файла."""
-    _check_admin(request)
+    require_admin_user(request)
     active_file = _get_active_file(data.mode)
     versions_dir = _get_versions_dir(data.mode)
 
@@ -231,7 +139,7 @@ async def save_instruction(request: Request, data: InstructionRoleUpdate) -> Dic
 @router.get('/instructions/versions')
 async def get_instruction_versions(request: Request, mode: str = 'chat') -> Dict[str, Any]:
     """Получение списка версий инструкций из папки versions/."""
-    _check_admin(request)
+    require_admin_user(request)
     versions_dir = _get_versions_dir(mode)
     active_file = _get_active_file(mode)
 
@@ -267,7 +175,7 @@ async def get_instruction_versions(request: Request, mode: str = 'chat') -> Dict
 @router.post('/instructions/activate')
 async def activate_instruction(request: Request, data: InstructionActivateRequest) -> Dict[str, str]:
     """Активация выбранной версии инструкции — копирует файл версии в активный."""
-    _check_admin(request)
+    require_admin_user(request)
     versions_dir = _get_versions_dir(data.mode)
     active_file = _get_active_file(data.mode)
 
@@ -298,7 +206,7 @@ async def activate_instruction(request: Request, data: InstructionActivateReques
 @router.post('/instructions/check')
 async def check_instruction_in_model(request: Request, data: Dict[str, Any]) -> Dict[str, Any]:
     """Временная check инструкции в модели без сохранения."""
-    _check_admin(request)
+    require_admin_user(request)
     try:
         from src.ai.unified_chat import UnifiedChatModel
         import os
@@ -339,17 +247,18 @@ async def check_instruction_in_model(request: Request, data: Dict[str, Any]) -> 
 @router.get('/sources/raw')
 async def get_sources_raw(request: Request) -> Dict[str, str]:
     """Получение сырого JSON-текста источников."""
-    _check_admin(request)
+    require_admin_user(request)
     content = _load_sources_raw()
     return {'content': content}
 
 @router.post('/sources/raw')
 async def update_sources_raw(request: Request, data: RawSourcesUpdate) -> Dict[str, str]:
     """Update сырого JSON-текста источников."""
-    _check_admin(request)
+    require_admin_user(request)
     _save_sources_raw(data.content)
     logger.info('Sources JSON updated via admin panel')
     return {'status': 'ok'}
+
 
 # ============================================================================
 # Plugin Manager Endpoints
@@ -511,7 +420,7 @@ async def get_plugin_status(plugin_name: str, request: Request):
 @router.post('/plugin/{plugin_name}/status')
 async def update_plugin_status(plugin_name: str, data: PluginStateUpdate, request: Request):
     """Update status of plugin (backward compatibility)."""
-    _check_admin(request)
+    require_admin_user(request)
     plugins_dict = _get_app_plugins(request)
     plugin = plugins_dict.get(plugin_name)
     if not plugin:
@@ -911,7 +820,7 @@ async def get_public_apps_status_endpoint(profile: Optional[str] = None) -> Dict
 @router.get('/apps/{app_name}/config')
 async def get_app_config(app_name: str, request: Request) -> Dict[str, Any]:
     """Get configuration for specified application under /apps."""
-    _check_admin(request)
+    require_admin_user(request)
 
     safe_name = "".join(c for c in app_name if c.isalnum() or c in ("_", "-"))
     if not safe_name:
@@ -937,7 +846,7 @@ async def get_app_config(app_name: str, request: Request) -> Dict[str, Any]:
 @router.post('/apps/{app_name}/config')
 async def set_app_config(app_name: str, data: AppConfigUpdateRequest, request: Request) -> Dict[str, Any]:
     """Update configuration for specified application under /apps."""
-    _check_admin(request)
+    require_admin_user(request)
 
     safe_name = "".join(c for c in app_name if c.isalnum() or c in ("_", "-"))
     if not safe_name:
@@ -974,7 +883,7 @@ class RagConfigRequest(BaseModel):
 @router.get('/rag/config')
 async def get_rag_config(request: Request):
     """Получение режима RAG."""
-    _check_admin(request)
+    require_admin_user(request)
     config_path = __root__ / 'config.json'
     mode = "rag+model"
     if config_path.exists():
@@ -989,7 +898,7 @@ async def get_rag_config(request: Request):
 @router.post('/rag/config')
 async def set_rag_config(request: Request, data: RagConfigRequest):
     """Установка режима RAG."""
-    _check_admin(request)
+    require_admin_user(request)
     config_path = __root__ / 'config.json'
     try:
         if config_path.exists():
@@ -1020,7 +929,7 @@ class WebSearchConfigRequest(BaseModel):
 @router.get('/web-search/config')
 async def get_web_search_config(request: Request):
     """Получение конфигурации сервера веб-поиска."""
-    _check_admin(request)
+    require_admin_user(request)
     config_path = __root__ / 'config.json'
     engine = "playwright"
     gemini_model = "gemini-2.5-flash"
@@ -1047,7 +956,7 @@ async def get_web_search_config(request: Request):
 @router.post('/web-search/config')
 async def set_web_search_config(request: Request, data: WebSearchConfigRequest):
     """Установка сервера веб-поиска (playwright / langchain / gemini / gemini_cli / agy)."""
-    _check_admin(request)
+    require_admin_user(request)
     config_path = __root__ / 'config.json'
     try:
         if config_path.exists():
@@ -1085,7 +994,7 @@ class WebSearchTestRequest(BaseModel):
 @router.post('/web-search/test')
 async def test_web_search(request: Request, data: WebSearchTestRequest):
     """Тестовое выполнение поиска через выбранный поисковый движок."""
-    _check_admin(request)
+    require_admin_user(request)
     query = data.query.strip()
     if not query:
         raise HTTPException(status_code=400, detail="Поисковый запрос не может быть пустым")
@@ -1151,7 +1060,7 @@ async def list_admin_users(
     status: str = ''
 ) -> Dict[str, Any]:
     """Получение списка пользователей с фильтрацией, поиском и статистикой."""
-    _check_admin(request)
+    require_admin_user(request)
     from src.user_manager import user_manager
     all_users = user_manager.get_all_users(active_only=False)
 
@@ -1198,7 +1107,7 @@ async def list_admin_users(
 @router.post('/users')
 async def create_admin_user(request: Request, data: AdminUserCreateRequest) -> Dict[str, Any]:
     """Создание нового пользователя администратором."""
-    _check_admin(request)
+    require_admin_user(request)
     email = data.email.strip().lower()
     name = data.name.strip()
     if not email:
@@ -1233,7 +1142,7 @@ class OrphanedDirsCleanRequest(BaseModel):
 @router.get('/users/orphaned-dirs')
 async def get_orphaned_user_dirs(request: Request) -> Dict[str, Any]:
     """Inspect and list orphaned user directories."""
-    _check_admin(request)
+    require_admin_user(request)
     from src.user_manager import user_manager
     orphaned = user_manager.get_orphaned_user_directories()
     total_size = sum(item["size_bytes"] for item in orphaned)
@@ -1252,7 +1161,7 @@ async def clean_orphaned_user_dirs(
     payload: Optional[OrphanedDirsCleanRequest] = None
 ) -> Dict[str, Any]:
     """Clean up specified or all orphaned user directories."""
-    _check_admin(request)
+    require_admin_user(request)
     from src.user_manager import user_manager
     dir_names = payload.dirs if payload and payload.dirs is not None else None
     result = user_manager.cleanup_orphaned_user_directories(dir_names=dir_names)
@@ -1261,7 +1170,7 @@ async def clean_orphaned_user_dirs(
 @router.get('/users/{user_id}')
 async def get_admin_user_details(user_id: int, request: Request) -> Dict[str, Any]:
     """Получение детальной информации о пользователе и его настройках."""
-    _check_admin(request)
+    require_admin_user(request)
     from src.user_manager import user_manager
     user = user_manager.get_user_by_id(user_id)
     if not user:
@@ -1285,7 +1194,7 @@ async def get_admin_user_details(user_id: int, request: Request) -> Dict[str, An
 @router.patch('/users/{user_id}')
 async def update_admin_user(user_id: int, data: AdminUserUpdateRequest, request: Request) -> Dict[str, Any]:
     """Update данных пользователя (полное или частичное редактирование полей)."""
-    _check_admin(request)
+    require_admin_user(request)
     from src.user_manager import user_manager
     user = user_manager.get_user_by_id(user_id)
     if not user:
@@ -1337,7 +1246,7 @@ async def update_admin_user(user_id: int, data: AdminUserUpdateRequest, request:
 @router.post('/users/{user_id}/password')
 async def set_admin_user_password(user_id: int, data: AdminUserPasswordRequest, request: Request) -> Dict[str, Any]:
     """Установка / сброс пароля пользователя администратором."""
-    _check_admin(request)
+    require_admin_user(request)
     new_password = data.password.strip()
     if not new_password:
         raise HTTPException(status_code=400, detail='Пароль не может быть пустым')
@@ -1356,7 +1265,7 @@ async def set_admin_user_password(user_id: int, data: AdminUserPasswordRequest, 
 @router.post('/users/{user_id}/toggle-active')
 async def toggle_admin_user_active(user_id: int, request: Request) -> Dict[str, Any]:
     """Переключение активности пользователя (блокировка / разблокировка)."""
-    _check_admin(request)
+    require_admin_user(request)
     from src.user_manager import user_manager
     user = user_manager.get_user_by_id(user_id)
     if not user:
@@ -1375,7 +1284,7 @@ async def toggle_admin_user_active(user_id: int, request: Request) -> Dict[str, 
 @router.post('/users/{user_id}/toggle-role')
 async def toggle_admin_user_role(user_id: int, request: Request) -> Dict[str, Any]:
     """Переключение роли пользователя (пользователь <-> администратор)."""
-    _check_admin(request)
+    require_admin_user(request)
     from src.user_manager import user_manager
     user = user_manager.get_user_by_id(user_id)
     if not user:
@@ -1403,7 +1312,7 @@ async def toggle_admin_user_role(user_id: int, request: Request) -> Dict[str, An
 @router.delete('/users/{user_id}')
 async def delete_admin_user(user_id: int, request: Request) -> Dict[str, Any]:
     """Удаление пользователя."""
-    _check_admin(request)
+    require_admin_user(request)
     from src.user_manager import user_manager
     user = user_manager.get_user_by_id(user_id)
     if not user:
@@ -2025,7 +1934,7 @@ class SchedulersConfigRequest(BaseModel):
 @router.get('/schedulers')
 async def get_schedulers_config(request: Request) -> Dict[str, Any]:
     """Retrieve current background scheduler configuration and diagnostic status."""
-    _check_admin(request)
+    require_admin_user(request)
     from src.utils.scheduler import scheduler
     
     cfg_file = __root__ / 'config.json'
@@ -2057,7 +1966,7 @@ async def get_schedulers_config(request: Request) -> Dict[str, Any]:
 @router.post('/schedulers')
 async def save_schedulers_config(data: SchedulersConfigRequest, request: Request) -> Dict[str, Any]:
     """Save background scheduler configuration to config.json and restart running jobs."""
-    _check_admin(request)
+    require_admin_user(request)
     from src.utils.scheduler import scheduler
     import src.config as app_config
     
@@ -2104,7 +2013,7 @@ async def save_schedulers_config(data: SchedulersConfigRequest, request: Request
 @router.post('/schedulers/trigger/{job_name}')
 async def trigger_scheduler_job(job_name: str, request: Request) -> Dict[str, Any]:
     """Manually trigger an immediate execution of a scheduled job."""
-    _check_admin(request)
+    require_admin_user(request)
     from src.utils.scheduler import scheduler
     
     if job_name == 'rag':

@@ -140,7 +140,8 @@ async function loadLocale(lang, bundle = 'main') {
     
     for (const path of paths) {
         try {
-            const r = await fetch(path);
+            const cacheBustUrl = `${path}?v=${Date.now()}`;
+            const r = await fetch(cacheBustUrl);
             if (r.ok) return await r.json();
         } catch (e) {
             console.log(`[i18n] Try next path: ${path}`);

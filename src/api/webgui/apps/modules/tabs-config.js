@@ -26,6 +26,7 @@ export const APP_TAB_DEFS = [
   { id: 'wikipedia_research', tab: 'wikipedia-research', tabId: 'tab-wikipedia-research', html: '/html/wikipedia_research_tab/index.html', js: '/html/wikipedia_research_tab/main.js' },
   { id: 'autolog_manager', tab: 'autolog', tabId: 'tab-autolog', html: '/html/autolog_tab/index.html', js: '/html/autolog_tab/main.js' },
   { id: 'software_transparency_scanner', tab: 'software-transparency', tabId: 'tab-software-transparency', html: '/html/software_transparency_tab/index.html', js: '/html/software_transparency_tab/main.js' },
+  { id: 'user_directories', tab: 'user-directories', tabId: 'tab-user-directories', html: '/html/user_directories_tab/index.html', js: '/html/user_directories_tab/main.js' },
 ];
 
 export const TC_EXCLUDES = new Set([

@@ -119,6 +119,9 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-plugins' && typeof window.initPluginsTab === 'function') {
     console.log('[UserInterface] Switching to Plugins tab...');
     window.initPluginsTab();
+  } else if (cleanId === 'tab-user-directories' && typeof window.initUserDirectoriesTab === 'function') {
+    console.log('[UserInterface] Switching to User Directories tab...');
+    window.initUserDirectoriesTab();
   }
 }
 
@@ -295,6 +298,7 @@ async function initInterface() {
     loadTabContent('voice', `/html/voice_tab/index.html?v=${cb}`, `/html/voice_tab/main.js?v=${cb}`),
     loadTabContent('skills', `/html/skills_tab/index.html?v=${cb}`, `/html/skills_tab/main.js?v=${cb}`),
     loadTabContent('plugins', `/html/plugins_tab/index.html?v=${cb}`, `/html/plugins_tab/main.js?v=${cb}`),
+    loadTabContent('user-directories', `/html/user_directories_tab/index.html?v=${cb}`, `/html/user_directories_tab/main.js?v=${cb}`),
   ]);
 
   // Apply translations

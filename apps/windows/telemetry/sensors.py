@@ -116,6 +116,8 @@ def _probe_wmi_thermal_zones() -> List[HardwareSensor]:
         return sensors
 
     try:
+        import pythoncom
+        pythoncom.CoInitialize()
         import wmi  # type: ignore
 
         w = wmi.WMI(namespace="root\\wmi")
@@ -152,6 +154,8 @@ def _probe_libre_hardware_monitor_wmi() -> List[HardwareSensor]:
 
     for namespace in ["root\\LibreHardwareMonitor", "root\\OpenHardwareMonitor"]:
         try:
+            import pythoncom
+            pythoncom.CoInitialize()
             import wmi  # type: ignore
 
             w = wmi.WMI(namespace=namespace)

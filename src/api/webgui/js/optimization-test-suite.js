@@ -361,4 +361,5 @@ window.printOptimizationStatus = function() {
   console.groupEnd();
 };
 
-export { OptimizationTestSuite, createDefaultTestSuite };
+export { OptimizationTestSuite };
+

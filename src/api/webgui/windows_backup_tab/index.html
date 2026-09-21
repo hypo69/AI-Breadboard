@@ -261,8 +261,112 @@
     </div>
   </div>
 
+  <!-- Row: User Shell Folders Storage & Relocation Management -->
+  <div class="row g-2 mt-1">
+    <div class="col-12">
+      <div class="wb-panel">
+        <div class="wb-panel-header">
+          <div class="d-flex align-items-center gap-2">
+            <span class="d-flex align-items-center gap-1.5">
+              <i class="bi bi-hdd-network-fill text-info"></i>
+              <span>Пользовательские директории и перенос на вторичные диски</span>
+            </span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle" id="wb-total-user-size">Объем: 0 ГБ</span>
+            <button class="btn btn-xs btn-outline-info py-0 px-2" id="wb-btn-refresh-user-folders" title="Пересчитать размер пользовательских папок" style="font-size: 0.72rem;">
+              <i class="bi bi-arrow-repeat me-1"></i> Пересчитать
+            </button>
+          </div>
+        </div>
+
+        <div class="p-2">
+          <!-- Disks summary row -->
+          <div class="mb-2 p-2 rounded bg-dark border border-secondary" style="font-size: 0.76rem;" id="wb-drives-summary">
+            <div class="text-muted small mb-1 fw-bold">💾 Обнаруженные физические накопители:</div>
+            <div class="d-flex flex-wrap gap-2" id="wb-drives-list">
+              <span class="text-muted">Загрузка информации о дисках...</span>
+            </div>
+          </div>
+
+          <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
+            <table class="table table-dark table-hover wb-table">
+              <thead>
+                <tr>
+                  <th>Директория</th>
+                  <th>Текущий путь</th>
+                  <th>Диск</th>
+                  <th>Размер</th>
+                  <th>Файлов</th>
+                  <th class="text-end">Действие</th>
+                </tr>
+              </thead>
+              <tbody id="wb-user-folders-tbody">
+                <tr>
+                  <td colspan="6" class="text-center text-muted p-3">Подсчет размера пользовательских папок...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Relocating Folder -->
+  <div class="modal fade" id="wb-relocate-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary py-2">
+          <h6 class="modal-title fw-bold text-info d-flex align-items-center gap-2">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Перенос пользовательской директории</span>
+          </h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="font-size: 0.85rem;">
+          <input type="hidden" id="wb-relocate-folder-id" />
+          <div class="mb-2">
+            <label class="text-muted small">Переносимая папка:</label>
+            <div class="fw-bold text-white fs-6" id="wb-relocate-folder-name">-</div>
+            <div class="font-monospace small text-muted text-break" id="wb-relocate-folder-path">-</div>
+          </div>
+          <div class="mb-2">
+            <label class="text-muted small">Текущий размер:</label>
+            <div class="fw-semibold text-warning" id="wb-relocate-folder-size">-</div>
+          </div>
+          <div class="mb-3">
+            <label class="text-muted small mb-1" for="wb-relocate-target-drive">Целевой диск для переноса:</label>
+            <select class="form-select form-select-sm bg-secondary text-white border-0" id="wb-relocate-target-drive">
+              <option value="">Выберите диск с достаточным местом...</option>
+            </select>
+            <div class="form-text text-muted small" id="wb-relocate-drive-hint"></div>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="wb-relocate-delete-source" />
+            <label class="form-check-label text-white small" for="wb-relocate-delete-source">
+              Очистить исходную папку после успешного копирования и перенастройки
+            </label>
+          </div>
+          <div class="alert alert-info py-2 px-3 small mb-0">
+            <i class="bi bi-info-circle me-1"></i>
+            Перенос скопирует файлы, обновит реестр Windows (User Shell Folders) и системную библиотеку Windows, благодаря чему служба File History и Проводник продолжат работать без сбоев.
+          </div>
+        </div>
+        <div class="modal-footer border-secondary py-1.5">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="button" class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="wb-btn-execute-relocate">
+            <i class="bi bi-check-circle"></i>
+            <span>Выполнить перенос</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Row 2: File Deletion Auditing (Event 4663 / 4660) -->
   <div class="row g-2 mt-1">
+
     <div class="col-12">
       <div class="wb-panel mb-0">
         <div class="wb-panel-header">

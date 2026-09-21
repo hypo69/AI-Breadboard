@@ -24,7 +24,8 @@
     "search": "🌐 Веб-поиск",
     "tts": "🗣️ Настройка TTS",
     "sources": "📑 Источники",
-    "logs": "📋 Логи",
+    "logs": "📋 Системные логи",
+    "sensorLogs": "⚡ Логи сенсоров",
     "help": "📚 Справочник",
     "instructions": "📝 Системные инструкции",
     "skills": "⚡ Навыки",
@@ -36,7 +37,9 @@
     "network": "🌐 Сетевой терминал",
     "systemInspector": "📡 Телеметрия",
     "aboutSystem": "ℹ️ О Системе",
-    "scenarios": "💬🎬 Чат и сценарии"
+    "scenarios": "💬🎬 Чат и сценарии",
+    "userDirectories": "📁 Пользовательские директории",
+    "userDirectoriesLong": "📁 Пользовательские директории и хранилище"
   },
   "movieSearch": {
     "title": "🔍 Поиск фильмов на трекерах",
@@ -251,6 +254,18 @@
     "resultTitle": "Результат анализа и стенограмма",
     "saveToRag": "Сохранить в RAG",
     "emptyStateTitle": "Запишите голос или загрузите аудиофайл"
+  },
+  "cacheManager": {
+    "title": "Управление браузерным кешем",
+    "subtitle": "Хранилище больших данных (IndexedDB + Memory Cache) для ускорения работы и офлайн-доступа.",
+    "quotaTitle": "Дисковая квота браузера",
+    "storesTitle": "Хранилища данных",
+    "btnCleanExpired": "Очистить просроченное",
+    "btnClearAll": "Очистить всё",
+    "btnRequestPersist": "Сделать постоянным",
+    "btnExport": "Экспорт JSON",
+    "btnImport": "Импорт JSON",
+    "menuItem": "Кеш браузера"
   },
   "button_apply": "Применить изменения",
   "label_active_voice": "Активный голос:"

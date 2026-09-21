@@ -76,6 +76,64 @@
         }
       };
     }
+
+    const btnRefreshFolders = document.getElementById('wb-btn-refresh-user-folders');
+    if (btnRefreshFolders) {
+      btnRefreshFolders.onclick = () => loadUserFoldersOverview();
+    }
+
+
+    const btnExecRelocate = document.getElementById('wb-btn-execute-relocate');
+    if (btnExecRelocate) {
+      btnExecRelocate.onclick = async () => {
+        const folderId = document.getElementById('wb-relocate-folder-id')?.value;
+        const targetDrive = document.getElementById('wb-relocate-target-drive')?.value;
+        const deleteSource = document.getElementById('wb-relocate-delete-source')?.checked || false;
+
+        if (!folderId || !targetDrive) {
+          alert('Пожалуйста, выберите целевой диск для переноса.');
+          return;
+        }
+
+        if (!confirm(`Подтвердите перенос папки на диск ${targetDrive}.\nВсе файлы будут скопированы, а системные пути и библиотеки перенастроены.`)) {
+          return;
+        }
+
+        btnExecRelocate.disabled = true;
+        btnExecRelocate.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Перенос...';
+
+        try {
+          const res = await fetch('/api/v1/windows-backup/user-folders/relocate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              folder_id: folderId,
+              target_drive_letter: targetDrive,
+              delete_source_after: deleteSource
+            })
+          });
+
+          const data = await res.json();
+          if (res.ok && data.success) {
+            alert(data.message || 'Перенос успешно завершен!');
+            // Закрываем модальное окно bootstrap если доступно
+            const modalEl = document.getElementById('wb-relocate-modal');
+            if (modalEl && window.bootstrap?.Modal) {
+              const modalInstance = window.bootstrap.Modal.getInstance(modalEl);
+              if (modalInstance) modalInstance.hide();
+            }
+            await loadBackupData();
+          } else {
+            alert('Ошибка переноса: ' + (data.detail || data.message || JSON.stringify(data)));
+          }
+        } catch (e) {
+          alert('Сетевая ошибка при переносе: ' + e.message);
+        } finally {
+          btnExecRelocate.disabled = false;
+          btnExecRelocate.innerHTML = '<i class="bi bi-check-circle"></i> <span>Выполнить перенос</span>';
+        }
+      };
+    }
   }
 
   async function loadBackupData() {
@@ -83,10 +141,12 @@
       loadHealthReport(),
       loadLibraries(),
       loadFileHistoryStatus(),
+      loadUserFoldersOverview(),
       loadVssSnapshots(),
       loadFileDeletions()
     ]);
   }
+
 
   async function loadHealthReport() {
     try {
@@ -312,6 +372,150 @@
     }
   }
 
+  let _userFoldersData = null;
+
+  async function loadUserFoldersOverview() {
+    const tbody = document.getElementById('wb-user-folders-tbody');
+    const totalSizeBadge = document.getElementById('wb-total-user-size');
+    const drivesList = document.getElementById('wb-drives-list');
+
+    try {
+      const res = await fetch('/api/v1/windows-backup/user-folders/overview');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      _userFoldersData = data;
+
+      if (totalSizeBadge) {
+        totalSizeBadge.textContent = `Общий объем: ${data.total_user_size_gb} ГБ (${data.total_user_size_mb} МБ)`;
+      }
+
+      // Отрисовка доступных дисков
+      if (drivesList) {
+        if (!data.drives || data.drives.length === 0) {
+          drivesList.innerHTML = '<span class="text-muted">Диски не обнаружены</span>';
+        } else {
+          drivesList.innerHTML = data.drives.map(d => `
+            <div class="px-2 py-1 rounded border ${d.is_system_drive ? 'border-info bg-dark' : 'border-secondary bg-dark'} d-flex align-items-center gap-1.5">
+              <i class="bi ${d.is_system_drive ? 'bi-hdd-fill text-info' : 'bi-hdd text-success'}"></i>
+              <span class="fw-bold">${escapeHtml(d.drive_letter)}</span>
+              <span class="text-muted">(${escapeHtml(d.fstype)})</span>:
+              <span class="text-success fw-semibold">${d.free_space_gb} ГБ своб.</span>
+              <span class="text-muted small">из ${d.total_space_gb} ГБ</span>
+              ${d.is_system_drive ? '<span class="badge bg-info-subtle text-info py-0 px-1" style="font-size: 0.65rem;">System</span>' : ''}
+            </div>
+          `).join('');
+        }
+      }
+
+      if (!tbody) return;
+      if (!data.folders || data.folders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3 text-muted">Пользовательские папки не найдены</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.folders.map(f => {
+        const hasAlternativeDrives = data.available_target_drives && data.available_target_drives.length > 0;
+        const suitableDrives = (data.available_target_drives || []).filter(d => {
+          const folderDrive = f.drive_letter.replace('\\', '');
+          const targetDrive = d.drive_letter.replace('\\', '');
+          return folderDrive !== targetDrive && d.free_space_gb >= (f.size_gb + 1.0);
+        });
+
+        const canRelocate = suitableDrives.length > 0;
+
+        return `
+          <tr>
+            <td class="fw-bold text-white">
+              <i class="bi bi-folder2-open me-1 text-primary"></i>${escapeHtml(f.name)}
+            </td>
+            <td class="font-monospace text-muted small text-truncate" style="max-width: 250px;" title="${escapeHtml(f.current_path)}">
+              ${escapeHtml(f.current_path)}
+            </td>
+            <td>
+              <span class="badge ${f.drive_letter.startsWith('C') ? 'bg-secondary' : 'bg-primary'}">${escapeHtml(f.drive_letter)}</span>
+            </td>
+            <td class="fw-semibold font-monospace ${f.size_gb > 1.0 ? 'text-warning' : 'text-info'}">
+              ${f.size_gb >= 0.01 ? `${f.size_gb} ГБ` : `${f.size_mb} МБ`}
+            </td>
+            <td class="small text-muted font-monospace">${f.file_count}</td>
+            <td class="text-end">
+              <button class="btn btn-xs ${canRelocate ? 'btn-outline-warning' : 'btn-outline-secondary'} py-0 px-2 wb-btn-relocate-modal" 
+                      data-folder-id="${escapeHtml(f.folder_id)}"
+                      ${!canRelocate ? 'title="Нет подходящих дисков с достаточным местом"' : 'title="Перенести на другой диск"'}
+                      style="font-size: 0.72rem;">
+                <i class="bi bi-box-arrow-right me-1"></i>Перенести
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Привязка клика по кнопкам "Перенести"
+      tbody.querySelectorAll('.wb-btn-relocate-modal').forEach(btn => {
+        btn.onclick = () => {
+          const fid = btn.getAttribute('data-folder-id');
+          openRelocateModal(fid);
+        };
+      });
+
+    } catch (e) {
+      if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-3 text-danger">Ошибка загрузки: ${escapeHtml(e.message)}</td></tr>`;
+    }
+  }
+
+  function openRelocateModal(folderId) {
+    if (!_userFoldersData) return;
+    const folder = (_userFoldersData.folders || []).find(f => f.folder_id === folderId);
+    if (!folder) return;
+
+    const elId = document.getElementById('wb-relocate-folder-id');
+    const elName = document.getElementById('wb-relocate-folder-name');
+    const elPath = document.getElementById('wb-relocate-folder-path');
+    const elSize = document.getElementById('wb-relocate-folder-size');
+    const selectDrive = document.getElementById('wb-relocate-target-drive');
+    const elHint = document.getElementById('wb-relocate-drive-hint');
+
+    if (elId) elId.value = folder.folder_id;
+    if (elName) elName.textContent = folder.name;
+    if (elPath) elPath.textContent = folder.current_path;
+    if (elSize) elSize.textContent = `${folder.size_gb >= 0.01 ? `${folder.size_gb} ГБ` : `${folder.size_mb} МБ`} (${folder.file_count} файлов)`;
+
+    if (selectDrive) {
+      selectDrive.innerHTML = '<option value="">-- Выберите диск --</option>';
+      const folderDrive = folder.drive_letter.replace('\\', '').toUpperCase();
+
+      (_userFoldersData.drives || []).forEach(d => {
+        const dLetter = d.drive_letter.replace('\\', '').toUpperCase();
+        if (dLetter === folderDrive) return; // текущий диск пропускаем
+
+        const isEnough = d.free_space_gb >= (folder.size_gb + 1.0);
+        const opt = document.createElement('option');
+        opt.value = d.drive_letter;
+        opt.textContent = `${d.drive_letter} (${d.fstype}) — Свободно: ${d.free_space_gb} ГБ из ${d.total_space_gb} ГБ ${isEnough ? '✅ Достаточно места' : '⚠️ Мало места'}`;
+        if (!isEnough) {
+          opt.disabled = true;
+        }
+        selectDrive.appendChild(opt);
+      });
+    }
+
+    if (elHint) {
+      elHint.textContent = 'Требуется свободного места: минимум ' + (folder.size_gb + 1.0).toFixed(2) + ' ГБ (размер + 1 ГБ резерва).';
+    }
+
+    const modalEl = document.getElementById('wb-relocate-modal');
+    if (modalEl) {
+      if (window.bootstrap?.Modal) {
+        const modal = new window.bootstrap.Modal(modalEl);
+        modal.show();
+      } else {
+        // Fallback если bootstrap modal не подключен напрямую
+        modalEl.classList.add('show');
+        modalEl.style.display = 'block';
+      }
+    }
+  }
+
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     return String(str)
@@ -322,3 +526,4 @@
       .replace(/'/g, '&#039;');
   }
 })();
+

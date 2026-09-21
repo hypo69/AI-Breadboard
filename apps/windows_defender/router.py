@@ -88,9 +88,9 @@ def init_router() -> APIRouter:
             _csv_logger.log_poll(
                 poll_type="defender_status",
                 metric_name="realtime_protection",
-                value=st.realtime_protection_enabled,
+                value=st.real_time_protection_enabled,
                 unit="bool",
-                status="OK" if st.realtime_protection_enabled else "ATTENTION",
+                status="OK" if st.real_time_protection_enabled else "ATTENTION",
                 details={"antivirus_enabled": st.antivirus_enabled, "engine_ver": st.engine_version},
                 filename="windows_defender_status_polls.csv",
             )

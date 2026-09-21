@@ -45,11 +45,15 @@ from apps.windows_backup_manager.core.models import (
     FileHistoryRAGSyncRequest,
     FileHistoryStatus,
     FileHistoryVersionSummary,
+    RelocateFolderRequest,
+    RelocateFolderResponse,
     StorageBackupAudit,
+    UserFoldersOverviewResponse,
     VssSnapshot,
     WindowsLibrary,
 )
 from apps.windows_backup_manager.core.storage_auditor import BackupStorageAuditor
+from apps.windows_backup_manager.core.user_folders_manager import UserFoldersManager
 from apps.windows_backup_manager.core.vss_manager import VssManager
 
 _csv_logger = AppCsvLogger("windows_backup_manager")
@@ -67,8 +71,10 @@ def init_router() -> APIRouter:
     fh_mgr = FileHistoryManager()
     storage_auditor = BackupStorageAuditor()
     vss_mgr = VssManager()
+    user_folders_mgr = UserFoldersManager(lib_mgr=lib_mgr)
     checker = BackupHealthChecker(lib_mgr, fh_mgr, storage_auditor, vss_mgr)
     rag_engine = get_file_history_rag()
+
 
     @router.get("/health", response_model=BackupHealthReport)
     async def get_backup_health_report() -> BackupHealthReport:
@@ -79,7 +85,7 @@ def init_router() -> APIRouter:
             metric_name="health_score",
             value=report.health_score,
             unit="score",
-            status=report.status,
+            status="OK" if report.health_score >= 70 else "ATTENTION",
             details={"service_running": report.service_running, "libraries_count": report.libraries_count},
             filename="windows_backup_events.csv",
         )
@@ -201,5 +207,36 @@ def init_router() -> APIRouter:
     async def get_file_versions_history(query: str) -> FileHistoryVersionSummary:
         """Получить список всех снимков конкретного документа в хранилище истории."""
         return rag_engine.get_file_versions(query)
+
+    # --- User Folders & Storage Relocation Endpoints ---
+
+    @router.get("/user-folders/overview", response_model=UserFoldersOverviewResponse)
+    async def get_user_folders_overview() -> UserFoldersOverviewResponse:
+        """Получить размеры пользовательских папок (Документы, Загрузки и т.д.) и список доступных дисков."""
+        return user_folders_mgr.get_overview()
+
+    @router.post("/user-folders/relocate", response_model=RelocateFolderResponse)
+    async def relocate_user_folder(payload: RelocateFolderRequest) -> RelocateFolderResponse:
+        """Перенести пользовательскую папку на другой физический диск с обновлением реестра и библиотек."""
+        result = user_folders_mgr.relocate_folder(
+            folder_id=payload.folder_id,
+            target_drive_letter=payload.target_drive_letter,
+            delete_source_after=payload.delete_source_after,
+        )
+        _csv_logger.log_event(
+            event_type="user_folder_relocate",
+            status="SUCCESS" if result.success else "FAILED",
+            details={
+                "folder_id": payload.folder_id,
+                "target_drive": payload.target_drive_letter,
+                "success": result.success,
+                "message": result.message,
+                "files_copied": result.files_copied,
+            },
+            filename="windows_backup_events.csv",
+        )
+        if not result.success:
+            raise HTTPException(status_code=400, detail=result.message)
+        return result
 
     return router

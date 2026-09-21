@@ -93,4 +93,3 @@ export function getAppsMap() {
   return window.appsStatusMap || {};
 }
 
-export { syncAppsTabsVisibility };

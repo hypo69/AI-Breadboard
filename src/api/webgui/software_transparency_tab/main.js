@@ -35,7 +35,7 @@
     }
 
     if (tbody && (!allApps || allApps.length === 0)) {
-      tbody.innerHTML = '|tr><td colspan="6" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>Ğ’Ñ‹Ğ¿Ğ¾Ğ»Ğ½ÑĞµÑ‚ÑÑ Ğ¸Ğ½Ğ²ĞµĞ½Ñ‚Ğ°Ñ€Ğ¸Ğ·Ğ°Ñ†Ğ¸Ñ ÑƒÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ½Ñ‹Ñ… Ñ›Ñ€Ğ¾Ğ³Ñ€Ğ°Ğ¼Ğ¼, ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¹ Ğ¸ ÑĞµÑ‚ĞµĞ²Ñ‹Ñ… ÑĞ¾ĞºĞµÑ‚Ğ¾Ğ²...</td></tr>'.replace('|', '<');
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>Ğ’Ñ‹Ğ¿Ğ¾Ğ»Ğ½ÑĞµÑ‚ÑÑ Ğ¸Ğ½Ğ²ĞµĞ½Ñ‚Ğ°Ñ€Ğ¸Ğ·Ğ°Ñ†Ğ¸Ñ ÑƒÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ½Ñ‹Ñ… Ğ¿Ñ€Ğ¾Ğ³Ñ€Ğ°Ğ¼Ğ¼, ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¹ Ğ¸ ÑĞµÑ‚ĞµĞ²Ñ‹Ñ… ÑĞ¾ĞºĞµÑ‚Ğ¾Ğ²...</td></tr>';
     }
 
     try {
@@ -54,7 +54,7 @@
 
       if (badge) {
         badge.className = 'badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2';
-        badge.innerText = 'à¥ĞĞ±Ğ½Ğ°Ñ€ÑƒĞ¶ĞµĞ½Ğ¾: ' + allApps.length + ' Ğ¿Ñ€Ğ¾Ğ³Ñ€Ğ°Ğ¼Ğ¼';
+        badge.innerText = 'â— ĞĞ±Ğ½Ğ°Ñ€ÑƒĞ¶ĞµĞ½Ğ¾: ' + allApps.length + ' Ğ¿Ñ€Ğ¾Ğ³Ñ€Ğ°Ğ¼Ğ¼';
       }
 
       renderTable();
@@ -93,171 +93,118 @@
       return;
     }
 
-    tbody.innerHTML = filtered.map((app) => renderAppRow(app)).join('');‚ˆ›ÙKœ]Y\TÙ[XİÜ[
-	Ëœİ]šY]ËXÛÛ™šYËX‰ÊK™›Ü‘XXÚ
+    tbody.innerHTML = filtered.map((app) => renderAppRow(app)).join('');
+    bindRowActions();
+  }
 
-ŠHOˆÂˆ‹›Û˜ÛXÚÈH
+  function renderAppRow(app) {
+    const dirs = (app.data_directories || []).map(d => `<div class="text-truncate small text-muted" title="${d.path}">ğŸ“ ${d.path} (${(d.total_size_bytes / (1024*1024)).toFixed(1)} MB)</div>`).join('') || '<span class="text-muted small">â€”</span>';
+    const cfgs = (app.config_files || []).map(c => `<button class="btn btn-link btn-sm p-0 text-warning text-decoration-none text-truncate d-block view-config-btn" data-app-id="${app.id}" data-cfg-path="${c.path}" title="${c.path}">âš™ï¸ ${c.filename}</button>`).join('') || '<span class="text-muted small">â€”</span>';
+    const nets = (app.network_endpoints || []).map(n => `<span class="badge bg-secondary me-1 mb-1" title="${n.endpoint}">${n.domain || n.endpoint}</span>`).join('') || '<span class="text-muted small">â€”</span>';
 
-HOˆÂˆÛÛœİ\YH‹™Ù]]šX]J	Ù]KX\ZY	ÊNÂˆÛÛœİÙ™ÒYH\œÙR[
-‹™Ù]]šX]J	Ù]KXÙ™ËZY	ÊKL
-NÂˆÜ[ÛÛ™šYÓ[Ù[
-\YÙ™ÒY
-NÂˆNÂˆJNÂ‚ˆ›ÙKœ]Y\TÙ[XİÜ[
-	Ëœİ\™\ÙX\˜ÚX‰ÊK™›Ü‘XXÚ
+    return `
+      <tr>
+        <td>
+          <div class="fw-bold">${escapeHtml(app.name)}</div>
+          <div class="small text-muted text-truncate" style="max-width: 250px;" title="${app.install_location || ''}">${escapeHtml(app.install_location || '')}</div>
+        </td>
+        <td>
+          <div>${escapeHtml(app.publisher || 'â€”')}</div>
+          <div class="small text-muted">${escapeHtml(app.version || '')}</div>
+        </td>
+        <td>${dirs}</td>
+        <td>${cfgs}</td>
+        <td>${nets}</td>
+        <td class="text-end">
+          <button class="btn btn-sm btn-outline-info research-app-btn" data-app-id="${app.id}" title="AI Ğ˜ÑÑĞ»ĞµĞ´Ğ¾Ğ²Ğ°Ğ½Ğ¸Ğµ">
+            <i class="bi bi-robot"></i> ĞĞ½Ğ°Ğ»Ğ¸Ğ·
+          </button>
+        </td>
+      </tr>
+    `;
+  }
 
-ŠHOˆÂˆ‹›Û˜ÛXÚÈH
+  function bindRowActions() {
+    document.querySelectorAll('.view-config-btn').forEach(btn => {
+      btn.onclick = () => {
+        const appId = btn.getAttribute('data-app-id');
+        const cfgPath = btn.getAttribute('data-cfg-path');
+        openConfigModal(appId, cfgPath);
+      };
+    });
 
-HOˆÂˆÛÛœİ\YH‹™Ù]]šX]J	Ù]KX\ZY	ÊNÂˆÜ[”™\ÙX\˜Ú[Ù[
-\Y
-NÂˆNÂˆJNÂˆB‚ˆ[˜İ[Ûˆ™[™\\›İÊ\
-HÂˆÛÛœİÛÛ™šYĞ˜YÙ\ÈH
-\˜ÛÛ™šY×Ùš[\È×JKœÛXÙJÊK›X\
+    document.querySelectorAll('.research-app-btn').forEach(btn => {
+      btn.onclick = () => {
+        const appId = btn.getAttribute('data-app-id');
+        openResearchModal(appId);
+      };
+    });
+  }
 
-ËY
-HOˆÂˆ™]\›ˆ	Ï[œ]Ï‰ÈÈ	Ï]ÛˆÛ\ÜÏH˜ˆ‹[İ][™K\ÙXÛÛ™\H‹\ÛHKLLH›Û[[Û›ÜÜXÙHÛX[İ]šY]ËXÛÛ™šYËXˆX‹LHYKLH^][˜Ø]Hˆİ[OH›X^]ÚYˆMÈˆ]KX\ZYH‰È
-È\šY
-È	Èˆ]KXÙ™ËZYH‰È
-ÈY
-È	Èˆ]OH‰È
-ÈË™\Ü^WÜ]
-È	È´+]IÈ
-ÈË™š[[˜[YH
-È	ÏØ]Û‰Èˆ	ÉÎÂˆJKš›Ú[Š	ÉÊNÂ‚ˆÛÛœİ\˜YÙ\ÈH
-\™]WÙ\™XİÜšY\È×JKœÛXÙJÊK›X\
+  function openConfigModal(appId, cfgPath) {
+    const app = allApps.find(a => a.id === appId);
+    const cfg = app ? (app.config_files || []).find(c => c.path === cfgPath) : null;
 
-
-HOˆÂˆ™]\›ˆ	Ï]ˆÛ\ÜÏHœÛX[^][˜Ø]H^\ÙXÛÛ™\HX‹LHˆ]OH‰È
-È™\Ü^WÜ]
-È	È
-	È
-È™\ØÜš\[Ûˆ
-È	ÊH¼'äàHÜ[ˆÛ\ÜÏH^[YÚ‰È
-È™\Ü^WÜ]
-È	ÏÜÜ[Ù]‰ÎÂˆJKš›Ú[Š	ÉÊNÂ‚ˆÛÛœİÛXZ[˜YÙ\ÈH
-\›™]ÛÜš×Ù[™Ú[È×JKœÛXÙJÊK›X\
+    document.getElementById('st-config-modal-path').innerText = cfgPath;
+    document.getElementById('st-config-modal-content').innerText = cfg ? (cfg.content_preview || '[ĞŸÑƒÑÑ‚Ğ¾Ğ¹ Ñ„Ğ°Ğ¹Ğ»]') : '[Ğ¤Ğ°Ğ¹Ğ» Ğ½Ğµ Ğ½Ğ°Ğ¹Ğ´ĞµĞ½]';
 
-\
-HOˆÂˆ™]\›ˆ	Ï]ˆÛ\ÜÏHœÛX[^][˜Ø]HX‹LHˆ]OH‰È
-È\œ\œÜÙH
-È	È¼'ã$Ü[ˆÛ\ÜÏH^Z[™›È‰È
-È\™ÛXZ[—ÛÜ—Ú\
-È	ÏÜÜ[ˆÜ[ˆÛ\ÜÏH^[]]Y‰È
-È
-\œÜÊH
-È	ÏÜÜ[Ù]‰ÎÂˆJKš›Ú[Š	ÉÊNÂ‚ˆ]^˜Q\œÈH
-\™]WÙ\™XİÜšY\È×JK›[™İˆÈÈ	Ï]ˆÛ\ÜÏH^[]]Yˆİ[OH™›Û\Ú^™NˆÜ™[NÈŠÈ4-tbt-H	È
-È
-\™]WÙ\™XİÜšY\Ë›[™İHÊH
-È	È4.´,4`´,4.ô/´,ô/´,Ù]‰Èˆ	ÉÎÂˆ]^˜PÙ™ÜÈH
-\˜ÛÛ™šY×Ùš[\È×JK›[™İˆÈÈ	Ï]ˆÛ\ÜÏH^[]]Yˆİ[OH™›Û\Ú^™NˆÜ™[NÈŠÈ4-tbt-H	È
-È
-\˜ÛÛ™šY×Ùš[\Ë›[™İHÊH
-È	È4a4,4.t.ô/´,Ù]‰Èˆ	ÉÎÂˆ]^˜S™]ÈH
-\›™]ÛÜš×Ù[™Ú[È×JK›[™İˆÈÈ	Ï]ˆÛ\ÜÏH^[]]Yˆİ[OH™›Û\Ú^™NˆÜ™[NÈŠÈ4-tbt-H	È
-È
-\›™]ÛÜš×Ù[™Ú[Ë›[™İHÊH
-È	È4`ô-ô.ô/´,Ù]‰Èˆ	ÉÎÂ‚ˆ™]\›ˆ	Ï‰È
-Âˆ	Ï]ˆÛ\ÜÏH™ËX›Û^]Ú]H‰È
-È\ØØ\R[
-\›˜[YJH
-È	ÏÙ]]ˆÛ\ÜÏHœÛX[^[]]Y›Û[[Û›ÜÜXÙH^][˜Ø]Hˆİ[OH›X^]ÚYˆŒÈˆ]OH‰È
-È
-\š[œİ[ÛØØ][Ûˆ	ÉÊH
-È	È‰È
-È\ØØ\R[
-\š[œİ[ÛØØ][Ûˆ\™^Xİ]X›WÜ]	ô(t.4`t`´-t/4/tbô.H4.´/´/4/ô/´/t-t/t`‰ÊH
-È	ÏÙ]İ‰È
-Âˆ	Ï]ˆÛ\ÜÏHœÛX[^[YÚ‰È
-È\ØØ\R[
-\œX›\Ú\ˆ	ô't-t.4-ô,´-t`t`´-t/IÊH
-È	ÏÙ]Ü[ˆÛ\ÜÏH˜˜YÙH™Ë\ÙXÛÛ™\H™Ë[ÜXÚ]KLH^Z[™›È›Û[[Û›ÜÜXÙHÛX[‰È
-È\ØØ\R[
-\™\œÚ[ÛŠH
-È	ÏÜÜ[ˆÜ[ˆÛ\ÜÏH˜˜YÙH™Ë\ÙXÛÛ™\H™Ë[ÜXÚ]KLH^\ÙXÛÛ™\H›Û[[Û›ÜÜXÙHÛX[‰È
-È\˜\˜Ú]Xİ\™H
-È	ÏÜÜ[İ‰È
-Âˆ	Ï‰È
-È
-\˜YÙ\È	ÏÜ[ˆÛ\ÜÏH^[]]YÛX[´'t-H4/´,t/t,4`4`ô-´-t/tbÏÜÜ[‰ÊH
-È^˜Q\œÈ
-È	Ïİ‰È
-Âˆ	Ï‰È
-È
-ÛÛ™šYĞ˜YÙ\È	ÏÜ[ˆÛ\ÜÏH^[]]YÛX[´'t-t`ˆ4a4,4.t.ô/´,ÜÜ[‰ÊH
-È^˜PÙ™ÜÈ
-È	Ïİ‰È
-Âˆ	Ï‰È
-È
-ÛXZ[˜YÙ\È	ÏÜ[ˆÛ\ÜÏH^[]]YÛX[´&ô/´.´,4.ôc4/tbô.H4`4-t-´.4/ÜÜ[‰ÊH
-È^˜S™]È
-È	Ïİ‰È
-Âˆ	Ïİ[OH^X[YÛˆšYÚÈ]ÛˆÛ\ÜÏH˜ˆ‹\ÛH‹[İ][™KZ[™›Èİ\™\ÙX\˜ÚXˆˆ]KX\ZYH‰È
-È\šY
-È	Èˆ]OHRH4.4`t`t.ô-t-4/´,´,4/t.4-H4/ô`4/´,ô`4,4/4/4bÈHÛ\ÜÏH˜šHšK\›Ø›İÚOˆ4&4`t`t.ô-t-4/´,´,4`´cØ]Ûİ‰È
-Âˆ	Ïİ‰ÎÂˆB‚ˆ[˜İ[ÛˆÜ[ÛÛ™šYÓ[Ù[
-\YÙ™ÒY
-HÂˆÛÛœİ\H[\Ë™š[™
-
-JHOˆKšYOOH\Y
-NÂˆYˆ
-X\X\˜ÛÛ™šY×Ùš[\ÈX\˜ÛÛ™šY×Ùš[\ÖØÙ™ÒYJH™]\›Â‚ˆÛÛœİÙ™ÈH\˜ÛÛ™šY×Ùš[\ÖØÙ™ÒYNÂˆØİ[Y[™Ù][[Y[RY
-	ÜİXÛÛ™šYË[[Ù[]]IÊKš[›™\•^H	ô&´/´/ut.4,ô`ô`4,4a´.4cÎˆ	È
-ÈÙ™Ë™š[[˜[YNÂˆØİ[Y[™Ù][[Y[RY
-	ÜİXÛÛ™šYË[[Ù[\]	ÊKš[›™\•^H	ô'ô`ô`´cˆ	È
-ÈÙ™Ë™\Ü^WÜ]
-È	È
-	È
-ÈÙ™Ë™›Ü›X]Õ\\Ø\ÙJ
-H
-È	Ë	È
-ÈÙ™ËœÚ^™WØ]\È
-È	È4,t,4.tJIÎÂˆØİ[Y[™Ù][[Y[RY
-	ÜİXÛÛ™šYË[[Ù[XÛÛ[	ÊK^ÛÛ[HÙ™ËœØ[\WØÛÛ[	ËËÈ4(t/´-4-t`4-´.4/4/´-H4/ô`ô`t`´/ˆ4.4.ô.4/t-t-4/´`t`´`ô/ô/t/‰ÎÂ‚ˆÛÛœİ[Ù[H™]È›Ûİİ˜\“[Ù[
-Øİ[Y[™Ù][[Y[RY
-	ÜİXÛÛ™šYË[[Ù[	ÊJNÂˆ[Ù[œÚİÊ
-NÂˆB‚ˆ\Ş[˜È[˜İ[ÛˆÜ[”™\ÙX\˜Ú[Ù[
-\Y
-HÂˆÛÛœİ\H[\Ë™š[™
-
-JHOˆKšYOOH\Y
-NÂˆYˆ
-X\
-H™]\›Â‚ˆØİ[Y[™Ù][[Y[RY
-	Üİ\™\ÙX\˜Ú[[Ù[]]IÊKš[›™\•^H	ĞRH4&4`t`t.ô-t-4/´,´,4/t.4-Nˆ	È
-È\›˜[YNÂˆÛÛœİ›ÙHHØİ[Y[™Ù][[Y[RY
-	Üİ\™\ÙX\˜Ú[[Ù[X›ÙIÊNÂˆ›ÙKš[›™\’SH	Ï]ˆÛ\ÜÏH^XÙ[\ˆKM]ˆÛ\ÜÏHœÜ[›™\‹X›Ü™\ˆÜ[›™\‹X›Ü™\‹\ÛH^Z[™›ÈYKLˆÙ]‘Ù[Z[šH4,4/t,4.ô.4-ô.4`4`ô-t`ˆ4/t,4-ô/t,4aô-t/t.4-H4/ô`4/´,ô`4,4/4/4bÈ4.4/ô`4/´,´-t`4cô-t`ˆ4-4/´.´`ô/4-t/t`´,4a´.4c‹‹‹Ù]‰ÎÂ‚ˆÛÛœİ[Ù[H™]È›Ûİİ˜\“[Ù[
-Øİ[Y[™Ù][[Y[RY
-	Üİ\™\ÙX\˜Ú[[Ù[	ÊJNÂˆ[Ù[œÚİÊ
-NÂ‚ˆHÂˆÛÛœİ™\ÈH]ØZ]™]Ú
-	ËØ\KİŒKÜÛÙØ\™K\ØØ[›™\‹Ü™\ÙX\˜Ú	ËÂˆY]Ùˆ	ÔÔÕ	ËˆXY\œÎˆÈ	ĞÛÛ[U\IÎˆ	Ø\XØ][Û‹ÚœÛÛ‰ÈKˆ›ÙNˆ”ÓÓ‹œİš[™ÚYJÈ\ÚYˆ\Y›Ü˜ÙWÜ™Yœ™\Úˆ˜[ÙHJKˆJNÂ‚ˆYˆ
-\™\Ë›ÚÊH›İÈ™]È\œ›ÜŠ	Ò	È
-È™\Ëœİ]\ÊNÂˆÛÛœİ]HH]ØZ]™\ËšœÛÛŠ
-NÂ‚ˆÛÛœİÛÛ™‘˜XİÈH
-]K˜ÛÛ™š\›YYÙ˜XİÈ×JK›X\
-
-ŠHOˆ	ÏO‰È
-È\ØØ\R[
-ŠH
-È	ÏÛO‰ÊKš›Ú[Š	ÉÊH	ÏO´'t-H4-ô,4a4.4:ÑĞ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ¿</li>';
-      const inferFacts = (data.inferred_facts || []).map((f) => '<li>' + escapeHtml(f) + '</li>').join('') || '<li>ĞĞµÑ‚ Ğ¿Ñ€ĞµĞ´Ğ¿Ğ¾Ğ»Ğ¾Ğ¶ĞµĞ½Ğ¸Ğ¹</li>';
-
-      body.innerHTML = '<div class="mb-3"><h6 class="text-info fw-bold mb-1">ğŸ“ˆ ĞĞ°Ğ·Ğ½Ğ°Ñ‡ĞµĞ½Ğ¸Ğµ Ğ¿Ñ€Ğ¾Ğ³Ñ€Ğ°Ğ¼Ğ¼Ñ‹</h6><p class="small text-light mb-2">' + escapeHtml(data.summary) + '</p></div>' +
-        '<div class="mb-3"><h6 class="text-warning fw-bold mb-1">Indicatorâš ĞĞ°Ğ·Ğ½Ğ°Ñ‡ĞµĞ½Ğ¸Ğµ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¹</h6><p class="small text-light mb-2">' + escapeHtml(data.config_purpose_explanation || 'Ğ¡Ñ‚Ğ°Ğ½Ğ´Ğ°Ñ€Ñ‚Ğ½Ñ‹Ğµ Ğ½Ğ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸ Ğ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»Ñ.') + '</p></div>' +
-        '<div class="mb-3"><h6 class="text-primary fw-bold mb-1">ğŸ’¾ Ğ“Ğ´Ğµ Ğ¸ ĞºĞ°ĞºĞ¸Ğµ Ğ´Ğ°Ğ½Ğ½Ñ‹Ğµ ÑĞ¾Ñ…Ñ€Ğ°Ğ½ÑÑÑ‚ÑÑ?</h6><p class="small text-light mb-2">' + escapeHtml(data.data_storage_explanation || 'Ğ›Ğ¾ĞºĞ°Ğ»ÑŒĞ½Ñ‹Ğµ Ñ„Ğ°Ğ¹Ğ»Ñ‹ Ğ² ĞºĞ°Ñ‚Ğ°Ğ»Ğ¾Ğ³Ğ°Ñ… AppData.') + '</p></div>' +
-        '<div class="mb-3"><h6 class="text-success fw-bold mb-1">ğŸ˜ Ğ¡ĞµÑ‚ĞµĞ²Ğ°Ñ Ğ°ĞºÑ‚Ğ¸Ğ²Ğ½Ğ¾ÑÑ‚ÑŒ Ğ¸ Ğ´Ğ¾Ğ¼ĞµĞ½Ñ‹</h6><p class="small text-light mb-2">' + escapeHtml(data.network_activity_explanation || 'ĞŸĞµÑ€Ğ¸Ğ¾Ğ´Ğ¸Ñ‡ĞµÑĞºĞ°Ñ Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ĞºĞ° Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ¸Ğ¹.') + '</p></div>' +
-        '<div class="row g-2 mt-2 pt-2 border-top border-secondary">' +
-        '<div class="col-md-6"><h6 class="text-success small fw-bold">ĞŸĞ¾Ğ´Ñ‚Ğ²ĞµÑ€Ğ¶Ğ´ĞµĞ½Ğ½Ñ‹Ğµ Ñ„Ğ°ĞºÑ‚Ñ‹</h6><ul class="small text-muted ps-3 mb-2">' + confFacts + '</ul></div>' +
-        '<div class="col-md-6"><h6 class="text-warning small fw-bold">ĞŸÑ€ĞµĞ´Ğ¿Ğ¾Ğ»Ğ¾Ğ¶ĞµĞ½Ğ¸Ñ Ğ¼Ğ¾Ğ´ĞµĞ»Ğ¸:</h6><ul class="small text-muted ps-3 mb-2">' + inferFacts + '</ul></div>' +
-        '</div>';
-    } catch (err) {
-      body.innerHTML = '<div class="alert alert-danger small">ĞÑˆĞ¸Ğ±ĞºĞ° AIÀ¸ÑÑĞ»ĞµĞ´Ğ¾Ğ²Ğ°Ğ½Ğ¸Ñ: ' + err.message + '</div>';
+    const modalEl = document.getElementById('st-config-modal');
+    if (modalEl && window.bootstrap) {
+      new bootstrap.Modal(modalEl).show();
     }
   }
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  async function openResearchModal(appId) {
+    const app = allApps.find(a => a.id === appId);
+    const titleEl = document.getElementById('st-research-modal-title');
+    const bodyEl = document.getElementById('st-research-modal-body');
+
+    if (titleEl) titleEl.innerText = 'AI Ğ˜ÑÑĞ»ĞµĞ´Ğ¾Ğ²Ğ°Ğ½Ğ¸Ğµ: ' + (app ? app.name : appId);
+    if (bodyEl) {
+      bodyEl.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Ğ’Ñ‹Ğ¿Ğ¾Ğ»Ğ½ÑĞµÑ‚ÑÑ Ğ°Ğ½Ğ°Ğ»Ğ¸Ñ‚Ğ¸Ñ‡ĞµÑĞºĞ¾Ğµ Ğ¸ÑÑĞ»ĞµĞ´Ğ¾Ğ²Ğ°Ğ½Ğ¸Ğµ Ğ¿Ñ€Ğ¾Ğ³Ñ€Ğ°Ğ¼Ğ¼Ñ‹ Ñ‡ĞµÑ€ĞµĞ· Gemini...</div>';
+    }
+
+    const modalEl = document.getElementById('st-research-modal');
+    if (modalEl && window.bootstrap) {
+      new bootstrap.Modal(modalEl).show();
+    }
+
+    try {
+      const res = await fetch('/api/v1/software-scanner/research', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ app_id: appId })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      if (bodyEl) {
+        bodyEl.innerHTML = `
+          <h6>ğŸ“‹ ĞĞ¿Ğ¸ÑĞ°Ğ½Ğ¸Ğµ Ğ¿Ñ€Ğ¾Ğ³Ñ€Ğ°Ğ¼Ğ¼Ñ‹:</h6>
+          <p>${escapeHtml(data.summary || data.description || 'ĞĞµÑ‚ Ğ´Ğ°Ğ½Ğ½Ñ‹Ñ…')}</p>
+          ${data.risk_score !== undefined ? `<div class="mb-2"><strong>ĞÑ†ĞµĞ½ĞºĞ° Ñ€Ğ¸ÑĞºĞ°:</strong> <span class="badge bg-${data.risk_score > 5 ? 'danger' : 'success'}">${data.risk_score}/10</span></div>` : ''}
+          ${data.recommendations ? `<h6>ğŸ’¡ Ğ ĞµĞºĞ¾Ğ¼ĞµĞ½Ğ´Ğ°Ñ†Ğ¸Ğ¸:</h6><p>${escapeHtml(data.recommendations)}</p>` : ''}
+        `;
+      }
+    } catch (err) {
+      if (bodyEl) {
+        bodyEl.innerHTML = `<div class="alert alert-danger">ĞÑˆĞ¸Ğ±ĞºĞ° Ğ°Ğ½Ğ°Ğ»Ğ¸Ğ·Ğ°: ${err.message}</div>`;
+      }
+    }
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.innerText = text;
+    return div.innerHTML;
   }
 
   window.initSoftwareTransparencyTab = initSoftwareTransparencyTab;
-è})();
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSoftwareTransparencyTab);
+  } else {
+    initSoftwareTransparencyTab();
+  }
+})();

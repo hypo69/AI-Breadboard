@@ -33,10 +33,16 @@ from apps.windows_backup_manager.core.models import (
     LibraryFolder,
     ServiceState,
     StorageBackupAudit,
+    TargetDriveInfo,
+    UserFolderInfo,
+    UserFoldersOverviewResponse,
+    RelocateFolderRequest,
+    RelocateFolderResponse,
     VssSnapshot,
     WindowsLibrary,
 )
 from apps.windows_backup_manager.core.storage_auditor import BackupStorageAuditor
+from apps.windows_backup_manager.core.user_folders_manager import UserFoldersManager
 from apps.windows_backup_manager.core.vss_manager import VssManager
 
 __all__ = [
@@ -55,8 +61,14 @@ __all__ = [
     "FileHistoryVersionSummary",
     "FileVersionRecord",
     "LibraryFolder",
+    "RelocateFolderRequest",
+    "RelocateFolderResponse",
     "ServiceState",
     "StorageBackupAudit",
+    "TargetDriveInfo",
+    "UserFolderInfo",
+    "UserFoldersManager",
+    "UserFoldersOverviewResponse",
     "VssManager",
     "VssSnapshot",
     "WindowsFileHistoryRAG",

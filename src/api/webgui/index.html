@@ -6,7 +6,7 @@
   <title>AI Assistant</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/html/css/main.css?v=20260917_refactor_v1" rel="stylesheet">
+  <link href="/html/css/main.css?v=20260920_v2" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/i18next@23.11.5/i18next.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
@@ -14,9 +14,23 @@
 <div class="container-fluid mt-1">
 
   <div class="d-flex align-items-center justify-content-between mb-1 main-nav-container rounded px-2 py-1">
-    <!-- Брендинг и индикатор активного раздела -->
+    <!-- Левая часть: кнопка меню, брендинг и индикатор активного раздела -->
     <div class="d-flex align-items-center gap-2">
-      <span class="fw-bold d-flex align-items-center gap-2 text-primary fs-6 user-select-none" style="letter-spacing: 0.3px;">
+      <!-- Кнопка открытия левого выдвижного меню -->
+      <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5 px-2 py-1 rounded shadow-sm"
+              id="left-drawer-toggle-btn"
+              type="button"
+              data-bs-toggle="offcanvas"
+              data-bs-target="#leftSideNavOffcanvas"
+              aria-controls="leftSideNavOffcanvas"
+              title="Открыть меню разделов"
+              style="font-size: 0.82rem; font-weight: 500;">
+        <i class="bi bi-list fs-6"></i>
+        <span class="d-none d-md-inline">Меню</span>
+      </button>
+
+      <!-- Брендинг -->
+      <span class="fw-bold d-flex align-items-center gap-1.5 text-primary fs-6 user-select-none" style="letter-spacing: 0.3px;">
         <i class="bi bi-cpu-fill fs-5"></i>
         <span class="d-none d-sm-inline">AI Breadboard</span>
       </span>
@@ -25,7 +39,7 @@
       </span>
     </div>
 
-    <!-- Правая часть панели: статусы, профиль, настройки и кнопка меню -->
+    <!-- Правая часть панели: статусы, профиль и настройки -->
     <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-auto" id="nav-auth-container">
       <!-- Active Model & Search Badges -->
       <span id="chat-model-badge" class="badge rounded-pill align-items-center gap-1 px-3 py-1 shadow-sm border" style="font-size: 0.8rem; display: none; cursor: pointer;" title="Текущая модель ИИ">
@@ -85,6 +99,12 @@
           </li>
           <li><hr class="dropdown-divider my-1"></li>
           <li>
+            <button class="dropdown-item d-flex align-items-center gap-2 py-1" type="button" id="user-menu-btn-cache" data-bs-toggle="modal" data-bs-target="#cacheManagerModal">
+              <i class="bi bi-hdd-stack text-info"></i>
+              <span data-i18n="cacheManager.menuItem">Кеш браузера</span>
+            </button>
+          </li>
+          <li>
             <button class="dropdown-item d-flex align-items-center gap-2 py-1" type="button" data-bs-toggle="modal" data-bs-target="#userSettingsModal">
               <i class="bi bi-gear-fill text-secondary"></i>
               <span data-i18n="userSettings.title">Настройки профиля</span>
@@ -99,6 +119,11 @@
         </ul>
       </div>
 
+      <!-- Кнопка кеша браузера -->
+      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center rounded-circle" id="btn-open-cache-manager" data-bs-toggle="modal" data-bs-target="#cacheManagerModal" title="Кеш браузера" style="width: 28px; height: 28px; padding: 0;" data-i18n-title="cacheManager.title">
+        <i class="bi bi-hdd-stack"></i>
+      </button>
+
       <!-- Кнопка переключения темы (☀️/🌙/🌓) -->
       <button class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center rounded-circle"
               id="theme-toggle"
@@ -111,37 +136,24 @@
       <button class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center rounded-circle" id="user-settings-gear-btn" data-bs-toggle="modal" data-bs-target="#userSettingsModal" title="Настройки" style="width: 28px; height: 28px; padding: 0;" data-i18n-title="userSettings.title">
         <i class="bi bi-gear-fill"></i>
       </button>
-
-      <!-- Кнопка открытия правого выдвижного меню -->
-      <button class="btn btn-sm btn-primary d-flex align-items-center gap-2 px-2 py-1 rounded shadow-sm"
-              id="right-drawer-toggle-btn"
-              type="button"
-              data-bs-toggle="offcanvas"
-              data-bs-target="#rightSideNavOffcanvas"
-              aria-controls="rightSideNavOffcanvas"
-              title="Открыть меню разделов"
-              style="font-size: 0.82rem; font-weight: 500;">
-        <i class="bi bi-layout-sidebar-reverse"></i>
-        <span>Меню</span>
-      </button>
     </div>
   </div>
 
-  <!-- Плавающий боковой ярлычок (вкладка) справа -->
-  <button class="right-drawer-tab-trigger btn shadow" 
+  <!-- Плавающий боковой ярлычок (вкладка) слева -->
+  <button class="left-drawer-tab-trigger btn shadow" 
           type="button" 
           data-bs-toggle="offcanvas" 
-          data-bs-target="#rightSideNavOffcanvas" 
-          aria-controls="rightSideNavOffcanvas" 
+          data-bs-target="#leftSideNavOffcanvas" 
+          aria-controls="leftSideNavOffcanvas" 
           title="Открыть меню навигации">
-    <i class="bi bi-layout-sidebar-reverse"></i>
-    <span class="right-drawer-tab-text">МЕНЮ</span>
+    <i class="bi bi-list fs-6"></i>
+    <span class="left-drawer-tab-text">МЕНЮ</span>
   </button>
 
-  <!-- Правая выдвижная вкладка / панель навигации (Offcanvas) -->
-  <div class="offcanvas offcanvas-end right-drawer-nav" tabindex="-1" id="rightSideNavOffcanvas" aria-labelledby="rightSideNavOffcanvasLabel">
+  <!-- Левая выдвижная вкладка / панель навигации (Offcanvas) -->
+  <div class="offcanvas offcanvas-start left-drawer-nav" tabindex="-1" id="leftSideNavOffcanvas" aria-labelledby="leftSideNavOffcanvasLabel">
     <div class="offcanvas-header border-bottom py-2 px-3">
-      <h5 class="offcanvas-title d-flex align-items-center gap-2 fs-6 fw-bold" id="rightSideNavOffcanvasLabel">
+      <h5 class="offcanvas-title d-flex align-items-center gap-2 fs-6 fw-bold" id="leftSideNavOffcanvasLabel">
         <i class="bi bi-grid-fill text-primary"></i>
         <span>Навигация и разделы</span>
       </h5>
@@ -166,6 +178,7 @@
             </button>
           </div>
         </div>
+
 
         <!-- Группа: Расширенные -->
         <div class="nav-drawer-group mb-3">
@@ -234,8 +247,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/html/js/ai_table_modal.js"></script>
-<script src="/html/js/chatService.js?v=20260917_refactor_v1"></script>
-<script type="module" src="/html/js/main.js?v=20260917_refactor_v1"></script>
+<script src="/html/js/chatService.js?v=20260920_v3"></script>
+<script type="module" src="/html/js/main.js?v=20260920_v3"></script>
 
 <!-- HELP Modal -->
 <div class="modal fade modal-help" id="help-modal" tabindex="-1" aria-labelledby="help-modal-label" aria-hidden="true">
@@ -325,6 +338,73 @@
             <option value="dark" data-i18n="userSettings.themeDark">🌙 Тёмная</option>
             <option value="system" data-i18n="userSettings.themeSystem">🌓 Системная</option>
           </select>
+        </div>
+      </div>
+<!-- Cache Manager Modal -->
+<div class="modal fade" id="cacheManagerModal" tabindex="-1" aria-labelledby="cacheManagerModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content shadow border-secondary-subtle">
+      <div class="modal-header border-secondary-subtle">
+        <div class="d-flex align-items-center gap-2">
+          <div class="rounded-circle bg-primary-subtle text-primary p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+            <i class="bi bi-hdd-stack fs-5"></i>
+          </div>
+          <div>
+            <h5 class="modal-title mb-0" id="cacheManagerModalLabel" data-i18n="cacheManager.title">Управление браузерным кешем</h5>
+            <div class="small text-muted" style="font-size: 0.78rem;" data-i18n="cacheManager.subtitle">Хранилище больших данных (IndexedDB + Memory Cache) для ускорения работы и офлайн-доступа.</div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3">
+        <!-- Storage Quota Bar Card -->
+        <div class="card bg-body-tertiary border-secondary-subtle p-3 mb-3">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="fw-semibold small d-flex align-items-center gap-1.5">
+              <i class="bi bi-pie-chart-fill text-primary"></i>
+              <span data-i18n="cacheManager.quotaTitle">Дисковая квота браузера</span>
+            </div>
+            <span id="cache-persist-badge" class="badge bg-secondary-subtle text-secondary border">Проверка...</span>
+          </div>
+          <div class="progress mb-2" style="height: 10px;">
+            <div id="cache-usage-progressbar" class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center small text-muted" style="font-size: 0.78rem;">
+            <span>Использование памяти:</span>
+            <span id="cache-usage-text" class="fw-semibold text-body">Загрузка...</span>
+          </div>
+        </div>
+
+        <!-- Stores List -->
+        <div class="mb-3">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <h6 class="fw-bold small text-uppercase text-muted mb-0" data-i18n="cacheManager.storesTitle">Хранилища данных</h6>
+            <button class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill small" id="cache-btn-cleanup-expired" style="font-size: 0.75rem;">
+              <i class="bi bi-magic me-1"></i><span data-i18n="cacheManager.btnCleanExpired">Очистить просроченное</span>
+            </button>
+          </div>
+          <div id="cache-stores-list">
+            <!-- Populated dynamically by cache-ui.js -->
+          </div>
+        </div>
+
+        <!-- Action Tools -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top border-secondary-subtle">
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="cache-btn-request-persist" data-i18n="cacheManager.btnRequestPersist">
+              <i class="bi bi-shield-lock me-1"></i>Сделать постоянным
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="cache-btn-export" data-i18n="cacheManager.btnExport">
+              <i class="bi bi-download me-1"></i>Экспорт JSON
+            </button>
+            <label class="btn btn-outline-secondary btn-sm mb-0" for="cache-file-import" style="cursor: pointer;">
+              <i class="bi bi-upload me-1"></i><span data-i18n="cacheManager.btnImport">Импорт JSON</span>
+              <input type="file" id="cache-file-import" accept=".json" class="d-none">
+            </label>
+          </div>
+          <button type="button" class="btn btn-outline-danger btn-sm" id="cache-btn-clear-all" data-i18n="cacheManager.btnClearAll">
+            <i class="bi bi-trash3 me-1"></i>Очистить всё
+          </button>
         </div>
       </div>
       <div class="modal-footer border-secondary-subtle py-2">

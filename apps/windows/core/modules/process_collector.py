@@ -29,17 +29,38 @@ import psutil
 
 from src.logger import logger
 from apps.windows.core.models import ActionType, AuditFinding, DomainAuditResult, RemediationAction, RiskLevel
+from apps.windows.telemetry.models import HardwareSensor, TelemetryProvider
 
 
-class ProcessCollector:
+class ProcessCollector(TelemetryProvider):
     """Коллектор фактов о процессах Windows."""
 
-    def collect(self) -> DomainAuditResult:
-        """Сбор данных о процессах и дереве выполнения.
+    def __init__(self) -> None:
+        self._last_result: Optional[DomainAuditResult] = None
 
-        Returns:
-            DomainAuditResult: Результат аудита процессов.
-        """
+    def get_sensors(self) -> List[HardwareSensor]:
+        """Возвращает показатели процессов как сенсоры."""
+        sensors: List[HardwareSensor] = []
+        if self._last_result and self._last_result.metrics:
+            metrics = self._last_result.metrics
+            sensors.append(HardwareSensor(
+                sensor_id="proc_total",
+                name="Всего процессов",
+                category="processes",
+                value=float(metrics.get("total_processes_count", 0)),
+                unit="count"
+            ))
+            sensors.append(HardwareSensor(
+                sensor_id="proc_handle_leaks",
+                name="Кандидаты на утечку дескрипторов",
+                category="processes",
+                value=float(metrics.get("handle_leak_candidates_count", 0)),
+                unit="count"
+            ))
+        return sensors
+
+    def collect(self) -> DomainAuditResult:
+        """Сбор данных о процессах и дереве выполнения."""
         start_t = time.perf_counter()
         findings: List[AuditFinding] = []
         processes = []
@@ -103,7 +124,7 @@ class ProcessCollector:
         }
 
         duration_ms = (time.perf_counter() - start_t) * 1000
-        return DomainAuditResult(
+        result = DomainAuditResult(
             domain_name="processes",
             title_ru="Интеллект процессов (Process Explorer)",
             status="warning" if findings else "ok",
@@ -111,3 +132,6 @@ class ProcessCollector:
             metrics=metrics,
             scan_duration_ms=round(duration_ms, 2),
         )
+        self._last_result = result
+        return result
+

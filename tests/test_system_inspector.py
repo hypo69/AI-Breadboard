@@ -44,8 +44,9 @@ class TestSystemTelemetryCollector:
     def collector(self) -> SystemCollector:
         return SystemCollector()
 
-    def test_cpu_metrics_collection(self, collector: SystemCollector):
-        cpu = collector.get_cpu_metrics()
+    @pytest.mark.asyncio
+    async def test_cpu_metrics_collection(self, collector: SystemCollector):
+        cpu = await collector.get_cpu_metrics()
         assert isinstance(cpu, CpuMetrics)
         assert cpu.logical_cores >= 1
         assert cpu.physical_cores >= 1
@@ -89,16 +90,19 @@ class TestSystemTelemetryCollector:
         if len(procs_mem) >= 2:
             assert procs_mem[0].memory_mb >= procs_mem[-1].memory_mb
 
-    def test_snapshot_aggregation(self, collector: SystemCollector):
-        snap = collector.get_snapshot(process_limit=5)
+    @pytest.mark.asyncio
+    async def test_snapshot_aggregation(self, collector: SystemCollector):
+        snap = await collector.get_snapshot(process_limit=5)
         assert isinstance(snap, SystemSnapshot)
         assert snap.hostname != ""
         assert snap.cpu.logical_cores >= 1
         assert snap.memory.total_gb > 0
         assert len(snap.top_processes) <= 5
 
-    def test_hardware_tree_generation(self, collector: SystemCollector):
-        tree = collector.get_hardware_tree()
+    @pytest.mark.asyncio
+    async def test_hardware_tree_generation(self, collector: SystemCollector):
+        # We need to run it in a way that doesn't create a new event loop inside
+        tree = await collector.get_hardware_tree_async()
         assert isinstance(tree, list)
         assert len(tree) >= 3
         categories = [node.category for node in tree]
@@ -166,11 +170,11 @@ class TestAIDiagnostician:
 class TestSystemInspectorTUI:
     """Test suite for Rich TUI layout renderer."""
 
-    def test_tui_state_and_render(self):
+    async def test_tui_state_and_render(self):
         from apps.system_inspector.tui import RICH_AVAILABLE
 
         state = SystemInspectorState(sort_by="cpu", process_limit=5)
-        state.refresh()
+        await state.refresh()
         assert state.latest_snapshot is not None
         assert state.latest_report is not None
 

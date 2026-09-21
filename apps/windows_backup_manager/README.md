@@ -1,4 +1,4 @@
-﻿# 🛡️ Windows Backup, Libraries & File History Manager (`apps/windows_backup_manager`)
+# 🛡️ Windows Backup, Libraries & File History Manager (`apps/windows_backup_manager`)
 
 **Status:** ✅ Active  
 **Author:** hypo69  
@@ -9,6 +9,7 @@
 2. **Службы и конфигурации Истории файлов (`File History / fhsvc`):** Мониторинг фоновой службы, проверка `Config.xml`, принудительный запуск циклов бэкапа (`fhexec -f`).
 3. **Аудита хранилища резервных копий:** Сканирование версий файлов `FileHistory\<User>\<PC>\Data`, учет объемов и контроль дискового пространства.
 4. **Теневых копий томов (VSS):** Инспекция теневых моментальных снимков томов.
+5. **Аудита и переноса пользовательских директорий:** Подсчет объемов (Рабочий стол, Документы, Загрузки, Изображения, Музыка, Видео), проверка наличия вторичных дисков с достаточным местом и безопасный перенос папок с обновлением реестра `User Shell Folders` и библиотек Windows.
 
 ---
 
@@ -32,3 +33,5 @@ python -m apps.windows_backup_manager
 | `POST` | `/api/v1/windows-backup/file-history/trigger` | Принудительный запуск цикла архивации (`fhexec -f`) |
 | `GET` | `/api/v1/windows-backup/storage/audit` | Аудит версий и занятого объема в целевом хранилище |
 | `GET` | `/api/v1/windows-backup/vss/snapshots` | Список теневых копий томов VSS |
+| `GET` | `/api/v1/windows-backup/user-folders/overview` | Подсчет объемов пользовательских папок и аудит свободного места на дисках |
+| `POST` | `/api/v1/windows-backup/user-folders/relocate` | Перенос пользовательской директории на выбранный вторичный диск |

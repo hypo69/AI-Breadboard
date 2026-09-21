@@ -57,6 +57,8 @@ from .router_registry_viewer import init_router as init_registry_viewer_router
 from .router_diagnostics import init_router as init_diagnostics_router
 from .router_scenarios import init_router as init_scenarios_router
 from .router_autolog import init_router as init_autolog_router
+from .router_sysautologging import init_router as init_sysautolog_router
+from .router_user_directories import init_router as init_user_directories_router
 from .pixel_rag_router import get_pixel_rag_router
 
 __all__ = [
@@ -64,6 +66,7 @@ __all__ = [
     "init_diagnostics_router",
     "init_scenarios_router",
     "init_autolog_router",
+    "init_sysautolog_router",
     "init_auth_router",
     "is_local_request",
     "get_current_user_data",
@@ -97,6 +100,7 @@ __all__ = [
     "init_telemetry_router",
     "init_system_logs_router",
     "init_registry_viewer_router",
+    "init_user_directories_router",
     "router_openai",
 ]
 

@@ -4,8 +4,10 @@ import { initI18n, switchLang, applyTranslations } from './i18n.js';
 import { initTheme, setTheme, getThemeMode, getResolvedTheme } from './theme.js';
 import { initUserSettings, refreshUserProfile } from './userSettings.js';
 import { initActivityTracker, trackTabSwitch } from './activityTracker.js';
+import { browserCache, STORES } from './browser-cache.js';
+import { initCacheUI, openCacheModal } from './cache-ui.js';
 
-// Make switchLang and theme functions available globally
+// Make functions available globally
 window.switchLang = switchLang;
 window.applyTranslations = applyTranslations;
 window.setTheme = setTheme;
@@ -14,6 +16,9 @@ window.getResolvedTheme = getResolvedTheme;
 window.initUserSettings = initUserSettings;
 window.refreshUserProfile = refreshUserProfile;
 window.trackTabSwitch = trackTabSwitch;
+window.browserCache = browserCache;
+window.BROWSER_STORES = STORES;
+window.openCacheModal = openCacheModal;
 
 // Helper to open plugin from top navbar dropdown / drawer
 window.openPluginFromDropdown = function(pluginName) {
@@ -24,7 +29,7 @@ window.openPluginFromDropdown = function(pluginName) {
   });
 
   // Закрываем offcanvas, если открыт
-  const offcanvasEl = document.getElementById('rightSideNavOffcanvas');
+  const offcanvasEl = document.getElementById('leftSideNavOffcanvas');
   if (offcanvasEl && typeof bootstrap !== 'undefined' && bootstrap.Offcanvas) {
     const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
     if (bsOffcanvas) {
@@ -95,6 +100,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initialize Activity Tracker for authenticated users
   initActivityTracker();
+
+  // Initialize Browser Cache UI
+  initCacheUI();
+  console.log('Browser cache UI initialized');
 
   await initHelpContent();
   console.log('HELP system initialized');
@@ -317,7 +326,7 @@ function switchTab(targetId) {
   }
 
   // 3. Закрываем offcanvas, если переключение вызвано из выпадающей панели
-  const offcanvasEl = document.getElementById('rightSideNavOffcanvas');
+  const offcanvasEl = document.getElementById('leftSideNavOffcanvas');
   if (offcanvasEl && typeof bootstrap !== 'undefined' && bootstrap.Offcanvas) {
     const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
     if (bsOffcanvas) {

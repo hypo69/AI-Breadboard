@@ -31,7 +31,7 @@ export function switchTab(targetId) {
     return;
   }
 
-  document.querySelectorAll('#appsNavTabs .nav-link').forEach((item) => {
+  document.querySelectorAll('#appsNavTabs .list-group-item, #appsNavTabs .nav-link').forEach((item) => {
     const itemTarget = item.getAttribute('data-tab') || item.getAttribute('data-bs-target')?.replace('#', '');
     if (itemTarget === tabId || itemTarget === cleanId) {
       item.classList.add('active');
@@ -53,6 +53,24 @@ export function switchTab(targetId) {
     targetPane.classList.add('show', 'active');
   }
 
+  // Закрываем offcanvas, если переключение вызвано из выпадающей панели
+  const offcanvasEl = document.getElementById('appsSideNavOffcanvas');
+  if (offcanvasEl && typeof bootstrap !== 'undefined' && bootstrap.Offcanvas) {
+    const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
+    if (bsOffcanvas) {
+      bsOffcanvas.hide();
+    }
+  }
+
+  // Обновляем бейдж текущего активного раздела
+  const activeBadge = document.getElementById('active-tab-title-badge');
+  if (activeBadge) {
+    const activeBtn = document.querySelector(`#appsNavTabs [data-tab="${tabId}"], #appsNavTabs [data-bs-target="#${tabId}"]`);
+    if (activeBtn) {
+      activeBadge.innerHTML = activeBtn.innerHTML;
+    }
+  }
+
   if (history.replaceState) {
     history.replaceState(null, null, `#${tabId}`);
   }
@@ -64,7 +82,7 @@ export function setupNavTabs() {
   const navTabs = document.getElementById('appsNavTabs');
   if (!navTabs) return;
 
-  navTabs.querySelectorAll('.nav-link').forEach((btn) => {
+  navTabs.querySelectorAll('.list-group-item, .nav-link').forEach((btn) => {
     btn.onclick = (e) => {
       e.preventDefault();
       const targetId = btn.getAttribute('data-tab') || btn.getAttribute('data-bs-target')?.replace('#', '');

@@ -234,7 +234,17 @@ def get_current_user_optional(request: Request) -> Optional[TokenData]:
         return None
 
 def require_admin_user(request: Request) -> TokenData:
-    """Ensure current request has administrative privileges."""
+    """Ensure current request has administrative privileges, supporting CLI via ADMIN_PASSWORD."""
+    # 1. Попытка CLI аутентификации через ADMIN_PASSWORD
+    admin_password = os.getenv('ADMIN_PASSWORD')
+    auth_header = request.headers.get('Authorization', '')
+    if admin_password and auth_header.startswith('Bearer '):
+        provided_password = auth_header[7:].strip()
+        if provided_password == admin_password:
+            # Возвращаем "административный" объект TokenData
+            return TokenData(email='admin@cli.local', name='CLI Admin', id=0)
+
+    # 2. Существующая логика аутентификации
     user_data = get_current_user_data(request)
 
     if is_auth_disabled() or is_local_request(request):

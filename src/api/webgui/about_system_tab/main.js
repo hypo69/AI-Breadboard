@@ -226,6 +226,7 @@
       setText('about-ident-codepage', `Кодировка: ${cp}`);
       setText('about-ident-inputs', inputs);
       setText('about-ident-os-build', osBuild);
+      setText('about-ident-install-date', snap.os_install_date || 'Не определена');
 
       // Top KPI Card 1: Operating System
       setText('about-kpi-os-title', `${snap.os_name || 'Windows 11'} (${snap.cpu?.architecture || 'AMD64'})`);
@@ -310,11 +311,31 @@
         // Update Top KPI Storage C:
         const cDrive = snap.disks.find(d => (d.device || '').toUpperCase().startsWith('C')) || snap.disks[0];
         if (cDrive) {
-          setText('about-kpi-stor-title', `${Number(cDrive.free_gb || 0).toFixed(1)} GB Free`);
+          const freeGb = Number(cDrive.free_gb || 0).toFixed(1);
+          const totalGb = Number(cDrive.total_gb || 0).toFixed(1);
+          setText('about-kpi-stor-title', `${freeGb} GB Free / ${totalGb} GB`);
         }
       }
 
-      // 4. Processes Table
+      // 4. Monitors & Displays Block
+      if (Array.isArray(snap.monitors) && snap.monitors.length > 0) {
+        const monShorts = snap.monitors.map(m => {
+          const prim = m.is_primary ? ' [Основной]' : '';
+          return `${m.name || 'Monitor'} (${m.width}x${m.height}@${m.frequency_hz}Hz${prim})`;
+        });
+        setText('about-ident-monitors', monShorts.join(', '));
+        setText('about-spec-monitors', monShorts.join(', '));
+      }
+
+      // 5. Windows Updates Block
+      if (snap.updates) {
+        const kbCount = snap.updates.installed_kb_count ? ` (${snap.updates.installed_kb_count} KBs)` : '';
+        const updTxt = `${snap.updates.status || 'Up to date'}${kbCount}`;
+        setText('about-ident-updates', updTxt);
+        setText('about-spec-update', updTxt);
+      }
+
+      // 6. Processes Table
       if (Array.isArray(snap.top_processes)) {
         currentProcesses = snap.top_processes;
         renderProcessesTable(snap.top_processes);
@@ -362,9 +383,11 @@
       setText('about-kpi-prot-title', `${countPoints} Checkpoints`);
       setText('about-kpi-prot-sub', `Protection: ${rest.system_protection_enabled ? 'Active' : 'Disabled'}`);
 
-      // KPI 4: Cleanable estimate
-      const cleanMb = disk.cleanup_estimate?.total_cleanable_mb || 190;
-      setText('about-kpi-stor-clean', `Cleanable: ~${cleanMb} MB`);
+      // KPI 4: Cleanable estimate & Total Disk Size
+      const cleanMb = disk.cleanup_estimate?.total_cleanable_mb || 150;
+      const cDrive = currentDisks.find(d => (d.device || '').toUpperCase().startsWith('C')) || currentDisks[0];
+      const totalGbTxt = cDrive ? ` | Всего: ${Number(cDrive.total_gb || 0).toFixed(1)} GB` : '';
+      setText('about-kpi-stor-clean', `Cleanable: ~${cleanMb} MB${totalGbTxt}`);
 
       // Security table rows
       setText('about-sec-defender', defActive ? 'Enabled' : 'Disabled');
@@ -378,7 +401,9 @@
       if (pwr.active_plan_name) setText('about-spec-power', pwr.active_plan_name);
       if (upd.status) {
         const kbCount = upd.recent_hotfixes_count ? ` (${upd.recent_hotfixes_count} KBs installed)` : '';
-        setText('about-spec-update', `${upd.status}${kbCount}`);
+        const updTxt = `${upd.status}${kbCount}`;
+        setText('about-spec-update', updTxt);
+        setText('about-ident-updates', updTxt);
       }
 
     } catch (e) {

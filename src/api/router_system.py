@@ -65,7 +65,7 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
         process_limit: int = Query(default=20, ge=1, le=100, description="Top processes count")
     ) -> SystemSnapshot:
         """Retrieve live system load, hardware telemetry, and top processes snapshot."""
-        return collector.get_snapshot(process_limit=process_limit)
+        return await collector.get_snapshot(process_limit=process_limit)
 
     @router.get("/processes", response_model=List[ProcessMetrics])
     async def list_processes(
@@ -78,7 +78,7 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
     @router.get("/hardware", response_model=List[HardwareNode])
     async def get_hardware_tree() -> List[HardwareNode]:
         """Retrieve AIDA64-like hierarchical component specification tree."""
-        return collector.get_hardware_tree()
+        return await collector.get_hardware_tree_async()
 
     @router.get("/sensors", response_model=List[HardwareSensor])
     async def get_sensors() -> List[HardwareSensor]:
@@ -92,7 +92,7 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
         snapshot: Optional[SystemSnapshot] = None,
     ) -> SystemDiagnosticReport:
         """Perform AI and heuristic performance audit on system telemetry."""
-        target_snapshot = snapshot or collector.get_snapshot()
+        target_snapshot = snapshot or await collector.get_snapshot()
         return await diagnostician.diagnose(target_snapshot)
 
     # =========================================================================

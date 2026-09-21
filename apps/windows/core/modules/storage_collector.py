@@ -30,21 +30,35 @@ import psutil
 from src.logger import logger
 from apps.windows.core.models import AuditFinding, DomainAuditResult, RiskLevel
 from apps.windows.core.system_restore import WindowsSystemRestoreManager
+from apps.windows.telemetry.models import HardwareSensor, TelemetryProvider
 
 
-class StorageCollector:
+class StorageCollector(TelemetryProvider):
     """Коллектор фактов о состоянии дисков, томов и теневых хранилищ VSS."""
 
     def __init__(self) -> None:
         """Инициализация коллектора с менеджером System Restore & VSS."""
         self._restore_mgr = WindowsSystemRestoreManager(timeout_seconds=10)
+        self._last_result: Optional[DomainAuditResult] = None
+
+    def get_sensors(self) -> List[HardwareSensor]:
+        """Возвращает показатели дисковой подсистемы как сенсоры."""
+        sensors: List[HardwareSensor] = []
+        if self._last_result and self._last_result.metrics:
+            volumes = self._last_result.metrics.get("volumes", [])
+            for vol in volumes:
+                mount = vol.get("mountpoint", "unknown").replace(":", "").replace("\\", "_")
+                sensors.append(HardwareSensor(
+                    sensor_id=f"disk_usage_{mount}",
+                    name=f"Заполнение диска {vol.get('mountpoint')}",
+                    category="storage",
+                    value=float(vol.get("percent_used", 0.0)),
+                    unit="%"
+                ))
+        return sensors
 
     def collect(self) -> DomainAuditResult:
-        """Сбор данных о дисках, свободном пространстве и теневом хранилище VSS.
-
-        Returns:
-            DomainAuditResult: Результат аудита дисковой подсистемы.
-        """
+        """Сбор данных о дисках, свободном пространстве и теневом хранилище VSS."""
         start_t = time.perf_counter()
         findings: List[AuditFinding] = []
         volumes = []
@@ -110,7 +124,7 @@ class StorageCollector:
         elif any(f.severity == RiskLevel.CAUTION for f in findings):
             status = "warning"
 
-        return DomainAuditResult(
+        result = DomainAuditResult(
             domain_name="storage",
             title_ru="Диски, VSS и файловая система",
             status=status,
@@ -118,3 +132,6 @@ class StorageCollector:
             metrics=metrics,
             scan_duration_ms=round(duration_ms, 2),
         )
+        self._last_result = result
+        return result
+

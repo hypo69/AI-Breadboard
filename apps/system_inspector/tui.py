@@ -73,11 +73,11 @@ class SystemInspectorState:
         self.hardware_tree_nodes: List[HardwareNode] = []
         self.status_message: str = "Initializing telemetry stream..."
 
-    def refresh(self) -> None:
+    async def refresh(self) -> None:
         """Collect latest telemetry snapshot and evaluate heuristics."""
-        self.latest_snapshot = self.collector.get_snapshot(process_limit=self.process_limit)
+        self.latest_snapshot = await self.collector.get_snapshot(process_limit=self.process_limit)
         if not self.hardware_tree_nodes:
-            self.hardware_tree_nodes = self.collector.get_hardware_tree()
+            self.hardware_tree_nodes = await self.collector.get_hardware_tree_async()
 
         score, anomalies, recommendations = self.diagnostician.evaluate_heuristics(self.latest_snapshot)
         self.latest_report = SystemDiagnosticReport(
@@ -232,13 +232,13 @@ async def run_system_inspector(interval: float = 1.0, sort_by: str = "cpu", max_
 
     console = Console()
     state = SystemInspectorState(sort_by=sort_by)
-    state.refresh()
+    await state.refresh()
 
     iterations = 0
     with Live(render_ui(state), console=console, refresh_per_second=4, screen=True) as live:
         try:
             while True:
-                state.refresh()
+                await state.refresh()
                 live.update(render_ui(state))
                 iterations += 1
                 if max_iterations and iterations >= max_iterations:

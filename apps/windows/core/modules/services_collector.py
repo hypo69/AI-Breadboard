@@ -111,19 +111,40 @@ def _resolve_service_binary(image_path: str) -> str:
     return raw
 
 
-class ServicesCollector:
+from apps.windows.telemetry.models import HardwareSensor, TelemetryProvider
+from apps.windows.core.models import ActionType, AuditFinding, DomainAuditResult, RemediationAction, RiskLevel
+
+class ServicesCollector(TelemetryProvider):
     """Коллектор фактов о службах Windows с использованием нативного SCM API."""
 
     def __init__(self) -> None:
         """Инициализация коллектора с нативным SCM клиентом."""
         self._scm = ServiceControlManager()
+        self._last_result: Optional[DomainAuditResult] = None
+
+    def get_sensors(self) -> List[HardwareSensor]:
+        """Возвращает показатели служб как сенсоры."""
+        sensors: List[HardwareSensor] = []
+        if self._last_result and self._last_result.metrics:
+            metrics = self._last_result.metrics
+            sensors.append(HardwareSensor(
+                sensor_id="services_total",
+                name="Всего системных служб",
+                category="services",
+                value=float(metrics.get("total_services_count", 0)),
+                unit="count"
+            ))
+            sensors.append(HardwareSensor(
+                sensor_id="services_running",
+                name="Запущенных служб",
+                category="services",
+                value=float(metrics.get("running_services_count", 0)),
+                unit="count"
+            ))
+        return sensors
 
     def collect(self) -> DomainAuditResult:
-        """Сбор данных о службах и выявление осиротевших записей.
-
-        Returns:
-            DomainAuditResult: Результат аудита служб.
-        """
+        """Сбор данных о службах и выявление осиротевших записей."""
         start_t = time.perf_counter()
         findings: List[AuditFinding] = []
         services = []
@@ -213,7 +234,7 @@ class ServicesCollector:
         }
 
         duration_ms = (time.perf_counter() - start_t) * 1000
-        return DomainAuditResult(
+        result = DomainAuditResult(
             domain_name="services",
             title_ru="Службы Windows",
             status="warning" if findings else "ok",
@@ -221,6 +242,9 @@ class ServicesCollector:
             metrics=metrics,
             scan_duration_ms=round(duration_ms, 2),
         )
+        self._last_result = result
+        return result
+
 
     def _get_reg_val(self, key: Any, val_name: str) -> Any:
         try:

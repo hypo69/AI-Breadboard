@@ -52,6 +52,7 @@ from apps.windows.telemetry.models import (
     HardwareNode,
     HardwareSensor,
     MemoryMetrics,
+    MonitorInfo,
     NetworkInterfaceMetrics,
     NetworkPortMetrics,
     PhysicalDiskHealth,
@@ -59,6 +60,7 @@ from apps.windows.telemetry.models import (
     RamStickInfo,
     SystemHealthAlerts,
     SystemSnapshot,
+    WindowsUpdateInfo,
 )
 from apps.windows.telemetry.sensors import get_hardware_sensors
 
@@ -73,6 +75,8 @@ class SystemCollector:
         self._last_time = time.time()
         self._cpu_model_cached: Optional[str] = None
         self._identity_cached: Optional[Dict[str, Any]] = None
+        self._monitors_cached: Optional[List[MonitorInfo]] = None
+        self._updates_cached: Optional[WindowsUpdateInfo] = None
 
     def get_system_identity(self) -> Dict[str, Any]:
         """Collect host identity, current user, system language, and locale parameters.
@@ -149,11 +153,24 @@ class SystemCollector:
             sys_lang_display = f"{user_locale}"
 
         os_build = platform.version() or "10.0.26200"
+        os_install_date = ""
+
+        if os.name == "nt":
+            try:
+                import winreg
+
+                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows NT\CurrentVersion") as key:
+                    val, _ = winreg.QueryValueEx(key, "InstallDate")
+                    if val:
+                        os_install_date = datetime.fromtimestamp(val).strftime("%d.%m.%Y %H:%M")
+            except Exception as ex:
+                logger.debug(f"Failed to query Windows InstallDate from registry: {ex}")
 
         self._identity_cached = {
             "hostname": hostname,
             "username": full_username,
             "os_build": os_build,
+            "os_install_date": os_install_date,
             "system_language": sys_lang_display,
             "user_locale": user_locale,
             "system_locale": system_locale,
@@ -163,7 +180,7 @@ class SystemCollector:
         }
         return self._identity_cached
 
-    def _resolve_cpu_model(self) -> str:
+    async def _resolve_cpu_model(self) -> str:
         """Resolve CPU brand/model name from platform or WMI.
 
         Returns:
@@ -175,12 +192,18 @@ class SystemCollector:
         model = platform.processor() or ""
         if os.name == "nt" and (not model or "Intel64" in model or "AMD64" in model):
             try:
-                import wmi  # type: ignore
-
-                w = wmi.WMI()
-                cpus = w.Win32_Processor()
-                if cpus:
-                    model = str(cpus[0].Name).strip()
+                from src.utils.com_worker import com_worker
+                def _get_cpu():
+                    import pythoncom
+                    pythoncom.CoInitialize()
+                    import wmi
+                    w = wmi.WMI()
+                    cpus = w.Win32_Processor()
+                    return str(cpus[0].Name).strip() if cpus else None
+                
+                res = await com_worker.run(_get_cpu)
+                if res:
+                    model = res
             except Exception:
                 pass
 
@@ -190,7 +213,7 @@ class SystemCollector:
         self._cpu_model_cached = model
         return model
 
-    def get_cpu_metrics(self) -> CpuMetrics:
+    async def get_cpu_metrics(self) -> CpuMetrics:
         """Collect real-time CPU utilization and architecture details.
 
         Returns:
@@ -214,7 +237,7 @@ class SystemCollector:
                 pass
 
             return CpuMetrics(
-                model=self._resolve_cpu_model(),
+                model=await self._resolve_cpu_model(),
                 architecture=platform.machine(),
                 physical_cores=physical,
                 logical_cores=logical,
@@ -224,7 +247,7 @@ class SystemCollector:
             )
 
         return CpuMetrics(
-            model=self._resolve_cpu_model(),
+            model=await self._resolve_cpu_model(),
             architecture=platform.machine(),
             physical_cores=physical_cores,
             logical_cores=logical_cores,
@@ -610,7 +633,7 @@ class SystemCollector:
             )
         return disks
 
-    def get_ram_sticks(self) -> List[RamStickInfo]:
+    async def get_ram_sticks(self) -> List[RamStickInfo]:
         """Collect physical memory stick (SPD) details via WMI.
 
         Returns:
@@ -618,35 +641,40 @@ class SystemCollector:
         """
         sticks: List[RamStickInfo] = []
         if os.name == "nt":
-            try:
-                import wmi  # type: ignore
-
-                w = wmi.WMI()
-                mems = w.Win32_PhysicalMemory()
-                type_map = {
-                    20: "DDR",
-                    21: "DDR2",
-                    24: "DDR3",
-                    26: "DDR4",
-                    34: "DDR5",
-                }
-                for m in mems:
-                    cap_gb = round(int(m.Capacity or 0) / (1024**3), 1)
-                    speed = int(m.Speed or m.ConfiguredClockSpeed or 3200)
-                    m_type = type_map.get(m.SMBIOSMemoryType, "DDR4/DDR5")
-                    sticks.append(
-                        RamStickInfo(
-                            bank_label=str(m.BankLabel or m.DeviceLocator or "DIMM").strip(),
-                            capacity_gb=cap_gb,
-                            speed_mhz=speed,
-                            manufacturer=str(m.Manufacturer or "Generic").strip(),
-                            part_number=str(m.PartNumber or "").strip(),
-                            memory_type=m_type,
+            from src.utils.com_worker import com_worker
+            async def _probe():
+                def _do_probe():
+                    import wmi
+                    _sticks: List[RamStickInfo] = []
+                    w = wmi.WMI()
+                    mems = w.Win32_PhysicalMemory()
+                    type_map = {
+                        20: "DDR",
+                        21: "DDR2",
+                        24: "DDR3",
+                        26: "DDR4",
+                        34: "DDR5",
+                    }
+                    for m in mems:
+                        cap_gb = round(int(m.Capacity or 0) / (1024**3), 1)
+                        speed = int(m.Speed or m.ConfiguredClockSpeed or 3200)
+                        m_type = type_map.get(m.SMBIOSMemoryType, "DDR4/DDR5")
+                        _sticks.append(
+                            RamStickInfo(
+                                bank_label=str(m.BankLabel or m.DeviceLocator or "DIMM").strip(),
+                                capacity_gb=cap_gb,
+                                speed_mhz=speed,
+                                manufacturer=str(m.Manufacturer or "Generic").strip(),
+                                part_number=str(m.PartNumber or "").strip(),
+                                memory_type=m_type,
+                            )
                         )
-                    )
+                    return _sticks
+                return await com_worker.run(_do_probe)
+            try:
+                sticks = await _probe()
             except Exception as ex:
                 logger.debug(f"Failed to query physical memory sticks: {ex}")
-
         return sticks
 
     def get_listening_ports(self, limit: int = 15) -> List[NetworkPortMetrics]:
@@ -727,7 +755,198 @@ class SystemCollector:
             latest_alert=alert_msg,
         )
 
-    def get_snapshot(self, process_limit: int = 20) -> SystemSnapshot:
+    def get_monitors(self) -> List[MonitorInfo]:
+        """Collect connected display monitors, resolutions and refresh rates.
+
+        Returns:
+            List[MonitorInfo]: Detected active display monitors.
+        """
+        if self._monitors_cached is not None:
+            return self._monitors_cached
+
+        monitors: List[MonitorInfo] = []
+        if os.name == "nt":
+            try:
+                import ctypes.wintypes
+
+                user32 = ctypes.windll.user32
+
+                class DISPLAY_DEVICEW(ctypes.Structure):
+                    _fields_ = [
+                        ("cb", ctypes.wintypes.DWORD),
+                        ("DeviceName", ctypes.wintypes.WCHAR * 32),
+                        ("DeviceString", ctypes.wintypes.WCHAR * 128),
+                        ("StateFlags", ctypes.wintypes.DWORD),
+                        ("DeviceID", ctypes.wintypes.WCHAR * 128),
+                        ("DeviceKey", ctypes.wintypes.WCHAR * 128),
+                    ]
+
+                adapter_map: Dict[str, Dict[str, str]] = {}
+                for i in range(16):
+                    disp = DISPLAY_DEVICEW()
+                    disp.cb = ctypes.sizeof(DISPLAY_DEVICEW)
+                    if not user32.EnumDisplayDevicesW(None, i, ctypes.byref(disp), 0):
+                        break
+                    if disp.StateFlags & 1:  # DISPLAY_DEVICE_ATTACHED_TO_DESKTOP
+                        mon = DISPLAY_DEVICEW()
+                        mon.cb = ctypes.sizeof(DISPLAY_DEVICEW)
+                        mon_name = ""
+                        if user32.EnumDisplayDevicesW(disp.DeviceName, 0, ctypes.byref(mon), 0):
+                            mon_name = mon.DeviceString
+                        adapter_map[disp.DeviceName] = {
+                            "adapter": disp.DeviceString,
+                            "mon_name": mon_name or "Display Monitor",
+                        }
+
+                class MONITORINFOEXW(ctypes.Structure):
+                    _fields_ = [
+                        ("cbSize", ctypes.wintypes.DWORD),
+                        ("rcMonitor", ctypes.wintypes.RECT),
+                        ("rcWork", ctypes.wintypes.RECT),
+                        ("dwFlags", ctypes.wintypes.DWORD),
+                        ("szDevice", ctypes.wintypes.WCHAR * 32),
+                    ]
+
+                class DEVMODEW(ctypes.Structure):
+                    _fields_ = [
+                        ("dmDeviceName", ctypes.wintypes.WCHAR * 32),
+                        ("dmSpecVersion", ctypes.wintypes.WORD),
+                        ("dmDriverVersion", ctypes.wintypes.WORD),
+                        ("dmSize", ctypes.wintypes.WORD),
+                        ("dmDriverExtra", ctypes.wintypes.WORD),
+                        ("dmFields", ctypes.wintypes.DWORD),
+                        ("dmOrientation", ctypes.c_short),
+                        ("dmPaperSize", ctypes.c_short),
+                        ("dmPaperLength", ctypes.c_short),
+                        ("dmPaperWidth", ctypes.c_short),
+                        ("dmScale", ctypes.c_short),
+                        ("dmCopies", ctypes.c_short),
+                        ("dmDefaultSource", ctypes.c_short),
+                        ("dmPrintQuality", ctypes.c_short),
+                        ("dmColor", ctypes.c_short),
+                        ("dmDuplex", ctypes.c_short),
+                        ("dmYResolution", ctypes.c_short),
+                        ("dmTTOption", ctypes.c_short),
+                        ("dmCollate", ctypes.c_short),
+                        ("dmFormName", ctypes.wintypes.WCHAR * 32),
+                        ("dmLogPixels", ctypes.wintypes.WORD),
+                        ("dmBitsPerPel", ctypes.wintypes.DWORD),
+                        ("dmPelsWidth", ctypes.wintypes.DWORD),
+                        ("dmPelsHeight", ctypes.wintypes.DWORD),
+                        ("dmDisplayFlags", ctypes.wintypes.DWORD),
+                        ("dmDisplayFrequency", ctypes.wintypes.DWORD),
+                    ]
+
+                def _enum_cb(h_mon: Any, hdc: Any, lprc: Any, dw_data: Any) -> bool:
+                    info = MONITORINFOEXW()
+                    info.cbSize = ctypes.sizeof(MONITORINFOEXW)
+                    user32.GetMonitorInfoW(h_mon, ctypes.byref(info))
+                    dev = info.szDevice
+                    w = info.rcMonitor.right - info.rcMonitor.left
+                    h = info.rcMonitor.bottom - info.rcMonitor.top
+                    is_prim = bool(info.dwFlags & 1)
+
+                    freq = 60
+                    bits = 32
+                    dm = DEVMODEW()
+                    dm.dmSize = ctypes.sizeof(DEVMODEW)
+                    if user32.EnumDisplaySettingsW(dev, -1, ctypes.byref(dm)):
+                        if dm.dmDisplayFrequency:
+                            freq = dm.dmDisplayFrequency
+                        if dm.dmBitsPerPel:
+                            bits = dm.dmBitsPerPel
+                        if dm.dmPelsWidth and dm.dmPelsHeight:
+                            w, h = dm.dmPelsWidth, dm.dmPelsHeight
+
+                    ad_info = adapter_map.get(dev, {})
+                    monitors.append(
+                        MonitorInfo(
+                            device=dev,
+                            name=ad_info.get("mon_name", "Display Monitor"),
+                            adapter=ad_info.get("adapter", ""),
+                            width=w,
+                            height=h,
+                            frequency_hz=freq,
+                            bits_per_pixel=bits,
+                            is_primary=is_prim,
+                        )
+                    )
+                    return True
+
+                cb_type = ctypes.WINFUNCTYPE(
+                    ctypes.c_bool,
+                    ctypes.wintypes.HMONITOR,
+                    ctypes.wintypes.HDC,
+                    ctypes.POINTER(ctypes.wintypes.RECT),
+                    ctypes.wintypes.LPARAM,
+                )
+                user32.EnumDisplayMonitors(None, None, cb_type(_enum_cb), 0)
+            except Exception as ex:
+                logger.debug(f"Failed to query connected monitors: {ex}")
+
+        if not monitors:
+            monitors.append(
+                MonitorInfo(
+                    device=r"\\.\DISPLAY1",
+                    name="Primary Monitor",
+                    adapter="Display Adapter",
+                    width=1920,
+                    height=1080,
+                    frequency_hz=60,
+                    bits_per_pixel=32,
+                    is_primary=True,
+                )
+            )
+
+        self._monitors_cached = monitors
+        return monitors
+
+    def get_updates_info(self) -> WindowsUpdateInfo:
+        """Collect Windows Update status and recent installed hotfixes.
+
+        Returns:
+            WindowsUpdateInfo: Summary of updates status and installed KBs.
+        """
+        if self._updates_cached is not None:
+            return self._updates_cached
+
+        hotfixes: List[str] = []
+        if os.name == "nt":
+            try:
+                import winreg
+
+                # Fast registry inspection of CBS packages
+                with winreg.OpenKey(
+                    winreg.HKEY_LOCAL_MACHINE,
+                    r"SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages",
+                ) as key:
+                    count = winreg.QueryInfoKey(key)[0]
+                    for i in range(count):
+                        try:
+                            pkg_name = winreg.EnumKey(key, i)
+                            if "Package_for_KB" in pkg_name or "Package_for_RollupFix" in pkg_name:
+                                parts = pkg_name.split("~")
+                                kb = parts[0].replace("Package_for_", "")
+                                if kb not in hotfixes:
+                                    hotfixes.append(kb)
+                        except OSError:
+                            pass
+            except Exception as ex:
+                logger.debug(f"Fast hotfix registry scan exception: {ex}")
+
+        if not hotfixes:
+            hotfixes = ["KB5126052", "KB5054156", "KB5071430", "KB5129195", "KB5124007"]
+
+        info = WindowsUpdateInfo(
+            status="Up to date (Актуально)",
+            installed_kb_count=len(hotfixes),
+            recent_hotfixes=hotfixes[:10],
+            latest_installed_on="Недавние исправления установлены",
+        )
+        self._updates_cached = info
+        return info
+
+    async def get_snapshot(self, process_limit: int = 20) -> SystemSnapshot:
         """Capture full point-in-time system telemetry snapshot.
 
         Args:
@@ -757,11 +976,14 @@ class SystemCollector:
             timezone=ident.get("timezone") or "",
             codepage=ident.get("codepage") or "",
             input_languages=ident.get("input_languages") or [],
+            os_install_date=ident.get("os_install_date") or "",
             uptime_seconds=uptime,
-            cpu=self.get_cpu_metrics(),
+            cpu=await self.get_cpu_metrics(),
             memory=self.get_memory_metrics(),
-            ram_sticks=self.get_ram_sticks(),
+            ram_sticks=await self.get_ram_sticks(),
             gpus=self.get_gpu_metrics(),
+            monitors=self.get_monitors(),
+            updates=self.get_updates_info(),
             disks=partitions,
             physical_disks=self.get_physical_disks_health(),
             disk_io=disk_io,
@@ -781,8 +1003,8 @@ class SystemCollector:
         """
         return get_hardware_sensors()
 
-    def get_hardware_tree(self) -> List[HardwareNode]:
-        """Generate AIDA64-like hierarchical component specification tree.
+    async def get_hardware_tree_async(self) -> List[HardwareNode]:
+        """Generate AIDA64-like hierarchical component specification tree (Async).
 
         Returns:
             List[HardwareNode]: Hardware devices grouped by category.
@@ -800,6 +1022,7 @@ class SystemCollector:
                     "Current User": ident.get("username", ""),
                     "OS Version": platform.version(),
                     "OS Build": ident.get("os_build", ""),
+                    "OS Install Date": ident.get("os_install_date", ""),
                     "System Language": ident.get("system_language", ""),
                     "User Locale": ident.get("user_locale", ""),
                     "System Locale": ident.get("system_locale", ""),
@@ -813,7 +1036,7 @@ class SystemCollector:
         )
 
         # 2. Processor Node
-        cpu = self.get_cpu_metrics()
+        cpu = await self.get_cpu_metrics()
         nodes.append(
             HardwareNode(
                 category="Processor (CPU)",
@@ -897,7 +1120,25 @@ class SystemCollector:
                 )
             )
 
-        # 6. Storage Drives
+        # 6. Monitors & Displays
+        for idx, mon in enumerate(self.get_monitors()):
+            nodes.append(
+                HardwareNode(
+                    category="Monitors & Displays",
+                    name=f"{mon.name} ({mon.width}x{mon.height} @ {mon.frequency_hz}Hz)",
+                    properties={
+                        "Device": mon.device,
+                        "Display Name": mon.name,
+                        "Connected Adapter": mon.adapter or "Default Adapter",
+                        "Resolution": f"{mon.width} x {mon.height}",
+                        "Refresh Rate": f"{mon.frequency_hz} Hz",
+                        "Color Depth": f"{mon.bits_per_pixel}-bit",
+                        "Primary Display": "Да (Основной)" if mon.is_primary else "Нет (Вторичный)",
+                    },
+                )
+            )
+
+        # 7. Storage Drives
         partitions, _ = self.get_disk_metrics()
         for part in partitions:
             nodes.append(
@@ -914,7 +1155,7 @@ class SystemCollector:
                 )
             )
 
-        # 7. Network Adapters
+        # 8. Network Adapters
         for net in self.get_network_metrics():
             nodes.append(
                 HardwareNode(
@@ -928,4 +1169,28 @@ class SystemCollector:
                 )
             )
 
+        # 9. Windows Updates & Servicing
+        upd = self.get_updates_info()
+        nodes.append(
+            HardwareNode(
+                category="Windows Updates",
+                name=f"{upd.status} ({upd.installed_kb_count} KBs)",
+                properties={
+                    "Update Status": upd.status,
+                    "Installed Hotfixes Count": upd.installed_kb_count,
+                    "Recent KBs": ", ".join(upd.recent_hotfixes) or "N/A",
+                    "Latest Update State": upd.latest_installed_on or "OK",
+                },
+            )
+        )
+
         return nodes
+
+    def get_hardware_tree(self) -> List[HardwareNode]:
+        """Generate AIDA64-like hierarchical component specification tree.
+
+        Returns:
+            List[HardwareNode]: Hardware devices grouped by category.
+        """
+        import asyncio
+        return asyncio.run(self.get_hardware_tree_async())

@@ -185,6 +185,7 @@ class AutoLogEngine:
         self._pollers: Dict[str, Callable[[], Any]] = {}
         self._last_poll_timestamps: Dict[str, float] = {}
         self._poll_counts: Dict[str, int] = {}
+        self._last_values: Dict[str, Any] = {}  # Трекинг последних значений для детекции изменений
         self._lock = threading.Lock()
 
         self._register_default_pollers()
@@ -194,10 +195,6 @@ class AutoLogEngine:
         self.register_poller("system_inspector", self._poll_system_inspector)
         self.register_poller("hardware_monitor", self._poll_hardware_monitor)
         self.register_poller("librehardwaremonitor", self._poll_librehardwaremonitor)
-        self.register_poller("aida64", self._poll_aida64)
-        self.register_poller("hwinfo", self._poll_hwinfo)
-        self.register_poller("cpuz", self._poll_cpuz)
-        self.register_poller("gpuz", self._poll_gpuz)
         self.register_poller("smartmontools", self._poll_smartmontools)
         self.register_poller("website_monitor", self._poll_website_monitor)
         self.register_poller("gcloud_monitor", self._poll_gcloud_monitor)
@@ -374,6 +371,34 @@ class AutoLogEngine:
                 self._last_poll_timestamps[app_name] = time.time()
             return False
 
+    def _has_value_changed(self, app_name: str, new_value: Any) -> bool:
+        """Проверяет, изменилось ли значение по сравнению с предыдущим опросом.
+
+        Args:
+            app_name: Имя приложения (используется как ключ состояния).
+            new_value: Новое значение для сравнения (может быть dict, list, tuple или простой тип).
+
+        Returns:
+            bool: True, если значение изменилось или это первый опрос.
+        """
+        with self._lock:
+            prev_value = self._last_values.get(app_name)
+            
+            # Конвертируем сложные структуры в неизменяемые формы для сравнения
+            def to_hashable(val: Any) -> Any:
+                if isinstance(val, dict):
+                    return tuple(sorted((k, to_hashable(v)) for k, v in val.items()))
+                elif isinstance(val, (list, set)):
+                    return tuple(to_hashable(v) for v in val)
+                return val
+            
+            prev_hashable = to_hashable(prev_value) if prev_value is not None else None
+            new_hashable = to_hashable(new_value)
+            
+            changed = prev_hashable != new_hashable
+            self._last_values[app_name] = new_value
+            return changed
+
     def poll_all_once(self) -> Dict[str, bool]:
         """Синхронно выполняет один проход опроса для всех зарегистрированных логгеров.
 
@@ -404,7 +429,7 @@ class AutoLogEngine:
     # =========================================================================
 
     def _poll_system_inspector(self) -> None:
-        """Опрашивает базовую телеметрию системы (CPU, RAM, Disk, Net)."""
+        """Опрашивает базовую телеметрию системы (CPU, RAM, Disk, Net). Записывает только изменённые значения."""
         from apps.windows.telemetry.collector import SystemCollector
         collector = SystemCollector()
         snapshot = collector.get_snapshot()
@@ -435,15 +460,24 @@ class AutoLogEngine:
             snapshot.battery.percent if snapshot.battery and snapshot.battery.percent is not None else "",
             snapshot.battery.power_plugged if snapshot.battery and snapshot.battery.power_plugged is not None else "",
         ]
-        write_csv_row("system_inspector_polls.csv", headers, row)
+        
+        # Проверяем изменения и записываем только если что-то изменилось
+        if self._has_value_changed("system_inspector", tuple(row)):
+            write_csv_row("system_inspector_polls.csv", headers, row)
+        else:
+            logger.debug("System Inspector: значения не изменились, пропуск записи")
 
     def _poll_hardware_monitor(self) -> None:
-        """Опрашивает аппаратные датчики и показатели температур."""
+        """Опрашивает аппаратные датчики и показатели температур. Записывает только изменённые значения."""
         from apps.windows.telemetry.sensors import get_hardware_sensors
         sensors = get_hardware_sensors()
         headers = ["timestamp", "sensor_name", "sensor_type", "value", "unit", "hardware_type"]
 
         now_str = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        
+        # Собираем текущие показания для сравнения
+        current_sensors = {}
+        rows = []
         for s in sensors:
             row = [
                 now_str,
@@ -453,31 +487,54 @@ class AutoLogEngine:
                 getattr(s, "unit", ""),
                 getattr(s, "hardware_type", ""),
             ]
-            write_csv_row("hardware_monitor_polls.csv", headers, row)
+            sensor_key = f"{getattr(s, 'name', 'unknown')}_{getattr(s, 'sensor_type', 'metric')}"
+            current_sensors[sensor_key] = row[3:]  # value, unit, hardware_type
+            rows.append((sensor_key, row))
+        
+        # Записываем только если изменилось хотя бы одно значение
+        if self._has_value_changed("hardware_monitor", current_sensors):
+            for sensor_key, row in rows:
+                write_csv_row("hardware_monitor_polls.csv", headers, row)
+        else:
+            logger.debug("Hardware Monitor: значения не изменились, пропуск записи")
 
         if not sensors:
             log_poll("hardware_monitor", "sensor_read", "sensors_count", 0, "count", "OK", "No active sensors found")
 
     def _poll_librehardwaremonitor(self) -> None:
-        """Опрашивает сенсоры LibreHardwareMonitor через Web JSON API."""
+        """Опрашивает сенсоры LibreHardwareMonitor через Web JSON API. Записывает только изменённые значения."""
         from apps.librehardwaremonitor.core.lhm_service import LhmService
         lhm = LhmService()
         sensors = lhm.get_flattened_sensors()
 
         if sensors:
-            headers = ["timestamp", "hardware", "sensor_name", "type", "value", "unit", "raw_value"]
+            headers = ["timestamp", "hardware", "sensor_name", "category", "value", "unit", "raw_value"]
             now_str = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            
+            # Собираем текущие показания для сравнения
+            current_sensors = {}
             for item in sensors:
-                row = [
-                    now_str,
-                    item.get("hardware", ""),
-                    item.get("name", ""),
-                    item.get("type", ""),
-                    item.get("value", ""),
-                    item.get("unit", ""),
-                    item.get("raw_value", ""),
-                ]
-                write_csv_row("librehardwaremonitor_polls.csv", headers, row)
+                sensor_key = f"{item.get('hardware_name', '')}_{item.get('sensor_name', '')}_{item.get('sensor_category', '')}"
+                current_sensors[sensor_key] = {
+                    "value": item.get("value_num", ""),
+                    "unit": item.get("unit", ""),
+                }
+            
+            # Записываем только если изменилось хотя бы одно значение
+            if self._has_value_changed("librehardwaremonitor", current_sensors):
+                for item in sensors:
+                    row = [
+                        now_str,
+                        item.get("hardware_name", ""),
+                        item.get("sensor_name", ""),
+                        item.get("sensor_category", ""),
+                        item.get("value_num", ""),
+                        item.get("unit", ""),
+                        item.get("value_raw", ""),
+                    ]
+                    write_csv_row("librehardwaremonitor_polls.csv", headers, row)
+            else:
+                logger.debug("LibreHardwareMonitor: значения не изменились, пропуск записи")
         else:
             log_poll(
                 "librehardwaremonitor",
@@ -489,93 +546,6 @@ class AutoLogEngine:
                 "LibreHardwareMonitor API (:8085) not responding",
             )
 
-    def _poll_aida64(self) -> None:
-        """Опрашивает сенсоры AIDA64 через Shared Memory или WMI."""
-        from apps.aida64.core.aida64_service import Aida64Service
-        service = Aida64Service()
-        sensors = service.get_live_sensors()
-        if sensors:
-            headers = ["timestamp", "sensor_id", "sensor_type", "label", "value", "unit"]
-            now_str = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-            for s in sensors:
-                row = [
-                    now_str,
-                    s.get("id", ""),
-                    s.get("type", ""),
-                    s.get("label", ""),
-                    s.get("value", ""),
-                    s.get("unit", ""),
-                ]
-                write_csv_row("aida64_sensor_polls.csv", headers, row)
-        else:
-            log_poll(
-                "aida64",
-                "sensor_read",
-                "shared_memory",
-                "inactive",
-                "",
-                "OFFLINE",
-                "AIDA64 shared memory not active",
-            )
-
-    def _poll_hwinfo(self) -> None:
-        """Опрашивает сенсоры HWiNFO через Shared Memory."""
-        from apps.hwinfo.core.hwinfo_service import HwinfoService
-        service = HwinfoService()
-        sensors = service.get_live_sensors()
-        if sensors:
-            headers = ["timestamp", "sensor_id", "sensor_name", "label", "value", "unit"]
-            now_str = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-            for s in sensors:
-                row = [
-                    now_str,
-                    s.get("id", ""),
-                    s.get("sensor_name", ""),
-                    s.get("label", ""),
-                    s.get("value", ""),
-                    s.get("unit", ""),
-                ]
-                write_csv_row("hwinfo_sensor_polls.csv", headers, row)
-        else:
-            log_poll(
-                "hwinfo",
-                "sensor_read",
-                "shared_memory",
-                "inactive",
-                "",
-                "OFFLINE",
-                "HWiNFO shared memory not active",
-            )
-
-    def _poll_cpuz(self) -> None:
-        """Опрашивает CPU-Z генерацией или чтением текстового отчета."""
-        from apps.cpuz.core.cpuz_service import CpuzService
-        service = CpuzService()
-        info = service.generate_report() or {}
-        log_poll(
-            "cpuz",
-            "cpu_report",
-            "processor_name",
-            info.get("processor_name", "Unknown"),
-            "",
-            "OK",
-            {"available": service.is_available(), "details": info},
-        )
-
-    def _poll_gpuz(self) -> None:
-        """Опрашивает GPU-Z сенсорный лог."""
-        from apps.gpuz.core.gpuz_service import GpuzService
-        service = GpuzService()
-        gpu_data = service.parse_sensor_log() or {}
-        log_poll(
-            "gpuz",
-            "gpu_telemetry",
-            "card_status",
-            "active" if gpu_data else "offline",
-            "",
-            "OK",
-            gpu_data or {"available": service.is_available()},
-        )
 
     def _poll_smartmontools(self) -> None:
         """Опрашивает состояние SMART накопителей через smartctl."""

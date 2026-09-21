@@ -108,7 +108,7 @@ def test_autolog_engine_status_and_poll_all():
     assert "registered_pollers" in status
     assert "system_inspector" in status["registered_pollers"]
     assert "librehardwaremonitor" in status["registered_pollers"]
-    assert "hwinfo" in status["registered_pollers"]
+    assert "smartmontools" in status["registered_pollers"]
 
     # Разовый опрос
     results = engine.poll_all_once()

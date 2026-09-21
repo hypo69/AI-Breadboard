@@ -201,11 +201,14 @@
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-users" data-bs-target="#tab-users" type="button" data-i18n="tabs.users">
             👥 Пользователи
           </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-user-directories" data-bs-target="#tab-user-directories" type="button" data-i18n="tabs.userDirectories">
+            📁 Пользовательские директории
+          </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-google-accounts" data-bs-target="#tab-google-accounts" type="button" data-i18n="tabs.googleAccounts">
             🌐 Google аккаунты
           </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-logs" data-bs-target="#tab-logs" type="button" data-i18n="tabs.logs">
-            📋 Логи
+            📋 Системные логи
           </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-instructions" data-bs-target="#tab-instructions" type="button" data-i18n="tabs.instructions">
             📝 Системные инструкции
@@ -411,6 +414,9 @@
 
     <!-- Wikipedia Research Lab Tab -->
     <div id="tab-wikipedia-research" class="tab-pane fade"></div>
+
+    <!-- User Directories and Storage Tab -->
+    <div id="tab-user-directories" class="tab-pane fade"></div>
   </div>
 </div>
 
@@ -418,23 +424,12 @@
 <script src="/html/js/appConfigEditor.js"></script>
 <script src="/html/js/chatService.js?v=20260915_light_v2"></script>
 
-<!-- Performance Optimization Modules -->
-<script type="module" src="/html/js/tab-loader.js?v=20260915_light_v2"></script>
-<script type="module" src="/html/js/api-cache.js?v=20260915_light_v2"></script>
-<script type="module" src="/html/js/request-manager.js?v=20260915_light_v2"></script>
-<script type="module" src="/html/js/debounce-integration.js?v=20260915_light_v2"></script>
-<script type="module" src="/html/js/tab-debounce-auto-patch.js?v=20260915_light_v2"></script>
-<script type="module" src="/html/js/tab-state-persistence.js?v=20260915_light_v2"></script>
-<script type="module" src="/html/js/tab-switch-optimizer.js?v=20260915_light_v2"></script>
-<script type="module" src="/html/js/optimization-test-suite.js?v=20260915_light_v2"></script>
-<script type="module" src="/html/admin/optimization-init.js?v=20260915_light_v2"></script>
+<!-- Admin Main - Modular Architecture -->
+<script type="module" src="/html/admin/main-refactored.js?v=20260920_v3"></script>
 
-<!-- Admin Main - Refactored Modular Architecture -->
-<script type="module" src="/html/admin/main-refactored.js?v=20260915_light_v2"></script>
-
-<!-- Optimization Patches (применяются после main.js) -->
-<script type="module" src="/html/admin/lazy-init-patch.js?v=20260915_light_v2"></script>
-<script type="module" src="/html/users_tab/debounce-patch.js?v=20260915_light_v2"></script>
+<!-- Optimization Patches -->
+<script type="module" src="/html/admin/lazy-init-patch.js?v=20260920_v3"></script>
+<script type="module" src="/html/users_tab/debounce-patch.js?v=20260920_v3"></script>
 
 <!-- HELP Modal -->
 <div class="modal fade modal-help" id="help-modal" tabindex="-1" aria-labelledby="help-modal-label" aria-hidden="true">

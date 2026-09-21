@@ -27,6 +27,7 @@
 from __future__ import annotations
 
 import codecs
+import csv
 import os
 import re
 import struct
@@ -387,8 +388,16 @@ class PrefetchScanner:
         return results
 
 
-class SoftwareAuditEngine:
-    """Главный движок аудита установленного программного обеспечения Windows."""
+from apps.windows.telemetry.models import HardwareSensor, TelemetryProvider
+from apps.windows.core.data_model import AppCategory, AppExecutionInfo, InstalledAppInfo, SoftwareAuditReport
+
+class SoftwareAuditEngine(TelemetryProvider):
+    """Главный движок аудита установленного программного обеспечения Windows.
+
+    Это гибридный движок (Hybrid Audit Engine), который собирает данные из:
+    - Реестра Windows (ветки Uninstall для инвентаризации).
+    - Артефактов ОС (UserAssist, Prefetch для анализа истории запусков).
+    """
 
     UNINSTALL_PATHS = [
         (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall", "x64"),
@@ -399,6 +408,28 @@ class SoftwareAuditEngine:
     def __init__(self) -> None:
         """Инициализировать движок аудита ПО."""
         self._categorizer = SoftwareCategorizer()
+        self._last_report: Optional[SoftwareAuditReport] = None
+
+    def get_sensors(self) -> List[HardwareSensor]:
+        """Возвращает текущие показатели аудита как сенсоры."""
+        sensors: List[HardwareSensor] = []
+        if self._last_report:
+            sensors.append(HardwareSensor(
+                sensor_id="software_total_apps",
+                name="Количество установленных приложений",
+                category="software",
+                value=float(self._last_report.total_apps),
+                unit="count"
+            ))
+            sensors.append(HardwareSensor(
+                sensor_id="software_active_apps",
+                name="Активных приложений",
+                category="software",
+                value=float(self._last_report.active_apps_count),
+                unit="count"
+            ))
+        return sensors
+
 
     def get_installed_applications(self) -> List[InstalledAppInfo]:
         """Собрать полный список установленных программ с историей запусков и назначением.
@@ -663,7 +694,7 @@ class SoftwareAuditEngine:
             reverse=True,
         )
 
-        return SoftwareAuditReport(
+        report = SoftwareAuditReport(
             timestamp=datetime.now(),
             total_apps=total_apps,
             active_apps_count=len(active_apps),
@@ -674,6 +705,32 @@ class SoftwareAuditEngine:
             never_launched_or_dormant=never_launched_or_dormant,
             apps=apps,
         )
+        self._last_report = report
+        self._save_to_csv(report)
+        return report
+
+
+    def _save_to_csv(self, report: SoftwareAuditReport):
+        """Сохранить отчет в CSV файл в %APPDATA%/AI-Assistant."""
+        appdata = os.environ.get("APPDATA")
+        if not appdata:
+            logger.warning("Переменная среды APPDATA не найдена, логирование отменено.")
+            return
+
+        log_dir = Path(appdata) / "AI-Assistant"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_file = log_dir / "software_audit.csv"
+        
+        try:
+            with open(log_file, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(["Name", "Version", "Publisher", "InstallDate"])
+                for app in report.apps:
+                    writer.writerow([app.display_name, app.version, app.publisher, app.install_date])
+            logger.info(f"Отчет аудита автоматически сохранен в: {log_file}")
+        except Exception as e:
+            logger.error(f"Не удалось сохранить отчет аудита в CSV: {e}")
+
 
     def _get_fallback_mock_data(self) -> List[InstalledAppInfo]:
         """Генерация реалистичных демонстрационных данных для не-Windows окружения или тестов."""

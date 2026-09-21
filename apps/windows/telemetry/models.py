@@ -17,9 +17,19 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
+
+class TelemetryProvider(ABC):
+    """Абстрактный базовый класс для всех компонентов системы, предоставляющих телеметрию."""
+    
+    @abstractmethod
+    def get_sensors(self) -> List[HardwareSensor]:
+        """Возвращает список сенсоров, предоставляемых данным компонентом."""
+        pass
+
 
 
 class CpuMetrics(BaseModel):
@@ -180,6 +190,28 @@ class HardwareNode(BaseModel):
     children: List[HardwareNode] = Field(default_factory=list, description="Sub-components or devices")
 
 
+class MonitorInfo(BaseModel):
+    """Connected display monitor details."""
+
+    device: str = Field(default="", description="Display device name (e.g. \\\\.\\DISPLAY1)")
+    name: str = Field(default="Monitor", description="Friendly monitor name or model")
+    adapter: str = Field(default="", description="Display adapter name")
+    width: int = Field(default=1920, description="Display resolution width")
+    height: int = Field(default=1080, description="Display resolution height")
+    frequency_hz: int = Field(default=60, description="Refresh rate in Hz")
+    bits_per_pixel: int = Field(default=32, description="Color bit depth")
+    is_primary: bool = Field(default=False, description="Whether this is the primary display")
+
+
+class WindowsUpdateInfo(BaseModel):
+    """Windows Update status and recent hotfixes."""
+
+    status: str = Field(default="Up to date", description="Overall update status")
+    installed_kb_count: int = Field(default=0, description="Total installed KBs")
+    recent_hotfixes: List[str] = Field(default_factory=list, description="Recent KB identifiers")
+    latest_installed_on: Optional[str] = Field(default=None, description="Date of most recent update")
+
+
 class SystemSnapshot(BaseModel):
     """Complete system and hardware telemetry snapshot."""
 
@@ -197,11 +229,14 @@ class SystemSnapshot(BaseModel):
     timezone: str = Field(default="", description="System timezone")
     codepage: str = Field(default="", description="Active system code pages")
     input_languages: List[str] = Field(default_factory=list, description="Installed keyboard input layouts")
+    os_install_date: str = Field(default="", description="Operating system installation date")
     uptime_seconds: float = Field(default=0.0, description="System uptime in seconds")
     cpu: CpuMetrics = Field(default_factory=CpuMetrics, description="CPU metrics")
     memory: MemoryMetrics = Field(default_factory=MemoryMetrics, description="RAM and Swap metrics")
     ram_sticks: List[RamStickInfo] = Field(default_factory=list, description="Installed physical RAM modules")
     gpus: List[GpuMetrics] = Field(default_factory=list, description="Detected GPU accelerators")
+    monitors: List[MonitorInfo] = Field(default_factory=list, description="Connected display monitors")
+    updates: WindowsUpdateInfo = Field(default_factory=WindowsUpdateInfo, description="Windows Update information")
     disks: List[DiskPartitionMetrics] = Field(default_factory=list, description="Disk partitions")
     physical_disks: List[PhysicalDiskHealth] = Field(default_factory=list, description="Physical storage disks and SMART health")
     disk_io: DiskIoMetrics = Field(default_factory=DiskIoMetrics, description="Aggregate disk I/O rates")

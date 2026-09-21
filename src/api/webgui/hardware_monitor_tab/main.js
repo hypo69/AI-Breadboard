@@ -271,10 +271,6 @@
    *   lhmKey — альтернативный ключ API для LibreHardwareMonitor
    */
   const HW_UTILITIES = [
-    { key: 'aida64',         apiPrefix: '/api/v1/aida64' },
-    { key: 'hwinfo',         apiPrefix: '/api/v1/hwinfo' },
-    { key: 'cpuz',           apiPrefix: '/api/v1/cpuz' },
-    { key: 'gpuz',           apiPrefix: '/api/v1/gpuz' },
     { key: 'smartmontools',  apiPrefix: '/api/v1/smartmontools' },
     { key: 'lhm',            apiPrefix: '/api/v1/lhm' },
   ];
@@ -389,13 +385,6 @@
 
     // Маппинг утилита+действие -> URL и метод
     const actionMap = {
-      'aida64:sensors':         { url: '/api/v1/aida64/sensors', method: 'GET' },
-      'aida64:report':          { url: '/api/v1/aida64/report?report_type=HW', method: 'POST' },
-      'hwinfo:sensors':         { url: '/api/v1/hwinfo/sensors', method: 'GET' },
-      'hwinfo:inventory':       { url: '/api/v1/hwinfo/inventory', method: 'GET' },
-      'cpuz:snapshot':          { url: '/api/v1/cpuz/snapshot', method: 'GET' },
-      'gpuz:snapshot':          { url: '/api/v1/gpuz/snapshot', method: 'GET' },
-      'gpuz:sensors':           { url: '/api/v1/gpuz/sensors', method: 'GET' },
       'smartmontools:scan':     { url: '/api/v1/smartmontools/scan', method: 'GET' },
       'lhm:sensors':            { url: '/api/v1/lhm/sensors', method: 'GET' },
     };

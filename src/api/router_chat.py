@@ -50,15 +50,6 @@ class TestModelRequest(BaseModel):
     message: str = "Привет! Назови свою модель и провайдера, и подтверди готовность к работе."
     system_instruction: str = ""
 
-class CommentResponderRequest(BaseModel):
-    post_title: str = ""
-    post_content: str = ""
-    comment_author: str = ""
-    comment_content: str = ""
-    parent_context: str = ""
-    model: str = ""
-    provider: str = ""
-    system_instruction: str = ""
 
 class ChatSessionPayload(BaseModel):
     id: str = ""
@@ -529,88 +520,6 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                 'duration_ms': duration_ms
             }
 
-    @router.post('/comment-responder')
-    async def respond_to_comment(req: CommentResponderRequest, fastapi_req: Request) -> dict:
-        """Endpoint for WordPress AI Responder plugin to generate context-aware replies to user comments."""
-        start_time = time.perf_counter()
-        target_model = req.model.strip() or 'gemini-2.5-flash'
-        provider = req.provider.strip().lower()
-
-        if provider == 'foundry' and target_model and not target_model.startswith('foundry:'):
-            target_model = f"foundry:{target_model}"
-        elif provider == 'ollama' and target_model and not target_model.startswith('ollama:'):
-            target_model = f"ollama:{target_model}"
-        elif provider == 'agy' and target_model and not target_model.startswith('agy-'):
-            target_model = f"agy-{target_model}"
-        elif provider in ('gemini_cli', 'gemini-cli') and target_model and not target_model.startswith('gemini_cli:'):
-            target_model = f"gemini_cli:{target_model}"
-        elif provider in ('openai', 'openai_compat', 'openai-compat', 'deepseek', 'groq', 'openrouter', 'lmstudio') and target_model:
-            openai_prefixes = ('openai:', 'deepseek:', 'groq:', 'openrouter:', 'lmstudio:', 'local:', 'compat:')
-            if not any(target_model.startswith(p) for p in openai_prefixes):
-                target_model = f"{provider}:{target_model}"
-        elif provider in ('hf', 'huggingface') and target_model and not target_model.startswith('hf:'):
-            target_model = f"hf:{target_model}"
-        elif provider == 'onnx' and target_model and not target_model.startswith('onnx:'):
-            target_model = f"onnx:{target_model}"
-
-        prompt_instructions = [
-            "You are an AI assistant responding to user comments on a website/blog (davidka.net).",
-            "Generate a polite, helpful, engaging, and concise reply in the same language as the comment (usually Russian).",
-            "Do not include unnecessary greetings or preamble if inappropriate; be natural, courteous, and accurate.",
-        ]
-        if req.system_instruction.strip():
-            prompt_instructions.append(f"Custom Persona & Instructions:\n{req.system_instruction.strip()}")
-
-        context_blocks = []
-        if req.post_title.strip():
-            context_blocks.append(f"Post Title: {req.post_title.strip()}")
-        if req.post_content.strip():
-            snippet = req.post_content.strip()[:3000]
-            context_blocks.append(f"Post Content Excerpt:\n{snippet}")
-        if req.parent_context.strip():
-            context_blocks.append(f"Comment Thread History:\n{req.parent_context.strip()}")
-        if req.comment_author.strip():
-            context_blocks.append(f"Comment Author: {req.comment_author.strip()}")
-        context_blocks.append(f"User Comment to Reply To:\n{req.comment_content.strip()}")
-
-        full_prompt = "\n\n".join(prompt_instructions) + "\n\n── CONTEXT & COMMENT ──\n" + "\n---\n".join(context_blocks)
-
-        try:
-            model_instance = get_chat_model(target_model, system_instruction=req.system_instruction)
-            response_text = ""
-            if hasattr(model_instance, 'ask'):
-                response_text = await model_instance.ask(full_prompt)
-            elif hasattr(model_instance, 'chat'):
-                response_text = await model_instance.chat(full_prompt)
-            elif hasattr(model_instance, 'chat_stream'):
-                chunks = []
-                async for chunk in model_instance.chat_stream(full_prompt):
-                    if chunk:
-                        clean_chunk = chunk.replace("[CHAT]", "").replace("[VOICE]", "")
-                        if clean_chunk:
-                            chunks.append(clean_chunk)
-                response_text = "".join(chunks)
-            else:
-                raise RuntimeError(f"Model {target_model} does not support generation methods")
-
-            duration_ms = round((time.perf_counter() - start_time) * 1000, 1)
-            return {
-                'status': 'success',
-                'reply': response_text.strip(),
-                'model': target_model,
-                'provider': provider,
-                'duration_ms': duration_ms
-            }
-        except Exception as exc:
-            logger.error(f"[ChatRouter] Error generating comment reply: {exc}", exc_info=True)
-            duration_ms = round((time.perf_counter() - start_time) * 1000, 1)
-            return {
-                'status': 'error',
-                'message': str(exc),
-                'model': target_model,
-                'provider': provider,
-                'duration_ms': duration_ms
-            }
 
     @router.post('/save-rag')
     async def save_to_rag(rag_req: SaveRagRequest, request: Request):

@@ -16,14 +16,10 @@
 """Standalone applications and terminal workspaces."""
 
 __all__ = [
-    "aida64",
     "cloudflared_monitor",
-    "cpuz",
     "dashboard",
     "gcloud_monitor",
-    "gpuz",
     "helpdesk",
-    "hwinfo",
     "lawyer_assistant",
     "librehardwaremonitor",
     "network_terminal",

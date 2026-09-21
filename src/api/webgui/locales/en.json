@@ -24,7 +24,8 @@
     "search": "🌐 Web Search",
     "tts": "🗣️ TTS Settings",
     "sources": "📑 Sources",
-    "logs": "📋 Logs",
+    "logs": "📋 System Logs",
+    "sensorLogs": "⚡ Sensor Logs",
     "help": "📚 Reference",
     "instructions": "📝 System Instructions",
     "skills": "⚡ Skills",
@@ -36,7 +37,9 @@
     "network": "🌐 Network Terminal",
     "systemInspector": "🖥️ System Inspector",
     "aboutSystem": "ℹ️ About System",
-    "scenarios": "💬🎬 Chat & Scenarios"
+    "scenarios": "💬🎬 Chat & Scenarios",
+    "userDirectories": "📁 User Directories",
+    "userDirectoriesLong": "📁 User Directories & Storage"
   },
   "movieSearch": {
     "title": "🔍 Search Movies on Trackers",
@@ -251,6 +254,18 @@
     "resultTitle": "Analysis & Diarized Transcript",
     "saveToRag": "Save to RAG",
     "emptyStateTitle": "Record speech or upload an audio file"
+  },
+  "cacheManager": {
+    "title": "Browser Cache & Storage Manager",
+    "subtitle": "Client-side large data storage (IndexedDB + Memory Cache) for high performance and offline capability.",
+    "quotaTitle": "Browser Storage Quota",
+    "storesTitle": "Data Stores",
+    "btnCleanExpired": "Clean Expired",
+    "btnClearAll": "Clear All",
+    "btnRequestPersist": "Make Persistent",
+    "btnExport": "Export JSON",
+    "btnImport": "Import JSON",
+    "menuItem": "Browser Cache"
   },
   "button_apply": "Apply Changes",
   "label_active_voice": "Active voice:"

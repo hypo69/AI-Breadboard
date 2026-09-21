@@ -145,20 +145,43 @@
     background: rgba(56, 189, 248, 0.08);
   }
   .about-sys-tree-body {
-    padding: 6px 10px;
-    font-size: 0.78rem;
+    padding: 8px 12px;
+    font-size: 0.80rem;
     border-top: 1px solid var(--border-color, #334155);
-    background: var(--bg-color, #090d16);
+    background: rgba(15, 23, 42, 0.45);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 4px 20px;
   }
   .about-sys-prop-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 3px 0;
-    border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+    display: grid;
+    grid-template-columns: minmax(140px, 200px) 1fr;
+    align-items: baseline;
+    gap: 12px;
+    padding: 4px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    transition: background 0.12s ease;
+  }
+  .about-sys-prop-row:hover {
+    background: rgba(56, 189, 248, 0.05);
   }
   .about-sys-prop-row:last-child {
-    border-bottom: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .about-sys-prop-key {
+    color: var(--text-muted, #94a3b8);
+    font-weight: 500;
+    font-size: 0.78rem;
+    user-select: text;
+  }
+  .about-sys-prop-val {
+    color: var(--text-color, #f8fafc);
+    font-weight: 500;
+    font-size: 0.80rem;
+    word-break: break-word;
+    user-select: text;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 </style>
 
@@ -282,15 +305,23 @@
           </div>
         </div>
       </div>
-      <!-- Installed Keyboards / Input Languages row -->
-      <div class="mt-2 pt-2 border-top border-secondary-subtle d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <div class="small text-muted">
-          <i class="bi bi-keyboard me-1 text-info"></i> Раскладки ввода клавиатуры:
+      <!-- Installed Keyboards, OS Build, Monitors, and Windows Update row -->
+      <div class="mt-2 pt-2 border-top border-secondary-subtle row g-2 align-items-center">
+        <div class="col-12 col-md-6 small text-muted text-truncate">
+          <i class="bi bi-keyboard me-1 text-info"></i> Раскладки ввода:
           <span id="about-ident-inputs" class="text-white fw-semibold ms-1">Русский (RU), English (US), עברית (IL)</span>
         </div>
-        <div class="small text-muted">
+        <div class="col-12 col-md-6 small text-muted text-truncate">
           <i class="bi bi-cpu me-1 text-primary"></i> Сборка Windows:
           <span id="about-ident-os-build" class="text-white fw-semibold ms-1">Windows 11 (Build 10.0.26200)</span>
+        </div>
+        <div class="col-12 col-md-6 small text-muted text-truncate">
+          <i class="bi bi-calendar-check me-1 text-warning"></i> Дата установки ОС:
+          <span id="about-ident-install-date" class="text-white fw-semibold ms-1">Загрузка...</span>
+        </div>
+        <div class="col-12 col-md-6 small text-muted text-truncate">
+          <i class="bi bi-arrow-repeat me-1 text-success"></i> Обновления:
+          <span id="about-ident-updates" class="text-white fw-semibold ms-1">Актуально (Up to date)</span>
         </div>
       </div>
     </div>
@@ -383,6 +414,10 @@
             <tr>
               <td class="about-sys-spec-key">RAM Memory</td>
               <td class="about-sys-spec-val" id="about-spec-ram">13.2 GB free / 31.8 GB total (58.6% used)</td>
+            </tr>
+            <tr>
+              <td class="about-sys-spec-key">Monitors / Displays</td>
+              <td class="about-sys-spec-val text-truncate" id="about-spec-monitors">1920x1080 @ 60Hz</td>
             </tr>
             <tr>
               <td class="about-sys-spec-key">Power Scheme</td>
@@ -554,13 +589,13 @@
     </div>
   </div>
 
-  <!-- Full Hardware Specification Tree Panel (AIDA64 Tree) -->
+  <!-- Full Hardware Specification Tree Panel (Hardware Tree) -->
   <div class="about-sys-panel">
     <div class="about-sys-panel-header">
       <div class="d-flex align-items-center gap-2">
         <i class="bi bi-diagram-3-fill text-info"></i>
         <span class="text-white">Иерархическая спецификация оборудования</span>
-        <span class="badge bg-secondary" id="about-sys-node-count">AIDA64 Tree</span>
+        <span class="badge bg-secondary" id="about-sys-node-count">Hardware Tree</span>
       </div>
       <div class="d-flex align-items-center gap-2">
         <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5" style="font-size: 0.72rem;" id="btn-about-sys-expand-all">

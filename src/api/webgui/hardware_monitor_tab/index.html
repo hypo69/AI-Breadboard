@@ -247,113 +247,12 @@
       <span>🔧</span> Внешние утилиты диагностики
     </h6>
     <div class="small text-muted" style="font-size: 0.72rem;">
-      Интеграции с AIDA64, HWiNFO, CPU-Z, GPU-Z, smartmontools и LibreHardwareMonitor.
+      Интеграции со smartmontools и LibreHardwareMonitor.
       Статус портативных версий обновляется автоматически.
     </div>
   </div>
 
   <div class="row g-2 mb-2" id="hw-utilities-grid">
-
-    <!-- AIDA64 -->
-    <div class="col-12 col-md-6 col-xl-4">
-      <div class="hw-panel" id="hw-util-aida64">
-        <div class="hw-panel-header">
-          <span class="d-flex align-items-center gap-1.5">
-            <i class="bi bi-motherboard text-info"></i>
-            <span>AIDA64</span>
-          </span>
-          <span class="badge bg-secondary" id="hw-util-aida64-badge">⏳ Проверка...</span>
-        </div>
-        <div class="p-2" style="font-size: 0.8rem;">
-          <div class="mb-1 text-muted small">Комплексная диагностика CPU, RAM, GPU, термодатчиков, стресс-тесты</div>
-          <div id="hw-util-aida64-actions" class="d-flex gap-1 flex-wrap mb-1">
-            <button class="btn btn-sm btn-outline-info py-0 px-2" onclick="hwUtilAction('aida64', 'sensors')" title="Сенсоры реального времени">
-              <i class="bi bi-speedometer2"></i> Сенсоры
-            </button>
-            <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="hwUtilAction('aida64', 'report')" title="Создать отчёт HW">
-              <i class="bi bi-file-earmark-text"></i> Отчёт
-            </button>
-          </div>
-          <div id="hw-util-aida64-guide" class="d-none"></div>
-          <div id="hw-util-aida64-result" class="mt-1" style="max-height: 160px; overflow-y: auto;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- HWiNFO -->
-    <div class="col-12 col-md-6 col-xl-4">
-      <div class="hw-panel" id="hw-util-hwinfo">
-        <div class="hw-panel-header">
-          <span class="d-flex align-items-center gap-1.5">
-            <i class="bi bi-cpu text-success"></i>
-            <span>HWiNFO</span>
-          </span>
-          <span class="badge bg-secondary" id="hw-util-hwinfo-badge">⏳ Проверка...</span>
-        </div>
-        <div class="p-2" style="font-size: 0.8rem;">
-          <div class="mb-1 text-muted small">Мониторинг аппаратных сенсоров через Shared Memory</div>
-          <div id="hw-util-hwinfo-actions" class="d-flex gap-1 flex-wrap mb-1">
-            <button class="btn btn-sm btn-outline-success py-0 px-2" onclick="hwUtilAction('hwinfo', 'sensors')" title="Сенсоры Shared Memory">
-              <i class="bi bi-speedometer2"></i> Сенсоры
-            </button>
-            <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="hwUtilAction('hwinfo', 'inventory')" title="Инвентаризация оборудования">
-              <i class="bi bi-list-check"></i> Инвентаризация
-            </button>
-          </div>
-          <div id="hw-util-hwinfo-guide" class="d-none"></div>
-          <div id="hw-util-hwinfo-result" class="mt-1" style="max-height: 160px; overflow-y: auto;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CPU-Z -->
-    <div class="col-12 col-md-6 col-xl-4">
-      <div class="hw-panel" id="hw-util-cpuz">
-        <div class="hw-panel-header">
-          <span class="d-flex align-items-center gap-1.5">
-            <i class="bi bi-cpu-fill text-primary"></i>
-            <span>CPU-Z</span>
-          </span>
-          <span class="badge bg-secondary" id="hw-util-cpuz-badge">⏳ Проверка...</span>
-        </div>
-        <div class="p-2" style="font-size: 0.8rem;">
-          <div class="mb-1 text-muted small">Детальная информация о процессоре, чипсете и оперативной памяти</div>
-          <div id="hw-util-cpuz-actions" class="d-flex gap-1 flex-wrap mb-1">
-            <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="hwUtilAction('cpuz', 'snapshot')" title="Снимок CPU-Z">
-              <i class="bi bi-camera"></i> Снимок
-            </button>
-          </div>
-          <div id="hw-util-cpuz-guide" class="d-none"></div>
-          <div id="hw-util-cpuz-result" class="mt-1" style="max-height: 160px; overflow-y: auto;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- GPU-Z -->
-    <div class="col-12 col-md-6 col-xl-4">
-      <div class="hw-panel" id="hw-util-gpuz">
-        <div class="hw-panel-header">
-          <span class="d-flex align-items-center gap-1.5">
-            <i class="bi bi-gpu-card text-warning"></i>
-            <span>GPU-Z</span>
-          </span>
-          <span class="badge bg-secondary" id="hw-util-gpuz-badge">⏳ Проверка...</span>
-        </div>
-        <div class="p-2" style="font-size: 0.8rem;">
-          <div class="mb-1 text-muted small">Характеристики и сенсоры видеокарт (TechPowerUp)</div>
-          <div id="hw-util-gpuz-actions" class="d-flex gap-1 flex-wrap mb-1">
-            <button class="btn btn-sm btn-outline-warning py-0 px-2" onclick="hwUtilAction('gpuz', 'snapshot')" title="Снимок GPU-Z">
-              <i class="bi bi-camera"></i> Снимок
-            </button>
-            <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="hwUtilAction('gpuz', 'sensors')" title="Лог сенсоров GPU-Z">
-              <i class="bi bi-graph-up"></i> Сенсоры
-            </button>
-          </div>
-          <div id="hw-util-gpuz-guide" class="d-none"></div>
-          <div id="hw-util-gpuz-result" class="mt-1" style="max-height: 160px; overflow-y: auto;"></div>
-        </div>
-      </div>
-    </div>
 
     <!-- smartmontools -->
     <div class="col-12 col-md-6 col-xl-4">

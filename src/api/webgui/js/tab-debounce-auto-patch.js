@@ -188,11 +188,3 @@ window.TabDebounceAutoPatch = {
   getAllDebounceStats
 };
 
-export {
-  autoPatchSearchInputs,
-  autoPatchAutoSaveTextareas,
-  autoPatchRefreshButtons,
-  autoPatchTab,
-  getTabDebounceStats,
-  getAllDebounceStats
-};

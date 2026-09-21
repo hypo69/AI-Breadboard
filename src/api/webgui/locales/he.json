@@ -40,7 +40,9 @@
     "network": "🌐 מסוף רשת",
     "systemInspector": "🖥️ בודק מערכת",
     "aboutSystem": "ℹ️ אודות המערכת",
-    "scenarios": "💬🎬 צ'אט ותרחישים"
+    "scenarios": "💬🎬 צ'אט ותרחישים",
+    "userDirectories": "📁 ספריות משתמשים",
+    "userDirectoriesLong": "📁 ספריות משתמשים ואחסון"
   },
   "movieSearch": {
     "title": "🔍 חיפוש סרטים בטורנט",
@@ -262,6 +264,18 @@
     "resultTitle": "תוצאות ניתוח ותמלול לפי דוברים",
     "saveToRag": "שמור ב-RAG",
     "emptyStateTitle": "הקלט קול או העלה קובץ שמע"
+  },
+  "cacheManager": {
+    "title": "ניהול זיכרון מטמון דפדפן",
+    "subtitle": "אחסון נתונים גדולים בצד לקוח (IndexedDB + זיכרון מטמון) לביצועים מהירים.",
+    "quotaTitle": "מכסת אחסון בדפדפן",
+    "storesTitle": "מאגרי נתונים",
+    "btnCleanExpired": "נקה שפג תוקפם",
+    "btnClearAll": "נקה הכל",
+    "btnRequestPersist": "הגדר כאחסון קבוע",
+    "btnExport": "ייצוא JSON",
+    "btnImport": "ייבוא JSON",
+    "menuItem": "זיכרון מטמון"
   },
   "button_apply": "החל שינויים",
   "label_active_voice": "קול פעיל:"

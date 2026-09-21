@@ -39,11 +39,7 @@ class TelemetryStorage:
     """Класс для управления сохранением и выборкой системной телеметрии в SQLite."""
 
     def __init__(self, db_path: Optional[Path | str] = None) -> None:
-        """Инициализирует подключение к SQLite базе данных телеметрии.
-
-        Args:
-            db_path: Путь к файлу базы данных SQLite. По умолчанию `data/telemetry.db`.
-        """
+        """Инициализирует подключение к SQLite базе данных телеметрии."""
         if db_path is None:
             self.db_path = __root__ / "data" / "telemetry.db"
         else:
@@ -51,17 +47,13 @@ class TelemetryStorage:
 
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = threading.Lock()
+        self._last_snapshot_json: Optional[str] = None
         self._init_db()
 
     def _get_connection(self) -> sqlite3.Connection:
-        """Создает и настраивает соединение с базой данных SQLite.
-
-        Returns:
-            sqlite3.Connection: Настроенное соединение с базой данных.
-        """
+        """Создает и настраивает соединение с базой данных SQLite."""
         conn = sqlite3.connect(str(self.db_path), timeout=10.0)
         conn.row_factory = sqlite3.Row
-        # Включаем WAL-режим для быстрой и безопасной конкурентной записи 1 Гц
         conn.execute("PRAGMA journal_mode=WAL;")
         conn.execute("PRAGMA synchronous=NORMAL;")
         return conn
@@ -115,23 +107,44 @@ class TelemetryStorage:
                 );
             """)
 
+            # Таблица логов аудита ПО
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS software_audit_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    total_apps INTEGER NOT NULL,
+                    raw_report TEXT NOT NULL
+                );
+            """)
+
             # Создание индексов для быстрой выборки по времени и связям
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_sys_snapshots_time ON system_snapshots (created_at);")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_sys_snapshots_timestamp ON system_snapshots (timestamp);")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_proc_snapshots_snap_id ON process_snapshots (snapshot_id);")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_proc_snapshots_name ON process_snapshots (name);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_audit_logs_time ON software_audit_logs (timestamp);")
             conn.commit()
 
+    def save_audit_log(self, total_apps: int, raw_report: str) -> int:
+        """Сохраняет отчет аудита ПО в базу данных."""
+        now_ts = datetime.now(timezone.utc).isoformat()
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO software_audit_logs (timestamp, total_apps, raw_report)
+                VALUES (?, ?, ?)
+            """, (now_ts, total_apps, raw_report))
+            conn.commit()
+            return cursor.lastrowid or 0
+
     def save_snapshot(self, snapshot: SystemSnapshot, top_n: int = 20) -> int:
-        """Сохраняет системный снимок и срез Top-N процессов в базу данных.
-
-        Args:
-            snapshot: Объект снимка системной телеметрии.
-            top_n: Количество процессов для сохранения (по умолчанию 20).
-
-        Returns:
-            int: ID сохраненного снимка в таблице system_snapshots.
-        """
+        """Сохраняет системный снимок в базу данных только при наличии изменений."""
+        current_json = snapshot.model_dump_json()
+        if self._last_snapshot_json == current_json:
+            return 0  # Снимок не изменился
+        
+        self._last_snapshot_json = current_json
+        
         now_epoch = datetime.now(timezone.utc).timestamp()
         ts_str = snapshot.timestamp or datetime.now(timezone.utc).isoformat()
 
@@ -179,7 +192,7 @@ class TelemetryStorage:
                 snapshot.disk_io.write_count_per_sec if snapshot.disk_io else 0.0,
                 net_sent,
                 net_recv,
-                snapshot.model_dump_json(),
+                current_json,
             ))
 
             snapshot_id = cursor.lastrowid or 0
@@ -225,15 +238,7 @@ class TelemetryStorage:
             return snapshot_id
 
     def get_snapshots(self, limit: int = 60, since_epoch: Optional[float] = None) -> List[Dict[str, Any]]:
-        """Извлекает исторические срезы системной телеметрии.
-
-        Args:
-            limit: Максимальное количество записей (по умолчанию 60).
-            since_epoch: Необязательный фильтр по времени создания (Unix epoch).
-
-        Returns:
-            List[Dict[str, Any]]: Список словарей с метриками системы.
-        """
+        """Извлекает исторические срезы системной телеметрии."""
         with self._lock, self._get_connection() as conn:
             cursor = conn.cursor()
             if since_epoch is not None:
@@ -258,14 +263,7 @@ class TelemetryStorage:
             return result
 
     def get_snapshot_processes(self, snapshot_id: int) -> List[Dict[str, Any]]:
-        """Извлекает список процессов, зафиксированных в конкретном снимке.
-
-        Args:
-            snapshot_id: Идентификатор снимка системы.
-
-        Returns:
-            List[Dict[str, Any]]: Список процессов в снимке.
-        """
+        """Извлекает список процессов, зафиксированных в конкретном снимке."""
         with self._lock, self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -281,16 +279,7 @@ class TelemetryStorage:
         pid: Optional[int] = None,
         limit: int = 100,
     ) -> List[Dict[str, Any]]:
-        """Извлекает историю поведения конкретного процесса по имени или PID.
-
-        Args:
-            name: Имя исполняемого файла процесса.
-            pid: Идентификатор процесса.
-            limit: Максимальное число записей.
-
-        Returns:
-            List[Dict[str, Any]]: Исторические записи процесса.
-        """
+        """Извлекает историю поведения конкретного процесса по имени или PID."""
         with self._lock, self._get_connection() as conn:
             cursor = conn.cursor()
             if pid is not None and name is not None:
@@ -320,11 +309,7 @@ class TelemetryStorage:
             return [dict(row) for row in cursor.fetchall()]
 
     def get_storage_stats(self) -> Dict[str, Any]:
-        """Возвращает общую статистику хранилища (количество записей, размер файла на диске).
-
-        Returns:
-            Dict[str, Any]: Статистические данные базы телеметрии.
-        """
+        """Возвращает общую статистику хранилища."""
         with self._lock, self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT COUNT(*) FROM system_snapshots;")
@@ -344,14 +329,7 @@ class TelemetryStorage:
             }
 
     def cleanup_old_records(self, retention_days: int = 7) -> int:
-        """Удаляет устаревшие записи телеметрии старше указанного количества дней.
-
-        Args:
-            retention_days: Количество дней хранения (по умолчанию 7).
-
-        Returns:
-            int: Количество удаленных записей снимков.
-        """
+        """Удаляет устаревшие записи телеметрии старше указанного количества дней."""
         threshold_epoch = datetime.now(timezone.utc).timestamp() - (retention_days * 86400)
         with self._lock, self._get_connection() as conn:
             cursor = conn.cursor()

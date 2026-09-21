@@ -60,7 +60,13 @@ src/                   ← Основной код
   /user_manager/       ← Управление пользователями
 
 plugins/               ← Плагины системы
-apps/                  ← Готовые приложения
+apps/                  ← Готовые подсистемы и микро-приложения
+  /windows/            ← Системный стек Windows (ОБЯЗАТЕЛЬНО проверять перед созданием системных утилит):
+    /telemetry/        ← Единый сборщик SystemCollector, SystemSnapshot, sensors, storage
+    /hardware/         ← Мониторинг оборудования, discovery, GPU/SMART/CPU-Z зонды
+    /core/             ← WinAPI, safe system_param_manager, software_audit, defender, restore
+    /log_intelligence/ ← Анализ Event Log, кластеризация инцидентов, RAG
+  /common/             ← Общие утилиты приложений (AppCsvLogger и др.)
 
 templates/             ← Веб-шаблоны
 static/                ← Статические файлы (JS, CSS)
@@ -182,6 +188,7 @@ def format_date(date: str, locale: str = 'ru') -> str:
 | **Логирование** | Raw `print()` statements или custom logging mechanisms. | Стандартный logger `src.logger.logger`. |
 | **Конфигурация** | Hardcoded port/path/URL константы в коде. | Централизованная конфигурация `config.json` + `.env`. |
 | **Работа с БД** | Raw SQL запросы, bypassing DB helpers. | Общие utilities и repository patterns. |
+| **Системные функции & Windows** | Строить отдельные изолированные инструменты/скрипты или функции для параметров ОС, оборудования, реестра, процессов или телеметрии. | Использовать и расширять существующий стек `apps/windows/` (`SystemCollector`, `SystemSnapshot`, менеджеры `apps/windows/core/`, зонды `apps/windows/hardware/`). |
 | **Функции** | Создавать две функции, которые делают почти одно и то же. | Одна функция с параметрами. |
 
 ### 3.2 Примеры нарушений

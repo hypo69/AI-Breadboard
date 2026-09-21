@@ -293,6 +293,9 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-users' && typeof window.initUsersTab === 'function') {
     console.log('[AdminInterface] Switching to users tab...');
     window.initUsersTab();
+  } else if (cleanId === 'tab-user-directories' && typeof window.initUserDirectoriesTab === 'function') {
+    console.log('[AdminInterface] Switching to user directories tab...');
+    window.initUserDirectoriesTab();
   } else if (cleanId === 'tab-google-accounts' && typeof window.initGoogleAccountsTab === 'function') {
     console.log('[AdminInterface] Switching to google accounts tab...');
     window.initGoogleAccountsTab();
@@ -562,6 +565,7 @@ async function initInterface() {
     loadTabContent('plugins', `/html/plugins_tab/index.html?v=${cb}`, `/html/plugins_tab/main.js?v=${cb}`),
     loadTabContent('admin', `/html/admin_tab/index.html?v=${cb}`, `/html/admin_tab/main.js?v=${cb}`),
     loadTabContent('users', `/html/users_tab/index.html?v=${cb}`, `/html/users_tab/main.js?v=${cb}`),
+    loadTabContent('user-directories', `/html/user_directories_tab/index.html?v=${cb}`, `/html/user_directories_tab/main.js?v=${cb}`),
     loadTabContent('google-accounts', `/html/google_accounts_tab/index.html?v=${cb}`, `/html/google_accounts_tab/main.js?v=${cb}`),
     loadTabContent('instructions', `/html/instructions_tab/index.html?v=${cb}`, `/html/instructions_tab/main.js?v=${cb}`),
     loadTabContent('rag', `/html/rag_tab/index.html?v=${cb}`, `/html/rag_tab/main.js?v=${cb}`),

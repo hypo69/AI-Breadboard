@@ -9,6 +9,7 @@ The `src.utils` directory is a collection of reusable helper modules, data conve
 
 | File / Subdirectory | Description |
 |---|---|
+| `com_worker.py` | Воркер для безопасного выполнения COM/WMI операций в Windows в выделенном потоке, предотвращающий блокировку основного асинхронного цикла. |
 | `printer.py` | Pretty printing and string formatting (`pformat`, `pprint`) with ANSI color/styling, automated embedded JSON scanning (`<text> <JSON> <text>`), and syntax indentation. |
 | `convertors/` | Format conversion utilities (JSON, Dict, Markdown, XML, CSV, Base64, SimpleNamespace). |
 | `file.py` | Safe file read/write operations, recursive path traversals, and file locking. |

@@ -271,17 +271,17 @@
   display: none !important;
 }
 
-/* ── Выдвижной боковой ярлычок (Правая вкладка-триггер) ─────────────────────── */
-.right-drawer-tab-trigger {
+/* ── Выдвижной боковой ярлычок (Левая вкладка-триггер) ──────────────────────── */
+.left-drawer-tab-trigger {
   position: fixed;
   top: 48%;
-  right: 0;
+  left: 0;
   transform: translateY(-50%);
   z-index: 1040;
   background-color: var(--surface-1);
   border: 1px solid var(--border-color);
-  border-right: none;
-  border-radius: 8px 0 0 8px;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
   padding: 10px 6px;
   display: flex;
   flex-direction: column;
@@ -294,14 +294,14 @@
   user-select: none;
 }
 
-.right-drawer-tab-trigger:hover {
+.left-drawer-tab-trigger:hover {
   background-color: var(--nav-hover-bg);
   color: var(--nav-active);
-  padding-left: 10px;
+  padding-right: 10px;
   box-shadow: var(--shadow-lg);
 }
 
-.right-drawer-tab-text {
+.left-drawer-tab-text {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   font-size: 0.68rem;
@@ -310,17 +310,17 @@
   text-transform: uppercase;
 }
 
-/* ── Правая выдвижная панель навигации (Offcanvas Drawer) ──────────────────── */
-.right-drawer-nav {
+/* ── Левая выдвижная панель навигации (Offcanvas Drawer) ──────────────────── */
+.left-drawer-nav {
   width: 320px !important;
   background-color: var(--surface-1);
   color: var(--text-color);
-  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
   box-shadow: var(--shadow-lg);
   z-index: 1060;
 }
 
-.right-drawer-nav .offcanvas-header {
+.left-drawer-nav .offcanvas-header {
   background-color: var(--surface-2);
   border-bottom: 1px solid var(--border-color);
 }
@@ -334,7 +334,7 @@
   padding: 0 4px;
 }
 
-.right-drawer-nav .list-group-item {
+.left-drawer-nav .list-group-item {
   background-color: var(--surface-1);
   border-color: var(--border-color);
   color: var(--text-color);
@@ -346,30 +346,31 @@
   border: 1px solid transparent;
 }
 
-.right-drawer-nav .list-group-item:hover {
+.left-drawer-nav .list-group-item:hover {
   background-color: var(--nav-hover-bg);
   color: var(--nav-active);
-  transform: translateX(-2px);
+  transform: translateX(2px);
 }
 
-.right-drawer-nav .list-group-item.active {
+.left-drawer-nav .list-group-item.active {
   background-color: #2563eb;
   border-color: #2563eb;
   color: #ffffff;
   font-weight: 600;
 }
 
-[data-theme="dark"] .right-drawer-nav .list-group-item.active {
+[data-theme="dark"] .left-drawer-nav .list-group-item.active {
   background-color: #1f6feb;
   border-color: #1f6feb;
   color: #ffffff;
 }
 
-.right-drawer-nav .list-group-item.active:hover {
+.left-drawer-nav .list-group-item.active:hover {
   background-color: #1d4ed8;
 }
 
-[data-theme="dark"] .right-drawer-nav .list-group-item.active:hover {
+[data-theme="dark"] .left-drawer-nav .list-group-item.active:hover {
   background-color: #388bfd;
 }
+
 
