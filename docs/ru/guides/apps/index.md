@@ -8,6 +8,7 @@
 - [Dashboard](dashboard.md)
 - [Hardware Explorer](hardware_explorer.md)
 - [Helpdesk](helpdesk.md)
+- [Платформа корпоративных знаний](enterprise_knowledge.md)
 - [Lawyer Assistant Roadmap](lawyer_assistant_roadmap.md)
 - [Memory Monitor](memory_monitor.md)
 - [Network Diagnostics](network_diagnostics.md)

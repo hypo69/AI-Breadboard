@@ -161,6 +161,7 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         router_openai,
     )
     from src.api.router_version import init_router as init_version_router
+    from apps.enterprise_knowledge.router import init_router as init_enterprise_knowledge_router
 
     # Routers that receive model instances
     app.include_router(init_chat_router(state.chat_model, state.narrator_model))
@@ -205,6 +206,7 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         app.include_router(factory())
 
     app.include_router(router_openai)
+    app.include_router(init_enterprise_knowledge_router())
 
     # apps/ — registered here for shared software server mode
     try:

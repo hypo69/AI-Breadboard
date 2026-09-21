@@ -23,55 +23,12 @@
 
 ---
 
-## TelegramBotPlugin
+## Реализации плагинов
 
-::: plugins.telegram_bot.plugin.TelegramBotPlugin
+Прикладные плагины загружаются динамически из каталогов `plugins/system-plugins`,
+`plugins/developer-plugins` и `plugins/user-plugins`. Эти каталоги содержат дефисы
+и не являются импортируемыми Python-пакетами, поэтому их API не подключается через
+`mkdocstrings` как обычные модули.
 
----
-
-## GoogleWorkspacePlugin
-
-::: plugins.google_workspace.plugin.GoogleWorkspacePlugin
-
----
-
-## UserStoragePlugin
-
-::: plugins.user_storage.plugin.UserStoragePlugin
-
----
-
-## TelegramChannelRAGPlugin
-
-::: plugins.telegram_channel_rag.plugin.TelegramChannelRAGPlugin
-
----
-
-## NewsfeedPlugin
-
-::: plugins.news_feed.plugin.NewsFeedPlugin
-
----
-
-## LogAnalyzerPlugin
-
-::: plugins.log_analyzer.plugin.LogAnalyzerPlugin
-
----
-
-## InvoiceProcessorPlugin
-
-::: plugins.invoice_processor.plugin.InvoiceProcessorPlugin
-
----
-
-## IFTTTPlugin
-
-::: plugins.ifttt.plugin.IFTTTPlugin
-
----
-
-## WhatsAppPlugin
-
-::: plugins.whatsapp.plugin.WhatsAppPlugin
+Документация конкретных плагинов находится в разделе [каталога плагинов](../plugins/catalog.md).
 

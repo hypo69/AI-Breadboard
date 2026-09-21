@@ -18,6 +18,7 @@
 __all__ = [
     "cloudflared_monitor",
     "dashboard",
+    "enterprise_knowledge",
     "gcloud_monitor",
     "helpdesk",
     "lawyer_assistant",

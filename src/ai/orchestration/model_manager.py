@@ -104,18 +104,20 @@ def load_unsupported_models(provider: str = "gemini") -> Set[str]:
                     if isinstance(item, str) and item.strip():
                         unsupported.add(_normalize_model_name(item))
 
-    # Loading из глобальной конфигурации
+    # Loading из глобальной конфигурации (новая структура: ai.providers.<prov>.unsupported_models)
     global_cfg = j_loads(_GLOBAL_CONFIG_PATH)
     if isinstance(global_cfg, dict):
         ai_sec = global_cfg.get("ai", {})
         if isinstance(ai_sec, dict):
-            unsup_dict = ai_sec.get("unsupported_models", {})
-            if isinstance(unsup_dict, dict):
-                prov_list = unsup_dict.get(prov, [])
-                if isinstance(prov_list, list):
-                    for item in prov_list:
-                        if isinstance(item, str) and item.strip():
-                            unsupported.add(_normalize_model_name(item))
+            providers = ai_sec.get("providers", {})
+            if isinstance(providers, dict):
+                prov_obj = providers.get(prov, {})
+                if isinstance(prov_obj, dict):
+                    prov_list = prov_obj.get("unsupported_models", [])
+                    if isinstance(prov_list, list):
+                        for item in prov_list:
+                            if isinstance(item, str) and item.strip():
+                                unsupported.add(_normalize_model_name(item))
 
     return unsupported
 
@@ -162,22 +164,26 @@ def add_unsupported_model(provider: str = "gemini", model_name: str = "", reason
                 gemini_cfg["unsupported_models"] = sorted(list(set(curr_list)))
                 j_dumps(gemini_cfg, _GEMINI_CONFIG_PATH)
 
-    # 2. Update глобальной конфигурации
+    # 2. Update глобальной конфигурации (новая структура: ai.providers.<prov>.unsupported_models)
     global_cfg = j_loads(_GLOBAL_CONFIG_PATH)
     if isinstance(global_cfg, dict):
         ai_sec = global_cfg.get("ai", {})
         if not isinstance(ai_sec, dict):
             ai_sec = {}
-        unsup_dict = ai_sec.get("unsupported_models", {})
-        if not isinstance(unsup_dict, dict):
-            unsup_dict = {}
-        prov_list = unsup_dict.get(prov, [])
+        providers = ai_sec.get("providers", {})
+        if not isinstance(providers, dict):
+            providers = {}
+        prov_obj = providers.get(prov, {})
+        if not isinstance(prov_obj, dict):
+            prov_obj = {}
+        prov_list = prov_obj.get("unsupported_models", [])
         if not isinstance(prov_list, list):
             prov_list = []
         if norm_name not in prov_list:
             prov_list.append(norm_name)
-            unsup_dict[prov] = sorted(list(set(prov_list)))
-            ai_sec["unsupported_models"] = unsup_dict
+            prov_obj["unsupported_models"] = sorted(list(set(prov_list)))
+            providers[prov] = prov_obj
+            ai_sec["providers"] = providers
             global_cfg["ai"] = ai_sec
             j_dumps(global_cfg, _GLOBAL_CONFIG_PATH)
 
@@ -249,14 +255,16 @@ def _fetch_gemini_models_sync(api_key: str = "", include_unsupported: bool = Fal
 def _fetch_foundry_models_sync(base_url: str = "", include_unsupported: bool = False) -> List[str]:
     """Synchronously fetch list of models from local Foundry server."""
     from src.config import ai_cfg
-    url: str = base_url or (getattr(ai_cfg, "foundry_base_url", "http://localhost:54837") if ai_cfg else "http://localhost:54837")
-    fallback_id: str = getattr(ai_cfg, "foundry_model_id", "qwen2.5-1.5b-instruct-generic-cpu:4") if ai_cfg else "qwen2.5-1.5b-instruct-generic-cpu:4"
+    providers = getattr(ai_cfg, "providers", {}) if ai_cfg else {}
+    foundry_cfg = providers.get("foundry", {}) if isinstance(providers, dict) else {}
+    base_url = base_url or (foundry_cfg.get("base_url", "http://localhost:54837") if foundry_cfg else "http://localhost:54837")
+    fallback_id = foundry_cfg.get("model", "qwen2.5-1.5b-instruct-generic-cpu:4")
     unsupported: Set[str] = load_unsupported_models("foundry")
 
     import requests
     models: List[str] = []
     try:
-        resp = requests.get(f"{url}/v1/models", timeout=5)
+        resp = requests.get(f"{base_url}/v1/models", timeout=5)
         if resp.status_code == 200:
             data: Dict[str, Any] = resp.json()
             for item in data.get("data", []):
@@ -268,7 +276,7 @@ def _fetch_foundry_models_sync(base_url: str = "", include_unsupported: bool = F
             if models:
                 return models
     except Exception as e:
-        logger.info(f"[ModelManager] Foundry сервер ({url}) недоступен или вернул ошибку: {e}")
+        logger.info(f"[ModelManager] Foundry сервер ({base_url}) недоступен или вернул ошибку: {e}")
 
     if include_unsupported or _normalize_model_name(fallback_id) not in unsupported:
         return [fallback_id]
@@ -277,14 +285,16 @@ def _fetch_foundry_models_sync(base_url: str = "", include_unsupported: bool = F
 def _fetch_ollama_models_sync(base_url: str = "", include_unsupported: bool = False) -> List[str]:
     """Synchronously fetch list of models from Ollama server."""
     from src.config import ai_cfg
-    url: str = base_url or (getattr(ai_cfg, "ollama_base_url", "http://localhost:11434") if ai_cfg else "http://localhost:11434")
-    fallback_id: str = getattr(ai_cfg, "ollama_model_id", "llama3.1") if ai_cfg else "llama3.1"
+    providers = getattr(ai_cfg, "providers", {}) if ai_cfg else {}
+    ollama_cfg = providers.get("ollama", {}) if isinstance(providers, dict) else {}
+    base_url = base_url or (ollama_cfg.get("base_url", "http://localhost:11434") if ollama_cfg else "http://localhost:11434")
+    fallback_id = ollama_cfg.get("model", "llama3.1")
     unsupported: Set[str] = load_unsupported_models("ollama")
 
     import requests
     models: List[str] = []
     try:
-        resp = requests.get(f"{url}/api/tags", timeout=5)
+        resp = requests.get(f"{base_url}/api/tags", timeout=5)
         if resp.status_code == 200:
             data: Dict[str, Any] = resp.json()
             for item in data.get("models", []):
@@ -296,7 +306,7 @@ def _fetch_ollama_models_sync(base_url: str = "", include_unsupported: bool = Fa
             if models:
                 return models
     except Exception as e:
-        logger.info(f"[ModelManager] Ollama сервер ({url}) недоступен или вернул ошибку: {e}")
+        logger.info(f"[ModelManager] Ollama сервер ({base_url}) недоступен или вернул ошибку: {e}")
 
     if include_unsupported or _normalize_model_name(fallback_id) not in unsupported:
         return [fallback_id]

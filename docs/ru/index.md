@@ -12,7 +12,7 @@
 - [Веб-интерфейсы и порталы](manual/web_interfaces.md) — Иерархия, приоритеты (/admin, /tc, /, /apps) и блок-схема
 - [Установка](manual/installation.md) — Подробное руководство по установке
 - [Запуск сервера](manual/RUN.md) — Параметры `run.ps1`, сопутствующие сервисы
-- [Конфигурация и секреты](manual/configuration.md) — `.env`, `config.json`, пул ключей Gemini
+- [Конфигурация и секреты](manual/secrets.md) — `.env`, `config.json`, пул ключей Gemini
 - [Примеры использования](manual/usage-examples.md) — Практические сценарии
 - [Решение проблем](manual/troubleshooting.md) — Типичные ошибки и их устранение
 - [Плагины системы](plugins/index.md) — Фоновые сервисы и интеграции

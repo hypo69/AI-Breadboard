@@ -440,7 +440,7 @@ python -m pytest tests/
    - Основные команды
    - Для всех платформ
 
-2. **[Справочник конфигурации](manual/config.md)**
+2. **[Справочник конфигурации](manual/config-reference.md)**
    - Работа с конфигурацией
    - ConfigManager API
    - Примеры использования

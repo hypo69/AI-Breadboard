@@ -45,13 +45,11 @@ class UnifiedChatModel:
         self,
         api_key_names: Optional[List[str]] = None,
         system_instruction: str = "",
-        foundry_model_id: str = "qwen2.5-1.5b-instruct-generic-cpu:4",
-        use_foundry: bool = False,
-        use_ollama: bool = False,
-        ollama_model_id: str = "llama3.1",
-        ollama_base_url: str = "http://localhost:11434",
     ) -> None:
         from src.ai.gemini.api import GoogleGenerativeAI
+        from src.ai.ollama_chat import OllamaChatBase
+        from src.ai.gemini_cli_chat import GeminiCliChatBase
+        from src.ai.agy_chat import AgyChatBase
 
         # --- always-available providers ---
         self.gemini_model = GoogleGenerativeAI(
@@ -66,47 +64,63 @@ class UnifiedChatModel:
         self.gemini_cli_model: Any = False
         self.agy_model: Any = False
 
-        # Configuration kept for lazy init in _get_active_model
-        self.use_foundry = use_foundry
-        self.foundry_model_id = foundry_model_id
-        self.use_ollama = use_ollama
-        self.ollama_model_id = ollama_model_id
-        self.ollama_base_url = ollama_base_url
-
-        # Eagerly initialise if explicitly requested
-        if use_foundry:
-            self.foundry_model = FoundryChatBase(
-                model_id=foundry_model_id,
-                system_prompt=system_instruction,
-            )
-
-        if use_ollama:
-            from src.ai.ollama_chat import OllamaChatBase
-            self.ollama_model = OllamaChatBase(
-                model_id=ollama_model_id,
-                system_prompt=system_instruction,
-                api_url=ollama_base_url,
-            )
-
         # Determine default model name from config / feature flags
         from src.ai.gemini.generative_ai import _DEFAULT_MODEL
         from src.config import ai_cfg
 
-        # New unified format: use ai_cfg.provider
-        provider = getattr(ai_cfg, "provider", "gemini").lower()
+        # New unified format: use ai_cfg.providers
+        providers = getattr(ai_cfg, "providers", {}) if ai_cfg else {}
         
-        if provider == "foundry":
-            self.default_model = f"foundry:{getattr(ai_cfg, 'foundry_model_id', foundry_model_id)}"
-        elif provider == "ollama":
-            self.default_model = f"ollama:{getattr(ai_cfg, 'ollama_model_id', ollama_model_id)}"
-        elif provider == "gemini_cli":
-            self.default_model = f"gemini_cli:{getattr(ai_cfg, 'gemini_cli_model_id', gemini_cli_model_id)}"
-        elif provider == "agy":
-            self.default_model = getattr(ai_cfg, "agy_model_id", "agy-gemini-3.6-flash")
-        else:  # gemini or default
-            self.default_model = getattr(ai_cfg, "gemini_model_id", _DEFAULT_MODEL)
+        default_model = _DEFAULT_MODEL
+        foundry_model_id = "qwen2.5-1.5b-instruct-generic-cpu:4"
+        ollama_model_id = "llama3.1"
+        gemini_cli_model_id = "gemini-3-flash-preview"
 
-        self._model_name = self.default_model
+        if isinstance(providers, dict):
+            foundry_cfg = providers.get("foundry", {})
+            if isinstance(foundry_cfg, dict) and foundry_cfg.get("enabled"):
+                foundry_model_id = foundry_cfg.get("model", foundry_model_id)
+                self.foundry_model = FoundryChatBase(
+                    model_id=foundry_model_id,
+                    system_prompt=system_instruction,
+                )
+                default_model = f"foundry:{foundry_model_id}"
+
+            ollama_cfg = providers.get("ollama", {})
+            if isinstance(ollama_cfg, dict) and ollama_cfg.get("enabled"):
+                ollama_model_id = ollama_cfg.get("model", ollama_model_id)
+                ollama_base_url = ollama_cfg.get("base_url", "http://localhost:11434")
+                self.ollama_model = OllamaChatBase(
+                    model_id=ollama_model_id,
+                    system_prompt=system_instruction,
+                    api_url=ollama_base_url,
+                )
+                default_model = f"ollama:{ollama_model_id}"
+
+            agy_cfg = providers.get("agy", {})
+            if isinstance(agy_cfg, dict) and agy_cfg.get("enabled"):
+                agy_model_id = agy_cfg.get("model", "agy-gemini-3.6-flash")
+                self.agy_model = AgyChatBase(
+                    model_id=agy_model_id,
+                    system_prompt=system_instruction,
+                )
+                default_model = agy_model_id
+
+            gemini_cli_cfg = providers.get("gemini_cli", {})
+            if isinstance(gemini_cli_cfg, dict) and gemini_cli_cfg.get("enabled"):
+                gemini_cli_model_id = gemini_cli_cfg.get("model", gemini_cli_model_id)
+                self.gemini_cli_model = GeminiCliChatBase(
+                    model_id=gemini_cli_model_id,
+                    system_prompt=system_instruction,
+                )
+                default_model = f"gemini_cli:{gemini_cli_model_id}"
+
+            gemini_cfg = providers.get("gemini", {})
+            if isinstance(gemini_cfg, dict) and gemini_cfg.get("enabled"):
+                gemini_model_id = gemini_cfg.get("model", _DEFAULT_MODEL)
+                default_model = gemini_model_id
+
+        self._model_name = default_model
 
     # ------------------------------------------------------------------
     # Private helpers
@@ -247,11 +261,15 @@ class UnifiedChatModel:
 
         if active_name.startswith("ollama:"):
             if not self.ollama_model:
-                from src.ai.providers.ollama import OllamaChatBase
+                from src.ai.ollama_chat import OllamaChatBase
+                from src.config import ai_cfg
+                providers = getattr(ai_cfg, "providers", {}) if ai_cfg else {}
+                ollama_cfg = providers.get("ollama", {}) if isinstance(providers, dict) else {}
+                ollama_base_url = ollama_cfg.get("base_url", "http://localhost:11434")
                 self.ollama_model = OllamaChatBase(
                     model_id=active_name.replace("ollama:", ""),
                     system_prompt=self.system_instruction or "",
-                    api_url=self.ollama_base_url,
+                    api_url=ollama_base_url,
                 )
             else:
                 self.ollama_model.model_id = active_name.replace("ollama:", "")

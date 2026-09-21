@@ -22,6 +22,7 @@ graph TD
         A5["cloudflared_monitor (Порт 8104)"]
         A6["user_assistant (Порт 8105)"]
         A7["gcloud_monitor (Порт 8106)"]
+        A8["enterprise_knowledge (общий API)"]
     end
     
     Gateway --> A1
@@ -31,6 +32,7 @@ graph TD
     Gateway --> A5
     Gateway --> A6
     Gateway --> A7
+    Gateway --> A8
 ```
 
 ### Стандарт распределения портов
@@ -44,6 +46,7 @@ graph TD
 | `cloudflared_monitor` | `8104` | HTTP / SSE | Мониторинг туннелей Cloudflare |
 | `user_assistant` | `8105` | HTTP / Chat | Интерактивный ассистент пользователя |
 | `gcloud_monitor` | `8106` | HTTP / TUI | Google Cloud Observability, логи, метрики и аудит |
+| `enterprise_knowledge` | общий сервер | HTTP / JSON | Накопление корпоративных знаний, identity resolution и hybrid retrieval |
 
 ---
 

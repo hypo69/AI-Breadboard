@@ -399,9 +399,15 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                 with open(active_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     ai_sec = data.get("ai", {})
-                    if ai_sec.get("provider"):
-                        provider = str(ai_sec["provider"]).upper()
-                        model_name = ai_sec.get("model") or ai_sec.get(f"{provider.lower()}_model_id") or "default"
+                    # New format: providers.<prov>.enabled + providers.<prov>.model
+                    providers = ai_sec.get("providers", {})
+                    if isinstance(providers, dict):
+                        for prov_key, prov_cfg in providers.items():
+                            if isinstance(prov_cfg, dict) and prov_cfg.get("enabled"):
+                                provider = prov_key.upper()
+                                model_name = prov_cfg.get("model") or "default"
+                                break
+                    # Legacy format: use_agy, use_gemini, use_ollama, use_foundry
                     elif ai_sec.get("use_agy"):
                         provider = "AGY"
                         model_name = ai_sec.get("agy_model_id") or ai_sec.get("model") or "gemini-3.6-flash"

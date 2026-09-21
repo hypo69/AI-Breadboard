@@ -3,11 +3,14 @@ site_description: Interactive AI Model Testbench & Breadboard
 site_url: !ENV [READTHEDOCS_CANONICAL_URL, 'http://localhost:8000']
 repo_url: https://github.com/hypo69/AI-Breadboard
 edit_uri: edit/master/docs/
+docs_dir: docs/ru
+exclude_docs: |
+  **/README.md
 
 # Theme
 theme:
   name: material
-  language: en
+  language: ru
   palette:
     primary: indigo
     accent: indigo
@@ -22,84 +25,68 @@ theme:
 
 # Navigation
 nav:
-  - Главная: ru/index.md
+  - Главная: index.md
   - Руководство:
-      - Начало работы: ru/manual/getting-started.md
-      - Установка: ru/manual/installation.md
-      - Запуск сервера: ru/manual/RUN.md
-      - Конфигурация и секреты: ru/manual/configuration.md
-      - Справочник config.json: ru/manual/config.md
-      - Примеры использования: ru/manual/usage-examples.md
-      - Решение проблем: ru/manual/troubleshooting.md
+    - Обзор: manual/index.md
+    - Начало работы: manual/getting-started.md
+    - Установка: manual/installation.md
+    - Запуск сервера: manual/RUN.md
+    - Конфигурация и секреты: manual/secrets.md
+    - Справочник конфигурации: manual/config-reference.md
+    - Примеры использования: manual/usage-examples.md
+    - Решение проблем: manual/troubleshooting.md
   - Плагины:
-      - Обзор: ru/plugins/index.md
-      - Каталог: ru/plugins/catalog.md
-      - Архитектура: ru/plugins/architecture.md
-      - Разработка: ru/plugins/development.md
+    - Обзор: plugins/index.md
+    - Каталог: plugins/catalog.md
+    - Архитектура: plugins/architecture.md
+    - Разработка: plugins/development.md
   - Навыки (Skills):
-      - Обзор: ru/skills/index.md
-      - Каталог: ru/skills/catalog.md
-      - Архитектура: ru/skills/architecture.md
-      - Разработка: ru/skills/development.md
+    - Обзор: skills/index.md
+    - Каталог: skills/catalog.md
+    - Архитектура: skills/architecture.md
+    - Разработка: skills/development.md
   - Приложения (Apps):
-      - Обзор: ru/apps/index.md
-      - Каталог: ru/apps/catalog.md
+    - Обзор: apps/index.md
+    - Каталог: apps/catalog.md
+    - Платформа корпоративных знаний: guides/apps/enterprise_knowledge.md
   - MCP Серверы:
-      - Обзор: ru/mcp/index.md
-      - Каталог: ru/mcp/catalog.md
-      - Руководство: ru/mcp/guide.md
+    - Обзор: mcp/index.md
+    - Каталог: mcp/catalog.md
+    - Руководство: mcp/guide.md
   - Архитектура:
-      - Обзор: ru/architecture/overview.md
-      - Компоненты: ru/architecture/components.md
-      - Безопасность API: ru/architecture/api-security.md
-      - Модели данных: ru/architecture/data-models.md
-      - Провайдер Gemini: ru/architecture/gemini-provider.md
+    - Обзор: architecture/overview.md
+    - Компоненты: architecture/components.md
+    - Безопасность API: architecture/api-security.md
+    - Модели данных: architecture/data-models.md
+    - Провайдер Gemini: architecture/gemini-provider.md
   - Гайды:
-      - Создание агентов: ru/guides/creating-agents.md
-      - Разработка плагинов: ru/guides/developing-plugins.md
-      - Разработка навыков: ru/guides/developing-skills.md
-      - Чат-интерфейс: ru/guides/chat-interface.md
-      - Google OAuth: ru/guides/google-oauth-setup.md
-      - Google Workspace: ru/guides/google-workspace.md
-      - Стратегия тестирования: ru/guides/testing-strategy.md
+    - Обзор: guides/index.md
+    - Создание агентов: guides/creating-agents.md
+    - Разработка плагинов: guides/developing-plugins.md
+    - Разработка навыков: guides/developing-skills.md
+    - Чат-интерфейс: guides/chat-interface.md
+    - Google OAuth: guides/google-oauth-setup.md
+    - Google Workspace: guides/google-workspace.md
+    - Стратегия тестирования: guides/testing-strategy.md
   - API Reference:
-      - Обзор: ru/api/index.md
-      - AI оркестратор: ru/api/ai.md
-      - RAG-движок: ru/api/rag.md
-      - Плагины: ru/api/plugins.md
-      - Агенты: ru/api/agents.md
-      - Навыки: ru/api/skills.md
-      - REST API: ru/api/utils.md
+    - Обзор: api/index.md
+    - AI оркестратор: api/ai.md
+    - RAG-движок: api/rag.md
+    - Плагины: api/plugins.md
+    - Агенты: api/agents.md
+    - Навыки: api/skills.md
+    - REST API: api/utils.md
+    - Enterprise Knowledge Platform: api/enterprise_knowledge.md
   - Разработчику:
-      - Обзор: ru/developer/index.md
-      - Changelog: ru/changelog.md
-      - Контрибуция: ru/contributing.md
+    - Обзор: developer/index.md
+    - Changelog: changelog.md
+    - Контрибуция: contributing.md
 
 # Plugins
 plugins:
   - search:
       lang:
-        - en
         - ru
-  - i18n:
-      docs_structure: folder
-      languages:
-        - locale: en
-          name: English
-          build: true
-          default: true
-        - locale: ru
-          name: Русский
-          build: true
-        - locale: es
-          name: Español
-          build: true
-        - locale: ar
-          name: العربية
-          build: true
-        - locale: he
-          name: עברית
-          build: true
   - mkdocstrings:
       default_handler: python
       handlers:

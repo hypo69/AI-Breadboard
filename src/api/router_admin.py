@@ -217,14 +217,17 @@ async def check_instruction_in_model(request: Request, data: Dict[str, Any]) -> 
 
         system_instruction = data.get('instruction', '')
         prompt = data.get('prompt', 'Привет!')
-        foundry_model_id = getattr(ai_cfg, 'foundry_model_id', None) or os.getenv('FOUNDRY_MODEL_ID', 'qwen2.5-1.5b-instruct-generic-cpu:4')
+        
+        # Get foundry model from new config format
+        from src.config import ai_cfg
+        providers = getattr(ai_cfg, "providers", {}) if ai_cfg else {}
+        foundry_cfg = providers.get("foundry", {}) if isinstance(providers, dict) else {}
+        foundry_model_id = foundry_cfg.get("model", None) or os.getenv('FOUNDRY_MODEL_ID', 'qwen2.5-1.5b-instruct-generic-cpu:4')
 
         # Создаём временный инстанс модели для теста
         temp_model = UnifiedChatModel(
             api_key_names=api_key_names,
             system_instruction=system_instruction,
-            foundry_model_id=foundry_model_id,
-            use_foundry=False,
         )
 
         response = await temp_model.chat(prompt)
@@ -1474,7 +1477,6 @@ async def generate_skill_ai(data: SkillAiGenerateRequest, request: Request) -> D
             chat = UnifiedChatModel(
                 api_key_names=api_key_names,
                 system_instruction=system_prompt,
-                use_foundry=False,
             )
             raw_response = await chat.chat(f"Create a skill for category '{category}': {user_prompt}")
             if raw_response:
@@ -1841,7 +1843,6 @@ async def test_admin_skill(name: str, data: SkillTestRunRequest, request: Reques
             chat = UnifiedChatModel(
                 api_key_names=api_key_names,
                 system_instruction=f"You are executing the following agent skill:\n\n{instructions}",
-                use_foundry=False,
             )
             response_text = await chat.chat(user_prompt)
             model_used = "UnifiedChatModel (LLM)"
