@@ -43,5 +43,5 @@ pytest --tb=short -q
 
 - Python 3.11+
 - Type hints everywhere
-- `from src.logger import logger` (not `logging.getLogger`)
+- `from logger import logger` (not `logging.getLogger`)
 - English for all log messages and comments

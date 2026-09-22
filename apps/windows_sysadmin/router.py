@@ -34,7 +34,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from src.api.router_auth import require_admin_user
-from src.logger import logger
+from logger import logger
 from apps.common.csv_logger import AppCsvLogger
 from .src.directory_watcher import get_directory_watcher
 from .src.file_auditor import WindowsFileAuditor

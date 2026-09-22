@@ -40,7 +40,7 @@ from apps.gcloud_monitor.src.error_reporting import GCloudErrorReporter
 from apps.gcloud_monitor.src.logging_service import GCloudLoggingService
 from apps.gcloud_monitor.src.metrics_service import GCloudMetricsService
 from apps.gcloud_monitor.tui import run_tui
-from src.logger import logger
+from logger import logger
 
 
 def main() -> None:

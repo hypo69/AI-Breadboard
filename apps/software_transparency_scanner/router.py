@@ -22,7 +22,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
-from src.logger import logger
+from logger import logger
 from apps.software_transparency_scanner.core.config_inspector import ConfigInspector
 from apps.software_transparency_scanner.core.gemini_researcher import GeminiResearcher
 from apps.software_transparency_scanner.core.inventory import SoftwareInventory

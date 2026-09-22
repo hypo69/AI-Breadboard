@@ -17,7 +17,7 @@ import os
 import aiohttp
 from typing import Optional, Dict, Any, List
 
-from src.logger import logger
+from logger import logger
 
 class FoundryClient:
     """Client for working with Microsoft AI Foundry."""

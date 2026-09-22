@@ -30,7 +30,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 import numpy as np
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 
 _DATA_DIR: Path = __root__ / "data"
 _DOCUMENTS_DIR: Path = _DATA_DIR / "rag_documents"

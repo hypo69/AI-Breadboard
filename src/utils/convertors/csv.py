@@ -48,7 +48,7 @@ import csv
 from pathlib import Path
 from typing import List, Dict
 from types import SimpleNamespace
-from src.logger.logger import logger
+from logger.logger import logger
 from src.utils.csv import read_csv_as_dict, read_csv_as_ns, save_csv_file, read_csv_file
 
 def csv2dict(csv_file: str | Path, *args, **kwargs) -> dict | None:

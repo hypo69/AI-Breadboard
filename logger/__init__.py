@@ -12,4 +12,4 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-from src.logger.logger import logger
+from logger.logger import logger

@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
-from src.logger import logger
+from logger import logger
 
 PROMPTS_DIR = Path("prompts/diagnostics")
 

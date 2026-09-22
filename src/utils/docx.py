@@ -3,7 +3,7 @@ import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional, Union, List
-from src.logger.logger import logger
+from logger.logger import logger
 
 W_NS = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 

@@ -23,7 +23,7 @@ from typing import Optional, Tuple
 
 from src.ai.simulation.base_generator import BaseSimulationGenerator
 from src.ai.simulation.models import EntityType, SimulationRequest, SimulationResult
-from src.logger import logger
+from logger import logger
 
 
 class ContractSimulationGenerator(BaseSimulationGenerator):

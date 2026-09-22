@@ -29,7 +29,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Deque, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 
 
 # Windows API константы

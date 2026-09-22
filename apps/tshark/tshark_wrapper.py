@@ -27,7 +27,7 @@ import subprocess
 from pathlib import Path
 from typing import AsyncGenerator, Dict, List, Optional, Any, Union
 
-from src.logger import logger
+from logger import logger
 from .models import NetworkInterface, PacketSummary, CaptureFilter
 
 

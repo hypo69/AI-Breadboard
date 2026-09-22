@@ -14,7 +14,7 @@
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
-from src.logger import logger
+from logger import logger
 from .capability_registry import AICapability, CapabilityRegistry, ModelDescriptor, Locality
 from .policy import PolicyEngine, RoutingPolicy, LocalityPreference, PrivacyLevel
 from .discovery import DiscoveryEngine

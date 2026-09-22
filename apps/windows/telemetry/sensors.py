@@ -28,7 +28,7 @@ import os
 import subprocess
 from typing import List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows.telemetry.models import HardwareSensor
 from apps.windows.telemetry.internet_speed import InternetSpeedSensor
 

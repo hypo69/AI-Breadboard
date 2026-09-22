@@ -24,7 +24,7 @@ from typing import AsyncGenerator
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse, FileResponse
 
-from src.logger import logger
+from logger import logger
 from src.ai.voice_pipeline import generate_voiceover_chunks
 
 _ROOT = Path(__file__).parent.parent.parent

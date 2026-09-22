@@ -23,7 +23,7 @@ import subprocess
 import tempfile
 from typing import List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows.hardware.base import (
     BaseHardwareProvider,
     ProviderCapability,

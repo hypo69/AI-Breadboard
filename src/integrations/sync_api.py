@@ -11,7 +11,7 @@ from typing import Optional, Dict, List
 from .google_drive_sync import GoogleDriveSync
 from .sync_scheduler import SyncScheduler, get_scheduler, ManualSyncHandler
 
-from src.logger import logger
+from logger import logger
 
 # Создание роутера
 router = APIRouter(prefix="/api/sync", tags=["sync"])

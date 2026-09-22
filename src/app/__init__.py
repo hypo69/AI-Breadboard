@@ -48,7 +48,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from src.config import server_cfg
-from src.logger import logger
+from logger import logger
 
 if TYPE_CHECKING:
     from src.app.state import AppState

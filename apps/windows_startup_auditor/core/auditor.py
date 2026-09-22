@@ -29,7 +29,7 @@ import time
 from datetime import datetime
 from typing import List, Tuple
 
-from src.logger import logger
+from logger import logger
 from apps.windows_startup_auditor.core.models import (
     AuditReport,
     AuditSummary,

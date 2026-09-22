@@ -23,7 +23,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile, s
 from pydantic import BaseModel, Field
 
 from src.ai.audio_diarization import AudioDiarizationService, get_audio_diarization_service
-from src.logger import logger
+from logger import logger
 from src.rag.document_rag import get_document_rag_manager
 
 

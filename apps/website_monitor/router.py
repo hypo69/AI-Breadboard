@@ -37,7 +37,7 @@ from apps.website_monitor.src.ga4_service import GA4Service
 from apps.website_monitor.src.gsc_service import GSCService
 from apps.website_monitor.src.normalizer import MetricsNormalizer
 from apps.website_monitor.src.technical_service import TechnicalService
-from src.logger import logger
+from logger import logger
 from apps.common.csv_logger import AppCsvLogger
 
 router = APIRouter(prefix="/api/v1/website-monitor", tags=["Website Intelligence Monitor"])

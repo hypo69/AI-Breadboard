@@ -18,7 +18,7 @@ import asyncio
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from src.rag.models import RAGDecisionType, RAGRouteDecision, RAGSearchResult
 from src.rag.user_rag import search_user_history, get_user_preferences_context
 from src.rag.query_router import get_query_router, RoutingType

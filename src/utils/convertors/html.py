@@ -28,7 +28,7 @@ import re
 import html
 from typing import Dict
 from pathlib import Path
-from src.logger.logger import logger
+from logger.logger import logger
 from types import SimpleNamespace
 from html.parser import HTMLParser
 try:

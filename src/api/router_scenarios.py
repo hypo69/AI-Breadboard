@@ -37,7 +37,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from src.config import server_cfg
-from src.logger import logger
+from logger import logger
 
 __root__ = Path(__file__).resolve().parents[2]
 

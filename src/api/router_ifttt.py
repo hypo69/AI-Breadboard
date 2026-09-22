@@ -27,7 +27,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from plugins.ifttt.client import IFTTTClient
-from src.logger import logger
+from logger import logger
 
 
 class IFTTTTriggerRequest(BaseModel):

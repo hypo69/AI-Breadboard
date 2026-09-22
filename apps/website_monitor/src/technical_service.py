@@ -30,7 +30,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from apps.website_monitor.src.auth import WebsiteMonitorAuthManager
-from src.logger import logger
+from logger import logger
 
 
 @dataclass

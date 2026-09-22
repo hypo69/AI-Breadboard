@@ -31,7 +31,7 @@ import platform
 import subprocess
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows.core.models import RiskLevel
 from apps.windows.core.tools.base import BaseTool, ToolExecutionResult
 from apps.windows.core.tools.registry import ToolRegistry

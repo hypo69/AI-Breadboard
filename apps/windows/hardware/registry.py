@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows.hardware.base import BaseHardwareProvider, ProviderTier
 from apps.windows.hardware.discovery import UtilityDiscovery
 from apps.windows.hardware.providers.aida64_provider import Aida64Provider

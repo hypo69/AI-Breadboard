@@ -18,7 +18,7 @@ from typing import Any
 
 from google.genai import types
 
-from src.logger.logger import logger
+from logger.logger import logger
 
 
 def normalize_text(text: str) -> str:

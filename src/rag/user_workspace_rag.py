@@ -27,7 +27,7 @@ from typing import Any, Dict, List, Optional, Union
 import numpy as np
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from src.user_manager import user_manager
 from plugins.rag_cleaner.cleaner import RAGDocumentCleanerCore
 

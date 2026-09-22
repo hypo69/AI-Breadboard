@@ -22,7 +22,7 @@ from typing import Dict, Optional
 
 import requests
 
-from src.logger import logger
+from logger import logger
 
 
 class InternetSpeedSensor:

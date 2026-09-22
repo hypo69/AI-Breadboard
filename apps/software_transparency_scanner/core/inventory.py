@@ -29,7 +29,7 @@ try:
 except ImportError:
     winreg = None  # type: ignore
 
-from src.logger import logger
+from logger import logger
 from apps.software_transparency_scanner.core.models import SoftwareItem
 
 

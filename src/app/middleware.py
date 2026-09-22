@@ -17,7 +17,7 @@ from typing import Callable
 
 from fastapi import Request, Response
 
-from src.logger import logger
+from logger import logger
 
 
 # ---------------------------------------------------------------------------

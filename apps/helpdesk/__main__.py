@@ -29,7 +29,7 @@ import sys
 
 from apps.helpdesk.tui import HelpdeskTUI, run_tui
 from src.api.helpdesk.database import init_db, get_db
-from src.logger import logger
+from logger import logger
 
 
 def main() -> None:

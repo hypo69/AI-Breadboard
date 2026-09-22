@@ -21,7 +21,7 @@ import aiohttp
 from google import genai
 
 from header import __root__
-from src.logger.logger import logger
+from logger.logger import logger
 from src.utils.jjson import j_dumps, j_loads
 
 _GLOBAL_CONFIG_PATH: Path = __root__ / "config.json"

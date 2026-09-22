@@ -22,7 +22,7 @@ from typing import Any, Dict
 
 from src.ai.simulation.base_generator import BaseSimulationGenerator
 from src.ai.simulation.models import EntityType, SimulationRequest, SimulationResult
-from src.logger import logger
+from logger import logger
 
 
 class GenericSimulationGenerator(BaseSimulationGenerator):

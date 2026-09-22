@@ -86,7 +86,7 @@ The logger seamlessly integrates with `src.utils.printer.pformat` and `PrettyCon
 
 1. **Native Python Dictionaries & Lists:**
    ```python
-   from src.logger.logger import logger
+   from logger.logger import logger
 
    user_data = {"id": 101, "role": "admin", "permissions": ["read", "write"]}
    logger.info(user_data)
@@ -155,7 +155,7 @@ The logger seamlessly integrates with `src.utils.printer.pformat` and `PrettyCon
 ### Basic Usage
 
 ```python
-from src.logger.logger import logger
+from logger.logger import logger
 
 # Standard text logging
 logger.info("Application started successfully")

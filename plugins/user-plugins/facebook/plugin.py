@@ -27,7 +27,7 @@ import os
 from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from plugins.base import BasePlugin
 from plugins.facebook.client import FacebookGraphClient
 

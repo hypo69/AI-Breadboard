@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from header import __root__
-from src.logger.logger import logger
+from logger.logger import logger
 
 _SECRETS_DIR: Path = __root__ / 'src' / 'secrets'
 _POOLS_FILE: Path = _SECRETS_DIR / 'model_pools.json'

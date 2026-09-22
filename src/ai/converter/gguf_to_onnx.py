@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict
 
-from src.logger.logger import logger
+from logger.logger import logger
 
 CONVERTER_AVAILABLE = False
 OPTIMIZER_AVAILABLE = False

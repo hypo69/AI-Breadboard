@@ -16,7 +16,7 @@ import os
 import platform
 import subprocess
 from typing import Any, Dict, List
-from src.logger import logger
+from logger import logger
 
 
 def is_windows_os() -> bool:

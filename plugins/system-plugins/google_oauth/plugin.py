@@ -19,7 +19,7 @@ from typing import Any, AsyncGenerator, Dict, List, Optional
 from fastapi import APIRouter
 
 from plugins.base import BasePlugin
-from src.logger import logger
+from logger import logger
 
 
 class GoogleOAuthPlugin(BasePlugin):

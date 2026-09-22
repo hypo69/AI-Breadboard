@@ -17,7 +17,7 @@ from src.utils.image import get_image_bytes
 import asyncio
 from pathlib import Path
 from typing import Optional, Union
-from src.logger.logger import logger
+from logger.logger import logger
 
 
 def extract_text_from_image_sync(image_input: Union[str, Path, bytes]) -> str:

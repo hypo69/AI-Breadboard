@@ -31,7 +31,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query, Response, WebSocket, WebSocketDisconnect
 from fastapi.responses import PlainTextResponse
 
-from src.logger import logger
+from logger import logger
 from apps.common.csv_logger import AppCsvLogger
 from apps.windows_startup_auditor.core.auditor import StartupAuditor
 from apps.windows_startup_auditor.core.manager import StartupManager

@@ -26,7 +26,7 @@ import re
 import subprocess
 from typing import List
 
-from src.logger import logger
+from logger import logger
 from apps.windows_backup_manager.core.models import VssSnapshot
 
 

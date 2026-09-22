@@ -20,7 +20,7 @@ import subprocess
 import queue
 from typing import List, Dict, AsyncGenerator
 
-from src.logger.logger import logger
+from logger.logger import logger
 
 class GeminiCliChatBase:
     """Адаптер взаимодействия с Google Gemini CLI через неинтерактивный режим подпроцесса.

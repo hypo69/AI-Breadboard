@@ -28,7 +28,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from src.logger import logger
+from logger import logger
 from apps.registry_viewer.models import RegistryKeyDetailsDTO
 from apps.registry_viewer.viewer import RegistryViewer
 from apps.registry_viewer.tui import RegistryViewerTUI

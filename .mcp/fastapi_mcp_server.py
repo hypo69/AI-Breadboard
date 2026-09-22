@@ -18,7 +18,7 @@ import httpx
 from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 
-from src.logger import logger
+from logger import logger
 from src.utils.jjson import j_loads_ns
 
 # Initialization FastMCP сервера

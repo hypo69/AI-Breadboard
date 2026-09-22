@@ -15,7 +15,7 @@ import json
 import argparse
 from typing import Generator, Dict, Any, List, Optional, Union
 
-from src.logger.logger import logger
+from logger.logger import logger
 from src.utils.file import read_text_file
 from src.utils.archive import extract_archive
 from src.utils.docx import extract_docx_text

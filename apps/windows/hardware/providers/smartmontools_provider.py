@@ -23,7 +23,7 @@ import os
 import subprocess
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows.hardware.base import (
     BaseHardwareProvider,
     ProviderCapability,

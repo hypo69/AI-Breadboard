@@ -24,7 +24,7 @@ from typing import Any, Dict, List, Optional
 from google import genai
 from google.genai import types
 
-from src.logger import logger
+from logger import logger
 from src.ai.gemini.gemini_api_key_state import load_api_keys, update_last_run
 
 

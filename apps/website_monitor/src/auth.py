@@ -40,7 +40,7 @@ except ImportError:
     Credentials = None  # type: ignore
     GOOGLE_AUTH_AVAILABLE = False
 
-from src.logger import logger
+from logger import logger
 from src.user_manager import user_manager
 
 

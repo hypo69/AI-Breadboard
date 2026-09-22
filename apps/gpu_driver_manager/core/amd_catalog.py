@@ -20,7 +20,7 @@ from __future__ import annotations
 import re
 from typing import List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.gpu_driver_manager.core.models import DriverBranch, DriverRelease, VendorType
 
 

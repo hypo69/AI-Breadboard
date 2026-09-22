@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Optional
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 
 
 class SourcesManager:

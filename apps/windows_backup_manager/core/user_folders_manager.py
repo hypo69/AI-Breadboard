@@ -33,7 +33,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import psutil
 
-from src.logger import logger
+from logger import logger
 from apps.windows_backup_manager.core.libraries_manager import WindowsLibrariesManager
 from apps.windows_backup_manager.core.models import (
     RelocateFolderResponse,

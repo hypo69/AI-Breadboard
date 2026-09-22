@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.logger import logger
+from logger import logger
 
 __root__ = Path(__file__).parent.parent.parent
 

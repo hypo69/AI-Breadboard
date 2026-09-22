@@ -41,7 +41,7 @@ except ImportError:
     PSUTIL_AVAILABLE = False
 
 from src.ai.orchestration.hardware import probe_hardware
-from src.logger import logger
+from logger import logger
 from apps.windows.telemetry.models import (
     AnomalyItem,
     BatteryMetrics,

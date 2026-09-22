@@ -31,7 +31,7 @@ import urllib.request
 import urllib.parse
 from bs4 import BeautifulSoup
 
-from src.logger import logger
+from logger import logger
 
 
 class TelegramMessageCollector:

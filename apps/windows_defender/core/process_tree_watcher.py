@@ -23,7 +23,7 @@ from typing import List, Optional
 
 import psutil
 
-from src.logger import logger
+from logger import logger
 from apps.windows_defender.core.models import (
     SuspiciousProcessChain,
     ThreatSeverity,

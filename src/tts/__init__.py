@@ -18,7 +18,7 @@ Unified interface for all TTS systems (Microsoft Edge, Google, Silero).
 from __future__ import annotations
 
 from pathlib import Path
-from src.logger import logger
+from logger import logger
 
 async def synthesize_speech(text: str, file_path: Path, tts_system: str = "edge-tts", voice: str = "ru-RU-DmitryNeural"):
     """Synthesizes speech to a file using the selected TTS system and voice."""

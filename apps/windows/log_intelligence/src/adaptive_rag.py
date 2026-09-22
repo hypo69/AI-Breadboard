@@ -32,7 +32,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from src.logger import logger
+from logger import logger
 from .models import DataProfileReport, IngestionDecision, IngestionStrategy
 
 

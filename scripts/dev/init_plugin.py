@@ -120,7 +120,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 from plugins.base import BasePlugin
-from src.logger import logger
+from logger import logger
 
 
 class {class_prefix}Plugin(BasePlugin):

@@ -30,7 +30,7 @@ import ctypes.wintypes as wintypes
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 
 # Константы доступа к SCM
 SC_MANAGER_CONNECT = 0x0001

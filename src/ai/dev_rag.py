@@ -20,7 +20,7 @@ import json
 import os
 from pathlib import Path
 from src.ai.gemini.rag import GeminiRAG
-from src.logger import logger
+from logger import logger
 
 # Index file path
 DEV_RAG_DB = Path(__file__).parent.parent.parent / ".gemini" / "knowledge" / "dev_rag.db"

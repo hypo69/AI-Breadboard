@@ -23,7 +23,7 @@ import sys
 import psutil
 from typing import Any
 
-from src.logger import logger
+from logger import logger
 
 try:
     from rich.console import Console

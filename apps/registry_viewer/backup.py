@@ -30,7 +30,7 @@ from apps.registry_viewer.models import (
     RegistryKeyDetailsDTO,
     RestoreBackupResponseDTO,
 )
-from src.logger import logger
+from logger import logger
 
 try:
     import winreg

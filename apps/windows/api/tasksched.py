@@ -27,7 +27,7 @@ from __future__ import annotations
 import sys
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 
 # TASK_STATE перечисление
 TASK_STATE_UNKNOWN = 0

@@ -35,7 +35,7 @@ from src.ai.google_accounts_state import (
     set_default_account,
 )
 from src.api.router_auth import require_admin_user
-from src.logger import logger
+from logger import logger
 
 router = APIRouter(
     prefix="/api/admin/google-accounts",

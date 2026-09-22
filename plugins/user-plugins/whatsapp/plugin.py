@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional
 
 from plugins.base import BasePlugin
 from .client import WhatsAppClient
-from src.logger import logger
+from logger import logger
 
 
 class WhatsAppPlugin(BasePlugin):

@@ -22,7 +22,7 @@ import subprocess
 import tempfile
 from typing import Any, Dict, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.common.discovery import UtilityDiscovery
 
 

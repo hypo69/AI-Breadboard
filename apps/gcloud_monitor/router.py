@@ -36,7 +36,7 @@ from apps.gcloud_monitor.src.diagnostics import GCloudDiagnosticsEngine
 from apps.gcloud_monitor.src.error_reporting import GCloudErrorReporter
 from apps.gcloud_monitor.src.logging_service import GCloudLoggingService
 from apps.gcloud_monitor.src.metrics_service import GCloudMetricsService
-from src.logger import logger
+from logger import logger
 from apps.common.csv_logger import AppCsvLogger
 
 router = APIRouter(prefix='/api/gcloud', tags=['Google Cloud Monitor'])

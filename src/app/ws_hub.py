@@ -18,7 +18,7 @@ from typing import Dict, Optional, Set
 
 from fastapi import WebSocket
 
-from src.logger import logger
+from logger import logger
 
 VALID_CHANNELS: Set[str] = {"chat", "stream", "voice", "metrics", "admin", "events"}
 

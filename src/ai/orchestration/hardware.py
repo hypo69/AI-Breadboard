@@ -17,7 +17,7 @@ import platform
 import subprocess
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
-from src.logger import logger
+from logger import logger
 
 
 @dataclass

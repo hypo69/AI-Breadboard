@@ -20,7 +20,7 @@ from __future__ import annotations
 import os
 from typing import List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows_defender.core.defender_service import DefenderService
 from apps.windows_defender.core.models import ControlledFolderAccessInfo, ProtectionState
 

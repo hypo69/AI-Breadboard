@@ -23,7 +23,7 @@ from fastapi import APIRouter, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from plugins.telegram_channel_rag.channel_manager import ChannelManager
 
 router = APIRouter(prefix="/api/telegram_rag", tags=["telegram_rag"])

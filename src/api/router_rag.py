@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile, status
 from pydantic import BaseModel, Field
 
-from src.logger import logger
+from logger import logger
 from src.rag.document_rag import DocumentRAGManager, get_document_rag_manager
 from plugins.generate_rag_from_codebase.plugin import GenerateRagCodebasePlugin
 

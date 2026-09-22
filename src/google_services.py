@@ -20,7 +20,7 @@ from typing import Any, Dict, List
 
 import requests
 
-from src.logger import logger
+from logger import logger
 from src.user_manager import user_manager
 
 def refresh_google_access_token(user_id: int) -> str:

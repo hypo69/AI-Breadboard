@@ -172,7 +172,7 @@ def choose_best_tag(tags: List[str], allow_prerelease: bool = False, debug: bool
     candidates = stable if stable and not allow_prerelease else tags
 
     if debug:
-        from src.logger.logger import logger
+        from logger.logger import logger
         logger.debug(f'[versioning.choose_best_tag] candidates={candidates} allow_prerelease={allow_prerelease}')
 
     best = ''

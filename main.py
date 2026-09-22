@@ -51,7 +51,7 @@ from src.app import (
 )
 from src.app.server_config import run_server
 from src.app.versioning import check_updates, prompt_and_perform_update
-from src.logger import logger
+from logger import logger
 
 
 def load_app_config() -> dict:

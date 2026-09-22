@@ -35,7 +35,7 @@ from pathlib import Path
 from typing import Optional, List
 from concurrent.futures import ThreadPoolExecutor
 from src.ai import GoogleGenerativeAI
-from src.logger import logger
+from logger import logger
 from header import __root__
 
 LOG_DIR: Path = Path(tempfile.gettempdir()) / 'ai-breadboard' / 'logs'

@@ -17,7 +17,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Dict, List
 
-from src.logger import logger
+from logger import logger
 from src.ai.gemini.user_query_rag import index_user_query, search_user_context
 from src.ai.gemini.chat_response_store import save_approved_response
 from src.user_manager.user_profile import get_recommendation_context

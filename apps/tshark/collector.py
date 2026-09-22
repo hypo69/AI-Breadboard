@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import List, Optional, Any
 
-from src.logger import logger
+from logger import logger
 from apps.windows.telemetry.models import HardwareSensor
 from .sensors import get_tshark_sensors
 

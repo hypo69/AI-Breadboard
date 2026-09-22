@@ -20,7 +20,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[4]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from src.logger.logger import logger
+from logger.logger import logger
 
 
 class GDriveAuditEngine:

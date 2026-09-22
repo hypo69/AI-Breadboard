@@ -32,7 +32,7 @@ import struct
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 
 # Константы семейств адресов
 AF_INET = 2

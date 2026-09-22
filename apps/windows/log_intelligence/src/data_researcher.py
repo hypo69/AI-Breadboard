@@ -28,7 +28,7 @@ import math
 import re
 from typing import Any, Dict, List, Optional, Set
 
-from src.logger import logger
+from logger import logger
 from .models import DataProfileReport, LogEntry, LogSeverity, TimeBurst
 
 

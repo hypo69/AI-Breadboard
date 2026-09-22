@@ -19,7 +19,7 @@ import asyncio
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
-from src.logger import logger
+from logger import logger
 from src.config import ai_cfg, tts_cfg
 from src.ai.gemini.user_query_rag import index_user_query, search_user_context
 

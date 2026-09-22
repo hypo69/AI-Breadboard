@@ -39,7 +39,7 @@ import aiofiles
 from pathlib import Path
 from typing import Optional
 import asyncio
-from src.logger.logger import logger
+from logger.logger import logger
 from src.utils.printer import pprint as print
 
 async def save_video_from_url(

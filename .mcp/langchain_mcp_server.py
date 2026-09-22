@@ -19,7 +19,7 @@ import asyncio
 from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 
-from src.logger import logger
+from logger import logger
 from src.ai.langchain_agent import MediaSearchAgent
 from src.ai.langchain_tools import (
     web_search,

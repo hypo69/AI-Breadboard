@@ -26,7 +26,7 @@ import time
 import winreg
 from typing import Any, Dict, List
 
-from src.logger import logger
+from logger import logger
 from apps.windows.core.models import AuditFinding, DomainAuditResult, RiskLevel
 
 

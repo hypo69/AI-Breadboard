@@ -26,7 +26,7 @@ import urllib.request
 from typing import Any, Dict, List, Optional, Tuple
 
 from apps.common.discovery import UtilityDiscovery
-from src.logger import logger
+from logger import logger
 
 DEFAULT_ENDPOINT = "http://localhost:8085/data.json"
 

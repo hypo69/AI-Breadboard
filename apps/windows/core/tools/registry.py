@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows.core.tools.base import BaseTool, ToolExecutionResult
 
 

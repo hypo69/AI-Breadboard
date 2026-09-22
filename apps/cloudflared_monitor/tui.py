@@ -24,7 +24,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any, List, Optional
 
-from src.logger import logger
+from logger import logger
 from .src.state import CloudflaredLogEntry, CloudflaredState
 
 try:

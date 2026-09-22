@@ -34,7 +34,7 @@ except ImportError:
     HttpError = Exception
 
 from src.ai.google_accounts_state import load_account_credentials
-from src.logger.logger import logger
+from logger.logger import logger
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",

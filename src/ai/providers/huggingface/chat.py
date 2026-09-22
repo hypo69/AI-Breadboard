@@ -23,7 +23,7 @@ import os
 from pathlib import Path
 from typing import Any, AsyncIterator, Callable, Dict, List
 
-from src.logger.logger import logger
+from logger.logger import logger
 
 def _get_models_dir() -> Path:
     """Get HuggingFace model cache directory.

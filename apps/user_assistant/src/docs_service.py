@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from src.logger import logger
+from logger import logger
 
 
 class DocsService:

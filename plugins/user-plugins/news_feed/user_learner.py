@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from plugins.news_feed.models import NewsArticleModel, UserFeedbackRequest, UserInterestProfile
 
 

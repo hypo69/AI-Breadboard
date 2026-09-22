@@ -22,7 +22,7 @@ blocks (<text> <JSON> <text>), and verifies integration with logger methods.
 import json
 import pytest
 from src.utils.printer import pformat, pprint, _color_text, TEXT_COLORS
-from src.logger.logger import logger
+from logger.logger import logger
 
 
 class TestPrinterFormatting:

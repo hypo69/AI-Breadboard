@@ -28,7 +28,7 @@ import subprocess
 import time
 from typing import Any, Dict, List
 
-from src.logger import logger
+from logger import logger
 from apps.windows.api.setupapi import SetupAPI
 from apps.windows.core.models import ActionType, AuditFinding, DomainAuditResult, RemediationAction, RiskLevel
 

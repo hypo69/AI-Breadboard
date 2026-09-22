@@ -25,7 +25,7 @@ from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel, Field
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from src.api.router_auth import get_current_user_data
 from src.utils.jjson import j_loads_ns
 

@@ -23,7 +23,7 @@ import time
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.common.csv_logger import AppCsvLogger
 from apps.windows.telemetry.models import HardwareSensor
 

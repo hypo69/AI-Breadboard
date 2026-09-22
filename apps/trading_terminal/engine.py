@@ -30,7 +30,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from src.logger import logger
+from logger import logger
 from src.ai.observability.trading_engine import TradingDiagnosticEngine
 from apps.common.csv_logger import AppCsvLogger
 

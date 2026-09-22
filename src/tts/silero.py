@@ -24,7 +24,7 @@ import torch
 import soundfile as sf
 from pydub import AudioSegment
 
-from src.logger import logger
+from logger import logger
 
 _model = ""
 

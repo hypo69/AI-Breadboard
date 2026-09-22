@@ -23,7 +23,7 @@ import subprocess
 import tempfile
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.common.discovery import UtilityDiscovery
 
 FILE_MAP_READ = 0x0004

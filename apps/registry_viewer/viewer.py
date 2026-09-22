@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from src.logger import logger
+from logger import logger
 from apps.registry_viewer.backup import RegistryBackupManager
 from apps.registry_viewer.models import (
     BackupMetadataDTO,

@@ -20,7 +20,7 @@ from __future__ import annotations
 import time
 from typing import List, Optional, Any
 
-from src.logger import logger
+from logger import logger
 from apps.common.csv_logger import AppCsvLogger
 from apps.windows.telemetry.models import HardwareSensor
 

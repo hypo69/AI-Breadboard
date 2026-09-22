@@ -43,7 +43,7 @@ import os
 from email.mime.text import MIMEText
 from typing import List, Dict, Optional
 
-from src.logger.logger import logger
+from logger.logger import logger
 
 # --- Configuration ---
 # DO NOT HARDCODE CREDENTIALS HERE!  Use environment variables instead.

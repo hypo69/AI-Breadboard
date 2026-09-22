@@ -20,7 +20,7 @@ import asyncio
 from typing import Dict, Set, Optional, Any
 from fastapi import WebSocket
 
-from src.logger import logger
+from logger import logger
 from .database import get_db
 
 

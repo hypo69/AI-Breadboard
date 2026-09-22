@@ -26,7 +26,7 @@ if str(_project_root) not in sys.path:
 
 import header
 from header import __root__
-from src.logger.logger import logger
+from logger.logger import logger
 from src.utils.pdf import PDFUtils
 
 

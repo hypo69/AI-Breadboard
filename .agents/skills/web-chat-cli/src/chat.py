@@ -23,7 +23,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../.
 
 from src.ai.gemini.user_query_rag import search_user_context, index_user_query
 from src.ai.orchestration.unified_chat import UnifiedChatModel
-from src.logger import logger
+from logger import logger
 
 class RAGPlugin:
     """Реализация RAG-плагина для обогащения ответов контекстом."""

@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 from typing import Dict, List, Optional
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Request, HTTPException
-from src.logger import logger
+from logger import logger
 from src.api.router_auth import verify_jwt_token
 
 class ControlConnectionManager:

@@ -34,7 +34,7 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 
 EVT_QUERY_CHANNEL_PATH = 0x1
 EVT_QUERY_FILE_PATH = 0x2

@@ -33,7 +33,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows.api.wevtapi import WevtAPI, ChannelMetadata
 
 

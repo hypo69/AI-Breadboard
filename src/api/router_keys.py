@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
-from src.logger import logger
+from logger import logger
 from src.api.router_auth import require_admin_user
 from src.ai.gemini.gemini_api_key_state import (
     _DAY_SECONDS,

@@ -29,7 +29,7 @@ import asyncio
 import time
 from typing import Any, AsyncIterator, Dict, List, Optional
 
-from src.logger.logger import logger
+from logger.logger import logger
 
 class FoundryChatBase:
     """Chat interface for Foundry models.

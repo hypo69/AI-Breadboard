@@ -5,7 +5,7 @@ import tarfile
 import zipfile
 from pathlib import Path
 from typing import List, Optional, Union
-from src.logger.logger import logger
+from logger.logger import logger
 
 def is_system_file(name: str) -> bool:
     parts = Path(name).parts

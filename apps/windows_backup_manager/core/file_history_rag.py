@@ -37,7 +37,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 import numpy as np
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from apps.windows_backup_manager.core.file_history_manager import FileHistoryManager
 from apps.windows_backup_manager.core.models import (
     FileHistoryRAGSearchResult,

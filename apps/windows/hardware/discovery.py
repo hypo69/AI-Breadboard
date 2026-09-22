@@ -22,7 +22,7 @@ import shutil
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 
 
 class UtilityDiscovery:

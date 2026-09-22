@@ -29,7 +29,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional
 
 from apps.gcloud_monitor.src.auth import GCloudAuthManager
-from src.logger import logger
+from logger import logger
 
 try:
     from google.cloud import monitoring_v3

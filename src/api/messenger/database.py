@@ -22,7 +22,7 @@ from typing import Any, Generator
 from contextlib import contextmanager
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 
 DB_PATH: Path = __root__ / 'data' / 'messenger.db'
 

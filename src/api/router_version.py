@@ -24,7 +24,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks, Request
 from pydantic import BaseModel
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from src.version_manager import get_version_manager, UpdateStatus
 from src.api.router_auth import require_admin_user
 

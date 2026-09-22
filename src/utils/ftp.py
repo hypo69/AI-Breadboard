@@ -27,7 +27,7 @@ Functions:
     - `delete`: Deletes a file from an FTP server.
 """
 
-from src.logger.logger import logger
+from logger.logger import logger
 from typing import Union
 import ftplib
 from pathlib import Path

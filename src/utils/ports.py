@@ -24,7 +24,7 @@ from types import SimpleNamespace
 from typing import Any, Dict, Optional
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from src.utils.jjson import j_loads_ns
 
 PORTS_FILE: Path = __root__ / "ports.json"

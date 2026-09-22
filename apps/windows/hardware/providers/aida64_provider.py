@@ -26,7 +26,7 @@ import xml.etree.ElementTree as ET
 from ctypes import wintypes
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows.hardware.base import (
     BaseHardwareProvider,
     ProviderCapability,

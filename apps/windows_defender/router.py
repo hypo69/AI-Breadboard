@@ -27,7 +27,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query, status
 
-from src.logger import logger
+from logger import logger
 from apps.windows_defender.core.ai_diagnostician import AIDiagnostician
 from apps.windows_defender.core.asr_manager import ASRManager
 from apps.windows_defender.core.cfa_manager import ControlledFolderAccessManager

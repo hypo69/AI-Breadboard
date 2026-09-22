@@ -32,7 +32,7 @@ except ImportError:
     service_account = None
     InstalledAppFlow = None
 
-from src.logger.logger import logger
+from logger.logger import logger
 
 DEFAULT_SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",

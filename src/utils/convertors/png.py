@@ -21,7 +21,7 @@ and saves them to output directory with customizable appearance options."""
 from pathlib import Path
 from typing import List, Tuple
 from PIL import Image, ImageDraw, ImageFont
-from src.logger.logger import logger  # Logging
+from logger.logger import logger  # Logging
 
 class TextToImageGenerator:
     """

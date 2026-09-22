@@ -32,7 +32,7 @@ from fastapi import APIRouter, HTTPException, Query, Request, Response
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
-from src.logger import logger
+from logger import logger
 from apps.windows.log_intelligence.src.models import LogEntry
 from apps.windows.log_intelligence.src.pipeline import LogIntelligencePipeline
 from apps.windows.core.modules.eventlog_collector import EventLogCollector

@@ -73,7 +73,7 @@ from typing import Any, Dict, List, Optional, AsyncGenerator
 from pathlib import Path
 
 from plugins.base import BasePlugin
-from src.logger import logger
+from logger import logger
 
 
 class SecurityScannerPlugin(BasePlugin):
@@ -219,6 +219,6 @@ pytest plugins/security_scanner/tests/
 ## 📋 Стандарты и правила оформления
 
 1. **Строгий лимит строк:** Файлы плагинов не должны превышать 500 строк функционального кода. При необходимости разбивайте логику на вспомогательные модули (`client.py`, `scanner.py`, `utils.py`).
-2. **Логирование:** Используйте только централизованный логгер `from src.logger import logger` (прямые вызовы `print()` запрещены).
+2. **Логирование:** Используйте только централизованный логгер `from logger import logger` (прямые вызовы `print()` запрещены).
 3. **Безопасность:** Не храните секреты и ключи в коде плагина или `config.json`. Все учетные данные загружаются из `.env`.
 4. **Языковой стандарт:** Код, имена переменных, docstrings и `README.md` в папке плагина оформляются строго на английском языке. Пользовательские строки интерфейса оформляются через словари `*_i18n`.

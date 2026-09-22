@@ -27,7 +27,7 @@ from typing import Any, Optional
 
 import httpx
 
-from src.logger import logger
+from logger import logger
 
 
 async def handle_telegram_voiceover_request(

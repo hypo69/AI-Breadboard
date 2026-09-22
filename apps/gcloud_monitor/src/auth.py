@@ -41,7 +41,7 @@ except ImportError:
     Credentials = None  # type: ignore
     GOOGLE_AUTH_AVAILABLE = False
 
-from src.logger import logger
+from logger import logger
 
 
 @dataclass

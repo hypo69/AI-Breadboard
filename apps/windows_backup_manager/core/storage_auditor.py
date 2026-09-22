@@ -30,7 +30,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows_backup_manager.core.models import (
     FileVersionRecord,
     StorageBackupAudit,

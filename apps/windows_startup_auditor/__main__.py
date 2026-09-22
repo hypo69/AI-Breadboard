@@ -27,7 +27,7 @@ import json
 import sys
 from pathlib import Path
 
-from src.logger import logger
+from logger import logger
 from apps.windows_startup_auditor.core.auditor import StartupAuditor
 from apps.windows_startup_auditor.core.manager import StartupManager
 from apps.windows_startup_auditor.tui import StartupAuditorTUI

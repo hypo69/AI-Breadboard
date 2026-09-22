@@ -21,7 +21,7 @@ from typing import Any, AsyncGenerator, AsyncIterator, Dict, List, Optional, Set
 from src.ai.providers.base import BaseChatProvider
 from src.ai.gemini.api import GoogleGenerativeAI
 from src.ai.gemini.generative_ai import _DEFAULT_MODEL
-from src.logger import logger
+from logger import logger
 
 
 class GeminiChatBase(BaseChatProvider):

@@ -22,7 +22,7 @@ from datetime import datetime
 from typing import Dict, List, Set, Optional, Any
 from fastapi import WebSocket
 
-from src.logger import logger
+from logger import logger
 from .database import get_db
 
 

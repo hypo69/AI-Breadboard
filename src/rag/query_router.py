@@ -25,7 +25,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
-from src.logger import logger
+from logger import logger
 
 
 class RoutingType(str, Enum):

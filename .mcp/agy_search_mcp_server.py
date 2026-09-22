@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import json
 import asyncio
-from src.logger.logger import logger
+from logger.logger import logger
 from plugins.web_search.agy_searcher import AgyWebSearcher
 
 try:

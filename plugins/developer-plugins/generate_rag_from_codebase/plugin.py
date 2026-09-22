@@ -30,7 +30,7 @@ import time
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from plugins.base import BasePlugin
 from plugins.generate_rag_from_codebase.ast_parser import PythonAstParser
 from plugins.generate_rag_from_codebase.ignore_filter import IgnoreFilter

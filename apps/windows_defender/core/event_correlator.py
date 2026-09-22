@@ -25,7 +25,7 @@ import subprocess
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows_defender.core.models import DefenderEventRecord
 
 

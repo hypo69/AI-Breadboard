@@ -3,7 +3,7 @@
     Standalone launcher for AI-Sensors telemetry aggregation service.
 
 .DESCRIPTION
-    Launches SANDBOX/ai-sensors/ai_sensors.py in background or standalone window.
+    Launches SANDBOX/ai-sensors/ in modular structure.
     Collects telemetry from all /apps/ modules and logs to JSON files.
 
 .PARAMETER Action
@@ -101,7 +101,7 @@ if (-not (Test-Path $venvPython)) {
 }
 
 # Paths
-$scriptPath = Join-Path $scriptDir "ai_sensors.py"
+$mainScript = Join-Path $scriptDir "main.py"
 $pidFile = Join-Path $scriptDir "ai_sensors.pid"
 $logDir = Join-Path $scriptDir "logs"
 $logFile = Join-Path $logDir "ai_sensors.log"
@@ -121,7 +121,7 @@ function Get-AISensorsProcess {
     return $processes
 }
 
-$runningProcs = Get-AISensorsProcess -ScriptPath $scriptPath
+$runningProcs = Get-AISensorsProcess -ScriptPath $mainScript
 
 if ($Action -eq 'status') {
     if ($runningProcs) {
@@ -158,7 +158,7 @@ if ($Action -in @('stop', 'restart')) {
 }
 
 if ($Action -in @('start', 'restart')) {
-    $existing = Get-AISensorsProcess -ScriptPath $scriptPath
+    $existing = Get-AISensorsProcess -ScriptPath $mainScript
     if ($existing) {
         $pids = ($existing | ForEach-Object { $_.ProcessId }) -join ', '
         Write-Host "✅ AI-Sensors is already running (PID: $pids)" -ForegroundColor Green
@@ -166,7 +166,7 @@ if ($Action -in @('start', 'restart')) {
     }
 
     # Build arguments
-    $appArgs = "`"$scriptPath`""
+    $appArgs = "`"$mainScript`""
     if ($Interval) {
         $appArgs += " --interval $Interval"
     }

@@ -33,7 +33,7 @@ import pandas as pd
 from types import SimpleNamespace
 from collections import OrderedDict
 
-from src.logger.logger import logger
+from logger.logger import logger
 from .convertors.dict import dict2ns
 
 def j_dumps(

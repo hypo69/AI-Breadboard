@@ -43,7 +43,7 @@ except ImportError:
             return DummyTool(func)
         return lambda f: DummyTool(f)
 
-from src.logger import logger
+from logger import logger
 from header import __root__
 
 @tool

@@ -23,7 +23,7 @@
 import json
 from typing import List, Optional
 
-from src.logger import logger
+from logger import logger
 from .models import PacketSummary, TrafficStats, AnomalyReport
 
 

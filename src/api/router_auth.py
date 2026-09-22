@@ -29,7 +29,7 @@ from fastapi import APIRouter, Cookie, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from src.user_manager import user_manager
 
 load_dotenv()

@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, FileResponse, Response
 
 from src.config import server_cfg
-from src.logger import logger
+from logger import logger
 
 __root__ = Path(__file__).resolve().parents[3]
 webinterface_dir = Path(__file__).resolve().parents[2] / 'api' / 'webgui'

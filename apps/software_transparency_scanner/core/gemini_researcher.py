@@ -24,7 +24,7 @@ import json
 import re
 from typing import Optional
 
-from src.logger import logger
+from logger import logger
 from apps.software_transparency_scanner.core.models import (
     GeminiAppResearch,
     SoftwareItem,

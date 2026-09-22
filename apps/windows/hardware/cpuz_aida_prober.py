@@ -12,7 +12,7 @@ import tempfile
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 
-from src.logger import logger
+from logger import logger
 
 
 @dataclass

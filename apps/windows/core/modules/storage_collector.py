@@ -27,7 +27,7 @@ from typing import Any, Dict, List
 
 import psutil
 
-from src.logger import logger
+from logger import logger
 from apps.windows.core.models import AuditFinding, DomainAuditResult, RiskLevel
 from apps.windows.core.system_restore import WindowsSystemRestoreManager
 from apps.windows.telemetry.models import HardwareSensor, TelemetryProvider

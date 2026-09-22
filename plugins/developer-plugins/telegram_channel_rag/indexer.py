@@ -29,7 +29,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np
 
-from src.logger import logger
+from logger import logger
 
 
 class TelegramChannelIndexer:

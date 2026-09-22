@@ -53,7 +53,7 @@ from apps.common.autolog_engine import (
 )
 from apps.common.csv_logger import get_apps_log_dir
 from header import __root__
-from src.logger import logger
+from logger import logger
 
 router = APIRouter(prefix="/sysautologging", tags=["sysautologging"])
 

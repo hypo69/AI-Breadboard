@@ -32,7 +32,7 @@ if str(_project_root) not in sys.path:
 from header import __root__
 from src.version_manager import get_version_manager
 from src.db.migrations import get_migration_manager
-from src.logger import logger
+from logger import logger
 
 
 def check_updates() -> dict:

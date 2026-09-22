@@ -21,7 +21,7 @@ import time
 
 import requests
 
-from src.logger.logger import logger
+from logger.logger import logger
 from src.ai.orchestration.model_pool_state import mark_model_exhausted, switch_model
 
 from .core import add_unsupported_model

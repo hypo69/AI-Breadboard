@@ -24,7 +24,7 @@ from src.ai.simulation.generators.contract_generator import ContractSimulationGe
 from src.ai.simulation.generators.generic_generator import GenericSimulationGenerator
 from src.ai.simulation.llm_enricher import enrich_simulation_with_llm
 from src.ai.simulation.models import SimulationRequest, SimulationResult
-from src.logger import logger
+from logger import logger
 
 
 class SimulationEngine:

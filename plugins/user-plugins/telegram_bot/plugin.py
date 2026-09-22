@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from plugins.base import BasePlugin
 from plugins.telegram_bot.bot import TelegramBotEngine
 

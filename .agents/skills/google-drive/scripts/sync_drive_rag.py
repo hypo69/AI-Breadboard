@@ -28,7 +28,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
 from gdrive_manager import GDriveManager
-from src.logger.logger import logger
+from logger.logger import logger
 
 try:
     from agents.skills.rag_cleaner.scripts.rag_cleaner import RAGDocumentCleaner

@@ -20,7 +20,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 
 # User profiles directory (same as user RAG storage location)
 _USER_PROFILES_DIR = Path(__file__).parent.parent / 'ai' / 'gemini' / 'user_rags'

@@ -19,7 +19,7 @@ from __future__ import annotations
 import os
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.common.discovery import UtilityDiscovery
 
 

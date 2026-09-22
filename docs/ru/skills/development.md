@@ -111,7 +111,7 @@ import argparse
 import sys
 import json
 from pathlib import Path
-from src.logger import logger
+from logger import logger
 
 
 def run_api_check(base_url: str, timeout: int = 5) -> dict:

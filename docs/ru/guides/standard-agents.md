@@ -61,7 +61,7 @@ import asyncio
 from pathlib import Path
 from typing import Dict, Any
 
-from src.logger import logger
+from logger import logger
 from src.utils.jjson import j_loads_ns
 from .tools import web_search, rag_search, python_eval
 

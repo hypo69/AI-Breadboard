@@ -34,7 +34,7 @@ from apps.ai_breadboard_admin.src import (
     UserAdminService,
     WindowsUserManager,
 )
-from src.logger import logger
+from logger import logger
 from apps.common.csv_logger import AppCsvLogger
 
 router = APIRouter(prefix="/api/v1/ai_breadboard_admin", tags=["ai_breadboard_admin"])

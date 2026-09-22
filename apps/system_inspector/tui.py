@@ -27,7 +27,7 @@ import sys
 import time
 from typing import Any, List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows.telemetry import (
     AnomalyItem,
     HardwareNode,

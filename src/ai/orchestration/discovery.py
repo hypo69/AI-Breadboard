@@ -16,7 +16,7 @@ import os
 import asyncio
 import aiohttp
 from typing import Any, Dict, List
-from src.logger import logger
+from logger import logger
 from .hardware import probe_hardware, HardwareProfile
 from src.ai.providers.windows_ai import probe_windows_ai_components
 

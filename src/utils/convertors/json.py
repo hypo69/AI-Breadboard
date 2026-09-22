@@ -33,7 +33,7 @@ from src.utils.csv import save_csv_file
 from src.utils.jjson import j_dumps, j_loads, j_loads_ns
 from src.utils.xls import save_xls_file
 from src.utils.convertors.dict import dict2xml
-from src.logger.logger import logger
+from logger.logger import logger
 
 def json2csv(json_data: str | list | dict | Path, csv_file_path: str | Path) -> bool:
     """

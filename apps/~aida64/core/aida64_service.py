@@ -25,7 +25,7 @@ import xml.etree.ElementTree as ET
 from ctypes import wintypes
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.common.discovery import UtilityDiscovery
 
 FILE_MAP_READ = 0x0004

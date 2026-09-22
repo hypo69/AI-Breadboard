@@ -10,7 +10,7 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows.hardware.gpu_prober import GpuProber
 
 

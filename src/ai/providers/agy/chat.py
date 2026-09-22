@@ -22,7 +22,7 @@ import os
 import asyncio
 from typing import Optional, List, Dict, AsyncGenerator
 
-from src.logger.logger import logger
+from logger.logger import logger
 from src.ai.gemini.gemini_api_key_state import load_api_keys
 
 class AgyChatBase:

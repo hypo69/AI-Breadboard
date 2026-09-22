@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Body
 from typing import TYPE_CHECKING
-from src.logger import logger
+from logger import logger
 from apps.common.csv_logger import AppCsvLogger
 
 if TYPE_CHECKING:

@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any, Generator, List, Dict
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 
 DB_PATH: Path = __root__ / 'src' / 'fastapi' / 'chat_sessions.db'
 

@@ -32,7 +32,7 @@ except ImportError:
 from google import genai
 from google.genai import types
 
-from src.logger import logger
+from logger import logger
 
 _EMBED_MODEL = 'models/gemini-embedding-2'
 _EMBED_DIM = 3072

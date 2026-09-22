@@ -22,7 +22,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any, List, Optional, Tuple
 
-from src.logger import logger
+from logger import logger
 from apps.windows.telemetry.models import AnomalyItem, SystemDiagnosticReport
 
 

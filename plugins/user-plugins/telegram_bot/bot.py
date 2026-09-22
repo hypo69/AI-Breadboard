@@ -36,7 +36,7 @@ from telegram.ext import (
     filters,
 )
 
-from src.logger import logger
+from logger import logger
 from plugins.telegram_bot.tts import handle_telegram_voiceover_request
 
 

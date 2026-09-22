@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
-from src.logger import logger
+from logger import logger
 from apps.windows.telemetry import (
     HardwareNode,
     HardwareSensor,

@@ -29,7 +29,7 @@ from typing import Any, Dict, List, Optional
 
 from apps.website_monitor.src.anomaly_detector import AnomalyDetector, SiteAlert
 from apps.website_monitor.src.normalizer import MetricsNormalizer, UnifiedSiteReport
-from src.logger import logger
+from logger import logger
 
 
 @dataclass

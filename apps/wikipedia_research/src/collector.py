@@ -23,7 +23,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 import httpx
 
-from src.logger import logger
+from logger import logger
 from .models import WikipediaArticleMeta
 from .normalizer import TextNormalizer
 

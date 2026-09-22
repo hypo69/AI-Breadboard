@@ -29,7 +29,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from src.logger import logger
+from logger import logger
 from src.user_manager import user_manager
 
 router = APIRouter(prefix="/api/admin/user-directories", tags=["user-directories"])

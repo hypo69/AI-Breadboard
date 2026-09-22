@@ -23,7 +23,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse
 
-from src.logger import logger
+from logger import logger
 from src.user_manager import user_manager
 
 router = APIRouter(prefix='/api/user/files', tags=['user-storage'])

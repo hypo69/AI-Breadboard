@@ -13,7 +13,7 @@
 # =============================================================================
 
 from typing import Any, AsyncIterator, Dict, List, Optional, Set
-from src.logger import logger
+from logger import logger
 from src.ai.providers.base import BaseChatProvider
 from .probe import probe_windows_ai_components, is_windows_os
 

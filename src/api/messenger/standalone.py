@@ -28,7 +28,7 @@ from fastapi.staticfiles import StaticFiles
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from src.api.messenger.router_messenger import init_router
-from src.logger import logger
+from logger import logger
 
 app = FastAPI(title="AI-Breadboard Standalone Messenger Hub", version="1.0.0")
 

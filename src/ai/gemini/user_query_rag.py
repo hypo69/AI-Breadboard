@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Optional
 
 from src.ai.gemini.rag import GeminiRAG
-from src.logger import logger
+from logger import logger
 
 # Directory for storing user RAG databases
 _USER_RAGS_DIR = Path(__file__).parent / "user_rags"

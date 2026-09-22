@@ -28,7 +28,7 @@ from typing import Any, Dict, List
 
 import psutil
 
-from src.logger import logger
+from logger import logger
 from apps.windows.core.models import ActionType, AuditFinding, DomainAuditResult, RemediationAction, RiskLevel
 from apps.windows.telemetry.models import HardwareSensor, TelemetryProvider
 

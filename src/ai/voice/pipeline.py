@@ -16,7 +16,7 @@ import asyncio
 import re
 from typing import AsyncGenerator
 from src.ai import GoogleGenerativeAI
-from src.logger import logger
+from logger import logger
 
 SYSTEM_PROMPT = """Вы — профессиональный редактор текстов для дикторов и систем озвучивания (Text-to-Speech).
 Ваша задача — переписать предоставленную информацию о медиафайле (сюжет, факты, вердикты) в устную речь (спич-формат).

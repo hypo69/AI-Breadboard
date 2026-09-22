@@ -15,7 +15,7 @@
 import socket
 from typing import List, Tuple, Union
 
-from src.logger import logger
+from logger import logger
 
 def _is_port_in_use(host: str, port: int) -> bool:
     """Check port availability on host."""

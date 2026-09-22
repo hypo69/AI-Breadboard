@@ -37,7 +37,7 @@ from apps.common.csv_logger import (
     log_poll,
     write_csv_row,
 )
-from src.logger import logger
+from logger import logger
 
 
 def parse_interval_seconds(

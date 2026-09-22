@@ -22,7 +22,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows.hardware.models import (
     CpuInventory,
     GpuInventory,

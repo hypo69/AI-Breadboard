@@ -168,7 +168,7 @@ load_dotenv(Path(__file__).parent / '.env')
 from src.app import create_app, register_pages, register_config_api
 from src.app.server_config import run_server
 from src.app.versioning import check_updates, prompt_and_perform_update
-from src.logger import logger
+from logger import logger
 
 app = create_app()
 register_pages(app)

@@ -20,7 +20,7 @@ import asyncio
 from pathlib import Path
 from typing import AsyncIterator
 
-from src.logger import logger
+from logger import logger
 from src.utils.jjson import j_loads_ns
 
 from .prompts import (

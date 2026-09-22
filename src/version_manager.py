@@ -38,7 +38,7 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 
 class UpdateStatus(Enum):
     """Application update statuses."""

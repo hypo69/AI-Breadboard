@@ -25,7 +25,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from src.api.router_auth import require_admin_user
 
 LOG_DIR = Path(tempfile.gettempdir()) / 'ai-breadboard' / 'logs'
@@ -136,7 +136,7 @@ def init_router(prefix: str = '/api/logs') -> APIRouter:
             raise HTTPException(status_code=404, detail=f'Файл не найден: {body.filename}')
 
         try:
-            from src.logger.log_analyzer import analyze_log_file
+            from logger.log_analyzer import analyze_log_file
             from src.ai import GoogleGenerativeAI
 
             api_key_names = [

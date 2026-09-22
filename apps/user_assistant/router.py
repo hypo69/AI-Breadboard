@@ -19,7 +19,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from apps.user_assistant.engine import UserAssistantEngine
-from src.logger import logger
+from logger import logger
 from apps.common.csv_logger import AppCsvLogger
 
 router = APIRouter(prefix="/api/v1/assistant", tags=["User Assistant"])

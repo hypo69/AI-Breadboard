@@ -30,7 +30,7 @@ try:
 except ImportError:
     build = None
 
-from src.logger.logger import logger
+from logger.logger import logger
 
 try:
     from google_auth import get_credentials

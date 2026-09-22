@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows.ai.prompt_templates import build_audit_prompt, build_system_prompt
 from apps.windows.core.models import FullAuditReport
 from apps.windows.core.root_cause_engine import RootCauseEngine

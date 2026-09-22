@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field
 
 from header import __root__
 from src.config import ai_cfg
-from src.logger import logger
+from logger import logger
 from src.api.router_auth import require_admin_user
 
 router = APIRouter(prefix='/api/admin', tags=['admin'])

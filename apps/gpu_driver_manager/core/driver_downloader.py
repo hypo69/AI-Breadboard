@@ -25,7 +25,7 @@ import uuid
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.gpu_driver_manager.core.models import DownloadProgress, TaskStatus, VendorType
 
 

@@ -20,7 +20,7 @@ import os
 from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 
-from src.logger.logger import logger
+from logger.logger import logger
 from plugins.base import BasePlugin
 from plugins.invoice_processor.extractor import (
     INVOICE_HEADER_ROW,

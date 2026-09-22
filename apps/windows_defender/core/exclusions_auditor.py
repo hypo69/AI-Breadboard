@@ -21,7 +21,7 @@ from __future__ import annotations
 import re
 from typing import List, Optional, Tuple
 
-from src.logger import logger
+from logger import logger
 from apps.windows_defender.core.defender_service import DefenderService
 from apps.windows_defender.core.models import (
     ExclusionItem,

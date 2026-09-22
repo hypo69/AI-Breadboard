@@ -61,7 +61,7 @@ except ImportError:
     )
 
 try:
-    from src.logger import logger
+    from logger import logger
 except ImportError:
     # Fallback логирование если Module недоступен
     class SimpleLogger:

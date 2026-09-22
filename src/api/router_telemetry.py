@@ -23,7 +23,7 @@ import requests
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
-from src.logger import logger
+from logger import logger
 from apps.windows.telemetry.ngrok_tunnel import ngrok_manager
 from src.user_manager import user_manager
 

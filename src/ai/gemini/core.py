@@ -26,7 +26,7 @@ from src.ai.orchestration.model_manager import (
     load_unsupported_models as _mgr_load_unsupported_models,
 )
 from src.config import server_cfg, ai_cfg
-from src.logger.logger import logger
+from logger.logger import logger
 from src.ai.gemini.gemini_api_key_state import (
     get_status,
     load_api_keys,

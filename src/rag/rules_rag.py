@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
 
-from src.logger import logger
+from logger import logger
 from header import __root__
 
 _AI_PROMPTS_ROOT: Path = __root__ / ".ai" / "prompts"

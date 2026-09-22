@@ -26,7 +26,7 @@ import re
 from pathlib import Path
 from typing import Any, AsyncIterator, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from src.ai.agents.prompts import SYSTEM_LOGS_AGENT_PROMPT
 from src.ai.agents.tools import system_logs_analyzer
 

@@ -37,7 +37,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows.core.models import RiskLevel
 from apps.windows.core.system_restore import WindowsSystemRestoreManager
 from apps.common.csv_logger import AppCsvLogger

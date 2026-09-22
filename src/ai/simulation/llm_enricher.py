@@ -19,7 +19,7 @@ import asyncio
 import inspect
 from typing import Any, Dict, Optional
 
-from src.logger import logger
+from logger import logger
 
 
 _ENRICHMENT_SYSTEM_PROMPT = (

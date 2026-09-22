@@ -35,7 +35,7 @@ except (ImportError, ValueError):
     from mail_client import MailAccountConfig, MailClient
 
 try:
-    from src.logger.logger import logger
+    from logger.logger import logger
 except ImportError:
     logger = logging.getLogger("mail_invoice_collector")
 

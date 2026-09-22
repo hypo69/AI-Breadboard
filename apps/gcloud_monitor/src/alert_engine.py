@@ -30,7 +30,7 @@ from typing import Any, Dict, List, Optional
 from apps.gcloud_monitor.src.auth import GCloudAuthManager
 from apps.gcloud_monitor.src.logging_service import GCloudLoggingService
 from apps.gcloud_monitor.src.metrics_service import GCloudMetricsService
-from src.logger import logger
+from logger import logger
 
 
 @dataclass

@@ -12,7 +12,7 @@ import urllib.request
 from pathlib import Path
 from typing import Optional, Tuple
 
-from src.logger import logger
+from logger import logger
 
 __root__ = Path(__file__).parent.parent.parent
 

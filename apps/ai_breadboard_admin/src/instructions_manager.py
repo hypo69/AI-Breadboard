@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 
 
 class InstructionsManager:

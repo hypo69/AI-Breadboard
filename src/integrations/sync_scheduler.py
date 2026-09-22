@@ -20,7 +20,7 @@ except ImportError:
 
 from .google_drive_sync import GoogleDriveSync
 
-from src.logger import logger
+from logger import logger
 
 
 class SyncScheduler:

@@ -331,7 +331,7 @@ FOUNDRY_DYNAMIC_PORT=8000
 **MUST использовать стандартный логгер проекта:**
 
 ```python
-from src.logger import logger
+from logger import logger
 
 # ✅ Правильно
 logger.error("API connector failed", exc_info=True)

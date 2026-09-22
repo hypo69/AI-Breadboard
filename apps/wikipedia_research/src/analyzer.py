@@ -22,7 +22,7 @@ import json
 import re
 from typing import Any, List, Optional
 
-from src.logger import logger
+from logger import logger
 from .models import AnalysisDimensions, ArticleAnalysisResult, WikipediaArticleMeta
 
 

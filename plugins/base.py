@@ -27,7 +27,7 @@ import inspect
 from datetime import datetime
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 
 
 class BasePlugin(abc.ABC):

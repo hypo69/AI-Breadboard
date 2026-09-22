@@ -33,7 +33,7 @@ from typing import Any, Dict, List, Optional
 
 import psutil
 
-from src.logger import logger
+from logger import logger
 from apps.windows.hardware.gpu_prober import GpuDeviceTelemetry, GpuProber
 from apps.windows.hardware.smartctl_probe import SmartDriveInfo, SmartProber
 from apps.windows.telemetry.sensors import get_hardware_sensors

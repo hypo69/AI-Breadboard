@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from src.user_manager import user_manager
 
 

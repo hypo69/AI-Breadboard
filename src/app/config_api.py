@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from src.config import ai_cfg
-from src.logger import logger
+from logger import logger
 
 __root__ = Path(__file__).parent.parent.parent
 

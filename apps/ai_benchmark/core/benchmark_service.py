@@ -22,7 +22,7 @@ import asyncio
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
-from src.logger import logger
+from logger import logger
 
 
 class BenchmarkRequest(BaseModel):

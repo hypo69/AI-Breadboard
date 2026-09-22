@@ -34,7 +34,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from apps.windows.core.models import RiskLevel
 from apps.windows.core.tools.base import BaseTool, ToolExecutionResult
 from apps.windows.core.tools.dynamic_factory import (

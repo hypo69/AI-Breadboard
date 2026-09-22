@@ -25,7 +25,7 @@ from __future__ import annotations
 import time
 from typing import Any, Dict, List
 
-from src.logger import logger
+from logger import logger
 from apps.windows.api.wevtapi import WevtAPI
 from apps.windows.core.models import AuditFinding, DomainAuditResult, RiskLevel
 

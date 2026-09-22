@@ -27,7 +27,7 @@ except ImportError:
         from markdown import markdown as md_convert
     except ImportError:
         md_convert = None
-from src.logger.logger import logger
+from logger.logger import logger
 
 def md2html(md_string: str, extras: List[str] = []) -> str:
     """

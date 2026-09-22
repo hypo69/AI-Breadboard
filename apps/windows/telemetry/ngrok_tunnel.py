@@ -25,7 +25,7 @@ import requests
 from dotenv import load_dotenv
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 
 load_dotenv(__root__ / '.env')
 

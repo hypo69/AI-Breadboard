@@ -72,7 +72,7 @@ py manage_tools.py plugins list --lang en
 # -*- coding: utf-8 -*-
 from typing import Any, Dict, List, Optional, AsyncGenerator
 from plugins.base import BasePlugin
-from src.logger import logger
+from logger import logger
 
 
 class AuditLoggerPlugin(BasePlugin):

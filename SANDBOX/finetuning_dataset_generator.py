@@ -15,7 +15,7 @@
 import json
 from pathlib import Path
 from typing import Dict, List, Any
-from src.logger import logger
+from logger import logger
 
 
 def generate_sample_dataset(output_path: Path) -> int:

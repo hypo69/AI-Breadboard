@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Union
 
-from src.logger import logger
+from logger import logger
 
 
 _LOCK = threading.Lock()

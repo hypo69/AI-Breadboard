@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows_defender.core.asr_manager import ASRManager
 from apps.windows_defender.core.cfa_manager import ControlledFolderAccessManager
 from apps.windows_defender.core.defender_service import DefenderService

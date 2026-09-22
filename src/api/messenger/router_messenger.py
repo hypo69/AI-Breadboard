@@ -42,7 +42,7 @@ from fastapi import (
 from fastapi.responses import FileResponse, JSONResponse
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from .database import get_db, init_db
 from .models import (
     MessengerUser,

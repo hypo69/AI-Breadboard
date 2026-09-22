@@ -22,7 +22,7 @@ from pydub import AudioSegment  # Library for audio conversion
 from gtts import gTTS  # Text-to-speech generation
 
 from src.utils.jjson import j_loads, j_loads_ns, j_dumps
-from src.logger.logger import logger
+from logger.logger import logger
 
 def speech_recognizer(audio_url: str = None, audio_file_path: Path = None, language: str = 'ru-RU') -> str:
     """Download an audio file and recognize speech in it.

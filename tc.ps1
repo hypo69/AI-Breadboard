@@ -330,19 +330,19 @@ if ($Background) {
 
 # Если действие sensorsonly, запускаем только сенсоры
 if ($Action -eq 'sensorsonly') {
-    $sensorsLauncher = Join-Path $scriptDir "launchers\Run-Sensors.ps1"
+    $sensorsLauncher = Join-Path $scriptDir "launchers\Run-AI-Sensors.ps1"
     if (-not (Test-Path $sensorsLauncher)) {
-        $sensorsLauncher = Join-Path $scriptDir "Run-Sensors.ps1"
+        $sensorsLauncher = Join-Path $scriptDir "Run-AI-Sensors.ps1"
     }
     
     if (Test-Path $sensorsLauncher) {
         Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkCyan
-        Write-Host "🚀 ЗАПУСК ТОЛЬКО СЕНСОРОВ И АВТОЛОГГИРОВАНИЯ" -ForegroundColor Cyan
+        Write-Host "🚀 ЗАПУСК AI-SENSORS ТЕЛЕМЕТРИИ" -ForegroundColor Cyan
         Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkCyan
-        & $sensorsLauncher -Action start
+        & $sensorsLauncher -Action start -Interval 60.0
         exit 0
     } else {
-        Write-Host "[ERROR] Run-Sensors.ps1 не найден: $sensorsLauncher" -ForegroundColor Red
+        Write-Host "[ERROR] Run-AI-Sensors.ps1 не найден: $sensorsLauncher" -ForegroundColor Red
         exit 1
     }
 }

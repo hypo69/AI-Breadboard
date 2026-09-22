@@ -16,7 +16,7 @@ import asyncio
 import time
 from typing import Optional, List, Dict, Any
 
-from src.logger.logger import logger
+from logger.logger import logger
 
 class OllamaChatBase:
     """

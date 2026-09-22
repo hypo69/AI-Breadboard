@@ -20,7 +20,7 @@ from typing import Any
 
 from google.genai import types
 
-from src.logger.logger import logger
+from logger.logger import logger
 from src.utils.image import get_image_bytes
 
 from .core import GoogleGenerativeAICore

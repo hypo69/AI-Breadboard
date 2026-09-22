@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 
 
 class AIW64ETWCollector:

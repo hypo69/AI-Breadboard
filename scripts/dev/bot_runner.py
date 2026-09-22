@@ -39,7 +39,7 @@ from header import __root__
 load_dotenv(__root__ / '.env')
 
 from src.utils.jjson import j_loads_ns
-from src.logger import logger
+from logger import logger
 
 from src.config import server_cfg, ai_cfg, tts_cfg, logging_cfg
 

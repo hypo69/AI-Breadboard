@@ -33,7 +33,7 @@ from fastapi import (
 )
 from fastapi.responses import JSONResponse
 
-from src.logger import logger
+from logger import logger
 from apps.common.csv_logger import AppCsvLogger
 from .database import get_db, init_db, get_next_ticket_number
 from .models import (

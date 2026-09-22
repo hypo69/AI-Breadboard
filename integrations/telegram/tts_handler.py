@@ -23,7 +23,7 @@ import io
 import httpx
 import asyncio
 from typing import AsyncGenerator
-from src.logger import logger
+from logger import logger
 from src.ai.voice import generate_voiceover_chunks
 
 # URL of local FastAPI instance

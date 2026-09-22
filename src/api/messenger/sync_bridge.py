@@ -24,7 +24,7 @@ from typing import Optional, Dict, Any
 
 import jwt
 from header import __root__
-from src.logger import logger
+from logger import logger
 from .database import get_db
 from .models import UserSyncPayload
 

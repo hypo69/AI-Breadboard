@@ -19,7 +19,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-from src.logger.logger import logger
+from logger.logger import logger
 from src.utils.pdf_extractor import extract_document_text
 
 INVOICE_FIELDS = [

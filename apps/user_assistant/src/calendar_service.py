@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
-from src.logger import logger
+from logger import logger
 
 
 class CalendarService:

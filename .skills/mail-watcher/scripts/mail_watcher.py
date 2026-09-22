@@ -40,7 +40,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 try:
-    from src.logger.logger import logger
+    from logger.logger import logger
 except ImportError:
     logger = logging.getLogger("mail_watcher")
 

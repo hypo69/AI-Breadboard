@@ -35,7 +35,7 @@ from apps.website_monitor.src.ga4_service import GA4Service
 from apps.website_monitor.src.gsc_service import GSCService
 from apps.website_monitor.src.normalizer import MetricsNormalizer
 from apps.website_monitor.src.technical_service import TechnicalService
-from src.logger import logger
+from logger import logger
 
 
 def main() -> None:

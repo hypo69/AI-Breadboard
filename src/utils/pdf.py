@@ -22,7 +22,7 @@ import json
 
 from pathlib import Path
 from typing import Union, Optional
-from src.logger.logger import logger
+from logger.logger import logger
 from header import __root__
 
 

@@ -33,7 +33,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Set
 
 from apps.windows.api.wevtapi import WevtAPI
-from src.logger import logger
+from logger import logger
 
 
 @dataclass

@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from src.user_manager import user_manager
 from src.rag.user_workspace_rag import user_workspace_rag_manager
 

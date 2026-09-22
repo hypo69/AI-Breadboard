@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from plugins.base import BasePlugin
-from src.logger import logger
+from logger import logger
 from plugins.news_feed.models import UserFeedbackRequest
 from plugins.news_feed.news_engine import NewsEngine
 

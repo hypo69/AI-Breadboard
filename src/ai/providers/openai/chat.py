@@ -21,7 +21,7 @@ from typing import Any, AsyncIterator, Dict, List, Optional
 import aiohttp
 
 from header import __root__
-from src.logger.logger import logger
+from logger.logger import logger
 from src.utils.jjson import j_loads
 
 _GLOBAL_CONFIG_PATH = __root__ / "config.json"

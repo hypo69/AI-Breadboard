@@ -25,7 +25,7 @@ import tempfile
 from ctypes import wintypes
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows.hardware.base import (
     BaseHardwareProvider,
     ProviderCapability,

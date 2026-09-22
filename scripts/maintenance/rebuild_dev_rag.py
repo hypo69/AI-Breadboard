@@ -14,7 +14,7 @@
 
 import os
 from src.ai.dev_rag import build_dev_rag
-from src.logger import logger
+from logger import logger
 
 def main():
     api_key = os.getenv('GEMINI_API_KEY')

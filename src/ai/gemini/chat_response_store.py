@@ -19,7 +19,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from src.logger import logger
+from logger import logger
 
 # Directory for storing approved responses
 _STORE_DIR = Path(__file__).parent.parent.parent / 'plugins' / 'media_organizer' / 'data' / 'chat_responses'

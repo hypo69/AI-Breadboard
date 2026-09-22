@@ -30,7 +30,7 @@ import urllib.request
 import urllib.error
 
 try:
-    from src.logger.logger import logger
+    from logger.logger import logger
 except ImportError:
     logger = logging.getLogger("whatsapp_plugin")
 

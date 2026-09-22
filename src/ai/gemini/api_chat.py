@@ -17,7 +17,7 @@
 import asyncio
 from typing import Any, AsyncGenerator
 
-from src.logger.logger import logger
+from logger.logger import logger
 from src.ai.gemini.gemini_api_key_state import update_last_run
 
 from .core import GoogleGenerativeAICore

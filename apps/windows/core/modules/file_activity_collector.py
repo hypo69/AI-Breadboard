@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from apps.windows.telemetry.models import HardwareSensor, TelemetryProvider
 from apps.windows.core.models import DomainAuditResult
 from apps.windows_sysadmin.src.file_auditor import WindowsFileAuditor

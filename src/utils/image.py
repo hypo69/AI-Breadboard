@@ -24,7 +24,7 @@ from io import BytesIO
 
 from PIL import Image, ImageDraw, ImageFont
 
-from src.logger.logger import logger
+from logger.logger import logger
 
 class ImageError(Exception):
     """Custom exception for image-related errors."""

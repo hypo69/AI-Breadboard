@@ -41,7 +41,7 @@ try:
 except ImportError:
     winreg = None  # type: ignore
 
-from src.logger import logger
+from logger import logger
 from .data_model import AppCategory, AppExecutionInfo, InstalledAppInfo, SoftwareAuditReport
 
 

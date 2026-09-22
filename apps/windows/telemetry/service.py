@@ -21,7 +21,7 @@ import threading
 import time
 from typing import Any, Dict, Optional
 
-from src.logger import logger
+from logger import logger
 from apps.windows.telemetry.collector import SystemCollector
 
 

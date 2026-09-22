@@ -30,7 +30,7 @@ import psutil
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
-from src.logger import logger
+from logger import logger
 from apps.common.csv_logger import AppCsvLogger
 from apps.windows.core.modules import (
     CleanCollector,

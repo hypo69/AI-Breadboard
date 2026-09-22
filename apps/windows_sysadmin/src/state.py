@@ -36,7 +36,7 @@ from apps.windows_sysadmin.src.file_auditor import (
     FolderSaclStatus,
     WindowsFileAuditor,
 )
-from src.logger import logger
+from logger import logger
 
 
 @dataclass

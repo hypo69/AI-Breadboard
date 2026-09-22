@@ -29,7 +29,7 @@ import pkgutil
 from typing import Any, Dict, List, Optional
 
 from header import __root__
-from src.logger import logger
+from logger import logger
 from src.config import global_settings
 from plugins.base import BasePlugin
 

@@ -29,7 +29,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-from src.logger import logger
+from logger import logger
 
 
 class DiagnosticExplainRequest(BaseModel):

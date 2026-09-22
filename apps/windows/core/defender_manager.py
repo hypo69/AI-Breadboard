@@ -31,7 +31,7 @@ import subprocess
 import time
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 
 
 class DefenderManager:

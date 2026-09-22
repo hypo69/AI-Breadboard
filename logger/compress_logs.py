@@ -80,7 +80,7 @@ def compress_log_file(input_path: Path, output_path: Path = None, min_repeat: in
 
 def main():
     """Main entry point for log compression."""
-    from src.logger import logger
+    from logger import logger
     
     logs_dir = Path(__file__).resolve().parent.parent.parent / 'tmp' / 'logs'
     

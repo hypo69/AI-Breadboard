@@ -40,7 +40,7 @@ except ImportError:
     psutil = None  # type: ignore
     PSUTIL_AVAILABLE = False
 
-from src.logger import logger
+from logger import logger
 
 
 @dataclass

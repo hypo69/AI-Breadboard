@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any, AsyncIterator, Dict, List, Optional
 
 from header import __root__
-from src.logger.logger import logger
+from logger.logger import logger
 
 _loaded_onnx_models: Dict[str, Dict[str, Any]] = {}
 

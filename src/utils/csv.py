@@ -20,7 +20,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import List, Dict, Union
 import pandas as pd
-from src.logger.logger import logger
+from logger.logger import logger
 
 def save_csv_file(
     data: List[Dict[str, str]],

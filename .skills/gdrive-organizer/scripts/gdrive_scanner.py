@@ -24,7 +24,7 @@ _GW_SCRIPTS_DIR = _REPO_ROOT / ".agents" / "skills" / "google-workspace" / "scri
 if str(_GW_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_GW_SCRIPTS_DIR))
 
-from src.logger.logger import logger
+from logger.logger import logger
 
 try:
     from googleapiclient.discovery import build

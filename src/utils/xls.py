@@ -41,7 +41,7 @@ import json
 from typing import List, Dict, Union
 from pathlib import Path
 
-from src.logger import logger
+from logger import logger
 
 def read_xls_as_dict(
     xls_file: str,

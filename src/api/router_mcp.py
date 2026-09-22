@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field
 
 from header import __root__
 from src.ai.agents.mcp_client import MCPClientManager
-from src.logger import logger
+from logger import logger
 
 admin_mcp_router = APIRouter(prefix='/api/admin/mcp', tags=['admin_mcp'])
 user_mcp_router = APIRouter(prefix='/api/mcp', tags=['mcp'])

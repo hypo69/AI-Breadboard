@@ -5,7 +5,7 @@ import os
 import json
 from datetime import datetime
 from typing import Any, List, Tuple, Optional
-from src.logger import logger
+from logger import logger
 from src.ai.observability.engine import DiagnosticEngine
 from apps.windows.telemetry.models import AnomalyItem
 from src.rag.user_workspace_rag import user_workspace_rag_manager

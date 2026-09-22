@@ -28,7 +28,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
-from src.logger import logger
+from logger import logger
 from apps.common.csv_logger import AppCsvLogger
 from apps.windows_backup_manager.core.file_history_manager import FileHistoryManager
 from apps.windows_backup_manager.core.file_history_rag import WindowsFileHistoryRAG, get_file_history_rag

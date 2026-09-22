@@ -21,7 +21,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 import googleapiclient.discovery
 from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 
-from src.logger import logger
+from logger import logger
 
 
 class GoogleDriveSync:

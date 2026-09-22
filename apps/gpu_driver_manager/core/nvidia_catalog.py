@@ -22,7 +22,7 @@ from typing import List, Optional
 import urllib.request
 import json
 
-from src.logger import logger
+from logger import logger
 from apps.gpu_driver_manager.core.models import DriverBranch, DriverRelease, VendorType
 
 

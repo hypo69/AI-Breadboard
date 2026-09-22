@@ -26,7 +26,7 @@ import asyncio
 import json
 import sys
 
-from src.logger import logger
+from logger import logger
 from .engine import WikipediaResearchEngine
 from .src.models import LanguageExperimentRequest, ModelExperimentRequest
 from .tui import run_demo_tui

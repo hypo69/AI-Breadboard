@@ -30,7 +30,7 @@ from typing import List, Dict
 from src.utils.convertors import xml2dict
 from src.utils.csv import save_csv_file
 from src.utils.xls import save_xls_file
-from src.logger.logger import logger
+from logger.logger import logger
 
 from types import SimpleNamespace
 from typing import Any, Dict

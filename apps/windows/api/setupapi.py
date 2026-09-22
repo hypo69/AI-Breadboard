@@ -29,7 +29,7 @@ import ctypes.wintypes as wintypes
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from src.logger import logger
+from logger import logger
 
 # SetupAPI константы
 DIGCF_DEFAULT = 0x00000001

@@ -21,7 +21,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query
 
-from src.logger import logger
+from logger import logger
 from apps.common.csv_logger import AppCsvLogger
 from .engine import WikipediaResearchEngine
 from .src.collector import SUPPORTED_LANGUAGES
