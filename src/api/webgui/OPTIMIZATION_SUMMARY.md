@@ -406,3 +406,95 @@ window.optimizationModule.apiCache.getStats();
 - 💾 Экономия трафика: на 70% меньше запросов
 
 Все оптимизации протестированы, задокументированы и готовы к использованию! 🎉
+
+---
+
+## 🔀 Флаг `LOAD_ALL_TABS_ON_START`
+
+### Файл: `src/api/webgui/js/main.js`, строка 4
+
+```javascript
+const LOAD_ALL_TABS_ON_START = false;
+```
+
+Переключатель стратегии загрузки вкладок главного интерфейса (`/html/index.html`).
+
+### Режимы
+
+| Значение | Стратегия | Когда использовать |
+|---|---|---|
+| `false` | **Lazy** — только `chat` при старте, остальные при первом открытии | Продакшн, медленные соединения |
+| `true` | **Promise.all** — все 8 вкладок параллельно при старте | Дебаггинг, профилирование, тестирование всех вкладок сразу |
+
+### Как работает
+
+**`false` (Lazy):**
+```
+DOMContentLoaded
+  └─ loadTabContent('chat')        ← ~300ms, пользователь видит интерфейс
+
+Пользователь открывает вкладку X
+  └─ _loadedTabs.has(X) → false
+  └─ loadTabContent(X)             ← грузится только сейчас
+  └─ _loadedTabs.add(X)            ← повторно не грузится
+```
+
+**`true` (Promise.all):**
+```
+DOMContentLoaded
+  └─ Promise.all(8 вкладок)        ← ~2-3 сек, все вкладки готовы
+  └─ _loadedTabs = все 8 имён
+
+Пользователь открывает вкладку X
+  └─ _loadedTabs.has(X) → true     ← загрузка не повторяется
+```
+
+### Единая карта URL `TAB_URLS`
+
+Оба режима используют одну карту, определённую в `DOMContentLoaded`:
+
+```javascript
+const TAB_URLS = {
+  'chat':         ['/html/chat/index.html?v=...',             '/html/chat/main.js?v=...'],
+  'rag':          ['/html/rag_tab/index.html?v=...',          '/html/rag_tab/main.js?v=...'],
+  'telegram-rag': ['/html/telegram_rag_tab/index.html?v=...', '/html/telegram_rag_tab/main.js?v=...'],
+  'news':         ['/html/news_tab/index.html?v=...',         '/html/news_tab/main.js?v=...'],
+  'voice':        ['/html/voice_tab/index.html?v=...',        '/html/voice_tab/main.js?v=...'],
+  'plugins':      ['/html/plugins_tab/index.html?v=...',      '/html/plugins_tab/main.js?v=...'],
+  'admin':        ['/html/admin_tab/index.html?v=...',        '/html/admin_tab/main.js?v=...'],
+  'help':         ['/html/help/index.html?v=...',             '/html/help/main.js?v=...'],
+};
+```
+
+Чтобы добавить новую вкладку — достаточно добавить одну строку в `TAB_URLS`.
+
+### Версионирование `?v=Date.now()`
+
+В обоих режимах URL содержат `?v=Date.now()` — это **намеренно**.
+При активной разработке это гарантирует, что браузер не отдаёт старый кеш.
+Для продакшн-деплоя заменить на фиксированную строку версии.
+
+### Защита от повторной загрузки
+
+`window._loadedTabs` (Set) отслеживает уже загруженные вкладки в обоих режимах.
+Повторный вызов `onTabSwitched` для уже загруженной вкладки не вызывает новый fetch.
+
+### Результаты по режимам
+
+```
+Lazy  (false): первый экран за ~300ms,  вкладки грузятся по ~300ms при открытии
+All   (true):  первый экран за ~2-3 сек, все вкладки готовы сразу после загрузки
+```
+
+### Проверка в консоли браузера
+
+```javascript
+// Какая стратегия активна
+console.log('[TabLoader] Strategy:', ...)  // выводится при старте
+
+// Какие вкладки уже загружены
+console.log(window._loadedTabs);
+
+// Принудительно загрузить вкладку (для тестирования)
+await loadTabContent('news', ...window._lazyTabUrls['news']);
+```

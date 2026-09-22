@@ -24,6 +24,10 @@ import requests
 
 from logger import logger
 
+# Module-level cache: (timestamp, result)
+_speed_cache: tuple[float, Dict[str, float]] | None = None
+_CACHE_TTL = 300  # seconds between real measurements
+
 
 class InternetSpeedSensor:
     """Internet speed measurement sensor using HTTP tests."""
@@ -181,22 +185,22 @@ class InternetSpeedSensor:
         Returns:
             Dictionary with ping, download, upload, and DNS metrics.
         """
+        global _speed_cache
+        if _speed_cache is not None:
+            cached_at, cached_result = _speed_cache
+            if time.monotonic() - cached_at < _CACHE_TTL:
+                return cached_result
+
         result: Dict[str, float] = {}
 
-        # Measure ping
         ping = self.measure_ping("8.8.8.8")
         result["ping_ms"] = ping if ping is not None else 0.0
-
-        # Measure download speed
         result["download_mbps"] = self.measure_download_speed()
-
-        # Measure upload speed
         result["upload_mbps"] = self.measure_upload_speed()
-
-        # Measure DNS resolution
         dns_time = self.measure_dns_resolution()
         result["dns_ms"] = dns_time if dns_time is not None else 0.0
 
+        _speed_cache = (time.monotonic(), result)
         return result
 
 
