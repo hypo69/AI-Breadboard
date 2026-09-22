@@ -1,0 +1,12 @@
+{
+  "interval_seconds": 5.0,
+  "max_file_size_mb": 100,
+  "max_measurements": null,
+  "watch_directories": [
+    "C:\\Users\\"
+  ],
+  "log_filename": "ai_sensors_polls.json",
+  "collect_serial_numbers": true,
+  "collect_hardware_inventory": true,
+  "collect_file_events": true
+}
