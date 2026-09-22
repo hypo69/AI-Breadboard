@@ -35,7 +35,6 @@ from .models import (
 )
 from .sensors import get_hardware_sensors
 from .collector import SystemCollector
-from .storage import TelemetryStorage
 from .service import TelemetryLoggerService
 from src.ai.observability.system_engine import SystemDiagnosticEngine
 
@@ -59,7 +58,5 @@ __all__ = [
     "SystemDiagnosticReport",
     "get_hardware_sensors",
     "SystemCollector",
-    "SystemDiagnosticEngine",
-    "TelemetryStorage",
     "TelemetryLoggerService",
 ]

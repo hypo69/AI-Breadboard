@@ -18,6 +18,7 @@
 | **Документировать код** | → [`standards/DOCUMENTATION.md`](standards/DOCUMENTATION.md) |
 | **Переиспользовать код** | → [`standards/REUSE.md`](standards/REUSE.md) |
 | **Писать тесты** | → [`workflows/TDD.md`](workflows/TDD.md) |
+| **Тестировать и документировать приложения** | → [`workflows/TESTING.md`](workflows/TESTING.md) |
 | **Интегрировать новое приложение** | → [`workflows/INTEGRATION.md`](workflows/INTEGRATION.md) |
 | **Понять архитектуру системы** | → [`reference/ARCHITECTURE.md`](reference/ARCHITECTURE.md) |
 | **Узнать API endpoints** | → [`reference/API_REFERENCE.md`](reference/API_REFERENCE.md) |
@@ -52,6 +53,10 @@
 - **`TDD.md`**  
   Test-Driven Development: 6-шаговый протокол документирования через тесты, структура тестов, проверка покрытия (70%+).  
   ⚠️ **Применяется к**: новым функциям, изменениям сигнатур, рефакторингу.
+
+- **`TESTING.md`**  
+  Тестирование и документирование приложений: структура тестов для приложений, README.md, 6 категорий тестов, integration tests.  
+  ⚠️ **Применяется к**: новым приложениям в `apps/`.
 
 - **`INTEGRATION.md`**  
   Как добавить новое приложение в проект: 6 этапов от логики до веб-панели администратора.  
@@ -110,8 +115,9 @@
 ### Сценарий 2: Создать новое приложение
 ```
 1. Прочитай standards/ENGINEERING.md  (Архитектура)
-2. Прочитай workflows/INTEGRATION.md  (6 этапов интеграции)
-3. Реализуй согласно 6-этапному протоколу
+2. Прочитай workflows/TESTING.md      (Тестирование и документирование)
+3. Прочитай workflows/INTEGRATION.md  (6 этапов интеграции)
+4. Реализуй согласно 6-этапному протоколу
 ```
 
 ### Сценарий 3: Понять как работает система

@@ -14,6 +14,7 @@ A unified telemetry collection, sensor probing, and AI diagnostics subsystem for
 | `models.py` | Pydantic data schemas for hardware metrics, snapshots, and diagnostic reports. |
 | `sensors.py` | Multi-backend hardware sensor prober (NVIDIA SMI, WMI ACPI, LibreHardwareMonitor). |
 | `collector.py` | `SystemCollector` for gathering live point-in-time snapshots and hardware trees. |
+| `service.py` | `TelemetryLoggerService` for continuous background metrics collection (no storage). |
 | `ai_diagnostics.py` | `SystemAIDiagnostician` for rule-based and AI-driven performance audits. |
 
 ## Usage

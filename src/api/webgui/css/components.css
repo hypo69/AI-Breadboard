@@ -537,3 +537,131 @@
   max-height: 280px;
   overflow-y: auto;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MENU EDITOR (DRAG AND DROP)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.menu-editor-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  transition: all 0.15s ease;
+}
+
+.menu-editor-item:hover {
+  border-color: var(--nav-active);
+  background: var(--surface-2);
+}
+
+.menu-editor-item:active {
+  cursor: grabbing;
+}
+
+.menu-editor-item.dragging {
+  opacity: 0.5;
+  background: var(--nav-active);
+  border-color: var(--nav-active);
+}
+
+.menu-editor-item .drag-handle-container {
+  cursor: grab;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+}
+
+.menu-editor-item .drag-handle-container:active {
+  cursor: grabbing;
+}
+
+.menu-editor-item .item-icon {
+  font-size: 1.3rem;
+  min-width: 28px;
+  text-align: center;
+}
+
+.menu-editor-item .item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-editor-item .item-label {
+  font-size: 0.88rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-editor-item .item-tab {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.menu-editor-item .editor-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.menu-editor-item .editor-visibility,
+.menu-editor-item .editor-order {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.menu-editor-item .editor-visibility .visibility-label,
+.menu-editor-item .editor-order .order-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.menu-editor-item .editor-visibility .visibility-select {
+  flex: 1;
+  font-size: 0.78rem;
+  padding: 2px 6px;
+}
+
+.menu-editor-item .editor-order .order-slider {
+  flex: 1;
+  height: 6px;
+  padding: 0;
+}
+
+.menu-editor-item .editor-order .order-value {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  min-width: 24px;
+  text-align: right;
+}
+
+.menu-editor-section {
+  margin-bottom: 20px;
+}
+
+.menu-editor-section h6 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  color: var(--text-muted);
+}
+
+.menu-editor-section h6 i {
+  margin-right: 6px;
+}
+
+#menuEditorModal .modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}

@@ -20,8 +20,8 @@
 ```
 apps/ai_breadboard_admin/
 ├── README.md                          # Документация приложения
+├── ADMIN_DOCUMENTATION.md             # Документация админ-панели
 ├── __init__.py                        # Экспорт точки входа и роутера
-├── __main__.py                        # Точка входа для запуска в автономном режиме / CLI
 ├── config.json                        # Локальная конфигурация микроприложения
 ├── router.py                          # FastAPI роутер (/api/v1/ai_breadboard_admin)
 ├── tui.py                             # Терминальный интерфейс администратора (TUI)
@@ -30,7 +30,8 @@ apps/ai_breadboard_admin/
 │   ├── config_manager.py              # Управление конфигурациями (RAG, поиск, apps)
 │   ├── instructions_manager.py        # Версионирование и переключение инструкций
 │   ├── sources_manager.py             # Управление файлами источников
-│   └── user_admin_service.py          # Администрирование пользователей
+│   ├── user_admin_service.py          # Администрирование пользователей (внутренние)
+│   └── windows_user_manager.py        # Администрирование пользователей Windows (ОС)
 └── tests/
     ├── __init__.py
     ├── test_admin_config.py           # Тесты менеджера конфигураций
@@ -43,14 +44,14 @@ apps/ai_breadboard_admin/
 
 ## 🚀 Запуск и использование
 
-### Запуск интерактивного TUI
+### Доступ к админ-панели
+Админ-панель доступна через основной сервер:
+- **URL**: http://localhost:8000/admin
+- **Пароль**: из `.env` (переменная `ADMIN_PASSWORD`)
+
+### Запуск интерактивного TUI (для отладки)
 ```powershell
 python -m apps.ai_breadboard_admin --mode tui
-```
-
-### Запуск автономного сервера API
-```powershell
-python -m apps.ai_breadboard_admin --mode server --port 8110
 ```
 
 ### Вывод краткого системного статуса в JSON
@@ -81,3 +82,18 @@ python -m apps.ai_breadboard_admin --mode status
 | `POST` | `/users/{user_id}/toggle-active` | Блокировка / разблокировка пользователя |
 | `POST` | `/users/{user_id}/toggle-role` | Переключение роли `admin` <-> `user` |
 | `GET` / `POST` | `/users/orphaned/dirs` | Просмотр и очистка осиротевших каталогов |
+
+---
+
+## 👥 Управление пользователями
+
+### Внутренние пользователи (проекта)
+- **Модуль**: `src/user_admin_service.py`
+- **Эндпоинты**: `/api/admin/users/*`
+- **Назначение**: Управление пользователями AI-Breadboard проекта
+
+### Пользователи Windows (ОС)
+- **Модуль**: `src/windows_user_manager.py`
+- **Эндпоинты**: `/api/windows-users/*`
+- **Назначение**: Управление локальными учетными записями Windows
+- **Важно**: Полностью отделен от внутренних пользователей проекта

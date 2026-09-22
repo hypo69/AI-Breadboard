@@ -130,7 +130,7 @@
             },
             "user_assistant": {
                 "interval": "5 minutes",
-                "enabled": true
+                "enabled": false
             },
             "helpdesk": {
                 "interval": "1 minute",

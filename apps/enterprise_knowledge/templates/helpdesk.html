@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Knowledge Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            padding: 20px 40px;
+            border-bottom: 2px solid #e94560;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .header h1::before {
+            content: '🏢';
+            font-size: 32px;
+        }
+        
+        .header .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(233, 69, 96, 0.2);
+            border-radius: 20px;
+            font-size: 14px;
+            color: #e94560;
+            font-weight: 500;
+        }
+        
+        .header .status::before {
+            content: '●';
+            font-size: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 40px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stat-card .icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+        
+        .stat-card .label {
+            font-size: 14px;
+            color: #8b9bb4;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .stat-card .value.green { color: #4ade80; }
+        .stat-card .value.blue { color: #60a5fa; }
+        .stat-card .value.purple { color: #c084fc; }
+        .stat-card .value.orange { color: #f97316; }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #8b9bb4;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+        
+        .tab.active {
+            background: #e94560;
+            border-color: #e94560;
+            color: #fff;
+        }
+        
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .search-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .search-box h3 {
+            font-size: 16px;
+            color: #8b9bb4;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 14px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #e94560;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .search-input::placeholder {
+            color: #6b7280;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .results-table th {
+            background: rgba(233, 69, 96, 0.2);
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 13px;
+            color: #e94560;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .results-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+            color: #d1d5db;
+        }
+        
+        .results-table tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-proposed { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        .status-confirmed { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
+        .status-rejected { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .status-superseded { background: rgba(156, 163, 175, 0.2); color: #9ca3af; }
+        
+        .employee-id {
+            font-family: 'Courier New', monospace;
+            color: #60a5fa;
+            font-weight: 500;
+        }
+        
+        .predicate {
+            color: #c084fc;
+            font-weight: 500;
+        }
+        
+        .object-value {
+            color: #f97316;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+        
+        .empty-state .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+        
+        .empty-state h3 {
+            font-size: 18px;
+            color: #8b9bb4;
+            margin-bottom: 8px;
+        }
+        
+        .empty-state p {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+        
+        .footer a {
+            color: #e94560;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Enterprise Knowledge Platform</h1>
+        <div class="status">Система активна</div>
+    </div>
+    
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="icon">👥</div>
+                <div class="label">Всего сотрудников</div>
+                <div class="value green" id="employee-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">💡</div>
+                <div class="label">Извлечено фактов</div>
+                <div class="value blue" id="fact-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">📄</div>
+                <div class="label">Источники данных</div>
+                <div class="value purple" id="source-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">🔗</div>
+                <div class="label">Связей</div>
+                <div class="value orange" id="relationship-count">0</div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="search">Поиск</div>
+            <div class="tab" data-tab="employees">Сотрудники</div>
+            <div class="tab" data-tab="facts">Факты</div>
+            <div class="tab" data-tab="sources">Источники</div>
+        </div>
+        
+        <div class="content-section active" id="search-section">
+            <div class="search-box">
+                <h3>🔍 Поиск по базе знаний</h3>
+                <input type="text" class="search-input" id="search-input" placeholder="Введите запрос для поиска по фактам, сотрудникам и источникам...">
+            </div>
+            
+            <div class="results-container">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Сотрудник</th>
+                            <th>Предикат</th>
+                            <th>Объект</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody id="search-results">
+                        <tr>
+                            <td colspan="5" class="empty-state">
+                                <div class="icon">🔍</div>
+                                <h3>Начните поиск</h3>
+                                <p>Введите запрос выше, чтобы найти сотрудников, факты и источники</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="content-section" id="employees-section">
+            <div class="search-box">
+                <h3>👥 Управление сотрудниками</h3>
+                <input type="text" class="search-input" id="employee-search" placeholder="Поиск сотрудников по имени, email или ID...">
+            </div>
+            
+            <div class="results-container">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Имя</th>
+                            <th>Email</th>
+                            <th>Отдел</th>
+                            <th>Алиасы</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employees-list">
+                        <tr>
+                            <td colspan="5" class="empty-state">
+                                <div class="icon">👥</div>
+                                <h3>Нет сотрудников</h3>
+                                <p>Зарегистрируйте первого сотрудника через API</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="content-section" id="facts-section">
+            <div class="search-box">
+                <h3>💡 Все факты</h3>
+                <input type="text" class="search-input" id="fact-search" placeholder="Фильтр по предикату или объекту...">
+            </div>
+            
+            <div class="results-container">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Сотрудник</th>
+                            <th>Предикат</th>
+                            <th>Объект</th>
+                            <th>Статус</th>
+                            <th>Создано</th>
+                        </tr>
+                    </thead>
+                    <tbody id="facts-list">
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <div class="icon">💡</div>
+                                <h3>Нет фактов</h3>
+                                <p>Факты будут извлечены из источников данных</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="content-section" id="sources-section">
+            <div class="search-box">
+                <h3>📄 Источники данных</h3>
+                <input type="text" class="search-input" id="source-search" placeholder="Поиск по содержимому источника...">
+            </div>
+            
+            <div class="results-container">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Тип</th>
+                            <th>Содержимое</th>
+                            <th>Создано</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sources-list">
+                        <tr>
+                            <td colspan="4" class="empty-state">
+                                <div class="icon">📄</div>
+                                <h3>Нет источников</h3>
+                                <p>Источники будут добавлены при ингестии данных</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Enterprise Knowledge Platform | <a href="/api/v1/enterprise-knowledge/health">API Health</a> | <a href="/docs">Swagger UI</a></p>
+    </div>
+    
+    <script>
+        // Update stats on page load
+        async function updateStats() {
+            try {
+                const response = await fetch('/api/v1/enterprise-knowledge/health');
+                if (response.ok) {
+                    // Stats will be updated from actual data
+                    document.getElementById('employee-count').textContent = '0';
+                    document.getElementById('fact-count').textContent = '0';
+                    document.getElementById('source-count').textContent = '0';
+                    document.getElementById('relationship-count').textContent = '0';
+                }
+            } catch (error) {
+                console.error('Failed to update stats:', error);
+            }
+        }
+        
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+                
+                tab.classList.add('active');
+                const tabName = tab.dataset.tab;
+                document.getElementById(tabName + '-section').classList.add('active');
+            });
+        });
+        
+        // Search functionality
+        document.getElementById('search-input').addEventListener('input', async (e) => {
+            const query = e.target.value;
+            if (query.length < 2) {
+                document.getElementById('search-results').innerHTML = `
+                    <tr>
+                        <td colspan="5" class="empty-state">
+                            <div class="icon">🔍</div>
+                            <h3>Введите минимум 2 символа</h3>
+                            <p>Для поиска введите запрос длиной от 2 символов</p>
+                        </td>
+                    </tr>`;
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/v1/enterprise-knowledge/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, limit: 20 })
+                });
+                
+                const data = await response.json();
+                renderSearchResults(data);
+            } catch (error) {
+                console.error('Search error:', error);
+            }
+        });
+        
+        function renderSearchResults(data) {
+            const tbody = document.getElementById('search-results');
+            
+            if (!data.facts || data.facts.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="empty-state">
+                            <div class="icon">🔍</div>
+                            <h3>Ничего не найдено</h3>
+                            <p>Нет результатов по запросу "${data.query}"</p>
+                        </td>
+                    </tr>`;
+                return;
+            }
+            
+            tbody.innerHTML = data.facts.map(fact => `
+                <tr>
+                    <td class="employee-id">${fact.fact_id?.substring(0, 10) || 'N/A'}</td>
+                    <td>${fact.employee_name || 'N/A'}</td>
+                    <td class="predicate">${fact.predicate || 'N/A'}</td>
+                    <td class="object-value">${(fact.object_value || 'N/A').substring(0, 50)}</td>
+                    <td><span class="status-badge status-${fact.status || 'proposed'}">${fact.status || 'proposed'}</span></td>
+                </tr>
+            `).join('');
+        }
+        
+        // Initialize
+        updateStats();
+    </script>
+</body>
+</html>

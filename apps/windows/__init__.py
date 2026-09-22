@@ -20,6 +20,8 @@ __author__ = "hypo69"
 
 from apps.windows.ai.diagnostician import WindowsAIDiagnostician
 from apps.windows.ai.root_cause_analyzer import WindowsAIRootCauseAnalyzer
+from apps.windows.ai_w64_collector import AIW64Collector, get_w64_collector, start_w64_collector, stop_w64_collector
+from apps.windows.ai_w64_etw_collector import AIW64ETWCollector
 from apps.windows.core.data_model import (
     AppCategory,
     AppExecutionInfo,
@@ -57,6 +59,11 @@ __all__ = [
     "SafeExecutor",
     "WindowsAIDiagnostician",
     "WindowsAIRootCauseAnalyzer",
+    "AIW64Collector",
+    "AIW64ETWCollector",
+    "get_w64_collector",
+    "start_w64_collector",
+    "stop_w64_collector",
     "RiskLevel",
     "ActionType",
     "RemediationAction",

@@ -28,7 +28,7 @@ from datetime import datetime, timezone
 from typing import Any, Deque, List, Optional
 
 from src.logger import logger
-from src.network import (
+from apps.tshark import (
     AIDetector,
     AnomalyReport,
     CaptureFilter,

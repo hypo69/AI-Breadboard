@@ -103,6 +103,7 @@
       "agy": {
         "enabled": false,
         "model": "agy-gemini-3.6-flash",
+        "effort":"medium",
         "unsupported_models": []
       },
       "gemini": {

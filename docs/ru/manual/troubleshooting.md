@@ -47,7 +47,7 @@ certutil -addstore -f "Root" $env:USERPROFILE\.certs\localhost+2.pem
 
 Перегенерировать сертификаты:
 ```powershell
-.\install_ssl_cert.ps1
+.\install\Install-SslCertificate.ps1
 ```
 
 ---

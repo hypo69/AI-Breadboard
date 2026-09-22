@@ -23,13 +23,15 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import psutil
 
 from src.logger import logger
 from apps.windows.core.models import ActionType, AuditFinding, DomainAuditResult, RemediationAction, RiskLevel
 from apps.windows.telemetry.models import HardwareSensor, TelemetryProvider
+from apps.windows.core.process_audit_manager import ProcessAuditManager
+from apps.windows.telemetry.service import TelemetryLoggerService
 
 
 class ProcessCollector(TelemetryProvider):
@@ -37,6 +39,7 @@ class ProcessCollector(TelemetryProvider):
 
     def __init__(self) -> None:
         self._last_result: Optional[DomainAuditResult] = None
+        self._audit_manager: Optional[ProcessAuditManager] = None
 
     def get_sensors(self) -> List[HardwareSensor]:
         """Возвращает показатели процессов как сенсоры."""
@@ -48,6 +51,13 @@ class ProcessCollector(TelemetryProvider):
                 name="Всего процессов",
                 category="processes",
                 value=float(metrics.get("total_processes_count", 0)),
+                unit="count"
+            ))
+            sensors.append(HardwareSensor(
+                sensor_id="proc_new_last_hour",
+                name="Новых процессов (последний час)",
+                category="processes",
+                value=float(metrics.get("new_processes_last_hour", 0)),
                 unit="count"
             ))
             sensors.append(HardwareSensor(
@@ -66,6 +76,51 @@ class ProcessCollector(TelemetryProvider):
         processes = []
         suspicious_paths = [r"c:\users\default", r"c:\windows\temp", r"appdata\local\temp"]
         handle_leak_candidates = []
+        new_processes_last_hour = 0
+
+        # Сбор событий запуска программ через ProcessAuditManager
+        try:
+            if self._audit_manager is None:
+                from apps.windows.api.wevtapi import WevtAPI
+                self._audit_manager = ProcessAuditManager(WevtAPI())
+            
+            # Получаем историю запусков за последний час
+            history = self._audit_manager.get_process_execution_history(
+                limit=100,
+                filter_process=None,
+                filter_user=None,
+            )
+            
+            # Фильтруем события за последний час
+            one_hour_ago = time.time() - 3600
+            for ev in history:
+                timestamp_str = ev.get("timestamp", "")
+                if timestamp_str:
+                    try:
+                        # Парсим ISO формат времени
+                        from datetime import datetime
+                        ts = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00")).timestamp()
+                        if ts > one_hour_ago:
+                            new_processes_last_hour += 1
+                            # Записываем корреляцию запуска процесса
+                            try:
+                                telemetry_service = TelemetryLoggerService.get_instance()
+                                telemetry_service.record_event(
+                                    event_type="process_start",
+                                    event_details={
+                                        "process_name": ev.get("process_name", ""),
+                                        "executable_path": ev.get("executable_path", ""),
+                                        "command_line": ev.get("command_line", ""),
+                                        "user": ev.get("user", ""),
+                                        "pid": ev.get("process_id"),
+                                    },
+                                )
+                            except Exception as ex:
+                                logger.debug(f"Не удалось записать корреляцию процесса: {ex}")
+                    except Exception:
+                        pass
+        except Exception as ex:
+            logger.debug(f"Не удалось получить историю запусков процессов: {ex}")
 
         for proc in psutil.process_iter(['pid', 'name', 'exe', 'cmdline', 'username', 'cpu_percent', 'memory_percent', 'num_threads']):
             try:
@@ -119,6 +174,7 @@ class ProcessCollector(TelemetryProvider):
 
         metrics: Dict[str, Any] = {
             "total_processes_count": len(processes),
+            "new_processes_last_hour": new_processes_last_hour,
             "handle_leak_candidates_count": len(handle_leak_candidates),
             "handle_leak_candidates": handle_leak_candidates,
         }

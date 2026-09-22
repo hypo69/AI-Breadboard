@@ -282,7 +282,7 @@ pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 
 # 4. SSL-сертификаты (Windows)
-.\install_ssl_cert.ps1
+.\install\Install-SslCertificate.ps1
 
 # 5. Конфигурация
 cp .env.example .env

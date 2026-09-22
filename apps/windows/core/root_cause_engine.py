@@ -42,6 +42,7 @@ from apps.windows.core.modules import (
     CleanCollector,
     DriverCollector,
     EventLogCollector,
+    FileActivityCollector,
     PerformanceCollector,
     ProcessCollector,
     SecurityCollector,
@@ -65,6 +66,7 @@ class RootCauseEngine:
         self.driver_collector = DriverCollector()
         self.clean_collector = CleanCollector()
         self.security_collector = SecurityCollector()
+        self.file_activity_collector: Optional[FileActivityCollector] = None
 
     def run_full_audit(self, mode: str = "full") -> FullAuditReport:
         """Запуск полного аудита по всем доменам с расчётом Health Score.
@@ -95,6 +97,7 @@ class RootCauseEngine:
                 "security": self.security_collector if hasattr(self, 'security_collector') else SecurityCollector(),
                 "eventlog": self.log_collector,
                 "processes": self.proc_collector,
+                "file_activity": self.file_activity_collector or FileActivityCollector(monitored_paths=["C:\\Users\\%USERNAME%\\Documents", "C:\\Program Files", "C:\\Program Files (x86)"]),
                 "services": self.svc_collector,
                 "tasks": self.task_collector,
             }

@@ -95,7 +95,7 @@ python -m pip install -r <requirements_file>
 
 ### Step 5: SSL Certificate Generation (HTTPS Support)
 Generate local development SSL certificates for `localhost`, `127.0.0.1`, and local network IP:
-- Windows: `.\install_ssl_cert.ps1`
+- Windows: `.\install\Install-SslCertificate.ps1`
 - Python cross-platform: `python scripts/cli/install_ssl_certs.py` or fallback self-signed certificate generation via `cryptography`.
 
 ### Step 6: Global CLI Registration (`assist` & Environment Variables)

@@ -1,5 +1,11 @@
 // ── MAIN.JS ───────────────────────────────────────────────────────────────────
 
+// ── DEV FLAG: стратегия загрузки вкладок ─────────────────────────────────────
+// true  → Promise.all: все вкладки грузятся параллельно при старте (старое поведение)
+// false → Lazy:        только чат при старте, остальные — при первом открытии
+const LOAD_ALL_TABS_ON_START = false;
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { initI18n, switchLang, applyTranslations } from './i18n.js';
 import { initTheme, setTheme, getThemeMode, getResolvedTheme } from './theme.js';
 import { initUserSettings, refreshUserProfile } from './userSettings.js';
@@ -105,24 +111,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   initCacheUI();
   console.log('Browser cache UI initialized');
 
-  await initHelpContent();
-  console.log('HELP system initialized');
-  
-  console.log('Loading tabs...');
+  initHelpContent();
+
   const v = Date.now();
-  await Promise.all([
-    loadTabContent('chat', `/html/chat/index.html?v=${v}`, `/html/chat/main.js?v=${v}`),
-    loadTabContent('rag', `/html/rag_tab/index.html?v=${v}`, `/html/rag_tab/main.js?v=${v}`),
-    loadTabContent('telegram-rag', `/html/telegram_rag_tab/index.html?v=${v}`, `/html/telegram_rag_tab/main.js?v=${v}`),
-    loadTabContent('news', `/html/news_tab/index.html?v=${v}`, `/html/news_tab/main.js?v=${v}`),
-    loadTabContent('voice', `/html/voice_tab/index.html?v=${v}`, `/html/voice_tab/main.js?v=${v}`),
-    loadTabContent('plugins', `/html/plugins_tab/index.html?v=${v}`, `/html/plugins_tab/main.js?v=${v}`),
-    loadTabContent('admin', `/html/admin_tab/index.html?v=${v}`, `/html/admin_tab/main.js?v=${v}`),
-    loadTabContent('help', `/html/help/index.html?v=${v}`, `/html/help/main.js?v=${v}`),
-  ]);
-  console.log('All tabs loaded');
-  
-  // Apply translations after all tabs are loaded
+  const TAB_URLS = {
+    'chat':         [`/html/chat/index.html?v=${v}`,             `/html/chat/main.js?v=${v}`],
+    'rag':          [`/html/rag_tab/index.html?v=${v}`,          `/html/rag_tab/main.js?v=${v}`],
+    'telegram-rag': [`/html/telegram_rag_tab/index.html?v=${v}`, `/html/telegram_rag_tab/main.js?v=${v}`],
+    'news':         [`/html/news_tab/index.html?v=${v}`,         `/html/news_tab/main.js?v=${v}`],
+    'voice':        [`/html/voice_tab/index.html?v=${v}`,        `/html/voice_tab/main.js?v=${v}`],
+    'plugins':      [`/html/plugins_tab/index.html?v=${v}`,      `/html/plugins_tab/main.js?v=${v}`],
+    'admin':        [`/html/admin_tab/index.html?v=${v}`,        `/html/admin_tab/main.js?v=${v}`],
+    'help':         [`/html/help/index.html?v=${v}`,             `/html/help/main.js?v=${v}`],
+  };
+
+  window._loadedTabs = new Set();
+
+  if (LOAD_ALL_TABS_ON_START) {
+    // Promise.all: все вкладки параллельно — удобно при дебаггинге
+    console.log('[TabLoader] Strategy: Promise.all (all tabs at start)');
+    await Promise.all(
+      Object.entries(TAB_URLS).map(([name, [html, js]]) => loadTabContent(name, html, js))
+    );
+    Object.keys(TAB_URLS).forEach(name => window._loadedTabs.add(name));
+  } else {
+    // Lazy: только чат сразу, остальные — при первом открытии
+    console.log('[TabLoader] Strategy: Lazy (chat only at start)');
+    window._lazyTabUrls = TAB_URLS;
+    await loadTabContent('chat', ...TAB_URLS['chat']);
+    window._loadedTabs.add('chat');
+  }
+
   applyTranslations();
   
   // Синхронизация видимости вкладок плагинов
@@ -239,38 +258,41 @@ async function loadTabContent(tabName, url, scriptUrl = null) {
 }
 
 // Tab Switch Handler
-function onTabSwitched(targetId) {
-const cleanId = targetId.startsWith('#') ? targetId.slice(1) : targetId;
-try {
-  trackTabSwitch(cleanId);
-} catch (e) {
-  console.debug('Failed to track tab switch:', e);
-}
-if (cleanId === 'tab-chat') {
-  const msgInput = document.getElementById('message-input');
-  if (msgInput) msgInput.focus();
-} else if (cleanId === 'tab-rag' && typeof window.initRagTab === 'function') {
-  console.log('[MainInterface] Switching to RAG tab...');
-  window.initRagTab();
-} else if ((cleanId === 'tab-telegram-rag' || cleanId === 'tab-telegram_rag') && typeof window.initTelegramRagTab === 'function') {
-  console.log('[MainInterface] Switching to Telegram RAG tab...');
-  window.initTelegramRagTab();
-} else if (cleanId === 'tab-news' && typeof window.initNewsTab === 'function') {
-  console.log('[MainInterface] Switching to News tab...');
-  window.initNewsTab();
-} else if (cleanId === 'tab-voice' && typeof window.initVoiceTab === 'function') {
-  console.log('[MainInterface] Switching to Voice tab...');
-  window.initVoiceTab();
-} else if (cleanId === 'tab-plugins' && typeof window.initPluginsTab === 'function') {
-  console.log('[MainInterface] Switching to Plugins tab...');
-  window.initPluginsTab();
-} else if (cleanId === 'tab-admin' && typeof window.initAdminTab === 'function') {
-  console.log('[MainInterface] Switching to Admin tab...');
-  window.initAdminTab();
-} else if (cleanId === 'tab-help' && typeof window.initHelpTab === 'function') {
-  console.log('[MainInterface] Switching to Help tab...');
-  window.initHelpTab();
-}
+async function onTabSwitched(targetId) {
+  const cleanId = targetId.startsWith('#') ? targetId.slice(1) : targetId;
+  try {
+    trackTabSwitch(cleanId);
+  } catch (e) {
+    console.debug('Failed to track tab switch:', e);
+  }
+
+  // Ленивая загрузка: грузим вкладку при первом открытии
+  const tabName = cleanId.replace(/^tab-/, '');
+  if (!window._loadedTabs.has(tabName) && window._lazyTabUrls?.[tabName]) {
+    window._loadedTabs.add(tabName);
+    const [htmlUrl, jsUrl] = window._lazyTabUrls[tabName];
+    console.log(`[LazyLoad] Loading tab on demand: ${tabName}`);
+    await loadTabContent(tabName, htmlUrl, jsUrl);
+  }
+
+  if (cleanId === 'tab-chat') {
+    const msgInput = document.getElementById('message-input');
+    if (msgInput) msgInput.focus();
+  } else if (cleanId === 'tab-rag' && typeof window.initRagTab === 'function') {
+    window.initRagTab();
+  } else if ((cleanId === 'tab-telegram-rag' || cleanId === 'tab-telegram_rag') && typeof window.initTelegramRagTab === 'function') {
+    window.initTelegramRagTab();
+  } else if (cleanId === 'tab-news' && typeof window.initNewsTab === 'function') {
+    window.initNewsTab();
+  } else if (cleanId === 'tab-voice' && typeof window.initVoiceTab === 'function') {
+    window.initVoiceTab();
+  } else if (cleanId === 'tab-plugins' && typeof window.initPluginsTab === 'function') {
+    window.initPluginsTab();
+  } else if (cleanId === 'tab-admin' && typeof window.initAdminTab === 'function') {
+    window.initAdminTab();
+  } else if (cleanId === 'tab-help' && typeof window.initHelpTab === 'function') {
+    window.initHelpTab();
+  }
 }
 
 // Programmatic tab switcher

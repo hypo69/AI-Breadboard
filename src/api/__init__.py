@@ -34,7 +34,7 @@ from .router_admin import (
     init_router as init_admin_router,
     init_skills_router,
     init_plugins_router,
-    init_apps_router,
+    init_apps_router
 )
 from .router_mcp import init_admin_mcp_router, init_user_mcp_router
 from .router_agents import init_agents_router
@@ -45,7 +45,6 @@ from .router_openai import router as router_openai
 from .router_user_storage import init_router as init_user_storage_router
 from .router_news import init_router as init_news_router
 from .messenger import init_router as init_messenger_router
-from .router_network import init_router as init_network_router
 from .router_system import init_router as init_system_router
 from .router_ifttt import init_router as init_ifttt_router
 from .router_windows_admin import init_router as init_windows_admin_router
@@ -91,7 +90,6 @@ __all__ = [
     "init_user_storage_router",
     "init_news_router",
     "init_messenger_router",
-    "init_network_router",
     "init_system_router",
     "init_ifttt_router",
     "init_windows_admin_router",

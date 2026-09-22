@@ -489,7 +489,7 @@ class VersionManager:
             
             # Apply database migrations
             try:
-                from src.db.migrations import get_migration_manager
+                from apps.helpdesk.db.migrations import get_migration_manager
                 db_mgr = get_migration_manager(self.repo_path)
                 mig_res = db_mgr.apply_all_pending()
                 if not mig_res.get("success", False):

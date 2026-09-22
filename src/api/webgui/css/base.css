@@ -6,11 +6,13 @@
 /* Базовый шрифт — 14px для компактного вида */
 html {
   font-size: 14px;
+  height: 100%;
 }
 
 body {
   display: flex;
   flex-direction: column;
+  height: 100%;
   min-height: 100vh;
   background: var(--bg-color);
   color: var(--text-color);
@@ -38,11 +40,60 @@ body {
 
 .tab-pane {
   min-height: auto;
-  overflow-y: visible;
-  overflow-x: hidden;
   padding-bottom: 16px;
 }
 
 .tab-pane.active {
   display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   АДМИН-ИНТЕРФЕЙС
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* Стили для #admin-interface внутри .container-fluid (как в index.html) */
+#admin-interface,
+.container-fluid#admin-interface {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100%;
+  overflow-y: auto;
+}
+
+#admin-interface .tab-content,
+.container-fluid#admin-interface .tab-content {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+#admin-interface .tab-pane,
+.container-fluid#admin-interface .tab-pane {
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#admin-interface .tab-pane.active,
+.container-fluid#admin-interface .tab-pane.active {
+  display: block;
+}
+
+/* Скроллбары для админки */
+#admin-interface ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+#admin-interface ::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
+
+#admin-interface ::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+#admin-interface ::-webkit-scrollbar-thumb:hover {
+  opacity: 0.85;
 }

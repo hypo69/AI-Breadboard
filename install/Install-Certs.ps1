@@ -17,7 +17,7 @@ Write-Host (Msg "step_5") -ForegroundColor Cyan
 $certsDir = Join-Path $env:USERPROFILE ".certs"
 $certFile = Join-Path $certsDir "localhost+2.pem"
 $keyFile  = Join-Path $certsDir "localhost+2-key.pem"
-$sslScriptPath = Join-Path $InstallDir "install_ssl_cert.ps1"
+$sslScriptPath = Join-Path $InstallDir "install\Install-SslCertificate.ps1"
 
 if ($Config -and $Config.paths) {
     if ($Config.paths.certs_dir) {

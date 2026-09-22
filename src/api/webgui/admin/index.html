@@ -36,6 +36,19 @@
   <!-- Navigation Bar -->
   <div class="d-flex align-items-center justify-content-between mb-3 main-nav-container rounded px-2 py-1">
     <ul class="nav nav-tabs flex-nowrap flex-grow-1 border-0 me-2 align-items-center" id="mainTabs">
+      <!-- Кнопка: О системе (сверху и первая) -->
+      <li class="nav-item">
+        <button class="nav-link d-flex align-items-center gap-1 active" data-tab="tab-about-system" data-bs-target="#tab-about-system" type="button" data-i18n="tabs.aboutSystem">
+          <i class="bi bi-info-circle-fill text-info me-1"></i>
+          <span>О системе</span>
+        </button>
+      </li>
+
+      <!-- Разделитель -->
+      <li class="nav-item d-flex align-items-center">
+        <div class="nav-group-divider"></div>
+      </li>
+
       <!-- Группа: Диалог и аудио -->
       <li class="nav-item dropdown">
         <button class="nav-link dropdown-toggle active d-flex align-items-center gap-1" type="button" id="dialogTabsDropdown">
@@ -70,6 +83,9 @@
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-rag" data-bs-target="#tab-rag" type="button" data-i18n="tabs.rag">
             🧠 RAG
           </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-pixelrag" data-bs-target="#tab-pixelrag" type="button">
+            🖼️ PixelRAG
+          </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-models" data-bs-target="#tab-models" type="button" data-i18n="tabs.models">
             🤖 Модели и API
           </button>
@@ -82,9 +98,6 @@
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-mcp" data-bs-target="#tab-mcp" type="button" data-i18n="tabs.mcp">
             🔌 MCP Серверы
           </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-observability" data-bs-target="#tab-observability" type="button">
-            🔍 Observability & Диагностика
-          </button>
         </div>
       </li>
 
@@ -93,7 +106,7 @@
         <div class="nav-group-divider"></div>
       </li>
 
-      <!-- Группа: Плагины и поиск -->
+      <!-- Группа: Плагины -->
       <li class="nav-item dropdown" id="pluginsNavDropdownWrapper">
         <button class="nav-link dropdown-toggle d-flex align-items-center gap-1" type="button" id="pluginsTabsDropdown">
           <i class="bi bi-puzzle-fill text-warning me-1"></i>
@@ -103,19 +116,9 @@
           <div id="nav-enabled-plugins-list" class="nav-enabled-plugins-list">
             <!-- Dynamic enabled plugins will be injected here -->
           </div>
-          <div data-plugin-tab="web_search">
-            <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-search" data-bs-target="#tab-search" data-plugin="web_search" type="button" data-i18n="tabs.search">
-              🌐 Веб-поиск
-            </button>
-          </div>
-          <div data-plugin-tab="movie_search_sources">
-            <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-sources" data-bs-target="#tab-sources" data-plugin="movie_search_sources" type="button" data-i18n="tabs.sources">
-              📑 Источники
-            </button>
-          </div>
           <hr class="dropdown-divider my-1">
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-plugins" data-bs-target="#tab-plugins" type="button" data-i18n="tabs.managePlugins">
-            ⚙️ Управление
+            ⚙️ Все плагины
           </button>
         </div>
       </li>
@@ -132,26 +135,11 @@
           <span data-i18n="tabs.groupApps">Приложения</span>
         </button>
         <div class="dropdown-menu shadow border-secondary-subtle">
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-about-system" data-bs-target="#tab-about-system" type="button" data-i18n="tabs.aboutSystem">
-            ℹ️ О Системе
-          </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-scenarios" data-bs-target="#tab-scenarios" type="button" data-i18n="tabs.scenarios">
-            💬🎬 Чат и сценарии
-          </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-chat" data-bs-target="#tab-chat" type="button" data-i18n="tabs.chat">
             💬 Чат
           </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-system-inspector" data-bs-target="#tab-system-inspector" type="button" data-i18n="tabs.systemInspector">
-            📡 Телеметрия
-          </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-network" data-bs-target="#tab-network" type="button" data-i18n="tabs.network">
-            🌐 Сетевой терминал
-          </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-trading" data-bs-target="#tab-trading" type="button" data-i18n="tabs.trading">
-            📈 Торговый терминал
-          </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-windows-admin" data-bs-target="#tab-windows-admin" type="button">
-            🛡️ Windows Sysadmin
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-scenarios" data-bs-target="#tab-scenarios" type="button" data-i18n="tabs.scenarios">
+            💬🎬 Чат и сценарии
           </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-user-assistant" data-bs-target="#tab-user-assistant" type="button">
             🗓️ User Assistant
@@ -164,21 +152,6 @@
           </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-cloudflared" data-bs-target="#tab-cloudflared" type="button">
             ☁️ Cloudflared Monitor
-          </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-system-control" data-bs-target="#tab-system-control" type="button">
-            🛠️ System Control Center
-          </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-system-logs" data-bs-target="#tab-system-logs" type="button">
-            📜 Журналы системы (All Logs)
-          </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-software-audit" data-bs-target="#tab-software-audit" type="button">
-            📊 Software Audit
-          </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-registry-viewer" data-bs-target="#tab-registry-viewer" type="button">
-            🗝️ Registry Viewer
-          </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-wikipedia-research" data-bs-target="#tab-wikipedia-research" type="button">
-            🌐 Wikipedia Research Lab
           </button>
         </div>
       </li>
@@ -199,10 +172,10 @@
             ⚙️ Управление
           </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-users" data-bs-target="#tab-users" type="button" data-i18n="tabs.users">
-            👥 Пользователи
+            👥 Внутренние пользователи
           </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-user-directories" data-bs-target="#tab-user-directories" type="button" data-i18n="tabs.userDirectories">
-            📁 Пользовательские директории
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-windows-users" data-bs-target="#tab-windows-users" type="button">
+            👥 Пользователи Windows
           </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-google-accounts" data-bs-target="#tab-google-accounts" type="button" data-i18n="tabs.googleAccounts">
             🌐 Google аккаунты
@@ -322,11 +295,17 @@
     <!-- Users Tab -->
     <div id="tab-users" class="tab-pane fade"></div>
 
+    <!-- Windows Users Tab -->
+    <div id="tab-windows-users" class="tab-pane fade"></div>
+
     <!-- Google Accounts Tab -->
     <div id="tab-google-accounts" class="tab-pane fade"></div>
 
     <!-- RAG Tab -->
     <div id="tab-rag" class="tab-pane fade"></div>
+
+    <!-- PixelRAG Tab -->
+    <div id="tab-pixelrag" class="tab-pane fade"></div>
 
     <!-- Telegram RAG Tab -->
     <div id="tab-telegram-rag" class="tab-pane fade"></div>

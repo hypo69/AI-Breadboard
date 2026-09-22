@@ -253,7 +253,7 @@ irm https://raw.githubusercontent.com/hypo69/AI-Breadboard/master/install.ps1 | 
    **Шаг 5: Генерация SSL-сертификатов**
 
    - Checks наличие `%USERPROFILE%\.certs\localhost+2.pem` и `localhost+2-key.pem`
-   - Если не найдены, запускает `install_ssl_cert.ps1` для генерации локальных SSL-сертификатов
+   - Если не найдены, запускает `.\install\Install-SslCertificate.ps1` для генерации локальных SSL-сертификатов
    - Включает HTTPS-доступ к `http://localhost:8000`
 
    **Шаг 6: Регистрация глобальной команды**

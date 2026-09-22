@@ -14,10 +14,10 @@
 
 """Экспорт 15 доменных коллекторов аудита Windows."""
 
-from apps.windows.core.modules.baseline_collector import BaselineCollector
 from apps.windows.core.modules.clean_collector import CleanCollector
 from apps.windows.core.modules.driver_collector import DriverCollector
 from apps.windows.core.modules.eventlog_collector import EventLogCollector
+from apps.windows.core.modules.file_activity_collector import FileActivityCollector
 from apps.windows.core.modules.integrity_collector import IntegrityCollector
 from apps.windows.core.modules.log_discovery_engine import LogDiscoveryEngine, LogSource
 from apps.windows.core.modules.network_collector import NetworkCollector
@@ -41,11 +41,11 @@ __all__ = [
     "SecurityCollector",
     "EventLogCollector",
     "ProcessCollector",
+    "FileActivityCollector",
     "ServicesCollector",
     "TasksCollector",
     "NetworkCollector",
     "UpdateCollector",
-    "BaselineCollector",
     "PostInstallCollector",
     "LogDiscoveryEngine",
     "LogSource",

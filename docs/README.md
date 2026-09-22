@@ -21,7 +21,8 @@ docs/
 │   └── user/        — End-user guide
 ├── assets/          — Images and diagrams
 ├── stylesheets/     — Custom MkDocs CSS
-└── changelog.md     — Project changelog
+├── changelog.md     — Project changelog
+└── hardware_sensors_telemetry.md — Hardware sensors and telemetry documentation
 ```
 
 ## Building the docs
@@ -37,3 +38,11 @@ mkdocs build          # static site output to site/
 - `docs/ru/` — Russian only (canonical documentation)
 - `docs/en/` — English only
 - All new documentation pages must be placed in the appropriate language subdirectory
+
+## Related Documentation
+
+- **Hardware Sensors & Telemetry** — `docs/hardware_sensors_telemetry.md`
+  - Overview of hardware monitoring system
+  - Two independent sensor sources (LibreHardwareMonitor and custom collectors)
+  - CSV logging architecture with change filtering
+  - Configuration and usage guide

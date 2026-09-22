@@ -307,7 +307,7 @@ def run_db_command(args: argparse.Namespace) -> int:
     Returns:
         int: Exit code (0 on success, 1 on error).
     """
-    from src.db.migrations import get_migration_manager
+    from apps.helpdesk.db.migrations import get_migration_manager
     mgr = get_migration_manager()
     sub = args.subcommand
 

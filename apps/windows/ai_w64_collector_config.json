@@ -1,0 +1,21 @@
+{
+  "log_dir": null,
+  "monitored_paths": [
+    "C:\\Users\\%USERNAME%\\Documents",
+    "C:\\Users\\%USERNAME%\\Downloads",
+    "C:\\Users\\%USERNAME%\\Desktop",
+    "C:\\Program Files",
+    "C:\\Program Files (x86)",
+    "C:\\Windows\\System32",
+    "C:\\Windows\\SysWOW64"
+  ],
+  "enable_file_monitoring": true,
+  "enable_process_monitoring": true,
+  "enable_registry_monitoring": true,
+  "enable_network_monitoring": true,
+  "enable_event_log_monitoring": true,
+  "enable_process_trace": true,
+  "enable_disk_trace": true,
+  "enable_network_trace": true,
+  "enable_registry_trace": true
+}

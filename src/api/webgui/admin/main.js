@@ -293,6 +293,9 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-users' && typeof window.initUsersTab === 'function') {
     console.log('[AdminInterface] Switching to users tab...');
     window.initUsersTab();
+  } else if (cleanId === 'tab-windows-users' && typeof window.initWindowsUsersTab === 'function') {
+    console.log('[AdminInterface] Switching to Windows users tab...');
+    window.initWindowsUsersTab();
   } else if (cleanId === 'tab-user-directories' && typeof window.initUserDirectoriesTab === 'function') {
     console.log('[AdminInterface] Switching to user directories tab...');
     window.initUserDirectoriesTab();
@@ -311,6 +314,9 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-rag' && typeof window.initRagTab === 'function') {
     console.log('[AdminInterface] Switching to RAG tab...');
     window.initRagTab();
+  } else if (cleanId === 'tab-pixelrag' && typeof window.initPixelRagTab === 'function') {
+    console.log('[AdminInterface] Switching to PixelRAG tab...');
+    window.initPixelRagTab();
   } else if ((cleanId === 'tab-telegram-rag' || cleanId === 'tab-telegram_rag') && typeof window.initTelegramRagTab === 'function') {
     console.log('[AdminInterface] Switching to Telegram RAG tab...');
     window.initTelegramRagTab();
@@ -565,10 +571,12 @@ async function initInterface() {
     loadTabContent('plugins', `/html/plugins_tab/index.html?v=${cb}`, `/html/plugins_tab/main.js?v=${cb}`),
     loadTabContent('admin', `/html/admin_tab/index.html?v=${cb}`, `/html/admin_tab/main.js?v=${cb}`),
     loadTabContent('users', `/html/users_tab/index.html?v=${cb}`, `/html/users_tab/main.js?v=${cb}`),
+    loadTabContent('windows-users', `/html/windows_users_tab/index.html?v=${cb}`, `/html/windows_users_tab/main.js?v=${cb}`),
     loadTabContent('user-directories', `/html/user_directories_tab/index.html?v=${cb}`, `/html/user_directories_tab/main.js?v=${cb}`),
     loadTabContent('google-accounts', `/html/google_accounts_tab/index.html?v=${cb}`, `/html/google_accounts_tab/main.js?v=${cb}`),
     loadTabContent('instructions', `/html/instructions_tab/index.html?v=${cb}`, `/html/instructions_tab/main.js?v=${cb}`),
     loadTabContent('rag', `/html/rag_tab/index.html?v=${cb}`, `/html/rag_tab/main.js?v=${cb}`),
+    loadTabContent('pixelrag', `/html/pixelrag_tab/index.html?v=${cb}`, `/html/pixelrag_tab/main.js?v=${cb}`),
     loadTabContent('telegram-rag', `/html/telegram_rag_tab/index.html?v=${cb}`, `/html/telegram_rag_tab/main.js?v=${cb}`),
     loadTabContent('voice', `/html/voice_tab/index.html?v=${cb}`, `/html/voice_tab/main.js?v=${cb}`),
     loadTabContent('models', `/html/models_tab/index.html?v=${cb}`, `/html/models_tab/main.js?v=${cb}`),
@@ -586,19 +594,12 @@ async function initInterface() {
 
   // Определение и фильтрация вкладок микроприложений (/apps)
   const appTabDefs = [
+    { id: 'chat', tab: 'chat', html: '/html/chat/index.html', js: '/html/chat/main.js' },
     { id: 'scenarios', tab: 'scenarios', html: '/html/scenarios_tab/index.html', js: '/html/scenarios_tab/main.js' },
-    { id: 'trading_terminal', tab: 'trading', html: '/html/trading_tab/index.html', js: '/html/trading_tab/main.js' },
-    { id: 'network_terminal', tab: 'network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
-    { id: 'system_inspector', tab: 'system-inspector', html: '/html/system_inspector_tab/index.html', js: '/html/system_inspector_tab/main.js' },
-    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html', js: '/html/about_system_tab/main.js' },
-    { id: 'windows_sysadmin', tab: 'windows-admin', html: '/html/windows_admin_tab/index.html', js: '/html/windows_admin_tab/main.js' },
-    { id: 'cloudflared_monitor', tab: 'cloudflared', html: '/html/cloudflared_tab/index.html', js: '/html/cloudflared_tab/main.js' },
     { id: 'user_assistant', tab: 'user-assistant', html: '/html/user_assistant_tab/index.html', js: '/html/user_assistant_tab/main.js' },
     { id: 'gcloud_monitor', tab: 'gcloud', html: '/html/gcloud_tab/index.html', js: '/html/gcloud_tab/main.js' },
     { id: 'website_monitor', tab: 'website-monitor', html: '/html/website_monitor_tab/index.html', js: '/html/website_monitor_tab/main.js' },
-    { id: 'system_control_center', tab: 'system-control', html: '/html/system_control_tab/index.html', js: '/html/system_control_tab/main.js' },
-    { id: 'system_log_viewer', tab: 'system-logs', html: '/html/system_logs_tab/index.html', js: '/html/system_logs_tab/main.js' },
-    { id: 'wikipedia_research', tab: 'wikipedia-research', html: '/html/wikipedia_research_tab/index.html', js: '/html/wikipedia_research_tab/main.js' },
+    { id: 'cloudflared_monitor', tab: 'cloudflared', html: '/html/cloudflared_tab/index.html', js: '/html/cloudflared_tab/main.js' },
   ];
 
   const appTabLoads = appTabDefs

@@ -11,14 +11,15 @@ from header import __root__
 from src.logger import logger
 from apps.windows.telemetry.models import HardwareSensor, TelemetryProvider
 from apps.windows.core.models import DomainAuditResult
-from apps.windows_sysadmin.src.file_auditor import FileAuditor
+from apps.windows_sysadmin.src.file_auditor import WindowsFileAuditor
+from apps.windows.telemetry.service import TelemetryLoggerService
 
 class FileActivityCollector(TelemetryProvider):
     """Коллектор активности файловой системы на основе аудита событий Windows."""
 
     def __init__(self, monitored_paths: List[str]) -> None:
         """Инициализация коллектора с аудитором и списком отслеживаемых путей."""
-        self._auditor = FileAuditor()
+        self._auditor = WindowsFileAuditor()
         self._monitored_paths = monitored_paths
         self._log_dir = __root__ / "data" / "file_activity_logs"
         self._log_dir.mkdir(parents=True, exist_ok=True)
@@ -60,13 +61,40 @@ class FileActivityCollector(TelemetryProvider):
         writes = 0
         deletes = 0
         log_file = self._log_dir / f"{datetime.now().strftime('%Y-%m-%d')}.jsonl"
+        
+        # Получаем сервис телеметрии для записи корреляций
+        telemetry_service = TelemetryLoggerService.get_instance()
 
         with open(log_file, "a", encoding="utf-8") as f:
             for ev in events:
                 if ev.is_deletion:
                     deletes += 1
+                    # Записываем корреляцию удаления файла
+                    try:
+                        telemetry_service.record_event(
+                            event_type="file_delete",
+                            event_details={
+                                "file_path": ev.object_name,
+                                "process_name": ev.process_name,
+                                "user": ev.subject_user_name,
+                            },
+                        )
+                    except Exception as ex:
+                        logger.debug(f"Не удалось записать корреляцию удаления: {ex}")
                 else:
                     writes += 1
+                    # Записываем корреляцию записи в файл
+                    try:
+                        telemetry_service.record_event(
+                            event_type="file_write",
+                            event_details={
+                                "file_path": ev.object_name,
+                                "process_name": ev.process_name,
+                                "user": ev.subject_user_name,
+                            },
+                        )
+                    except Exception as ex:
+                        logger.debug(f"Не удалось записать корреляцию записи: {ex}")
                 
                 # Запись события в JSONL
                 f.write(json.dumps(ev.__dict__, default=str, ensure_ascii=False) + "\n")

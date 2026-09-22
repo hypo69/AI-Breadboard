@@ -32,6 +32,7 @@ from apps.ai_breadboard_admin.src import (
     InstructionsManager,
     SourcesManager,
     UserAdminService,
+    WindowsUserManager,
 )
 from src.logger import logger
 from apps.common.csv_logger import AppCsvLogger

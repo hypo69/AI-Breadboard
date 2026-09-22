@@ -1,0 +1,41 @@
+{
+  "app": {
+    "name": "Enterprise Knowledge Platform",
+    "version": "1.0.0",
+    "description": "Unified Enterprise Knowledge Platform with identity resolution, fact storage, and hybrid retrieval"
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8181,
+    "ssl": true,
+    "dedicated": true
+  },
+  "storage": {
+    "db_path": "data/enterprise_knowledge/knowledge.db",
+    "type": "sqlite"
+  },
+  "workers": {
+    "enabled": true,
+    "ingestion_batch_size": 100,
+    "consolidation_interval_minutes": 60
+  },
+  "retrieval": {
+    "hybrid": {
+      "vector_enabled": false,
+      "fulltext_enabled": true,
+      "structured_enabled": true,
+      "graph_enabled": false
+    },
+    "default_limit": 20,
+    "max_limit": 100
+  },
+  "identity": {
+    "resolution_strategies": ["email", "alias", "employee_id"],
+    "default_confidence": 0.8,
+    "require_verification": false
+  },
+  "security": {
+    "access_control_enabled": true,
+    "audit_logging_enabled": true
+  }
+}

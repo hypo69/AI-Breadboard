@@ -254,6 +254,15 @@ class AgyChatBase:
         except Exception as e:
             await self.close()
             err_str = str(e)
+            
+            # 3. Service temporarily unavailable (503 UNAVAILABLE) - use model pool
+            if '503' in err_str or 'UNAVAILABLE' in err_str:
+                from src.ai.orchestration.model_pool_state import mark_model_exhausted, switch_model
+                mark_model_exhausted('agy', self.model_id)
+                err_msg = f"Error in AgyChatBase.ask (503 UNAVAILABLE): {err_str}"
+                logger.error(err_msg, exc_info=True)
+                raise
+            
             if any(x in err_str for x in ('404', 'NOT_FOUND', 'not supported', 'is no longer available', 'not found')):
                 from src.ai.model_manager import add_unsupported_model
                 add_unsupported_model('agy', self.model_id, reason=err_str)
@@ -337,6 +346,16 @@ class AgyChatBase:
         except Exception as e:
             await self.close()
             err_str = str(e)
+            
+            # 3. Service temporarily unavailable (503 UNAVAILABLE) - use model pool
+            if '503' in err_str or 'UNAVAILABLE' in err_str:
+                from src.ai.orchestration.model_pool_state import mark_model_exhausted, switch_model
+                mark_model_exhausted('agy', self.model_id)
+                err_msg = f"Error Antigravity SDK (503 UNAVAILABLE): {err_str}"
+                logger.error(err_msg, exc_info=True)
+                yield err_msg
+                return
+            
             if any(x in err_str for x in ('404', 'NOT_FOUND', 'not supported', 'is no longer available', 'not found')):
                 from src.ai.model_manager import add_unsupported_model
                 add_unsupported_model('agy', self.model_id, reason=err_str)

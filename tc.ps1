@@ -57,7 +57,7 @@
 [CmdletBinding()]
 param (
     [Parameter(Position = 0)]
-    [ValidateSet('start', 'stop', 'restart', 'status')]
+    [ValidateSet('start', 'stop', 'restart', 'status', 'sensorsonly')]
     [string]$Action = 'start',
 
     [Alias('Window', 'SeparateWindow', 'w')]
@@ -130,12 +130,13 @@ if ($Help) {
     Write-Host "  • Настройки запуска приложений   (config_tc.json)" -ForegroundColor White
     Write-Host ""
     Write-Host "СИНТАКСИС:" -ForegroundColor Yellow
-    Write-Host "  .\tc.ps1 [-Action start|stop|restart|status] [-ConfigFile <config_tc.json>] [-NewWindow] [-Background] [-NoBrowser]"
+    Write-Host "  .\tc.ps1 [sensorsonly|start|stop|restart|status] [-ConfigFile <config_tc.json>] [-NewWindow] [-Background] [-NoBrowser]"
     Write-Host "  .\tc.ps1 -Interactive"
     Write-Host "  .\tc.ps1 --help"
     Write-Host ""
     Write-Host "ПРИМЕРЫ:" -ForegroundColor Yellow
     Write-Host "  .\tc.ps1                               # Запуск приложений по config_tc.json"
+    Write-Host "  .\tc.ps1 sensorsonly                   # Запуск только сенсоров и автологгирования"
     Write-Host "  .\tc.ps1 -Action status                # Проверка статуса работы всех микросервисов"
     Write-Host "  .\tc.ps1 -ConfigFile config_tc.json    # Явное указание файла конфигурации"
     Write-Host "  .\tc.ps1 -Action stop                  # Остановка сервисов"
@@ -324,8 +325,28 @@ if ($Background) {
 }
 
 # ============================================================================
-# STAGE 5 — ОБРАБОТКА ДЕЙСТВИЯ (STATUS, STOP, RESTART, START)
+# STAGE 5 — ОБРАБОТКА ДЕЙСТВИЯ (STATUS, STOP, RESTART, START, SENSORSONLY)
 # ============================================================================
+
+# Если действие sensorsonly, запускаем только сенсоры
+if ($Action -eq 'sensorsonly') {
+    $sensorsLauncher = Join-Path $scriptDir "launchers\Run-Sensors.ps1"
+    if (-not (Test-Path $sensorsLauncher)) {
+        $sensorsLauncher = Join-Path $scriptDir "Run-Sensors.ps1"
+    }
+    
+    if (Test-Path $sensorsLauncher) {
+        Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkCyan
+        Write-Host "🚀 ЗАПУСК ТОЛЬКО СЕНСОРОВ И АВТОЛОГГИРОВАНИЯ" -ForegroundColor Cyan
+        Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkCyan
+        & $sensorsLauncher -Action start
+        exit 0
+    } else {
+        Write-Host "[ERROR] Run-Sensors.ps1 не найден: $sensorsLauncher" -ForegroundColor Red
+        exit 1
+    }
+}
+
 function Test-PortListening {
     param([int]$CheckPort)
     try {

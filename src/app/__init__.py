@@ -144,7 +144,6 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_user_storage_router,
         init_news_router,
         init_messenger_router,
-        init_network_router,
         init_system_router,
         init_ifttt_router,
         init_windows_admin_router,
@@ -188,7 +187,6 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_audio_router,
         init_user_storage_router,
         init_messenger_router,
-        init_network_router,
         init_ifttt_router,
         init_windows_admin_router,
         init_telegram_rag_router,
@@ -201,7 +199,7 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_autolog_router,
         init_sysautolog_router,
         init_user_directories_router,
-        get_pixel_rag_router,
+        get_pixel_rag_router
     ):
         app.include_router(factory())
 

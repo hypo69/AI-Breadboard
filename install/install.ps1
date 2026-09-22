@@ -532,7 +532,7 @@ if ((Test-Path $certFile) -and (Test-Path $keyFile)) {
     Write-Host (Msg "step_5_found" @($certFile)) -ForegroundColor Green
 } else {
     Write-Host (Msg "step_5_not_found") -ForegroundColor Yellow
-    $sslScript = Join-Path $ScriptRoot "install_ssl_cert.ps1"
+    $sslScript = Join-Path $ScriptRoot "Install-SslCertificate.ps1"
     if (Test-Path $sslScript) {
         & $sslScript
     } else {

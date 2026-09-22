@@ -1,0 +1,175 @@
+{
+  "version": "20260920_v2",
+  "menu": {
+    "topButtons": [
+      {
+        "id": "system_inspector",
+        "label": "Потребление ресурсов",
+        "icon": "bi-graph-up-arrow",
+        "tab": "tab-system-inspector",
+        "order": 1,
+        "visible": true
+      },
+      {
+        "id": "system_control_center",
+        "label": "System Control",
+        "icon": "bi-tools",
+        "tab": "tab-system-control",
+        "order": 2,
+        "visible": true
+      },
+      {
+        "id": "windows_defender",
+        "label": "Defender Security",
+        "icon": "bi-shield-lock",
+        "tab": "tab-defender",
+        "order": 3,
+        "visible": true
+      },
+      {
+        "id": "windows_sysadmin",
+        "label": "Windows Sysadmin",
+        "icon": "bi-server",
+        "tab": "tab-windows-admin",
+        "order": 4,
+        "visible": true
+      }
+    ],
+    "sidebarItems": [
+      {
+        "id": "about_system",
+        "label": "О Системе",
+        "icon": "bi-grid-fill",
+        "tab": "tab-about-system",
+        "order": 1,
+        "visible": true
+      },
+      {
+        "id": "scenarios",
+        "label": "Чат и сценарии",
+        "icon": "bi-chat-dots",
+        "tab": "tab-scenarios",
+        "order": 2,
+        "visible": true
+      },
+      {
+        "id": "network_terminal",
+        "label": "Сетевой терминал",
+        "icon": "bi-globe",
+        "tab": "tab-network",
+        "order": 3,
+        "visible": true
+      },
+      {
+        "id": "registry_viewer",
+        "label": "Registry Viewer",
+        "icon": "bi-file-earmark-text",
+        "tab": "tab-registry-viewer",
+        "order": 4,
+        "visible": true
+      },
+      {
+        "id": "cloudflared_monitor",
+        "label": "Cloudflared",
+        "icon": "bi-cloud",
+        "tab": "tab-cloudflared",
+        "order": 5,
+        "visible": true
+      },
+      {
+        "id": "gcloud_monitor",
+        "label": "Google Cloud",
+        "icon": "bi-cloud",
+        "tab": "tab-gcloud",
+        "order": 6,
+        "visible": true
+      },
+      {
+        "id": "website_monitor",
+        "label": "Website Intelligence",
+        "icon": "bi-bar-chart",
+        "tab": "tab-website-monitor",
+        "order": 7,
+        "visible": true
+      },
+      {
+        "id": "trading_terminal",
+        "label": "Торговый терминал",
+        "icon": "bi-graph-up",
+        "tab": "tab-trading",
+        "order": 8,
+        "visible": true
+      },
+      {
+        "id": "user_assistant",
+        "label": "User Assistant",
+        "icon": "bi-calendar-check",
+        "tab": "tab-user-assistant",
+        "order": 9,
+        "visible": true
+      },
+      {
+        "id": "helpdesk",
+        "label": "Helpdesk",
+        "icon": "bi-headset",
+        "tab": "tab-helpdesk",
+        "order": 10,
+        "visible": true
+      },
+      {
+        "id": "wikipedia_research",
+        "label": "Wikipedia Lab",
+        "icon": "bi-book",
+        "tab": "tab-wikipedia-research",
+        "order": 11,
+        "visible": true
+      },
+      {
+        "id": "windows_backup_manager",
+        "label": "Windows Backup",
+        "icon": "bi-hdd",
+        "tab": "tab-windows-backup",
+        "order": 12,
+        "visible": true
+      },
+      {
+        "id": "hardware_monitor",
+        "label": "Логи сенсоров",
+        "icon": "bi-lightning",
+        "tab": "tab-hardware-monitor",
+        "order": 13,
+        "visible": true
+      },
+      {
+        "id": "autolog_manager",
+        "label": "Управление логами",
+        "icon": "bi-file-earmark-text",
+        "tab": "tab-autolog",
+        "order": 14,
+        "visible": true
+      },
+      {
+        "id": "software_transparency_scanner",
+        "label": "Transparency Scanner",
+        "icon": "bi-search",
+        "tab": "tab-software-transparency",
+        "order": 15,
+        "visible": true
+      },
+      {
+        "id": "user_directories",
+        "label": "Директории пользователей",
+        "icon": "bi-folder",
+        "tab": "tab-user-directories",
+        "order": 16,
+        "visible": true
+      }
+    ]
+  },
+  "settings": {
+    "showTopButtons": true,
+    "showSidebar": true,
+    "defaultTab": "tab-about-system",
+    "enableAnimations": true
+  }
+}

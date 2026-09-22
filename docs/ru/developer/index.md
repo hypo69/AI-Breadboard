@@ -16,6 +16,7 @@
    * [5.2 Добавление нового API эндпоинта (FastAPI)](#52-добавление-нового-api-эндпоинта-fastapi)
    * [5.3 Расширение веб-интерфейса и синхронизация](#53-расширение-веб-интерфейса-и-синхронизация)
    * [5.4 Создание плагинов и навыков](#54-создание-плагинов-и-навыков)
+   * [5.5 Редактор меню (Menu Editor)](#55-редактор-меню-menu-editor)
 6. [Стандарты написания тестов и комментариев](#6-стандарты-написания-тестов-и-комментариев)
 7. [Чек-лист перед коммитом (Pre-Commit Checklist)](#7-чек-лист-перед-коммитом-pre-commit-checklist)
 
@@ -187,6 +188,83 @@ def retrieve_user_context(user_id: str, query: str = '', limit: int = 5) -> list
    - Синхронное сохранение в `localStorage` для мгновенного отклика интерфейса.
    - Фоновая асинхронная синхронизация с REST API сервера (`/api/...`).
    - Сохранение работоспособности в оффлайн-режиме при временной недоступности сервера.
+
+### 5.4 Редактор меню (Menu Editor)
+
+Редактор меню позволяет настраивать расположение элементов навигации в веб-интерфейсе `/tc`.
+
+#### Архитектура
+
+| Файл | Описание |
+|------|----------|
+| `menu-config.json` | Внешний файл конфигурации меню |
+| `apps/index.html` | HTML-шаблон с редактором меню |
+| `apps/main.js` | Основной JS-модуль |
+| `apps/modules/status-manager.js` | Управление состоянием приложений |
+| `apps/modules/tabs-config.js` | Реестр определений вкладок |
+| `css/components.css` | Стили для редактора меню |
+
+#### Структура конфигурации
+
+```json
+{
+  "version": "1.0",
+  "menu": {
+    "topButtons": [
+      {
+        "id": "system_inspector",
+        "label": "Потребление ресурсов",
+        "icon": "bi-graph-up-arrow",
+        "tab": "tab-system-inspector",
+        "order": 1,
+        "visible": true
+      }
+    ],
+    "sidebarItems": [
+      {
+        "id": "about_system",
+        "label": "О Системе",
+        "icon": "bi-grid-fill",
+        "tab": "tab-about-system",
+        "order": 1,
+        "visible": true
+      }
+    ]
+  }
+}
+```
+
+#### Добавление нового элемента меню
+
+1. **Добавьте определение вкладки** в `src/api/webgui/apps/modules/tabs-config.js`:
+   ```javascript
+   { id: 'new_feature', tab: 'new-feature', tabId: 'tab-new-feature', html: '/html/new_feature_tab/index.html', js: '/html/new_feature_tab/main.js' }
+   ```
+
+2. **Добавьте элемент в `menu-config.json`**:
+   ```json
+   {
+     "id": "new_feature",
+     "label": "Новая функция",
+     "icon": "bi-star-fill",
+     "tab": "tab-new-feature",
+     "order": 5,
+     "visible": true
+   }
+   ```
+
+3. **Создайте HTML и JS файлы** для вкладки:
+   - `src/api/webgui/new_feature_tab/index.html`
+   - `src/api/webgui/new_feature_tab/main.js`
+
+#### Тестирование
+
+Запустите тесты:
+```bash
+pytest tests/test_menu_editor.py -v
+```
+
+Полная документация: [docs/ru/developer/menu-editor.md](menu-editor.md)
 
 ---
 

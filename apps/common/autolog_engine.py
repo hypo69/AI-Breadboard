@@ -430,42 +430,50 @@ class AutoLogEngine:
 
     def _poll_system_inspector(self) -> None:
         """Опрашивает базовую телеметрию системы (CPU, RAM, Disk, Net). Записывает только изменённые значения."""
+        import asyncio
         from apps.windows.telemetry.collector import SystemCollector
-        collector = SystemCollector()
-        snapshot = collector.get_snapshot()
-
-        headers = [
-            "timestamp",
-            "cpu_usage_pct",
-            "memory_usage_pct",
-            "memory_used_gb",
-            "memory_total_gb",
-            "disk_usage_pct",
-            "net_bytes_sent_sec",
-            "net_bytes_recv_sec",
-            "battery_pct",
-            "battery_plugged",
-        ]
-        ts = snapshot.timestamp
-        ts_str = ts.isoformat() if hasattr(ts, "isoformat") else str(ts)
-        row = [
-            ts_str,
-            round(snapshot.cpu.total_percent, 2) if snapshot.cpu else 0.0,
-            round(snapshot.memory.percent, 2) if snapshot.memory else 0.0,
-            round(snapshot.memory.used_gb, 2) if snapshot.memory else 0.0,
-            round(snapshot.memory.total_gb, 2) if snapshot.memory else 0.0,
-            round(snapshot.disks[0].percent, 2) if snapshot.disks else 0.0,
-            round(snapshot.network[0].bytes_sent_per_sec, 2) if snapshot.network else 0.0,
-            round(snapshot.network[0].bytes_recv_per_sec, 2) if snapshot.network else 0.0,
-            snapshot.battery.percent if snapshot.battery and snapshot.battery.percent is not None else "",
-            snapshot.battery.power_plugged if snapshot.battery and snapshot.battery.power_plugged is not None else "",
-        ]
         
-        # Проверяем изменения и записываем только если что-то изменилось
-        if self._has_value_changed("system_inspector", tuple(row)):
-            write_csv_row("system_inspector_polls.csv", headers, row)
-        else:
-            logger.debug("System Inspector: значения не изменились, пропуск записи")
+        async def _poll():
+            collector = SystemCollector()
+            snapshot = await collector.get_snapshot()
+
+            headers = [
+                "timestamp",
+                "cpu_usage_pct",
+                "memory_usage_pct",
+                "memory_used_gb",
+                "memory_total_gb",
+                "disk_usage_pct",
+                "net_bytes_sent_sec",
+                "net_bytes_recv_sec",
+                "battery_pct",
+                "battery_plugged",
+            ]
+            ts = snapshot.timestamp
+            ts_str = ts.isoformat() if hasattr(ts, "isoformat") else str(ts)
+            row = [
+                ts_str,
+                round(snapshot.cpu.total_percent, 2) if snapshot.cpu else 0.0,
+                round(snapshot.memory.percent, 2) if snapshot.memory else 0.0,
+                round(snapshot.memory.used_gb, 2) if snapshot.memory else 0.0,
+                round(snapshot.memory.total_gb, 2) if snapshot.memory else 0.0,
+                round(snapshot.disks[0].percent, 2) if snapshot.disks else 0.0,
+                round(snapshot.network[0].bytes_sent_per_sec, 2) if snapshot.network else 0.0,
+                round(snapshot.network[0].bytes_recv_per_sec, 2) if snapshot.network else 0.0,
+                snapshot.battery.percent if snapshot.battery and snapshot.battery.percent is not None else "",
+                snapshot.battery.power_plugged if snapshot.battery and snapshot.battery.power_plugged is not None else "",
+            ]
+            
+            # Проверяем изменения и записываем только если что-то изменилось
+            if self._has_value_changed("system_inspector", tuple(row)):
+                write_csv_row("system_inspector_polls.csv", headers, row)
+            else:
+                logger.debug("System Inspector: значения не изменились, пропуск записи")
+        
+        try:
+            asyncio.run(_poll())
+        except Exception as ex:
+            logger.debug(f"Автологгер 'system_inspector' вернул исключение при опросе: {ex}")
 
     def _poll_hardware_monitor(self) -> None:
         """Опрашивает аппаратные датчики и показатели температур. Записывает только изменённые значения."""

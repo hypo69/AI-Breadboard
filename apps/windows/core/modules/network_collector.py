@@ -33,38 +33,16 @@ import psutil
 from src.logger import logger
 from apps.windows.api.nethelper import IPHelperAPI
 from apps.windows.core.models import AuditFinding, DomainAuditResult, RiskLevel
-from apps.windows.telemetry.models import HardwareSensor, TelemetryProvider
+from apps.common.csv_logger import AppCsvLogger
 
 
-class NetworkCollector(TelemetryProvider):
+class NetworkCollector:
     """Коллектор фактов о сетевых адаптерах и подключениях."""
 
     def __init__(self) -> None:
-        """Инициализация коллектора с поддержкой нативного IP Helper API."""
+        """Инициализация коллектора с поддержкой нативного IP Helper API и CSV логгирования."""
         self._net_api = IPHelperAPI()
-        self._last_result: Optional[DomainAuditResult] = None
-
-    def get_sensors(self) -> List[HardwareSensor]:
-        """Возвращает сетевые показатели как сенсоры."""
-        sensors: List[HardwareSensor] = []
-        if self._last_result and self._last_result.metrics:
-            metrics = self._last_result.metrics
-            sensors.append(HardwareSensor(
-                sensor_id="net_listening_ports",
-                name="Слушающих портов",
-                category="network",
-                value=float(metrics.get("listening_ports_count", 0)),
-                unit="count"
-            ))
-            sensors.append(HardwareSensor(
-                sensor_id="net_established_conns",
-                name="Установленных подключений",
-                category="network",
-                value=float(metrics.get("established_connections_count", 0)),
-                unit="count"
-            ))
-        return sensors
-
+        self._csv_logger = AppCsvLogger("network_terminal")
 
     def collect(self) -> DomainAuditResult:
         """Сбор данных о сетевых соединениях и портах.
@@ -170,6 +148,9 @@ class NetworkCollector(TelemetryProvider):
             "engine": "Native IP Helper (iphlpapi.dll)" if native_success else "psutil fallback",
         }
 
+        # Log network metrics to CSV via sensors
+        self._log_network_metrics_csv(metrics)
+
         duration_ms = (time.perf_counter() - start_t) * 1000
         result = DomainAuditResult(
             domain_name="network",
@@ -181,6 +162,61 @@ class NetworkCollector(TelemetryProvider):
         )
         self._last_result = result
         return result
+
+    def _log_network_metrics_csv(self, metrics: Dict[str, Any]) -> None:
+        """Log network metrics to CSV using Windows native tools.
+
+        Args:
+            metrics: Network metrics dictionary.
+        """
+        try:
+            # Log listening ports count
+            self._csv_logger.log_poll(
+                poll_type="network_status",
+                metric_name="listening_ports_count",
+                value=metrics.get("listening_ports_count", 0),
+                unit="ports",
+                status="OK",
+                details={"engine": metrics.get("engine", "unknown")},
+                filename="network_terminal_status_polls.csv",
+            )
+
+            # Log established connections count
+            self._csv_logger.log_poll(
+                poll_type="network_status",
+                metric_name="established_connections_count",
+                value=metrics.get("established_connections_count", 0),
+                unit="connections",
+                status="OK",
+                details={"engine": metrics.get("engine", "unknown")},
+                filename="network_terminal_status_polls.csv",
+            )
+
+            # Log suspicious connections count
+            self._csv_logger.log_poll(
+                poll_type="network_status",
+                metric_name="suspicious_connections_count",
+                value=metrics.get("suspicious_connections_count", 0),
+                unit="connections",
+                status="OK",
+                details={"engine": metrics.get("engine", "unknown")},
+                filename="network_terminal_status_polls.csv",
+            )
+
+            # Log firewall status
+            fw_status = metrics.get("firewall_status", {})
+            self._csv_logger.log_poll(
+                poll_type="network_status",
+                metric_name="firewall_enabled",
+                value=1 if fw_status.get("firewall_enabled") else 0,
+                unit="bool",
+                status="OK" if fw_status.get("firewall_enabled") else "WARNING",
+                details={"profiles_enabled": fw_status.get("profiles_enabled", 0)},
+                filename="network_terminal_status_polls.csv",
+            )
+
+        except Exception as ex:
+            logger.debug(f"Failed to log network metrics to CSV: {ex}")
 
 
     def _get_firewall_status(self) -> Dict[str, Any]:

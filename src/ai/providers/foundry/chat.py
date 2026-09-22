@@ -214,6 +214,25 @@ class FoundryChatBase:
                     time.sleep(wait)
 
             except Exception as ex:
+                err_str = str(ex)
+                
+                # 3. Service temporarily unavailable (503 UNAVAILABLE) - use model pool
+                if '503' in err_str or 'UNAVAILABLE' in err_str:
+                    from src.ai.orchestration.model_pool_state import mark_model_exhausted, switch_model
+                    mark_model_exhausted('foundry', self.model_id)
+                    logger.error(f"[{self.model_id}] exception on attempt {attempt}: 503 UNAVAILABLE", exc_info=True)
+                    self._last_error = err_str
+                    self._error_count += 1
+
+                    if attempt < attempts:
+                        wait = 2 ** min(attempt, 5)
+                        logger.info(f"[{self.model_id}] Waiting {wait}s before retry...")
+                        time.sleep(wait)
+                    else:
+                        logger.error(f"[{self.model_id}] All {attempts} attempts failed")
+                        return None
+                    continue
+
                 logger.error(f"[{self.model_id}] exception on attempt {attempt}: {ex}")
                 self._last_error = str(ex)
                 self._error_count += 1
@@ -328,6 +347,19 @@ class FoundryChatBase:
                     time.sleep(2 ** min(attempt, 5))
 
             except Exception as ex:
+                err_str = str(ex)
+                
+                # 3. Service temporarily unavailable (503 UNAVAILABLE) - use model pool
+                if '503' in err_str or 'UNAVAILABLE' in err_str:
+                    from src.ai.orchestration.model_pool_state import mark_model_exhausted, switch_model
+                    mark_model_exhausted('foundry', self.model_id)
+                    logger.error(f"[{self.model_id}] chat exception: 503 UNAVAILABLE", exc_info=True)
+                    self._last_error = err_str
+                    if attempt >= attempts:
+                        return ""
+                    time.sleep(2 ** min(attempt, 5))
+                    continue
+
                 logger.error(f"[{self.model_id}] chat exception: {ex}")
                 self._last_error = str(ex)
                 if attempt >= attempts:

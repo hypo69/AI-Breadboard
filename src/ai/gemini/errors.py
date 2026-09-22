@@ -13,6 +13,8 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
+from typing import Any, Optional
+
 import asyncio
 import re
 import time
@@ -20,6 +22,7 @@ import time
 import requests
 
 from src.logger.logger import logger
+from src.ai.orchestration.model_pool_state import mark_model_exhausted, switch_model
 
 from .core import add_unsupported_model
 
@@ -73,6 +76,7 @@ class GoogleGenerativeAIErrorMixin:
 
         # 3. Service temporarily unavailable (503 UNAVAILABLE)
         if '503' in ex_str or 'UNAVAILABLE' in ex_str:
+            mark_model_exhausted('gemini', active_model)
             self._unavailable_attempts += 1
             if self._unavailable_attempts < 6:
                 wait: int = 2 ** min(self._unavailable_attempts, 5)
@@ -80,9 +84,20 @@ class GoogleGenerativeAIErrorMixin:
                 await asyncio.sleep(wait)
                 return True
             else:
-                switched: bool = self._switch_model_down()
-                self._unavailable_attempts = 0
-                return switched
+                new_model: Optional[str] = switch_model('gemini', active_model)
+                if new_model:
+                    logger.info(f'GoogleGenerativeAI: Switching model from {active_model} to {new_model}')
+                    self.model_name = new_model
+                    self.api_keys, self._key_names_active, _ = load_api_keys(self.api_key_names)
+                    if self.api_keys:
+                        self.api_key = self.api_keys[0]
+                        self._client = genai.Client(api_key=self.api_key)
+                    self._unavailable_attempts = 0
+                    return True
+                else:
+                    logger.error(f'GoogleGenerativeAI: No available models for gemini after 5 retry attempts')
+                    self._unavailable_attempts = 0
+                    return False
 
         # 4. Request quota exceeded (429 RESOURCE_EXHAUSTED)
         if '429' in ex_str or 'RESOURCE_EXHAUSTED' in ex_str:

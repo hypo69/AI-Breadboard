@@ -71,20 +71,7 @@
 - **Администратор:** [`.ai/instructions/roles/ADMINISTRATOR.md`](.ai/instructions/roles/ADMINISTRATOR.md)
 
 
-### Запуск сервисов
-```powershell
-# Единый запуск (всё)
-.\run.ps1
 
-# Сценарий Test Computer (роут /tc, приложения /apps по config_tc.json)
-.\tc.ps1
-
-# Запуск только сервера FastAPI
-.\launchers\Run-Unicorn.ps1
-
-# Проверка статуса
-assist status
-```
 
 ### Запуск скриптов через `manage_tools.py`
 ```powershell

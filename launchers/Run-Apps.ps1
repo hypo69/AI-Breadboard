@@ -168,7 +168,7 @@ $appScripts = @(
     @{ Name = "Google Cloud Monitor";         Folder = "gcloud_monitor";      File = "Run-GCloudMonitor.ps1";       Port = 8106; Key = "gcloud_monitor" },
     @{ Name = "Website Intelligence Monitor"; Folder = "website_monitor";     File = "Run-WebsiteMonitor.ps1";      Port = 8107; Key = "website_monitor" },
     @{ Name = "System Control Center";        Folder = "system_control_center"; File = "Run-SystemControlCenter.ps1"; Port = 8109; Key = "system_control_center" },
-    @{ Name = "Wikipedia Research Lab";       Folder = "wikipedia_research";   File = "Run-WikipediaResearch.ps1";  Port = 8110; Key = "wikipedia_research" },
+    @{ Name = "Wikipedia Research Lab";       Folder = "wikipedia_research";   File = "Run-WikipediaResearch.ps1";  Port = 8111; Key = "wikipedia_research" },
     @{ Name = "AI Breadboard Admin";          Folder = "ai_breadboard_admin";  File = "Run-Admin.ps1";              Port = 8110; Key = "ai_breadboard_admin" },
     @{ Name = "Research & Statistics";        Folder = "research_and_statistic"; File = "Run-ResearchStatistic.ps1"; Port = 8111; Key = "research_and_statistic" },
     @{ Name = "Software Audit";               Folder = "software_audit";      File = "Run-SoftwareAudit.ps1";      Port = 8113; Key = "software_audit" },
@@ -178,7 +178,8 @@ $appScripts = @(
     @{ Name = "Windows Backup Manager";       Folder = "windows_backup_manager"; File = "Run-BackupManager.ps1";   Port = 8115; Key = "windows_backup_manager" },
     @{ Name = "Hardware & Sensors Monitor";   Folder = "windows";             File = "Run-HardwareMonitor.ps1";    Port = 8116; Key = "hardware_monitor" },
     @{ Name = "smartmontools Storage App";    Folder = "smartmontools";       File = "Run-Smartmontools.ps1";      Port = 8124; Key = "smartmontools" },
-    @{ Name = "LibreHardwareMonitor App";     Folder = "librehardwaremonitor"; File = "Run-LHM.ps1";               Port = 8126; Key = "librehardwaremonitor" }
+    @{ Name = "LibreHardwareMonitor App";     Folder = "librehardwaremonitor"; File = "Run-LHM.ps1";               Port = 8126; Key = "librehardwaremonitor" },
+    @{ Name = "Enterprise Knowledge Platform"; Folder = "enterprise_knowledge"; File = "Run-EnterpriseKnowledge.ps1"; Port = 8181; Key = "enterprise_knowledge" }
 )
 
 $isAppsArray = ($cfgObj -and $cfgObj.apps -and ($cfgObj.apps -is [System.Collections.IEnumerable]) -and ($cfgObj.apps -isnot [string]) -and ($cfgObj.apps.PSObject.Properties['enable_all'] -eq $null) -and ($cfgObj.apps.PSObject.Properties['enabled'] -eq $null))
@@ -237,6 +238,7 @@ foreach ($app in $appScripts) {
     if ($app.Folder -eq "windows_startup_auditor") { $aliases += @("startup_auditor", "startup", "autoruns", "tab-startup-auditor") }
     if ($app.Folder -eq "windows_backup_manager") { $aliases += @("backup_manager", "windows_backup", "backup", "tab-windows-backup") }
     if ($app.Key -eq "hardware_monitor") { $aliases += @("hardware", "sensors", "hw_monitor", "tab-hardware-monitor") }
+    if ($app.Folder -eq "enterprise_knowledge") { $aliases += @("enterprise", "knowledge", "tab-enterprise-knowledge") }
 
     $isExplicitlyDisabled = $false
     foreach ($al in $aliases) {

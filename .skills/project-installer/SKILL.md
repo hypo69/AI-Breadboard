@@ -81,7 +81,7 @@ Follow the platform rules derived from `install.ps1` and `install.sh`:
 
 5. **SSL Certificates Setup:**
    - Check for `localhost+2.pem` and `localhost+2-key.pem`.
-   - Run `install_ssl_cert.ps1` or Python certificate generator if missing.
+   - Run `.\install\Install-SslCertificate.ps1` or Python certificate generator if missing.
 
 6. **Environment & Secrets (`.env`):**
    - Ensure `.env` exists (copy from `.env.example` if absent).

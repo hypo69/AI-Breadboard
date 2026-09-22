@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 from apps.enterprise_knowledge.engine import EnterpriseKnowledgeEngine
@@ -12,6 +14,7 @@ from apps.enterprise_knowledge.engine import EnterpriseKnowledgeEngine
 
 router = APIRouter(prefix="/api/v1/enterprise-knowledge", tags=["Enterprise Knowledge"])
 engine = EnterpriseKnowledgeEngine()
+templates = Jinja2Templates(directory="apps/enterprise_knowledge/templates")
 
 
 class EmployeeRequest(BaseModel):
@@ -70,5 +73,23 @@ async def query(body: QueryRequest) -> dict[str, Any]:
     return engine.query(**body.model_dump())
 
 
+@router.get("/helpdesk", response_class=HTMLResponse)
+async def helpdesk_page(request: Request) -> HTMLResponse:
+    """Main helpdesk page for Enterprise Knowledge Platform."""
+    return templates.TemplateResponse("helpdesk.html", {"request": request})
+
+
 def init_router() -> APIRouter:
+    """Инициализация и экспорт FastAPI роутера Enterprise Knowledge Platform.
+
+    Returns:
+        APIRouter: Сконфигурированный экземпляр роутера.
+    """
     return router
+
+
+__all__ = [
+    "init_router",
+    "router",
+    "engine",
+]

@@ -63,6 +63,7 @@ from apps.windows.telemetry.models import (
     WindowsUpdateInfo,
 )
 from apps.windows.telemetry.sensors import get_hardware_sensors
+from apps.network_terminal.sensors import get_network_sensors
 
 
 class SystemCollector:

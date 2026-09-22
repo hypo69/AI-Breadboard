@@ -18,7 +18,6 @@
 import pytest
 from apps.windows.core.models import ActionType, RemediationAction, RiskLevel
 from apps.windows.core.modules import (
-    BaselineCollector,
     CleanCollector,
     DriverCollector,
     EventLogCollector,
@@ -142,14 +141,6 @@ def test_update_collector():
     res = collector.collect()
     assert res.domain_name == "updates"
     assert "installed_kb_count" in res.metrics
-
-
-def test_baseline_collector():
-    """Тест коллектора базовой линии."""
-    collector = BaselineCollector()
-    res = collector.collect()
-    assert res.domain_name == "baseline"
-
 
 def test_postinstall_collector():
     """Тест коллектора пост-установки."""

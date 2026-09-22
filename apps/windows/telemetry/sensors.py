@@ -20,7 +20,7 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""Prober for hardware thermal, fan, and voltage sensors."""
+"""Prober for hardware thermal, fan, voltage, network, and internet sensors."""
 
 from __future__ import annotations
 
@@ -30,6 +30,7 @@ from typing import List, Optional
 
 from src.logger import logger
 from apps.windows.telemetry.models import HardwareSensor
+from apps.windows.telemetry.internet_speed import InternetSpeedSensor
 
 
 def _probe_nvidia_gpu_sensors() -> List[HardwareSensor]:
@@ -184,6 +185,143 @@ def _probe_libre_hardware_monitor_wmi() -> List[HardwareSensor]:
     return sensors
 
 
+def _probe_network_sensors() -> List[HardwareSensor]:
+    """Probe network interface metrics using Windows native tools.
+
+    Returns:
+        List[HardwareSensor]: Network interface telemetry as sensors.
+    """
+    sensors: List[HardwareSensor] = []
+    
+    try:
+        import psutil
+        
+        # Get network I/O counters using psutil (Windows native wrapper)
+        current_net_io = psutil.net_io_counters(pernic=True)
+        
+        if current_net_io:
+            for name, stats in current_net_io.items():
+                # Create sensors for each interface
+                sensors.append(HardwareSensor(
+                    sensor_id=f"net_{name}_bytes_recv",
+                    name=f"Network {name} Bytes Received",
+                    category="network",
+                    value=round(stats.bytes_recv, 2),
+                    unit="B",
+                ))
+                
+                sensors.append(HardwareSensor(
+                    sensor_id=f"net_{name}_bytes_sent",
+                    name=f"Network {name} Bytes Sent",
+                    category="network",
+                    value=round(stats.bytes_sent, 2),
+                    unit="B",
+                ))
+                
+                sensors.append(HardwareSensor(
+                    sensor_id=f"net_{name}_packets_recv",
+                    name=f"Network {name} Packets Received",
+                    category="network",
+                    value=stats.packets_recv,
+                    unit="pkts",
+                ))
+                
+                sensors.append(HardwareSensor(
+                    sensor_id=f"net_{name}_packets_sent",
+                    name=f"Network {name} Packets Sent",
+                    category="network",
+                    value=stats.packets_sent,
+                    unit="pkts",
+                ))
+                
+                sensors.append(HardwareSensor(
+                    sensor_id=f"net_{name}_errors_recv",
+                    name=f"Network {name} Errors Received",
+                    category="network",
+                    value=stats.errin,
+                    unit="errors",
+                ))
+                
+                sensors.append(HardwareSensor(
+                    sensor_id=f"net_{name}_errors_sent",
+                    name=f"Network {name} Errors Sent",
+                    category="network",
+                    value=stats.errout,
+                    unit="errors",
+                ))
+                
+                sensors.append(HardwareSensor(
+                    sensor_id=f"net_{name}_dropped_recv",
+                    name=f"Network {name} Dropped Received",
+                    category="network",
+                    value=stats.dropin,
+                    unit="pkts",
+                ))
+                
+                sensors.append(HardwareSensor(
+                    sensor_id=f"net_{name}_dropped_sent",
+                    name=f"Network {name} Dropped Sent",
+                    category="network",
+                    value=stats.dropout,
+                    unit="pkts",
+                ))
+                
+    except Exception as ex:
+        logger.debug(f"Network sensor probe failed: {ex}")
+    
+    return sensors
+
+
+def _probe_internet_speed_sensors() -> List[HardwareSensor]:
+    """Probe internet speed metrics.
+
+    Returns:
+        List[HardwareSensor]: Internet speed metrics as sensors.
+    """
+    sensors: List[HardwareSensor] = []
+    
+    try:
+        sensor = InternetSpeedSensor()
+        metrics = sensor.measure_internet_speed()
+        
+        sensors.append(HardwareSensor(
+            sensor_id="internet_ping",
+            name="Internet Ping",
+            category="network",
+            value=round(metrics.get("ping_ms", 0.0), 2),
+            unit="ms",
+        ))
+        
+        sensors.append(HardwareSensor(
+            sensor_id="internet_download",
+            name="Internet Download Speed",
+            category="network",
+            value=round(metrics.get("download_mbps", 0.0), 2),
+            unit="Mbps",
+        ))
+        
+        sensors.append(HardwareSensor(
+            sensor_id="internet_upload",
+            name="Internet Upload Speed",
+            category="network",
+            value=round(metrics.get("upload_mbps", 0.0), 2),
+            unit="Mbps",
+        ))
+        
+        sensors.append(HardwareSensor(
+            sensor_id="internet_dns",
+            name="DNS Resolution Time",
+            category="network",
+            value=round(metrics.get("dns_ms", 0.0), 2),
+            unit="ms",
+        ))
+        
+    except Exception as ex:
+        logger.debug(f"Internet speed sensor probe failed: {ex}")
+    
+    return sensors
+
+
 def get_hardware_sensors() -> List[HardwareSensor]:
     """Retrieve all available hardware sensors across all supported backends.
 
@@ -194,4 +332,6 @@ def get_hardware_sensors() -> List[HardwareSensor]:
     all_sensors.extend(_probe_nvidia_gpu_sensors())
     all_sensors.extend(_probe_libre_hardware_monitor_wmi())
     all_sensors.extend(_probe_wmi_thermal_zones())
+    all_sensors.extend(_probe_network_sensors())
+    all_sensors.extend(_probe_internet_speed_sensors())
     return all_sensors

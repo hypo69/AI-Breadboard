@@ -12,6 +12,34 @@ import { applyTranslations } from '../js/i18n.js';
 window.switchTab = switchTab;
 window.switchToTab = switchTab;
 
+// Обработчики кнопок верхнего меню (Quick Access)
+function setupTopMenuButtons() {
+  const topMenuButtons = document.querySelectorAll('.main-nav-container button[data-tab]');
+  topMenuButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tabId = btn.getAttribute('data-tab');
+      if (tabId) {
+        switchTab(tabId);
+      }
+    });
+  });
+}
+
+// Обработчики элементов бокового меню
+function setupSidebarButtons() {
+  const sidebarButtons = document.querySelectorAll('#appsNavTabs .list-group-item');
+  sidebarButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tabId = btn.getAttribute('data-tab');
+      if (tabId) {
+        switchTab(tabId);
+      }
+    });
+  });
+}
+
 async function initAppsHub() {
   console.log('🚀 [AppsHub] Initializing modular interface...');
 
@@ -19,6 +47,8 @@ async function initAppsHub() {
   setupGlobalApi();
   await setupThemeAndLang();
   setupNavTabs();
+  setupTopMenuButtons();
+  setupSidebarButtons();
 
   const isTcRoute = window.location.pathname.startsWith('/tc');
   if (isTcRoute) {
@@ -30,11 +60,18 @@ async function initAppsHub() {
   const appsMap = statusData?.apps || {};
   await updateModelBadge(statusData);
 
-  // 3. Фильтрация и показ активных вкладок
+  // 3. Загрузка содержимого включенных вкладок (только для тех, что есть в DOM)
   const enabledTabs = [];
   const cb = Date.now();
 
+  // Получаем список вкладок, которые actually отображаются в DOM
+  const visibleTabButtons = document.querySelectorAll('#appsNavTabs .list-group-item');
+  const visibleTabIds = Array.from(visibleTabButtons).map(btn => btn.dataset.tab);
+
   APP_TAB_DEFS.forEach((def) => {
+    // Пропускаем вкладки, которых нет в DOM (они уже отфильтрованы)
+    if (!visibleTabIds.includes(def.tabId)) return;
+
     const appInfo = appsMap[def.id] || Object.values(appsMap).find(a => a.tab === def.tabId);
     let isEnabled = appInfo ? appInfo.enabled : (!isTcRoute || !TC_EXCLUDES.has(def.id));
     
@@ -42,28 +79,8 @@ async function initAppsHub() {
       isEnabled = false;
     }
 
-    const navBtn = document.querySelector(`#appsNavTabs [data-tab="${def.tabId}"], #appsNavTabs [data-bs-target="#${def.tabId}"]`);
-    const navItem = navBtn ? navBtn.closest('.nav-item') : null;
-    const pane = document.getElementById(def.tabId);
-
     if (isEnabled) {
-      if (navItem) {
-        navItem.style.display = '';
-        navItem.classList.remove('d-none');
-      }
-      if (pane) {
-        pane.style.display = '';
-      }
       enabledTabs.push(def);
-    } else {
-      if (navItem) {
-        navItem.style.display = 'none';
-        navItem.classList.add('d-none');
-      }
-      if (pane) {
-        pane.style.display = 'none';
-        pane.classList.remove('show', 'active');
-      }
     }
   });
 

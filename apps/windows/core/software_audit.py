@@ -388,10 +388,10 @@ class PrefetchScanner:
         return results
 
 
-from apps.windows.telemetry.models import HardwareSensor, TelemetryProvider
 from apps.windows.core.data_model import AppCategory, AppExecutionInfo, InstalledAppInfo, SoftwareAuditReport
 
-class SoftwareAuditEngine(TelemetryProvider):
+
+class SoftwareAuditEngine:
     """Главный движок аудита установленного программного обеспечения Windows.
 
     Это гибридный движок (Hybrid Audit Engine), который собирает данные из:
@@ -408,28 +408,6 @@ class SoftwareAuditEngine(TelemetryProvider):
     def __init__(self) -> None:
         """Инициализировать движок аудита ПО."""
         self._categorizer = SoftwareCategorizer()
-        self._last_report: Optional[SoftwareAuditReport] = None
-
-    def get_sensors(self) -> List[HardwareSensor]:
-        """Возвращает текущие показатели аудита как сенсоры."""
-        sensors: List[HardwareSensor] = []
-        if self._last_report:
-            sensors.append(HardwareSensor(
-                sensor_id="software_total_apps",
-                name="Количество установленных приложений",
-                category="software",
-                value=float(self._last_report.total_apps),
-                unit="count"
-            ))
-            sensors.append(HardwareSensor(
-                sensor_id="software_active_apps",
-                name="Активных приложений",
-                category="software",
-                value=float(self._last_report.active_apps_count),
-                unit="count"
-            ))
-        return sensors
-
 
     def get_installed_applications(self) -> List[InstalledAppInfo]:
         """Собрать полный список установленных программ с историей запусков и назначением.
@@ -705,19 +683,18 @@ class SoftwareAuditEngine(TelemetryProvider):
             never_launched_or_dormant=never_launched_or_dormant,
             apps=apps,
         )
-        self._last_report = report
         self._save_to_csv(report)
         return report
 
 
     def _save_to_csv(self, report: SoftwareAuditReport):
-        """Сохранить отчет в CSV файл в %APPDATA%/AI-Assistant."""
+        """Сохранить отчет в CSV файл в %APPDATA%/AI-Breadboard/apps/logs."""
         appdata = os.environ.get("APPDATA")
         if not appdata:
             logger.warning("Переменная среды APPDATA не найдена, логирование отменено.")
             return
 
-        log_dir = Path(appdata) / "AI-Assistant"
+        log_dir = Path(appdata) / "AI-Breadboard" / "apps" / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
         log_file = log_dir / "software_audit.csv"
         
@@ -732,7 +709,6 @@ class SoftwareAuditEngine(TelemetryProvider):
             logger.error(f"Не удалось сохранить отчет аудита в CSV: {e}")
 
 
-    def _get_fallback_mock_data(self) -> List[InstalledAppInfo]:
         """Генерация реалистичных демонстрационных данных для не-Windows окружения или тестов."""
         now = datetime.now()
         return [

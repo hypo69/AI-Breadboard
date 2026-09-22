@@ -33,7 +33,6 @@ from apps.windows.ai.diagnostician import WindowsAIDiagnostician
 from apps.windows.ai.root_cause_analyzer import WindowsAIRootCauseAnalyzer
 from apps.windows.core.models import ActionType, RemediationAction, RiskLevel
 from apps.windows.core.modules import (
-    BaselineCollector,
     CleanCollector,
     DriverCollector,
     EventLogCollector,
@@ -259,13 +258,6 @@ async def get_network_audit() -> Dict[str, Any]:
 async def get_updates_audit() -> Dict[str, Any]:
     """Аудит версии Windows и обновлений KB."""
     collector = UpdateCollector()
-    return collector.collect().to_dict()
-
-
-@router.get("/audit/baseline")
-async def get_baseline_audit() -> Dict[str, Any]:
-    """Аудит эталонного снимка конфигурации и дрифта."""
-    collector = BaselineCollector()
     return collector.collect().to_dict()
 
 
