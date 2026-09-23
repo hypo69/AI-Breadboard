@@ -36,134 +36,22 @@
       }
     ],
     "sidebarItems": [
-      {
-        "id": "about_system",
-        "label": "О Системе",
-        "icon": "bi-grid-fill",
-        "tab": "tab-about-system",
-        "order": 1,
-        "visible": true
-      },
-      {
-        "id": "scenarios",
-        "label": "Чат и сценарии",
-        "icon": "bi-chat-dots",
-        "tab": "tab-scenarios",
-        "order": 2,
-        "visible": true
-      },
-      {
-        "id": "network_terminal",
-        "label": "Сетевой терминал",
-        "icon": "bi-globe",
-        "tab": "tab-network",
-        "order": 3,
-        "visible": true
-      },
-      {
-        "id": "registry_viewer",
-        "label": "Registry Viewer",
-        "icon": "bi-file-earmark-text",
-        "tab": "tab-registry-viewer",
-        "order": 4,
-        "visible": true
-      },
-      {
-        "id": "cloudflared_monitor",
-        "label": "Cloudflared",
-        "icon": "bi-cloud",
-        "tab": "tab-cloudflared",
-        "order": 5,
-        "visible": true
-      },
-      {
-        "id": "gcloud_monitor",
-        "label": "Google Cloud",
-        "icon": "bi-cloud",
-        "tab": "tab-gcloud",
-        "order": 6,
-        "visible": true
-      },
-      {
-        "id": "website_monitor",
-        "label": "Website Intelligence",
-        "icon": "bi-bar-chart",
-        "tab": "tab-website-monitor",
-        "order": 7,
-        "visible": true
-      },
-      {
-        "id": "trading_terminal",
-        "label": "Торговый терминал",
-        "icon": "bi-graph-up",
-        "tab": "tab-trading",
-        "order": 8,
-        "visible": true
-      },
-      {
-        "id": "user_assistant",
-        "label": "User Assistant",
-        "icon": "bi-calendar-check",
-        "tab": "tab-user-assistant",
-        "order": 9,
-        "visible": true
-      },
-      {
-        "id": "helpdesk",
-        "label": "Helpdesk",
-        "icon": "bi-headset",
-        "tab": "tab-helpdesk",
-        "order": 10,
-        "visible": true
-      },
-      {
-        "id": "wikipedia_research",
-        "label": "Wikipedia Lab",
-        "icon": "bi-book",
-        "tab": "tab-wikipedia-research",
-        "order": 11,
-        "visible": true
-      },
-      {
-        "id": "windows_backup_manager",
-        "label": "Windows Backup",
-        "icon": "bi-hdd",
-        "tab": "tab-windows-backup",
-        "order": 12,
-        "visible": true
-      },
-      {
-        "id": "hardware_monitor",
-        "label": "Логи сенсоров",
-        "icon": "bi-lightning",
-        "tab": "tab-hardware-monitor",
-        "order": 13,
-        "visible": true
-      },
-      {
-        "id": "autolog_manager",
-        "label": "Управление логами",
-        "icon": "bi-file-earmark-text",
-        "tab": "tab-autolog",
-        "order": 14,
-        "visible": true
-      },
-      {
-        "id": "software_transparency_scanner",
-        "label": "Transparency Scanner",
-        "icon": "bi-search",
-        "tab": "tab-software-transparency",
-        "order": 15,
-        "visible": true
-      },
-      {
-        "id": "user_directories",
-        "label": "Директории пользователей",
-        "icon": "bi-folder",
-        "tab": "tab-user-directories",
-        "order": 16,
-        "visible": true
-      }
+      { "id": "about_system",                "label": "О Системе",                    "i18n": "tabs.aboutSystem",       "icon": "ℹ️",  "tab": "tab-about-system",           "order": 1,  "visible": true },
+      { "id": "scenarios",                   "label": "Чат и сценарии",               "i18n": "tabs.scenarios",         "icon": "💬",  "tab": "tab-scenarios",              "order": 2,  "visible": true },
+      { "id": "network_terminal",            "label": "Сетевой терминал",             "i18n": "tabs.network",           "icon": "🌐",  "tab": "tab-network",                "order": 3,  "visible": true },
+      { "id": "registry_viewer",             "label": "Registry Viewer",              "icon": "🗝️", "tab": "tab-registry-viewer",        "order": 4,  "visible": true },
+      { "id": "cloudflared_monitor",         "label": "Cloudflared",                  "icon": "☁️",  "tab": "tab-cloudflared",             "order": 5,  "visible": true },
+      { "id": "gcloud_monitor",              "label": "Google Cloud",                 "icon": "☁️",  "tab": "tab-gcloud",                  "order": 6,  "visible": true },
+      { "id": "website_monitor",             "label": "Website Intelligence",         "icon": "📊",  "tab": "tab-website-monitor",         "order": 7,  "visible": true },
+      { "id": "trading_terminal",            "label": "Торговый терминал",            "i18n": "tabs.trading",           "icon": "📈",  "tab": "tab-trading",                "order": 8,  "visible": true },
+      { "id": "user_assistant",              "label": "User Assistant",               "icon": "🗓️", "tab": "tab-user-assistant",          "order": 9,  "visible": true },
+      { "id": "helpdesk",                    "label": "Helpdesk",                     "i18n": "tabs.helpdesk",          "icon": "🎧",  "tab": "tab-helpdesk",               "order": 10, "visible": true },
+      { "id": "wikipedia_research",          "label": "Wikipedia Lab",                "icon": "🌐",  "tab": "tab-wikipedia-research",      "order": 11, "visible": true },
+      { "id": "windows_backup_manager",      "label": "Windows Backup",              "icon": "💾",  "tab": "tab-windows-backup",          "order": 12, "visible": true },
+      { "id": "hardware_monitor",            "label": "Логи сенсоров",               "i18n": "tabs.sensorLogs",        "icon": "⚡",  "tab": "tab-hardware-monitor",       "order": 13, "visible": true },
+      { "id": "autolog_manager",             "label": "Управление логами",           "icon": "📝",  "tab": "tab-autolog",                "order": 14, "visible": true },
+      { "id": "software_transparency_scanner", "label": "Transparency Scanner",      "icon": "🔍",  "tab": "tab-software-transparency",   "order": 15, "visible": true },
+      { "id": "user_directories",            "label": "Директории пользователей",    "i18n": "tabs.userDirectories",  "icon": "📁",  "tab": "tab-user-directories",       "order": 16, "visible": true }
     ]
   },
   "settings": {

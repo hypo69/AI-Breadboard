@@ -1,129 +1,222 @@
-/**
- * Applications Hub Interface Main JS (/apps) — Модульный Оркестратор
- */
-
 import { setupGlobalApi, setupThemeAndLang } from './modules/init-interface.js';
-import { setupNavTabs, switchTab, loadTabContent } from './modules/tab-manager.js';
 import { fetchAppsStatus, updateModelBadge } from './modules/status-manager.js';
-import { APP_TAB_DEFS, TC_EXCLUDES } from './modules/tabs-config.js';
+import { APP_TAB_DEFS } from './modules/tabs-config.js';
 import { applyTranslations } from '../js/i18n.js';
 
-// Экспорт глобальных функций переключения для HTML и плагинов
+// Карта: tabId → { html, js } — берём из tabs-config, не генерируем пути вручную
+const TAB_PATHS = Object.fromEntries(
+  APP_TAB_DEFS.map(d => [d.tabId, { html: d.html, js: d.js }])
+);
+
+// ── SWITCH TAB ───────────────────────────────────────────────────────────────
+
+export function switchTab(tabId) {
+  if (!tabId) return;
+  const id = tabId.startsWith('tab-') ? tabId : `tab-${tabId}`;
+
+  document.querySelectorAll('#appsNavTabs [data-tab]').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.tab === id)
+  );
+
+  document.querySelectorAll('#mainTabContent .tab-pane').forEach(pane => {
+    pane.classList.toggle('show', pane.id === id);
+    pane.classList.toggle('active', pane.id === id);
+  });
+
+  const activeBtn = document.querySelector(`#appsNavTabs [data-tab="${id}"]`);
+  const badge = document.getElementById('active-tab-title-badge');
+  if (activeBtn && badge) badge.innerHTML = activeBtn.innerHTML;
+
+  const oc = bootstrap.Offcanvas.getInstance(document.getElementById('appsSideNavOffcanvas'));
+  oc?.hide();
+
+  history.replaceState(null, null, `#${id}`);
+
+  // Вызов init-функции вкладки
+  const name = id.replace(/^tab-/, '').replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+  window[`init${name[0].toUpperCase() + name.slice(1)}Tab`]?.();
+}
+
 window.switchTab = switchTab;
 window.switchToTab = switchTab;
 
-// Обработчики кнопок верхнего меню (Quick Access)
-function setupTopMenuButtons() {
-  const topMenuButtons = document.querySelectorAll('.main-nav-container button[data-tab]');
-  topMenuButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const tabId = btn.getAttribute('data-tab');
-      if (tabId) {
-        switchTab(tabId);
-      }
+// Единственный обработчик кликов для ВСЕХ кнопок с data-tab на странице
+document.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-tab], a[data-tab]');
+  if (btn) switchTab(btn.dataset.tab);
+});
+
+// ── MENU BUILDER ─────────────────────────────────────────────────────────────
+
+async function buildMenu(appsMap) {
+  const res = await fetch('/html/config/tc_menu_config.json');
+  if (!res.ok) return null;
+  const cfg = await res.json();
+  if (!cfg.menu) return null;
+
+  const isEnabled = item => {
+    const app = appsMap[item.id];
+    return !app || app.enabled !== false;
+  };
+  const sorted = arr => [...arr]
+    .filter(x => x.visible !== false && isEnabled(x))
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  // Верхнее меню
+  const topContainer = document.querySelector('.main-nav-container .d-flex.gap-1.flex-wrap');
+  if (topContainer) {
+    topContainer.innerHTML = '';
+    sorted(cfg.menu.topButtons || []).forEach(item => {
+      const safeIcon = /^bi-[a-z0-9-]+$/.test(item.icon) ? item.icon : 'bi-app';
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-sm btn-outline-primary d-flex align-items-center gap-1 py-1 px-2 rounded';
+      btn.type = 'button';
+      btn.dataset.tab = item.tab;
+      btn.title = item.label;
+      btn.innerHTML = `<i class="bi ${safeIcon}"></i><span class="d-none d-sm-inline">${item.label}</span>`;
+      topContainer.appendChild(btn);
     });
+  }
+
+  // Боковое меню
+  const navTabs = document.getElementById('appsNavTabs');
+  if (navTabs) {
+    navTabs.innerHTML = '';
+    sorted(cfg.menu.sidebarItems || []).forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3';
+      btn.type = 'button';
+      btn.dataset.tab = item.tab;
+      if (item.i18n) btn.dataset.i18n = item.i18n;
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'fs-6';
+      iconSpan.textContent = item.icon;
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'fw-medium';
+      labelSpan.textContent = item.label;
+      btn.append(iconSpan, labelSpan);
+      navTabs.appendChild(btn);
+    });
+  }
+
+  return cfg;
+}
+
+// ── MENU EDITOR ──────────────────────────────────────────────────────────────
+
+function initMenuEditor(cfg) {
+  const editorBtn = document.getElementById('menu-editor-btn');
+  const modal = document.getElementById('menuEditorModal');
+  const list = document.getElementById('allMenuEditor');
+  const saveBtn = document.getElementById('saveMenuConfig');
+  if (!editorBtn || !modal || !list || !cfg) return;
+
+  const items = [
+    ...(cfg.menu.topButtons || []).map(x => ({ ...x, position: 'top' })),
+    ...(cfg.menu.sidebarItems || []).map(x => ({ ...x, position: x.visible === false ? 'hidden' : 'bottom' })),
+  ];
+
+  list.innerHTML = '';
+  items.forEach(item => {
+    const safeId = item.id.replace(/[^a-zA-Z0-9_-]/g, '');
+    const div = document.createElement('div');
+    div.className = 'd-flex align-items-center gap-3 p-2 border-bottom';
+    div.dataset.id = item.id;
+
+    const info = document.createElement('div');
+    info.className = 'flex-grow-1 small';
+    info.textContent = `${item.label} (${item.tab})`;
+
+    const group = document.createElement('div');
+    group.className = 'btn-group btn-group-sm';
+    group.setAttribute('role', 'group');
+
+    [['top', 'Сверху', 'btn-outline-primary'], ['bottom', 'Слева', 'btn-outline-secondary'], ['hidden', 'Скрыть', 'btn-outline-danger']].forEach(([val, text, cls]) => {
+      const inp = document.createElement('input');
+      inp.type = 'radio'; inp.className = 'btn-check';
+      inp.name = `pos-${safeId}`; inp.id = `pos-${val}-${safeId}`; inp.value = val;
+      inp.checked = item.position === val;
+      inp.addEventListener('change', () => { item.position = val; item.visible = val !== 'hidden'; });
+      const lbl = document.createElement('label');
+      lbl.className = `btn ${cls}`; lbl.setAttribute('for', inp.id); lbl.textContent = text;
+      group.append(inp, lbl);
+    });
+
+    div.append(info, group);
+    list.appendChild(div);
+  });
+
+  editorBtn.addEventListener('click', () => new bootstrap.Modal(modal).show());
+  saveBtn.addEventListener('click', async () => {
+    cfg.menu.topButtons = items.filter(x => x.position === 'top').map(({ position, ...x }) => x);
+    cfg.menu.sidebarItems = items.filter(x => x.position !== 'top').map(({ position, ...x }) => x);
+    try {
+      const r = await fetch('/api/menu/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cfg)
+      });
+      r.ok ? (alert('Сохранено!'), location.reload()) : alert('Ошибка: ' + r.statusText);
+    } catch (e) { alert('Ошибка: ' + e.message); }
   });
 }
 
-// Обработчики элементов бокового меню
-function setupSidebarButtons() {
-  const sidebarButtons = document.querySelectorAll('#appsNavTabs .list-group-item');
-  sidebarButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const tabId = btn.getAttribute('data-tab');
-      if (tabId) {
-        switchTab(tabId);
-      }
+// ── TAB LOADER ───────────────────────────────────────────────────────────────
+
+async function loadTab(tabId, v) {
+  const paths = TAB_PATHS[tabId];
+  if (!paths) return; // вкладка не в реестре — пропускаем без ошибки
+  const container = document.getElementById(tabId);
+  if (!container) return;
+  try {
+    const html = await fetch(`${paths.html}?v=${v}`).then(r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.text();
     });
-  });
+    container.innerHTML = html;
+    await new Promise(resolve => {
+      const s = document.createElement('script');
+      s.src = `${paths.js}?v=${v}`;
+      s.onload = s.onerror = resolve;
+      document.body.appendChild(s);
+    });
+    const name = tabId.replace(/^tab-/, '').replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    window[`init${name[0].toUpperCase() + name.slice(1)}Tab`]?.();
+  } catch (e) {
+    container.innerHTML = `<div class="alert alert-danger">Ошибка загрузки ${tabId}: ${e.message}</div>`;
+  }
 }
 
-async function initAppsHub() {
-  console.log('🚀 [AppsHub] Initializing modular interface...');
+// ── INIT ─────────────────────────────────────────────────────────────────────
 
-  // 1. Инициализация глобального API и темы/языка
+async function init() {
   setupGlobalApi();
   await setupThemeAndLang();
-  setupNavTabs();
-  setupTopMenuButtons();
-  setupSidebarButtons();
 
-  const isTcRoute = window.location.pathname.startsWith('/tc');
-  if (isTcRoute) {
+  if (window.location.pathname.startsWith('/tc'))
     document.title = 'AI Breadboard — Test Computer (/tc)';
-  }
 
-  // 2. Получение статуса приложений и обновление бейджа модели
   const statusData = await fetchAppsStatus();
-  const appsMap = statusData?.apps || {};
   await updateModelBadge(statusData);
+  const appsMap = statusData?.apps || {};
 
-  // 3. Загрузка содержимого включенных вкладок (только для тех, что есть в DOM)
-  const enabledTabs = [];
-  const cb = Date.now();
+  const cfg = await buildMenu(appsMap).catch(() => null);
+  initMenuEditor(cfg);
 
-  // Получаем список вкладок, которые actually отображаются в DOM
-  const visibleTabButtons = document.querySelectorAll('#appsNavTabs .list-group-item');
-  const visibleTabIds = Array.from(visibleTabButtons).map(btn => btn.dataset.tab);
-
-  APP_TAB_DEFS.forEach((def) => {
-    // Пропускаем вкладки, которых нет в DOM (они уже отфильтрованы)
-    if (!visibleTabIds.includes(def.tabId)) return;
-
-    const appInfo = appsMap[def.id] || Object.values(appsMap).find(a => a.tab === def.tabId);
-    let isEnabled = appInfo ? appInfo.enabled : (!isTcRoute || !TC_EXCLUDES.has(def.id));
-    
-    if (isTcRoute && appInfo && appInfo.enabled && TC_EXCLUDES.has(def.id) && (!statusData?.config_file || statusData.config_file === 'config.json')) {
-      isEnabled = false;
-    }
-
-    if (isEnabled) {
-      enabledTabs.push(def);
-    }
-  });
-
-  // 4. Параллельная загрузка содержимого включенных вкладок
-  if (enabledTabs.length > 0) {
-    const loadPromises = enabledTabs.map(def =>
-      loadTabContent(def.tab, `${def.html}?v=${cb}`, `${def.js}?v=${cb}`)
-    );
-    await Promise.all(loadPromises);
-  } else {
-    const mainContent = document.getElementById('mainTabContent');
-    if (mainContent) {
-      const cfgFile = statusData?.config_file || 'config.json';
-      mainContent.innerHTML = `
-        <div class="card shadow-sm border-secondary-subtle p-4 text-center my-4">
-          <div class="mb-2 fs-1 text-warning">🚫</div>
-          <h5 class="fw-bold text-white mb-2">Все приложения отключены</h5>
-          <p class="text-muted mb-3 small">
-            Все приложения в блоке <code>/apps</code> отключены в текущем конфигурационном файле (<code>${cfgFile}</code>).
-          </p>
-        </div>
-      `;
-    }
-  }
+  // Загружаем все вкладки из бокового меню (пути берём из TAB_PATHS)
+  const v = Date.now();
+  await Promise.all(
+    Array.from(document.querySelectorAll('#appsNavTabs [data-tab]'))
+      .map(btn => loadTab(btn.dataset.tab, v))
+  );
 
   applyTranslations();
 
-  // 5. Активация начальной вкладки по URL hash или первой активной
-  const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
-  const hashTabId = hash.startsWith('tab-') ? hash : `tab-${hash}`;
-  const isHashEnabled = enabledTabs.some(d => d.tabId === hashTabId || d.tab === hash);
-
-  if (hash && isHashEnabled) {
-    switchTab(hashTabId);
-  } else if (enabledTabs.length > 0) {
-    switchTab(enabledTabs[0].tabId);
-  }
-
-  console.log('✅ [AppsHub] Modular interface ready');
+  const hash = location.hash.replace('#', '');
+  const first = document.querySelector('#appsNavTabs [data-tab]');
+  switchTab(hash || first?.dataset.tab || '');
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initAppsHub);
-} else {
-  initAppsHub();
-}
+document.readyState === 'loading'
+  ? document.addEventListener('DOMContentLoaded', init)
+  : init();

@@ -215,8 +215,18 @@ function initBackgroundComputerStream() {
 }
 
 // Загрузка контента вкладки
+const ALLOWED_TAB_PATH = /^\/html\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_.-]+(\?.*)?$/;
+
+function assertSameOriginPath(url) {
+  if (!ALLOWED_TAB_PATH.test(url)) {
+    throw new Error(`Blocked disallowed URL: ${url}`);
+  }
+}
+
 async function loadTabContent(tabName, url, scriptUrl = null) {
   try {
+    assertSameOriginPath(url);
+    if (scriptUrl) assertSameOriginPath(scriptUrl);
     console.log(`Loading tab ${tabName} from ${url}...`);
     const response = await fetch(url);
     console.log(`Response status: ${response.status} for ${tabName}`);
@@ -428,8 +438,13 @@ function setupDropdownTabs() {
 }
 
 // Модуль для работы с API
+const ALLOWED_API_PATH = /^\/api\/[a-zA-Z0-9/_-]+(\?.*)?$/;
+
 window.api = {
   async fetch(url, options = {}) {
+    if (!ALLOWED_API_PATH.test(url)) {
+      throw new Error(`Blocked disallowed API URL: ${url}`);
+    }
     const response = await fetch(url, options);
     if (!response.ok) {
       let msg = response.statusText;
