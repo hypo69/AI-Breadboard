@@ -390,6 +390,56 @@ async def trigger_cleanup() -> Dict[str, Any]:
     }
 
 
+@router.get("/logs")
+async def get_system_control_logs(limit: int = Query(50, ge=1, le=200)) -> Dict[str, Any]:
+    """Получение журнала активности и аудита операций System Control Center."""
+    from apps.common.csv_logger import get_apps_log_dir
+    import csv
+
+    logs: List[Dict[str, Any]] = []
+    log_dir = get_apps_log_dir()
+
+    pattern_files = [
+        "system_control_profile_events.csv",
+        "system_control_restore_points.csv",
+        "system_control_param_changes.csv",
+    ]
+
+    for fname in pattern_files:
+        fpath = log_dir / fname
+        if fpath.exists():
+            try:
+                with open(fpath, mode="r", encoding="utf-8-sig") as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        logs.append({
+                            "timestamp": row.get("timestamp", ""),
+                            "action": row.get("event_type") or row.get("param_name") or "Operation",
+                            "target": row.get("app", "system_control"),
+                            "status": row.get("status", "OK"),
+                            "details": str(row.get("details") or row.get("new_value") or ""),
+                        })
+            except Exception as e:
+                logger.warning(f"Ошибка чтения лога {fpath}: {e}")
+
+    # Добавляем историю изменений параметров из менеджера параметров
+    try:
+        param_history = _param_mgr.get_history(limit=limit)
+        for h in param_history:
+            logs.append({
+                "timestamp": h.get("applied_at", ""),
+                "action": f"Param: {h.get('param_id', '')}",
+                "target": "SafeParamManager",
+                "status": "SUCCESS" if not h.get("is_rolled_back") else "ROLLED_BACK",
+                "details": f"{h.get('old_value')} -> {h.get('new_value')} (Restore point: {h.get('restore_point_id')})",
+            })
+    except Exception as e:
+        logger.warning(f"Ошибка получения истории параметров: {e}")
+
+    # Сортировка по времени (свежие сверху)
+    logs.sort(key=lambda x: str(x.get("timestamp", "")), reverse=True)
+    return {"logs": logs[:limit], "total": len(logs)}
+
 
 def init_router() -> APIRouter:
     """Возвращает инициализированный FastAPI роутер."""

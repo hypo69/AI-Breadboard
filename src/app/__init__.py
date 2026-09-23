@@ -156,6 +156,7 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_autolog_router,
         init_sysautolog_router,
         init_user_directories_router,
+        init_menu_router,
         get_pixel_rag_router,
         router_openai,
     )
@@ -199,6 +200,7 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_autolog_router,
         init_sysautolog_router,
         init_user_directories_router,
+        init_menu_router,
         get_pixel_rag_router
     ):
         app.include_router(factory())

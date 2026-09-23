@@ -22,6 +22,8 @@
   let isLiveActive = true;
   let liveIntervalId = null;
   let isUpdating = false;
+  let hasAutoRunAiDiagnostics = false;
+  let isAiRunning = false;
 
   async function apiFetch(url, options = {}) {
     if (window.api && typeof window.api.fetch === 'function') {
@@ -45,6 +47,7 @@
   async function initAboutSystemTab() {
     console.log('[AboutSystemTab] Initializing tab controller...');
     bindEvents();
+    bindAIEvents();
     updateLocalClock();
 
     // Fast initial render from quick summary (<100ms) so tab is never empty
@@ -54,7 +57,12 @@
 
     // Async background fetches for heavier diagnostics without blocking UI
     fetchSystemControlStatus().catch(err => console.warn('[AboutSystemTab] Control status error:', err));
-    fetchAIDiagnostics().catch(err => console.warn('[AboutSystemTab] AI diagnose error:', err));
+
+    // Execute AI Diagnostics only ONCE on system start / initial tab load
+    if (!hasAutoRunAiDiagnostics) {
+      hasAutoRunAiDiagnostics = true;
+      runAIDiagnostics(false).catch(err => console.warn('[AboutSystemTab] Initial AI diagnose error:', err));
+    }
 
     // Start live telemetry ticker
     startLiveStream();
@@ -179,8 +187,7 @@
         fetchSystemSummary(),
         fetchSystemControlStatus(),
         fetchHardwareSpec(),
-        fetchHardwareSensors(),
-        fetchAIDiagnostics()
+        fetchHardwareSensors()
       ]);
     } finally {
       isUpdating = false;
@@ -425,24 +432,227 @@
     }
   }
 
-  async function fetchAIDiagnostics() {
+  function bindAIEvents() {
+    const btnRescan = document.getElementById('btn-about-ai-rescan');
+    if (btnRescan) {
+      btnRescan.onclick = () => runAIDiagnostics(true);
+    }
+
+    const btnToggleStages = document.getElementById('btn-about-ai-toggle-stages');
+    const stagesBox = document.getElementById('about-ai-stages-container');
+    const icStages = document.getElementById('ic-about-ai-toggle-stages');
+    const txtStages = document.getElementById('txt-about-ai-toggle-stages');
+    if (btnToggleStages && stagesBox) {
+      btnToggleStages.onclick = () => {
+        const isHidden = stagesBox.classList.toggle('d-none');
+        if (icStages) {
+          icStages.className = isHidden ? 'bi bi-chevron-down ms-0.5' : 'bi bi-chevron-up ms-0.5';
+        }
+        if (txtStages) {
+          txtStages.textContent = isHidden ? 'Показать этапы' : 'Свернуть этапы';
+        }
+      };
+    }
+
+    const btnTogglePrompt = document.getElementById('btn-about-ai-toggle-prompt');
+    const promptCollapse = document.getElementById('about-ai-prompt-collapse');
+    const icPrompt = document.getElementById('ic-about-ai-prompt');
+    if (btnTogglePrompt && promptCollapse) {
+      btnTogglePrompt.onclick = () => {
+        const isShown = !promptCollapse.classList.toggle('d-none');
+        if (icPrompt) {
+          icPrompt.className = isShown ? 'bi bi-chevron-up text-muted ms-1' : 'bi bi-chevron-down text-muted ms-1';
+        }
+      };
+    }
+
+    const btnCopyPrompt = document.getElementById('btn-about-ai-copy-prompt');
+    if (btnCopyPrompt) {
+      btnCopyPrompt.onclick = () => {
+        const text = document.getElementById('about-ai-prompt-text')?.textContent || '';
+        navigator.clipboard.writeText(text).then(() => {
+          const s = document.getElementById('txt-about-ai-copy-prompt');
+          if (s) s.textContent = 'Скопировано!';
+          setTimeout(() => { if (s) s.textContent = 'Копировать'; }, 1800);
+        });
+      };
+    }
+
+    const btnToggleRaw = document.getElementById('btn-about-ai-toggle-raw');
+    const rawCollapse = document.getElementById('about-ai-raw-collapse');
+    const icRaw = document.getElementById('ic-about-ai-raw');
+    if (btnToggleRaw && rawCollapse) {
+      btnToggleRaw.onclick = () => {
+        const isShown = !rawCollapse.classList.toggle('d-none');
+        if (icRaw) {
+          icRaw.className = isShown ? 'bi bi-chevron-up text-muted ms-1' : 'bi bi-chevron-down text-muted ms-1';
+        }
+      };
+    }
+
+    const btnCopyRaw = document.getElementById('btn-about-ai-copy-raw');
+    if (btnCopyRaw) {
+      btnCopyRaw.onclick = () => {
+        const text = document.getElementById('about-ai-raw-text')?.textContent || '';
+        navigator.clipboard.writeText(text).then(() => {
+          const s = document.getElementById('txt-about-ai-copy-raw');
+          if (s) s.textContent = 'Скопировано!';
+          setTimeout(() => { if (s) s.textContent = 'Копировать'; }, 1800);
+        });
+      };
+    }
+  }
+
+  function renderAIDiagnosticStages(stages, isCompleted = true) {
+    const container = document.getElementById('about-ai-stages-container');
+    if (!container) return;
+    if (!Array.isArray(stages) || stages.length === 0) {
+      container.innerHTML = '<div class="small text-muted text-center py-2">Этапы аудита не зарегистрированы</div>';
+      return;
+    }
+
+    container.innerHTML = stages.map((st, idx) => {
+      const isLatest = idx === stages.length - 1 && !isCompleted;
+      const icon = isLatest
+        ? '<div class="spinner-grow spinner-grow-sm text-info" style="width: 0.6rem; height: 0.6rem;" role="status"></div>'
+        : '<span class="text-success small fw-bold" style="font-size: 0.72rem;">✔</span>';
+      const textClass = isLatest ? 'text-light fw-semibold' : 'text-muted';
+      return `
+        <div class="about-ai-stage-row ${textClass}">
+          <div class="d-flex align-items-center gap-2">
+            <span>${icon}</span>
+            <span>${escapeHtml(st.message || st.title || 'Выполнение этапа...')}</span>
+          </div>
+          ${st.details ? `<div class="text-secondary ps-3 font-monospace" style="font-size: 0.68rem; word-break: break-all;">↳ ${escapeHtml(st.details)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderAIAnomalies(anomalies) {
+    const container = document.getElementById('about-ai-anomalies-container');
+    if (!container) return;
+    if (!Array.isArray(anomalies) || anomalies.length === 0) {
+      container.innerHTML = '<span class="badge bg-success-subtle text-success border border-success px-2.5 py-1" style="font-size: 0.72rem;"><i class="bi bi-check-circle me-1"></i> Аномалий в подсистемах оборудования не обнаружено</span>';
+      return;
+    }
+
+    container.innerHTML = anomalies.map(a => {
+      const isCrit = a.severity === 'critical';
+      return `<span class="anomaly-pill ${isCrit ? 'critical' : 'warning'}">⚠️ [${escapeHtml(a.subsystem || 'SYS')}] ${escapeHtml(a.title || '')}: ${escapeHtml(a.description || '')}</span>`;
+    }).join('');
+  }
+
+  async function runAIDiagnostics(isManualRescan = false) {
+    if (isAiRunning) return;
+    isAiRunning = true;
+
+    const btnRescan = document.getElementById('btn-about-ai-rescan');
+    const txtRescan = document.getElementById('txt-about-ai-rescan');
+    const icRescan = document.getElementById('ic-about-ai-rescan');
+    const badgeHealth = document.getElementById('about-ai-health-badge');
+    const engineTag = document.getElementById('about-ai-engine-name');
+    const summaryEl = document.getElementById('about-ai-summary-text');
+    const promptSec = document.getElementById('about-ai-prompt-section');
+    const promptText = document.getElementById('about-ai-prompt-text');
+    const rawSec = document.getElementById('about-ai-raw-section');
+    const rawText = document.getElementById('about-ai-raw-text');
+
+    if (btnRescan) btnRescan.disabled = true;
+    if (icRescan) icRescan.className = 'spinner-border spinner-border-sm text-dark';
+    if (txtRescan) txtRescan.textContent = 'Сканирование...';
+
+    if (badgeHealth) {
+      badgeHealth.textContent = 'Health: Анализ...';
+      badgeHealth.className = 'badge bg-warning-subtle text-warning border border-warning font-monospace';
+    }
+
+    // Render initial in-progress stages
+    renderAIDiagnosticStages([
+      {
+        stage: 'init',
+        title: 'Сбор телеметрии',
+        message: '🔌 Опрос системных метрик WMI, сенсоров и топовых процессов...',
+        details: 'Формирование системного снимка (SystemSnapshot)',
+      }
+    ], false);
+
+    if (summaryEl) {
+      summaryEl.textContent = 'Выполняется глубокий аудит аппаратных ресурсов и поиск узких мест...';
+    }
+
     try {
       const report = await apiFetch('/api/v1/system/diagnose', { method: 'POST' });
-      if (report) {
-        const healthEl = document.getElementById('about-ai-health-badge');
-        if (healthEl) {
-          healthEl.textContent = `Health: ${report.health_score || 100}/100`;
-          healthEl.className = (report.health_score >= 80)
-            ? 'badge bg-success-subtle text-success border border-success ms-2'
-            : 'badge bg-warning-subtle text-warning border border-warning ms-2';
+      if (!report) throw new Error('Пустой ответ от сервера');
+
+      // Update Health Score Badge
+      const score = Number(report.health_score || 100);
+      if (badgeHealth) {
+        badgeHealth.textContent = `Health: ${score}/100`;
+        badgeHealth.className = `badge font-monospace ${
+          score >= 80 ? 'bg-success-subtle text-success border border-success' :
+          score >= 60 ? 'bg-warning-subtle text-warning border border-warning' :
+          'bg-danger-subtle text-danger border border-danger'
+        }`;
+      }
+
+      // Update Engine Badge
+      if (engineTag) {
+        engineTag.innerHTML = `<i class="bi bi-cpu me-1"></i>${escapeHtml(report.ai_model_used || 'Heuristic Engine')}`;
+      }
+
+      // Render Completed Stages
+      const stages = Array.isArray(report.stages) && report.stages.length > 0
+        ? report.stages
+        : [
+            { stage: 'init', title: 'Сбор телеметрии', message: '🔌 Сбор телеметрии хоста завершён' },
+            { stage: 'eval', title: 'Эвристика', message: '⚙️ Эвристический анализ подсистем завершён' },
+            { stage: 'done', title: 'Сводка', message: '✅ Аудит системы успешно выполнен' }
+          ];
+      renderAIDiagnosticStages(stages, true);
+
+      // Render Anomalies
+      renderAIAnomalies(report.anomalies);
+
+      // Render Summary and Recommendations
+      if (summaryEl) {
+        let text = report.summary || 'Телеметрия в норме.';
+        if (Array.isArray(report.recommendations) && report.recommendations.length > 0) {
+          text += '\n\n💡 Рекомендации по оптимизации:\n' + report.recommendations.map(r => `• ${r}`).join('\n');
         }
-        setText('about-ai-engine-name', report.ai_model_used || 'Heuristic engine');
-        if (report.summary) {
-          setText('about-ai-summary-text', report.summary);
-        }
+        summaryEl.textContent = text;
+      }
+
+      // Handle Generated Prompt Viewer
+      if (report.generated_prompt) {
+        if (promptSec) promptSec.style.display = 'block';
+        if (promptText) promptText.textContent = report.generated_prompt;
+      } else {
+        if (promptSec) promptSec.style.display = 'none';
+      }
+
+      // Handle Raw Response Viewer
+      if (report.raw_response || report.summary) {
+        if (rawSec) rawSec.style.display = 'block';
+        if (rawText) rawText.textContent = report.raw_response || report.summary;
+      } else {
+        if (rawSec) rawSec.style.display = 'none';
       }
     } catch (e) {
-      console.warn('[AboutSystemTab] fetchAIDiagnostics warning:', e);
+      console.error('[AboutSystemTab] AI Diagnosis error:', e);
+      if (summaryEl) summaryEl.textContent = 'Ошибка выполнения AI-диагностики: ' + e.message;
+      if (badgeHealth) {
+        badgeHealth.textContent = 'Health: Error';
+        badgeHealth.className = 'badge bg-danger-subtle text-danger border border-danger font-monospace';
+      }
+      renderAIDiagnosticStages([
+        { stage: 'error', title: 'Ошибка', message: `❌ Ошибка выполнения диагностики: ${e.message}`, details: 'Проверьте доступность бэкенда и настройки провайдеров' }
+      ], true);
+    } finally {
+      isAiRunning = false;
+      if (btnRescan) btnRescan.disabled = false;
+      if (icRescan) icRescan.className = 'bi bi-lightning-charge-fill';
+      if (txtRescan) txtRescan.textContent = 'Rescan';
     }
   }
 

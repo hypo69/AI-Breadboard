@@ -101,9 +101,6 @@
       <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-scc-refresh">
         <i class="bi bi-arrow-clockwise me-1"></i> Refresh
       </button>
-      <button class="btn btn-sm btn-outline-light rounded-pill px-3" id="btn-scc-snap-quick">
-        <i class="bi bi-camera-fill me-1"></i> Take Snapshot
-      </button>
     </div>
   </div>
 
@@ -157,13 +154,8 @@
       </button>
     </li>
     <li class="nav-item" role="presentation">
-      <button class="nav-link" id="scc-tab-snapshots-btn" data-bs-toggle="pill" data-bs-target="#scc-pane-snapshots" type="button" role="tab">
-        📸 4. System Snapshots & Drift
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
       <button class="nav-link" id="scc-tab-logs-btn" data-bs-toggle="pill" data-bs-target="#scc-pane-logs" type="button" role="tab">
-        📋 Activity Log
+        📋 4. Activity Log
       </button>
     </li>
   </ul>
@@ -344,52 +336,7 @@
       </div>
     </div>
 
-    <!-- 4. Snapshots & Drift Pane -->
-    <div class="tab-pane fade" id="scc-pane-snapshots" role="tabpanel">
-      <div class="row g-3">
-        <!-- Snapshots List -->
-        <div class="col-lg-5">
-          <div class="card bg-dark border-secondary h-100">
-            <div class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center">
-              <span class="fw-bold text-white"><i class="bi bi-clock-history me-1"></i> Saved Snapshots</span>
-              <button class="btn btn-sm btn-outline-info rounded-pill" id="btn-scc-take-snap">
-                <i class="bi bi-plus-circle me-1"></i> Capture Snapshot
-              </button>
-            </div>
-            <div class="card-body p-2" id="scc-snapshots-list-container" style="max-height: 400px; overflow-y: auto;">
-              <!-- Snapshots list items -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Baseline Diff Viewer -->
-        <div class="col-lg-7">
-          <div class="card bg-dark border-secondary h-100">
-            <div class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center">
-              <span class="fw-bold text-info"><i class="bi bi-layout-split me-1"></i> Baseline vs Current State Drift</span>
-              <span class="badge bg-secondary" id="scc-drift-badge">0 Drifts</span>
-            </div>
-            <div class="p-0 table-responsive" style="max-height: 400px; overflow-y: auto;">
-              <table class="scc-table">
-                <thead>
-                  <tr>
-                    <th>Parameter</th>
-                    <th>Baseline Value</th>
-                    <th>Current Value</th>
-                    <th style="text-align: center;">Status</th>
-                  </tr>
-                </thead>
-                <tbody id="scc-diff-tbody">
-                  <tr><td colspan="4" class="text-center text-muted p-3">Select a snapshot to compare.</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Activity Log Pane -->
+    <!-- 4. Activity Log Pane -->
     <div class="tab-pane fade" id="scc-pane-logs" role="tabpanel">
       <div class="card bg-dark border-secondary">
         <div class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center">

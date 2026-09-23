@@ -14,7 +14,6 @@
 
 (function () {
   let isSCCInitialized = false;
-  let currentSnapshots = [];
   let activeProfileSteps = [];
 
   // Helper to format timestamps
@@ -339,89 +338,6 @@
     }
   }
 
-  // Snapshots list & Baseline compare
-  async function fetchSnapshots() {
-    try {
-      const res = await fetch('/api/system-control/snapshots');
-      if (!res.ok) return;
-      const data = await res.json();
-      currentSnapshots = data.snapshots || [];
-
-      const container = document.getElementById('scc-snapshots-list-container');
-      if (container) {
-        if (currentSnapshots.length === 0) {
-          container.innerHTML = '<div class="text-center text-muted p-3">No snapshots captured yet.</div>';
-          return;
-        }
-        container.innerHTML = currentSnapshots.map(s => `
-          <div class="card bg-body-tertiary border-secondary p-2 mb-2 scc-snap-item" style="cursor: pointer;" data-id="${s.id}">
-            <div class="d-flex justify-content-between align-items-center">
-              <strong class="text-white">${s.name}</strong>
-              <span class="small text-muted font-monospace">${formatTime(s.created_at)}</span>
-            </div>
-            <div class="small text-muted text-truncate">${s.description || 'System Snapshot'}</div>
-            <div class="d-flex align-items-center gap-2 mt-2">
-              <button class="btn btn-xs btn-outline-info py-0 px-2 btn-compare-snap" data-id="${s.id}" style="font-size: 0.75rem;">
-                Compare vs Live
-              </button>
-            </div>
-          </div>
-        `).join('');
-
-        container.querySelectorAll('.btn-compare-snap').forEach(btn => {
-          btn.onclick = (e) => {
-            e.stopPropagation();
-            const snapId = btn.getAttribute('data-id');
-            compareSnapshotWithLive(snapId);
-          };
-        });
-
-        // Automatically compare first snapshot by default
-        if (currentSnapshots.length > 0) {
-          compareSnapshotWithLive(currentSnapshots[0].id);
-        }
-      }
-    } catch (e) {
-      console.error('[SystemControl] Failed to fetch snapshots:', e);
-    }
-  }
-
-  async function compareSnapshotWithLive(baselineId) {
-    try {
-      const res = await fetch('/api/system-control/snapshots/compare', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ baseline_id: baselineId, target_id: "" })
-      });
-      if (!res.ok) return;
-      const diff = await res.json();
-
-      const badge = document.getElementById('scc-drift-badge');
-      if (badge) {
-        badge.innerText = `${diff.drift_count} Drifts`;
-        badge.className = diff.drift_count === 0 ? 'badge bg-success-subtle text-success' : 'badge bg-warning-subtle text-warning';
-      }
-
-      const tbody = document.getElementById('scc-diff-tbody');
-      if (tbody) {
-        tbody.innerHTML = (diff.diffs || []).map(d => `
-          <tr>
-            <td class="fw-semibold text-white"><span class="badge bg-secondary font-monospace me-1">${d.category}</span> ${d.parameter}</td>
-            <td class="font-monospace text-info">${d.baseline_val}</td>
-            <td class="font-monospace text-light">${d.current_val}</td>
-            <td style="text-align: center;">
-              <span class="badge ${d.status === 'MATCH' ? 'scc-badge-secure' : 'scc-badge-warn'}">
-                ${d.status}
-              </span>
-            </td>
-          </tr>
-        `).join('');
-      }
-    } catch (e) {
-      console.error('[SystemControl] Failed to compare snapshot:', e);
-    }
-  }
-
   // Activity Log
   async function fetchLogs() {
     try {
@@ -456,13 +372,10 @@
     console.log('[SystemControl] Initializing System Control Center Web Tab...');
     fetchStatus();
     loadWizardProfiles();
-    fetchSnapshots();
     fetchLogs();
 
     if (!isSCCInitialized) {
       const refreshBtn = document.getElementById('btn-scc-refresh');
-      const snapQuickBtn = document.getElementById('btn-scc-snap-quick');
-      const snapTakeBtn = document.getElementById('btn-scc-take-snap');
       const applyProfBtn = document.getElementById('btn-scc-apply-profile');
       const cleanBtn = document.getElementById('btn-scc-action-clean');
       const sfcBtn = document.getElementById('btn-scc-action-sfc');
@@ -472,22 +385,6 @@
 
       if (refreshBtn) refreshBtn.onclick = () => { fetchStatus(); fetchLogs(); };
       if (refreshLogsBtn) refreshLogsBtn.onclick = () => fetchLogs();
-
-      const capturePrompt = async () => {
-        const name = prompt('Enter a name for the snapshot:', `Snapshot ${new Date().toLocaleDateString()}`);
-        if (name) {
-          await fetch('/api/system-control/snapshots', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name, description: 'User manual capture' })
-          });
-          fetchSnapshots();
-          fetchLogs();
-        }
-      };
-
-      if (snapQuickBtn) snapQuickBtn.onclick = capturePrompt;
-      if (snapTakeBtn) snapTakeBtn.onclick = capturePrompt;
 
       if (applyProfBtn) applyProfBtn.onclick = applyCurrentProfile;
 

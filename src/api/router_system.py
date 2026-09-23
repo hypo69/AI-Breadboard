@@ -125,7 +125,7 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
                 except (asyncio.TimeoutError, Exception):
                     pass
 
-                snapshot = collector.get_snapshot(process_limit=15)
+                snapshot = await collector.get_snapshot(process_limit=15)
                 await websocket.send_text(snapshot.model_dump_json())
                 await asyncio.sleep(interval_sec)
 

@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import List
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -40,3 +40,6 @@ class SystemDiagnosticReport(BaseModel):
     anomalies: List[AnomalyItem] = Field(default_factory=list, description="List of detected anomalies")
     recommendations: List[str] = Field(default_factory=list, description="Actionable optimization suggestions")
     ai_model_used: str = Field(default="heuristic", description="AI Model identifier or heuristic engine")
+    generated_prompt: Optional[str] = Field(default=None, description="Exact prompt sent to AI model")
+    raw_response: Optional[str] = Field(default=None, description="Raw response text from AI provider")
+    stages: List[Dict[str, Any]] = Field(default_factory=list, description="Step-by-step audit stages")

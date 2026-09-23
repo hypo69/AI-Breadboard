@@ -1,38 +1,35 @@
 # 🛠️ System Control Center Web Interface Tab
 
-**Path:** `src/api/webinterface/system_control_tab/`  
-**Status:** ✅ Active (English Standard)
+**Путь:** `src/api/webgui/system_control_tab/`  
+**Статус:** ✅ Активно (Русский стандарт)  
+**Автор:** hypo69  
 
 ---
 
-## 📋 Overview
+## 📋 Обзор
 
-The **System Control Center Tab** provides an intuitive administrative web dashboard integrated into the AI Breadboard single-page application (SPA).
+Вкладка **System Control Center (Центр управления системой)** предоставляет административную веб-панель, интегрированную в интерфейс `/tc` и `/apps` AI Breadboard.
 
 ---
 
-## 🏛️ Architecture & Panes
+## 🏛️ Архитектура и подразделы
 
-The tab consists of `index.html` and `main.js`, exposing `window.initSystemControlTab()` for administrative tab switching and real-time lifecycle management.
+Вкладка состоит из `index.html` и `main.js`, экспортируя функцию `window.initSystemControlTab()` для переключения вкладок и управления жизненным циклом.
 
-### Sub-panes:
-1. **📊 1. Monitoring:** Real-time host telemetry, Windows Defender status, Firewall profile states, UAC mode, and partition metrics.
-2. **⚡ 2. Post-Install Wizard:** Sequential checklist execution for post-installation setup presets (*Windows Post-Install Baseline*, *Security Hardening*, *Developer Workstation*).
-3. **🛠️ 3. Maintenance & Recovery:** Temporary cache purging, System File Checker (SFC) verification, DISM component store health checking, and Windows System Restore Point creation.
-4. **📸 4. System Snapshots & Drift:** Point-in-time configuration snapshots with parameter drift comparison (`MATCH` / `DRIFT`) against live state.
-5. **📋 Activity Log:** Historical audit trail of all actions and maintenance operations executed through the UI.
+### Подразделы:
+1. **📊 1. Monitoring:** Телеметрия хоста в реальном времени, статус Windows Defender, профили брандмауэра, режим UAC и метрики дисковых накопителей.
+2. **⚡ 2. Post-Install Wizard:** Пошаговое выполнение контрольных списков настройки (*Windows Post-Install Baseline*, *Security Hardening*, *Developer Workstation*).
+3. **🛠️ 3. Maintenance & Recovery:** Безопасная очистка временного кэша, проверка целостности системных файлов (SFC), проверка хранилища компонентов DISM и создание точек восстановления Windows.
+4. **📋 4. Activity Log:** Журнал аудита всех операций и выполненных действий (все события и изменения сохраняются в логах).
 
 ---
 
 ## 🔗 Backend API
 
-Interacts with the FastAPI backend at `/api/system-control`:
+Взаимодействует с FastAPI бэкендом по префиксу `/api/system-control`:
 - `GET /api/system-control/status`
 - `GET /api/system-control/profiles`
 - `POST /api/system-control/profiles/apply`
-- `GET /api/system-control/snapshots`
-- `POST /api/system-control/snapshots`
-- `POST /api/system-control/snapshots/compare`
 - `POST /api/system-control/maintenance/cleanup`
 - `POST /api/system-control/maintenance/sfc`
 - `POST /api/system-control/maintenance/dism`

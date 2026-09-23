@@ -1166,11 +1166,6 @@
         }
 
         if (statusInd) statusInd.innerText = 'Ответ сформирован';
-
-        // Speak aloud using existing [VOICE] block if toggle is active
-        if (voiceCheck && voiceCheck.checked && window.chatService?.speak) {
-          window.chatService.speak(voiceText || chatText);
-        }
       } catch (err) {
         console.error('[ScenariosTab] Chat error:', err);
         const bodyElem = document.getElementById(`${msgId}-body`);

@@ -883,6 +883,463 @@
         }
       };
     }
+
+    // Interval editor modal buttons
+    const btnIntervalsTop = document.getElementById('btn-sys-intervals');
+    if (btnIntervalsTop) {
+      btnIntervalsTop.onclick = () => openSysIntervalsModal();
+    }
+
+    const btnIntervalsLhm = document.getElementById('btn-sys-intervals-lhm');
+    if (btnIntervalsLhm) {
+      btnIntervalsLhm.onclick = () => openSysIntervalsModal();
+    }
+
+    const btnRefreshIntervals = document.getElementById('btn-modal-intervals-refresh');
+    if (btnRefreshIntervals) {
+      btnRefreshIntervals.onclick = () => loadSysIntervalsConfig(true);
+    }
+
+    const btnSaveIntervals = document.getElementById('btn-modal-intervals-save');
+    if (btnSaveIntervals) {
+      btnSaveIntervals.onclick = () => saveSysIntervalsConfig();
+    }
+
+    const selUiRefresh = document.getElementById('modal-ui-refresh-select');
+    if (selUiRefresh) {
+      selUiRefresh.onchange = (e) => {
+        const sec = parseInt(e.target.value, 10) || 5;
+        setupSysSensorInterval(sec);
+        const badge = document.getElementById('modal-ui-refresh-badge');
+        if (badge) badge.textContent = `${sec} сек`;
+      };
+    }
+  }
+
+  // =============================================================================
+  // Telemetry & Polling Intervals Editor Controller (config.json)
+  // =============================================================================
+
+  const INTERVAL_PRESETS = [
+    { value: '1 second', label: '1 сек' },
+    { value: '2 seconds', label: '2 сек' },
+    { value: '3 seconds', label: '3 сек' },
+    { value: '5 seconds', label: '5 сек' },
+    { value: '10 seconds', label: '10 сек' },
+    { value: '30 seconds', label: '30 сек' },
+    { value: '1 minute', label: '1 мин' },
+    { value: '5 minutes', label: '5 мин' },
+    { value: '10 minutes', label: '10 мин' },
+    { value: '30 minutes', label: '30 мин' },
+    { value: '1 hour', label: '1 час' },
+    { value: '6 hours', label: '6 часов' },
+    { value: '24 hours', label: '24 часа' },
+  ];
+
+  const CORE_RESOURCE_LOGGERS = [
+    'librehardwaremonitor',
+    'system_inspector',
+    'hardware_monitor',
+    'smartmontools'
+  ];
+
+  const LOGGER_META = {
+    librehardwaremonitor: {
+      icon: '🌡️',
+      title: 'LibreHardwareMonitor',
+      desc: 'Аппаратные сенсоры: температура CPU/GPU, вольтаж, обороты вентиляторов, частоты',
+    },
+    system_inspector: {
+      icon: '📊',
+      title: 'System Inspector',
+      desc: 'Комплексный снимок: загрузка CPU, RAM, дисковый ввод-вывод, процессы хоста',
+    },
+    hardware_monitor: {
+      icon: '💻',
+      title: 'Hardware Monitor',
+      desc: 'Аппаратные датчики WMI, GPU SMI (NVIDIA/AMD/Intel) и физические шины',
+    },
+    smartmontools: {
+      icon: '💾',
+      title: 'SmartMonTools (SMART)',
+      desc: 'Диагностика накопителей NVMe/SSD/HDD, температура дисков и здоровье SMART',
+    },
+    windows_sysadmin: {
+      icon: '🛠️',
+      title: 'Windows SysAdmin',
+      desc: 'Системные службы Windows, пользователи, локальные группы и сетевые порты',
+    },
+    windows_defender: {
+      icon: '🛡️',
+      title: 'Windows Defender',
+      desc: 'Статус антивирусной защиты, сигнатуры, обнаруженные угрозы и карантин',
+    },
+    windows_startup_auditor: {
+      icon: '🚀',
+      title: 'StartUp Auditor',
+      desc: 'Автозагрузка программ, реестр Run/RunOnce, сервисы и планировщик задач',
+    },
+    windows_backup_manager: {
+      icon: '📦',
+      title: 'Backup Manager',
+      desc: 'Резервные копии баз данных SQLite, конфигураций и снапшотов системы',
+    },
+    website_monitor: {
+      icon: '🌐',
+      title: 'Website Monitor',
+      desc: 'Проверка доступности веб-сервисов, задержка ответов HTTP/HTTPS',
+    },
+    gcloud_monitor: {
+      icon: '☁️',
+      title: 'GCloud Monitor',
+      desc: 'Телеметрия виртуальных машин, квоты и мониторинг Google Cloud',
+    },
+    cloudflared_monitor: {
+      icon: '🚇',
+      title: 'Cloudflare Tunnel',
+      desc: 'Статус защищенных туннелей cloudflared и исходящих подключений',
+    },
+    user_assistant: {
+      icon: '🤖',
+      title: 'User Assistant',
+      desc: 'Фоновые периодические напоминания, календарь и уведомления',
+    },
+    trading_terminal: {
+      icon: '📈',
+      title: 'Trading Terminal',
+      desc: 'Торговые котировки, балансы криптобирж и открытые ордера',
+    },
+    registry_viewer: {
+      icon: '📑',
+      title: 'Registry Viewer',
+      desc: 'Мониторинг изменений системного реестра Windows',
+    },
+    software_audit: {
+      icon: '🔍',
+      title: 'Software Audit',
+      desc: 'Аудит неиспользуемого и редко запускаемого ПО (UserAssist/Prefetch)',
+    },
+    helpdesk: {
+      icon: '🎫',
+      title: 'Helpdesk',
+      desc: 'Мониторинг тикетов техподдержки и уведомлений',
+    },
+  };
+
+  let _sysIntervalsConfigData = null;
+  let _currentUiRefreshSeconds = 5;
+
+  function showAlertInModal(msg, type = 'success') {
+    const alertEl = document.getElementById('modal-intervals-alert');
+    if (!alertEl) return;
+    alertEl.className = `alert alert-${type} py-2 px-3 small mb-3`;
+    alertEl.innerHTML = msg;
+    alertEl.classList.remove('d-none');
+    if (type === 'success') {
+      setTimeout(() => {
+        alertEl.classList.add('d-none');
+      }, 4000);
+    }
+  }
+
+  async function loadSysIntervalsConfig(notify = false) {
+    const btnRefresh = document.getElementById('btn-modal-intervals-refresh');
+    const icon = btnRefresh ? btnRefresh.querySelector('i') : null;
+    if (icon) icon.classList.add('spin-animation');
+
+    try {
+      let res = await fetch('/api/autolog/config');
+      if (!res.ok) {
+        res = await fetch('/sysautologging/config');
+      }
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      _sysIntervalsConfigData = await res.json();
+      renderSysIntervalsForm(_sysIntervalsConfigData);
+
+      if (notify) {
+        showAlertInModal('<i class="bi bi-check2 me-1"></i> Конфигурация успешно загружена из файла', 'success');
+      }
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Failed to load intervals config:', e);
+      showAlertInModal(`<i class="bi bi-exclamation-triangle me-1"></i> Ошибка загрузки конфигурации: ${escapeHtml(e.message)}`, 'danger');
+    } finally {
+      if (icon) icon.classList.remove('spin-animation');
+    }
+  }
+
+  function buildIntervalSelectHtml(loggerName, currentInterval) {
+    const val = currentInterval || '1 minute';
+    const isCustom = !INTERVAL_PRESETS.some(p => p.value === val);
+
+    let html = `<select class="form-select form-select-sm bg-dark text-white border-secondary sys-int-select" data-logger="${loggerName}" style="min-width: 120px;">`;
+    INTERVAL_PRESETS.forEach(p => {
+      const sel = p.value === val ? 'selected' : '';
+      html += `<option value="${p.value}" ${sel}>${p.label} (${p.value})</option>`;
+    });
+    if (isCustom) {
+      html += `<option value="${escapeHtml(val)}" selected>${escapeHtml(val)} (пользовательский)</option>`;
+    }
+    html += `</select>`;
+    return html;
+  }
+
+  function renderSysIntervalsForm(data) {
+    if (!data) return;
+
+    // 1. Config file badge
+    const cfgBadge = document.getElementById('modal-intervals-cfg-file');
+    if (cfgBadge && data.config_file) {
+      cfgBadge.textContent = data.config_file;
+    }
+
+    // 2. Engine status & global switch
+    const engineStatusBadge = document.getElementById('modal-intervals-engine-status');
+    if (engineStatusBadge) {
+      if (data.is_running) {
+        engineStatusBadge.textContent = 'AutoLog Active';
+        engineStatusBadge.className = 'badge bg-success';
+      } else {
+        engineStatusBadge.textContent = 'AutoLog Paused';
+        engineStatusBadge.className = 'badge bg-secondary';
+      }
+    }
+
+    const globalEnable = document.getElementById('modal-intervals-global-enable');
+    if (globalEnable) {
+      globalEnable.checked = data.enable_autolog !== false;
+    }
+
+    // 3. Default fallback interval select
+    const defSelect = document.getElementById('modal-intervals-default-select');
+    if (defSelect && data.default_interval) {
+      defSelect.value = data.default_interval;
+    }
+
+    // 4. Populate Core resource loggers & Other loggers
+    const coreContainer = document.getElementById('modal-core-loggers-container');
+    const otherContainer = document.getElementById('modal-other-loggers-container');
+    const otherCountEl = document.getElementById('modal-other-loggers-count');
+
+    if (!coreContainer || !otherContainer) return;
+
+    const loggers = data.loggers || {};
+    let coreHtml = '';
+    let otherHtml = '';
+    let otherCount = 0;
+
+    // Process core loggers
+    CORE_RESOURCE_LOGGERS.forEach(name => {
+      const cfg = loggers[name] || { interval: '5 seconds', enabled: true };
+      const meta = LOGGER_META[name] || { icon: '⚙️', title: name, desc: 'Системный сбор метрик' };
+      const isEnabled = cfg.enabled !== false;
+      const intervalVal = cfg.interval || '5 seconds';
+
+      coreHtml += `
+        <div class="p-2 rounded d-flex align-items-center justify-content-between flex-wrap gap-2" style="background: var(--bg-color); border: 1px solid var(--border-color);">
+          <div class="d-flex align-items-center gap-2" style="max-width: 58%;">
+            <span class="fs-5">${meta.icon}</span>
+            <div>
+              <div class="fw-bold small" style="color: var(--text-color);">${meta.title}</div>
+              <div class="small text-muted" style="font-size: 0.72rem; line-height: 1.2;">${meta.desc}</div>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2 ms-auto">
+            <div class="form-check form-switch m-0" title="Включить/отключить сбор метрик для этого сервиса">
+              <input class="form-check-input sys-int-enable" type="checkbox" data-logger="${name}" ${isEnabled ? 'checked' : ''}>
+            </div>
+            ${buildIntervalSelectHtml(name, intervalVal)}
+            <button class="btn btn-xs btn-outline-secondary rounded px-1.5 py-0.5 sys-int-custom-btn" data-logger="${name}" title="Ввести произвольный интервал вручную">
+              <i class="bi bi-pencil"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    });
+
+    // Process remaining loggers
+    const allLoggerNames = Object.keys(loggers).length > 0
+      ? Object.keys(loggers)
+      : Object.keys(LOGGER_META);
+
+    allLoggerNames.forEach(name => {
+      if (CORE_RESOURCE_LOGGERS.includes(name)) return;
+      otherCount++;
+      const cfg = loggers[name] || { interval: data.default_interval || '1 minute', enabled: true };
+      const meta = LOGGER_META[name] || { icon: '🔹', title: name, desc: 'Фоновый опрос службы' };
+      const isEnabled = cfg.enabled !== false;
+      const intervalVal = cfg.interval || '1 minute';
+
+      otherHtml += `
+        <div class="p-2 rounded d-flex align-items-center justify-content-between flex-wrap gap-2" style="background: var(--bg-color); border: 1px solid var(--border-color);">
+          <div class="d-flex align-items-center gap-2" style="max-width: 58%;">
+            <span class="fs-6">${meta.icon}</span>
+            <div>
+              <div class="fw-bold small" style="color: var(--text-color); font-size: 0.78rem;">${meta.title}</div>
+              <div class="small text-muted" style="font-size: 0.7rem; line-height: 1.2;">${meta.desc}</div>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2 ms-auto">
+            <div class="form-check form-switch m-0" title="Включить/выключить">
+              <input class="form-check-input sys-int-enable" type="checkbox" data-logger="${name}" ${isEnabled ? 'checked' : ''}>
+            </div>
+            ${buildIntervalSelectHtml(name, intervalVal)}
+            <button class="btn btn-xs btn-outline-secondary rounded px-1.5 py-0.5 sys-int-custom-btn" data-logger="${name}" title="Ввести произвольный интервал вручную">
+              <i class="bi bi-pencil"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    });
+
+    coreContainer.innerHTML = coreHtml;
+    otherContainer.innerHTML = otherHtml;
+    if (otherCountEl) otherCountEl.textContent = String(otherCount);
+
+    // Bind custom interval prompt buttons
+    document.querySelectorAll('.sys-int-custom-btn').forEach(btn => {
+      btn.onclick = () => {
+        const lName = btn.getAttribute('data-logger');
+        const sel = document.querySelector(`.sys-int-select[data-logger="${lName}"]`);
+        const currentVal = sel ? sel.value : '1 minute';
+        const custom = prompt(`Введите интервал опроса для ${lName} (например: "2 seconds", "15 seconds", "10 minutes", "1 hour"):`, currentVal);
+        if (custom && custom.trim()) {
+          const trimmed = custom.trim();
+          let opt = sel.querySelector(`option[value="${trimmed}"]`);
+          if (!opt) {
+            opt = document.createElement('option');
+            opt.value = trimmed;
+            opt.textContent = `${trimmed} (пользовательский)`;
+            sel.appendChild(opt);
+          }
+          sel.value = trimmed;
+        }
+      };
+    });
+  }
+
+  async function saveSysIntervalsConfig() {
+    const btnSave = document.getElementById('btn-modal-intervals-save');
+    if (btnSave) {
+      btnSave.disabled = true;
+      btnSave.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Сохранение...';
+    }
+
+    try {
+      const globalEnable = document.getElementById('modal-intervals-global-enable');
+      const defSelect = document.getElementById('modal-intervals-default-select');
+
+      const payload = {
+        enable_autolog: globalEnable ? globalEnable.checked : true,
+        default_interval: defSelect ? defSelect.value : '1 minute',
+        loggers: {}
+      };
+
+      // Collect values from all interval selects & switches
+      document.querySelectorAll('.sys-int-select').forEach(sel => {
+        const lName = sel.getAttribute('data-logger');
+        if (!lName) return;
+        const sw = document.querySelector(`.sys-int-enable[data-logger="${lName}"]`);
+        payload.loggers[lName] = {
+          interval: sel.value,
+          enabled: sw ? sw.checked : true
+        };
+      });
+
+      let saveRes = await fetch('/api/autolog/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!saveRes.ok) {
+        saveRes = await fetch('/sysautologging/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+
+      if (!saveRes.ok) {
+        const errJson = await saveRes.json().catch(() => ({}));
+        throw new Error(errJson.detail || `HTTP ${saveRes.status}`);
+      }
+
+      const result = await saveRes.json();
+      showAlertInModal(
+        `<i class="bi bi-check-circle-fill text-success me-1"></i> ${result.message || 'Интервалы успешно сохранены в config.json и применены!'}`,
+        'success'
+      );
+
+      // Refresh engine badge
+      const engineStatusBadge = document.getElementById('modal-intervals-engine-status');
+      if (engineStatusBadge) {
+        if (result.is_running) {
+          engineStatusBadge.textContent = 'AutoLog Active';
+          engineStatusBadge.className = 'badge bg-success';
+        } else {
+          engineStatusBadge.textContent = 'AutoLog Paused';
+          engineStatusBadge.className = 'badge bg-secondary';
+        }
+      }
+    } catch (e) {
+      console.error('[SystemInspectorTab] Save intervals config error:', e);
+      showAlertInModal(`<i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> Не удалось сохранить интервалы: ${escapeHtml(e.message)}`, 'danger');
+    } finally {
+      if (btnSave) {
+        btnSave.disabled = false;
+        btnSave.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Сохранить в config.json';
+      }
+    }
+  }
+
+  function setupSysSensorInterval(seconds) {
+    _currentUiRefreshSeconds = seconds;
+    if (window._sysSensorInterval) {
+      clearInterval(window._sysSensorInterval);
+      window._sysSensorInterval = null;
+    }
+    window._sysSensorInterval = setInterval(() => {
+      const activeTab = document.querySelector('#appsNavTabs .nav-link.active, #mainTabs .dropdown-item.active');
+      const isActive = activeTab && (
+        activeTab.getAttribute('data-tab') === 'tab-system-inspector' ||
+        activeTab.getAttribute('data-bs-target') === '#tab-system-inspector'
+      );
+      if (isActive) {
+        fetchLhmSensors();
+      }
+    }, seconds * 1000);
+    console.log(`[SystemInspectorTab] UI sensor refresh interval set to ${seconds}s`);
+  }
+
+  function openSysIntervalsModal() {
+    const modalEl = document.getElementById('sysIntervalsModal');
+    if (!modalEl) {
+      console.warn('[SystemInspectorTab] sysIntervalsModal element not found');
+      return;
+    }
+
+    // Set UI select to current seconds
+    const selUi = document.getElementById('modal-ui-refresh-select');
+    if (selUi) {
+      selUi.value = String(_currentUiRefreshSeconds);
+    }
+    const uiBadge = document.getElementById('modal-ui-refresh-badge');
+    if (uiBadge) {
+      uiBadge.textContent = `${_currentUiRefreshSeconds} сек`;
+    }
+
+    loadSysIntervalsConfig(false);
+
+    if (window.bootstrap && window.bootstrap.Modal) {
+      const modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+    } else {
+      modalEl.classList.add('show');
+      modalEl.style.display = 'block';
+    }
   }
 
   function escapeHtml(str) {
@@ -912,20 +1369,13 @@
 
     connectSystemWebSocket();
 
-    // Periodic sensor refresh every 5 seconds
+    // Periodic sensor refresh
     if (!window._sysSensorInterval) {
-      window._sysSensorInterval = setInterval(() => {
-        const activeTab = document.querySelector('#appsNavTabs .nav-link.active, #mainTabs .dropdown-item.active');
-        const isActive = activeTab && (
-          activeTab.getAttribute('data-tab') === 'tab-system-inspector' ||
-          activeTab.getAttribute('data-bs-target') === '#tab-system-inspector'
-        );
-        if (isActive) {
-          fetchLhmSensors();
-        }
-      }, 5000);
+      setupSysSensorInterval(_currentUiRefreshSeconds);
     }
   }
 
   window.initSystemInspectorTab = initSystemInspectorTab;
+  window.openSysIntervalsModal = openSysIntervalsModal;
 })();
+

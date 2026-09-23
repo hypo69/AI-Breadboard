@@ -183,6 +183,52 @@
     user-select: text;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
+  .about-ai-copilot-banner {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(20, 35, 60, 0.95) 50%, rgba(15, 23, 42, 0.98) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.45) !important;
+    border-radius: 10px;
+    box-shadow: 0 0 22px rgba(56, 189, 248, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+  }
+  .about-ai-pulse-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .about-ai-stages-box {
+    background: rgba(10, 15, 29, 0.7);
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  .about-ai-stage-row {
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 0.74rem;
+    line-height: 1.35;
+  }
+  .about-ai-stage-row:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .anomaly-pill {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #f87171;
+    font-weight: 500;
+  }
+  .anomaly-pill.warning {
+    background: rgba(234, 179, 8, 0.12);
+    border-color: rgba(234, 179, 8, 0.4);
+    color: #fde047;
+  }
 </style>
 
 <div class="about-sys-wrapper">
@@ -205,6 +251,92 @@
       <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1" id="btn-about-sys-live-toggle" title="Приостановить или возобновить поток">
         <i class="bi bi-pause-fill me-1" id="icon-about-sys-live"></i> <span id="txt-about-sys-live">Пауза</span>
       </button>
+    </div>
+  </div>
+
+  <!-- Top Prominent AI Copilot Performance & Diagnostics Banner (Top-most Panel) -->
+  <div class="about-ai-copilot-banner p-3 mb-3" id="about-ai-copilot-card">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-2 border-bottom border-secondary border-opacity-25">
+      <div class="d-flex align-items-center gap-2.5 flex-wrap">
+        <div class="about-ai-pulse-icon">
+          <i class="bi bi-robot text-info fs-5"></i>
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="fw-bold text-white" style="font-size: 0.95rem;">AI Copilot: Анализ производительности и узких мест</span>
+            <span class="badge bg-success-subtle text-success border border-success font-monospace" id="about-ai-health-badge">Health: 100/100</span>
+          </div>
+          <div class="small text-muted" style="font-size: 0.72rem;">Интеллектуальный диагностический аудит хоста и оборудования</div>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="badge bg-dark text-info border border-info border-opacity-30 px-2.5 py-1 font-monospace" id="about-ai-engine-name" style="font-size: 0.72rem;">
+          <i class="bi bi-cpu me-1"></i>Unified AI / Heuristic
+        </span>
+        <button class="btn btn-sm btn-info text-dark fw-bold rounded-pill px-3 py-1 shadow-sm d-flex align-items-center gap-1.5" id="btn-about-ai-rescan" title="Выполнить глубокий пересканирующий аудит с вызовом AI">
+          <i class="bi bi-lightning-charge-fill" id="ic-about-ai-rescan"></i>
+          <span id="txt-about-ai-rescan">Rescan</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Execution Stages / Steps Inspector (as in /tc scenario chat) -->
+    <div class="mt-2.5" id="about-ai-stages-section">
+      <div class="d-flex align-items-center justify-content-between text-muted small mb-1.5" style="font-size: 0.72rem;">
+        <span class="text-uppercase tracking-wider fw-semibold text-info"><i class="bi bi-activity me-1"></i>Этапы диагностики системы</span>
+        <button class="btn btn-link btn-sm p-0 text-info text-decoration-none" type="button" id="btn-about-ai-toggle-stages" style="font-size: 0.70rem;">
+          <span id="txt-about-ai-toggle-stages">Свернуть этапы</span> <i class="bi bi-chevron-up ms-0.5" id="ic-about-ai-toggle-stages"></i>
+        </button>
+      </div>
+      <div class="about-ai-stages-box p-2 rounded border border-secondary border-opacity-25" id="about-ai-stages-container">
+        <div class="small text-muted text-center py-2" id="about-ai-stages-empty">Ожидание запуска аудита...</div>
+      </div>
+    </div>
+
+    <!-- Anomalies Pills Container -->
+    <div id="about-ai-anomalies-container" class="mt-2 d-flex flex-wrap gap-1.5"></div>
+
+    <!-- AI Summary / Assessment Output -->
+    <div class="mt-2 p-2.5 rounded bg-black bg-opacity-40 border border-secondary border-opacity-25">
+      <div class="small text-light" id="about-ai-summary-text" style="line-height: 1.55; white-space: pre-line;">
+        Система готова. Нажмите «Rescan» для глубокого анализа ресурсов и поиска узких мест системы.
+      </div>
+    </div>
+
+    <!-- Collapsible Sent Prompt Inspector -->
+    <div class="mt-2" id="about-ai-prompt-section" style="display: none;">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+        <button class="btn btn-sm btn-link p-0 text-warning text-decoration-none d-flex align-items-center gap-1.5 font-monospace" type="button" id="btn-about-ai-toggle-prompt" style="font-size: 0.74rem;">
+          <i class="bi bi-terminal-fill text-warning"></i>
+          <span><strong>Сформированный промпт модели</strong></span>
+          <i class="bi bi-chevron-down text-muted ms-1" id="ic-about-ai-prompt"></i>
+        </button>
+        <button class="btn btn-dark btn-sm py-0 px-2 text-secondary border border-secondary-subtle d-flex align-items-center gap-1" type="button" id="btn-about-ai-copy-prompt" style="font-size: 0.68rem;" title="Скопировать отправленный промпт">
+          <i class="bi bi-clipboard"></i>
+          <span id="txt-about-ai-copy-prompt">Копировать</span>
+        </button>
+      </div>
+      <div id="about-ai-prompt-collapse" class="d-none mt-1.5 p-2 bg-black bg-opacity-75 border border-warning border-opacity-30 rounded">
+        <pre class="m-0 p-1.5 text-warning font-monospace" id="about-ai-prompt-text" style="font-size: 0.70rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;"></pre>
+      </div>
+    </div>
+
+    <!-- Collapsible Raw Response / Diagnostic Data Inspector -->
+    <div class="mt-2" id="about-ai-raw-section" style="display: none;">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+        <button class="btn btn-sm btn-link p-0 text-info text-decoration-none d-flex align-items-center gap-1.5 font-monospace" type="button" id="btn-about-ai-toggle-raw" style="font-size: 0.74rem;">
+          <i class="bi bi-code-slash text-info"></i>
+          <span><strong>Сырой ответ модели / Данные</strong></span>
+          <i class="bi bi-chevron-down text-muted ms-1" id="ic-about-ai-raw"></i>
+        </button>
+        <button class="btn btn-dark btn-sm py-0 px-2 text-secondary border border-secondary-subtle d-flex align-items-center gap-1" type="button" id="btn-about-ai-copy-raw" style="font-size: 0.68rem;" title="Скопировать ответ">
+          <i class="bi bi-clipboard"></i>
+          <span id="txt-about-ai-copy-raw">Копировать</span>
+        </button>
+      </div>
+      <div id="about-ai-raw-collapse" class="d-none mt-1.5 p-2 bg-black bg-opacity-75 border border-info border-opacity-30 rounded">
+        <pre class="m-0 p-1.5 text-light font-monospace" id="about-ai-raw-text" style="font-size: 0.70rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;"></pre>
+      </div>
     </div>
   </div>
 
@@ -572,21 +704,6 @@
     </div>
   </div>
 
-  <!-- AI Copilot Diagnostics Card (From Screenshot 2) -->
-  <div class="about-sys-panel mb-3">
-    <div class="about-sys-panel-header">
-      <div class="d-flex align-items-center gap-2">
-        <i class="bi bi-robot text-info"></i>
-        <span class="text-white">AI Copilot: Анализ производительности и узких мест</span>
-        <span class="badge bg-success-subtle text-success border border-success ms-2" id="about-ai-health-badge">Health: 100/100</span>
-      </div>
-      <span class="small text-muted" id="about-ai-engine-name">Heuristic Engine</span>
-    </div>
-    <div class="p-3">
-      <p class="mb-0 small text-light" id="about-ai-summary-text">
-        Монитор телеметрии готов. Система функционирует в штатном режиме, узких мест производительности не обнаружено.
-      </p>
-    </div>
   </div>
 
   <!-- Full Hardware Specification Tree Panel (Hardware Tree) -->

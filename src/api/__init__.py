@@ -58,10 +58,12 @@ from .router_scenarios import init_router as init_scenarios_router
 from .router_autolog import init_router as init_autolog_router
 from .router_sysautologging import init_router as init_sysautolog_router
 from .router_user_directories import init_router as init_user_directories_router
+from .router_menu import init_router as init_menu_router
 from .pixel_rag_router import get_pixel_rag_router
 
 __all__ = [
     "get_pixel_rag_router",
+    "init_menu_router",
     "init_diagnostics_router",
     "init_scenarios_router",
     "init_autolog_router",

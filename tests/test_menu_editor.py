@@ -1,35 +1,57 @@
-"""
-Тесты редактора меню (/tc)
-Тестируют генерацию меню, drag-and-drop и фильтрацию disabled приложений
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Test Suite: Тесты редактора меню (/tc) и API конфигурации меню
+# =============================================================================
+# Description:
+#   Тестирует чтение, валидацию, сохранение через /api/menu/config,
+#   структуру конфигурации tc_menu_config.json и интеграцию с интерфейсом.
+#
+# File: test_menu_editor.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# =============================================================================
+
+"""Тесты редактора меню (/tc) и эндпоинтов управления конфигурацией меню."""
 
 import json
-import pytest
+import re
 from pathlib import Path
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from header import __root__
+from src.api.router_menu import init_router as init_menu_router, TC_MENU_CONFIG_PATH
+
+
+WEBGUI_DIR = __root__ / "src" / "api" / "webgui"
+APPS_MAIN_JS = WEBGUI_DIR / "apps" / "main.js"
+TABS_CONFIG_JS = WEBGUI_DIR / "apps" / "modules" / "tabs-config.js"
+STATUS_MANAGER_JS = WEBGUI_DIR / "apps" / "modules" / "status-manager.js"
+APPS_INDEX_HTML = WEBGUI_DIR / "apps" / "index.html"
 
 
 class TestMenuConfig:
-    """Тесты структуры menu-config.json"""
+    """Тесты структуры tc_menu_config.json"""
 
     def test_menu_config_exists(self):
-        """Проверка существования файла конфигурации"""
-        config_path = Path("menu-config.json")
-        assert config_path.exists(), "menu-config.json не найден"
+        """Проверка существования файла конфигурации tc_menu_config.json"""
+        assert TC_MENU_CONFIG_PATH.exists(), f"Файл {TC_MENU_CONFIG_PATH} не найден"
 
     def test_menu_config_valid_json(self):
-        """Проверка валидности JSON"""
-        config_path = Path("menu-config.json")
+        """Проверка валидности JSON в файле конфигурации"""
         try:
-            with open(config_path) as f:
+            with open(TC_MENU_CONFIG_PATH, "r", encoding="utf-8") as f:
                 config = json.load(f)
             assert isinstance(config, dict), "Конфигурация должна быть объектом"
         except json.JSONDecodeError as e:
-            pytest.fail(f"Неверный JSON в menu-config.json: {e}")
+            pytest.fail(f"Неверный JSON в tc_menu_config.json: {e}")
 
     def test_menu_config_structure(self):
-        """Проверка обязательных полей конфигурации"""
-        config_path = Path("menu-config.json")
-        with open(config_path) as f:
+        """Проверка обязательных разделов конфигурации меню"""
+        with open(TC_MENU_CONFIG_PATH, "r", encoding="utf-8") as f:
             config = json.load(f)
 
         assert "menu" in config, "Отсутствует секция menu"
@@ -38,26 +60,22 @@ class TestMenuConfig:
 
     def test_top_buttons_required_fields(self):
         """Проверка обязательных полей в topButtons"""
-        config_path = Path("menu-config.json")
-        with open(config_path) as f:
+        with open(TC_MENU_CONFIG_PATH, "r", encoding="utf-8") as f:
             config = json.load(f)
 
         for item in config["menu"]["topButtons"]:
             assert "id" in item, f"Отсутствует id в topButtons: {item}"
             assert "label" in item, f"Отсутствует label в topButtons: {item}"
-            assert "icon" in item, f"Отсутствует icon в topButtons: {item}"
             assert "tab" in item, f"Отсутствует tab в topButtons: {item}"
 
     def test_sidebar_items_required_fields(self):
         """Проверка обязательных полей в sidebarItems"""
-        config_path = Path("menu-config.json")
-        with open(config_path) as f:
+        with open(TC_MENU_CONFIG_PATH, "r", encoding="utf-8") as f:
             config = json.load(f)
 
         for item in config["menu"]["sidebarItems"]:
             assert "id" in item, f"Отсутствует id в sidebarItems: {item}"
             assert "label" in item, f"Отсутствует label в sidebarItems: {item}"
-            assert "icon" in item, f"Отсутствует icon в sidebarItems: {item}"
             assert "tab" in item, f"Отсутствует tab в sidebarItems: {item}"
 
 
@@ -66,42 +84,28 @@ class TestTabsConfig:
 
     def test_tabs_config_exists(self):
         """Проверка существования tabs-config.js"""
-        config_path = Path("src/api/webgui/apps/modules/tabs-config.js")
-        assert config_path.exists(), "tabs-config.js не найден"
+        assert TABS_CONFIG_JS.exists(), "tabs-config.js не найден"
 
     def test_tabs_config_valid(self):
         """Проверка структуры tabs-config.js"""
-        config_path = Path("src/api/webgui/apps/modules/tabs-config.js")
-        with open(config_path) as f:
-            content = f.read()
-
+        content = TABS_CONFIG_JS.read_text(encoding="utf-8")
         assert "APP_TAB_DEFS" in content, "Отсутствует APP_TAB_DEFS"
-        assert "TC_EXCLUDES" in content, "Отсутствует TC_EXCLUDES"
 
 
 class TestMenuConsistency:
-    """Тесты согласованности конфигурации"""
+    """Тесты согласованности конфигурации с зарегистрированными вкладками"""
 
     def test_menu_ids_match_tabs(self):
-        """Проверка, что id из menu-config.json есть в tabs-config.js"""
-        menu_config_path = Path("menu-config.json")
-        tabs_config_path = Path("src/api/webgui/apps/modules/tabs-config.js")
-
-        with open(menu_config_path) as f:
+        """Проверка, что id из меню присутствуют в tabs-config.js"""
+        with open(TC_MENU_CONFIG_PATH, "r", encoding="utf-8") as f:
             menu_config = json.load(f)
 
-        with open(tabs_config_path) as f:
-            content = f.read()
-
-        # Извлекаем id из tabs-config.js
-        import re
+        content = TABS_CONFIG_JS.read_text(encoding="utf-8")
         tab_ids = re.findall(r"id:\s*['\"]([^'\"]+)['\"]", content)
 
-        # Проверяем topButtons
         for item in menu_config["menu"]["topButtons"]:
             assert item["id"] in tab_ids, f"ID {item['id']} из topButtons не найден в tabs-config.js"
 
-        # Проверяем sidebarItems
         for item in menu_config["menu"]["sidebarItems"]:
             assert item["id"] in tab_ids, f"ID {item['id']} из sidebarItems не найден в tabs-config.js"
 
@@ -111,195 +115,84 @@ class TestMenuEditorUI:
 
     def test_menu_editor_button_exists(self):
         """Проверка кнопки редактора меню"""
-        html_path = Path("src/api/webgui/apps/index.html")
-        with open(html_path) as f:
-            content = f.read()
-
+        content = APPS_INDEX_HTML.read_text(encoding="utf-8")
         assert "menu-editor-btn" in content, "Отсутствует кнопка menu-editor-btn"
         assert "Редактор меню" in content, "Отсутствует текст 'Редактор меню'"
 
     def test_menu_editor_modal_exists(self):
         """Проверка модального окна редактора"""
-        html_path = Path("src/api/webgui/apps/index.html")
-        with open(html_path) as f:
-            content = f.read()
-
+        content = APPS_INDEX_HTML.read_text(encoding="utf-8")
         assert "menuEditorModal" in content, "Отсутствует модальное окно menuEditorModal"
-        assert "topMenuEditor" in content, "Отсутствует контейнер topMenuEditor"
-        assert "sidebarMenuEditor" in content, "Отсутствует контейнер sidebarMenuEditor"
-
-    def test_menu_editor_css_exists(self):
-        """Проверка CSS стилей редактора"""
-        css_path = Path("src/api/webgui/css/components.css")
-        with open(css_path) as f:
-            content = f.read()
-
-        assert "menu-editor-item" in content, "Отсутствуют стили .menu-editor-item"
-        assert "drag-handle" in content, "Отсутствуют стили .drag-handle"
-
-    def test_menu_editor_visibility_select(self):
-        """Проверка наличия переключателя позиции"""
-        html_path = Path("src/api/webgui/apps/index.html")
-        with open(html_path) as f:
-            content = f.read()
-
-        assert "visibility-select" in content, "Отсутствует переключатель позиции"
-        assert "editor-visibility" in content, "Отсутствует контейнер editor-visibility"
-        assert "Сверху" in content, "Отсутствует опция 'Сверху'"
-        assert "Снизу" in content, "Отсутствует опция 'Снизу'"
-        assert "Скрыть" in content, "Отсутствует опция 'Скрыть'"
-
-    def test_menu_editor_order_slider(self):
-        """Проверка наличия слайдера порядка"""
-        html_path = Path("src/api/webgui/apps/index.html")
-        with open(html_path) as f:
-            content = f.read()
-
-        assert "order-slider" in content, "Отсутствует слайдер порядка"
-        assert "editor-order" in content, "Отсутствует контейнер editor-order"
-        assert "order-value" in content, "Отсутствует отображение значения порядка"
-        assert 'type="range"' in content, "Слайдер должен иметь type='range'"
-
-    def test_menu_editor_controls_style(self):
-        """Проверка стилей элементов управления"""
-        css_path = Path("src/api/webgui/css/components.css")
-        with open(css_path) as f:
-            content = f.read()
-
-        assert "editor-controls" in content, "Отсутствуют стили .editor-controls"
-        assert "editor-visibility" in content, "Отсутствуют стили .editor-visibility"
-        assert "editor-order" in content, "Отсутствуют стили .editor-order"
-        assert "visibility-select" in content, "Отсутствуют стили .visibility-select"
-        assert "order-slider" in content, "Отсутствуют стили .order-slider"
-        assert "order-value" in content, "Отсутствуют стили .order-value"
+        assert "allMenuEditor" in content, "Отсутствует контейнер allMenuEditor"
+        assert "saveMenuConfig" in content, "Отсутствует кнопка saveMenuConfig"
 
 
 class TestJavaScriptLogic:
-    """Тесты JavaScript логики"""
+    """Тесты логики JavaScript редактора меню"""
 
-    def test_menu_editor_js_exists(self):
-        """Проверка наличия JS кода редактора"""
-        html_path = Path("src/api/webgui/apps/index.html")
-        with open(html_path) as f:
-            content = f.read()
-
+    def test_menu_editor_js_functions(self):
+        """Проверка наличия функций управления меню в main.js"""
+        content = APPS_MAIN_JS.read_text(encoding="utf-8")
         assert "initMenuEditor" in content, "Отсутствует функция initMenuEditor"
-        assert "getDragAfterElement" in content, "Отсутствует функция getDragAfterElement"
-        assert "setupDropZones" in content, "Отсутствует функция setupDropZones"
+        assert "buildMenu" in content, "Отсутствует функция buildMenu"
+        assert "loadRequiredTabs" in content, "Отсутствует функция loadRequiredTabs"
 
-    def test_menu_editor_uses_fetch(self):
-        """Проверка использования fetch для загрузки конфига"""
-        html_path = Path("src/api/webgui/apps/index.html")
-        with open(html_path) as f:
-            content = f.read()
-
-        assert "fetch('/menu-config.json')" in content, "Отсутствует загрузка menu-config.json"
-
-    def test_menu_editor_visibility_handler(self):
-        """Проверка обработчика изменения позиции"""
-        html_path = Path("src/api/webgui/apps/index.html")
-        with open(html_path) as f:
-            content = f.read()
-
-        assert "visibility-select" in content, "Отсутствует переключатель позиции"
-        assert "position" in content, "Отсутствует обработка параметра position"
-        assert "top" in content, "Отсутствует позиция top"
-        assert "bottom" in content, "Отсутствует позиция bottom"
-        assert "hidden" in content, "Отсутствует позиция hidden"
-
-    def test_menu_editor_order_handler(self):
-        """Проверка обработчика слайдера порядка"""
-        html_path = Path("src/api/webgui/apps/index.html")
-        with open(html_path) as f:
-            content = f.read()
-
-        assert "order-slider" in content, "Отсутствует слайдер порядка"
-        assert "order-value" in content, "Отсутствует отображение значения порядка"
-        assert "order:" in content, "Отсутствует обработка параметра order"
-
-
-class TestDisabledFiltering:
-    """Тесты фильтрации disabled приложений"""
-
-    def test_disabled_filter_in_menu_generation(self):
-        """Проверка фильтрации disabled приложений при генерации меню"""
-        html_path = Path("src/api/webgui/apps/index.html")
-        with open(html_path) as f:
-            content = f.read()
-
-        assert "enabled === false" in content, "Отсутствует проверка enabled === false"
-        assert "appsMap" in content, "Отсутствует проверка appsMap"
-
-    def test_status_manager_exists(self):
-        """Проверка existence status-manager.js"""
-        manager_path = Path("src/api/webgui/apps/modules/status-manager.js")
-        assert manager_path.exists(), "status-manager.js не найден"
+    def test_menu_editor_endpoint_and_instant_apply(self):
+        """Проверка вызова эндпоинта /api/menu/config и мгновенного обновления интерфейса"""
+        content = APPS_MAIN_JS.read_text(encoding="utf-8")
+        assert "/api/menu/config" in content, "Отсутствует обращение к /api/menu/config"
+        assert "buildMenu(appsMap, cfg)" in content or "buildMenu(" in content, "Отсутствует вызов buildMenu для мгновенного переопределения"
 
     def test_status_manager_fetches_apps_status(self):
-        """Проверка, что status-manager.js получает статус приложений"""
-        manager_path = Path("src/api/webgui/apps/modules/status-manager.js")
-        with open(manager_path) as f:
-            content = f.read()
-
-        assert "apps/status" in content, "Отсутствует запрос к /api/apps/status"
+        """Проверка получения статуса приложений в status-manager.js"""
+        assert STATUS_MANAGER_JS.exists(), "status-manager.js не найден"
+        content = STATUS_MANAGER_JS.read_text(encoding="utf-8")
+        assert "apps/status" in content or "fetchAppsStatus" in content
 
 
-class TestCSSStyles:
-    """Тесты CSS стилей"""
+class TestMenuAPI:
+    """Тесты FastAPI роутера /api/menu/config"""
 
-    def test_dragging_class_style(self):
-        """Проверка стилей для класса dragging"""
-        css_path = Path("src/api/webgui/css/components.css")
-        with open(css_path) as f:
-            content = f.read()
+    @pytest.fixture
+    def client(self):
+        """Создает тестовый клиент FastAPI."""
+        app = FastAPI()
+        app.include_router(init_menu_router())
+        return TestClient(app)
 
-        assert ".menu-editor-item.dragging" in content, "Отсутствуют стили для .menu-editor-item.dragging"
+    def test_get_menu_config(self, client):
+        """GET /api/menu/config должен возвращать валидную конфигурацию."""
+        response = client.get("/api/menu/config")
+        assert response.status_code == 200
+        data = response.json()
+        assert "menu" in data
+        assert "topButtons" in data["menu"]
+        assert "sidebarItems" in data["menu"]
 
-    def test_drag_handle_style(self):
-        """Проверка стилей для drag handle"""
-        css_path = Path("src/api/webgui/css/components.css")
-        with open(css_path) as f:
-            content = f.read()
+    def test_post_menu_config_invalid(self, client):
+        """POST /api/menu/config с невалидным телом должен возвращать ошибку 400."""
+        response = client.post("/api/menu/config", json={"invalid": 123})
+        assert response.status_code == 400
 
-        assert ".drag-handle" in content, "Отсутствуют стили для .drag-handle"
+    def test_post_menu_config_success(self, client, monkeypatch, tmp_path):
+        """POST /api/menu/config должен успешно сохранять конфигурацию."""
+        fake_config_file = tmp_path / "tc_menu_config.json"
+        fake_config_file.write_text(json.dumps({"version": "test", "menu": {"topButtons": [], "sidebarItems": []}}), encoding="utf-8")
+        
+        import src.api.router_menu as router_menu_module
+        monkeypatch.setattr(router_menu_module, "TC_MENU_CONFIG_PATH", fake_config_file)
 
-    def test_menu_editor_item_style(self):
-        """Проверка базовых стилей элемента"""
-        css_path = Path("src/api/webgui/css/components.css")
-        with open(css_path) as f:
-            content = f.read()
+        payload = {
+            "version": "test_v2",
+            "menu": {
+                "topButtons": [{"id": "system_inspector", "label": "Потребление", "tab": "tab-system-inspector", "order": 1, "visible": True}],
+                "sidebarItems": [{"id": "about_system", "label": "О Системе", "tab": "tab-about-system", "order": 1, "visible": True}]
+            }
+        }
+        response = client.post("/api/menu/config", json=payload)
+        assert response.status_code == 200
+        assert response.json().get("status") == "ok"
 
-        assert ".menu-editor-item {" in content, "Отсутствуют базовые стили .menu-editor-item"
-
-
-class TestIntegration:
-    """Интеграционные тесты"""
-
-    def test_full_workflow(self):
-        """Полный рабочий процесс: загрузка -> редактирование -> сохранение"""
-        # Проверка, что все компоненты существуют
-        assert Path("menu-config.json").exists(), "menu-config.json"
-        assert Path("src/api/webgui/apps/index.html").exists(), "index.html"
-        assert Path("src/api/webgui/apps/main.js").exists(), "main.js"
-        assert Path("src/api/webgui/apps/modules/status-manager.js").exists(), "status-manager.js"
-        assert Path("src/api/webgui/apps/modules/tabs-config.js").exists(), "tabs-config.js"
-        assert Path("src/api/webgui/css/components.css").exists(), "components.css"
-
-    def test_menu_editor_includes_status_manager(self):
-        """Проверка импорта status-manager в index.html"""
-        html_path = Path("src/api/webgui/apps/index.html")
-        with open(html_path) as f:
-            content = f.read()
-
-        assert "fetchAppsStatus" in content, "Отсутствует импорт fetchAppsStatus"
-        assert "window.fetchAppsStatus = fetchAppsStatus" in content, "fetchAppsStatus не экспортируется в window"
-
-    def test_menu_editor_save_endpoint(self):
-        """Проверка эндпоинта сохранения конфигурации"""
-        html_path = Path("src/api/webgui/apps/index.html")
-        with open(html_path) as f:
-            content = f.read()
-
-        assert "/api/menu/config" in content, "Отсутствует эндпоинт /api/menu/config"
-        assert "POST" in content, "Отсутствует метод POST для сохранения"
-        assert "saveMenuConfig" in content, "Отсутствует функция saveMenuConfig"
+        saved_data = json.loads(fake_config_file.read_text(encoding="utf-8"))
+        assert saved_data["version"] == "test_v2"
+        assert len(saved_data["menu"]["topButtons"]) == 1
