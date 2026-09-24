@@ -123,7 +123,7 @@ class NativeWinProvider(BaseHardwareProvider):
             # Попытка получить физические диски с интерфейсами, SMART и здоровьем
             try:
                 from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
-                sensor = WindowsStorageSensor(timeout_sec=15)
+                sensor = WindowsStorageSensor(timeout_sec=30)
                 phys_disks = sensor.get_physical_disks()
                 for d in phys_disks:
                     wear = d.wear_percentage
@@ -228,7 +228,7 @@ class NativeWinProvider(BaseHardwareProvider):
         # Сенсоры температур накопителей
         try:
             from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
-            sensor = WindowsStorageSensor(timeout_sec=10)
+            sensor = WindowsStorageSensor(timeout_sec=30)
             for disk in sensor.get_physical_disks():
                 if disk.temperature_c is not None:
                     snapshot.sensors.append(

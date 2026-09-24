@@ -115,11 +115,23 @@ class TestSystemTelemetryCollector:
     def test_hardware_tree_generation(self, collector: SystemCollector):
         tree = asyncio.run(collector.get_hardware_tree_async())
         assert isinstance(tree, list)
-        assert len(tree) >= 3
+        assert len(tree) >= 5
         categories = [node.category for node in tree]
         assert "System" in categories
         assert "Processor (CPU)" in categories
         assert "System Memory" in categories
+        assert "Network Adapter" in categories
+
+        # Проверка расширенных свойств сетевых адаптеров
+        net_nodes = [n for n in tree if n.category == "Network Adapter"]
+        assert len(net_nodes) > 0
+        for net in net_nodes:
+            assert "Имя подключения" in net.properties
+            assert "Производитель" in net.properties
+            assert "Тип адаптера" in net.properties
+            assert "Физический (MAC) адрес" in net.properties
+            assert "Состояние соединения" in net.properties
+            assert "Скорость канала" in net.properties
 
 
 class TestHardwareSensors:
@@ -246,4 +258,20 @@ class TestSystemInspectorFastAPI:
             assert "hostname" in data
             assert "cpu" in data
             assert "memory" in data
+            assert "network_activity" in data
+
+    def test_get_network_activity_endpoint(self, client: TestClient):
+        """Проверка эндпоинта /api/v1/system/network-activity."""
+        response = client.get("/api/v1/system/network-activity?limit=15")
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+        if data:
+            item = data[0]
+            assert "pid" in item
+            assert "name" in item
+            assert "remote_address" in item
+            assert "protocol" in item
+            assert "sent_summary" in item
+            assert "recv_summary" in item
 

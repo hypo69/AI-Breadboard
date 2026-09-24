@@ -26,6 +26,7 @@ __all__ = [
     "research_and_statistic",
     "smartmontools",
     "software_transparency_scanner",
+    "telemetry_research",
     "trading_terminal",
     "user_assistant",
     "website_monitor",

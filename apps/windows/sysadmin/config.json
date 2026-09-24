@@ -18,8 +18,39 @@
       "*"
     ]
   },
-  "watch_directory": "C:\\",
+  "watch_directory": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard",
   "watch_directories": [
+    "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard",
+    "C:\\Program Files",
     "C:\\"
-  ]
+  ],
+  "exclusions": {
+    "enabled": true,
+    "paths": [
+      "AppData\\Roaming\\AI-Breadboard\\apps\\windows\\telemetry\\logs",
+      "AppData\\Local\\Temp",
+      "$Recycle.Bin",
+      "System Volume Information",
+      ".git",
+      "__pycache__",
+      "node_modules",
+      "c:\\Users\\onela\\AppData\\*.*",
+      ".pytest_cache"
+    ],
+    "extensions": [
+      ".tmp",
+      ".log",
+      ".db-wal",
+      ".db-shm",
+      ".csv"
+    ],
+    "patterns": [
+      "*librehardwaremonitor_polls.csv*",
+      "*Windows.db*",
+      "~$*"
+    ],
+    "processes": [
+      "SearchIndexer.exe"
+    ]
+  }
 }

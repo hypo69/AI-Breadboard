@@ -25,6 +25,9 @@
         },
         "provider": "gemini_cli"
     },
+    "schedulers": {
+        "enabled": false
+    },
     "apps": {
       "enabled": [
         "about_system",
@@ -46,7 +49,8 @@
         "ai_benchmark",
         "ninite_updater",
         "file_recovery",
-        "telemetry_history"
+        "telemetry_history",
+        "telemetry_research"
       ],
       "disabled": [
         "chat",

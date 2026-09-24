@@ -14,6 +14,17 @@ from .model_manager import (
     is_model_supported,
 )
 
+from .model_error_hub import (
+    ModelErrorCategory,
+    ModelErrorEvent,
+    ModelErrorHub,
+    classify_model_error,
+    get_error_hub,
+    get_model_errors,
+    get_model_health_summary,
+    record_model_error,
+)
+
 __all__ = [
     "HardwareProfile",
     "probe_hardware",
@@ -35,4 +46,12 @@ __all__ = [
     "actualize_all_models",
     "add_unsupported_model",
     "is_model_supported",
+    "ModelErrorCategory",
+    "ModelErrorEvent",
+    "ModelErrorHub",
+    "classify_model_error",
+    "get_error_hub",
+    "record_model_error",
+    "get_model_errors",
+    "get_model_health_summary",
 ]

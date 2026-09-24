@@ -80,8 +80,23 @@ def test_telemetry_json_logger(tmp_path: Path) -> None:
     assert len(files) >= 1
 
 
-def test_sensor_collector_snapshot() -> None:
+@patch("apps.windows.telemetry.sensor_collector.InternetSpeedSensor")
+@patch("apps.windows.telemetry.sensor_collector.HardwareMonitor")
+def test_sensor_collector_snapshot(mock_hw_cls: MagicMock, mock_speed_cls: MagicMock) -> None:
     """Тестирование сбора аппаратного снимка сенсоров."""
+    mock_hw = MagicMock()
+    mock_hw.get_telemetry_snapshot.return_value = {
+        "timestamp": "2026-09-24T18:00:00Z",
+        "cpu_usage_percent": 15.0,
+        "memory_used_mb": 4096,
+        "gpu_temperature_c": 50,
+    }
+    mock_hw_cls.return_value = mock_hw
+
+    mock_speed = MagicMock()
+    mock_speed.get_metrics.return_value = {"ping_ms": 12.0, "download_mbps": 100.0, "upload_mbps": 50.0}
+    mock_speed_cls.return_value = mock_speed
+
     collector = SensorCollector()
     snapshot = collector.get_hardware_snapshot()
 
@@ -102,20 +117,45 @@ def test_sensor_collector_snapshot() -> None:
 def test_file_collector_events(tmp_path: Path) -> None:
     """Тестирование работы коллектора файловых событий."""
     test_dir = str(tmp_path)
-    collector = FileCollector(watch_dirs=[test_dir])
+    mock_watcher = MagicMock()
+    mock_watcher.start.return_value = True
+    mock_watcher.get_recent_events.return_value = []
 
-    # Добавление и удаление директории
-    assert collector.add_watch_dir(test_dir) is False  # Уже добавлена
-    events = collector.get_recent_events(limit=10)
-    assert isinstance(events, list)
+    with patch("apps.windows.telemetry.file_collector._get_directory_watcher_cls", return_value=MagicMock(return_value=mock_watcher)):
+        collector = FileCollector(watch_dirs=[test_dir])
 
-    collector.stop()
+        # Добавление и удаление директории
+        assert collector.add_watch_dir(test_dir) is False  # Уже добавлена
+        events = collector.get_recent_events(limit=10)
+        assert isinstance(events, list)
+
+        collector.stop()
+        mock_watcher.stop.assert_called()
 
 
 def test_telemetry_aggregator_lifecycle(tmp_path: Path) -> None:
     """Тестирование жизненного цикла агрегатора телеметрии."""
     log_dir = tmp_path / "telemetry_logs"
-    aggregator = TelemetryAggregator(log_dir=str(log_dir))
+
+    mock_fc = MagicMock(spec=FileCollector)
+    mock_fc.get_recent_events.return_value = []
+    mock_fc.stop.return_value = None
+
+    mock_sc = MagicMock(spec=SensorCollector)
+    mock_sc.get_hardware_snapshot.return_value = {
+        "timestamp": "2026-09-24T12:00:00+03:00",
+        "sensors": [{"id": "cpu_1", "hardware_name": "CPU", "value": 25.0}],
+    }
+
+    from apps.windows.telemetry.storage import TelemetryStorage
+    test_storage = TelemetryStorage(db_path=tmp_path / "agg_test.db")
+
+    aggregator = TelemetryAggregator(
+        log_dir=str(log_dir),
+        file_collector=mock_fc,
+        sensor_collector=mock_sc,
+        storage=test_storage,
+    )
 
     # Единичный опрос
     aggregator.poll_once()
@@ -133,7 +173,7 @@ def test_telemetry_aggregator_lifecycle(tmp_path: Path) -> None:
     assert aggregator.get_status()["is_running"] is True
     assert aggregator.start() is False  # Повторный запуск должен вернуть False
 
-    time.sleep(0.5)
+    time.sleep(0.1)
     assert aggregator.stop() is True
     assert aggregator.get_status()["is_running"] is False
 

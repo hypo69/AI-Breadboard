@@ -23,6 +23,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import ctypes
 import getpass
 import locale
@@ -64,6 +65,7 @@ from apps.windows.telemetry.models import (
     OfficeSuiteInfo,
     PhysicalDiskHealth,
     ProcessMetrics,
+    ProcessNetworkActivity,
     RamStickInfo,
     SystemHealthAlerts,
     SystemSnapshot,
@@ -72,6 +74,7 @@ from apps.windows.telemetry.models import (
 from apps.windows.telemetry.sensors import get_hardware_sensors
 from apps.windows.telemetry.hardware_auditor import HardwareAuditor
 from apps.windows.telemetry.history_manager import HardwareHistoryManager
+from apps.windows.telemetry.storage import TelemetryStorage
 
 
 class SystemCollector:
@@ -81,8 +84,9 @@ class SystemCollector:
         self,
         auditor: Optional[HardwareAuditor] = None,
         history_manager: Optional[HardwareHistoryManager] = None,
+        storage: Optional[TelemetryStorage] = None,
     ) -> None:
-        """Initialize telemetry collector with timing, I/O baseline, and hardware auditor."""
+        """Initialize telemetry collector with timing, I/O baseline, hardware auditor, and storage."""
         self._last_disk_io = psutil.disk_io_counters() if PSUTIL_AVAILABLE else None
         self._last_net_io = psutil.net_io_counters(pernic=True) if PSUTIL_AVAILABLE else None
         self._last_time = time.time()
@@ -93,6 +97,7 @@ class SystemCollector:
         self._office_cached: Optional[OfficeSuiteInfo] = None
         self.auditor = auditor or HardwareAuditor()
         self.history_manager = history_manager or HardwareHistoryManager()
+        self.storage = storage or TelemetryStorage.get_instance()
 
     def get_system_identity(self) -> Dict[str, Any]:
         """Collect host identity, current user, system language, and locale parameters.
@@ -744,6 +749,229 @@ class SystemCollector:
 
         return ports
 
+    def get_process_network_activity(
+        self, limit: int = 50, only_internet: bool = False
+    ) -> List[ProcessNetworkActivity]:
+        """Collect active network connections and traffic attribution for processes.
+
+        Args:
+            limit: Maximum connections to return.
+            only_internet: Whether to restrict only to external internet addresses.
+
+        Returns:
+            List[ProcessNetworkActivity]: Active network connections with process and traffic description.
+        """
+        activities: List[ProcessNetworkActivity] = []
+        if not PSUTIL_AVAILABLE:
+            return activities
+
+        try:
+            raw_conns = psutil.net_connections(kind="inet")
+        except Exception as ex:
+            logger.debug(f"Failed to query network connections: {ex}")
+            return activities
+
+        proc_cache: Dict[int, Dict[str, Any]] = {}
+
+        def _get_proc_info(pid: Optional[int]) -> Dict[str, Any]:
+            if not pid or pid == 0:
+                return {"name": "System Idle", "user": "SYSTEM", "read_kb": 0.0, "write_kb": 0.0}
+            if pid == 4:
+                return {"name": "System", "user": "NT AUTHORITY\\SYSTEM", "read_kb": 0.0, "write_kb": 0.0}
+            if pid in proc_cache:
+                return proc_cache[pid]
+            try:
+                p = psutil.Process(pid)
+                pname = p.name()
+                puser = ""
+                try:
+                    puser = p.username()
+                except Exception:
+                    puser = ""
+
+                read_kb = 0.0
+                write_kb = 0.0
+                try:
+                    io = p.io_counters()
+                    read_kb = round(io.read_bytes / 1024, 1)
+                    write_kb = round(io.write_bytes / 1024, 1)
+                except Exception:
+                    pass
+
+                info = {"name": pname, "user": puser, "read_kb": read_kb, "write_kb": write_kb}
+                proc_cache[pid] = info
+                return info
+            except Exception:
+                info = {"name": f"PID {pid}", "user": "", "read_kb": 0.0, "write_kb": 0.0}
+                proc_cache[pid] = info
+                return info
+
+        def _is_ext_internet(ip: str) -> bool:
+            if not ip:
+                return False
+            if ip in ("127.0.0.1", "::1", "0.0.0.0", "::") or ip.startswith("127.") or ip.startswith("fe80:"):
+                return False
+            return True
+
+        for c in raw_conns:
+            laddr_str = f"{c.laddr.ip}:{c.laddr.port}" if c.laddr else "-"
+            raddr_str = f"{c.raddr.ip}:{c.raddr.port}" if c.raddr else "-"
+            rip = c.raddr.ip if c.raddr else ""
+            rport = c.raddr.port if c.raddr else 0
+            lport = c.laddr.port if c.laddr else 0
+
+            is_ext = _is_ext_internet(rip)
+            if only_internet and not is_ext:
+                continue
+
+            proto = "TCP" if c.type == socket.SOCK_STREAM else "UDP"
+            status = c.status or ("LISTEN" if not c.raddr else "ESTABLISHED")
+            p_info = _get_proc_info(c.pid)
+            p_name = p_info["name"]
+            p_user = p_info["user"]
+
+            service_type, sent_desc, recv_desc = self._classify_traffic(
+                p_name, rport or lport, proto, status, is_ext
+            )
+
+            activities.append(
+                ProcessNetworkActivity(
+                    pid=c.pid or 0,
+                    name=p_name,
+                    user=p_user,
+                    local_address=laddr_str,
+                    remote_address=raddr_str,
+                    remote_host=None,
+                    protocol=proto,
+                    status=status,
+                    is_internet=is_ext,
+                    service_type=service_type,
+                    sent_kb=p_info["write_kb"],
+                    recv_kb=p_info["read_kb"],
+                    sent_summary=sent_desc,
+                    recv_summary=recv_desc,
+                )
+            )
+            if len(activities) >= limit:
+                break
+
+        return activities
+
+    @staticmethod
+    def _classify_traffic(
+        proc_name: str, port: int, proto: str, status: str, is_internet: bool
+    ) -> tuple[str, str, str]:
+        """Classify network traffic service type and generate human-readable summaries."""
+        p_lower = proc_name.lower()
+
+        # 1. Listen sockets
+        if status == "LISTEN" or not is_internet:
+            if "python" in p_lower or "uvicorn" in p_lower or "node" in p_lower:
+                return (
+                    "Локальный Web API / Сервер",
+                    "HTTP ответы локальным клиентам / WebSockets",
+                    "Входящие HTTP запросы от фронтенда / браузера",
+                )
+            return (
+                "Локальная служба / Socket",
+                "Служебные ответы локальной подсистемы",
+                "Ожидание входящих подключений (Listen)",
+            )
+
+        # 2. Port-based classification with Process-specific context
+        if port in (443, 8443):
+            if any(b in p_lower for b in ("edge", "chrome", "firefox", "brave", "opera", "browser")):
+                return (
+                    "HTTPS / Веб-навигация",
+                    "Исходящие HTTPS запросы, URL заголовки, формы, cookies",
+                    "HTML страницы, скрипты, видео, изображения, медиа",
+                )
+            if any(m in p_lower for m in ("telegram", "discord", "slack", "whatsapp", "skype")):
+                return (
+                    "Мессенджер / Зашифрованный чат",
+                    "Текстовые сообщения, медиа-файлы, голосовые пакеты, пинги",
+                    "Входящие сообщения, аудио/видеопоток, обновления чатов",
+                )
+            if any(s in p_lower for s in ("onedrive", "googledrivefs", "dropbox", "cloud")):
+                return (
+                    "Облачная синхронизация / Хранилище",
+                    "Выгрузка локальных файлов, метаданные изменений",
+                    "Синхронизация файлов из облака, снимки папок",
+                )
+            if any(d in p_lower for d in ("code", "devenv", "language_server", "python", "pycharm", "git")):
+                return (
+                    "Разработка / LLM API & Git",
+                    "AI промпты к LLM моделям, API вызовы, git push, пакеты",
+                    "Сгенерированный AI код, ответы API, пакеты библиотек",
+                )
+            if any(w in p_lower for w in ("svchost", "system", "msmpeng", "searchindexer", "spoolsv")):
+                return (
+                    "Системные службы Windows / Облако MS",
+                    "Телеметрия Defender, проверка сертификатов, запросы ОС",
+                    "Сигнатуры безопасности, метаданные обновлений Windows",
+                )
+            return (
+                "HTTPS / Зашифрованный веб-трафик",
+                "Зашифрованные HTTPS/TLS запросы и полезная нагрузка",
+                "Ответы удаленного веб-сервера, зашифрованные данные",
+            )
+
+        if port in (80, 8080):
+            return (
+                "HTTP / Открытый веб-трафик",
+                "HTTP GET/POST запросы, клиентские заголовки",
+                "HTML веб-страницы, незашифрованный контент, ответы",
+            )
+
+        if port == 53:
+            return (
+                "DNS / Разрешение имен",
+                "Запросы на получение IP-адресов доменов (DNS Queries)",
+                "DNS-ответы с IP-адресами серверов (DNS Answers)",
+            )
+
+        if port in (5222, 5223, 5228):
+            return (
+                "Push-нотификации / XMPP",
+                "Heartbeat пинги, исходящие push-запросы",
+                "Входящие фоновые push-уведомления и события",
+            )
+
+        if port == 22:
+            return (
+                "SSH / Защищенный терминал",
+                "Команды консоли, зашифрованные SSH сессии",
+                "Вывод удаленного терминала, файловые потоки SFTP",
+            )
+
+        if port == 7680:
+            return (
+                "WUDO / P2P обновления Windows",
+                "P2P раздача фрагментов обновлений ОС",
+                "P2P получение компонентов обновлений ОС",
+            )
+
+        if port in (465, 587):
+            return (
+                "SMTP / Почтовая отправка",
+                "Исходящие электронные письма (MIME/SMTP)",
+                "Квитанции доставки, подтверждения почтового сервера",
+            )
+
+        if port in (993, 995):
+            return (
+                "IMAP/POP3 / Почтовый прием",
+                "Команды проверки новых писем и папок",
+                "Входящие электронные письма, заголовки, вложения",
+            )
+
+        # Fallback
+        return (
+            f"{proto}/{port}",
+            f"Исходящие пакеты данных ({proto}) на порт {port}",
+            f"Входящие пакеты и ответы сервера с порта {port}",
+        )
+
     def get_health_alerts(self) -> SystemHealthAlerts:
         """Check system reliability indicators and pending reboot status.
 
@@ -1154,7 +1382,7 @@ class SystemCollector:
             )
 
     async def get_snapshot(self, process_limit: int = 20) -> SystemSnapshot:
-        """Capture full point-in-time system telemetry snapshot.
+        """Capture full point-in-time system telemetry snapshot without blocking event loop.
 
         Args:
             process_limit: Number of top active processes to include.
@@ -1162,15 +1390,56 @@ class SystemCollector:
         Returns:
             SystemSnapshot: Consolidated system and hardware snapshot.
         """
-        now = time.time()
-        uptime = round(now - (psutil.boot_time() if PSUTIL_AVAILABLE else now - 3600), 1)
-        partitions, disk_io = self.get_disk_metrics()
-        net_metrics = self.get_network_metrics()
-        sensors = get_hardware_sensors()
-        top_procs = self.get_top_processes(limit=process_limit)
-        ident = self.get_system_identity()
+        def _collect_sync_telemetry() -> Dict[str, Any]:
+            now = time.time()
+            uptime = round(now - (psutil.boot_time() if PSUTIL_AVAILABLE else now - 3600), 1)
+            partitions, disk_io = self.get_disk_metrics()
+            net_metrics = self.get_network_metrics()
+            sensors = get_hardware_sensors()
+            top_procs = self.get_top_processes(limit=process_limit)
+            ident = self.get_system_identity()
+            mems = self.get_memory_metrics()
+            gpu_list = self.get_gpu_metrics()
+            mon_list = self.get_monitors()
+            upd_info = self.get_updates_info()
+            off_info = self.get_ms_office_info()
+            od_info = self.get_onedrive_info()
+            phys_disks = self.get_physical_disks_health()
+            ports = self.get_listening_ports()
+            net_activity = self.get_process_network_activity(limit=40)
+            batt = self.get_battery_metrics()
+            alerts = self.get_health_alerts()
+            self._last_time = now
 
-        self._last_time = now
+            return {
+                "now": now,
+                "uptime": uptime,
+                "partitions": partitions,
+                "disk_io": disk_io,
+                "net_metrics": net_metrics,
+                "sensors": sensors,
+                "top_procs": top_procs,
+                "ident": ident,
+                "memory": mems,
+                "gpus": gpu_list,
+                "monitors": mon_list,
+                "updates": upd_info,
+                "office": off_info,
+                "onedrive": od_info,
+                "physical_disks": phys_disks,
+                "listening_ports": ports,
+                "net_activity": net_activity,
+                "battery": batt,
+                "alerts": alerts,
+            }
+
+        # Асинхронно параллельно запускаем сбор CPU, RAM и тяжелых синхронных метрик
+        cpu_task = asyncio.create_task(self.get_cpu_metrics())
+        ram_task = asyncio.create_task(self.get_ram_sticks())
+        sync_task = asyncio.create_task(asyncio.to_thread(_collect_sync_telemetry))
+
+        cpu_metrics, ram_sticks, sync_data = await asyncio.gather(cpu_task, ram_task, sync_task)
+        ident = sync_data["ident"]
 
         return SystemSnapshot(
             hostname=ident.get("hostname") or socket.gethostname(),
@@ -1184,24 +1453,25 @@ class SystemCollector:
             codepage=ident.get("codepage") or "",
             input_languages=ident.get("input_languages") or [],
             os_install_date=ident.get("os_install_date") or "",
-            uptime_seconds=uptime,
-            cpu=await self.get_cpu_metrics(),
-            memory=self.get_memory_metrics(),
-            ram_sticks=await self.get_ram_sticks(),
-            gpus=self.get_gpu_metrics(),
-            monitors=self.get_monitors(),
-            updates=self.get_updates_info(),
-            office=self.get_ms_office_info(),
-            onedrive=self.get_onedrive_info(),
-            disks=partitions,
-            physical_disks=self.get_physical_disks_health(),
-            disk_io=disk_io,
-            network=net_metrics,
-            listening_ports=self.get_listening_ports(),
-            battery=self.get_battery_metrics(),
-            alerts=self.get_health_alerts(),
-            sensors=sensors,
-            top_processes=top_procs,
+            uptime_seconds=sync_data["uptime"],
+            cpu=cpu_metrics,
+            memory=sync_data["memory"],
+            ram_sticks=ram_sticks,
+            gpus=sync_data["gpus"],
+            monitors=sync_data["monitors"],
+            updates=sync_data["updates"],
+            office=sync_data["office"],
+            onedrive=sync_data["onedrive"],
+            disks=sync_data["partitions"],
+            physical_disks=sync_data["physical_disks"],
+            disk_io=sync_data["disk_io"],
+            network=sync_data["net_metrics"],
+            listening_ports=sync_data["listening_ports"],
+            network_activity=sync_data["net_activity"],
+            battery=sync_data["battery"],
+            alerts=sync_data["alerts"],
+            sensors=sync_data["sensors"],
+            top_processes=sync_data["top_procs"],
         )
 
     def get_hardware_sensors(self) -> List[HardwareSensor]:
@@ -1447,18 +1717,74 @@ class SystemCollector:
         )
 
         # 5. Видеоадаптеры и ускорители (Display Adapters & GPUs)
+        wmi_video_map: Dict[str, Dict[str, Any]] = {}
+        if os.name == "nt":
+            try:
+                import win32com.client
+                wmi_obj = win32com.client.GetObject("winmgmts:")
+                for v in wmi_obj.InstancesOf("Win32_VideoController"):
+                    v_name = (getattr(v, "Name", "") or "").strip()
+                    v_pnp = (getattr(v, "PNPDeviceID", "") or "").strip()
+                    v_mfg = (getattr(v, "AdapterCompatibility", "") or "").strip()
+                    v_drv_ver = (getattr(v, "DriverVersion", "") or "").strip()
+                    v_drv_date_raw = getattr(v, "DriverDate", None)
+                    v_drv_date = ""
+                    if v_drv_date_raw:
+                        ds = str(v_drv_date_raw)[:8]
+                        if len(ds) == 8 and ds.isdigit():
+                            v_drv_date = f"{ds[6:8]}.{ds[4:6]}.{ds[0:4]}"
+                    v_proc = (getattr(v, "VideoProcessor", "") or "").strip()
+                    v_mode = (getattr(v, "VideoModeDescription", "") or "").strip()
+                    v_refresh = getattr(v, "CurrentRefreshRate", None)
+                    v_status = (getattr(v, "Status", "") or "OK").strip()
+
+                    info_dict = {
+                        "name": v_name,
+                        "mfg": v_mfg,
+                        "drv_ver": v_drv_ver,
+                        "drv_date": v_drv_date,
+                        "proc": v_proc,
+                        "mode": v_mode,
+                        "refresh": v_refresh,
+                        "status": v_status,
+                        "pnp": v_pnp,
+                    }
+                    if v_name:
+                        wmi_video_map[v_name.lower()] = info_dict
+            except Exception as e:
+                logger.debug(f"[HardwareTree] WMI VideoController query warning: {e}")
+
         gpus = self.get_gpu_metrics()
         for idx, gpu in enumerate(gpus):
+            v_extra = wmi_video_map.get(gpu.name.lower(), {})
+            gpu_mfg = v_extra.get("mfg") or ("NVIDIA" if "geforce" in gpu.name.lower() or "nvidia" in gpu.name.lower() else "Intel" if "intel" in gpu.name.lower() else "AMD" if "radeon" in gpu.name.lower() else "Unknown")
+            drv_ver = v_extra.get("drv_ver")
+            drv_date = v_extra.get("drv_date")
+            vproc = v_extra.get("proc")
+            vmode = v_extra.get("mode")
+
             gpu_props: Dict[str, Any] = {
                 "Индекс устройства": idx,
+                "Модель видеокарты": gpu.name,
+                "Производитель (Вендор)": gpu_mfg,
                 "Объем видеопамяти (VRAM)": f"{gpu.memory_total_gb} GB",
-                "Поддержка CUDA": "Да" if gpu.has_cuda else "Нет",
-                "Поддержка DirectML": "Да" if gpu.has_directml else "Нет",
             }
-            if getattr(gpu, "driver_version", None):
-                gpu_props["Версия драйвера"] = gpu.driver_version
-            if getattr(gpu, "vendor", None):
-                gpu_props["Вендор"] = gpu.vendor
+            if vproc:
+                gpu_props["Видеопроцессор"] = vproc
+            if drv_ver:
+                gpu_props["Версия драйвера"] = drv_ver
+            if drv_date:
+                gpu_props["Дата драйвера"] = drv_date
+            if vmode:
+                gpu_props["Текущий видеорежим"] = vmode
+            elif v_extra.get("refresh"):
+                gpu_props["Частота обновления"] = f"{v_extra['refresh']} Hz"
+
+            gpu_props["Поддержка CUDA"] = "Да" if gpu.has_cuda else "Нет"
+            gpu_props["Поддержка DirectML"] = "Да" if gpu.has_directml else "Нет"
+            gpu_props["Статус устройства"] = v_extra.get("status", "OK (Активно)")
+            if v_extra.get("pnp"):
+                gpu_props["Идентификатор PnP"] = v_extra["pnp"]
 
             nodes.append(
                 HardwareNode(
@@ -1498,22 +1824,55 @@ class SystemCollector:
                     iface = (getattr(d, "InterfaceType", "") or "SCSI/SATA").strip()
                     media = (getattr(d, "MediaType", "") or "Fixed hard disk media").strip()
                     sn = (getattr(d, "SerialNumber", "") or "").strip() or "N/A"
+                    firmware = (getattr(d, "FirmwareRevision", "") or "").strip()
                     parts = getattr(d, "Partitions", 0) or 1
                     status = (getattr(d, "Status", "") or "OK").strip()
+
+                    # Определение бренда производителя накопителя
+                    model_l = model.lower()
+                    if "samsung" in model_l:
+                        disk_mfg = "Samsung"
+                    elif "crucial" in model_l or model_l.startswith("ct"):
+                        disk_mfg = "Crucial / Micron"
+                    elif "toshiba" in model_l or model_l.startswith("hdwd") or model_l.startswith("dt01"):
+                        disk_mfg = "Toshiba"
+                    elif "wdc" in model_l or model_l.startswith("wd") or "western digital" in model_l:
+                        disk_mfg = "Western Digital"
+                    elif "kingston" in model_l or model_l.startswith("sa400") or model_l.startswith("skc"):
+                        disk_mfg = "Kingston"
+                    elif "seagate" in model_l or model_l.startswith("st"):
+                        disk_mfg = "Seagate"
+                    elif "sandisk" in model_l:
+                        disk_mfg = "SanDisk"
+                    elif "kioxia" in model_l:
+                        disk_mfg = "Kioxia"
+                    elif "intel" in model_l:
+                        disk_mfg = "Intel"
+                    elif "micron" in model_l:
+                        disk_mfg = "Micron"
+                    elif "sk hynix" in model_l or "hynix" in model_l:
+                        disk_mfg = "SK Hynix"
+                    else:
+                        disk_mfg = "Универсальный накопитель"
+
+                    disk_props: Dict[str, Any] = {
+                        "Модель накопителя": model,
+                        "Производитель (Бренд)": disk_mfg,
+                        "Интерфейс подключения": iface,
+                        "Тип носителя": media,
+                        "Емкость": f"{size_gb} GB ({size_bytes:,} байт)",
+                        "Серийный номер (S/N)": sn,
+                    }
+                    if firmware:
+                        disk_props["Версия прошивки (Firmware)"] = firmware
+                    disk_props["Число разделов"] = parts
+                    disk_props["Статус S.M.A.R.T."] = status
 
                     nodes.append(
                         HardwareNode(
                             category="Physical Disk",
                             name=f"{model} ({size_gb} GB)",
-                            properties={
-                                "Модель накопителя": model,
-                                "Интерфейс подключения": iface,
-                                "Тип носителя": media,
-                                "Емкость": f"{size_gb} GB ({size_bytes:,} байт)",
-                                "Серийный номер (S/N)": sn,
-                                "Число разделов": parts,
-                                "Статус S.M.A.R.T.": status,
-                            },
+                            properties=disk_props,
                         )
                     )
             except Exception as e:
@@ -1537,21 +1896,243 @@ class SystemCollector:
                 )
             )
 
-        # 9. Сетевые адаптеры (Network Adapters)
-        for net in self.get_network_metrics():
-            nodes.append(
-                HardwareNode(
-                    category="Network Adapter",
-                    name=net.name,
-                    properties={
-                        "Состояние соединения": "Активно (Up)" if net.is_up else "Отключено (Down)",
-                        "Скорость канала": f"{net.speed_mbps} Mbps",
-                        "IP-адреса": ", ".join(net.ip_addresses) or "N/A",
-                    },
-                )
-            )
+        # 9. Сетевые адаптеры (Network Adapters) с полными параметрами WMI/psutil
+        wmi_net_adapters: Dict[str, Dict[str, Any]] = {}
+        wmi_net_configs: Dict[str, Any] = {}
 
-        # 10. Обновления Windows (Windows Updates & Servicing)
+        if os.name == "nt":
+            try:
+                import win32com.client
+                wmi_obj = win32com.client.GetObject("winmgmts:")
+
+                for cfg in wmi_obj.InstancesOf("Win32_NetworkAdapterConfiguration"):
+                    cdesc = (getattr(cfg, "Description", "") or "").strip()
+                    if cdesc:
+                        wmi_net_configs[cdesc.lower()] = cfg
+
+                for a in wmi_obj.InstancesOf("Win32_NetworkAdapter"):
+                    net_id = (getattr(a, "NetConnectionID", "") or "").strip()
+                    aname = (getattr(a, "Name", "") or "").strip()
+                    adesc = (getattr(a, "Description", "") or "").strip()
+                    apnp = (getattr(a, "PNPDeviceID", "") or "").strip()
+                    amfg = (getattr(a, "Manufacturer", "") or "").strip()
+                    amac = (getattr(a, "MACAddress", "") or "").strip()
+                    aspeed = getattr(a, "Speed", None)
+                    atype = (getattr(a, "AdapterType", "") or "").strip()
+                    astatus_num = getattr(a, "NetConnectionStatus", None)
+                    aphys = getattr(a, "PhysicalAdapter", False)
+
+                    item = {
+                        "net_id": net_id,
+                        "name": aname,
+                        "desc": adesc,
+                        "pnp": apnp,
+                        "mfg": amfg,
+                        "mac": amac,
+                        "speed": aspeed,
+                        "ad_type": atype,
+                        "status_num": astatus_num,
+                        "is_phys": aphys,
+                    }
+                    if net_id:
+                        wmi_net_adapters[net_id.lower()] = item
+                    if aname:
+                        wmi_net_adapters[aname.lower()] = item
+                    if adesc:
+                        wmi_net_adapters[adesc.lower()] = item
+            except Exception as e:
+                logger.debug(f"[HardwareTree] WMI NetworkAdapter query warning: {e}")
+
+        if PSUTIL_AVAILABLE:
+            ps_addrs = psutil.net_if_addrs()
+            ps_stats = psutil.net_if_stats()
+
+            for if_name, addr_list in ps_addrs.items():
+                stat = ps_stats.get(if_name)
+                w_info = wmi_net_adapters.get(if_name.lower(), {})
+                cfg = wmi_net_configs.get(w_info.get("desc", "").lower()) or wmi_net_configs.get(if_name.lower())
+
+                # Физический MAC-адрес
+                mac_addr = w_info.get("mac")
+                if not mac_addr:
+                    for a in addr_list:
+                        fam_name = getattr(a.family, "name", "")
+                        if fam_name == "AF_LINK" or a.family == -1 or a.family == getattr(psutil, "AF_LINK", -1):
+                            if a.address and len(a.address) in (12, 17):
+                                mac_addr = a.address.replace("-", ":").upper()
+                                break
+
+                # IP-адреса
+                ipv4_list = [a.address for a in addr_list if a.family == socket.AF_INET]
+                ipv6_list = [a.address.split("%")[0] for a in addr_list if hasattr(socket, "AF_INET6") and a.family == socket.AF_INET6]
+
+                # Шлюзы, DHCP, DNS
+                gateways = list(getattr(cfg, "DefaultIPGateway", []) or []) if cfg else []
+                dhcp_server = getattr(cfg, "DHCPServer", None) if cfg else None
+                dhcp_enabled = getattr(cfg, "DHCPEnabled", None) if cfg else None
+                dns_servers = list(getattr(cfg, "DNSServerSearchOrder", []) or []) if cfg else []
+
+                # Статус соединения
+                is_up = stat.isup if stat else True
+                status_num = w_info.get("status_num")
+                if status_num == 2 or (status_num is None and is_up):
+                    status_str = "Активно (Up)"
+                elif status_num == 7:
+                    status_str = "Кабель не подключен (Disconnected)"
+                elif status_num == 0:
+                    status_str = "Отключено (Disabled)"
+                elif not is_up:
+                    status_str = "Не активно (Down)"
+                else:
+                    status_str = "Активно (Up)"
+
+                # Скорость соединения
+                speed_mbps = 0
+                if stat and stat.speed and stat.speed > 0 and stat.speed < 1000000:
+                    speed_mbps = stat.speed
+                elif w_info.get("speed"):
+                    try:
+                        raw_spd = int(w_info["speed"])
+                        if raw_spd < 100_000_000_000:
+                            speed_mbps = round(raw_spd / 1_000_000)
+                    except Exception:
+                        pass
+
+                if speed_mbps > 0:
+                    if speed_mbps >= 1000:
+                        speed_str = f"{speed_mbps} Mbps ({round(speed_mbps / 1000, 1)} Gbps)"
+                    else:
+                        speed_str = f"{speed_mbps} Mbps"
+                else:
+                    speed_str = "Автоопределение (0 Mbps)" if not is_up else "1000 Mbps (Авто)"
+
+                # Модель адаптера и производитель
+                model_name = w_info.get("name") or w_info.get("desc") or if_name
+                mfg_val = w_info.get("mfg")
+                if not mfg_val:
+                    if "intel" in if_name.lower() or "intel" in model_name.lower():
+                        mfg_val = "Intel Corporation"
+                    elif "realtek" in if_name.lower() or "realtek" in model_name.lower():
+                        mfg_val = "Realtek"
+                    elif "vethernet" in if_name.lower() or "hyper-v" in model_name.lower() or "microsoft" in model_name.lower() or "local area connection*" in if_name.lower():
+                        mfg_val = "Microsoft Corporation"
+                    else:
+                        mfg_val = "Универсальный сетевой контроллер"
+
+                # Тип адаптера
+                name_l = if_name.lower()
+                desc_l = (w_info.get("desc") or "").lower()
+                if "local area connection*" in name_l:
+                    adapter_type = "Виртуальный адаптер Wi-Fi Direct"
+                    if model_name == if_name:
+                        model_name = f"Microsoft Wi-Fi Direct Virtual Adapter ({if_name})"
+                elif "wi-fi" in name_l or "wireless" in desc_l or "802.11" in desc_l:
+                    adapter_type = "Беспроводной адаптер (Wi-Fi 802.11)"
+                elif "bluetooth" in name_l or "bluetooth" in desc_l:
+                    adapter_type = "Bluetooth PAN адаптер"
+                elif "vethernet" in name_l or "virtual" in desc_l or "hyper-v" in desc_l:
+                    adapter_type = "Виртуальный сетевой адаптер (Hyper-V / WSL)"
+                elif "loopback" in name_l:
+                    adapter_type = "Программный интерфейс Loopback"
+                elif "tap" in name_l or "tun" in name_l or "vpn" in name_l:
+                    adapter_type = "VPN / Туннельный адаптер"
+                else:
+                    adapter_type = "Сетевая карта Ethernet (LAN)"
+
+                net_props: Dict[str, Any] = {
+                    "Имя подключения": if_name,
+                    "Модель адаптера": model_name,
+                    "Производитель": mfg_val,
+                    "Тип адаптера": adapter_type,
+                    "Физический (MAC) адрес": mac_addr or "N/A",
+                    "Состояние соединения": status_str,
+                    "Скорость канала": speed_str,
+                }
+                if stat and getattr(stat, "duplex", None) is not None:
+                    d_val = getattr(stat.duplex, "value", stat.duplex)
+                    if d_val == 2:
+                        net_props["Режим дуплекса"] = "Full Duplex (Полный)"
+                    elif d_val == 1:
+                        net_props["Режим дуплекса"] = "Half Duplex (Полудуплекс)"
+                if stat and getattr(stat, "mtu", None):
+                    net_props["Размер MTU"] = f"{stat.mtu} байт"
+
+                net_props["IP-адреса (IPv4)"] = ", ".join(ipv4_list) or "N/A"
+                if ipv6_list:
+                    net_props["IP-адреса (IPv6)"] = ", ".join(ipv6_list[:3])
+                if gateways:
+                    net_props["Основной шлюз"] = ", ".join(gateways)
+                if dhcp_server or dhcp_enabled is not None:
+                    net_props["DHCP сервер"] = dhcp_server or ("Включен (DHCP)" if dhcp_enabled else "Статический IP / Отключен")
+                if dns_servers:
+                    net_props["DNS серверы"] = ", ".join(dns_servers)
+                if w_info.get("pnp"):
+                    net_props["Идентификатор PnP"] = w_info["pnp"]
+
+                display_title = f"{if_name}: {model_name}" if model_name != if_name else if_name
+                nodes.append(
+                    HardwareNode(
+                        category="Network Adapter",
+                        name=display_title,
+                        properties=net_props,
+                    )
+                )
+
+        # 10. Аудиоустройства и звуковые карты (Audio Devices)
+        if os.name == "nt":
+            try:
+                import win32com.client
+                wmi_obj = win32com.client.GetObject("winmgmts:")
+                for s in wmi_obj.InstancesOf("Win32_SoundDevice"):
+                    snd_name = (getattr(s, "Caption", "") or getattr(s, "Name", "") or "").strip()
+                    snd_mfg = (getattr(s, "Manufacturer", "") or "").strip() or "Аудиоустройство"
+                    snd_status = (getattr(s, "Status", "") or "OK").strip()
+                    snd_pnp = (getattr(s, "PNPDeviceID", "") or "").strip()
+
+                    if snd_name:
+                        nodes.append(
+                            HardwareNode(
+                                category="Audio Device",
+                                name=snd_name,
+                                properties={
+                                    "Название устройства": snd_name,
+                                    "Производитель": snd_mfg,
+                                    "Состояние": f"{snd_status} (Работает)",
+                                    "Идентификатор PnP": snd_pnp or "N/A",
+                                },
+                            )
+                        )
+            except Exception as e:
+                logger.debug(f"[HardwareTree] WMI SoundDevice query warning: {e}")
+
+        # 11. USB-контроллеры (USB Controllers)
+        if os.name == "nt":
+            try:
+                import win32com.client
+                wmi_obj = win32com.client.GetObject("winmgmts:")
+                for u in wmi_obj.InstancesOf("Win32_USBController"):
+                    usb_name = (getattr(u, "Caption", "") or getattr(u, "Name", "") or "").strip()
+                    usb_mfg = (getattr(u, "Manufacturer", "") or "").strip() or "USB Контроллер"
+                    usb_status = (getattr(u, "Status", "") or "OK").strip()
+                    usb_pnp = (getattr(u, "PNPDeviceID", "") or "").strip()
+
+                    if usb_name:
+                        nodes.append(
+                            HardwareNode(
+                                category="USB Controller",
+                                name=usb_name,
+                                properties={
+                                    "Название контроллера": usb_name,
+                                    "Производитель": usb_mfg,
+                                    "Состояние": f"{usb_status} (Работает)",
+                                    "Идентификатор PnP": usb_pnp or "N/A",
+                                },
+                            )
+                        )
+            except Exception as e:
+                logger.debug(f"[HardwareTree] WMI USBController query warning: {e}")
+
+        # 12. Обновления Windows (Windows Updates & Servicing)
         upd = self.get_updates_info()
         nodes.append(
             HardwareNode(
@@ -1618,4 +2199,71 @@ class SystemCollector:
             List[HardwareChangeItem]: Historical changes timeline.
         """
         return self.history_manager.get_change_timeline(limit=limit)
+
+    def save_snapshot_to_db(
+        self,
+        snapshot: Optional[SystemSnapshot] = None,
+        top_n: int = 20,
+    ) -> int:
+        """Collect and save system telemetry snapshot directly into SQLite database.
+
+        Args:
+            snapshot: Optional existing SystemSnapshot (if None, collected synchronously).
+            top_n: Top processes count.
+
+        Returns:
+            int: Created snapshot ID in database.
+        """
+        snap = snapshot
+        if snap is None:
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = None
+
+            if loop and loop.is_running():
+                snap = asyncio.run_coroutine_threadsafe(
+                    self.get_snapshot(process_limit=top_n),
+                    loop,
+                ).result(timeout=5.0)
+            else:
+                snap = asyncio.run(self.get_snapshot(process_limit=top_n))
+
+        return self.storage.save_snapshot(snap, top_n=top_n)
+
+    def get_snapshots(
+        self,
+        limit: int = 60,
+        since_epoch: Optional[float] = None,
+    ) -> List[Dict[str, Any]]:
+        """Retrieve persisted system snapshots from SQLite database.
+
+        Args:
+            limit: Maximum number of snapshots.
+            since_epoch: Optional starting timestamp.
+
+        Returns:
+            List[Dict[str, Any]]: List of system snapshots from database.
+        """
+        return self.storage.get_snapshots(limit=limit, since_epoch=since_epoch)
+
+    def get_process_history(
+        self,
+        name: Optional[str] = None,
+        pid: Optional[int] = None,
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """Retrieve historical process metrics from SQLite database.
+
+        Args:
+            name: Substring of process name.
+            pid: Process identifier.
+            limit: Record limit.
+
+        Returns:
+            List[Dict[str, Any]]: History of process metrics.
+        """
+        return self.storage.get_process_history(name=name, pid=pid, limit=limit)
+
 

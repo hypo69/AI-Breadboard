@@ -215,10 +215,17 @@ class UserFoldersOverviewResponse(BaseModel):
 
 
 class RelocateFolderRequest(BaseModel):
-    """Запрос на перенос пользовательской папки на другой диск."""
+    """Запрос на перенос пользовательской папки на другой диск или в кастомную директорию."""
     folder_id: str = Field(description="Ключ/ID папки (Desktop, Personal, Downloads, My Pictures, My Music, My Video)")
-    target_drive_letter: str = Field(description="Целевой диск для переноса (например, 'D:' или 'D:\\')")
+    target_drive_letter: Optional[str] = Field(default=None, description="Целевой диск для переноса (например, 'D:' или 'D:\\')")
+    target_path: Optional[str] = Field(default=None, description="Пользовательский целевой путь (директория) для переноса")
     delete_source_after: bool = Field(default=False, description="Удалить исходные файлы после успешного копирования")
+
+
+class BrowseFolderResponse(BaseModel):
+    """Результат системного диалога выбора папки Windows."""
+    success: bool = Field(description="Успешно ли открыт диалог и выбрана папка")
+    selected_path: Optional[str] = Field(default=None, description="Выбранный путь к папке")
 
 
 class RelocateFolderResponse(BaseModel):

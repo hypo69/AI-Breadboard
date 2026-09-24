@@ -124,7 +124,12 @@ flowchart TD
    - На широких мониторах список свойств автоматически распределяется по нескольким параллельным колонкам (`repeat(auto-fill, minmax(360px, 1fr))`).
    - Быстрый поиск компонентов и фильтрация на лету.
 
-4. **Интеллектуальная AI-диагностика и Observability**:
+4. **Износ накопителей и состояние батареи (Storage & Battery Health)**:
+   - Мониторинг износа и остаточного ресурса SSD / NVMe (SMART-статус, Health %).
+   - Детальная таблица разделов с полосами износа и статусами накопителей.
+   - Телеметрия источника питания и деградации аккумулятора ноутбука (Battery Degradation / AC Mains).
+
+5. **Интеллектуальная AI-диагностика и Observability**:
    - Многоэтапный конвейер аудита (*Multi-stage Diagnostic Pipeline*) со статусами выполнения в реальном времени.
    - Расчет индекса здоровья системы (*Health Score 0-100*).
    - Кластеризация и отображение аномалий по уровням важности (Warning, Critical, Info).
@@ -141,5 +146,6 @@ flowchart TD
 - `GET /api/v1/system/summary` — получение сводного снимка телеметрии хоста (`SystemSnapshot`).
 - `GET /api/v1/system/hardware` — получение иерархического дерева компонентов (`List[HardwareNode]`).
 - `GET /api/v1/system/sensors` — сбор показателей сенсоров LibreHardwareMonitor (`List[HardwareSensor]`).
+- `GET /api/v1/system/diagnostics/storage-battery` — телеметрия износа накопителей SSD/NVMe (SMART) и батареи питания (`StorageBatteryWearReport`).
 - `GET /api/v1/system/processes` — получение списка активных процессов хоста с метриками CPU/RAM.
 - `POST /api/v1/system/diagnose` — запуск эвристического и AI-анализа телеметрии (`SystemDiagnosticReport`).

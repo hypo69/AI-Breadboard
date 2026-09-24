@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from unittest.mock import MagicMock
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -151,10 +152,16 @@ def test_chart_generator(sample_telemetry_records):
     assert str(report.health_score) in html
 
 
-def test_research_router_endpoints(sample_telemetry_records):
+def test_research_router_endpoints(sample_telemetry_records, tmp_path: Path):
     """Тестирование REST API эндпоинтов исследования телеметрии."""
+    mock_storage = MagicMock()
+    mock_storage.get_snapshots.return_value = []
+    mock_storage.get_sensor_history.return_value = []
+    mock_storage.get_events.return_value = []
+    test_extractor = TelemetryDataExtractor(default_log_dirs=[tmp_path], storage=mock_storage)
+    test_researcher = TelemetryResearcher(extractor=test_extractor)
     app = FastAPI()
-    app.include_router(init_research_router())
+    app.include_router(init_research_router(researcher=test_researcher))
     client = TestClient(app)
 
     # 1. POST /report

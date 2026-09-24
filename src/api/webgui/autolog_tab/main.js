@@ -1,11 +1,11 @@
 /**
  * ===============================================================================
- * Process Name: Auto-Logging Manager Interface Controller
+ * Process Name: Auto-Logging and Telemetry Sensors Interface Controller
  * ===============================================================================
  * Description:
- *   Модульный контроллер вкладки управления автологгированием и CSV-логами в /tc.
- *   Обеспечивает опрос REST API (/api/autolog), сохранение конфигурации,
- *   управление воркерами, интерактивную визуализацию и выгрузку CSV-файлов.
+ *   Модульный контроллер вкладки управления автологгированием и телеметрией в /tc.
+ *   Обеспечивает опрос REST API (/api/autolog), сохранение объединенной конфигурации,
+ *   графическое редактирование сенсоров, метрик, JSON-редактор и выгрузку CSV-файлов.
  *
  * File: main.js
  * Project: AI-Breadboard
@@ -18,7 +18,7 @@
 (function () {
   'use strict';
 
-  console.log('🚀 [AutoLogTab] Initializing Auto-Logging Management Controller...');
+  console.log('🚀 [AutoLogTab] Initializing Auto-Logging & Sensors Controller...');
 
   // Preset intervals for quick selection
   const INTERVAL_PRESETS = [
@@ -55,6 +55,19 @@
     registry_viewer: { icon: '🗝️', title: 'Windows Registry Hives' },
     software_audit: { icon: '📊', title: 'Software Transparency Audit' },
     autolog_manager: { icon: '📝', title: 'Auto-Logging Manager' },
+  };
+
+  // Sensor metadata
+  const SENSOR_META = {
+    cpu: { icon: '🧠', title: 'Процессор (CPU)', allMetrics: ['temperature', 'load', 'clocks', 'voltage', 'power'] },
+    gpu: { icon: '🎮', title: 'Видеокарта (GPU)', allMetrics: ['temperature', 'load', 'memory', 'power', 'fan', 'clocks'] },
+    ram: { icon: '🖹', title: 'Оперативная память (RAM)', allMetrics: ['usage', 'swap', 'available', 'total'] },
+    disk: { icon: '💽', title: 'Дисковая подсистема (Disk)', allMetrics: ['usage', 'io', 'read_bytes', 'write_bytes', 'queue_length'] },
+    network: { icon: '🌐', title: 'Сетевой интерфейс (Network)', allMetrics: ['throughput', 'connections', 'bytes_sent', 'bytes_recv', 'errors'] },
+    sensors: { icon: '🌡️', title: 'Сенсоры LHM / WMI', allMetrics: ['temperature', 'fan', 'voltage', 'power', 'control'] },
+    internet: { icon: '🚀', title: 'Интернет-канал (Speed/Ping)', allMetrics: ['ping', 'download', 'upload', 'dns', 'jitter'] },
+    storage: { icon: '💾', title: 'Здоровье дисков (S.M.A.R.T.)', allMetrics: ['smart_attributes', 'temperature', 'wear_level', 'health_status'] },
+    device_flapping: { icon: '🔌', title: 'Дребезг устройств (Flapping)', allMetrics: ['connect_events', 'disconnect_events', 'flapping_count'] },
   };
 
   // State
@@ -140,6 +153,9 @@
 
       renderHeaderStatus();
       renderLoggersTable();
+      renderSensorsCards();
+      renderTelemetryOptions();
+      renderJsonEditor();
     } catch (err) {
       console.error('[AutoLogTab] Ошибка загрузки статуса/конфигурации:', err);
       showToast(`Ошибка загрузки данных: ${err.message}`, 'danger');
@@ -149,7 +165,7 @@
   function renderHeaderStatus() {
     if (!_statusData || !_configData) return;
 
-    const isRunning = _statusData.running;
+    const isRunning = _statusData.running || _configData.is_running;
     const isAutologEnabled = _configData.enable_autolog;
 
     // Badge
@@ -165,282 +181,437 @@
       }
     }
 
-    // Toggle button
-    const toggleBtn = document.getElementById('btn-autolog-toggle-engine');
-    const toggleText = document.getElementById('btn-autolog-toggle-text');
-    if (toggleBtn && toggleText) {
+    // Toggle button text
+    const btnToggleText = document.getElementById('btn-autolog-toggle-text');
+    const btnToggle = document.getElementById('btn-autolog-toggle-engine');
+    if (btnToggleText && btnToggle) {
       if (isRunning) {
-        toggleBtn.className = 'btn btn-sm btn-outline-danger d-flex align-items-center gap-1 shadow-sm';
-        toggleText.textContent = 'Остановить';
+        btnToggleText.textContent = 'Остановить';
+        btnToggle.className = 'btn btn-sm btn-outline-danger d-flex align-items-center gap-1 shadow-sm';
       } else {
-        toggleBtn.className = 'btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-sm';
-        toggleText.textContent = 'Запустить';
+        btnToggleText.textContent = 'Запустить';
+        btnToggle.className = 'btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-sm';
       }
+    }
+
+    // Counters
+    const activeTasksEl = document.getElementById('metric-active-tasks');
+    if (activeTasksEl) {
+      activeTasksEl.textContent = _statusData.active_tasks_count ?? 0;
+    }
+
+    const sensorsCount = Object.keys(_configData.sensors || {}).length;
+    const activeSensorsCount = Object.values(_configData.sensors || {}).filter(s => s.enabled).length;
+    const metricSensorsEl = document.getElementById('metric-active-sensors');
+    if (metricSensorsEl) {
+      metricSensorsEl.textContent = `${activeSensorsCount} / ${sensorsCount}`;
+    }
+    const badgeSensorsEl = document.getElementById('badge-sensors-count');
+    if (badgeSensorsEl) {
+      badgeSensorsEl.textContent = `${activeSensorsCount}`;
+    }
+
+    const cfgFileEl = document.getElementById('metric-active-config-file');
+    if (cfgFileEl) {
+      cfgFileEl.textContent = _configData.config_file || '~autolog_sensors.json';
     }
 
     // Master Switch
     const masterSwitch = document.getElementById('switch-enable-autolog');
     const masterText = document.getElementById('autolog-master-status-text');
     if (masterSwitch) {
-      masterSwitch.checked = isAutologEnabled;
+      masterSwitch.checked = Boolean(isAutologEnabled);
     }
     if (masterText) {
       masterText.textContent = isAutologEnabled ? 'Включено' : 'Выключено';
       masterText.className = isAutologEnabled ? 'fw-bold text-info' : 'fw-bold text-muted';
     }
-
-    // Metrics Counters
-    const activeTasksEl = document.getElementById('metric-active-tasks');
-    if (activeTasksEl) {
-      activeTasksEl.textContent = _statusData.active_tasks_count || 0;
-    }
-
-    const cfgFileEl = document.getElementById('metric-active-config-file');
-    if (cfgFileEl) {
-      cfgFileEl.textContent = _configData.config_file || 'config_tc.json';
-    }
   }
 
+  // --- Render Loggers Table ---
   function renderLoggersTable() {
     const tbody = document.getElementById('tbody-loggers');
     if (!tbody || !_configData) return;
 
     const loggers = _configData.loggers || {};
-    const keys = Object.keys(loggers);
+    const loggerKeys = Object.keys(loggers);
+
     const badgeTotal = document.getElementById('badge-total-loggers');
-    if (badgeTotal) badgeTotal.textContent = keys.length;
+    if (badgeTotal) badgeTotal.textContent = loggerKeys.length;
 
-    const searchInput = document.getElementById('input-search-loggers');
-    const filter = (searchInput?.value || '').toLowerCase().trim();
-
-    const filteredKeys = keys.filter(k => {
-      if (!filter) return true;
-      const meta = APP_META[k] || {};
-      return k.toLowerCase().includes(filter) || (meta.title && meta.title.toLowerCase().includes(filter));
-    });
-
-    if (filteredKeys.length === 0) {
+    if (loggerKeys.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" class="text-center text-muted py-4">
-            ${filter ? 'Ничего не найдено по фильтру "' + filter + '"' : 'Нет доступных логгеров'}
-          </td>
+          <td colspan="6" class="text-center text-muted py-4">Логгеры не найдены в конфигурации</td>
         </tr>
       `;
       return;
     }
 
-    tbody.innerHTML = filteredKeys.map(name => {
+    let html = '';
+    for (const name of loggerKeys) {
       const item = loggers[name];
       const meta = APP_META[name] || { icon: '📦', title: name };
-      const isEnabled = item.enabled !== false;
-      const interval = item.interval || '1 minute';
-      const pollCount = item.poll_count || 0;
-      const lastPoll = item.last_poll ? formatDateTime(item.last_poll) : '<span class="text-muted">Не опрашивался</span>';
+      const isEnabled = Boolean(item.enabled);
+      const intervalVal = item.interval || '1 minute';
+      const pollCount = item.poll_count ?? 0;
+      const lastPoll = item.last_poll
+        ? new Date(item.last_poll).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        : '<span class="text-muted">—</span>';
 
-      // Build options for select
-      const hasCustom = !INTERVAL_PRESETS.some(p => p.value === interval);
-      const optionsHtml = INTERVAL_PRESETS.map(p => `
-        <option value="${p.value}" ${p.value === interval ? 'selected' : ''}>${p.label}</option>
-      `).join('') + (hasCustom ? `<option value="${interval}" selected>${interval} (пользовательский)</option>` : '');
+      // Presets options HTML
+      let optionsHtml = '';
+      let isCustom = true;
+      for (const preset of INTERVAL_PRESETS) {
+        const selected = preset.value.toLowerCase() === intervalVal.toLowerCase() ? 'selected' : '';
+        if (selected) isCustom = false;
+        optionsHtml += `<option value="${preset.value}" ${selected}>${preset.label}</option>`;
+      }
+      if (isCustom) {
+        optionsHtml += `<option value="${intervalVal}" selected>Пользовательский (${intervalVal})</option>`;
+      }
 
-      return `
-        <tr data-logger="${name}">
+      html += `
+        <tr data-logger-name="${name}">
           <td class="text-center">
             <div class="form-check form-switch d-inline-block mb-0">
-              <input class="form-check-input logger-enable-switch" type="checkbox" role="switch" 
-                     data-logger="${name}" ${isEnabled ? 'checked' : ''} title="Включить / выключить логгер">
+              <input class="form-check-input logger-enable-switch" type="checkbox" role="switch"
+                     data-app="${name}" ${isEnabled ? 'checked' : ''}>
             </div>
           </td>
           <td>
             <div class="d-flex align-items-center gap-2">
               <span class="fs-5">${meta.icon}</span>
               <div>
-                <div class="fw-bold text-white">${name}</div>
-                <div class="text-muted" style="font-size: 0.75rem;">${meta.title}</div>
+                <div class="fw-semibold text-white">${meta.title}</div>
+                <code class="text-secondary small">${name}</code>
               </div>
             </div>
           </td>
           <td>
-            <div class="input-group input-group-sm">
-              <select class="form-select form-select-sm bg-dark text-white border-secondary logger-interval-select" data-logger="${name}">
+            <div class="d-flex align-items-center gap-1">
+              <select class="form-select form-select-sm bg-dark text-white border-secondary select-logger-interval"
+                      data-app="${name}" style="min-width: 170px;">
                 ${optionsHtml}
               </select>
-              <button class="btn btn-outline-secondary btn-custom-interval" type="button" data-logger="${name}" title="Ввести свой интервал">
-                <i class="bi bi-pencil"></i>
-              </button>
             </div>
           </td>
-          <td class="text-center font-monospace text-info fw-bold">
-            ${pollCount}
+          <td class="text-center fw-mono">
+            <span class="badge bg-secondary">${pollCount}</span>
           </td>
-          <td class="small font-monospace">
-            ${lastPoll}
+          <td>
+            <small class="text-light">${lastPoll}</small>
           </td>
           <td class="text-center">
-            <div class="btn-group btn-group-sm" role="group">
-              <button class="btn btn-outline-info btn-poll-single d-flex align-items-center gap-1" data-logger="${name}" title="Опросить немедленно">
-                <i class="bi bi-play-circle"></i>
-                <span class="d-none d-lg-inline">Опрос</span>
-              </button>
-              <button class="btn btn-outline-light btn-view-csv d-flex align-items-center gap-1" data-logger="${name}" title="Посмотреть CSV-лог">
-                <i class="bi bi-eye"></i>
-                <span class="d-none d-lg-inline">Лог</span>
-              </button>
-            </div>
+            <button class="btn btn-sm btn-outline-info btn-poll-single d-inline-flex align-items-center gap-1"
+                    data-app="${name}" title="Опросить немедленно">
+              <i class="bi bi-play-fill"></i>
+              <span>Опросить</span>
+            </button>
           </td>
         </tr>
       `;
-    }).join('');
-
-    attachLoggersTableEvents();
-  }
-
-  function formatDateTime(isoStr) {
-    try {
-      const d = new Date(isoStr);
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' ' +
-             d.toLocaleDateString([], { day: '2-digit', month: '2-digit' });
-    } catch {
-      return isoStr;
     }
+
+    tbody.innerHTML = html;
+    bindLoggersTableEvents();
   }
 
-  function attachLoggersTableEvents() {
-    // 1. Enable switch change
-    document.querySelectorAll('.logger-enable-switch').forEach(sw => {
-      sw.addEventListener('change', (e) => {
-        const loggerName = e.target.getAttribute('data-logger');
-        if (_configData?.loggers?.[loggerName]) {
-          _configData.loggers[loggerName].enabled = e.target.checked;
-        }
-      });
-    });
+  function bindLoggersTableEvents() {
+    const tbody = document.getElementById('tbody-loggers');
+    if (!tbody) return;
 
-    // 2. Interval select change
-    document.querySelectorAll('.logger-interval-select').forEach(sel => {
-      sel.addEventListener('change', (e) => {
-        const loggerName = e.target.getAttribute('data-logger');
-        if (_configData?.loggers?.[loggerName]) {
-          _configData.loggers[loggerName].interval = e.target.value;
-        }
-      });
-    });
-
-    // 3. Custom interval prompt
-    document.querySelectorAll('.btn-custom-interval').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const loggerName = btn.getAttribute('data-logger');
-        const currentVal = _configData?.loggers?.[loggerName]?.interval || '1 minute';
-        const newVal = prompt(`Введите интервал опроса для '${loggerName}' (например: '10 seconds', '5 minutes', '2 hours'):`, currentVal);
-        if (newVal && newVal.trim()) {
-          const trimmed = newVal.trim();
-          if (_configData?.loggers?.[loggerName]) {
-            _configData.loggers[loggerName].interval = trimmed;
-          }
-          renderLoggersTable();
-        }
-      });
-    });
-
-    // 4. Poll single logger button
-    document.querySelectorAll('.btn-poll-single').forEach(btn => {
+    // Single poller trigger
+    tbody.querySelectorAll('.btn-poll-single').forEach((btn) => {
       btn.addEventListener('click', async (e) => {
-        const loggerName = btn.getAttribute('data-logger');
+        const appName = btn.getAttribute('data-app');
+        if (!appName) return;
+
         btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status"></span>`;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+
         try {
-          await apiPost(`/api/autolog/poll/${loggerName}`);
-          showToast(`Опрос приложения '${loggerName}' успешно выполнен!`, 'success');
+          await apiPost(`/api/autolog/poll/${appName}`);
+          showToast(`Опрос логгера '${appName}' успешно выполнен`, 'success');
           await loadStatusAndConfig();
-          await loadLogFiles();
         } catch (err) {
-          showToast(`Ошибка опроса '${loggerName}': ${err.message}`, 'danger');
+          showToast(`Ошибка опроса '${appName}': ${err.message}`, 'danger');
         } finally {
           btn.disabled = false;
-          btn.innerHTML = `<i class="bi bi-play-circle"></i> <span class="d-none d-lg-inline">Опрос</span>`;
+          btn.innerHTML = '<i class="bi bi-play-fill"></i> <span>Опросить</span>';
         }
       });
     });
 
-    // 5. View CSV button
-    document.querySelectorAll('.btn-view-csv').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const loggerName = btn.getAttribute('data-logger');
-        await openLoggerCsvFile(loggerName);
+    // Logger switch change
+    tbody.querySelectorAll('.logger-enable-switch').forEach((sw) => {
+      sw.addEventListener('change', (e) => {
+        const appName = sw.getAttribute('data-app');
+        if (_configData?.loggers?.[appName]) {
+          _configData.loggers[appName].enabled = sw.checked;
+        }
+      });
+    });
+
+    // Logger interval change
+    tbody.querySelectorAll('.select-logger-interval').forEach((sel) => {
+      sel.addEventListener('change', (e) => {
+        const appName = sel.getAttribute('data-app');
+        if (_configData?.loggers?.[appName]) {
+          _configData.loggers[appName].interval = sel.value;
+        }
       });
     });
   }
 
-  async function openLoggerCsvFile(loggerName) {
-    // Guess file name
-    await loadLogFiles();
-    const candidateName = _filesData.find(f => f.filename.toLowerCase().includes(loggerName.toLowerCase()))?.filename
-      || `${loggerName}_polls.csv`;
+  // --- Render Telemetry Sensors Cards ---
+  function renderSensorsCards() {
+    const container = document.getElementById('sensors-cards-container');
+    if (!container || !_configData) return;
 
-    const viewerTabBtn = document.getElementById('subtab-viewer-btn');
-    if (viewerTabBtn) {
-      viewerTabBtn.click();
+    const sensors = _configData.sensors || {};
+    const sensorKeys = Object.keys(sensors);
+
+    if (sensorKeys.length === 0) {
+      container.innerHTML = `
+        <div class="col-12 text-center text-muted py-4">Сенсоры телеметрии не найдены в конфигурации</div>
+      `;
+      return;
     }
 
-    const select = document.getElementById('select-csv-target');
-    if (select) {
-      select.value = candidateName;
-      await loadCsvContent(candidateName);
+    let html = '';
+    for (const sensorName of sensorKeys) {
+      const cfg = sensors[sensorName] || {};
+      const meta = SENSOR_META[sensorName] || { icon: '📊', title: sensorName, allMetrics: cfg.metrics || [] };
+      const isEnabled = Boolean(cfg.enabled);
+      const intervalSec = cfg.interval_seconds ?? 5.0;
+      const activeMetrics = new Set(cfg.metrics || []);
+
+      // Combine default/known metrics with active metrics
+      const allKnownMetrics = Array.from(new Set([...(meta.allMetrics || []), ...activeMetrics]));
+
+      let metricsHtml = '';
+      for (const m of allKnownMetrics) {
+        const isActive = activeMetrics.has(m);
+        metricsHtml += `
+          <button type="button" class="btn btn-sm ${isActive ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2 rounded-pill metric-pill-btn"
+                  data-sensor="${sensorName}" data-metric="${m}" style="font-size: 0.75rem;">
+            ${isActive ? '✓ ' : '+ '}${m}
+          </button>
+        `;
+      }
+
+      html += `
+        <div class="col-12 col-md-6 col-lg-4" data-sensor-card="${sensorName}">
+          <div class="card bg-black border ${isEnabled ? 'border-secondary' : 'border-secondary-subtle opacity-75'} h-100 p-3 shadow-sm rounded-3">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <div class="d-flex align-items-center gap-2">
+                <span class="fs-4">${meta.icon}</span>
+                <div>
+                  <h6 class="mb-0 text-white fw-bold">${meta.title}</h6>
+                  <code class="text-secondary small">${sensorName}</code>
+                </div>
+              </div>
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input sensor-enable-switch" type="checkbox" role="switch"
+                       data-sensor="${sensorName}" ${isEnabled ? 'checked' : ''}>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 my-2">
+              <label class="small text-muted text-nowrap mb-0">Интервал (сек):</label>
+              <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary sensor-interval-input"
+                     data-sensor="${sensorName}" value="${intervalSec}" min="0.1" step="0.5" style="max-width: 90px;">
+            </div>
+
+            <div class="mt-2">
+              <div class="small text-muted mb-1">Собираемые метрики:</div>
+              <div class="d-flex flex-wrap gap-1">
+                ${metricsHtml || '<span class="text-muted small">Метрики не заданы</span>'}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = html;
+    bindSensorsEvents();
+  }
+
+  function bindSensorsEvents() {
+    const container = document.getElementById('sensors-cards-container');
+    if (!container) return;
+
+    // Sensor enabled switch
+    container.querySelectorAll('.sensor-enable-switch').forEach((sw) => {
+      sw.addEventListener('change', () => {
+        const sName = sw.getAttribute('data-sensor');
+        if (_configData?.sensors?.[sName]) {
+          _configData.sensors[sName].enabled = sw.checked;
+          const card = container.querySelector(`[data-sensor-card="${sName}"] .card`);
+          if (card) {
+            if (sw.checked) {
+              card.classList.remove('opacity-75', 'border-secondary-subtle');
+              card.classList.add('border-secondary');
+            } else {
+              card.classList.add('opacity-75', 'border-secondary-subtle');
+              card.classList.remove('border-secondary');
+            }
+          }
+          renderHeaderStatus();
+        }
+      });
+    });
+
+    // Sensor interval input
+    container.querySelectorAll('.sensor-interval-input').forEach((inp) => {
+      inp.addEventListener('input', () => {
+        const sName = inp.getAttribute('data-sensor');
+        const val = parseFloat(inp.value);
+        if (_configData?.sensors?.[sName] && !isNaN(val)) {
+          _configData.sensors[sName].interval_seconds = val;
+        }
+      });
+    });
+
+    // Metric toggle pill
+    container.querySelectorAll('.metric-pill-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const sName = btn.getAttribute('data-sensor');
+        const metric = btn.getAttribute('data-metric');
+        if (!_configData?.sensors?.[sName]) return;
+
+        let metrics = _configData.sensors[sName].metrics || [];
+        if (metrics.includes(metric)) {
+          metrics = metrics.filter(m => m !== metric);
+          btn.className = 'btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill metric-pill-btn';
+          btn.textContent = '+ ' + metric;
+        } else {
+          metrics.push(metric);
+          btn.className = 'btn btn-sm btn-primary py-0 px-2 rounded-pill metric-pill-btn';
+          btn.textContent = '✓ ' + metric;
+        }
+        _configData.sensors[sName].metrics = metrics;
+      });
+    });
+  }
+
+  function renderTelemetryOptions() {
+    if (!_configData) return;
+    const opts = _configData.telemetry_options || {};
+
+    const optInv = document.getElementById('opt-collect-inventory');
+    const optSer = document.getElementById('opt-collect-serials');
+    const optFiles = document.getElementById('opt-collect-file-events');
+    const optMax = document.getElementById('opt-max-file-size');
+    const optDirs = document.getElementById('opt-watch-dirs');
+
+    if (optInv) optInv.checked = opts.collect_hardware_inventory ?? true;
+    if (optSer) optSer.checked = opts.collect_serial_numbers ?? true;
+    if (optFiles) optFiles.checked = opts.collect_file_events ?? true;
+    if (optMax) optMax.value = opts.max_file_size_mb ?? 50;
+    if (optDirs) optDirs.value = (opts.watch_directories || ['C:\\Users\\']).join(', ');
+  }
+
+  function collectTelemetryOptions() {
+    const optInv = document.getElementById('opt-collect-inventory');
+    const optSer = document.getElementById('opt-collect-serials');
+    const optFiles = document.getElementById('opt-collect-file-events');
+    const optMax = document.getElementById('opt-max-file-size');
+    const optDirs = document.getElementById('opt-watch-dirs');
+
+    const dirsRaw = optDirs ? optDirs.value.split(',').map(s => s.trim()).filter(Boolean) : ['C:\\Users\\'];
+
+    return {
+      collect_hardware_inventory: optInv ? optInv.checked : true,
+      collect_serial_numbers: optSer ? optSer.checked : true,
+      collect_file_events: optFiles ? optFiles.checked : true,
+      max_file_size_mb: optMax ? parseInt(optMax.value, 10) || 50 : 50,
+      watch_directories: dirsRaw,
+    };
+  }
+
+  function renderJsonEditor() {
+    const textarea = document.getElementById('textarea-raw-json');
+    if (!textarea || !_configData) return;
+
+    if (_configData.raw_json) {
+      textarea.value = _configData.raw_json;
+    } else {
+      const fullObj = {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        enable_autolog: _configData.enable_autolog ?? true,
+        default_interval: _configData.default_interval ?? '1 minute',
+        loggers: _configData.loggers ?? {},
+        sensors: _configData.sensors ?? {},
+        telemetry_options: _configData.telemetry_options ?? {},
+      };
+      textarea.value = JSON.stringify(fullObj, null, 2);
     }
   }
 
-  // --- Save Configuration ---
-  async function saveConfig() {
-    const saveBtns = [
-      document.getElementById('btn-autolog-save-config'),
-      document.getElementById('btn-autolog-save-config-bottom'),
-    ];
+  // --- Save Config via API ---
+  async function saveFullConfiguration() {
+    if (!_configData) return;
 
-    saveBtns.forEach(b => {
-      if (b) {
-        b.disabled = true;
-        b.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span> Сохранение...`;
-      }
-    });
+    const masterSwitch = document.getElementById('switch-enable-autolog');
+    const enableAutolog = masterSwitch ? masterSwitch.checked : true;
+
+    // Collect loggers
+    const loggersPayload = {};
+    for (const [name, item] of Object.entries(_configData.loggers || {})) {
+      loggersPayload[name] = {
+        interval: item.interval || '1 minute',
+        enabled: Boolean(item.enabled),
+      };
+    }
+
+    // Collect sensors
+    const sensorsPayload = {};
+    for (const [name, item] of Object.entries(_configData.sensors || {})) {
+      sensorsPayload[name] = {
+        enabled: Boolean(item.enabled),
+        interval_seconds: item.interval_seconds ?? 5.0,
+        metrics: item.metrics || [],
+      };
+    }
+
+    const telemetryOptions = collectTelemetryOptions();
+
+    const payload = {
+      enable_autolog: enableAutolog,
+      default_interval: _configData.default_interval || '1 minute',
+      loggers: loggersPayload,
+      sensors: sensorsPayload,
+      telemetry_options: telemetryOptions,
+    };
 
     try {
-      const masterSwitch = document.getElementById('switch-enable-autolog');
-      const isAutologEnabled = masterSwitch ? masterSwitch.checked : true;
-
-      const loggersPayload = {};
-      if (_configData?.loggers) {
-        Object.entries(_configData.loggers).forEach(([k, v]) => {
-          loggersPayload[k] = {
-            interval: v.interval || '1 minute',
-            enabled: v.enabled !== false,
-          };
-        });
-      }
-
-      const payload = {
-        enable_autolog: isAutologEnabled,
-        loggers: loggersPayload,
-      };
-
+      showToast('Сохранение конфигурации...', 'info');
       const res = await apiPost('/api/autolog/config', payload);
       showToast(res.message || 'Конфигурация успешно сохранена!', 'success');
       await loadStatusAndConfig();
     } catch (err) {
-      console.error('[AutoLogTab] Ошибка сохранения конфигурации:', err);
+      console.error('[AutoLogTab] Ошибка сохранения:', err);
       showToast(`Ошибка сохранения: ${err.message}`, 'danger');
-    } finally {
-      saveBtns.forEach(b => {
-        if (b) {
-          b.disabled = false;
-          b.innerHTML = `<i class="bi bi-floppy-fill me-1"></i> Сохранить настройки`;
-        }
-      });
     }
   }
 
-  // --- Files Manager ---
-  async function loadLogFiles() {
+  // --- CSV Files Manager ---
+  async function loadCsvFiles() {
+    const tbody = document.getElementById('tbody-files');
+    if (!tbody) return;
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center text-muted py-4">
+          <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
+          Загрузка файлов...
+        </td>
+      </tr>
+    `;
+
     try {
       const data = await apiGet('/api/autolog/files');
       _filesData = data.files || [];
@@ -453,9 +624,13 @@
       if (metricFiles) metricFiles.textContent = _filesData.length;
 
       renderFilesTable();
-      updateCsvSelectDropdown();
+      populateViewerSelect();
     } catch (err) {
-      console.error('[AutoLogTab] Ошибка загрузки списка файлов логов:', err);
+      console.error('[AutoLogTab] Ошибка загрузки файлов:', err);
+      showToast(`Ошибка загрузки CSV файлов: ${err.message}`, 'danger');
+      tbody.innerHTML = `
+        <tr><td colspan="5" class="text-center text-danger py-3">Не удалось загрузить файлы: ${err.message}</td></tr>
+      `;
     }
   }
 
@@ -466,239 +641,188 @@
     if (_filesData.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="5" class="text-center text-muted py-4">
-            В каталоге <code>%APPDATA%/AI-Breadboard/apps/logs</code> пока нет созданных CSV-файлов.
-            Запустите движок автологгирования или выполните разовый опрос.
-          </td>
+          <td colspan="5" class="text-center text-muted py-4">В каталоге пока нет CSV-файлов логов</td>
         </tr>
       `;
       return;
     }
 
-    tbody.innerHTML = _filesData.map(file => {
-      const dateStr = formatDateTime(file.modified_at);
-      return `
-        <tr data-file="${file.filename}">
+    let html = '';
+    for (const f of _filesData) {
+      const modDate = f.modified ? new Date(f.modified).toLocaleString() : '—';
+      html += `
+        <tr>
           <td>
             <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-file-earmark-spreadsheet text-success fs-5"></i>
-              <span class="font-monospace fw-semibold text-white">${file.filename}</span>
+              <i class="bi bi-filetype-csv text-success fs-5"></i>
+              <div>
+                <span class="fw-semibold text-white">${f.filename}</span>
+                <span class="text-muted small d-block">${f.app_name}</span>
+              </div>
             </div>
           </td>
-          <td class="text-end font-monospace text-muted">
-            ${file.size_human}
+          <td class="text-end fw-mono text-light">${f.size_formatted || '0 B'}</td>
+          <td class="text-center fw-mono">
+            <span class="badge bg-secondary">${f.rows_count ?? 0}</span>
           </td>
-          <td class="text-center font-monospace text-info fw-bold">
-            ${file.row_count}
-          </td>
-          <td class="small font-monospace">
-            ${dateStr}
-          </td>
+          <td><small class="text-light">${modDate}</small></td>
           <td class="text-center">
-            <div class="btn-group btn-group-sm" role="group">
-              <button class="btn btn-outline-light btn-view-file d-flex align-items-center gap-1" data-file="${file.filename}" title="Открыть в инспекторе">
-                <i class="bi bi-eye"></i>
-                <span>Просмотр</span>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-info btn-view-file" data-file="${f.filename}" title="Просмотреть в инспекторе">
+                <i class="bi bi-eye"></i> Просмотр
               </button>
-              <a href="/api/autolog/download/${file.filename}" class="btn btn-outline-success d-flex align-items-center gap-1" download title="Скачать CSV">
+              <a href="/api/autolog/download/${f.filename}" class="btn btn-outline-success" title="Скачать CSV">
                 <i class="bi bi-download"></i>
               </a>
-              <button class="btn btn-outline-danger btn-delete-file d-flex align-items-center gap-1" data-file="${file.filename}" title="Удалить файл лога">
+              <button class="btn btn-outline-danger btn-delete-file" data-file="${f.filename}" title="Удалить файл">
                 <i class="bi bi-trash"></i>
               </button>
             </div>
           </td>
         </tr>
       `;
-    }).join('');
+    }
 
-    // Attach row events
-    document.querySelectorAll('.btn-view-file').forEach(btn => {
+    tbody.innerHTML = html;
+    bindFilesEvents();
+  }
+
+  function bindFilesEvents() {
+    const tbody = document.getElementById('tbody-files');
+    if (!tbody) return;
+
+    // View file
+    tbody.querySelectorAll('.btn-view-file').forEach((btn) => {
       btn.addEventListener('click', () => {
         const fn = btn.getAttribute('data-file');
+        if (!fn) return;
         const viewerTabBtn = document.getElementById('subtab-viewer-btn');
-        if (viewerTabBtn) viewerTabBtn.click();
-        const select = document.getElementById('select-csv-target');
-        if (select) {
-          select.value = fn;
+        if (viewerTabBtn && window.bootstrap?.Tab) {
+          const tab = new window.bootstrap.Tab(viewerTabBtn);
+          tab.show();
+        }
+        const sel = document.getElementById('select-csv-target');
+        if (sel) {
+          sel.value = fn;
           loadCsvContent(fn);
         }
       });
     });
 
-    document.querySelectorAll('.btn-delete-file').forEach(btn => {
+    // Delete file
+    tbody.querySelectorAll('.btn-delete-file').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const fn = btn.getAttribute('data-file');
-        if (confirm(`Вы уверены, что хотите удалить файл лога '${fn}'?`)) {
-          try {
-            await apiDelete(`/api/autolog/file/${fn}`);
-            showToast(`Файл '${fn}' успешно удален`, 'success');
-            await loadLogFiles();
-          } catch (err) {
-            showToast(`Ошибка удаления файла: ${err.message}`, 'danger');
-          }
+        if (!fn) return;
+        if (!confirm(`Удалить файл лога '${fn}'?`)) return;
+
+        try {
+          await apiDelete(`/api/autolog/file/${fn}`);
+          showToast(`Файл '${fn}' удален`, 'success');
+          await loadCsvFiles();
+        } catch (err) {
+          showToast(`Ошибка удаления '${fn}': ${err.message}`, 'danger');
         }
       });
     });
   }
 
-  function updateCsvSelectDropdown() {
-    const select = document.getElementById('select-csv-target');
-    if (!select) return;
+  function populateViewerSelect() {
+    const sel = document.getElementById('select-csv-target');
+    if (!sel) return;
 
-    const currentVal = select.value;
-    select.innerHTML = '<option value="">-- Выберите CSV-файл --</option>' +
-      _filesData.map(f => `<option value="${f.filename}" ${f.filename === currentVal ? 'selected' : ''}>${f.filename} (${f.row_count} записей, ${f.size_human})</option>`).join('');
+    const currentVal = sel.value;
+    let html = '<option value="">-- Выберите CSV-файл --</option>';
+    for (const f of _filesData) {
+      const selected = f.filename === currentVal ? 'selected' : '';
+      html += `<option value="${f.filename}" ${selected}>${f.filename} (${f.size_formatted}, ${f.rows_count} строк)</option>`;
+    }
+    sel.innerHTML = html;
   }
 
-  // --- CSV Content Viewer ---
+  // --- CSV Viewer ---
   async function loadCsvContent(filename) {
-    if (!filename) {
-      renderCsvTable([], []);
-      return;
-    }
-
+    if (!filename) return;
     _currentViewingFile = filename;
-    const downloadBtn = document.getElementById('btn-download-current-csv');
-    if (downloadBtn) {
-      downloadBtn.disabled = false;
-      downloadBtn.onclick = () => {
-        window.location.href = `/api/autolog/download/${filename}`;
-      };
-    }
 
     const thead = document.getElementById('thead-csv-content');
     const tbody = document.getElementById('tbody-csv-content');
-    if (tbody) {
-      tbody.innerHTML = `<tr><td class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm text-info me-2"></div> Загрузка строк лога...</td></tr>`;
-    }
+    const dlBtn = document.getElementById('btn-download-current-csv');
+
+    if (thead) thead.innerHTML = '<tr><th class="text-muted text-center">Загрузка данных...</th></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td class="text-center py-4"><div class="spinner-border spinner-border-sm text-info"></div></td></tr>';
 
     try {
-      const filterInput = document.getElementById('input-filter-csv');
-      const search = filterInput ? filterInput.value.trim() : '';
-      const query = `?limit=${_csvLimit}&offset=${_csvPage * _csvLimit}${search ? '&search=' + encodeURIComponent(search) : ''}`;
-      const res = await apiGet(`/api/autolog/file/${filename}${query}`);
+      const offset = _csvPage * _csvLimit;
+      const data = await apiGet(`/api/autolog/file/${filename}?limit=${_csvLimit}&offset=${offset}`);
+      _currentCsvData = data;
 
-      _currentCsvData = res;
-      renderCsvTable(res.headers, res.rows, res.total_rows);
+      if (dlBtn) dlBtn.disabled = false;
+      renderCsvTable(data);
     } catch (err) {
-      console.error('[AutoLogTab] Ошибка чтения CSV файла:', err);
-      if (tbody) {
-        tbody.innerHTML = `<tr><td class="text-center text-danger py-4">Ошибка чтения файла: ${err.message}</td></tr>`;
-      }
+      showToast(`Ошибка чтения файла '${filename}': ${err.message}`, 'danger');
+      if (thead) thead.innerHTML = '<tr><th class="text-danger text-center">Ошибка</th></tr>';
+      if (tbody) tbody.innerHTML = `<tr><td class="text-danger text-center py-3">${err.message}</td></tr>`;
     }
   }
 
-  function renderCsvTable(headers, rows, totalRows = 0) {
+  function renderCsvTable(data) {
     const thead = document.getElementById('thead-csv-content');
     const tbody = document.getElementById('tbody-csv-content');
-    const counter = document.getElementById('viewer-rows-count');
+    const rowsCountEl = document.getElementById('viewer-rows-count');
     const pageIndicator = document.getElementById('viewer-page-indicator');
-    const prevBtn = document.getElementById('btn-viewer-prev-page');
-    const nextBtn = document.getElementById('btn-viewer-next-page');
+    const btnPrev = document.getElementById('btn-viewer-prev-page');
+    const btnNext = document.getElementById('btn-viewer-next-page');
 
-    if (!headers || headers.length === 0) {
-      if (thead) thead.innerHTML = `<tr><th class="text-muted text-center">Нет данных</th></tr>`;
-      if (tbody) tbody.innerHTML = `<tr><td class="text-center text-muted py-5">Выберите файл лога из списка выше</td></tr>`;
-      if (counter) counter.textContent = 'Строк: 0';
+    const headers = data.headers || [];
+    const rows = data.rows || [];
+    const totalRows = data.total_rows || 0;
+
+    if (rowsCountEl) rowsCountEl.textContent = `Строк: ${totalRows} (показано ${rows.length})`;
+
+    const maxPages = Math.max(1, Math.ceil(totalRows / _csvLimit));
+    if (pageIndicator) pageIndicator.textContent = `${_csvPage + 1} / ${maxPages}`;
+    if (btnPrev) btnPrev.disabled = _csvPage <= 0;
+    if (btnNext) btnNext.disabled = _csvPage >= maxPages - 1;
+
+    if (headers.length === 0 && rows.length === 0) {
+      if (thead) thead.innerHTML = '<tr><th class="text-muted text-center">Файл пуст</th></tr>';
+      if (tbody) tbody.innerHTML = '<tr><td class="text-muted text-center py-4">Нет данных</td></tr>';
       return;
     }
 
-    // Render headers
     if (thead) {
-      thead.innerHTML = `
-        <tr>
-          <th style="width: 45px;" class="text-center">#</th>
-          ${headers.map(h => `<th class="text-nowrap">${escapeHtml(h)}</th>`).join('')}
-        </tr>
-      `;
+      thead.innerHTML = '<tr>' + headers.map(h => `<th class="text-nowrap">${h}</th>`).join('') + '</tr>';
     }
 
-    // Render rows
     if (tbody) {
-      if (!rows || rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${headers.length + 1}" class="text-center text-muted py-4">Нет записей, соответствующих критериям фильтра</td></tr>`;
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${headers.length || 1}" class="text-center text-muted py-4">Нет строк</td></tr>`;
       } else {
-        const startIdx = _csvPage * _csvLimit;
-        tbody.innerHTML = rows.map((row, idx) => `
-          <tr>
-            <td class="text-center font-monospace text-muted">${startIdx + idx + 1}</td>
-            ${row.map(cell => `<td class="font-monospace text-nowrap" style="max-width: 320px; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(cell)}">${escapeHtml(cell)}</td>`).join('')}
-          </tr>
-        `).join('');
+        tbody.innerHTML = rows.map(r => {
+          return '<tr>' + headers.map(h => `<td class="text-nowrap">${r[h] ?? ''}</td>`).join('') + '</tr>';
+        }).join('');
       }
     }
-
-    // Update pagination
-    const totalPages = Math.max(1, Math.ceil(totalRows / _csvLimit));
-    if (counter) counter.textContent = `Отображено: ${rows.length} из ${totalRows} записей`;
-    if (pageIndicator) pageIndicator.textContent = `${_csvPage + 1} / ${totalPages}`;
-    if (prevBtn) prevBtn.disabled = _csvPage <= 0;
-    if (nextBtn) nextBtn.disabled = (_csvPage + 1) >= totalPages;
   }
 
-  function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
+  // --- Setup Master Event Listeners ---
+  function setupEventListeners() {
+    // Save buttons
+    const btnSaveHeader = document.getElementById('btn-autolog-save-config');
+    const btnSaveBottom = document.getElementById('btn-autolog-save-config-bottom');
+    const btnSaveSensors = document.getElementById('btn-save-sensors-config');
+    if (btnSaveHeader) btnSaveHeader.addEventListener('click', saveFullConfiguration);
+    if (btnSaveBottom) btnSaveBottom.addEventListener('click', saveFullConfiguration);
+    if (btnSaveSensors) btnSaveSensors.addEventListener('click', saveFullConfiguration);
 
-  // --- Main Initialization ---
-  function initAutoLogTab() {
-    // 1. Search in loggers
-    const searchLoggers = document.getElementById('input-search-loggers');
-    if (searchLoggers) {
-      searchLoggers.addEventListener('input', renderLoggersTable);
-    }
-
-    // 2. Refresh buttons
-    const btnRefreshLoggers = document.getElementById('btn-refresh-loggers');
-    if (btnRefreshLoggers) {
-      btnRefreshLoggers.addEventListener('click', loadStatusAndConfig);
-    }
-
-    const btnRefreshFiles = document.getElementById('btn-refresh-files');
-    if (btnRefreshFiles) {
-      btnRefreshFiles.addEventListener('click', loadLogFiles);
-    }
-
-    const btnRefreshViewer = document.getElementById('btn-refresh-viewer');
-    if (btnRefreshViewer) {
-      btnRefreshViewer.addEventListener('click', () => {
-        if (_currentViewingFile) loadCsvContent(_currentViewingFile);
-      });
-    }
-
-    // 3. Master Poll All Button
-    const btnPollAll = document.getElementById('btn-autolog-poll-all');
-    if (btnPollAll) {
-      btnPollAll.addEventListener('click', async () => {
-        btnPollAll.disabled = true;
-        btnPollAll.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Опрос всех...`;
-        try {
-          const res = await apiPost('/api/autolog/poll-all');
-          showToast(`Опрос завершен: ${res.successful_count} из ${res.total_polled} логгеров успешно опрошено`, 'success');
-          await loadStatusAndConfig();
-          await loadLogFiles();
-        } catch (err) {
-          showToast(`Ошибка опроса всех логгеров: ${err.message}`, 'danger');
-        } finally {
-          btnPollAll.disabled = false;
-          btnPollAll.innerHTML = `<i class="bi bi-arrow-repeat me-1"></i> Опросить все сейчас`;
-        }
-      });
-    }
-
-    // 4. Toggle Engine Run/Stop Button
+    // Toggle Engine button
     const btnToggle = document.getElementById('btn-autolog-toggle-engine');
     if (btnToggle) {
       btnToggle.addEventListener('click', async () => {
-        const isRunning = _statusData?.running;
         btnToggle.disabled = true;
         try {
+          const isRunning = _statusData?.running || _configData?.is_running;
           if (isRunning) {
             await apiPost('/api/autolog/stop');
             showToast('AutoLogEngine успешно остановлен', 'info');
@@ -708,71 +832,177 @@
           }
           await loadStatusAndConfig();
         } catch (err) {
-          showToast(`Ошибка переключения движка: ${err.message}`, 'danger');
+          showToast(`Ошибка: ${err.message}`, 'danger');
         } finally {
           btnToggle.disabled = false;
         }
       });
     }
 
-    // 5. Save buttons
-    const btnSaveTop = document.getElementById('btn-autolog-save-config');
-    if (btnSaveTop) btnSaveTop.addEventListener('click', saveConfig);
-
-    const btnSaveBottom = document.getElementById('btn-autolog-save-config-bottom');
-    if (btnSaveBottom) btnSaveBottom.addEventListener('click', saveConfig);
-
-    // 6. CSV file select dropdown
-    const selectCsv = document.getElementById('select-csv-target');
-    if (selectCsv) {
-      selectCsv.addEventListener('change', (e) => {
-        _csvPage = 0;
-        loadCsvContent(e.target.value);
-      });
-    }
-
-    // 7. Filter in viewer
-    const filterCsv = document.getElementById('input-filter-csv');
-    if (filterCsv) {
-      let filterTimeout = null;
-      filterCsv.addEventListener('input', () => {
-        clearTimeout(filterTimeout);
-        filterTimeout = setTimeout(() => {
-          _csvPage = 0;
-          if (_currentViewingFile) loadCsvContent(_currentViewingFile);
-        }, 300);
-      });
-    }
-
-    // 8. Pagination buttons
-    const prevBtn = document.getElementById('btn-viewer-prev-page');
-    if (prevBtn) {
-      prevBtn.addEventListener('click', () => {
-        if (_csvPage > 0) {
-          _csvPage--;
-          if (_currentViewingFile) loadCsvContent(_currentViewingFile);
+    // Poll All button
+    const btnPollAll = document.getElementById('btn-autolog-poll-all');
+    if (btnPollAll) {
+      btnPollAll.addEventListener('click', async () => {
+        btnPollAll.disabled = true;
+        btnPollAll.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Опрос...';
+        try {
+          const res = await apiPost('/api/autolog/poll-all');
+          showToast(`Опрос завершен: успешно ${res.successful_count} из ${res.total_polled}`, 'success');
+          await loadStatusAndConfig();
+        } catch (err) {
+          showToast(`Ошибка разового опроса: ${err.message}`, 'danger');
+        } finally {
+          btnPollAll.disabled = false;
+          btnPollAll.innerHTML = '<i class="bi bi-arrow-repeat"></i> <span>Опросить все сейчас</span>';
         }
       });
     }
 
-    const nextBtn = document.getElementById('btn-viewer-next-page');
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => {
-        _csvPage++;
-        if (_currentViewingFile) loadCsvContent(_currentViewingFile);
+    // Refresh Loggers & Sensors
+    const btnRefLoggers = document.getElementById('btn-refresh-loggers');
+    if (btnRefLoggers) btnRefLoggers.addEventListener('click', loadStatusAndConfig);
+    const btnRefSensors = document.getElementById('btn-refresh-sensors');
+    if (btnRefSensors) btnRefSensors.addEventListener('click', loadStatusAndConfig);
+
+    // Refresh Files
+    const btnRefFiles = document.getElementById('btn-refresh-files');
+    if (btnRefFiles) btnRefFiles.addEventListener('click', loadCsvFiles);
+
+    // Search Loggers filter
+    const inputSearch = document.getElementById('input-search-loggers');
+    if (inputSearch) {
+      inputSearch.addEventListener('input', () => {
+        const q = inputSearch.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#tbody-loggers tr[data-logger-name]');
+        rows.forEach(r => {
+          const name = r.getAttribute('data-logger-name') || '';
+          const text = r.textContent.toLowerCase();
+          r.style.display = (name.includes(q) || text.includes(q)) ? '' : 'none';
+        });
       });
     }
 
-    // Initial data fetch
+    // Tab switch to Files
+    const subtabFilesBtn = document.getElementById('subtab-files-btn');
+    if (subtabFilesBtn) {
+      subtabFilesBtn.addEventListener('shown.bs.tab', loadCsvFiles);
+    }
+
+    // Tab switch to JSON
+    const subtabJsonBtn = document.getElementById('subtab-json-btn');
+    if (subtabJsonBtn) {
+      subtabJsonBtn.addEventListener('shown.bs.tab', renderJsonEditor);
+    }
+
+    // JSON Editor Actions
+    const btnFormatJson = document.getElementById('btn-format-json');
+    const btnReloadJson = document.getElementById('btn-reload-json');
+    const btnSaveJson = document.getElementById('btn-save-raw-json');
+    const txtJson = document.getElementById('textarea-raw-json');
+
+    if (btnFormatJson && txtJson) {
+      btnFormatJson.addEventListener('click', () => {
+        try {
+          const parsed = JSON.parse(txtJson.value);
+          txtJson.value = JSON.stringify(parsed, null, 2);
+          showToast('JSON отформатирован', 'info');
+        } catch (e) {
+          showToast(`Ошибка синтаксиса JSON: ${e.message}`, 'danger');
+        }
+      });
+    }
+
+    if (btnReloadJson) {
+      btnReloadJson.addEventListener('click', async () => {
+        await loadStatusAndConfig();
+        renderJsonEditor();
+        showToast('JSON перезагружен с диска', 'info');
+      });
+    }
+
+    if (btnSaveJson && txtJson) {
+      btnSaveJson.addEventListener('click', async () => {
+        try {
+          const parsed = JSON.parse(txtJson.value);
+          showToast('Сохранение JSON...', 'info');
+          const res = await apiPost('/api/autolog/config', { raw_json: JSON.stringify(parsed, null, 2) });
+          showToast(res.message || 'JSON успешно сохранен!', 'success');
+          await loadStatusAndConfig();
+        } catch (err) {
+          showToast(`Ошибка сохранения JSON: ${err.message}`, 'danger');
+        }
+      });
+    }
+
+    // CSV Viewer Controls
+    const selViewer = document.getElementById('select-csv-target');
+    if (selViewer) {
+      selViewer.addEventListener('change', () => {
+        _csvPage = 0;
+        loadCsvContent(selViewer.value);
+      });
+    }
+
+    const btnRefViewer = document.getElementById('btn-refresh-viewer');
+    if (btnRefViewer) {
+      btnRefViewer.addEventListener('click', () => {
+        if (selViewer) loadCsvContent(selViewer.value);
+      });
+    }
+
+    const btnPrevPage = document.getElementById('btn-viewer-prev-page');
+    if (btnPrevPage) {
+      btnPrevPage.addEventListener('click', () => {
+        if (_csvPage > 0 && selViewer?.value) {
+          _csvPage--;
+          loadCsvContent(selViewer.value);
+        }
+      });
+    }
+
+    const btnNextPage = document.getElementById('btn-viewer-next-page');
+    if (btnNextPage) {
+      btnNextPage.addEventListener('click', () => {
+        if (selViewer?.value) {
+          _csvPage++;
+          loadCsvContent(selViewer.value);
+        }
+      });
+    }
+
+    const inputFilterCsv = document.getElementById('input-filter-csv');
+    if (inputFilterCsv) {
+      inputFilterCsv.addEventListener('input', () => {
+        const q = inputFilterCsv.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#tbody-csv-content tr');
+        rows.forEach(r => {
+          const text = r.textContent.toLowerCase();
+          r.style.display = text.includes(q) ? '' : 'none';
+        });
+      });
+    }
+
+    const btnDownload = document.getElementById('btn-download-current-csv');
+    if (btnDownload) {
+      btnDownload.addEventListener('click', () => {
+        if (_currentViewingFile) {
+          window.location.href = `/api/autolog/download/${_currentViewingFile}`;
+        }
+      });
+    }
+  }
+
+  // --- Initialization ---
+  document.addEventListener('DOMContentLoaded', () => {
+    setupEventListeners();
     loadStatusAndConfig();
-    loadLogFiles();
-  }
+    loadCsvFiles();
+  });
 
-  // Self-execute on load or tab switch
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAutoLogTab);
-  } else {
-    initAutoLogTab();
+  // Also initialize immediately if DOM is already ready
+  if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    setupEventListeners();
+    loadStatusAndConfig();
+    loadCsvFiles();
   }
-
 })();

@@ -31,31 +31,41 @@ from apps.windows.telemetry.telemetry_config import TelemetryConfigManager
 from apps.windows.telemetry.sensor_collector import SensorCollector
 from apps.windows.telemetry.file_collector import FileCollector
 from apps.windows.telemetry.json_logger import TelemetryJsonLogger
+from apps.windows.telemetry.storage import TelemetryStorage
 
 
 class TelemetryAggregator:
-    """Централизованный агрегатор телеметрии и сенсорного сбора."""
+    """Централизованный агрегатор телеметрии и сенсорного сбора в базу данных и лог."""
 
     def __init__(
         self,
         config_manager: Optional[TelemetryConfigManager] = None,
         log_dir: Optional[str] = None,
+        storage: Optional[TelemetryStorage] = None,
+        sensor_collector: Optional[SensorCollector] = None,
+        file_collector: Optional[FileCollector] = None,
+        telemetry_logger: Optional[TelemetryJsonLogger] = None,
     ) -> None:
         """Инициализирует агрегатор телеметрии.
 
         Args:
             config_manager: Менеджер конфигурации (если None, создается новый).
             log_dir: Директория для логов (по умолчанию: %APPDATA%\\AI-Breadboard\\apps\\logs).
+            storage: Экземпляр постоянного SQLite хранилища TelemetryStorage.
+            sensor_collector: Коллектор аппаратных сенсоров.
+            file_collector: Коллектор файловых событий.
+            telemetry_logger: Логгер JSON-потока телеметрии.
         """
         self.config_manager = config_manager or TelemetryConfigManager()
         self.log_dir = log_dir or self._get_default_log_dir()
+        self.storage = storage or TelemetryStorage.get_instance()
 
-        # Инициализация коллекторов
-        self.sensor_collector = SensorCollector(config_manager=self.config_manager)
-        self.file_collector = FileCollector(
+        # Инициализация коллекторов с поддержкой явного внедрения зависимостей (DI)
+        self.sensor_collector = sensor_collector or SensorCollector(config_manager=self.config_manager)
+        self.file_collector = file_collector or FileCollector(
             watch_dirs=self.config_manager._config.get("watch_directories", ["C:\\Users\\"])
         )
-        self.logger = TelemetryJsonLogger(
+        self.logger = telemetry_logger or TelemetryJsonLogger(
             log_dir=self.log_dir,
             filename=self.config_manager._config.get("log_filename", "ai_sensors_polls.json"),
             max_file_size_mb=self.config_manager._config.get("max_file_size_mb", 100),
@@ -165,6 +175,7 @@ class TelemetryAggregator:
         try:
             if sensors_list:
                 self.logger.record_sensors(sensors_list, timestamp=now_iso)
+                self.storage.save_sensor_polls_batch(sensors_list, timestamp=now_iso)
             else:
                 self.logger.log({
                     "timestamp": now_iso,
@@ -172,7 +183,7 @@ class TelemetryAggregator:
                     "hardware": hardware_data,
                     "file_events": file_events,
                 })
-            logger.debug(f"Записана телеметрия #{self._measurement_count} ({len(sensors_list)} сенсоров)")
+            logger.debug(f"Записана телеметрия #{self._measurement_count} ({len(sensors_list)} сенсоров в БД и лог)")
         except Exception as e:
             logger.error(f"Ошибка при записи телеметрии: {e}")
 

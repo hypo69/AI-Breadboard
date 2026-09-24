@@ -7,7 +7,9 @@
 
 ### 🎯 Основные компоненты
 
-1. **[API Cache System](api-cache.md)** — Универсальная система кеширования
+1. **[Quick Start (5 минут)](QUICKSTART.md)** — Быстрый старт для разработчиков
+
+2. **[API Cache System](api-cache.md)** — Универсальная система кеширования
    - Автоматическое кеширование всех API-запросов
    - 3 стратегии: Cache-First, Network-First, Stale-While-Revalidate
    - Многоуровневое хранилище (Memory + IndexedDB)

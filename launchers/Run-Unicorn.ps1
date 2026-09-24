@@ -408,7 +408,11 @@ Start-Job -ScriptBlock {
             "${env:LocalAppData}\Microsoft\Edge\Application\msedge.exe"
         )
         $edgeExe = $edgePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
-        $profileDir = Join-Path $rootDir "data\browser_profile"
+        $appDataDir = $env:APPDATA
+        if (-not $appDataDir) {
+            $appDataDir = Join-Path $env:USERPROFILE "AppData\Roaming"
+        }
+        $profileDir = Join-Path $appDataDir "AI-Breadboard\browser_profile"
 
         # Terminate any existing app window processes using this profile
         try {

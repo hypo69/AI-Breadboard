@@ -11,7 +11,7 @@
 **`aibreadboard`** переносит эту концепцию в программную инженерию искусственного интеллекта:
 
 ```mermaid
-graph TB
+graph LR
     subgraph "AI Breadboard (Макетная плата)"
         Bus["Универсальная сигнальная шина (UnifiedChatModel)"]
         Registry["Контроллер сокетов и диагностика (ModelManager)"]

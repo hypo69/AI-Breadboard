@@ -135,6 +135,26 @@ class TestRouterChat:
         assert 'agy' in res['models']
 
     @pytest.mark.asyncio
+    async def test_get_active_model(self):
+        """Тест получения текущей активной модели."""
+        from src.api.router_chat import init_router
+        
+        mock_model = Mock()
+        router = init_router(mock_model, mock_model, {})
+        
+        get_active_model_func = None
+        for route in router.routes:
+            if route.path in ('/active-model', '/api/chat/active-model'):
+                get_active_model_func = route.endpoint
+                break
+        
+        assert get_active_model_func is not None
+        res = await get_active_model_func(fastapi_req=None, profile="tc")
+        assert 'provider' in res
+        assert 'model' in res
+        assert 'config_file' in res
+
+    @pytest.mark.asyncio
     async def test_chat_stream_excludes_search_engine_for_model(self):
         """Тест checks, что search_engine из generation_config не попадает в chat_stream модели."""
         from src.api.router_chat import init_router, ChatRequest

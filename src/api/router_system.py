@@ -15,19 +15,26 @@ from pydantic import BaseModel
 
 from logger import logger
 from apps.windows.telemetry import (
+    ForensicsActivityReport,
     HardwareArchiveEntry,
     HardwareAuditReport,
     HardwareChangeItem,
     HardwareDeviceAudit,
     HardwareNode,
     HardwareSensor,
+    KernelThrottlingReport,
+    PeripheralsNetworkReport,
+    ProcessLeakDiagnosticsReport,
     ProcessMetrics,
+    ProcessNetworkActivity,
+    StorageBatteryWearReport,
     SystemDiagnosticEngine,
     SystemCollector,
     SystemDiagnosticReport,
     SystemSnapshot,
     TelemetryLoggerService,
 )
+from apps.windows.telemetry.deep_diagnostics import DeepDiagnosticsEngine
 from src.ai.observability.grouped_telemetry import (
     GroupDiagnoseRequest,
     GroupDiagnosticResult,
@@ -64,7 +71,15 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
         sort_by: str = Query(default="cpu", pattern="^(cpu|memory)$", description="Sort criteria"),
     ) -> List[ProcessMetrics]:
         """Retrieve active process stream sorted by CPU or memory consumption."""
-        return collector.get_top_processes(limit=limit, sort_by=sort_by)
+        return await asyncio.to_thread(collector.get_top_processes, limit=limit, sort_by=sort_by)
+
+    @router.get("/network-activity", response_model=List[ProcessNetworkActivity])
+    async def get_process_network_activity(
+        limit: int = Query(default=50, ge=1, le=200, description="Max active network connections"),
+        only_internet: bool = Query(default=False, description="Filter only external Internet addresses"),
+    ) -> List[ProcessNetworkActivity]:
+        """Сетевая активность процессов: программы в сети, адреса, протоколы, отправка и прием."""
+        return await asyncio.to_thread(collector.get_process_network_activity, limit=limit, only_internet=only_internet)
 
     @router.get("/hardware", response_model=List[HardwareNode])
     async def get_hardware_tree() -> List[HardwareNode]:
@@ -74,33 +89,33 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
     @router.get("/hardware/audit", response_model=HardwareAuditReport)
     async def get_hardware_audit() -> HardwareAuditReport:
         """Retrieve full hardware and driver audit report with attached sensors."""
-        return collector.get_hardware_audit()
+        return await asyncio.to_thread(collector.get_hardware_audit)
 
     @router.get("/hardware/history")
     async def get_hardware_history(
         limit: int = Query(default=50, ge=1, le=200, description="Max history count")
     ) -> List[Dict[str, Any]]:
         """Retrieve list of saved historical hardware archive snapshots."""
-        return collector.get_hardware_history(limit=limit)
+        return await asyncio.to_thread(collector.get_hardware_history, limit=limit)
 
     @router.get("/hardware/changes", response_model=List[HardwareChangeItem])
     async def get_hardware_changes(
         limit: int = Query(default=100, ge=1, le=500, description="Max changes count")
     ) -> List[HardwareChangeItem]:
         """Retrieve historical timeline of hardware configuration changes."""
-        return collector.get_hardware_changes(limit=limit)
+        return await asyncio.to_thread(collector.get_hardware_changes, limit=limit)
 
     @router.post("/hardware/archive", response_model=HardwareArchiveEntry)
     async def create_hardware_archive() -> HardwareArchiveEntry:
         """Force capturing and archiving current hardware audit state."""
-        return collector.archive_hardware_state(auto_diff=True)
+        return await asyncio.to_thread(collector.archive_hardware_state, auto_diff=True)
 
     @router.get("/sensors", response_model=List[HardwareSensor])
     async def get_sensors() -> List[HardwareSensor]:
         """Retrieve thermal, fan, and voltage sensor readings."""
         from apps.windows.telemetry.sensors import get_hardware_sensors
 
-        return get_hardware_sensors()
+        return await asyncio.to_thread(get_hardware_sensors)
 
     @router.post("/diagnose", response_model=SystemDiagnosticReport)
     async def run_ai_diagnostics(
@@ -180,6 +195,39 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
         from apps.librehardwaremonitor.core.lhm_auditor import LhmSensorAuditor
         auditor = LhmSensorAuditor()
         return await auditor.audit_sensors_with_ai(chat_model=chat_model)
+
+    # =========================================================================
+    # Глубокая системная диагностика, форензика, троттлинг и износ
+    # =========================================================================
+
+    _deep_engine = DeepDiagnosticsEngine()
+
+    @router.get("/diagnostics/leaks", response_model=ProcessLeakDiagnosticsReport)
+    async def get_process_leaks(
+        limit: int = Query(default=50, ge=1, le=200, description="Максимум процессов")
+    ) -> ProcessLeakDiagnosticsReport:
+        """Скрытая диагностика процессов (дескрипторы Handles, GDI/USER объекты, Hard Page Faults)."""
+        return await asyncio.to_thread(_deep_engine.collect_process_leaks, limit=limit)
+
+    @router.get("/diagnostics/forensics", response_model=ForensicsActivityReport)
+    async def get_activity_forensics() -> ForensicsActivityReport:
+        """Поведенческая телеметрия (активное окно, Idle Time, камера/микрофон, UserAssist)."""
+        return await asyncio.to_thread(_deep_engine.collect_forensics_activity)
+
+    @router.get("/diagnostics/throttling", response_model=KernelThrottlingReport)
+    async def get_kernel_throttling() -> KernelThrottlingReport:
+        """Качество работы ядра, прерывания DPC/ISR, троттлинг PROCHOT/Power, Uptime и BSOD."""
+        return await asyncio.to_thread(_deep_engine.collect_kernel_throttling)
+
+    @router.get("/diagnostics/storage-battery", response_model=StorageBatteryWearReport)
+    async def get_storage_battery_wear() -> StorageBatteryWearReport:
+        """Телеметрия износа накопителей SSD/NVMe (SMART, TBW) и батареи питания."""
+        return await asyncio.to_thread(_deep_engine.collect_storage_battery_wear)
+
+    @router.get("/diagnostics/peripherals", response_model=PeripheralsNetworkReport)
+    async def get_peripherals_network() -> PeripheralsNetworkReport:
+        """Телеметрия сети (Wi-Fi RSSI/BSSID), USB PnP устройств и аудио."""
+        return await asyncio.to_thread(_deep_engine.collect_peripherals_network)
 
 
     # =========================================================================

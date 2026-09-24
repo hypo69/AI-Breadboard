@@ -526,6 +526,35 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                 'duration_ms': duration_ms
             }
 
+    @router.get('/model-errors')
+    async def get_model_errors_endpoint(provider: str = "", limit: int = 50) -> dict:
+        """Получить список последних зафиксированных ошибок AI-моделей.
+
+        :param provider: Опциональный фильтр по провайдеру (gemini, agy, foundry, ollama и т.д.).
+        :param limit: Количество записей.
+        :returns: JSON-ответ со списком событий ошибок.
+        """
+        from src.ai.orchestration.model_error_hub import get_model_errors
+        events = get_model_errors(provider=provider or None, limit=limit)
+        return {
+            'status': 'success',
+            'errors': [evt.model_dump() for evt in events],
+            'count': len(events),
+        }
+
+    @router.get('/model-health')
+    async def get_model_health_endpoint() -> dict:
+        """Получить сводную статистику здоровья и доступности AI-моделей.
+
+        :returns: Агрегированная сводка по ошибкам и провайдерам.
+        """
+        from src.ai.orchestration.model_error_hub import get_model_health_summary
+        summary = get_model_health_summary()
+        return {
+            'status': 'success',
+            'health': summary,
+        }
+
 
     @router.post('/save-rag')
     async def save_to_rag(rag_req: SaveRagRequest, request: Request):

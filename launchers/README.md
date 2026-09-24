@@ -44,7 +44,7 @@ All launchers rely on `scripts/cli/paths.py`, `scripts/cli/config.py`, and `scri
 ### Embedded Edge App Mode
 On Windows systems, `run.ps1` and `Run-Unicorn.ps1` automatically open the admin interface in an **embedded, standalone App window** (`msedge.exe --app="..."`) rather than opening a tab inside the default external browser:
 - **No browser chrome:** No tab bar, address bar, or external browser extensions.
-- **Isolated profile:** Session cookies, caches, and localStorage are isolated within `data/browser_profile/` in the project root.
+- **Isolated profile:** Session cookies, caches, and localStorage are isolated within `%APPDATA%/AI-Breadboard/browser_profile`.
 - **Graceful fallback:** Falls back to default system browser invocation if Edge executable is not located.
 
 ### Admin URL Routing: Tunnel vs. Localhost

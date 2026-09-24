@@ -21,6 +21,7 @@ from .models import (
     DiskIoMetrics,
     DiskPartitionMetrics,
     DriverInfo,
+    ForensicsActivityReport,
     GpuMetrics,
     HardwareArchiveEntry,
     HardwareAuditReport,
@@ -28,12 +29,18 @@ from .models import (
     HardwareDeviceAudit,
     HardwareNode,
     HardwareSensor,
+    KernelThrottlingReport,
     MemoryMetrics,
     NetworkInterfaceMetrics,
     NetworkPortMetrics,
+    PeripheralsNetworkReport,
     PhysicalDiskHealth,
+    ProcessLeakDiagnosticsReport,
+    ProcessLeakItem,
     ProcessMetrics,
+    ProcessNetworkActivity,
     RamStickInfo,
+    StorageBatteryWearReport,
     SystemDiagnosticReport,
     SystemHealthAlerts,
     SystemSnapshot,
@@ -41,6 +48,7 @@ from .models import (
 from .sensors import get_hardware_sensors
 from .hardware_auditor import HardwareAuditor
 from .history_manager import HardwareHistoryManager
+from .storage import TelemetryStorage
 from .collector import SystemCollector
 from .service import TelemetryLoggerService
 from .telemetry_config import TelemetryConfigManager
@@ -49,6 +57,7 @@ from .file_collector import FileCollector
 from .sensor_collector import SensorCollector
 from .aggregator import TelemetryAggregator
 from .device_flapping_sensor import DeviceFlappingSensor, DeviceTransitionEvent
+from .deep_diagnostics import DeepDiagnosticsEngine
 from .research import (
     ChartConfig,
     MetricPoint,
@@ -60,9 +69,6 @@ from .research import (
     TimeSeriesDataset,
     init_research_router,
 )
-
-# Алиас для обратной совместимости
-TelemetryStorage = HardwareHistoryManager
 
 __all__ = [
     "CpuMetrics",
@@ -77,6 +83,12 @@ __all__ = [
     "BatteryMetrics",
     "SystemHealthAlerts",
     "ProcessMetrics",
+    "ProcessLeakItem",
+    "ProcessLeakDiagnosticsReport",
+    "ForensicsActivityReport",
+    "KernelThrottlingReport",
+    "StorageBatteryWearReport",
+    "PeripheralsNetworkReport",
     "HardwareSensor",
     "HardwareNode",
     "SystemSnapshot",
@@ -100,6 +112,7 @@ __all__ = [
     "TelemetryAggregator",
     "DeviceFlappingSensor",
     "DeviceTransitionEvent",
+    "DeepDiagnosticsEngine",
     "SystemDiagnosticEngine",
     "TelemetryResearcher",
     "TelemetryChartGenerator",

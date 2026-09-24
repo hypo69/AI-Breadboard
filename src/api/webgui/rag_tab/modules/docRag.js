@@ -15,6 +15,7 @@
  */
 
 import { formatBytes, escapeHtml } from './utils.js';
+import { ragCachedFetch, CACHE_TAG } from './cache.js';
 
 /**
  * Upload one or multiple files to the global document RAG storage.
@@ -85,7 +86,9 @@ export async function uploadFiles(files) {
  */
 export async function loadRagStatus() {
   try {
-    const res = await fetch('/api/rag/status');
+    const res = await ragCachedFetch('/api/rag/status', {
+      tags: ['rag-status']
+    });
     if (!res.ok) return;
     const data = await res.json();
     const st = data.data || {};
@@ -124,7 +127,9 @@ export async function loadRagDocuments() {
   if (!tbody) return;
 
   try {
-    const res = await fetch('/api/rag/documents');
+    const res = await ragCachedFetch('/api/rag/documents', {
+      tags: ['rag-documents']
+    });
     if (!res.ok) return;
     const data = await res.json();
     const docs = data.documents || [];

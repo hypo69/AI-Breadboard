@@ -45,6 +45,53 @@ window.switchToTab = switchAppTab;
 
 // ── МЕНЮ ─────────────────────────────────────────────────────────────────────
 
+/**
+ * Создает DOM-элемент иконки для кнопок и редактора (поддерживает bi-* и эмодзи)
+ * @param {string} iconStr
+ * @param {string} defaultIcon
+ * @returns {HTMLElement}
+ */
+function createIconElement(iconStr, defaultIcon = '📄') {
+  const icon = iconStr || defaultIcon;
+  if (/^bi-[a-z0-9-]+$/.test(icon) || icon.startsWith('bi-')) {
+    const i = document.createElement('i');
+    i.className = `bi ${icon}`;
+    return i;
+  }
+  const span = document.createElement('span');
+  span.textContent = icon;
+  return span;
+}
+
+/**
+ * Обработчик прямого запуска программ (например R-Studio)
+ * @param {Object} item
+ * @param {HTMLElement} [iconEl]
+ */
+async function executeLaunchItem(item, iconEl = null) {
+  const origContent = iconEl ? iconEl.innerHTML : '';
+  if (iconEl) iconEl.innerHTML = '⏳';
+  try {
+    const res = await fetch('/api/recovery/launch', { method: 'POST' });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (window.toast) {
+        window.toast.success('R-Studio запущена', data.message || 'Программа восстановления файлов запущена');
+      }
+    } else {
+      if (window.toast) {
+        window.toast.error('Ошибка запуска', data.detail || 'Не удалось запустить программу');
+      }
+    }
+  } catch (err) {
+    if (window.toast) {
+      window.toast.error('Ошибка связи', err.message);
+    }
+  } finally {
+    if (iconEl) iconEl.innerHTML = origContent;
+  }
+}
+
 function getMenuTarget() {
   const p = location.pathname.toLowerCase();
   if (p.startsWith('/su') || location.search.includes('target=su')) {
@@ -91,13 +138,30 @@ async function buildMenu(appsMap = {}, customCfg = null) {
   if (topEl) {
     topEl.innerHTML = '';
     sorted(cfg.menu.topButtons || []).forEach(item => {
-      const safeIcon = /^bi-[a-z0-9-]+$/.test(item.icon) ? item.icon : 'bi-app';
       const btn = document.createElement('button');
-      btn.className = 'btn btn-sm btn-outline-primary d-flex align-items-center gap-1 py-1 px-2 rounded';
+      btn.className = 'btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2 rounded';
       btn.type = 'button';
-      btn.dataset.tab = item.tab;
       btn.title = item.label;
-      btn.innerHTML = `<i class="bi ${safeIcon}"></i><span class="d-none d-sm-inline">${item.label}</span>`;
+
+      const iconEl = createIconElement(item.icon, 'bi-app');
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'd-none d-sm-inline';
+      labelSpan.textContent = item.label;
+      if (item.i18n) labelSpan.dataset.i18n = item.i18n;
+
+      btn.append(iconEl, labelSpan);
+
+      if (item.id === 'file_recovery' || item.action === 'launch') {
+        btn.dataset.action = 'launch';
+        btn.onclick = async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          await executeLaunchItem(item, iconEl);
+        };
+      } else {
+        btn.dataset.tab = item.tab;
+      }
+
       topEl.appendChild(btn);
     });
   }
@@ -110,14 +174,15 @@ async function buildMenu(appsMap = {}, customCfg = null) {
       const btn = document.createElement('button');
       btn.className = 'list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3';
       btn.type = 'button';
-      if (item.i18n) btn.dataset.i18n = item.i18n;
-      const icon = document.createElement('span');
-      icon.className = 'fs-6';
-      icon.textContent = item.icon || '📄';
+
+      const iconEl = createIconElement(item.icon, '📄');
+      iconEl.classList.add('fs-6');
       const label = document.createElement('span');
       label.className = 'fw-medium';
       label.textContent = item.label;
-      btn.append(icon, label);
+      if (item.i18n) label.dataset.i18n = item.i18n;
+
+      btn.append(iconEl, label);
 
       if (item.id === 'file_recovery' || item.action === 'launch') {
         btn.dataset.action = 'launch';
@@ -125,27 +190,7 @@ async function buildMenu(appsMap = {}, customCfg = null) {
         btn.onclick = async (e) => {
           e.preventDefault();
           e.stopPropagation();
-          const origIcon = icon.textContent;
-          icon.textContent = '⏳';
-          try {
-            const res = await fetch('/api/recovery/launch', { method: 'POST' });
-            const data = await res.json();
-            if (res.ok && data.success) {
-              if (window.toast) {
-                window.toast.success('R-Studio запущена', data.message || 'Программа восстановления файлов запущена');
-              }
-            } else {
-              if (window.toast) {
-                window.toast.error('Ошибка запуска', data.detail || 'Не удалось запустить программу');
-              }
-            }
-          } catch (err) {
-            if (window.toast) {
-              window.toast.error('Ошибка связи', err.message);
-            }
-          } finally {
-            icon.textContent = origIcon;
-          }
+          await executeLaunchItem(item, iconEl);
         };
       } else {
         btn.dataset.tab = item.tab;
@@ -155,8 +200,14 @@ async function buildMenu(appsMap = {}, customCfg = null) {
     });
   }
 
-  // Обновление состояния кнопок вкладок
-  document.querySelectorAll('[data-tab]');
+  // Обновление активного состояния кнопок вкладок
+  const activePane = document.querySelector('#mainTabContent .tab-pane.active') || document.querySelector('.tab-pane.active');
+  const activeTabId = activePane ? activePane.id : null;
+  if (activeTabId) {
+    document.querySelectorAll('[data-tab]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === activeTabId);
+    });
+  }
 
   applyTranslations();
   return cfg;
@@ -182,7 +233,7 @@ function initMenuEditor(cfg, appsMap = {}) {
 
   function collectInitialItems() {
     return [
-      ...(cfg.menu.topButtons || []).map(x => ({ ...x, position: 'top' })),
+      ...(cfg.menu.topButtons || []).map(x => ({ ...x, position: x.visible === false ? 'hidden' : 'top' })),
       ...(cfg.menu.sidebarItems || []).map(x => ({ ...x, position: x.visible === false ? 'hidden' : 'bottom' })),
     ];
   }
@@ -212,7 +263,14 @@ function initMenuEditor(cfg, appsMap = {}) {
       orderBadge.style.minWidth = '38px';
       orderBadge.style.textAlign = 'center';
 
-      // 3. Информация об элементе (название и вкладка)
+      // 3. Иконка элемента
+      const iconContainer = document.createElement('div');
+      iconContainer.className = 'item-icon d-flex align-items-center justify-content-center px-1 text-center';
+      iconContainer.style.minWidth = '30px';
+      const iconEl = createIconElement(item.icon, '📄');
+      iconContainer.appendChild(iconEl);
+
+      // 4. Информация об элементе (название и вкладка)
       const info = document.createElement('div');
       info.className = 'item-info flex-grow-1 min-w-0 px-1';
       const labelDiv = document.createElement('div');

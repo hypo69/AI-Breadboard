@@ -345,6 +345,11 @@
             <span>Генерация AI-диагностики и анализа рисков для программы «${escapeHtml(entry.name)}»...</span>
           </div>
         `;
+        const activeModel = window.activeModelName
+          || window.userSettings?.model
+          || document.getElementById('model-select')?.value
+          || document.getElementById('header-model-select')?.value
+          || '';
         try {
           const res = await window.api.fetch('/api/v1/startup-auditor/explain', {
             method: 'POST',
@@ -362,7 +367,8 @@
               is_enabled: entry.is_enabled,
               file_exists: entry.file_exists,
               is_signed: entry.is_signed,
-              boot_impact: entry.boot_impact
+              boot_impact: entry.boot_impact,
+              model: activeModel || undefined
             })
           });
 

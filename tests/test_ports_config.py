@@ -120,6 +120,7 @@ class TestAppsConfigSyncWithPortsJson:
         "smartmontools": "smartmontools",
         "librehardwaremonitor": "librehardwaremonitor",
         "chat": "chat",
+        "telemetry_research": "telemetry_research",
         "enterprise_knowledge": "enterprise_knowledge",
     }
 
@@ -146,6 +147,7 @@ class TestAppsConfigSyncWithPortsJson:
             ("smartmontools", 8124),
             ("librehardwaremonitor", 8126),
             ("chat", 8128),
+            ("telemetry_research", 8129),
             ("enterprise_knowledge", 8181),
         ],
     )

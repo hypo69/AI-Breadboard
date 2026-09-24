@@ -151,7 +151,7 @@ class SmartProber:
         # 1. Попытка сбора через нативный WindowsStorageSensor (MSFT_PhysicalDisk + StorageReliabilityCounter)
         try:
             from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
-            sensor = WindowsStorageSensor(timeout_sec=15)
+            sensor = WindowsStorageSensor(timeout_sec=30)
             physical_disks = sensor.get_physical_disks()
             if physical_disks:
                 for d in physical_disks:

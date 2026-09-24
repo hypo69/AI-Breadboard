@@ -125,11 +125,50 @@ function onTabSwitched(targetId) {
   }
 }
 
+// Карта конфигураций вкладок
+const USER_TAB_DEFS = {
+  'chat': { html: '/html/chat/index.html', js: '/html/chat/main.js' },
+  'rag': { html: '/html/rag_tab/index.html', js: '/html/rag_tab/main.js' },
+  'telegram-rag': { html: '/html/telegram_rag_tab/index.html', js: '/html/telegram_rag_tab/main.js' },
+  'news': { html: '/html/news_tab/index.html', js: '/html/news_tab/main.js' },
+  'tts': { html: '/html/tts_tab/index.html', js: '/html/tts_tab/main.js' },
+  'voice': { html: '/html/voice_tab/index.html', js: '/html/voice_tab/main.js' },
+  'skills': { html: '/html/skills_tab/index.html', js: '/html/skills_tab/main.js' },
+  'plugins': { html: '/html/plugins_tab/index.html', js: '/html/plugins_tab/main.js' },
+  'user-directories': { html: '/html/user_directories_tab/index.html', js: '/html/user_directories_tab/main.js' },
+};
+
+const loadedUserTabs = new Set();
+const loadingUserTabs = new Map();
+
+async function ensureTabLoaded(tabName) {
+  if (loadedUserTabs.has(tabName)) return true;
+  if (loadingUserTabs.has(tabName)) return loadingUserTabs.get(tabName);
+
+  const def = USER_TAB_DEFS[tabName];
+  if (!def) return false;
+
+  const cb = Date.now();
+  const promise = (async () => {
+    try {
+      await loadTabContent(tabName, `${def.html}?v=${cb}`, `${def.js}?v=${cb}`);
+      loadedUserTabs.add(tabName);
+      return true;
+    } finally {
+      loadingUserTabs.delete(tabName);
+    }
+  })();
+
+  loadingUserTabs.set(tabName, promise);
+  return promise;
+}
+
 // Programmatic tab switcher
-function switchTab(targetId) {
+async function switchTab(targetId) {
   if (!targetId) return;
   const cleanId = targetId.startsWith('#') ? targetId.slice(1) : targetId;
   const tabId = cleanId.startsWith('tab-') ? cleanId : `tab-${cleanId}`;
+  const tabName = tabId.replace(/^tab-/, '');
 
   // 1. Update active state on dropdown items & toggles
   document.querySelectorAll('#mainTabs .dropdown-item').forEach((item) => {
@@ -171,7 +210,10 @@ function switchTab(targetId) {
     targetPane.classList.add('show', 'active');
   }
 
-  // 3. Notify lifecycle callback
+  // 3. Загружаем содержимое вкладки по требованию, если ещё не загружено
+  await ensureTabLoaded(tabName);
+
+  // 4. Notify lifecycle callback
   onTabSwitched(tabId);
 }
 window.switchTab = switchTab;
@@ -208,7 +250,7 @@ function setupDropdownTabs() {
 
   // 2. Dropdown Item Buttons (Tab Switchers & Action Buttons)
   mainTabs.querySelectorAll('.dropdown-item').forEach((item) => {
-    item.onclick = (e) => {
+    item.onclick = async (e) => {
       const targetId = item.getAttribute('data-tab') || item.getAttribute('data-bs-target')?.replace('#', '');
       const pluginName = item.getAttribute('data-plugin');
 
@@ -223,7 +265,7 @@ function setupDropdownTabs() {
       } else if (targetId) {
         e.preventDefault();
         e.stopPropagation();
-        switchTab(targetId);
+        await switchTab(targetId);
       }
     };
   });
@@ -287,19 +329,14 @@ async function initInterface() {
   // Initialize User Settings & Google OAuth
   await initUserSettings();
 
-  const cb = Date.now();
-  // Load the requested tabs: Chat, RAG, News, TTS, Voice, Skills, Plugins
-  await Promise.all([
-    loadTabContent('chat', `/html/chat/index.html?v=${cb}`, `/html/chat/main.js?v=${cb}`),
-    loadTabContent('rag', `/html/rag_tab/index.html?v=${cb}`, `/html/rag_tab/main.js?v=${cb}`),
-    loadTabContent('telegram-rag', `/html/telegram_rag_tab/index.html?v=${cb}`, `/html/telegram_rag_tab/main.js?v=${cb}`),
-    loadTabContent('news', `/html/news_tab/index.html?v=${cb}`, `/html/news_tab/main.js?v=${cb}`),
-    loadTabContent('tts', `/html/tts_tab/index.html?v=${cb}`, `/html/tts_tab/main.js?v=${cb}`),
-    loadTabContent('voice', `/html/voice_tab/index.html?v=${cb}`, `/html/voice_tab/main.js?v=${cb}`),
-    loadTabContent('skills', `/html/skills_tab/index.html?v=${cb}`, `/html/skills_tab/main.js?v=${cb}`),
-    loadTabContent('plugins', `/html/plugins_tab/index.html?v=${cb}`, `/html/plugins_tab/main.js?v=${cb}`),
-    loadTabContent('user-directories', `/html/user_directories_tab/index.html?v=${cb}`, `/html/user_directories_tab/main.js?v=${cb}`),
-  ]);
+  // Определение и загрузка ТОЛЬКО активной вкладки
+  const hash = location.hash.replace('#', '');
+  const initialTabId = hash || 'tab-chat';
+  const initialTabName = initialTabId.replace(/^tab-/, '');
+
+  console.log(`[UserInterface] Loading initial active tab: ${initialTabName}`);
+  await ensureTabLoaded(initialTabName);
+  await switchTab(initialTabId);
 
   // Apply translations
   applyTranslations();
@@ -325,10 +362,20 @@ async function initInterface() {
 
 async function loadTabContent(tabName, url, jsOverrideSrc) {
   try {
+    const container = document.getElementById(`tab-${tabName}`);
+    if (container && !container.innerHTML.trim()) {
+      container.innerHTML = `
+        <div class="d-flex justify-content-center align-items-center" style="height: 200px;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Загрузка...</span>
+          </div>
+        </div>
+      `;
+    }
+
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const html = await response.text();
-    const container = document.getElementById(`tab-${tabName}`);
     if (!container) return;
     container.innerHTML = html;
     

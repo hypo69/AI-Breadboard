@@ -23,6 +23,7 @@ from __future__ import annotations
 import collections
 import ctypes
 from ctypes import wintypes
+import fnmatch
 import os
 import platform
 import threading
@@ -165,6 +166,121 @@ def get_process_for_file(file_path: str) -> Tuple[str, Optional[int]]:
 
 
 @dataclass
+class WatcherExclusions:
+    """Правила фильтрации и исключения файлов и процессов из мониторинга в реальном времени."""
+
+    enabled: bool = True
+    paths: List[str] = field(default_factory=list)
+    extensions: List[str] = field(default_factory=list)
+    patterns: List[str] = field(default_factory=list)
+    processes: List[str] = field(default_factory=list)
+
+    def is_excluded(self, file_path: str, proc_name: str = "", watch_dir: str = "") -> bool:
+        """Проверить, попадает ли путь к файлу или имя процесса под правило исключения.
+
+        Args:
+            file_path: Абсолютный или относительный путь к файлу.
+            proc_name: Имя исполняемого файла процесса (например, SearchIndexer.exe).
+            watch_dir: Отслеживаемый корневой каталог (если известен). Позволяет не исключать
+                       файлы, если пользователь явно выбрал отслеживать подпапку внутри
+                       обычно исключаемого каталога (например, AppData\\Local\\Temp).
+
+        Returns:
+            bool: True если событие должно быть отфильтровано/проигнорировано.
+        """
+        if not self.enabled:
+            return False
+
+        # 1. Проверка по имени процесса (если передано)
+        if proc_name and self.processes:
+            clean_proc = proc_name.lower().strip()
+            for p in self.processes:
+                if p and p.lower().strip() == clean_proc:
+                    return True
+
+        if not file_path:
+            return False
+
+        norm_path = os.path.normpath(file_path).lower()
+        file_name = os.path.basename(norm_path)
+        norm_watch_dir = os.path.normpath(watch_dir).lower() if watch_dir else ""
+
+        # 2. Проверка расширений файлов (.tmp, .log, .csv, .db-wal, etc.)
+        if self.extensions:
+            ext = os.path.splitext(file_name)[1].lower()
+            for e in self.extensions:
+                clean_e = e.lower().strip()
+                if not clean_e.startswith("."):
+                    clean_e = f".{clean_e}"
+                if ext == clean_e:
+                    return True
+
+        # 3. Проверка фрагментов путей и каталогов
+        if self.paths:
+            rel_path = ""
+            if norm_watch_dir:
+                try:
+                    rel_candidate = os.path.relpath(norm_path, norm_watch_dir)
+                    if not rel_candidate.startswith(".."):
+                        rel_path = rel_candidate.lower()
+                except Exception:
+                    rel_path = ""
+
+            for p in self.paths:
+                clean_p = os.path.normpath(p.strip()).lower()
+                if not clean_p:
+                    continue
+
+                if os.path.isabs(clean_p):
+                    if norm_watch_dir and (norm_watch_dir == clean_p or norm_watch_dir.startswith(clean_p + os.sep)):
+                        # Пользователь явно отслеживает эту папку или ее подпапку
+                        pass
+                    elif norm_path == clean_p or norm_path.startswith(clean_p + os.sep) or clean_p in norm_path:
+                        return True
+                else:
+                    if rel_path:
+                        if clean_p in rel_path:
+                            return True
+                    else:
+                        if clean_p in norm_path:
+                            return True
+
+        # 4. Проверка шаблонов подстановок (wildcards: fnmatch)
+        if self.patterns:
+            for pat in self.patterns:
+                clean_pat = pat.lower().strip()
+                if not clean_pat:
+                    continue
+                if fnmatch.fnmatch(file_name, clean_pat) or fnmatch.fnmatch(norm_path, clean_pat):
+                    return True
+
+        return False
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Преобразовать правила исключений в словарь."""
+        return {
+            "enabled": self.enabled,
+            "paths": list(self.paths),
+            "extensions": list(self.extensions),
+            "patterns": list(self.patterns),
+            "processes": list(self.processes),
+        }
+
+    @classmethod
+    def from_dict(cls, data: Optional[Dict[str, Any]]) -> "WatcherExclusions":
+        """Создать экземпляр правил из словаря."""
+        if not isinstance(data, dict):
+            return cls()
+        return cls(
+            enabled=bool(data.get("enabled", True)),
+            paths=[str(p) for p in data.get("paths", []) if p],
+            extensions=[str(e) for e in data.get("extensions", []) if e],
+            patterns=[str(pat) for pat in data.get("patterns", []) if pat],
+            processes=[str(proc) for proc in data.get("processes", []) if proc],
+        )
+
+
+@dataclass
 class LiveFileEvent:
     """Событие изменения файла в реальном времени."""
 
@@ -185,12 +301,14 @@ class DirectoryWatcher:
         self,
         watch_dirs: Optional[Union[str, List[str]]] = None,
         max_history: int = 200,
+        exclusions: Optional[Union[WatcherExclusions, Dict[str, Any]]] = None,
     ) -> None:
         """Инициализация наблюдателя файловых изменений.
 
         Args:
             watch_dirs: Путь или список путей к отслеживаемым каталогам.
             max_history: Размер кольцевого буфера истории событий.
+            exclusions: Настройки правил исключений и фильтрации.
         """
         if watch_dirs is None:
             self._watch_dirs: List[str] = [str(Path.cwd().resolve())]
@@ -209,6 +327,29 @@ class DirectoryWatcher:
         self._handles: Dict[str, Any] = {}
         self._lock = threading.Lock()
         self.is_windows = platform.system() == "Windows"
+
+        if isinstance(exclusions, WatcherExclusions):
+            self.exclusions = exclusions
+        elif isinstance(exclusions, dict):
+            self.exclusions = WatcherExclusions.from_dict(exclusions)
+        else:
+            self.exclusions = WatcherExclusions(
+                enabled=True,
+                paths=[
+                    "AppData\\Roaming\\AI-Breadboard\\apps\\windows\\telemetry\\logs",
+                    "AppData\\Local\\Temp",
+                    "$Recycle.Bin",
+                    "System Volume Information",
+                    ".git",
+                    "__pycache__",
+                    "node_modules",
+                ],
+                extensions=[".tmp", ".log", ".db-wal", ".db-shm"],
+                patterns=["*librehardwaremonitor_polls.csv*", "*Windows.db*", "~$*"],
+                processes=["SearchIndexer.exe"],
+            )
+
+        self.filtered_events_count: int = 0
 
         from apps.windows.sysadmin.src.watcher_telemetry import get_watcher_telemetry_engine
 
@@ -495,6 +636,108 @@ class DirectoryWatcher:
             with self._lock:
                 self._handles.pop(target_dir, None)
 
+    def get_exclusions(self) -> Dict[str, Any]:
+        """Получить текущие правила исключений и статистику отфильтрованных событий.
+
+        Returns:
+            Dict[str, Any]: Словарь с правилами исключений и счетчиком отфильтрованных событий.
+        """
+        with self._lock:
+            data = self.exclusions.to_dict()
+            data["filtered_count"] = self.filtered_events_count
+            return data
+
+    def set_exclusions(self, data: Dict[str, Any]) -> None:
+        """Обновить правила исключений.
+
+        Args:
+            data: Словарь с новой конфигурацией исключений.
+        """
+        with self._lock:
+            self.exclusions = WatcherExclusions.from_dict(data)
+
+    def add_exclusion(self, category: str, value: str) -> bool:
+        """Добавить элемент в указанную категорию исключений.
+
+        Args:
+            category: Категория ('paths', 'extensions', 'patterns', 'processes').
+            value: Значение правила.
+
+        Returns:
+            bool: True если правило успешно добавлено.
+        """
+        cat = category.lower().strip()
+        val = value.strip()
+        if not val:
+            return False
+
+        with self._lock:
+            if cat in ("paths", "path"):
+                if val not in self.exclusions.paths:
+                    self.exclusions.paths.append(val)
+                    return True
+            elif cat in ("extensions", "extension", "ext"):
+                clean_ext = val if val.startswith(".") else f".{val}"
+                if clean_ext not in self.exclusions.extensions:
+                    self.exclusions.extensions.append(clean_ext)
+                    return True
+            elif cat in ("patterns", "pattern", "pat"):
+                if val not in self.exclusions.patterns:
+                    self.exclusions.patterns.append(val)
+                    return True
+            elif cat in ("processes", "process", "proc"):
+                if val not in self.exclusions.processes:
+                    self.exclusions.processes.append(val)
+                    return True
+        return False
+
+    def remove_exclusion(self, category: str, value: str) -> bool:
+        """Удалить элемент из указанной категории исключений.
+
+        Args:
+            category: Категория ('paths', 'extensions', 'patterns', 'processes').
+            value: Значение правила.
+
+        Returns:
+            bool: True если правило найдено и удалено.
+        """
+        cat = category.lower().strip()
+        val = value.strip()
+        with self._lock:
+            target_list = None
+            if cat in ("paths", "path"):
+                target_list = self.exclusions.paths
+            elif cat in ("extensions", "extension", "ext"):
+                target_list = self.exclusions.extensions
+                val = val if val.startswith(".") else f".{val}"
+            elif cat in ("patterns", "pattern", "pat"):
+                target_list = self.exclusions.patterns
+            elif cat in ("processes", "process", "proc"):
+                target_list = self.exclusions.processes
+
+            if target_list is not None:
+                for idx, item in enumerate(target_list):
+                    if item.lower() == val.lower():
+                        target_list.pop(idx)
+                        return True
+        return False
+
+    def toggle_exclusions(self, enabled: Optional[bool] = None) -> bool:
+        """Переключить активность фильтрации исключений.
+
+        Args:
+            enabled: Опциональное явное состояние включения/отключения.
+
+        Returns:
+            bool: Актуальное состояние активности фильтрации.
+        """
+        with self._lock:
+            if enabled is None:
+                self.exclusions.enabled = not self.exclusions.enabled
+            else:
+                self.exclusions.enabled = bool(enabled)
+            return self.exclusions.enabled
+
     def _process_notifications(self, target_dir: str, raw_data: bytes, total_bytes: int) -> None:
         """Разобрать структуры FILE_NOTIFY_INFORMATION из буфера и определить вызывающий процесс.
 
@@ -517,11 +760,30 @@ class DirectoryWatcher:
             file_name = file_name_raw.decode("utf-16le", errors="ignore")
 
             full_path = os.path.join(target_dir, file_name)
+
+            # Предварительная проверка исключений по пути/расширению/шаблону (до вызова Restart Manager)
+            if self.exclusions.is_excluded(full_path, watch_dir=target_dir):
+                with self._lock:
+                    self.filtered_events_count += 1
+                if next_offset == 0:
+                    break
+                offset += next_offset
+                continue
+
             action_str = ACTION_NAMES.get(action_code, f"Action_{action_code}")
             is_del = action_code in (FILE_ACTION_REMOVED, FILE_ACTION_RENAMED_OLD_NAME)
 
             # Определение программы / процесса, вызвавшего изменение
             proc_name, proc_id = get_process_for_file(full_path)
+
+            # Проверка исключений с учетом определенного процесса
+            if proc_name and self.exclusions.is_excluded(full_path, proc_name=proc_name, watch_dir=target_dir):
+                with self._lock:
+                    self.filtered_events_count += 1
+                if next_offset == 0:
+                    break
+                offset += next_offset
+                continue
 
             event = LiveFileEvent(
                 timestamp=now_str,
@@ -573,19 +835,22 @@ _global_watcher: Optional[DirectoryWatcher] = None
 
 def get_directory_watcher(
     watch_dirs: Optional[Union[str, List[str]]] = None,
+    exclusions: Optional[Union[WatcherExclusions, Dict[str, Any]]] = None,
 ) -> DirectoryWatcher:
     """Получить глобальный экземпляр DirectoryWatcher.
 
     Args:
         watch_dirs: Путь или список путей для мониторинга. Если не указаны, используются пути из config.json.
+        exclusions: Настройки исключений. Если не указаны, загружаются из config.json.
 
     Returns:
         DirectoryWatcher: Экземпляр наблюдателя.
     """
     global _global_watcher
     if _global_watcher is None:
-        # Если пути не указаны, пытаемся загрузить их из config.json
-        if watch_dirs is None:
+        cfg_exclusions = None
+        # Если пути или исключения не указаны, пытаемся загрузить их из config.json
+        if watch_dirs is None or exclusions is None:
             from pathlib import Path
             import json
             import os
@@ -594,14 +859,18 @@ def get_directory_watcher(
                 if cfg_file.exists():
                     with open(cfg_file, "r", encoding="utf-8") as f:
                         cfg_data = json.load(f)
-                        custom_paths = cfg_data.get("watch_directories")
-                        if isinstance(custom_paths, list) and custom_paths:
-                            valid_paths = [p for p in custom_paths if isinstance(p, str) and os.path.isdir(p)]
-                            if valid_paths:
-                                watch_dirs = valid_paths
+                        if watch_dirs is None:
+                            custom_paths = cfg_data.get("watch_directories")
+                            if isinstance(custom_paths, list) and custom_paths:
+                                valid_paths = [p for p in custom_paths if isinstance(p, str) and os.path.isdir(p)]
+                                if valid_paths:
+                                    watch_dirs = valid_paths
+                        if exclusions is None and "exclusions" in cfg_data:
+                            cfg_exclusions = cfg_data.get("exclusions")
             except Exception as e:
-                logger.debug(f"Не удалось загрузить watch_directories из config.json при первом создании: {e}")
-        
-        _global_watcher = DirectoryWatcher(watch_dirs=watch_dirs)
+                logger.debug(f"Не удалось загрузить параметры из config.json при первом создании: {e}")
+
+        active_exclusions = exclusions if exclusions is not None else cfg_exclusions
+        _global_watcher = DirectoryWatcher(watch_dirs=watch_dirs, exclusions=active_exclusions)
         _global_watcher.start()
     return _global_watcher

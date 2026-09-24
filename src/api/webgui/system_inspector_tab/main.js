@@ -3,6 +3,9 @@
   let sysWs = null;
   let isSysInitialized = false;
   let isSysPaused = false;
+  let isNetPaused = false;
+  let currentNetFilter = 'internet';
+  let cachedNetworkActivities = [];
   let latestTelemetrySnapshot = null;
   let cachedSensors = [];
   let currentSensorCategory = 'all';
@@ -629,6 +632,9 @@
     }
 
     renderProcessTable();
+    if (snap.network_activity) {
+      renderNetworkActivityTable(snap.network_activity);
+    }
   }
 
   function renderProcessTable() {
@@ -661,7 +667,7 @@
       return `
         <tr class="sys-proc-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для детальной AI-диагностики процесса">
           <td style="color: #38bdf8;">${p.pid}</td>
-          <td style="font-weight: 600;">${escapeHtml(p.name || '')}</td>
+          <td style="font-weight: 600; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(p.name || '')}">${escapeHtml(p.name || '')}</td>
           <td style="color: #94a3b8;">${escapeHtml(p.status || 'running')}</td>
           <td style="text-align: right;" class="${cpuClass}">${Number(p.cpu_percent || 0).toFixed(1)}%</td>
           <td style="text-align: right; color: #4ade80;">${Number(p.memory_mb || 0).toFixed(1)} MB</td>
@@ -706,6 +712,163 @@
               username: p.username,
               status: p.status
             }
+          });
+        }
+      };
+    });
+  }
+
+  async function fetchNetworkActivity() {
+    try {
+      const res = await fetch('/api/v1/system/network-activity?limit=100');
+      if (res.ok) {
+        const data = await res.json();
+        renderNetworkActivityTable(data);
+      }
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Failed to fetch network activity:', e);
+    }
+  }
+
+  function renderNetworkActivityTable(activities) {
+    if (activities) {
+      cachedNetworkActivities = activities;
+    }
+    if (isNetPaused) return;
+
+    const tbody = document.getElementById('sys-net-tbody');
+    if (!tbody) return;
+
+    const searchInput = document.getElementById('sys-net-search');
+    const filterText = (searchInput?.value || '').toLowerCase().trim();
+    const countBadge = document.getElementById('sys-netact-count-badge');
+    const connsBadge = document.getElementById('sys-netact-conns-badge');
+
+    const rawList = Array.isArray(cachedNetworkActivities) ? cachedNetworkActivities : [];
+
+    // Filter by category and search query
+    let filtered = rawList.filter(item => {
+      if (currentNetFilter === 'internet' && !item.is_internet) return false;
+      if (currentNetFilter === 'listen' && item.status !== 'LISTEN') return false;
+
+      if (filterText) {
+        return (
+          String(item.pid).includes(filterText) ||
+          (item.name || '').toLowerCase().includes(filterText) ||
+          (item.user || '').toLowerCase().includes(filterText) ||
+          (item.remote_address || '').toLowerCase().includes(filterText) ||
+          (item.local_address || '').toLowerCase().includes(filterText) ||
+          (item.service_type || '').toLowerCase().includes(filterText) ||
+          (item.sent_summary || '').toLowerCase().includes(filterText) ||
+          (item.recv_summary || '').toLowerCase().includes(filterText)
+        );
+      }
+      return true;
+    });
+
+    const uniqueProcs = new Set(filtered.map(i => i.pid)).size;
+    if (countBadge) countBadge.textContent = `${uniqueProcs} программ`;
+    if (connsBadge) connsBadge.textContent = `${filtered.length} сокетов`;
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted small">Нет активных сетевых соединений по выбранному фильтру</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = filtered.map((item, idx) => {
+      const isListen = item.status === 'LISTEN';
+      const statusBadgeClass = isListen
+        ? 'badge bg-secondary-subtle text-light border border-secondary'
+        : item.status === 'ESTABLISHED'
+        ? 'badge bg-success-subtle text-success border border-success'
+        : 'badge bg-warning-subtle text-warning border border-warning';
+
+      const protoBadge = item.protocol === 'UDP'
+        ? '<span class="badge bg-primary text-white" style="font-size: 0.65rem;">UDP</span>'
+        : '<span class="badge bg-dark border border-secondary text-info" style="font-size: 0.65rem;">TCP</span>';
+
+      const isExtBadge = item.is_internet
+        ? '<span class="badge bg-primary-subtle text-primary border border-primary px-1" style="font-size: 0.62rem;" title="Внешний сервер в сети Интернет">WAN</span>'
+        : '<span class="badge bg-secondary px-1" style="font-size: 0.62rem;" title="Локальный сокет Loopback">LAN</span>';
+
+      const sentBytes = item.sent_kb > 0 ? `<span class="badge bg-dark border border-warning text-warning ms-1" style="font-size: 0.68rem;">${item.sent_kb.toLocaleString()} KB</span>` : '';
+      const recvBytes = item.recv_kb > 0 ? `<span class="badge bg-dark border border-success text-success ms-1" style="font-size: 0.68rem;">${item.recv_kb.toLocaleString()} KB</span>` : '';
+
+      return `
+        <tr class="sys-net-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для детальной диагностики сетевого соединения">
+          <td>
+            <div class="fw-bold text-white text-truncate" style="max-width: 165px;" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+            <div class="small text-muted" style="font-size: 0.70rem;">PID: <span style="color: #38bdf8;">${item.pid}</span> ${item.user ? '• ' + escapeHtml(item.user) : ''}</div>
+          </td>
+          <td>
+            <div class="d-flex align-items-center gap-1">
+              ${isExtBadge}
+              <span class="font-monospace text-light fw-semibold text-truncate" style="max-width: 195px;" title="${escapeHtml(item.remote_address)}">
+                ${escapeHtml(item.remote_address !== '-' ? item.remote_address : item.local_address)}
+              </span>
+            </div>
+            <div class="small text-muted font-monospace" style="font-size: 0.68rem;">Local: ${escapeHtml(item.local_address)}</div>
+          </td>
+          <td>
+            <div class="d-flex align-items-center gap-1 mb-0.5">
+              ${protoBadge}
+              <span class="fw-semibold text-truncate" style="max-width: 110px; font-size: 0.74rem; color: #a855f7;" title="${escapeHtml(item.service_type)}">${escapeHtml(item.service_type)}</span>
+            </div>
+          </td>
+          <td style="text-align: center;">
+            <span class="${statusBadgeClass}" style="font-size: 0.68rem;">${escapeHtml(item.status)}</span>
+          </td>
+          <td>
+            <div class="d-flex align-items-start gap-1">
+              <i class="bi bi-arrow-up-right text-warning mt-0.5" style="font-size: 0.72rem;"></i>
+              <div class="text-truncate" style="max-width: 250px; font-size: 0.73rem; color: #fde047;" title="${escapeHtml(item.sent_summary)}">
+                ${escapeHtml(item.sent_summary)} ${sentBytes}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex align-items-start gap-1">
+              <i class="bi bi-arrow-down-left text-success mt-0.5" style="font-size: 0.72rem;"></i>
+              <div class="text-truncate" style="max-width: 250px; font-size: 0.73rem; color: #86efac;" title="${escapeHtml(item.recv_summary)}">
+                ${escapeHtml(item.recv_summary)} ${recvBytes}
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    tbody.querySelectorAll('.sys-net-row').forEach(row => {
+      row.onclick = () => {
+        const idx = parseInt(row.getAttribute('data-idx'), 10);
+        const item = filtered[idx];
+        if (!item) return;
+
+        if (window.AITableModal) {
+          window.AITableModal.show({
+            icon: '🌐',
+            title: `${item.name} (${item.service_type})`,
+            subtitle: `PID: ${item.pid} | ${item.remote_address}`,
+            tableType: 'network',
+            badges: [
+              { text: `PID ${item.pid}`, class: 'badge bg-info text-dark' },
+              { text: item.protocol, class: 'badge bg-primary' },
+              { text: item.status, class: 'badge bg-success' },
+              { text: item.is_internet ? 'Интернет (WAN)' : 'Локально (LAN)', class: item.is_internet ? 'badge bg-warning text-dark' : 'badge bg-secondary' }
+            ],
+            metadata: [
+              { label: 'Программа / Процесс', value: item.name },
+              { label: 'Process ID (PID)', value: String(item.pid) },
+              { label: 'Пользователь системы', value: item.user || 'SYSTEM' },
+              { label: 'Удаленный адрес (Remote)', value: item.remote_address },
+              { label: 'Локальный сокет (Local)', value: item.local_address },
+              { label: 'Протокол / Служба', value: `${item.protocol} • ${item.service_type}` },
+              { label: 'Что шлет (Отправка)', value: `${item.sent_summary} ${item.sent_kb > 0 ? '(' + item.sent_kb + ' KB)' : ''}`, fullWidth: true },
+              { label: 'Что принимает (Прием)', value: `${item.recv_summary} ${item.recv_kb > 0 ? '(' + item.recv_kb + ' KB)' : ''}`, fullWidth: true }
+            ],
+            rawTitle: 'Сетевой дамп подключения',
+            rawContent: JSON.stringify(item, null, 2),
+            requestData: item
           });
         }
       };
@@ -767,7 +930,18 @@
         sysWs.onerror = null;
         sysWs.close();
       } catch {}
+      sysWs = null;
     }
+
+    if (window.isTabActive && !window.isTabActive('tab-system-inspector')) {
+      const statusBadge = document.getElementById('sys-conn-status');
+      if (statusBadge) {
+        statusBadge.className = 'badge rounded-pill bg-secondary text-light px-3 py-2';
+        statusBadge.innerText = '○ Поток приостановлен';
+      }
+      return;
+    }
+
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${proto}//${window.location.host}/api/v1/system/stream`;
 
@@ -795,6 +969,7 @@
 
       const scheduleReconnect = (reason) => {
         if (sysWsReconnectTimer) return;
+        if (window.isTabActive && !window.isTabActive('tab-system-inspector')) return;
         console.warn(`[SystemInspectorTab] WebSocket отключен (${reason}). Автопереподключение через 3 сек...`);
         if (statusBadge) {
           statusBadge.className = 'badge rounded-pill bg-warning-subtle text-warning border border-warning px-3 py-2';
@@ -802,7 +977,9 @@
         }
         sysWsReconnectTimer = setTimeout(() => {
           sysWsReconnectTimer = null;
-          connectSystemWebSocket();
+          if (!window.isTabActive || window.isTabActive('tab-system-inspector')) {
+            connectSystemWebSocket();
+          }
         }, 3000);
       };
 
@@ -818,8 +995,30 @@
       console.error('[SystemInspectorTab] Ошибка инициализации WebSocket:', err);
       sysWsReconnectTimer = setTimeout(() => {
         sysWsReconnectTimer = null;
-        connectSystemWebSocket();
+        if (!window.isTabActive || window.isTabActive('tab-system-inspector')) {
+          connectSystemWebSocket();
+        }
       }, 5000);
+    }
+  }
+
+  function disconnectSystemWebSocket() {
+    if (sysWsReconnectTimer) {
+      clearTimeout(sysWsReconnectTimer);
+      sysWsReconnectTimer = null;
+    }
+    if (sysWs) {
+      try {
+        sysWs.onclose = null;
+        sysWs.onerror = null;
+        sysWs.close();
+      } catch {}
+      sysWs = null;
+    }
+    const statusBadge = document.getElementById('sys-conn-status');
+    if (statusBadge) {
+      statusBadge.className = 'badge rounded-pill bg-secondary text-light px-3 py-2';
+      statusBadge.innerText = '○ Поток приостановлен';
     }
   }
 
@@ -970,19 +1169,225 @@
       };
     }
 
-    // Real-Time Live Watcher controls
+    // Изменения файлов в реальном времени controls
     const changeWatchDirBtn = document.getElementById('btn-sys-change-watch-dir');
     if (changeWatchDirBtn) {
-      changeWatchDirBtn.onclick = openWatchFoldersModal;
+      changeWatchDirBtn.onclick = () => openWatchFoldersModal('folders');
+    }
+    const exclusionsBtn = document.getElementById('btn-sys-watch-exclusions');
+    if (exclusionsBtn) {
+      exclusionsBtn.onclick = () => openWatchFoldersModal('exclusions');
     }
     const watchDirBadge = document.getElementById('sys-watch-dir-badge');
     if (watchDirBadge) {
-      watchDirBadge.onclick = openWatchFoldersModal;
+      watchDirBadge.onclick = () => openWatchFoldersModal('folders');
     }
     const liveHelpBtn = document.getElementById('btn-sys-live-help');
     if (liveHelpBtn) {
       liveHelpBtn.onclick = showLiveWatcherHelpModal;
     }
+
+    // Network Activity Table controls
+    const searchNet = document.getElementById('sys-net-search');
+    if (searchNet) {
+      searchNet.oninput = () => renderNetworkActivityTable();
+    }
+
+    const btnPauseNet = document.getElementById('btn-sys-pause-net');
+    if (btnPauseNet) {
+      btnPauseNet.onclick = () => {
+        isNetPaused = !isNetPaused;
+        btnPauseNet.innerText = isNetPaused ? 'Возобновить' : 'Пауза';
+        btnPauseNet.className = isNetPaused ? 'btn btn-xs btn-warning rounded-pill px-2.5 py-0.5' : 'btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-0.5';
+        if (!isNetPaused) renderNetworkActivityTable();
+      };
+    }
+
+    const btnRefreshNet = document.getElementById('btn-sys-refresh-net');
+    if (btnRefreshNet) {
+      btnRefreshNet.onclick = () => fetchNetworkActivity();
+    }
+
+    document.querySelectorAll('.sys-net-filter-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.sys-net-filter-btn').forEach(b => {
+          b.classList.remove('active', 'btn-outline-primary');
+          b.classList.add('btn-outline-secondary');
+        });
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('active', 'btn-outline-primary');
+        currentNetFilter = btn.getAttribute('data-filter') || 'internet';
+        renderNetworkActivityTable();
+      };
+    });
+
+    // Инициализация интерактивных ресайзеров таблиц
+    initNetTableResizer();
+    initWatcherTableResizer();
+  }
+
+  function initNetTableResizer() {
+    const resizer = document.getElementById('sys-net-table-resizer');
+    const tableContainer = document.getElementById('sys-net-table-container');
+    if (!resizer || !tableContainer) return;
+
+    if (resizer._resizerInitialized) return;
+    resizer._resizerInitialized = true;
+
+    try {
+      const savedHeight = localStorage.getItem('sys_inspector_net_height');
+      if (savedHeight) {
+        const parsed = parseInt(savedHeight, 10);
+        if (!isNaN(parsed) && parsed >= 140 && parsed <= 1200) {
+          tableContainer.style.height = `${parsed}px`;
+        }
+      }
+    } catch {}
+
+    let startY = 0;
+    let startHeight = 0;
+    let isDragging = false;
+
+    function onMouseMove(e) {
+      if (!isDragging) return;
+      const clientY = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : null);
+      if (clientY === null) return;
+
+      const deltaY = clientY - startY;
+      let newHeight = startHeight + deltaY;
+      if (newHeight < 140) newHeight = 140;
+      if (newHeight > 1200) newHeight = 1200;
+
+      tableContainer.style.height = `${newHeight}px`;
+    }
+
+    function onMouseUp() {
+      if (!isDragging) return;
+      isDragging = false;
+      resizer.classList.remove('resizing');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('touchmove', onMouseMove);
+      window.removeEventListener('touchend', onMouseUp);
+
+      const currentH = parseInt(tableContainer.style.height, 10);
+      if (!isNaN(currentH)) {
+        try {
+          localStorage.setItem('sys_inspector_net_height', String(currentH));
+        } catch {}
+      }
+    }
+
+    function onMouseDown(e) {
+      isDragging = true;
+      startY = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+      startHeight = tableContainer.getBoundingClientRect().height;
+      resizer.classList.add('resizing');
+      document.body.style.cursor = 'ns-resize';
+      document.body.style.userSelect = 'none';
+
+      window.addEventListener('mousemove', onMouseMove, { passive: false });
+      window.addEventListener('mouseup', onMouseUp);
+      window.addEventListener('touchmove', onMouseMove, { passive: false });
+      window.addEventListener('touchend', onMouseUp);
+      e.preventDefault();
+    }
+
+    resizer.addEventListener('mousedown', onMouseDown);
+    resizer.addEventListener('touchstart', onMouseDown, { passive: false });
+
+    resizer.addEventListener('dblclick', () => {
+      tableContainer.style.height = '300px';
+      try {
+        localStorage.removeItem('sys_inspector_net_height');
+      } catch {}
+    });
+  }
+
+  function initWatcherTableResizer() {
+    const resizer = document.getElementById('sys-watcher-table-resizer');
+    const tableContainer = document.getElementById('sys-watcher-table-container');
+    if (!resizer || !tableContainer) return;
+
+    if (resizer._resizerInitialized) return;
+    resizer._resizerInitialized = true;
+
+    // Восстановление сохранённой пользователем высоты
+    try {
+      const savedHeight = localStorage.getItem('sys_inspector_watcher_height');
+      if (savedHeight) {
+        const parsed = parseInt(savedHeight, 10);
+        if (!isNaN(parsed) && parsed >= 120 && parsed <= 1200) {
+          tableContainer.style.height = `${parsed}px`;
+        }
+      }
+    } catch {}
+
+    let startY = 0;
+    let startHeight = 0;
+    let isDragging = false;
+
+    function onMouseMove(e) {
+      if (!isDragging) return;
+      const clientY = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : null);
+      if (clientY === null) return;
+
+      const deltaY = clientY - startY;
+      let newHeight = startHeight + deltaY;
+      if (newHeight < 120) newHeight = 120;
+      if (newHeight > 1200) newHeight = 1200;
+
+      tableContainer.style.height = `${newHeight}px`;
+    }
+
+    function onMouseUp() {
+      if (!isDragging) return;
+      isDragging = false;
+      resizer.classList.remove('resizing');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('touchmove', onMouseMove);
+      window.removeEventListener('touchend', onMouseUp);
+
+      const currentH = parseInt(tableContainer.style.height, 10);
+      if (!isNaN(currentH)) {
+        try {
+          localStorage.setItem('sys_inspector_watcher_height', String(currentH));
+        } catch {}
+      }
+    }
+
+    function onMouseDown(e) {
+      isDragging = true;
+      startY = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+      startHeight = tableContainer.getBoundingClientRect().height;
+      resizer.classList.add('resizing');
+      document.body.style.cursor = 'ns-resize';
+      document.body.style.userSelect = 'none';
+
+      window.addEventListener('mousemove', onMouseMove, { passive: false });
+      window.addEventListener('mouseup', onMouseUp);
+      window.addEventListener('touchmove', onMouseMove, { passive: false });
+      window.addEventListener('touchend', onMouseUp);
+      e.preventDefault();
+    }
+
+    resizer.addEventListener('mousedown', onMouseDown);
+    resizer.addEventListener('touchstart', onMouseDown, { passive: false });
+
+    // Сброс по двойному клику
+    resizer.addEventListener('dblclick', () => {
+      tableContainer.style.height = '280px';
+      try {
+        localStorage.removeItem('sys_inspector_watcher_height');
+      } catch {}
+    });
   }
 
   // =============================================================================
@@ -1425,6 +1830,11 @@
       if (!resEvents || !resEvents.ok) return;
       const data = await resEvents.json();
       const events = data.events || [];
+
+      if (data.filtered_count !== undefined) {
+        const filteredEl = document.getElementById('sys-watcher-filtered-count');
+        if (filteredEl) filteredEl.textContent = data.filtered_count;
+      }
       
       currentWatchDirs = data.watch_dirs || (data.watch_dir ? [data.watch_dir] : []);
       currentWatchDir = currentWatchDirs[0] || data.watch_dir || '';
@@ -1729,7 +2139,223 @@
     }
   }
 
-  async function openWatchFoldersModal() {
+  let currentExclusions = {
+    enabled: true,
+    paths: [],
+    extensions: [],
+    patterns: [],
+    processes: [],
+    filtered_count: 0
+  };
+
+  function showExclusionsAlert(msg, type = 'success') {
+    const alertEl = document.getElementById('modal-exclusions-alert');
+    if (!alertEl) return;
+    alertEl.className = `alert alert-${type} py-2 px-3 small mb-3`;
+    alertEl.innerHTML = msg;
+    alertEl.classList.remove('d-none');
+    if (type === 'success' || type === 'info') {
+      setTimeout(() => {
+        alertEl.classList.add('d-none');
+      }, 3500);
+    }
+  }
+
+  function renderExclusionsLists() {
+    const totalCount = (currentExclusions.paths?.length || 0) +
+      (currentExclusions.extensions?.length || 0) +
+      (currentExclusions.patterns?.length || 0) +
+      (currentExclusions.processes?.length || 0);
+
+    const tabBadge = document.getElementById('modal-watch-exclusions-tab-count');
+    const headerBadge = document.getElementById('sys-exclusions-count-badge');
+    if (tabBadge) tabBadge.textContent = String(totalCount);
+    if (headerBadge) headerBadge.textContent = String(totalCount);
+
+    const switchEl = document.getElementById('switch-exclusions-active');
+    const statusBadge = document.getElementById('badge-exclusions-status');
+    if (switchEl) switchEl.checked = Boolean(currentExclusions.enabled);
+    if (statusBadge) {
+      if (currentExclusions.enabled) {
+        statusBadge.className = 'badge bg-success';
+        statusBadge.textContent = 'ВКЛ';
+      } else {
+        statusBadge.className = 'badge bg-secondary';
+        statusBadge.textContent = 'ВЫКЛ';
+      }
+    }
+
+    const filteredTotalEl = document.getElementById('modal-exclusions-filtered-total');
+    if (filteredTotalEl) filteredTotalEl.textContent = String(currentExclusions.filtered_count || 0);
+
+    // 1. Paths list
+    const pathsContainer = document.getElementById('list-ex-paths');
+    const pathsBadge = document.getElementById('badge-ex-paths-count');
+    if (pathsBadge) pathsBadge.textContent = String(currentExclusions.paths?.length || 0);
+    if (pathsContainer) {
+      if (!currentExclusions.paths || currentExclusions.paths.length === 0) {
+        pathsContainer.innerHTML = `<div class="text-muted small text-center py-2">Нет исключенных папок</div>`;
+      } else {
+        pathsContainer.innerHTML = currentExclusions.paths.map((p, idx) => `
+          <div class="d-flex align-items-center justify-content-between gap-1.5 p-1 px-2 rounded mb-1" style="background: var(--bg-color); border: 1px solid var(--border-color);">
+            <span class="small font-monospace text-light text-truncate" style="font-size: 0.72rem;" title="${escapeHtml(p)}">${escapeHtml(p)}</span>
+            <button class="btn btn-xs btn-outline-danger py-0 px-1 rounded-pill" onclick="window._removeExclusionItem('paths', '${escapeHtml(p.replace(/\\/g, '\\\\'))}')" title="Удалить">✕</button>
+          </div>
+        `).join('');
+      }
+    }
+
+    // 2. Extensions list
+    const extsContainer = document.getElementById('list-ex-extensions');
+    const extsBadge = document.getElementById('badge-ex-extensions-count');
+    if (extsBadge) extsBadge.textContent = String(currentExclusions.extensions?.length || 0);
+    if (extsContainer) {
+      if (!currentExclusions.extensions || currentExclusions.extensions.length === 0) {
+        extsContainer.innerHTML = `<div class="text-muted small text-center py-2">Нет исключенных расширений</div>`;
+      } else {
+        extsContainer.innerHTML = `<div class="d-flex flex-wrap gap-1">` + currentExclusions.extensions.map(e => `
+          <span class="badge bg-dark border border-secondary text-info d-inline-flex align-items-center gap-1 font-monospace" style="font-size: 0.75rem;">
+            ${escapeHtml(e)}
+            <button type="button" class="btn-close btn-close-white" style="font-size: 0.5rem;" onclick="window._removeExclusionItem('extensions', '${escapeHtml(e)}')" title="Удалить"></button>
+          </span>
+        `).join('') + `</div>`;
+      }
+    }
+
+    // 3. Patterns list
+    const patsContainer = document.getElementById('list-ex-patterns');
+    const patsBadge = document.getElementById('badge-ex-patterns-count');
+    if (patsBadge) patsBadge.textContent = String(currentExclusions.patterns?.length || 0);
+    if (patsContainer) {
+      if (!currentExclusions.patterns || currentExclusions.patterns.length === 0) {
+        patsContainer.innerHTML = `<div class="text-muted small text-center py-2">Нет исключенных шаблонов</div>`;
+      } else {
+        patsContainer.innerHTML = `<div class="d-flex flex-wrap gap-1">` + currentExclusions.patterns.map(pat => `
+          <span class="badge bg-dark border border-secondary text-warning d-inline-flex align-items-center gap-1 font-monospace" style="font-size: 0.75rem;">
+            ${escapeHtml(pat)}
+            <button type="button" class="btn-close btn-close-white" style="font-size: 0.5rem;" onclick="window._removeExclusionItem('patterns', '${escapeHtml(pat)}')" title="Удалить"></button>
+          </span>
+        `).join('') + `</div>`;
+      }
+    }
+
+    // 4. Processes list
+    const procsContainer = document.getElementById('list-ex-processes');
+    const procsBadge = document.getElementById('badge-ex-processes-count');
+    if (procsBadge) procsBadge.textContent = String(currentExclusions.processes?.length || 0);
+    if (procsContainer) {
+      if (!currentExclusions.processes || currentExclusions.processes.length === 0) {
+        procsContainer.innerHTML = `<div class="text-muted small text-center py-2">Нет исключенных программ</div>`;
+      } else {
+        procsContainer.innerHTML = `<div class="d-flex flex-wrap gap-1">` + currentExclusions.processes.map(proc => `
+          <span class="badge bg-dark border border-secondary text-danger d-inline-flex align-items-center gap-1 font-monospace" style="font-size: 0.75rem;">
+            <i class="bi bi-cpu me-0.5"></i>${escapeHtml(proc)}
+            <button type="button" class="btn-close btn-close-white" style="font-size: 0.5rem;" onclick="window._removeExclusionItem('processes', '${escapeHtml(proc)}')" title="Удалить"></button>
+          </span>
+        `).join('') + `</div>`;
+      }
+    }
+  }
+
+  async function fetchExclusionsData() {
+    try {
+      const res = await fetch('/api/sysadmin/file-audit/exclusions');
+      if (res.ok) {
+        currentExclusions = await res.json();
+        renderExclusionsLists();
+      }
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Failed to fetch exclusions:', e);
+    }
+  }
+
+  async function addExclusionItem(category, value) {
+    if (!value || !value.trim()) return;
+    const cleanVal = value.trim();
+    try {
+      const res = await fetch('/api/sysadmin/file-audit/exclusions/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category, value: cleanVal })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        currentExclusions = data.exclusions || currentExclusions;
+        renderExclusionsLists();
+        showExclusionsAlert(`Правило добавлено: <code>${escapeHtml(cleanVal)}</code>`, 'success');
+        const inputVal = document.getElementById('input-exclusion-value');
+        if (inputVal) inputVal.value = '';
+      } else {
+        showExclusionsAlert(data.message || 'Правило уже существует или невалидно', 'warning');
+      }
+    } catch (e) {
+      showExclusionsAlert(`Ошибка добавления: ${e.message}`, 'danger');
+    }
+  }
+
+  window._removeExclusionItem = async function(category, value) {
+    if (!value) return;
+    try {
+      const res = await fetch('/api/sysadmin/file-audit/exclusions/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category, value })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        currentExclusions = data.exclusions || currentExclusions;
+        renderExclusionsLists();
+        showExclusionsAlert(`Правило удалено: <code>${escapeHtml(value)}</code>`, 'info');
+      } else {
+        showExclusionsAlert(data.message || 'Не удалось удалить правило', 'warning');
+      }
+    } catch (e) {
+      showExclusionsAlert(`Ошибка удаления: ${e.message}`, 'danger');
+    }
+  };
+
+  async function toggleExclusionsActive(enabled) {
+    try {
+      const res = await fetch('/api/sysadmin/file-audit/exclusions/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        currentExclusions = data.exclusions || currentExclusions;
+        renderExclusionsLists();
+        showExclusionsAlert(`Фильтрация исключений ${data.enabled ? 'включена' : 'отключена'}`, 'info');
+      }
+    } catch (e) {
+      showExclusionsAlert(`Ошибка переключения: ${e.message}`, 'danger');
+    }
+  }
+
+  async function applyExclusionPreset(preset) {
+    if (preset === 'logs') {
+      await addExclusionItem('paths', 'AppData\\Roaming\\AI-Breadboard\\apps\\windows\\telemetry\\logs');
+      await addExclusionItem('extensions', '.log');
+      await addExclusionItem('extensions', '.csv');
+      await addExclusionItem('patterns', '*librehardwaremonitor_polls.csv*');
+    } else if (preset === 'search') {
+      await addExclusionItem('processes', 'SearchIndexer.exe');
+      await addExclusionItem('patterns', '*Windows.db*');
+      await addExclusionItem('patterns', '*Windows.db-wal*');
+      await addExclusionItem('patterns', '*Windows.db-shm*');
+    } else if (preset === 'temp') {
+      await addExclusionItem('paths', 'AppData\\Local\\Temp');
+      await addExclusionItem('extensions', '.tmp');
+      await addExclusionItem('patterns', '~$*');
+    } else if (preset === 'dev') {
+      await addExclusionItem('paths', '.git');
+      await addExclusionItem('paths', 'node_modules');
+      await addExclusionItem('paths', '__pycache__');
+      await addExclusionItem('paths', '.pytest_cache');
+    }
+  }
+
+  async function openWatchFoldersModal(initialTab = 'folders') {
     const modalEl = document.getElementById('modal-sys-watch-folders');
     if (!modalEl) {
       console.warn('[SystemInspectorTab] modal-sys-watch-folders element not found');
@@ -1749,7 +2375,30 @@
     }
 
     renderModalActiveDirsList();
+    const tabFoldersBadge = document.getElementById('modal-watch-dirs-tab-count');
+    if (tabFoldersBadge) tabFoldersBadge.textContent = String(stagedWatchDirs.length);
+
     await loadSystemDrives();
+    await fetchExclusionsData();
+
+    // Tab activation
+    if (initialTab === 'exclusions') {
+      const tabExBtn = document.getElementById('tab-btn-watch-exclusions');
+      if (tabExBtn && window.bootstrap && window.bootstrap.Tab) {
+        const tab = window.bootstrap.Tab.getOrCreateInstance(tabExBtn);
+        tab.show();
+      } else if (tabExBtn) {
+        tabExBtn.click();
+      }
+    } else {
+      const tabFoldersBtn = document.getElementById('tab-btn-watch-folders');
+      if (tabFoldersBtn && window.bootstrap && window.bootstrap.Tab) {
+        const tab = window.bootstrap.Tab.getOrCreateInstance(tabFoldersBtn);
+        tab.show();
+      } else if (tabFoldersBtn) {
+        tabFoldersBtn.click();
+      }
+    }
 
     const startPath = stagedWatchDirs[0] || currentBrowserPath || 'C:\\';
     loadFolderBrowser(startPath);
@@ -1792,7 +2441,7 @@
       };
     }
 
-    // Presets buttons
+    // Presets buttons (folders)
     document.querySelectorAll('.sys-preset-btn').forEach(btn => {
       btn.onclick = () => {
         const preset = btn.getAttribute('data-preset');
@@ -1806,6 +2455,37 @@
           addDirToStaged(target);
           loadFolderBrowser(target);
         }
+      };
+    });
+
+    // Exclusions switch and add buttons binding
+    const switchExActive = document.getElementById('switch-exclusions-active');
+    if (switchExActive) {
+      switchExActive.onchange = (e) => {
+        toggleExclusionsActive(e.target.checked);
+      };
+    }
+
+    const btnAddEx = document.getElementById('btn-add-exclusion');
+    const selectExCat = document.getElementById('select-exclusion-category');
+    const inputExVal = document.getElementById('input-exclusion-value');
+    if (btnAddEx && selectExCat && inputExVal) {
+      btnAddEx.onclick = () => {
+        addExclusionItem(selectExCat.value, inputExVal.value);
+      };
+      inputExVal.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          btnAddEx.click();
+        }
+      };
+    }
+
+    // Exclusions preset buttons
+    document.querySelectorAll('.sys-ex-preset-btn').forEach(btn => {
+      btn.onclick = () => {
+        const preset = btn.getAttribute('data-preset');
+        if (preset) applyExclusionPreset(preset);
       };
     });
 
@@ -1863,7 +2543,7 @@
     if (window.AITableModal) {
       window.AITableModal.show({
         icon: 'ℹ️',
-        title: 'Справка: Real-Time Live Watcher (Multi-Directory)',
+        title: 'Справка:Изменения файлов в реальном времени (Multi-Directory)',
         subtitle: 'Низкоуровневый мониторинг файловой системы Windows через WinAPI ReadDirectoryChangesW',
         tableType: 'help',
         badges: [
@@ -1879,7 +2559,7 @@
           { label: 'Хранение настроек', value: 'apps/windows_sysadmin/config.json (ключ watch_directories)' }
         ],
         rawTitle: 'Подробное руководство по панели мониторинга',
-        rawContent: `# Панель Real-Time Live Watcher
+        rawContent: `# ПанельИзменения файлов в реальном времени
 
 ### 1. Что это такое?
 Компонент для мгновенного перехвата операций файловой системы в режиме реального времени на базе WinAPI ReadDirectoryChangesW с поддержкой одновременного наблюдения за произвольным количеством папок.
@@ -1902,7 +2582,7 @@
         }
       });
     } else {
-      alert('Мониторинг файловой системы Real-Time Live Watcher (Multi-Directory).\nОтслеживаемые папки:\n- ' + dirsStr);
+      alert('Мониторинг файловой системыИзменения файлов в реальном времени (Multi-Directory).\nОтслеживаемые папки:\n- ' + dirsStr);
     }
   }
 
@@ -1971,6 +2651,7 @@
     bindTabEvents();
     await fetchLhmSensors();
     await fetchLiveFileEvents();
+    await fetchNetworkActivity();
 
     try {
       const snapRes = await fetch('/api/v1/system/summary');
@@ -1990,7 +2671,20 @@
     }
   }
 
+  function activateSystemInspectorTab() {
+    if (window.isTabActive && !window.isTabActive('tab-system-inspector')) return;
+    console.log('[SystemInspectorTab] Tab activated, resuming telemetry stream...');
+    connectSystemWebSocket();
+  }
+
+  function deactivateSystemInspectorTab() {
+    console.log('[SystemInspectorTab] Tab deactivated, pausing telemetry stream...');
+    disconnectSystemWebSocket();
+  }
+
   window.initSystemInspectorTab = initSystemInspectorTab;
+  window.activateSystemInspectorTab = activateSystemInspectorTab;
+  window.deactivateSystemInspectorTab = deactivateSystemInspectorTab;
   window.openSysIntervalsModal = openSysIntervalsModal;
 })();
 

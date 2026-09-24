@@ -141,23 +141,80 @@ class OllamaChatBase:
                     self._error_count += 1
                     if "404" in self._last_error or "not found" in self._last_error.lower():
                         from src.ai.model_manager import add_unsupported_model
+                        from src.ai.orchestration.model_error_hub import record_model_error
+                        record_model_error(
+                            provider='ollama',
+                            model_name=self.model_id,
+                            error=self._last_error,
+                            status_code=404,
+                            attempt=attempt,
+                            max_attempts=attempts,
+                            action_taken='failed',
+                        )
                         add_unsupported_model('ollama', self.model_id, reason=self._last_error)
                         return ""
                     logger.warning(f"[{self.model_id}] Error in generate_text: {self._last_error}")
+                    from src.ai.orchestration.model_error_hub import record_model_error
+                    wait_time = 2 ** min(attempt, 5)
                     if attempt >= attempts:
+                        record_model_error(
+                            provider='ollama',
+                            model_name=self.model_id,
+                            error=self._last_error,
+                            attempt=attempt,
+                            max_attempts=attempts,
+                            action_taken='failed',
+                        )
                         return ""
-                    time.sleep(2 ** min(attempt, 5))
+                    record_model_error(
+                        provider='ollama',
+                        model_name=self.model_id,
+                        error=self._last_error,
+                        attempt=attempt,
+                        max_attempts=attempts,
+                        action_taken='retry',
+                        retry_delay_seconds=float(wait_time),
+                    )
+                    time.sleep(wait_time)
                     
             except Exception as ex:
                 self._error_count += 1
                 logger.error(f"[{self.model_id}] chat exception: {ex}")
                 self._last_error = str(ex)
+                from src.ai.orchestration.model_error_hub import record_model_error
                 if "404" in self._last_error or "not found" in self._last_error.lower():
                     from src.ai.model_manager import add_unsupported_model
+                    record_model_error(
+                        provider='ollama',
+                        model_name=self.model_id,
+                        error=self._last_error,
+                        status_code=404,
+                        attempt=attempt,
+                        max_attempts=attempts,
+                        action_taken='failed',
+                    )
                     add_unsupported_model('ollama', self.model_id, reason=self._last_error)
                     return ""
+                wait_time = 2 ** min(attempt, 5)
                 if attempt >= attempts:
+                    record_model_error(
+                        provider='ollama',
+                        model_name=self.model_id,
+                        error=self._last_error,
+                        attempt=attempt,
+                        max_attempts=attempts,
+                        action_taken='failed',
+                    )
                     return ""
+                record_model_error(
+                    provider='ollama',
+                    model_name=self.model_id,
+                    error=self._last_error,
+                    attempt=attempt,
+                    max_attempts=attempts,
+                    action_taken='retry',
+                    retry_delay_seconds=float(wait_time),
+                )
                 time.sleep(2 ** min(attempt, 5))
 
         return ""

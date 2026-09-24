@@ -317,23 +317,90 @@ class UserFoldersManager:
             available_target_drives=available_targets,
         )
 
+    def choose_folder_dialog(
+        self, initial_path: Optional[str] = None, title: str = "Выберите целевую папку для переноса"
+    ) -> Optional[str]:
+        """Открывает нативный системный диалог выбора папки Windows.
+
+        Args:
+            initial_path: Начальная директория в диалоге.
+            title: Заголовок окна диалога.
+
+        Returns:
+            Optional[str]: Выбранный абсолютный путь к папке или None при отмене.
+        """
+        import subprocess
+
+        # 1. Попытка через Tkinter askdirectory в изолированном подпроцессе
+        py_script = (
+            "import sys, tkinter as tk, tkinter.filedialog as fd\n"
+            "root = tk.Tk()\n"
+            "root.withdraw()\n"
+            "root.attributes('-topmost', True)\n"
+            "initial = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] else None\n"
+            "title = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] else 'Выберите целевую папку'\n"
+            "path = fd.askdirectory(parent=root, initialdir=initial, title=title, mustexist=False)\n"
+            "root.destroy()\n"
+            "if path:\n"
+            "    print(path.replace('/', '\\\\'))\n"
+        )
+        try:
+            res = subprocess.run(
+                [sys.executable, "-c", py_script, initial_path or "", title],
+                capture_output=True,
+                text=True,
+                timeout=180,
+                encoding="utf-8",
+            )
+            chosen = res.stdout.strip()
+            if chosen:
+                return chosen
+        except Exception as ex:
+            logger.warning(f"Ошибка при вызове диалога выбора папки через Tkinter: {ex}")
+
+        # 2. Fallback через PowerShell FolderBrowserDialog
+        try:
+            ps_cmd = (
+                "Add-Type -AssemblyName System.Windows.Forms; "
+                "$f = New-Object System.Windows.Forms.FolderBrowserDialog; "
+                f"$f.Description = '{title}'; "
+                "$f.ShowNewFolderButton = $true; "
+            )
+            if initial_path and os.path.exists(initial_path):
+                ps_cmd += f"$f.SelectedPath = '{initial_path}'; "
+            ps_cmd += "if ($f.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { [Console]::WriteLine($f.SelectedPath) }"
+            res = subprocess.run(
+                ["powershell", "-NoProfile", "-STA", "-Command", ps_cmd],
+                capture_output=True,
+                text=True,
+                timeout=180,
+            )
+            chosen = res.stdout.strip()
+            if chosen:
+                return chosen
+        except Exception as ex:
+            logger.error(f"Ошибка при вызове диалога выбора папки через PowerShell: {ex}")
+
+        return None
+
     def relocate_folder(
-        self, folder_id: str, target_drive_letter: str, delete_source_after: bool = False
+        self,
+        folder_id: str,
+        target_drive_letter: Optional[str] = None,
+        target_path: Optional[str] = None,
+        delete_source_after: bool = False,
     ) -> RelocateFolderResponse:
-        """Переносит пользовательскую папку на другой физический диск.
+        """Переносит пользовательскую папку на другой физический диск или в кастомную директорию.
 
         Args:
             folder_id: Идентификатор папки (Downloads, Personal, etc.).
             target_drive_letter: Буква целевого диска (например, 'D:' или 'D:\\').
+            target_path: Пользовательский целевой путь (директория) для переноса.
             delete_source_after: Удалить ли файлы из исходной папки после успешного копирования.
 
         Returns:
             RelocateFolderResponse: Результат выполнения операции.
         """
-        target_drive = target_drive_letter.replace("/", "\\").rstrip("\\").upper()
-        if not target_drive.endswith(":"):
-            target_drive = target_drive + ":"
-
         # 1. Поиск определения папки
         fdef = next((f for f in FOLDER_DEFINITIONS if f["id"].lower() == folder_id.lower()), None)
         if not fdef:
@@ -348,7 +415,7 @@ class UserFoldersManager:
         reg_path = self._read_registry_path(fdef["guid_keys"])
         user_home = Path.home()
         current_path = reg_path if reg_path else str(user_home / fdef["default_subfolder"])
-        current_path_obj = Path(current_path)
+        current_path_obj = Path(current_path).resolve()
 
         if not current_path_obj.exists():
             return RelocateFolderResponse(
@@ -359,18 +426,46 @@ class UserFoldersManager:
                 message=f"Исходная папка '{current_path}' не существует на диске.",
             )
 
-        # Текущий диск
-        current_drive = current_path_obj.drive.upper()
-        if current_drive == target_drive:
+        # 2. Определение целевого пути
+        if target_path and target_path.strip():
+            new_path_obj = Path(target_path.strip()).resolve()
+            target_drive = new_path_obj.drive.upper()
+            if not target_drive:
+                return RelocateFolderResponse(
+                    success=False,
+                    folder_id=folder_id,
+                    old_path=current_path,
+                    new_path="",
+                    message=f"Некорректный целевой путь '{target_path}'. Укажите абсолютный путь с диском.",
+                )
+        elif target_drive_letter and target_drive_letter.strip():
+            target_drive = target_drive_letter.strip().replace("/", "\\").rstrip("\\").upper()
+            if not target_drive.endswith(":"):
+                target_drive = target_drive + ":"
+            username = user_home.name
+            new_path_obj = Path(f"{target_drive}\\Users\\{username}\\{fdef['default_subfolder']}").resolve()
+        else:
             return RelocateFolderResponse(
                 success=False,
                 folder_id=folder_id,
                 old_path=current_path,
-                new_path=current_path,
-                message=f"Папка уже находится на диске {target_drive}.",
+                new_path="",
+                message="Не указан целевой диск или целевая папка для переноса.",
             )
 
-        # 2. Проверка свободного места
+        new_path = str(new_path_obj)
+
+        # Проверка, не совпадает ли целевой путь с текущим
+        if str(current_path_obj).lower() == str(new_path_obj).lower():
+            return RelocateFolderResponse(
+                success=False,
+                folder_id=folder_id,
+                old_path=current_path,
+                new_path=new_path,
+                message=f"Папка уже находится в указанной директории '{new_path}'.",
+            )
+
+        # 3. Проверка свободного места
         try:
             usage = psutil.disk_usage(f"{target_drive}\\")
         except Exception as ex:
@@ -396,13 +491,10 @@ class UserFoldersManager:
                 message=f"Недостаточно места на диске {target_drive}. Требуется: {req_gb} ГБ (с запасом), свободно: {free_gb} ГБ.",
             )
 
-        # 3. Формирование нового пути: <Drive>:\Users\<Username>\<Subfolder>
-        username = user_home.name
-        new_path_obj = Path(f"{target_drive}\\Users\\{username}\\{fdef['default_subfolder']}")
-        new_path = str(new_path_obj)
+        # 4. Создание целевой директории
         new_path_obj.mkdir(parents=True, exist_ok=True)
 
-        # 4. Копирование содержимого
+        # 5. Копирование содержимого
         copied_files = 0
         copied_bytes = 0
         try:
@@ -432,12 +524,12 @@ class UserFoldersManager:
                 bytes_copied=copied_bytes,
             )
 
-        # 5. Обновление реестра
+        # 6. Обновление реестра
         reg_updated = self._update_registry_paths(fdef["guid_keys"], new_path)
         if not reg_updated:
             logger.warning(f"Не удалось обновить реестр для {folder_id}, но файлы скопированы в {new_path}")
 
-        # 6. Обновление системной библиотеки Windows (.library-ms)
+        # 7. Обновление системной библиотеки Windows (.library-ms)
         lib_name = fdef["library_name"]
         try:
             self.lib_mgr.add_folder_to_library(library_name=lib_name, folder_path=new_path, is_default_save=True)
@@ -445,7 +537,7 @@ class UserFoldersManager:
         except Exception as ex:
             logger.debug(f"Не удалось обновить библиотеку {lib_name}: {ex}")
 
-        # 7. Опциональная очистка старой директории
+        # 8. Опциональная очистка старой директории
         if delete_source_after:
             try:
                 for entry in os.scandir(current_path):
@@ -461,7 +553,7 @@ class UserFoldersManager:
                 logger.warning(f"Не удалось полностью очистить исходную папку {current_path}: {ex}")
 
         msg = (
-            f"Папка '{fdef['name']}' успешно перенесена на диск {target_drive} ({new_path}). "
+            f"Папка '{fdef['name']}' успешно перенесена в директорию '{new_path}'. "
             f"Скопировано {copied_files} файлов ({round(copied_bytes / (1024**2), 2)} МБ). "
             f"Реестр и библиотеки обновлены."
         )

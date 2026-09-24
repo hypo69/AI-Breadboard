@@ -112,34 +112,39 @@ def load_autolog_config(config_path: Optional[Union[str, Path]] = None) -> Dict[
     """Загружает секцию logging/autolog из autolog_sensors.json или активного файла конфигурации.
 
     Порядок поиска:
-        1. config/autolog_sensors.json (приоритетный источник)
-        2. Явно переданный config_path
-        3. Переменные окружения AIBREADBOARD_CONFIG / CONFIG_FILE
-        4. config_tc.json / config.json в cwd (fallback)
+        1. start_scenarios_config/~autolog_sensors.json / autolog_sensors.json (приоритетный источник)
+        2. config/autolog_sensors.json
+        3. Явно переданный config_path
+        4. Переменные окружения AIBREADBOARD_CONFIG / CONFIG_FILE
+        5. config_tc.json / config.json в cwd (fallback)
 
     Args:
         config_path: Явный путь к файлу конфигурации (опционально).
 
     Returns:
-        Dict[str, Any]: Словарь с ключами 'enable_autolog', 'default_interval' и 'loggers'.
+        Dict[str, Any]: Словарь с ключами 'enable_autolog', 'default_interval', 'loggers', 'sensors' и 'telemetry_options'.
     """
     default_config: Dict[str, Any] = {
         "enable_autolog": True,
         "default_interval": "1 minute",
         "loggers": {},
+        "sensors": {},
+        "telemetry_options": {},
     }
 
     def _extract(path: Path) -> Optional[Dict[str, Any]]:
-        """Читает файл и извлекает секцию autolog."""
+        """Читает файл и извлекает секцию autolog и сенсоров."""
         try:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            # autolog_sensors.json хранит поля на верхнем уровне
-            if "loggers" in data and "logging" not in data:
+            # autolog_sensors.json / ~autolog_sensors.json хранит поля на верхнем уровне
+            if "loggers" in data or "sensors" in data or "enable_autolog" in data:
                 return {
                     "enable_autolog": bool(data.get("enable_autolog", True)),
                     "default_interval": data.get("default_interval", "1 minute"),
                     "loggers": data.get("loggers", {}),
+                    "sensors": data.get("sensors", {}),
+                    "telemetry_options": data.get("telemetry_options", {}),
                 }
             # dashboard.json / tc.json хранят в секции logging
             logging_sec = data.get("logging") or data.get("autolog") or {}
@@ -148,24 +153,35 @@ def load_autolog_config(config_path: Optional[Union[str, Path]] = None) -> Dict[
                     "enable_autolog": bool(logging_sec.get("enable_autolog", True)),
                     "default_interval": logging_sec.get("default_interval", "1 minute"),
                     "loggers": logging_sec.get("loggers", {}),
+                    "sensors": data.get("sensors", {}),
+                    "telemetry_options": data.get("telemetry_options", {}),
                 }
         except Exception as ex:
             logger.warning(f"Ошибка при чтении конфигурации логгирования из {path}: {ex}")
         return None
 
-    # 1. config/autolog_sensors.json — приоритетный источник
-    for base in (Path.cwd(), Path(__file__).resolve().parent.parent):
-        sensors_path = base / "config" / "autolog_sensors.json"
-        if sensors_path.exists():
-            result = _extract(sensors_path)
-            if result is not None:
-                return result
-
-    # 2. Явно переданный путь
+    # 1. Явно переданный путь (наивысший приоритет)
     if config_path:
         p = Path(config_path)
         if p.exists():
             result = _extract(p)
+            if result is not None:
+                return result
+        else:
+            return default_config
+
+    # 2. start_scenarios_config/~autolog_sensors.json и autolog_sensors.json
+    for base in (Path.cwd(), Path(__file__).resolve().parent.parent):
+        for candidate_name in ("~autolog_sensors.json", "autolog_sensors.json"):
+            scenario_path = base / "start_scenarios_config" / candidate_name
+            if scenario_path.exists():
+                result = _extract(scenario_path)
+                if result is not None:
+                    return result
+
+        sensors_path = base / "config" / "autolog_sensors.json"
+        if sensors_path.exists():
+            result = _extract(sensors_path)
             if result is not None:
                 return result
 
@@ -291,6 +307,8 @@ class AutoLogEngine:
         self._running = True
         self._tasks.clear()
 
+        active_summary: List[str] = []
+
         # Создаем задачи опроса для зарегистрированных логгеров
         for app_name, poller_fn in list(self._pollers.items()):
             app_cfg = loggers_cfg.get(app_name, {})
@@ -310,9 +328,11 @@ class AutoLogEngine:
                 name=f"autolog_{app_name}",
             )
             self._tasks.append(task)
+            active_summary.append(f"{app_name} ({interval_raw})")
 
         logger.info(
-            f"AutoLogEngine успешно запущен. Активировано {len(self._tasks)} фоновых логгеров в {get_apps_log_dir()}."
+            f"AutoLogEngine успешно запущен. Активировано {len(self._tasks)} фоновых логгеров в {get_apps_log_dir()}: "
+            + ", ".join(active_summary)
         )
         return True
 

@@ -40,7 +40,8 @@
     "scenarios": "💬🎬 Chat & Scenarios",
     "userDirectories": "📁 User Directories",
     "userDirectoriesLong": "📁 User Directories & Storage",
-    "fileRecovery": "🗂️ File Recovery"
+    "fileRecovery": "🗂️ File Recovery",
+    "startupAuditor": "🚀 Startup Auditor"
   },
   "movieSearch": {
     "title": "🔍 Search Movies on Trackers",

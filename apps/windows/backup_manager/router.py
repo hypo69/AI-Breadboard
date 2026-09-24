@@ -24,6 +24,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
@@ -37,6 +38,7 @@ from apps.windows.backup_manager.core.libraries_manager import WindowsLibrariesM
 from apps.windows.backup_manager.core.models import (
     AddFolderToLibraryRequest,
     BackupHealthReport,
+    BrowseFolderResponse,
     CreateLibraryRequest,
     FileHistoryConfigInfo,
     FileHistoryRAGSearchRequest,
@@ -79,8 +81,9 @@ def init_router() -> APIRouter:
     @router.get("/health", response_model=BackupHealthReport)
     async def get_backup_health_report() -> BackupHealthReport:
         """Сводная оценка готовности системы резервного копирования Windows (Health Score)."""
-        report = checker.generate_report()
-        _csv_logger.log_poll(
+        report = await asyncio.to_thread(checker.generate_report)
+        await asyncio.to_thread(
+            _csv_logger.log_poll,
             poll_type="backup_health",
             metric_name="health_score",
             value=report.health_score,
@@ -95,18 +98,20 @@ def init_router() -> APIRouter:
     @router.get("/libraries", response_model=List[WindowsLibrary])
     async def list_libraries() -> List[WindowsLibrary]:
         """Получить список всех библиотек Windows и включенных в них папок."""
-        return lib_mgr.get_all_libraries()
+        return await asyncio.to_thread(lib_mgr.get_all_libraries)
 
     @router.post("/libraries", response_model=WindowsLibrary, status_code=status.HTTP_201_CREATED)
     async def create_library(payload: CreateLibraryRequest) -> WindowsLibrary:
         """Создать новую системную библиотеку Windows (.library-ms)."""
         try:
-            lib = lib_mgr.create_library(
+            lib = await asyncio.to_thread(
+                lib_mgr.create_library,
                 name=payload.name,
                 folders=payload.folders,
                 is_pinned=payload.is_pinned,
             )
-            _csv_logger.log_event(
+            await asyncio.to_thread(
+                _csv_logger.log_event,
                 event_type="create_library",
                 status="SUCCESS",
                 details={"name": payload.name, "folders": payload.folders},
@@ -120,14 +125,16 @@ def init_router() -> APIRouter:
     @router.post("/libraries/{library_name}/folders", response_model=WindowsLibrary)
     async def add_folder_to_library(library_name: str, payload: AddFolderToLibraryRequest) -> WindowsLibrary:
         """Добавить физическую папку в существующую библиотеку Windows."""
-        res = lib_mgr.add_folder_to_library(
+        res = await asyncio.to_thread(
+            lib_mgr.add_folder_to_library,
             library_name=library_name,
             folder_path=payload.folder_path,
             is_default_save=payload.is_default_save,
         )
         if not res:
             raise HTTPException(status_code=404, detail=f"Библиотека '{library_name}' не найдена.")
-        _csv_logger.log_event(
+        await asyncio.to_thread(
+            _csv_logger.log_event,
             event_type="add_folder_to_library",
             status="SUCCESS",
             details={"library": library_name, "folder": payload.folder_path},
@@ -138,13 +145,14 @@ def init_router() -> APIRouter:
     @router.get("/file-history/status", response_model=FileHistoryStatus)
     async def get_file_history_status() -> FileHistoryStatus:
         """Статус службы fhsvc и текущая конфигурация Истории файлов Windows."""
-        return fh_mgr.get_status()
+        return await asyncio.to_thread(fh_mgr.get_status)
 
     @router.post("/file-history/trigger")
     async def trigger_file_history_backup() -> Dict[str, Any]:
         """Принудительно запустить цикл резервного копирования Истории файлов (fhexec -f)."""
-        success, message = fh_mgr.trigger_backup_now()
-        _csv_logger.log_event(
+        success, message = await asyncio.to_thread(fh_mgr.trigger_backup_now)
+        await asyncio.to_thread(
+            _csv_logger.log_event,
             event_type="file_history_trigger_backup",
             status="SUCCESS" if success else "FAILED",
             details=message,
@@ -158,12 +166,12 @@ def init_router() -> APIRouter:
     @router.get("/storage/audit", response_model=StorageBackupAudit)
     async def audit_backup_storage(target_path: Optional[str] = None) -> StorageBackupAudit:
         """Аудит файлов, версий и дискового пространства в целевом хранилище."""
-        return storage_auditor.audit_storage(target_path)
+        return await asyncio.to_thread(storage_auditor.audit_storage, target_path)
 
     @router.get("/vss/snapshots", response_model=List[VssSnapshot])
     async def list_vss_snapshots() -> List[VssSnapshot]:
         """Список теневых копий томов Windows VSS (Volume Shadow Copies)."""
-        return vss_mgr.list_snapshots()
+        return await asyncio.to_thread(vss_mgr.list_snapshots)
 
     # --- File History RAG Endpoints ---
 
@@ -175,7 +183,8 @@ def init_router() -> APIRouter:
         chunk_overlap = payload.chunk_overlap if payload else 50
         force_rebuild = payload.force_rebuild if payload else False
 
-        result = rag_engine.sync(
+        result = await asyncio.to_thread(
+            rag_engine.sync,
             target_path=target_path,
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
@@ -188,7 +197,8 @@ def init_router() -> APIRouter:
     @router.post("/file-history/rag/search", response_model=List[FileHistoryRAGSearchResult])
     async def search_file_history_rag(payload: FileHistoryRAGSearchRequest) -> List[FileHistoryRAGSearchResult]:
         """Семантический поиск по архивным версиям файлов Windows с фильтрами."""
-        return rag_engine.search(
+        return await asyncio.to_thread(
+            rag_engine.search,
             query=payload.query,
             top_k=payload.top_k,
             min_score=payload.min_score,
@@ -201,34 +211,45 @@ def init_router() -> APIRouter:
     @router.get("/file-history/rag/status", response_model=FileHistoryRAGStatus)
     async def get_file_history_rag_status() -> FileHistoryRAGStatus:
         """Текущее состояние и метрики RAG индекса Истории файлов."""
-        return rag_engine.get_status()
+        return await asyncio.to_thread(rag_engine.get_status)
 
     @router.get("/file-history/rag/versions", response_model=FileHistoryVersionSummary)
     async def get_file_versions_history(query: str) -> FileHistoryVersionSummary:
         """Получить список всех снимков конкретного документа в хранилище истории."""
-        return rag_engine.get_file_versions(query)
+        return await asyncio.to_thread(rag_engine.get_file_versions, query)
 
     # --- User Folders & Storage Relocation Endpoints ---
+
+    @router.post("/browse-folder", response_model=BrowseFolderResponse)
+    @router.get("/browse-folder", response_model=BrowseFolderResponse)
+    async def browse_folder(initial_path: Optional[str] = None) -> BrowseFolderResponse:
+        """Открыть системный диалог выбора папки Windows."""
+        selected = await asyncio.to_thread(user_folders_mgr.choose_folder_dialog, initial_path)
+        return BrowseFolderResponse(success=bool(selected), selected_path=selected)
 
     @router.get("/user-folders/overview", response_model=UserFoldersOverviewResponse)
     async def get_user_folders_overview() -> UserFoldersOverviewResponse:
         """Получить размеры пользовательских папок (Документы, Загрузки и т.д.) и список доступных дисков."""
-        return user_folders_mgr.get_overview()
+        return await asyncio.to_thread(user_folders_mgr.get_overview)
 
     @router.post("/user-folders/relocate", response_model=RelocateFolderResponse)
     async def relocate_user_folder(payload: RelocateFolderRequest) -> RelocateFolderResponse:
-        """Перенести пользовательскую папку на другой физический диск с обновлением реестра и библиотек."""
-        result = user_folders_mgr.relocate_folder(
+        """Перенести пользовательскую папку на другой физический диск или в кастомную директорию."""
+        result = await asyncio.to_thread(
+            user_folders_mgr.relocate_folder,
             folder_id=payload.folder_id,
             target_drive_letter=payload.target_drive_letter,
+            target_path=payload.target_path,
             delete_source_after=payload.delete_source_after,
         )
-        _csv_logger.log_event(
+        await asyncio.to_thread(
+            _csv_logger.log_event,
             event_type="user_folder_relocate",
             status="SUCCESS" if result.success else "FAILED",
             details={
                 "folder_id": payload.folder_id,
                 "target_drive": payload.target_drive_letter,
+                "target_path": payload.target_path,
                 "success": result.success,
                 "message": result.message,
                 "files_copied": result.files_copied,

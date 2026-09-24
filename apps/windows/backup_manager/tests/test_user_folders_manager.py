@@ -149,3 +149,48 @@ def test_user_folders_api_endpoints():
         json={"folder_id": "UnknownFolderXYZ", "target_drive_letter": "D:", "delete_source_after": False}
     )
     assert resp_invalid.status_code == 400
+
+    # 3. POST /api/v1/windows-backup/browse-folder (с моком)
+    with patch.object(UserFoldersManager, "choose_folder_dialog", return_value="D:\\CustomFolder"):
+        resp_browse = client.post("/api/v1/windows-backup/browse-folder")
+        assert resp_browse.status_code == 200
+        assert resp_browse.json()["success"] is True
+        assert resp_browse.json()["selected_path"] == "D:\\CustomFolder"
+
+
+def test_choose_folder_dialog_mocked():
+    """Тест вызова системного диалога выбора папки Windows."""
+    mgr = UserFoldersManager()
+    with patch("subprocess.run") as mock_sub:
+        mock_sub.return_value = MagicMock(stdout="E:\\Backups\\Target\n", returncode=0)
+        res = mgr.choose_folder_dialog(initial_path="E:\\")
+        assert res == "E:\\Backups\\Target"
+
+
+def test_relocate_folder_custom_target_path(tmp_path: Path):
+    """Тест переноса пользовательской папки в явно указанную директорию (target_path)."""
+    mock_lib_mgr = MagicMock()
+    mgr = UserFoldersManager(lib_mgr=mock_lib_mgr)
+
+    fake_src = tmp_path / "Pictures"
+    fake_src.mkdir(exist_ok=True)
+    (fake_src / "photo.png").write_bytes(b"12345")
+
+    target_custom_path = str(tmp_path / "CustomTarget" / "Photos")
+
+    with patch.object(mgr, "_read_registry_path", return_value=str(fake_src)), \
+         patch.object(mgr, "_update_registry_paths", return_value=True), \
+         patch("psutil.disk_usage") as mock_usage, \
+         patch("pathlib.Path.home", return_value=Path("C:/Users/testuser")):
+
+        mock_usage.return_value = MagicMock(free=100 * 1024 * 1024 * 1024, total=500 * 1024 * 1024 * 1024)
+
+        with patch("shutil.copy2", return_value=None), \
+             patch("pathlib.Path.mkdir", return_value=None):
+            res = mgr.relocate_folder("My Pictures", target_path=target_custom_path, delete_source_after=False)
+
+        assert res.success is True
+        assert res.folder_id == "My Pictures"
+        assert res.new_path == target_custom_path
+        mock_lib_mgr.add_folder_to_library.assert_called_once()
+

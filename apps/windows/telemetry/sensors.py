@@ -333,7 +333,7 @@ def _probe_storage_sensors() -> List[HardwareSensor]:
 
     try:
         from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
-        sensor = WindowsStorageSensor(timeout_sec=10)
+        sensor = WindowsStorageSensor(timeout_sec=30)
         disks = sensor.get_physical_disks()
         for disk in disks:
             disk_slug = disk.device_id.replace("\\", "_").replace(".", "_")

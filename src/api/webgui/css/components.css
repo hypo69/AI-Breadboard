@@ -275,6 +275,23 @@
   border-color: var(--border-color) !important;
 }
 
+.table-responsive-adaptive {
+  height: auto;
+  min-height: 120px;
+  max-height: clamp(320px, 58vh, 720px);
+  overflow-y: auto;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table-responsive-adaptive thead th,
+.table-sticky-header thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: var(--surface-2);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    АЛЕРТЫ — адаптивные для обеих тем
    ═══════════════════════════════════════════════════════════════════════════ */

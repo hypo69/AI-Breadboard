@@ -170,46 +170,33 @@ export function switchTab(tabId) {
   const id = normalizeTabId(tabId);
   const prevTabId = currentActiveTabId;
 
-  // Проверяем флаг isProcessing для предыдущей вкладки
-  // Если что-то запущено, прерываем без ожидания завершения
-  let prevProcessing = false;
-  if (prevTabId && prevTabId !== id && processingFlags.has(prevTabId)) {
-    prevProcessing = processingFlags.get(prevTabId);
+  // 1. Остановка фонового аудио / синтеза речи при переходе
+  if (prevTabId && prevTabId !== id && window.chatService?.stop) {
+    try {
+      window.chatService.stop();
+    } catch (e) {}
   }
 
-  // 1. Деактивация предыдущей активной вкладки (асинхронно, без ожидания если processing)
+  // 2. Мгновенная деактивация опросников предыдущей вкладки
   if (prevTabId && prevTabId !== id) {
     for (const poller of registeredPollers.values()) {
       if (poller.tabId === prevTabId) {
         stopPoller(poller);
       }
     }
-    
-    const prevName = prevTabId.replace(/^tab-/, '').replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-    const deactivateFn = window[`deactivate${prevName[0].toUpperCase() + prevName.slice(1)}Tab`];
-    
-    // Если есть флаг processing, вызываем без ожидания
-    if (prevProcessing && typeof deactivateFn === 'function') {
-      // Вызываем деактивацию асинхронно, не блокируя переключение
-      Promise.resolve().then(() => deactivateFn().catch(() => {})).catch(() => {});
-    } else if (typeof deactivateFn === 'function') {
-      deactivateFn();
-    }
-    
-    document.dispatchEvent(new CustomEvent('tab:deactivated', { detail: { tabId: prevTabId, name: prevName } }));
   }
 
   currentActiveTabId = id;
 
-  // 2. Активная кнопка меню
+  // 3. МГНОВЕННОЕ обновление UI элементов в DOM (Zero-Delay)
   document.querySelectorAll('[data-tab]').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.tab === id)
   );
 
-  // 3. Видимая панель
   document.querySelectorAll('#mainTabContent .tab-pane').forEach(pane => {
-    pane.classList.toggle('show', pane.id === id);
-    pane.classList.toggle('active', pane.id === id);
+    const isTarget = (pane.id === id);
+    pane.classList.toggle('show', isTarget);
+    pane.classList.toggle('active', isTarget);
   });
 
   // 4. Бейдж заголовка
@@ -217,14 +204,16 @@ export function switchTab(tabId) {
   const activeBtn = document.querySelector(`[data-tab="${id}"]`);
   if (badge && activeBtn) badge.innerHTML = activeBtn.innerHTML;
 
-  // 5. Закрыть offcanvas меню
+  // 5. Быстро закрыть offcanvas меню
   OFFCANVAS_IDS.forEach(ocId => {
     const el = document.getElementById(ocId);
     if (el) bootstrap.Offcanvas.getInstance(el)?.hide();
   });
 
-  // 6. Обновить хэш URL
-  history.replaceState(null, null, `#${id}`);
+  // 6. Обновить URL hash
+  try {
+    history.replaceState(null, null, `#${id}`);
+  } catch (e) {}
 
   // 7. Запуск опросников новой активной вкладки
   for (const poller of registeredPollers.values()) {
@@ -233,21 +222,35 @@ export function switchTab(tabId) {
     }
   }
 
-  // 8. Lifecycle hooks
+  // 8. Неблокирующий вызов Lifecycle hooks через requestAnimationFrame / setTimeout
   const name = id.replace(/^tab-/, '').replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-  
-  // Инициализация новой вкладки
-  const initFn = window[`init${name[0].toUpperCase() + name.slice(1)}Tab`];
-  if (typeof initFn === 'function') {
-    initFn();
+  const prevName = prevTabId ? prevTabId.replace(/^tab-/, '').replace(/-([a-z])/g, (_, c) => c.toUpperCase()) : null;
+
+  // Деактивация предыдущей вкладки в фоне
+  if (prevTabId && prevTabId !== id) {
+    const deactivateFn = window[`deactivate${prevName[0].toUpperCase() + prevName.slice(1)}Tab`];
+    if (typeof deactivateFn === 'function') {
+      setTimeout(() => {
+        try { deactivateFn(); } catch (err) { console.debug('deactivate hook error:', err); }
+      }, 0);
+    }
+    document.dispatchEvent(new CustomEvent('tab:deactivated', { detail: { tabId: prevTabId, name: prevName } }));
   }
-  
-  const activateFn = window[`activate${name[0].toUpperCase() + name.slice(1)}Tab`];
-  if (typeof activateFn === 'function') {
-    activateFn();
-  }
-  
-  document.dispatchEvent(new CustomEvent('tab:activated', { detail: { tabId: id, name } }));
+
+  // Активация новой вкладки в следующем фрейме анимации
+  requestAnimationFrame(() => {
+    const initFn = window[`init${name[0].toUpperCase() + name.slice(1)}Tab`];
+    if (typeof initFn === 'function') {
+      try { initFn(); } catch (err) { console.debug('init tab hook error:', err); }
+    }
+    
+    const activateFn = window[`activate${name[0].toUpperCase() + name.slice(1)}Tab`];
+    if (typeof activateFn === 'function') {
+      try { activateFn(); } catch (err) { console.debug('activate tab hook error:', err); }
+    }
+    
+    document.dispatchEvent(new CustomEvent('tab:activated', { detail: { tabId: id, name } }));
+  });
 }
 
 /**
@@ -259,6 +262,17 @@ export function switchTab(tabId) {
 export async function loadTab(tabName, htmlUrl, jsUrl) {
   const container = document.getElementById(`tab-${tabName}`);
   if (!container) return;
+  
+  // Показываем мгновенный скелетон/спиннер, если контейнер еще пуст
+  if (!container.innerHTML.trim()) {
+    container.innerHTML = `
+      <div class="d-flex flex-column align-items-center justify-content-center py-5 text-muted" style="min-height: 200px;">
+        <div class="spinner-border text-primary mb-2" role="status" style="width: 2rem; height: 2rem;"></div>
+        <span class="small fw-medium">Загрузка раздела...</span>
+      </div>
+    `;
+  }
+
   try {
     const r = await fetch(htmlUrl);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -272,7 +286,7 @@ export async function loadTab(tabName, htmlUrl, jsUrl) {
     const name = tabName.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
     window[`init${name[0].toUpperCase() + name.slice(1)}Tab`]?.();
   } catch (e) {
-    container.innerHTML = `<div class="alert alert-danger">Ошибка загрузки ${tabName}: ${e.message}</div>`;
+    container.innerHTML = `<div class="alert alert-danger m-3">Ошибка загрузки ${tabName}: ${e.message}</div>`;
   }
 }
 

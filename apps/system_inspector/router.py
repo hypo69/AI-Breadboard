@@ -60,7 +60,7 @@ def get_diagnostician() -> SystemAIDiagnostician:
 async def get_status(request: Request) -> dict:
     """Get current system status."""
     collector = get_collector()
-    snapshot = collector.get_snapshot(process_limit=15)
+    snapshot = await collector.get_snapshot(process_limit=15)
     
     _csv_logger.log_poll(
         poll_type="status",
@@ -86,7 +86,7 @@ async def get_status(request: Request) -> dict:
 async def get_processes(request: Request, limit: int = 20, sort_by: str = "cpu") -> dict:
     """Get top processes."""
     collector = get_collector()
-    snapshot = collector.get_snapshot(process_limit=limit)
+    snapshot = await collector.get_snapshot(process_limit=limit)
     
     processes = []
     for p in snapshot.top_processes:
@@ -121,7 +121,7 @@ async def get_processes(request: Request, limit: int = 20, sort_by: str = "cpu")
 async def get_hardware(request: Request) -> dict:
     """Get hardware specification tree."""
     collector = get_collector()
-    nodes = collector.get_hardware_tree()
+    nodes = await collector.get_hardware_tree_async()
     sensors = collector.get_hardware_sensors()
     
     hardware = []
@@ -162,7 +162,7 @@ async def get_diagnostic(request: Request, process_limit: int = 20) -> dict:
     collector = get_collector()
     diagnostician = get_diagnostician()
     
-    snapshot = collector.get_snapshot(process_limit=process_limit)
+    snapshot = await collector.get_snapshot(process_limit=process_limit)
     score, anomalies, recommendations = diagnostician.evaluate_heuristics(snapshot)
     
     _csv_logger.log_event(
@@ -192,7 +192,7 @@ async def get_diagnostic(request: Request, process_limit: int = 20) -> dict:
 async def get_hardware_tree(request: Request) -> dict:
     """Get AIDA64-style hardware tree."""
     collector = get_collector()
-    nodes = collector.get_hardware_tree()
+    nodes = await collector.get_hardware_tree_async()
     
     tree = []
     for node in nodes:
@@ -230,7 +230,7 @@ async def trigger_diagnostic(request: Request, process_limit: int = 20) -> dict:
     collector = get_collector()
     diagnostician = get_diagnostician()
     
-    snapshot = collector.get_snapshot(process_limit=process_limit)
+    snapshot = await collector.get_snapshot(process_limit=process_limit)
     score, anomalies, recommendations = diagnostician.evaluate_heuristics(snapshot)
     
     _csv_logger.log_event(

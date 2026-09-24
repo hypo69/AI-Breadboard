@@ -42,12 +42,18 @@ async function lazyLoad(tabName) {
   applyTranslations();
 }
 
-// Переопределяем switchTab с lazy-загрузкой
+// Переопределяем switchTab с приоритетной мгновенной навигацией
 const _switchTab = switchTab;
-export async function switchMainTab(tabId) {
-  const name = (tabId.startsWith('tab-') ? tabId.slice(4) : tabId);
-  await lazyLoad(name);
+export function switchMainTab(tabId) {
+  if (!tabId) return;
+  // 1. Мгновенное переключение UI без задержки
   _switchTab(tabId);
+
+  // 2. Фоновая асинхронная подгрузка разметки и скрипта вкладки (если еще не загружена)
+  const name = (tabId.startsWith('tab-') ? tabId.slice(4) : tabId);
+  if (!loaded.has(name) && TABS[name]) {
+    lazyLoad(name).catch(err => console.warn(`[Main] Ошибка lazyLoad для ${name}:`, err));
+  }
 }
 window.switchTab = switchMainTab;
 window.switchToTab = switchMainTab;

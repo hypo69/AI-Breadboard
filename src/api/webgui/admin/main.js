@@ -597,7 +597,7 @@ async function initInterface() {
 
   // Определение и фильтрация вкладок микроприложений (/apps)
   const appTabDefs = [
-    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20260924_v4', js: '/html/about_system_tab/main.js?v=20260924_v4' },
+    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20260924_v7', js: '/html/about_system_tab/main.js?v=20260924_v7' },
     { id: 'trading_terminal', tab: 'trading', html: '/html/trading_tab/index.html', js: '/html/trading_tab/main.js' },
     { id: 'network_terminal', tab: 'network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
     { id: 'system_inspector', tab: 'system-inspector', html: '/html/system_inspector_tab/index.html', js: '/html/system_inspector_tab/main.js' },
@@ -607,6 +607,11 @@ async function initInterface() {
     { id: 'gcloud_monitor', tab: 'gcloud', html: '/html/gcloud_tab/index.html', js: '/html/gcloud_tab/main.js' },
     { id: 'website_monitor', tab: 'website-monitor', html: '/html/website_monitor_tab/index.html', js: '/html/website_monitor_tab/main.js' },
     { id: 'cloudflared_monitor', tab: 'cloudflared', html: '/html/cloudflared_tab/index.html', js: '/html/cloudflared_tab/main.js' },
+    { id: 'process_leaks', tab: 'process-leaks', html: '/html/process_leaks_tab/index.html?v=20260924_v1', js: '/html/process_leaks_tab/main.js?v=20260924_v1' },
+    { id: 'forensics', tab: 'forensics', html: '/html/forensics_tab/index.html?v=20260924_v1', js: '/html/forensics_tab/main.js?v=20260924_v1' },
+    { id: 'throttling', tab: 'throttling', html: '/html/throttling_tab/index.html?v=20260924_v1', js: '/html/throttling_tab/main.js?v=20260924_v1' },
+    { id: 'storage_wear', tab: 'storage-wear', html: '/html/storage_wear_tab/index.html?v=20260924_v1', js: '/html/storage_wear_tab/main.js?v=20260924_v1' },
+    { id: 'peripherals', tab: 'peripherals', html: '/html/peripherals_tab/index.html?v=20260924_v1', js: '/html/peripherals_tab/main.js?v=20260924_v1' },
   ];
 
   const appTabLoads = appTabDefs

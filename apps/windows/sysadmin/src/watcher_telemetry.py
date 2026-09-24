@@ -3,7 +3,7 @@
 # Process Name: Real-time File Watcher Telemetry & Hardware Sensors Engine
 # =============================================================================
 # Description:
-#   Движок телеметрии для Real-Time Live Watcher (ReadDirectoryChangesW)
+#   Движок телеметрии дляИзменения файлов в реальном времени (ReadDirectoryChangesW)
 #   с поддержкой множественных отслеживаемых папок и накопителей:
 #   - Программные сенсоры: темп файловых операций (events/sec, created/sec, deleted/sec),
 #     детекторы всплесков удалений (Ransomware heuristic), сопоставление с Event ID 4660/4663.

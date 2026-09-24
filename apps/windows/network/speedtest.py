@@ -45,11 +45,16 @@ class NetworkSpeedTester:
     ]
 
     DOWNLOAD_URLS = [
-        "https://speed.cloudflare.com/__down?bytes=10000000",  # 10 MB
-        "https://speed.cloudflare.com/__down?bytes=5000000",   # 5 MB fallback
+        "https://speed.cloudflare.com/__down?bytes={bytes_count}",
+        "https://cachefly.cachefly.net/10mb.test",
+        "https://proof.ovh.net/files/10Mb.dat",
     ]
 
-    UPLOAD_URL = "https://speed.cloudflare.com/__up"
+    UPLOAD_URLS = [
+        "https://speed.cloudflare.com/__up",
+        "https://httpbin.org/post",
+        "https://postman-echo.com/post",
+    ]
 
     def __init__(self) -> None:
         """Инициализация тестера с CSV-логгером."""
@@ -149,7 +154,7 @@ class NetworkSpeedTester:
         return results
 
     async def measure_download(self, client: httpx.AsyncClient, bytes_count: int = 10_000_000) -> Dict[str, Any]:
-        """Измерить скорость скачивания (Download Speed).
+        """Измерить скорость скачивания (Download Speed) с fallback-узлами.
 
         Args:
             client (httpx.AsyncClient): HTTP клиент.
@@ -158,25 +163,31 @@ class NetworkSpeedTester:
         Returns:
             Dict[str, Any]: Результаты теста входящей скорости.
         """
-        download_url = f"https://speed.cloudflare.com/__down?bytes={bytes_count}"
-        t0 = time.perf_counter()
-        
-        try:
-            resp = await client.get(download_url, timeout=20.0)
-            if resp.status_code == 200:
-                elapsed = max(time.perf_counter() - t0, 0.001)
-                content_len = len(resp.content)
-                mbps = round((content_len * 8 / elapsed) / 1_000_000, 2)
-                mb_s = round((content_len / elapsed) / 1_000_000, 2)
-                return {
-                    "speed_mbps": mbps,
-                    "speed_mb_s": mb_s,
-                    "duration_s": round(elapsed, 2),
-                    "bytes_downloaded": content_len,
-                    "status": "SUCCESS",
-                }
-        except Exception as ex:
-            logger.warning(f"Download speedtest error: {ex}")
+        last_exception = None
+        for raw_url in self.DOWNLOAD_URLS:
+            download_url = raw_url.format(bytes_count=bytes_count)
+            t0 = time.perf_counter()
+            try:
+                resp = await client.get(download_url, timeout=20.0)
+                if resp.status_code == 200:
+                    elapsed = max(time.perf_counter() - t0, 0.001)
+                    content_len = len(resp.content)
+                    mbps = round((content_len * 8 / elapsed) / 1_000_000, 2)
+                    mb_s = round((content_len / elapsed) / 1_000_000, 2)
+                    return {
+                        "speed_mbps": mbps,
+                        "speed_mb_s": mb_s,
+                        "duration_s": round(elapsed, 2),
+                        "bytes_downloaded": content_len,
+                        "status": "SUCCESS",
+                    }
+            except Exception as ex:
+                last_exception = ex
+                logger.debug(f"Download speedtest failed for {download_url}: {ex}. Trying next fallback...")
+                continue
+
+        if last_exception:
+            logger.warning(f"Download speedtest error across all endpoints: {last_exception}")
 
         return {
             "speed_mbps": 0.0,
@@ -187,7 +198,7 @@ class NetworkSpeedTester:
         }
 
     async def measure_upload(self, client: httpx.AsyncClient, bytes_count: int = 3_000_000) -> Dict[str, Any]:
-        """Измерить скорость отдачи (Upload Speed).
+        """Измерить скорость отдачи (Upload Speed) с fallback-узлами.
 
         Args:
             client (httpx.AsyncClient): HTTP клиент.
@@ -197,23 +208,30 @@ class NetworkSpeedTester:
             Dict[str, Any]: Результаты теста исходящей скорости.
         """
         payload = b"0" * bytes_count
-        t0 = time.perf_counter()
 
-        try:
-            resp = await client.post(self.UPLOAD_URL, content=payload, timeout=20.0)
-            if resp.status_code in (200, 204):
-                elapsed = max(time.perf_counter() - t0, 0.001)
-                mbps = round((len(payload) * 8 / elapsed) / 1_000_000, 2)
-                mb_s = round((len(payload) / elapsed) / 1_000_000, 2)
-                return {
-                    "speed_mbps": mbps,
-                    "speed_mb_s": mb_s,
-                    "duration_s": round(elapsed, 2),
-                    "bytes_uploaded": len(payload),
-                    "status": "SUCCESS",
-                }
-        except Exception as ex:
-            logger.warning(f"Upload speedtest error: {ex}")
+        last_exception = None
+        for upload_url in self.UPLOAD_URLS:
+            t0 = time.perf_counter()
+            try:
+                resp = await client.post(upload_url, content=payload, timeout=20.0)
+                if resp.status_code in (200, 201, 204):
+                    elapsed = max(time.perf_counter() - t0, 0.001)
+                    mbps = round((len(payload) * 8 / elapsed) / 1_000_000, 2)
+                    mb_s = round((len(payload) / elapsed) / 1_000_000, 2)
+                    return {
+                        "speed_mbps": mbps,
+                        "speed_mb_s": mb_s,
+                        "duration_s": round(elapsed, 2),
+                        "bytes_uploaded": len(payload),
+                        "status": "SUCCESS",
+                    }
+            except Exception as ex:
+                last_exception = ex
+                logger.debug(f"Upload speedtest failed for {upload_url}: {ex}. Trying next fallback...")
+                continue
+
+        if last_exception:
+            logger.warning(f"Upload speedtest error across all endpoints: {last_exception}")
 
         return {
             "speed_mbps": 0.0,

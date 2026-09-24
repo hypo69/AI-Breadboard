@@ -343,7 +343,11 @@ $trayScriptBlock = {
     }
 
     $openOrRestoreAppWindow = {
-        $profileDir = Join-Path $SharedProjectRoot "data\browser_profile"
+        $appDataDir = $env:APPDATA
+        if (-not $appDataDir) {
+            $appDataDir = Join-Path $env:USERPROFILE "AppData\Roaming"
+        }
+        $profileDir = Join-Path $appDataDir "AI-Breadboard\browser_profile"
 
         $restored = $false
         try {

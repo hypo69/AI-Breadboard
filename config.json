@@ -36,6 +36,7 @@
   },
   "apps": {
     "enabled": [
+      "chat",
       "windows_sysadmin",
       "system_inspector",
       "about_system",
@@ -53,7 +54,8 @@
       "windows_backup_manager",
       "windows_defender",
       "autolog_manager",
-      "software_transparency_scanner"
+      "software_transparency_scanner",
+      "telemetry_research"
     ],
     "disabled": [
       "trading_terminal",

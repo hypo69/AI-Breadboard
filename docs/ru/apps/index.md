@@ -11,7 +11,7 @@
 Все приложения построены по модульному принципу и запускаются независимо либо через общий диспетчер задач.
 
 ```mermaid
-graph TD
+graph LR
     User([Пользователь / Браузер]) -->|HTTP / WebSocket| Gateway[AI Breadboard Core / Launchers]
     
     subgraph Apps ["Микро-приложения (apps/)"]

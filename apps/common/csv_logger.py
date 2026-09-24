@@ -83,12 +83,31 @@ def _format_cell(val: Any) -> str:
     return str(val)
 
 
+try:
+    from apps.windows.telemetry.storage import TelemetryStorage
+except ImportError:
+    try:
+        from storage import TelemetryStorage
+    except ImportError:
+        TelemetryStorage = None
+
+
+def _get_storage() -> Optional[Any]:
+    """Возвращает экземпляр SQLite хранилища телеметрии, если доступно."""
+    if TelemetryStorage is not None:
+        try:
+            return TelemetryStorage.get_instance()
+        except Exception:
+            return None
+    return None
+
+
 def write_csv_row(
     filename: str,
     headers: Sequence[str],
     row_data: Sequence[Any],
 ) -> Path:
-    """Потокобезопасно записывает строку в CSV-файл с автоматическим добавлением заголовков.
+    """Потокобезопасно записывает строку в SQLite и CSV-файл с автоматическим добавлением заголовков.
 
     Args:
         filename: Имя файла (например, 'cloudflared_status_polls.csv').
@@ -105,6 +124,15 @@ def write_csv_row(
     file_path = log_dir / filename
 
     formatted_row = [_format_cell(x) for x in row_data]
+
+    # Сохраняем в SQLite БД
+    storage = _get_storage()
+    if storage is not None:
+        try:
+            payload = dict(zip(headers, row_data))
+            storage.save_custom_record(source_file=filename, payload=payload)
+        except Exception as ex:
+            logger.debug(f"Не удалось записать custom_record в SQLite: {ex}")
 
     with _LOCK:
         try:
@@ -127,7 +155,7 @@ def log_event(
     details: Any = "",
     filename: Optional[str] = None,
 ) -> Path:
-    """Логирует событие приложения в CSV.
+    """Логирует событие приложения в SQLite и CSV.
 
     Args:
         app: Имя приложения (например, 'cloudflared_monitor').
@@ -139,10 +167,18 @@ def log_event(
     Returns:
         Path: Путь к CSV-файлу.
     """
+    now_iso = datetime.now(timezone.utc).isoformat()
+    storage = _get_storage()
+    if storage is not None:
+        try:
+            storage.save_app_event(app=app, event_type=event_type, status=status, details=details, timestamp=now_iso)
+        except Exception as ex:
+            logger.debug(f"Не удалось записать app_event в SQLite: {ex}")
+
     target_file = filename or f"{app}_events.csv"
     headers = ["timestamp", "app", "event_type", "status", "details"]
     row = [
-        datetime.now(timezone.utc).isoformat(),
+        now_iso,
         app,
         event_type,
         status,
@@ -161,7 +197,7 @@ def log_param_change(
     details: Any = "",
     filename: Optional[str] = None,
 ) -> Path:
-    """Логирует изменение параметра/настройки приложения в CSV.
+    """Логирует изменение параметра/настройки приложения в SQLite и CSV.
 
     Args:
         app: Имя приложения (например, 'system_control_center').
@@ -176,6 +212,23 @@ def log_param_change(
     Returns:
         Path: Путь к CSV-файлу.
     """
+    now_iso = datetime.now(timezone.utc).isoformat()
+    storage = _get_storage()
+    if storage is not None:
+        try:
+            storage.save_app_param_change(
+                app=app,
+                param_name=param_name,
+                old_value=old_value,
+                new_value=new_value,
+                status=status,
+                user=user,
+                details=details,
+                timestamp=now_iso,
+            )
+        except Exception as ex:
+            logger.debug(f"Не удалось записать app_param_change в SQLite: {ex}")
+
     target_file = filename or f"{app}_param_changes.csv"
     headers = [
         "timestamp",
@@ -188,7 +241,7 @@ def log_param_change(
         "details",
     ]
     row = [
-        datetime.now(timezone.utc).isoformat(),
+        now_iso,
         app,
         param_name,
         old_value,
@@ -210,7 +263,7 @@ def log_poll(
     details: Any = "",
     filename: Optional[str] = None,
 ) -> Path:
-    """Логирует факт опроса телеметрии, метрики или статуса в CSV.
+    """Логирует факт опроса телеметрии, метрики или статуса в SQLite и CSV.
 
     Args:
         app: Имя приложения (например, 'hwinfo', 'website_monitor').
@@ -225,6 +278,23 @@ def log_poll(
     Returns:
         Path: Путь к CSV-файлу.
     """
+    now_iso = datetime.now(timezone.utc).isoformat()
+    storage = _get_storage()
+    if storage is not None:
+        try:
+            storage.save_app_poll(
+                app=app,
+                poll_type=poll_type,
+                metric_name=metric_name,
+                value=value,
+                unit=unit,
+                status=status,
+                details=details,
+                timestamp=now_iso,
+            )
+        except Exception as ex:
+            logger.debug(f"Не удалось записать app_poll в SQLite: {ex}")
+
     target_file = filename or f"{app}_poll_events.csv"
     headers = [
         "timestamp",
@@ -237,7 +307,7 @@ def log_poll(
         "details",
     ]
     row = [
-        datetime.now(timezone.utc).isoformat(),
+        now_iso,
         app,
         poll_type,
         metric_name,

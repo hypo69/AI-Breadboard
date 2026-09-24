@@ -115,7 +115,7 @@ if (window.api && originalApiFetch) {
 // ============================================================================
 
 export async function initLazyTabLoading(tabDefinitions) {
-  console.log('[Optimization] Initializing lazy tab loading...');
+  console.log('[Optimization] Initializing lazy tab loading (on-demand mode)...');
 
   // Регистрируем все вкладки в системе ленивой загрузки
   tabDefinitions.forEach(({ tabName, htmlUrl, jsUrl }) => {
@@ -145,34 +145,10 @@ export async function initLazyTabLoading(tabDefinitions) {
     return result;
   };
 
-  // Определяем стартовые вкладки (только те, которые разрешены в профиле)
-  const allPriorityTabs = ['about-system', 'chat', 'admin', 'users'];
-  const allowedTabNames = new Set(tabDefinitions.map(def => def.tabName));
-  const priorityTabs = allPriorityTabs.filter(name => allowedTabNames.has(name));
+  const allowedTabNames = tabDefinitions.map(def => def.tabName);
+  console.log(`[Optimization] Registered ${allowedTabNames.length} tabs for on-demand loading.`);
 
-  // Вкладки, исключенные из автоматической фоновой предзагрузки (загружаются только по клику)
-  const excludedFromPreload = ['trading'];
-  const restTabs = tabDefinitions
-    .map(def => def.tabName)
-    .filter(name => !priorityTabs.includes(name) && !excludedFromPreload.includes(name));
-
-  // Фаза 1: Загружаем приоритетные вкладки
-  console.log(`[Optimization] Phase 1: Loading priority tabs: ${priorityTabs.join(', ')}`);
-  await tabLoader.loadMultiple(priorityTabs);
-  priorityTabs.forEach(tab => window.optimizationModule.stats.tabsLoaded.add(tab));
-
-  // Фаза 2: Предзагружаем остальные вкладки в фоне (асинхронно)
-  console.log(`[Optimization] Phase 2: Preloading remaining ${restTabs.length} tabs in background...`);
-  setTimeout(() => {
-    tabLoader.preloadMultiple(restTabs);
-    restTabs.forEach(tab => {
-      tabLoader.loadTab(tab).then(() => {
-        window.optimizationModule.stats.tabsLoaded.add(tab);
-      });
-    });
-  }, 2000);
-
-  return { priorityTabs, restTabs };
+  return { registeredTabs: allowedTabNames };
 }
 
 // ============================================================================
@@ -188,9 +164,9 @@ export function enhanceTabSwitching(originalSwitchTab) {
 
     console.log(`[Optimization] Switching to tab: ${tabName}`);
 
-    // Если вкладка еще не загружена - загружаем ее
+    // Если вкладка еще не загружена - загружаем ее по требованию
     if (!tabLoader.isLoaded(tabName)) {
-      console.log(`[Optimization] Tab not loaded yet, loading: ${tabName}`);
+      console.log(`[Optimization] Tab not loaded yet, loading on-demand: ${tabName}`);
       await tabLoader.loadTab(tabName);
       window.optimizationModule.stats.tabsLoaded.add(tabName);
     }
@@ -209,37 +185,36 @@ export function enhanceTabSwitching(originalSwitchTab) {
 // 5. ВОССТАНОВЛЕНИЕ ПОСЛЕДНЕЙ ВКЛАДКИ
 // ============================================================================
 
-export async function restoreLastTab(fallbackTab = 'tab-chat') {
-  // Используем TabStatePersistence если она доступна
-  let lastTab = null;
-  
-  if (window.tabPersistence && typeof window.tabPersistence.getLastActiveTab === 'function') {
-    lastTab = window.tabPersistence.getLastActiveTab();
-  } else {
-    // Fallback на старый метод для совместимости
-    lastTab = localStorage.getItem('admin:lastActiveTab');
-  }
-  
-  if (lastTab && document.getElementById(lastTab)) {
-    console.log(`[Optimization] Restoring last tab: ${lastTab}`);
-    const tabName = lastTab.replace(/^tab-/, '');
-    
-    if (!tabLoader.isLoaded(tabName)) {
-      await tabLoader.loadTab(tabName);
-      window.optimizationModule.stats.tabsLoaded.add(tabName);
+export async function restoreLastTab(fallbackTab = 'tab-about-system') {
+  // Проверяем хэш в URL
+  const hash = location.hash.replace('#', '');
+  let initialTab = hash || null;
+
+  // Если в хэше ничего нет, проверяем persistence
+  if (!initialTab) {
+    if (window.tabPersistence && typeof window.tabPersistence.getLastActiveTab === 'function') {
+      initialTab = window.tabPersistence.getLastActiveTab();
+    } else {
+      initialTab = localStorage.getItem('admin:lastActiveTab');
     }
-    
-    if (typeof window.switchTab === 'function') {
-      window.switchTab(lastTab);
-    }
-    return true;
   }
 
-  // Fallback на стартовую вкладку
-  if (typeof window.switchTab === 'function') {
-    window.switchTab(fallbackTab);
+  const targetTabId = (initialTab && document.getElementById(initialTab.startsWith('tab-') ? initialTab : `tab-${initialTab}`))
+    ? (initialTab.startsWith('tab-') ? initialTab : `tab-${initialTab}`)
+    : fallbackTab;
+
+  const tabName = targetTabId.replace(/^tab-/, '');
+  console.log(`[Optimization] Loading strictly initial active tab: ${tabName}`);
+
+  if (!tabLoader.isLoaded(tabName)) {
+    await tabLoader.loadTab(tabName);
+    window.optimizationModule.stats.tabsLoaded.add(tabName);
   }
-  return false;
+
+  if (typeof window.switchTab === 'function') {
+    window.switchTab(targetTabId);
+  }
+  return targetTabId;
 }
 
 // ============================================================================

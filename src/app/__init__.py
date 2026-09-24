@@ -164,8 +164,7 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
     from src.api.router_version import init_router as init_version_router
 
     # Routers that receive model instances
-    if is_app_enabled("chat"):
-        app.include_router(init_chat_router(state.chat_model, state.narrator_model))
+    app.include_router(init_chat_router(state.chat_model, state.narrator_model))
     app.include_router(init_news_router(state.chat_model))
     app.include_router(init_system_router(state.chat_model))
 
@@ -356,6 +355,13 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
             app.include_router(init_ai_benchmark_router())
         except (ImportError, Exception) as e:
             logger.debug(f"AI Benchmark router not registered: {e}")
+
+    if is_app_enabled("telemetry_research"):
+        try:
+            from apps.telemetry_research.router import init_router as init_telemetry_research_router
+            app.include_router(init_telemetry_research_router(state=state))
+        except (ImportError, Exception) as e:
+            logger.debug(f"Telemetry Research app router not registered: {e}")
 
     # Auto-discover additional routers in src/app/routers/
     _auto_discover_routers(app)

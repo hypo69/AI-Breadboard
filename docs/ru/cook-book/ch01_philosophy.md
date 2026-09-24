@@ -14,12 +14,16 @@
 - Если чип работает некорректно или выходит из строя, его извлекают и заменяют на аналог за считанные секунды.
 
 ```mermaid
-graph TD
-    Breadboard["AI Breadboard (Макетная плата)"] --> Socket1["Сокет A: Облачная LLM (Gemini / OpenAI)"]
-    Breadboard --> Socket2["Сокет B: Аппаратный ONNX DirectML (Локальный GPU)"]
-    Breadboard --> Socket3["Сокет C: In-Process PyTorch (Transformers)"]
+graph LR
+    Breadboard["AI Breadboard (Макетная плата)"]
+
+    Breadboard --> Socket1["Сокет A: Облачная LLM ( OpenAI)"]
+    Breadboard --> Socket2["Сокет B: Gemini, gemini cli, agy, agy cli"]
+    Breadboard --> Socket3["Сокет C: Аппаратный ONNX DirectML (Локальный GPU)"]
+    Breadboard --> Socket4["Сокет D: In-Process PyTorch (Transformers)"]
     Breadboard --> Memory["Шина памяти: Векторный FAISS RAM + SQLite ROM"]
     Breadboard --> Bus["Универсальная шина: UnifiedChatModel & FastAPI"]
+
     Bus --> Probes["Контрольные точки: Логи, SSE-потоки и профилировщики"]
 ```
 

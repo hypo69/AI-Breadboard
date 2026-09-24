@@ -89,7 +89,7 @@ class GoogleGenerativeAIConfigMixin:
         if generation_config:
             gen_cfg.update(generation_config)
 
-        response_type: str = gen_cfg.pop('response_type', 'both')
+        response_type: str = gen_cfg.pop('response_type', 'chat')
         inst: str = instruction or self.system_instruction or ''
 
         if inst:

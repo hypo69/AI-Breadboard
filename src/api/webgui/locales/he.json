@@ -43,7 +43,8 @@
     "scenarios": "💬🎬 צ'אט ותרחישים",
     "userDirectories": "📁 ספריות משתמשים",
     "userDirectoriesLong": "📁 ספריות משתמשים ואחסון",
-    "fileRecovery": "🗂️ שחזור קבצים שנמחקו"
+    "fileRecovery": "🗂️ שחזור קבצים שנמחקו",
+    "startupAuditor": "🚀 מנהל הפעלה אוטומטית"
   },
   "movieSearch": {
     "title": "🔍 חיפוש סרטים בטורנט",

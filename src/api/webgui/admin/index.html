@@ -6,8 +6,8 @@
   <title>AI Assistant - Admin</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/html/css/main.css?v=20260923_v1" rel="stylesheet">
-  <script src="/html/js/toast.js?v=20260923_v1"></script>
+  <link href="/html/css/main.css?v=20260924_v1" rel="stylesheet">
+  <script src="/html/js/toast.js?v=20260924_v1"></script>
   <script src="https://cdn.jsdelivr.net/npm/i18next@23.11.5/i18next.min.js"></script>
 </head>
 <body>
@@ -168,6 +168,24 @@
           </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-windows-backup" data-bs-target="#tab-windows-backup" type="button">
             💾 Windows Backup
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-startup-auditor" data-bs-target="#tab-startup-auditor" type="button">
+            🚀 Windows Startup Auditor
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-process-leaks" data-bs-target="#tab-process-leaks" type="button">
+            🔍 1. Утечки и микрофризы
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-forensics" data-bs-target="#tab-forensics" type="button">
+            ⏱️ 2. Поведенческая форензика
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-throttling" data-bs-target="#tab-throttling" type="button">
+            ⚡ 3. Качество ядра и Троттлинг
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-storage-wear" data-bs-target="#tab-storage-wear" type="button">
+            💽 4. Износ дисков и батареи
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-peripherals" data-bs-target="#tab-peripherals" type="button">
+            🔌 5. Сеть и периферия
           </button>
         </div>
       </li>
@@ -407,6 +425,9 @@
     <!-- Windows Backup Manager Tab -->
     <div id="tab-windows-backup" class="tab-pane fade"></div>
 
+    <!-- Startup Auditor Tab -->
+    <div id="tab-startup-auditor" class="tab-pane fade"></div>
+
     <!-- Scenarios Tab -->
     <div id="tab-scenarios" class="tab-pane fade"></div>
 
@@ -415,20 +436,27 @@
 
     <!-- User Directories and Storage Tab -->
     <div id="tab-user-directories" class="tab-pane fade"></div>
+
+    <!-- Diagnostic and Forensics Tabs -->
+    <div id="tab-process-leaks" class="tab-pane fade"></div>
+    <div id="tab-forensics" class="tab-pane fade"></div>
+    <div id="tab-throttling" class="tab-pane fade"></div>
+    <div id="tab-storage-wear" class="tab-pane fade"></div>
+    <div id="tab-peripherals" class="tab-pane fade"></div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/html/js/window-api.js?v=20260923_v2"></script>
-<script src="/html/js/appConfigEditor.js?v=20260923_v2"></script>
-<script src="/html/js/chatService.js?v=20260923_v2"></script>
+<script src="/html/js/window-api.js?v=20260924_v1"></script>
+<script src="/html/js/appConfigEditor.js?v=20260924_v1"></script>
+<script src="/html/js/chatService.js?v=20260924_v1"></script>
 
 <!-- Admin Main - Modular Architecture -->
-<script type="module" src="/html/admin/main-refactored.js?v=20260923_v2"></script>
+<script type="module" src="/html/admin/main-refactored.js?v=20260924_v1"></script>
 
 <!-- Optimization Patches -->
-<script type="module" src="/html/admin/lazy-init-patch.js?v=20260923_v2"></script>
-<script type="module" src="/html/users_tab/debounce-patch.js?v=20260923_v2"></script>
+<script type="module" src="/html/admin/lazy-init-patch.js?v=20260924_v1"></script>
+<script type="module" src="/html/users_tab/debounce-patch.js?v=20260924_v1"></script>
 
 <!-- HELP Modal -->
 <div class="modal fade modal-help" id="help-modal" tabindex="-1" aria-labelledby="help-modal-label" aria-hidden="true">

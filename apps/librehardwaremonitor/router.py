@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter
 
@@ -34,9 +35,10 @@ async def get_status() -> Dict[str, Any]:
     """Проверка доступности LHM и руководство по установке portable-версии."""
     from apps.common.discovery import UtilityDiscovery
     guide = UtilityDiscovery().get_portable_guide("librehardwaremonitor")
-    running = _service.is_running()
-    available = _service.is_binary_available()
-    _csv_logger.log_poll(
+    running = await asyncio.to_thread(_service.is_running)
+    available = await asyncio.to_thread(_service.is_binary_available)
+    await asyncio.to_thread(
+        _csv_logger.log_poll,
         poll_type="status_poll",
         metric_name="is_running",
         value=running,
@@ -57,8 +59,9 @@ async def get_status() -> Dict[str, Any]:
 @router.get("/sensors")
 async def get_sensors() -> Dict[str, Any]:
     """Получение полного дерева сенсоров."""
-    data = _service.get_sensor_tree()
-    _csv_logger.log_poll(
+    data = await asyncio.to_thread(_service.get_sensor_tree)
+    await asyncio.to_thread(
+        _csv_logger.log_poll,
         poll_type="sensor_tree_poll",
         metric_name="has_tree",
         value=bool(data),
@@ -73,8 +76,9 @@ async def get_sensors() -> Dict[str, Any]:
 @router.get("/metrics")
 async def get_metrics() -> Dict[str, Any]:
     """Получение плоского списка всех сенсоров с нормализованными числовыми значениями."""
-    items = _service.get_flattened_sensors()
-    _csv_logger.log_poll(
+    items = await asyncio.to_thread(_service.get_flattened_sensors)
+    await asyncio.to_thread(
+        _csv_logger.log_poll,
         poll_type="metrics_poll",
         metric_name="sensor_count",
         value=len(items),
@@ -92,8 +96,9 @@ async def get_metrics() -> Dict[str, Any]:
 @router.get("/summary")
 async def get_summary() -> Dict[str, Any]:
     """Получение краткой системной сводки (CPU/GPU/RAM)."""
-    summary = _service.get_system_summary()
-    _csv_logger.log_poll(
+    summary = await asyncio.to_thread(_service.get_system_summary)
+    await asyncio.to_thread(
+        _csv_logger.log_poll,
         poll_type="summary_poll",
         metric_name="summary_status",
         value="available" if summary else "empty",
@@ -108,8 +113,10 @@ async def get_summary() -> Dict[str, Any]:
 @router.post("/launch")
 async def launch_lhm() -> Dict[str, Any]:
     """Запуск исполняемого файла LibreHardwareMonitor в фоновом режиме."""
-    started = _service.start_process()
-    _csv_logger.log_event(
+    started = await asyncio.to_thread(_service.start_process)
+    is_running = await asyncio.to_thread(_service.is_running)
+    await asyncio.to_thread(
+        _csv_logger.log_event,
         event_type="launch_lhm_process",
         status="SUCCESS" if started else "FAILED",
         details={"binary_path": _service.binary_path},
@@ -117,7 +124,7 @@ async def launch_lhm() -> Dict[str, Any]:
     )
     return {
         "success": started,
-        "is_running": _service.is_running(),
+        "is_running": is_running,
         "binary_path": _service.binary_path,
     }
 
@@ -143,7 +150,7 @@ async def run_sensor_audit() -> Dict[str, Any]:
 @router.get("/audit/summary")
 async def get_sensor_audit_summary() -> Dict[str, Any]:
     """Быстрое получение агрегированных залогированных показателей сенсоров без вызова AI."""
-    return _auditor.collect_and_aggregate_logs()
+    return await asyncio.to_thread(_auditor.collect_and_aggregate_logs)
 
 
 def init_router() -> APIRouter:

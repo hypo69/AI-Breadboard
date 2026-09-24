@@ -695,7 +695,7 @@ APPS_REGISTRY: List[Dict[str, Any]] = [
         "id": "windows_startup_auditor",
         "key": "windows_startup_auditor",
         "tab": "tab-startup-auditor",
-        "folder": "windows_startup_auditor",
+        "folder": "windows/startup",
         "aliases": ["windows_startup_auditor", "startup_auditor", "startup", "autoruns", "tab-startup-auditor"],
         "name": "Windows Startup Auditor",
         "ru_name": "Аудит автозапуска Windows",

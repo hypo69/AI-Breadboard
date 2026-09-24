@@ -162,6 +162,25 @@ class NetworkPortMetrics(BaseModel):
     process_name: Optional[str] = Field(default=None, description="Owning process executable name")
 
 
+class ProcessNetworkActivity(BaseModel):
+    """Сетевая активность процесса (интернет-соединения, отправка и прием трафика)."""
+
+    pid: int = Field(default=0, description="Process ID")
+    name: str = Field(default="", description="Process executable name")
+    user: str = Field(default="", description="Process owner username")
+    local_address: str = Field(default="", description="Local IP:Port")
+    remote_address: str = Field(default="", description="Remote IP:Port")
+    remote_host: Optional[str] = Field(default=None, description="Resolved remote hostname or service name")
+    protocol: str = Field(default="TCP", description="Protocol: TCP / UDP")
+    status: str = Field(default="ESTABLISHED", description="Connection state (ESTABLISHED, LISTEN, etc.)")
+    is_internet: bool = Field(default=True, description="Whether remote address is external Internet vs local loopback")
+    service_type: str = Field(default="Web/HTTPS", description="Recognized protocol service: HTTPS, HTTP, DNS, Cloud Sync, etc.")
+    sent_kb: float = Field(default=0.0, description="Traffic/IO sent in KB or transfer rate")
+    recv_kb: float = Field(default=0.0, description="Traffic/IO received in KB or transfer rate")
+    sent_summary: str = Field(default="", description="Человекопонятное описание отправляемого (что шлет)")
+    recv_summary: str = Field(default="", description="Человекопонятное описание принимаемого (что принимает)")
+
+
 class SystemHealthAlerts(BaseModel):
     """System reliability and event log alerts."""
 
@@ -268,6 +287,7 @@ class SystemSnapshot(BaseModel):
     disk_io: DiskIoMetrics = Field(default_factory=DiskIoMetrics, description="Aggregate disk I/O rates")
     network: List[NetworkInterfaceMetrics] = Field(default_factory=list, description="Network interfaces")
     listening_ports: List[NetworkPortMetrics] = Field(default_factory=list, description="Active listening ports and sockets")
+    network_activity: List[ProcessNetworkActivity] = Field(default_factory=list, description="Сетевая активность программ (соединения и трафик)")
     battery: BatteryMetrics = Field(default_factory=BatteryMetrics, description="Battery and power state")
     alerts: SystemHealthAlerts = Field(default_factory=SystemHealthAlerts, description="System health and reliability alerts")
     sensors: List[HardwareSensor] = Field(default_factory=list, description="Hardware sensor readings")
@@ -372,4 +392,100 @@ class HardwareArchiveEntry(BaseModel):
     devices_count: int = Field(default=0, description="Количество устройств в архиве")
     changes_count: int = Field(default=0, description="Количество изменений, зафиксированных в этом архиве")
     report: HardwareAuditReport = Field(..., description="Полный отчет аудита оборудования")
+
+
+# =============================================================================
+# Модели данных для 5 специализированных направлений глубокой телеметрии
+# =============================================================================
+
+class ProcessLeakItem(BaseModel):
+    """Метрики скрытой диагностики и утечек отдельного процесса."""
+
+    pid: int = Field(..., description="Идентификатор процесса")
+    name: str = Field(..., description="Имя процесса")
+    status: str = Field(default="running", description="Статус процесса")
+    handles_count: int = Field(default=0, description="Количество открытых дескрипторов (Handles)")
+    gdi_objects: int = Field(default=0, description="Количество GDI-объектов (шрифты, битмапы, кисти, лимит 10 000)")
+    user_objects: int = Field(default=0, description="Количество USER-объектов (окна, меню, курсоры)")
+    page_faults_total: int = Field(default=0, description="Общее число страничных ошибок (Page Faults)")
+    peak_working_set_mb: float = Field(default=0.0, description="Пиковый рабочий набор памяти в МБ")
+    memory_mb: float = Field(default=0.0, description="Текущая память (RSS) в МБ")
+    threads_count: int = Field(default=1, description="Количество потоков процесса")
+    cpu_percent: float = Field(default=0.0, description="Нагрузка на CPU %")
+    leak_risk_score: str = Field(default="normal", description="Уровень риска утечки: normal, warning, critical")
+    leak_risk_reasons: List[str] = Field(default_factory=list, description="Список признаков аномального поведения")
+
+
+class ProcessLeakDiagnosticsReport(BaseModel):
+    """Сводный отчет скрытой диагностики процессов, утечек дескрипторов и ресурсов UI."""
+
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="Время сбора среза",
+    )
+    total_processes: int = Field(default=0, description="Всего проанализировано процессов")
+    suspicious_count: int = Field(default=0, description="Количество процессов с признаками утечки")
+    top_handle_hogs: List[ProcessLeakItem] = Field(default_factory=list, description="Топ процессов по открытым дескрипторам")
+    top_gdi_hogs: List[ProcessLeakItem] = Field(default_factory=list, description="Топ процессов по GDI объектам")
+    top_page_fault_hogs: List[ProcessLeakItem] = Field(default_factory=list, description="Топ процессов по обращениям к файлу подкачки")
+    all_processes: List[ProcessLeakItem] = Field(default_factory=list, description="Полный список проанализированных процессов")
+
+
+class ForensicsActivityReport(BaseModel):
+    """Поведенческая телеметрия и форензика активности пользователя."""
+
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="Время фиксации",
+    )
+    foreground_window: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Активное окно в фокусе (заголовок, процесс, PID, время)",
+    )
+    user_idle_seconds: float = Field(default=0.0, description="Время бездействия пользователя (без ввода с клавиатуры/мыши)")
+    camera_active_apps: List[Dict[str, Any]] = Field(default_factory=list, description="Приложения, использующие или недавно вызывавшие камеру")
+    microphone_active_apps: List[Dict[str, Any]] = Field(default_factory=list, description="Приложения, использующие микрофон")
+    userassist_top_apps: List[Dict[str, Any]] = Field(default_factory=list, description="История запусков из реестра UserAssist (счетчик и фокусное время)")
+
+
+class KernelThrottlingReport(BaseModel):
+    """Качество работы ядра, прерываний и аппаратного троттлинга."""
+
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="Время среза",
+    )
+    dpc_latency_pct: float = Field(default=0.0, description="Процент времени ЦП в DPC (отложенных вызовах процедур)")
+    interrupt_latency_pct: float = Field(default=0.0, description="Процент времени ЦП в аппаратных прерываниях (ISR)")
+    dpc_status: str = Field(default="optimal", description="Статус латентности прерываний: optimal, elevated, severe")
+    thermal_throttling_detected: bool = Field(default=False, description="Обнаружен термический троттлинг ядер (PROCHOT)")
+    power_limit_throttling_detected: bool = Field(default=False, description="Обнаружено ограничение по питанию (PL1/PL2 Limit)")
+    system_uptime_seconds: float = Field(default=0.0, description="Время непрерывной работы системы (Uptime)")
+    uptime_formatted: str = Field(default="0 дн 0 ч", description="Отформатированное время Uptime")
+    last_bsod_crashes: List[Dict[str, Any]] = Field(default_factory=list, description="Последние зафиксированные падения системы (BugCheck / Minidump)")
+    gpu_pcie_link: Dict[str, Any] = Field(default_factory=dict, description="Режим шины PCIe для видеокарты (Link Speed / Width)")
+
+
+class StorageBatteryWearReport(BaseModel):
+    """Телеметрия износа накопителей SSD/NVMe и батареи питания."""
+
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="Время формирования",
+    )
+    disks_wear: List[Dict[str, Any]] = Field(default_factory=list, description="Метрики износа SSD, TBW и здоровье накопителей")
+    battery_wear: Dict[str, Any] = Field(default_factory=dict, description="Глубокая телеметрия износа аккумулятора (Design vs Full Charge)")
+
+
+class PeripheralsNetworkReport(BaseModel):
+    """Телеметрия сети (Wi-Fi, интерфейсы) и периферийных устройств (USB, Audio)."""
+
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="Время сбора",
+    )
+    usb_devices: List[Dict[str, Any]] = Field(default_factory=list, description="Подключенные USB-устройства и контроллеры")
+    wifi_telemetry: Dict[str, Any] = Field(default_factory=dict, description="Параметры текущей беспроводной сети Wi-Fi (SSID, BSSID, RSSI, канал)")
+    audio_endpoints: List[Dict[str, Any]] = Field(default_factory=list, description="Аудиоустройства и активные конечные точки")
+
 

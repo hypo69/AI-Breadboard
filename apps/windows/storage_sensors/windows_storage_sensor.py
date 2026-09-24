@@ -57,14 +57,19 @@ $ErrorActionPreference = 'SilentlyContinue'
 function Get-SafeCimInstances {
     param([string]$ClassName, [string]$Namespace = 'root/cimv2')
     try {
-        @(Get-CimInstance -Namespace $Namespace -ClassName $ClassName | Select-Object *)
+        @(Get-CimInstance -Namespace $Namespace -ClassName $ClassName -ErrorAction Stop | Select-Object *)
     }
     catch { @() }
 }
 
 function Get-SafeStorageReliability {
-    try { @(Get-PhysicalDisk | Get-StorageReliabilityCounter | Select-Object *) }
-    catch { @() }
+    try {
+        @(Get-CimInstance -Namespace 'root/Microsoft/Windows/Storage' -ClassName 'MSFT_StorageReliabilityCounter' -ErrorAction Stop | Select-Object *)
+    }
+    catch {
+        try { @(Get-PhysicalDisk -ErrorAction Stop | Get-StorageReliabilityCounter -ErrorAction Stop | Select-Object *) }
+        catch { @() }
+    }
 }
 
 function Get-SafePerformanceCounters {
@@ -76,16 +81,12 @@ function Get-SafePerformanceCounters {
         '\\PhysicalDisk(*)\Avg. Disk sec/Write',
         '\\PhysicalDisk(*)\Current Disk Queue Length'
     )
-    $result = @()
-    foreach ($path in $paths) {
-        try {
-            $result += @(Get-Counter -Counter $path -ErrorAction Stop |
-                Select-Object -ExpandProperty CounterSamples |
-                Select-Object Path, InstanceName, CookedValue, Timestamp)
-        }
-        catch { }
+    try {
+        @(Get-Counter -Counter $paths -MaxSamples 1 -ErrorAction Stop |
+            Select-Object -ExpandProperty CounterSamples |
+            Select-Object Path, InstanceName, CookedValue, Timestamp)
     }
-    return $result
+    catch { @() }
 }
 
 function Get-SafeEventLog {
@@ -98,9 +99,8 @@ function Get-SafeEventLog {
     $result = @()
     foreach ($log in $logs) {
         try {
-            $result += @(Get-WinEvent -LogName $log -MaxEvents 50 |
-                Select-Object LogName, Id, LevelDisplayName, TimeCreated,
-                    ProviderName, Message)
+            $result += @(Get-WinEvent -LogName $log -MaxEvents 15 -ErrorAction Stop |
+                Select-Object LogName, Id, LevelDisplayName, TimeCreated, ProviderName, Message)
         }
         catch { }
     }
@@ -164,7 +164,7 @@ class WindowsStorageSensor:
     def __init__(self, timeout_sec: int = 30, ttl_sec: float = 600.0) -> None:
         """Инициализация сенсора дисков Windows.
 
-        :param timeout_sec: Таймаут сбора данных через PowerShell в секундах.
+        :param timeout_sec: Таймаут сбора данных через PowerShell в секундах (по умолчанию 30с).
         :param ttl_sec: Время жизни кэша снимка в секундах (по умолчанию 600с = 10 мин).
         """
         self.timeout_sec = timeout_sec
@@ -184,19 +184,25 @@ class WindowsStorageSensor:
         """
         effective_timeout = timeout or self.timeout_sec
         creationflags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
-        result = subprocess.run(
-            [
-                "powershell.exe", "-NoLogo", "-NoProfile", "-NonInteractive",
-                "-ExecutionPolicy", "Bypass", "-Command", script,
-            ],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=effective_timeout,
-            creationflags=creationflags,
-            check=False,
-        )
+        try:
+            result = subprocess.run(
+                [
+                    "powershell.exe", "-NoLogo", "-NoProfile", "-NonInteractive",
+                    "-ExecutionPolicy", "Bypass", "-Command", script,
+                ],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=effective_timeout,
+                creationflags=creationflags,
+                check=False,
+            )
+        except subprocess.TimeoutExpired:
+            logger.warning(
+                f"PowerShell скрипт сбора хранилища превысил таймаут {effective_timeout} сек."
+            )
+            return {}
 
         if result.returncode != 0:
             logger.warning(
@@ -207,12 +213,16 @@ class WindowsStorageSensor:
                     f"PowerShell завершился с кодом {result.returncode}: {result.stderr.strip()}"
                 )
 
+        stdout_clean = result.stdout.strip()
+        if not stdout_clean:
+            return {}
+
         try:
-            return json.loads(result.stdout)
+            return json.loads(stdout_clean)
         except json.JSONDecodeError as error:
-            logger.error(f"Некорректный JSON от PowerShell: {result.stdout[:500]}")
+            logger.error(f"Некорректный JSON от PowerShell: {stdout_clean[:500]}")
             raise ValueError(
-                f"Некорректный JSON от PowerShell: {result.stdout[:500]}"
+                f"Некорректный JSON от PowerShell: {stdout_clean[:500]}"
             ) from error
 
     def collect_snapshot(self, force_refresh: bool = False) -> Dict[str, Any]:

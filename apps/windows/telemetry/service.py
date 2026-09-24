@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: System Telemetry Logger Service (Empty - No Storage)
+# Process Name: System Telemetry Logger Service with SQLite Database Storage
 # =============================================================================
 # Description:
-#   Фоновый сервис для непрерывного сбора метрик системы без сохранения.
-#   Используется для сбора данных в памяти для последующего анализа.
+#   Фоновый сервис непрерывного сбора метрик системы и сохранения их в базу данных SQLite.
+#   Фиксирует системные снапшоты, активные процессы, события и периодический аудит железа.
+#
+# Examples:
+#   >>> from apps.windows.telemetry.service import TelemetryLoggerService
+#   >>> service = TelemetryLoggerService.get_instance()
+#   >>> service.start()
 #
 # File: service.py
 # Project: ai-breadboard
@@ -13,20 +18,27 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""Фоновый сервис посекундного сбора системных метрик без сохранения."""
+"""Фоновый сервис посекундного сбора системных метрик с сохранением в SQLite."""
+
+from __future__ import annotations
 
 import asyncio
 import threading
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
-from logger import logger
+try:
+    from src.logger.logger import logger
+except ImportError:
+    from logger import logger
+
 from apps.windows.telemetry.collector import SystemCollector
 from apps.windows.telemetry.history_manager import HardwareHistoryManager
+from apps.windows.telemetry.storage import TelemetryStorage
 
 
 class TelemetryLoggerService:
-    """Сервис периодического сбора системной телеметрии и аудита оборудования."""
+    """Сервис периодического сбора системной телеметрии и аудита оборудования в SQLite."""
 
     _instance: Optional[TelemetryLoggerService] = None
 
@@ -35,6 +47,7 @@ class TelemetryLoggerService:
         interval_sec: float = 1.0,
         top_processes: int = 20,
         collector: Optional[SystemCollector] = None,
+        storage: Optional[TelemetryStorage] = None,
         hardware_audit_interval_sec: float = 60.0,
     ) -> None:
         """Инициализирует сервис сбора системных метрик.
@@ -43,12 +56,14 @@ class TelemetryLoggerService:
             interval_sec: Интервал между замерами телеметрии в секундах (по умолчанию 1.0).
             top_processes: Лимит сохраняемых активных процессов (по умолчанию 20).
             collector: Экземпляр сборщика SystemCollector (опционально).
+            storage: Экземпляр хранилища TelemetryStorage (опционально).
             hardware_audit_interval_sec: Интервал периодического аудита железа (по умолчанию 60.0).
         """
         self.interval_sec = max(0.2, interval_sec)
         self.top_processes = max(1, top_processes)
         self.hardware_audit_interval_sec = max(5.0, hardware_audit_interval_sec)
         self.collector = collector or SystemCollector()
+        self.storage = storage or TelemetryStorage.get_instance()
 
         self._running = False
         self._thread: Optional[threading.Thread] = None
@@ -82,6 +97,11 @@ class TelemetryLoggerService:
         """
         return self._running and self._thread is not None and self._thread.is_alive()
 
+    @property
+    def history_manager(self) -> HardwareHistoryManager:
+        """Возвращает менеджер истории оборудования."""
+        return self.collector.history_manager
+
     def start(self) -> bool:
         """Запускает фоновый поток сбора телеметрии и мониторинга оборудования.
 
@@ -106,8 +126,8 @@ class TelemetryLoggerService:
         )
         self._thread.start()
         logger.info(
-            f"Фоновый сервис телеметрии запущен (интервал: {self.interval_sec}с, "
-            f"аудит железа: {self.hardware_audit_interval_sec}с)"
+            f"Фоновый сервис телеметрии запущен в БД (интервал: {self.interval_sec}с, "
+            f"аудит железа: {self.hardware_audit_interval_sec}с, БД: {self.storage.db_path})"
         )
         return True
 
@@ -129,7 +149,7 @@ class TelemetryLoggerService:
         return True
 
     def _worker_loop(self) -> None:
-        """Основной рабочий цикл фонового сбора метрик и аудита изменений."""
+        """Основной рабочий цикл фонового сбора метрик, записи в БД и аудита изменений."""
         while not self._stop_event.is_set():
             loop_start = time.time()
             try:
@@ -153,13 +173,21 @@ class TelemetryLoggerService:
                 self._ticks_count += 1
                 self._last_tick_time = time.time()
 
+                # Сохранение среза в SQLite базу данных
+                try:
+                    self.storage.save_snapshot(snapshot, top_n=self.top_processes)
+                except Exception as db_err:
+                    logger.warning(f"Ошибка сохранения снимка телеметрии в БД: {db_err}")
+
                 # 2. Периодический аудит железа и фиксация изменений
                 if (
                     self._last_hw_audit_time is None
                     or (loop_start - self._last_hw_audit_time) >= self.hardware_audit_interval_sec
                 ):
                     try:
-                        self.collector.archive_hardware_state(auto_diff=True)
+                        archive_entry = self.collector.archive_hardware_state(auto_diff=True)
+                        if archive_entry:
+                            self.storage.save_hardware_archive(archive_entry)
                         self._last_hw_audit_time = loop_start
                     except Exception as hw_ex:
                         logger.debug(f"Ошибка при периодическом аудите железа: {hw_ex}")
@@ -192,16 +220,8 @@ class TelemetryLoggerService:
             "last_tick_epoch": self._last_tick_time,
             "last_hw_audit_epoch": self._last_hw_audit_time,
             "last_error": self._last_error,
+            "storage_stats": self.storage.get_storage_stats(),
         }
-
-    @property
-    def storage(self) -> HardwareHistoryManager:
-        """Возвращает менеджер истории и архивов оборудования.
-
-        Returns:
-            HardwareHistoryManager: Менеджер архивного хранилища.
-        """
-        return self.collector.history_manager
 
     def get_last_snapshot(self) -> Optional[Any]:
         """Возвращает последний собранный снапшот.
@@ -211,16 +231,36 @@ class TelemetryLoggerService:
         """
         return self._last_snapshot
 
+    def get_history(self, limit: int = 60) -> List[Dict[str, Any]]:
+        """Возвращает историю системных снимков из SQLite базы данных.
+
+        Args:
+            limit: Количество последних записей.
+
+        Returns:
+            List[Dict[str, Any]]: Список исторических срезов.
+        """
+        return self.storage.get_snapshots(limit=limit)
+
     def record_event(
         self,
         event_type: str,
         event_details: Dict[str, Any],
-    ) -> None:
-        """Записывает событие в системный логгер.
+        severity: str = "info",
+    ) -> int:
+        """Записывает событие в SQLite базу данных телеметрии.
 
         Args:
             event_type: Тип события (hardware_change, process_start, driver_update).
             event_details: Детали события.
+            severity: Уровень серьезности события.
+
+        Returns:
+            int: ID добавленной записи события.
         """
         logger.info(f"[Событие Telemetry] {event_type}: {event_details}")
-
+        try:
+            return self.storage.save_event(event_type, event_details, severity=severity)
+        except Exception as ex:
+            logger.error(f"Не удалось записать событие в базу данных: {ex}")
+            return 0

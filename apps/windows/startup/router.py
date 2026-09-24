@@ -143,7 +143,43 @@ def init_router() -> APIRouter:
         # Попытка интеллектуального анализа через доступную языковую модель
         try:
             from src.api.router_chat import get_chat_model
-            model_key = req.model or "gemini_cli:gemini-2.5-flash"
+            from src.config import ai_cfg
+
+            model_key = req.model
+            if not model_key:
+                providers = getattr(ai_cfg, "providers", {}) if ai_cfg else {}
+                provider = "gemini"
+                if isinstance(providers, dict):
+                    for prov_key, prov_cfg in providers.items():
+                        if isinstance(prov_cfg, dict) and prov_cfg.get("enabled"):
+                            provider = prov_key
+                            break
+
+                if provider == "gemini_cli":
+                    gemini_cli_cfg = providers.get("gemini_cli", {}) if isinstance(providers, dict) else {}
+                    model_key = f"gemini_cli:{gemini_cli_cfg.get('model', 'gemini-3.1-flash-lite')}"
+                elif provider == "foundry":
+                    foundry_cfg = providers.get("foundry", {}) if isinstance(providers, dict) else {}
+                    model_key = f"foundry:{foundry_cfg.get('model', 'default')}"
+                elif provider == "ollama":
+                    ollama_cfg = providers.get("ollama", {}) if isinstance(providers, dict) else {}
+                    model_key = f"ollama:{ollama_cfg.get('model', 'llama3.1')}"
+                elif provider == "agy":
+                    agy_cfg = providers.get("agy", {}) if isinstance(providers, dict) else {}
+                    model_key = f"{agy_cfg.get('model', 'agy-gemini-3.6-flash')}"
+                elif provider == "openai":
+                    openai_cfg = providers.get("openai", {}) if isinstance(providers, dict) else {}
+                    model_key = f"openai:{openai_cfg.get('model', 'gpt-4o-mini')}"
+                elif provider == "hf":
+                    hf_cfg = providers.get("hf", {}) if isinstance(providers, dict) else {}
+                    model_key = f"hf:{hf_cfg.get('model', 'default')}"
+                elif provider == "onnx":
+                    onnx_cfg = providers.get("onnx", {}) if isinstance(providers, dict) else {}
+                    model_key = f"onnx:{onnx_cfg.get('model', 'default')}"
+                else:
+                    gemini_cfg = providers.get("gemini", {}) if isinstance(providers, dict) else {}
+                    model_key = gemini_cfg.get("model", "gemini-3.1-flash-lite")
+
             llm = get_chat_model(
                 model_key,
                 system_instruction="Ты — эксперт по безопасности Windows и оптимизации автозагрузки. Отвечай строго в формате JSON.",

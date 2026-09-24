@@ -1,0 +1,9 @@
+{
+  "max_points": 5,
+  "auto_prune": true,
+  "max_storage_size": "10%",
+  "schedule_trigger": "weekly",
+  "schedule_time": "03:00",
+  "frequency_limit_minutes": 0,
+  "updated_at": "2026-09-24T17:52:27.983792"
+}

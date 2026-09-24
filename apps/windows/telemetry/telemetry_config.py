@@ -34,9 +34,16 @@ class TelemetryConfigManager:
         if config_path:
             self._config_path = config_path
         else:
+            unified_cfg1 = Path(__file__).resolve().parent.parent.parent.parent / "start_scenarios_config" / "~autolog_sensors.json"
+            unified_cfg2 = Path(__file__).resolve().parent.parent.parent.parent / "start_scenarios_config" / "autolog_sensors.json"
             windows_root_cfg = Path(__file__).parent.parent / "config.json"
             telemetry_cfg = Path(__file__).parent / "config.json"
-            if windows_root_cfg.exists():
+
+            if unified_cfg1.exists():
+                self._config_path = str(unified_cfg1)
+            elif unified_cfg2.exists():
+                self._config_path = str(unified_cfg2)
+            elif windows_root_cfg.exists():
                 self._config_path = str(windows_root_cfg)
             else:
                 self._config_path = str(telemetry_cfg)

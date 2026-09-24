@@ -15,6 +15,7 @@
  */
 
 import { escapeHtml } from './utils.js';
+import { ragCachedFetch, CACHE_TAG } from './cache.js';
 
 let cachedCodebaseIndexes = [];
 
@@ -28,7 +29,9 @@ export async function loadCodebaseIndexes() {
   if (!select) return;
 
   try {
-    const res = await fetch('/api/rag/codebase/indexes');
+    const res = await ragCachedFetch('/api/rag/codebase/indexes', {
+      tags: ['rag-codebase']
+    });
     if (!res.ok) return;
     const data = await res.json();
     cachedCodebaseIndexes = data.indexes || [];

@@ -1,9 +1,12 @@
 // ── CHAT.JS ───────────────────────────────────────────────────────────────────
 
+import { cachedApiFetch, clearCacheByTag } from '../js/api-cache.js';
+
 const STORAGE_KEY_SESSIONS = 'breadboard_chat_sessions_v2';
 const STORAGE_KEY_ACTIVE_SESSION_ID = 'breadboard_active_session_id';
 const STORAGE_KEY_SIDEBAR_COLLAPSED = 'breadboard_chat_sidebar_collapsed';
 const LEGACY_STORAGE_KEY = 'breadboard_chat_history';
+const CACHE_TAG = 'chat';
 
 let sessions = [];
 let activeSessionId = null;
@@ -116,7 +119,9 @@ async function clearAllSessionsFromServer() {
 
 async function syncSessionsWithServer() {
   try {
-    const res = await fetch('/api/chat/sessions');
+    const res = await cachedApiFetch('/api/chat/sessions', {
+      tags: [CACHE_TAG, 'chat-sessions']
+    });
     if (!res.ok) return;
     const data = await res.json();
     const serverSessions = data.sessions || [];
@@ -360,6 +365,9 @@ function clearAllSessions() {
     localStorage.removeItem(LEGACY_STORAGE_KEY);
   } catch (e) {}
 
+  // Clear cache for chat sessions
+  clearCacheByTag(CACHE_TAG).catch(err => console.debug('Failed to clear chat cache:', err));
+
   clearAllSessionsFromServer();
   createNewSession('Новый чат', true);
 }
@@ -456,10 +464,53 @@ function renderActiveSessionMessages() {
   updateCurrentSessionHeader();
 }
 
+/**
+ * Update cache status badge
+ */
+function updateChatCacheStatus() {
+  const badge = document.getElementById('chat-cache-badge');
+  const ratio = document.getElementById('chat-cache-ratio');
+  if (!badge || !ratio) return;
+
+  try {
+    const stats = window.apiCacheStats || { hits: 0, total: 0 };
+    const hitRate = stats.total > 0 ? Math.round((stats.hits / stats.total) * 100) : 0;
+    ratio.textContent = `${hitRate}%`;
+    
+    // Color coding based on hit rate
+    badge.className = 'badge cache-badge';
+    if (hitRate >= 70) {
+      badge.classList.add('bg-success-subtle', 'text-success');
+    } else if (hitRate >= 40) {
+      badge.classList.add('bg-warning-subtle', 'text-warning');
+    } else {
+      badge.classList.add('bg-secondary-subtle', 'text-secondary');
+    }
+  } catch (err) {
+    console.debug('Failed to update cache status:', err);
+  }
+}
+
+/**
+ * Clear chat cache
+ */
+async function clearChatCache() {
+  try {
+    await clearCacheByTag(CACHE_TAG);
+    updateChatCacheStatus();
+    console.log('Chat cache cleared');
+  } catch (err) {
+    console.error('Failed to clear chat cache:', err);
+  }
+}
+
 function initChatTab() {
   loadSessions();
   renderSessionsList();
   renderActiveSessionMessages();
+
+  // Update cache status
+  updateChatCacheStatus();
 
   // Bind Sidebar Toggle
   const sidebar = document.getElementById('chat-sidebar');
@@ -505,6 +556,16 @@ function initChatTab() {
     });
   }
 
+  const clearCacheBtn = document.getElementById('chat-clear-cache-btn');
+  if (clearCacheBtn) {
+    clearCacheBtn.addEventListener('click', async () => {
+      await clearChatCache();
+      // Force refresh sessions
+      await syncSessionsWithServer();
+      renderSessionsList();
+    });
+  }
+
   const renameCurrentBtn = document.getElementById('chat-rename-current-btn');
   if (renameCurrentBtn) {
     renameCurrentBtn.addEventListener('click', () => {
@@ -541,7 +602,7 @@ function initChatTab() {
       ragToggle.checked = savedRagPref === 'true';
       updateRagInputsState(ragToggle.checked);
     }
-    fetch('/auth/settings')
+    fetch('/auth/settings', { cache: 'no-cache' })
       .then((res) => (res.ok ? res.json() : null))
       .then((settings) => {
         if (settings && typeof settings.rag_enabled !== 'undefined') {
@@ -574,6 +635,8 @@ function initChatTab() {
     const savedMode = localStorage.getItem('chat_output_mode');
     if (savedMode) {
       modeSelect.value = savedMode;
+    } else {
+      modeSelect.value = 'text_only';
     }
     modeSelect.addEventListener('change', (e) => {
       localStorage.setItem('chat_output_mode', e.target.value);
@@ -787,7 +850,7 @@ async function sendMessage() {
 
   const topK = topKInput ? parseInt(topKInput.value, 10) || 3 : 3;
   const minScore = minScoreInput ? parseFloat(minScoreInput.value) || 0.45 : 0.45;
-  const outputMode = modeSelect ? modeSelect.value : 'text_and_voice';
+  const outputMode = modeSelect ? modeSelect.value : 'text_only';
   const shouldSpeak = outputMode === 'voice_only' || outputMode === 'text_and_voice';
   const isRagEnabled = ragToggle ? ragToggle.checked : true;
 
@@ -851,6 +914,18 @@ async function sendMessage() {
       search_engine: window.activeSearchEngine || undefined
     };
 
+    let rafId = null;
+    const scheduleRender = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        if (textDiv) {
+          textDiv.innerHTML = parseContentToHtml(fullReply);
+        }
+        if (win) win.scrollTop = win.scrollHeight;
+      });
+    };
+
     const replyObj = await window.chatService.sendChatMessage(
       msg,
       (chunk, status) => {
@@ -863,15 +938,17 @@ async function sendMessage() {
             started = true;
           }
           fullReply += chunk;
-          if (textDiv) {
-            textDiv.innerHTML = parseContentToHtml(fullReply);
-          }
+          scheduleRender();
         }
-        if (win) win.scrollTop = win.scrollHeight;
       },
       session.chatHistory || [],
       generationConfig
     );
+
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
 
     const finalReply = replyObj.text || fullReply;
     if (textDiv) {

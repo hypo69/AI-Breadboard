@@ -114,7 +114,7 @@ class StorageCollector(TelemetryProvider):
         physical_disks_data: List[Dict[str, Any]] = []
         try:
             from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
-            sensor = WindowsStorageSensor(timeout_sec=10)
+            sensor = WindowsStorageSensor(timeout_sec=30)
             disks = sensor.get_physical_disks()
             for d in disks:
                 disk_dict = d.to_dict()

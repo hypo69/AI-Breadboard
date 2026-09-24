@@ -54,7 +54,7 @@ class ChatEngine:
                 "rag_enabled": True,
                 "top_k": 3,
                 "min_score": 0.45,
-                "output_mode": "text_and_voice",
+                "output_mode": "text_only",
             },
         }
 

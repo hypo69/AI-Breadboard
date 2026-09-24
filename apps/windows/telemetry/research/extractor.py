@@ -29,26 +29,40 @@ from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Union
 
 from logger import logger
+from apps.windows.telemetry.storage import TelemetryStorage
 
 
 class TelemetryDataExtractor:
-    """Извлекатель и нормализатор данных из файлов логов телеметрии."""
+    """Извлекатель и нормализатор данных из базы данных и файлов логов телеметрии."""
 
-    def __init__(self, default_log_dirs: Optional[List[Union[str, Path]]] = None) -> None:
+    def __init__(
+        self,
+        default_log_dirs: Optional[List[Union[str, Path]]] = None,
+        storage: Optional[TelemetryStorage] = None,
+    ) -> None:
         """Инициализация извлекателя логов.
 
         Args:
             default_log_dirs: Список базовых директорий для поиска логов по умолчанию.
+            storage: Экземпляр хранилища SQLite базы данных.
         """
+        self._storage = storage
         base_proj = Path(__file__).resolve().parent.parent.parent.parent.parent
         appdata = os.environ.get("APPDATA", str(Path.home() / "AppData" / "Roaming"))
 
         self.default_log_dirs = [Path(p) for p in default_log_dirs] if default_log_dirs else [
             base_proj / "logs" / "telemetry",
             Path(appdata) / "AI-Breadboard" / "apps" / "logs",
+            Path(appdata) / "AI-Breadboard" / "apps" / "windows" / "telemetry" / "logs",
             base_proj / "data" / "telemetry" / "hardware_archives",
-            base_proj / "logs",
         ]
+
+    @property
+    def storage(self) -> TelemetryStorage:
+        """Получить экземпляр SQLite хранилища телеметрии."""
+        if self._storage is None:
+            self._storage = TelemetryStorage.get_instance()
+        return self._storage
 
     def discover_log_files(self, search_dir: Optional[Union[str, Path]] = None) -> List[Path]:
         """Обнаружить все доступные файлы логов телеметрии.
@@ -151,14 +165,50 @@ class TelemetryDataExtractor:
 
         return entries
 
+    def load_from_database(self, limit: int = 1000) -> List[Dict[str, Any]]:
+        """Загрузить исторические записи телеметрии напрямую из базы данных SQLite.
+
+        Args:
+            limit: Максимальное число извлекаемых записей.
+
+        Returns:
+            List[Dict[str, Any]]: Список нормализованных записей из БД.
+        """
+        records: List[Dict[str, Any]] = []
+        try:
+            snapshots = self.storage.get_snapshots(limit=limit)
+            for snap in snapshots:
+                rec = dict(snap)
+                rec["source_file"] = "sqlite:system_snapshots"
+                records.append(self._normalize_entry(rec, source_file="sqlite:system_snapshots"))
+
+            sensor_polls = self.storage.get_sensor_history(limit=limit)
+            for s in sensor_polls:
+                rec = dict(s)
+                rec["source_file"] = "sqlite:sensor_polls"
+                records.append(self._normalize_entry(rec, source_file="sqlite:sensor_polls"))
+
+            events = self.storage.get_events(limit=limit)
+            for ev in events:
+                rec = dict(ev)
+                rec["source_file"] = "sqlite:telemetry_events"
+                records.append(self._normalize_entry(rec, source_file="sqlite:telemetry_events"))
+
+        except Exception as ex:
+            logger.warning(f"Ошибка загрузки телеметрии из базы данных: {ex}")
+
+        return records
+
     def load_all_records(
         self,
         source: Optional[Union[str, Path, List[Dict[str, Any]]]] = None,
+        include_database: bool = True,
     ) -> List[Dict[str, Any]]:
-        """Загрузить все записи телеметрии из источника или из всех обнаруженных директорий.
+        """Загрузить все записи телеметрии из источника, базы данных или найденных файлов.
 
         Args:
             source: Путь к директории, файлу или готовый список записей.
+            include_database: Загружать ли записи из базы данных SQLite.
 
         Returns:
             List[Dict[str, Any]]: Отсортированный по времени список записей телеметрии.
@@ -167,6 +217,7 @@ class TelemetryDataExtractor:
             return [self._normalize_entry(x, source_file="memory") for x in source if isinstance(x, dict)]
 
         all_records: List[Dict[str, Any]] = []
+
         if source:
             source_path = Path(source)
             if source_path.is_file():
@@ -175,6 +226,8 @@ class TelemetryDataExtractor:
                 for f in self.discover_log_files(source_path):
                     all_records.extend(self.parse_file(f))
         else:
+            if include_database:
+                all_records.extend(self.load_from_database())
             for f in self.discover_log_files():
                 all_records.extend(self.parse_file(f))
 

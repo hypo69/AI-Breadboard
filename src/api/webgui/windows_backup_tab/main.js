@@ -291,20 +291,82 @@
       btnRefreshFolders.onclick = () => loadUserFoldersOverview();
     }
 
-    // Modal Relocate
+    // Modal Relocate Target Drive Change
+    const selectRelocateDrive = document.getElementById('wb-relocate-target-drive');
+    if (selectRelocateDrive) {
+      selectRelocateDrive.onchange = () => {
+        const driveVal = selectRelocateDrive.value;
+        const folderId = document.getElementById('wb-relocate-folder-id')?.value;
+        const folder = (_userFoldersData?.folders || []).find(f => f.folder_id === folderId);
+        const inputPath = document.getElementById('wb-relocate-target-path');
+        if (driveVal && folder && inputPath) {
+          const d = driveVal.replace('/', '\\').replace(/\\+$/, '');
+          const parts = folder.current_path.split('\\');
+          const folderSubname = parts[parts.length - 1] || folder.name;
+          const userMatch = folder.current_path.match(/Users\\([^\\]+)/i);
+          const username = userMatch ? userMatch[1] : 'User';
+          inputPath.value = `${d}\\Users\\${username}\\${folderSubname}`;
+        }
+      };
+    }
+
+    // Modal Relocate Browse Folder Button
+    const btnBrowseFolder = document.getElementById('wb-btn-browse-folder');
+    if (btnBrowseFolder) {
+      btnBrowseFolder.onclick = async () => {
+        const currentPathVal = document.getElementById('wb-relocate-target-path')?.value || '';
+        const currentDriveVal = document.getElementById('wb-relocate-target-drive')?.value || '';
+        const initialPath = currentPathVal || (currentDriveVal ? currentDriveVal + '\\' : '');
+
+        btnBrowseFolder.disabled = true;
+        btnBrowseFolder.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Выбор...';
+
+        try {
+          const res = await fetch(`/api/v1/windows-backup/browse-folder?initial_path=${encodeURIComponent(initialPath)}`, {
+            method: 'POST'
+          });
+          const data = await res.json();
+          if (res.ok && data.selected_path) {
+            const chosenPath = data.selected_path;
+            const inputPath = document.getElementById('wb-relocate-target-path');
+            if (inputPath) inputPath.value = chosenPath;
+
+            // Синхронизируем выпадающий список дисков
+            const driveLetter = chosenPath.match(/^[a-zA-Z]:/)?.[0]?.toUpperCase();
+            if (driveLetter && selectRelocateDrive) {
+              for (let opt of selectRelocateDrive.options) {
+                if (opt.value && opt.value.toUpperCase().startsWith(driveLetter)) {
+                  selectRelocateDrive.value = opt.value;
+                  break;
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.error('[WindowsBackup] Browse folder error:', err);
+        } finally {
+          btnBrowseFolder.disabled = false;
+          btnBrowseFolder.innerHTML = '<i class="bi bi-folder2-open"></i> <span>Обзор...</span>';
+        }
+      };
+    }
+
+    // Modal Relocate Execution
     const btnExecRelocate = document.getElementById('wb-btn-execute-relocate');
     if (btnExecRelocate) {
       btnExecRelocate.onclick = async () => {
         const folderId = document.getElementById('wb-relocate-folder-id')?.value;
         const targetDrive = document.getElementById('wb-relocate-target-drive')?.value;
+        const targetPath = document.getElementById('wb-relocate-target-path')?.value?.trim();
         const deleteSource = document.getElementById('wb-relocate-delete-source')?.checked || false;
 
-        if (!folderId || !targetDrive) {
-          alert('Пожалуйста, выберите целевой диск для переноса.');
+        if (!folderId || (!targetDrive && !targetPath)) {
+          alert('Пожалуйста, выберите целевой диск или укажите целевую папку для переноса.');
           return;
         }
 
-        if (!confirm(`Подтвердите перенос папки на диск ${targetDrive}.\nВсе файлы будут скопированы, а системные пути и библиотеки перенастроены.`)) {
+        const destDisplay = targetPath || targetDrive;
+        if (!confirm(`Подтвердите перенос папки в "${destDisplay}".\nВсе файлы будут скопированы, а системные пути и библиотеки перенастроены.`)) {
           return;
         }
 
@@ -317,7 +379,8 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               folder_id: folderId,
-              target_drive_letter: targetDrive,
+              target_drive_letter: targetDrive || null,
+              target_path: targetPath || null,
               delete_source_after: deleteSource
             })
           });
@@ -690,9 +753,13 @@
     if (elPath) elPath.textContent = folder.current_path;
     if (elSize) elSize.textContent = `${folder.size_gb >= 0.01 ? `${folder.size_gb} ГБ` : `${folder.size_mb} МБ`} (${folder.file_count} файлов)`;
 
+    const inputPath = document.getElementById('wb-relocate-target-path');
+    if (inputPath) inputPath.value = '';
+
     if (selectDrive) {
       selectDrive.innerHTML = '<option value="">-- Выберите диск --</option>';
       const folderDrive = folder.drive_letter.replace('\\', '').toUpperCase();
+      let firstSuitableDrive = null;
 
       (_userFoldersData.drives || []).forEach(d => {
         const dLetter = d.drive_letter.replace('\\', '').toUpperCase();
@@ -704,9 +771,23 @@
         opt.textContent = `${d.drive_letter} (${d.fstype}) — Свободно: ${d.free_space_gb} ГБ из ${d.total_space_gb} ГБ ${isEnough ? '✅ Достаточно места' : '⚠️ Мало места'}`;
         if (!isEnough) {
           opt.disabled = true;
+        } else if (!firstSuitableDrive) {
+          firstSuitableDrive = d.drive_letter;
         }
         selectDrive.appendChild(opt);
       });
+
+      if (firstSuitableDrive) {
+        selectDrive.value = firstSuitableDrive;
+        if (inputPath) {
+          const d = firstSuitableDrive.replace('/', '\\').replace(/\\+$/, '');
+          const parts = folder.current_path.split('\\');
+          const folderSubname = parts[parts.length - 1] || folder.name;
+          const userMatch = folder.current_path.match(/Users\\([^\\]+)/i);
+          const username = userMatch ? userMatch[1] : 'User';
+          inputPath.value = `${d}\\Users\\${username}\\${folderSubname}`;
+        }
+      }
     }
 
     if (elHint) {

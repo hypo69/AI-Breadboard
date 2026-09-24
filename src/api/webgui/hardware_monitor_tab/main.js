@@ -426,7 +426,7 @@
       if (data.sensors.length === 0) {
         return '<div class="text-muted small">Сенсоры не обнаружены или утилита не запущена</div>';
       }
-      const rows = data.sensors.slice(0, 30).map(s => {
+      const rows = data.sensors.map(s => {
         const val = s.value !== undefined ? s.value : (s.current || '—');
         const unit = s.unit || '';
         return `<tr>
@@ -439,16 +439,16 @@
           <thead><tr><th>Сенсор</th><th>Значение</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
-        ${data.count > 30 ? `<div class="text-muted text-center small">Показано 30 из ${data.count}</div>` : ''}
+        <div class="text-muted text-end small mt-1" style="font-size: 0.7rem;">Всего элементов: ${data.sensors.length}</div>
       `;
     }
 
     // Если есть report (AIDA64)
     if (data.report) {
       if (typeof data.report === 'string') {
-        return `<pre class="bg-dark text-light p-1 rounded mb-0" style="font-size: 0.72rem; max-height: 150px; overflow: auto;">${escapeHtml(data.report.substring(0, 3000))}</pre>`;
+        return `<pre class="bg-dark text-light p-1.5 rounded mb-0 font-monospace" style="font-size: 0.72rem; white-space: pre-wrap; word-break: break-word;">${escapeHtml(data.report)}</pre>`;
       }
-      return `<pre class="bg-dark text-light p-1 rounded mb-0" style="font-size: 0.72rem; max-height: 150px; overflow: auto;">${escapeHtml(JSON.stringify(data.report, null, 2).substring(0, 3000))}</pre>`;
+      return `<pre class="bg-dark text-light p-1.5 rounded mb-0 font-monospace" style="font-size: 0.72rem; white-space: pre-wrap; word-break: break-word;">${escapeHtml(JSON.stringify(data.report, null, 2))}</pre>`;
     }
 
     // Если есть drives / devices (smartmontools scan)
@@ -469,11 +469,11 @@
     // Snapshot данные (CPU-Z, GPU-Z)
     if (data.snapshot || data.data || data.info) {
       const obj = data.snapshot || data.data || data.info;
-      return `<pre class="bg-dark text-light p-1 rounded mb-0" style="font-size: 0.72rem; max-height: 150px; overflow: auto;">${escapeHtml(JSON.stringify(obj, null, 2).substring(0, 3000))}</pre>`;
+      return `<pre class="bg-dark text-light p-1.5 rounded mb-0 font-monospace" style="font-size: 0.72rem; white-space: pre-wrap; word-break: break-word;">${escapeHtml(JSON.stringify(obj, null, 2))}</pre>`;
     }
 
     // Общий fallback
-    return `<pre class="bg-dark text-light p-1 rounded mb-0" style="font-size: 0.72rem; max-height: 150px; overflow: auto;">${escapeHtml(JSON.stringify(data, null, 2).substring(0, 3000))}</pre>`;
+    return `<pre class="bg-dark text-light p-1.5 rounded mb-0 font-monospace" style="font-size: 0.72rem; white-space: pre-wrap; word-break: break-word;">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
   }
 })();
 

@@ -1,10 +1,10 @@
 <!--
 ===============================================================================
-Process Name: Applications Auto-Logging and CSV Manager Web UI Tab
+Process Name: Applications Auto-Logging and Telemetry Sensors Web UI Tab
 ===============================================================================
 Description:
     Модульный интерфейс управления периодическим автологгированием приложений,
-    настройки интервалов опроса телеметрии, инспекции и скачивания CSV-логов.
+    сенсорами телеметрии оборудования, инспекции и скачивания CSV-логов.
 
 File: index.html
 Project: AI-Breadboard
@@ -22,8 +22,8 @@ Copyright: © 2026 hypo69
         <div class="d-flex align-items-center gap-2">
           <div class="fs-3">📝</div>
           <div>
-            <h5 class="mb-0 fw-bold text-white">Управление автологгированием приложений</h5>
-            <small class="text-muted">Централизованный периодический опрос телеметрии и запись в CSV (<code>%APPDATA%/AI-Breadboard/apps/logs</code>)</small>
+            <h5 class="mb-0 fw-bold text-white">Управление автологгированием и сенсорами телеметрии</h5>
+            <small class="text-muted">Единый конфигурационный профиль телеметрии и периодический сбор в CSV (<code>%APPDATA%/AI-Breadboard/apps/logs</code>)</small>
           </div>
         </div>
 
@@ -73,15 +73,15 @@ Copyright: © 2026 hypo69
 
         <div class="col-6 col-md-3">
           <div class="p-2 rounded border border-secondary" style="background: rgba(15, 23, 42, 0.6);">
-            <div class="text-muted small text-uppercase" style="font-size: 0.7rem;">Всего CSV-файлов логов</div>
-            <div class="fw-bold text-white fs-5 mt-1" id="metric-csv-files-count">0</div>
+            <div class="text-muted small text-uppercase" style="font-size: 0.7rem;">Сенсоров телеметрии</div>
+            <div class="fw-bold text-success fs-5 mt-1" id="metric-active-sensors">0</div>
           </div>
         </div>
 
         <div class="col-6 col-md-3">
           <div class="p-2 rounded border border-secondary" style="background: rgba(15, 23, 42, 0.6);">
-            <div class="text-muted small text-uppercase" style="font-size: 0.7rem;">Конфигурационный профиль</div>
-            <div class="fw-bold text-warning fs-6 mt-1 text-truncate" id="metric-active-config-file">config_tc.json</div>
+            <div class="text-muted small text-uppercase" style="font-size: 0.7rem;">Конфигурационный файл</div>
+            <div class="fw-bold text-warning fs-6 mt-1 text-truncate" id="metric-active-config-file">~autolog_sensors.json</div>
           </div>
         </div>
       </div>
@@ -94,7 +94,14 @@ Copyright: © 2026 hypo69
     <li class="nav-item" role="presentation">
       <button class="nav-link active d-flex align-items-center gap-1.5 py-1.5 px-3" id="subtab-loggers-btn" data-bs-toggle="tab" data-bs-target="#subtab-loggers" type="button" role="tab">
         <i class="bi bi-sliders2-vertical text-info"></i>
-        <span>Настройки логгеров приложений</span>
+        <span>Логгеры приложений</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link d-flex align-items-center gap-1.5 py-1.5 px-3" id="subtab-sensors-btn" data-bs-toggle="tab" data-bs-target="#subtab-sensors" type="button" role="tab">
+        <i class="bi bi-cpu text-warning"></i>
+        <span>Сенсоры телеметрии</span>
+        <span class="badge bg-secondary ms-1" id="badge-sensors-count">0</span>
       </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -106,8 +113,14 @@ Copyright: © 2026 hypo69
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link d-flex align-items-center gap-1.5 py-1.5 px-3" id="subtab-viewer-btn" data-bs-toggle="tab" data-bs-target="#subtab-viewer" type="button" role="tab">
-        <i class="bi bi-table text-warning"></i>
+        <i class="bi bi-table text-primary"></i>
         <span>Инспектор CSV-записей</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link d-flex align-items-center gap-1.5 py-1.5 px-3" id="subtab-json-btn" data-bs-toggle="tab" data-bs-target="#subtab-json" type="button" role="tab">
+        <i class="bi bi-code-square text-info"></i>
+        <span>Редактор JSON</span>
       </button>
     </li>
   </ul>
@@ -161,7 +174,7 @@ Copyright: © 2026 hypo69
         <div class="card-footer bg-dark border-secondary p-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
           <small class="text-muted">
             <i class="bi bi-info-circle me-1"></i>
-            Изменения интервалов сохраняются в активный профиль и мгновенно применяются к фоновым воркерам.
+            Изменения сохраняются в единый конфигурационный файл и мгновенно перезапускают фоновые воркеры.
           </small>
           <button id="btn-autolog-save-config-bottom" class="btn btn-sm btn-primary d-flex align-items-center gap-1 shadow-sm">
             <i class="bi bi-floppy-fill"></i>
@@ -171,7 +184,77 @@ Copyright: © 2026 hypo69
       </div>
     </div>
 
-    <!-- Section 2: CSV Log Files Manager -->
+    <!-- Section 2: Telemetry Sensors Visual Editor -->
+    <div class="tab-pane fade" id="subtab-sensors" role="tabpanel">
+      <div class="card shadow-sm border-secondary-subtle mb-3">
+        <div class="card-header bg-dark d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 border-secondary">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fw-semibold text-white small">⚙️ Глобальные параметры сбора телеметрии</span>
+          </div>
+        </div>
+        <div class="card-body bg-dark text-white p-3">
+          <div class="row g-3">
+            <div class="col-12 col-md-4">
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch" id="opt-collect-inventory" checked>
+                <label class="form-check-label small" for="opt-collect-inventory">Инвентаризация оборудования (WMI/Win32)</label>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="opt-collect-serials" checked>
+                <label class="form-check-label small" for="opt-collect-serials">Сбор серийных номеров накопителей/CPU</label>
+              </div>
+            </div>
+            <div class="col-12 col-md-4">
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch" id="opt-collect-file-events" checked>
+                <label class="form-check-label small" for="opt-collect-file-events">Мониторинг файловых событий</label>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <label class="small text-muted text-nowrap mb-0" for="opt-max-file-size">Макс. лог (MB):</label>
+                <input type="number" id="opt-max-file-size" class="form-control form-control-sm bg-dark text-white border-secondary" style="max-width: 100px;" value="50" min="1" max="1000">
+              </div>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="small text-muted mb-1" for="opt-watch-dirs">Отслеживаемые директории (через запятую):</label>
+              <input type="text" id="opt-watch-dirs" class="form-control form-control-sm bg-dark text-white border-secondary" value="C:\Users\">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-secondary-subtle">
+        <div class="card-header bg-dark d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 border-secondary">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fw-semibold text-white small">📊 Сенсоры оборудования и метрики телеметрии</span>
+          </div>
+          <button id="btn-refresh-sensors" class="btn btn-sm btn-outline-secondary" title="Обновить сенсоры">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+        </div>
+
+        <div class="card-body p-3 bg-dark">
+          <div class="row g-3" id="sensors-cards-container">
+            <div class="col-12 text-center text-muted py-4">
+              <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
+              Загрузка конфигурации сенсоров...
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer bg-dark border-secondary p-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <small class="text-muted">
+            <i class="bi bi-info-circle me-1"></i>
+            Нажмите на бейджи метрик для включения/выключения отдельных параметров сбора.
+          </small>
+          <button id="btn-save-sensors-config" class="btn btn-sm btn-primary d-flex align-items-center gap-1 shadow-sm">
+            <i class="bi bi-floppy-fill"></i>
+            <span>Сохранить конфигурацию сенсоров</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: CSV Log Files Manager -->
     <div class="tab-pane fade" id="subtab-files" role="tabpanel">
       <div class="card shadow-sm border-secondary-subtle">
         <div class="card-header bg-dark d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 border-secondary">
@@ -211,7 +294,7 @@ Copyright: © 2026 hypo69
       </div>
     </div>
 
-    <!-- Section 3: Interactive CSV Explorer -->
+    <!-- Section 4: Interactive CSV Explorer -->
     <div class="tab-pane fade" id="subtab-viewer" role="tabpanel">
       <div class="card shadow-sm border-secondary-subtle">
         <div class="card-header bg-dark d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 border-secondary">
@@ -258,6 +341,46 @@ Copyright: © 2026 hypo69
             <span class="btn btn-sm btn-dark disabled border-0" id="viewer-page-indicator">1 / 1</span>
             <button class="btn btn-sm btn-outline-secondary" id="btn-viewer-next-page" disabled>Вперед &raquo;</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 5: Raw JSON Editor -->
+    <div class="tab-pane fade" id="subtab-json" role="tabpanel">
+      <div class="card shadow-sm border-secondary-subtle">
+        <div class="card-header bg-dark d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 border-secondary">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fw-semibold text-white small">💻 Прямой редактор конфигурационного JSON-файла</span>
+          </div>
+
+          <div class="d-flex align-items-center gap-2">
+            <button id="btn-format-json" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1" title="Отформатировать JSON">
+              <i class="bi bi-text-indent-left"></i>
+              <span>Форматировать</span>
+            </button>
+            <button id="btn-reload-json" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" title="Перечитать с диска">
+              <i class="bi bi-arrow-clockwise"></i>
+              <span>Сбросить</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body p-2 bg-dark">
+          <textarea id="textarea-raw-json" class="form-control bg-black text-light font-monospace border-secondary p-3" rows="20" style="font-size: 0.85rem; line-height: 1.4; tab-size: 2; font-family: 'Consolas', 'Fira Code', monospace;"></textarea>
+          <div id="json-validation-feedback" class="mt-2 small text-success d-none">
+            <i class="bi bi-check-circle-fill me-1"></i> JSON синтаксически корректен
+          </div>
+        </div>
+
+        <div class="card-footer bg-dark border-secondary p-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <small class="text-muted">
+            <i class="bi bi-shield-check me-1"></i>
+            Валидация синтаксиса выполняется перед сохранением.
+          </small>
+          <button id="btn-save-raw-json" class="btn btn-sm btn-primary d-flex align-items-center gap-1 shadow-sm">
+            <i class="bi bi-floppy-fill"></i>
+            <span>Сохранить JSON на диск</span>
+          </button>
         </div>
       </div>
     </div>

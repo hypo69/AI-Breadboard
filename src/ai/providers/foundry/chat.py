@@ -204,12 +204,32 @@ class FoundryChatBase:
                 error_msg = result.get("error", "Unknown error")
                 if "404" in error_msg or "not found" in error_msg.lower():
                     from src.ai.model_manager import add_unsupported_model
+                    from src.ai.orchestration.model_error_hub import record_model_error
+                    record_model_error(
+                        provider='foundry',
+                        model_name=self.model_id,
+                        error=error_msg,
+                        status_code=404,
+                        attempt=attempt,
+                        max_attempts=attempts,
+                        action_taken='failed',
+                    )
                     add_unsupported_model('foundry', self.model_id, reason=error_msg)
                     return None
                 logger.warning(f"[{self.model_id}] attempt {attempt} failed: {error_msg}")
 
                 if attempt < attempts:
                     wait = 2 ** min(attempt, 5)  # Exponential backoff: 2, 4, 8, 16, 32s
+                    from src.ai.orchestration.model_error_hub import record_model_error
+                    record_model_error(
+                        provider='foundry',
+                        model_name=self.model_id,
+                        error=error_msg,
+                        attempt=attempt,
+                        max_attempts=attempts,
+                        action_taken='retry',
+                        retry_delay_seconds=float(wait),
+                    )
                     logger.info(f"Waiting {wait}s before retry...")
                     time.sleep(wait)
 
@@ -218,6 +238,7 @@ class FoundryChatBase:
                 
                 # 3. Service temporarily unavailable (503 UNAVAILABLE) - use model pool
                 if '503' in err_str or 'UNAVAILABLE' in err_str:
+                    from src.ai.orchestration.model_error_hub import record_model_error
                     from src.ai.orchestration.model_pool_state import mark_model_exhausted, switch_model
                     mark_model_exhausted('foundry', self.model_id)
                     logger.error(f"[{self.model_id}] exception on attempt {attempt}: 503 UNAVAILABLE", exc_info=True)
@@ -226,9 +247,28 @@ class FoundryChatBase:
 
                     if attempt < attempts:
                         wait = 2 ** min(attempt, 5)
+                        record_model_error(
+                            provider='foundry',
+                            model_name=self.model_id,
+                            error=err_str,
+                            status_code=503,
+                            attempt=attempt,
+                            max_attempts=attempts,
+                            action_taken='retry',
+                            retry_delay_seconds=float(wait),
+                        )
                         logger.info(f"[{self.model_id}] Waiting {wait}s before retry...")
                         time.sleep(wait)
                     else:
+                        record_model_error(
+                            provider='foundry',
+                            model_name=self.model_id,
+                            error=err_str,
+                            status_code=503,
+                            attempt=attempt,
+                            max_attempts=attempts,
+                            action_taken='failed',
+                        )
                         logger.error(f"[{self.model_id}] All {attempts} attempts failed")
                         return None
                     continue
@@ -237,11 +277,29 @@ class FoundryChatBase:
                 self._last_error = str(ex)
                 self._error_count += 1
 
+                from src.ai.orchestration.model_error_hub import record_model_error
                 if attempt < attempts:
                     wait = 2 ** min(attempt, 5)
+                    record_model_error(
+                        provider='foundry',
+                        model_name=self.model_id,
+                        error=err_str,
+                        attempt=attempt,
+                        max_attempts=attempts,
+                        action_taken='retry',
+                        retry_delay_seconds=float(wait),
+                    )
                     logger.info(f"Waiting {wait}s before retry...")
                     time.sleep(wait)
                 else:
+                    record_model_error(
+                        provider='foundry',
+                        model_name=self.model_id,
+                        error=err_str,
+                        attempt=attempt,
+                        max_attempts=attempts,
+                        action_taken='failed',
+                    )
                     logger.error(f"[{self.model_id}] All {attempts} attempts failed")
                     return None
 

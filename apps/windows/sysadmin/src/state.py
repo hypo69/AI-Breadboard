@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Управление состоянием Windows System Administrator:
-#   - Сессии пользователей и Active Directory
+#   - Учетные записи пользователей, скрытые аккаунты и сессии Active Directory
 #   - Журнал событий безопасности Windows (Security Event Log)
 #   - Аудит удаления файлов (File Deletion & Security Auditing)
 #   - Мониторинг файловой системы в реальном времени (DirectoryWatcher)
@@ -20,6 +20,7 @@
 
 from __future__ import annotations
 
+import os
 import platform
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -35,6 +36,10 @@ from apps.windows.sysadmin.src.file_auditor import (
     FileAuditEvent,
     FolderSaclStatus,
     WindowsFileAuditor,
+)
+from apps.windows.sysadmin.src.user_collector import (
+    WindowsAccountDetails,
+    WindowsUserCollector,
 )
 from logger import logger
 
@@ -69,12 +74,14 @@ class SystemAdminState:
     hostname: str = "WORKSTATION"
     domain: str = "WORKGROUP"
     users: List[UserSession] = field(default_factory=list)
+    accounts: List[WindowsAccountDetails] = field(default_factory=list)
     events: List[SecurityEvent] = field(default_factory=list)
     uptime_seconds: int = 0
     ad_connected: bool = False
     ad_status: str = "Disconnected"
 
-    # Файловый аудит
+    # Коллекторы
+    user_collector: WindowsUserCollector = field(default_factory=WindowsUserCollector)
     file_auditor: WindowsFileAuditor = field(default_factory=WindowsFileAuditor)
     audit_policy: AuditPolicyStatus = field(default_factory=AuditPolicyStatus)
     file_events: List[FileAuditEvent] = field(default_factory=list)
@@ -93,26 +100,43 @@ class SystemAdminState:
         self._refresh_file_audit_summary()
 
     def _refresh_users(self) -> None:
-        """Собрать информацию о пользователях."""
-        if not self.users:
-            self.users = [
-                UserSession(
-                    username="Administrator",
-                    session_id=1,
-                    status="Active",
-                    login_time=datetime.now().isoformat(),
-                    ip_address="127.0.0.1",
-                    process_count=23,
-                ),
-                UserSession(
-                    username="CurrentSession",
-                    session_id=2,
-                    status="Active",
-                    login_time=(datetime.now() - timedelta(hours=1)).isoformat(),
-                    ip_address="127.0.0.1",
-                    process_count=45,
-                ),
-            ]
+        """Собрать информацию об учетных записях и активных сессиях."""
+        try:
+            self.accounts = self.user_collector.get_all_users()
+            active_sessions: List[UserSession] = []
+            
+            session_id = 1
+            for acc in self.accounts:
+                if acc.is_logged_in:
+                    active_sessions.append(
+                        UserSession(
+                            username=acc.name,
+                            session_id=session_id,
+                            status="Active",
+                            login_time=acc.last_logon or datetime.now().isoformat(),
+                            ip_address="127.0.0.1",
+                            process_count=acc.process_count,
+                        )
+                    )
+                    session_id += 1
+
+            if active_sessions:
+                self.users = active_sessions
+            elif not self.users:
+                # Fallback для тестов и сред без активных сессий
+                curr = os.environ.get("USERNAME", "Administrator")
+                self.users = [
+                    UserSession(
+                        username=curr,
+                        session_id=1,
+                        status="Active",
+                        login_time=datetime.now().isoformat(),
+                        ip_address="127.0.0.1",
+                        process_count=12,
+                    )
+                ]
+        except Exception as e:
+            logger.error(f"Ошибка обновления пользователей в state: {e}")
 
     def _refresh_security_events(self) -> None:
         """Собрать недавние события безопасности."""

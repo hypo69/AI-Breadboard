@@ -109,6 +109,37 @@ function generateCacheKey(url, options = {}) {
  *   tag: 'custom-data'
  * });
  */
+/**
+ * Оборачивает результат в полиморфный объект, поддерживающий как прямое обращение к полям,
+ * так и стандартный интерфейс Response (res.ok, res.status, res.json()).
+ * @param {any} data 
+ * @returns {any}
+ */
+function wrapCachedData(data) {
+  if (data && typeof data === 'object') {
+    try {
+      if (!('ok' in data)) {
+        Object.defineProperty(data, 'ok', { value: true, writable: true, configurable: true, enumerable: false });
+      }
+      if (!('status' in data)) {
+        Object.defineProperty(data, 'status', { value: 200, writable: true, configurable: true, enumerable: false });
+      }
+      if (typeof data.json !== 'function') {
+        Object.defineProperty(data, 'json', { value: async () => data, writable: true, configurable: true, enumerable: false });
+      }
+    } catch (_) {}
+  }
+  return data;
+}
+
+/**
+ * Универсальная функция для выполнения HTTP-запросов с автоматическим кешированием
+ * 
+ * @param {string} url - URL запроса
+ * @param {Object} options - Опции запроса
+ * @param {Object} cacheOptions - Опции кеширования (переопределяют автоматику)
+ * @returns {Promise<any>} Результат запроса (поддерживает как прямое чтение, так и res.ok / await res.json())
+ */
 export async function cachedApiFetch(url, options = {}, cacheOptions = {}) {
   // Определяем стратегию автоматически или используем переданную
   const autoStrategy = getCacheStrategy(url);
@@ -122,32 +153,35 @@ export async function cachedApiFetch(url, options = {}, cacheOptions = {}) {
   const cacheKey = generateCacheKey(url, options);
   const cache = browserCache;
   
-  // Если кеш недоступен, выполняем прямой запрос
-  if (!cache || !cache.isDbReady) {
-    console.warn(`[API Cache] Cache unavailable, direct network request: ${url}`);
-    return await directFetch(url, options);
+  // Дожидаемся готовности базы, но не блокируем если есть ошибка
+  if (cache) {
+    try {
+      await cache.ready();
+    } catch (_) {}
   }
   
   // CACHE-FIRST: сначала проверяем кеш, потом сеть
-  if (strategy === 'cache-first' && !forceNetwork) {
-    const cached = await cache.get(STORES.API_CACHE, cacheKey);
-    if (cached) {
-      console.log(`[API Cache] 🎯 HIT (cache-first): ${url}`);
-      return cached;
-    }
+  if (cache && strategy === 'cache-first' && !forceNetwork) {
+    try {
+      const cached = await cache.get(STORES.API_CACHE, cacheKey);
+      if (cached !== null && cached !== undefined) {
+        return wrapCachedData(cached);
+      }
+    } catch (_) {}
   }
   
   // STALE-WHILE-REVALIDATE: показываем кеш, обновляем в фоне
-  if (strategy === 'stale-while-revalidate' && !forceNetwork) {
-    const cached = await cache.get(STORES.API_CACHE, cacheKey);
-    if (cached) {
-      console.log(`[API Cache] 🎯 HIT (stale-while-revalidate): ${url} → updating in background`);
-      // Запускаем обновление в фоне (не ждем)
-      directFetch(url, options)
-        .then(fresh => cache.set(STORES.API_CACHE, cacheKey, fresh, { ttl, tags: [tag, 'api-cache'] }))
-        .catch(err => console.warn(`[API Cache] Background update failed for ${url}:`, err));
-      return cached;
-    }
+  if (cache && strategy === 'stale-while-revalidate' && !forceNetwork) {
+    try {
+      const cached = await cache.get(STORES.API_CACHE, cacheKey);
+      if (cached !== null && cached !== undefined) {
+        // Фоновое асинхронное обновление
+        directFetch(url, options)
+          .then(fresh => cache.set(STORES.API_CACHE, cacheKey, fresh, { ttl, tags: [tag, 'api-cache'] }))
+          .catch(err => console.debug(`[API Cache] Background update skipped for ${url}:`, err));
+        return wrapCachedData(cached);
+      }
+    } catch (_) {}
   }
   
   // NETWORK-FIRST или первый запрос: сначала сеть, потом кеш как fallback
@@ -155,20 +189,21 @@ export async function cachedApiFetch(url, options = {}, cacheOptions = {}) {
     const fresh = await directFetch(url, options);
     
     // Сохраняем в кеш (если TTL > 0)
-    if (ttl > 0) {
-      await cache.set(STORES.API_CACHE, cacheKey, fresh, { ttl, tags: [tag, 'api-cache'] });
-      console.log(`[API Cache] ❌ MISS → stored (${strategy}): ${url}`);
-    } else {
-      console.log(`[API Cache] ⚡ SKIP cache (TTL=0): ${url}`);
+    if (cache && ttl > 0) {
+      cache.set(STORES.API_CACHE, cacheKey, fresh, { ttl, tags: [tag, 'api-cache'] }).catch(() => {});
     }
     
-    return fresh;
+    return wrapCachedData(fresh);
   } catch (err) {
     // При ошибке сети пытаемся вернуть устаревший кеш
-    const staleCache = await cache.get(STORES.API_CACHE, cacheKey);
-    if (staleCache) {
-      console.warn(`[API Cache] 🔌 Network failed, returning STALE cache: ${url}`);
-      return staleCache;
+    if (cache) {
+      try {
+        const staleCache = await cache.get(STORES.API_CACHE, cacheKey);
+        if (staleCache !== null && staleCache !== undefined) {
+          console.warn(`[API Cache] Network failed, returning STALE cache: ${url}`);
+          return wrapCachedData(staleCache);
+        }
+      } catch (_) {}
     }
     throw err;
   }
@@ -189,9 +224,9 @@ async function directFetch(url, options = {}) {
     };
   }
   
-  // Используем window.api.fetch если доступно (для Electron/PWA окна)
   if (window.api && typeof window.api.fetch === 'function') {
-    return await window.api.fetch(url, opts);
+    const r = await window.api.fetch(url, opts);
+    return wrapCachedData(r);
   }
   
   const res = await fetch(url, opts);
@@ -205,7 +240,8 @@ async function directFetch(url, options = {}) {
     } catch (_) {}
     throw new Error(errMsg);
   }
-  return await res.json();
+  const json = await res.json();
+  return wrapCachedData(json);
 }
 
 /**

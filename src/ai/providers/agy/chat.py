@@ -257,7 +257,15 @@ class AgyChatBase:
             
             # 3. Service temporarily unavailable (503 UNAVAILABLE) - use model pool
             if '503' in err_str or 'UNAVAILABLE' in err_str:
+                from src.ai.orchestration.model_error_hub import record_model_error
                 from src.ai.orchestration.model_pool_state import mark_model_exhausted, switch_model
+                record_model_error(
+                    provider='agy',
+                    model_name=self.model_id,
+                    error=err_str,
+                    status_code=503,
+                    action_taken='switch_model',
+                )
                 mark_model_exhausted('agy', self.model_id)
                 err_msg = f"Error in AgyChatBase.ask (503 UNAVAILABLE): {err_str}"
                 logger.error(err_msg, exc_info=True)
@@ -267,6 +275,14 @@ class AgyChatBase:
                 from src.ai.model_manager import add_unsupported_model
                 add_unsupported_model('agy', self.model_id, reason=err_str)
                 add_unsupported_model('gemini', self.model_id, reason=err_str)
+            
+            from src.ai.orchestration.model_error_hub import record_model_error
+            record_model_error(
+                provider='agy',
+                model_name=self.model_id,
+                error=err_str,
+                action_taken='failed',
+            )
             logger.error(f"Error in AgyChatBase.ask: {err_str}", exc_info=True)
             raise
 
@@ -349,7 +365,15 @@ class AgyChatBase:
             
             # 3. Service temporarily unavailable (503 UNAVAILABLE) - use model pool
             if '503' in err_str or 'UNAVAILABLE' in err_str:
+                from src.ai.orchestration.model_error_hub import record_model_error
                 from src.ai.orchestration.model_pool_state import mark_model_exhausted, switch_model
+                record_model_error(
+                    provider='agy',
+                    model_name=self.model_id,
+                    error=err_str,
+                    status_code=503,
+                    action_taken='switch_model',
+                )
                 mark_model_exhausted('agy', self.model_id)
                 err_msg = f"Error Antigravity SDK (503 UNAVAILABLE): {err_str}"
                 logger.error(err_msg, exc_info=True)
@@ -360,6 +384,13 @@ class AgyChatBase:
                 from src.ai.model_manager import add_unsupported_model
                 add_unsupported_model('agy', self.model_id, reason=err_str)
                 add_unsupported_model('gemini', self.model_id, reason=err_str)
+            from src.ai.orchestration.model_error_hub import record_model_error
+            record_model_error(
+                provider='agy',
+                model_name=self.model_id,
+                error=err_str,
+                action_taken='failed',
+            )
             err_msg = f"Error Antigravity SDK: {err_str}"
             logger.error(err_msg, exc_info=True)
             yield err_msg

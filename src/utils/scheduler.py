@@ -49,20 +49,31 @@ class BackgroundScheduler:
         """Reload scheduler configuration parameters from config.json."""
         try:
             from src.config import schedulers_cfg
-            self.enabled = getattr(schedulers_cfg, "enabled", True)
+            # Планировщик запускается ТОЛЬКО если он явно включен в конфигурации сценария
+            has_schedulers = hasattr(schedulers_cfg, "enabled") or bool(getattr(schedulers_cfg, "__dict__", {}))
+            if not has_schedulers:
+                self.enabled = False
+                self.rag_enabled = False
+                self.email_enabled = False
+                return
+
+            self.enabled = getattr(schedulers_cfg, "enabled", False)
             
             rag_cfg = getattr(schedulers_cfg, "rag_reindex", getattr(schedulers_cfg, "rag", None))
             email_cfg = getattr(schedulers_cfg, "email_check", getattr(schedulers_cfg, "email", None))
             
-            self.rag_enabled = getattr(rag_cfg, "enabled", True) if rag_cfg is not None else True
+            self.rag_enabled = getattr(rag_cfg, "enabled", False) if rag_cfg is not None else False
             rag_hours = getattr(rag_cfg, "interval_hours", 24) if rag_cfg is not None else 24
             self._rag_interval_seconds = max(60.0, float(rag_hours) * 3600.0)
             
-            self.email_enabled = getattr(email_cfg, "enabled", True) if email_cfg is not None else True
+            self.email_enabled = getattr(email_cfg, "enabled", False) if email_cfg is not None else False
             email_minutes = getattr(email_cfg, "interval_minutes", 5) if email_cfg is not None else 5
             self._email_interval_seconds = max(10.0, float(email_minutes) * 60.0)
         except Exception as ex:
             logger.error(f"[Scheduler] Failed to load configuration: {ex}")
+            self.enabled = False
+            self.rag_enabled = False
+            self.email_enabled = False
 
     async def restart(self) -> None:
         """Reload configuration and restart running tasks."""

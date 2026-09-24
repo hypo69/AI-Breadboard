@@ -49,6 +49,8 @@
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     margin-bottom: 0.75rem;
+    display: flex;
+    flex-direction: column;
   }
   .hw-panel-header {
     background: #1e293b !important;
@@ -60,10 +62,25 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .hw-scrollable {
+    height: auto;
+    min-height: 100px;
+    max-height: clamp(280px, 52vh, 620px);
+    overflow-y: auto;
+    overflow-x: auto;
+    scrollbar-width: thin;
   }
   .hw-table {
     margin-bottom: 0;
     font-size: 0.8rem;
+    width: 100%;
+  }
+  .hw-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
   }
   .hw-table th {
     background: #1e293b;
@@ -72,7 +89,7 @@
     font-size: 0.72rem;
     text-transform: uppercase;
     border-bottom: 1px solid #334155;
-    padding: 0.4rem 0.6rem;
+    padding: 0.45rem 0.6rem;
   }
   .hw-table td {
     border-bottom: 1px solid #1e293b;
@@ -161,7 +178,7 @@
           </span>
           <span class="badge bg-dark border border-secondary text-muted" id="hw-disks-count">0 дисков</span>
         </div>
-        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+        <div class="table-responsive hw-scrollable">
           <table class="table table-dark table-hover hw-table">
             <thead>
               <tr>
@@ -188,7 +205,7 @@
             <span>Графические ускорители (GPU)</span>
           </span>
         </div>
-        <div class="p-2.5" id="hw-gpu-container" style="max-height: 220px; overflow-y: auto; font-size: 0.8rem;">
+        <div class="p-2.5 hw-scrollable" id="hw-gpu-container" style="font-size: 0.8rem;">
           <div class="text-center py-3 text-muted">Загрузка информации GPU...</div>
         </div>
       </div>
@@ -205,7 +222,7 @@
           </span>
           <span class="badge bg-dark border border-secondary text-muted" id="hw-sensors-total">0 сенсоров</span>
         </div>
-        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+        <div class="table-responsive hw-scrollable">
           <table class="table table-dark table-hover hw-table">
             <thead>
               <tr>
@@ -232,7 +249,7 @@
             <span>S.M.A.R.T. Здоровье накопителей</span>
           </span>
         </div>
-        <div class="p-2.5" id="hw-smart-container" style="max-height: 220px; overflow-y: auto; font-size: 0.8rem;">
+        <div class="p-2.5 hw-scrollable" id="hw-smart-container" style="font-size: 0.8rem;">
           <div class="text-center py-3 text-muted">Загрузка S.M.A.R.T. телеметрии...</div>
         </div>
       </div>
@@ -272,7 +289,7 @@
             </button>
           </div>
           <div id="hw-util-smartmontools-guide" class="d-none"></div>
-          <div id="hw-util-smartmontools-result" class="mt-1" style="max-height: 160px; overflow-y: auto;"></div>
+          <div id="hw-util-smartmontools-result" class="mt-1 hw-scrollable"></div>
         </div>
       </div>
     </div>
@@ -295,7 +312,7 @@
             </button>
           </div>
           <div id="hw-util-lhm-guide" class="d-none"></div>
-          <div id="hw-util-lhm-result" class="mt-1" style="max-height: 160px; overflow-y: auto;"></div>
+          <div id="hw-util-lhm-result" class="mt-1 hw-scrollable"></div>
         </div>
       </div>
     </div>

@@ -1,0 +1,13 @@
+{
+  "app_name": "telemetry_research",
+  "display_name": "Исследования телеметрии (Telemetry Research)",
+  "version": "1.0.0",
+  "port": 8129,
+  "launcher": "Run-TelemetryResearch.ps1",
+  "server": {
+    "port": 8129,
+    "dedicated": false,
+    "use_ssl": false,
+    "workers": 1
+  }
+}

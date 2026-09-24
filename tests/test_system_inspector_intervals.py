@@ -51,7 +51,7 @@ def test_system_inspector_main_js_contains_intervals_controller():
 
 
 def test_system_inspector_contains_realtime_live_watcher():
-    """Проверяет наличие панели Real-Time Live Watcher во вкладке 'Потребление ресурсов'."""
+    """Проверяет наличие панелиИзменения файлов в реальном времени во вкладке 'Потребление ресурсов'."""
     html_path = Path("src/api/webgui/system_inspector_tab/index.html")
     content = html_path.read_text(encoding="utf-8")
     assert "Real-Time Live Watcher" in content
@@ -67,7 +67,7 @@ def test_system_inspector_contains_realtime_live_watcher():
 
 
 def test_windows_admin_does_not_contain_live_watcher():
-    """Проверяет, что панель Real-Time Live Watcher была удалена из вкладки Windows Sysadmin."""
+    """Проверяет, что панельИзменения файлов в реальном времени была удалена из вкладки Windows Sysadmin."""
     html_path = Path("src/api/webgui/windows_admin_tab/index.html")
     content = html_path.read_text(encoding="utf-8")
     assert "Real-Time Live Watcher" not in content

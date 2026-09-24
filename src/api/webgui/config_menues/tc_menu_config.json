@@ -50,16 +50,56 @@
         "tab": "tab-telemetry-history",
         "order": 6,
         "visible": true
-      }
-    ],
-    "sidebarItems": [
+      },
       {
         "id": "scenarios",
         "label": "Чат и сценарии",
         "i18n": "tabs.scenarios",
         "icon": "💬",
         "tab": "tab-scenarios",
+        "order": 7,
+        "visible": true
+      }
+    ],
+    "sidebarItems": [
+      {
+        "id": "process_leaks",
+        "label": "1. Утечки и микрофризы",
+        "icon": "🔍",
+        "tab": "tab-process-leaks",
         "order": 1,
+        "visible": true
+      },
+      {
+        "id": "forensics",
+        "label": "2. Поведенческая форензика",
+        "icon": "⏱️",
+        "tab": "tab-forensics",
+        "order": 2,
+        "visible": true
+      },
+      {
+        "id": "throttling",
+        "label": "3. Качество ядра и Троттлинг",
+        "icon": "⚡",
+        "tab": "tab-throttling",
+        "order": 3,
+        "visible": true
+      },
+      {
+        "id": "storage_wear",
+        "label": "4. Износ дисков и батареи",
+        "icon": "💽",
+        "tab": "tab-storage-wear",
+        "order": 4,
+        "visible": true
+      },
+      {
+        "id": "peripherals",
+        "label": "5. Сеть и периферия",
+        "icon": "🔌",
+        "tab": "tab-peripherals",
+        "order": 5,
         "visible": true
       },
       {
@@ -68,7 +108,7 @@
         "i18n": "tabs.network",
         "icon": "🌐",
         "tab": "tab-network",
-        "order": 2,
+        "order": 6,
         "visible": true
       },
       {
@@ -76,6 +116,15 @@
         "label": "Registry Viewer",
         "icon": "🗝️",
         "tab": "tab-registry-viewer",
+        "order": 2,
+        "visible": true
+      },
+      {
+        "id": "windows_startup_auditor",
+        "label": "Автозапуск программ",
+        "i18n": "tabs.startupAuditor",
+        "icon": "🚀",
+        "tab": "tab-startup-auditor",
         "order": 3,
         "visible": true
       },
@@ -171,11 +220,19 @@
         "visible": true
       },
       {
+        "id": "telemetry_research",
+        "label": "Исследования телеметрии",
+        "icon": "🔬",
+        "tab": "tab-telemetry-research",
+        "order": 15,
+        "visible": true
+      },
+      {
         "id": "software_transparency_scanner",
         "label": "Transparency Scanner",
         "icon": "🔍",
         "tab": "tab-software-transparency",
-        "order": 14,
+        "order": 15,
         "visible": true
       },
       {
@@ -184,7 +241,7 @@
         "i18n": "tabs.userDirectories",
         "icon": "📁",
         "tab": "tab-user-directories",
-        "order": 15,
+        "order": 16,
         "visible": true
       },
       {
@@ -192,7 +249,7 @@
         "label": "Установить Ninite",
         "icon": "⚡",
         "tab": "tab-ninite-updater",
-        "order": 16,
+        "order": 17,
         "visible": true
       },
       {
@@ -201,7 +258,7 @@
         "i18n": "tabs.fileRecovery",
         "icon": "🗂️",
         "tab": "tab-file-recovery",
-        "order": 17,
+        "order": 18,
         "visible": true
       },
       {
@@ -210,7 +267,7 @@
         "i18n": "tabs.rag",
         "icon": "🧠",
         "tab": "tab-rag",
-        "order": 18,
+        "order": 19,
         "visible": false
       },
       {
@@ -218,7 +275,7 @@
         "label": "PixelRAG",
         "icon": "🖼️",
         "tab": "tab-pixelrag",
-        "order": 19,
+        "order": 20,
         "visible": false
       },
       {
@@ -227,7 +284,7 @@
         "i18n": "tabs.models",
         "icon": "🤖",
         "tab": "tab-models",
-        "order": 20,
+        "order": 21,
         "visible": true
       },
       {
@@ -236,7 +293,7 @@
         "i18n": "tabs.agents",
         "icon": "🧩",
         "tab": "tab-agents",
-        "order": 21,
+        "order": 22,
         "visible": false
       },
       {
@@ -245,7 +302,7 @@
         "i18n": "tabs.skills",
         "icon": "⚡",
         "tab": "tab-skills",
-        "order": 22,
+        "order": 23,
         "visible": false
       },
       {
@@ -254,7 +311,7 @@
         "i18n": "tabs.mcp",
         "icon": "🔌",
         "tab": "tab-mcp",
-        "order": 23,
+        "order": 24,
         "visible": false
       }
     ]

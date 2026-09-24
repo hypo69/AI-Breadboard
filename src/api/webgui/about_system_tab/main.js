@@ -27,6 +27,7 @@
   let activeSensorFilter = 'all';
   let isLiveActive = true;
   let liveIntervalId = null;
+  let wearAutoRefreshTimer = null;
   let isUpdating = false;
   let isAiRunning = false;
   
@@ -36,7 +37,8 @@
     SYSTEM_SUMMARY: { ttl: 5 * 1000, strategy: 'stale-while-revalidate' }, // 5 сек
     SENSORS: { ttl: 3 * 1000, strategy: 'network-first' },                 // 3 сек, всегда свежие
     CONTROL_STATUS: { ttl: 60 * 1000, strategy: 'stale-while-revalidate' }, // 1 мин
-    BACKUP_STATUS: { ttl: 5 * 60 * 1000, strategy: 'cache-first' }         // 5 мин
+    BACKUP_STATUS: { ttl: 5 * 60 * 1000, strategy: 'cache-first' },         // 5 мин
+    STORAGE_BATTERY: { ttl: 10 * 1000, strategy: 'stale-while-revalidate' } // 10 сек
   };
   
   const CACHE_STORE = 'api_cache';
@@ -163,6 +165,7 @@
     fetchHardwareSensors().catch(err => console.warn('[AboutSystemTab] Sensors error:', err));
     fetchBackupStatus().catch(err => console.warn('[AboutSystemTab] Backup status error:', err));
     fetchSystemControlStatus().catch(err => console.warn('[AboutSystemTab] Control status error:', err));
+    fetchStorageBatteryWear().catch(err => console.warn('[AboutSystemTab] Storage & Battery wear error:', err));
 
     // AI-диагностика запускается только пользователем по кнопке Rescan / Запуск
     // Start live telemetry ticker
@@ -216,6 +219,9 @@
         updateLocalClock();
         if (isLiveActive && !isUpdating) {
           await pollLiveTelemetry();
+          if (activeSubtab !== 'subtab-overview') {
+            await refreshActiveSubtab();
+          }
         }
         // Обновляем статус кеша каждые 3 секунды
         await updateCacheStatus();
@@ -226,6 +232,9 @@
         updateLocalClock();
         if (isLiveActive && !isUpdating) {
           await pollLiveTelemetry();
+          if (activeSubtab !== 'subtab-overview') {
+            await refreshActiveSubtab();
+          }
         }
         await updateCacheStatus();
       }, 3000);
@@ -348,6 +357,23 @@
         };
       });
     }
+
+    const btnWearRefresh = document.getElementById('btn-diag-wear-refresh');
+    if (btnWearRefresh) {
+      btnWearRefresh.onclick = () => fetchStorageBatteryWear(true);
+    }
+
+    const wearAutoSwitch = document.getElementById('diag-wear-auto-refresh');
+    if (wearAutoSwitch) {
+      wearAutoSwitch.onchange = (e) => {
+        if (e.target.checked) {
+          wearAutoRefreshTimer = setInterval(() => fetchStorageBatteryWear(true), 10000);
+        } else if (wearAutoRefreshTimer) {
+          clearInterval(wearAutoRefreshTimer);
+          wearAutoRefreshTimer = null;
+        }
+      };
+    }
   }
 
   async function refreshAllData(forceNetwork = false) {
@@ -400,6 +426,15 @@
               });
             }
             return fetchBackupStatus();
+          }),
+          apiFetch('/api/v1/system/diagnostics/storage-battery').then(data => {
+            if (window.browserCache) {
+              window.browserCache.set(CACHE_STORE, 'storage_battery_wear', data, {
+                ttl: CACHE_STRATEGY.STORAGE_BATTERY.ttl,
+                tags: [CACHE_TAG]
+              });
+            }
+            return fetchStorageBatteryWear(true);
           })
         ]);
       } else {
@@ -408,7 +443,8 @@
           fetchSystemControlStatus(),
           fetchHardwareSpec(),
           fetchHardwareSensors(),
-          fetchBackupStatus()
+          fetchBackupStatus(),
+          fetchStorageBatteryWear()
         ]);
       }
     } finally {
@@ -469,6 +505,90 @@
     } catch (e) {
       console.warn('[AboutSystemTab] fetchBackupStatus warning:', e);
       setText('about-ident-backup', 'Не настроено');
+    }
+  }
+
+  async function fetchStorageBatteryWear(forceNetwork = false) {
+    try {
+      const config = CACHE_STRATEGY.STORAGE_BATTERY;
+      const data = await cachedFetch(
+        '/api/v1/system/diagnostics/storage-battery',
+        'storage_battery_wear',
+        { ttl: config.ttl, strategy: config.strategy, forceNetwork }
+      );
+      if (!data) return;
+
+      // Disks Wear & SMART
+      const disksTbody = document.getElementById('diag-wear-disks-tbody');
+      if (disksTbody && data.disks_wear) {
+        setText('diag-wear-disks-count', `${data.disks_wear.length} дисков`);
+        if (data.disks_wear.length === 0) {
+          disksTbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Разделов накопителей не обнаружено</td></tr>';
+        } else {
+          disksTbody.innerHTML = data.disks_wear.map(d => `
+            <tr>
+              <td class="fw-bold text-white"><i class="bi bi-hdd-network text-primary me-1.5"></i>${escapeHtml(d.drive_letter)}</td>
+              <td class="text-muted font-monospace">${escapeHtml(d.fstype)}</td>
+              <td style="text-align: right;" class="text-light font-monospace">${d.total_gb} GB</td>
+              <td style="text-align: right;" class="text-success font-monospace">${d.free_gb} GB</td>
+              <td>
+                <div class="d-flex align-items-center gap-1.5">
+                  <div class="about-sys-progress-track flex-grow-1" style="height: 6px; min-width: 60px;">
+                    <div class="about-sys-progress-bar bg-success" style="width: ${d.health_pct}%;"></div>
+                  </div>
+                  <span class="small font-monospace text-success ms-1">${d.health_pct}%</span>
+                </div>
+              </td>
+              <td><span class="badge bg-success-subtle text-success border border-success">${escapeHtml(d.status)}</span></td>
+            </tr>
+          `).join('');
+        }
+      }
+
+      // Battery Degradation
+      const batContainer = document.getElementById('diag-battery-details-container');
+      const batSourceBadge = document.getElementById('diag-battery-source-badge');
+      if (batContainer && data.battery_wear) {
+        const b = data.battery_wear;
+        if (batSourceBadge) {
+          batSourceBadge.textContent = b.power_source || 'AC Mains';
+        }
+        if (!b.has_battery) {
+          batContainer.innerHTML = `
+            <div class="text-center py-4 text-muted small">
+              <i class="bi bi-plug-fill fs-4 text-info d-block mb-1"></i>
+              Стационарный компьютер — питание напрямую от электросети
+            </div>
+          `;
+        } else {
+          batContainer.innerHTML = `
+            <table class="about-sys-spec-table">
+              <tbody>
+                <tr>
+                  <td class="about-sys-spec-key"><i class="bi bi-battery-charging me-1.5 text-warning"></i>Уровень заряда</td>
+                  <td class="about-sys-spec-val fw-bold text-white">${b.percent}% (${b.is_charging ? 'Заряжается' : 'Разряд'})</td>
+                </tr>
+                <tr>
+                  <td class="about-sys-spec-key"><i class="bi bi-shield-shaded me-1.5 text-info"></i>Заводская емкость</td>
+                  <td class="about-sys-spec-val font-monospace">${b.design_capacity_mwh ? b.design_capacity_mwh + ' mWh' : '--'}</td>
+                </tr>
+                <tr>
+                  <td class="about-sys-spec-key"><i class="bi bi-battery-full me-1.5 text-success"></i>Текущая емкость</td>
+                  <td class="about-sys-spec-val font-monospace">${b.full_charge_capacity_mwh ? b.full_charge_capacity_mwh + ' mWh' : '--'}</td>
+                </tr>
+                <tr>
+                  <td class="about-sys-spec-key"><i class="bi bi-heart-pulse me-1.5 text-danger"></i>Деградация (Износ)</td>
+                  <td class="about-sys-spec-val ${b.wear_level_pct > 20 ? 'text-danger fw-bold' : 'text-success'}">
+                    ${b.wear_level_pct}% износа
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          `;
+        }
+      }
+    } catch (err) {
+      console.warn('[AboutSystemTab] fetchStorageBatteryWear error:', err);
     }
   }
 
@@ -1539,9 +1659,12 @@
     if (cat.includes('system') || cat.includes('os')) return 'bi bi-laptop';
     if (cat.includes('motherboard') || cat.includes('mainboard')) return 'bi bi-motherboard';
     if (cat.includes('display') || cat.includes('gpu') || cat.includes('video') || cat.includes('graphics')) return 'bi bi-gpu-card';
+    if (cat.includes('monitor') || cat.includes('screen') || cat.includes('экран')) return 'bi bi-display';
     if (cat.includes('physical') || cat.includes('диск')) return 'bi bi-hdd-fill';
     if (cat.includes('disk') || cat.includes('storage') || cat.includes('drive') || cat.includes('volume')) return 'bi bi-hdd-stack';
-    if (cat.includes('network') || cat.includes('adapter') || cat.includes('ethernet')) return 'bi bi-ethernet';
+    if (cat.includes('network') || cat.includes('adapter') || cat.includes('ethernet') || cat.includes('wi-fi') || cat.includes('сеть')) return 'bi bi-ethernet';
+    if (cat.includes('audio') || cat.includes('sound') || cat.includes('звук')) return 'bi bi-volume-up-fill';
+    if (cat.includes('usb') || cat.includes('контроллер')) return 'bi bi-usb-symbol';
     if (cat.includes('update') || cat.includes('servicing')) return 'bi bi-arrow-repeat';
     return 'bi bi-gear-fill';
   }

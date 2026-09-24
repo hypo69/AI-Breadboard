@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import ctypes
 import os
 import platform
@@ -66,55 +67,8 @@ def _is_admin() -> bool:
         return False
 
 
-class ProfileApplyRequest(BaseModel):
-    profile_id: str
-    step_ids: Optional[List[str]] = None
-
-
-class ActionRequest(BaseModel):
-    action: str
-    target: Optional[str] = None
-    force: Optional[bool] = False
-
-
-class ParamApplyRequest(BaseModel):
-    param_id: str
-    new_value: Any
-    force: Optional[bool] = False
-    custom_description: Optional[str] = None
-
-
-class ParamPreviewRequest(BaseModel):
-    param_id: str
-    new_value: Any
-
-
-class RestorePointCreateRequest(BaseModel):
-    description: str
-    restore_point_type: Optional[str] = "MODIFY_SETTINGS"
-
-
-class RestorePolicyConfigRequest(BaseModel):
-    max_storage_size: Optional[str] = Field("10%", description="Максимальный размер теневого хранилища")
-    max_points: Optional[int] = Field(5, ge=1, le=50, description="Максимальное количество хранимых точек")
-    auto_prune: Optional[bool] = Field(True, description="Автоматическая ротация точек")
-    schedule_trigger: Optional[str] = Field("daily", description="Сценарий: daily, startup, weekly, disabled")
-    schedule_time: Optional[str] = Field("03:00", description="Время создания в формате HH:mm")
-    frequency_limit_minutes: Optional[int] = Field(0, ge=0, description="Лимит частоты в реестре (0 = без лимита)")
-
-
-class RestorePruneRequest(BaseModel):
-    keep_count: Optional[int] = Field(5, ge=1, le=50, description="Сколько последних точек сохранить")
-
-
-class RollbackRequest(BaseModel):
-    change_id: str
-
-
-
-@router.get("/status")
-async def get_system_control_status() -> Dict[str, Any]:
-    """Получение сводного статуса системы для панели управления."""
+def _collect_status_sync() -> Dict[str, Any]:
+    """Синхронный сбор информации о системе, безопасности и дисках в отдельном потоке."""
     is_elevated = _is_admin()
     
     # System Info
@@ -239,21 +193,74 @@ async def get_system_control_status() -> Dict[str, Any]:
     return res
 
 
+class ProfileApplyRequest(BaseModel):
+    profile_id: str
+    step_ids: Optional[List[str]] = None
+
+
+class ActionRequest(BaseModel):
+    action: str
+    target: Optional[str] = None
+    force: Optional[bool] = False
+
+
+class ParamApplyRequest(BaseModel):
+    param_id: str
+    new_value: Any
+    force: Optional[bool] = False
+    custom_description: Optional[str] = None
+
+
+class ParamPreviewRequest(BaseModel):
+    param_id: str
+    new_value: Any
+
+
+class RestorePointCreateRequest(BaseModel):
+    description: str
+    restore_point_type: Optional[str] = "MODIFY_SETTINGS"
+
+
+class RestorePolicyConfigRequest(BaseModel):
+    max_storage_size: Optional[str] = Field("10%", description="Максимальный размер теневого хранилища")
+    max_points: Optional[int] = Field(5, ge=1, le=50, description="Максимальное количество хранимых точек")
+    auto_prune: Optional[bool] = Field(True, description="Автоматическая ротация точек")
+    schedule_trigger: Optional[str] = Field("daily", description="Сценарий: daily, startup, weekly, disabled")
+    schedule_time: Optional[str] = Field("03:00", description="Время создания в формате HH:mm")
+    frequency_limit_minutes: Optional[int] = Field(0, ge=0, description="Лимит частоты в реестре (0 = без лимита)")
+
+
+class RestorePruneRequest(BaseModel):
+    keep_count: Optional[int] = Field(5, ge=1, le=50, description="Сколько последних точек сохранить")
+
+
+class RollbackRequest(BaseModel):
+    change_id: str
+
+
+@router.get("/status")
+async def get_system_control_status() -> Dict[str, Any]:
+    """Получение сводного статуса системы для панели управления."""
+    return await asyncio.to_thread(_collect_status_sync)
+
+
 @router.get("/restore-points")
 async def get_restore_points() -> Dict[str, Any]:
     """Получение списка точек восстановления Windows."""
-    points = _restore_mgr.list_restore_points()
+    points = await asyncio.to_thread(_restore_mgr.list_restore_points)
     return {"restore_points": points}
 
 
 @router.post("/restore-points")
 async def create_restore_point(payload: RestorePointCreateRequest) -> Dict[str, Any]:
     """Создание новой точки восстановления Windows вручную."""
-    res = _restore_mgr.create_restore_point(
+    res = await asyncio.to_thread(
+        _restore_mgr.create_restore_point,
         description=payload.description,
         restore_point_type=payload.restore_point_type or "MODIFY_SETTINGS",
     )
-    _csv_logger.log_event(
+    await asyncio.to_thread(
+        _csv_logger.log_event,
         event_type="restore_point_create",
         status="SUCCESS" if res.get("success") else "FAILED",
         details={"description": payload.description, "type": payload.restore_point_type, "result": res.get("message")},
@@ -264,17 +271,17 @@ async def create_restore_point(payload: RestorePointCreateRequest) -> Dict[str, 
     return res
 
 
-
 @router.get("/restore-points/config")
 async def get_restore_policy_config() -> Dict[str, Any]:
     """Получение конфигурации политик хранения, теневого хранилища и расписания точек восстановления."""
-    return _restore_mgr.get_policy_config()
+    return await asyncio.to_thread(_restore_mgr.get_policy_config)
 
 
 @router.post("/restore-points/config")
 async def update_restore_policy_config(payload: RestorePolicyConfigRequest) -> Dict[str, Any]:
     """Обновление и применение политики хранения, лимита дискового пространства и расписания."""
-    res = _restore_mgr.save_policy(
+    res = await asyncio.to_thread(
+        _restore_mgr.save_policy,
         max_points=payload.max_points or 5,
         auto_prune=payload.auto_prune if payload.auto_prune is not None else True,
         max_storage_size=payload.max_storage_size or "10%",
@@ -282,7 +289,8 @@ async def update_restore_policy_config(payload: RestorePolicyConfigRequest) -> D
         schedule_time=payload.schedule_time or "03:00",
         frequency_limit_minutes=payload.frequency_limit_minutes or 0,
     )
-    _csv_logger.log_event(
+    await asyncio.to_thread(
+        _csv_logger.log_event,
         event_type="restore_policy_update",
         status="SUCCESS" if res.get("success") else "FAILED",
         details=payload.model_dump(),
@@ -294,8 +302,9 @@ async def update_restore_policy_config(payload: RestorePolicyConfigRequest) -> D
 @router.post("/restore-points/prune")
 async def prune_restore_points(payload: RestorePruneRequest) -> Dict[str, Any]:
     """Принудительная очистка старых точек восстановления в соответствии с заданным лимитом."""
-    res = _restore_mgr.prune_old_restore_points(keep_count=payload.keep_count or 5)
-    _csv_logger.log_event(
+    res = await asyncio.to_thread(_restore_mgr.prune_old_restore_points, keep_count=payload.keep_count or 5)
+    await asyncio.to_thread(
+        _csv_logger.log_event,
         event_type="restore_points_prune",
         status="SUCCESS" if res.get("success") else "FAILED",
         details=res,
@@ -304,18 +313,17 @@ async def prune_restore_points(payload: RestorePruneRequest) -> Dict[str, Any]:
     return res
 
 
-
 @router.get("/params")
 async def list_system_parameters(category: Optional[str] = Query(None)) -> Dict[str, Any]:
     """Получение каталога параметров системы с флагами чувствительности и текущими значениями."""
-    params = _param_mgr.list_parameters(category=category)
+    params = await asyncio.to_thread(_param_mgr.list_parameters, category=category)
     return {"parameters": params, "total": len(params)}
 
 
 @router.post("/params/preview")
 async def preview_param_change(payload: ParamPreviewRequest) -> Dict[str, Any]:
     """Симуляция и предварительный просмотр изменения параметра (Dry-Run)."""
-    res = _param_mgr.preview_change(param_id=payload.param_id, new_value=payload.new_value)
+    res = await asyncio.to_thread(_param_mgr.preview_change, param_id=payload.param_id, new_value=payload.new_value)
     if not res.get("success"):
         raise HTTPException(status_code=400, detail=res.get("error", "Ошибка симуляции параметра"))
     return res
@@ -327,7 +335,8 @@ async def apply_param_change(payload: ParamApplyRequest) -> Dict[str, Any]:
     
     При изменении чувствительного параметра автоматически создается точка восстановления Windows.
     """
-    res = _param_mgr.apply_change(
+    res = await asyncio.to_thread(
+        _param_mgr.apply_change,
         param_id=payload.param_id,
         new_value=payload.new_value,
         force=payload.force or False,
@@ -341,14 +350,14 @@ async def apply_param_change(payload: ParamApplyRequest) -> Dict[str, Any]:
 @router.get("/params/history")
 async def get_param_change_history(limit: int = Query(50, ge=1, le=200)) -> Dict[str, Any]:
     """Получение журнала аудита изменений параметров и связанных точек восстановления."""
-    history = _param_mgr.get_history(limit=limit)
+    history = await asyncio.to_thread(_param_mgr.get_history, limit=limit)
     return {"history": history, "total": len(history)}
 
 
 @router.post("/params/rollback")
 async def rollback_param_change(payload: RollbackRequest) -> Dict[str, Any]:
     """Откат изменения параметра к предыдущему сохраненному значению."""
-    res = _param_mgr.rollback_change(change_id=payload.change_id)
+    res = await asyncio.to_thread(_param_mgr.rollback_change, change_id=payload.change_id)
     if res.get("status") != "SUCCESS":
         raise HTTPException(status_code=400, detail=res.get("message", "Ошибка отката параметра"))
     return res
@@ -428,9 +437,10 @@ async def trigger_reboot() -> Dict[str, Any]:
 @router.post("/actions/cleanup")
 async def trigger_cleanup() -> Dict[str, Any]:
     """Выполнение безопасной очистки временных файлов."""
-    res = _clean_collector.collect()
+    res = await asyncio.to_thread(_clean_collector.collect)
     cleaned = getattr(res, "total_cleanable_mb", 0)
-    _csv_logger.log_event(
+    await asyncio.to_thread(
+        _csv_logger.log_event,
         event_type="system_cleanup_executed",
         status="SUCCESS",
         details={"cleaned_mb": cleaned},
@@ -443,9 +453,8 @@ async def trigger_cleanup() -> Dict[str, Any]:
     }
 
 
-@router.get("/logs")
-async def get_system_control_logs(limit: int = Query(50, ge=1, le=200)) -> Dict[str, Any]:
-    """Получение журнала активности и аудита операций System Control Center."""
+def _read_logs_sync(limit: int) -> Dict[str, Any]:
+    """Синхронное чтение CSV логов и истории в отдельном потоке."""
     from apps.common.csv_logger import get_apps_log_dir
     import csv
 
@@ -492,6 +501,12 @@ async def get_system_control_logs(limit: int = Query(50, ge=1, le=200)) -> Dict[
     # Сортировка по времени (свежие сверху)
     logs.sort(key=lambda x: str(x.get("timestamp", "")), reverse=True)
     return {"logs": logs[:limit], "total": len(logs)}
+
+
+@router.get("/logs")
+async def get_system_control_logs(limit: int = Query(50, ge=1, le=200)) -> Dict[str, Any]:
+    """Получение журнала активности и аудита операций System Control Center."""
+    return await asyncio.to_thread(_read_logs_sync, limit)
 
 
 def init_router() -> APIRouter:

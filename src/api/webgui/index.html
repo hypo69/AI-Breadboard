@@ -223,6 +223,36 @@
             </button>
           </div>
         </div>
+
+        <!-- Группа: Диагностика и форензика -->
+        <div class="nav-drawer-group mb-3">
+          <div class="nav-drawer-group-title d-flex align-items-center gap-1 mb-2">
+            <i class="bi bi-shield-check text-success"></i>
+            <span>Диагностика и форензика</span>
+          </div>
+          <div class="list-group list-group-flush rounded border">
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-process-leaks" data-bs-target="#tab-process-leaks" type="button">
+              <span class="fs-6">🔍</span>
+              <span class="fw-medium">1. Утечки и микрофризы</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-forensics" data-bs-target="#tab-forensics" type="button">
+              <span class="fs-6">⏱️</span>
+              <span class="fw-medium">2. Поведенческая форензика</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-throttling" data-bs-target="#tab-throttling" type="button">
+              <span class="fs-6">⚡</span>
+              <span class="fw-medium">3. Качество ядра и Троттлинг</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-storage-wear" data-bs-target="#tab-storage-wear" type="button">
+              <span class="fs-6">💽</span>
+              <span class="fw-medium">4. Износ дисков и батареи</span>
+            </button>
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3" data-tab="tab-peripherals" data-bs-target="#tab-peripherals" type="button">
+              <span class="fs-6">🔌</span>
+              <span class="fw-medium">5. Сеть и периферия</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Footer Drawer -->
@@ -243,14 +273,19 @@
     <div id="tab-plugins" class="tab-pane fade"></div>
     <div id="tab-admin" class="tab-pane fade"></div>
     <div id="tab-help" class="tab-pane fade"></div>
+    <div id="tab-process-leaks" class="tab-pane fade"></div>
+    <div id="tab-forensics" class="tab-pane fade"></div>
+    <div id="tab-throttling" class="tab-pane fade"></div>
+    <div id="tab-storage-wear" class="tab-pane fade"></div>
+    <div id="tab-peripherals" class="tab-pane fade"></div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/html/js/ai_table_modal.js"></script>
-<script src="/html/js/chatService.js?v=20260920_v3"></script>
-<script src="/html/js/window-api.js?v=20260923_v2"></script>
-<script type="module" src="/html/js/main.js?v=20260924_v1"></script>
+<script src="/html/js/chatService.js?v=20260924_v2"></script>
+<script src="/html/js/window-api.js?v=20260924_v2"></script>
+<script type="module" src="/html/js/main.js?v=20260924_v2"></script>
 
 <!-- HELP Modal -->
 <div class="modal fade modal-help" id="help-modal" tabindex="-1" aria-labelledby="help-modal-label" aria-hidden="true">
