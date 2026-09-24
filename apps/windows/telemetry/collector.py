@@ -89,6 +89,7 @@ class SystemCollector:
         """Initialize telemetry collector with timing, I/O baseline, hardware auditor, and storage."""
         self._last_disk_io = psutil.disk_io_counters() if PSUTIL_AVAILABLE else None
         self._last_net_io = psutil.net_io_counters(pernic=True) if PSUTIL_AVAILABLE else None
+        self._last_proc_net_io: Dict[int, Tuple[float, float, float]] = {}
         self._last_time = time.time()
         self._cpu_model_cached: Optional[str] = None
         self._identity_cached: Optional[Dict[str, Any]] = None
@@ -772,12 +773,31 @@ class SystemCollector:
             return activities
 
         proc_cache: Dict[int, Dict[str, Any]] = {}
+        now_ts = time.time()
 
         def _get_proc_info(pid: Optional[int]) -> Dict[str, Any]:
             if not pid or pid == 0:
-                return {"name": "System Idle", "user": "SYSTEM", "read_kb": 0.0, "write_kb": 0.0}
+                return {
+                    "name": "System Idle",
+                    "user": "SYSTEM",
+                    "read_kb": 0.0,
+                    "write_kb": 0.0,
+                    "delta_read_kb": 0.0,
+                    "delta_write_kb": 0.0,
+                    "read_speed_kbs": 0.0,
+                    "write_speed_kbs": 0.0,
+                }
             if pid == 4:
-                return {"name": "System", "user": "NT AUTHORITY\\SYSTEM", "read_kb": 0.0, "write_kb": 0.0}
+                return {
+                    "name": "System",
+                    "user": "NT AUTHORITY\\SYSTEM",
+                    "read_kb": 0.0,
+                    "write_kb": 0.0,
+                    "delta_read_kb": 0.0,
+                    "delta_write_kb": 0.0,
+                    "read_speed_kbs": 0.0,
+                    "write_speed_kbs": 0.0,
+                }
             if pid in proc_cache:
                 return proc_cache[pid]
             try:
@@ -791,18 +811,54 @@ class SystemCollector:
 
                 read_kb = 0.0
                 write_kb = 0.0
+                delta_read_kb = 0.0
+                delta_write_kb = 0.0
+                read_speed_kbs = 0.0
+                write_speed_kbs = 0.0
+
                 try:
                     io = p.io_counters()
                     read_kb = round(io.read_bytes / 1024, 1)
                     write_kb = round(io.write_bytes / 1024, 1)
+
+                    if hasattr(self, "_last_proc_net_io") and pid in self._last_proc_net_io:
+                        prev_t, prev_r, prev_w = self._last_proc_net_io[pid]
+                        dt = max(now_ts - prev_t, 0.1)
+                        if io.read_bytes >= prev_r:
+                            delta_read_kb = round((io.read_bytes - prev_r) / 1024, 1)
+                            read_speed_kbs = round(delta_read_kb / dt, 1)
+                        if io.write_bytes >= prev_w:
+                            delta_write_kb = round((io.write_bytes - prev_w) / 1024, 1)
+                            write_speed_kbs = round(delta_write_kb / dt, 1)
+
+                    if hasattr(self, "_last_proc_net_io"):
+                        self._last_proc_net_io[pid] = (now_ts, io.read_bytes, io.write_bytes)
                 except Exception:
                     pass
 
-                info = {"name": pname, "user": puser, "read_kb": read_kb, "write_kb": write_kb}
+                info = {
+                    "name": pname,
+                    "user": puser,
+                    "read_kb": read_kb,
+                    "write_kb": write_kb,
+                    "delta_read_kb": delta_read_kb,
+                    "delta_write_kb": delta_write_kb,
+                    "read_speed_kbs": read_speed_kbs,
+                    "write_speed_kbs": write_speed_kbs,
+                }
                 proc_cache[pid] = info
                 return info
             except Exception:
-                info = {"name": f"PID {pid}", "user": "", "read_kb": 0.0, "write_kb": 0.0}
+                info = {
+                    "name": f"PID {pid}",
+                    "user": "",
+                    "read_kb": 0.0,
+                    "write_kb": 0.0,
+                    "delta_read_kb": 0.0,
+                    "delta_write_kb": 0.0,
+                    "read_speed_kbs": 0.0,
+                    "write_speed_kbs": 0.0,
+                }
                 proc_cache[pid] = info
                 return info
 
@@ -846,8 +902,12 @@ class SystemCollector:
                     status=status,
                     is_internet=is_ext,
                     service_type=service_type,
-                    sent_kb=p_info["write_kb"],
-                    recv_kb=p_info["read_kb"],
+                    sent_kb=p_info.get("write_kb", 0.0),
+                    recv_kb=p_info.get("read_kb", 0.0),
+                    delta_sent_kb=p_info.get("delta_write_kb", 0.0),
+                    delta_recv_kb=p_info.get("delta_read_kb", 0.0),
+                    sent_rate_kbs=p_info.get("write_speed_kbs", 0.0),
+                    recv_rate_kbs=p_info.get("read_speed_kbs", 0.0),
                     sent_summary=sent_desc,
                     recv_summary=recv_desc,
                 )

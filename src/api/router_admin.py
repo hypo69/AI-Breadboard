@@ -750,7 +750,7 @@ def get_apps_status(profile: Optional[str] = None) -> Dict[str, Any]:
     cfg_env = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
     active_path: Optional[Path] = None
     if profile in ("tc", "test-computer", "test_computer", "apps_tc"):
-        for candidate in [__root__ / "config" / "tc.json", __root__ / "config_tc.json"]:
+        for candidate in [__root__ / "start_scenarios_config" / "tc.json", __root__ / "config" / "tc.json", __root__ / "config_tc.json", __root__ / "tc.json"]:
             if candidate.exists():
                 active_path = candidate
                 break
@@ -759,12 +759,12 @@ def get_apps_status(profile: Optional[str] = None) -> Dict[str, Any]:
         active_path = p if p.is_absolute() else (__root__ / cfg_env)
 
     if not active_path or not active_path.exists():
-        for candidate in [__root__ / "config" / "tc.json", __root__ / "config_tc.json"]:
+        for candidate in [__root__ / "start_scenarios_config" / "tc.json", __root__ / "config" / "tc.json", __root__ / "config_tc.json", __root__ / "tc.json"]:
             if candidate.exists() and not (__root__ / "config.json").exists() and not (__root__ / "config" / "dashboard.json").exists():
                 active_path = candidate
                 break
         if not active_path or not active_path.exists():
-            active_path = (__root__ / "config" / "dashboard.json") if (__root__ / "config" / "dashboard.json").exists() else (__root__ / "config.json")
+            active_path = (__root__ / "start_scenarios_config" / "dashboard.json") if (__root__ / "start_scenarios_config" / "dashboard.json").exists() else ((__root__ / "config" / "dashboard.json") if (__root__ / "config" / "dashboard.json").exists() else (__root__ / "config.json"))
 
     apps_cfg: Any = {}
     config_filename = active_path.name if active_path else "config.json"

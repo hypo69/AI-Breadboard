@@ -20,14 +20,20 @@ window.applyTranslations = applyTranslations;
 // Карта вкладок: имя → [htmlUrl, jsUrl]
 // Пути явные — не генерируются из имени
 const TABS = {
-  'chat':         ['/html/chat/index.html',             '/html/chat/main.js'],
-  'rag':          ['/html/rag_tab/index.html',          '/html/rag_tab/main.js'],
-  'telegram-rag': ['/html/telegram_rag_tab/index.html', '/html/telegram_rag_tab/main.js'],
-  'news':         ['/html/news_tab/index.html',         '/html/news_tab/main.js'],
-  'voice':        ['/html/voice_tab/index.html',        '/html/voice_tab/main.js'],
-  'plugins':      ['/html/plugins_tab/index.html',      '/html/plugins_tab/main.js'],
-  'admin':        ['/html/admin_tab/index.html',        '/html/admin_tab/main.js'],
-  'help':         ['/html/help/index.html',             '/html/help/main.js'],
+  'chat':           ['/html/chat/index.html',                 '/html/chat/main.js'],
+  'rag':            ['/html/rag_tab/index.html',              '/html/rag_tab/main.js'],
+  'telegram-rag':   ['/html/telegram_rag_tab/index.html',     '/html/telegram_rag_tab/main.js'],
+  'news':           ['/html/news_tab/index.html',             '/html/news_tab/main.js'],
+  'voice':          ['/html/voice_tab/index.html',            '/html/voice_tab/main.js'],
+  'plugins':        ['/html/plugins_tab/index.html',          '/html/plugins_tab/main.js'],
+  'admin':          ['/html/admin_tab/index.html',            '/html/admin_tab/main.js'],
+  'help':           ['/html/help/index.html',                 '/html/help/main.js'],
+  'process-leaks':  ['/html/process_leaks_tab/index.html',    '/html/process_leaks_tab/main.js'],
+  'forensics':      ['/html/forensics_tab/index.html',        '/html/forensics_tab/main.js'],
+  'throttling':     ['/html/throttling_tab/index.html',       '/html/throttling_tab/main.js'],
+  'storage-wear':   ['/html/storage_wear_tab/index.html',     '/html/storage_wear_tab/main.js'],
+  'peripherals':    ['/html/peripherals_tab/index.html',      '/html/peripherals_tab/main.js'],
+  'system-logs':    ['/html/system_logs_tab/index.html',      '/html/system_logs_tab/main.js'],
 };
 
 // Lazy-загрузка: вкладка грузится при первом открытии

@@ -35,10 +35,13 @@ _LOG_DIR_OVERRIDE: Optional[Path] = None
 
 
 def get_apps_log_dir() -> Path:
-    """Возвращает и создает целевой каталог для CSV-логов приложений.
+    """Возвращает и создает целевой каталог для логов приложений и телеметрии.
 
-    Каталог располагается в %APPDATA%/AI-Breadboard/apps/windows/telemetry/logs (с фоллбэком на
-    %LOCALAPPDATA% или ~/.config/AI-Breadboard/apps/windows/telemetry/logs в кросс-платформенных средах).
+    Приоритет разрешения пути:
+    1. Переопределение через set_apps_log_dir_override (для тестов).
+    2. Переменные окружения AI_BREADBOARD_LOGS_DIR / TELEMETRY_LOGS_DIR.
+    3. Параметр storage.telemetry_logs_dir / storage.logs_dir из root config.json.
+    4. Стандартный каталог %APPDATA%/AI-Breadboard/apps/windows/telemetry/logs.
 
     Returns:
         Path: Абсолютный путь к директории логов приложений.
@@ -48,6 +51,32 @@ def get_apps_log_dir() -> Path:
         _LOG_DIR_OVERRIDE.mkdir(parents=True, exist_ok=True)
         return _LOG_DIR_OVERRIDE
 
+    # 1. Проверка переменных окружения
+    env_dir = os.environ.get("AI_BREADBOARD_LOGS_DIR") or os.environ.get("TELEMETRY_LOGS_DIR")
+    if env_dir:
+        p = Path(env_dir)
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
+    # 2. Проверка центрального config.json
+    try:
+        root_dir = Path(__file__).resolve().parent.parent.parent
+        cfg_file = root_dir / "config.json"
+        if cfg_file.exists():
+            with open(cfg_file, "r", encoding="utf-8") as f:
+                cfg_data = json.load(f)
+                storage_cfg = cfg_data.get("storage", {})
+                custom_logs = storage_cfg.get("telemetry_logs_dir") or storage_cfg.get("logs_dir")
+                if custom_logs:
+                    p = Path(custom_logs)
+                    if not p.is_absolute():
+                        p = root_dir / p
+                    p.mkdir(parents=True, exist_ok=True)
+                    return p
+    except Exception:
+        pass
+
+    # 3. Стандартный системный путь %APPDATA%
     appdata = os.environ.get("APPDATA") or os.environ.get("LOCALAPPDATA")
     if appdata and os.path.exists(appdata):
         base_dir = Path(appdata)

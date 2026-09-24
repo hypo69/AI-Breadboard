@@ -25,6 +25,7 @@
     "tts": "🗣️ TTS Settings",
     "sources": "📑 Sources",
     "logs": "📋 System Logs",
+    "systemLogs": "📜 OS System Logs",
     "sensorLogs": "⚡ Sensor Logs",
     "help": "📚 Reference",
     "instructions": "📝 System Instructions",

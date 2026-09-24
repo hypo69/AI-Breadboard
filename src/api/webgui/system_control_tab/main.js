@@ -53,30 +53,10 @@
       const pwr = data.power || {};
       const upd = data.update || {};
 
-      const cardOs = document.getElementById('scc-card-os');
-      const cardHost = document.getElementById('scc-card-host');
-      const cardSec = document.getElementById('scc-card-security');
-      const cardFw = document.getElementById('scc-card-firewall');
-      const cardRest = document.getElementById('scc-card-restore');
-      const cardProt = document.getElementById('scc-card-protection');
-      const cardStor = document.getElementById('scc-card-storage');
-      const cardClean = document.getElementById('scc-card-cleanable');
-
-      if (cardOs) cardOs.innerText = `${sys.os_caption || 'Windows 11'} (${sys.architecture || 'x64'})`;
-      if (cardHost) cardHost.innerText = `Host: ${sys.hostname || 'LOCAL'}`;
-      if (cardSec) {
-        cardSec.innerText = sec.defender_enabled ? 'Active & Protected' : 'Attention Required';
-        cardSec.className = sec.defender_enabled ? 'scc-value text-success mt-1' : 'scc-value text-warning mt-1';
-      }
-      if (cardFw) cardFw.innerText = `Firewall: ${sec.firewall_overall_enabled ? 'ON' : 'OFF'} | UAC: ${sec.uac_enabled ? 'ON' : 'OFF'}`;
-      if (cardRest) cardRest.innerText = `${rest.restore_points_count || 0} Checkpoints`;
-      if (cardProt) cardProt.innerText = `Protection: ${rest.system_protection_enabled ? 'Active' : 'Disabled'}`;
-      if (cardStor) cardStor.innerText = `${disk.system_drive_free_gb || 0} GB Free`;
-      if (cardClean) {
+      const cleanEstimateTxt = document.getElementById('scc-clean-estimate-txt');
+      if (cleanEstimateTxt) {
         const cleanMb = disk.cleanup_estimate?.total_cleanable_mb || 0;
-        cardClean.innerText = `Cleanable: ~${cleanMb} MB`;
-        const cleanEstimateTxt = document.getElementById('scc-clean-estimate-txt');
-        if (cleanEstimateTxt) cleanEstimateTxt.innerText = `Cleanable: ~${cleanMb} MB`;
+        cleanEstimateTxt.innerText = `Cleanable: ~${cleanMb} MB`;
       }
 
       // Specifications Table

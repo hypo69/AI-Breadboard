@@ -73,11 +73,6 @@
   // State
   let _configData = null;
   let _statusData = null;
-  let _filesData = [];
-  let _currentViewingFile = '';
-  let _currentCsvData = null;
-  let _csvPage = 0;
-  const _csvLimit = 100;
   let _toastInstance = null;
 
   function showToast(message, type = 'info') {
@@ -155,7 +150,6 @@
       renderLoggersTable();
       renderSensorsCards();
       renderTelemetryOptions();
-      renderJsonEditor();
     } catch (err) {
       console.error('[AutoLogTab] Ошибка загрузки статуса/конфигурации:', err);
       showToast(`Ошибка загрузки данных: ${err.message}`, 'danger');
@@ -532,25 +526,6 @@
     };
   }
 
-  function renderJsonEditor() {
-    const textarea = document.getElementById('textarea-raw-json');
-    if (!textarea || !_configData) return;
-
-    if (_configData.raw_json) {
-      textarea.value = _configData.raw_json;
-    } else {
-      const fullObj = {
-        $schema: 'https://json-schema.org/draft/2020-12/schema',
-        enable_autolog: _configData.enable_autolog ?? true,
-        default_interval: _configData.default_interval ?? '1 minute',
-        loggers: _configData.loggers ?? {},
-        sensors: _configData.sensors ?? {},
-        telemetry_options: _configData.telemetry_options ?? {},
-      };
-      textarea.value = JSON.stringify(fullObj, null, 2);
-    }
-  }
-
   // --- Save Config via API ---
   async function saveFullConfiguration() {
     if (!_configData) return;
@@ -595,214 +570,6 @@
     } catch (err) {
       console.error('[AutoLogTab] Ошибка сохранения:', err);
       showToast(`Ошибка сохранения: ${err.message}`, 'danger');
-    }
-  }
-
-  // --- CSV Files Manager ---
-  async function loadCsvFiles() {
-    const tbody = document.getElementById('tbody-files');
-    if (!tbody) return;
-
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="5" class="text-center text-muted py-4">
-          <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
-          Загрузка файлов...
-        </td>
-      </tr>
-    `;
-
-    try {
-      const data = await apiGet('/api/autolog/files');
-      _filesData = data.files || [];
-
-      // Update counters
-      const badgeFiles = document.getElementById('badge-files-count');
-      if (badgeFiles) badgeFiles.textContent = _filesData.length;
-
-      const metricFiles = document.getElementById('metric-csv-files-count');
-      if (metricFiles) metricFiles.textContent = _filesData.length;
-
-      renderFilesTable();
-      populateViewerSelect();
-    } catch (err) {
-      console.error('[AutoLogTab] Ошибка загрузки файлов:', err);
-      showToast(`Ошибка загрузки CSV файлов: ${err.message}`, 'danger');
-      tbody.innerHTML = `
-        <tr><td colspan="5" class="text-center text-danger py-3">Не удалось загрузить файлы: ${err.message}</td></tr>
-      `;
-    }
-  }
-
-  function renderFilesTable() {
-    const tbody = document.getElementById('tbody-files');
-    if (!tbody) return;
-
-    if (_filesData.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="5" class="text-center text-muted py-4">В каталоге пока нет CSV-файлов логов</td>
-        </tr>
-      `;
-      return;
-    }
-
-    let html = '';
-    for (const f of _filesData) {
-      const modDate = f.modified ? new Date(f.modified).toLocaleString() : '—';
-      html += `
-        <tr>
-          <td>
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-filetype-csv text-success fs-5"></i>
-              <div>
-                <span class="fw-semibold text-white">${f.filename}</span>
-                <span class="text-muted small d-block">${f.app_name}</span>
-              </div>
-            </div>
-          </td>
-          <td class="text-end fw-mono text-light">${f.size_formatted || '0 B'}</td>
-          <td class="text-center fw-mono">
-            <span class="badge bg-secondary">${f.rows_count ?? 0}</span>
-          </td>
-          <td><small class="text-light">${modDate}</small></td>
-          <td class="text-center">
-            <div class="btn-group btn-group-sm">
-              <button class="btn btn-outline-info btn-view-file" data-file="${f.filename}" title="Просмотреть в инспекторе">
-                <i class="bi bi-eye"></i> Просмотр
-              </button>
-              <a href="/api/autolog/download/${f.filename}" class="btn btn-outline-success" title="Скачать CSV">
-                <i class="bi bi-download"></i>
-              </a>
-              <button class="btn btn-outline-danger btn-delete-file" data-file="${f.filename}" title="Удалить файл">
-                <i class="bi bi-trash"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-      `;
-    }
-
-    tbody.innerHTML = html;
-    bindFilesEvents();
-  }
-
-  function bindFilesEvents() {
-    const tbody = document.getElementById('tbody-files');
-    if (!tbody) return;
-
-    // View file
-    tbody.querySelectorAll('.btn-view-file').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const fn = btn.getAttribute('data-file');
-        if (!fn) return;
-        const viewerTabBtn = document.getElementById('subtab-viewer-btn');
-        if (viewerTabBtn && window.bootstrap?.Tab) {
-          const tab = new window.bootstrap.Tab(viewerTabBtn);
-          tab.show();
-        }
-        const sel = document.getElementById('select-csv-target');
-        if (sel) {
-          sel.value = fn;
-          loadCsvContent(fn);
-        }
-      });
-    });
-
-    // Delete file
-    tbody.querySelectorAll('.btn-delete-file').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const fn = btn.getAttribute('data-file');
-        if (!fn) return;
-        if (!confirm(`Удалить файл лога '${fn}'?`)) return;
-
-        try {
-          await apiDelete(`/api/autolog/file/${fn}`);
-          showToast(`Файл '${fn}' удален`, 'success');
-          await loadCsvFiles();
-        } catch (err) {
-          showToast(`Ошибка удаления '${fn}': ${err.message}`, 'danger');
-        }
-      });
-    });
-  }
-
-  function populateViewerSelect() {
-    const sel = document.getElementById('select-csv-target');
-    if (!sel) return;
-
-    const currentVal = sel.value;
-    let html = '<option value="">-- Выберите CSV-файл --</option>';
-    for (const f of _filesData) {
-      const selected = f.filename === currentVal ? 'selected' : '';
-      html += `<option value="${f.filename}" ${selected}>${f.filename} (${f.size_formatted}, ${f.rows_count} строк)</option>`;
-    }
-    sel.innerHTML = html;
-  }
-
-  // --- CSV Viewer ---
-  async function loadCsvContent(filename) {
-    if (!filename) return;
-    _currentViewingFile = filename;
-
-    const thead = document.getElementById('thead-csv-content');
-    const tbody = document.getElementById('tbody-csv-content');
-    const dlBtn = document.getElementById('btn-download-current-csv');
-
-    if (thead) thead.innerHTML = '<tr><th class="text-muted text-center">Загрузка данных...</th></tr>';
-    if (tbody) tbody.innerHTML = '<tr><td class="text-center py-4"><div class="spinner-border spinner-border-sm text-info"></div></td></tr>';
-
-    try {
-      const offset = _csvPage * _csvLimit;
-      const data = await apiGet(`/api/autolog/file/${filename}?limit=${_csvLimit}&offset=${offset}`);
-      _currentCsvData = data;
-
-      if (dlBtn) dlBtn.disabled = false;
-      renderCsvTable(data);
-    } catch (err) {
-      showToast(`Ошибка чтения файла '${filename}': ${err.message}`, 'danger');
-      if (thead) thead.innerHTML = '<tr><th class="text-danger text-center">Ошибка</th></tr>';
-      if (tbody) tbody.innerHTML = `<tr><td class="text-danger text-center py-3">${err.message}</td></tr>`;
-    }
-  }
-
-  function renderCsvTable(data) {
-    const thead = document.getElementById('thead-csv-content');
-    const tbody = document.getElementById('tbody-csv-content');
-    const rowsCountEl = document.getElementById('viewer-rows-count');
-    const pageIndicator = document.getElementById('viewer-page-indicator');
-    const btnPrev = document.getElementById('btn-viewer-prev-page');
-    const btnNext = document.getElementById('btn-viewer-next-page');
-
-    const headers = data.headers || [];
-    const rows = data.rows || [];
-    const totalRows = data.total_rows || 0;
-
-    if (rowsCountEl) rowsCountEl.textContent = `Строк: ${totalRows} (показано ${rows.length})`;
-
-    const maxPages = Math.max(1, Math.ceil(totalRows / _csvLimit));
-    if (pageIndicator) pageIndicator.textContent = `${_csvPage + 1} / ${maxPages}`;
-    if (btnPrev) btnPrev.disabled = _csvPage <= 0;
-    if (btnNext) btnNext.disabled = _csvPage >= maxPages - 1;
-
-    if (headers.length === 0 && rows.length === 0) {
-      if (thead) thead.innerHTML = '<tr><th class="text-muted text-center">Файл пуст</th></tr>';
-      if (tbody) tbody.innerHTML = '<tr><td class="text-muted text-center py-4">Нет данных</td></tr>';
-      return;
-    }
-
-    if (thead) {
-      thead.innerHTML = '<tr>' + headers.map(h => `<th class="text-nowrap">${h}</th>`).join('') + '</tr>';
-    }
-
-    if (tbody) {
-      if (rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${headers.length || 1}" class="text-center text-muted py-4">Нет строк</td></tr>`;
-      } else {
-        tbody.innerHTML = rows.map(r => {
-          return '<tr>' + headers.map(h => `<td class="text-nowrap">${r[h] ?? ''}</td>`).join('') + '</tr>';
-        }).join('');
-      }
     }
   }
 
@@ -864,10 +631,6 @@
     const btnRefSensors = document.getElementById('btn-refresh-sensors');
     if (btnRefSensors) btnRefSensors.addEventListener('click', loadStatusAndConfig);
 
-    // Refresh Files
-    const btnRefFiles = document.getElementById('btn-refresh-files');
-    if (btnRefFiles) btnRefFiles.addEventListener('click', loadCsvFiles);
-
     // Search Loggers filter
     const inputSearch = document.getElementById('input-search-loggers');
     if (inputSearch) {
@@ -881,128 +644,17 @@
         });
       });
     }
-
-    // Tab switch to Files
-    const subtabFilesBtn = document.getElementById('subtab-files-btn');
-    if (subtabFilesBtn) {
-      subtabFilesBtn.addEventListener('shown.bs.tab', loadCsvFiles);
-    }
-
-    // Tab switch to JSON
-    const subtabJsonBtn = document.getElementById('subtab-json-btn');
-    if (subtabJsonBtn) {
-      subtabJsonBtn.addEventListener('shown.bs.tab', renderJsonEditor);
-    }
-
-    // JSON Editor Actions
-    const btnFormatJson = document.getElementById('btn-format-json');
-    const btnReloadJson = document.getElementById('btn-reload-json');
-    const btnSaveJson = document.getElementById('btn-save-raw-json');
-    const txtJson = document.getElementById('textarea-raw-json');
-
-    if (btnFormatJson && txtJson) {
-      btnFormatJson.addEventListener('click', () => {
-        try {
-          const parsed = JSON.parse(txtJson.value);
-          txtJson.value = JSON.stringify(parsed, null, 2);
-          showToast('JSON отформатирован', 'info');
-        } catch (e) {
-          showToast(`Ошибка синтаксиса JSON: ${e.message}`, 'danger');
-        }
-      });
-    }
-
-    if (btnReloadJson) {
-      btnReloadJson.addEventListener('click', async () => {
-        await loadStatusAndConfig();
-        renderJsonEditor();
-        showToast('JSON перезагружен с диска', 'info');
-      });
-    }
-
-    if (btnSaveJson && txtJson) {
-      btnSaveJson.addEventListener('click', async () => {
-        try {
-          const parsed = JSON.parse(txtJson.value);
-          showToast('Сохранение JSON...', 'info');
-          const res = await apiPost('/api/autolog/config', { raw_json: JSON.stringify(parsed, null, 2) });
-          showToast(res.message || 'JSON успешно сохранен!', 'success');
-          await loadStatusAndConfig();
-        } catch (err) {
-          showToast(`Ошибка сохранения JSON: ${err.message}`, 'danger');
-        }
-      });
-    }
-
-    // CSV Viewer Controls
-    const selViewer = document.getElementById('select-csv-target');
-    if (selViewer) {
-      selViewer.addEventListener('change', () => {
-        _csvPage = 0;
-        loadCsvContent(selViewer.value);
-      });
-    }
-
-    const btnRefViewer = document.getElementById('btn-refresh-viewer');
-    if (btnRefViewer) {
-      btnRefViewer.addEventListener('click', () => {
-        if (selViewer) loadCsvContent(selViewer.value);
-      });
-    }
-
-    const btnPrevPage = document.getElementById('btn-viewer-prev-page');
-    if (btnPrevPage) {
-      btnPrevPage.addEventListener('click', () => {
-        if (_csvPage > 0 && selViewer?.value) {
-          _csvPage--;
-          loadCsvContent(selViewer.value);
-        }
-      });
-    }
-
-    const btnNextPage = document.getElementById('btn-viewer-next-page');
-    if (btnNextPage) {
-      btnNextPage.addEventListener('click', () => {
-        if (selViewer?.value) {
-          _csvPage++;
-          loadCsvContent(selViewer.value);
-        }
-      });
-    }
-
-    const inputFilterCsv = document.getElementById('input-filter-csv');
-    if (inputFilterCsv) {
-      inputFilterCsv.addEventListener('input', () => {
-        const q = inputFilterCsv.value.toLowerCase().trim();
-        const rows = document.querySelectorAll('#tbody-csv-content tr');
-        rows.forEach(r => {
-          const text = r.textContent.toLowerCase();
-          r.style.display = text.includes(q) ? '' : 'none';
-        });
-      });
-    }
-
-    const btnDownload = document.getElementById('btn-download-current-csv');
-    if (btnDownload) {
-      btnDownload.addEventListener('click', () => {
-        if (_currentViewingFile) {
-          window.location.href = `/api/autolog/download/${_currentViewingFile}`;
-        }
-      });
-    }
   }
 
   // --- Initialization ---
   document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     loadStatusAndConfig();
-    loadCsvFiles();
   });
 
   // Also initialize immediately if DOM is already ready
   if (document.readyState === 'interactive' || document.readyState === 'complete') {
     setupEventListeners();
     loadStatusAndConfig();
-    loadCsvFiles();
   }
 })();

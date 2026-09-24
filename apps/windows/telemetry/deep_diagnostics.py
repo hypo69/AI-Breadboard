@@ -568,29 +568,122 @@ class DeepDiagnosticsEngine:
             "power_source": "AC Mains (Стационарное питание)",
         }
 
-        # 1. Износ дисков (Physical Disks & SMART)
+        # 1. Износ физических дисков (Physical Disks & SMART)
         try:
-            # Читаем физические разделы через psutil
-            if PSUTIL_AVAILABLE:
+            from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
+            sensor = WindowsStorageSensor()
+            snapshot = sensor.collect_snapshot()
+            raw_partitions = snapshot.get("sources", {}).get("partitions", [])
+
+            # Сопоставляем номера дисков с буквами разделов
+            part_map: Dict[str, List[str]] = {}
+            for p in raw_partitions:
+                if isinstance(p, dict):
+                    dn = p.get("DiskNumber")
+                    dl = p.get("DriveLetter")
+                    if dn is not None and dl:
+                        part_map.setdefault(str(dn), []).append(f"{dl}:")
+
+            io_counters = psutil.disk_io_counters(perdisk=True) if (PSUTIL_AVAILABLE and hasattr(psutil, "disk_io_counters")) else {}
+            now_dt = datetime.now(timezone.utc)
+
+            physical_disks = sensor.get_physical_disks()
+            if physical_disks:
+                for d in physical_disks:
+                    dev_num_str = "".join(filter(str.isdigit, d.device_id))
+                    mounted = part_map.get(dev_num_str, [])
+
+                    free_total = 0.0
+                    has_free = False
+                    if PSUTIL_AVAILABLE:
+                        for letter in mounted:
+                            try:
+                                u = psutil.disk_usage(f"{letter}\\")
+                                free_total += round(u.free / (1024**3), 1)
+                                has_free = True
+                            except Exception:
+                                pass
+
+                    # Метрики ввода/вывода (прочитано / записано байт)
+                    io_key = f"PhysicalDrive{dev_num_str}"
+                    io = io_counters.get(io_key)
+                    bytes_read = io.read_bytes if io else 0
+                    bytes_written = io.write_bytes if io else 0
+                    read_count = io.read_count if io else 0
+                    write_count = io.write_count if io else 0
+
+                    # Наработка и оценка первого включения
+                    poh = d.power_on_hours
+                    first_on_str = (
+                        (now_dt - timedelta(hours=int(poh))).strftime("%Y-%m-%d")
+                        if poh and poh > 0
+                        else None
+                    )
+
+                    health_pct = 100.0
+                    if d.wear_percentage is not None:
+                        health_pct = max(0.0, min(100.0, 100.0 - float(d.wear_percentage)))
+                    elif d.health_status and d.health_status.lower() in ("warning", "caution"):
+                        health_pct = 70.0
+                    elif d.health_status and d.health_status.lower() in ("unhealthy", "critical", "failed"):
+                        health_pct = 20.0
+
+                    status_str = "Healthy (SMART OK)"
+                    if d.health_status and d.health_status not in ("Healthy", "OK", "0", "PASSED"):
+                        status_str = d.health_status
+
+                    disks.append({
+                        "device_id": f"Диск {dev_num_str}" if dev_num_str else d.device_id,
+                        "name": d.model or d.friendly_name or "Физический накопитель",
+                        "model": d.model or d.friendly_name,
+                        "serial_number": d.serial_number if d.serial_number != "N/A" else None,
+                        "bus_type": d.bus_type or "Unknown",
+                        "media_type": d.media_type or "SSD",
+                        "partitions": ", ".join(mounted) if mounted else "—",
+                        "total_gb": round(d.size_gb, 1),
+                        "free_gb": round(free_total, 1) if has_free else None,
+                        "health_pct": round(health_pct, 1),
+                        "wear_level_pct": d.wear_percentage or 0.0,
+                        "power_on_hours": poh,
+                        "first_power_on": first_on_str,
+                        "bytes_written": bytes_written,
+                        "bytes_read": bytes_read,
+                        "read_count": read_count,
+                        "write_count": write_count,
+                        "temperature_c": d.temperature_c,
+                        "status": status_str,
+                    })
+
+                disks.sort(key=lambda x: int("".join(filter(str.isdigit, str(x.get("device_id", "0")))) or 0))
+        except Exception as ex:
+            logger.debug(f"Ошибка сбора физических дисков через WindowsStorageSensor: {ex}")
+
+        # Фолбэк на psutil partitions, если физические диски не удалось получить
+        if not disks and PSUTIL_AVAILABLE:
+            try:
                 for part in psutil.disk_partitions(all=False):
                     try:
                         usage = psutil.disk_usage(part.mountpoint)
                         disks.append({
-                            "drive_letter": part.device,
-                            "mountpoint": part.mountpoint,
-                            "fstype": part.fstype,
+                            "device_id": part.device,
+                            "name": f"Том {part.device}",
+                            "model": part.device,
+                            "serial_number": None,
+                            "bus_type": part.fstype,
+                            "media_type": "Drive",
+                            "partitions": part.mountpoint,
                             "total_gb": round(usage.total / (1024**3), 1),
                             "free_gb": round(usage.free / (1024**3), 1),
-                            "used_pct": usage.percent,
-                            "health_pct": 100.0,  # SMART baseline
+                            "health_pct": 100.0,
                             "wear_level_pct": 0.0,
-                            "total_bytes_written_tb": 0.0,
+                            "temperature_c": None,
+                            "power_on_hours": None,
                             "status": "Healthy (SMART OK)",
                         })
                     except Exception:
                         continue
-        except Exception as ex:
-            logger.debug(f"Ошибка сбора дисков: {ex}")
+            except Exception as ex:
+                logger.debug(f"Ошибка сбора дисков (psutil fallback): {ex}")
 
         # 2. Батарея
         if PSUTIL_AVAILABLE and hasattr(psutil, "sensors_battery"):

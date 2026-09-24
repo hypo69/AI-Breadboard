@@ -57,13 +57,13 @@ class TelemetryStorage:
             db_path: Путь к файлу SQLite базы данных (по умолчанию: logs/telemetry.db).
         """
         if db_path is None:
-            appdata = os.environ.get("APPDATA") or os.environ.get("LOCALAPPDATA") or os.path.expanduser("~\\AppData\\Roaming")
-            target_dir = Path(appdata) / "AI-Breadboard" / "apps" / "windows" / "telemetry" / "logs"
-            target_dir.mkdir(parents=True, exist_ok=True)
+            from apps.common.csv_logger import get_apps_log_dir
+
+            target_dir = get_apps_log_dir()
             self.db_path = target_dir / "telemetry.db"
 
             # Бесшовная миграция старой БД, если она лежала в родительской папке
-            old_db_path = Path(appdata) / "AI-Breadboard" / "apps" / "windows" / "telemetry" / "telemetry.db"
+            old_db_path = target_dir.parent / "telemetry.db"
             if old_db_path.exists() and not self.db_path.exists():
                 try:
                     import shutil

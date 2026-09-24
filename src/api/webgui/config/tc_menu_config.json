@@ -195,11 +195,20 @@
         "visible": true
       },
       {
+        "id": "system_log_viewer",
+        "label": "Логи операционной системы",
+        "i18n": "tabs.systemLogs",
+        "icon": "📜",
+        "tab": "tab-system-logs",
+        "order": 13,
+        "visible": true
+      },
+      {
         "id": "autolog_manager",
         "label": "Управление логами",
         "icon": "📝",
         "tab": "tab-autolog",
-        "order": 13,
+        "order": 14,
         "visible": true
       },
       {

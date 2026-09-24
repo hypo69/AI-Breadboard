@@ -3,11 +3,11 @@
  */
 
 export const APP_TAB_DEFS = [
-  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20260924_v7', js: '/html/about_system_tab/main.js?v=20260924_v7' },
+  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20260925_v2', js: '/html/about_system_tab/main.js?v=20260925_v2' },
   { id: 'scenarios', tab: 'scenarios', tabId: 'tab-scenarios', html: '/html/scenarios_tab/index.html?v=20260924_v2', js: '/html/scenarios_tab/main.js?v=20260924_v2' },
   { id: 'chat', tab: 'chat', tabId: 'tab-chat', html: '/html/chat/index.html?v=20260923_v5', js: '/html/chat/main.js?v=20260923_v5' },
   { id: 'network_terminal', tab: 'network', tabId: 'tab-network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
-  { id: 'system_inspector', tab: 'system-inspector', tabId: 'tab-system-inspector', html: '/html/system_inspector_tab/index.html?v=20260924_v4', js: '/html/system_inspector_tab/main.js?v=20260924_v4' },
+  { id: 'system_inspector', tab: 'system-inspector', tabId: 'tab-system-inspector', html: '/html/system_inspector_tab/index.html?v=20260924_v5', js: '/html/system_inspector_tab/main.js?v=20260924_v5' },
   { id: 'windows_sysadmin', tab: 'windows-admin', tabId: 'tab-windows-admin', html: '/html/windows_admin_tab/index.html', js: '/html/windows_admin_tab/main.js' },
   { id: 'system_control_center', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html?v=20260924_v1', js: '/html/system_control_tab/main.js?v=20260924_v1' },
   { id: 'system_log_viewer', tab: 'system-logs', tabId: 'tab-system-logs', html: '/html/system_logs_tab/index.html', js: '/html/system_logs_tab/main.js' },
@@ -24,7 +24,7 @@ export const APP_TAB_DEFS = [
   { id: 'user_assistant', tab: 'user-assistant', tabId: 'tab-user-assistant', html: '/html/user_assistant_tab/index.html', js: '/html/user_assistant_tab/main.js' },
   { id: 'helpdesk', tab: 'helpdesk', tabId: 'tab-helpdesk', html: '/html/helpdesk_tab/index.html', js: '/html/helpdesk_tab/main.js' },
   { id: 'wikipedia_research', tab: 'wikipedia-research', tabId: 'tab-wikipedia-research', html: '/html/wikipedia_research_tab/index.html', js: '/html/wikipedia_research_tab/main.js' },
-  { id: 'autolog_manager', tab: 'autolog', tabId: 'tab-autolog', html: '/html/autolog_tab/index.html', js: '/html/autolog_tab/main.js' },
+  { id: 'autolog_manager', tab: 'autolog', tabId: 'tab-autolog', html: '/html/autolog_tab/index.html?v=20260925_v1', js: '/html/autolog_tab/main.js?v=20260925_v1' },
   { id: 'software_transparency_scanner', tab: 'software-transparency', tabId: 'tab-software-transparency', html: '/html/software_transparency_tab/index.html', js: '/html/software_transparency_tab/main.js' },
   { id: 'user_directories', tab: 'user-directories', tabId: 'tab-user-directories', html: '/html/user_directories_tab/index.html', js: '/html/user_directories_tab/main.js' },
   { id: 'ninite_updater', tab: 'ninite-updater', tabId: 'tab-ninite-updater', html: '/html/ninite_updater_tab/index.html?v=20260924_v2', js: '/html/ninite_updater_tab/main.js?v=20260924_v2' },

@@ -63,13 +63,18 @@ function Get-SafeCimInstances {
 }
 
 function Get-SafeStorageReliability {
+    $res = @()
     try {
-        @(Get-CimInstance -Namespace 'root/Microsoft/Windows/Storage' -ClassName 'MSFT_StorageReliabilityCounter' -ErrorAction Stop | Select-Object *)
+        $res = @(Get-PhysicalDisk -ErrorAction Stop | Get-StorageReliabilityCounter -ErrorAction Stop | Select-Object *)
     }
-    catch {
-        try { @(Get-PhysicalDisk -ErrorAction Stop | Get-StorageReliabilityCounter -ErrorAction Stop | Select-Object *) }
+    catch { }
+    if (-not $res -or $res.Count -eq 0) {
+        try {
+            $res = @(Get-CimInstance -Namespace 'root/Microsoft/Windows/Storage' -ClassName 'MSFT_StorageReliabilityCounter' -ErrorAction Stop | Select-Object *)
+        }
         catch { @() }
     }
+    return $res
 }
 
 function Get-SafePerformanceCounters {

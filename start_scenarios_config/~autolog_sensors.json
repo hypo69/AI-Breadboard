@@ -4,68 +4,151 @@
   "enable_autolog": true,
   "default_interval": "1 minute",
   "loggers": {
-    "system_inspector":        { "interval": "5 seconds",  "enabled": true },
-    "hardware_monitor":        { "interval": "5 seconds",  "enabled": true },
-    "librehardwaremonitor":    { "interval": "5 seconds",  "enabled": true },
-    "smartmontools":           { "interval": "10 minutes", "enabled": true },
-    "windows_sysadmin":        { "interval": "1 minute",   "enabled": true },
-    "windows_defender":        { "interval": "1 hour",     "enabled": true },
-    "windows_startup_auditor": { "interval": "1 hour",     "enabled": true },
-    "windows_backup_manager":  { "interval": "6 hours",    "enabled": true },
-    "registry_viewer":         { "interval": "1 hour",     "enabled": true },
-    "software_audit":          { "interval": "1 hour",     "enabled": true },
-    "website_monitor":         { "interval": "5 minutes",  "enabled": true },
-    "gcloud_monitor":          { "interval": "5 minutes",  "enabled": true },
-    "cloudflared_monitor":     { "interval": "30 seconds", "enabled": true },
-    "trading_terminal":        { "interval": "10 seconds", "enabled": true },
-    "user_assistant":          { "interval": "5 minutes",  "enabled": true },
-    "helpdesk":                { "interval": "1 minute",   "enabled": true }
+    "system_inspector": {
+      "interval": "5 seconds",
+      "enabled": true
+    },
+    "hardware_monitor": {
+      "interval": "5 seconds",
+      "enabled": true
+    },
+    "librehardwaremonitor": {
+      "interval": "5 seconds",
+      "enabled": true
+    },
+    "smartmontools": {
+      "interval": "10 minutes",
+      "enabled": true
+    },
+    "windows_sysadmin": {
+      "interval": "1 minute",
+      "enabled": true
+    },
+    "windows_defender": {
+      "interval": "1 hour",
+      "enabled": true
+    },
+    "windows_startup_auditor": {
+      "interval": "1 hour",
+      "enabled": true
+    },
+    "windows_backup_manager": {
+      "interval": "6 hours",
+      "enabled": true
+    },
+    "registry_viewer": {
+      "interval": "1 hour",
+      "enabled": true
+    },
+    "software_audit": {
+      "interval": "1 hour",
+      "enabled": true
+    },
+    "website_monitor": {
+      "interval": "5 minutes",
+      "enabled": false
+    },
+    "gcloud_monitor": {
+      "interval": "5 minutes",
+      "enabled": false
+    },
+    "cloudflared_monitor": {
+      "interval": "30 seconds",
+      "enabled": false
+    },
+    "trading_terminal": {
+      "interval": "10 seconds",
+      "enabled": false
+    },
+    "user_assistant": {
+      "interval": "5 minutes",
+      "enabled": false
+    },
+    "helpdesk": {
+      "interval": "1 minute",
+      "enabled": false
+    }
   },
   "sensors": {
     "cpu": {
       "enabled": true,
       "interval_seconds": 5.0,
-      "metrics": ["temperature", "load", "clocks"]
+      "metrics": [
+        "temperature",
+        "load",
+        "clocks"
+      ]
     },
     "gpu": {
       "enabled": true,
       "interval_seconds": 10.0,
-      "metrics": ["temperature", "load", "memory", "power"]
+      "metrics": [
+        "temperature",
+        "load",
+        "memory",
+        "power"
+      ]
     },
     "ram": {
       "enabled": true,
       "interval_seconds": 10.0,
-      "metrics": ["usage", "swap"]
+      "metrics": [
+        "usage",
+        "swap"
+      ]
     },
     "disk": {
       "enabled": true,
       "interval_seconds": 30.0,
-      "metrics": ["usage", "io"]
+      "metrics": [
+        "usage",
+        "io"
+      ]
     },
     "network": {
       "enabled": true,
       "interval_seconds": 10.0,
-      "metrics": ["throughput", "connections"]
+      "metrics": [
+        "throughput",
+        "connections"
+      ]
     },
     "sensors": {
       "enabled": true,
       "interval_seconds": 10.0,
-      "metrics": ["temperature", "fan", "voltage"]
+      "metrics": [
+        "temperature",
+        "fan",
+        "voltage"
+      ]
     },
     "internet": {
       "enabled": true,
       "interval_seconds": 120.0,
-      "metrics": ["ping", "download", "upload", "dns"]
+      "metrics": [
+        "ping",
+        "download",
+        "upload",
+        "dns"
+      ]
     },
     "storage": {
       "enabled": true,
-      "interval_seconds": 600.0,
-      "metrics": ["smart_attributes", "temperature", "wear_level"]
+      "interval_seconds": 32000.0,
+      "metrics": [
+        "smart_attributes",
+        "temperature",
+        "wear_level"
+      ]
     },
     "device_flapping": {
       "enabled": true,
       "interval_seconds": 30.0,
-      "metrics": ["connect_events", "disconnect_events", "flapping_count"]
+      "metrics": [
+        "connect_events",
+        "disconnect_events",
+        "flapping_count"
+      ]
     }
   },
   "telemetry_options": {

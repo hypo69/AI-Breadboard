@@ -791,8 +791,28 @@
         ? '<span class="badge bg-primary-subtle text-primary border border-primary px-1" style="font-size: 0.62rem;" title="Внешний сервер в сети Интернет">WAN</span>'
         : '<span class="badge bg-secondary px-1" style="font-size: 0.62rem;" title="Локальный сокет Loopback">LAN</span>';
 
-      const sentBytes = item.sent_kb > 0 ? `<span class="badge bg-dark border border-warning text-warning ms-1" style="font-size: 0.68rem;">${item.sent_kb.toLocaleString()} KB</span>` : '';
-      const recvBytes = item.recv_kb > 0 ? `<span class="badge bg-dark border border-success text-success ms-1" style="font-size: 0.68rem;">${item.recv_kb.toLocaleString()} KB</span>` : '';
+      const formatNetKb = (kb) => {
+        if (!kb || kb <= 0) return '0 KB';
+        if (kb >= 1024 * 1024) return (kb / (1024 * 1024)).toFixed(2) + ' GB';
+        if (kb >= 1024) return (kb / 1024).toFixed(1) + ' MB';
+        return kb.toFixed(1) + ' KB';
+      };
+
+      const formatNetRate = (rate) => {
+        if (!rate || rate <= 0.05) return '';
+        if (rate >= 1024) return (rate / 1024).toFixed(1) + ' MB/s';
+        return rate.toFixed(1) + ' KB/s';
+      };
+
+      const deltaSentStr = (item.delta_sent_kb && item.delta_sent_kb > 0)
+        ? `▲ +${formatNetKb(item.delta_sent_kb)}${item.sent_rate_kbs > 0.05 ? ' (' + formatNetRate(item.sent_rate_kbs) + ')' : ''}`
+        : '▲ 0 KB';
+      const deltaRecvStr = (item.delta_recv_kb && item.delta_recv_kb > 0)
+        ? `▼ +${formatNetKb(item.delta_recv_kb)}${item.recv_rate_kbs > 0.05 ? ' (' + formatNetRate(item.recv_rate_kbs) + ')' : ''}`
+        : '▼ 0 KB';
+
+      const totalSentStr = formatNetKb(item.sent_kb || 0);
+      const totalRecvStr = formatNetKb(item.recv_kb || 0);
 
       return `
         <tr class="sys-net-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для детальной диагностики сетевого соединения">
@@ -819,18 +839,34 @@
             <span class="${statusBadgeClass}" style="font-size: 0.68rem;">${escapeHtml(item.status)}</span>
           </td>
           <td>
+            <div class="d-flex align-items-center justify-content-between gap-1 mb-1">
+              <span class="badge bg-warning-subtle text-warning border border-warning px-1.5 py-0.5" style="font-size: 0.68rem;" title="Отправлено за измеряемый период">
+                ${deltaSentStr}
+              </span>
+              <span class="text-muted font-monospace" style="font-size: 0.66rem;" title="Всего отправлено/записано">
+                Σ ${totalSentStr}
+              </span>
+            </div>
             <div class="d-flex align-items-start gap-1">
-              <i class="bi bi-arrow-up-right text-warning mt-0.5" style="font-size: 0.72rem;"></i>
-              <div class="text-truncate" style="max-width: 250px; font-size: 0.73rem; color: #fde047;" title="${escapeHtml(item.sent_summary)}">
-                ${escapeHtml(item.sent_summary)} ${sentBytes}
+              <i class="bi bi-arrow-up-right text-warning mt-0.5" style="font-size: 0.70rem;"></i>
+              <div class="text-truncate" style="max-width: 250px; font-size: 0.72rem; color: #fde047;" title="${escapeHtml(item.sent_summary)}">
+                ${escapeHtml(item.sent_summary)}
               </div>
             </div>
           </td>
           <td>
+            <div class="d-flex align-items-center justify-content-between gap-1 mb-1">
+              <span class="badge bg-success-subtle text-success border border-success px-1.5 py-0.5" style="font-size: 0.68rem;" title="Скачано/получено за измеряемый период">
+                ${deltaRecvStr}
+              </span>
+              <span class="text-muted font-monospace" style="font-size: 0.66rem;" title="Всего скачано/прочитано">
+                Σ ${totalRecvStr}
+              </span>
+            </div>
             <div class="d-flex align-items-start gap-1">
-              <i class="bi bi-arrow-down-left text-success mt-0.5" style="font-size: 0.72rem;"></i>
-              <div class="text-truncate" style="max-width: 250px; font-size: 0.73rem; color: #86efac;" title="${escapeHtml(item.recv_summary)}">
-                ${escapeHtml(item.recv_summary)} ${recvBytes}
+              <i class="bi bi-arrow-down-left text-success mt-0.5" style="font-size: 0.70rem;"></i>
+              <div class="text-truncate" style="max-width: 250px; font-size: 0.72rem; color: #86efac;" title="${escapeHtml(item.recv_summary)}">
+                ${escapeHtml(item.recv_summary)}
               </div>
             </div>
           </td>
@@ -843,6 +879,19 @@
         const idx = parseInt(row.getAttribute('data-idx'), 10);
         const item = filtered[idx];
         if (!item) return;
+
+        const formatNetKb = (kb) => {
+          if (!kb || kb <= 0) return '0 KB';
+          if (kb >= 1024 * 1024) return (kb / (1024 * 1024)).toFixed(2) + ' GB';
+          if (kb >= 1024) return (kb / 1024).toFixed(1) + ' MB';
+          return kb.toFixed(1) + ' KB';
+        };
+
+        const formatNetRate = (rate) => {
+          if (!rate || rate <= 0.05) return '';
+          if (rate >= 1024) return (rate / 1024).toFixed(1) + ' MB/s';
+          return rate.toFixed(1) + ' KB/s';
+        };
 
         if (window.AITableModal) {
           window.AITableModal.show({
@@ -863,8 +912,13 @@
               { label: 'Удаленный адрес (Remote)', value: item.remote_address },
               { label: 'Локальный сокет (Local)', value: item.local_address },
               { label: 'Протокол / Служба', value: `${item.protocol} • ${item.service_type}` },
-              { label: 'Что шлет (Отправка)', value: `${item.sent_summary} ${item.sent_kb > 0 ? '(' + item.sent_kb + ' KB)' : ''}`, fullWidth: true },
-              { label: 'Что принимает (Прием)', value: `${item.recv_summary} ${item.recv_kb > 0 ? '(' + item.recv_kb + ' KB)' : ''}`, fullWidth: true }
+              { label: 'Статус соединения', value: item.status },
+              { label: 'Скачано за период (Прием)', value: `${formatNetKb(item.delta_recv_kb || 0)} ${item.recv_rate_kbs > 0.05 ? '(' + formatNetRate(item.recv_rate_kbs) + ')' : ''}` },
+              { label: 'Всего скачано / получено', value: formatNetKb(item.recv_kb || 0) },
+              { label: 'Отправлено за период', value: `${formatNetKb(item.delta_sent_kb || 0)} ${item.sent_rate_kbs > 0.05 ? '(' + formatNetRate(item.sent_rate_kbs) + ')' : ''}` },
+              { label: 'Всего отправлено', value: formatNetKb(item.sent_kb || 0) },
+              { label: 'Что шлет (Отправка)', value: item.sent_summary, fullWidth: true },
+              { label: 'Что принимает (Прием)', value: item.recv_summary, fullWidth: true }
             ],
             rawTitle: 'Сетевой дамп подключения',
             rawContent: JSON.stringify(item, null, 2),
