@@ -36,6 +36,7 @@ from apps.windows.hardware.models import (
     StorageInventory,
     SystemHardwareInventory,
 )
+from apps.windows.hardware.lhm_service import LhmService, parse_sensor_value
 from apps.windows.hardware.registry import HardwareProviderRegistry
 
 __all__ = [
@@ -47,6 +48,8 @@ __all__ = [
     "UtilityDiscovery",
     "CrossValidator",
     "ValidationReport",
+    "LhmService",
+    "parse_sensor_value",
     "CpuInventory",
     "GpuInventory",
     "MemoryInventory",

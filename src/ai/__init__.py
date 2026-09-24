@@ -8,7 +8,7 @@ from .providers.foundry import FoundryChatBase, FoundryClient, FoundrySimpleChat
 from .providers.onnx import ONNXChatBase
 from .providers.huggingface import HFChatBase
 from .providers.openai import OpenAICompatChat
-from .providers.gemini_cli import GeminiCliChatBase
+from .providers.gemini_cli import GeminiCliChatBase, GeminiCliProvider, GeminiCliResponse
 from .providers.agy import AgyChatBase
 from .gemini import GoogleGenerativeAI
 
@@ -31,6 +31,8 @@ __all__ = [
     "BaseChatProvider",
     "GoogleGenerativeAI",
     "GeminiCliChatBase",
+    "GeminiCliProvider",
+    "GeminiCliResponse",
     "AgyChatBase",
     "OllamaChatBase",
     "OllamaClient",

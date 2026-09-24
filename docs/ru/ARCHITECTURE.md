@@ -487,9 +487,29 @@ port = find_available_port(8000)
 
 ---
 
+## 🌐 Сценарии запуска и архитектура веб-интерфейсов (WebGUI)
+
+Веб-уровень платформы AI Breadboard разделен на модульные оболочки (**shells**), каждая из которых отвечает за свой сценарий использования:
+
+| Скрипт запуска | Профиль конфигурации | Маршрут FastAPI | Файл шаблона | Назначение сценария |
+|---|---|---|---|---|
+| `Run-Dashboard.ps1` | `config/dashboard.json` | `/admin` | `src/api/webgui/admin/index.html` | Главная панель администратора: RAG, агенты, модели, настройки |
+| `Run-TC.ps1` | `config/tc.json` | `/tc` | `src/api/webgui/apps/index.html` | Test Computer: мониторинг железа, диагностика ОС, системный стек |
+| `su.ps1` | `su.json` | `/su` | `src/api/webgui/apps/index.html` | SU Console: управление микросервисами суперпользователя |
+| `launchers/helpdesk.ps1` | `config.json` | `/helpdesk` | `src/api/webgui/helpdesk/index.html` | Служба поддержки: рабочее место оператора и учет тикетов |
+| `Run-UserAssistant.ps1` | `config/dashboard.json` | `/` | `src/api/webgui/user/index.html` | Пользовательский портал и персональный AI-ассистент |
+| `launchers/Run-Chat.ps1` | `config.json` | `/chat` | `src/api/webgui/chat/index.html` | Автономный диалоговый AI-чат |
+
+Подробные руководства:
+- 📖 [**Руководство по созданию новых сценариев запуска**](guides/creating_launch_scenarios.md)
+- 🎨 [**Стандарт построения веб-интерфейса (UI Architecture)**](../../src/api/webgui/UI_ARCHITECTURE.md)
+- ⚙️ [**Реестр конфигураций сценариев**](../../config/README.md)
+
+---
+
 ## Выводы
 
-✅ **Архитектура портирования:**
+✅ **Архитектура портирования и платформы:**
 - Moduleная и расширяемая
 - Полностью кроссплатформенная
 - Production-ready
@@ -497,13 +517,14 @@ port = find_available_port(8000)
 - Хорошо документирована
 
 ✅ **Слои:**
-1. User Interface (обертки)
-2. Core Modules (Python)
+1. User Interface (обертки, PowerShell лончеры, WebGUI оболочки)
+2. Core Modules (Python, FastAPI эндпоинты)
 3. Platform Abstraction (paths, config, utils)
-4. OS-Specific Execution (subprocess, socket, etc)
+4. OS-Specific Execution (subprocess, socket, Windows native APIs)
 
 ✅ **Результат:**
 - Один код работает везде
-- Пользователь видит одинаковые команды
-- Минимальная переработка исходного кода
+- Четкое разделение сценариев и UI-оболочек
+- Пользователь видит понятные и изолированные консоли
 - Готово к production использованию
+

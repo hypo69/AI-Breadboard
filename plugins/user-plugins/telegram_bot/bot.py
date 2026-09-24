@@ -122,6 +122,9 @@ class TelegramBotEngine:
             # Text messages
             self.app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self._handle_text_message))
 
+            # Error handler
+            self.app.add_error_handler(self._handle_error)
+
             await self.app.initialize()
             logger.info("TelegramBotEngine: Application initialized.")
             return True
@@ -718,3 +721,18 @@ class TelegramBotEngine:
             f"• *Active AI Model:* `{model_name}`\n"
             f"• *Configured Admins:* {len(self.admin_ids)}\n"
         )
+
+    async def _handle_error(self, update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Обработка ошибок polling-цикла и сетевых сбоев Telegram API."""
+        err = context.error
+        if err is None:
+            return
+        err_str = str(err)
+        err_type = type(err).__name__
+
+        if "getaddrinfo" in err_str or "ConnectError" in err_str or "NetworkError" in err_type:
+            logger.warning(
+                f"Telegram-бот: Временное отсутствие подключения к сети или сбой DNS Telegram API ({err_str}). Бот автоматически повторит попытку."
+            )
+        else:
+            logger.error(f"Telegram-бот: Необработанное исключение: {err}", exc_info=err)

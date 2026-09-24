@@ -15,7 +15,7 @@ class Dashboard:
             from apps.memory_monitor import PerformanceMonitor
             from apps.network_diagnostics import NetworkDiagnostics
             from apps.services_manager import ServicesManager
-            from apps.registry_viewer import RegistryViewer
+            from apps.windows.registry import RegistryViewer
             from apps.security_analyzer import SecurityAnalyzer
             from apps.hardware_explorer import HardwareExplorer
             from apps.baseline_detector import BaselineDetector

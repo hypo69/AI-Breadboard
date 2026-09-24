@@ -288,10 +288,10 @@ class TestAppsStatusVisibility:
             assert status["apps"]["helpdesk"]["enabled"] is False
 
     def test_get_apps_status_with_profile_param(self):
-        """Passing profile=tc must explicitly load config_tc.json regardless of env CONFIG_FILE."""
+        """Passing profile=tc must explicitly load tc.json or config_tc.json regardless of env CONFIG_FILE."""
         status = get_apps_status(profile="tc")
         assert status["status"] == "ok"
-        assert status["config_file"] == "config_tc.json"
+        assert status["config_file"] in ("tc.json", "config_tc.json")
         assert status["apps"]["cloudflared_monitor"]["enabled"] is False
         assert status["apps"]["gcloud_monitor"]["enabled"] is False
         assert status["apps"]["website_monitor"]["enabled"] is False
@@ -299,12 +299,12 @@ class TestAppsStatusVisibility:
         assert status["apps"]["wikipedia_research"]["enabled"] is False
 
     def test_api_status_endpoint_with_profile_param(self):
-        """Querying /api/apps/status?profile=tc must return config_tc.json status."""
+        """Querying /api/apps/status?profile=tc must return tc.json / config_tc.json status."""
         res = client.get("/api/apps/status?profile=tc")
         assert res.status_code == 200
         data = res.json()
         assert data["status"] == "ok"
-        assert data["config_file"] == "config_tc.json"
+        assert data["config_file"] in ("tc.json", "config_tc.json")
         assert data["apps"]["cloudflared_monitor"]["enabled"] is False
         assert data["apps"]["gcloud_monitor"]["enabled"] is False
         assert data["apps"]["website_monitor"]["enabled"] is False

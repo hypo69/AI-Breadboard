@@ -263,3 +263,48 @@ class TestSystemControlRouter:
         assert data["status"] == "SUCCESS"
         assert data["is_sensitive"] is True
         assert data["restore_point"]["success"] is True
+
+    def test_get_restore_policy_config_endpoint(self, client: TestClient) -> None:
+        """Тест GET /api/system-control/restore-points/config."""
+        response = client.get("/api/system-control/restore-points/config")
+        assert response.status_code == 200
+        data = response.json()
+        assert "max_points" in data
+        assert "schedule_trigger" in data
+
+    @patch("apps.windows.core.system_restore.WindowsSystemRestoreManager.save_policy")
+    def test_update_restore_policy_config_endpoint(self, mock_save: MagicMock, client: TestClient) -> None:
+        """Тест POST /api/system-control/restore-points/config."""
+        mock_save.return_value = {
+            "success": True,
+            "config": {"max_points": 7, "max_storage_size": "15%"},
+            "message": "Политика обновлена",
+        }
+        payload = {
+            "max_points": 7,
+            "max_storage_size": "15%",
+            "schedule_trigger": "weekly",
+            "schedule_time": "02:00",
+        }
+        response = client.post("/api/system-control/restore-points/config", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["config"]["max_points"] == 7
+
+    @patch("apps.windows.core.system_restore.WindowsSystemRestoreManager.prune_old_restore_points")
+    def test_prune_restore_points_endpoint(self, mock_prune: MagicMock, client: TestClient) -> None:
+        """Тест POST /api/system-control/restore-points/prune."""
+        mock_prune.return_value = {
+            "success": True,
+            "deleted_count": 2,
+            "target_keep": 5,
+            "remaining_count": 5,
+        }
+        payload = {"keep_count": 5}
+        response = client.post("/api/system-control/restore-points/prune", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["deleted_count"] == 2
+

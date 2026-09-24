@@ -19,7 +19,7 @@ from typing import Any, Dict, List
 
 from logger import logger
 from src.ai.gemini.user_query_rag import index_user_query, search_user_context
-from src.ai.gemini.chat_response_store import save_approved_response
+from src.ai.gemini.approved_responses_store import save_approved_response
 from src.user_manager.user_profile import get_recommendation_context
 
 async def search_user_history(

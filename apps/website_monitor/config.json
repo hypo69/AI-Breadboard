@@ -1,9 +1,8 @@
 {
   "app_name": "Website Intelligence Monitor",
   "version": "1.0.0",
+  "launcher": "Run-WebsiteMonitor.ps1",
   "server": {
-    "dedicated": false,
-    "host": "127.0.0.1",
     "port": 8107,
     "use_ssl": false,
     "workers": 1

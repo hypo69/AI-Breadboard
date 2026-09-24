@@ -124,9 +124,10 @@
           try {
             const res = await fetch('/api/cloudflared/test-endpoint');
             const data = await res.json();
-            alert(`Результат проверки Ingress:\nДоступен: ${data.reachable ? 'ДА' : 'НЕТ'}\nКод ответа: ${data.status_code || 'N/A'}\nЗадержка: ${data.response_time_ms || 0} ms`);
+            const msg = `Результат проверки Ingress:\nДоступен: ${data.reachable ? 'ДА' : 'НЕТ'}\nКод ответа: ${data.status_code || 'N/A'}\nЗадержка: ${data.response_time_ms || 0} ms`;
+            window.showToast?.(msg, data.reachable ? 'success' : 'warning') || alert(msg);
           } catch (e) {
-            alert('Ошибка проверки эндпоинта: ' + e.message);
+            window.showToast?.('Ошибка проверки эндпоинта: ' + e.message, 'danger') || alert('Ошибка проверки эндпоинта: ' + e.message);
           } finally {
             testBtn.disabled = false;
             testBtn.innerHTML = '<i class="bi bi-broadcast me-1"></i> Проверить Ingress';

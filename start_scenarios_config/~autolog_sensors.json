@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Конфигурация автологгирования сенсоров и приложений (общая для всех сценариев запуска)",
+  "enable_autolog": true,
+  "default_interval": "1 minute",
+  "loggers": {
+    "system_inspector":       { "interval": "5 seconds",  "enabled": true  },
+    "hardware_monitor":       { "interval": "5 seconds",  "enabled": true  },
+    "librehardwaremonitor":   { "interval": "5 seconds",  "enabled": true  },
+    "smartmontools":          { "interval": "10 minutes", "enabled": true  },
+    "windows_sysadmin":       { "interval": "1 minute",   "enabled": true  },
+    "windows_defender":       { "interval": "1 hour",     "enabled": true  },
+    "windows_startup_auditor":{ "interval": "1 hour",     "enabled": true  },
+    "windows_backup_manager": { "interval": "6 hours",    "enabled": true  },
+    "registry_viewer":        { "interval": "1 hour",     "enabled": true  },
+    "software_audit":         { "interval": "1 hour",     "enabled": true  },
+    "website_monitor":        { "interval": "5 minutes",  "enabled": true  },
+    "gcloud_monitor":         { "interval": "5 minutes",  "enabled": true  },
+    "cloudflared_monitor":    { "interval": "30 seconds", "enabled": true  },
+    "trading_terminal":       { "interval": "10 seconds", "enabled": true  },
+    "user_assistant":         { "interval": "5 minutes",  "enabled": true  },
+    "helpdesk":               { "interval": "1 minute",   "enabled": true  }
+  }
+}

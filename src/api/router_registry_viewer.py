@@ -3,7 +3,7 @@
 # Process Name: Windows Registry Viewer Router Bridge
 # =============================================================================
 # Description:
-#   FastAPI роутер-адаптер для приложения Windows Registry Viewer (apps.registry_viewer),
+#   FastAPI роутер-адаптер для приложения Windows Registry Viewer (apps.windows.registry),
 #   обеспечивающий интеграцию с общим бэкендом AI-Breadboard и веб-интерфейсом.
 #
 # File: router_registry_viewer.py
@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
-from apps.registry_viewer import (
+from apps.windows.registry import (
     BookmarkItem,
     RegistryKeyDetailsDTO,
     RegistryValueDTO,

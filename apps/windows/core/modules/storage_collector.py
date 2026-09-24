@@ -110,9 +110,60 @@ class StorageCollector(TelemetryProvider):
                 )
             )
 
+        # Диагностика физических накопителей через WindowsStorageSensor
+        physical_disks_data: List[Dict[str, Any]] = []
+        try:
+            from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
+            sensor = WindowsStorageSensor(timeout_sec=10)
+            disks = sensor.get_physical_disks()
+            for d in disks:
+                disk_dict = d.to_dict()
+                physical_disks_data.append(disk_dict)
+
+                # Проверка критического статуса здоровья
+                if d.health_status.upper() in ("UNHEALTHY", "FAILING", "CRITICAL"):
+                    findings.append(
+                        AuditFinding(
+                            domain="storage",
+                            category="disk_hardware_failure",
+                            title=f"Угроза отказа диска {d.friendly_name}",
+                            description=f"Накопитель {d.friendly_name} сообщает о сбое здоровья ({d.health_status}, статус: {d.operational_status}).",
+                            severity=RiskLevel.CRITICAL,
+                            evidence=disk_dict,
+                        )
+                    )
+                elif d.health_status.upper() == "WARNING":
+                    findings.append(
+                        AuditFinding(
+                            domain="storage",
+                            category="disk_health_warning",
+                            title=f"Предупреждение о здоровье диска {d.friendly_name}",
+                            description=f"Накопитель {d.friendly_name} находится в состоянии предупреждения ({d.health_status}).",
+                            severity=RiskLevel.CAUTION,
+                            evidence=disk_dict,
+                        )
+                    )
+
+                # Проверка износа SSD/NVMe
+                if d.wear_percentage is not None and d.wear_percentage >= 95.0:
+                    findings.append(
+                        AuditFinding(
+                            domain="storage",
+                            category="ssd_wear_critical",
+                            title=f"Критический износ накопителя {d.friendly_name}",
+                            description=f"Процент износа SSD/NVMe {d.friendly_name} достиг {d.wear_percentage}%. Рекомендуется замена накопителя.",
+                            severity=RiskLevel.CRITICAL if d.wear_percentage >= 99.0 else RiskLevel.CAUTION,
+                            evidence=disk_dict,
+                        )
+                    )
+        except Exception as e:
+            logger.debug(f"Ошибка сбора физических дисков в StorageCollector: {e}")
+
         metrics: Dict[str, Any] = {
             "volumes_count": len(volumes),
             "volumes": volumes,
+            "physical_disks_count": len(physical_disks_data),
+            "physical_disks": physical_disks_data,
             "vss_shadow_storage": vss_storage,
             "system_protection": protection_status,
         }

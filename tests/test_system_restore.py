@@ -199,3 +199,68 @@ class TestWindowsSystemRestoreManager:
         assert result["success"] is False
         assert "Таймаут" in result["error"]
 
+    @patch("subprocess.run")
+    def test_set_shadow_storage_max_size(self, mock_run: MagicMock) -> None:
+        """Проверка изменения лимита дискового пространства теневых копий."""
+        mock_res = MagicMock()
+        mock_res.returncode = 0
+        mock_res.stdout = "Successfully resized the shadow copy storage association"
+        mock_res.stderr = ""
+        mock_run.return_value = mock_res
+
+        mgr = WindowsSystemRestoreManager()
+        res = mgr.set_shadow_storage_max_size(drive="C:", max_size="15%")
+
+        assert res["success"] is True
+        assert res["max_size"] == "15%"
+        assert res["drive"] == "C:"
+
+    def test_get_and_set_policy_config(self, tmp_path: Path) -> None:
+        """Проверка чтения и сохранения политики хранения и расписания."""
+        policy_file = str(tmp_path / "system_restore_policy.json")
+        mgr = WindowsSystemRestoreManager(policy_file=policy_file)
+
+        # Проверка дефолтных настроек
+        cfg = mgr.get_policy_config()
+        assert cfg["max_points"] == 5
+        assert cfg["auto_prune"] is True
+        assert cfg["schedule_trigger"] == "daily"
+
+        # Проверка обновления политики
+        with patch.object(mgr, "set_shadow_storage_max_size", return_value={"success": True, "max_size": "20%"}):
+            with patch.object(mgr, "set_schedule_config", return_value={"success": True}):
+                res = mgr.save_policy(
+                    max_points=10,
+                    auto_prune=True,
+                    max_storage_size="20%",
+                    schedule_trigger="weekly",
+                    schedule_time="04:00",
+                    frequency_limit_minutes=0,
+                )
+                assert res["success"] is True
+                assert res["config"]["max_points"] == 10
+                assert res["config"]["schedule_trigger"] == "weekly"
+
+        # Проверка персистентности в файле
+        saved_cfg = mgr.get_policy_config()
+        assert saved_cfg["max_points"] == 10
+        assert saved_cfg["schedule_trigger"] == "weekly"
+
+    @patch("subprocess.run")
+    def test_prune_old_restore_points(self, mock_run: MagicMock) -> None:
+        """Проверка удаления старых точек восстановления при превышении лимита."""
+        mock_run.return_value = MagicMock(returncode=0, stdout="Deleted shadow copies", stderr="")
+        mgr = WindowsSystemRestoreManager()
+
+        # Мокаем список из 6 точек
+        mock_points = [
+            {"sequence_number": i, "description": f"RP {i}", "restore_point_type": "MODIFY_SETTINGS", "creation_time": f"2026-09-0{i} 10:00:00"}
+            for i in range(1, 7)
+        ]
+        with patch.object(mgr, "list_restore_points", return_value=mock_points):
+            res = mgr.prune_old_restore_points(keep_count=3)
+            assert res["success"] is True
+            assert res["deleted_count"] == 3
+            assert res["target_keep"] == 3
+
+

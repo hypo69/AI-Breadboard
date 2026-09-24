@@ -22,7 +22,10 @@ from typing import Dict, Optional
 
 import requests
 
-from logger import logger
+try:
+    from src.logger.logger import logger
+except ImportError:
+    from logger import logger
 
 # Module-level cache: (timestamp, result)
 _speed_cache: tuple[float, Dict[str, float]] | None = None
@@ -65,7 +68,9 @@ class InternetSpeedSensor:
             elapsed_ms = (time.perf_counter() - start_time) * 1000
 
             if process.returncode != 0:
-                logger.debug(f"Ping failed: {host}")
+                logger.warning(
+                    f"InternetSpeed: Сбой проверки ICMP ping к хосту {host} (узел недоступен или отсутствует подключение к сети)."
+                )
                 return None
 
             # Try to parse actual RTT from ping output
@@ -83,7 +88,7 @@ class InternetSpeedSensor:
             return round(elapsed_ms, 2)
 
         except Exception as ex:
-            logger.debug(f"Ping measurement failed: {ex}")
+            logger.warning(f"InternetSpeed: Ошибка при выполнении ping к {host}: {ex}")
             return None
 
     def measure_download_speed(self, url: Optional[str] = None) -> float:
@@ -120,7 +125,9 @@ class InternetSpeedSensor:
             return 0.0
 
         except Exception as ex:
-            logger.debug(f"Download speed test failed: {ex}")
+            logger.warning(
+                f"InternetSpeed: Сбой теста скорости загрузки ({test_url}): {ex} (сеть недоступна или сбой DNS)"
+            )
             return 0.0
 
     def measure_upload_speed(self, url: Optional[str] = None) -> float:
@@ -133,13 +140,14 @@ class InternetSpeedSensor:
             Upload speed in Mbps.
         """
         start_time = time.perf_counter()
+        target_url = url or "https://httpbin.org/post"
 
         try:
             # Generate test data (1MB)
             test_data = b"x" * (1024 * 1024)
 
             response = requests.post(
-                url or "https://httpbin.org/post",
+                target_url,
                 data=test_data,
                 timeout=self.timeout,
             )
@@ -154,7 +162,9 @@ class InternetSpeedSensor:
             return 0.0
 
         except Exception as ex:
-            logger.debug(f"Upload speed test failed: {ex}")
+            logger.warning(
+                f"InternetSpeed: Сбой теста скорости отдачи ({target_url}): {ex} (сеть недоступна или сбой DNS)"
+            )
             return 0.0
 
     def measure_dns_resolution(self, hostname: str = "google.com") -> Optional[float]:
@@ -176,7 +186,9 @@ class InternetSpeedSensor:
             return round(elapsed_ms, 2)
 
         except Exception as ex:
-            logger.debug(f"DNS resolution failed: {ex}")
+            logger.warning(
+                f"InternetSpeed: Сбой разрешения DNS для '{hostname}': {ex} (отсутствует интернет или сбой DNS-сервера)"
+            )
             return None
 
     def measure_internet_speed(self) -> Dict[str, float]:

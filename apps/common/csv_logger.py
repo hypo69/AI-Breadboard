@@ -37,8 +37,8 @@ _LOG_DIR_OVERRIDE: Optional[Path] = None
 def get_apps_log_dir() -> Path:
     """Возвращает и создает целевой каталог для CSV-логов приложений.
 
-    Каталог располагается в %APPDATA%/AI-Breadboard/apps/logs (с фоллбэком на
-    %LOCALAPPDATA% или ~/.config/AI-Breadboard/apps/logs в кросс-платформенных средах).
+    Каталог располагается в %APPDATA%/AI-Breadboard/apps/windows/telemetry/logs (с фоллбэком на
+    %LOCALAPPDATA% или ~/.config/AI-Breadboard/apps/windows/telemetry/logs в кросс-платформенных средах).
 
     Returns:
         Path: Абсолютный путь к директории логов приложений.
@@ -54,7 +54,7 @@ def get_apps_log_dir() -> Path:
     else:
         base_dir = Path.home() / ".config"
 
-    log_dir = base_dir / "AI-Breadboard" / "apps" / "logs"
+    log_dir = base_dir / "AI-Breadboard" / "apps" / "windows" / "telemetry" / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     return log_dir
 

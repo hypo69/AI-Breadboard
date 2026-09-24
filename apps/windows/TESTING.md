@@ -79,7 +79,7 @@ python -m apps.windows.apps.services_manager
 
 ### Test Registry Viewer
 ```bash
-python -m apps.windows.apps.registry_viewer
+python -m apps.windows.apps.windows.registry
 > hive HKEY_LOCAL_MACHINE
 > cd Software\Microsoft
 > ls

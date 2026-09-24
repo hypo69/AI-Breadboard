@@ -5,95 +5,14 @@
     color: var(--text-color, #f8fafc);
   }
   .about-sys-top-header {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
-    border: 1px solid var(--border-color, #334155);
-    border-radius: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md, 8px);
     padding: 0.75rem 1rem;
     margin-bottom: 0.75rem;
   }
-  .about-sys-card {
-    background: var(--surface-1, #0f172a) !important;
-    border: 1px solid var(--border-color, #334155) !important;
-    border-radius: 8px;
-    padding: 0.75rem 0.9rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 80px;
-    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-  .about-sys-card:hover {
-    border-color: #38bdf8 !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-  }
-  .about-sys-label {
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted, #94a3b8);
-    font-weight: 600;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .about-sys-value {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--text-color, #f8fafc);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    line-height: 1.25;
-  }
-  .about-sys-sub {
-    font-size: 0.75rem;
-    color: var(--text-muted, #94a3b8);
-    line-height: 1.2;
-  }
-  .about-sys-panel {
-    background: var(--surface-1, #0f172a) !important;
-    border: 1px solid var(--border-color, #334155) !important;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 0.75rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  }
-  .about-sys-panel-header {
-    background: var(--surface-2, #1e293b) !important;
-    border-bottom: 1px solid var(--border-color, #334155) !important;
-    padding: 0.55rem 0.9rem;
-    font-weight: 600;
-    font-size: 0.84rem;
-    color: var(--nav-active, #38bdf8);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .about-sys-spec-table {
-    width: 100%;
-    margin-bottom: 0;
-    font-size: 0.82rem;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  }
-  .about-sys-spec-table td {
-    padding: 6px 12px;
-    border-bottom: 1px solid rgba(51, 65, 85, 0.35);
-    vertical-align: middle;
-  }
-  .about-sys-spec-table tr:last-child td {
-    border-bottom: none;
-  }
-  .about-sys-spec-key {
-    color: var(--text-muted, #94a3b8);
-    width: 32%;
-    font-weight: 500;
-  }
-  .about-sys-spec-val {
-    color: var(--text-color, #f8fafc);
-    font-weight: 600;
-  }
   .about-sys-progress-track {
-    background: rgba(51, 65, 85, 0.6);
+    background: var(--surface-2);
     border-radius: 4px;
     height: 8px;
     overflow: hidden;
@@ -105,21 +24,21 @@
     transition: width 0.3s ease;
   }
   .about-sys-badge-ok {
-    background: rgba(34, 197, 94, 0.15);
-    color: #4ade80;
-    border: 1px solid #22c55e;
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+    border: 1px solid var(--status-success-border);
     font-size: 0.72rem;
     padding: 2px 6px;
-    border-radius: 4px;
+    border-radius: var(--radius-xs, 4px);
     font-weight: 600;
   }
   .about-sys-badge-warn {
-    background: rgba(234, 179, 8, 0.15);
-    color: #fde047;
-    border: 1px solid #eab308;
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
+    border: 1px solid var(--status-warning-border);
     font-size: 0.72rem;
     padding: 2px 6px;
-    border-radius: 4px;
+    border-radius: var(--radius-xs, 4px);
     font-weight: 600;
   }
   .about-sys-tree-node {
@@ -155,10 +74,10 @@
   }
   .about-sys-prop-row {
     display: grid;
-    grid-template-columns: minmax(140px, 200px) 1fr;
+    grid-template-columns: minmax(180px, 240px) 1fr;
     align-items: baseline;
-    gap: 12px;
-    padding: 4px 8px;
+    gap: 14px;
+    padding: 6px 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 4px;
     transition: background 0.12s ease;
@@ -172,16 +91,57 @@
   .about-sys-prop-key {
     color: var(--text-muted, #94a3b8);
     font-weight: 500;
-    font-size: 0.78rem;
+    font-size: 0.80rem;
     user-select: text;
   }
   .about-sys-prop-val {
     color: var(--text-color, #f8fafc);
     font-weight: 500;
-    font-size: 0.80rem;
+    font-size: 0.82rem;
     word-break: break-word;
     user-select: text;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .about-sys-spec-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .about-sys-spec-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-subtle, rgba(51, 65, 85, 0.35));
+    vertical-align: middle;
+    line-height: 1.5;
+  }
+  .about-sys-spec-table tr:hover td {
+    background: rgba(56, 189, 248, 0.04);
+  }
+  .about-sys-spec-table tr:last-child td {
+    border-bottom: none;
+  }
+  .about-sys-spec-key {
+    color: var(--text-muted, #94a3b8);
+    width: 230px;
+    min-width: 210px;
+    max-width: 260px;
+    white-space: nowrap;
+    font-weight: 500;
+    font-size: 0.82rem;
+    font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+    vertical-align: middle;
+  }
+  .about-sys-spec-key i {
+    margin-right: 8px;
+    font-size: 0.92rem;
+    vertical-align: -1px;
+  }
+  .about-sys-spec-val {
+    color: var(--text-color, #f8fafc);
+    font-weight: 500;
+    font-size: 0.82rem;
+    font-family: var(--font-mono, monospace);
+    vertical-align: middle;
+    word-break: break-word;
   }
   .about-ai-copilot-banner {
     background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(20, 35, 60, 0.95) 50%, rgba(15, 23, 42, 0.98) 100%);
@@ -229,24 +189,51 @@
     border-color: rgba(234, 179, 8, 0.4);
     color: #fde047;
   }
+  
+  /* Анимация вращения для иконок обновления */
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .spin-animation {
+    animation: spin 1s linear infinite;
+  }
 </style>
 
 <div class="about-sys-wrapper">
   <!-- Top Navigation / Refresh & Status Bar -->
-  <div class="about-sys-top-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <div class="about-sys-top-header d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <span class="fs-5">ℹ️</span>
       <h6 class="mb-0 fw-bold" style="font-size: 1rem; color: #38bdf8;">О Системе (System Specification & Telemetry)</h6>
       <span class="badge rounded-pill bg-info-subtle text-info border border-info px-2.5 py-1" style="font-size: 0.72rem;" id="about-sys-live-badge">
         ● Live Host Telemetry
       </span>
+      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-2.5 py-1" style="font-size: 0.72rem;" id="about-sys-cache-badge" title="Состояние кеша вкладки">
+        💾 Cache: Ready
+      </span>
       <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary px-2.5 py-1" style="font-size: 0.72rem;" id="about-sys-privilege-badge">
         🔍 Privilege Check
       </span>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
+      <!-- Button to Open AI Diagnostics Modal -->
+      <button class="btn btn-sm btn-info text-dark fw-bold rounded-pill px-3 py-1 shadow-sm d-flex align-items-center gap-1.5"
+              id="btn-open-about-ai-modal"
+              type="button"
+              data-bs-toggle="modal"
+              data-bs-target="#aboutAiDiagnosticsModal"
+              title="Открыть AI Copilot: Диагностика сенсоров и оборудования">
+        <i class="bi bi-robot"></i>
+        <span>AI Диагностика</span>
+        <span class="badge bg-dark text-info border border-info font-monospace ms-1" id="about-ai-health-badge-btn">Health: 100/100</span>
+      </button>
       <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1" id="btn-about-sys-refresh" title="Обновить всю информацию">
         <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+      </button>
+      <button class="btn btn-sm btn-outline-warning rounded-pill px-2.5 py-1" id="btn-about-sys-clear-cache" title="Очистить кеш вкладки и обновить">
+        <i class="bi bi-trash3 me-1"></i> Очистить кеш
       </button>
       <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1" id="btn-about-sys-live-toggle" title="Приостановить или возобновить поток">
         <i class="bi bi-pause-fill me-1" id="icon-about-sys-live"></i> <span id="txt-about-sys-live">Пауза</span>
@@ -254,103 +241,223 @@
     </div>
   </div>
 
-  <!-- Top Prominent AI Copilot Performance & Diagnostics Banner (Top-most Panel) -->
-  <div class="about-ai-copilot-banner p-3 mb-3" id="about-ai-copilot-card">
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-2 border-bottom border-secondary border-opacity-25">
-      <div class="d-flex align-items-center gap-2.5 flex-wrap">
-        <div class="about-ai-pulse-icon">
-          <i class="bi bi-robot text-info fs-5"></i>
-        </div>
-        <div>
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="fw-bold text-white" style="font-size: 0.95rem;">AI Copilot: Анализ производительности и узких мест</span>
-            <span class="badge bg-success-subtle text-success border border-success font-monospace" id="about-ai-health-badge">Health: 100/100</span>
+  <!-- AI Copilot Diagnostics Modal Dialog -->
+  <div class="modal fade" id="aboutAiDiagnosticsModal" tabindex="-1" aria-labelledby="aboutAiDiagnosticsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-xl-down" style="max-width: 95vw; width: 95vw; height: 92vh; margin: 1.5vh auto;">
+      <div class="modal-content bg-dark text-white border border-info border-opacity-40 shadow-lg" style="height: 100%; background: linear-gradient(135deg, rgba(13, 20, 36, 0.98) 0%, rgba(18, 30, 52, 0.98) 100%);">
+        
+        <div class="modal-header border-secondary border-opacity-25 pb-2 px-3">
+          <div class="d-flex align-items-center justify-content-between w-100 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2.5">
+              <div class="about-ai-pulse-icon">
+                <i class="bi bi-robot text-info fs-5"></i>
+              </div>
+              <div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <h6 class="modal-title fw-bold text-white mb-0" id="aboutAiDiagnosticsModalLabel" style="font-size: 0.95rem;">
+                    AI Copilot: Анализ производительности и узких мест
+                  </h6>
+                  <span class="badge bg-success-subtle text-success border border-success font-monospace" id="about-ai-health-badge">Health: 100/100</span>
+                </div>
+                <div class="small text-muted" style="font-size: 0.72rem;">Интеллектуальный диагностический аудит хоста и оборудования</div>
+              </div>
+            </div>
+            
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-dark text-info border border-info border-opacity-30 px-2.5 py-1 font-monospace" id="about-ai-engine-name" style="font-size: 0.72rem;">
+                <i class="bi bi-cpu me-1"></i>Unified AI / Heuristic
+              </span>
+              <button class="btn btn-sm btn-info text-dark fw-bold rounded-pill px-3 py-1 shadow-sm d-flex align-items-center gap-1.5" id="btn-about-ai-rescan" title="Выполнить глубокий пересканирующий аудит с вызовом AI">
+                <i class="bi bi-lightning-charge-fill" id="ic-about-ai-rescan"></i>
+                <span id="txt-about-ai-rescan">Rescan</span>
+              </button>
+              <button type="button" class="btn-close btn-close-white ms-1" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
           </div>
-          <div class="small text-muted" style="font-size: 0.72rem;">Интеллектуальный диагностический аудит хоста и оборудования</div>
         </div>
-      </div>
-      <div class="d-flex align-items-center gap-2 flex-wrap">
-        <span class="badge bg-dark text-info border border-info border-opacity-30 px-2.5 py-1 font-monospace" id="about-ai-engine-name" style="font-size: 0.72rem;">
-          <i class="bi bi-cpu me-1"></i>Unified AI / Heuristic
-        </span>
-        <button class="btn btn-sm btn-info text-dark fw-bold rounded-pill px-3 py-1 shadow-sm d-flex align-items-center gap-1.5" id="btn-about-ai-rescan" title="Выполнить глубокий пересканирующий аудит с вызовом AI">
-          <i class="bi bi-lightning-charge-fill" id="ic-about-ai-rescan"></i>
-          <span id="txt-about-ai-rescan">Rescan</span>
-        </button>
-      </div>
-    </div>
 
-    <!-- Execution Stages / Steps Inspector (as in /tc scenario chat) -->
-    <div class="mt-2.5" id="about-ai-stages-section">
-      <div class="d-flex align-items-center justify-content-between text-muted small mb-1.5" style="font-size: 0.72rem;">
-        <span class="text-uppercase tracking-wider fw-semibold text-info"><i class="bi bi-activity me-1"></i>Этапы диагностики системы</span>
-        <button class="btn btn-link btn-sm p-0 text-info text-decoration-none" type="button" id="btn-about-ai-toggle-stages" style="font-size: 0.70rem;">
-          <span id="txt-about-ai-toggle-stages">Свернуть этапы</span> <i class="bi bi-chevron-up ms-0.5" id="ic-about-ai-toggle-stages"></i>
-        </button>
-      </div>
-      <div class="about-ai-stages-box p-2 rounded border border-secondary border-opacity-25" id="about-ai-stages-container">
-        <div class="small text-muted text-center py-2" id="about-ai-stages-empty">Ожидание запуска аудита...</div>
-      </div>
-    </div>
+        <div class="modal-body p-3" id="about-ai-copilot-card" style="overflow-y: auto; max-height: 80vh;">
+          
+          <!-- Live Polling & Active Telemetry Feed Banner (Shows what is being collected right now) -->
+          <div class="p-2.5 mb-2.5 rounded border border-info border-opacity-30 bg-black bg-opacity-40 d-flex flex-column gap-2" id="about-ai-live-feed-banner">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <div class="d-flex align-items-center gap-2">
+                <span class="spinner-grow spinner-grow-sm text-info" id="about-ai-live-pulse" role="status" style="width: 0.75rem; height: 0.75rem;"></span>
+                <strong class="text-info small" style="font-size: 0.80rem;">Текущий сбор сенсоров:</strong>
+                <span class="text-light small font-monospace" id="about-ai-live-status-text">Опрос датчиков и системных интерфейсов хоста...</span>
+              </div>
+              <div class="d-flex align-items-center gap-1.5 flex-wrap font-monospace" style="font-size: 0.70rem;">
+                <span class="badge bg-secondary bg-opacity-40 text-light border border-secondary" id="chip-sensor-lhm">🌡️ LHM Sensors</span>
+                <span class="badge bg-secondary bg-opacity-40 text-light border border-secondary" id="chip-sensor-wmi">⚡ WMI Cores</span>
+                <span class="badge bg-secondary bg-opacity-40 text-light border border-secondary" id="chip-sensor-ram">🧠 RAM & Procs</span>
+                <span class="badge bg-secondary bg-opacity-40 text-light border border-secondary" id="chip-sensor-disks">💾 Disks & SMART</span>
+                <span class="badge bg-secondary bg-opacity-40 text-light border border-secondary" id="chip-sensor-net">🌐 Network & OS</span>
+              </div>
+            </div>
+            <!-- Live metrics snapshot ticker -->
+            <div class="small text-secondary font-monospace d-flex align-items-center gap-3 flex-wrap border-top border-secondary border-opacity-20 pt-1.5" id="about-ai-live-metrics-bar" style="font-size: 0.72rem;">
+              <span><strong class="text-muted">CPU:</strong> <span class="text-info fw-semibold" id="live-tick-cpu">--</span></span>
+              <span><strong class="text-muted">Max Temp:</strong> <span class="text-warning fw-semibold" id="live-tick-temp">--</span></span>
+              <span><strong class="text-muted">RAM:</strong> <span class="text-success fw-semibold" id="live-tick-ram">--</span></span>
+              <span><strong class="text-muted">Disks:</strong> <span class="text-light fw-semibold" id="live-tick-disks">--</span></span>
+              <span><strong class="text-muted">Top Process:</strong> <span class="text-danger fw-semibold" id="live-tick-top-proc">--</span></span>
+            </div>
+          </div>
 
-    <!-- Anomalies Pills Container -->
-    <div id="about-ai-anomalies-container" class="mt-2 d-flex flex-wrap gap-1.5"></div>
+          <!-- Execution Stages / Steps Inspector -->
+          <div class="mb-2.5" id="about-ai-stages-section">
+            <div class="d-flex align-items-center justify-content-between text-muted small mb-1.5" style="font-size: 0.72rem;">
+              <span class="text-uppercase tracking-wider fw-semibold text-info"><i class="bi bi-activity me-1"></i>Цепочка пошаговой AI-диагностики</span>
+              <button class="btn btn-link btn-sm p-0 text-info text-decoration-none" type="button" id="btn-about-ai-toggle-stages" style="font-size: 0.70rem;">
+                <span id="txt-about-ai-toggle-stages">Свернуть этапы</span> <i class="bi bi-chevron-up ms-0.5" id="ic-about-ai-toggle-stages"></i>
+              </button>
+            </div>
+            <!-- Stepwise Progress Bar -->
+            <div class="progress mb-2" style="height: 4px; background-color: rgba(255,255,255,0.08);">
+              <div class="progress-bar bg-info progress-bar-striped progress-bar-animated" role="progressbar" id="about-ai-step-progress" style="width: 0%;"></div>
+            </div>
+            <div class="about-ai-stages-box p-2 rounded border border-secondary border-opacity-25" id="about-ai-stages-container">
+              <div class="small text-muted text-center py-2" id="about-ai-stages-empty">Ожидание запуска пошагового аудита...</div>
+            </div>
+          </div>
 
-    <!-- AI Summary / Assessment Output -->
-    <div class="mt-2 p-2.5 rounded bg-black bg-opacity-40 border border-secondary border-opacity-25">
-      <div class="small text-light" id="about-ai-summary-text" style="line-height: 1.55; white-space: pre-line;">
-        Система готова. Нажмите «Rescan» для глубокого анализа ресурсов и поиска узких мест системы.
-      </div>
-    </div>
+          <!-- 4 Functional Domain Cards Grid -->
+          <div class="mt-2.5" id="about-ai-domain-cards-section">
+            <div class="row g-2" id="about-ai-groups-container"></div>
+          </div>
 
-    <!-- Collapsible Sent Prompt Inspector -->
-    <div class="mt-2" id="about-ai-prompt-section" style="display: none;">
-      <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
-        <button class="btn btn-sm btn-link p-0 text-warning text-decoration-none d-flex align-items-center gap-1.5 font-monospace" type="button" id="btn-about-ai-toggle-prompt" style="font-size: 0.74rem;">
-          <i class="bi bi-terminal-fill text-warning"></i>
-          <span><strong>Сформированный промпт модели</strong></span>
-          <i class="bi bi-chevron-down text-muted ms-1" id="ic-about-ai-prompt"></i>
-        </button>
-        <button class="btn btn-dark btn-sm py-0 px-2 text-secondary border border-secondary-subtle d-flex align-items-center gap-1" type="button" id="btn-about-ai-copy-prompt" style="font-size: 0.68rem;" title="Скопировать отправленный промпт">
-          <i class="bi bi-clipboard"></i>
-          <span id="txt-about-ai-copy-prompt">Копировать</span>
-        </button>
-      </div>
-      <div id="about-ai-prompt-collapse" class="d-none mt-1.5 p-2 bg-black bg-opacity-75 border border-warning border-opacity-30 rounded">
-        <pre class="m-0 p-1.5 text-warning font-monospace" id="about-ai-prompt-text" style="font-size: 0.70rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;"></pre>
-      </div>
-    </div>
+          <!-- Anomalies Pills Container -->
+          <div id="about-ai-anomalies-container" class="mt-2 d-flex flex-wrap gap-1.5"></div>
 
-    <!-- Collapsible Raw Response / Diagnostic Data Inspector -->
-    <div class="mt-2" id="about-ai-raw-section" style="display: none;">
-      <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
-        <button class="btn btn-sm btn-link p-0 text-info text-decoration-none d-flex align-items-center gap-1.5 font-monospace" type="button" id="btn-about-ai-toggle-raw" style="font-size: 0.74rem;">
-          <i class="bi bi-code-slash text-info"></i>
-          <span><strong>Сырой ответ модели / Данные</strong></span>
-          <i class="bi bi-chevron-down text-muted ms-1" id="ic-about-ai-raw"></i>
-        </button>
-        <button class="btn btn-dark btn-sm py-0 px-2 text-secondary border border-secondary-subtle d-flex align-items-center gap-1" type="button" id="btn-about-ai-copy-raw" style="font-size: 0.68rem;" title="Скопировать ответ">
-          <i class="bi bi-clipboard"></i>
-          <span id="txt-about-ai-copy-raw">Копировать</span>
-        </button>
-      </div>
-      <div id="about-ai-raw-collapse" class="d-none mt-1.5 p-2 bg-black bg-opacity-75 border border-info border-opacity-30 rounded">
-        <pre class="m-0 p-1.5 text-light font-monospace" id="about-ai-raw-text" style="font-size: 0.70rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;"></pre>
+          <!-- Error Message Alert (if present) -->
+          <div class="mt-2 p-2 rounded bg-danger bg-opacity-10 border border-danger border-opacity-40 d-none" id="about-ai-error-section">
+            <div class="d-flex align-items-center gap-2 text-danger small">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <strong>Ошибка выполнения AI-диагностики:</strong>
+            </div>
+            <div class="small text-light font-monospace mt-1 ps-4" id="about-ai-error-text" style="font-size: 0.72rem; word-break: break-word;"></div>
+          </div>
+
+          <!-- AI Final Synthesis / Executive Summary Output -->
+          <div class="mt-2.5 p-3 rounded bg-black bg-opacity-50 border border-info border-opacity-30 shadow-sm" id="about-ai-synthesis-card">
+            <div class="d-flex align-items-center justify-content-between mb-1.5 pb-1 border-bottom border-secondary border-opacity-25">
+              <span class="small text-info fw-bold font-monospace text-uppercase" style="font-size: 0.75rem;">
+                <i class="bi bi-award-fill me-1"></i>Итоговый синтез и вердикт инженера
+              </span>
+              <span class="badge bg-secondary-subtle text-light font-monospace" id="about-ai-synthesis-status" style="font-size: 0.68rem;">Готов к запуску</span>
+            </div>
+            <div class="small text-light" id="about-ai-summary-text" style="line-height: 1.55; white-space: pre-line;">
+              Нажмите «Rescan» для запуска пошаговой AI-диагностики сенсоров по 4 доменам (CPU/GPU, Память, Диски, Сеть).
+            </div>
+            <div class="mt-2 pt-2 border-top border-secondary border-opacity-20 d-none" id="about-ai-actions-box">
+              <div class="text-warning small fw-semibold mb-1" style="font-size: 0.72rem;">
+                <i class="bi bi-exclamation-circle-fill me-1"></i>Приоритетные действия для администратора:
+              </div>
+              <ul class="list-unstyled mb-0 small text-light ps-2" id="about-ai-actions-list" style="font-size: 0.73rem;"></ul>
+            </div>
+          </div>
+
+          <!-- Collapsible Live Telemetry Payload Inspector (What was collected) -->
+          <div class="mt-2" id="about-ai-snapshot-section">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+              <button class="btn btn-sm btn-link p-0 text-info text-decoration-none d-flex align-items-center gap-1.5 font-monospace" type="button" id="btn-about-ai-toggle-snapshot" style="font-size: 0.74rem;">
+                <i class="bi bi-cpu-fill text-info"></i>
+                <span><strong>Срез собираемых сенсоров и сырых данных (Live Telemetry Snapshot)</strong></span>
+                <i class="bi bi-chevron-down text-muted ms-1" id="ic-about-ai-snapshot"></i>
+              </button>
+              <button class="btn btn-dark btn-sm py-0 px-2 text-secondary border border-secondary-subtle d-flex align-items-center gap-1" type="button" id="btn-about-ai-copy-snapshot" style="font-size: 0.68rem;" title="Скопировать JSON данных">
+                <i class="bi bi-clipboard"></i>
+                <span id="txt-about-ai-copy-snapshot">Копировать JSON</span>
+              </button>
+            </div>
+            <div id="about-ai-snapshot-collapse" class="d-none mt-1.5 p-2 bg-black bg-opacity-75 border border-info border-opacity-30 rounded">
+              <pre class="m-0 p-1.5 text-info font-monospace" id="about-ai-snapshot-text" style="font-size: 0.70rem; line-height: 1.35; max-height: 250px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">Ожидание сбора телеметрии...</pre>
+            </div>
+          </div>
+
+          <!-- Collapsible System Instruction Inspector -->
+          <div class="mt-2" id="about-ai-instruction-section" style="display: none;">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+              <button class="btn btn-sm btn-link p-0 text-info text-decoration-none d-flex align-items-center gap-1.5 font-monospace" type="button" id="btn-about-ai-toggle-instruction" style="font-size: 0.74rem;">
+                <i class="bi bi-shield-lock-fill text-info"></i>
+                <span><strong>Системная инструкция модели</strong></span>
+                <i class="bi bi-chevron-down text-muted ms-1" id="ic-about-ai-instruction"></i>
+              </button>
+              <button class="btn btn-dark btn-sm py-0 px-2 text-secondary border border-secondary-subtle d-flex align-items-center gap-1" type="button" id="btn-about-ai-copy-instruction" style="font-size: 0.68rem;" title="Скопировать системную инструкцию">
+                <i class="bi bi-clipboard"></i>
+                <span id="txt-about-ai-copy-instruction">Копировать</span>
+              </button>
+            </div>
+            <div id="about-ai-instruction-collapse" class="d-none mt-1.5 p-2 bg-black bg-opacity-75 border border-info border-opacity-30 rounded">
+              <pre class="m-0 p-1.5 text-info font-monospace" id="about-ai-instruction-text" style="font-size: 0.70rem; line-height: 1.35; max-height: 200px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;"></pre>
+            </div>
+          </div>
+
+          <!-- Collapsible Sent Prompt Inspector -->
+          <div class="mt-2" id="about-ai-prompt-section" style="display: none;">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+              <button class="btn btn-sm btn-link p-0 text-warning text-decoration-none d-flex align-items-center gap-1.5 font-monospace" type="button" id="btn-about-ai-toggle-prompt" style="font-size: 0.74rem;">
+                <i class="bi bi-terminal-fill text-warning"></i>
+                <span><strong>Сформированный промпт модели</strong></span>
+                <i class="bi bi-chevron-down text-muted ms-1" id="ic-about-ai-prompt"></i>
+              </button>
+              <button class="btn btn-dark btn-sm py-0 px-2 text-secondary border border-secondary-subtle d-flex align-items-center gap-1" type="button" id="btn-about-ai-copy-prompt" style="font-size: 0.68rem;" title="Скопировать отправленный промпт">
+                <i class="bi bi-clipboard"></i>
+                <span id="txt-about-ai-copy-prompt">Копировать</span>
+              </button>
+            </div>
+            <div id="about-ai-prompt-collapse" class="d-none mt-1.5 p-2 bg-black bg-opacity-75 border border-warning border-opacity-30 rounded">
+              <pre class="m-0 p-1.5 text-warning font-monospace" id="about-ai-prompt-text" style="font-size: 0.70rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;"></pre>
+            </div>
+          </div>
+
+          <!-- Collapsible Raw Response / Diagnostic Data Inspector -->
+          <div class="mt-2" id="about-ai-raw-section" style="display: none;">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+              <button class="btn btn-sm btn-link p-0 text-info text-decoration-none d-flex align-items-center gap-1.5 font-monospace" type="button" id="btn-about-ai-toggle-raw" style="font-size: 0.74rem;">
+                <i class="bi bi-code-slash text-info"></i>
+                <span><strong>Сырой ответ модели / Данные</strong></span>
+                <i class="bi bi-chevron-down text-muted ms-1" id="ic-about-ai-raw"></i>
+              </button>
+              <button class="btn btn-dark btn-sm py-0 px-2 text-secondary border border-secondary-subtle d-flex align-items-center gap-1" type="button" id="btn-about-ai-copy-raw" style="font-size: 0.68rem;" title="Скопировать ответ">
+                <i class="bi bi-clipboard"></i>
+                <span id="txt-about-ai-copy-raw">Копировать</span>
+              </button>
+            </div>
+            <div id="about-ai-raw-collapse" class="d-none mt-1.5 p-2 bg-black bg-opacity-75 border border-info border-opacity-30 rounded">
+              <pre class="m-0 p-1.5 text-light font-monospace" id="about-ai-raw-text" style="font-size: 0.70rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;"></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer border-secondary border-opacity-25 py-2 px-3 d-flex justify-content-between align-items-center">
+          <div class="small text-muted" style="font-size: 0.72rem;">
+            <i class="bi bi-shield-check text-info me-1"></i>System Diagnostics & AI Sensors Audit
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">
+            Закрыть
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
 
-  <!-- Top 4 Summary KPI Cards (From Screenshot 1) -->
+
+  <!-- Top 4 Summary KPI Cards (Vital Overview) -->
   <div class="row g-2 mb-3">
-    <!-- Card 1: Operating System -->
+    <!-- Card 1: Operating System & Host -->
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="about-sys-card">
         <div class="about-sys-label">
-          <span>Operating System</span>
+          <span>Платформа & ОС</span>
           <i class="bi bi-windows text-info"></i>
         </div>
         <div class="about-sys-value text-info text-truncate mt-1" id="about-kpi-os-title">Windows 11 (AMD64)</div>
-        <div class="about-sys-sub text-truncate" id="about-kpi-os-host">Host: DELL-VOSTRO</div>
+        <div class="about-sys-sub text-truncate d-flex align-items-center justify-content-between">
+          <span id="about-kpi-os-host">Host: DELL-VOSTRO</span>
+          <span class="badge bg-dark border border-secondary text-info py-0 px-1" id="about-spec-uptime">Uptime: --</span>
+        </div>
       </div>
     </div>
 
@@ -358,7 +465,7 @@
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="about-sys-card">
         <div class="about-sys-label">
-          <span>Security & Defender</span>
+          <span>Безопасность системы</span>
           <i class="bi bi-shield-check text-success"></i>
         </div>
         <div class="about-sys-value text-success text-truncate mt-1" id="about-kpi-sec-title">Active & Protected</div>
@@ -366,11 +473,11 @@
       </div>
     </div>
 
-    <!-- Card 3: System Protection -->
+    <!-- Card 3: System Protection & Restore -->
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="about-sys-card">
         <div class="about-sys-label">
-          <span>System Protection</span>
+          <span>Точки восстановления</span>
           <i class="bi bi-shield-lock text-warning"></i>
         </div>
         <div class="about-sys-value text-warning text-truncate mt-1" id="about-kpi-prot-title">3 Checkpoints</div>
@@ -382,7 +489,7 @@
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="about-sys-card">
         <div class="about-sys-label">
-          <span>System Storage (C:)</span>
+          <span>Системный накопитель (C:)</span>
           <i class="bi bi-hdd-fill text-primary"></i>
         </div>
         <div class="about-sys-value text-white text-truncate mt-1" id="about-kpi-stor-title">1014.8 GB Free</div>
@@ -391,75 +498,7 @@
     </div>
   </div>
 
-  <!-- Special Identity, User & Localization Card -->
-  <div class="about-sys-panel">
-    <div class="about-sys-panel-header">
-      <div class="d-flex align-items-center gap-2">
-        <i class="bi bi-person-badge-fill text-info"></i>
-        <span class="text-white">Идентификация системы и региональные параметры</span>
-      </div>
-      <div class="d-flex align-items-center gap-2 small text-muted">
-        <span id="about-ident-time-badge">Локальное время: --:--:--</span>
-      </div>
-    </div>
-    <div class="p-2.5">
-      <div class="row g-2">
-        <!-- Computer Name -->
-        <div class="col-12 col-md-6 col-lg-3">
-          <div class="p-2 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
-            <div class="small text-muted mb-1"><i class="bi bi-laptop me-1 text-info"></i> Название компьютера:</div>
-            <div class="fw-bold fs-6 text-white" id="about-ident-hostname">DELL-VOSTRO</div>
-            <div class="small text-muted mt-1" id="about-ident-domain">Workgroup / Host: DELL-VOSTRO</div>
-          </div>
-        </div>
-        <!-- User Name -->
-        <div class="col-12 col-md-6 col-lg-3">
-          <div class="p-2 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
-            <div class="small text-muted mb-1"><i class="bi bi-person-circle me-1 text-success"></i> Имя пользователя:</div>
-            <div class="fw-bold fs-6 text-white" id="about-ident-username">onela</div>
-            <div class="small text-muted mt-1" id="about-ident-privilege">Права: Standard / Admin</div>
-          </div>
-        </div>
-        <!-- System Language -->
-        <div class="col-12 col-md-6 col-lg-3">
-          <div class="p-2 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
-            <div class="small text-muted mb-1"><i class="bi bi-translate me-1 text-warning"></i> Язык системы:</div>
-            <div class="fw-bold fs-6 text-white" id="about-ident-language">Русский / English / עברית</div>
-            <div class="small text-muted mt-1" id="about-ident-locales">Локали: User: he-IL | Sys: en-US</div>
-          </div>
-        </div>
-        <!-- Locale & Timezone -->
-        <div class="col-12 col-md-6 col-lg-3">
-          <div class="p-2 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
-            <div class="small text-muted mb-1"><i class="bi bi-clock me-1 text-primary"></i> Локальные установки:</div>
-            <div class="fw-bold fs-6 text-white" id="about-ident-timezone">Jerusalem (UTC+03:00)</div>
-            <div class="small text-muted mt-1 text-truncate" id="about-ident-codepage">Кодировка: UTF-8 (ACP: 65001)</div>
-          </div>
-        </div>
-      </div>
-      <!-- Installed Keyboards, OS Build, Monitors, and Windows Update row -->
-      <div class="mt-2 pt-2 border-top border-secondary-subtle row g-2 align-items-center">
-        <div class="col-12 col-md-6 small text-muted text-truncate">
-          <i class="bi bi-keyboard me-1 text-info"></i> Раскладки ввода:
-          <span id="about-ident-inputs" class="text-white fw-semibold ms-1">Русский (RU), English (US), עברית (IL)</span>
-        </div>
-        <div class="col-12 col-md-6 small text-muted text-truncate">
-          <i class="bi bi-cpu me-1 text-primary"></i> Сборка Windows:
-          <span id="about-ident-os-build" class="text-white fw-semibold ms-1">Windows 11 (Build 10.0.26200)</span>
-        </div>
-        <div class="col-12 col-md-6 small text-muted text-truncate">
-          <i class="bi bi-calendar-check me-1 text-warning"></i> Дата установки ОС:
-          <span id="about-ident-install-date" class="text-white fw-semibold ms-1">Загрузка...</span>
-        </div>
-        <div class="col-12 col-md-6 small text-muted text-truncate">
-          <i class="bi bi-arrow-repeat me-1 text-success"></i> Обновления:
-          <span id="about-ident-updates" class="text-white fw-semibold ms-1">Актуально (Up to date)</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Live Resource Telemetry Bar (From Screenshot 2) -->
+  <!-- Live Resource Telemetry Bar -->
   <div class="row g-2 mb-3">
     <!-- CPU Utilization -->
     <div class="col-12 col-sm-6 col-lg-3">
@@ -517,88 +556,108 @@
     </div>
   </div>
 
-  <!-- System Specification & Security & Firewall Profiles (From Screenshot 1) -->
+  <!-- Reorganized Dual Master Panels: Hardware & Platform Specs vs User Environment & Security -->
   <div class="row g-2 mb-3">
-    <!-- Left: System Specification -->
+    <!-- Left: Hardware & Platform Specification -->
     <div class="col-12 col-lg-6">
       <div class="about-sys-panel h-100">
         <div class="about-sys-panel-header">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-cpu-fill text-info"></i>
-            <span class="text-white">System Specification</span>
+            <span class="text-white">Конфигурация оборудования и ОС</span>
           </div>
-          <span class="badge bg-dark border border-secondary text-info" id="about-spec-uptime">Uptime: 65h 25m</span>
+          <span class="badge bg-dark border border-secondary text-info" id="about-ident-os-build">Windows 11</span>
         </div>
         <table class="about-sys-spec-table">
           <tbody>
             <tr>
-              <td class="about-sys-spec-key">Hostname</td>
-              <td class="about-sys-spec-val" id="about-spec-host">DELL-VOSTRO</td>
+              <td class="about-sys-spec-key"><i class="bi bi-cpu me-1.5 text-info"></i>Процессор (CPU)</td>
+              <td class="about-sys-spec-val" id="about-spec-cpu">Intel Processor</td>
             </tr>
             <tr>
-              <td class="about-sys-spec-key">OS Version</td>
-              <td class="about-sys-spec-val" id="about-spec-os">Windows 11 (Build 10.0.26200)</td>
+              <td class="about-sys-spec-key"><i class="bi bi-memory me-1.5 text-warning"></i>Установленная память</td>
+              <td class="about-sys-spec-val" id="about-spec-ram">31.8 GB RAM</td>
             </tr>
             <tr>
-              <td class="about-sys-spec-key">CPU Processor</td>
-              <td class="about-sys-spec-val" id="about-spec-cpu">Intel64 Family 6 Model 165 Stepping 3, GenuineIntel (12 logical cores)</td>
-            </tr>
-            <tr>
-              <td class="about-sys-spec-key">RAM Memory</td>
-              <td class="about-sys-spec-val" id="about-spec-ram">13.2 GB free / 31.8 GB total (58.6% used)</td>
-            </tr>
-            <tr>
-              <td class="about-sys-spec-key">Monitors / Displays</td>
+              <td class="about-sys-spec-key"><i class="bi bi-display me-1.5 text-primary"></i>Мониторы и дисплеи</td>
               <td class="about-sys-spec-val text-truncate" id="about-spec-monitors">1920x1080 @ 60Hz</td>
             </tr>
             <tr>
-              <td class="about-sys-spec-key">Power Scheme</td>
+              <td class="about-sys-spec-key"><i class="bi bi-lightning-charge me-1.5 text-success"></i>Схема питания</td>
               <td class="about-sys-spec-val" id="about-spec-power">Balanced (Сбалансированная)</td>
             </tr>
             <tr>
-              <td class="about-sys-spec-key">Windows Update</td>
-              <td class="about-sys-spec-val" id="about-spec-update">Up to date (5 KBs installed)</td>
+              <td class="about-sys-spec-key"><i class="bi bi-calendar-check me-1.5 text-warning"></i>Дата установки ОС</td>
+              <td class="about-sys-spec-val" id="about-ident-install-date">Не определена</td>
+            </tr>
+            <tr>
+              <td class="about-sys-spec-key"><i class="bi bi-arrow-repeat me-1.5 text-info"></i>Служба обновлений</td>
+              <td class="about-sys-spec-val" id="about-spec-update">Up to date</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Right: Security & Firewall Profiles -->
+    <!-- Right: User Environment, Regional & Security -->
     <div class="col-12 col-lg-6">
       <div class="about-sys-panel h-100">
         <div class="about-sys-panel-header">
           <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-shield-check text-success"></i>
-            <span class="text-white">Security & Firewall Profiles</span>
+            <i class="bi bi-person-badge-fill text-success"></i>
+            <span class="text-white">Окружение пользователя и безопасность</span>
           </div>
-          <span class="about-sys-badge-ok">SECURE</span>
+          <span class="small text-muted font-monospace" id="about-ident-time-badge">Локальное время: --:--:--</span>
         </div>
         <table class="about-sys-spec-table">
           <tbody>
             <tr>
-              <td class="about-sys-spec-key">Windows Defender</td>
-              <td class="about-sys-spec-val text-success" id="about-sec-defender">Enabled</td>
+              <td class="about-sys-spec-key"><i class="bi bi-person-circle me-1.5 text-success"></i>Пользователь и права</td>
+              <td class="about-sys-spec-val">
+                <span class="fw-bold text-white me-1" id="about-ident-username">Пользователь</span>
+                <span class="text-muted small" id="about-ident-privilege">(Права)</span>
+              </td>
             </tr>
             <tr>
-              <td class="about-sys-spec-key">Real Time Protection</td>
-              <td class="about-sys-spec-val text-success" id="about-sec-realtime">Enabled</td>
+              <td class="about-sys-spec-key"><i class="bi bi-translate me-1.5 text-warning"></i>Язык и локали</td>
+              <td class="about-sys-spec-val">
+                <span id="about-ident-language">Русский</span>
+                <div class="small text-muted font-monospace" id="about-ident-locales">User: ru-RU | Sys: ru-RU</div>
+              </td>
             </tr>
             <tr>
-              <td class="about-sys-spec-key">Domain Firewall</td>
-              <td class="about-sys-spec-val text-success" id="about-sec-fw-domain">Active</td>
+              <td class="about-sys-spec-key"><i class="bi bi-clock me-1.5 text-primary"></i>Часовой пояс и кодировка</td>
+              <td class="about-sys-spec-val">
+                <span id="about-ident-timezone">UTC+03:00</span>
+                <div class="small text-muted font-monospace" id="about-ident-codepage">Кодировка: UTF-8</div>
+              </td>
             </tr>
             <tr>
-              <td class="about-sys-spec-key">Private Firewall</td>
-              <td class="about-sys-spec-val text-success" id="about-sec-fw-private">Active</td>
+              <td class="about-sys-spec-key"><i class="bi bi-cloud-check me-1.5 text-info"></i>Офис и OneDrive</td>
+              <td class="about-sys-spec-val">
+                <span>MS Office: <strong id="about-ident-ms-office" class="text-light font-monospace">Не установлен</strong></span>
+                <div class="small text-muted font-monospace">OneDrive: <span id="about-ident-onedrive" class="text-light">Не настроено</span></div>
+              </td>
             </tr>
             <tr>
-              <td class="about-sys-spec-key">Public Firewall</td>
-              <td class="about-sys-spec-val text-success" id="about-sec-fw-public">Active</td>
+              <td class="about-sys-spec-key"><i class="bi bi-archive me-1.5 text-info"></i>Резервные копии</td>
+              <td class="about-sys-spec-val" id="about-ident-backup">Нет записей</td>
             </tr>
             <tr>
-              <td class="about-sys-spec-key">User Account Control (UAC)</td>
-              <td class="about-sys-spec-val text-success" id="about-sec-uac">Enabled</td>
+              <td class="about-sys-spec-key"><i class="bi bi-shield-shaded me-1.5 text-success"></i>Брандмауэр Windows</td>
+              <td class="about-sys-spec-val">
+                Domain: <span id="about-sec-fw-domain" class="text-success fw-bold">Active</span> |
+                Private: <span id="about-sec-fw-private" class="text-success fw-bold">Active</span> |
+                Public: <span id="about-sec-fw-public" class="text-success fw-bold">Active</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="about-sys-spec-key"><i class="bi bi-shield-lock me-1.5 text-success"></i>Защитник и UAC</td>
+              <td class="about-sys-spec-val">
+                Defender: <span id="about-sec-defender" class="text-success fw-bold">Enabled</span> |
+                Realtime: <span id="about-sec-realtime" class="text-success fw-bold">Enabled</span> |
+                UAC: <span id="about-sec-uac" class="text-success fw-bold">Enabled</span>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -704,14 +763,12 @@
     </div>
   </div>
 
-  </div>
-
   <!-- Full Hardware Specification Tree Panel (Hardware Tree) -->
   <div class="about-sys-panel">
     <div class="about-sys-panel-header">
       <div class="d-flex align-items-center gap-2">
         <i class="bi bi-diagram-3-fill text-info"></i>
-        <span class="text-white">Иерархическая спецификация оборудования</span>
+        <span class="text-white">Полная спецификация оборудования</span>
         <span class="badge bg-secondary" id="about-sys-node-count">Hardware Tree</span>
       </div>
       <div class="d-flex align-items-center gap-2">

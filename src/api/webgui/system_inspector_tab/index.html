@@ -4,50 +4,6 @@
   .sys-container {
     padding: 0.5rem 0.75rem;
   }
-  /* Метрические карточки (CPU, RAM, GPU, Disk) */
-  .sys-card {
-    background: var(--surface-1) !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: 6px;
-    padding: 0.4rem 0.7rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 54px;
-    gap: 0.2rem;
-  }
-  .sys-label {
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-    line-height: 1.1;
-  }
-  .sys-value {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--text-color);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    line-height: 1.15;
-  }
-  /* Панели (дерево оборудования, процессы, AI Copilot) */
-  .sys-panel {
-    background: var(--surface-1) !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: 6px;
-    overflow: hidden;
-  }
-  .sys-panel-header {
-    background: var(--surface-2) !important;
-    border-bottom: 1px solid var(--border-color) !important;
-    padding: 0.4rem 0.75rem;
-    font-weight: 600;
-    font-size: 0.82rem;
-    color: var(--nav-active);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
   /* Сенсоры LHM */
   .sys-sensor-group {
     margin-bottom: 6px;
@@ -136,7 +92,7 @@
   }
 </style>
 
-<div class="sys-container">
+<div class="sys-container theme-inspector">
   <!-- Header Alert & Status (Compact Strip) -->
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 py-1 px-3 rounded-2"
        style="background: var(--surface-2); border: 1px solid var(--border-color);">
@@ -325,8 +281,8 @@
           <button class="btn btn-xs btn-primary rounded-pill px-2.5 py-0.5 fw-bold text-nowrap flex-shrink-0 ms-1 shadow-sm"
                   id="btn-sys-sensor-analyze"
                   style="font-size: 0.72rem; background: linear-gradient(135deg, #0284c7, #6366f1); border: none;"
-                  title="Комплексный анализ сенсоров и общий отчет с рекомендациями">
-            <i class="bi bi-magic me-1"></i> Анализ
+                  title="Комплексный AI-аудит сенсоров и оборудования хоста">
+            <i class="bi bi-shield-check me-1"></i> Аудит
           </button>
         </div>
 
@@ -391,39 +347,121 @@
       </div>
     </div>
   </div>
+
+  <!-- Real-Time Live Watcher Panel (WinAPI ReadDirectoryChangesW) -->
+  <div class="row g-2 mt-1">
+    <div class="col-12">
+      <div class="sys-panel">
+        <div class="sys-panel-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <span><i class="bi bi-activity text-info me-1"></i> Real-Time Live Watcher</span>
+            <span class="badge bg-info-subtle text-info" id="sys-live-badge">ReadDirectoryChangesW</span>
+            <span class="badge bg-dark border border-secondary text-truncate" id="sys-watch-dir-badge" style="max-width: 280px; font-size: 0.72rem; cursor: pointer;" title="Текущая отслеживаемая папка. Нажмите для смены.">
+              📁 <span id="sys-watch-dir-path">Загрузка...</span>
+            </span>
+          </div>
+          <div class="d-flex align-items-center gap-1.5">
+            <span class="badge bg-success-subtle text-success border border-success px-2 py-1" id="sys-watcher-sensor-status" style="font-size: 0.7rem;">🟢 Штатный режим</span>
+            <button class="btn btn-xs btn-outline-light rounded-pill px-2 py-0.5" style="font-size: 0.72rem;" id="btn-sys-change-watch-dir" title="Выбрать другую папку для мониторинга">
+              <i class="bi bi-folder2-open me-1 text-warning"></i> Папка
+            </button>
+            <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-0.5" style="font-size: 0.72rem;" id="btn-sys-live-help" title="Подробная справка о работе Real-Time Live Watcher">
+              <i class="bi bi-info-circle me-1"></i> Справка
+            </button>
+          </div>
+        </div>
+
+        <!-- Real-Time Watcher Telemetry & Hardware Sensors Bar -->
+        <div class="px-3 py-2 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2" style="background: var(--surface-2); border-color: var(--border-color) !important; font-size: 0.97rem;">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="text-muted"><i class="bi bi-speedometer2 text-info me-1"></i>Темп: <span class="fw-bold text-info" id="sys-watcher-rate">0.0</span> оп/с</span>
+            <span class="text-muted" style="font-size: 0.92rem;">(<span class="text-success" id="sys-watcher-cr">0</span> cr / <span class="text-warning" id="sys-watcher-mod">0</span> mod / <span class="text-danger" id="sys-watcher-del">0</span> del)</span>
+            <span class="border-start border-secondary ps-2 text-muted">
+              <i class="bi bi-hdd-network text-primary me-1"></i>Диск: <span class="text-light fw-bold" id="sys-watcher-drive">C:</span> (<span class="text-muted" id="sys-watcher-drive-model">Storage</span>)
+            </span>
+            <span class="badge bg-dark border border-secondary text-info px-2 py-0.5" id="sys-watcher-temp" style="font-size: 0.92rem;">-- °C</span>
+            <span class="text-muted" style="font-size: 0.92rem;">R: <span class="text-light" id="sys-watcher-r-kbs">0</span> KB/s | W: <span class="text-light" id="sys-watcher-w-kbs">0</span> KB/s</span>
+          </div>
+          <div class="d-flex align-items-center gap-1 text-muted" style="font-size: 0.92rem;">
+            <span><i class="bi bi-shield-check text-success me-1"></i>Audit 4660/4663:</span>
+            <span class="badge bg-dark border border-secondary text-muted px-2 py-0.5" id="sys-watcher-sec-matches" style="font-size: 0.92rem;">0</span>
+            <span class="text-muted ms-1" title="Периодическое логирование в file_watcher_telemetry_polls.csv">● AutoLog Active</span>
+          </div>
+        </div>
+        <div class="p-0 table-responsive" style="max-height: 280px; overflow-y: auto;">
+          <table class="sys-proc-table">
+            <thead>
+              <tr>
+                <th style="width: 100px;">Время</th>
+                <th style="width: 120px;">Действие</th>
+                <th style="width: 170px;">Программа / PID</th>
+                <th>Полный путь к файлу</th>
+              </tr>
+            </thead>
+            <tbody id="sys-watcher-tbody">
+              <tr><td colspan="4" class="text-center text-muted p-3">Мониторинг файловых событий...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Sensor Analysis & Recommendations Modal -->
 <div class="modal fade" id="sysSensorAnalysisModal" tabindex="-1" aria-labelledby="sysSensorAnalysisModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
     <div class="modal-content text-white border-secondary shadow-lg" style="background: var(--surface-1); border-color: var(--border-color) !important;">
       <div class="modal-header py-2 px-3 border-secondary" style="background: var(--surface-2); border-color: var(--border-color) !important;">
         <h6 class="modal-title d-flex align-items-center gap-2 mb-0" id="sysSensorAnalysisModalLabel">
           <i class="bi bi-shield-check text-info"></i>
-          <span>Комплексный анализ сенсоров и оборудования</span>
+          <span>Комплексный AI-аудит сенсоров и оборудования</span>
           <span class="badge bg-success ms-1" id="modal-sensor-health-badge">Health: 100/100</span>
+          <span class="badge bg-secondary font-monospace" id="modal-sensor-model-badge" style="font-size: 0.68rem;">Heuristic Engine</span>
         </h6>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body p-3" style="max-height: 70vh; overflow-y: auto;">
+      <div class="modal-body p-3" style="max-height: 75vh; overflow-y: auto;">
         <!-- Status Banner -->
         <div class="p-2.5 rounded mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2" id="modal-sensor-status-banner" style="background: var(--surface-2); border: 1px solid var(--border-color);">
           <div class="d-flex align-items-center gap-2">
             <span class="fs-4" id="modal-sensor-status-icon">✅</span>
             <div>
               <div class="fw-bold" style="font-size: 0.88rem;" id="modal-sensor-status-title">Все подсистемы работают в штатном режиме</div>
-              <div class="small text-muted" style="font-size: 0.75rem;" id="modal-sensor-status-sub">Анализ выполнен на основе текущих показаний LibreHardwareMonitor и WMI</div>
+              <div class="small text-muted" style="font-size: 0.75rem;" id="modal-sensor-status-sub">Сравнение залогированных усреднённых показателей со спецификациями реального железа</div>
             </div>
           </div>
           <div class="d-flex gap-2">
             <div class="text-end">
-              <div class="small text-muted" style="font-size: 0.7rem;">СЕНСОРОВ В АНАЛИЗЕ</div>
+              <div class="small text-muted" style="font-size: 0.7rem;">СЕНСОРОВ В АУДИТЕ</div>
               <div class="fw-bold font-monospace" id="modal-sensor-count-stat">0</div>
             </div>
             <div class="text-end ps-2 border-start border-secondary">
               <div class="small text-muted" style="font-size: 0.7rem;">МАКС. ТЕМПЕРАТУРА</div>
               <div class="fw-bold font-monospace" id="modal-sensor-max-temp">-- °C</div>
             </div>
+          </div>
+        </div>
+
+        <!-- Detected Real Hardware Devices from Logs -->
+        <div class="mb-3 p-2.5 rounded border" style="background: var(--surface-2); border-color: var(--border-color) !important;">
+          <div class="d-flex align-items-center justify-content-between mb-1.5">
+            <span class="small fw-bold text-info"><i class="bi bi-cpu me-1"></i> Распознанные устройства хоста (из логов LHM)</span>
+            <span class="badge bg-dark border border-secondary text-muted" id="modal-sensor-devices-count">0 устр.</span>
+          </div>
+          <div class="d-flex flex-wrap gap-1.5" id="modal-sensor-devices-list">
+            <span class="badge bg-dark border border-secondary text-muted">Загрузка устройств...</span>
+          </div>
+        </div>
+
+        <!-- AI Comparison against Real Hardware Specifications -->
+        <div class="mb-3 p-2.5 rounded border" style="background: var(--surface-2); border-color: var(--border-color) !important;">
+          <div class="d-flex align-items-center justify-content-between mb-1.5">
+            <span class="small fw-bold text-primary"><i class="bi bi-robot me-1"></i> AI-сравнение показателей со спецификациями реального железа</span>
+            <span class="badge bg-primary bg-opacity-25 text-primary border border-primary" id="modal-sensor-ai-tag">AI Expert</span>
+          </div>
+          <div class="text-light p-2.5 rounded" id="modal-sensor-ai-comparison" style="background: var(--bg-color); font-size: 0.78rem; line-height: 1.5; white-space: pre-wrap;">
+            Сбор залогированных данных и формирование отчёта...
           </div>
         </div>
 
@@ -477,7 +515,7 @@
         </button>
         <div class="d-flex gap-2">
           <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-re-analyze-sensors">
-            <i class="bi bi-arrow-clockwise me-1"></i> Повторить анализ
+            <i class="bi bi-arrow-clockwise me-1"></i> Повторить аудит
           </button>
           <button class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Закрыть</button>
         </div>
@@ -610,4 +648,112 @@
     </div>
   </div>
 </div>
+
+<!-- Real-Time Watcher Multi-Folder Selection Modal -->
+<div class="modal fade" id="modal-sys-watch-folders" tabindex="-1" aria-labelledby="modalSysWatchFoldersLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+    <div class="modal-content text-white border-secondary shadow-lg" style="background: var(--surface-1); border-color: var(--border-color) !important;">
+      <div class="modal-header py-2.5 px-3 border-secondary" style="background: var(--surface-2); border-color: var(--border-color) !important;">
+        <h6 class="modal-title d-flex align-items-center gap-2 mb-0" id="modalSysWatchFoldersLabel">
+          <i class="bi bi-folder2-open text-warning fs-5"></i>
+          <span class="fw-bold">Отслеживаемые папки (Real-Time Live Watcher)</span>
+          <span class="badge bg-info-subtle text-info font-monospace ms-1" style="font-size: 0.7rem;">ReadDirectoryChangesW</span>
+        </h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3" style="max-height: 75vh; overflow-y: auto;">
+        <!-- Alert feedback -->
+        <div id="modal-watch-dirs-alert" class="alert alert-success py-2 px-3 small mb-3 d-none"></div>
+
+        <!-- Section 1: Active Monitored Folders List -->
+        <div class="card border-secondary mb-3" style="background: var(--surface-2); border-color: var(--border-color) !important;">
+          <div class="card-header py-2 px-3 border-secondary d-flex align-items-center justify-content-between" style="border-color: var(--border-color) !important;">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-eye text-success"></i>
+              <span class="small fw-bold text-light">Активные папки мониторинга</span>
+              <span class="badge bg-primary rounded-pill" id="modal-watch-dirs-count">0</span>
+            </div>
+            <span class="small text-muted" style="font-size: 0.72rem;">События агрегируются в реальном времени</span>
+          </div>
+          <div class="card-body p-2">
+            <div class="d-flex flex-column gap-1.5" id="modal-watch-dirs-active-list" style="max-height: 160px; overflow-y: auto;">
+              <!-- Dynamically populated active watched directories -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Quick System Presets -->
+        <div class="mb-3">
+          <div class="small fw-bold text-muted mb-1.5"><i class="bi bi-lightning-charge text-warning me-1"></i>Быстрые системные каталоги:</div>
+          <div class="d-flex flex-wrap gap-1.5" id="modal-watch-presets-bar">
+            <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-preset-btn" data-preset="project">
+              📂 Проект AI-Breadboard
+            </button>
+            <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-preset-btn" data-preset="downloads">
+              📥 Загрузки (Downloads)
+            </button>
+            <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-preset-btn" data-preset="desktop">
+              🖥️ Рабочий стол (Desktop)
+            </button>
+            <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-preset-btn" data-preset="temp">
+              ⚡ Temp
+            </button>
+          </div>
+        </div>
+
+        <!-- Section 3: System Folder Explorer -->
+        <div class="card border-secondary" style="background: var(--surface-2); border-color: var(--border-color) !important;">
+          <div class="card-header py-2 px-3 border-secondary d-flex align-items-center justify-content-between flex-wrap gap-2" style="border-color: var(--border-color) !important;">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-compass text-info"></i>
+              <span class="small fw-bold text-light">Проводник файлов и папок</span>
+            </div>
+            <!-- Drives selection bar -->
+            <div class="d-flex align-items-center gap-1" id="modal-watch-drives-bar">
+              <!-- Drives loaded dynamically -->
+            </div>
+          </div>
+          <div class="card-body p-2.5">
+            <!-- Path bar & Search/Input -->
+            <div class="input-group input-group-sm mb-2">
+              <button class="btn btn-outline-secondary" type="button" id="btn-modal-folder-up" title="Перейти на уровень выше">
+                <i class="bi bi-arrow-up-circle"></i> Вверх
+              </button>
+              <input type="text" class="form-control bg-dark text-white border-secondary font-monospace" id="modal-folder-path-input" placeholder="C:\..." style="font-size: 0.8rem;">
+              <button class="btn btn-outline-info" type="button" id="btn-modal-folder-go" title="Открыть указанный путь">
+                <i class="bi bi-arrow-right-circle me-1"></i> Перейти
+              </button>
+              <button class="btn btn-success" type="button" id="btn-modal-folder-add-current" title="Добавить эту папку в мониторинг">
+                <i class="bi bi-plus-circle me-1"></i> + Добавить папку
+              </button>
+            </div>
+
+            <!-- Breadcrumbs navigation -->
+            <div class="d-flex align-items-center flex-wrap gap-1 p-1.5 rounded mb-2 font-monospace small" id="modal-folder-breadcrumbs" style="background: var(--bg-color); font-size: 0.75rem;">
+              <!-- Breadcrumbs injected dynamically -->
+            </div>
+
+            <!-- Subdirectories list -->
+            <div class="border border-secondary rounded p-1" style="background: var(--bg-color); max-height: 200px; overflow-y: auto;">
+              <div id="modal-folder-browser-list" class="d-flex flex-column gap-1">
+                <div class="text-center text-muted small py-3">Загрузка структуры каталогов...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer py-2 px-3 border-secondary d-flex justify-content-between" style="background: var(--surface-2); border-color: var(--border-color) !important;">
+        <span class="small text-muted" id="modal-watch-dirs-footer-hint">Выберите папки и нажмите «Применить»</span>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Отмена</button>
+          <button class="btn btn-sm btn-primary rounded-pill px-4 fw-bold" id="btn-modal-watch-dirs-apply">
+            <i class="bi bi-check2-circle me-1"></i> Применить и запустить
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 

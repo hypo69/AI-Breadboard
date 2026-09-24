@@ -24,7 +24,24 @@ from pydantic import BaseModel, Field
 from header import __root__
 from logger import logger
 
-TC_MENU_CONFIG_PATH = __root__ / 'src' / 'api' / 'webgui' / 'config' / 'tc_menu_config.json'
+TC_MENU_CONFIG_PATH = __root__ / 'src' / 'api' / 'webgui' / 'config_menues' / 'tc_menu_config.json'
+SU_MENU_CONFIG_PATH = __root__ / 'src' / 'api' / 'webgui' / 'config_menues' / 'su_menu_config.json'
+CONFIG_MENUES_DIR = __root__ / 'src' / 'api' / 'webgui' / 'config_menues'
+
+
+def _get_config_path(target: Optional[str] = None) -> Path:
+    """Возвращает путь к файлу конфигурации меню по целевому контексту."""
+    if not target or target.lower() in ('tc', 'apps', 'test_computer'):
+        return TC_MENU_CONFIG_PATH
+    if target.lower() in ('su', 'user', 'user_assistant'):
+        return SU_MENU_CONFIG_PATH
+    
+    # Поддержка произвольных имен конфигураций <target>_menu_config.json
+    custom_path = CONFIG_MENUES_DIR / f"{target.lower()}_menu_config.json"
+    if custom_path.exists():
+        return custom_path
+    
+    return TC_MENU_CONFIG_PATH
 
 
 class MenuItem(BaseModel):
@@ -56,34 +73,36 @@ def init_router() -> APIRouter:
     router = APIRouter(prefix='/api/menu', tags=['menu'])
 
     @router.get('/config')
-    async def get_menu_config() -> Dict[str, Any]:
+    async def get_menu_config(target: Optional[str] = None) -> Dict[str, Any]:
         """
-        Получение текущей конфигурации меню из tc_menu_config.json.
+        Получение текущей конфигурации меню из tc_menu_config.json или su_menu_config.json.
         """
-        if not TC_MENU_CONFIG_PATH.exists():
-            logger.warning(f"Файл конфигурации меню не найден: {TC_MENU_CONFIG_PATH}")
+        config_path = _get_config_path(target)
+        if not config_path.exists():
+            logger.warning(f"Файл конфигурации меню не найден: {config_path}")
             raise HTTPException(status_code=404, detail="Файл конфигурации меню не найден")
 
         try:
-            content = TC_MENU_CONFIG_PATH.read_text(encoding='utf-8')
+            content = config_path.read_text(encoding='utf-8')
             return json.loads(content)
         except Exception as ex:
             logger.error(f"Ошибка при чтении конфигурации меню: {ex}")
             raise HTTPException(status_code=500, detail=f"Ошибка чтения конфигурации: {ex}")
 
     @router.post('/config')
-    async def save_menu_config(payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def save_menu_config(payload: Dict[str, Any], target: Optional[str] = None) -> Dict[str, Any]:
         """
-        Сохранение обновленной конфигурации меню в tc_menu_config.json.
+        Сохранение обновленной конфигурации меню в tc_menu_config.json или su_menu_config.json.
         """
         if not isinstance(payload, dict) or 'menu' not in payload:
             raise HTTPException(status_code=400, detail="Некорректная структура конфигурации меню (отсутствует секция 'menu')")
 
+        config_path = _get_config_path(target)
         try:
-            TC_MENU_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-            TC_MENU_CONFIG_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
-            logger.info("Конфигурация меню успешно сохранена в tc_menu_config.json")
-            return {"status": "ok", "message": "Конфигурация меню успешно сохранена"}
+            config_path.parent.mkdir(parents=True, exist_ok=True)
+            config_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+            logger.info(f"Конфигурация меню успешно сохранена в {config_path.name}")
+            return {"status": "ok", "message": f"Конфигурация меню успешно сохранена в {config_path.name}"}
         except Exception as ex:
             logger.error(f"Ошибка при сохранении конфигурации меню: {ex}")
             raise HTTPException(status_code=500, detail=f"Ошибка сохранения конфигурации: {ex}")

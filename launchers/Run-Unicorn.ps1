@@ -132,6 +132,7 @@ try {
 }
 
 # ============================================
+# ============================================
 # LOADING CONFIGURATION
 # ============================================
 Write-Host ""
@@ -144,14 +145,27 @@ if ($ConfigFile) {
 } elseif ($env:CONFIG_FILE) {
     $cfgFileName = $env:CONFIG_FILE
 }
-$env:AIBREADBOARD_CONFIG = $cfgFileName
-$env:CONFIG_FILE = $cfgFileName
-$configPath = if ([System.IO.Path]::IsPathRooted($cfgFileName)) { $cfgFileName } else { Join-Path $projectRoot $cfgFileName }
+
+$candidateConfigPaths = @(
+    & { ([System.IO.Path]::IsPathRooted($cfgFileName)) ? $cfgFileName : (Join-Path $projectRoot $cfgFileName) }
+    Join-Path $projectRoot "start_scenarios_config\$([System.IO.Path]::GetFileName($cfgFileName))"
+    Join-Path $projectRoot "config\$([System.IO.Path]::GetFileName($cfgFileName))"
+    Join-Path $projectRoot $cfgFileName
+    Join-Path $projectRoot "config.json"
+)
+
+$configPath = $candidateConfigPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+if (-not $configPath) {
+    $configPath = Join-Path $projectRoot "config.json"
+}
+
+$env:AIBREADBOARD_CONFIG = $configPath
+$env:CONFIG_FILE = $configPath
 $envFile    = Join-Path $projectRoot ".env"
 $cfgHost    = "0.0.0.0"
 $cfgPort    = "8000"
 $workers    = 1
-$useSsl     = $false
+$useSsl     = $true
 $reload     = $false
 $clientUrl  = $null
 $useCloudflared = $false
@@ -315,11 +329,20 @@ if ($useSsl) {
     $certsDir = Join-Path $env:USERPROFILE ".certs"
     $certFile = Join-Path $certsDir "localhost+2.pem"
     $keyFile  = Join-Path $certsDir "localhost+2-key.pem"
+    
+    if ($cfg -and $cfg.server -and $cfg.server.ssl) {
+        if ($cfg.server.ssl.cert -and (Test-Path $cfg.server.ssl.cert)) { $certFile = $cfg.server.ssl.cert }
+        if ($cfg.server.ssl.key -and (Test-Path $cfg.server.ssl.key)) { $keyFile = $cfg.server.ssl.key }
+    }
+    if ($env:SSL_CERT_FILE -and (Test-Path $env:SSL_CERT_FILE)) { $certFile = $env:SSL_CERT_FILE }
+    if ($env:SSL_KEY_FILE -and (Test-Path $env:SSL_KEY_FILE)) { $keyFile = $env:SSL_KEY_FILE }
+
     if ((Test-Path $certFile) -and (Test-Path $keyFile)) {
         $uvicornArgs += "--ssl-certfile", $certFile, "--ssl-keyfile", $keyFile
         Write-Host "    SSL: enabled ($certFile)" -ForegroundColor Green
     } else {
         Write-Host "    [WARN] Certificates not found — running without SSL" -ForegroundColor Yellow
+        $useSsl = $false
     }
 }
 

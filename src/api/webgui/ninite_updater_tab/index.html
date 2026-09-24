@@ -1,0 +1,202 @@
+<!-- Ninite Auto-Updater & Task Scheduler Management Tab -->
+<style>
+  .ninite-container {
+    padding: 0.75rem 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .ninite-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    padding: 1.25rem;
+    color: #f8fafc;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  }
+  .ninite-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 0.85rem 1.25rem;
+  }
+  .ninite-dropzone {
+    border: 2px dashed #38bdf8;
+    background: rgba(56, 189, 248, 0.05);
+    border-radius: 10px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+  }
+  .ninite-dropzone:hover, .ninite-dropzone.dragover {
+    background: rgba(56, 189, 248, 0.12);
+    border-color: #0ea5e9;
+  }
+  .ninite-stat-box {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+  }
+  .ninite-stat-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+  }
+  .ninite-stat-val {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f8fafc;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+</style>
+
+<div class="ninite-container">
+  <!-- Верхняя информационная панель -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 ninite-header text-white">
+    <div class="d-flex align-items-center gap-2.5">
+      <span class="fs-4">⚡</span>
+      <div>
+        <h5 class="mb-0 fw-bold fs-6">Установка и автообновление Ninite</h5>
+        <span class="text-secondary small">Автоматическое получение свежих версий ПО через Windows Task Scheduler</span>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge rounded-pill bg-dark border border-secondary text-info px-2.5 py-1.5" id="ninite-status-badge">
+        Загрузка статуса...
+      </span>
+      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-ninite-refresh" type="button">
+        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+      </button>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <!-- Левая колонка: Форма загрузки и настройки расписания -->
+    <div class="col-12 col-lg-7">
+      <div class="ninite-card h-100">
+        <h6 class="fw-bold text-info mb-3 d-flex align-items-center gap-2">
+          <i class="bi bi-cloud-arrow-up-fill"></i> 1. Выбор инсталлятора и расписание
+        </h6>
+
+        <form id="ninite-upload-form">
+          <!-- Dropzone для выбора файла -->
+          <label for="ninite-file-input" class="ninite-dropzone mb-3 d-block text-decoration-none" id="ninite-dropzone">
+            <i class="bi bi-file-earmark-arrow-up fs-1 text-info mb-2 d-block"></i>
+            <div class="fw-semibold mb-1 text-white" id="ninite-file-label">Перетащите файл установщика Ninite или нажмите для выбора</div>
+            <div class="text-secondary small">Файл будет сохранён и переименован в <code>C:\Program Files\Ninite\ninite.exe</code></div>
+            <input type="file" id="ninite-file-input" class="d-none" accept=".exe">
+          </label>
+
+          <!-- Параметры расписания -->
+          <div class="row g-2 mb-3">
+            <div class="col-12 col-sm-6">
+              <label for="ninite-interval" class="form-label small text-secondary fw-semibold">
+                <i class="bi bi-calendar-range me-1"></i> Интервал обновления
+              </label>
+              <select class="form-select form-select-sm bg-dark text-white border-secondary" id="ninite-interval">
+                <option value="1">Каждую неделю (1 неделя)</option>
+                <option value="2" selected>Каждые 2 недели (по умолчанию)</option>
+                <option value="3">Каждые 3 недели</option>
+                <option value="4">Раз в месяц (4 недели)</option>
+              </select>
+            </div>
+
+            <div class="col-12 col-sm-6">
+              <label for="ninite-time" class="form-label small text-secondary fw-semibold">
+                <i class="bi bi-clock me-1"></i> Время запуска
+              </label>
+              <input type="time" class="form-control form-control-sm bg-dark text-white border-secondary" id="ninite-time" value="20:00">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="ninite-day" class="form-label small text-secondary fw-semibold">
+              <i class="bi bi-calendar-event me-1"></i> День недели
+            </label>
+            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="ninite-day">
+              <option value="Sunday" selected>Воскресенье</option>
+              <option value="Monday">Понедельник</option>
+              <option value="Tuesday">Вторник</option>
+              <option value="Wednesday">Среда</option>
+              <option value="Thursday">Четверг</option>
+              <option value="Friday">Пятница</option>
+              <option value="Saturday">Суббота</option>
+            </select>
+          </div>
+
+          <!-- Кнопка отправки и сохранения -->
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2" id="btn-ninite-submit">
+            <i class="bi bi-check-circle-fill"></i> Установить в Program Files и активировать Task Scheduler
+          </button>
+        </form>
+
+        <div id="ninite-alert-box" class="mt-3" style="display: none;"></div>
+      </div>
+    </div>
+
+    <!-- Правая колонка: Текущее состояние и управление -->
+    <div class="col-12 col-lg-5">
+      <div class="ninite-card h-100 d-flex flex-column justify-content-between">
+        <div>
+          <h6 class="fw-bold text-info mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-cpu-fill"></i> 2. Текущее состояние системы
+          </h6>
+
+          <div class="row g-2 mb-3">
+            <div class="col-12">
+              <div class="ninite-stat-box">
+                <div class="ninite-stat-title">Файл Ninite в Program Files</div>
+                <div class="ninite-stat-val text-truncate" id="ninite-file-status">Проверка...</div>
+                <div class="text-secondary small mt-1" id="ninite-file-details">Путь: C:\Program Files\Ninite\ninite.exe</div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="ninite-stat-box">
+                <div class="ninite-stat-title">Задача Windows Task Scheduler</div>
+                <div class="ninite-stat-val text-truncate" id="ninite-task-status">Проверка...</div>
+                <div class="text-secondary small mt-1" id="ninite-task-details">Задача: NiniteAutoUpdate</div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="ninite-stat-box">
+                <div class="ninite-stat-title">Следующий запуск по расписанию</div>
+                <div class="ninite-stat-val text-info text-truncate" id="ninite-task-next">--</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <!-- Кнопка восстановления удаленных файлов (R-Studio) -->
+          <button class="btn btn-outline-info w-100 py-2 fw-semibold mb-2 d-flex align-items-center justify-content-center gap-2" id="btn-ninite-recovery-launch" type="button" title="Запуск R-Studio Technician Portable для восстановления данных">
+            <i class="bi bi-folder-symlink-fill"></i> Восстановить удаленные файлы
+          </button>
+
+          <!-- Кнопка принудительного обновления -->
+          <button class="btn btn-outline-warning w-100 py-2 fw-semibold mb-2 d-flex align-items-center justify-content-center gap-2" id="btn-ninite-run-now">
+            <i class="bi bi-play-circle-fill"></i> Запустить обновление прямо сейчас
+          </button>
+
+          <button class="btn btn-sm btn-outline-secondary w-100" id="btn-ninite-update-schedule-only" type="button">
+            <i class="bi bi-sliders"></i> Обновить только расписание (без перезагрузки файла)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Журнал выполнения / лог -->
+  <div class="ninite-card">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="fw-bold text-info mb-0 d-flex align-items-center gap-2">
+        <i class="bi bi-terminal-fill"></i> Журнал выполнения обновления (Log)
+      </h6>
+      <span class="text-secondary small" id="ninite-log-timestamp"></span>
+    </div>
+    <pre class="p-2.5 rounded bg-dark border border-secondary text-light small mb-0" id="ninite-log-viewer" style="max-height: 180px; overflow-y: auto; font-family: ui-monospace, monospace; white-space: pre-wrap;">Логи обновлений пока отсутствуют.</pre>
+  </div>
+</div>

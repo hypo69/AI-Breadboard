@@ -38,7 +38,7 @@ def test_config_validity():
     data = json.loads(config_path.read_text(encoding="utf-8"))
     assert "app" in data
     assert "server" in data
-    assert data["server"]["port"] == 8110
+    assert data["server"]["port"] == 8116
 
 
 def test_tui_and_stats():

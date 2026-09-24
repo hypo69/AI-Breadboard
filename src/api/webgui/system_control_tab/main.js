@@ -187,6 +187,29 @@
     }
   }
 
+  // Helper to format restore point types into friendly badges
+  function formatRestorePointType(rawType) {
+    if (!rawType) return 'System Checkpoint';
+    const s = String(rawType).toUpperCase();
+    if (s.includes('APPLICATION_INSTALL') || s === '0') return 'App Install';
+    if (s.includes('APPLICATION_UNINSTALL') || s === '1') return 'App Uninstall';
+    if (s.includes('DEVICE_DRIVER') || s === '10') return 'Driver Install';
+    if (s.includes('MODIFY_SETTINGS') || s === '12') return 'Settings Change';
+    if (s.includes('CANCELLED') || s === '13') return 'Cancelled Op';
+    if (s.includes('WINDOWS_UPDATE') || s === '17') return 'Windows Update';
+    return s.replace(/_/g, ' ');
+  }
+
+  // Helper to format CIM timestamps to readable datetime
+  function formatRestoreTime(rawTime) {
+    if (!rawTime) return '-';
+    const s = String(rawTime).trim();
+    if (s.length >= 14 && /^\d{14}/.test(s)) {
+      return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)} ${s.slice(8, 10)}:${s.slice(10, 12)}:${s.slice(12, 14)}`;
+    }
+    return s;
+  }
+
   // Fetch restore points
   async function fetchRestorePoints() {
     try {
@@ -201,14 +224,18 @@
           tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted p-3">No restore points found. Click "Create Restore Point" to generate one.</td></tr>';
           return;
         }
-        tbody.innerHTML = points.map((p, idx) => `
+        tbody.innerHTML = points.map((p, idx) => {
+          const typeBadge = formatRestorePointType(p.restore_point_type);
+          const timeFormatted = formatRestoreTime(p.creation_time);
+          return `
           <tr class="scc-restore-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для анализа точки восстановления">
             <td class="font-monospace text-info fw-bold">#${p.sequence_number}</td>
             <td class="fw-semibold text-white">${p.description}</td>
-            <td class="small text-muted font-monospace">${p.restore_point_type}</td>
-            <td class="small text-muted">${p.creation_time}</td>
+            <td><span class="badge bg-secondary text-light px-2 py-1 font-monospace" style="font-size: 0.75rem;">${typeBadge}</span></td>
+            <td class="small text-light font-monospace">${timeFormatted}</td>
           </tr>
-        `).join('');
+        `;
+        }).join('');
 
         tbody.querySelectorAll('.scc-restore-row').forEach(row => {
           row.onclick = () => {
@@ -406,7 +433,7 @@
           sfcBtn.innerText = 'Scanning...';
           const res = await fetch('/api/system-control/maintenance/sfc', { method: 'POST' });
           const d = await res.json();
-          alert(d.message || 'SFC Scan Completed');
+          window.showToast?.(d.message || 'SFC Scan Completed', d.status === 'error' ? 'danger' : 'success') || alert(d.message || 'SFC Scan Completed');
           sfcBtn.disabled = false;
           sfcBtn.innerHTML = '<i class="bi bi-search me-1"></i> Run SFC Integrity Scan';
           fetchLogs();
@@ -419,7 +446,7 @@
           dismBtn.innerText = 'Checking...';
           const res = await fetch('/api/system-control/maintenance/dism', { method: 'POST' });
           const d = await res.json();
-          alert(d.message || 'DISM Check Completed');
+          window.showToast?.(d.message || 'DISM Check Completed', d.status === 'error' ? 'danger' : 'success') || alert(d.message || 'DISM Check Completed');
           dismBtn.disabled = false;
           dismBtn.innerHTML = '<i class="bi bi-activity me-1"></i> Check DISM Store';
           fetchLogs();
@@ -437,7 +464,7 @@
               body: JSON.stringify({ description: desc })
             });
             const d = await res.json();
-            alert(d.message || 'Restore point created.');
+            window.showToast?.(d.message || 'Restore point created.', d.status === 'error' ? 'danger' : 'success') || alert(d.message || 'Restore point created.');
             createRestoreBtn.disabled = false;
             fetchRestorePoints();
             fetchLogs();
@@ -445,7 +472,149 @@
         };
       }
 
+      // Policy & Storage Config Modal Button
+      const configRestoreBtn = document.getElementById('btn-scc-config-restore');
+      if (configRestoreBtn) {
+        configRestoreBtn.onclick = loadRestorePolicyModal;
+      }
+
+      const savePolicyBtn = document.getElementById('btn-scc-save-restore-policy');
+      if (savePolicyBtn) {
+        savePolicyBtn.onclick = saveRestorePolicy;
+      }
+
+      const pruneNowBtn = document.getElementById('btn-scc-policy-prune-now');
+      if (pruneNowBtn) {
+        pruneNowBtn.onclick = pruneRestorePointsNow;
+      }
+
       isSCCInitialized = true;
+    }
+  }
+
+  // Load restore policy and quota into modal
+  async function loadRestorePolicyModal() {
+    try {
+      const res = await fetch('/api/system-control/restore-points/config');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      const storageSel = document.getElementById('scc-policy-storage-size');
+      const triggerSel = document.getElementById('scc-policy-trigger');
+      const timeInput = document.getElementById('scc-policy-time');
+      const timeWrapper = document.getElementById('scc-policy-time-wrapper');
+      const freqChk = document.getElementById('scc-policy-freq-limit');
+      const maxPtsSel = document.getElementById('scc-policy-max-points');
+      const autoPruneChk = document.getElementById('scc-policy-auto-prune');
+      const storageBar = document.getElementById('scc-policy-storage-bar');
+      const storageLabel = document.getElementById('scc-policy-storage-label');
+
+      if (storageSel && data.max_storage_size) storageSel.value = data.max_storage_size;
+      if (triggerSel && data.schedule_trigger) {
+        triggerSel.value = data.schedule_trigger;
+        if (timeWrapper) timeWrapper.style.display = (data.schedule_trigger === 'daily' || data.schedule_trigger === 'weekly') ? 'block' : 'none';
+      }
+      if (timeInput && data.schedule_time) timeInput.value = data.schedule_time;
+      if (freqChk) freqChk.checked = data.frequency_limit_minutes === 0;
+      if (maxPtsSel && data.max_points) maxPtsSel.value = String(data.max_points);
+      if (autoPruneChk && data.auto_prune !== undefined) autoPruneChk.checked = Boolean(data.auto_prune);
+
+      // Storage telemetry
+      const st = data.storage_info || {};
+      if (storageBar && storageLabel) {
+        const pct = st.usage_percent || 0;
+        const usedGb = (st.used_bytes ? (st.used_bytes / (1024 ** 3)).toFixed(2) : '0.00');
+        const maxGb = (st.max_bytes ? (st.max_bytes / (1024 ** 3)).toFixed(2) : '0.00');
+        storageBar.style.width = `${Math.min(pct, 100)}%`;
+        storageBar.className = pct > 85 ? 'progress-bar bg-danger' : (pct > 60 ? 'progress-bar bg-warning' : 'progress-bar bg-info');
+        storageLabel.innerHTML = `<span>Used: ${usedGb} GB (${pct}%)</span><span>Max: ${maxGb} GB</span>`;
+      }
+
+      if (triggerSel) {
+        triggerSel.onchange = () => {
+          if (timeWrapper) timeWrapper.style.display = (triggerSel.value === 'daily' || triggerSel.value === 'weekly') ? 'block' : 'none';
+        };
+      }
+
+      const modalEl = document.getElementById('modal-scc-restore-config');
+      if (modalEl && window.bootstrap?.Modal) {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+      }
+    } catch (e) {
+      console.error('[SystemControl] Failed to load restore policy config:', e);
+    }
+  }
+
+  // Save restore policy and quota
+  async function saveRestorePolicy() {
+    const saveBtn = document.getElementById('btn-scc-save-restore-policy');
+    const storageSel = document.getElementById('scc-policy-storage-size');
+    const triggerSel = document.getElementById('scc-policy-trigger');
+    const timeInput = document.getElementById('scc-policy-time');
+    const freqChk = document.getElementById('scc-policy-freq-limit');
+    const maxPtsSel = document.getElementById('scc-policy-max-points');
+    const autoPruneChk = document.getElementById('scc-policy-auto-prune');
+
+    const payload = {
+      max_storage_size: storageSel ? storageSel.value : '10%',
+      schedule_trigger: triggerSel ? triggerSel.value : 'daily',
+      schedule_time: timeInput ? timeInput.value : '03:00',
+      frequency_limit_minutes: freqChk && freqChk.checked ? 0 : 1440,
+      max_points: maxPtsSel ? parseInt(maxPtsSel.value, 10) : 5,
+      auto_prune: autoPruneChk ? autoPruneChk.checked : true,
+    };
+
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerText = 'Сохранение...';
+    }
+
+    try {
+      const res = await fetch('/api/system-control/restore-points/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const d = await res.json();
+      window.showToast?.(d.message || 'Политика успешно сохранена', d.success ? 'success' : 'danger') || alert(d.message || 'Политика сохранена');
+      const modalEl = document.getElementById('modal-scc-restore-config');
+      if (modalEl && window.bootstrap?.Modal) {
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal?.hide();
+      }
+      fetchRestorePoints();
+      fetchLogs();
+    } catch (e) {
+      console.error('[SystemControl] Failed to save restore policy:', e);
+      alert('Ошибка сохранения политики точек восстановления: ' + e);
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Сохранить и применить';
+      }
+    }
+  }
+
+  // Prune extra restore points now
+  async function pruneRestorePointsNow() {
+    const maxPtsSel = document.getElementById('scc-policy-max-points');
+    const keep = maxPtsSel ? parseInt(maxPtsSel.value, 10) : 5;
+    if (!confirm(`Выполнить принудительную ротацию точек восстановления и оставить только ${keep} последних?`)) {
+      return;
+    }
+    try {
+      const res = await fetch('/api/system-control/restore-points/prune', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keep_count: keep })
+      });
+      const d = await res.json();
+      window.showToast?.(d.message || 'Ротация выполнена', 'info') || alert(d.message || 'Ротация выполнена');
+      fetchRestorePoints();
+      fetchLogs();
+    } catch (e) {
+      console.error('[SystemControl] Failed to prune restore points:', e);
     }
   }
 

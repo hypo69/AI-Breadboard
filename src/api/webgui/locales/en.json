@@ -39,7 +39,8 @@
     "aboutSystem": "ℹ️ About System",
     "scenarios": "💬🎬 Chat & Scenarios",
     "userDirectories": "📁 User Directories",
-    "userDirectoriesLong": "📁 User Directories & Storage"
+    "userDirectoriesLong": "📁 User Directories & Storage",
+    "fileRecovery": "🗂️ File Recovery"
   },
   "movieSearch": {
     "title": "🔍 Search Movies on Trackers",

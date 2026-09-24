@@ -145,10 +145,40 @@ class SmartProber:
             return None
 
     def _fallback_wmi_scan(self) -> List[SmartDriveInfo]:
-        """Fallback disk probe using Python WMI or PowerShell Win32_DiskDrive."""
+        """Фолбэк-сканирование накопителей через WindowsStorageSensor и WMI."""
         drives: List[SmartDriveInfo] = []
 
-        # 1. Быстрый in-process WMI COM запрос (<10мс)
+        # 1. Попытка сбора через нативный WindowsStorageSensor (MSFT_PhysicalDisk + StorageReliabilityCounter)
+        try:
+            from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
+            sensor = WindowsStorageSensor(timeout_sec=15)
+            physical_disks = sensor.get_physical_disks()
+            if physical_disks:
+                for d in physical_disks:
+                    status_upper = d.health_status.upper()
+                    is_passed = "HEALTHY" in status_upper or status_upper == "OK"
+                    drives.append(
+                        SmartDriveInfo(
+                            device=d.device_id,
+                            model=d.model or d.friendly_name,
+                            serial=d.serial_number,
+                            firmware=d.bus_type,
+                            protocol=d.bus_type,
+                            capacity_gb=d.size_gb,
+                            health_status="PASSED" if is_passed else "FAILING",
+                            temperature_c=int(d.temperature_c) if d.temperature_c is not None else None,
+                            power_on_hours=d.power_on_hours,
+                            percentage_used=int(d.wear_percentage) if d.wear_percentage is not None else None,
+                            reallocated_sectors=d.read_errors_total or d.write_errors_total,
+                            raw_attributes=d.raw_storage_data,
+                        )
+                    )
+                if drives:
+                    return drives
+        except Exception as e:
+            logger.debug(f"WindowsStorageSensor fallback skipped: {e}")
+
+        # 2. Быстрый in-process WMI COM запрос (<10мс)
         try:
             import wmi  # type: ignore
             w = wmi.WMI()
@@ -171,7 +201,7 @@ class SmartProber:
         except Exception:
             pass
 
-        # 2. Fallback через PowerShell при отсутствии модуля WMI
+        # 3. Fallback через прямой Get-CimInstance
         try:
             ps_cmd = (
                 "Get-CimInstance Win32_DiskDrive | "

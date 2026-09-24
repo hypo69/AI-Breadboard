@@ -28,8 +28,13 @@ class SyncTab {
     await this.updateStats();
     
     // Установка автообновления
-    setInterval(() => this.updateStatus(), 5000);
-    setInterval(() => this.updateStats(), 30000);
+    if (window.registerTabPoller) {
+      window.registerTabPoller('tab-sync', () => this.updateStatus(), 5000, { pollerId: 'sync_status', immediate: false });
+      window.registerTabPoller('tab-sync', () => this.updateStats(), 30000, { pollerId: 'sync_stats', immediate: false });
+    } else {
+      setInterval(() => this.updateStatus(), 5000);
+      setInterval(() => this.updateStats(), 30000);
+    }
     
     this.initialized = true;
     console.log('[SyncTab] Initialized');

@@ -495,7 +495,7 @@ class McpTabManager {
     const envRaw = document.getElementById('mcp-server-env')?.value.trim();
 
     if (!serverId) {
-      alert('Укажите ID сервера');
+      window.showToast?.('Укажите ID сервера', 'warning') || alert('Укажите ID сервера');
       return;
     }
 
@@ -519,7 +519,7 @@ class McpTabManager {
       try {
         env = JSON.parse(envRaw);
       } catch (err) {
-        alert('Ошибка формата JSON в переменных окружения: ' + err.message);
+        window.showToast?.('Ошибка формата JSON в переменных окружения: ' + err.message, 'danger') || alert('Ошибка формата JSON в переменных окружения: ' + err.message);
         return;
       }
     }
@@ -569,7 +569,7 @@ class McpTabManager {
 
       await this.refresh();
     } catch (err) {
-      alert(`Ошибка сохранения MCP сервера: ${err.message}`);
+      window.showToast?.(`Ошибка сохранения MCP сервера: ${err.message}`, 'danger') || alert(`Ошибка сохранения MCP сервера: ${err.message}`);
     } finally {
       if (saveBtn) {
         saveBtn.disabled = false;
@@ -589,7 +589,7 @@ class McpTabManager {
       }
       await this.refresh();
     } catch (err) {
-      alert(`Ошибка переключения статуса сервера: ${err.message}`);
+      window.showToast?.(`Ошибка переключения статуса сервера: ${err.message}`, 'danger') || alert(`Ошибка переключения статуса сервера: ${err.message}`);
     }
   }
 
@@ -608,7 +608,7 @@ class McpTabManager {
       }
       await this.refresh();
     } catch (err) {
-      alert(`Ошибка удаления сервера: ${err.message}`);
+      window.showToast?.(`Ошибка удаления сервера: ${err.message}`, 'danger') || alert(`Ошибка удаления сервера: ${err.message}`);
     }
   }
 
@@ -694,7 +694,7 @@ class McpTabManager {
 
     let env = {};
     if (envRaw) {
-      try { env = JSON.parse(envRaw); } catch (e) { alert('Неверный формат JSON в env'); return; }
+      try { env = JSON.parse(envRaw); } catch (e) { window.showToast?.('Неверный формат JSON в env', 'danger') || alert('Неверный формат JSON в env'); return; }
     }
 
     const testBtn = document.getElementById('btn-test-modal-server');
@@ -718,12 +718,12 @@ class McpTabManager {
       });
       const data = await res.json();
       if (data.status === 'ok') {
-        alert(`✅ Подключение успешно! (${data.latency_ms} ms)\nНайдено инструментов: ${data.tools_count}`);
+        window.showToast?.(`✅ Подключение успешно! (${data.latency_ms} ms)\nНайдено инструментов: ${data.tools_count}`, 'success');
       } else {
-        alert(`❌ Ошибка проверки подключения:\n${data.message}`);
+        window.showToast?.(`❌ Ошибка проверки подключения:\n${data.message}`, 'danger');
       }
     } catch (err) {
-      alert(`❌ Ошибка запроса: ${err.message}`);
+      window.showToast?.(`❌ Ошибка запроса: ${err.message}`, 'danger');
     } finally {
       if (testBtn) {
         testBtn.disabled = false;

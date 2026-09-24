@@ -21,10 +21,10 @@
 
 import unittest
 from unittest.mock import MagicMock, patch
-from src.network.models import NetworkInterface, PacketSummary, CaptureFilter, TrafficStats, AnomalyReport
-from src.network.tshark_wrapper import TSharkWrapper
-from src.network.analyzer import TrafficAnalyzer
-from src.network.ai_detector import AIDetector
+from apps.tshark.models import NetworkInterface, PacketSummary, CaptureFilter, TrafficStats, AnomalyReport
+from apps.tshark.tshark_wrapper import TSharkWrapper
+from apps.tshark.analyzer import TrafficAnalyzer
+from apps.tshark.ai_detector import AIDetector
 
 
 class TestNetworkModule(unittest.IsolatedAsyncioTestCase):

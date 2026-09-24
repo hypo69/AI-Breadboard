@@ -198,13 +198,22 @@
     submitTicket: function() {
       var subject = document.getElementById('hd-ticket-subject').value.trim();
       var message = document.getElementById('hd-ticket-message').value.trim();
-      if (!subject || !message) return void alert('Пожалуйста, заполните все поля');
+      if (!subject || !message) {
+        if (window.showToast) window.showToast('Пожалуйста, заполните все поля', 'warning');
+        else alert('Пожалуйста, заполните все поля');
+        return;
+      }
       this.loadScript(this.config.url + '/api/tickets.php', function(response) {
         if (response.status === 'success') {
-          alert('Тикет создан! Мы свяжемся с вами в ближайшее время.');
+          if (window.showToast) window.showToast('Тикет создан! Мы свяжемся с вами в ближайшее время.', 'success');
+          else alert('Тикет создан! Мы свяжемся с вами в ближайшее время.');
           this.hideTicketForm(); this.elements.inputArea.style.display = 'flex';
           document.getElementById('hd-ticket-subject').value = ''; document.getElementById('hd-ticket-message').value = '';
-        } else alert('Ошибка при создании тикета: ' + (response.message || 'Неизвестная ошибка'));
+        } else {
+          var errMsg = 'Ошибка при создании тикета: ' + (response.message || 'Неизвестная ошибка');
+          if (window.showToast) window.showToast(errMsg, 'danger');
+          else alert(errMsg);
+        }
       }.bind(this), 'POST', JSON.stringify({ subject: subject, message: message, category: 'general', priority: 'normal' }));
     },
     

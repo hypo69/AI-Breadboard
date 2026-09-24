@@ -71,8 +71,76 @@ class PerformanceCollector(TelemetryProvider):
         """Сбор данных о производительности и автозапуске."""
         start_t = time.perf_counter()
         findings: List[AuditFinding] = []
-        
-        # ... (код остается без изменений до возврата)
+
+        # Сбор показателей CPU, памяти и времени работы
+        try:
+            cpu_pct = float(psutil.cpu_percent(interval=0.1))
+        except Exception:
+            cpu_pct = 0.0
+
+        try:
+            mem = psutil.virtual_memory()
+            mem_pct = float(mem.percent)
+            mem_used = round(mem.used / (1024 ** 3), 2)
+            mem_total = round(mem.total / (1024 ** 3), 2)
+        except Exception:
+            mem_pct, mem_used, mem_total = 0.0, 0.0, 0.0
+
+        try:
+            swap = psutil.swap_memory()
+            swap_pct = float(swap.percent)
+        except Exception:
+            swap_pct = 0.0
+
+        try:
+            boot_time = psutil.boot_time()
+            uptime_hours = round((time.time() - boot_time) / 3600.0, 2)
+        except Exception:
+            uptime_hours = 0.0
+
+        startup_items = self._get_registry_startup()
+
+        # Анализ высокой нагрузки на процессор и память
+        if cpu_pct >= 90.0:
+            findings.append(AuditFinding(
+                id="perf_cpu_high",
+                domain="performance",
+                title=f"Критическая загрузка процессора: {cpu_pct:.1f}%",
+                description="Процессор загружен более чем на 90%, возможны зависания и задержки отклика.",
+                severity=RiskLevel.CRITICAL,
+                remediation=RemediationAction(
+                    action_type=ActionType.KILL_PROCESS,
+                    command="",
+                    description="Завершите процессы, утилизирующие большую часть ресурсов процессора.",
+                    risk=RiskLevel.CAUTION,
+                ),
+            ))
+        elif cpu_pct >= 75.0:
+            findings.append(AuditFinding(
+                id="perf_cpu_elevated",
+                domain="performance",
+                title=f"Повышенная нагрузка CPU: {cpu_pct:.1f}%",
+                description="Процессор загружен выше нормального рабочего диапазона.",
+                severity=RiskLevel.CAUTION,
+            ))
+
+        if mem_pct >= 90.0:
+            findings.append(AuditFinding(
+                id="perf_ram_high",
+                domain="performance",
+                title=f"Критическое заполнение оперативной памяти: {mem_pct:.1f}% ({mem_used} GB / {mem_total} GB)",
+                description="Оперативная память почти исчерпана, система может активно использовать файл подкачки.",
+                severity=RiskLevel.CRITICAL,
+            ))
+
+        if len(startup_items) > 15:
+            findings.append(AuditFinding(
+                id="perf_startup_crowded",
+                domain="performance",
+                title=f"Большое количество программ в автозагрузке ({len(startup_items)})",
+                description="Множество программ в реестре автозапуска замедляют старт Windows.",
+                severity=RiskLevel.CAUTION,
+            ))
 
         metrics: Dict[str, Any] = {
             "cpu_percent": cpu_pct,
@@ -81,10 +149,8 @@ class PerformanceCollector(TelemetryProvider):
             "memory_total_gb": mem_total,
             "swap_percent": swap_pct,
             "uptime_hours": uptime_hours,
-            "startup_items_count": 0,
+            "startup_items_count": len(startup_items),
         }
-
-        # ... (код остается без изменений)
 
         duration_ms = (time.perf_counter() - start_t) * 1000
         status = "ok"

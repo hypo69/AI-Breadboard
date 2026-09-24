@@ -6,7 +6,8 @@
   <title>AI Assistant - Admin</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/html/css/main.css?v=20260915_light_v2" rel="stylesheet">
+  <link href="/html/css/main.css?v=20260923_v1" rel="stylesheet">
+  <script src="/html/js/toast.js?v=20260923_v1"></script>
   <script src="https://cdn.jsdelivr.net/npm/i18next@23.11.5/i18next.min.js"></script>
 </head>
 <body>
@@ -135,6 +136,18 @@
           <span data-i18n="tabs.groupApps">Приложения</span>
         </button>
         <div class="dropdown-menu shadow border-secondary-subtle">
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-about-system" data-bs-target="#tab-about-system" type="button" data-i18n="tabs.aboutSystem">
+            ℹ️ О системе
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-trading" data-bs-target="#tab-trading" type="button" data-i18n="tabs.trading">
+            📈 Trading Terminal
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-network" data-bs-target="#tab-network" type="button" data-i18n="tabs.network">
+            🌐 Network Terminal
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-system-inspector" data-bs-target="#tab-system-inspector" type="button" data-i18n="tabs.systemInspector">
+            🔍 System Inspector
+          </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-chat" data-bs-target="#tab-chat" type="button" data-i18n="tabs.chat">
             💬 Чат
           </button>
@@ -152,6 +165,9 @@
           </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-cloudflared" data-bs-target="#tab-cloudflared" type="button">
             ☁️ Cloudflared Monitor
+          </button>
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-windows-backup" data-bs-target="#tab-windows-backup" type="button">
+            💾 Windows Backup
           </button>
         </div>
       </li>
@@ -388,6 +404,9 @@
     <!-- Registry Viewer Tab -->
     <div id="tab-registry-viewer" class="tab-pane fade"></div>
 
+    <!-- Windows Backup Manager Tab -->
+    <div id="tab-windows-backup" class="tab-pane fade"></div>
+
     <!-- Scenarios Tab -->
     <div id="tab-scenarios" class="tab-pane fade"></div>
 
@@ -400,15 +419,16 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/html/js/appConfigEditor.js"></script>
-<script src="/html/js/chatService.js?v=20260915_light_v2"></script>
+<script src="/html/js/window-api.js?v=20260923_v2"></script>
+<script src="/html/js/appConfigEditor.js?v=20260923_v2"></script>
+<script src="/html/js/chatService.js?v=20260923_v2"></script>
 
 <!-- Admin Main - Modular Architecture -->
-<script type="module" src="/html/admin/main-refactored.js?v=20260920_v3"></script>
+<script type="module" src="/html/admin/main-refactored.js?v=20260923_v2"></script>
 
 <!-- Optimization Patches -->
-<script type="module" src="/html/admin/lazy-init-patch.js?v=20260920_v3"></script>
-<script type="module" src="/html/users_tab/debounce-patch.js?v=20260920_v3"></script>
+<script type="module" src="/html/admin/lazy-init-patch.js?v=20260923_v2"></script>
+<script type="module" src="/html/users_tab/debounce-patch.js?v=20260923_v2"></script>
 
 <!-- HELP Modal -->
 <div class="modal fade modal-help" id="help-modal" tabindex="-1" aria-labelledby="help-modal-label" aria-hidden="true">

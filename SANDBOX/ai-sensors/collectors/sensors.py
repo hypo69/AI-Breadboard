@@ -26,7 +26,7 @@ from utils.config import ConfigManager
 # Импортируем из существующих модулей
 try:
     from apps.windows.hardware.hardware_monitor import HardwareMonitor
-    from apps.librehardwaremonitor.core.lhm_service import LhmService
+    from apps.windows.hardware.lhm_service import LhmService
     from apps.windows.telemetry.internet_speed import InternetSpeedSensor
 except ImportError as e:
     logger.warning(f"Не удалось импортировать зависимости: {e}")

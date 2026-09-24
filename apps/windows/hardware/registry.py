@@ -66,7 +66,7 @@ class HardwareProviderRegistry:
         gpuz_path = self.discovery.find_utility("gpuz")
         self._providers["gpuz"] = GpuzProvider(binary_path=gpuz_path)
 
-        logger.info(f"Зарегистрировано {len(self._providers)} аппаратных провайдеров")
+        logger.debug(f"Зарегистрировано {len(self._providers)} аппаратных провайдеров")
 
     def get_provider(self, key: str) -> Optional[BaseHardwareProvider]:
         """Получить конкретный провайдер по ключу."""

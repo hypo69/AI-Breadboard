@@ -75,7 +75,7 @@ class CpuzProvider(BaseHardwareProvider):
             with tempfile.TemporaryDirectory() as tmpdir:
                 report_prefix = os.path.join(tmpdir, "cpuz_report")
                 cmd = [self.binary_path, f"-txt={report_prefix}"]
-                logger.info(f"Запуск CPU-Z CLI: {' '.join(cmd)}")
+                logger.debug(f"Запуск CPU-Z CLI: {' '.join(cmd)}")
                 subprocess.run(cmd, capture_output=True, timeout=15)
 
                 txt_path = f"{report_prefix}.txt"

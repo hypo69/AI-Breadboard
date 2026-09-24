@@ -191,6 +191,12 @@
     }
   }
 
+  function isTradingTabActive() {
+    const el = document.getElementById('tab-trading');
+    if (!el) return false;
+    return el.classList.contains('active') || el.classList.contains('show') || (el.offsetWidth > 0 && el.offsetHeight > 0);
+  }
+
   function connectTradingWebSocket() {
     if (tradingWs) {
       try { tradingWs.close(); } catch {}
@@ -213,8 +219,10 @@
         try {
           const state = JSON.parse(evt.data);
           updateTradingUI(state);
-          fetchOrderbook();
-          fetchOrdersList();
+          if (isTradingTabActive()) {
+            fetchOrderbook();
+            fetchOrdersList();
+          }
         } catch (e) {
           console.error('[TradingTab] WS message parse error:', e);
         }
@@ -231,13 +239,7 @@
     }
   }
 
-  function initTradingTab() {
-    console.log('[TradingTab] Initializing Trading Terminal tab...');
-    fetchTradingState();
-    fetchOrderbook();
-    fetchOrdersList();
-    connectTradingWebSocket();
-
+  function initTradingTab(force = false) {
     if (!isTradingInitialized) {
       const buyBtn = document.getElementById('btn-order-buy');
       const sellBtn = document.getElementById('btn-order-sell');
@@ -262,6 +264,17 @@
 
       isTradingInitialized = true;
     }
+
+    if (!force && !isTradingTabActive()) {
+      console.log('[TradingTab] Tab is not active; skipping background network polling and WebSocket connection.');
+      return;
+    }
+
+    console.log('[TradingTab] Initializing active Trading Terminal network polling & WebSocket...');
+    fetchTradingState();
+    fetchOrderbook();
+    fetchOrdersList();
+    connectTradingWebSocket();
   }
 
   window.initTradingTab = initTradingTab;

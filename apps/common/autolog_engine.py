@@ -109,7 +109,13 @@ def parse_interval_seconds(
 
 
 def load_autolog_config(config_path: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
-    """Загружает секцию logging/autolog из активного файла конфигурации.
+    """Загружает секцию logging/autolog из autolog_sensors.json или активного файла конфигурации.
+
+    Порядок поиска:
+        1. config/autolog_sensors.json (приоритетный источник)
+        2. Явно переданный config_path
+        3. Переменные окружения AIBREADBOARD_CONFIG / CONFIG_FILE
+        4. config_tc.json / config.json в cwd (fallback)
 
     Args:
         config_path: Явный путь к файлу конфигурации (опционально).
@@ -117,50 +123,72 @@ def load_autolog_config(config_path: Optional[Union[str, Path]] = None) -> Dict[
     Returns:
         Dict[str, Any]: Словарь с ключами 'enable_autolog', 'default_interval' и 'loggers'.
     """
-    cfg_file: Optional[Path] = None
-
-    if config_path:
-        p = Path(config_path)
-        if p.exists():
-            cfg_file = p
-
-    if cfg_file is None:
-        env_cfg = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
-        if env_cfg:
-            p = Path(env_cfg)
-            if p.is_absolute() and p.exists():
-                cfg_file = p
-            elif (Path.cwd() / env_cfg).exists():
-                cfg_file = Path.cwd() / env_cfg
-
-    if cfg_file is None:
-        for candidate in ("config_tc.json", "config.json"):
-            p = Path.cwd() / candidate
-            if p.exists():
-                cfg_file = p
-                break
-
     default_config: Dict[str, Any] = {
         "enable_autolog": True,
         "default_interval": "1 minute",
         "loggers": {},
     }
 
-    if not cfg_file or not cfg_file.exists():
-        return default_config
-
-    try:
-        with open(cfg_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
+    def _extract(path: Path) -> Optional[Dict[str, Any]]:
+        """Читает файл и извлекает секцию autolog."""
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            # autolog_sensors.json хранит поля на верхнем уровне
+            if "loggers" in data and "logging" not in data:
+                return {
+                    "enable_autolog": bool(data.get("enable_autolog", True)),
+                    "default_interval": data.get("default_interval", "1 minute"),
+                    "loggers": data.get("loggers", {}),
+                }
+            # dashboard.json / tc.json хранят в секции logging
             logging_sec = data.get("logging") or data.get("autolog") or {}
-            return {
-                "enable_autolog": bool(logging_sec.get("enable_autolog", True)),
-                "default_interval": logging_sec.get("default_interval", "1 minute"),
-                "loggers": logging_sec.get("loggers", {}),
-            }
-    except Exception as ex:
-        logger.warning(f"Ошибка при чтении конфигурации логгирования из {cfg_file}: {ex}")
-        return default_config
+            if logging_sec:
+                return {
+                    "enable_autolog": bool(logging_sec.get("enable_autolog", True)),
+                    "default_interval": logging_sec.get("default_interval", "1 minute"),
+                    "loggers": logging_sec.get("loggers", {}),
+                }
+        except Exception as ex:
+            logger.warning(f"Ошибка при чтении конфигурации логгирования из {path}: {ex}")
+        return None
+
+    # 1. config/autolog_sensors.json — приоритетный источник
+    for base in (Path.cwd(), Path(__file__).resolve().parent.parent):
+        sensors_path = base / "config" / "autolog_sensors.json"
+        if sensors_path.exists():
+            result = _extract(sensors_path)
+            if result is not None:
+                return result
+
+    # 2. Явно переданный путь
+    if config_path:
+        p = Path(config_path)
+        if p.exists():
+            result = _extract(p)
+            if result is not None:
+                return result
+
+    # 3. Переменные окружения
+    env_cfg = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
+    if env_cfg:
+        p = Path(env_cfg)
+        if not p.is_absolute():
+            p = Path.cwd() / env_cfg
+        if p.exists():
+            result = _extract(p)
+            if result is not None:
+                return result
+
+    # 4. Fallback
+    for candidate in ("config_tc.json", "config.json"):
+        p = Path.cwd() / candidate
+        if p.exists():
+            result = _extract(p)
+            if result is not None:
+                return result
+
+    return default_config
 
 
 class AutoLogEngine:
@@ -614,7 +642,7 @@ class AutoLogEngine:
         )
 
     def _poll_windows_sysadmin(self) -> None:
-        """Опрашивает состояние системных служб Windows."""
+        """Опрашивает состояние системных служб Windows и телеметрию DirectoryWatcher."""
         log_poll(
             "windows_sysadmin",
             "services_check",
@@ -624,6 +652,12 @@ class AutoLogEngine:
             "OK",
             "Windows system services inspected",
         )
+        try:
+            from apps.windows.sysadmin.src.directory_watcher import get_directory_watcher
+            watcher = get_directory_watcher()
+            watcher.get_telemetry_snapshot()
+        except Exception as e:
+            logger.debug(f"DirectoryWatcher autolog telemetry poll skipped: {e}")
 
     def _poll_windows_defender(self) -> None:
         """Опрашивает статус антивирусной защиты Windows Defender."""

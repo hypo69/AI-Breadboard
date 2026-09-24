@@ -457,14 +457,30 @@
         let latestSnapshot = null;
         let ws = null;
 
+        let wsReconnectTimer = null;
+
         function connectWebSocket() {
+            if (wsReconnectTimer) {
+                clearTimeout(wsReconnectTimer);
+                wsReconnectTimer = null;
+            }
+            if (ws) {
+                try {
+                    ws.onclose = null;
+                    ws.onerror = null;
+                    ws.close();
+                } catch {}
+            }
             const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${proto}//${window.location.host}/api/v1/system/stream`;
             ws = new WebSocket(wsUrl);
 
             ws.onopen = () => {
-                document.getElementById('conn-status').innerHTML = '<span class="pulse-dot"></span><span>TELEMETRY STREAMING</span>';
-                document.getElementById('conn-status').style.borderColor = 'var(--accent-green)';
+                const connStatus = document.getElementById('conn-status');
+                if (connStatus) {
+                    connStatus.innerHTML = '<span class="pulse-dot"></span><span>TELEMETRY STREAMING</span>';
+                    connStatus.style.borderColor = 'var(--accent-green)';
+                }
             };
 
             ws.onmessage = (event) => {
@@ -478,11 +494,21 @@
                 }
             };
 
-            ws.onclose = () => {
-                document.getElementById('conn-status').innerHTML = '<span style="color: var(--accent-red);">●</span><span>DISCONNECTED</span>';
-                document.getElementById('conn-status').style.borderColor = 'var(--accent-red)';
-                setTimeout(connectWebSocket, 2000);
+            const scheduleReconnect = () => {
+                if (wsReconnectTimer) return;
+                const connStatus = document.getElementById('conn-status');
+                if (connStatus) {
+                    connStatus.innerHTML = '<span style="color: var(--accent-red);">●</span><span>RECONNECTING...</span>';
+                    connStatus.style.borderColor = 'var(--accent-red)';
+                }
+                wsReconnectTimer = setTimeout(() => {
+                    wsReconnectTimer = null;
+                    connectWebSocket();
+                }, 3000);
             };
+
+            ws.onclose = scheduleReconnect;
+            ws.onerror = scheduleReconnect;
         }
 
         function updateDashboard(snap) {

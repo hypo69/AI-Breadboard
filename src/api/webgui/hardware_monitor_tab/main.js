@@ -23,30 +23,38 @@
     const autoSwitch = document.getElementById('hw-auto-refresh');
     if (autoSwitch) {
       autoSwitch.onchange = () => {
-        if (autoSwitch.checked) {
-          startPolling();
+        if (window.setTabPollerEnabled) {
+          window.setTabPollerEnabled('tab-hardware-monitor_default', autoSwitch.checked);
         } else {
-          stopPolling();
+          if (autoSwitch.checked) {
+            startPolling();
+          } else {
+            stopPolling();
+          }
         }
       };
     }
   }
 
   function startPolling() {
-    stopPolling();
-    timerId = setInterval(() => {
-      const activeTab = document.querySelector('#appsNavTabs .nav-link.active');
-      const isHwActive = activeTab && (
-        activeTab.getAttribute('data-tab') === 'tab-hardware-monitor' ||
-        activeTab.getAttribute('data-bs-target') === '#tab-hardware-monitor'
-      );
-      if (isHwActive) {
-        loadHardwareData();
-      }
-    }, 3000);
+    if (window.registerTabPoller) {
+      const autoSwitch = document.getElementById('hw-auto-refresh');
+      const isEnabled = autoSwitch ? autoSwitch.checked : true;
+      window.registerTabPoller('tab-hardware-monitor', loadHardwareData, 3000, { immediate: false, enabled: isEnabled });
+    } else {
+      stopPolling();
+      timerId = setInterval(() => {
+        if (window.isTabActive ? window.isTabActive('tab-hardware-monitor') : true) {
+          loadHardwareData();
+        }
+      }, 3000);
+    }
   }
 
   function stopPolling() {
+    if (window.unregisterTabPoller) {
+      window.unregisterTabPoller('tab-hardware-monitor_default');
+    }
     if (timerId) {
       clearInterval(timerId);
       timerId = null;

@@ -15,6 +15,7 @@
 
 """Unit and integration tests for System & Hardware Inspector."""
 
+import asyncio
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -44,9 +45,8 @@ class TestSystemTelemetryCollector:
     def collector(self) -> SystemCollector:
         return SystemCollector()
 
-    @pytest.mark.asyncio
-    async def test_cpu_metrics_collection(self, collector: SystemCollector):
-        cpu = await collector.get_cpu_metrics()
+    def test_cpu_metrics_collection(self, collector: SystemCollector):
+        cpu = asyncio.run(collector.get_cpu_metrics())
         assert isinstance(cpu, CpuMetrics)
         assert cpu.logical_cores >= 1
         assert cpu.physical_cores >= 1
@@ -90,19 +90,30 @@ class TestSystemTelemetryCollector:
         if len(procs_mem) >= 2:
             assert procs_mem[0].memory_mb >= procs_mem[-1].memory_mb
 
-    @pytest.mark.asyncio
-    async def test_snapshot_aggregation(self, collector: SystemCollector):
-        snap = await collector.get_snapshot(process_limit=5)
+    def test_office_metrics_collection(self, collector: SystemCollector):
+        office = collector.get_ms_office_info()
+        assert office is not None
+        assert isinstance(office.installed, bool)
+        assert isinstance(office.status, str)
+
+    def test_onedrive_metrics_collection(self, collector: SystemCollector):
+        od = collector.get_onedrive_info()
+        assert od is not None
+        assert isinstance(od.installed, bool)
+        assert isinstance(od.status, str)
+
+    def test_snapshot_aggregation(self, collector: SystemCollector):
+        snap = asyncio.run(collector.get_snapshot(process_limit=5))
         assert isinstance(snap, SystemSnapshot)
         assert snap.hostname != ""
         assert snap.cpu.logical_cores >= 1
         assert snap.memory.total_gb > 0
+        assert snap.office is not None
+        assert snap.onedrive is not None
         assert len(snap.top_processes) <= 5
 
-    @pytest.mark.asyncio
-    async def test_hardware_tree_generation(self, collector: SystemCollector):
-        # We need to run it in a way that doesn't create a new event loop inside
-        tree = await collector.get_hardware_tree_async()
+    def test_hardware_tree_generation(self, collector: SystemCollector):
+        tree = asyncio.run(collector.get_hardware_tree_async())
         assert isinstance(tree, list)
         assert len(tree) >= 3
         categories = [node.category for node in tree]
@@ -155,14 +166,13 @@ class TestAIDiagnostician:
         assert "RAM" in subsystems
         assert "Thermals" in subsystems
 
-    @pytest.mark.asyncio
-    async def test_diagnose_report_structure(self, diagnostician: SystemDiagnosticEngine):
+    def test_diagnose_report_structure(self, diagnostician: SystemDiagnosticEngine):
         snap = SystemSnapshot(
             hostname="test-host",
             cpu=CpuMetrics(total_percent=20.0),
             memory=MemoryMetrics(percent=50.0, total_gb=32.0, used_gb=16.0),
         )
-        report = await diagnostician.diagnose(snap)
+        report = asyncio.run(diagnostician.diagnose(snap))
         assert report.health_score == 100
         assert "Health score: 100/100" in report.summary
 
@@ -170,11 +180,11 @@ class TestAIDiagnostician:
 class TestSystemInspectorTUI:
     """Test suite for Rich TUI layout renderer."""
 
-    async def test_tui_state_and_render(self):
+    def test_tui_state_and_render(self):
         from apps.system_inspector.tui import RICH_AVAILABLE
 
         state = SystemInspectorState(sort_by="cpu", process_limit=5)
-        await state.refresh()
+        asyncio.run(state.refresh())
         assert state.latest_snapshot is not None
         assert state.latest_report is not None
 

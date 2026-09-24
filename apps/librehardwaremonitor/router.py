@@ -19,11 +19,13 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter
 
-from apps.librehardwaremonitor.core.lhm_service import LhmService
+from apps.windows.hardware.lhm_service import LhmService
+from apps.librehardwaremonitor.core.lhm_auditor import LhmSensorAuditor
 from apps.common.csv_logger import AppCsvLogger
 
 router = APIRouter(prefix="/api/v1/lhm", tags=["librehardwaremonitor"])
 _service = LhmService()
+_auditor = LhmSensorAuditor()
 _csv_logger = AppCsvLogger("librehardwaremonitor")
 
 
@@ -118,6 +120,30 @@ async def launch_lhm() -> Dict[str, Any]:
         "is_running": _service.is_running(),
         "binary_path": _service.binary_path,
     }
+
+
+@router.post("/audit")
+async def run_sensor_audit() -> Dict[str, Any]:
+    """Запуск сбора залогированных данных сенсоров, усреднения и AI-аудита оборудования."""
+    report = await _auditor.audit_sensors_with_ai()
+    _csv_logger.log_event(
+        event_type="lhm_sensor_ai_audit",
+        status="SUCCESS" if report.get("success") else "FAILED",
+        details={
+            "devices_count": report.get("devices_count", 0),
+            "sensors_count": report.get("sensors_count", 0),
+            "health_score": report.get("health_score", 100),
+            "ai_model_used": report.get("ai_model_used", ""),
+        },
+        filename="lhm_service_events.csv",
+    )
+    return report
+
+
+@router.get("/audit/summary")
+async def get_sensor_audit_summary() -> Dict[str, Any]:
+    """Быстрое получение агрегированных залогированных показателей сенсоров без вызова AI."""
+    return _auditor.collect_and_aggregate_logs()
 
 
 def init_router() -> APIRouter:

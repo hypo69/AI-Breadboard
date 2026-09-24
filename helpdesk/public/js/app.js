@@ -147,13 +147,13 @@ async function handleLogin(e) {
             loadTickets();
             loadStats();
             
-            alert('Login successful!');
+            window.showToast?.('Login successful!', 'success') || alert('Login successful!');
         } else {
-            alert('Login failed: ' + data.message);
+            window.showToast?.('Login failed: ' + data.message, 'danger') || alert('Login failed: ' + data.message);
         }
     } catch (error) {
         console.error('Login error:', error);
-        alert('An error occurred during login');
+        window.showToast?.('An error occurred during login', 'danger') || alert('An error occurred during login');
     }
 }
 
@@ -192,13 +192,13 @@ async function handleRegister(e) {
             loadTickets();
             loadStats();
             
-            alert('Registration successful!');
+            window.showToast?.('Registration successful!', 'success') || alert('Registration successful!');
         } else {
-            alert('Registration failed: ' + data.message);
+            window.showToast?.('Registration failed: ' + data.message, 'danger') || alert('Registration failed: ' + data.message);
         }
     } catch (error) {
         console.error('Registration error:', error);
-        alert('An error occurred during registration');
+        window.showToast?.('An error occurred during registration', 'danger') || alert('An error occurred during registration');
     }
 }
 
@@ -217,7 +217,7 @@ async function handleLogout() {
         elements.dashboardSection.style.display = 'none';
         elements.loginSection.style.display = 'block';
         
-        alert('Logged out successfully');
+        window.showToast?.('Logged out successfully', 'success') || alert('Logged out successfully');
     } catch (error) {
         console.error('Logout error:', error);
     }
@@ -249,15 +249,15 @@ async function handleCreateTicket(e) {
         const data = await response.json();
         
         if (response.ok) {
-            alert('Ticket created successfully!');
+            window.showToast?.('Ticket created successfully!', 'success') || alert('Ticket created successfully!');
             elements.createTicketForm.reset();
             loadTickets();
         } else {
-            alert('Failed to create ticket: ' + data.message);
+            window.showToast?.('Failed to create ticket: ' + data.message, 'danger') || alert('Failed to create ticket: ' + data.message);
         }
     } catch (error) {
         console.error('Create ticket error:', error);
-        alert('An error occurred while creating ticket');
+        window.showToast?.('An error occurred while creating ticket', 'danger') || alert('An error occurred while creating ticket');
     }
 }
 

@@ -665,3 +665,534 @@
   max-height: 70vh;
   overflow-y: auto;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FLOATING TOAST NOTIFICATIONS (ВСПЛЫВАЮЩИЕ ОКНА)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.floating-toast-container {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 420px;
+  width: calc(100vw - 36px);
+  pointer-events: none;
+}
+
+.floating-toast {
+  pointer-events: auto;
+  background-color: var(--surface-1, #1e293b);
+  color: var(--text-color, #f8fafc);
+  border: 1px solid var(--border-color, #334155);
+  border-left-width: 4px;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  padding: 12px 14px;
+  opacity: 0;
+  transform: translateX(40px) scale(0.96);
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  position: relative;
+}
+
+.floating-toast.show {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.floating-toast.hide {
+  opacity: 0;
+  transform: translateX(40px) scale(0.92);
+}
+
+.floating-toast-success {
+  border-left-color: #22c55e !important;
+}
+
+.floating-toast-danger {
+  border-left-color: #ef4444 !important;
+}
+
+.floating-toast-warning {
+  border-left-color: #f59e0b !important;
+}
+
+.floating-toast-info {
+  border-left-color: #3b82f6 !important;
+}
+
+.floating-toast-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.floating-toast-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.floating-toast-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  flex: 1;
+  color: var(--text-color, #f8fafc);
+}
+
+.floating-toast-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.floating-toast-close:hover {
+  color: var(--text-color, #ffffff);
+}
+
+.floating-toast-body {
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--card-text, #cbd5e1);
+  word-break: break-word;
+}
+
+.floating-toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.floating-toast-progress-bar {
+  height: 100%;
+  width: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   КАСКАДНАЯ ДИЗАЙН-СИСТЕМА (UNIFIED CASCADING UI SYSTEM)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. KPI & Метрические карточки ───────────────────────────────────────── */
+.ui-kpi-card {
+  background: var(--kpi-bg, var(--surface-1)) !important;
+  border: 1px solid var(--kpi-border, var(--border-color)) !important;
+  border-radius: var(--radius-md, 8px);
+  padding: var(--kpi-padding, 0.65rem 0.9rem);
+  min-height: var(--kpi-min-height, 72px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.ui-kpi-card:hover {
+  border-color: var(--kpi-accent, var(--nav-active)) !important;
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.15));
+}
+
+.ui-kpi-label {
+  font-size: var(--kpi-label-size, 0.72rem);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--text-muted, #8b949e);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  line-height: 1.2;
+}
+
+.ui-kpi-value {
+  font-size: var(--kpi-val-size, 1.25rem);
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-color, #f8fafc);
+  line-height: 1.2;
+}
+
+.ui-kpi-sub {
+  font-size: var(--kpi-sub-size, 0.72rem);
+  color: var(--text-muted, #8b949e);
+  line-height: 1.2;
+}
+
+/* Модификаторы состояний KPI карточек через каскад */
+.ui-kpi-card.is-success {
+  --kpi-border: var(--status-success-border, #22c55e);
+  --kpi-accent: var(--status-success-border, #22c55e);
+}
+.ui-kpi-card.is-danger {
+  --kpi-border: var(--status-danger-border, #ef4444);
+  --kpi-accent: var(--status-danger-border, #ef4444);
+}
+.ui-kpi-card.is-warning {
+  --kpi-border: var(--status-warning-border, #eab308);
+  --kpi-accent: var(--status-warning-border, #eab308);
+}
+.ui-kpi-card.is-info {
+  --kpi-border: var(--status-info-border, #0284c7);
+  --kpi-accent: var(--status-info-border, #0284c7);
+}
+
+/* ── 2. Модульные заголовки и Hero-баннеры ────────────────────────────────── */
+.ui-module-header {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-md, 8px);
+  padding: 0.6rem 1rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ui-module-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0;
+}
+
+.ui-module-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+/* ── 3. Панели и контейнеры таблиц ───────────────────────────────────────── */
+.ui-panel {
+  background: var(--panel-bg, var(--surface-1)) !important;
+  border: 1px solid var(--panel-border, var(--border-color)) !important;
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.1));
+}
+
+.ui-panel-header {
+  background: var(--panel-header-bg, var(--surface-2)) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ui-panel-body {
+  padding: 0.75rem;
+}
+
+.ui-panel-footer {
+  background: var(--surface-2) !important;
+  border-top: 1px solid var(--border-color) !important;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.78rem;
+}
+
+/* ── 4. Унифицированные суб-навигационные переключатели (Sub-Nav Tabs) ──── */
+.ui-subnav {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.35rem;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+}
+
+.ui-subnav-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: var(--subnav-font-size, 0.82rem);
+  font-weight: 500;
+  padding: var(--subnav-btn-padding, 0.35rem 0.75rem);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease;
+}
+
+.ui-subnav-btn:hover {
+  background: var(--surface-2);
+  color: var(--text-color);
+}
+
+.ui-subnav-btn.active {
+  background: var(--surface-2);
+  border-color: var(--nav-active);
+  color: var(--nav-active);
+  font-weight: 600;
+}
+
+/* ── 5. Унифицированные статусные бейджи ──────────────────────────────────── */
+.ui-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-xs, 4px);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  line-height: 1.2;
+}
+
+.ui-badge-success {
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
+  border: 1px solid var(--status-success-border);
+}
+
+.ui-badge-danger {
+  background: var(--status-danger-bg);
+  color: var(--status-danger-text);
+  border: 1px solid var(--status-danger-border);
+}
+
+.ui-badge-warning {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
+  border: 1px solid var(--status-warning-border);
+}
+
+.ui-badge-info {
+  background: var(--status-info-bg);
+  color: var(--status-info-text);
+  border: 1px solid var(--status-info-border);
+}
+
+.ui-badge-neutral {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+/* ── 6. Унифицированная таблица спецификаций (Ключ - Значение) ────────────── */
+.ui-spec-table,
+.about-sys-spec-table,
+.sysctl-spec-table,
+.def-spec-table,
+.winadmin-spec-table {
+  width: 100%;
+  margin-bottom: 0;
+  font-size: 0.82rem;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.ui-spec-table td,
+.about-sys-spec-table td,
+.sysctl-spec-table td,
+.def-spec-table td,
+.winadmin-spec-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border-subtle, rgba(51, 65, 85, 0.35));
+  vertical-align: middle;
+  line-height: 1.45;
+}
+
+.ui-spec-table tr:hover td,
+.about-sys-spec-table tr:hover td,
+.sysctl-spec-table tr:hover td,
+.def-spec-table tr:hover td,
+.winadmin-spec-table tr:hover td {
+  background: rgba(56, 189, 248, 0.04);
+}
+
+.ui-spec-table tr:last-child td,
+.about-sys-spec-table tr:last-child td,
+.sysctl-spec-table tr:last-child td,
+.def-spec-table tr:last-child td,
+.winadmin-spec-table tr:last-child td {
+  border-bottom: none;
+}
+
+.ui-spec-key,
+.about-sys-spec-key,
+.sysctl-spec-key,
+.def-spec-key,
+.winadmin-spec-key {
+  color: var(--text-muted, #94a3b8);
+  width: 230px;
+  min-width: 210px;
+  max-width: 260px;
+  white-space: nowrap;
+  font-weight: 500;
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  vertical-align: middle;
+}
+
+.ui-spec-key i,
+.about-sys-spec-key i,
+.sysctl-spec-key i,
+.def-spec-key i,
+.winadmin-spec-key i {
+  margin-right: 8px;
+  font-size: 0.92rem;
+  vertical-align: -1px;
+}
+
+.ui-spec-val,
+.about-sys-spec-val,
+.sysctl-spec-val,
+.def-spec-val,
+.winadmin-spec-val {
+  color: var(--text-color, #f8fafc);
+  font-weight: 500;
+  font-family: var(--font-mono, monospace);
+  vertical-align: middle;
+  word-break: break-word;
+}
+
+/* ── 7. Контекстные каскадные темы (Тематические переопределения) ──────────── */
+.theme-defender {
+  --kpi-min-height: 64px;
+  --kpi-padding: 0.5rem 0.75rem;
+  --kpi-accent: #22c55e;
+}
+
+.theme-sysadmin {
+  --kpi-min-height: 68px;
+  --kpi-padding: 0.55rem 0.85rem;
+}
+
+.theme-inspector {
+  --kpi-min-height: 80px;
+  --kpi-val-size: 1.35rem;
+}
+
+.theme-sysctl {
+  --kpi-min-height: 72px;
+}
+
+/* ── 8. Алиасы совместимости (Backward-compatible Aliases) ─────────────────── */
+.about-sys-card,
+.def-card,
+.sysctl-card,
+.scc-card,
+.winadmin-card,
+.sys-card {
+  composes: ui-kpi-card;
+  background: var(--kpi-bg, var(--surface-1)) !important;
+  border: 1px solid var(--kpi-border, var(--border-color)) !important;
+  border-radius: var(--radius-md, 8px);
+  padding: var(--kpi-padding, 0.65rem 0.9rem);
+  min-height: var(--kpi-min-height, 72px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.about-sys-card:hover,
+.def-card:hover,
+.sysctl-card:hover,
+.scc-card:hover,
+.winadmin-card:hover,
+.sys-card:hover {
+  border-color: var(--kpi-accent, var(--nav-active)) !important;
+}
+
+.about-sys-label,
+.def-card-label,
+.sysctl-label,
+.scc-label,
+.winadmin-label,
+.sys-label {
+  font-size: var(--kpi-label-size, 0.72rem);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--text-muted, #8b949e);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  line-height: 1.2;
+}
+
+.about-sys-value,
+.def-card-value,
+.sysctl-value,
+.scc-value,
+.winadmin-value,
+.sys-value {
+  font-size: var(--kpi-val-size, 1.25rem);
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-color, #f8fafc);
+  line-height: 1.2;
+}
+
+.about-sys-sub,
+.def-card-sub,
+.sysctl-sub,
+.scc-sub,
+.winadmin-sub,
+.sys-sub {
+  font-size: var(--kpi-sub-size, 0.72rem);
+  color: var(--text-muted, #8b949e);
+  line-height: 1.2;
+}
+
+.about-sys-panel,
+.def-panel,
+.sysctl-panel,
+.winadmin-panel,
+.sys-panel {
+  background: var(--panel-bg, var(--surface-1)) !important;
+  border: 1px solid var(--panel-border, var(--border-color)) !important;
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.1));
+}
+
+.about-sys-panel-header,
+.def-panel-header,
+.sysctl-panel-header,
+.winadmin-panel-header,
+.sys-panel-header {
+  background: var(--panel-header-bg, var(--surface-2)) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+
+

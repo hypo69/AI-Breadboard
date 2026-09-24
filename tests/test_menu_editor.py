@@ -196,3 +196,17 @@ class TestMenuAPI:
         saved_data = json.loads(fake_config_file.read_text(encoding="utf-8"))
         assert saved_data["version"] == "test_v2"
         assert len(saved_data["menu"]["topButtons"]) == 1
+
+    def test_get_menu_config_su_target(self, client):
+        """GET /api/menu/config?target=su должен возвращать конфигурацию для su без 'О системе'."""
+        response = client.get("/api/menu/config?target=su")
+        assert response.status_code == 200
+        data = response.json()
+        assert "menu" in data
+        assert any(x.get("id") == "user_assistant" for x in data["menu"].get("sidebarItems", []))
+        # Проверка отсутствия приложения 'О системе' у сценария su
+        top_ids = [x.get("id") for x in data["menu"].get("topButtons", [])]
+        sidebar_ids = [x.get("id") for x in data["menu"].get("sidebarItems", [])]
+        assert "about_system" not in top_ids, "Приложение about_system не должно присутствовать в topButtons сценария su"
+        assert "about_system" not in sidebar_ids, "Приложение about_system не должно присутствовать в sidebarItems сценария su"
+

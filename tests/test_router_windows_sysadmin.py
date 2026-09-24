@@ -18,7 +18,7 @@
 import unittest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from apps.windows_sysadmin.router import init_router
+from apps.windows.sysadmin.router import init_router
 
 
 class TestWindowsSysadminRouter(unittest.TestCase):

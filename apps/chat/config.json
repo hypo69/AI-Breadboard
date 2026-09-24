@@ -1,0 +1,19 @@
+{
+  "app_name": "AI Chat Assistant",
+  "version": "1.0.0",
+  "server": {
+    "dedicated": false,
+    "host": "127.0.0.1",
+    "port": 8128,
+    "use_ssl": false,
+    "workers": 1
+  },
+  "port": 8128,
+  "chat": {
+    "default_mode": "chat",
+    "rag_enabled": true,
+    "top_k": 3,
+    "min_score": 0.45,
+    "output_mode": "text_and_voice"
+  }
+}

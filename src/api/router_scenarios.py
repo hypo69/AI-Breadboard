@@ -162,6 +162,23 @@ class ScenarioExecuteFixResponse(BaseModel):
     error_message: Optional[str] = Field(default=None, description="Текст ошибки при сбое")
 
 
+class ScenarioSaveApprovedResponseRequest(BaseModel):
+    """Запрос на сохранение одобренного ответа мини-чата для обучения модели и RAG."""
+    user_id: str = Field(default="tc_admin", description="Идентификатор пользователя")
+    query: str = Field(description="Исходный запрос пользователя")
+    chat_text: str = Field(description="Текст ответа модели")
+    voice_text: Optional[str] = Field(default="", description="Текст для озвучки")
+    system_context: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Контекст системы и выполненных команд")
+    tags: Optional[List[str]] = Field(default_factory=lambda: ["tc", "diagnostics", "training"], description="Категории и теги")
+
+
+class ScenarioSaveApprovedResponseResponse(BaseModel):
+    """Результат сохранения ответа для обучения модели."""
+    status: str = Field(default="ok", description="Статус: 'ok' или 'error'")
+    message: str = Field(description="Пользовательское сообщение о результате")
+    file_saved: Optional[str] = Field(default=None, description="Имя сохраненного файла или статус")
+
+
 class ScenarioChatRequest(BaseModel):
     """Запрос в мини-чат интеллектуального помощника сценариев."""
     message: str = Field(description="Текст запроса или вопроса на естественном языке")
@@ -1319,5 +1336,31 @@ def init_router() -> APIRouter:
             ],
             quick_buttons=[],
         )
+
+    @router.post("/save-approved-response", response_model=ScenarioSaveApprovedResponseResponse)
+    async def save_approved_scenario_response(req: ScenarioSaveApprovedResponseRequest) -> ScenarioSaveApprovedResponseResponse:
+        """Сохраняет одобренный пользователем ответ мини-чата в базу TC для RAG и последующего тюнинга модели."""
+        try:
+            from src.ai.gemini.approved_responses_store import save_approved_response
+            ok = save_approved_response(
+                user_id=req.user_id,
+                query=req.query,
+                chat_text=req.chat_text,
+                voice_text=req.voice_text or "",
+                system_context=req.system_context or {},
+                tags=req.tags or ["tc", "diagnostics", "training"],
+            )
+            if not ok:
+                raise HTTPException(status_code=500, detail="Не удалось сохранить одобренный ответ в базу данных.")
+            return ScenarioSaveApprovedResponseResponse(
+                status="ok",
+                message="Ответ успешно сохранён в базу знаний и датасет обучения модели (data/tc/approved_responses).",
+                file_saved="ok"
+            )
+        except HTTPException:
+            raise
+        except Exception as ex:
+            logger.error(f"Ошибка сохранения одобренного ответа TC: {ex}", exc_info=True)
+            raise HTTPException(status_code=500, detail=str(ex))
 
     return router

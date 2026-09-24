@@ -50,7 +50,7 @@ export function initCacheUI() {
     btnCleanupExpired.addEventListener('click', async () => {
       btnCleanupExpired.disabled = true;
       const count = await browserCache.cleanupExpired();
-      alert(`Очищено просроченных записей: ${count}`);
+      window.showToast?.(`Очищено просроченных записей: ${count}`, 'info') || alert(`Очищено просроченных записей: ${count}`);
       btnCleanupExpired.disabled = false;
       await refreshCacheModalStats();
     });
@@ -62,7 +62,7 @@ export function initCacheUI() {
       if (confirm('Вы действительно хотите полностью очистить весь браузерный кеш?')) {
         btnClearAll.disabled = true;
         await browserCache.clearAll();
-        alert('Все хранилища браузерного кеша успешно очищены.');
+        window.showToast?.('Все хранилища браузерного кеша успешно очищены.', 'success') || alert('Все хранилища браузерного кеша успешно очищены.');
         btnClearAll.disabled = false;
         await refreshCacheModalStats();
       }
@@ -73,7 +73,8 @@ export function initCacheUI() {
   if (btnRequestPersist) {
     btnRequestPersist.addEventListener('click', async () => {
       const granted = await browserCache.requestPersistence();
-      alert(granted ? 'Постоянное хранилище успешно включено браузером.' : 'Браузер отклонил запрос персистентности.');
+      const msg = granted ? 'Постоянное хранилище успешно включено браузером.' : 'Браузер отклонил запрос персистентности.';
+      window.showToast?.(msg, granted ? 'success' : 'warning') || alert(msg);
       await refreshCacheModalStats();
     });
   }
@@ -91,6 +92,7 @@ export function initCacheUI() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      window.showToast?.('Экспорт кеша успешно сохранён', 'success');
     });
   }
 
@@ -104,10 +106,10 @@ export function initCacheUI() {
         const text = await file.text();
         const data = JSON.parse(text);
         await browserCache.importData(data);
-        alert('Данные кеша успешно импортированы.');
+        window.showToast?.('Данные кеша успешно импортированы.', 'success') || alert('Данные кеша успешно импортированы.');
         await refreshCacheModalStats();
       } catch (err) {
-        alert('Ошибка при чтении файла импорта: ' + err.message);
+        window.showToast?.('Ошибка при чтении файла импорта: ' + err.message, 'danger') || alert('Ошибка при чтении файла импорта: ' + err.message);
       } finally {
         fileInput.value = '';
       }

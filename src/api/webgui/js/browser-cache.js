@@ -11,6 +11,10 @@
  * 
  * Включает автоматическую очистку по TTL, групповую инвалидацию по тегам,
  * мониторинг дисковой квоты браузера и персистентность.
+ * 
+ * ПРИМЕЧАНИЕ: Приложение запускается в своем окне через Edge --app=url,
+ * что может ограничивать доступ к Storage API. Проверьте консоль браузера
+ * на наличие предупреждений о недоступности IndexedDB.
  */
 
 const DB_NAME = 'AI_Breadboard_DB';
@@ -62,6 +66,10 @@ export class BrowserCacheManager {
   async _initIndexedDB() {
     if (typeof window === 'undefined' || !window.indexedDB) {
       console.warn('[BrowserCache] IndexedDB недоступен в текущем окружении. Используется fallback на память.');
+      console.warn('[BrowserCache] Возможные причины:');
+      console.warn('[BrowserCache] 1. Приложение запущено в PWA-окне (Edge --app=url)');
+      console.warn('[BrowserCache] 2. Ограничения безопасности браузера');
+      console.warn('[BrowserCache] 3. Поврежденный user-data-dir');
       this.isDbReady = false;
       return null;
     }
@@ -88,12 +96,16 @@ export class BrowserCacheManager {
           this.db = event.target.result;
           this.isDbReady = true;
           console.log('[BrowserCache] IndexedDB успешно подключена:', DB_NAME);
+          console.log('[BrowserCache] Данные будут сохраняться в профиле пользователя:', this._getUserDataDir());
           this.cleanupExpired().catch(() => {});
           resolve(this.db);
         };
 
         request.onerror = (event) => {
           console.error('[BrowserCache] Ошибка открытия IndexedDB:', event.target.error);
+          console.error('[BrowserCache] Проверьте:');
+          console.error('[BrowserCache] 1. Есть ли права на запись в user-data-dir');
+          console.error('[BrowserCache] 2. Не заблокирован ли IndexedDB политикой браузера');
           this.isDbReady = false;
           resolve(null);
         };
@@ -568,7 +580,10 @@ export class BrowserCacheManager {
       stores: {}
     };
 
-    if (!this.isDbReady || !this.db) return exportResult;
+    if (!this.isDbReady || !this.db) {
+      console.warn('[BrowserCache] Cannot export data: IndexedDB not ready');
+      return exportResult;
+    }
 
     for (const storeName of storeNames) {
       try {
@@ -641,6 +656,17 @@ export class BrowserCacheManager {
     } catch {
       return 1024;
     }
+  }
+  
+  /**
+   * Попытка получить путь к user-data-dir (для отладки)
+   * @private
+   */
+  _getUserDataDir() {
+    // В браузере этот путь недоступен из-за ограничений безопасности
+    // Но мы можем попытаться определить, запущено ли приложение в PWA-окне
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+    return isPWA ? '[PWA-окно - путь недоступен]' : '[Обычное окно]';
   }
 }
 

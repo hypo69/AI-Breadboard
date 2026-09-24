@@ -230,6 +230,12 @@ def _fetch_gemini_models_sync(api_key: str = "", include_unsupported: bool = Fal
                 actions = getattr(m, 'supported_actions', []) or getattr(m, 'supported_generation_methods', []) or []
                 if actions and not any('generateContent' in str(a) for a in actions):
                     continue
+                # Exclude TTS (Audio-only) models without TEXT output modality
+                out_modalities = getattr(m, 'output_modalities', []) or []
+                if out_modalities and not any('TEXT' in str(mod).upper() for mod in out_modalities):
+                    continue
+                if norm.endswith('-tts') or '-tts-' in norm or norm.startswith('tts-'):
+                    continue
                 if norm and norm not in discovered:
                     discovered.append(norm)
         except Exception as e:

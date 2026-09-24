@@ -138,6 +138,7 @@ class PhysicalDiskHealth(BaseModel):
     health_status: str = Field(default="Healthy", description="Drive health status (Healthy, Warning, Unhealthy)")
     operational_status: str = Field(default="OK", description="Operational status")
     temperature_celsius: Optional[float] = Field(default=None, description="Drive temperature if available")
+    interface_type: Optional[str] = Field(default=None, description="Drive interface or bus type (NVMe, SATA, USB, etc.)")
 
 
 class RamStickInfo(BaseModel):
@@ -212,6 +213,29 @@ class WindowsUpdateInfo(BaseModel):
     latest_installed_on: Optional[str] = Field(default=None, description="Date of most recent update")
 
 
+class OfficeSuiteInfo(BaseModel):
+    """Microsoft Office and productivity suite detection telemetry."""
+
+    installed: bool = Field(default=False, description="Whether an Office suite is installed")
+    product_name: Optional[str] = Field(default=None, description="Product suite name (e.g. Microsoft 365, Office 2021)")
+    version: Optional[str] = Field(default=None, description="Office suite release version string")
+    publisher: Optional[str] = Field(default=None, description="Software vendor/publisher name")
+    status: str = Field(default="Не установлен", description="Human-readable office status summary")
+
+
+class CloudStorageInfo(BaseModel):
+    """Cloud drive and synchronization storage telemetry (OneDrive)."""
+
+    installed: bool = Field(default=False, description="Whether cloud storage drive is detected and active")
+    name: str = Field(default="OneDrive", description="Cloud storage service name")
+    path: Optional[str] = Field(default=None, description="Local synchronized root folder path")
+    total_gb: Optional[float] = Field(default=None, description="Total storage volume capacity in GB")
+    used_gb: Optional[float] = Field(default=None, description="Used space in GB")
+    free_gb: Optional[float] = Field(default=None, description="Free available space in GB")
+    percent_used: Optional[float] = Field(default=None, description="Storage disk utilization percentage")
+    status: str = Field(default="Не настроено", description="Human-readable cloud storage status")
+
+
 class SystemSnapshot(BaseModel):
     """Complete system and hardware telemetry snapshot."""
 
@@ -237,6 +261,8 @@ class SystemSnapshot(BaseModel):
     gpus: List[GpuMetrics] = Field(default_factory=list, description="Detected GPU accelerators")
     monitors: List[MonitorInfo] = Field(default_factory=list, description="Connected display monitors")
     updates: WindowsUpdateInfo = Field(default_factory=WindowsUpdateInfo, description="Windows Update information")
+    office: OfficeSuiteInfo = Field(default_factory=OfficeSuiteInfo, description="Office suite telemetry")
+    onedrive: CloudStorageInfo = Field(default_factory=CloudStorageInfo, description="OneDrive cloud storage telemetry")
     disks: List[DiskPartitionMetrics] = Field(default_factory=list, description="Disk partitions")
     physical_disks: List[PhysicalDiskHealth] = Field(default_factory=list, description="Physical storage disks and SMART health")
     disk_io: DiskIoMetrics = Field(default_factory=DiskIoMetrics, description="Aggregate disk I/O rates")
@@ -269,6 +295,81 @@ class SystemDiagnosticReport(BaseModel):
     anomalies: List[AnomalyItem] = Field(default_factory=list, description="List of detected anomalies")
     recommendations: List[str] = Field(default_factory=list, description="Actionable optimization suggestions")
     ai_model_used: str = Field(default="heuristic", description="AI Model identifier or heuristic engine")
+    system_instruction: Optional[str] = Field(default=None, description="System instruction used for AI model")
     generated_prompt: Optional[str] = Field(default=None, description="Exact prompt sent to AI model")
     raw_response: Optional[str] = Field(default=None, description="Raw response text from AI provider")
+    error: Optional[str] = Field(default=None, description="Error details if inference failed")
     stages: List[Dict[str, Any]] = Field(default_factory=list, description="Step-by-step audit stages")
+
+
+class DriverInfo(BaseModel):
+    """Сведения об установленном драйвере устройства и его актуальности."""
+
+    name: str = Field(default="", description="Имя драйвера или сервиса")
+    driver_version: str = Field(default="", description="Версия установленного драйвера")
+    driver_date: Optional[str] = Field(default=None, description="Дата релиза драйвера (ISO или YYYY-MM-DD)")
+    provider: str = Field(default="Unknown", description="Поставщик драйвера (NVIDIA, Intel, Microsoft и др.)")
+    inf_name: Optional[str] = Field(default=None, description="Имя INF-файла драйвера (oem*.inf)")
+    is_signed: bool = Field(default=True, description="Наличие цифровой подписи WHQL")
+    is_inbox: bool = Field(default=False, description="Является ли драйвер стандартным (inbox) от Microsoft")
+    age_days: Optional[int] = Field(default=None, description="Возраст драйвера в днях")
+    currency_status: str = Field(default="Актуален", description="Статус актуальности: Актуален, Устарел, Базовый драйвер ОС")
+
+
+class HardwareDeviceAudit(BaseModel):
+    """Единица аудита аппаратного устройства с драйверами, датами и сенсорами."""
+
+    device_id: str = Field(..., description="Уникальный идентификатор инстанса устройства (PnP Instance ID)")
+    name: str = Field(..., description="Понятное наименование устройства")
+    device_class: str = Field(default="Device", description="Класс устройства (Display, Processor, Net, DiskDrive и др.)")
+    manufacturer: str = Field(default="Unknown", description="Производитель оборудования")
+    install_date: Optional[str] = Field(default=None, description="Дата первой/текущей установки устройства в системе")
+    status: str = Field(default="OK", description="Рабочий статус устройства (OK, Problem, Error, Disabled)")
+    problem_code: int = Field(default=0, description="Код ошибки PnP (0 если исправно, 10, 43, 28 при сбое)")
+    driver: Optional[DriverInfo] = Field(default=None, description="Сведения об используемом драйвере")
+    sensors: List[HardwareSensor] = Field(default_factory=list, description="Сенсоры, привязанные к данному оборудованию")
+    properties: Dict[str, Any] = Field(default_factory=dict, description="Дополнительные аппаратные параметры")
+
+
+class HardwareChangeItem(BaseModel):
+    """Зафиксированное изменение в аппаратной конфигурации или драйверах."""
+
+    change_type: str = Field(..., description="Тип изменения: added, removed, driver_updated, status_changed, hardware_altered")
+    device_id: str = Field(..., description="Идентификатор затронутого устройства")
+    device_name: str = Field(..., description="Наименование устройства")
+    description: str = Field(..., description="Подробное описание изменения на русском языке")
+    previous_value: Optional[Dict[str, Any]] = Field(default=None, description="Предыдущее состояние параметра")
+    current_value: Optional[Dict[str, Any]] = Field(default=None, description="Новое состояние параметра")
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="Временная метка обнаружения изменения",
+    )
+
+
+class HardwareAuditReport(BaseModel):
+    """Полный отчет аудита аппаратного обеспечения с привязкой сенсоров и драйверов."""
+
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="Время проведения аудита (UTC)",
+    )
+    devices_count: int = Field(default=0, description="Общее количество обнаруженных устройств")
+    problem_devices_count: int = Field(default=0, description="Количество устройств с ошибками PnP")
+    outdated_drivers_count: int = Field(default=0, description="Количество устройств с устаревшими драйверами")
+    devices: List[HardwareDeviceAudit] = Field(default_factory=list, description="Список проаудированных устройств")
+    summary: str = Field(default="", description="Сводка состояния аппаратной части")
+    changes_since_last_archive: List[HardwareChangeItem] = Field(
+        default_factory=list,
+        description="Изменения, обнаруженные по сравнению с последним сохраненным архивом",
+    )
+
+
+class HardwareArchiveEntry(BaseModel):
+    """Запись в архиве истории оборудования."""
+
+    archive_id: str = Field(..., description="Уникальный идентификатор архивного снимка")
+    timestamp: str = Field(..., description="Время создания архива")
+    devices_count: int = Field(default=0, description="Количество устройств в архиве")
+    changes_count: int = Field(default=0, description="Количество изменений, зафиксированных в этом архиве")
+    report: HardwareAuditReport = Field(..., description="Полный отчет аудита оборудования")
+

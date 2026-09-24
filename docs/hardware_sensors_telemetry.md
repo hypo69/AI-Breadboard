@@ -193,12 +193,60 @@ def _has_value_changed(self, app_name: str, new_value: Any) -> bool:
 
 ---
 
+## Централизованный агрегатор телеметрии (`TelemetryAggregator`)
+
+Потоковый сборщик и логгер телеметрии со всех аппаратных датчиков и сетевых компонентов.
+
+### Структурированный формат сенсоров и значений (values)
+
+Каждый датчик представлен отдельной записью, в массив `values` которой инкрементируются новые замеры:
+
+```json
+[
+  {
+    "id": 38,
+    "hardware_name": "Intel Core i5-10400",
+    "hardware_type": "cpu",
+    "sensor_category": "Temperatures",
+    "sensor_name": "CPU Core #4 Distance to TjMax",
+    "unit": "°C",
+    "values": [
+      {"num": 56.0, "time": "2026-09-24T15:21:21+03:00"},
+      {"num": 56.0, "time": "2026-09-24T15:21:26+03:00"}
+    ]
+  }
+]
+```
+
+### Автономность и ротация 50 МБ
+
+1. **Автономность модуля**: Подсистема `apps/windows/telemetry` изолирована от веб-сервера и баз данных. Запись выполняется прямо в локальные файлы `%APPDATA%\AI-Breadboard\apps\windows\telemetry\logs`, обеспечивая непрерывную работу при любых сбоях окружения.
+2. **Ротация 50 МБ**: При достижении 50 МБ файл `ai_sensors_polls.json` ротируется с меткой времени (`ai_sensors_polls_YYYYMMDD_HHMMSS.json`), и сбор продолжается в новый чистый файл.
+
+### Управление через `Run-AI-Sensors.ps1`
+
+```powershell
+# Запуск
+.\launchers\Run-AI-Sensors.ps1
+
+# Перезапуск заново (сброс старых процессов)
+.\launchers\Run-AI-Sensors.ps1 -Restart
+
+# Статус
+.\launchers\Run-AI-Sensors.ps1 -Action status
+
+# Остановка
+.\launchers\Run-AI-Sensors.ps1 -Action stop
+```
+
+---
+
 ## Дополнительные модули
 
-- `apps/windows/telemetry/sensors.py` — базовые сборщики сенсоров
-- `apps/windows/telemetry/collector.py` — системный сборщик (CPU, RAM, Disk, Net)
-- `apps/windows/telemetry/storage.py` — хранилище данных (теперь CSV)
-- `apps/windows/telemetry/service.py` — фоновый сервис телеметрии
+- `apps/windows/telemetry/sensor_collector.py` — адаптер сбора метрик и группировки `samples`
+- `apps/windows/telemetry/aggregator.py` — центральный агрегатор телеметрии
+- `apps/windows/telemetry/json_logger.py` — JSON-логгер с авторотацией по 50 МБ
+- `apps/windows/telemetry/telemetry_config.py` — менеджер конфигурации сенсоров
 - `apps/librehardwaremonitor/core/lhm_service.py` — сервис LHM через HTTP API
 - `apps/common/autolog_engine.py` — движок автологгирования
 
@@ -206,8 +254,9 @@ def _has_value_changed(self, app_name: str, new_value: Any) -> bool:
 
 ## История изменений
 
-- **2026-09-21** — Переписан `storage.py`: SQLite → CSV (убрана зависимость от `data/telemetry.db`)
-- **2026-09-21** — Документирована архитектура сенсоров и логгирования
+- **2026-09-24** — Рефакторинг формата телеметрии: группировка по устройствам/метрикам и массив `samples` с таймстемпами. Установлена ротация логов на 50 МБ. Добавлена поддержка флага `-Restart` в лаунчере `Run-AI-Sensors.ps1`.
+- **2026-09-21** — Переписан `storage.py`: SQLite → CSV (убрана зависимость от `data/telemetry.db`).
+- **2026-09-21** — Документирована архитектура сенсоров и логгирования.
 
 ---
 

@@ -537,6 +537,126 @@ class TestGoogleGenerativeAI_ErrorScenarios:
             mock_mark.assert_not_called()
             mock_sleep.assert_called()
 
+    @pytest.mark.asyncio
+    async def test_error_429_zero_quota_limit_marks_exhausted_and_switches(self):
+        """Error 429 with quota_limit_value='0' must mark key exhausted and switch key immediately."""
+        # --- Setup (Arrange) ---
+        error_429_zero_quota: Exception = RuntimeError(
+            "429 RESOURCE_EXHAUSTED: {'quota_limit': 'ApiRequestsPerMinutePerProjectPerRegion', 'quota_unit': '1/min/{project}/{region}', 'quota_limit_value': '0'}"
+        )
+        success_response: MagicMock = MagicMock()
+        success_response.text = 'Success with rotated key on zero quota'
+
+        mock_client: MagicMock = MagicMock()
+        mock_client.models.generate_content.side_effect = [error_429_zero_quota, success_response]
+
+        with patch('src.ai.gemini.core.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.core.load_api_keys', return_value=(['key1', 'key2'], ['k1', 'k2'], ['k1', 'k2'])), \
+             patch('src.ai.gemini.core.get_status'), \
+             patch('src.ai.gemini.core.mark_exhausted') as mock_mark:
+
+            ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
+
+            # --- Execution (Act) ---
+            result: str = await ai_instance.ask('Test 429 Zero Quota')
+
+            # --- Assertion (Assert) ---
+            assert result == 'Success with rotated key on zero quota', (
+                f'On zero quota 429 must immediately transition to next key, got: {result!r}'
+            )
+            mock_mark.assert_called_once_with('k1')
+
+    @pytest.mark.asyncio
+    async def test_error_unsupported_modalities_switches_model(self):
+        """Error 400 with unsupported response modalities must add model to unsupported and switch."""
+        # --- Setup (Arrange) ---
+        error_400_modalities: Exception = RuntimeError(
+            "400 INVALID_ARGUMENT: The requested combination of response modalities (TEXT) is not supported by the model. models/gemini-2.5-flash-preview-tts accepts the following combination of response modalities:\n* AUDIO"
+        )
+        success_response: MagicMock = MagicMock()
+        success_response.text = 'Success with fallback text model'
+
+        mock_client: MagicMock = MagicMock()
+        mock_client.models.generate_content.side_effect = [error_400_modalities, success_response]
+
+        with patch('src.ai.gemini.core.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.core.load_api_keys', return_value=(['key1'], ['k1'], ['k1'])), \
+             patch('src.ai.gemini.core.get_status'), \
+             patch('src.ai.gemini.core.GoogleGenerativeAICore.get_available_models', return_value=['gemini-2.5-flash-preview-tts', 'gemini-flash-latest']), \
+             patch('src.ai.gemini.errors.add_unsupported_model') as mock_add_unsupp:
+
+            ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(model_name='gemini-2.5-flash-preview-tts')
+
+            # --- Execution (Act) ---
+            result: str = await ai_instance.ask('Test TTS Modality')
+
+            # --- Assertion (Assert) ---
+            assert result == 'Success with fallback text model', (
+                f'On modality mismatch error must transition to available model, got: {result!r}'
+            )
+            assert ai_instance.model_name == 'gemini-flash-latest', (
+                f'Active model name must update to gemini-flash-latest, current: {ai_instance.model_name}'
+            )
+            mock_add_unsupp.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_error_503_temporary_retry(self):
+        """Error 503 UNAVAILABLE (high demand) must wait with backoff and retry without failing."""
+        # --- Setup (Arrange) ---
+        error_503: Exception = RuntimeError(
+            "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        )
+        success_response: MagicMock = MagicMock()
+        success_response.text = 'Success after 503 spike cleared'
+
+        mock_client: MagicMock = MagicMock()
+        mock_client.models.generate_content.side_effect = [error_503, success_response]
+
+        with patch('src.ai.gemini.core.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.core.load_api_keys', return_value=(['key1'], ['k1'], ['k1'])), \
+             patch('src.ai.gemini.core.get_status'), \
+             patch('asyncio.sleep') as mock_sleep:
+
+            ai_instance: GoogleGenerativeAI = GoogleGenerativeAI()
+
+            # --- Execution (Act) ---
+            result: str = await ai_instance.ask('Test 503 temporary')
+
+            # --- Assertion (Assert) ---
+            assert result == 'Success after 503 spike cleared'
+            mock_sleep.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_error_503_persistent_switches_model(self):
+        """Persistent 503 errors must trigger model failover to next available model."""
+        # --- Setup (Arrange) ---
+        error_503: Exception = RuntimeError(
+            "503 UNAVAILABLE: High demand spike"
+        )
+        success_response: MagicMock = MagicMock()
+        success_response.text = 'Success with failover model'
+
+        mock_client: MagicMock = MagicMock()
+        # 4 consecutive 503s then success on new model
+        mock_client.models.generate_content.side_effect = [
+            error_503, error_503, error_503, error_503, success_response
+        ]
+
+        with patch('src.ai.gemini.core.genai.Client', return_value=mock_client), \
+             patch('src.ai.gemini.core.load_api_keys', return_value=(['key1'], ['k1'], ['k1'])), \
+             patch('src.ai.gemini.core.get_status'), \
+             patch('src.ai.gemini.core.GoogleGenerativeAICore.get_available_models', return_value=['gemini-flash-latest', 'gemini-flash-lite-latest']), \
+             patch('asyncio.sleep'):
+
+            ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(model_name='gemini-flash-latest')
+
+            # --- Execution (Act) ---
+            result: str = await ai_instance.ask('Test 503 persistent')
+
+            # --- Assertion (Assert) ---
+            assert result == 'Success with failover model'
+            assert ai_instance.model_name == 'gemini-flash-lite-latest'
+
 # =============================================================================
 # Section: Regression — integration and regression scenarios
 # =============================================================================
@@ -573,8 +693,6 @@ class TestGoogleGenerativeAI_Regression:
             unified_model: UnifiedChatModel = UnifiedChatModel(
                 api_key_names=['key_dev'],
                 system_instruction='Test instruction',
-                foundry_model_id='test-foundry',
-                use_foundry=False,
             )
 
             # --- Execution (Act) ---

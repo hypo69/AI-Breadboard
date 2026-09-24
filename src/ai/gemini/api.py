@@ -203,6 +203,7 @@ class GoogleGenerativeAI(
                 should_retry: bool = await self._handle_api_error(ex, active_model, attempt, attempts)
                 if not should_retry:
                     return f'Chat error: {self._last_exception or str(ex)}'
+                active_model = model_name or self.model_name
 
         return self._get_exhausted_error_msg()
 
@@ -349,6 +350,7 @@ class GoogleGenerativeAI(
                 if not should_retry:
                     yield f'Streaming error: {self._last_exception or str(ex)}'
                     return
+                active_model = model_name or self.model_name
 
     async def ask_with_tools(
         self,
@@ -390,11 +392,19 @@ class GoogleGenerativeAI(
         )
 
         for _ in range(10):
-            response = self._client.models.generate_content(
-                model=active_model,
-                contents=contents,
-                config=config,
-            )
+            try:
+                response = self._client.models.generate_content(
+                    model=active_model,
+                    contents=contents,
+                    config=config,
+                )
+            except Exception as ex:
+                should_retry: bool = await self._handle_api_error(ex, active_model, 0, 3)
+                if should_retry:
+                    active_model = model_name or self.model_name
+                    continue
+                return f'Model error: {self._last_exception or str(ex)}'
+
             candidate = response.candidates[0] if response and response.candidates else False
             if not candidate:
                 break

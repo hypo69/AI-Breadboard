@@ -441,7 +441,8 @@
         window.speechSynthesis.speak(utterance);
         playerContainer.style.display = 'none';
       } else {
-        alert(i18next?.t('errors.no_api') || 'Ваш браузер не поддерживает Web Speech API.');
+        const msg = i18next?.t('errors.no_api') || 'Ваш браузер не поддерживает Web Speech API.';
+        window.showToast?.(msg, 'warning') || alert(msg);
       }
       return;
     }

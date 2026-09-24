@@ -46,7 +46,7 @@ python -m apps.windows.apps.network_diagnostics
 python -m apps.windows.apps.services_manager
 
 # Registry Viewer
-python -m apps.windows.apps.registry_viewer
+python -m apps.windows.apps.windows.registry
 
 # Security Analyzer
 python -m apps.windows.apps.security_analyzer

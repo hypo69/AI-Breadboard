@@ -317,7 +317,7 @@
 
       await loadKey(currentHive, currentPath);
     } catch (e) {
-      alert(`Ошибка сохранения параметра: ${e.message}`);
+      window.showToast?.(`Ошибка сохранения параметра: ${e.message}`, 'danger') || alert(`Ошибка сохранения параметра: ${e.message}`);
     }
   }
 
@@ -344,9 +344,10 @@
         throw new Error(errJson.detail || `HTTP ${res.status}`);
       }
 
+      window.showToast?.(`Параметр ${displayName} удален`, 'success');
       await loadKey(currentHive, currentPath);
     } catch (e) {
-      alert(`Ошибка удаления параметра: ${e.message}`);
+      window.showToast?.(`Ошибка удаления параметра: ${e.message}`, 'danger') || alert(`Ошибка удаления параметра: ${e.message}`);
     }
   }
 
@@ -365,7 +366,7 @@
     const keyNameInput = document.getElementById('regModalNewKeyName');
     const newKeyName = keyNameInput ? keyNameInput.value.trim() : '';
     if (!newKeyName) {
-      alert('Введите имя подраздела');
+      window.showToast?.('Введите имя подраздела', 'warning') || alert('Введите имя подраздела');
       return;
     }
 
@@ -392,15 +393,16 @@
         if (modal) modal.hide();
       }
 
+      window.showToast?.(`Подраздел '${newKeyName}' успешно создан`, 'success');
       await loadKey(currentHive, currentPath);
     } catch (e) {
-      alert(`Ошибка создания ключа: ${e.message}`);
+      window.showToast?.(`Ошибка создания ключа: ${e.message}`, 'danger') || alert(`Ошибка создания ключа: ${e.message}`);
     }
   }
 
   async function deleteCurrentKey() {
     if (!currentPath) {
-      alert('Нельзя удалить корневой раздел');
+      window.showToast?.('Нельзя удалить корневой раздел', 'warning') || alert('Нельзя удалить корневой раздел');
       return;
     }
 
@@ -425,9 +427,10 @@
         throw new Error(errJson.detail || `HTTP ${res.status}`);
       }
 
+      window.showToast?.('Раздел реестра успешно удален', 'success');
       goUp();
     } catch (e) {
-      alert(`Ошибка удаления раздела: ${e.message}`);
+      window.showToast?.(`Ошибка удаления раздела: ${e.message}`, 'danger') || alert(`Ошибка удаления раздела: ${e.message}`);
     }
   }
 
@@ -481,10 +484,10 @@
               const err = await rRes.json().catch(() => ({}));
               throw new Error(err.detail || `HTTP ${rRes.status}`);
             }
-            alert('Реестр успешно восстановлен из резервной копии!');
+            window.showToast?.('Реестр успешно восстановлен из резервной копии!', 'success');
             await loadKey(currentHive, currentPath);
           } catch (err) {
-            alert(`Ошибка восстановления: ${err.message}`);
+            window.showToast?.(`Ошибка восстановления: ${err.message}`, 'danger') || alert(`Ошибка восстановления: ${err.message}`);
           }
         };
       });

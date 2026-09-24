@@ -1,325 +1,273 @@
 /**
- * APICache - Расширенная система кеширования API ответов
+ * api-cache.js - Универсальный кеш-слой для всех API-запросов веб-интерфейса
  * 
- * Кеширует GET запросы на клиенте с поддержкой L1 Memory и L2 IndexedDB (через BrowserCacheManager),
- * инвалидирует кеш при изменениях (POST/PUT/DELETE).
- * Снижает нагрузку на сервер и ускоряет отклик интерфейса.
+ * Предоставляет единую точку входа для всех HTTP-запросов с автоматическим кешированием,
+ * используя современные стратегии: Cache-First, Network-First, Stale-While-Revalidate.
  * 
- * Usage:
- *   const cache = new APICache();
- *   await cache.set('/api/users', data, 5 * 60 * 1000);  // 5 минут
- *   const cached = await cache.get('/api/users');
- *   cache.invalidate(/\/api\/users/);  // Pattern-based invalidation
+ * АРХИТЕКТУРА:
+ * - L1 Cache: In-Memory (быстрый доступ)
+ * - L2 Cache: IndexedDB (персистентный)
+ * - L3 Fallback: Direct network (если кеш недоступен)
+ * 
+ * ПРИМЕНЕНИЕ:
+ * Используется всеми вкладками веб-интерфейса для оптимизации загрузки данных,
+ * снижения нагрузки на API и обеспечения offline-режима.
+ * 
+ * @author hypo69
+ * @version 1.0.0
+ * @since 2026-09-24
  */
 
 import { browserCache, STORES } from './browser-cache.js';
 
-class APICache {
-  constructor(options = {}) {
-    this.store = new Map(); // { key: { data, expiresAt, timestamp } }
-    this.defaultTTL = options.defaultTTL || 5 * 60 * 1000; // 5 минут по умолчанию
-    this.usePersistentStorage = options.usePersistent !== false;
-    this.storeName = STORES.API_CACHE;
-  }
+// Глобальные стратегии кеширования для разных типов данных
+export const CACHE_STRATEGIES = {
+  // Статические справочники (модели, конфигурации) - долгое TTL
+  STATIC: { ttl: 60 * 60 * 1000, strategy: 'cache-first' },           // 1 час
+  
+  // Редко меняющиеся данные (hardware spec, user profiles) - средний TTL
+  SEMI_STATIC: { ttl: 30 * 60 * 1000, strategy: 'cache-first' },      // 30 минут
+  
+  // Часто меняющиеся данные (системные метрики, статусы) - короткий TTL
+  DYNAMIC: { ttl: 5 * 1000, strategy: 'stale-while-revalidate' },     // 5 секунд
+  
+  // Реалтайм данные (live telemetry, сенсоры) - минимальный TTL
+  REALTIME: { ttl: 3 * 1000, strategy: 'network-first' },             // 3 секунды
+  
+  // Критичные данные (security status, errors) - всегда из сети
+  CRITICAL: { ttl: 0, strategy: 'network-first' }                     // Нет кеша
+};
 
-  /**
-   * Сохранить данные в кеш
-   * @param {string} key - Ключ (обычно URL)
-   * @param {any} data - Данные для кеширования
-   * @param {number} ttl - Time to live в миллисекундах (опционально)
-   * @param {Object} options - Дополнительные параметры (tags, persist)
-   */
-  set(key, data, ttl = this.defaultTTL, options = {}) {
-    const expiresAt = Date.now() + ttl;
-    const clonedData = JSON.parse(JSON.stringify(data));
+// Автоматические правила сопоставления URL → стратегия
+const URL_PATTERNS = [
+  // Статические данные
+  { pattern: /\/api\/v1\/models/, strategy: CACHE_STRATEGIES.STATIC, tag: 'models' },
+  { pattern: /\/api\/config/, strategy: CACHE_STRATEGIES.STATIC, tag: 'config' },
+  { pattern: /\/api\/plugins/, strategy: CACHE_STRATEGIES.SEMI_STATIC, tag: 'plugins' },
+  
+  // Hardware и системные спецификации
+  { pattern: /\/api\/v1\/system\/hardware/, strategy: CACHE_STRATEGIES.SEMI_STATIC, tag: 'hardware' },
+  { pattern: /\/api\/v1\/windows-backup/, strategy: CACHE_STRATEGIES.SEMI_STATIC, tag: 'backup' },
+  
+  // Динамические системные данные
+  { pattern: /\/api\/v1\/system\/summary/, strategy: CACHE_STRATEGIES.DYNAMIC, tag: 'system-summary' },
+  { pattern: /\/api\/system-control\/status/, strategy: CACHE_STRATEGIES.DYNAMIC, tag: 'control-status' },
+  
+  // Реалтайм телеметрия
+  { pattern: /\/api\/v1\/system\/sensors/, strategy: CACHE_STRATEGIES.REALTIME, tag: 'sensors' },
+  { pattern: /\/api\/v1\/system\/processes/, strategy: CACHE_STRATEGIES.REALTIME, tag: 'processes' },
+  
+  // RAG и чат (частые обновления)
+  { pattern: /\/api\/chat/, strategy: CACHE_STRATEGIES.DYNAMIC, tag: 'chat' },
+  { pattern: /\/api\/rag/, strategy: CACHE_STRATEGIES.DYNAMIC, tag: 'rag' }
+];
+
+/**
+ * Определение стратегии кеширования по URL
+ * @param {string} url - URL запроса
+ * @returns {Object} { ttl, strategy, tag }
+ */
+function getCacheStrategy(url) {
+  for (const rule of URL_PATTERNS) {
+    if (rule.pattern.test(url)) {
+      return { ...rule.strategy, tag: rule.tag };
+    }
+  }
+  // По умолчанию: stale-while-revalidate с TTL 1 минута
+  return { ttl: 60 * 1000, strategy: 'stale-while-revalidate', tag: 'default' };
+}
+
+/**
+ * Генерация ключа кеша из URL и параметров
+ * @param {string} url - URL запроса
+ * @param {Object} options - Опции запроса (method, body)
+ * @returns {string} Уникальный ключ кеша
+ */
+function generateCacheKey(url, options = {}) {
+  const method = options.method || 'GET';
+  const body = options.body ? `-${btoa(options.body).substring(0, 32)}` : '';
+  return `${method}:${url}${body}`;
+}
+
+/**
+ * Универсальная функция для выполнения HTTP-запросов с автоматическим кешированием
+ * 
+ * @param {string} url - URL запроса
+ * @param {Object} options - Опции запроса
+ * @param {Object} cacheOptions - Опции кеширования (переопределяют автоматику)
+ * @returns {Promise<any>} Результат запроса
+ * 
+ * @example
+ * // Автоматическое определение стратегии
+ * const data = await cachedApiFetch('/api/v1/system/hardware');
+ * 
+ * @example
+ * // Ручное переопределение стратегии
+ * const data = await cachedApiFetch('/api/custom', {}, {
+ *   ttl: 10000,
+ *   strategy: 'cache-first',
+ *   tag: 'custom-data'
+ * });
+ */
+export async function cachedApiFetch(url, options = {}, cacheOptions = {}) {
+  // Определяем стратегию автоматически или используем переданную
+  const autoStrategy = getCacheStrategy(url);
+  const { 
+    ttl = autoStrategy.ttl, 
+    strategy = autoStrategy.strategy, 
+    tag = autoStrategy.tag,
+    forceNetwork = false 
+  } = cacheOptions;
+  
+  const cacheKey = generateCacheKey(url, options);
+  const cache = browserCache;
+  
+  // Если кеш недоступен, выполняем прямой запрос
+  if (!cache || !cache.isDbReady) {
+    console.warn(`[API Cache] Cache unavailable, direct network request: ${url}`);
+    return await directFetch(url, options);
+  }
+  
+  // CACHE-FIRST: сначала проверяем кеш, потом сеть
+  if (strategy === 'cache-first' && !forceNetwork) {
+    const cached = await cache.get(STORES.API_CACHE, cacheKey);
+    if (cached) {
+      console.log(`[API Cache] 🎯 HIT (cache-first): ${url}`);
+      return cached;
+    }
+  }
+  
+  // STALE-WHILE-REVALIDATE: показываем кеш, обновляем в фоне
+  if (strategy === 'stale-while-revalidate' && !forceNetwork) {
+    const cached = await cache.get(STORES.API_CACHE, cacheKey);
+    if (cached) {
+      console.log(`[API Cache] 🎯 HIT (stale-while-revalidate): ${url} → updating in background`);
+      // Запускаем обновление в фоне (не ждем)
+      directFetch(url, options)
+        .then(fresh => cache.set(STORES.API_CACHE, cacheKey, fresh, { ttl, tags: [tag, 'api-cache'] }))
+        .catch(err => console.warn(`[API Cache] Background update failed for ${url}:`, err));
+      return cached;
+    }
+  }
+  
+  // NETWORK-FIRST или первый запрос: сначала сеть, потом кеш как fallback
+  try {
+    const fresh = await directFetch(url, options);
     
-    // Сохранение в память L1
-    this.store.set(key, {
-      data: clonedData,
-      expiresAt,
-      timestamp: Date.now(),
-      ttl
-    });
-
-    // Асинхронно сохраняем в IndexedDB L2
-    if (this.usePersistentStorage && browserCache) {
-      browserCache.set(this.storeName, key, clonedData, {
-        ttl,
-        tags: options.tags || ['api'],
-        persist: options.persist !== false
-      }).catch(err => {
-        console.warn(`[APICache] Ошибка сохранения в IndexedDB для ${key}:`, err);
-      });
+    // Сохраняем в кеш (если TTL > 0)
+    if (ttl > 0) {
+      await cache.set(STORES.API_CACHE, cacheKey, fresh, { ttl, tags: [tag, 'api-cache'] });
+      console.log(`[API Cache] ❌ MISS → stored (${strategy}): ${url}`);
+    } else {
+      console.log(`[API Cache] ⚡ SKIP cache (TTL=0): ${url}`);
     }
-
-    console.log(`[APICache] Cached: ${key} (TTL: ${ttl}ms)`);
-  }
-
-  /**
-   * Получить данные из кеша если они актуальны (синхронный поиск в L1)
-   * @param {string} key - Ключ (обычно URL)
-   * @returns {any|null} - Данные или null если кеша нет или он истек
-   */
-  get(key) {
-    const cached = this.store.get(key);
     
-    if (!cached) {
-      return null;
+    return fresh;
+  } catch (err) {
+    // При ошибке сети пытаемся вернуть устаревший кеш
+    const staleCache = await cache.get(STORES.API_CACHE, cacheKey);
+    if (staleCache) {
+      console.warn(`[API Cache] 🔌 Network failed, returning STALE cache: ${url}`);
+      return staleCache;
     }
-
-    // Проверяем срок действия
-    if (Date.now() > cached.expiresAt) {
-      this.store.delete(key);
-      if (this.usePersistentStorage && browserCache) {
-        browserCache.delete(this.storeName, key).catch(() => {});
-      }
-      console.log(`[APICache] Expired: ${key}`);
-      return null;
-    }
-
-    console.log(`[APICache] Hit: ${key}`);
-    return cached.data;
-  }
-
-  /**
-   * Асинхронное получение из кеша (сначала L1 память, затем L2 IndexedDB)
-   * @param {string} key - Ключ
-   * @returns {Promise<any|null>}
-   */
-  async getAsync(key) {
-    // 1. Проверяем синхронно в L1
-    const l1Data = this.get(key);
-    if (l1Data !== null) {
-      return l1Data;
-    }
-
-    // 2. Проверяем в IndexedDB L2
-    if (this.usePersistentStorage && browserCache) {
-      try {
-        const l2Data = await browserCache.get(this.storeName, key);
-        if (l2Data !== null) {
-          // Восстанавливаем в память L1
-          this.store.set(key, {
-            data: l2Data,
-            expiresAt: Date.now() + this.defaultTTL,
-            timestamp: Date.now(),
-            ttl: this.defaultTTL
-          });
-          console.log(`[APICache] Hit from IndexedDB: ${key}`);
-          return l2Data;
-        }
-      } catch (err) {
-        console.warn(`[APICache] Ошибка чтения IndexedDB для ${key}:`, err);
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Проверить есть ли валидный кеш
-   */
-  has(key) {
-    return this.get(key) !== null;
-  }
-
-  /**
-   * Инвалидировать кеш по паттерну (RegExp или строка)
-   * @param {string|RegExp} pattern - Паттерн для инвалидации
-   */
-  invalidate(pattern) {
-    let keysToDelete = [];
-
-    if (pattern instanceof RegExp) {
-      keysToDelete = Array.from(this.store.keys()).filter(key => 
-        pattern.test(key)
-      );
-    } else if (typeof pattern === 'string') {
-      keysToDelete = Array.from(this.store.keys()).filter(key => 
-        key === pattern || key.startsWith(pattern)
-      );
-    }
-
-    keysToDelete.forEach(key => {
-      this.store.delete(key);
-      console.log(`[APICache] Invalidated in Memory: ${key}`);
-    });
-
-    if (this.usePersistentStorage && browserCache) {
-      browserCache.invalidateByPattern(this.storeName, pattern).catch(() => {});
-    }
-
-    return keysToDelete.length;
-  }
-
-  /**
-   * Очистить весь кеш API
-   */
-  clear() {
-    const count = this.store.size;
-    this.store.clear();
-    if (this.usePersistentStorage && browserCache) {
-      browserCache.clearStore(this.storeName).catch(() => {});
-    }
-    console.log(`[APICache] Cleared ${count} entries`);
-  }
-
-  /**
-   * Получить информацию о кеше
-   */
-  getStats() {
-    return {
-      size: this.store.size,
-      entries: Array.from(this.store.entries()).map(([key, value]) => ({
-        key,
-        expiresIn: Math.max(0, value.expiresAt - Date.now()),
-        expired: Date.now() > value.expiresAt,
-        ttl: value.ttl,
-        dataSize: JSON.stringify(value.data).length
-      }))
-    };
-  }
-
-  /**
-   * Установить новый TTL по умолчанию
-   */
-  setDefaultTTL(ttl) {
-    this.defaultTTL = ttl;
+    throw err;
   }
 }
 
 /**
- * APIFetcher - Обертка над fetch с поддержкой многоуровневого кеширования
+ * Прямой HTTP-запрос без кеширования
+ * @param {string} url - URL запроса
+ * @param {Object} options - Опции fetch
+ * @returns {Promise<any>}
  */
-class APIFetcher {
-  constructor(cache = null) {
-    this.cache = cache || new APICache();
-    this.defaultHeaders = {
-      'Content-Type': 'application/json'
+async function directFetch(url, options = {}) {
+  const opts = { ...options };
+  if (opts.body && typeof opts.body === 'string') {
+    opts.headers = {
+      'Content-Type': 'application/json',
+      ...(opts.headers || {})
     };
   }
-
-  /**
-   * Выполнить fetch с автоматическим кешированием
-   * @param {string} url - URL запроса
-   * @param {object} options - Опции fetch (method, body, headers и т.д.)
-   * @param {object} cacheOptions - Опции кеширования
-   */
-  async fetch(url, options = {}, cacheOptions = {}) {
-    const method = (options.method || 'GET').toUpperCase();
-    const isGetRequest = method === 'GET' || method === 'HEAD';
-    const useCache = cacheOptions.useCache !== false && isGetRequest;
-
-    // Пытаемся получить из кеша (сначала L1, затем L2 IndexedDB)
-    if (useCache) {
-      const cached = await this.cache.getAsync(url);
-      if (cached) {
-        console.log(`[APIFetcher] Returning from cache: ${url}`);
-        return cached;
+  
+  // Используем window.api.fetch если доступно (для Electron/PWA окна)
+  if (window.api && typeof window.api.fetch === 'function') {
+    return await window.api.fetch(url, opts);
+  }
+  
+  const res = await fetch(url, opts);
+  if (!res.ok) {
+    let errMsg = `HTTP ${res.status}`;
+    try {
+      const errJson = await res.json();
+      if (errJson && errJson.detail) {
+        errMsg += ` (${typeof errJson.detail === 'object' ? JSON.stringify(errJson.detail) : errJson.detail})`;
       }
-    }
-
-    // Выполняем fetch
-    console.log(`[APIFetcher] Fetching: ${method} ${url}`);
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...this.defaultHeaders,
-        ...(options.headers || {})
-      }
-    });
-
-    if (!response.ok) {
-      let msg = response.statusText;
-      try {
-        const data = await response.json();
-        if (data && data.detail) {
-          msg = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
-        }
-      } catch {}
-      throw new Error(`${response.status} ${msg}`);
-    }
-
-    const data = await response.json();
-
-    // Кешируем GET запросы
-    if (useCache) {
-      const ttl = cacheOptions.ttl || this.cache.defaultTTL;
-      this.cache.set(url, data, ttl, {
-        tags: cacheOptions.tags,
-        persist: cacheOptions.persist
-      });
-    }
-
-    // Инвалидируем кеш для мутирующих запросов (POST/PUT/DELETE)
-    if (cacheOptions.invalidatePatterns) {
-      cacheOptions.invalidatePatterns.forEach(pattern => {
-        this.cache.invalidate(pattern);
-      });
-    }
-
-    return data;
+    } catch (_) {}
+    throw new Error(errMsg);
   }
-
-  /**
-   * GET запрос (кешируется)
-   */
-  get(url, options = {}, cacheOptions = {}) {
-    return this.fetch(url, { ...options, method: 'GET' }, { useCache: true, ...cacheOptions });
-  }
-
-  /**
-   * POST запрос (не кешируется, инвалидирует кеш)
-   */
-  post(url, body, options = {}, invalidatePatterns = []) {
-    return this.fetch(
-      url,
-      { ...options, method: 'POST', body: JSON.stringify(body) },
-      { useCache: false, invalidatePatterns }
-    );
-  }
-
-  /**
-   * PUT запрос (не кешируется, инвалидирует кеш)
-   */
-  put(url, body, options = {}, invalidatePatterns = []) {
-    return this.fetch(
-      url,
-      { ...options, method: 'PUT', body: JSON.stringify(body) },
-      { useCache: false, invalidatePatterns }
-    );
-  }
-
-  /**
-   * DELETE запрос (не кешируется, инвалидирует кеш)
-   */
-  delete(url, options = {}, invalidatePatterns = []) {
-    return this.fetch(
-      url,
-      { ...options, method: 'DELETE' },
-      { useCache: false, invalidatePatterns }
-    );
-  }
-
-  /**
-   * Очистить весь кеш
-   */
-  clearCache() {
-    this.cache.clear();
-  }
-
-  /**
-   * Получить статистику кеша
-   */
-  getCacheStats() {
-    return this.cache.getStats();
-  }
+  return await res.json();
 }
 
-// Экспортируем глобально
+/**
+ * Инвалидация кеша по тегу (например, после обновления данных)
+ * @param {string} tag - Тег для инвалидации
+ * @returns {Promise<number>} Количество удаленных записей
+ * 
+ * @example
+ * // Очистить весь кеш моделей после обновления
+ * await invalidateCacheByTag('models');
+ */
+export async function invalidateCacheByTag(tag) {
+  if (!browserCache || !browserCache.isDbReady) return 0;
+  const count = await browserCache.invalidateByTag(STORES.API_CACHE, tag);
+  console.log(`[API Cache] 🗑️ Invalidated ${count} entries with tag: ${tag}`);
+  return count;
+}
+
+/**
+ * Очистка всего API-кеша
+ * @returns {Promise<boolean>}
+ */
+export async function clearAllApiCache() {
+  if (!browserCache || !browserCache.isDbReady) return false;
+  await browserCache.clearStore(STORES.API_CACHE);
+  console.log('[API Cache] 🗑️ All API cache cleared');
+  return true;
+}
+
+/**
+ * Получение статистики кеша
+ * @returns {Promise<Object>}
+ */
+export async function getApiCacheStats() {
+  if (!browserCache || !browserCache.isDbReady) {
+    return { available: false, metrics: null };
+  }
+  
+  const stats = await browserCache.getDetailedStats();
+  const apiStore = stats.stores[STORES.API_CACHE] || {};
+  
+  return {
+    available: true,
+    metrics: stats.metrics,
+    apiCache: {
+      count: apiStore.count || 0,
+      sizeMB: apiStore.sizeMB || '0.00',
+      hitRate: stats.metrics.hits + stats.metrics.misses > 0 
+        ? Math.round((stats.metrics.hits / (stats.metrics.hits + stats.metrics.misses)) * 100)
+        : 0
+    },
+    storage: stats.storageEstimate
+  };
+}
+
+// Экспорт в глобальный контекст для доступности из всех вкладок
 if (typeof window !== 'undefined') {
-  window.APICache = APICache;
-  window.APIFetcher = APIFetcher;
+  window.cachedApiFetch = cachedApiFetch;
+  window.invalidateCacheByTag = invalidateCacheByTag;
+  window.clearAllApiCache = clearAllApiCache;
+  window.getApiCacheStats = getApiCacheStats;
+  window.CACHE_STRATEGIES = CACHE_STRATEGIES;
 }
 
-export { APICache, APIFetcher };
+export default cachedApiFetch;

@@ -13,6 +13,8 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
+from __future__ import annotations
+
 import logging
 import logging.handlers
 import colorama
@@ -24,7 +26,7 @@ import queue
 import atexit
 import tempfile
 from pathlib import Path
-from typing import Optional, Tuple, Dict
+from typing import Optional, Tuple, Dict, Any
 from types import SimpleNamespace
 from collections import Counter
 
@@ -360,16 +362,24 @@ class Logger(metaclass=SingletonMeta):
             import os
             from dotenv import load_dotenv
             load_dotenv(__root__ / '.env')
-            
+
             try:
-                from src.config import server_cfg
+                from src.config import server_cfg, logging_cfg
+                log_debug = getattr(logging_cfg, "debug", None)
+                log_level = str(getattr(logging_cfg, "level", "")).lower()
                 mode_val = getattr(server_cfg, "mode", "dev").lower()
-                is_debug = getattr(server_cfg, "debug", True)
+                server_debug = getattr(server_cfg, "debug", True)
+
+                if log_debug is not None:
+                    self.is_debug_mode = bool(log_debug)
+                elif log_level:
+                    self.is_debug_mode = (log_level == 'debug')
+                else:
+                    self.is_debug_mode = (mode_val in ('dev', 'debug') or server_debug)
             except ImportError:
                 mode_val = os.getenv("MODE", "dev").lower()
                 is_debug = os.getenv("DEBUG", "true").lower() == "true"
-            
-            self.is_debug_mode = (mode_val in ('dev', 'debug') or is_debug)
+                self.is_debug_mode = (mode_val in ('dev', 'debug') or is_debug)
         except Exception:
             self.is_debug_mode = True  # По умолчанию включаем режим отладки
 

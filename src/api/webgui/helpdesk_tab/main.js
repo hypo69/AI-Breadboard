@@ -17,7 +17,9 @@
     await loadTickets();
     await updateStats();
 
-    if (!hdStatsInterval) {
+    if (window.registerTabPoller) {
+      window.registerTabPoller('tab-helpdesk', updateStats, 15000, { immediate: false });
+    } else if (!hdStatsInterval) {
       hdStatsInterval = setInterval(updateStats, 15000);
     }
   }
@@ -451,7 +453,7 @@
         const message = document.getElementById('hd-new-ticket-message')?.value?.trim();
 
         if (!subject || !message) {
-          alert('Пожалуйста, заполните тему и текст обращения.');
+          window.showToast?.('Пожалуйста, заполните тему и текст обращения.', 'warning') || alert('Пожалуйста, заполните тему и текст обращения.');
           return;
         }
 
@@ -467,9 +469,7 @@
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
           if (data.status === 'success') {
-            if (typeof showNotification === 'function') {
-              showNotification(`Тикет #${data.ticket.ticket_number} успешно создан!`, 'success');
-            }
+            window.showToast?.(`Тикет #${data.ticket.ticket_number} успешно создан!`, 'success');
             const modalEl = document.getElementById('hdCreateTicketModal');
             const modal = bootstrap.Modal.getInstance(modalEl);
             modal?.hide();
@@ -485,7 +485,7 @@
           }
         } catch (err) {
           console.error('[HelpdeskTab] Create ticket failed:', err);
-          alert('Ошибка создания тикета: ' + err.message);
+          window.showToast?.('Ошибка создания тикета: ' + err.message, 'danger') || alert('Ошибка создания тикета: ' + err.message);
         } finally {
           btnSubmitNew.disabled = false;
         }

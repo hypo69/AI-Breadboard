@@ -74,11 +74,11 @@ def get_terminal_profiles() -> Dict[str, List[Dict[str, str]]]:
         "network": [
             {
                 "title": "Network DPI Terminal",
-                "command": f'"{python_exe}" -m apps.network_terminal',
+                "command": f'"{python_exe}" -m apps.windows.network',
             },
             {
                 "title": "Network Traffic Stream",
-                "command": f'"{python_exe}" -m apps.network_terminal --simulate',
+                "command": f'"{python_exe}" -m apps.windows.network --simulate',
             },
         ],
         "cloudflared": [

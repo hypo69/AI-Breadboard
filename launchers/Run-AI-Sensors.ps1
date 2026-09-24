@@ -39,9 +39,17 @@ param (
 
     [string]$ConfigFile = $null,
 
+    [switch]$Restart,
+
+    [switch]$Force,
+
     [Alias('h', '-help')]
     [switch]$Help
 )
+
+if ($Restart -or $Force) {
+    $Action = 'restart'
+}
 
 $ErrorActionPreference = 'Continue'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -67,7 +75,7 @@ if ((Split-Path -Leaf $projectRoot) -eq "launchers" -or -not (Test-Path (Join-Pa
     }
 }
 
-$aiSensorsDir = Join-Path $projectRoot "SANDBOX" "ai-sensors"
+$aiSensorsDir = Join-Path $projectRoot "apps\windows\telemetry"
 $aiSensorsMain = Join-Path $aiSensorsDir "main.py"
 $aiSensorsConfig = if ($ConfigFile) { $ConfigFile } else { Join-Path $aiSensorsDir "config.json" }
 
@@ -104,9 +112,8 @@ function Test-PythonAvailable {
 
 # Функция получения запущенных процессов AI-Sensors
 function Get-AISensorsProcesses {
-    param([string]$ScriptPath)
     Get-CimInstance Win32_Process | Where-Object {
-        $_.CommandLine -and $_.CommandLine -match [regex]::Escape($ScriptPath)
+        $_.CommandLine -and ($_.CommandLine -match 'telemetry[\\\/]main\.py' -or $_.CommandLine -match 'apps[\\\/]windows[\\\/]telemetry')
     }
 }
 
@@ -144,13 +151,18 @@ function Start-AISensors {
         return $false
     }
 
-    $appArgs = "`"$aiSensorsMain`""
+    $argList = @("-u", $aiSensorsMain)
     if ($Interval) {
-        $appArgs += " --interval $Interval"
+        $argList += @("--interval", "$Interval")
     }
 
-    $logDir = Join-Path $aiSensorsDir "logs"
-    $logFile = Join-Path $logDir "ai_sensors.log"
+    $appDataDir = $env:APPDATA
+    if (-not $appDataDir) {
+        $appDataDir = Join-Path $env:USERPROFILE "AppData\Roaming"
+    }
+    $logDir = Join-Path $appDataDir "AI-Breadboard\apps\windows\telemetry\logs"
+    $logOutFile = Join-Path $logDir "ai_sensors.log"
+    $logErrFile = Join-Path $logDir "ai_sensors_err.log"
 
     # Создаем директорию для логов
     if (-not (Test-Path $logDir)) {
@@ -158,18 +170,24 @@ function Start-AISensors {
     }
 
     Write-Host "   Python: $venvPython" -ForegroundColor DarkGray
-    Write-Host "   Лог-файл: $logFile" -ForegroundColor DarkGray
+    Write-Host "   Лог-файл: $logOutFile" -ForegroundColor DarkGray
     Write-Host ""
 
+    # Устанавливаем UTF-8 для потоков вывода Python
+    $env:PYTHONUTF8 = "1"
+    $env:PYTHONIOENCODING = "utf-8"
+    $env:PYTHONPATH = $projectRoot
+
     # Запускаем в фоновом режиме
-    $proc = Start-Process $venvPython -ArgumentList $appArgs `
-        -WorkingDirectory $aiSensorsDir `
+    $proc = Start-Process $venvPython -ArgumentList $argList `
+        -WorkingDirectory $projectRoot `
         -PassThru `
         -WindowStyle Minimized `
-        -RedirectStandardOutput $logFile `
-        -RedirectStandardError $logFile
+        -RedirectStandardOutput $logOutFile `
+        -RedirectStandardError $logErrFile
 
     if ($proc) {
+        Start-Sleep -Milliseconds 800
         Write-Host "✅ AI-Sensors запущен (PID: $($proc.Id))" -ForegroundColor Green
         Write-Host "   Лог-директория: $logDir" -ForegroundColor Cyan
         Write-Host ""
@@ -180,7 +198,7 @@ function Start-AISensors {
     }
 }
 
-$runningProcs = Get-AISensorsProcesses -ScriptPath $aiSensorsMain
+$runningProcs = Get-AISensorsProcesses
 
 # -------------------------------------------------------------
 # ДЕЙСТВИЕ: STATUS
@@ -190,8 +208,11 @@ if ($Action -eq 'status') {
 
     if ($runningProcs) {
         $pids = ($runningProcs | ForEach-Object { $_.ProcessId }) -join ', '
+        $appDataDir = $env:APPDATA
+        if (-not $appDataDir) { $appDataDir = Join-Path $env:USERPROFILE "AppData\Roaming" }
+        $logOutFile = Join-Path $appDataDir "AI-Breadboard\apps\windows\telemetry\logs\ai_sensors.log"
         Write-Host "✅ AI-Sensors запущен (PID: $pids)" -ForegroundColor Green
-        Write-Host "   Лог-файл: $logFile" -ForegroundColor DarkGray
+        Write-Host "   Лог-файл: $logOutFile" -ForegroundColor DarkGray
     } else {
         Write-Host "❌ AI-Sensors не запущен" -ForegroundColor Yellow
         Write-Host "   Для запуска: .\launchers\Run-AI-Sensors.ps1" -ForegroundColor DarkGray
@@ -228,7 +249,7 @@ if ($Action -in @('stop', 'restart')) {
 # ДЕЙСТВИЕ: START / RESTART
 # -------------------------------------------------------------
 if ($Action -in @('start', 'restart')) {
-    $existing = Get-AISensorsProcesses -ScriptPath $aiSensorsMain
+    $existing = Get-AISensorsProcesses
     if ($existing) {
         $pids = ($existing | ForEach-Object { $_.ProcessId }) -join ', '
         Write-Host "✅ AI-Sensors уже запущен (PID: $pids)" -ForegroundColor Green
@@ -238,6 +259,9 @@ if ($Action -in @('start', 'restart')) {
     $started = Start-AISensors -Interval $Interval
 
     if ($started) {
+        $appDataDir = $env:APPDATA
+        if (-not $appDataDir) { $appDataDir = Join-Path $env:USERPROFILE "AppData\Roaming" }
+        $logOutFile = Join-Path $appDataDir "AI-Breadboard\apps\windows\telemetry\logs\ai_sensors.log"
         Write-Host ""
         Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Green
         Write-Host "  ✅ AI-SENSORS ЗАПУЩЕН!                                       " -ForegroundColor Green
@@ -250,7 +274,7 @@ if ($Action -in @('start', 'restart')) {
         Write-Host "   - InternetSpeedSensor (ping, download, upload, DNS)" -ForegroundColor White
         Write-Host ""
         Write-Host "📈 Интервал сбора: ${Interval}с" -ForegroundColor Cyan
-        Write-Host "📁 Лог-файл: $logFile" -ForegroundColor Cyan
+        Write-Host "📁 Лог-файл: $logOutFile" -ForegroundColor Cyan
         Write-Host ""
     } else {
         Write-Host "❌ Не удалось запустить AI-Sensors" -ForegroundColor Red

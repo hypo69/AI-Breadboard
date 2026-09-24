@@ -995,7 +995,7 @@ ${instructions}`;
       }
     } catch (err) {
       console.error('[SkillsTab] Details error:', err);
-      alert(`Ошибка открытия деталей навыка: ${err.message}`);
+      window.showToast?.(`Ошибка открытия деталей навыка: ${err.message}`, 'danger') || alert(`Ошибка открытия деталей навыка: ${err.message}`);
     }
   }
 
@@ -1065,6 +1065,7 @@ ${instructions}`;
         alertEl.textContent = '✅ Изменения успешно сохранены';
         alertEl.classList.remove('d-none');
       }
+      window.showToast?.('Изменения навыка успешно сохранены', 'success');
 
       await this.refresh();
     } catch (err) {
@@ -1074,6 +1075,7 @@ ${instructions}`;
         alertEl.textContent = `Ошибка сохранения: ${err.message}`;
         alertEl.classList.remove('d-none');
       }
+      window.showToast?.(`Ошибка сохранения: ${err.message}`, 'danger');
     } finally {
       spinner?.classList.add('d-none');
     }
@@ -1089,11 +1091,11 @@ ${instructions}`;
         throw new Error(errData.detail || res.statusText);
       }
       const data = await res.json();
-      alert(`✅ Навык '${name}' успешно упакован в архив:\n${data.archive?.path} (${this.formatBytes(data.archive?.size)})`);
+      window.showToast?.(`✅ Навык '${name}' успешно упакован в архив:\n${data.archive?.path} (${this.formatBytes(data.archive?.size)})`, 'success');
       await this.refresh();
     } catch (err) {
       console.error('[SkillsTab] Package error:', err);
-      alert(`Ошибка сборки архива: ${err.message}`);
+      window.showToast?.(`Ошибка сборки архива: ${err.message}`, 'danger') || alert(`Ошибка сборки архива: ${err.message}`);
     }
   }
 
@@ -1121,10 +1123,11 @@ ${instructions}`;
       const modal = bootstrap.Modal.getInstance(modalEl);
       modal?.hide();
 
+      window.showToast?.(`Навык '${name}' успешно удален`, 'success');
       await this.refresh();
     } catch (err) {
       console.error('[SkillsTab] Delete error:', err);
-      alert(`Ошибка удаления навыка: ${err.message}`);
+      window.showToast?.(`Ошибка удаления навыка: ${err.message}`, 'danger') || alert(`Ошибка удаления навыка: ${err.message}`);
     }
   }
 

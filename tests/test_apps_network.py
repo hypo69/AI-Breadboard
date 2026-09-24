@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Unit Tests for apps.network_terminal
+# Process Name: Unit Tests for apps.windows.network
 # =============================================================================
 # Description:
 #   Unit tests for Network Terminal state management, TUI rendering,
-#   and FastAPI router integration in apps.network_terminal.
+#   and FastAPI router integration in apps.windows.network.
 #
 # File: test_apps_network.py
 # Project: ai-breadboard
@@ -13,22 +13,22 @@
 # Copyright: © 2026 hypo69
 # =============================================================================
 
-"""Unit tests for apps.network_terminal package."""
+"""Unit tests for apps.windows.network package."""
 
 import pytest
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 
-from apps.network_terminal import (
+from apps.windows.network import (
     NetworkTerminalState,
     render_ui,
     init_router,
 )
-from src.network.models import PacketSummary
+from apps.tshark.models import PacketSummary
 
 
 class TestNetworkTerminalApp:
-    """Test suite for apps.network_terminal components."""
+    """Test suite for apps.windows.network components."""
 
     def test_state_initialization(self):
         """State should initialize with clean buffers and default interface."""
@@ -80,7 +80,7 @@ class TestNetworkTerminalApp:
 
     def test_render_ui_layout(self):
         """Rich UI layout generation should succeed without exceptions."""
-        from apps.network_terminal.tui import RICH_AVAILABLE
+        from apps.windows.network.tui import RICH_AVAILABLE
 
         state = NetworkTerminalState(interface="1")
         state.add_packet(
@@ -110,8 +110,9 @@ class TestNetworkFastAPIRouter:
         return TestClient(app)
 
     def test_get_status(self, client):
-        """GET /api/v1/network/status returns status dict."""
-        resp = client.get("/api/v1/network/status")
+        """GET /api/network/status returns status dict."""
+        resp = client.get("/api/network/status")
         assert resp.status_code == 200
         data = resp.json()
-        assert "available" in data
+        assert "interface" in data
+        assert "total_packets" in data

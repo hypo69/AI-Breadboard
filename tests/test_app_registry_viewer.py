@@ -3,7 +3,7 @@
 # Process Name: Test Standalone Registry Viewer App
 # =============================================================================
 # Description:
-#   Тесты для автономного приложения Windows Registry Viewer (apps.registry_viewer).
+#   Тесты для автономного приложения Windows Registry Viewer (apps.windows.registry).
 #
 # File: test_app_registry_viewer.py
 # Project: ai-breadboard
@@ -20,7 +20,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from apps.registry_viewer import (
+from apps.windows.registry import (
     BookmarkItem,
     RegistryKeyDetailsDTO,
     RegistryValueDTO,
@@ -154,7 +154,7 @@ def test_api_endpoints_standalone(client):
 
 def test_registry_editor_operations_and_backups(tmp_path):
     """Проверка полного цикла создания, редактирования, бэкапа и отката параметров реестра."""
-    from apps.registry_viewer import (
+    from apps.windows.registry import (
         RegistryViewer,
         SetValueRequestDTO,
         DeleteValueRequestDTO,

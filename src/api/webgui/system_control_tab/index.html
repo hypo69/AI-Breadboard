@@ -4,83 +4,58 @@
     padding: 1rem;
   }
   .scc-header {
-    background: linear-gradient(135deg, #091e3a 0%, #172554 50%, #1e1b4b 100%);
-    border: 1px solid #1e3a8a;
-    border-radius: 12px;
-    padding: 1.25rem;
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md, 8px);
+    padding: 1rem 1.25rem;
   }
-  .scc-card {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
-    border-radius: 10px;
-    padding: 1rem;
-    transition: transform 0.15s ease, border-color 0.15s ease;
+  .scc-badge-secure {
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+    border: 1px solid var(--status-success-border);
   }
-  .scc-card:hover {
-    border-color: #38bdf8 !important;
+  .scc-badge-warn {
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
+    border: 1px solid var(--status-warning-border);
   }
-  .scc-label {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #94a3b8;
-    font-weight: 600;
-  }
-  .scc-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #f8fafc;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  }
-  .scc-nav-pills .nav-link {
-    color: #94a3b8;
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-    font-weight: 500;
-    font-size: 0.88rem;
-    transition: all 0.2s;
-  }
-  .scc-nav-pills .nav-link.active {
-    background: #2563eb;
-    color: #fff;
+  .scc-badge-danger {
+    background: var(--status-danger-bg);
+    color: var(--status-danger-text);
+    border: 1px solid var(--status-danger-border);
   }
   .scc-table {
     width: 100%;
-    font-size: 0.82rem;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     border-collapse: collapse;
+    margin-bottom: 0;
   }
   .scc-table th {
-    background: #1e293b;
-    padding: 8px 12px;
-    color: #94a3b8;
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    border-bottom: 1px solid #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted, #94a3b8);
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--border-color, #334155);
+    white-space: nowrap;
   }
   .scc-table td {
-    padding: 8px 12px;
-    border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--text-color, #f8fafc);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     vertical-align: middle;
   }
-  .scc-badge-secure {
-    background: rgba(34, 197, 94, 0.15);
-    color: #4ade80;
-    border: 1px solid #22c55e;
+  .scc-table tr:last-child td {
+    border-bottom: none;
   }
-  .scc-badge-warn {
-    background: rgba(234, 179, 8, 0.15);
-    color: #fde047;
-    border: 1px solid #eab308;
-  }
-  .scc-badge-danger {
-    background: rgba(239, 68, 68, 0.15);
-    color: #f87171;
-    border: 1px solid #ef4444;
+  .scc-table tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.04);
   }
 </style>
 
-<div class="scc-container">
+<div class="scc-container theme-sysctl">
   <!-- Top Header Bar -->
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 scc-header text-white">
     <div>
@@ -310,20 +285,25 @@
         <!-- System Restore Points Panel -->
         <div class="col-12">
           <div class="card bg-dark border-secondary">
-            <div class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center">
+            <div class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center flex-wrap gap-2">
               <span class="fw-bold text-white"><i class="bi bi-arrow-counterclockwise me-1"></i> Windows System Restore Points</span>
-              <button class="btn btn-sm btn-outline-primary rounded-pill px-3" id="btn-scc-create-restore">
-                <i class="bi bi-plus-lg me-1"></i> Create Restore Point
-              </button>
+              <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-scc-config-restore" title="Настройка квоты диска, расписания и политик хранения">
+                  <i class="bi bi-gear-fill me-1"></i> Policy & Storage
+                </button>
+                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" id="btn-scc-create-restore">
+                  <i class="bi bi-plus-lg me-1"></i> Create Restore Point
+                </button>
+              </div>
             </div>
             <div class="p-0 table-responsive" style="max-height: 280px; overflow-y: auto;">
               <table class="scc-table">
                 <thead>
                   <tr>
-                    <th>Seq #</th>
-                    <th>Description</th>
-                    <th>Type</th>
-                    <th>Creation Time</th>
+                    <th style="width: 100px;">Seq #</th>
+                    <th style="width: 45%;">Description</th>
+                    <th style="width: 25%;">Type</th>
+                    <th style="width: 20%;">Creation Time</th>
                   </tr>
                 </thead>
                 <tbody id="scc-restore-tbody">
@@ -349,17 +329,136 @@
           <table class="scc-table">
             <thead>
               <tr>
-                <th>Time</th>
-                <th>Action</th>
+                <th style="width: 180px;">Time</th>
+                <th style="width: 160px;">Action</th>
                 <th>Target</th>
-                <th>Status</th>
-                <th>Details</th>
+                <th style="width: 120px;">Status</th>
+                <th style="width: 30%;">Details</th>
               </tr>
             </thead>
             <tbody id="scc-logs-tbody">
               <tr><td colspan="5" class="text-center text-muted p-3">Loading activity logs...</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: System Restore Policy, Disk Quota & Automated Schedule -->
+  <div class="modal fade" id="modal-scc-restore-config" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title fw-bold text-info">
+            <i class="bi bi-shield-shaded me-2"></i> System Restore Policy, Quota & Schedules
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p class="small text-muted mb-3">
+            Настройка дисковой квоты теневого хранилища (VSS), сценариев автоматического создания и правил ротации точек восстановления Windows.
+          </p>
+
+          <!-- 1. Disk Quota Allocation -->
+          <div class="card bg-black border-secondary p-3 mb-3">
+            <h6 class="fw-bold text-primary mb-2">
+              <i class="bi bi-hdd-fill me-1"></i> 1. Выделение дискового пространства (Shadow Storage)
+            </h6>
+            <div class="row g-3 align-items-center">
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Максимальный лимит для диска C:</label>
+                <select class="form-select form-select-sm bg-dark text-white border-secondary" id="scc-policy-storage-size">
+                  <option value="5%">5% объема диска (~15-30 GB)</option>
+                  <option value="10%" selected>10% объема диска (~30-60 GB, рекомендуется)</option>
+                  <option value="15%">15% объема диска (~45-90 GB)</option>
+                  <option value="20%">20% объема диска (~60-120 GB)</option>
+                  <option value="10GB">10 GB фиксированно</option>
+                  <option value="20GB">20 GB фиксированно</option>
+                  <option value="50GB">50 GB фиксированно</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Текущее заполнение VSS:</label>
+                <div class="progress bg-secondary" style="height: 10px;">
+                  <div id="scc-policy-storage-bar" class="progress-bar bg-info" role="progressbar" style="width: 0%;"></div>
+                </div>
+                <div class="d-flex justify-content-between small text-muted mt-1 font-monospace" id="scc-policy-storage-label">
+                  <span>Used: 0 GB</span>
+                  <span>Max: 0 GB</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Schedule and Triggers -->
+          <div class="card bg-black border-secondary p-3 mb-3">
+            <h6 class="fw-bold text-success mb-2">
+              <i class="bi bi-clock-history me-1"></i> 2. Сценарий автоматического создания (Trigger)
+            </h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Сценарий запуска:</label>
+                <select class="form-select form-select-sm bg-dark text-white border-secondary" id="scc-policy-trigger">
+                  <option value="daily">Ежедневно по расписанию (Daily)</option>
+                  <option value="startup">При каждом запуске системы (At Startup)</option>
+                  <option value="weekly">Еженедельно (Weekly Sunday)</option>
+                  <option value="disabled">Только вручную / перед изменениями (Disabled)</option>
+                </select>
+              </div>
+              <div class="col-md-6" id="scc-policy-time-wrapper">
+                <label class="form-label small text-muted">Время создания (для ежедневного/еженедельного):</label>
+                <input type="time" class="form-control form-control-sm bg-dark text-white border-secondary font-monospace" id="scc-policy-time" value="03:00">
+              </div>
+              <div class="col-12">
+                <div class="form-check form-switch mt-1">
+                  <input class="form-check-input" type="checkbox" id="scc-policy-freq-limit" checked style="cursor: pointer;">
+                  <label class="form-check-label small text-light" for="scc-policy-freq-limit">
+                    Снять 24-часовое системное ограничение частоты Windows (<code>CreationFrequency = 0</code>)
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Retention Policy -->
+          <div class="card bg-black border-secondary p-3 mb-3">
+            <h6 class="fw-bold text-warning mb-2">
+              <i class="bi bi-layers-half me-1"></i> 3. Политика хранения и ротация (Retention)
+            </h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Сколько последних точек хранить:</label>
+                <select class="form-select form-select-sm bg-dark text-white border-secondary" id="scc-policy-max-points">
+                  <option value="3">Хранить 3 последние точки</option>
+                  <option value="5" selected>Хранить 5 последних точек (рекомендуется)</option>
+                  <option value="7">Хранить 7 последних точек</option>
+                  <option value="10">Хранить 10 последних точек</option>
+                  <option value="15">Хранить 15 последних точек</option>
+                  <option value="20">Хранить 20 последних точек</option>
+                </select>
+              </div>
+              <div class="col-md-6 d-flex flex-column justify-content-end">
+                <div class="form-check form-switch mb-1">
+                  <input class="form-check-input" type="checkbox" id="scc-policy-auto-prune" checked style="cursor: pointer;">
+                  <label class="form-check-label small text-light" for="scc-policy-auto-prune">
+                    Автоматическая ротация при превышении (Auto-Prune FIFO)
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-secondary d-flex justify-content-between">
+          <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" id="btn-scc-policy-prune-now">
+            <i class="bi bi-trash3 me-1"></i> Prune Extra Points Now
+          </button>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Закрыть</button>
+            <button type="button" class="btn btn-sm btn-primary rounded-pill px-4" id="btn-scc-save-restore-policy">
+              <i class="bi bi-check-lg me-1"></i> Сохранить и применить
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -47,7 +47,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from src.config import server_cfg
+from src.config import server_cfg, is_app_enabled
 from logger import logger
 
 if TYPE_CHECKING:
@@ -143,7 +143,6 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_audio_router,
         init_user_storage_router,
         init_news_router,
-        init_messenger_router,
         init_system_router,
         init_ifttt_router,
         init_windows_admin_router,
@@ -158,13 +157,15 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_user_directories_router,
         init_menu_router,
         get_pixel_rag_router,
+        init_ninite_router,
+        init_recovery_router,
         router_openai,
     )
     from src.api.router_version import init_router as init_version_router
-    from apps.enterprise_knowledge.router import init_router as init_enterprise_knowledge_router
 
     # Routers that receive model instances
-    app.include_router(init_chat_router(state.chat_model, state.narrator_model))
+    if is_app_enabled("chat"):
+        app.include_router(init_chat_router(state.chat_model, state.narrator_model))
     app.include_router(init_news_router(state.chat_model))
     app.include_router(init_system_router(state.chat_model))
 
@@ -187,7 +188,6 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_rag_router,
         init_audio_router,
         init_user_storage_router,
-        init_messenger_router,
         init_ifttt_router,
         init_windows_admin_router,
         init_telegram_rag_router,
@@ -201,133 +201,161 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_sysautolog_router,
         init_user_directories_router,
         init_menu_router,
-        get_pixel_rag_router
+        get_pixel_rag_router,
+        init_ninite_router,
+        init_recovery_router,
     ):
         app.include_router(factory())
 
     app.include_router(router_openai)
-    app.include_router(init_enterprise_knowledge_router())
 
-    # apps/ — registered here for shared software server mode
-    try:
-        from apps.trading_terminal import init_router as init_trading_router
-        app.include_router(init_trading_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"Trading terminal router not registered: {e}")
+    if is_app_enabled("enterprise_knowledge"):
+        try:
+            from apps.enterprise_knowledge.router import init_router as init_enterprise_knowledge_router
+            app.include_router(init_enterprise_knowledge_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f"Enterprise knowledge router not registered: {e}")
 
-    try:
-        from apps.cloudflared_monitor.router import init_router as init_cloudflared_router
-        app.include_router(init_cloudflared_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"Cloudflared monitor router not registered: {e}")
+    # apps/ — регистрируются с проверкой включения в текущей конфигурации (config.json / config/tc.json)
+    if is_app_enabled("chat"):
+        try:
+            from apps.chat.router import init_router as init_chat_app_router
+            app.include_router(init_chat_app_router(state.chat_model if hasattr(state, "chat_model") else None, state.narrator_model if hasattr(state, "narrator_model") else None))
+        except (ImportError, Exception) as e:
+            logger.debug(f"Chat app router not registered: {e}")
 
-    try:
-        from apps.windows.router import init_router as init_windows_router
-        app.include_router(init_windows_router(app, state))
-    except (ImportError, Exception) as e:
-        logger.debug(f"Windows AI center router not registered: {e}")
+    if is_app_enabled("cloudflared_monitor"):
+        try:
+            from apps.cloudflared_monitor.router import init_router as init_cloudflared_router
+            app.include_router(init_cloudflared_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f"Cloudflared monitor router not registered: {e}")
 
-    try:
-        from apps.windows_sysadmin.router import init_router as init_windows_sysadmin_router
-        app.include_router(init_windows_sysadmin_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"Windows sysadmin router not registered: {e}")
+    if is_app_enabled("windows") or is_app_enabled("about_system") or is_app_enabled("windows_sysadmin"):
+        try:
+            from apps.windows.router import init_router as init_windows_router
+            app.include_router(init_windows_router(app, state))
+        except (ImportError, Exception) as e:
+            logger.debug(f"Windows AI center router not registered: {e}")
 
-    try:
-        from apps.network_terminal.router import init_router as init_network_terminal_router
-        app.include_router(init_network_terminal_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"Network terminal router not registered: {e}")
+    if is_app_enabled("windows_sysadmin"):
+        try:
+            from apps.windows.sysadmin.router import init_router as init_windows_sysadmin_router
+            app.include_router(init_windows_sysadmin_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f"Windows sysadmin router not registered: {e}")
 
-    try:
-        from apps.system_inspector.router import init_router as init_system_inspector_router
-        app.include_router(init_system_inspector_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"System inspector router not registered: {e}")
+    if is_app_enabled("network_terminal"):
+        try:
+            from apps.windows.network.router import init_router as init_network_terminal_router
+            app.include_router(init_network_terminal_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f"Network terminal router not registered: {e}")
 
-    try:
-        from apps.system_control_center.router import init_router as init_system_control_center_router
-        app.include_router(init_system_control_center_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"System control center router not registered: {e}")
+    if is_app_enabled("system_inspector"):
+        try:
+            from apps.system_inspector.router import init_router as init_system_inspector_router
+            app.include_router(init_system_inspector_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f"System inspector router not registered: {e}")
 
-    try:
-        from apps.gcloud_monitor.router import router as gcloud_monitor_router
-        app.include_router(gcloud_monitor_router)
-    except (ImportError, Exception) as e:
-        logger.debug(f"Google Cloud monitor router not registered: {e}")
+    if is_app_enabled("system_control_center"):
+        try:
+            from apps.system_control_center.router import init_router as init_system_control_center_router
+            app.include_router(init_system_control_center_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f"System control center router not registered: {e}")
 
-    try:
-        from apps.website_monitor.router import init_router as init_website_monitor_router
-        app.include_router(init_website_monitor_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"Website monitor router not registered: {e}")
+    if is_app_enabled("gcloud_monitor"):
+        try:
+            from apps.gcloud_monitor.router import router as gcloud_monitor_router
+            app.include_router(gcloud_monitor_router)
+        except (ImportError, Exception) as e:
+            logger.debug(f"Google Cloud monitor router not registered: {e}")
 
-    try:
-        from apps.user_assistant.router import init_router as init_user_assistant_router
-        app.include_router(init_user_assistant_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"User assistant router not registered: {e}")
+    if is_app_enabled("website_monitor"):
+        try:
+            from apps.website_monitor.router import init_router as init_website_monitor_router
+            app.include_router(init_website_monitor_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f"Website monitor router not registered: {e}")
 
-    try:
-        from apps.research_and_statistic.router import init_router as init_research_app_router
-        app.include_router(init_research_app_router(state))
-    except (ImportError, Exception) as e:
-        logger.debug(f"Research and statistic app router not registered: {e}")
+    if is_app_enabled("user_assistant"):
+        try:
+            from apps.user_assistant.router import init_router as init_user_assistant_router
+            app.include_router(init_user_assistant_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f"User assistant router not registered: {e}")
 
-    try:
-        from apps.wikipedia_research.router import init_router as init_wiki_app_router
-        app.include_router(init_wiki_app_router(state))
-    except (ImportError, Exception) as e:
-        logger.debug(f"Wikipedia research app router not registered: {e}")
+    if is_app_enabled("research_and_statistic"):
+        try:
+            from apps.research_and_statistic.router import init_router as init_research_app_router
+            app.include_router(init_research_app_router(state))
+        except (ImportError, Exception) as e:
+            logger.debug(f"Research and statistic app router not registered: {e}")
 
-    try:
-        from apps.ai_breadboard_admin.router import init_router as init_ai_breadboard_admin_router
-        app.include_router(init_ai_breadboard_admin_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"AI Breadboard admin router not registered: {e}")
+    if is_app_enabled("wikipedia_research"):
+        try:
+            from apps.wikipedia_research.router import init_router as init_wiki_app_router
+            app.include_router(init_wiki_app_router(state))
+        except (ImportError, Exception) as e:
+            logger.debug(f"Wikipedia research app router not registered: {e}")
 
-    try:
-        from apps.windows_startup_auditor.router import init_router as init_startup_auditor_router
-        app.include_router(init_startup_auditor_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"Windows startup auditor router not registered: {e}")
+    if is_app_enabled("ai_breadboard_admin"):
+        try:
+            from apps.ai_breadboard_admin.router import init_router as init_ai_breadboard_admin_router
+            app.include_router(init_ai_breadboard_admin_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f"AI Breadboard admin router not registered: {e}")
 
-    try:
-        from apps.windows_backup_manager.router import init_router as init_backup_manager_router
-        app.include_router(init_backup_manager_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"Windows backup manager router not registered: {e}")
+    if is_app_enabled("windows_startup_auditor"):
+        try:
+            from apps.windows.startup.router import init_router as init_startup_auditor_router
+            app.include_router(init_startup_auditor_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f"Windows startup auditor router not registered: {e}")
 
-    try:
-        from apps.windows_defender.router import init_router as init_windows_defender_router
-        app.include_router(init_windows_defender_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"Windows defender router not registered: {e}")
+    if is_app_enabled("windows_backup_manager"):
+        try:
+            from apps.windows.backup_manager.router import init_router as init_backup_manager_router
+            app.include_router(init_backup_manager_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f"Windows backup manager router not registered: {e}")
 
-    try:
-        from apps.software_transparency_scanner.router import init_router as init_transparency_scanner_router
-        app.include_router(init_transparency_scanner_router(state.chat_model if hasattr(state, "chat_model") else None))
-    except (ImportError, Exception) as e:
-        logger.debug(f"Software transparency scanner router not registered: {e}")
+    if is_app_enabled("windows_defender"):
+        try:
+            from apps.windows.defender.router import init_router as init_windows_defender_router
+            app.include_router(init_windows_defender_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f"Windows defender router not registered: {e}")
 
-    try:
-        from apps.smartmontools.router import init_router as init_smartmontools_router
-        app.include_router(init_smartmontools_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"smartmontools router not registered: {e}")
+    if is_app_enabled("software_transparency_scanner"):
+        try:
+            from apps.software_transparency_scanner.router import init_router as init_transparency_scanner_router
+            app.include_router(init_transparency_scanner_router(state.chat_model if hasattr(state, "chat_model") else None))
+        except (ImportError, Exception) as e:
+            logger.debug(f"Software transparency scanner router not registered: {e}")
 
-    try:
-        from apps.librehardwaremonitor.router import init_router as init_lhm_router
-        app.include_router(init_lhm_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"LibreHardwareMonitor router not registered: {e}")
+    if is_app_enabled("smartmontools"):
+        try:
+            from apps.smartmontools.router import init_router as init_smartmontools_router
+            app.include_router(init_smartmontools_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f"smartmontools router not registered: {e}")
 
-    try:
-        from apps.ai_benchmark.router import init_router as init_ai_benchmark_router
-        app.include_router(init_ai_benchmark_router())
-    except (ImportError, Exception) as e:
-        logger.debug(f"AI Benchmark router not registered: {e}")
+    if is_app_enabled("librehardwaremonitor"):
+        try:
+            from apps.librehardwaremonitor.router import init_router as init_lhm_router
+            app.include_router(init_lhm_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f"LibreHardwareMonitor router not registered: {e}")
+
+    if is_app_enabled("ai_benchmark"):
+        try:
+            from apps.ai_benchmark.router import init_router as init_ai_benchmark_router
+            app.include_router(init_ai_benchmark_router())
+        except (ImportError, Exception) as e:
+            logger.debug(f"AI Benchmark router not registered: {e}")
 
     # Auto-discover additional routers in src/app/routers/
     _auto_discover_routers(app)

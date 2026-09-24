@@ -73,7 +73,7 @@ class TestServerModeHelper:
     """Test _get_server_mode parser across all apps."""
 
     def test_windows_sysadmin_get_server_mode(self) -> None:
-        from apps.windows_sysadmin.__main__ import _get_server_mode
+        from apps.windows.sysadmin.__main__ import _get_server_mode
 
         assert _get_server_mode(SimpleNamespace(server=SimpleNamespace(dedicated=True))) == "dedicated"
         assert _get_server_mode(SimpleNamespace(server=SimpleNamespace(dedicated=False))) == "shared"
@@ -86,7 +86,7 @@ class TestServerModeHelper:
         assert _get_server_mode(SimpleNamespace()) == "dedicated"
 
     def test_network_terminal_get_server_mode(self) -> None:
-        from apps.network_terminal.__main__ import _get_server_mode
+        from apps.windows.network.__main__ import _get_server_mode
 
         assert _get_server_mode(SimpleNamespace(server=SimpleNamespace(dedicated=True))) == "dedicated"
         assert _get_server_mode(SimpleNamespace(server=SimpleNamespace(dedicated=False))) == "shared"
@@ -135,8 +135,8 @@ class TestAppRoutersInSharedServer:
 
         from apps.trading_terminal import init_router as init_trading
         from apps.cloudflared_monitor.router import init_router as init_cloudflared
-        from apps.windows_sysadmin.router import init_router as init_sysadmin
-        from apps.network_terminal.router import init_router as init_network
+        from apps.windows.sysadmin.router import init_router as init_sysadmin
+        from apps.windows.network.router import init_router as init_network
         from apps.system_inspector.router import init_router as init_inspector
 
         routers = [

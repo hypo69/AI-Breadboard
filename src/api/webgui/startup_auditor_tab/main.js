@@ -261,12 +261,13 @@
             body: JSON.stringify({ entry_id: entryId, enable: newState })
           });
           if (res.success) {
+            window.showToast?.(`Автозагрузка ${newState ? 'включена' : 'отключена'}`, 'success');
             await loadAuditData();
           } else {
-            alert(`Ошибка переключения: ${res.message}`);
+            window.showToast?.(`Ошибка переключения: ${res.message}`, 'danger') || alert(`Ошибка переключения: ${res.message}`);
           }
         } catch (err) {
-          alert(`Ошибка: ${err.message}`);
+          window.showToast?.(`Ошибка: ${err.message}`, 'danger') || alert(`Ошибка: ${err.message}`);
         } finally {
           btn.disabled = false;
           btn.style.opacity = '1';
@@ -404,12 +405,13 @@
           if (res.success) {
             entry.is_enabled = newState;
             showEntryModal(entry);
+            window.showToast?.(`Автозагрузка ${newState ? 'включена' : 'отключена'}`, 'success');
             await loadAuditData();
           } else {
-            alert(`Ошибка переключения: ${res.message}`);
+            window.showToast?.(`Ошибка переключения: ${res.message}`, 'danger') || alert(`Ошибка переключения: ${res.message}`);
           }
         } catch (err) {
-          alert(`Ошибка: ${err.message}`);
+          window.showToast?.(`Ошибка: ${err.message}`, 'danger') || alert(`Ошибка: ${err.message}`);
         } finally {
           modalToggleBtn.disabled = false;
         }

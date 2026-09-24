@@ -65,9 +65,13 @@ def load_app_config() -> dict:
             config_file = p
         elif (script_dir / env_cfg).exists():
             config_file = script_dir / env_cfg
+        elif (script_dir / "start_scenarios_config" / p.name).exists():
+            config_file = script_dir / "start_scenarios_config" / p.name
+        elif (script_dir / "config" / p.name).exists():
+            config_file = script_dir / "config" / p.name
     
     if config_file is None:
-        for candidate in ("config_tc.json", "config.json"):
+        for candidate in ("start_scenarios_config/tc.json", "start_scenarios_config/dashboard.json", "config_tc.json", "config.json"):
             p = script_dir / candidate
             if p.exists():
                 config_file = p

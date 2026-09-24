@@ -11,7 +11,7 @@ from header import __root__
 from logger import logger
 from apps.windows.telemetry.models import HardwareSensor, TelemetryProvider
 from apps.windows.core.models import DomainAuditResult
-from apps.windows_sysadmin.src.file_auditor import WindowsFileAuditor
+from apps.windows.sysadmin.src.file_auditor import WindowsFileAuditor
 from apps.windows.telemetry.service import TelemetryLoggerService
 
 class FileActivityCollector(TelemetryProvider):

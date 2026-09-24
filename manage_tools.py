@@ -159,6 +159,33 @@ def run_rag_command(args: argparse.Namespace) -> int:
             print(f"Error checking RAG status: {e}")
             return 1
 
+    if sub == 'tc-status':
+        try:
+            from src.ai.gemini.approved_responses_store import list_responses, get_store_dir
+            responses = list_responses()
+            store_dir = get_store_dir()
+            print(f"TC Approved Responses Directory: {store_dir}")
+            print(f"Total Approved TC Q&A items: {len(responses)}")
+            return 0
+        except Exception as e:
+            print(f"Error checking TC RAG status: {e}")
+            return 1
+
+    if sub == 'tc-export':
+        try:
+            from header import __root__
+            from src.ai.gemini.approved_responses_store import export_tuning_dataset
+            fmt = 'alpaca'
+            if extra and len(extra) > 0:
+                fmt = extra[0]
+            out_file = __root__ / 'data' / 'tc' / 'datasets' / f"tc_qa_{fmt}.jsonl"
+            count = export_tuning_dataset(out_file, fmt=fmt)
+            print(f"Exported {count} TC Q&A items to {out_file} (format: {fmt})")
+            return 0
+        except Exception as e:
+            print(f"Error exporting TC dataset: {e}")
+            return 1
+
     print(f"Unknown rag subcommand: {sub}")
     return 1
 
@@ -239,6 +266,13 @@ def run_skills_command(args: argparse.Namespace) -> int:
             print(f"{skill.name}\t{skill.get_description(lang) if lang else skill.description}")
         return 0
 
+    if sub == 'create':
+        return _run_script('scripts/dev/init_skill.py', [
+            '--name', args.name,
+            '--description', args.description,
+            '--description-ru', args.description_ru
+        ])
+
     if sub in ('show', 'export'):
         try:
             if sub == 'show':
@@ -307,7 +341,13 @@ def run_db_command(args: argparse.Namespace) -> int:
     Returns:
         int: Exit code (0 on success, 1 on error).
     """
-    from apps.helpdesk.db.migrations import get_migration_manager
+    try:
+        from apps.helpdesk.db.migrations import get_migration_manager
+    except (ModuleNotFoundError, ImportError) as e:
+        print(f"Error: helpdesk.db module not found. This feature requires the helpdesk module.")
+        print(f"Details: {e}")
+        return 1
+    
     mgr = get_migration_manager()
     sub = args.subcommand
 
@@ -346,7 +386,7 @@ def run_network_command(args: argparse.Namespace) -> int:
     Returns:
         int: Exit code (0 on success, 1 on error).
     """
-    from src.network import TSharkWrapper, TrafficAnalyzer
+    from apps.tshark import TSharkWrapper, TrafficAnalyzer
     sub = args.subcommand
     wrapper = TSharkWrapper()
 
@@ -524,80 +564,432 @@ def run_telemetry_command(args: argparse.Namespace) -> int:
     Returns:
         int: Код возврата (0 - успешно, 1 - ошибка).
     """
-    from apps.windows.telemetry import SystemCollector, TelemetryStorage, TelemetryLoggerService
+    from apps.windows.telemetry import (
+        HardwareAuditor,
+        HardwareHistoryManager,
+        SystemCollector,
+        TelemetryLoggerService,
+    )
     import time
 
-    storage = TelemetryStorage()
+    history_mgr = HardwareHistoryManager()
+    collector = SystemCollector()
     sub = args.subcommand
 
     if sub == 'status':
-        stats = storage.get_storage_stats()
-        print("\n--- СТАТУС БАЗЫ ДАННЫХ ТЕЛЕМЕТРИИ ---")
-        print(f"Путь к базе данных:    {stats['db_path']}")
-        print(f"Всего снимков системы: {stats['snapshots_count']}")
-        print(f"Всего записей процессов:{stats['process_snapshots_count']}")
-        print(f"Размер файла базы:     {stats['file_size_mb']} MB")
-        print("-------------------------------------\n")
-        return 0
-
-    if sub == 'history':
-        limit = getattr(args, 'limit', 20) or 20
-        snaps = storage.get_snapshots(limit=limit)
-        print(f"\n--- ПОСЛЕДНИЕ {len(snaps)} СНИМКОВ ТЕЛЕМЕТРИИ ---")
-        print(f"{'#ID':<6} | {'ВРЕМЯ (UTC)':<20} | {'CPU %':<7} | {'RAM %':<7} | {'DISK R (KB/s)':<14} | {'DISK W (KB/s)':<14}")
-        print("-" * 80)
-        for s in snaps:
-            r_kb = round(s.get('disk_read_bytes_sec', 0.0) / 1024, 1)
-            w_kb = round(s.get('disk_write_bytes_sec', 0.0) / 1024, 1)
-            ts = s.get('timestamp', '')[:19].replace('T', ' ')
-            print(f"{s.get('id'):<6} | {ts:<20} | {s.get('cpu_total_percent', 0.0):<7.1f} | {s.get('memory_percent', 0.0):<7.1f} | {r_kb:<14.1f} | {w_kb:<14.1f}")
+        history_list = history_mgr.get_history(limit=5)
+        latest = history_mgr.get_latest_archive()
+        print("\n--- СТАТУС ТЕЛЕМЕТРИИ И АРХИВОВ ОБОРУДОВАНИЯ ---")
+        print(f"Каталог архивов:        {history_mgr.archive_dir}")
+        print(f"Всего архивных записей: {len(history_list)}")
+        if latest:
+            print(f"Последний архив:        {latest.archive_id} ({latest.timestamp})")
+            print(f"Устройств в архиве:     {latest.devices_count}")
+            print(f"Сводка:                 {latest.report.summary}")
+        else:
+            print("Архивные снимки:        Пока не созданы")
         print("------------------------------------------------\n")
         return 0
 
-    if sub == 'cleanup':
-        days = getattr(args, 'days', 7) or 7
-        print(f"Очистка записей телеметрии старше {days} дней...")
-        deleted = storage.cleanup_old_records(retention_days=days)
-        print(f"[OK] Удалено устаревших снимков: {deleted}\n")
+    if sub in ('history', 'list'):
+        limit = getattr(args, 'limit', 20) or 20
+        history_list = history_mgr.get_history(limit=limit)
+        print(f"\n--- ПОСЛЕДНИЕ {len(history_list)} АРХИВОВ ОБОРУДОВАНИЯ ---")
+        print(f"{'#ID АРХИВА':<32} | {'ВРЕМЯ (UTC)':<20} | {'УСТРОЙСТВ':<10} | {'ОШИБОК':<8} | {'ИЗМЕНЕНИЙ':<10}")
+        print("-" * 90)
+        for h in history_list:
+            ts = h.get('timestamp', '')[:19].replace('T', ' ')
+            print(f"{h.get('archive_id', ''):<32} | {ts:<20} | {h.get('devices_count', 0):<10} | {h.get('problem_devices_count', 0):<8} | {h.get('changes_count', 0):<10}")
+        print("----------------------------------------------------------\n")
+        return 0
+
+    if sub == 'audit':
+        print("\n[+] Запуск аудита аппаратного обеспечения, драйверов и сенсоров...")
+        report = collector.get_hardware_audit()
+        print(f"\n--- РЕЗУЛЬТАТЫ АУДИТА ОБОРУДОВАНИЯ ({report.devices_count} устройств) ---")
+        print(f"Проблемных PnP: {report.problem_devices_count} | С устаревшими драйверами: {report.outdated_drivers_count}")
+        print("-" * 110)
+        print(f"{'УСТРОЙСТВО':<35} | {'КЛАСС':<12} | {'ДРАЙВЕР':<15} | {'ВЕРСИЯ':<15} | {'ДАТА / АКТУАЛЬНОСТЬ':<25}")
+        print("-" * 110)
+        for dev in report.devices[:25]:
+            d_name = dev.name[:33]
+            cls_name = dev.device_class[:10]
+            drv_name = (dev.driver.name if dev.driver else 'N/A')[:13]
+            drv_ver = (dev.driver.driver_version if dev.driver else 'N/A')[:13]
+            curr = f"{dev.driver.driver_date or ''} ({dev.driver.currency_status})" if dev.driver else "N/A"
+            print(f"{d_name:<35} | {cls_name:<12} | {drv_name:<15} | {drv_ver:<15} | {curr[:25]:<25}")
+        if len(report.devices) > 25:
+            print(f"... и ещё {len(report.devices) - 25} устройств.")
+        print("--------------------------------------------------------------------------------------------------------------\n")
+        return 0
+
+    if sub == 'changes':
+        changes = history_mgr.get_change_timeline(limit=30)
+        print(f"\n--- ТАЙМЛАЙН ИЗМЕНЕНИЙ ОБОРУДОВАНИЯ ({len(changes)} событий) ---")
+        if not changes:
+            print("Изменений аппаратной конфигурации пока не зафиксировано.")
+        for c in changes:
+            ts = c.timestamp[:19].replace('T', ' ')
+            print(f"[{ts}] [{c.change_type.upper()}] {c.description}")
+        print("-----------------------------------------------------------------\n")
+        return 0
+
+    if sub == 'archive':
+        print("\n[+] Фиксация текущего снимка оборудования в архив...")
+        entry = collector.archive_hardware_state(auto_diff=True)
+        print(f"[OK] Создан архив: {entry.archive_id} (Устройств: {entry.devices_count}, Изменений: {entry.changes_count})\n")
         return 0
 
     if sub == 'start':
-        interval = float(getattr(args, 'interval', 1.0) or 1.0)
-        procs_limit = int(getattr(args, 'processes', 20) or 20)
-        collector = SystemCollector()
-
-        print(f"\n[+] Запуск посекундного логгирования телеметрии в SQLite...")
-        print(f"    Интервал: {interval} сек | Top-процессов: {procs_limit} | База: {storage.db_path}")
-        print(f"    Нажмите Ctrl+C для остановки.\n")
-        print(f"{'ВРЕМЯ':<10} | {'CPU %':<7} | {'RAM %':<7} | {'DISK READ':<12} | {'DISK WRITE':<12} | ТОП-1 ПРОЦЕСС")
-        print("-" * 85)
-
+        interval = getattr(args, 'interval', 1.0)
+        processes = getattr(args, 'processes', 20)
+        print(f"\n[+] Запуск сервиса телеметрии с интервалом {interval}с, лимит процессов: {processes}...")
         try:
-            while True:
-                t0 = time.time()
-                snap = collector.get_snapshot(process_limit=procs_limit)
-                snap_id = storage.save_snapshot(snap, top_n=procs_limit)
-
-                now_str = time.strftime("%H:%M:%S")
-                cpu = f"{snap.cpu.total_percent:.1f}%"
-                ram = f"{snap.memory.percent:.1f}%"
-                r_rate = f"{snap.disk_io.read_bytes_per_sec / (1024*1024):.2f} MB/s"
-                w_rate = f"{snap.disk_io.write_bytes_per_sec / (1024*1024):.2f} MB/s"
-                top_p = snap.top_processes[0].name if snap.top_processes else "N/A"
-                top_p_cpu = f"({snap.top_processes[0].cpu_percent:.1f}%)" if snap.top_processes else ""
-
-                print(f"{now_str:<10} | {cpu:<7} | {ram:<7} | {r_rate:<12} | {w_rate:<12} | {top_p} {top_p_cpu}")
-
-                elapsed = time.time() - t0
-                time.sleep(max(0.01, interval - elapsed))
-        except KeyboardInterrupt:
-            print("\n[!] Логгирование телеметрии остановлено пользователем.\n")
+            service = TelemetryLoggerService(interval_sec=float(interval), top_processes=int(processes))
+            service.start()
+            print(f"[OK] Телеметрия запущена (PID: {service._thread.ident if service._thread else 'N/A'})\n")
             return 0
         except Exception as e:
-            print(f"\n[ERROR] Ошибка сбора телеметрии: {e}\n")
+            print(f"[ERROR] Failed to start telemetry: {e}")
+            return 1
+
+    if sub == 'cleanup':
+        days = getattr(args, 'days', 7)
+        print(f"\n[+] Удаление архивов старше {days} дней...")
+        try:
+            removed = history_mgr.cleanup_old_archives(days=int(days))
+            print(f"[OK] Удалено {removed} архивов\n")
+            return 0
+        except Exception as e:
+            print(f"[ERROR] Failed to cleanup archives: {e}")
             return 1
 
     print(f"Неизвестная подкоманда telemetry: {sub}")
+    return 1
+
+
+def run_mcp_command(args: argparse.Namespace) -> int:
+    """Управление MCP-серверами (FastMCP servers).
+
+    Args:
+        args (argparse.Namespace): Аргументы команды CLI.
+
+    Returns:
+        int: Код возврата (0 - успешно, 1 - ошибка).
+    """
+    import subprocess
+    from pathlib import Path
+
+    # Список доступных MCP-серверов
+    servers = {
+        'fastapi': '.mcp/fastapi_mcp_server.py',
+        'langchain': '.mcp/langchain_mcp_server.py',
+        'gemini_search': '.mcp/gemini_search_mcp_server.py',
+        'gemini_cli': '.mcp/gemini_cli_search_mcp_server.py',
+        'agy_search': '.mcp/agy_search_mcp_server.py',
+        'unicorn': '.mcp/unicorn_mcp_server.py',
+        'example': '.mcp/example_mcp_server.py',
+    }
+
+    sub = args.subcommand
+
+    if sub == 'list':
+        print("\n--- ДОСТУПНЫЕ MCP-СЕРВЕРЫ ---")
+        for name, path in sorted(servers.items()):
+            server_path = __root__ / path
+            status = "✓" if server_path.exists() else "✗"
+            print(f"  {status} {name}: {path}")
+        print("----------------------------\n")
+        return 0
+
+    if sub == 'start':
+        server_path = servers.get(args.name)
+        if not server_path:
+            print(f"Error: неизвестный MCP-сервер: {args.name}")
+            return 1
+
+        target_path = __root__ / server_path
+        if not target_path.exists():
+            print(f"Error: файл не найден: {target_path}")
+            return 1
+
+        print(f"[+] Запуск MCP-сервера: {args.name}...")
+        try:
+            result = subprocess.Popen(
+                [sys.executable, str(target_path)],
+                cwd=str(__root__),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            print(f"[OK] MCP-сервер {args.name} запущен (PID: {result.pid})\n")
+            return 0
+        except Exception as e:
+            print(f"[ERROR] Ошибка запуска: {e}")
+            return 1
+
+    if sub == 'stop':
+        server_name = args.name.lower()
+        if server_name == 'unicorn':
+            # Особая обработка для unicorn - остановка uvicorn.exe процессов
+            print("[+] Остановка процессов unicorn/uvicorn...")
+            try:
+                subprocess.run(
+                    ["taskkill", "/F", "/IM", "uvicorn.exe", "/T"],
+                    capture_output=True,
+                    text=True,
+                )
+                print("[OK] Процессы остановлены\n")
+                return 0
+            except Exception as e:
+                print(f"[ERROR] Ошибка остановки: {e}")
+                return 1
+        else:
+            print(f"Note: остановка сервера '{server_name}' требует ручного вмешательства.")
+            print("      MCP-серверы работают как отдельные процессы.")
+            return 0
+
+    if sub == 'status':
+        server_name = args.name.lower()
+        if server_name == 'unicorn':
+            try:
+                result = subprocess.run(
+                    ["tasklist", "/FI", "IMAGENAME eq uvicorn.exe"],
+                    capture_output=True,
+                    text=True,
+                )
+                if "uvicorn.exe" in result.stdout:
+                    print("\n[OK] Сервис Unicorn (uvicorn.exe) активен\n")
+                    return 0
+                print("\n[INFO] Сервис Unicorn (uvicorn.exe) не запущен\n")
+                return 0
+            except Exception as e:
+                print(f"[ERROR] Ошибка проверки: {e}")
+                return 1
+        else:
+            server_path = servers.get(server_name)
+            if server_path and (__root__ / server_path).exists():
+                print(f"\n[INFO] MCP-сервер '{server_name}' установлен\n")
+                return 0
+            print(f"\n[INFO] MCP-сервер '{server_name}' не найден\n")
+            return 0
+
+    print(f"Error: неизвестная подкоманда mcp: {sub}")
+    return 1
+
+
+def run_health_command(args: argparse.Namespace) -> int:
+    """Проверка состояния системы (system health check).
+
+    Args:
+        args (argparse.Namespace): Аргументы команды CLI.
+
+    Returns:
+        int: Код возврата (0 - успешно, 1 - ошибка).
+    """
+    import json
+    import datetime
+    import requests
+    from pathlib import Path
+
+    sub = args.subcommand
+
+    if sub == 'check':
+        try:
+            # URL сервера из config.json
+            from header import __root__
+            from src.utils.jjson import j_loads_ns
+
+            cfg = j_loads_ns(__root__ / "config.json")
+            server_cfg = getattr(cfg, "server", object())
+            host = getattr(server_cfg, "host", "localhost")
+            if host == "0.0.0.0":
+                host = "localhost"
+            port = getattr(server_cfg, "port", 8000)
+            server_url = f"https://{host}:{port}"
+
+            print(f"Проверка состояния системы на {server_url}...")
+            response = requests.get(f"{server_url}/", verify=False, timeout=5)
+
+            status = {
+                "timestamp": datetime.datetime.now().isoformat(),
+                "server_url": server_url,
+                "status_code": response.status_code,
+                "healthy": response.status_code == 200,
+            }
+
+            print(f"Результат: статус {response.status_code}, здорова: {status['healthy']}")
+
+            # Сохраняем отчет
+            report_file = __root__ / "logs" / "health_report.json"
+            report_file.parent.mkdir(exist_ok=True)
+            with open(report_file, "w", encoding="utf-8") as f:
+                json.dump(status, f, indent=4, ensure_ascii=False)
+
+            print(f"Отчет сохранен в {report_file}")
+            return 0 if status['healthy'] else 1
+
+        except requests.exceptions.RequestException as e:
+            print(f"Ошибка подключения к серверу: {e}")
+            return 1
+
+        except Exception as e:
+            print(f"Ошибка проверки состояния: {e}")
+            return 1
+
+    print(f"Error: неизвестная подкоманда health: {sub}")
+    return 1
+
+
+def run_test_command(args: argparse.Namespace) -> int:
+    """Запуск тестов с анализом покрытия (test runner).
+
+    Args:
+        args (argparse.Namespace): Аргументы команды CLI.
+
+    Returns:
+        int: Код возврата (0 - успешно, 1 - ошибка).
+    """
+    import subprocess
+    from pathlib import Path
+
+    sub = getattr(args, 'subcommand', None)
+
+    if sub == 'run':
+        cmd = ["pytest"]
+
+        # Покрытие
+        if getattr(args, 'coverage', False):
+            cmd.extend([
+                "--cov=src",
+                "--cov=plugins",
+                "--cov=scripts",
+                "--cov-report=term-missing",
+                "--cov-report=html:tests/coverage",
+                "--cov-report=xml:coverage.xml",
+                "--cov-config=.coveragerc"
+            ])
+
+        # Глубокий режим
+        if getattr(args, 'verbose', False):
+            cmd.append("-v")
+
+        # Фильтр по маркерам
+        markers = getattr(args, 'markers', None)
+        if markers:
+            cmd.extend(["-m", markers])
+
+        result = subprocess.run(cmd, cwd=str(__root__))
+        return result.returncode
+
+    if sub == 'coverage':
+        html_path = __root__ / "tests" / "coverage" / "index.html"
+        if html_path.exists():
+            import webbrowser
+            webbrowser.open(f"file://{html_path.absolute()}")
+            print(f"[OK] Открыт отчет покрытия: {html_path}")
+            return 0
+        print("[ERROR] HTML-отчет не найден. Запустите тесты с флагом --coverage")
+        return 1
+
+    print(f"Error: неизвестная подкоманда test: {sub}")
+    return 1
+
+
+def run_installer_command(args: argparse.Namespace) -> int:
+    """Запуск кроссплатформенного установщика (cross-platform installer).
+
+    Args:
+        args (argparse.Namespace): Аргументы команды CLI.
+
+    Returns:
+        int: Код возврата (0 - успешно, 1 - ошибка).
+    """
+    from pathlib import Path
+
+    # Импортируем из scripts/cli/installer.py
+    sys.path.insert(0, str(__root__ / "scripts" / "cli"))
+    from installer import Installer, Language
+
+    language = getattr(args, 'lang', 'en')
+    install_dir = getattr(args, 'install_dir', None)
+    light_version = getattr(args, 'light', False)
+
+    # Парсим аргументы
+    skip_models = getattr(args, 'skip_models', False)
+    skip_venv = getattr(args, 'skip_venv', False)
+    skip_deps = getattr(args, 'skip_deps', False)
+    skip_certs = getattr(args, 'skip_certs', False)
+
+    # Устанавливаем язык
+    if language:
+        try:
+            lang_enum = Language[language.upper()]
+            language = lang_enum.value
+        except KeyError:
+            print(f"Error: unsupported language: {language}")
+            return 1
+
+    # Парс install_dir
+    if install_dir:
+        install_dir = Path(install_dir)
+
+    installer = Installer(
+        language=language,
+        install_dir=install_dir,
+        light_version=light_version,
+    )
+
+    return installer.run(
+        skip_models=skip_models,
+        skip_venv=skip_venv,
+        skip_deps=skip_deps,
+        skip_certs=skip_certs,
+    )
+
+
+def run_terminal_command(args: argparse.Namespace) -> int:
+    """Управление терминальными workspace (terminal workspace manager).
+
+    Args:
+        args (argparse.Namespace): Аргументы команды CLI.
+
+    Returns:
+        int: Код возврата (0 - успешно, 1 - ошибка).
+    """
+    import subprocess
+    from pathlib import Path
+
+    sub = getattr(args, 'subcommand', None)
+
+    if sub == 'list':
+        sys.path.insert(0, str(__root__ / "scripts" / "cli"))
+        from terminal_manager import get_terminal_profiles
+
+        profiles = get_terminal_profiles()
+        print("\n--- ДОСТУПНЫЕ ТЕРМИНАЛЬНЫЕ ПРОФИЛИ ---")
+        for name, panes in sorted(profiles.items()):
+            print(f"  • {name} ({len(panes)} панелей)")
+        print("------------------------------------\n")
+        return 0
+
+    if sub == 'launch':
+        profile_name = getattr(args, 'profile', 'breadboard')
+        sys.path.insert(0, str(__root__ / "scripts" / "cli"))
+        from terminal_manager import build_wt_command
+
+        cmd = build_wt_command(profile_name)
+        if cmd:
+            print(f"[+] Запуск профиля '{profile_name}'...")
+            try:
+                subprocess.run(cmd, cwd=str(__root__))
+                return 0
+            except Exception as e:
+                print(f"[ERROR] Ошибка запуска: {e}")
+                return 1
+        print(f"[ERROR] Профиль '{profile_name}' не найден")
+        return 1
+
+    print(f"Error: неизвестная подкоманда terminal: {sub}")
     return 1
 
 
@@ -632,6 +1024,10 @@ Examples:
   py manage_tools.py rag rebuild                          # rebuild RAG index
   py manage_tools.py knowledge extract --file chat.md     # extract knowledge
   py manage_tools.py skills list                          # list all available skills
+  py manage_tools.py health check                         # check system health
+  py manage_tools.py test run --coverage                  # run tests with coverage
+  py manage_tools.py mcp list                             # list MCP servers
+  py manage_tools.py terminal list                        # list terminal profiles
 '''
     )
 
@@ -664,6 +1060,9 @@ Examples:
     rag_subparsers.add_parser('reindex', help='Reindex knowledge base')
     rag_subparsers.add_parser('validate', help='Validate knowledge base files')
     rag_subparsers.add_parser('status', help='Check RAG index status')
+    rag_subparsers.add_parser('tc-status', help='Check Test Computer (TC) Q&A RAG status')
+    rag_tc_export = rag_subparsers.add_parser('tc-export', help='Export TC Q&A dataset for fine-tuning')
+    rag_tc_export.add_argument('rest', nargs=argparse.REMAINDER, help='Format (alpaca, sharegpt, gemini)')
 
     # ==========================================================================
     # Documentation Management Subparser
@@ -694,6 +1093,10 @@ Examples:
     skills_search = skills_subparsers.add_parser('search', help='Search skills by name or description')
     skills_search.add_argument('query', help='Search terms')
     skills_search.add_argument('--lang', '-l', help='Language code for output (e.g. en, ru, es)')
+    skills_create = skills_subparsers.add_parser('create', help='Create a new skill')
+    skills_create.add_argument('--name', required=True, help='Skill name')
+    skills_create.add_argument('--description', required=True, help='English description')
+    skills_create.add_argument('--description-ru', required=True, help='Russian description')
     skills_show = skills_subparsers.add_parser('show', help='Print Markdown instructions')
     skills_show.add_argument('name', help='Skill name')
     skills_export = skills_subparsers.add_parser('export', help='Export a portable JSON skill contract')
@@ -772,17 +1175,21 @@ Examples:
     # ==========================================================================
     # Telemetry SQLite Logger Subparser
     # ==========================================================================
-    telemetry_parser = subparsers.add_parser('telemetry', help='System metrics 1Hz SQLite logging (CPU, RAM, Disk I/O, Top-20 procs)')
+    telemetry_parser = subparsers.add_parser('telemetry', help='System metrics 1Hz logging, hardware audit, drivers, and history archives')
     telemetry_subparsers = telemetry_parser.add_subparsers(dest='subcommand', help='Subcommands')
 
     telemetry_start = telemetry_subparsers.add_parser('start', help='Start 1Hz telemetry logging loop')
     telemetry_start.add_argument('--interval', '-i', type=float, default=1.0, help='Logging interval in seconds (default: 1.0)')
     telemetry_start.add_argument('--processes', '-p', type=int, default=20, help='Top processes limit (default: 20)')
 
-    telemetry_subparsers.add_parser('status', help='View telemetry SQLite database statistics')
+    telemetry_subparsers.add_parser('status', help='View telemetry & hardware archives status')
 
-    telemetry_history = telemetry_subparsers.add_parser('history', help='View recent telemetry snapshots')
+    telemetry_history = telemetry_subparsers.add_parser('history', help='View saved hardware archive snapshots')
     telemetry_history.add_argument('--limit', '-n', type=int, default=20, help='Limit snapshots count')
+
+    telemetry_subparsers.add_parser('audit', help='Perform live deep hardware & driver audit with sensors')
+    telemetry_subparsers.add_parser('changes', help='View hardware configuration changes timeline (Diff)')
+    telemetry_subparsers.add_parser('archive', help='Force capture and archive current hardware state')
 
     telemetry_cleanup = telemetry_subparsers.add_parser('cleanup', help='Delete old telemetry records')
     telemetry_cleanup.add_argument('--days', '-d', type=int, default=7, help='Retention days (default: 7)')
@@ -795,6 +1202,68 @@ Examples:
 
     assist_parser = subparsers.add_parser('assist', help='Assistant management (start, stop, status, providers, etc.)')
     assist_parser.add_argument('rest', nargs=argparse.REMAINDER, help='Arguments for assist CLI')
+
+    # ==========================================================================
+    # MCP Server Management Subparser
+    # ==========================================================================
+    # Commands for managing FastMCP servers (FastAPI, LangChain, Gemini, etc.)
+
+    mcp_parser = subparsers.add_parser('mcp', help='MCP server management')
+    mcp_subparsers = mcp_parser.add_subparsers(dest='subcommand', help='Subcommands')
+    mcp_list = mcp_subparsers.add_parser('list', help='List available MCP servers')
+    mcp_start = mcp_subparsers.add_parser('start', help='Start MCP server')
+    mcp_start.add_argument('name', help='Server name (fastapi, langchain, gemini_search, gemini_cli, agy_search, unicorn)')
+    mcp_stop = mcp_subparsers.add_parser('stop', help='Stop MCP server')
+    mcp_stop.add_argument('name', help='Server name')
+    mcp_status = mcp_subparsers.add_parser('status', help='Check MCP server status')
+    mcp_status.add_argument('name', help='Server name')
+
+    # ==========================================================================
+    # System Health Check Subparser
+    # ==========================================================================
+    # Commands for checking system health and server status.
+
+    health_parser = subparsers.add_parser('health', help='System health check')
+    health_subparsers = health_parser.add_subparsers(dest='subcommand', help='Subcommands')
+    health_subparsers.add_parser('check', help='Check system health and generate report')
+
+    # ==========================================================================
+    # Test Runner Subparser
+    # ==========================================================================
+    # Commands for running tests with coverage analysis.
+
+    test_parser = subparsers.add_parser('test', help='Test runner with coverage')
+    test_subparsers = test_parser.add_subparsers(dest='subcommand', help='Subcommands')
+    test_run = test_subparsers.add_parser('run', help='Run tests')
+    test_run.add_argument('--coverage', '-c', action='store_true', help='Include coverage analysis')
+    test_run.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
+    test_run.add_argument('--markers', '-m', type=str, help='pytest markers (e.g., unit, integration)')
+    test_subparsers.add_parser('coverage', help='Open coverage report in browser')
+
+    # ==========================================================================
+    # Cross-Platform Installer Subparser
+    # ==========================================================================
+    # Commands for installing and setting up the project.
+
+    installer_parser = subparsers.add_parser('install', help='Cross-platform installer')
+    installer_parser.add_argument('--lang', '-l', type=str, default='en', choices=['en', 'ru', 'es', 'he'], help='Language')
+    installer_parser.add_argument('--install-dir', type=str, help='Installation directory')
+    installer_parser.add_argument('--light', action='store_true', help='Install light version (Gemini/AGY only)')
+    installer_parser.add_argument('--skip-models', action='store_true', help='Skip model download')
+    installer_parser.add_argument('--skip-venv', action='store_true', help='Skip venv creation')
+    installer_parser.add_argument('--skip-deps', action='store_true', help='Skip dependency installation')
+    installer_parser.add_argument('--skip-certs', action='store_true', help='Skip SSL certificate setup')
+
+    # ==========================================================================
+    # Terminal Workspace Manager Subparser
+    # ==========================================================================
+    # Commands for managing terminal workspace layouts.
+
+    terminal_parser = subparsers.add_parser('terminal', help='Terminal workspace manager')
+    terminal_subparsers = terminal_parser.add_subparsers(dest='subcommand', help='Subcommands')
+    terminal_subparsers.add_parser('list', help='List available terminal profiles')
+    terminal_launch = terminal_subparsers.add_parser('launch', help='Launch terminal workspace')
+    terminal_launch.add_argument('--profile', '-p', type=str, default='breadboard', help='Profile name')
 
     # ==========================================================================
     # Command Dispatch
@@ -845,6 +1314,11 @@ Examples:
         'network': run_network_command,
         'sys-param': run_sys_param_command,
         'telemetry': run_telemetry_command,
+        'mcp': run_mcp_command,
+        'health': run_health_command,
+        'test': run_test_command,
+        'install': run_installer_command,
+        'terminal': run_terminal_command,
     }
 
     # Resolve and execute the appropriate command handler

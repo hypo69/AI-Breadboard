@@ -44,7 +44,6 @@ from .router_google_accounts import init_router as init_google_accounts_router
 from .router_openai import router as router_openai
 from .router_user_storage import init_router as init_user_storage_router
 from .router_news import init_router as init_news_router
-from .messenger import init_router as init_messenger_router
 from .router_system import init_router as init_system_router
 from .router_ifttt import init_router as init_ifttt_router
 from .router_windows_admin import init_router as init_windows_admin_router
@@ -60,6 +59,8 @@ from .router_sysautologging import init_router as init_sysautolog_router
 from .router_user_directories import init_router as init_user_directories_router
 from .router_menu import init_router as init_menu_router
 from .pixel_rag_router import get_pixel_rag_router
+from .router_ninite import init_router as init_ninite_router
+from .router_recovery import init_router as init_recovery_router
 
 __all__ = [
     "get_pixel_rag_router",
@@ -91,7 +92,6 @@ __all__ = [
     "init_audio_router",
     "init_user_storage_router",
     "init_news_router",
-    "init_messenger_router",
     "init_system_router",
     "init_ifttt_router",
     "init_windows_admin_router",
@@ -101,6 +101,8 @@ __all__ = [
     "init_system_logs_router",
     "init_registry_viewer_router",
     "init_user_directories_router",
+    "init_ninite_router",
+    "init_recovery_router",
     "router_openai",
 ]
 

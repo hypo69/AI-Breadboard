@@ -9,6 +9,8 @@ import { initUserSettings } from './userSettings.js';
 import { initActivityTracker } from './activityTracker.js';
 import { initCacheUI } from './cache-ui.js';
 import { switchTab, loadTab, setupTabClicks } from './tab-core.js';
+import './api-cache.js'; // Подключаем универсальный API-кеш слой
+import './test-api-cache.js'; // Подключаем тестовый скрипт
 
 // Глобальный экспорт для вызова из вкладок
 window.switchTab = switchTab;
@@ -42,12 +44,13 @@ async function lazyLoad(tabName) {
 
 // Переопределяем switchTab с lazy-загрузкой
 const _switchTab = switchTab;
-window.switchTab = async function(tabId) {
+export async function switchMainTab(tabId) {
   const name = (tabId.startsWith('tab-') ? tabId.slice(4) : tabId);
   await lazyLoad(name);
   _switchTab(tabId);
-};
-window.switchToTab = window.switchTab;
+}
+window.switchTab = switchMainTab;
+window.switchToTab = switchMainTab;
 
 // Открыть плагин по имени (вызывается из плагинов)
 window.openPluginFromDropdown = function(pluginName) {
@@ -99,7 +102,7 @@ async function init() {
 
   // 7. Активировать вкладку по hash или чат
   const hash = location.hash.replace('#', '');
-  window.switchTab(hash || 'tab-chat');
+  await switchMainTab(hash || 'tab-chat');
 
   // 8. Фоновый WebSocket
   initComputerStream();
@@ -118,19 +121,7 @@ function initComputerStream() {
   ws.onclose = () => setTimeout(initComputerStream, 3000);
 }
 
-// Безопасный fetch для API
-window.api = {
-  async fetch(url, opts = {}) {
-    if (!/^\/api\/[a-zA-Z0-9/_-]+(\?.*)?$/.test(url)) throw new Error(`Blocked: ${url}`);
-    const r = await fetch(url, opts);
-    if (!r.ok) {
-      let msg = r.statusText;
-      try { msg = (await r.json()).detail || msg; } catch {}
-      throw new Error(`${r.status} ${msg}`);
-    }
-    return r.json();
-  }
-};
+
 
 document.readyState === 'loading'
   ? document.addEventListener('DOMContentLoaded', init)

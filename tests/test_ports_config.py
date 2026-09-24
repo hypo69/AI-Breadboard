@@ -99,6 +99,30 @@ class TestPortsUtility:
 class TestAppsConfigSyncWithPortsJson:
     """Проверка полного соответствия портов в apps/*/config.json и ports.json."""
 
+    APP_PATHS: dict[str, str] = {
+        "windows_sysadmin": "windows/sysadmin",
+        "network_terminal": "windows/network",
+        "system_inspector": "system_inspector",
+        "trading_terminal": "trading_terminal",
+        "cloudflared_monitor": "cloudflared_monitor",
+        "user_assistant": "user_assistant",
+        "gcloud_monitor": "gcloud_monitor",
+        "website_monitor": "website_monitor",
+        "windows": "windows",
+        "system_control_center": "system_control_center",
+        "ai_breadboard_admin": "ai_breadboard_admin",
+        "research_and_statistic": "research_and_statistic",
+        "windows_startup_auditor": "windows/startup",
+        "windows_defender": "windows/defender",
+        "windows_backup_manager": "windows/registry",
+        "software_transparency_scanner": "software_transparency_scanner",
+        "helpdesk": "helpdesk",
+        "smartmontools": "smartmontools",
+        "librehardwaremonitor": "librehardwaremonitor",
+        "chat": "chat",
+        "enterprise_knowledge": "enterprise_knowledge",
+    }
+
     @pytest.mark.parametrize(
         "app_name, expected_port",
         [
@@ -112,14 +136,26 @@ class TestAppsConfigSyncWithPortsJson:
             ("website_monitor", 8107),
             ("windows", 8108),
             ("system_control_center", 8109),
+            ("ai_breadboard_admin", 8110),
+            ("research_and_statistic", 8111),
+            ("windows_startup_auditor", 8112),
+            ("windows_defender", 8113),
+            ("windows_backup_manager", 8114),
+            ("software_transparency_scanner", 8115),
+            ("helpdesk", 8116),
+            ("smartmontools", 8124),
+            ("librehardwaremonitor", 8126),
+            ("chat", 8128),
+            ("enterprise_knowledge", 8181),
         ],
     )
     def test_app_config_matches_ports_json(self, app_name: str, expected_port: int) -> None:
         """Порт в config.json приложения должен в точности совпадать с ports.json."""
         assert get_port(app_name) == expected_port, f"В ports.json для {app_name} ожидался {expected_port}"
 
-        app_config_path = APPS_DIR / app_name / "config.json"
-        assert app_config_path.is_file(), f"Файл config.json отсутствует для {app_name}"
+        rel_path = self.APP_PATHS.get(app_name, app_name)
+        app_config_path = APPS_DIR / rel_path / "config.json"
+        assert app_config_path.is_file(), f"Файл config.json отсутствует для {app_name} по пути {app_config_path}"
 
         with open(app_config_path, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -133,3 +169,4 @@ class TestAppsConfigSyncWithPortsJson:
         assert app_port == expected_port, (
             f"Несовпадение порта для '{app_name}': в config.json указан {app_port}, а в ports.json — {expected_port}"
         )
+

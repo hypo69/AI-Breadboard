@@ -33,25 +33,230 @@
         "tab": "tab-windows-admin",
         "order": 4,
         "visible": true
+      },
+      {
+        "id": "about_system",
+        "label": "О Системе",
+        "i18n": "tabs.aboutSystem",
+        "icon": "ℹ️",
+        "tab": "tab-about-system",
+        "order": 5,
+        "visible": true
+      },
+      {
+        "id": "telemetry_history",
+        "label": "История и графики",
+        "icon": "bi-graph-up",
+        "tab": "tab-telemetry-history",
+        "order": 6,
+        "visible": true
       }
     ],
     "sidebarItems": [
-      { "id": "about_system",                "label": "О Системе",                    "i18n": "tabs.aboutSystem",       "icon": "ℹ️",  "tab": "tab-about-system",           "order": 1,  "visible": true },
-      { "id": "scenarios",                   "label": "Чат и сценарии",               "i18n": "tabs.scenarios",         "icon": "💬",  "tab": "tab-scenarios",              "order": 2,  "visible": true },
-      { "id": "network_terminal",            "label": "Сетевой терминал",             "i18n": "tabs.network",           "icon": "🌐",  "tab": "tab-network",                "order": 3,  "visible": true },
-      { "id": "registry_viewer",             "label": "Registry Viewer",              "icon": "🗝️", "tab": "tab-registry-viewer",        "order": 4,  "visible": true },
-      { "id": "cloudflared_monitor",         "label": "Cloudflared",                  "icon": "☁️",  "tab": "tab-cloudflared",             "order": 5,  "visible": true },
-      { "id": "gcloud_monitor",              "label": "Google Cloud",                 "icon": "☁️",  "tab": "tab-gcloud",                  "order": 6,  "visible": true },
-      { "id": "website_monitor",             "label": "Website Intelligence",         "icon": "📊",  "tab": "tab-website-monitor",         "order": 7,  "visible": true },
-      { "id": "trading_terminal",            "label": "Торговый терминал",            "i18n": "tabs.trading",           "icon": "📈",  "tab": "tab-trading",                "order": 8,  "visible": true },
-      { "id": "user_assistant",              "label": "User Assistant",               "icon": "🗓️", "tab": "tab-user-assistant",          "order": 9,  "visible": true },
-      { "id": "helpdesk",                    "label": "Helpdesk",                     "i18n": "tabs.helpdesk",          "icon": "🎧",  "tab": "tab-helpdesk",               "order": 10, "visible": true },
-      { "id": "wikipedia_research",          "label": "Wikipedia Lab",                "icon": "🌐",  "tab": "tab-wikipedia-research",      "order": 11, "visible": true },
-      { "id": "windows_backup_manager",      "label": "Windows Backup",              "icon": "💾",  "tab": "tab-windows-backup",          "order": 12, "visible": true },
-      { "id": "hardware_monitor",            "label": "Логи сенсоров",               "i18n": "tabs.sensorLogs",        "icon": "⚡",  "tab": "tab-hardware-monitor",       "order": 13, "visible": true },
-      { "id": "autolog_manager",             "label": "Управление логами",           "icon": "📝",  "tab": "tab-autolog",                "order": 14, "visible": true },
-      { "id": "software_transparency_scanner", "label": "Transparency Scanner",      "icon": "🔍",  "tab": "tab-software-transparency",   "order": 15, "visible": true },
-      { "id": "user_directories",            "label": "Директории пользователей",    "i18n": "tabs.userDirectories",  "icon": "📁",  "tab": "tab-user-directories",       "order": 16, "visible": true }
+      {
+        "id": "scenarios",
+        "label": "Чат и сценарии",
+        "i18n": "tabs.scenarios",
+        "icon": "💬",
+        "tab": "tab-scenarios",
+        "order": 1,
+        "visible": true
+      },
+      {
+        "id": "network_terminal",
+        "label": "Сетевой терминал",
+        "i18n": "tabs.network",
+        "icon": "🌐",
+        "tab": "tab-network",
+        "order": 2,
+        "visible": true
+      },
+      {
+        "id": "registry_viewer",
+        "label": "Registry Viewer",
+        "icon": "🗝️",
+        "tab": "tab-registry-viewer",
+        "order": 3,
+        "visible": true
+      },
+      {
+        "id": "cloudflared_monitor",
+        "label": "Cloudflared",
+        "icon": "☁️",
+        "tab": "tab-cloudflared",
+        "order": 4,
+        "visible": true
+      },
+      {
+        "id": "gcloud_monitor",
+        "label": "Google Cloud",
+        "icon": "☁️",
+        "tab": "tab-gcloud",
+        "order": 5,
+        "visible": true
+      },
+      {
+        "id": "website_monitor",
+        "label": "Website Intelligence",
+        "icon": "📊",
+        "tab": "tab-website-monitor",
+        "order": 6,
+        "visible": true
+      },
+      {
+        "id": "trading_terminal",
+        "label": "Торговый терминал",
+        "i18n": "tabs.trading",
+        "icon": "📈",
+        "tab": "tab-trading",
+        "order": 7,
+        "visible": true
+      },
+      {
+        "id": "user_assistant",
+        "label": "User Assistant",
+        "icon": "🗓️",
+        "tab": "tab-user-assistant",
+        "order": 8,
+        "visible": true
+      },
+      {
+        "id": "helpdesk",
+        "label": "Helpdesk",
+        "i18n": "tabs.helpdesk",
+        "icon": "🎧",
+        "tab": "tab-helpdesk",
+        "order": 9,
+        "visible": true
+      },
+      {
+        "id": "wikipedia_research",
+        "label": "Wikipedia Lab",
+        "icon": "🌐",
+        "tab": "tab-wikipedia-research",
+        "order": 10,
+        "visible": true
+      },
+      {
+        "id": "windows_backup_manager",
+        "label": "Windows Backup",
+        "icon": "💾",
+        "tab": "tab-windows-backup",
+        "order": 11,
+        "visible": true
+      },
+      {
+        "id": "hardware_monitor",
+        "label": "Логи сенсоров",
+        "i18n": "tabs.sensorLogs",
+        "icon": "⚡",
+        "tab": "tab-hardware-monitor",
+        "order": 12,
+        "visible": true
+      },
+      {
+        "id": "autolog_manager",
+        "label": "Управление логами",
+        "icon": "📝",
+        "tab": "tab-autolog",
+        "order": 13,
+        "visible": true
+      },
+      {
+        "id": "telemetry_history",
+        "label": "Визуализация истории",
+        "icon": "📈",
+        "tab": "tab-telemetry-history",
+        "order": 14,
+        "visible": true
+      },
+      {
+        "id": "software_transparency_scanner",
+        "label": "Transparency Scanner",
+        "icon": "🔍",
+        "tab": "tab-software-transparency",
+        "order": 14,
+        "visible": true
+      },
+      {
+        "id": "user_directories",
+        "label": "Директории пользователей",
+        "i18n": "tabs.userDirectories",
+        "icon": "📁",
+        "tab": "tab-user-directories",
+        "order": 15,
+        "visible": true
+      },
+      {
+        "id": "ninite_updater",
+        "label": "Установить Ninite",
+        "icon": "⚡",
+        "tab": "tab-ninite-updater",
+        "order": 16,
+        "visible": true
+      },
+      {
+        "id": "file_recovery",
+        "label": "Восстановить удаленные файлы",
+        "i18n": "tabs.fileRecovery",
+        "icon": "🗂️",
+        "tab": "tab-file-recovery",
+        "order": 17,
+        "visible": true
+      },
+      {
+        "id": "rag",
+        "label": "RAG",
+        "i18n": "tabs.rag",
+        "icon": "🧠",
+        "tab": "tab-rag",
+        "order": 18,
+        "visible": true
+      },
+      {
+        "id": "pixelrag",
+        "label": "PixelRAG",
+        "icon": "🖼️",
+        "tab": "tab-pixelrag",
+        "order": 19,
+        "visible": true
+      },
+      {
+        "id": "models",
+        "label": "Модели и API",
+        "i18n": "tabs.models",
+        "icon": "🤖",
+        "tab": "tab-models",
+        "order": 20,
+        "visible": true
+      },
+      {
+        "id": "agents",
+        "label": "Агенты ИИ",
+        "i18n": "tabs.agents",
+        "icon": "🧩",
+        "tab": "tab-agents",
+        "order": 21,
+        "visible": true
+      },
+      {
+        "id": "skills",
+        "label": "Навыки",
+        "i18n": "tabs.skills",
+        "icon": "⚡",
+        "tab": "tab-skills",
+        "order": 22,
+        "visible": true
+      },
+      {
+        "id": "mcp",
+        "label": "MCP Серверы",
+        "i18n": "tabs.mcp",
+        "icon": "🔌",
+        "tab": "tab-mcp",
+        "order": 23,
+        "visible": true
+      }
     ]
   },
   "settings": {

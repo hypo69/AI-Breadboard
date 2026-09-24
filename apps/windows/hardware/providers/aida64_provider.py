@@ -203,7 +203,7 @@ class Aida64Provider(BaseHardwareProvider):
                     "/HW",
                     "/SILENT",
                 ]
-                logger.info(f"Запуск AIDA64 CLI: {' '.join(cmd)}")
+                logger.debug(f"Запуск AIDA64 CLI: {' '.join(cmd)}")
                 res = subprocess.run(cmd, capture_output=True, timeout=30)
                 if os.path.exists(report_file):
                     return self._parse_xml_report(report_file)

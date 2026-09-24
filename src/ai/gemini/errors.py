@@ -53,14 +53,14 @@ class GoogleGenerativeAIErrorMixin:
         """
         self._record_error(ex)
         ex_str: str = str(ex)
-        logger.error(f'GoogleGenerativeAI: API Error (attempt {attempt + 1}/{max_attempts}): {ex_str}')
 
         # 1. Authorization error (invalid API key)
         if '401' in ex_str or 'API_KEY_INVALID' in ex_str or 'PERMISSION_DENIED' in ex_str:
+            logger.warning(f'GoogleGenerativeAI: Authorization error (API key invalid/expired). Rotating key...', exc_info=False)
             self._invalidate_api_key(self.api_key)
             return self._switch_api_key()
 
-        # 2. Model not found / outdated (404)
+        # 2. Model not found / outdated / incompatible modalities (404 / 400 with modality mismatch)
         if any(
             k in ex_str
             for k in [
@@ -69,39 +69,57 @@ class GoogleGenerativeAIErrorMixin:
                 'is no longer available',
                 'not found for API version',
                 'not supported for generateContent',
+                'response modalities',
+                'response_modalities',
+                'not supported by the model',
             ]
         ):
+            logger.warning(f'GoogleGenerativeAI: Model {active_model} is unsupported or deprecated ({ex_str}). Switching model...', exc_info=False)
             add_unsupported_model(active_model, reason=ex_str)
             return self._switch_model()
 
-        # 3. Service temporarily unavailable (503 UNAVAILABLE)
-        if '503' in ex_str or 'UNAVAILABLE' in ex_str:
+        # 3. Service temporarily unavailable (503 UNAVAILABLE / High demand / Spike)
+        if '503' in ex_str or 'UNAVAILABLE' in ex_str or 'high demand' in ex_str.lower():
             mark_model_exhausted('gemini', active_model)
             self._unavailable_attempts += 1
-            if self._unavailable_attempts < 6:
+            if self._unavailable_attempts <= 3:
                 wait: int = 2 ** min(self._unavailable_attempts, 5)
-                logger.info(f'GoogleGenerativeAI: 503 UNAVAILABLE. Waiting {wait}s...')
+                logger.warning(
+                    f'GoogleGenerativeAI: 503 UNAVAILABLE ({active_model}). '
+                    f'High demand / service load (attempt {attempt + 1}/{max_attempts}). '
+                    f'Waiting {wait}s...',
+                    exc_info=False,
+                )
                 await asyncio.sleep(wait)
                 return True
             else:
-                new_model: Optional[str] = switch_model('gemini', active_model)
-                if new_model:
-                    logger.info(f'GoogleGenerativeAI: Switching model from {active_model} to {new_model}')
-                    self.model_name = new_model
-                    self.api_keys, self._key_names_active, _ = load_api_keys(self.api_key_names)
-                    if self.api_keys:
-                        self.api_key = self.api_keys[0]
-                        self._client = genai.Client(api_key=self.api_key)
+                logger.warning(
+                    f'GoogleGenerativeAI: Model {active_model} is experiencing persistent high demand after '
+                    f'{self._unavailable_attempts} attempts. Switching to alternative model...',
+                    exc_info=False,
+                )
+                if self._switch_model():
                     self._unavailable_attempts = 0
                     return True
                 else:
-                    logger.error(f'GoogleGenerativeAI: No available models for gemini after 5 retry attempts')
+                    logger.error(
+                        'GoogleGenerativeAI: No alternative models available for gemini provider',
+                        exc_info=False,
+                    )
                     self._unavailable_attempts = 0
                     return False
 
-        # 4. Request quota exceeded (429 RESOURCE_EXHAUSTED)
+        # 4. Превышение квоты запросов (429 RESOURCE_EXHAUSTED)
         if '429' in ex_str or 'RESOURCE_EXHAUSTED' in ex_str:
-            is_per_minute: bool = any(
+            # Проверка на нулевой лимит квоты (квота не выделена, 0 в регионе или заблокирована)
+            is_zero_quota: bool = (
+                "quota_limit_value': '0'" in ex_str
+                or 'quota_limit_value": "0"' in ex_str
+                or "'quota_limit_value': 0" in ex_str
+                or '"quota_limit_value": 0' in ex_str
+            )
+
+            is_per_minute: bool = not is_zero_quota and any(
                 k in ex_str.lower()
                 for k in [
                     '1/min',
@@ -117,9 +135,23 @@ class GoogleGenerativeAIErrorMixin:
                 for k in ['perday', 'per_day', 'requestsperday', 'daily_quota']
             )
 
-            if is_daily:
-                logger.warning('GoogleGenerativeAI: Daily quota exhausted for key. Rotating key...')
+            if is_zero_quota or is_daily:
+                logger.warning(
+                    'GoogleGenerativeAI: Исчерпана суточная квота или лимит равен 0 для ключа. Ротация ключа...',
+                    exc_info=False,
+                )
                 self._mark_key_exhausted(self.api_key)
+                if self._switch_api_key():
+                    return True
+                return self._switch_model()
+
+            # Если 429 повторяется более 2 раз подряд, эскалируем на ротацию ключа/модели
+            if attempt >= 2:
+                logger.warning(
+                    f'GoogleGenerativeAI: Повторяющийся лимит 429 (попытка {attempt + 1}). '
+                    'Выполняется ротация ключа или переключение модели...',
+                    exc_info=False,
+                )
                 if self._switch_api_key():
                     return True
                 return self._switch_model()
@@ -127,21 +159,26 @@ class GoogleGenerativeAIErrorMixin:
             m = re.search(r'retry\D*(\d+(?:\.\d+)?)s', ex_str, re.IGNORECASE)
             base_wait: int = int(float(m.group(1))) + 2 if m else 5
             wait_time: int = min(base_wait * (2 ** min(attempt, 3)), 60)
-            logger.info(f'GoogleGenerativeAI: 429 Rate Limit (Per-Minute/Burst). Waiting {wait_time}s before retry...')
+            logger.info(f'GoogleGenerativeAI: 429 Rate Limit (Per-Minute/Burst). Ожидание {wait_time}s перед повтором...')
             await asyncio.sleep(wait_time)
             return True
 
         # 5. Network request errors
         if isinstance(ex, requests.exceptions.RequestException):
             if attempt < 5:
-                logger.warning('GoogleGenerativeAI: Network Error. Waiting 10s...')
+                logger.warning('GoogleGenerativeAI: Network Error. Waiting 10s...', exc_info=False)
                 await asyncio.sleep(10)
                 return True
             return False
 
         # 6. General unexpected errors
         if attempt < max_attempts - 1:
+            logger.warning(
+                f'GoogleGenerativeAI: API Error on attempt {attempt + 1}/{max_attempts}: {ex_str}. Retrying...',
+                exc_info=False,
+            )
             await asyncio.sleep(2 ** min(attempt, 4))
             return True
 
+        logger.error(f'GoogleGenerativeAI: API Error (exhausted {max_attempts} attempts): {ex_str}')
         return False

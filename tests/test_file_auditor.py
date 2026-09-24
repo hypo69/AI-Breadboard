@@ -21,17 +21,17 @@ import pytest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 
-from apps.windows_sysadmin.src.file_auditor import (
+from apps.windows.sysadmin.src.file_auditor import (
     AuditPolicyStatus,
     FileAuditEvent,
     FolderSaclStatus,
     WindowsFileAuditor,
 )
-from apps.windows_sysadmin.src.directory_watcher import (
+from apps.windows.sysadmin.src.directory_watcher import (
     DirectoryWatcher,
     LiveFileEvent,
 )
-from apps.windows_sysadmin.router import init_router
+from apps.windows.sysadmin.router import init_router
 from fastapi import FastAPI
 
 

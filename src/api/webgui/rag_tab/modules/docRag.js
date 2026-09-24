@@ -219,11 +219,11 @@ export async function deleteRagDocument(filename) {
     const res = await fetch(`/api/rag/documents/${encodeURIComponent(filename)}`, {
       method: 'DELETE',
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    window.showToast?.(`Документ «${filename}» успешно удален`, 'success');
     await loadRagDocuments();
     await loadRagStatus();
   } catch (err) {
-    alert(`Ошибка удаления: ${err.message}`);
+    window.showToast?.(`Ошибка удаления: ${err.message}`, 'danger') || alert(`Ошибка удаления: ${err.message}`);
   }
 }
 

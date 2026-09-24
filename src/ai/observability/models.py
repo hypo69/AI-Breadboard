@@ -40,6 +40,8 @@ class SystemDiagnosticReport(BaseModel):
     anomalies: List[AnomalyItem] = Field(default_factory=list, description="List of detected anomalies")
     recommendations: List[str] = Field(default_factory=list, description="Actionable optimization suggestions")
     ai_model_used: str = Field(default="heuristic", description="AI Model identifier or heuristic engine")
+    system_instruction: Optional[str] = Field(default=None, description="System instruction used for AI model")
     generated_prompt: Optional[str] = Field(default=None, description="Exact prompt sent to AI model")
     raw_response: Optional[str] = Field(default=None, description="Raw response text from AI provider")
+    error: Optional[str] = Field(default=None, description="Error details if inference failed")
     stages: List[Dict[str, Any]] = Field(default_factory=list, description="Step-by-step audit stages")

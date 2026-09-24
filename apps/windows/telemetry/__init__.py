@@ -20,7 +20,12 @@ from .models import (
     CpuMetrics,
     DiskIoMetrics,
     DiskPartitionMetrics,
+    DriverInfo,
     GpuMetrics,
+    HardwareArchiveEntry,
+    HardwareAuditReport,
+    HardwareChangeItem,
+    HardwareDeviceAudit,
     HardwareNode,
     HardwareSensor,
     MemoryMetrics,
@@ -34,9 +39,30 @@ from .models import (
     SystemSnapshot,
 )
 from .sensors import get_hardware_sensors
+from .hardware_auditor import HardwareAuditor
+from .history_manager import HardwareHistoryManager
 from .collector import SystemCollector
 from .service import TelemetryLoggerService
-from src.ai.observability.system_engine import SystemDiagnosticEngine
+from .telemetry_config import TelemetryConfigManager
+from .json_logger import TelemetryJsonLogger
+from .file_collector import FileCollector
+from .sensor_collector import SensorCollector
+from .aggregator import TelemetryAggregator
+from .device_flapping_sensor import DeviceFlappingSensor, DeviceTransitionEvent
+from .research import (
+    ChartConfig,
+    MetricPoint,
+    MetricStats,
+    TelemetryChartGenerator,
+    TelemetryDataExtractor,
+    TelemetryResearchReport,
+    TelemetryResearcher,
+    TimeSeriesDataset,
+    init_research_router,
+)
+
+# Алиас для обратной совместимости
+TelemetryStorage = HardwareHistoryManager
 
 __all__ = [
     "CpuMetrics",
@@ -56,7 +82,41 @@ __all__ = [
     "SystemSnapshot",
     "AnomalyItem",
     "SystemDiagnosticReport",
+    "DriverInfo",
+    "HardwareDeviceAudit",
+    "HardwareChangeItem",
+    "HardwareAuditReport",
+    "HardwareArchiveEntry",
     "get_hardware_sensors",
+    "HardwareAuditor",
+    "HardwareHistoryManager",
+    "TelemetryStorage",
     "SystemCollector",
     "TelemetryLoggerService",
+    "TelemetryConfigManager",
+    "TelemetryJsonLogger",
+    "FileCollector",
+    "SensorCollector",
+    "TelemetryAggregator",
+    "DeviceFlappingSensor",
+    "DeviceTransitionEvent",
+    "SystemDiagnosticEngine",
+    "TelemetryResearcher",
+    "TelemetryChartGenerator",
+    "TelemetryDataExtractor",
+    "TelemetryResearchReport",
+    "ChartConfig",
+    "MetricPoint",
+    "MetricStats",
+    "TimeSeriesDataset",
+    "init_research_router",
 ]
+
+
+def __getattr__(name: str):
+    """Lazy import to prevent circular dependency cycles."""
+    if name == "SystemDiagnosticEngine":
+        from src.ai.observability.system_engine import SystemDiagnosticEngine
+        return SystemDiagnosticEngine
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+

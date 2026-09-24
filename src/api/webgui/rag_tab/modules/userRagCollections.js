@@ -281,7 +281,7 @@ export function renderRagEntries(entries, total) {
  */
 export async function addQaEntry() {
   if (!activeUserRagId) {
-    alert('Пожалуйста, выберите коллекцию RAG.');
+    window.showToast?.('Пожалуйста, выберите коллекцию RAG.', 'warning') || alert('Пожалуйста, выберите коллекцию RAG.');
     return;
   }
 
@@ -293,7 +293,7 @@ export async function addQaEntry() {
   const answer = aInput?.value.trim() || '';
 
   if (!answer) {
-    alert('Пожалуйста, введите текст ответа или знания.');
+    window.showToast?.('Пожалуйста, введите текст ответа или знания.', 'warning') || alert('Пожалуйста, введите текст ответа или знания.');
     return;
   }
 
@@ -317,10 +317,11 @@ export async function addQaEntry() {
     if (qInput) qInput.value = '';
     if (aInput) aInput.value = '';
 
+    window.showToast?.('Q&A запись успешно добавлена', 'success');
     await selectUserRag(activeUserRagId);
     await loadUserRags();
   } catch (err) {
-    alert(`Ошибка сохранения Q&A записи: ${err.message}`);
+    window.showToast?.(`Ошибка сохранения Q&A записи: ${err.message}`, 'danger') || alert(`Ошибка сохранения Q&A записи: ${err.message}`);
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -344,10 +345,11 @@ export async function deleteRagEntry(chunkId) {
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
+    window.showToast?.('Запись успешно удалена', 'success');
     await selectUserRag(activeUserRagId);
     await loadUserRags();
   } catch (err) {
-    alert(`Ошибка удаления записи: ${err.message}`);
+    window.showToast?.(`Ошибка удаления записи: ${err.message}`, 'danger') || alert(`Ошибка удаления записи: ${err.message}`);
   }
 }
 
@@ -365,7 +367,7 @@ export async function createUserRag() {
 
   const name = nameInput?.value.trim();
   if (!name) {
-    alert('Пожалуйста, укажите имя коллекции.');
+    window.showToast?.('Пожалуйста, укажите имя коллекции.', 'warning') || alert('Пожалуйста, укажите имя коллекции.');
     return;
   }
 
@@ -396,6 +398,7 @@ export async function createUserRag() {
     if (nameInput) nameInput.value = '';
     if (descInput) descInput.value = '';
 
+    window.showToast?.(`Коллекция '${name}' успешно создана`, 'success');
     await loadUserRags();
     const createdId = data.collection?.id;
     if (createdId) {
@@ -409,7 +412,7 @@ export async function createUserRag() {
       }
     }
   } catch (err) {
-    alert(`Ошибка создания коллекции: ${err.message}`);
+    window.showToast?.(`Ошибка создания коллекции: ${err.message}`, 'danger') || alert(`Ошибка создания коллекции: ${err.message}`);
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -431,10 +434,11 @@ export async function deleteActiveUserRag() {
       method: 'DELETE'
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    window.showToast?.(`Коллекция '${activeUserRagId}' успешно удалена`, 'success');
     activeUserRagId = null;
     await loadUserRags();
   } catch (err) {
-    alert(`Ошибка удаления коллекции: ${err.message}`);
+    window.showToast?.(`Ошибка удаления коллекции: ${err.message}`, 'danger') || alert(`Ошибка удаления коллекции: ${err.message}`);
   }
 }
 

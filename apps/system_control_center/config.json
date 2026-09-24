@@ -3,8 +3,8 @@
   "display_name": "System Control Center",
   "description": "Центр администрирования, управления питанием, точками восстановления и системными профилями Windows",
   "version": "1.0.0",
+  "launcher": "Run-SystemControlCenter.ps1",
   "server": {
-    "host": "127.0.0.1",
     "port": 8109,
     "dedicated": false
   }

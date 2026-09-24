@@ -25,6 +25,13 @@
 
 ## Разделы документации
 
+### 🌐 Веб-интерфейс
+Раздел [Веб-интерфейс (WebGUI)](webgui/README.md):
+- [API Cache System](webgui/api-cache.md) — Универсальная система кеширования
+- [Примеры использования](webgui/examples.md) — Практические примеры интеграции
+- Browser Cache Manager — Низкоуровневый менеджер кеша (IndexedDB)
+- Tab Core — Система управления вкладками и lifecycle
+
 ### 🧩 Плагины системы
 Раздел [Плагины (Plugins)](plugins/index.md):
 - [Архитектура и жизненный цикл](plugins/architecture.md)

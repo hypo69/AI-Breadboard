@@ -296,7 +296,7 @@ async function toggleVoiceRecording() {
       isRecordingVoice = true;
       btnRecordVoiceEl.style.background = 'var(--danger-color)';
     } catch (e) {
-      alert('Microphone access required for voice notes.');
+      window.showToast?.('Для записи голосовых сообщений требуется доступ к микрофону', 'warning') || alert('Для записи голосовых сообщений требуется доступ к микрофону');
     }
   }
 }

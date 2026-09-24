@@ -1,0 +1,49 @@
+{
+  "interval_seconds": 5.0,
+  "max_file_size_mb": 50,
+  "max_measurements": null,
+  "watch_directories": [
+    "C:\\Users\\"
+  ],
+  "log_filename": "ai_sensors_polls.json",
+  "collect_serial_numbers": true,
+  "collect_hardware_inventory": true,
+  "collect_file_events": true,
+  "sensors": {
+    "cpu": {
+      "enabled": true,
+      "interval_seconds": 5.0,
+      "metrics": ["temperature", "load", "clocks"]
+    },
+    "gpu": {
+      "enabled": true,
+      "interval_seconds": 10.0,
+      "metrics": ["temperature", "load", "memory", "power"]
+    },
+    "ram": {
+      "enabled": true,
+      "interval_seconds": 10.0,
+      "metrics": ["usage", "swap"]
+    },
+    "disk": {
+      "enabled": true,
+      "interval_seconds": 30.0,
+      "metrics": ["usage", "io"]
+    },
+    "network": {
+      "enabled": true,
+      "interval_seconds": 10.0,
+      "metrics": ["throughput", "connections"]
+    },
+    "sensors": {
+      "enabled": true,
+      "interval_seconds": 10.0,
+      "metrics": ["temperature", "fan", "voltage"]
+    },
+    "internet": {
+      "enabled": true,
+      "interval_seconds": 120.0,
+      "metrics": ["ping", "download", "upload", "dns"]
+    }
+  }
+}

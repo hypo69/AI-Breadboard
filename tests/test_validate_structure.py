@@ -188,7 +188,7 @@ class TestDocumentationValidatorDirectoryStructure:
             docs_root = Path(tmpdir)
             
             # Создаём все требуемые директории
-            for dir_name in ['manual', 'api', 'guides', 'architecture', '_templates', '_static']:
+            for dir_name in DocumentationValidator.REQUIRED_DIRECTORIES:
                 (docs_root / dir_name).mkdir(parents=True, exist_ok=True)
             
             validator = DocumentationValidator(docs_root)
@@ -222,18 +222,14 @@ class TestDocumentationValidatorIntegration:
             docs_root = Path(tmpdir)
             
             # Создаём корректную структуру
-            (docs_root / 'manual').mkdir()
-            (docs_root / 'api').mkdir()
-            (docs_root / 'guides').mkdir()
-            (docs_root / 'architecture').mkdir()
-            (docs_root / '_templates').mkdir()
-            (docs_root / '_static').mkdir()
+            for dir_name in DocumentationValidator.REQUIRED_DIRECTORIES:
+                (docs_root / dir_name).mkdir(parents=True, exist_ok=True)
             
             # Создаём обязательные файлы
             (docs_root / 'index.md').write_text('# Документация\n\n## Содержание\n## Разделы\n')
             (docs_root / 'conf.py').write_text('# Config\n')
             (docs_root / 'manual' / 'index.md').write_text('# Руководства\n')
-            (docs_root / 'api' / 'index.md').write_text('# API\n## Модули\n')
+            (docs_root / 'developer' / 'index.md').write_text('# Для разработчиков\n## Модули\n')
             
             validator = DocumentationValidator(docs_root)
             success, errors, warnings = validator.validate_all()

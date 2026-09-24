@@ -23,7 +23,16 @@ from header import __root__
 _cfg_env = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
 if _cfg_env:
     _cfg_path = Path(_cfg_env)
-    CONFIG_FILE = _cfg_path if _cfg_path.is_absolute() else (__root__ / _cfg_env)
+    if _cfg_path.is_absolute() and _cfg_path.exists():
+        CONFIG_FILE = _cfg_path
+    elif (__root__ / _cfg_env).exists():
+        CONFIG_FILE = __root__ / _cfg_env
+    elif (__root__ / "start_scenarios_config" / _cfg_path.name).exists():
+        CONFIG_FILE = __root__ / "start_scenarios_config" / _cfg_path.name
+    elif (__root__ / "config" / _cfg_path.name).exists():
+        CONFIG_FILE = __root__ / "config" / _cfg_path.name
+    else:
+        CONFIG_FILE = __root__ / "config.json"
 else:
     CONFIG_FILE = __root__ / "config.json"
 
@@ -46,7 +55,41 @@ qbt_cfg = qbittorrent_cfg
 storage_cfg = getattr(global_settings, "storage", SimpleNamespace())
 plugins_cfg = getattr(global_settings, "plugins", SimpleNamespace())
 schedulers_cfg = getattr(global_settings, "schedulers", getattr(global_settings, "scheduler", SimpleNamespace()))
+apps_cfg = getattr(global_settings, "apps", SimpleNamespace())
+
+
+def is_app_enabled(app_name: str) -> bool:
+    """Проверяет, активно ли приложение согласно текущей конфигурации.
+
+    Args:
+        app_name (str): Идентификатор приложения (например, 'wikipedia_research', 'trading_terminal').
+
+    Returns:
+        bool: True, если приложение разрешено и не находится в списке отключенных; иначе False.
+    """
+    apps_section = getattr(global_settings, "apps", None)
+    if not apps_section:
+        return True
+
+    enabled = getattr(apps_section, "enabled", None)
+    disabled = getattr(apps_section, "disabled", None)
+
+    # Преобразование в список, если представлено иным итерируемым объектом
+    if disabled is not None:
+        disabled_list = list(disabled) if hasattr(disabled, "__iter__") and not isinstance(disabled, str) else [disabled]
+        if app_name in disabled_list:
+            return False
+
+    if enabled is not None:
+        enabled_list = list(enabled) if hasattr(enabled, "__iter__") and not isinstance(enabled, str) else [enabled]
+        if len(enabled_list) > 0:
+            return app_name in enabled_list
+
+    return True
 
 from src.utils.ports import load_ports_config, PORTS_FILE
 ports_cfg = load_ports_config(PORTS_FILE)
+
+from apps.common.autolog_engine import load_autolog_config
+autolog_cfg = load_autolog_config()
 

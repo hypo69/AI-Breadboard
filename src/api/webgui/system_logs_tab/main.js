@@ -913,11 +913,19 @@
     const liveSwitch = document.getElementById('slc-live-switch');
     if (liveSwitch) {
       liveSwitch.onchange = () => {
-        if (liveSwitch.checked) {
-          liveIntervalTimer = setInterval(loadEvents, 4000);
+        if (window.registerTabPoller && window.unregisterTabPoller) {
+          if (liveSwitch.checked) {
+            window.registerTabPoller('tab-system-logs', loadEvents, 4000, { immediate: true });
+          } else {
+            window.unregisterTabPoller('tab-system-logs_default');
+          }
         } else {
-          clearInterval(liveIntervalTimer);
-          liveIntervalTimer = null;
+          if (liveSwitch.checked) {
+            liveIntervalTimer = setInterval(loadEvents, 4000);
+          } else {
+            clearInterval(liveIntervalTimer);
+            liveIntervalTimer = null;
+          }
         }
       };
     }

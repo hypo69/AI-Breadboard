@@ -2,9 +2,8 @@
   "app_name": "wikipedia_research",
   "display_name": "Wikipedia Research Lab",
   "version": "1.0.0",
+  "launcher": "Run-WikipediaResearch.ps1",
   "server": {
-    "host": "127.0.0.1",
-    "port": 8110,
     "dedicated": false,
     "use_ssl": false,
     "workers": 1

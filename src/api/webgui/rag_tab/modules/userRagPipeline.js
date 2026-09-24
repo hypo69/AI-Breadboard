@@ -229,7 +229,7 @@ export async function handleQuickUploadToUserStorage(event) {
 export async function syncGoogleDocsIntoActiveRag() {
   const activeUserRagId = getActiveUserRagId();
   if (!activeUserRagId) {
-    alert('Пожалуйста, выберите или создайте коллекцию RAG.');
+    window.showToast?.('Пожалуйста, выберите или создайте коллекцию RAG.', 'warning') || alert('Пожалуйста, выберите или создайте коллекцию RAG.');
     return;
   }
 

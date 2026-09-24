@@ -190,7 +190,6 @@ def test_unified_chat_openai_routing():
         chat_model = UnifiedChatModel(
             api_key_names=[],
             system_instruction="Test system",
-            foundry_model_id="qwen2.5",
         )
         with patch.object(OpenAICompatChat, "chat", new_callable=AsyncMock) as mock_chat:
             mock_chat.return_value = "Routed answer from OpenAI"

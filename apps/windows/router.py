@@ -575,6 +575,8 @@ async def get_process_telemetry_file_activity(limit: int = 50) -> List[Dict[str,
 
 def init_router(app: Optional[Any] = None, state: Optional[Any] = None) -> APIRouter:
     """Инициализация FastAPI роутера."""
+    from apps.windows.telemetry.research import init_research_router
+    router.include_router(init_research_router())
     return router
 
 

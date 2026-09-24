@@ -368,6 +368,9 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-news' && typeof window.initNewsTab === 'function') {
     console.log('[AdminInterface] Switching to news tab...');
     window.initNewsTab();
+  } else if (cleanId === 'tab-windows-backup' && typeof window.initWindowsBackupTab === 'function') {
+    console.log('[AdminInterface] Switching to windows backup tab...');
+    window.initWindowsBackupTab();
   } else if (cleanId === 'tab-help' && typeof window.initHelpTab === 'function') {
     console.log('[AdminInterface] Switching to help tab...');
     window.initHelpTab();
@@ -594,6 +597,10 @@ async function initInterface() {
 
   // Определение и фильтрация вкладок микроприложений (/apps)
   const appTabDefs = [
+    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20260924_v4', js: '/html/about_system_tab/main.js?v=20260924_v4' },
+    { id: 'trading_terminal', tab: 'trading', html: '/html/trading_tab/index.html', js: '/html/trading_tab/main.js' },
+    { id: 'network_terminal', tab: 'network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
+    { id: 'system_inspector', tab: 'system-inspector', html: '/html/system_inspector_tab/index.html', js: '/html/system_inspector_tab/main.js' },
     { id: 'chat', tab: 'chat', html: '/html/chat/index.html', js: '/html/chat/main.js' },
     { id: 'scenarios', tab: 'scenarios', html: '/html/scenarios_tab/index.html', js: '/html/scenarios_tab/main.js' },
     { id: 'user_assistant', tab: 'user-assistant', html: '/html/user_assistant_tab/index.html', js: '/html/user_assistant_tab/main.js' },

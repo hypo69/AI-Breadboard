@@ -1,20 +1,31 @@
-# Network Terminal Admin Tab (`src/fastapi/webinterface/network_tab`)
+# 🌐 Сетевой терминал Windows (`apps/windows/network`)
 
-**Status:** ✅ Active  
-**Language:** English  
-**Authors:** hypo69  
-
----
-
-## 📋 Overview
-
-The `network_tab` module integrates the standalone **Network Terminal** (`/apps/network_terminal`) into the AI-Breadboard administrative web panel. It offers live packet streaming via TShark, network interface discovery, PCAP capture file uploading and Deep Packet Inspection (DPI), heuristic traffic rules, and AI anomaly detection.
+**Статус:** ✅ Активен  
+**Язык:** Русский  
+**Автор:** hypo69  
 
 ---
 
-## 🚀 Key Features
+## 📋 Описание
 
-- **TShark Live Capture:** Real-time packet stream over WebSocket `/api/v1/network/ws/live`.
-- **Interface Probing:** Dynamic network interface probing via `/api/v1/network/interfaces`.
-- **PCAP Analysis:** File upload and parsing via `/api/v1/network/analyze/pcap`.
-- **AI Diagnostics:** Traffic anomaly heuristics and health report generation.
+Модуль `network_tab` интегрирует **Сетевой терминал Windows** (`/apps/windows/network`) в веб-панель управления AI-Breadboard. Вкладка предоставляет полный стек мониторинга и диагностики сети:
+- **Тест скорости интернета (Speedtest)**: Замер скорости скачивания (Download, Mbps), отдачи (Upload, Mbps), задержки (Ping, ms), джиттера (Jitter) и определение внешнего IP/провайдера.
+- **Инспекция сетевых адаптеров Windows**: Мониторинг адаптеров (IPv4, IPv6, MAC, скорость, статус соединения, отправлено/принято байт).
+- **Таблица соединений и портов**: Активные TCP/UDP соединения и слушающие сокеты с сопоставлением с процессами Windows и PID.
+- **Захват пакетов в реальном времени (DPI)**: Инспекция сетевых заголовков и полезной нагрузки.
+- **PCAP-анализ и AI-диагностика**: Загрузка дампов трафика и автоматический эвристический аудит аномалий.
+
+---
+
+## 🚀 Основные эндпоинты API
+
+- `POST /api/network/speedtest/run` — Полный замер скорости интернета, пинга и качества соединения
+- `GET /api/network/speedtest/ping` — Экспресс-пинг к опорным DNS и CDN серверам (Cloudflare, Google, Quad9, OpenDNS)
+- `GET /api/network/speedtest/latest` — Получение последнего отчета теста скорости
+- `GET /api/network/status` — Общий статус сетевой подсистемы
+- `GET /api/network/interfaces` — Список всех сетевых адаптеров хоста
+- `GET /api/network/connections` — Активные сетевые соединения и открытые порты
+- `GET /api/network/telemetry` — Метрики скорости передачи в реальном времени
+- `GET /api/network/packets` — Буфер захваченных пакетов
+- `POST /api/network/start-capture` / `POST /api/network/stop-capture` — Управление захватом пакетов
+- `POST /api/network/analyze/pcap` — Анализ загруженного файла дампа PCAP

@@ -190,7 +190,7 @@ async function handleAddSource() {
     const desc = document.getElementById('new-source-description')?.value.trim();
     
     if (!id || !name || !url) {
-        alert('Заполните обязательные поля: ID, Название и URL');
+        window.showToast?.('Заполните обязательные поля: ID, Название и URL', 'warning') || alert('Заполните обязательные поля: ID, Название и URL');
         return;
     }
     

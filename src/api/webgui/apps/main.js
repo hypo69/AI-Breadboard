@@ -18,49 +18,64 @@ const TAB_PATHS = Object.fromEntries(
   APP_TAB_DEFS.map(d => [d.tabId, { html: d.html, js: d.js }])
 );
 
+// Lazy-загрузка: вкладка грузится только при первом открытии
 const loadedTabs = new Set();
 
-/**
- * Загружает необходимые вкладки HTML/JS
- */
-async function loadRequiredTabs() {
+async function lazyLoad(tabId) {
+  const normId = tabId.startsWith('tab-') ? tabId : `tab-${tabId}`;
+  if (loadedTabs.has(normId)) return;
+  const paths = TAB_PATHS[normId];
+  if (!paths) return;
+  loadedTabs.add(normId);
   const v = Date.now();
-  await Promise.all(
-    Array.from(document.querySelectorAll('[data-tab]')).map(btn => {
-      const tabId = btn.dataset.tab;
-      if (!tabId || loadedTabs.has(tabId)) return Promise.resolve();
-      loadedTabs.add(tabId);
-      const paths = TAB_PATHS[tabId];
-      if (!paths) return Promise.resolve();
-      const name = tabId.replace(/^tab-/, '');
-      return loadTab(name, `${paths.html}?v=${v}`, `${paths.js}?v=${v}`);
-    })
-  );
+  const name = normId.replace(/^tab-/, '');
+  await loadTab(name, `${paths.html}?v=${v}`, `${paths.js}?v=${v}`);
+  applyTranslations();
 }
+
+const _switchTab = switchTab;
+export async function switchAppTab(tabId) {
+  if (!tabId) return;
+  const normId = tabId.startsWith('tab-') ? tabId : `tab-${tabId}`;
+  await lazyLoad(normId);
+  _switchTab(normId);
+}
+window.switchTab = switchAppTab;
+window.switchToTab = switchAppTab;
 
 // ── МЕНЮ ─────────────────────────────────────────────────────────────────────
 
+function getMenuTarget() {
+  const p = location.pathname.toLowerCase();
+  if (p.startsWith('/su') || location.search.includes('target=su')) {
+    return 'su';
+  }
+  return 'tc';
+}
+
 async function buildMenu(appsMap = {}, customCfg = null) {
   let cfg = customCfg;
+  const target = getMenuTarget();
   if (!cfg) {
     try {
-      const r = await fetch(`/api/menu/config?t=${Date.now()}`);
+      const r = await fetch(`/api/menu/config?target=${target}&t=${Date.now()}`);
       if (r.ok) {
         cfg = await r.json();
       }
     } catch (e) {
-      console.warn('Не удалось загрузить /api/menu/config, пробуем статический файл', e);
+      console.warn(`Не удалось загрузить /api/menu/config?target=${target}, пробуем статический файл`, e);
     }
   }
 
   if (!cfg) {
     try {
-      const r = await fetch(`/html/config/tc_menu_config.json?t=${Date.now()}`);
+      const staticFile = target === 'su' ? 'su_menu_config.json' : 'tc_menu_config.json';
+      const r = await fetch(`/html/config_menues/${staticFile}?t=${Date.now()}`);
       if (r.ok) {
         cfg = await r.json();
       }
     } catch (e) {
-      console.error('Ошибка загрузки tc_menu_config.json', e);
+      console.error('Ошибка загрузки статического файла конфигурации меню', e);
     }
   }
 
@@ -95,7 +110,6 @@ async function buildMenu(appsMap = {}, customCfg = null) {
       const btn = document.createElement('button');
       btn.className = 'list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3';
       btn.type = 'button';
-      btn.dataset.tab = item.tab;
       if (item.i18n) btn.dataset.i18n = item.i18n;
       const icon = document.createElement('span');
       icon.className = 'fs-6';
@@ -104,12 +118,54 @@ async function buildMenu(appsMap = {}, customCfg = null) {
       label.className = 'fw-medium';
       label.textContent = item.label;
       btn.append(icon, label);
+
+      if (item.id === 'file_recovery' || item.action === 'launch') {
+        btn.dataset.action = 'launch';
+        btn.title = 'Запуск программы восстановления файлов (R-Studio)';
+        btn.onclick = async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const origIcon = icon.textContent;
+          icon.textContent = '⏳';
+          try {
+            const res = await fetch('/api/recovery/launch', { method: 'POST' });
+            const data = await res.json();
+            if (res.ok && data.success) {
+              if (window.toast) {
+                window.toast.success('R-Studio запущена', data.message || 'Программа восстановления файлов запущена');
+              }
+            } else {
+              if (window.toast) {
+                window.toast.error('Ошибка запуска', data.detail || 'Не удалось запустить программу');
+              }
+            }
+          } catch (err) {
+            if (window.toast) {
+              window.toast.error('Ошибка связи', err.message);
+            }
+          } finally {
+            icon.textContent = origIcon;
+          }
+        };
+      } else {
+        btn.dataset.tab = item.tab;
+      }
+
       navEl.appendChild(btn);
     });
   }
 
+  // Обновление состояния кнопок вкладок
+  document.querySelectorAll('[data-tab]');
+
   applyTranslations();
   return cfg;
+}
+
+export async function loadRequiredTabs(tabs = []) {
+  for (const tab of tabs) {
+    await lazyLoad(tab);
+  }
 }
 
 // ── РЕДАКТОР МЕНЮ ─────────────────────────────────────────────────────────────
@@ -121,25 +177,109 @@ function initMenuEditor(cfg, appsMap = {}) {
   const saveBtn = document.getElementById('saveMenuConfig');
   if (!editorBtn || !modal || !list || !cfg) return;
 
-  function renderEditorItems() {
-    const items = [
+  let currentItems = [];
+  let draggedIdx = null;
+
+  function collectInitialItems() {
+    return [
       ...(cfg.menu.topButtons || []).map(x => ({ ...x, position: 'top' })),
       ...(cfg.menu.sidebarItems || []).map(x => ({ ...x, position: x.visible === false ? 'hidden' : 'bottom' })),
     ];
+  }
 
+  function renderList() {
     list.innerHTML = '';
-    items.forEach(item => {
-      const safeId = item.id.replace(/[^a-zA-Z0-9_-]/g, '');
+    const total = currentItems.length;
+
+    currentItems.forEach((item, idx) => {
+      const safeId = (item.id || `item_${idx}`).replace(/[^a-zA-Z0-9_-]/g, '');
       const div = document.createElement('div');
-      div.className = 'd-flex align-items-center gap-3 p-2 border-bottom';
+      div.className = 'menu-editor-item d-flex align-items-center gap-2 p-2 mb-2 rounded border border-secondary-subtle';
       div.dataset.id = item.id;
+      div.dataset.index = idx;
+      div.draggable = true;
 
+      // 1. Ручка перетаскивания (Drag Handle)
+      const dragHandle = document.createElement('div');
+      dragHandle.className = 'drag-handle-container text-muted px-1';
+      dragHandle.title = 'Перетащите для изменения порядка';
+      dragHandle.innerHTML = '<i class="bi bi-grip-vertical fs-5"></i>';
+
+      // 2. Порядковый номер
+      const orderBadge = document.createElement('span');
+      orderBadge.className = 'badge bg-secondary-subtle text-light border px-2 py-1';
+      orderBadge.textContent = `#${idx + 1}`;
+      orderBadge.style.minWidth = '38px';
+      orderBadge.style.textAlign = 'center';
+
+      // 3. Информация об элементе (название и вкладка)
       const info = document.createElement('div');
-      info.className = 'flex-grow-1 small';
-      info.textContent = `${item.label} (${item.tab})`;
+      info.className = 'item-info flex-grow-1 min-w-0 px-1';
+      const labelDiv = document.createElement('div');
+      labelDiv.className = 'fw-semibold text-truncate small';
+      labelDiv.textContent = item.label;
+      const tabDiv = document.createElement('div');
+      tabDiv.className = 'text-muted text-truncate font-monospace';
+      tabDiv.style.fontSize = '0.75rem';
+      tabDiv.textContent = item.tab;
+      info.append(labelDiv, tabDiv);
 
+      // 4. Слайдер-перетаскиватель порядка и кнопки перемещения
+      const orderCtrl = document.createElement('div');
+      orderCtrl.className = 'd-flex align-items-center gap-1 me-2';
+      orderCtrl.style.width = '160px';
+      orderCtrl.style.flexShrink = '0';
+
+      const btnUp = document.createElement('button');
+      btnUp.type = 'button';
+      btnUp.className = 'btn btn-sm btn-outline-secondary p-0 px-1';
+      btnUp.title = 'Переместить выше';
+      btnUp.disabled = idx === 0;
+      btnUp.innerHTML = '<i class="bi bi-chevron-up"></i>';
+      btnUp.addEventListener('click', () => {
+        if (idx > 0) {
+          const [moved] = currentItems.splice(idx, 1);
+          currentItems.splice(idx - 1, 0, moved);
+          renderList();
+        }
+      });
+
+      const slider = document.createElement('input');
+      slider.type = 'range';
+      slider.className = 'form-range order-slider flex-grow-1 m-0';
+      slider.min = '1';
+      slider.max = String(total);
+      slider.value = String(idx + 1);
+      slider.title = `Слайдер порядка: ${idx + 1} из ${total}`;
+
+      slider.addEventListener('input', (e) => {
+        const targetIdx = parseInt(e.target.value, 10) - 1;
+        if (targetIdx !== idx && targetIdx >= 0 && targetIdx < total) {
+          const [moved] = currentItems.splice(idx, 1);
+          currentItems.splice(targetIdx, 0, moved);
+          renderList();
+        }
+      });
+
+      const btnDown = document.createElement('button');
+      btnDown.type = 'button';
+      btnDown.className = 'btn btn-sm btn-outline-secondary p-0 px-1';
+      btnDown.title = 'Переместить ниже';
+      btnDown.disabled = idx === total - 1;
+      btnDown.innerHTML = '<i class="bi bi-chevron-down"></i>';
+      btnDown.addEventListener('click', () => {
+        if (idx < total - 1) {
+          const [moved] = currentItems.splice(idx, 1);
+          currentItems.splice(idx + 1, 0, moved);
+          renderList();
+        }
+      });
+
+      orderCtrl.append(btnUp, slider, btnDown);
+
+      // 5. Переключатели позиции (Сверху / Слева / Скрыть)
       const group = document.createElement('div');
-      group.className = 'btn-group btn-group-sm';
+      group.className = 'btn-group btn-group-sm flex-shrink-0';
       group.setAttribute('role', 'group');
 
       [['top', 'Сверху', 'btn-outline-primary'], ['bottom', 'Слева', 'btn-outline-secondary'], ['hidden', 'Скрыть', 'btn-outline-danger']]
@@ -157,17 +297,50 @@ function initMenuEditor(cfg, appsMap = {}) {
           group.append(inp, lbl);
         });
 
-      div.append(info, group);
+      // 6. Drag & Drop события
+      div.addEventListener('dragstart', (e) => {
+        draggedIdx = idx;
+        div.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(idx));
+      });
+
+      div.addEventListener('dragend', () => {
+        div.classList.remove('dragging');
+        document.querySelectorAll('.menu-editor-item').forEach(el => el.classList.remove('drag-over'));
+      });
+
+      div.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        div.classList.add('drag-over');
+      });
+
+      div.addEventListener('dragleave', () => {
+        div.classList.remove('drag-over');
+      });
+
+      div.addEventListener('drop', (e) => {
+        e.preventDefault();
+        div.classList.remove('drag-over');
+        if (draggedIdx !== null && draggedIdx !== idx) {
+          const [moved] = currentItems.splice(draggedIdx, 1);
+          currentItems.splice(idx, 0, moved);
+          draggedIdx = null;
+          renderList();
+        }
+      });
+
+      div.append(dragHandle, orderBadge, info, orderCtrl, group);
       list.appendChild(div);
     });
 
-    return items;
+    return currentItems;
   }
 
-  let currentItems = renderEditorItems();
-
   editorBtn.addEventListener('click', () => {
-    currentItems = renderEditorItems();
+    currentItems = collectInitialItems();
+    renderList();
     new bootstrap.Modal(modal).show();
   });
 
@@ -181,7 +354,8 @@ function initMenuEditor(cfg, appsMap = {}) {
       .map(({ position, ...x }, idx) => ({ ...x, visible: position === 'bottom', order: idx + 1 }));
 
     try {
-      const r = await fetch('/api/menu/config', {
+      const target = getMenuTarget();
+      const r = await fetch(`/api/menu/config?target=${target}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cfg)
@@ -193,7 +367,6 @@ function initMenuEditor(cfg, appsMap = {}) {
 
       // Немедленно переопределяем меню и структуру вкладок в интерфейсе
       await buildMenu(appsMap, cfg);
-      await loadRequiredTabs();
 
       const modalInstance = bootstrap.Modal.getInstance(modal);
       if (modalInstance) {
@@ -207,11 +380,11 @@ function initMenuEditor(cfg, appsMap = {}) {
       if (!isStillInMenu) {
         const firstVisible = document.querySelector('[data-tab]');
         if (firstVisible?.dataset.tab) {
-          switchTab(firstVisible.dataset.tab);
+          await switchAppTab(firstVisible.dataset.tab);
         }
       }
     } catch (e) {
-      alert('Ошибка при сохранении меню: ' + e.message);
+      window.showToast?.('Ошибка при сохранении меню: ' + e.message, 'danger') || alert('Ошибка при сохранении меню: ' + e.message);
     }
   });
 }
@@ -237,15 +410,14 @@ async function init() {
   const cfg = await buildMenu(appsMap).catch(() => null);
   initMenuEditor(cfg, appsMap);
 
-  // Загрузить все вкладки (из верхнего и бокового меню)
-  await loadRequiredTabs();
-
   applyTranslations();
 
-  // Активировать вкладку по hash или первую
+  // Активировать вкладку по hash, defaultTab из конфига или первую доступную
   const hash = location.hash.replace('#', '');
+  const defaultTab = cfg?.settings?.defaultTab;
   const first = document.querySelector('#appsNavTabs [data-tab]') || document.querySelector('[data-tab]');
-  switchTab(hash || first?.dataset.tab || '');
+  const initialTab = hash || (defaultTab && document.querySelector(`[data-tab="${defaultTab}"]`) ? defaultTab : first?.dataset.tab || 'tab-chat');
+  await switchAppTab(initialTab);
 }
 
 document.readyState === 'loading'

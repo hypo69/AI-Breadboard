@@ -98,14 +98,22 @@ Write-Host ""
 
 # Resolve configuration file
 $activeCfgFile = "config.json"
-if ($ConfigFile -and (Test-Path (Join-Path $projectRoot $ConfigFile))) {
-    $activeCfgFile = $ConfigFile
+if ($ConfigFile) {
+    if (Test-Path (Join-Path $projectRoot $ConfigFile)) {
+        $activeCfgFile = $ConfigFile
+    }
 } elseif (Test-Path (Join-Path $projectRoot "config.json")) {
     $activeCfgFile = "config.json"
 } elseif (Test-Path (Join-Path $projectRoot "config_ts.json")) {
     $activeCfgFile = "config_ts.json"
 } elseif (Test-Path (Join-Path $projectRoot "config_tc.json")) {
     $activeCfgFile = "config_tc.json"
+} elseif (Test-Path (Join-Path $projectRoot "admin.json")) {
+    $activeCfgFile = "admin.json"
+} elseif (Test-Path (Join-Path $projectRoot "su.json")) {
+    $activeCfgFile = "su.json"
+} elseif (Test-Path (Join-Path $projectRoot "config\su.json")) {
+    $activeCfgFile = "config\su.json"
 }
 
 $activeCfgPath = Join-Path $projectRoot $activeCfgFile
@@ -113,10 +121,11 @@ $cfgObj = $null
 if (Test-Path $activeCfgPath) {
     try {
         $cfgObj = Get-Content $activeCfgPath -Raw -Encoding UTF8 | ConvertFrom-Json
-        Write-Host "  [CONFIG] Using configuration: $activeCfgFile" -ForegroundColor DarkGray
     } catch {
         Write-Host "  [WARN] Failed to parse $activeCfgFile : $_" -ForegroundColor Yellow
     }
+} else {
+    Write-Host "  [WARN] Config file not found: $activeCfgPath" -ForegroundColor Yellow
 }
 
 function Get-AppServerMode {
@@ -126,8 +135,19 @@ function Get-AppServerMode {
     )
     $candidatePaths = @(
         (Join-Path $BaseDir "src\apps\$AppName\config.json"),
-        (Join-Path $BaseDir "apps\$AppName\config.json")
+        (Join-Path $BaseDir "apps\$AppName\config.json"),
+        (Join-Path $BaseDir "apps\windows\$AppName\config.json"),
+        (Join-Path $BaseDir "apps\windows\$($AppName -replace '^windows_', '')\config.json"),
+        (Join-Path $BaseDir "apps\windows\$($AppName -replace '_terminal$', '')\config.json"),
+        (Join-Path $BaseDir "apps\windows\$($AppName -replace '^windows_', '' -replace '_auditor$', '')\config.json")
     )
+    if ($AppName -in @("windows_sysadmin", "sysadmin", "windows_admin")) {
+        $candidatePaths += (Join-Path $BaseDir "apps\windows\sysadmin\config.json")
+        $candidatePaths += (Join-Path $BaseDir "apps\windows\config.json")
+    }
+    if ($AppName -in @("network_terminal", "network")) {
+        $candidatePaths += (Join-Path $BaseDir "apps\windows\network\config.json")
+    }
     foreach ($path in $candidatePaths) {
         if (Test-Path $path) {
             try {
@@ -151,11 +171,11 @@ function Get-AppServerMode {
                     }
                 }
             } catch {
-                # Fallback to dedicated
+                # Fallback to shared
             }
         }
     }
-    return "dedicated"
+    return "shared"
 }
 
 $appScripts = @(
@@ -179,6 +199,7 @@ $appScripts = @(
     @{ Name = "Hardware & Sensors Monitor";   Folder = "windows";             File = "Run-HardwareMonitor.ps1";    Port = 8116; Key = "hardware_monitor" },
     @{ Name = "smartmontools Storage App";    Folder = "smartmontools";       File = "Run-Smartmontools.ps1";      Port = 8124; Key = "smartmontools" },
     @{ Name = "LibreHardwareMonitor App";     Folder = "librehardwaremonitor"; File = "Run-LHM.ps1";               Port = 8126; Key = "librehardwaremonitor" },
+    @{ Name = "AI Chat Assistant";            Folder = "chat";                File = "Run-Chat.ps1";               Port = 8128; Key = "chat" },
     @{ Name = "Enterprise Knowledge Platform"; Folder = "enterprise_knowledge"; File = "Run-EnterpriseKnowledge.ps1"; Port = 8181; Key = "enterprise_knowledge" }
 )
 
@@ -205,6 +226,9 @@ if ($hasDisabledList) {
         if ($item) { $disabledAppsList += $item.ToString().Trim().ToLower() }
     }
 }
+
+Write-Host "  [DEBUG] enabledAppsList: $enabledAppsList" -ForegroundColor DarkGray
+Write-Host "  [DEBUG] disabledAppsList: $disabledAppsList" -ForegroundColor DarkGray
 
 $enableAll = $true
 if ($isAppsArray -or $hasEnabledList) {
@@ -238,6 +262,7 @@ foreach ($app in $appScripts) {
     if ($app.Folder -eq "windows_startup_auditor") { $aliases += @("startup_auditor", "startup", "autoruns", "tab-startup-auditor") }
     if ($app.Folder -eq "windows_backup_manager") { $aliases += @("backup_manager", "windows_backup", "backup", "tab-windows-backup") }
     if ($app.Key -eq "hardware_monitor") { $aliases += @("hardware", "sensors", "hw_monitor", "tab-hardware-monitor") }
+    if ($app.Folder -eq "chat") { $aliases += @("chat", "tab-chat", "ai_chat", "chat_assistant") }
     if ($app.Folder -eq "enterprise_knowledge") { $aliases += @("enterprise", "knowledge", "tab-enterprise-knowledge") }
 
     $isExplicitlyDisabled = $false

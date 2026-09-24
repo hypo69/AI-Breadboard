@@ -3,70 +3,14 @@
   .def-container {
     padding: 0.5rem 0.75rem;
   }
-  .def-card {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
-    border-radius: 8px;
-    padding: 0.5rem 0.75rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
-    min-height: 62px;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-  .def-card:hover {
-    border-color: #38bdf8 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
-  .def-card-label {
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #94a3b8;
-    font-weight: 600;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    line-height: 1.1;
-  }
-  .def-card-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    line-height: 1.15;
-  }
-  .def-card-sub {
-    font-size: 0.7rem;
-    color: #64748b;
-    line-height: 1.1;
-  }
-  .def-panel {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
-  .def-panel-header {
-    background: #1e293b !important;
-    border-bottom: 1px solid #334155 !important;
-    padding: 0.45rem 0.85rem;
-    font-weight: 600;
-    font-size: 0.82rem;
-    color: #38bdf8;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .def-badge-active { background: #166534; color: #86efac; border: 1px solid #22c55e; }
-  .def-badge-disabled { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
-  .def-badge-audit { background: #854d0e; color: #fde047; border: 1px solid #eab308; }
-  .def-badge-warn { background: #c2410c; color: #fdba74; border: 1px solid #f97316; }
-  .def-badge-critical { background: #991b1b; color: #fecaca; border: 1px solid #f87171; font-weight: bold; }
+  .def-badge-active { background: var(--status-success-bg); color: var(--status-success-text); border: 1px solid var(--status-success-border); }
+  .def-badge-disabled { background: var(--status-danger-bg); color: var(--status-danger-text); border: 1px solid var(--status-danger-border); }
+  .def-badge-audit { background: var(--status-warning-bg); color: var(--status-warning-text); border: 1px solid var(--status-warning-border); }
+  .def-badge-warn { background: var(--status-warning-bg); color: var(--status-warning-text); border: 1px solid var(--status-warning-border); }
+  .def-badge-critical { background: var(--status-danger-bg); color: var(--status-danger-text); border: 1px solid var(--status-danger-border); font-weight: bold; }
 </style>
 
-<div class="def-container">
+<div class="def-container theme-defender">
   <!-- Top Stat Cards -->
   <div class="row g-2 mb-2">
     <div class="col-6 col-md-3 col-xl">

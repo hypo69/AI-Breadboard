@@ -1,0 +1,337 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "app": {
+        "name": "AI Breadboard",
+        "description": "Primary configuration profile for AI Breadboard server, models, and runtimes (Run-Dashboard.ps1)"
+    },
+    "server": {
+        "host": "0.0.0.0",
+        "port": 8000,
+        "protocol": "https",
+        "workers": 1,
+        "reload": false,
+        "use_ssl": true,
+        "ssl": {
+            "cert": "",
+            "key": ""
+        },
+        "mode": "DEV",
+        "debug": true,
+        "auto_launch": {
+            "enabled": false,
+            "delay_seconds": 5
+        },
+        "auto_start_assist_cli": false,
+        "enable_assist": false,
+        "enable_oauth": true,
+        "enable_telegram_bot": true,
+        "enable_apps": true,
+        "use_cloudflared": false,
+        "user_domain": "ai.aistros.com",
+        "client_url": "https://ai.aistros.com"
+    },
+    "apps": {
+        "enabled": [
+            "windows_sysadmin",
+            "system_inspector",
+            "about_system",
+            "system_control_center",
+            "system_log_viewer",
+            "network_terminal",
+            "user_assistant",
+            "gcloud_monitor",
+            "website_monitor",
+            "ai_breadboard_admin",
+            "cloudflared_monitor",
+            "wikipedia_research",
+            "research_and_statistic",
+            "windows_startup_auditor",
+            "windows_backup_manager",
+            "windows_defender",
+            "autolog_manager",
+            "software_transparency_scanner"
+        ],
+        "disabled": [
+            "trading_terminal",
+            "helpdesk"
+        ]
+    },
+    "plugins": {
+        "enabled": [
+            "application_log_analyzer",
+            "facebook",
+            "gdrive_sync",
+            "generate_rag_from_codebase",
+            "google_oauth",
+            "ifttt",
+            "invoice_processor",
+            "news_feed",
+            "rag_cleaner",
+            "telegram_bot",
+            "telegram_channel_rag",
+            "user_storage"
+        ],
+        "disabled": []
+    },
+    "telegram": {
+        "bot_name": "ai_breadboard_bot"
+    },
+    "ai": {
+        "enable_narrator": true,
+        "preload_silero": false,
+        "realtime_streaming": true,
+        "providers": {
+            "foundry": {
+                "enabled": false,
+                "base_url": "http://localhost:49618",
+                "model": "qwen2.5-1.5b",
+                "unsupported_models": [
+                    "antigravity-preview-05-2026",
+                    "test-foundry-model-1"
+                ]
+            },
+            "ollama": {
+                "enabled": false,
+                "base_url": "http://localhost:11434",
+                "model": "llama3.1",
+                "unsupported_models": [
+                    "llama3.1"
+                ]
+            },
+            "agy": {
+                "enabled": false,
+                "model": "agy-gemini-3.6-flash",
+                "effort": "medium",
+                "unsupported_models": []
+            },
+            "gemini": {
+                "enabled": true,
+                "model": "gemini-3.1-flash-lite",
+                "api_key_names": "*",
+                "unsupported_models": [
+                    "gemini-1.0-pro",
+                    "gemini-1.0-ultra",
+                    "gemini-1.5-flash",
+                    "gemini-1.5-pro",
+                    "gemini-2.5-flash",
+                    "gemini-old",
+                    "gemini:gemini-3.1-flash-lite"
+                ]
+            },
+            "gemini_cli": {
+                "enabled": true,
+                "model": "gemini-3-flash-preview",
+                "unsupported_models": []
+            },
+            "hf": {
+                "enabled": false,
+                "model": "",
+                "unsupported_models": []
+            },
+            "onnx": {
+                "enabled": false,
+                "model": "",
+                "unsupported_models": []
+            },
+            "openai": {
+                "enabled": false,
+                "model": "",
+                "unsupported_models": []
+            }
+        }
+    },
+    "huggingface": {
+        "enabled": false,
+        "default_model": "Qwen/Qwen2.5-0.5B-Instruct",
+        "cache_dir": ""
+    },
+    "onnx": {
+        "enabled": true,
+        "models_dir": "models/onnx",
+        "execution_provider": "DirectMLExecutionProvider",
+        "default_model": "phi-3.5-mini-instruct-onnx",
+        "device_id": 0,
+        "olive_precision": "int4"
+    },
+    "openai_compat": {
+        "providers": {
+            "openai": {
+                "base_url": "https://api.openai.com/v1",
+                "models": [
+                    "gpt-4o",
+                    "gpt-4o-mini"
+                ]
+            },
+            "deepseek": {
+                "base_url": "https://api.deepseek.com/v1",
+                "models": [
+                    "deepseek-chat",
+                    "deepseek-reasoner"
+                ]
+            },
+            "lmstudio": {
+                "base_url": "http://localhost:1234/v1",
+                "models": []
+            }
+        }
+    },
+    "tts": {
+        "default_voice": "ru-RU-DmitryNeural"
+    },
+    "logging": {
+        "enable_log_analyzer": false,
+        "max_size_mb": 10.0,
+        "enable_autolog": true,
+        "default_interval": "1 minute",
+        "loggers": {
+            "librehardwaremonitor": {
+                "interval": "10 seconds",
+                "enabled": true
+            },
+            "system_inspector": {
+                "interval": "30 seconds",
+                "enabled": true
+            },
+            "hardware_monitor": {
+                "interval": "30 seconds",
+                "enabled": true
+            },
+            "smartmontools": {
+                "interval": "30 minutes",
+                "enabled": true
+            },
+            "cloudflared_monitor": {
+                "interval": "30 seconds",
+                "enabled": true
+            },
+            "gcloud_monitor": {
+                "interval": "24 hours",
+                "enabled": true
+            },
+            "helpdesk": {
+                "interval": "1 minute",
+                "enabled": true
+            },
+            "registry_viewer": {
+                "interval": "24 hours",
+                "enabled": true
+            },
+            "software_audit": {
+                "interval": "24 hours",
+                "enabled": true
+            },
+            "trading_terminal": {
+                "interval": "24 hours",
+                "enabled": true
+            },
+            "user_assistant": {
+                "interval": "5 minutes",
+                "enabled": true
+            },
+            "website_monitor": {
+                "interval": "24 hours",
+                "enabled": true
+            },
+            "windows_backup_manager": {
+                "interval": "6 hours",
+                "enabled": true
+            },
+            "windows_defender": {
+                "interval": "24 hours",
+                "enabled": true
+            },
+            "windows_startup_auditor": {
+                "interval": "24 hours",
+                "enabled": true
+            },
+            "windows_sysadmin": {
+                "interval": "6 hours",
+                "enabled": true
+            }
+        }
+    },
+    "pprint": {
+        "json_indent": 6
+    },
+    "rag": {
+        "mode": "rag+model"
+    },
+    "ifttt": {
+        "enabled": true,
+        "timeout_seconds": 10
+    },
+    "web_search": {
+        "engine": "playwright",
+        "gemini_model": "gemini-2.5-flash",
+        "gemini_cli_model": "gemini-3.1-flash-lite",
+        "agy_model": "agy-flash",
+        "fallback_on_rag_not_found": true
+    },
+    "langchain": {
+        "enabled": true,
+        "default_llm": "gemini",
+        "gemini_model": "gemini-2.5-flash",
+        "ollama_model": "qwen2.5:7b",
+        "ollama_base_url": "http://localhost:11434",
+        "mcp_servers": {
+            "playwright": {
+                "command": "npx",
+                "args": [
+                    "@playwright/mcp@latest"
+                ],
+                "transport": "stdio"
+            },
+            "fetch": {
+                "command": "uvx",
+                "args": [
+                    "mcp-server-fetch"
+                ],
+                "transport": "stdio"
+            },
+            "brave_search": {
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "@modelcontextprotocol/server-brave-search"
+                ],
+                "transport": "stdio",
+                "env": {
+                    "BRAVE_API_KEY": ""
+                }
+            }
+        },
+        "max_agent_steps": 15,
+        "search_timeout_seconds": 60
+    },
+    "agents": {
+        "enabled": [
+            "google_workspace_agent",
+            "playwright_agent",
+            "smart_home_agent",
+            "system_logs_agent",
+            "travel_agent",
+            "web_search_gemini",
+            "web_search_gemini_cli"
+        ],
+        "disabled": [
+            "web_search_agy"
+        ]
+    },
+    "schedulers": {
+        "enabled": true,
+        "rag_reindex": {
+            "enabled": true,
+            "interval_hours": 24
+        },
+        "email_check": {
+            "enabled": true,
+            "interval_minutes": 5
+        }
+    },
+    "storage": {
+        "users_dir": "data/users"
+    },
+    "user_settings": {
+        "language": "en"
+    }
+}

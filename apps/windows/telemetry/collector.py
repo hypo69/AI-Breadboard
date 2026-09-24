@@ -45,16 +45,23 @@ from logger import logger
 from apps.windows.telemetry.models import (
     AnomalyItem,
     BatteryMetrics,
+    CloudStorageInfo,
     CpuMetrics,
     DiskIoMetrics,
     DiskPartitionMetrics,
+    DriverInfo,
     GpuMetrics,
+    HardwareArchiveEntry,
+    HardwareAuditReport,
+    HardwareChangeItem,
+    HardwareDeviceAudit,
     HardwareNode,
     HardwareSensor,
     MemoryMetrics,
     MonitorInfo,
     NetworkInterfaceMetrics,
     NetworkPortMetrics,
+    OfficeSuiteInfo,
     PhysicalDiskHealth,
     ProcessMetrics,
     RamStickInfo,
@@ -63,14 +70,19 @@ from apps.windows.telemetry.models import (
     WindowsUpdateInfo,
 )
 from apps.windows.telemetry.sensors import get_hardware_sensors
-from apps.network_terminal.sensors import get_network_sensors
+from apps.windows.telemetry.hardware_auditor import HardwareAuditor
+from apps.windows.telemetry.history_manager import HardwareHistoryManager
 
 
 class SystemCollector:
     """Telemetry collector for system load, hardware devices, and processes."""
 
-    def __init__(self) -> None:
-        """Initialize telemetry collector with timing and I/O baseline state."""
+    def __init__(
+        self,
+        auditor: Optional[HardwareAuditor] = None,
+        history_manager: Optional[HardwareHistoryManager] = None,
+    ) -> None:
+        """Initialize telemetry collector with timing, I/O baseline, and hardware auditor."""
         self._last_disk_io = psutil.disk_io_counters() if PSUTIL_AVAILABLE else None
         self._last_net_io = psutil.net_io_counters(pernic=True) if PSUTIL_AVAILABLE else None
         self._last_time = time.time()
@@ -78,6 +90,9 @@ class SystemCollector:
         self._identity_cached: Optional[Dict[str, Any]] = None
         self._monitors_cached: Optional[List[MonitorInfo]] = None
         self._updates_cached: Optional[WindowsUpdateInfo] = None
+        self._office_cached: Optional[OfficeSuiteInfo] = None
+        self.auditor = auditor or HardwareAuditor()
+        self.history_manager = history_manager or HardwareHistoryManager()
 
     def get_system_identity(self) -> Dict[str, Any]:
         """Collect host identity, current user, system language, and locale parameters.
@@ -588,6 +603,9 @@ class SystemCollector:
                         if hasattr(d, "OperationalDetails") and d.OperationalDetails:
                             pass
 
+                        bus_map = {17: "NVMe", 11: "SATA", 8: "USB", 7: "SCSI", 6: "Fibre Channel", 3: "ATAPI", 1: "SCSI"}
+                        bus_type = bus_map.get(getattr(d, "BusType", None), "NVMe" if "NVMe" in str(d.Model or "") else "SATA")
+
                         disks.append(
                             PhysicalDiskHealth(
                                 device_id=str(d.DeviceId or d.FriendlyName or "Disk"),
@@ -597,6 +615,7 @@ class SystemCollector:
                                 health_status=health,
                                 operational_status="OK" if health == "Healthy" else "Check",
                                 temperature_celsius=temp_c,
+                                interface_type=bus_type,
                             )
                         )
                 except Exception:
@@ -608,6 +627,7 @@ class SystemCollector:
                     for d in w.Win32_DiskDrive():
                         size_gb = round(int(d.Size or 0) / (1024**3), 1)
                         status = str(d.Status or "OK")
+                        iface = str(getattr(d, "InterfaceType", None) or ("NVMe" if "NVMe" in str(d.Model or "") else "SATA")).strip()
                         disks.append(
                             PhysicalDiskHealth(
                                 device_id=str(d.DeviceID or d.Index or "Disk"),
@@ -616,6 +636,7 @@ class SystemCollector:
                                 size_gb=size_gb,
                                 health_status="Healthy" if status == "OK" else "Warning",
                                 operational_status=status,
+                                interface_type=iface,
                             )
                         )
             except Exception as ex:
@@ -630,6 +651,7 @@ class SystemCollector:
                     size_gb=512.0,
                     health_status="Healthy",
                     operational_status="OK",
+                    interface_type="NVMe",
                 )
             )
         return disks
@@ -947,6 +969,190 @@ class SystemCollector:
         self._updates_cached = info
         return info
 
+    def get_ms_office_info(self) -> OfficeSuiteInfo:
+        """Сбор информации об установленном пакете Microsoft Office / 365.
+
+        Returns:
+            OfficeSuiteInfo: Сведения о версии и статусе пакета Office.
+        """
+        if self._office_cached is not None:
+            return self._office_cached
+
+        installed = False
+        product_name = None
+        version = None
+        publisher = None
+
+        if os.name == "nt":
+            try:
+                import winreg
+
+                # 1. ClickToRun Configuration
+                ctr_keys = [
+                    (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Office\ClickToRun\Configuration"),
+                    (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Microsoft\Office\ClickToRun\Configuration"),
+                ]
+                for root, subkey in ctr_keys:
+                    try:
+                        with winreg.OpenKey(root, subkey) as k:
+                            for val_name in ("ProductVersion", "VersionToReport", "ClientVersionToReport"):
+                                try:
+                                    v, _ = winreg.QueryValueEx(k, val_name)
+                                    if v:
+                                        version = str(v)
+                                        break
+                                except OSError:
+                                    pass
+                            try:
+                                prod_ids, _ = winreg.QueryValueEx(k, "ProductReleaseIds")
+                                if prod_ids:
+                                    product_name = str(prod_ids).replace("Volume", "").replace("Retail", "").strip()
+                            except OSError:
+                                pass
+                            if version:
+                                installed = True
+                                publisher = "Microsoft Corporation"
+                                break
+                    except OSError:
+                        pass
+
+                # 2. Uninstall registry keys
+                if not installed:
+                    for root in (winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER):
+                        for sub in (
+                            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+                            r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
+                        ):
+                            try:
+                                with winreg.OpenKey(root, sub) as key:
+                                    count = winreg.QueryInfoKey(key)[0]
+                                    for i in range(count):
+                                        try:
+                                            sk_name = winreg.EnumKey(key, i)
+                                            with winreg.OpenKey(key, sk_name) as sk:
+                                                dn, _ = winreg.QueryValueEx(sk, "DisplayName")
+                                                dn_str = str(dn)
+                                                if (
+                                                    "microsoft office" in dn_str.lower()
+                                                    or "microsoft 365" in dn_str.lower()
+                                                    or "office 16" in dn_str.lower()
+                                                    or "office 15" in dn_str.lower()
+                                                ):
+                                                    try:
+                                                        dv, _ = winreg.QueryValueEx(sk, "DisplayVersion")
+                                                        version = str(dv)
+                                                    except OSError:
+                                                        pass
+                                                    try:
+                                                        pub, _ = winreg.QueryValueEx(sk, "Publisher")
+                                                        publisher = str(pub)
+                                                    except OSError:
+                                                        publisher = "Microsoft Corporation"
+                                                    product_name = dn_str
+                                                    installed = True
+                                                    break
+                                        except OSError:
+                                            pass
+                                    if installed:
+                                        break
+                            except OSError:
+                                pass
+                            if installed:
+                                break
+            except Exception as ex:
+                logger.debug(f"Исключение при поиске MS Office: {ex}")
+
+        if installed:
+            ver_suffix = f" (v{version})" if version else ""
+            summary = f"{product_name or 'Microsoft Office'}{ver_suffix}"
+        else:
+            summary = "Не установлен"
+
+        res = OfficeSuiteInfo(
+            installed=installed,
+            product_name=product_name,
+            version=version,
+            publisher=publisher,
+            status=summary,
+        )
+        self._office_cached = res
+        return res
+
+    def get_onedrive_info(self) -> CloudStorageInfo:
+        """Сбор информации о синхронизированной папке и дисковом пространстве OneDrive.
+
+        Returns:
+            CloudStorageInfo: Сведения о локальном пути и емкости диска OneDrive.
+        """
+        import shutil
+
+        od_paths: List[str] = []
+        for env_var in ("OneDrive", "OneDriveConsumer", "OneDriveCommercial"):
+            val = os.environ.get(env_var)
+            if val and os.path.exists(val) and val not in od_paths:
+                od_paths.append(val)
+
+        if not od_paths:
+            home = os.path.expanduser("~")
+            candidate = os.path.join(home, "OneDrive")
+            if os.path.exists(candidate):
+                od_paths.append(candidate)
+
+        if os.name == "nt":
+            try:
+                import winreg
+
+                for subkey in (
+                    r"Software\Microsoft\OneDrive\Accounts\Personal",
+                    r"Software\Microsoft\OneDrive\Accounts\Business1",
+                    r"Software\Microsoft\OneDrive",
+                ):
+                    try:
+                        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, subkey) as k:
+                            val, _ = winreg.QueryValueEx(k, "UserFolder")
+                            if val and os.path.exists(val) and val not in od_paths:
+                                od_paths.append(val)
+                    except OSError:
+                        pass
+            except Exception:
+                pass
+
+        if not od_paths:
+            return CloudStorageInfo(
+                installed=False,
+                name="OneDrive",
+                path=None,
+                status="Не настроено",
+            )
+
+        target_path = od_paths[0]
+        try:
+            usage = shutil.disk_usage(target_path)
+            free_gb = round(usage.free / (1024**3), 1)
+            total_gb = round(usage.total / (1024**3), 1)
+            used_gb = round(usage.used / (1024**3), 1)
+            pct = round((usage.used / max(usage.total, 1)) * 100.0, 1)
+
+            summary = f"{free_gb} GB своб. ({target_path})"
+            return CloudStorageInfo(
+                installed=True,
+                name="OneDrive",
+                path=target_path,
+                total_gb=total_gb,
+                used_gb=used_gb,
+                free_gb=free_gb,
+                percent_used=pct,
+                status=summary,
+            )
+        except Exception as ex:
+            logger.debug(f"Ошибка проверки диска OneDrive: {ex}")
+            return CloudStorageInfo(
+                installed=True,
+                name="OneDrive",
+                path=target_path,
+                status=f"Активен ({target_path})",
+            )
+
     async def get_snapshot(self, process_limit: int = 20) -> SystemSnapshot:
         """Capture full point-in-time system telemetry snapshot.
 
@@ -985,6 +1191,8 @@ class SystemCollector:
             gpus=self.get_gpu_metrics(),
             monitors=self.get_monitors(),
             updates=self.get_updates_info(),
+            office=self.get_ms_office_info(),
+            onedrive=self.get_onedrive_info(),
             disks=partitions,
             physical_disks=self.get_physical_disks_health(),
             disk_io=disk_io,
@@ -1013,49 +1221,71 @@ class SystemCollector:
         nodes: List[HardwareNode] = []
         ident = self.get_system_identity()
 
-        # 1. Computer & Operating System Node
+        # 1. Компьютер и операционная система (System & OS)
         nodes.append(
             HardwareNode(
                 category="System",
                 name=f"{ident.get('hostname')} ({platform.system()} {platform.release()})",
                 properties={
-                    "Computer Name": ident.get("hostname", ""),
-                    "Current User": ident.get("username", ""),
-                    "OS Version": platform.version(),
-                    "OS Build": ident.get("os_build", ""),
-                    "OS Install Date": ident.get("os_install_date", ""),
-                    "System Language": ident.get("system_language", ""),
-                    "User Locale": ident.get("user_locale", ""),
-                    "System Locale": ident.get("system_locale", ""),
-                    "Timezone": ident.get("timezone", ""),
-                    "Codepages": ident.get("codepage", ""),
-                    "Input Languages": ", ".join(ident.get("input_languages", [])),
-                    "Architecture": platform.machine(),
-                    "Python Runtime": platform.python_version(),
+                    "Компьютер (Host)": ident.get("hostname", ""),
+                    "Пользователь": ident.get("username", ""),
+                    "Версия Windows": platform.version(),
+                    "Номер сборки": ident.get("os_build", ""),
+                    "Дата установки ОС": ident.get("os_install_date", ""),
+                    "Язык системы": ident.get("system_language", ""),
+                    "Локали": f"User: {ident.get('user_locale', '')} | Sys: {ident.get('system_locale', '')}",
+                    "Часовой пояс": ident.get("timezone", ""),
+                    "Кодировки": ident.get("codepage", ""),
+                    "Языки ввода": ", ".join(ident.get("input_languages", [])),
+                    "Архитектура": platform.machine(),
+                    "Среда Python": platform.python_version(),
                 },
             )
         )
 
-        # 2. Processor Node
+        # 2. Процессор (CPU) с деталями кэша и сокета
         cpu = await self.get_cpu_metrics()
+        cpu_props: Dict[str, Any] = {
+            "Модель процессора": cpu.model,
+            "Физические ядра": cpu.physical_cores,
+            "Логические потоки": cpu.logical_cores,
+            "Базовая частота": f"{cpu.frequency_mhz} MHz",
+            "Архитектура": cpu.architecture,
+        }
+
+        # Дополнительный опрос WMI Win32_Processor для расширенных данных кэша и сокета
+        if os.name == "nt":
+            try:
+                import win32com.client
+                wmi_obj = win32com.client.GetObject("winmgmts:")
+                for p in wmi_obj.InstancesOf("Win32_Processor"):
+                    if getattr(p, "SocketDesignation", None):
+                        cpu_props["Разъем (Socket)"] = p.SocketDesignation
+                    if getattr(p, "L2CacheSize", None):
+                        cpu_props["Кэш L2"] = f"{round(p.L2CacheSize / 1024, 1)} MB ({p.L2CacheSize} KB)"
+                    if getattr(p, "L3CacheSize", None):
+                        cpu_props["Кэш L3"] = f"{round(p.L3CacheSize / 1024, 1)} MB ({p.L3CacheSize} KB)"
+                    if getattr(p, "MaxClockSpeed", None):
+                        cpu_props["Макс. частота"] = f"{p.MaxClockSpeed} MHz"
+                    if getattr(p, "Manufacturer", None):
+                        cpu_props["Производитель"] = p.Manufacturer
+                    break
+            except Exception as e:
+                logger.debug(f"[HardwareTree] WMI Win32_Processor warning: {e}")
+
         nodes.append(
             HardwareNode(
                 category="Processor (CPU)",
                 name=cpu.model,
-                properties={
-                    "Physical Cores": cpu.physical_cores,
-                    "Logical Threads": cpu.logical_cores,
-                    "Base Frequency": f"{cpu.frequency_mhz} MHz",
-                    "Architecture": cpu.architecture,
-                },
+                properties=cpu_props,
             )
         )
 
-        # 3. Motherboard & BIOS (via Registry or WMI on Windows)
+        # 3. Системная плата и BIOS (Motherboard & BIOS)
         if os.name == "nt":
+            mb_props: Dict[str, Any] = {}
             mb_name = ""
             mb_mfg = ""
-            bios_ver = ""
             try:
                 import winreg
 
@@ -1063,124 +1293,275 @@ class SystemCollector:
                     mb_mfg, _ = winreg.QueryValueEx(key, "BaseBoardManufacturer")
                     mb_name, _ = winreg.QueryValueEx(key, "BaseBoardProduct")
                     bios_ver, _ = winreg.QueryValueEx(key, "BIOSVersion")
+                    if mb_mfg:
+                        mb_props["Производитель платы"] = mb_mfg
+                    if mb_name:
+                        mb_props["Модель платы"] = mb_name
+                    if bios_ver:
+                        mb_props["Версия BIOS"] = bios_ver
             except Exception:
                 pass
 
-            if not mb_name:
-                try:
-                    import wmi  # type: ignore
+            try:
+                import win32com.client
+                wmi_obj = win32com.client.GetObject("winmgmts:")
+                for b in wmi_obj.InstancesOf("Win32_BaseBoard"):
+                    if getattr(b, "Manufacturer", None):
+                        mb_props["Производитель платы"] = b.Manufacturer
+                    if getattr(b, "Product", None):
+                        mb_props["Модель платы"] = b.Product
+                    if getattr(b, "SerialNumber", None):
+                        mb_props["Серийный номер платы"] = (b.SerialNumber or "").strip()
+                    if getattr(b, "Version", None):
+                        mb_props["Ревизия / Версия"] = b.Version
+                    mb_name = mb_props.get("Модель платы", mb_name)
+                    mb_mfg = mb_props.get("Производитель платы", mb_mfg)
+                    break
 
-                    w = wmi.WMI()
-                    board = w.Win32_BaseBoard()
-                    bios = w.Win32_BIOS()
-                    mb_name = board[0].Product if board else ""
-                    mb_mfg = board[0].Manufacturer if board else ""
-                    bios_ver = bios[0].SMBIOSBIOSVersion if bios else ""
-                except Exception:
-                    pass
+                for bios in wmi_obj.InstancesOf("Win32_BIOS"):
+                    if getattr(bios, "Manufacturer", None):
+                        mb_props["Производитель BIOS"] = bios.Manufacturer
+                    if getattr(bios, "SMBIOSBIOSVersion", None):
+                        mb_props["Версия SMBIOS BIOS"] = bios.SMBIOSBIOSVersion
+                    if getattr(bios, "ReleaseDate", None):
+                        rel_date = str(bios.ReleaseDate)[:8]
+                        if len(rel_date) == 8:
+                            mb_props["Дата выпуска BIOS"] = f"{rel_date[6:8]}.{rel_date[4:6]}.{rel_date[0:4]}"
+                        else:
+                            mb_props["Дата выпуска BIOS"] = str(bios.ReleaseDate)
+                    break
+            except Exception as e:
+                logger.debug(f"[HardwareTree] WMI BaseBoard/BIOS warning: {e}")
 
-            if mb_name or mb_mfg:
+            if mb_props:
                 nodes.append(
                     HardwareNode(
                         category="Motherboard",
                         name=f"{mb_mfg} {mb_name}".strip() or "Motherboard",
-                        properties={
-                            "Manufacturer": mb_mfg or "Unknown",
-                            "Product": mb_name or "Unknown",
-                            "BIOS Version": bios_ver or "Unknown",
-                        },
+                        properties=mb_props,
                     )
                 )
 
-        # 4. Memory (RAM)
+        # 4. Общая память (System Memory RAM Overview)
         mem = self.get_memory_metrics()
+        mem_overview_props: Dict[str, Any] = {
+            "Общий объем RAM": f"{mem.total_gb} GB",
+            "Доступная память": f"{mem.available_gb} GB",
+            "Файл подкачки (Swap)": f"{mem.swap_total_gb} GB",
+        }
+
+        # 4.1 Физические планки памяти (Physical RAM DIMM Modules)
+        ram_modules_found = 0
+        if os.name == "nt":
+            try:
+                import win32com.client
+                wmi_obj = win32com.client.GetObject("winmgmts:")
+
+                # Количество слотов на плате и макс. поддерживаемый объем
+                for arr in wmi_obj.InstancesOf("Win32_PhysicalMemoryArray"):
+                    if getattr(arr, "MemoryDevices", None):
+                        mem_overview_props["Слотов памяти на плате"] = arr.MemoryDevices
+                    if getattr(arr, "MaxCapacity", None):
+                        max_gb = round(int(arr.MaxCapacity) / (1024**2), 1)
+                        mem_overview_props["Макс. поддерживаемый объем"] = f"{max_gb} GB"
+                    break
+
+                type_map = {
+                    20: "DDR",
+                    21: "DDR2",
+                    22: "DDR2 FB-DIMM",
+                    24: "DDR3",
+                    26: "DDR4",
+                    27: "LPDDR",
+                    28: "LPDDR2",
+                    29: "LPDDR3",
+                    30: "LPDDR4",
+                    34: "DDR5",
+                    35: "LPDDR5",
+                }
+                form_map = {
+                    8: "DIMM (Desktop)",
+                    12: "SODIMM (Laptop)",
+                    9: "TSOP",
+                    10: "PGA",
+                    11: "RIMM",
+                }
+
+                for idx, m in enumerate(wmi_obj.InstancesOf("Win32_PhysicalMemory")):
+                    ram_modules_found += 1
+                    cap_bytes = int(getattr(m, "Capacity", 0) or 0)
+                    cap_gb = round(cap_bytes / (1024**3), 1)
+                    smbios_type = int(getattr(m, "SMBIOSMemoryType", 0) or 0)
+                    mem_type = type_map.get(smbios_type, f"DDR (Тип {smbios_type})" if smbios_type else "DDR")
+                    form_code = int(getattr(m, "FormFactor", 0) or 0)
+                    form_name = form_map.get(form_code, "DIMM")
+
+                    mfg = (getattr(m, "Manufacturer", "") or "").strip()
+                    if mfg == "04CB000080CE":
+                        mfg_display = "ADATA / Micron (04CB)"
+                    elif mfg:
+                        mfg_display = mfg
+                    else:
+                        mfg_display = "Не определен"
+
+                    sn = (getattr(m, "SerialNumber", "") or "").strip() or "N/A"
+                    pn = (getattr(m, "PartNumber", "") or "").strip() or "N/A"
+                    speed = getattr(m, "Speed", 0) or 0
+                    clock = getattr(m, "ConfiguredClockSpeed", 0) or speed
+                    locator = (getattr(m, "DeviceLocator", "") or f"DIMM {idx+1}").strip()
+                    bank = (getattr(m, "BankLabel", "") or "").strip()
+
+                    module_props: Dict[str, Any] = {
+                        "Слот / Разъем (Locator)": locator,
+                        "Объем планки": f"{cap_gb} GB ({cap_bytes:,} байт)",
+                        "Производитель": mfg_display,
+                        "Серийный номер (S/N)": sn,
+                        "Парт-номер (P/N)": pn,
+                        "Номинальная частота": f"{speed} MHz" if speed else "N/A",
+                        "Текущая рабочая частота": f"{clock} MHz" if clock else "N/A",
+                        "Тип памяти": f"{mem_type} (SMBIOS {smbios_type})",
+                        "Форм-фактор": form_name,
+                    }
+                    if bank:
+                        module_props["Банк памяти (Bank)"] = bank
+
+                    nodes.append(
+                        HardwareNode(
+                            category="Memory Module (RAM)",
+                            name=f"Планка {idx+1} ({locator}): {cap_gb} GB {mem_type}-{speed or clock}",
+                            properties=module_props,
+                        )
+                    )
+            except Exception as e:
+                logger.debug(f"[HardwareTree] WMI PhysicalMemory query warning: {e}")
+
+        if ram_modules_found > 0:
+            mem_overview_props["Установлено модулей"] = f"{ram_modules_found} шт."
+
         nodes.append(
             HardwareNode(
                 category="System Memory",
                 name=f"{mem.total_gb} GB Physical RAM",
-                properties={
-                    "Total RAM": f"{mem.total_gb} GB",
-                    "Available RAM": f"{mem.available_gb} GB",
-                    "Swap Capacity": f"{mem.swap_total_gb} GB",
-                },
+                properties=mem_overview_props,
             )
         )
 
-        # 5. Display & Graphics (GPU)
-        for idx, gpu in enumerate(self.get_gpu_metrics()):
+        # 5. Видеоадаптеры и ускорители (Display Adapters & GPUs)
+        gpus = self.get_gpu_metrics()
+        for idx, gpu in enumerate(gpus):
+            gpu_props: Dict[str, Any] = {
+                "Индекс устройства": idx,
+                "Объем видеопамяти (VRAM)": f"{gpu.memory_total_gb} GB",
+                "Поддержка CUDA": "Да" if gpu.has_cuda else "Нет",
+                "Поддержка DirectML": "Да" if gpu.has_directml else "Нет",
+            }
+            if getattr(gpu, "driver_version", None):
+                gpu_props["Версия драйвера"] = gpu.driver_version
+            if getattr(gpu, "vendor", None):
+                gpu_props["Вендор"] = gpu.vendor
+
             nodes.append(
                 HardwareNode(
                     category="Display Adapter",
                     name=gpu.name,
-                    properties={
-                        "Device Index": idx,
-                        "VRAM": f"{gpu.memory_total_gb} GB",
-                        "CUDA Accelerated": gpu.has_cuda,
-                        "DirectML Accelerated": gpu.has_directml,
-                    },
+                    properties=gpu_props,
                 )
             )
 
-        # 6. Monitors & Displays
+        # 6. Дисплеи и мониторы (Monitors & Displays)
         for idx, mon in enumerate(self.get_monitors()):
             nodes.append(
                 HardwareNode(
                     category="Monitors & Displays",
                     name=f"{mon.name} ({mon.width}x{mon.height} @ {mon.frequency_hz}Hz)",
                     properties={
-                        "Device": mon.device,
-                        "Display Name": mon.name,
-                        "Connected Adapter": mon.adapter or "Default Adapter",
-                        "Resolution": f"{mon.width} x {mon.height}",
-                        "Refresh Rate": f"{mon.frequency_hz} Hz",
-                        "Color Depth": f"{mon.bits_per_pixel}-bit",
-                        "Primary Display": "Да (Основной)" if mon.is_primary else "Нет (Вторичный)",
+                        "Устройство": mon.device,
+                        "Название дисплея": mon.name,
+                        "Подключенный видеоадаптер": mon.adapter or "Default Adapter",
+                        "Разрешение экрана": f"{mon.width} x {mon.height}",
+                        "Частота развертки": f"{mon.frequency_hz} Hz",
+                        "Глубина цвета": f"{mon.bits_per_pixel}-bit",
+                        "Основной монитор": "Да (Основной)" if mon.is_primary else "Нет (Вторичный)",
                     },
                 )
             )
 
-        # 7. Storage Drives
+        # 7. Физические накопители (Physical Storage Drives)
+        if os.name == "nt":
+            try:
+                import win32com.client
+                wmi_obj = win32com.client.GetObject("winmgmts:")
+                for d in wmi_obj.InstancesOf("Win32_DiskDrive"):
+                    size_bytes = int(getattr(d, "Size", 0) or 0)
+                    size_gb = round(size_bytes / (1024**3), 1)
+                    model = (getattr(d, "Model", "") or "Hard Disk").strip()
+                    iface = (getattr(d, "InterfaceType", "") or "SCSI/SATA").strip()
+                    media = (getattr(d, "MediaType", "") or "Fixed hard disk media").strip()
+                    sn = (getattr(d, "SerialNumber", "") or "").strip() or "N/A"
+                    parts = getattr(d, "Partitions", 0) or 1
+                    status = (getattr(d, "Status", "") or "OK").strip()
+
+                    nodes.append(
+                        HardwareNode(
+                            category="Physical Disk",
+                            name=f"{model} ({size_gb} GB)",
+                            properties={
+                                "Модель накопителя": model,
+                                "Интерфейс подключения": iface,
+                                "Тип носителя": media,
+                                "Емкость": f"{size_gb} GB ({size_bytes:,} байт)",
+                                "Серийный номер (S/N)": sn,
+                                "Число разделов": parts,
+                                "Статус S.M.A.R.T.": status,
+                            },
+                        )
+                    )
+            except Exception as e:
+                logger.debug(f"[HardwareTree] WMI DiskDrive query warning: {e}")
+
+        # 8. Логические разделы дисков (Logical Storage Volumes)
         partitions, _ = self.get_disk_metrics()
         for part in partitions:
             nodes.append(
                 HardwareNode(
-                    category="Storage Drive",
-                    name=f"Disk Volume {part.device} ({part.total_gb} GB)",
+                    category="Storage Volume",
+                    name=f"Раздел {part.device} ({part.total_gb} GB)",
                     properties={
-                        "Device": part.device,
-                        "Mountpoint": part.mountpoint,
-                        "Filesystem": part.fstype,
-                        "Total Space": f"{part.total_gb} GB",
-                        "Free Space": f"{part.free_gb} GB",
+                        "Дисковый том": part.device,
+                        "Точка монтирования": part.mountpoint,
+                        "Файловая система": part.fstype,
+                        "Общий объем": f"{part.total_gb} GB",
+                        "Свободное место": f"{part.free_gb} GB",
+                        "Занято памяти": f"{part.used_gb} GB ({part.percent}%)",
                     },
                 )
             )
 
-        # 8. Network Adapters
+        # 9. Сетевые адаптеры (Network Adapters)
         for net in self.get_network_metrics():
             nodes.append(
                 HardwareNode(
                     category="Network Adapter",
                     name=net.name,
                     properties={
-                        "Status": "Up" if net.is_up else "Down",
-                        "Link Speed": f"{net.speed_mbps} Mbps",
-                        "IP Addresses": ", ".join(net.ip_addresses) or "N/A",
+                        "Состояние соединения": "Активно (Up)" if net.is_up else "Отключено (Down)",
+                        "Скорость канала": f"{net.speed_mbps} Mbps",
+                        "IP-адреса": ", ".join(net.ip_addresses) or "N/A",
                     },
                 )
             )
 
-        # 9. Windows Updates & Servicing
+        # 10. Обновления Windows (Windows Updates & Servicing)
         upd = self.get_updates_info()
         nodes.append(
             HardwareNode(
                 category="Windows Updates",
                 name=f"{upd.status} ({upd.installed_kb_count} KBs)",
                 properties={
-                    "Update Status": upd.status,
-                    "Installed Hotfixes Count": upd.installed_kb_count,
-                    "Recent KBs": ", ".join(upd.recent_hotfixes) or "N/A",
-                    "Latest Update State": upd.latest_installed_on or "OK",
+                    "Статус обновлений": upd.status,
+                    "Число установленных исправлений": upd.installed_kb_count,
+                    "Последние KB пакеты": ", ".join(upd.recent_hotfixes) or "N/A",
+                    "Дата последней установки": upd.latest_installed_on or "OK",
                 },
             )
         )
@@ -1195,3 +1576,46 @@ class SystemCollector:
         """
         import asyncio
         return asyncio.run(self.get_hardware_tree_async())
+
+    def get_hardware_audit(self) -> HardwareAuditReport:
+        """Collect deep hardware devices audit with drivers, install dates, and attached sensors.
+
+        Returns:
+            HardwareAuditReport: Complete hardware audit report.
+        """
+        return self.auditor.audit_hardware()
+
+    def archive_hardware_state(self, auto_diff: bool = True) -> HardwareArchiveEntry:
+        """Capture current hardware audit and save it to historical archive storage.
+
+        Args:
+            auto_diff: Automatically compute diff with previous archive.
+
+        Returns:
+            HardwareArchiveEntry: Persisted archive entry with detected changes.
+        """
+        report = self.get_hardware_audit()
+        return self.history_manager.archive_report(report, auto_diff=auto_diff)
+
+    def get_hardware_history(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Retrieve historical hardware archive snapshots metadata.
+
+        Args:
+            limit: Maximum count of archive entries.
+
+        Returns:
+            List[Dict[str, Any]]: Chronological list of archive entries.
+        """
+        return self.history_manager.get_history(limit=limit)
+
+    def get_hardware_changes(self, limit: int = 100) -> List[HardwareChangeItem]:
+        """Retrieve historical timeline of all hardware configuration changes.
+
+        Args:
+            limit: Maximum count of changes to return.
+
+        Returns:
+            List[HardwareChangeItem]: Historical changes timeline.
+        """
+        return self.history_manager.get_change_timeline(limit=limit)
+

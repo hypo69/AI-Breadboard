@@ -30,6 +30,10 @@
     "user_domain": "ai.aistros.com",
     "client_url": "https://ai.aistros.com"
   },
+  "logging": {
+    "level": "DEBUG",
+    "debug": true
+  },
   "apps": {
     "enabled": [
       "windows_sysadmin",
@@ -52,7 +56,6 @@
       "software_transparency_scanner"
     ],
     "disabled": [
-      
       "trading_terminal",
       "autolog_manager",
       "helpdesk"
@@ -103,7 +106,7 @@
       "agy": {
         "enabled": false,
         "model": "agy-gemini-3.6-flash",
-        "effort":"medium",
+        "effort": "medium",
         "unsupported_models": []
       },
       "gemini": {
@@ -116,6 +119,7 @@
           "gemini-1.5-flash",
           "gemini-1.5-pro",
           "gemini-2.5-flash",
+          "gemini-2.5-flash-preview-tts",
           "gemini-old",
           "gemini:gemini-3.1-flash-lite"
         ]
@@ -179,94 +183,6 @@
   },
   "tts": {
     "default_voice": "ru-RU-DmitryNeural"
-  },
-  "logging": {
-    "enable_log_analyzer": false,
-    "max_size_mb": 10.0
-  },
-  "pprint": {
-    "json_indent": 6
-  },
-  "rag": {
-    "mode": "rag+model"
-  },
-  "ifttt": {
-    "enabled": true,
-    "timeout_seconds": 10
-  },
-  "web_search": {
-    "engine": "playwright",
-    "gemini_model": "gemini-2.5-flash",
-    "gemini_cli_model": "gemini-3.1-flash-lite",
-    "agy_model": "agy-flash",
-    "fallback_on_rag_not_found": true
-  },
-  "langchain": {
-    "enabled": true,
-    "default_llm": "gemini",
-    "gemini_model": "gemini-2.5-flash",
-    "ollama_model": "qwen2.5:7b",
-    "ollama_base_url": "http://localhost:11434",
-    "mcp_servers": {
-      "playwright": {
-        "command": "npx",
-        "args": [
-          "@playwright/mcp@latest"
-        ],
-        "transport": "stdio"
-      },
-      "fetch": {
-        "command": "uvx",
-        "args": [
-          "mcp-server-fetch"
-        ],
-        "transport": "stdio"
-      },
-      "brave_search": {
-        "command": "npx",
-        "args": [
-          "-y",
-          "@modelcontextprotocol/server-brave-search"
-        ],
-        "transport": "stdio",
-        "env": {
-          "BRAVE_API_KEY": ""
-        }
-      }
-    },
-    "max_agent_steps": 15,
-    "search_timeout_seconds": 60
-  },
-  "agents": {
-    "enabled": [
-      "google_workspace_agent",
-      "playwright_agent",
-      "smart_home_agent",
-      "system_logs_agent",
-      "travel_agent",
-      "web_search_gemini",
-      "web_search_gemini_cli"
-    ],
-    "disabled": [
-      "web_search_agy"
-    ]
-  },
-  "schedulers": {
-    "enabled": true,
-    "rag_reindex": {
-      "enabled": true,
-      "interval_hours": 24
-    },
-    "email_check": {
-      "enabled": true,
-      "interval_minutes": 5
-    }
-  },
-  "storage": {
-    "users_dir": "data/users"
-  },
-  "user_settings": {
-    "language": "en"
   },
   "logging": {
     "enable_autolog": true,
@@ -337,5 +253,91 @@
         "enabled": true
       }
     }
+  },
+  "pprint": {
+    "json_indent": 6
+  },
+  "rag": {
+    "mode": "rag+model"
+  },
+  "ifttt": {
+    "enabled": true,
+    "timeout_seconds": 10
+  },
+  "web_search": {
+    "engine": "playwright",
+    "gemini_model": "gemini-2.5-flash",
+    "gemini_cli_model": "gemini-3.1-flash-lite",
+    "agy_model": "agy-flash",
+    "fallback_on_rag_not_found": true
+  },
+  "langchain": {
+    "enabled": true,
+    "default_llm": "gemini",
+    "gemini_model": "gemini-2.5-flash",
+    "ollama_model": "qwen2.5:7b",
+    "ollama_base_url": "http://localhost:11434",
+    "mcp_servers": {
+      "playwright": {
+        "command": "npx",
+        "args": [
+          "@playwright/mcp@latest"
+        ],
+        "transport": "stdio"
+      },
+      "fetch": {
+        "command": "uvx",
+        "args": [
+          "mcp-server-fetch"
+        ],
+        "transport": "stdio"
+      },
+      "brave_search": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-brave-search"
+        ],
+        "transport": "stdio",
+        "env": {
+          "BRAVE_API_KEY": ""
+        }
+      }
+    },
+    "max_agent_steps": 15,
+    "search_timeout_seconds": 60
+  },
+  "agents": {
+    "enabled": [
+      "google_workspace_agent",
+      "mail_invoice_agent",
+      "mail_watcher_agent",
+      "playwright_agent",
+      "smart_home_agent",
+      "system_logs_agent",
+      "travel_agent",
+      "web_search_gemini",
+      "web_search_gemini_cli"
+    ],
+    "disabled": [
+      "web_search_agy"
+    ]
+  },
+  "schedulers": {
+    "enabled": true,
+    "rag_reindex": {
+      "enabled": true,
+      "interval_hours": 24
+    },
+    "email_check": {
+      "enabled": true,
+      "interval_minutes": 5
+    }
+  },
+  "storage": {
+    "users_dir": "data/users"
+  },
+  "user_settings": {
+    "language": "en"
   }
 }

@@ -7,6 +7,12 @@
 //   AIDA64-like hardware tree, LibreHardwareMonitor sensors, live top processes,
 //   disk volumes and security status.
 //
+//   КЕШИРОВАНИЕ (IndexedDB + Memory):
+//   - Stale-While-Revalidate для всех данных
+//   - Cache-First для hardware spec (меняется редко)
+//   - Network-First для live telemetry (всегда свежие)
+//   - Prefetching при активации вкладки
+//
 // File: main.js
 // Package: src.api.webgui.about_system_tab
 // Author: hypo69
@@ -22,15 +28,106 @@
   let isLiveActive = true;
   let liveIntervalId = null;
   let isUpdating = false;
-  let hasAutoRunAiDiagnostics = false;
   let isAiRunning = false;
+  
+  // Кеш-стратегия и TTL
+  const CACHE_STRATEGY = {
+    HARDWARE_SPEC: { ttl: 30 * 60 * 1000, strategy: 'cache-first' },      // 30 мин, редко меняется
+    SYSTEM_SUMMARY: { ttl: 5 * 1000, strategy: 'stale-while-revalidate' }, // 5 сек
+    SENSORS: { ttl: 3 * 1000, strategy: 'network-first' },                 // 3 сек, всегда свежие
+    CONTROL_STATUS: { ttl: 60 * 1000, strategy: 'stale-while-revalidate' }, // 1 мин
+    BACKUP_STATUS: { ttl: 5 * 60 * 1000, strategy: 'cache-first' }         // 5 мин
+  };
+  
+  const CACHE_STORE = 'api_cache';
+  const CACHE_TAG = 'about-system-tab';
+  
+  /**
+   * Универсальная функция для работы с кешем
+   * Поддерживает стратегии: cache-first, network-first, stale-while-revalidate
+   */
+  async function cachedFetch(url, cacheKey, options = {}) {
+    const { ttl = 60000, strategy = 'stale-while-revalidate', forceNetwork = false } = options;
+    const cache = window.browserCache;
+    
+    if (!cache) {
+      // Fallback: кеш недоступен, прямой запрос
+      return await apiFetch(url);
+    }
+    
+    // Cache-First: сначала кеш, потом сеть (для редко меняющихся данных)
+    if (strategy === 'cache-first' && !forceNetwork) {
+      const cached = await cache.get(CACHE_STORE, cacheKey);
+      if (cached) {
+        console.log(`[Cache] HIT (cache-first): ${cacheKey}`);
+        return cached;
+      }
+    }
+    
+    // Stale-While-Revalidate: показываем кеш, обновляем в фоне
+    if (strategy === 'stale-while-revalidate' && !forceNetwork) {
+      const cached = await cache.get(CACHE_STORE, cacheKey);
+      if (cached) {
+        console.log(`[Cache] HIT (stale-while-revalidate): ${cacheKey}, updating in background...`);
+        // Запускаем обновление в фоне
+        apiFetch(url)
+          .then(fresh => cache.set(CACHE_STORE, cacheKey, fresh, { ttl, tags: [CACHE_TAG] }))
+          .catch(err => console.warn(`[Cache] Background update failed for ${cacheKey}:`, err));
+        return cached;
+      }
+    }
+    
+    // Network-First или первый запрос: сначала сеть, потом кеш
+    try {
+      const fresh = await apiFetch(url);
+      // Сохраняем в кеш
+      await cache.set(CACHE_STORE, cacheKey, fresh, { ttl, tags: [CACHE_TAG] });
+      console.log(`[Cache] MISS → stored: ${cacheKey}`);
+      return fresh;
+    } catch (err) {
+      // Если сеть недоступна, пытаемся вернуть устаревший кеш
+      const cached = await cache.get(CACHE_STORE, cacheKey);
+      if (cached) {
+        console.warn(`[Cache] Network failed, returning stale cache: ${cacheKey}`);
+        return cached;
+      }
+      throw err;
+    }
+  }
+  
+  /**
+   * Очистка кеша вкладки (при необходимости)
+   */
+  async function clearTabCache() {
+    const cache = window.browserCache;
+    if (cache) {
+      await cache.invalidateByTag(CACHE_STORE, CACHE_TAG);
+      console.log('[Cache] Tab cache cleared');
+    }
+  }
 
   async function apiFetch(url, options = {}) {
-    if (window.api && typeof window.api.fetch === 'function') {
-      return await window.api.fetch(url, options);
+    const opts = { ...options };
+    if (opts.body && typeof opts.body === 'string') {
+      opts.headers = {
+        'Content-Type': 'application/json',
+        ...(opts.headers || {})
+      };
     }
-    const res = await fetch(url, options);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (window.api && typeof window.api.fetch === 'function') {
+      return await window.api.fetch(url, opts);
+    }
+    const res = await fetch(url, opts);
+    if (!res.ok) {
+      let errMsg = `HTTP ${res.status}`;
+      try {
+        const errJson = await res.json();
+        if (errJson && errJson.detail) {
+          errMsg += ` (${typeof errJson.detail === 'object' ? JSON.stringify(errJson.detail) : errJson.detail})`;
+        }
+      } catch (_) {}
+      throw new Error(errMsg);
+    }
     return await res.json();
   }
 
@@ -49,25 +146,61 @@
     bindEvents();
     bindAIEvents();
     updateLocalClock();
+    
+    // Проверка доступности кеша
+    await updateCacheStatus();
 
-    // Fast initial render from quick summary (<100ms) so tab is never empty
-    fetchSystemSummary().catch(err => console.warn('[AboutSystemTab] Quick summary error:', err));
+    // Prefetch: предзагрузка критичных данных для мгновенного отображения
+    const prefetchPromises = [
+      fetchSystemSummary().catch(err => console.warn('[AboutSystemTab] Quick summary error:', err)),
+      fetchHardwareSpec().catch(err => console.warn('[AboutSystemTab] Hardware spec error:', err))
+    ];
+    
+    // Ждем критичные данные перед отображением
+    await Promise.allSettled(prefetchPromises);
+    
+    // Фоновая загрузка менее критичных данных
     fetchHardwareSensors().catch(err => console.warn('[AboutSystemTab] Sensors error:', err));
-    fetchHardwareSpec().catch(err => console.warn('[AboutSystemTab] Hardware spec error:', err));
-
-    // Async background fetches for heavier diagnostics without blocking UI
+    fetchBackupStatus().catch(err => console.warn('[AboutSystemTab] Backup status error:', err));
     fetchSystemControlStatus().catch(err => console.warn('[AboutSystemTab] Control status error:', err));
 
-    // Execute AI Diagnostics only ONCE on system start / initial tab load
-    if (!hasAutoRunAiDiagnostics) {
-      hasAutoRunAiDiagnostics = true;
-      runAIDiagnostics(false).catch(err => console.warn('[AboutSystemTab] Initial AI diagnose error:', err));
-    }
-
+    // AI-диагностика запускается только пользователем по кнопке Rescan / Запуск
     // Start live telemetry ticker
     startLiveStream();
   }
   window.initAboutSystemTab = initAboutSystemTab;
+  
+  /**
+   * Обновление статуса кеша в интерфейсе
+   */
+  async function updateCacheStatus() {
+    const badge = document.getElementById('about-sys-cache-badge');
+    if (!badge) return;
+    
+    const cache = window.browserCache;
+    if (!cache) {
+      badge.textContent = '💾 Cache: Unavailable';
+      badge.className = 'badge rounded-pill bg-warning-subtle text-warning border border-warning px-2.5 py-1';
+      badge.title = 'Кеш недоступен, используется прямой запрос к API';
+      return;
+    }
+    
+    const ready = await cache.ready();
+    if (ready) {
+      const stats = await cache.getDetailedStats();
+      const hitRate = stats.metrics.hits + stats.metrics.misses > 0 
+        ? Math.round((stats.metrics.hits / (stats.metrics.hits + stats.metrics.misses)) * 100)
+        : 0;
+      
+      badge.textContent = `💾 Cache: ${hitRate}% hit`;
+      badge.className = 'badge rounded-pill bg-success-subtle text-success border border-success px-2.5 py-1';
+      badge.title = `Кеш активен\nПопаданий: ${stats.metrics.hits}\nПромахов: ${stats.metrics.misses}\nВ памяти: ${stats.memoryCacheSize} записей`;
+    } else {
+      badge.textContent = '💾 Cache: Error';
+      badge.className = 'badge rounded-pill bg-danger-subtle text-danger border border-danger px-2.5 py-1';
+      badge.title = 'Ошибка инициализации кеша';
+    }
+  }
 
   function updateLocalClock() {
     const clockEl = document.getElementById('about-ident-time-badge');
@@ -78,13 +211,25 @@
   }
 
   function startLiveStream() {
-    if (liveIntervalId) clearInterval(liveIntervalId);
-    liveIntervalId = setInterval(async () => {
-      updateLocalClock();
-      if (isLiveActive && !isUpdating) {
-        await pollLiveTelemetry();
-      }
-    }, 3000);
+    if (window.registerTabPoller) {
+      window.registerTabPoller('tab-about-system', async () => {
+        updateLocalClock();
+        if (isLiveActive && !isUpdating) {
+          await pollLiveTelemetry();
+        }
+        // Обновляем статус кеша каждые 3 секунды
+        await updateCacheStatus();
+      }, 3000, { immediate: true });
+    } else {
+      if (liveIntervalId) clearInterval(liveIntervalId);
+      liveIntervalId = setInterval(async () => {
+        updateLocalClock();
+        if (isLiveActive && !isUpdating) {
+          await pollLiveTelemetry();
+        }
+        await updateCacheStatus();
+      }, 3000);
+    }
   }
 
   function bindEvents() {
@@ -99,11 +244,36 @@
         btnRefresh.disabled = false;
       };
     }
+    
+    const btnClearCache = document.getElementById('btn-about-sys-clear-cache');
+    if (btnClearCache) {
+      btnClearCache.onclick = async () => {
+        btnClearCache.disabled = true;
+        const icon = btnClearCache.querySelector('i');
+        if (icon) icon.classList.add('spin-animation');
+        
+        // Очищаем кеш вкладки
+        await clearTabCache();
+        
+        // Принудительно обновляем все данные из сети
+        await refreshAllData(true);
+        
+        if (icon) icon.classList.remove('spin-animation');
+        btnClearCache.disabled = false;
+        
+        if (window.showToast) {
+          window.showToast('Кеш вкладки очищен, данные обновлены', 'success');
+        }
+      };
+    }
 
     const btnLiveToggle = document.getElementById('btn-about-sys-live-toggle');
     if (btnLiveToggle) {
       btnLiveToggle.onclick = () => {
         isLiveActive = !isLiveActive;
+        if (window.setTabPollerEnabled) {
+          window.setTabPollerEnabled('tab-about-system_default', isLiveActive);
+        }
         const icon = document.getElementById('icon-about-sys-live');
         const txt = document.getElementById('txt-about-sys-live');
         const liveBadge = document.getElementById('about-sys-live-badge');
@@ -180,17 +350,125 @@
     }
   }
 
-  async function refreshAllData() {
+  async function refreshAllData(forceNetwork = false) {
     isUpdating = true;
     try {
-      await Promise.allSettled([
-        fetchSystemSummary(),
-        fetchSystemControlStatus(),
-        fetchHardwareSpec(),
-        fetchHardwareSensors()
-      ]);
+      if (forceNetwork) {
+        // Принудительная загрузка из сети (игнорируем кеш)
+        await Promise.allSettled([
+          apiFetch('/api/v1/system/summary?process_limit=25').then(data => {
+            if (window.browserCache) {
+              window.browserCache.set(CACHE_STORE, 'system_summary', data, { 
+                ttl: CACHE_STRATEGY.SYSTEM_SUMMARY.ttl, 
+                tags: [CACHE_TAG] 
+              });
+            }
+            return fetchSystemSummary();
+          }),
+          apiFetch('/api/system-control/status').then(data => {
+            if (window.browserCache) {
+              window.browserCache.set(CACHE_STORE, 'system_control_status', data, { 
+                ttl: CACHE_STRATEGY.CONTROL_STATUS.ttl, 
+                tags: [CACHE_TAG] 
+              });
+            }
+            return fetchSystemControlStatus();
+          }),
+          apiFetch('/api/v1/system/hardware').then(data => {
+            if (window.browserCache) {
+              window.browserCache.set(CACHE_STORE, 'hardware_spec', data, { 
+                ttl: CACHE_STRATEGY.HARDWARE_SPEC.ttl, 
+                tags: [CACHE_TAG] 
+              });
+            }
+            return fetchHardwareSpec();
+          }),
+          apiFetch('/api/v1/system/sensors').then(data => {
+            if (window.browserCache) {
+              window.browserCache.set(CACHE_STORE, 'hardware_sensors', data, { 
+                ttl: CACHE_STRATEGY.SENSORS.ttl, 
+                tags: [CACHE_TAG] 
+              });
+            }
+            return fetchHardwareSensors();
+          }),
+          apiFetch('/api/v1/windows-backup/health').then(data => {
+            if (window.browserCache) {
+              window.browserCache.set(CACHE_STORE, 'backup_status', data, { 
+                ttl: CACHE_STRATEGY.BACKUP_STATUS.ttl, 
+                tags: [CACHE_TAG] 
+              });
+            }
+            return fetchBackupStatus();
+          })
+        ]);
+      } else {
+        await Promise.allSettled([
+          fetchSystemSummary(),
+          fetchSystemControlStatus(),
+          fetchHardwareSpec(),
+          fetchHardwareSensors(),
+          fetchBackupStatus()
+        ]);
+      }
     } finally {
       isUpdating = false;
+    }
+  }
+
+  async function fetchBackupStatus() {
+    try {
+      const config = CACHE_STRATEGY.BACKUP_STATUS;
+      const data = await cachedFetch(
+        '/api/v1/windows-backup/health',
+        'backup_status',
+        { ttl: config.ttl, strategy: config.strategy }
+      );
+      if (!data) return;
+
+      const cfg = data.file_history?.config;
+      const storage = data.storage_audit;
+
+      let lastTimeStr = 'Нет записей';
+      if (cfg && cfg.last_backup_time) {
+        try {
+          const d = new Date(cfg.last_backup_time);
+          if (!isNaN(d.getTime())) {
+            lastTimeStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          }
+        } catch (_) {}
+      } else if (storage && storage.sample_versions && storage.sample_versions.length > 0) {
+        const latestSample = storage.sample_versions[0];
+        if (latestSample && latestSample.version_timestamp) {
+          try {
+            const d = new Date(latestSample.version_timestamp);
+            if (!isNaN(d.getTime())) {
+              lastTimeStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+          } catch (_) {}
+        }
+      }
+
+      let storageStr = '';
+      if (storage && storage.target_exists && storage.free_space_gb !== null && storage.free_space_gb !== undefined) {
+        const target = storage.target_path || 'Диск';
+        const freeGb = typeof storage.free_space_gb === 'number' ? storage.free_space_gb.toFixed(1) : storage.free_space_gb;
+        storageStr = `${target} (${freeGb} GB своб.)`;
+      } else if (cfg && (cfg.target_drive_letter || cfg.target_url)) {
+        storageStr = cfg.target_drive_letter || cfg.target_url;
+      } else {
+        storageStr = 'Хранилище не найдено';
+      }
+
+      const backupSummary = `${lastTimeStr} | ${storageStr}`;
+      const backupEl = document.getElementById('about-ident-backup');
+      if (backupEl) {
+        backupEl.textContent = backupSummary;
+        backupEl.title = `Последний бэкап: ${lastTimeStr}\nХранилище: ${storageStr}\nСлужба File History: ${data.file_history?.service_status || '—'}\nHealth Score: ${data.health_score ?? '--'}/100`;
+      }
+    } catch (e) {
+      console.warn('[AboutSystemTab] fetchBackupStatus warning:', e);
+      setText('about-ident-backup', 'Не настроено');
     }
   }
 
@@ -208,7 +486,12 @@
 
   async function fetchSystemSummary(isLightPoll = false) {
     try {
-      const snap = await apiFetch('/api/v1/system/summary?process_limit=25');
+      const config = CACHE_STRATEGY.SYSTEM_SUMMARY;
+      const snap = await cachedFetch(
+        '/api/v1/system/summary?process_limit=25',
+        'system_summary',
+        { ttl: config.ttl, strategy: isLightPoll ? 'stale-while-revalidate' : 'network-first' }
+      );
       if (!snap) return;
 
       // 1. Identity & Locale Block
@@ -272,8 +555,8 @@
           ramBar.className = pct > 85 ? 'about-sys-progress-bar bg-danger' : (pct > 65 ? 'about-sys-progress-bar bg-warning' : 'about-sys-progress-bar bg-info');
         }
 
-        // Specification Table RAM
-        setText('about-spec-ram', `${avail} GB free / ${total} GB total (${pct}% used)`);
+        // Specification Table RAM (Hardware installed capacity)
+        setText('about-spec-ram', `${total} GB RAM (${avail} GB свободно)`);
       }
 
       if (Array.isArray(snap.gpus) && snap.gpus.length > 0) {
@@ -342,6 +625,22 @@
         setText('about-spec-update', updTxt);
       }
 
+      // 5.1 MS Office Block
+      if (snap.office) {
+        const offTxt = snap.office.status || (snap.office.installed ? `${snap.office.product_name || 'MS Office'} (${snap.office.version || ''})` : 'Не установлен');
+        setText('about-ident-ms-office', offTxt);
+      } else {
+        setText('about-ident-ms-office', 'Не установлен');
+      }
+
+      // 5.2 OneDrive Storage Block
+      if (snap.onedrive) {
+        const odTxt = snap.onedrive.status || (snap.onedrive.installed ? `${snap.onedrive.free_gb || 0} GB своб.` : 'Не настроено');
+        setText('about-ident-onedrive', odTxt);
+      } else {
+        setText('about-ident-onedrive', 'Не настроено');
+      }
+
       // 6. Processes Table
       if (Array.isArray(snap.top_processes)) {
         currentProcesses = snap.top_processes;
@@ -355,7 +654,12 @@
 
   async function fetchSystemControlStatus() {
     try {
-      const res = await apiFetch('/api/system-control/status');
+      const config = CACHE_STRATEGY.CONTROL_STATUS;
+      const res = await cachedFetch(
+        '/api/system-control/status',
+        'system_control_status',
+        { ttl: config.ttl, strategy: config.strategy }
+      );
       if (!res) return;
 
       const isElevated = res.is_elevated;
@@ -420,7 +724,12 @@
 
   async function fetchHardwareSensors(isPoll = false) {
     try {
-      const sensors = await apiFetch('/api/v1/system/sensors');
+      const config = CACHE_STRATEGY.SENSORS;
+      const sensors = await cachedFetch(
+        '/api/v1/system/sensors',
+        'hardware_sensors',
+        { ttl: config.ttl, strategy: config.strategy }
+      );
       if (Array.isArray(sensors)) {
         currentSensors = sensors;
         const badge = document.getElementById('about-sensors-count-badge');
@@ -451,6 +760,30 @@
         if (txtStages) {
           txtStages.textContent = isHidden ? 'Показать этапы' : 'Свернуть этапы';
         }
+      };
+    }
+
+    const btnToggleInstruction = document.getElementById('btn-about-ai-toggle-instruction');
+    const instructionCollapse = document.getElementById('about-ai-instruction-collapse');
+    const icInstruction = document.getElementById('ic-about-ai-instruction');
+    if (btnToggleInstruction && instructionCollapse) {
+      btnToggleInstruction.onclick = () => {
+        const isShown = !instructionCollapse.classList.toggle('d-none');
+        if (icInstruction) {
+          icInstruction.className = isShown ? 'bi bi-chevron-up text-muted ms-1' : 'bi bi-chevron-down text-muted ms-1';
+        }
+      };
+    }
+
+    const btnCopyInstruction = document.getElementById('btn-about-ai-copy-instruction');
+    if (btnCopyInstruction) {
+      btnCopyInstruction.onclick = () => {
+        const text = document.getElementById('about-ai-instruction-text')?.textContent || '';
+        navigator.clipboard.writeText(text).then(() => {
+          const s = document.getElementById('txt-about-ai-copy-instruction');
+          if (s) s.textContent = 'Скопировано!';
+          setTimeout(() => { if (s) s.textContent = 'Копировать'; }, 1800);
+        });
       };
     }
 
@@ -501,13 +834,37 @@
         });
       };
     }
+
+    const btnToggleSnapshot = document.getElementById('btn-about-ai-toggle-snapshot');
+    const snapshotCollapse = document.getElementById('about-ai-snapshot-collapse');
+    const icSnapshot = document.getElementById('ic-about-ai-snapshot');
+    if (btnToggleSnapshot && snapshotCollapse) {
+      btnToggleSnapshot.onclick = () => {
+        const isShown = !snapshotCollapse.classList.toggle('d-none');
+        if (icSnapshot) {
+          icSnapshot.className = isShown ? 'bi bi-chevron-up text-muted ms-1' : 'bi bi-chevron-down text-muted ms-1';
+        }
+      };
+    }
+
+    const btnCopySnapshot = document.getElementById('btn-about-ai-copy-snapshot');
+    if (btnCopySnapshot) {
+      btnCopySnapshot.onclick = () => {
+        const text = document.getElementById('about-ai-snapshot-text')?.textContent || '';
+        navigator.clipboard.writeText(text).then(() => {
+          const s = document.getElementById('txt-about-ai-copy-snapshot');
+          if (s) s.textContent = 'Скопировано!';
+          setTimeout(() => { if (s) s.textContent = 'Копировать JSON'; }, 1800);
+        });
+      };
+    }
   }
 
   function renderAIDiagnosticStages(stages, isCompleted = true) {
     const container = document.getElementById('about-ai-stages-container');
     if (!container) return;
     if (!Array.isArray(stages) || stages.length === 0) {
-      container.innerHTML = '<div class="small text-muted text-center py-2">Этапы аудита не зарегистрированы</div>';
+      container.innerHTML = '<div class="small text-muted text-center py-2">Этапы пошагового аудита не запущены</div>';
       return;
     }
 
@@ -515,6 +872,8 @@
       const isLatest = idx === stages.length - 1 && !isCompleted;
       const icon = isLatest
         ? '<div class="spinner-grow spinner-grow-sm text-info" style="width: 0.6rem; height: 0.6rem;" role="status"></div>'
+        : (st.stage === 'error' || st.stage === 'warning')
+        ? '<span class="text-warning small fw-bold" style="font-size: 0.72rem;">⚠️</span>'
         : '<span class="text-success small fw-bold" style="font-size: 0.72rem;">✔</span>';
       const textClass = isLatest ? 'text-light fw-semibold' : 'text-muted';
       return `
@@ -524,6 +883,62 @@
             <span>${escapeHtml(st.message || st.title || 'Выполнение этапа...')}</span>
           </div>
           ${st.details ? `<div class="text-secondary ps-3 font-monospace" style="font-size: 0.68rem; word-break: break-all;">↳ ${escapeHtml(st.details)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderAIDomainCards(groupsResults) {
+    const container = document.getElementById('about-ai-groups-container');
+    if (!container) return;
+
+    container.innerHTML = groupsResults.map(g => {
+      const isPending = g.status === 'pending';
+      const isAnalyzing = g.status === 'analyzing';
+      const isCrit = g.status === 'critical';
+      const isWarn = g.status === 'warning';
+
+      const statusBadge = isPending
+        ? '<span class="badge bg-secondary bg-opacity-25 text-muted border border-secondary border-opacity-25"><i class="bi bi-hourglass me-1"></i>Ожидание</span>'
+        : isAnalyzing
+        ? '<span class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-50"><span class="spinner-border spinner-border-sm me-1" style="width:0.6rem;height:0.6rem;"></span>Анализ LLM...</span>'
+        : isCrit
+        ? '<span class="badge bg-danger text-white"><i class="bi bi-exclamation-octagon-fill me-1"></i>Критично</span>'
+        : isWarn
+        ? '<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle-fill me-1"></i>Внимание</span>'
+        : '<span class="badge bg-success-subtle text-success border border-success"><i class="bi bi-check-circle-fill me-1"></i>В норме</span>';
+
+      const cardBorder = isCrit
+        ? 'border-danger border-opacity-75 shadow-sm'
+        : isWarn
+        ? 'border-warning border-opacity-50 shadow-sm'
+        : isAnalyzing
+        ? 'border-info border-opacity-60 shadow-sm'
+        : 'border-secondary border-opacity-30';
+
+      const metricsList = g.key_metrics && Object.keys(g.key_metrics).length > 0
+        ? `<div class="mt-2 pt-1.5 border-top border-secondary border-opacity-20 d-flex flex-wrap gap-1.5 font-monospace" style="font-size: 0.70rem;">
+            ${Object.entries(g.key_metrics).map(([k, v]) => `<span class="badge bg-dark bg-opacity-75 border border-secondary text-light px-2 py-1"><strong class="text-info">${escapeHtml(k)}:</strong> <span class="text-white">${escapeHtml(String(v))}</span></span>`).join('')}
+           </div>`
+        : '';
+
+      return `
+        <div class="col-12 col-md-6">
+          <div class="p-2.5 rounded bg-black bg-opacity-40 border ${cardBorder} h-100 d-flex flex-column justify-content-between transition-all" id="domain-card-${g.group_id}">
+            <div>
+              <div class="d-flex align-items-center justify-content-between mb-1.5">
+                <div class="d-flex align-items-center gap-1.5">
+                  <i class="bi ${escapeHtml(g.icon || 'bi-cpu')} text-info fs-6"></i>
+                  <strong class="text-light" style="font-size: 0.82rem;">${escapeHtml(g.title)}</strong>
+                </div>
+                ${statusBadge}
+              </div>
+              <div class="small text-light mt-1" style="font-size: 0.73rem; line-height: 1.45; white-space: pre-line;">
+                ${escapeHtml(g.summary || g.description || 'Ожидание запуска группы...')}
+              </div>
+            </div>
+            ${metricsList}
+          </div>
         </div>
       `;
     }).join('');
@@ -546,115 +961,334 @@
   async function runAIDiagnostics(isManualRescan = false) {
     if (isAiRunning) return;
     isAiRunning = true;
+    
+    // Устанавливаем флаг processing для немедленного переключения вкладок
+    if (window.setTabProcessing) {
+      window.setTabProcessing('tab-about-system', true);
+    }
 
     const btnRescan = document.getElementById('btn-about-ai-rescan');
     const txtRescan = document.getElementById('txt-about-ai-rescan');
     const icRescan = document.getElementById('ic-about-ai-rescan');
     const badgeHealth = document.getElementById('about-ai-health-badge');
+    const badgeHealthBtn = document.getElementById('about-ai-health-badge-btn');
     const engineTag = document.getElementById('about-ai-engine-name');
     const summaryEl = document.getElementById('about-ai-summary-text');
-    const promptSec = document.getElementById('about-ai-prompt-section');
-    const promptText = document.getElementById('about-ai-prompt-text');
-    const rawSec = document.getElementById('about-ai-raw-section');
-    const rawText = document.getElementById('about-ai-raw-text');
+    const errorSec = document.getElementById('about-ai-error-section');
+    const errorText = document.getElementById('about-ai-error-text');
+    const progressBar = document.getElementById('about-ai-step-progress');
+    const synthesisStatus = document.getElementById('about-ai-synthesis-status');
+    const actionsBox = document.getElementById('about-ai-actions-box');
+    const actionsList = document.getElementById('about-ai-actions-list');
+
+    const liveStatusText = document.getElementById('about-ai-live-status-text');
+    const chipLhm = document.getElementById('chip-sensor-lhm');
+    const chipWmi = document.getElementById('chip-sensor-wmi');
+    const chipRam = document.getElementById('chip-sensor-ram');
+    const chipDisks = document.getElementById('chip-sensor-disks');
+    const chipNet = document.getElementById('chip-sensor-net');
+    const snapshotText = document.getElementById('about-ai-snapshot-text');
+    const tickCpu = document.getElementById('live-tick-cpu');
+    const tickTemp = document.getElementById('live-tick-temp');
+    const tickRam = document.getElementById('live-tick-ram');
+    const tickDisks = document.getElementById('live-tick-disks');
+    const tickTopProc = document.getElementById('live-tick-top-proc');
 
     if (btnRescan) btnRescan.disabled = true;
     if (icRescan) icRescan.className = 'spinner-border spinner-border-sm text-dark';
-    if (txtRescan) txtRescan.textContent = 'Сканирование...';
+    if (txtRescan) txtRescan.textContent = 'Диагностика...';
+
+    if (errorSec) errorSec.classList.add('d-none');
+    if (actionsBox) actionsBox.classList.add('d-none');
+    if (progressBar) progressBar.style.width = '5%';
+
+    if (liveStatusText) liveStatusText.textContent = 'Опрос аппаратных датчиков хоста (LibreHardwareMonitor, WMI, psutil, SMART)...';
+
+    // Reset chips to active polling state
+    [chipLhm, chipWmi, chipRam, chipDisks, chipNet].forEach(c => {
+      if (c) c.className = 'badge bg-secondary bg-opacity-40 text-light border border-secondary';
+    });
 
     if (badgeHealth) {
-      badgeHealth.textContent = 'Health: Анализ...';
+      badgeHealth.textContent = 'Health: Поэтапный опрос...';
       badgeHealth.className = 'badge bg-warning-subtle text-warning border border-warning font-monospace';
     }
+    if (badgeHealthBtn) {
+      badgeHealthBtn.textContent = 'Health: Опрос...';
+      badgeHealthBtn.className = 'badge bg-warning-subtle text-warning border border-warning font-monospace ms-1';
+    }
 
-    // Render initial in-progress stages
-    renderAIDiagnosticStages([
+    const stagesLog = [
       {
         stage: 'init',
         title: 'Сбор телеметрии',
-        message: '🔌 Опрос системных метрик WMI, сенсоров и топовых процессов...',
-        details: 'Формирование системного снимка (SystemSnapshot)',
+        message: '🔌 Получение среза телеметрии и сенсоров хоста...',
+        details: 'Опрос LibreHardwareMonitor, WMI счетчиков и SystemSnapshot',
       }
-    ], false);
-
-    if (summaryEl) {
-      summaryEl.textContent = 'Выполняется глубокий аудит аппаратных ресурсов и поиск узких мест...';
-    }
+    ];
+    renderAIDiagnosticStages(stagesLog, false);
 
     try {
-      const report = await apiFetch('/api/v1/system/diagnose', { method: 'POST' });
-      if (!report) throw new Error('Пустой ответ от сервера');
+      // 1. Получение списка подготовленных 4 групп телеметрии
+      const groups = await apiFetch('/api/v1/system/diagnose/groups');
+      if (!Array.isArray(groups) || groups.length === 0) {
+        throw new Error('Не удалось получить список диагностических групп');
+      }
 
-      // Update Health Score Badge
-      const score = Number(report.health_score || 100);
+      if (snapshotText) {
+        snapshotText.textContent = JSON.stringify(groups, null, 2);
+      }
+
+      // Обновление живой информационной плашки собранных метрик
+      const compGroup = groups.find(g => g.group_id === 'compute_thermals');
+      if (compGroup && compGroup.payload) {
+        const cpu = compGroup.payload.cpu || {};
+        if (tickCpu) tickCpu.textContent = `${cpu.model || 'CPU'} (${cpu.load_percent ?? 0}%)`;
+        const temps = compGroup.payload.sensors?.temperatures_celsius || {};
+        const tempVals = Object.values(temps);
+        const maxT = tempVals.length > 0 ? Math.max(...tempVals) : null;
+        if (tickTemp) tickTemp.textContent = maxT !== null ? `${maxT}°C` : 'В норме';
+      }
+
+      const memGroup = groups.find(g => g.group_id === 'memory_processes');
+      if (memGroup && memGroup.payload) {
+        const ram = memGroup.payload.ram || {};
+        if (tickRam) tickRam.textContent = `${ram.used_gb ?? 0} / ${ram.total_gb ?? 0} GB (${ram.used_percent ?? 0}%)`;
+        const procs = memGroup.payload.top_active_processes || [];
+        if (tickTopProc) tickTopProc.textContent = procs.length > 0 ? `${procs[0].name} (${procs[0].cpu_percent ?? 0}%)` : 'Нет активных';
+      }
+
+      const diskGroup = groups.find(g => g.group_id === 'storage_smart');
+      if (diskGroup && diskGroup.payload) {
+        const parts = diskGroup.payload.storage_partitions || [];
+        if (tickDisks) tickDisks.textContent = parts.map(p => `${p.mountpoint || p.device || 'Vol'}: ${p.free_gb ?? 0} GB св.`).join(', ') || 'OK';
+      }
+
+      // Отрисовка начальных 4 карточек в режиме ожидания с уже доступными собранными метриками
+      const cardsState = groups.map(g => {
+        const keyMetrics = {};
+        if (g.group_id === 'compute_thermals') {
+          const cpu = g.payload?.cpu || {};
+          keyMetrics['cpu_load'] = `${cpu.load_percent ?? 0}%`;
+          keyMetrics['cpu_model'] = cpu.model || 'CPU';
+          const temps = g.payload?.sensors?.temperatures_celsius || {};
+          const maxT = Object.values(temps).length > 0 ? Math.max(...Object.values(temps)) : null;
+          keyMetrics['max_temp'] = maxT !== null ? `${maxT}°C` : 'В норме';
+        } else if (g.group_id === 'memory_processes') {
+          const ram = g.payload?.ram || {};
+          keyMetrics['ram_used'] = `${ram.used_gb ?? 0} / ${ram.total_gb ?? 0} GB (${ram.used_percent ?? 0}%)`;
+          const procs = g.payload?.top_active_processes || [];
+          keyMetrics['top_process'] = procs.length > 0 ? `${procs[0].name} (${procs[0].cpu_percent ?? 0}%)` : 'Нет';
+        } else if (g.group_id === 'storage_smart') {
+          const parts = g.payload?.storage_partitions || [];
+          const maxUsed = parts.length > 0 ? Math.max(...parts.map(p => p.used_percent || 0)) : 0;
+          keyMetrics['max_volume_fill'] = `${maxUsed}%`;
+          keyMetrics['volumes_count'] = parts.length;
+        } else if (g.group_id === 'system_network') {
+          const updates = g.payload?.system_updates || {};
+          keyMetrics['reboot_pending'] = updates.reboot_pending ? 'Да' : 'Нет';
+          keyMetrics['update_status'] = updates.status || 'Up to date';
+        }
+
+        return {
+          group_id: g.group_id,
+          title: g.title,
+          icon: g.icon,
+          status: 'pending',
+          summary: g.description,
+          key_metrics: keyMetrics,
+          payload: g.payload,
+        };
+      });
+      renderAIDomainCards(cardsState);
+
+      const completedGroups = [];
+
+      // 2. Последовательный вызов каждой группы (цепочка Запрос -> Ответ -> Отображение)
+      for (let i = 0; i < groups.length; i++) {
+        const group = groups[i];
+        const stepNum = i + 1;
+        const totalSteps = groups.length;
+        const pct = Math.round((stepNum / totalSteps) * 85);
+        if (progressBar) progressBar.style.width = `${pct}%`;
+
+        // Подсветка активного чипа собираемого домена
+        if (group.group_id === 'compute_thermals') {
+          if (chipLhm) chipLhm.className = 'badge bg-info text-dark border border-info fw-bold';
+          if (chipWmi) chipWmi.className = 'badge bg-info text-dark border border-info fw-bold';
+        } else if (group.group_id === 'memory_processes') {
+          if (chipRam) chipRam.className = 'badge bg-info text-dark border border-info fw-bold';
+        } else if (group.group_id === 'storage_smart') {
+          if (chipDisks) chipDisks.className = 'badge bg-info text-dark border border-info fw-bold';
+        } else if (group.group_id === 'system_network') {
+          if (chipNet) chipNet.className = 'badge bg-info text-dark border border-info fw-bold';
+        }
+
+        if (liveStatusText) {
+          liveStatusText.textContent = `🧠 Анализ [${stepNum}/${totalSteps}]: ${group.title} (оценка сенсоров и метрик)...`;
+        }
+
+        // Обновляем статус карточки на "Анализ"
+        cardsState[i].status = 'analyzing';
+        cardsState[i].summary = `🧠 Модель выполняет целевой анализ телеметрии группы ${stepNum}/${totalSteps}...`;
+        renderAIDomainCards(cardsState);
+
+        stagesLog.push({
+          stage: 'group_run',
+          title: `Группа ${stepNum}/${totalSteps}`,
+          message: `🧠 [${stepNum}/${totalSteps}] Запрос модели: ${group.title}...`,
+          details: group.description,
+        });
+        renderAIDiagnosticStages(stagesLog, false);
+
+        // Запрос к AI модели по данной группе
+        const res = await apiFetch('/api/v1/system/diagnose/group', {
+          method: 'POST',
+          body: JSON.stringify({
+            group_id: group.group_id,
+            title: group.title,
+            payload: group.payload,
+          }),
+        });
+
+        if (res) {
+          cardsState[i] = res;
+          completedGroups.push(res);
+        } else {
+          cardsState[i].status = 'warning';
+          cardsState[i].summary = 'Ответ не получен, используются базовые метрики.';
+          completedGroups.push(cardsState[i]);
+        }
+
+        // Отмечаем чип как завершенный (зеленый)
+        if (group.group_id === 'compute_thermals') {
+          if (chipLhm) chipLhm.className = 'badge bg-success-subtle text-success border border-success';
+          if (chipWmi) chipWmi.className = 'badge bg-success-subtle text-success border border-success';
+        } else if (group.group_id === 'memory_processes') {
+          if (chipRam) chipRam.className = 'badge bg-success-subtle text-success border border-success';
+        } else if (group.group_id === 'storage_smart') {
+          if (chipDisks) chipDisks.className = 'badge bg-success-subtle text-success border border-success';
+        } else if (group.group_id === 'system_network') {
+          if (chipNet) chipNet.className = 'badge bg-success-subtle text-success border border-success';
+        }
+
+        // Немедленно обновляем красивую карточку на экране!
+        renderAIDomainCards(cardsState);
+
+        stagesLog.push({
+          stage: 'group_done',
+          title: `Группа ${stepNum} завершена`,
+          message: `✅ [${stepNum}/${totalSteps}] ${group.title}: ${cardsState[i].status.toUpperCase()}`,
+          details: cardsState[i].summary.substring(0, 120) + (cardsState[i].summary.length > 120 ? '...' : ''),
+        });
+        renderAIDiagnosticStages(stagesLog, false);
+      }
+
+      if (liveStatusText) {
+        liveStatusText.textContent = '🏆 Поэтапный опрос и анализ всех доменов завершен.';
+      }
+
+      // 3. Финальный синтез итогового вердикта
+      if (progressBar) progressBar.style.width = '95%';
+      stagesLog.push({
+        stage: 'synthesis',
+        title: 'Финальный синтез',
+        message: '🏆 Формирование итогового заключения и расчет Health Score...',
+        details: 'Агрегация заключений всех 4 доменов',
+      });
+      renderAIDiagnosticStages(stagesLog, false);
+
+      const synthesis = await apiFetch('/api/v1/system/diagnose/synthesize', {
+        method: 'POST',
+        body: JSON.stringify({ groups: completedGroups }),
+      });
+
+      if (progressBar) progressBar.style.width = '100%';
+
+      // Обновление итогового Health Badge
+      const score = Number(synthesis.health_score || 100);
+      const healthClass = score >= 80 ? 'bg-success-subtle text-success border border-success' :
+        score >= 60 ? 'bg-warning-subtle text-warning border border-warning' :
+        'bg-danger-subtle text-danger border border-danger';
+
       if (badgeHealth) {
         badgeHealth.textContent = `Health: ${score}/100`;
-        badgeHealth.className = `badge font-monospace ${
-          score >= 80 ? 'bg-success-subtle text-success border border-success' :
-          score >= 60 ? 'bg-warning-subtle text-warning border border-warning' :
-          'bg-danger-subtle text-danger border border-danger'
+        badgeHealth.className = `badge font-monospace ${healthClass}`;
+      }
+      if (badgeHealthBtn) {
+        badgeHealthBtn.textContent = `Health: ${score}/100`;
+        badgeHealthBtn.className = `badge font-monospace ms-1 ${healthClass}`;
+      }
+
+      if (engineTag) {
+        engineTag.innerHTML = `<i class="bi bi-cpu me-1"></i>${escapeHtml(synthesis.ai_model_used || 'Heuristic Engine')}`;
+      }
+
+      if (synthesisStatus) {
+        synthesisStatus.textContent = `${synthesis.status_label} (${score}/100)`;
+        synthesisStatus.className = `badge font-monospace ${
+          score >= 80 ? 'bg-success text-white' :
+          score >= 60 ? 'bg-warning text-dark' :
+          'bg-danger text-white'
         }`;
       }
 
-      // Update Engine Badge
-      if (engineTag) {
-        engineTag.innerHTML = `<i class="bi bi-cpu me-1"></i>${escapeHtml(report.ai_model_used || 'Heuristic Engine')}`;
-      }
-
-      // Render Completed Stages
-      const stages = Array.isArray(report.stages) && report.stages.length > 0
-        ? report.stages
-        : [
-            { stage: 'init', title: 'Сбор телеметрии', message: '🔌 Сбор телеметрии хоста завершён' },
-            { stage: 'eval', title: 'Эвристика', message: '⚙️ Эвристический анализ подсистем завершён' },
-            { stage: 'done', title: 'Сводка', message: '✅ Аудит системы успешно выполнен' }
-          ];
-      renderAIDiagnosticStages(stages, true);
-
-      // Render Anomalies
-      renderAIAnomalies(report.anomalies);
-
-      // Render Summary and Recommendations
       if (summaryEl) {
-        let text = report.summary || 'Телеметрия в норме.';
-        if (Array.isArray(report.recommendations) && report.recommendations.length > 0) {
-          text += '\n\n💡 Рекомендации по оптимизации:\n' + report.recommendations.map(r => `• ${r}`).join('\n');
+        summaryEl.textContent = synthesis.executive_summary || 'Анализ завершён.';
+      }
+
+      // Отрисовка приоритетных действий
+      if (Array.isArray(synthesis.critical_actions) && synthesis.critical_actions.length > 0) {
+        if (actionsBox && actionsList) {
+          actionsBox.classList.remove('d-none');
+          actionsList.innerHTML = synthesis.critical_actions.map(act => `<li class="mb-1"><i class="bi bi-arrow-right-short text-warning me-1"></i>${escapeHtml(act)}</li>`).join('');
         }
-        summaryEl.textContent = text;
       }
 
-      // Handle Generated Prompt Viewer
-      if (report.generated_prompt) {
-        if (promptSec) promptSec.style.display = 'block';
-        if (promptText) promptText.textContent = report.generated_prompt;
-      } else {
-        if (promptSec) promptSec.style.display = 'none';
-      }
+      stagesLog.push({
+        stage: 'done',
+        title: 'Аудит завершен',
+        message: `✅ Поэтапная AI-диагностика успешно завершена (Health: ${score}/100)`,
+        details: 'Все 4 функциональные группы оценены моделью',
+      });
+      renderAIDiagnosticStages(stagesLog, true);
 
-      // Handle Raw Response Viewer
-      if (report.raw_response || report.summary) {
-        if (rawSec) rawSec.style.display = 'block';
-        if (rawText) rawText.textContent = report.raw_response || report.summary;
-      } else {
-        if (rawSec) rawSec.style.display = 'none';
-      }
     } catch (e) {
-      console.error('[AboutSystemTab] AI Diagnosis error:', e);
-      if (summaryEl) summaryEl.textContent = 'Ошибка выполнения AI-диагностики: ' + e.message;
+      console.error('[AboutSystemTab] Grouped AI Diagnosis error:', e);
+      if (summaryEl) summaryEl.textContent = 'Ошибка выполнения поэтапной AI-диагностики: ' + e.message;
       if (badgeHealth) {
         badgeHealth.textContent = 'Health: Error';
         badgeHealth.className = 'badge bg-danger-subtle text-danger border border-danger font-monospace';
       }
-      renderAIDiagnosticStages([
-        { stage: 'error', title: 'Ошибка', message: `❌ Ошибка выполнения диагностики: ${e.message}`, details: 'Проверьте доступность бэкенда и настройки провайдеров' }
-      ], true);
+      if (badgeHealthBtn) {
+        badgeHealthBtn.textContent = 'Health: Error';
+        badgeHealthBtn.className = 'badge bg-danger-subtle text-danger border border-danger font-monospace ms-1';
+      }
+      if (errorSec) {
+        errorSec.classList.remove('d-none');
+        if (errorText) errorText.textContent = e.message;
+      }
+      stagesLog.push({
+        stage: 'error',
+        title: 'Ошибка',
+        message: `❌ Ошибка выполнения: ${e.message}`,
+        details: 'Проверьте доступность API-сервера',
+      });
+      renderAIDiagnosticStages(stagesLog, true);
     } finally {
       isAiRunning = false;
+      
+      // Сбрасываем флаг processing после завершения
+      if (window.resetTabProcessing) {
+        window.resetTabProcessing('tab-about-system');
+      }
+      
       if (btnRescan) btnRescan.disabled = false;
       if (icRescan) icRescan.className = 'bi bi-lightning-charge-fill';
       if (txtRescan) txtRescan.textContent = 'Rescan';
     }
   }
+
 
   async function fetchHardwareSpec() {
     const container = document.getElementById('about-sys-tree-container');
@@ -662,7 +1296,12 @@
     if (!container) return;
 
     try {
-      const nodes = await apiFetch('/api/v1/system/hardware');
+      const config = CACHE_STRATEGY.HARDWARE_SPEC;
+      const nodes = await cachedFetch(
+        '/api/v1/system/hardware',
+        'hardware_spec',
+        { ttl: config.ttl, strategy: config.strategy }
+      );
       hardwareData = Array.isArray(nodes) ? nodes : [];
 
       if (badgeCount) {
@@ -895,12 +1534,15 @@
   function getNodeIcon(category) {
     const cat = (category || '').toLowerCase();
     if (cat.includes('processor') || cat.includes('cpu')) return 'bi bi-cpu';
-    if (cat.includes('memory') || cat.includes('ram')) return 'bi bi-memory';
+    if (cat.includes('module') || cat.includes('планка')) return 'bi bi-memory';
+    if (cat.includes('memory') || cat.includes('ram')) return 'bi bi-sd-card';
     if (cat.includes('system') || cat.includes('os')) return 'bi bi-laptop';
     if (cat.includes('motherboard') || cat.includes('mainboard')) return 'bi bi-motherboard';
     if (cat.includes('display') || cat.includes('gpu') || cat.includes('video') || cat.includes('graphics')) return 'bi bi-gpu-card';
-    if (cat.includes('disk') || cat.includes('storage') || cat.includes('drive')) return 'bi bi-hdd';
+    if (cat.includes('physical') || cat.includes('диск')) return 'bi bi-hdd-fill';
+    if (cat.includes('disk') || cat.includes('storage') || cat.includes('drive') || cat.includes('volume')) return 'bi bi-hdd-stack';
     if (cat.includes('network') || cat.includes('adapter') || cat.includes('ethernet')) return 'bi bi-ethernet';
+    if (cat.includes('update') || cat.includes('servicing')) return 'bi bi-arrow-repeat';
     return 'bi bi-gear-fill';
   }
 

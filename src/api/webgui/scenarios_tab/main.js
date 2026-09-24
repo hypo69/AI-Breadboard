@@ -996,6 +996,16 @@
           `;
         }
 
+        const trainingActionHtml = `
+          <div class="mt-2.5 pt-2 border-top border-secondary border-opacity-25 d-flex align-items-center justify-content-between flex-wrap gap-2" id="training-save-container-${msgId}">
+            <button class="btn btn-outline-info btn-sm d-flex align-items-center gap-1.5 py-1 px-2.5 shadow-sm btn-save-training-qa" id="btn-save-training-${msgId}" type="button" title="Сохранить пару вопрос-ответ в базу данных Test Computer для RAG и последующего обучения (тюнинга) модели">
+              <i class="bi bi-mortarboard-fill text-info"></i>
+              <span>Сохранить ответ для обучения модели</span>
+            </button>
+            <span class="text-muted" style="font-size: 0.68rem;"><i class="bi bi-database me-1"></i>data/tc/approved_responses</span>
+          </div>
+        `;
+
         const bodyElem = document.getElementById(`${msgId}-body`);
         if (bodyElem) {
           bodyElem.innerHTML = `
@@ -1003,11 +1013,55 @@
             <div>${formattedReply}</div>
             ${remediationHtml}
             ${skillActionHtml}
+            ${trainingActionHtml}
             ${metaInfoHtml}
             ${promptInfoHtml}
           `;
         }
         chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        // Wire up save response for training & RAG button
+        const btnSaveTraining = document.getElementById(`btn-save-training-${msgId}`);
+        if (btnSaveTraining) {
+          btnSaveTraining.onclick = async () => {
+            btnSaveTraining.disabled = true;
+            btnSaveTraining.innerHTML = `<div class="spinner-border spinner-border-sm text-info me-1" role="status"></div><span>Сохранение...</span>`;
+            try {
+              const res = await fetch('/api/v1/scenarios/save-approved-response', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  user_id: 'tc_admin',
+                  query: message,
+                  chat_text: chatText,
+                  voice_text: voiceText || '',
+                  system_context: {
+                    command_executed: finalData.command_executed || '',
+                    tool_plan: finalData.tool_plan || null,
+                    platform: 'Windows'
+                  },
+                  tags: ['tc', 'diagnostics', 'training']
+                }),
+              });
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              const resData = await res.json();
+              const container = document.getElementById(`training-save-container-${msgId}`);
+              if (container) {
+                container.innerHTML = `
+                  <div class="p-1.5 px-2.5 bg-success bg-opacity-10 border border-success border-opacity-50 text-success rounded small d-flex align-items-center gap-1.5 w-100 shadow-sm">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    <span><strong>Успешно:</strong> ответ сохранён для обучения модели и RAG (<code>data/tc/approved_responses</code>)</span>
+                  </div>
+                `;
+              }
+              if (statusInd) statusInd.innerText = 'Ответ сохранён в базу для обучения модели!';
+            } catch (saveErr) {
+              console.error('[ScenariosTab] Error saving training QA:', saveErr);
+              btnSaveTraining.disabled = false;
+              btnSaveTraining.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-danger me-1"></i><span>Ошибка сохранения. Повторить</span>`;
+            }
+          };
+        }
 
 
         // Wire up manual save & inline edit logic

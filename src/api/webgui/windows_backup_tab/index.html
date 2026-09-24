@@ -86,13 +86,17 @@
   <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
     <div>
       <h6 class="mb-0 fw-bold text-white d-flex align-items-center gap-2">
-        <span>💾</span> Резервное копирование и библиотеки Windows
+        <span>💾</span> Резервное копирование и управление бэкапами Windows
       </h6>
       <div class="small text-muted" style="font-size: 0.72rem;">
-        Управление системными библиотеками Windows (.library-ms), службой File History (fhsvc) и теневыми копиями VSS
+        Настройка бэкапов, аудит библиотек (.library-ms), служба File History (fhsvc), мониторинг изменений/удаления файлов и RAG-поиск по архивам
       </div>
     </div>
     <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1" id="wb-btn-open-create-lib" title="Создать новую системную библиотеку Windows">
+        <i class="bi bi-folder-plus"></i>
+        <span>Создать библиотеку</span>
+      </button>
       <button class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="wb-btn-trigger-backup" title="Принудительный запуск архивации через fhexec">
         <i class="bi bi-play-fill"></i>
         <span>Запустить бэкап</span>
@@ -158,7 +162,12 @@
             <i class="bi bi-folder-symlink text-info"></i>
             <span>Системные библиотеки Windows (.library-ms)</span>
           </span>
-          <span class="badge bg-dark border border-secondary text-muted" id="wb-lib-count">0 шт.</span>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-xs btn-outline-info py-0 px-2" id="wb-btn-quick-add-folder" style="font-size: 0.72rem;" title="Добавить папку в существующую библиотеку">
+              <i class="bi bi-plus-circle me-1"></i>Добавить папку
+            </button>
+            <span class="badge bg-dark border border-secondary text-muted" id="wb-lib-count">0 шт.</span>
+          </div>
         </div>
         <div class="table-responsive" style="max-height: 240px; overflow-y: auto;">
           <table class="table table-dark table-hover wb-table">
@@ -208,14 +217,14 @@
       </div>
     </div>
 
-    <!-- Right Column: File History Status & Storage Audit -->
+    <!-- Right Column: File History Config & Health & RAG Search -->
     <div class="col-12 col-lg-5">
       <!-- File History Config & Target -->
       <div class="wb-panel">
         <div class="wb-panel-header">
           <span class="d-flex align-items-center gap-1.5">
             <i class="bi bi-clock-history text-primary"></i>
-            <span>Конфигурация File History</span>
+            <span>Настройка File History (История файлов)</span>
           </span>
         </div>
         <div class="p-2.5" style="font-size: 0.8rem;" id="wb-fh-details">
@@ -244,6 +253,28 @@
         </div>
       </div>
 
+      <!-- RAG Search in File History Archive -->
+      <div class="wb-panel">
+        <div class="wb-panel-header">
+          <span class="d-flex align-items-center gap-1.5">
+            <i class="bi bi-search-heart text-info"></i>
+            <span>RAG поиск по архивам бэкапа</span>
+          </span>
+          <button class="btn btn-xs btn-outline-primary py-0 px-2" id="wb-btn-rag-sync" title="Индексировать новые версии файлов" style="font-size: 0.72rem;">
+            <i class="bi bi-arrow-repeat me-1"></i>Синхронизация
+          </button>
+        </div>
+        <div class="p-2" style="font-size: 0.8rem;">
+          <div class="input-group input-group-sm mb-2">
+            <input type="text" class="form-control bg-dark text-white border-secondary" id="wb-rag-query" placeholder="Поиск документа или фрагмента текста..." />
+            <button class="btn btn-primary" id="wb-btn-rag-search"><i class="bi bi-search"></i></button>
+          </div>
+          <div id="wb-rag-results" style="max-height: 140px; overflow-y: auto;">
+            <div class="text-muted text-center py-2 small">Введите запрос для поиска по архивным копиям</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Recommendations and Health Checklist -->
       <div class="wb-panel">
         <div class="wb-panel-header">
@@ -252,7 +283,7 @@
             <span>Рекомендации безопасности данных</span>
           </span>
         </div>
-        <div class="p-2.5" style="max-height: 180px; overflow-y: auto;">
+        <div class="p-2.5" style="max-height: 150px; overflow-y: auto;">
           <ul class="list-unstyled mb-0" id="wb-recommendations-list" style="font-size: 0.78rem;">
             <li class="text-muted text-center py-2">Загрузка рекомендаций...</li>
           </ul>
@@ -313,6 +344,44 @@
     </div>
   </div>
 
+  <!-- Row 2: File Deletion Auditing (Event 4663 / 4660) -->
+  <div class="row g-2 mt-1">
+    <div class="col-12">
+      <div class="wb-panel mb-0">
+        <div class="wb-panel-header">
+          <div class="d-flex align-items-center gap-2">
+            <span class="d-flex align-items-center gap-1.5">
+              <i class="bi bi-trash3-fill text-danger"></i>
+              <span>Аудит изменения и удаления файлов (Event 4663 / 4660)</span>
+            </span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-xs btn-outline-info py-0 px-2" id="wb-btn-configure-sacl" title="Настроить SACL Delete для папки" style="font-size: 0.72rem;">
+              <i class="bi bi-folder-check me-1"></i> Настроить SACL папки
+            </button>
+            <span class="badge bg-danger-subtle text-danger" id="wb-deletions-badge">0 удалений</span>
+          </div>
+        </div>
+        <div class="p-0 table-responsive" style="max-height: 280px; overflow-y: auto;">
+          <table class="table table-dark table-hover wb-table">
+            <thead>
+              <tr>
+                <th>Время</th>
+                <th>ID</th>
+                <th>Файл / Папка</th>
+                <th>Процесс</th>
+                <th>Пользователь</th>
+              </tr>
+            </thead>
+            <tbody id="wb-deletions-tbody">
+              <tr><td colspan="5" class="text-center text-muted p-3">Поиск событий удаления файлов...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal for Relocating Folder -->
   <div class="modal fade" id="wb-relocate-modal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -364,40 +433,79 @@
     </div>
   </div>
 
-  <!-- Row 2: File Deletion Auditing (Event 4663 / 4660) -->
-  <div class="row g-2 mt-1">
-
-    <div class="col-12">
-      <div class="wb-panel mb-0">
-        <div class="wb-panel-header">
-          <div class="d-flex align-items-center gap-2">
-            <span class="d-flex align-items-center gap-1.5">
-              <i class="bi bi-trash3-fill text-danger"></i>
-              <span>Аудит удаления файлов (Event 4663 / 4660)</span>
-            </span>
+  <!-- Modal for Creating Library -->
+  <div class="modal fade" id="wb-create-lib-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary py-2">
+          <h6 class="modal-title fw-bold text-info d-flex align-items-center gap-2">
+            <i class="bi bi-folder-plus"></i>
+            <span>Создать библиотеку Windows (.library-ms)</span>
+          </h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="font-size: 0.85rem;">
+          <div class="mb-2">
+            <label class="text-muted small" for="wb-create-lib-name">Название библиотеки:</label>
+            <input type="text" class="form-control form-control-sm bg-secondary text-white border-0" id="wb-create-lib-name" placeholder="Например: Архивы Проектов" />
           </div>
-          <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-xs btn-outline-info py-0 px-2" id="wb-btn-configure-sacl" title="Настроить SACL Delete для папки" style="font-size: 0.72rem;">
-              <i class="bi bi-folder-check me-1"></i> Настроить SACL папки
-            </button>
-            <span class="badge bg-danger-subtle text-danger" id="wb-deletions-badge">0 удалений</span>
+          <div class="mb-2">
+            <label class="text-muted small" for="wb-create-lib-folders">Пути к папкам (по одной строке на папку):</label>
+            <textarea class="form-control form-control-sm bg-secondary text-white border-0 font-monospace" id="wb-create-lib-folders" rows="3" placeholder="C:\Data\Backups&#10;D:\Projects"></textarea>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="wb-create-lib-pinned" checked />
+            <label class="form-check-label text-white small" for="wb-create-lib-pinned">
+              Закрепить в панели навигации Проводника
+            </label>
           </div>
         </div>
-        <div class="p-0 table-responsive" style="max-height: 280px; overflow-y: auto;">
-          <table class="table table-dark table-hover wb-table">
-            <thead>
-              <tr>
-                <th>Время</th>
-                <th>ID</th>
-                <th>Файл / Папка</th>
-                <th>Процесс</th>
-                <th>Пользователь</th>
-              </tr>
-            </thead>
-            <tbody id="wb-deletions-tbody">
-              <tr><td colspan="5" class="text-center text-muted p-3">Поиск событий удаления файлов...</td></tr>
-            </tbody>
-          </table>
+        <div class="modal-footer border-secondary py-1.5">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="button" class="btn btn-sm btn-info d-flex align-items-center gap-1" id="wb-btn-execute-create-lib">
+            <i class="bi bi-check-lg"></i>
+            <span>Создать</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Adding Folder to Library -->
+  <div class="modal fade" id="wb-add-folder-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary py-2">
+          <h6 class="modal-title fw-bold text-info d-flex align-items-center gap-2">
+            <i class="bi bi-folder-plus"></i>
+            <span>Добавить папку в библиотеку</span>
+          </h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="font-size: 0.85rem;">
+          <div class="mb-2">
+            <label class="text-muted small" for="wb-add-folder-lib-select">Выберите целевую библиотеку:</label>
+            <select class="form-select form-select-sm bg-secondary text-white border-0" id="wb-add-folder-lib-select">
+              <option value="">Загрузка библиотек...</option>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="text-muted small" for="wb-add-folder-path">Полный путь к физической папке:</label>
+            <input type="text" class="form-control form-control-sm bg-secondary text-white border-0 font-monospace" id="wb-add-folder-path" placeholder="D:\BackupFolder" />
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="wb-add-folder-default-save" />
+            <label class="form-check-label text-white small" for="wb-add-folder-default-save">
+              Сделать основной папкой сохранения по умолчанию
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer border-secondary py-1.5">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="button" class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="wb-btn-execute-add-folder">
+            <i class="bi bi-check-lg"></i>
+            <span>Добавить</span>
+          </button>
         </div>
       </div>
     </div>

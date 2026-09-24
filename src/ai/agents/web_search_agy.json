@@ -4,7 +4,7 @@
   "name": "Antigravity AGY Searcher",
   "description": "Агентный веб-поиск через встроенные инструменты платформы Google Antigravity",
   "is_system": true,
-  "enabled": true,
+  "enabled": false,
   "provider": "agy",
   "model": "agy-gemma-4-26b-a4b-it",
   "temperature": 0.2,

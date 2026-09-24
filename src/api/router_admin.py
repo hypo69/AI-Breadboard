@@ -48,10 +48,70 @@ _VERSIONS_DIRS: Dict[str, Path] = {
 _SOURCES_FILE = __root__ / 'plugins' / 'movie_search_sources' / 'sources.json'
 
 # ============================================================================
+# Pydantic-модели
+# ============================================================================
+
+class SystemInstructionUpdate(BaseModel):
+    """Модель обновления системной инструкции."""
+    content: str
+
+
+class InstructionRoleUpdate(BaseModel):
+    """Модель сохранения новой версии инструкции."""
+    mode: str = 'chat'
+    content: str
+
+
+class InstructionActivateRequest(BaseModel):
+    """Модель активации сохраненной версии инструкции."""
+    mode: str = 'chat'
+    filename: str
+
+
+class RawSourcesUpdate(BaseModel):
+    """Модель обновления JSON-текста источников."""
+    content: str
+
+
+# ============================================================================
 # Helper functions
 # ============================================================================
 
-# ... (удалено _check_admin) ...
+def _get_active_file(mode: str) -> Path:
+    """Возвращает путь к активному файлу инструкции для указанного режима."""
+    return _INSTRUCTION_FILES.get(mode, _INSTRUCTION_FILES['chat'])
+
+
+def _get_versions_dir(mode: str) -> Path:
+    """Возвращает директорию версий инструкций для указанного режима."""
+    path = _VERSIONS_DIRS.get(mode, _VERSIONS_DIRS['chat'])
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _next_version_number(versions_dir: Path) -> int:
+    """Определяет следующий порядковый номер версии инструкции."""
+    versions_dir.mkdir(parents=True, exist_ok=True)
+    max_ver = 0
+    for file in versions_dir.glob('v*.md'):
+        m = re.match(r'^v(\d+)_', file.name)
+        if m:
+            max_ver = max(max_ver, int(m.group(1)))
+    return max_ver + 1
+
+
+def _load_sources_raw() -> str:
+    """Загружает содержимое файла источников."""
+    if _SOURCES_FILE.exists():
+        return _SOURCES_FILE.read_text(encoding='utf-8')
+    return '{}'
+
+
+def _save_sources_raw(content: str) -> None:
+    """Сохраняет содержимое файла источников."""
+    _SOURCES_FILE.parent.mkdir(parents=True, exist_ok=True)
+    _SOURCES_FILE.write_text(content, encoding='utf-8')
+
 
 @router.get('/system_instruction')
 async def get_system_instruction(request: Request) -> Dict[str, str]:
@@ -690,17 +750,21 @@ def get_apps_status(profile: Optional[str] = None) -> Dict[str, Any]:
     cfg_env = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
     active_path: Optional[Path] = None
     if profile in ("tc", "test-computer", "test_computer", "apps_tc"):
-        if (__root__ / "config_tc.json").exists():
-            active_path = __root__ / "config_tc.json"
+        for candidate in [__root__ / "config" / "tc.json", __root__ / "config_tc.json"]:
+            if candidate.exists():
+                active_path = candidate
+                break
     elif cfg_env:
         p = Path(cfg_env)
         active_path = p if p.is_absolute() else (__root__ / cfg_env)
 
     if not active_path or not active_path.exists():
-        if (__root__ / "config_tc.json").exists() and not (__root__ / "config.json").exists():
-            active_path = __root__ / "config_tc.json"
-        else:
-            active_path = __root__ / "config.json"
+        for candidate in [__root__ / "config" / "tc.json", __root__ / "config_tc.json"]:
+            if candidate.exists() and not (__root__ / "config.json").exists() and not (__root__ / "config" / "dashboard.json").exists():
+                active_path = candidate
+                break
+        if not active_path or not active_path.exists():
+            active_path = (__root__ / "config" / "dashboard.json") if (__root__ / "config" / "dashboard.json").exists() else (__root__ / "config.json")
 
     apps_cfg: Any = {}
     config_filename = active_path.name if active_path else "config.json"

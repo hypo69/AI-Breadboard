@@ -1,1 +1,122 @@
-[]
+[
+  {
+    "backup_id": "backup_20260923_111943_HKEY_CURRENT_USER_Software_AIBreadboardAPITest",
+    "timestamp": "2026-09-23T11:19:43.465911",
+    "hive": "HKEY_CURRENT_USER",
+    "path": "Software\\AIBreadboardAPITest",
+    "operation": "set_value:ApiVal",
+    "file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260923_111943_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.json",
+    "reg_file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260923_111943_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.reg",
+    "values_count": 1
+  },
+  {
+    "backup_id": "backup_20260923_131521_HKEY_CURRENT_USER_Software_AIBreadboardAPITest",
+    "timestamp": "2026-09-23T13:15:21.913390",
+    "hive": "HKEY_CURRENT_USER",
+    "path": "Software\\AIBreadboardAPITest",
+    "operation": "set_value:ApiVal",
+    "file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260923_131521_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.json",
+    "reg_file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260923_131521_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.reg",
+    "values_count": 1
+  },
+  {
+    "backup_id": "backup_20260923_160915_HKEY_CURRENT_USER_Software_AIBreadboardAPITest",
+    "timestamp": "2026-09-23T16:09:15.433514",
+    "hive": "HKEY_CURRENT_USER",
+    "path": "Software\\AIBreadboardAPITest",
+    "operation": "set_value:ApiVal",
+    "file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260923_160915_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.json",
+    "reg_file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260923_160915_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.reg",
+    "values_count": 1
+  },
+  {
+    "backup_id": "backup_20260923_165003_HKEY_CURRENT_USER_Software_AIBreadboardAPITest",
+    "timestamp": "2026-09-23T16:50:03.716298",
+    "hive": "HKEY_CURRENT_USER",
+    "path": "Software\\AIBreadboardAPITest",
+    "operation": "set_value:ApiVal",
+    "file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260923_165003_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.json",
+    "reg_file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260923_165003_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.reg",
+    "values_count": 1
+  },
+  {
+    "backup_id": "backup_20260924_122713_HKEY_CURRENT_USER_Software_AIBreadboardAPITest",
+    "timestamp": "2026-09-24T12:27:13.403205",
+    "hive": "HKEY_CURRENT_USER",
+    "path": "Software\\AIBreadboardAPITest",
+    "operation": "set_value:ApiVal",
+    "file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_122713_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.json",
+    "reg_file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_122713_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.reg",
+    "values_count": 1
+  },
+  {
+    "backup_id": "backup_20260924_123717_HKEY_CURRENT_USER_Software_AIBreadboardAPITest",
+    "timestamp": "2026-09-24T12:37:17.374120",
+    "hive": "HKEY_CURRENT_USER",
+    "path": "Software\\AIBreadboardAPITest",
+    "operation": "set_value:ApiVal",
+    "file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_123717_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.json",
+    "reg_file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_123717_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.reg",
+    "values_count": 1
+  },
+  {
+    "backup_id": "backup_20260924_132133_HKEY_CURRENT_USER_Software_AIBreadboardAPITest",
+    "timestamp": "2026-09-24T13:21:33.747989",
+    "hive": "HKEY_CURRENT_USER",
+    "path": "Software\\AIBreadboardAPITest",
+    "operation": "set_value:ApiVal",
+    "file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_132133_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.json",
+    "reg_file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_132133_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.reg",
+    "values_count": 1
+  },
+  {
+    "backup_id": "backup_20260924_132845_HKEY_CURRENT_USER_Software_AIBreadboardAPITest",
+    "timestamp": "2026-09-24T13:28:45.304593",
+    "hive": "HKEY_CURRENT_USER",
+    "path": "Software\\AIBreadboardAPITest",
+    "operation": "set_value:ApiVal",
+    "file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_132845_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.json",
+    "reg_file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_132845_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.reg",
+    "values_count": 1
+  },
+  {
+    "backup_id": "backup_20260924_133400_HKEY_CURRENT_USER_Software_AIBreadboardAPITest",
+    "timestamp": "2026-09-24T13:34:00.682252",
+    "hive": "HKEY_CURRENT_USER",
+    "path": "Software\\AIBreadboardAPITest",
+    "operation": "set_value:ApiVal",
+    "file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_133400_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.json",
+    "reg_file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_133400_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.reg",
+    "values_count": 1
+  },
+  {
+    "backup_id": "backup_20260924_135219_HKEY_CURRENT_USER_Software_AIBreadboardAPITest",
+    "timestamp": "2026-09-24T13:52:19.004022",
+    "hive": "HKEY_CURRENT_USER",
+    "path": "Software\\AIBreadboardAPITest",
+    "operation": "set_value:ApiVal",
+    "file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_135219_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.json",
+    "reg_file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_135219_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.reg",
+    "values_count": 1
+  },
+  {
+    "backup_id": "backup_20260924_140706_HKEY_CURRENT_USER_Software_AIBreadboardAPITest",
+    "timestamp": "2026-09-24T14:07:06.800782",
+    "hive": "HKEY_CURRENT_USER",
+    "path": "Software\\AIBreadboardAPITest",
+    "operation": "set_value:ApiVal",
+    "file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_140706_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.json",
+    "reg_file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_140706_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.reg",
+    "values_count": 1
+  },
+  {
+    "backup_id": "backup_20260924_144408_HKEY_CURRENT_USER_Software_AIBreadboardAPITest",
+    "timestamp": "2026-09-24T14:44:08.827829",
+    "hive": "HKEY_CURRENT_USER",
+    "path": "Software\\AIBreadboardAPITest",
+    "operation": "set_value:ApiVal",
+    "file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_144408_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.json",
+    "reg_file_path": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard\\data\\registry_backups\\backup_20260924_144408_HKEY_CURRENT_USER_Software_AIBreadboardAPITest.reg",
+    "values_count": 1
+  }
+]

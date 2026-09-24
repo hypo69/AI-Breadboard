@@ -49,6 +49,29 @@ export function setupGlobalFunctions() {
   window.showChatLogicModal = window.showChatLogicModal || (() => {});
   window.showNotification = window.showNotification || (() => {});
 
+  // API Fallback
+  window.api = window.api || {};
+  if (!window.api.fetch) {
+    window.api.fetch = async function(url, options = {}) {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        let msg = response.statusText;
+        try {
+          const data = await response.json();
+          if (data && data.detail) {
+            if (typeof data.detail === 'string') msg = data.detail;
+            else if (Array.isArray(data.detail)) msg = data.detail.map(d => d.msg || JSON.stringify(d)).join(', ');
+            else msg = JSON.stringify(data.detail);
+          } else if (data && data.message) {
+            msg = data.message;
+          }
+        } catch {}
+        throw new Error(`${response.status} ${msg}`);
+      }
+      return response.json();
+    };
+  }
+
   console.log('[AdminInterface] Global functions registered');
 }
 

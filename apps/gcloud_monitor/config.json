@@ -1,7 +1,6 @@
 {
+  "launcher": "Run-GCloudMonitor.ps1",
   "server": {
-    "dedicated": false,
-    "host": "127.0.0.1",
     "port": 8106,
     "use_ssl": false,
     "workers": 1

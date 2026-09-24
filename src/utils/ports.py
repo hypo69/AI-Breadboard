@@ -27,7 +27,7 @@ from header import __root__
 from logger import logger
 from src.utils.jjson import j_loads_ns
 
-PORTS_FILE: Path = __root__ / "ports.json"
+PORTS_FILE: Path = __root__ / "start_scenarios_config" / "ports.json"
 
 
 def load_ports_config(ports_file: Optional[Path] = None) -> SimpleNamespace:
@@ -41,14 +41,18 @@ def load_ports_config(ports_file: Optional[Path] = None) -> SimpleNamespace:
     """
     target_file = ports_file or PORTS_FILE
     if not target_file.exists():
-        logger.warning(f"Файл портов не найден: {target_file}")
-        return SimpleNamespace(
-            dynamic_ports=False,
-            server=SimpleNamespace(main=8000),
-            static_ports=SimpleNamespace(apps=SimpleNamespace(), services=SimpleNamespace()),
-            apps=SimpleNamespace(),
-            services=SimpleNamespace(),
-        )
+        fallback_file = __root__ / "ports.json"
+        if fallback_file.exists():
+            target_file = fallback_file
+        else:
+            logger.warning(f"Файл портов не найден: {target_file}")
+            return SimpleNamespace(
+                dynamic_ports=False,
+                server=SimpleNamespace(main=8000),
+                static_ports=SimpleNamespace(apps=SimpleNamespace(), services=SimpleNamespace()),
+                apps=SimpleNamespace(),
+                services=SimpleNamespace(),
+            )
 
     try:
         return j_loads_ns(target_file)

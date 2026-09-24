@@ -1,5 +1,8 @@
 // Windows Backup & Libraries Manager Frontend Logic
 (function () {
+  let _userFoldersData = null;
+  let _librariesData = [];
+
   async function initWindowsBackupTab() {
     console.log('[WindowsBackup] Initializing tab...');
     bindEvents();
@@ -36,6 +39,212 @@
       };
     }
 
+    // Modal Create Library
+    const btnOpenCreateLib = document.getElementById('wb-btn-open-create-lib');
+    if (btnOpenCreateLib) {
+      btnOpenCreateLib.onclick = () => {
+        const modalEl = document.getElementById('wb-create-lib-modal');
+        if (modalEl) {
+          if (window.bootstrap?.Modal) {
+            new window.bootstrap.Modal(modalEl).show();
+          } else {
+            modalEl.classList.add('show');
+            modalEl.style.display = 'block';
+          }
+        }
+      };
+    }
+
+    const btnExecCreateLib = document.getElementById('wb-btn-execute-create-lib');
+    if (btnExecCreateLib) {
+      btnExecCreateLib.onclick = async () => {
+        const name = document.getElementById('wb-create-lib-name')?.value?.trim();
+        const foldersRaw = document.getElementById('wb-create-lib-folders')?.value || '';
+        const isPinned = document.getElementById('wb-create-lib-pinned')?.checked ?? true;
+
+        if (!name) {
+          alert('Укажите название библиотеки');
+          return;
+        }
+
+        const folders = foldersRaw
+          .split('\n')
+          .map(f => f.trim())
+          .filter(f => f.length > 0);
+
+        btnExecCreateLib.disabled = true;
+        btnExecCreateLib.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Создание...';
+
+        try {
+          const res = await fetch('/api/v1/windows-backup/libraries', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, folders, is_pinned: isPinned })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            alert(`Библиотека "${name}" успешно создана!`);
+            const modalEl = document.getElementById('wb-create-lib-modal');
+            if (modalEl && window.bootstrap?.Modal) {
+              const modalInst = window.bootstrap.Modal.getInstance(modalEl);
+              if (modalInst) modalInst.hide();
+            }
+            await loadLibraries();
+          } else {
+            alert('Ошибка: ' + (data.detail || JSON.stringify(data)));
+          }
+        } catch (e) {
+          alert('Ошибка сети: ' + e.message);
+        } finally {
+          btnExecCreateLib.disabled = false;
+          btnExecCreateLib.innerHTML = '<i class="bi bi-check-lg"></i> <span>Создать</span>';
+        }
+      };
+    }
+
+    // Modal Add Folder to Library
+    const btnQuickAddFolder = document.getElementById('wb-btn-quick-add-folder');
+    if (btnQuickAddFolder) {
+      btnQuickAddFolder.onclick = () => {
+        const select = document.getElementById('wb-add-folder-lib-select');
+        if (select) {
+          select.innerHTML = _librariesData.length > 0
+            ? _librariesData.map(l => `<option value="${escapeHtml(l.name)}">${escapeHtml(l.name)} (${l.folder_count || 0} папок)</option>`).join('')
+            : '<option value="">Нет доступных библиотек</option>';
+        }
+        const modalEl = document.getElementById('wb-add-folder-modal');
+        if (modalEl) {
+          if (window.bootstrap?.Modal) {
+            new window.bootstrap.Modal(modalEl).show();
+          } else {
+            modalEl.classList.add('show');
+            modalEl.style.display = 'block';
+          }
+        }
+      };
+    }
+
+    const btnExecAddFolder = document.getElementById('wb-btn-execute-add-folder');
+    if (btnExecAddFolder) {
+      btnExecAddFolder.onclick = async () => {
+        const libName = document.getElementById('wb-add-folder-lib-select')?.value;
+        const folderPath = document.getElementById('wb-add-folder-path')?.value?.trim();
+        const isDefault = document.getElementById('wb-add-folder-default-save')?.checked ?? false;
+
+        if (!libName || !folderPath) {
+          alert('Выберите библиотеку и укажите путь к папке');
+          return;
+        }
+
+        btnExecAddFolder.disabled = true;
+        btnExecAddFolder.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Добавление...';
+
+        try {
+          const res = await fetch(`/api/v1/windows-backup/libraries/${encodeURIComponent(libName)}/folders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ folder_path: folderPath, is_default_save: isDefault })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            alert(`Папка успешно добавлена в библиотеку "${libName}"!`);
+            const modalEl = document.getElementById('wb-add-folder-modal');
+            if (modalEl && window.bootstrap?.Modal) {
+              const modalInst = window.bootstrap.Modal.getInstance(modalEl);
+              if (modalInst) modalInst.hide();
+            }
+            await loadLibraries();
+          } else {
+            alert('Ошибка: ' + (data.detail || JSON.stringify(data)));
+          }
+        } catch (e) {
+          alert('Ошибка сети: ' + e.message);
+        } finally {
+          btnExecAddFolder.disabled = false;
+          btnExecAddFolder.innerHTML = '<i class="bi bi-check-lg"></i> <span>Добавить</span>';
+        }
+      };
+    }
+
+    // RAG Search & Sync
+    const btnRagSync = document.getElementById('wb-btn-rag-sync');
+    if (btnRagSync) {
+      btnRagSync.onclick = async () => {
+        btnRagSync.disabled = true;
+        btnRagSync.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Синхр...';
+        try {
+          const res = await fetch('/api/v1/windows-backup/file-history/rag/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ force_rebuild: false })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            alert(`Синхронизация RAG завершена!\nПроиндексировано: ${data.total_indexed || 0} версий файлов.`);
+          } else {
+            alert('Ошибка синхронизации: ' + (data.detail || JSON.stringify(data)));
+          }
+        } catch (e) {
+          alert('Ошибка сети: ' + e.message);
+        } finally {
+          btnRagSync.disabled = false;
+          btnRagSync.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Синхронизация';
+        }
+      };
+    }
+
+    const btnRagSearch = document.getElementById('wb-btn-rag-search');
+    const inputRagQuery = document.getElementById('wb-rag-query');
+    const performRagSearch = async () => {
+      const query = inputRagQuery?.value?.trim();
+      if (!query) return;
+
+      const resultsContainer = document.getElementById('wb-rag-results');
+      if (resultsContainer) {
+        resultsContainer.innerHTML = '<div class="text-center text-muted py-2"><span class="spinner-border spinner-border-sm me-1"></span>Поиск в архиве...</div>';
+      }
+
+      try {
+        const res = await fetch('/api/v1/windows-backup/file-history/rag/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, top_k: 5 })
+        });
+        const items = await res.json();
+        if (resultsContainer) {
+          if (!items || items.length === 0) {
+            resultsContainer.innerHTML = '<div class="text-muted text-center py-2 small">Ничего не найдено по запросу</div>';
+            return;
+          }
+          resultsContainer.innerHTML = items.map(item => `
+            <div class="p-1.5 mb-1 rounded bg-dark border border-secondary" style="font-size: 0.75rem;">
+              <div class="d-flex justify-content-between align-items-center mb-0.5">
+                <span class="fw-bold text-info text-truncate" title="${escapeHtml(item.file_name)}">${escapeHtml(item.file_name)}</span>
+                <span class="badge bg-primary-subtle text-primary">${(item.score * 100).toFixed(0)}%</span>
+              </div>
+              <div class="text-muted font-monospace small text-truncate" title="${escapeHtml(item.original_path)}">${escapeHtml(item.original_path)}</div>
+              ${item.snippet ? `<div class="text-white-50 mt-1 small text-truncate">${escapeHtml(item.snippet)}</div>` : ''}
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        if (resultsContainer) {
+          resultsContainer.innerHTML = `<div class="text-danger small py-1">Ошибка поиска: ${escapeHtml(e.message)}</div>`;
+        }
+      }
+    };
+
+    if (btnRagSearch) btnRagSearch.onclick = performRagSearch;
+    if (inputRagQuery) {
+      inputRagQuery.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          performRagSearch();
+        }
+      };
+    }
+
+    // Audit buttons
     const btnEnableAudit = document.getElementById('wb-btn-enable-auditpol');
     if (btnEnableAudit) {
       btnEnableAudit.onclick = async () => {
@@ -82,7 +291,7 @@
       btnRefreshFolders.onclick = () => loadUserFoldersOverview();
     }
 
-
+    // Modal Relocate
     const btnExecRelocate = document.getElementById('wb-btn-execute-relocate');
     if (btnExecRelocate) {
       btnExecRelocate.onclick = async () => {
@@ -116,7 +325,6 @@
           const data = await res.json();
           if (res.ok && data.success) {
             alert(data.message || 'Перенос успешно завершен!');
-            // Закрываем модальное окно bootstrap если доступно
             const modalEl = document.getElementById('wb-relocate-modal');
             if (modalEl && window.bootstrap?.Modal) {
               const modalInstance = window.bootstrap.Modal.getInstance(modalEl);
@@ -147,7 +355,6 @@
     ]);
   }
 
-
   async function loadHealthReport() {
     try {
       const res = await fetch('/api/v1/windows-backup/health');
@@ -158,12 +365,15 @@
       const elBadge = document.getElementById('wb-badge-status');
       const elSub = document.getElementById('wb-sub-health');
 
-      if (elHealth) elHealth.textContent = `${data.score || 0} / 100`;
+      const score = data.health_score ?? 0;
+      if (elHealth) elHealth.textContent = `${score} / 100`;
       if (elBadge) {
-        elBadge.textContent = data.status || 'OK';
-        elBadge.className = `badge bg-${data.score >= 80 ? 'success' : data.score >= 50 ? 'warning' : 'danger'}`;
+        elBadge.textContent = score >= 80 ? 'Готов' : score >= 50 ? 'Внимание' : 'Критично';
+        elBadge.className = `badge bg-${score >= 80 ? 'success' : score >= 50 ? 'warning' : 'danger'}`;
       }
-      if (elSub) elSub.textContent = data.summary || 'Готовность защиты';
+      if (elSub) {
+        elSub.textContent = data.service_running ? 'Служба активна' : 'Служба остановлена';
+      }
 
       const recList = document.getElementById('wb-recommendations-list');
       if (recList && Array.isArray(data.recommendations)) {
@@ -192,6 +402,7 @@
       const res = await fetch('/api/v1/windows-backup/libraries');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const libs = await res.json();
+      _librariesData = libs || [];
 
       if (countBadge) countBadge.textContent = `${libs.length} шт.`;
       if (valLibs) valLibs.textContent = `${libs.length}`;
@@ -203,11 +414,17 @@
       }
 
       tbody.innerHTML = libs.map(lib => {
-        const foldersHtml = (lib.folders || []).map(f => `
-          <div class="text-break font-monospace small text-muted">
-            <i class="bi bi-folder me-1 text-info"></i>${escapeHtml(f)}
-          </div>
-        `).join('') || '<span class="text-muted small">Нет папок</span>';
+        const foldersHtml = (lib.folders || []).map(f => {
+          const path = typeof f === 'string' ? f : f.folder_path;
+          const exists = typeof f === 'object' ? f.exists : true;
+          return `
+            <div class="text-break font-monospace small d-flex align-items-center gap-1 ${exists ? 'text-white' : 'text-danger'}">
+              <i class="bi ${exists ? 'bi-folder-check text-info' : 'bi-folder-x text-danger'}"></i>
+              <span>${escapeHtml(path)}</span>
+              ${!exists ? '<span class="badge bg-danger-subtle text-danger py-0 px-1" style="font-size:0.6rem;">Недоступна</span>' : ''}
+            </div>
+          `;
+        }).join('') || '<span class="text-muted small">Нет папок</span>';
 
         return `
           <tr>
@@ -274,7 +491,6 @@
   async function loadVssSnapshots() {
     const tbody = document.getElementById('wb-vss-body');
     const countBadge = document.getElementById('wb-vss-count');
-    const valVss = document.getElementById('wb-val-vss');
 
     try {
       const res = await fetch('/api/v1/windows-backup/vss/snapshots');
@@ -282,7 +498,6 @@
       const snapshots = await res.json();
 
       if (countBadge) countBadge.textContent = `${snapshots.length} шт.`;
-      if (valVss) valVss.textContent = `${snapshots.length}`;
 
       if (!tbody) return;
       if (!snapshots || snapshots.length === 0) {
@@ -372,8 +587,6 @@
     }
   }
 
-  let _userFoldersData = null;
-
   async function loadUserFoldersOverview() {
     const tbody = document.getElementById('wb-user-folders-tbody');
     const totalSizeBadge = document.getElementById('wb-total-user-size');
@@ -389,7 +602,6 @@
         totalSizeBadge.textContent = `Общий объем: ${data.total_user_size_gb} ГБ (${data.total_user_size_mb} МБ)`;
       }
 
-      // Отрисовка доступных дисков
       if (drivesList) {
         if (!data.drives || data.drives.length === 0) {
           drivesList.innerHTML = '<span class="text-muted">Диски не обнаружены</span>';
@@ -414,7 +626,6 @@
       }
 
       tbody.innerHTML = data.folders.map(f => {
-        const hasAlternativeDrives = data.available_target_drives && data.available_target_drives.length > 0;
         const suitableDrives = (data.available_target_drives || []).filter(d => {
           const folderDrive = f.drive_letter.replace('\\', '');
           const targetDrive = d.drive_letter.replace('\\', '');
@@ -450,7 +661,6 @@
         `;
       }).join('');
 
-      // Привязка клика по кнопкам "Перенести"
       tbody.querySelectorAll('.wb-btn-relocate-modal').forEach(btn => {
         btn.onclick = () => {
           const fid = btn.getAttribute('data-folder-id');
@@ -486,7 +696,7 @@
 
       (_userFoldersData.drives || []).forEach(d => {
         const dLetter = d.drive_letter.replace('\\', '').toUpperCase();
-        if (dLetter === folderDrive) return; // текущий диск пропускаем
+        if (dLetter === folderDrive) return;
 
         const isEnough = d.free_space_gb >= (folder.size_gb + 1.0);
         const opt = document.createElement('option');
@@ -506,10 +716,8 @@
     const modalEl = document.getElementById('wb-relocate-modal');
     if (modalEl) {
       if (window.bootstrap?.Modal) {
-        const modal = new window.bootstrap.Modal(modalEl);
-        modal.show();
+        new window.bootstrap.Modal(modalEl).show();
       } else {
-        // Fallback если bootstrap modal не подключен напрямую
         modalEl.classList.add('show');
         modalEl.style.display = 'block';
       }
@@ -526,4 +734,3 @@
       .replace(/'/g, '&#039;');
   }
 })();
-

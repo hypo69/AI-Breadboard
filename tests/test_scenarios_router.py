@@ -271,6 +271,35 @@ def test_scenario_chat_with_use_rag(client, monkeypatch):
     assert '"stage": "rag"' in resp_stream.text
 
 
+def test_save_approved_response_endpoint(client, tmp_path):
+    """Проверка сохранения ответа для обучения модели и RAG через /api/v1/scenarios/save-approved-response."""
+    from src.ai.gemini import approved_responses_store
+    from unittest.mock import patch
+
+    with patch.object(approved_responses_store, '_STORE_DIR', tmp_path):
+        payload = {
+            "user_id": "tc_tester",
+            "query": "Как проверить загрузку CPU?",
+            "chat_text": "Используйте Get-Counter или дашборд TC.",
+            "voice_text": "Проверьте загрузку CPU через дашборд.",
+            "system_context": {"cpu_cores": 16, "platform": "Windows 11"},
+            "tags": ["tc", "cpu", "training"]
+        }
+        res = client.post("/api/v1/scenarios/save-approved-response", json=payload)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "ok"
+        assert "успешно" in data["message"].lower()
+
+        # Проверяем, что файл физически сохранился в указанной директории
+        saved_items = approved_responses_store.list_responses()
+        assert len(saved_items) == 1
+        assert saved_items[0]["query"] == "Как проверить загрузку CPU?"
+        assert saved_items[0]["system_context"]["cpu_cores"] == 16
+        assert "cpu" in saved_items[0]["tags"]
+
+
+
 
 
 

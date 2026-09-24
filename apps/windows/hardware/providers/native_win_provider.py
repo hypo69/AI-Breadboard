@@ -116,24 +116,55 @@ class NativeWinProvider(BaseHardwareProvider):
         except Exception as e:
             logger.debug(f"Ошибка сбора GPU инвентаря: {e}")
 
-        # 4. Диски
+        # 4. Диски (Физические диски через WindowsStorageSensor + Логические тома)
         try:
             storage = StorageInventory(source_provider=self.name)
-            for part in psutil.disk_partitions(all=False):
-                try:
-                    usage = psutil.disk_usage(part.mountpoint)
+            
+            # Попытка получить физические диски с интерфейсами, SMART и здоровьем
+            try:
+                from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
+                sensor = WindowsStorageSensor(timeout_sec=15)
+                phys_disks = sensor.get_physical_disks()
+                for d in phys_disks:
+                    wear = d.wear_percentage
+                    health_pct = max(0.0, 100.0 - float(wear)) if wear is not None else None
                     storage.devices.append(
                         StorageDeviceInventory(
-                            device_id=part.device,
-                            model=f"Logical Disk {part.mountpoint}",
-                            interface_type="Storage",
-                            media_type="Volume",
-                            size_gb=round(usage.total / (1024**3), 2),
+                            device_id=d.device_id,
+                            model=d.model or d.friendly_name,
+                            vendor="Standard Storage",
+                            interface_type=d.bus_type,
+                            media_type=d.media_type,
+                            size_gb=d.size_gb,
+                            serial_number=d.serial_number,
+                            health_status=d.health_status,
+                            health_pct=health_pct,
+                            temperature_c=d.temperature_c,
+                            power_on_hours=d.power_on_hours,
+                            smart_attributes=d.raw_storage_data,
                             source_provider=self.name,
                         )
                     )
-                except Exception:
-                    continue
+            except Exception as e:
+                logger.debug(f"Ошибка сбора физических дисков: {e}")
+
+            # Если физические диски не найдены, собираем логические тома psutil
+            if not storage.devices:
+                for part in psutil.disk_partitions(all=False):
+                    try:
+                        usage = psutil.disk_usage(part.mountpoint)
+                        storage.devices.append(
+                            StorageDeviceInventory(
+                                device_id=part.device,
+                                model=f"Logical Disk {part.mountpoint}",
+                                interface_type="Storage",
+                                media_type="Volume",
+                                size_gb=round(usage.total / (1024**3), 2),
+                                source_provider=self.name,
+                            )
+                        )
+                    except Exception:
+                        continue
             inv.storage = storage
         except Exception as e:
             logger.debug(f"Ошибка сбора Storage инвентаря: {e}")
@@ -148,7 +179,7 @@ class NativeWinProvider(BaseHardwareProvider):
         return inv
 
     def probe_sensors(self) -> Optional[SensorSnapshot]:
-        """Собрать базовые показания датчиков psutil и GPU."""
+        """Собрать базовые показания датчиков psutil, GPU и дисков."""
         snapshot = SensorSnapshot(source_provider=self.name)
 
         # psutil CPU и RAM
@@ -193,5 +224,24 @@ class NativeWinProvider(BaseHardwareProvider):
                     )
         except Exception:
             pass
+
+        # Сенсоры температур накопителей
+        try:
+            from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
+            sensor = WindowsStorageSensor(timeout_sec=10)
+            for disk in sensor.get_physical_disks():
+                if disk.temperature_c is not None:
+                    snapshot.sensors.append(
+                        SensorReading(
+                            name=f"{disk.friendly_name} Temperature",
+                            sensor_type="Temperature",
+                            value=disk.temperature_c,
+                            unit="°C",
+                            hardware_name=disk.friendly_name,
+                            hardware_type="Storage",
+                        )
+                    )
+        except Exception as e:
+            logger.debug(f"Ошибка получения сенсоров дисков: {e}")
 
         return snapshot

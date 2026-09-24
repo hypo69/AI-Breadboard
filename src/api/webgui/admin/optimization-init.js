@@ -145,11 +145,16 @@ export async function initLazyTabLoading(tabDefinitions) {
     return result;
   };
 
-  // Определяем стартовые вкладки (которые грузим сразу)
-  const priorityTabs = ['about-system', 'chat', 'admin', 'users'];
+  // Определяем стартовые вкладки (только те, которые разрешены в профиле)
+  const allPriorityTabs = ['about-system', 'chat', 'admin', 'users'];
+  const allowedTabNames = new Set(tabDefinitions.map(def => def.tabName));
+  const priorityTabs = allPriorityTabs.filter(name => allowedTabNames.has(name));
+
+  // Вкладки, исключенные из автоматической фоновой предзагрузки (загружаются только по клику)
+  const excludedFromPreload = ['trading'];
   const restTabs = tabDefinitions
     .map(def => def.tabName)
-    .filter(name => !priorityTabs.includes(name));
+    .filter(name => !priorityTabs.includes(name) && !excludedFromPreload.includes(name));
 
   // Фаза 1: Загружаем приоритетные вкладки
   console.log(`[Optimization] Phase 1: Loading priority tabs: ${priorityTabs.join(', ')}`);

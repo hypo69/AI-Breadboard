@@ -133,11 +133,11 @@ if ($Preset -eq 'trading') {
 } elseif ($Preset -eq 'network') {
     $panes += @{
         Title = "Network DPI Terminal"
-        Command = "`"$venvPython`" -m apps.network_terminal"
+        Command = "`"$venvPython`" -m apps.windows.network"
     }
     $panes += @{
         Title = "Network Packet Stream"
-        Command = "`"$venvPython`" -m apps.network_terminal --simulate"
+        Command = "`"$venvPython`" -m apps.windows.network --simulate"
     }
     $panes += @{
         Title = "Security Feed"

@@ -267,14 +267,15 @@ def register_pages(app: FastAPI) -> None:
         
         return FileResponse(file_path, media_type=media_type)
 
-    # === Applications Hub & Test Computer (/tc, /apps, /log_audit) ===
+    # === Applications Hub & Test Computer (/tc, /apps, /log_audit, /su) ===
 
     @app.get('/tc', response_class=HTMLResponse)
     @app.get('/apps', response_class=HTMLResponse)
     @app.get('/log_audit', response_class=HTMLResponse)
     @app.get('/log-audit', response_class=HTMLResponse)
+    @app.get('/su', response_class=HTMLResponse)
     async def apps_interface(request: Request) -> HTMLResponse:
-        """Display the Applications Container / Test Computer page (/tc, /apps, /log_audit)."""
+        """Display the Applications Container / Test Computer page (/tc, /apps, /log_audit, /su)."""
         content = read_text_file(webinterface_dir / 'apps' / 'index.html')
         if not content:
             raise HTTPException(status_code=500, detail='Failed to read apps index page')
@@ -288,6 +289,7 @@ def register_pages(app: FastAPI) -> None:
     @app.get('/apps/{full_path:path}', response_class=HTMLResponse)
     @app.get('/log_audit/{full_path:path}', response_class=HTMLResponse)
     @app.get('/log-audit/{full_path:path}', response_class=HTMLResponse)
+    @app.get('/su/{full_path:path}', response_class=HTMLResponse)
     async def apps_static(full_path: str, request: Request):
         """Serving apps / test-computer portal static files."""
         file_path = webinterface_dir / 'apps' / full_path

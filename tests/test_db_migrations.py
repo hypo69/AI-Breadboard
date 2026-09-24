@@ -18,7 +18,7 @@ import tempfile
 from pathlib import Path
 import pytest
 
-from apps.helpdesk.db.migrations import MigrationManager
+from src.db.migrations import MigrationManager
 
 
 @pytest.fixture

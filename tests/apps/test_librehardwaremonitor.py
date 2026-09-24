@@ -22,10 +22,12 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from apps.librehardwaremonitor.core.lhm_service import (
+from apps.windows.hardware.lhm_service import (
     LhmService,
     parse_sensor_value,
 )
+from apps.windows.hardware import LhmService as LhmServiceWindows
+from apps.librehardwaremonitor.core.lhm_service import LhmService as LhmServiceAlias
 from apps.librehardwaremonitor.router import init_router
 
 
@@ -105,6 +107,12 @@ SAMPLE_LHM_TREE = {
         }
     ],
 }
+
+
+def test_lhm_service_import_compatibility() -> None:
+    """Тестирование корректности экспорта LhmService в apps.windows.hardware."""
+    assert LhmService is LhmServiceWindows
+    assert LhmService is LhmServiceAlias
 
 
 def test_parse_sensor_value() -> None:

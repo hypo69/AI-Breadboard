@@ -16,14 +16,13 @@
 """Standalone applications and terminal workspaces."""
 
 __all__ = [
+    "chat",
     "cloudflared_monitor",
     "dashboard",
     "enterprise_knowledge",
     "gcloud_monitor",
     "helpdesk",
-    "lawyer_assistant",
     "librehardwaremonitor",
-    "network_terminal",
     "research_and_statistic",
     "smartmontools",
     "software_transparency_scanner",
@@ -32,9 +31,5 @@ __all__ = [
     "website_monitor",
     "wikipedia_research",
     "windows",
-    "windows_backup_manager",
-    "windows_defender",
-    "windows_startup_auditor",
-    "windows_sysadmin",
 ]
 

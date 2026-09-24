@@ -28,7 +28,7 @@ from typing import Any, Dict, List, Optional
 
 import psutil
 from fastapi import APIRouter, HTTPException, Query, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from logger import logger
 from apps.common.csv_logger import AppCsvLogger
@@ -92,6 +92,19 @@ class ParamPreviewRequest(BaseModel):
 class RestorePointCreateRequest(BaseModel):
     description: str
     restore_point_type: Optional[str] = "MODIFY_SETTINGS"
+
+
+class RestorePolicyConfigRequest(BaseModel):
+    max_storage_size: Optional[str] = Field("10%", description="Максимальный размер теневого хранилища")
+    max_points: Optional[int] = Field(5, ge=1, le=50, description="Максимальное количество хранимых точек")
+    auto_prune: Optional[bool] = Field(True, description="Автоматическая ротация точек")
+    schedule_trigger: Optional[str] = Field("daily", description="Сценарий: daily, startup, weekly, disabled")
+    schedule_time: Optional[str] = Field("03:00", description="Время создания в формате HH:mm")
+    frequency_limit_minutes: Optional[int] = Field(0, ge=0, description="Лимит частоты в реестре (0 = без лимита)")
+
+
+class RestorePruneRequest(BaseModel):
+    keep_count: Optional[int] = Field(5, ge=1, le=50, description="Сколько последних точек сохранить")
 
 
 class RollbackRequest(BaseModel):
@@ -248,6 +261,46 @@ async def create_restore_point(payload: RestorePointCreateRequest) -> Dict[str, 
     )
     if not res.get("success"):
         raise HTTPException(status_code=500, detail=res.get("message", "Ошибка создания точки восстановления"))
+    return res
+
+
+
+@router.get("/restore-points/config")
+async def get_restore_policy_config() -> Dict[str, Any]:
+    """Получение конфигурации политик хранения, теневого хранилища и расписания точек восстановления."""
+    return _restore_mgr.get_policy_config()
+
+
+@router.post("/restore-points/config")
+async def update_restore_policy_config(payload: RestorePolicyConfigRequest) -> Dict[str, Any]:
+    """Обновление и применение политики хранения, лимита дискового пространства и расписания."""
+    res = _restore_mgr.save_policy(
+        max_points=payload.max_points or 5,
+        auto_prune=payload.auto_prune if payload.auto_prune is not None else True,
+        max_storage_size=payload.max_storage_size or "10%",
+        schedule_trigger=payload.schedule_trigger or "daily",
+        schedule_time=payload.schedule_time or "03:00",
+        frequency_limit_minutes=payload.frequency_limit_minutes or 0,
+    )
+    _csv_logger.log_event(
+        event_type="restore_policy_update",
+        status="SUCCESS" if res.get("success") else "FAILED",
+        details=payload.model_dump(),
+        filename="system_control_restore_points.csv",
+    )
+    return res
+
+
+@router.post("/restore-points/prune")
+async def prune_restore_points(payload: RestorePruneRequest) -> Dict[str, Any]:
+    """Принудительная очистка старых точек восстановления в соответствии с заданным лимитом."""
+    res = _restore_mgr.prune_old_restore_points(keep_count=payload.keep_count or 5)
+    _csv_logger.log_event(
+        event_type="restore_points_prune",
+        status="SUCCESS" if res.get("success") else "FAILED",
+        details=res,
+        filename="system_control_restore_points.csv",
+    )
     return res
 
 

@@ -8,9 +8,10 @@
   },
   "enabled": false,
   "active": false,
+  "launcher": "Run-Helpdesk.ps1",
   "server": {
     "host": "127.0.0.1",
-    "port": 8110,
+    "port": 8116,
     "dedicated": false,
     "auto_reload": false
   },

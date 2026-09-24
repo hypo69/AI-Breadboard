@@ -137,7 +137,7 @@ class HwinfoProvider(BaseHardwareProvider):
             with tempfile.TemporaryDirectory() as tmpdir:
                 report_file = os.path.join(tmpdir, "hwinfo_report.json")
                 cmd = [self.binary_path, f"-j{report_file}"]
-                logger.info(f"Запуск HWiNFO CLI: {' '.join(cmd)}")
+                logger.debug(f"Запуск HWiNFO CLI: {' '.join(cmd)}")
                 subprocess.run(cmd, capture_output=True, timeout=25)
                 if os.path.exists(report_file):
                     with open(report_file, "r", encoding="utf-8", errors="ignore") as f:

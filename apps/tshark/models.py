@@ -45,13 +45,35 @@ class PacketSummary(BaseModel):
     """Summary of decoded packet details."""
 
     number: int = Field(default=0, description="Packet index number")
+    packet_number: int = Field(default=0, description="Alias for packet index number")
     timestamp: str = Field(default="", description="Capture timestamp")
     source_ip: str = Field(default="", description="Source IP address or MAC")
+    source: str = Field(default="", description="Alias for source IP")
+    source_port: int | str = Field(default="", description="Source port")
     destination_ip: str = Field(default="", description="Destination IP address or MAC")
+    destination: str = Field(default="", description="Alias for destination IP")
+    destination_port: int | str = Field(default="", description="Destination port")
     protocol: str = Field(default="", description="Highest layer protocol (e.g. TCP, HTTP, DNS)")
     length: int = Field(default=0, description="Packet length in bytes")
     info: str = Field(default="", description="Summary information text")
     raw_layers: Dict[str, Any] = Field(default_factory=dict, description="Parsed layer fields dictionary")
+
+    def model_post_init(self, __context: Any) -> None:
+        """Синхронизация полей-алиасов после инициализации."""
+        if not self.packet_number and self.number:
+            self.packet_number = self.number
+        elif not self.number and self.packet_number:
+            self.number = self.packet_number
+
+        if not self.source and self.source_ip:
+            self.source = self.source_ip
+        elif not self.source_ip and self.source:
+            self.source_ip = self.source
+
+        if not self.destination and self.destination_ip:
+            self.destination = self.destination_ip
+        elif not self.destination_ip and self.destination:
+            self.destination_ip = self.destination
 
 
 class TrafficStats(BaseModel):
