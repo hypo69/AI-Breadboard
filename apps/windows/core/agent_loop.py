@@ -35,7 +35,7 @@ from typing import Any, AsyncIterator, Callable, Dict, List, Optional, Tuple
 
 from logger import logger
 from apps.windows.core.tools.base import BaseTool, ToolExecutionResult
-from apps.windows.core.tools.dynamic_factory import DynamicSynthesizedTool, DynamicToolFactory
+from apps.windows.core.tools.dynamic_factory import DynamicSynthesizedTool, DynamicToolFactory, to_ascii_slug
 from apps.windows.core.tools.registry import ToolRegistry
 
 

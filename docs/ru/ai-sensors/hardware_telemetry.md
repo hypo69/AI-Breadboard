@@ -11,7 +11,7 @@
 Сбор метрик осуществляется через многоуровневую систему аппаратных провайдеров:
 1. **LibreHardwareMonitor (LHM)** — опрос веб-сервиса (порт 8085) и WMI-пространства `root\LibreHardwareMonitor`.
 2. **HWiNFO / CPU-Z / GPU-Z / AIDA64** — аппаратные сенсоры, Shared Memory XML и CLI-отчеты.
-3. **S.M.A.R.T. и дисковая подсистема** — утилита `smartctl.exe` ([`apps/smartmontools`](../../apps/smartmontools)) и нативный сенсор Windows [`WindowsStorageSensor`](../../apps/windows/storage_sensors/windows_storage_sensor.py) (`MSFT_PhysicalDisk` + `StorageReliabilityCounter`).
+3. **Дисковая подсистема и надежность** — нативный сенсор Windows [`WindowsStorageSensor`](../../apps/windows/storage_sensors/windows_storage_sensor.py) (`MSFT_PhysicalDisk` + `StorageReliabilityCounter`).
 4. **Прямые системные провайдеры** — утилита `nvidia-smi`, WMI-зоны `root\wmi\MSAcpi_ThermalZoneTemperature` и библиотека `psutil`.
 
 ---
@@ -25,7 +25,7 @@
 | **Мощность (W)** | NVIDIA-SMI / LHM / HWiNFO | `GPU Power Draw`, `CPU Package Power`, `Total System Power` | `lhm_sensor_polls.csv`, `gpuz_sensor_polls.csv` |
 | **Частоты (MHz)** | LHM / CPU-Z / GPU-Z | `CPU Core #1 Clock`, `GPU Memory Clock`, `BCLK`, `Multiplier` | `lhm_sensor_polls.csv`, `cpuz_hardware_polls.csv`, `gpuz_sensor_polls.csv` |
 | **Кулеры и помпы** | LHM / NVIDIA-SMI / HWiNFO | `CPU Fan RPM`, `GPU Fan Speed (%)`, `Water Pump Control (RPM)` | `lhm_sensor_polls.csv`, `hwinfo_sensor_polls.csv` |
-| **Накопители и S.M.A.R.T.** | smartctl / WindowsStorageSensor | `Power-On Hours (наработка часов)`, `Power Cycles`, `Wear % (износ)`, `TBW`, `Reallocated Sectors` | `smartmontools_drives_polls.csv`, `windows_audit_polls.csv` |
+| **Накопители и надежность** | WindowsStorageSensor | `Power-On Hours (наработка часов)`, `Power Cycles`, `Wear % (износ)`, `TBW`, `Reallocated Sectors` | `windows_audit_polls.csv` |
 | **Память и ОС** | psutil / SystemCollector | `RAM Used (GB)`, `RAM Available`, `Swap %`, `Disk Read/Write MB/s`, `Network Rx/Tx` | `windows_audit_polls.csv`, `system_inspector_polls.csv` |
 
 ---

@@ -108,7 +108,6 @@ def test_autolog_engine_status_and_poll_all():
     assert "registered_pollers" in status
     assert "system_inspector" in status["registered_pollers"]
     assert "librehardwaremonitor" in status["registered_pollers"]
-    assert "smartmontools" in status["registered_pollers"]
 
     # Разовый опрос
     results = engine.poll_all_once()
@@ -189,24 +188,32 @@ def test_parse_interval_russian_units():
 
 def test_autolog_csv_writing(tmp_path: Path):
     """Проверяет фактическую запись CSV-логов при выполнении опросов."""
-    engine = AutoLogEngine()
-
-    # Опрашиваем несколько встроенных логгеров
-    engine.poll_logger("system_inspector")
-    engine.poll_logger("website_monitor")
-    engine.poll_logger("windows_sysadmin")
-
+    from apps.common.csv_logger import set_log_dir_override, set_mirroring_logs_to_csv
     log_dir = tmp_path / "autolog_csvs"
-    assert log_dir.exists()
+    set_log_dir_override(log_dir)
+    set_mirroring_logs_to_csv(True)
 
-    sys_csv = log_dir / "system_inspector_polls.csv"
-    assert sys_csv.exists()
-    content = sys_csv.read_text(encoding="utf-8-sig")
-    assert "cpu_usage_pct" in content
-    assert "memory_usage_pct" in content
+    try:
+        engine = AutoLogEngine()
 
-    web_csv = log_dir / "website_monitor_poll_events.csv"
-    assert web_csv.exists()
-    web_content = web_csv.read_text(encoding="utf-8-sig")
-    assert "website_monitor" in web_content
-    assert "monitor_heartbeat" in web_content
+        # Опрашиваем несколько встроенных логгеров
+        engine.poll_logger("system_inspector")
+        engine.poll_logger("website_monitor")
+        engine.poll_logger("windows_sysadmin")
+
+        assert log_dir.exists()
+
+        sys_csv = log_dir / "system_inspector_polls.csv"
+        assert sys_csv.exists()
+        content = sys_csv.read_text(encoding="utf-8-sig")
+        assert "cpu_usage_pct" in content
+        assert "memory_usage_pct" in content
+
+        web_csv = log_dir / "website_monitor_poll_events.csv"
+        assert web_csv.exists()
+        web_content = web_csv.read_text(encoding="utf-8-sig")
+        assert "website_monitor" in web_content
+        assert "monitor_heartbeat" in web_content
+    finally:
+        set_log_dir_override(None)
+        set_mirroring_logs_to_csv(False)

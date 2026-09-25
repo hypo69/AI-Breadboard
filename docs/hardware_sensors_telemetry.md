@@ -168,7 +168,6 @@ def _has_value_changed(self, app_name: str, new_value: Any) -> bool:
 - `librehardwaremonitor_polls.csv` — сенсоры через LHM HTTP API
 - `lhm_sensor_polls.csv` — дополнительные сенсоры LHM (если есть)
 - `system_inspector_polls.csv` — базовая телеметрия (CPU, RAM, Disk, Net)
-- `smartmontools_drive_polls.csv` — SMART накопителей
 - `software_audit.csv` — аудит ПО
 
 ---

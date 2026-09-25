@@ -184,7 +184,7 @@ class ScenarioChatRequest(BaseModel):
     message: str = Field(description="Текст запроса или вопроса на естественном языке")
     conversation_id: Optional[str] = Field(default=None, description="Идентификатор диалога")
     auto_create_skill: bool = Field(default=False, description="Автоматически генерировать навык без подтверждения")
-    keep_context: bool = Field(default=True, description="Сохранять и учитывать контекст предыдущих сообщений диалога")
+    keep_context: bool = Field(default=False, description="Сохранять и учитывать контекст предыдущих сообщений диалога")
     use_rag: bool = Field(default=True, description="Использовать базу знаний RAG для поиска контекста")
 
 
@@ -1224,8 +1224,15 @@ def init_router() -> APIRouter:
                 ):
                     yield f"data: {json.dumps(evt, ensure_ascii=False)}\n\n"
             except Exception as e:
+                import traceback
+                tb_str = traceback.format_exc()
                 logger.error(f"Ошибка в chat_scenario_assistant_stream: {e}", exc_info=True)
-                err_evt = {"type": "error", "error": str(e)}
+                err_evt = {
+                    "type": "error",
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "details": tb_str,
+                }
                 yield f"data: {json.dumps(err_evt, ensure_ascii=False)}\n\n"
 
         return StreamingResponse(event_generator(), media_type="text/event-stream")

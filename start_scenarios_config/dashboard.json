@@ -196,10 +196,6 @@
                 "interval": "30 seconds",
                 "enabled": true
             },
-            "smartmontools": {
-                "interval": "30 minutes",
-                "enabled": true
-            },
             "cloudflared_monitor": {
                 "interval": "30 seconds",
                 "enabled": true

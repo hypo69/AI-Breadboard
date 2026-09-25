@@ -234,7 +234,7 @@
 
       if (!container) return;
       if (!drives || drives.length === 0) {
-        container.innerHTML = '<div class="text-muted text-center py-2">S.M.A.R.T. накопители проверены (smartctl / WMI). Состояние нормальное.</div>';
+        container.innerHTML = '<div class="text-muted text-center py-2">S.M.A.R.T. накопители проверены (Windows Storage API / WMI). Состояние нормальное.</div>';
         return;
       }
 
@@ -279,7 +279,6 @@
    *   lhmKey — альтернативный ключ API для LibreHardwareMonitor
    */
   const HW_UTILITIES = [
-    { key: 'smartmontools',  apiPrefix: '/api/v1/smartmontools' },
     { key: 'lhm',            apiPrefix: '/api/v1/lhm' },
   ];
 
@@ -393,7 +392,6 @@
 
     // Маппинг утилита+действие -> URL и метод
     const actionMap = {
-      'smartmontools:scan':     { url: '/api/v1/smartmontools/scan', method: 'GET' },
       'lhm:sensors':            { url: '/api/v1/lhm/sensors', method: 'GET' },
     };
 
@@ -451,7 +449,7 @@
       return `<pre class="bg-dark text-light p-1.5 rounded mb-0 font-monospace" style="font-size: 0.72rem; white-space: pre-wrap; word-break: break-word;">${escapeHtml(JSON.stringify(data.report, null, 2))}</pre>`;
     }
 
-    // Если есть drives / devices (smartmontools scan)
+    // Если есть drives / devices (сканирование дисков)
     if (data.drives || data.devices) {
       const drives = data.drives || data.devices || [];
       if (drives.length === 0) {

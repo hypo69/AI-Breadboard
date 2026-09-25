@@ -16,10 +16,6 @@
       "interval": "5 seconds",
       "enabled": true
     },
-    "smartmontools": {
-      "interval": "10 minutes",
-      "enabled": true
-    },
     "windows_sysadmin": {
       "interval": "1 minute",
       "enabled": true

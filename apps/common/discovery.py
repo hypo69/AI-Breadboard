@@ -55,8 +55,6 @@ class UtilityDiscovery:
         "hwinfo": ["HWiNFO64.exe", "HWiNFO32.exe", "HWiNFO.exe"],
         "cpuz": ["cpuz_x64.exe", "cpuz.exe", "cpuz64.exe"],
         "gpuz": ["GPU-Z.exe", "GPUZ.exe"],
-        "smartmontools": ["smartctl.exe"],
-        "smartctl": ["smartctl.exe"],
         "crystaldiskinfo": ["DiskInfo64.exe", "DiskInfo32.exe", "DiskInfo.exe"],
         "lhm": ["LibreHardwareMonitor.exe", "LibreHardwareMonitorLib.dll"],
         "librehardwaremonitor": ["LibreHardwareMonitor.exe"],
@@ -90,14 +88,6 @@ class UtilityDiscovery:
             "GPU-Z",
             "TechPowerUp GPU-Z",
             "gpuz",
-        ],
-        "smartmontools": [
-            "smartmontools/bin",
-            "smartmontools",
-        ],
-        "smartctl": [
-            "smartmontools/bin",
-            "smartmontools",
         ],
         "crystaldiskinfo": [
             "CrystalDiskInfo",
@@ -141,13 +131,6 @@ class UtilityDiscovery:
             "download_url": "https://www.hwinfo.com/files/hwi_portable.zip",
             "target_bin_path": "bin/hwinfo/HWiNFO64.exe",
             "instruction_ru": "1. Перейдите на официальный сайт и скачайте 'HWiNFO Portable (ZIP)'.\n2. Распакуйте архив в папку 'bin/hwinfo/'.\n3. Запустите HWiNFO64.exe один раз и включите опцию 'Shared Memory Support' в настройках (Settings).",
-        },
-        "smartmontools": {
-            "name": "smartmontools (smartctl)",
-            "official_url": "https://www.smartmontools.org/",
-            "download_url": "https://sourceforge.net/projects/smartmontools/files/smartmontools/",
-            "target_bin_path": "bin/smartmontools/smartctl.exe",
-            "instruction_ru": "1. Скачайте Windows-дистрибутив smartmontools (ZIP или portable installer).\n2. Скопируйте 'smartctl.exe' в папку 'bin/smartmontools/' или 'bin/'.",
         },
         "cpuz": {
             "name": "CPU-Z (CPUID)",
@@ -311,8 +294,6 @@ class UtilityDiscovery:
         key = utility_name.lower().strip()
         if key == "lhm":
             key = "librehardwaremonitor"
-        if key == "smartctl":
-            key = "smartmontools"
 
         found_path = self.find_utility(key)
         guide_info = self.PORTABLE_GUIDES.get(

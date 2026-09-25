@@ -35,7 +35,6 @@ import psutil
 
 from logger import logger
 from apps.windows.hardware.gpu_prober import GpuDeviceTelemetry, GpuProber
-from apps.windows.hardware.smartctl_probe import SmartDriveInfo, SmartProber
 from apps.windows.telemetry.sensors import get_hardware_sensors
 
 
@@ -172,7 +171,6 @@ class HardwareMonitor:
     def __init__(self) -> None:
         """Инициализация монитора с внутренними счетчиками для дифференциальных метрик."""
         self._gpu_prober = GpuProber()
-        self._smart_prober = SmartProber()
         self._last_poll_time: float = time.time()
         self._last_disk_io = self._get_raw_disk_io()
         self._last_net_io = self._get_raw_net_io()

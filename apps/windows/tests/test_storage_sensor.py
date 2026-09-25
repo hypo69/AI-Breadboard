@@ -20,7 +20,6 @@ from unittest.mock import MagicMock, patch
 
 from apps.windows.core.modules.storage_collector import StorageCollector
 from apps.windows.hardware.providers.native_win_provider import NativeWinProvider
-from apps.windows.hardware.smartctl_probe import SmartProber
 from apps.windows.storage_sensors.windows_storage_sensor import (
     StorageDiskHealthInfo,
     WindowsStorageSensor,
@@ -127,32 +126,6 @@ class TestWindowsStorageSensor(unittest.TestCase):
             self.assertEqual(disk.model, "WDC WD20EZAZ")
             self.assertEqual(disk.media_type, "HDD")
             self.assertEqual(disk.health_status, "Healthy")
-
-    def test_smart_prober_fallback_with_storage_sensor(self) -> None:
-        """Проверка использования сенсора в фолбэке SmartProber."""
-        prober = SmartProber(custom_smartctl_path="non_existent_binary.exe")
-        with patch("apps.windows.storage_sensors.windows_storage_sensor.WindowsStorageSensor.get_physical_disks") as mock_disks:
-            mock_disks.return_value = [
-                StorageDiskHealthInfo(
-                    device_id="Disk0",
-                    friendly_name="Crucial CT1000P3SSD8",
-                    model="Crucial CT1000P3SSD8",
-                    serial_number="2210E654321",
-                    bus_type="NVMe",
-                    media_type="SSD",
-                    size_gb=931.51,
-                    health_status="Healthy",
-                    operational_status="OK",
-                    temperature_c=38.0,
-                    wear_percentage=1.0,
-                    power_on_hours=1200,
-                )
-            ]
-            drives = prober.scan_drives(force_refresh=True)
-            self.assertTrue(len(drives) >= 1)
-            self.assertEqual(drives[0].model, "Crucial CT1000P3SSD8")
-            self.assertEqual(drives[0].temperature_c, 38)
-            self.assertEqual(drives[0].health_status, "PASSED")
 
     def test_native_win_provider_storage_integration(self) -> None:
         """Проверка интеграции StorageDeviceInventory и сенсоров в NativeWinProvider."""

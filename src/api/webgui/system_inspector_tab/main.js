@@ -564,10 +564,10 @@
         diskBadge.textContent = allHealthy ? 'SMART OK' : 'Внимание';
         diskBadge.className = allHealthy ? 'badge bg-success-subtle text-success border border-success' : 'badge bg-warning-subtle text-warning border border-warning';
       }
-      diskCont.innerHTML = snap.physical_disks.slice(0, 2).map(d => `
-        <div class="d-flex justify-content-between align-items-center py-0.5">
-          <span class="text-truncate" style="max-width: 140px;" title="${escapeHtml(d.model)}">${escapeHtml(d.model)}</span>
-          <span class="badge bg-secondary font-monospace">${d.size_gb} GB ${d.media_type}</span>
+      diskCont.innerHTML = snap.physical_disks.map(d => `
+        <div class="d-flex justify-content-between align-items-center py-0.5 border-bottom border-dark-subtle" style="border-bottom-style: dashed !important;">
+          <span class="text-truncate me-2" style="max-width: 160px;" title="${escapeHtml(d.model)}">${escapeHtml(d.model)}</span>
+          <span class="badge bg-secondary font-monospace" style="font-size: 0.65rem;">${d.size_gb} GB ${escapeHtml(d.media_type || '')}</span>
         </div>
       `).join('');
     }
@@ -1467,8 +1467,7 @@
   const CORE_RESOURCE_LOGGERS = [
     'librehardwaremonitor',
     'system_inspector',
-    'hardware_monitor',
-    'smartmontools'
+    'hardware_monitor'
   ];
 
   const LOGGER_META = {
@@ -1486,11 +1485,6 @@
       icon: '💻',
       title: 'Hardware Monitor',
       desc: 'Аппаратные датчики WMI, GPU SMI (NVIDIA/AMD/Intel) и физические шины',
-    },
-    smartmontools: {
-      icon: '💾',
-      title: 'SmartMonTools (SMART)',
-      desc: 'Диагностика накопителей NVMe/SSD/HDD, температура дисков и здоровье SMART',
     },
     windows_sysadmin: {
       icon: '🛠️',

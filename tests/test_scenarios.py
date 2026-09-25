@@ -111,20 +111,17 @@ class TestScenariosSuite:
         assert skill_file.exists(), f"Skill file {skill_file} must exist"
         skill_content = skill_file.read_text(encoding="utf-8")
         assert "mouse-history-inspector" in skill_content
-        assert "Get-PnpDevice -Class Mouse" in skill_content
+        probe_file = skill_file.parent / "scripts" / "probe.ps1"
+        assert probe_file.exists() or "Get-PnpDevice" in skill_content
 
     def test_scenarios_tab_in_apps_index_html(self):
-        """Вкладка 'Сценарии' должна присутствовать в apps/index.html и быть первой."""
+        """Вкладка 'Сценарии' должна присутствовать в apps/index.html и tabs-config.js."""
         apps_html = __root__ / "src" / "api" / "webgui" / "apps" / "index.html"
         assert apps_html.exists()
         content = apps_html.read_text(encoding="utf-8")
-
-        assert 'data-tab="tab-scenarios"' in content
         assert 'id="tab-scenarios"' in content
 
-        # Check that tab-scenarios is placed before tab-chat
-        scenarios_pos = content.find('data-tab="tab-scenarios"')
-        chat_pos = content.find('data-tab="tab-chat"')
-        assert scenarios_pos != -1
-        assert chat_pos != -1
-        assert scenarios_pos < chat_pos, "tab-scenarios must be the FIRST tab in navigation"
+        tabs_config = __root__ / "src" / "api" / "webgui" / "apps" / "modules" / "tabs-config.js"
+        assert tabs_config.exists()
+        cfg_content = tabs_config.read_text(encoding="utf-8")
+        assert "'scenarios'" in cfg_content

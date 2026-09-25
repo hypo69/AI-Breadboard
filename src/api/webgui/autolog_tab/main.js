@@ -41,7 +41,6 @@
     system_inspector: { icon: '🖥️', title: 'System Inspector (Потребление ресурсов)' },
     hardware_monitor: { icon: '⚡', title: 'Hardware Sensors (Датчики оборудования)' },
     librehardwaremonitor: { icon: '🌡️', title: 'LibreHardwareMonitor API' },
-    smartmontools: { icon: '💾', title: 'Smartmontools (SMART дисков)' },
     website_monitor: { icon: '🌐', title: 'Website Intelligence & Heartbeat' },
     gcloud_monitor: { icon: '☁️', title: 'Google Cloud Observability' },
     cloudflared_monitor: { icon: '🛡️', title: 'Cloudflared Tunnel Supervisor' },

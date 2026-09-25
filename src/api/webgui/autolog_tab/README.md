@@ -11,7 +11,7 @@
   - Управление запуском и остановкой движка в один клик.
   - Мастер-кнопка немедленного опроса всех логгеров ("Опросить все сейчас").
 - **Управление периодичностью логгеров**:
-  - Включение / выключение индивидуальных логгеров (`system_inspector`, `hardware_monitor`, `librehardwaremonitor`, `smartmontools`, `website_monitor`, `gcloud_monitor`, `cloudflared_monitor`, `windows_sysadmin`, `windows_defender`, `windows_startup_auditor`, `windows_backup_manager`, `trading_terminal`, `user_assistant`, `helpdesk`, `registry_viewer`, `software_audit`).
+  - Включение / выключение индивидуальных логгеров (`system_inspector`, `hardware_monitor`, `librehardwaremonitor`, `website_monitor`, `gcloud_monitor`, `cloudflared_monitor`, `windows_sysadmin`, `windows_defender`, `windows_startup_auditor`, `windows_backup_manager`, `trading_terminal`, `user_assistant`, `helpdesk`, `registry_viewer`, `software_audit`).
   - Выбор частоты опроса из удобного списка пресетов (5 сек, 10 сек, 30 сек, 1 мин, 5 мин, 10 мин, 30 мин, 1 час, 6 часов, 1 день, 7 дней) либо ручной ввод произвольного интервала.
   - Сохранение настроек в активный конфигурационный файл с мгновенным перезапуском фоновых воркеров без перезагрузки сервера.
 - **Сенсоры оборудования и телеметрия**:

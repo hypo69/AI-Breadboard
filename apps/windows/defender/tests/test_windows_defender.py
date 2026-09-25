@@ -185,3 +185,15 @@ def test_fastapi_router() -> None:
     resp_diag = client.get("/api/v1/defender/diagnostics")
     assert resp_diag.status_code == 200
     assert "security_score" in resp_diag.json()
+
+    with patch.object(DefenderService, "trigger_scan") as mock_scan:
+        from apps.windows.defender.core.models import ScanResponse
+        mock_scan.return_value = ScanResponse(
+            success=True,
+            scan_type=ScanType.FULL,
+            message="Сканирование успешно завершено.",
+        )
+        resp_scan = client.post("/api/v1/defender/scan", json={"scan_type": "full"})
+        assert resp_scan.status_code == 200
+        assert resp_scan.json()["success"] is True
+

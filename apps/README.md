@@ -16,7 +16,7 @@ The `/apps` directory hosts standalone domain applications, interactive terminal
 ```
 apps/
 ├── windows/                   # 🪟 AI Windows Diagnostic, Hardware & Administration Center
-│   ├── hardware/              # External hardware diagnostic probers (smartctl, GPU SMI, CPU-Z/AIDA64, Stress)
+│   ├── hardware/              # External hardware diagnostic probers (Storage WMI, GPU SMI, CPU-Z/AIDA64, Stress)
 │   ├── core/                  # Core SafeOps, Root-Cause engine, and 15 OS collectors
 │   ├── ai/                    # AI Diagnostician and Incident correlation
 │   ├── telemetry/             # Hardware sensors, performance metrics, and tunnels
@@ -45,8 +45,7 @@ apps/
 
 | Application | CLI Command | Port | FastAPI Endpoints | Description |
 |---|---|---|---|---|
-| **AI Windows Diagnostic Center** | `python -m apps.windows` | `8105` | `/api/windows/*` | Комплексная диагностика Windows, аудит драйверов, SMART дисков (`smartctl`), GPU (`nvidia-smi`/`amd-smi`), стресс-тесты, журналы событий и безопасное администрирование. |
-| **smartmontools Storage App** | `python -m apps.smartmontools` | `8124` | `/api/v1/smartmontools/*` | Автоматическая SMART диагностика всех дисков через `smartctl --json -x`, расчет износа NVMe/SSD. |
+| **AI Windows Diagnostic Center** | `python -m apps.windows` | `8105` | `/api/windows/*` | Комплексная диагностика Windows, аудит драйверов, нативная диагностика накопителей, GPU (`nvidia-smi`/`amd-smi`), стресс-тесты, журналы событий и безопасное администрирование. |
 | **LibreHardwareMonitor App** | `python -m apps.librehardwaremonitor` | `8126` | `/api/v1/lhm/*` | Сбор телеметрии через Web REST JSON API (`http://localhost:8085/data.json`) и WMI. |
 | **Microsoft Defender Security Center** | `python -m apps.windows_defender` | `8113` | `/api/v1/defender/*` | Мониторинг и управление Microsoft Defender Antivirus, правила ASR, Controlled Folder Access (Ransomware), аудит исключений, детекция Fileless и корреляция событий. |
 | **Windows Startup Auditor** | `python -m apps.windows_startup_auditor` | `8112` | `/api/v1/startup-auditor/*` | Полный поиск всех точек автозагрузки и персистентности Windows (реестр Run/RunOnce, папки Startup, Winlogon, IFEO, службы, задачи), аудит безопасности и оптимизация старта. |

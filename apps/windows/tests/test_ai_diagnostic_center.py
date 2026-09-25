@@ -194,7 +194,8 @@ def test_root_cause_engine_investigate():
 def test_router_initialization():
     """Тест инициализации FastAPI роутера."""
     r = init_router()
-    routes = [route.path for route in r.routes]
+    routes = [getattr(route, "path", None) for route in r.routes]
+    routes = [p for p in routes if p is not None]
     assert "/api/windows/health" in routes
     assert "/api/windows/audit/full" in routes
     assert "/api/windows/investigate" in routes

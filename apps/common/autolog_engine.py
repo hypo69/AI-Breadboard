@@ -239,7 +239,6 @@ class AutoLogEngine:
         self.register_poller("system_inspector", self._poll_system_inspector)
         self.register_poller("hardware_monitor", self._poll_hardware_monitor)
         self.register_poller("librehardwaremonitor", self._poll_librehardwaremonitor)
-        self.register_poller("smartmontools", self._poll_smartmontools)
         self.register_poller("website_monitor", self._poll_website_monitor)
         self.register_poller("gcloud_monitor", self._poll_gcloud_monitor)
         self.register_poller("cloudflared_monitor", self._poll_cloudflared_monitor)
@@ -601,28 +600,6 @@ class AutoLogEngine:
                 "UNREACHABLE",
                 "LibreHardwareMonitor API (:8085) not responding",
             )
-
-
-    def _poll_smartmontools(self) -> None:
-        """Опрашивает состояние SMART накопителей через smartctl."""
-        from apps.smartmontools.core.smartctl_service import SmartctlService
-        service = SmartctlService()
-        drives = service.scan_devices()
-        headers = ["timestamp", "name", "type", "protocol", "info"]
-        now_str = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-
-        for d in drives:
-            row = [
-                now_str,
-                d.get("name", ""),
-                d.get("type", ""),
-                d.get("protocol", ""),
-                d.get("info_name", ""),
-            ]
-            write_csv_row("smartmontools_drive_polls.csv", headers, row)
-
-        if not drives:
-            log_poll("smartmontools", "smart_scan", "drives_count", 0, "count", "OK", "No drives detected via smartctl")
 
 
     def _poll_website_monitor(self) -> None:

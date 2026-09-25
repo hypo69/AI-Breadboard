@@ -61,12 +61,14 @@ from .router_menu import init_router as init_menu_router
 from .pixel_rag_router import get_pixel_rag_router
 from .router_ninite import init_router as init_ninite_router
 from .router_recovery import init_router as init_recovery_router
+from .router_tc import init_router as init_tc_router
 
 __all__ = [
     "get_pixel_rag_router",
     "init_menu_router",
     "init_diagnostics_router",
     "init_scenarios_router",
+    "init_tc_router",
     "init_autolog_router",
     "init_sysautolog_router",
     "init_auth_router",

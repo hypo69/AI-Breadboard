@@ -152,6 +152,7 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_registry_viewer_router,
         init_diagnostics_router,
         init_scenarios_router,
+        init_tc_router,
         init_autolog_router,
         init_sysautolog_router,
         init_user_directories_router,
@@ -196,6 +197,7 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
         init_registry_viewer_router,
         init_diagnostics_router,
         init_scenarios_router,
+        init_tc_router,
         init_autolog_router,
         init_sysautolog_router,
         init_user_directories_router,
@@ -334,13 +336,6 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
             app.include_router(init_transparency_scanner_router(state.chat_model if hasattr(state, "chat_model") else None))
         except (ImportError, Exception) as e:
             logger.debug(f"Software transparency scanner router not registered: {e}")
-
-    if is_app_enabled("smartmontools"):
-        try:
-            from apps.smartmontools.router import init_router as init_smartmontools_router
-            app.include_router(init_smartmontools_router())
-        except (ImportError, Exception) as e:
-            logger.debug(f"smartmontools router not registered: {e}")
 
     if is_app_enabled("librehardwaremonitor"):
         try:

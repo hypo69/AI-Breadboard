@@ -68,6 +68,18 @@
 5. **`hardware_audits`** — архивы аудита конфигурации оборудования:
    - `id`, `archive_id`, `timestamp`, `created_at`, `devices_count`, `problem_devices_count`, `outdated_drivers_count`, `changes_count`, `raw_json`
 
+6. **`app_polls`** — замеры метрик прикладных модулей (`apps.common.csv_logger`):
+   - `id`, `timestamp`, `created_at`, `app`, `poll_type`, `metric_name`, `value`, `unit`, `tags_json`
+
+7. **`app_events`** — события и статусы приложений:
+   - `id`, `timestamp`, `created_at`, `app`, `event_type`, `status`, `details`, `duration_ms`, `metadata_json`
+
+8. **`app_param_changes`** — аудит изменений конфигурации параметров:
+   - `id`, `timestamp`, `created_at`, `app`, `param_name`, `old_value`, `new_value`, `changed_by`
+
+9. **`custom_records`** — произвольные табличные записи:
+   - `id`, `timestamp`, `created_at`, `app`, `log_name`, `row_data_json`
+
 ---
 
 ## 🚀 Как запускается (Управление)

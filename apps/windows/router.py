@@ -21,9 +21,7 @@
 
 """FastAPI роутер для AI Windows Diagnostic & Administration Center."""
 
-from __future__ import annotations
-
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
@@ -467,11 +465,15 @@ async def get_hardware_sensors_list() -> Dict[str, Any]:
 
 @router.get("/hardware/smart")
 async def get_storage_smart() -> Dict[str, Any]:
-    """Получение детальных S.M.A.R.T. данных и здоровья накопителей."""
-    from apps.windows.hardware.smartctl_probe import SmartProber
-    prober = SmartProber()
-    drives = prober.scan_drives()
-    return {"drives": [d.__dict__ for d in drives]}
+    """Получение детальных S.M.A.R.T. данных и здоровья накопителей через нативный Windows Storage API."""
+    try:
+        from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
+        sensor = WindowsStorageSensor()
+        drives = sensor.get_physical_disks()
+        return {"drives": drives}
+    except Exception as ex:
+        logger.warning(f"Ошибка получения состояния дисков: {ex}")
+        return {"drives": []}
 
 
 @router.get("/hardware/gpu")

@@ -21,8 +21,6 @@
 
 """FastAPI роутер для модуля исследования логов телеметрии."""
 
-from __future__ import annotations
-
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query, Response
 from pydantic import BaseModel, Field

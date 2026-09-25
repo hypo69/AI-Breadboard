@@ -499,11 +499,24 @@
     const sendBtn = document.getElementById('btn-scenario-chat-send');
     const statusInd = document.getElementById('chat-status-indicator');
     const ragCheck = document.getElementById('check-scenario-rag');
+    const keepContextCheck = document.getElementById('check-scenario-keep-context');
 
     if (!chatForm || !chatInput || !chatHistory) return;
 
     // Fetch and render questions dynamically from external configuration
     loadQuestionsFromConfig();
+
+    if (keepContextCheck) {
+      const savedKeepContext = localStorage.getItem('tc_scenario_keep_context');
+      if (savedKeepContext !== null) {
+        keepContextCheck.checked = savedKeepContext === 'true';
+      } else {
+        keepContextCheck.checked = false;
+      }
+      keepContextCheck.addEventListener('change', (e) => {
+        localStorage.setItem('tc_scenario_keep_context', e.target.checked);
+      });
+    }
 
     if (ragCheck) {
       const savedRagState = localStorage.getItem('tc_scenario_use_rag');
@@ -728,6 +741,7 @@
 
       try {
         const useRag = ragCheck ? ragCheck.checked : true;
+        const keepContext = keepContextCheck ? keepContextCheck.checked : false;
 
         const res = await fetch('/api/v1/scenarios/chat/stream', {
           method: 'POST',
@@ -736,7 +750,7 @@
             message: message,
             conversation_id: currentConversationId,
             auto_create_skill: false,
-            keep_context: true,
+            keep_context: keepContext,
             use_rag: useRag,
           }),
         });
@@ -762,42 +776,50 @@
           for (const line of lines) {
             const cleanLine = line.trim();
             if (!cleanLine.startsWith('data:')) continue;
+            let evt = null;
             try {
-              const evt = JSON.parse(cleanLine.substring(5).trim());
-              if (evt.type === 'stage') {
-                const lastSt = stagesLog[stagesLog.length - 1];
-                if (!lastSt || lastSt.stage !== evt.stage || lastSt.message !== evt.message) {
-                  stagesLog.push(evt);
-                }
-                if (statusInd) statusInd.innerText = evt.message || 'Обработка...';
-
-                const bodyElem = document.getElementById(`${msgId}-body`);
-                if (bodyElem) {
-                  const { chatText } = parseChatAndVoice(streamedReplyText);
-                  bodyElem.innerHTML = `
-                    ${renderStagesHtml(stagesLog, false)}
-                    ${streamedReplyText ? `<div class="chat-streaming-content mt-1.5">${formatMarkdown(chatText)}<span class="streaming-cursor">▌</span></div>` : ''}
-                  `;
-                  chatHistory.scrollTop = chatHistory.scrollHeight;
-                }
-              } else if (evt.type === 'chunk') {
-                streamedReplyText += (evt.content || '');
-                const bodyElem = document.getElementById(`${msgId}-body`);
-                if (bodyElem) {
-                  const { chatText } = parseChatAndVoice(streamedReplyText);
-                  bodyElem.innerHTML = `
-                    ${renderStagesHtml(stagesLog, false)}
-                    <div class="chat-streaming-content mt-1.5">${formatMarkdown(chatText)}<span class="streaming-cursor">▌</span></div>
-                  `;
-                  chatHistory.scrollTop = chatHistory.scrollHeight;
-                }
-              } else if (evt.type === 'done') {
-                finalData = evt;
-              } else if (evt.type === 'error') {
-                throw new Error(evt.error || 'Ошибка в потоке');
-              }
+              evt = JSON.parse(cleanLine.substring(5).trim());
             } catch (pErr) {
               console.warn('[ScenariosTab] SSE parse warning:', pErr);
+              continue;
+            }
+            if (!evt) continue;
+
+            if (evt.type === 'stage') {
+              const lastSt = stagesLog[stagesLog.length - 1];
+              if (!lastSt || lastSt.stage !== evt.stage || lastSt.message !== evt.message) {
+                stagesLog.push(evt);
+              }
+              if (statusInd) statusInd.innerText = evt.message || 'Обработка...';
+
+              const bodyElem = document.getElementById(`${msgId}-body`);
+              if (bodyElem) {
+                const { chatText } = parseChatAndVoice(streamedReplyText);
+                bodyElem.innerHTML = `
+                  ${renderStagesHtml(stagesLog, false)}
+                  ${streamedReplyText ? `<div class="chat-streaming-content mt-1.5">${formatMarkdown(chatText)}<span class="streaming-cursor">▌</span></div>` : ''}
+                `;
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+              }
+            } else if (evt.type === 'chunk') {
+              streamedReplyText += (evt.content || '');
+              const bodyElem = document.getElementById(`${msgId}-body`);
+              if (bodyElem) {
+                const { chatText } = parseChatAndVoice(streamedReplyText);
+                bodyElem.innerHTML = `
+                  ${renderStagesHtml(stagesLog, false)}
+                  <div class="chat-streaming-content mt-1.5">${formatMarkdown(chatText)}<span class="streaming-cursor">▌</span></div>
+                `;
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+              }
+            } else if (evt.type === 'done') {
+              finalData = evt;
+            } else if (evt.type === 'error') {
+              const streamErr = new Error(evt.error || 'Ошибка в потоке');
+              streamErr.details = evt.details || '';
+              streamErr.errorType = evt.error_type || 'StreamError';
+              streamErr.rawEvent = evt;
+              throw streamErr;
             }
           }
         }
@@ -1224,14 +1246,29 @@
         console.error('[ScenariosTab] Chat error:', err);
         const bodyElem = document.getElementById(`${msgId}-body`);
         if (bodyElem) {
+          const errDetail = err.details || (err.rawEvent ? JSON.stringify(err.rawEvent, null, 2) : '');
+          const errorTypeBadge = err.errorType ? `<span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 font-monospace small ms-1" style="font-size: 0.68rem;">${escapeHtml(err.errorType)}</span>` : '';
           bodyElem.innerHTML = `
-            <div class="text-danger">
-              <i class="bi bi-exclamation-triangle-fill me-1"></i>Ошибка: ${escapeHtml(err.message)}
+            ${stagesLog.length > 0 ? renderStagesHtml(stagesLog, false) : ''}
+            <div class="text-danger p-2.5 bg-danger bg-opacity-10 border border-danger border-opacity-40 rounded mt-2">
+              <div class="fw-semibold d-flex align-items-center justify-content-between flex-wrap gap-1 text-danger small">
+                <span class="d-flex align-items-center gap-1.5">
+                  <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                  <span>Ошибка: ${escapeHtml(err.message || 'Неизвестная ошибка выполнения')}</span>
+                </span>
+                ${errorTypeBadge}
+              </div>
+              ${errDetail && errDetail.trim() !== (err.message || '').trim() ? `
+                <div class="mt-2 pt-1.5 border-top border-danger border-opacity-25">
+                  <div class="text-muted small mb-1" style="font-size: 0.72rem;"><i class="bi bi-code-slash me-1"></i>Параметры и стек ошибки:</div>
+                  <pre class="m-0 p-2 bg-black bg-opacity-60 text-danger border border-danger border-opacity-25 rounded font-monospace small" style="font-size: 0.72rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;">${escapeHtml(errDetail)}</pre>
+                </div>
+              ` : ''}
             </div>
           `;
         }
         chatHistory.scrollTop = chatHistory.scrollHeight;
-        if (statusInd) statusInd.innerText = 'Ошибка запроса';
+        if (statusInd) statusInd.innerText = `Ошибка: ${err.message || 'Сбой'}`;
       } finally {
         isChatSubmitting = false;
         chatInput.disabled = false;

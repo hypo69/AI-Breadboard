@@ -45,7 +45,7 @@ class ProviderTier(int, Enum):
     """Уровень приоритета провайдера в диагностической иерархии."""
     TIER_1_NATIVE = 1       # Нативные Windows API (WinAPI, WMI, SMBIOS, DXGI)
     TIER_2_PRIMARY = 2      # Основные диагностические комбайны (HWiNFO, AIDA64, LHM)
-    TIER_3_SPECIALIZED = 3  # Специализированные утилиты (smartctl, CPU-Z, GPU-Z, NVML, CDI)
+    TIER_3_SPECIALIZED = 3  # Специализированные утилиты (CPU-Z, GPU-Z, NVML, CDI)
     TIER_4_AUXILIARY = 4    # Дополнительные/вспомогательные источники (Speccy, OHM, CoreTemp)
 
 

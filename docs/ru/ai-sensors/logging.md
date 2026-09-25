@@ -24,7 +24,7 @@ flowchart TD
         DFS["🔌 DeviceFlappingSensor<br/>(PnP, USB, Wacom, HDMI, BT)"]
         LHM["🌡️ LibreHardwareMonitor<br/>(Температуры, Напряжения, RPM)"]
         HW["🔍 HWiNFO / CPU-Z / GPU-Z<br/>(Сенсоры, Частоты, Вольтаж)"]
-        SMART["💾 Smartmontools / WMI<br/>(S.M.A.R.T., Износ, Часы, TBW)"]
+        SMART["💾 WindowsStorageSensor / WMI<br/>(Диски, Износ, Часы, TBW)"]
         SYS["💻 SystemCollector<br/>(CPU %, RAM, Диски, Сеть)"]
         NET["🚀 InternetSpeedSensor<br/>(Speedtest, Ping, Jitter)"]
         FILE["📁 FileCollector<br/>(Directory Watcher)"]
@@ -83,7 +83,7 @@ flowchart TD
 ```csv
 timestamp,app,poll_type,metric_name,value,unit,status,details
 2026-09-24T11:40:00.123+00:00,librehardwaremonitor,sensor_read,cpu_package_temp,58.4,°C,OK,"{""sensor_id"": ""/amdcpu/0/temperature/0""}"
-2026-09-24T11:40:00.124+00:00,smartmontools,sensor_read,power_on_hours,25038,h,OK,"{""device"": ""Disk0"", ""model"": ""YongzhenWeiye""}"
+2026-09-24T11:40:00.124+00:00,windows_sysadmin,sensor_read,power_on_hours,25038,h,OK,"{""device"": ""Disk0"", ""model"": ""Samsung SSD""}"
 ```
 
 ### 2. События сенсоров и служб (`*_events.csv`)
@@ -171,15 +171,15 @@ timestamp,app,param_name,old_value,new_value,status,user,details
 ```python
 from apps.common.csv_logger import AppCsvLogger
 
-logger = AppCsvLogger("smartmontools")
+logger = AppCsvLogger("librehardwaremonitor")
 logger.log_poll(
-    poll_type="smart_read",
-    metric_name="power_on_hours",
-    value=25038,
-    unit="hours",
+    poll_type="sensor_read",
+    metric_name="cpu_temp",
+    value=58.4,
+    unit="°C",
     status="OK",
-    details={"device": "\\\\.\\PhysicalDrive0", "model": "Samsung SSD 990 EVO Plus"},
-    filename="smartmontools_drives_polls.csv"
+    details={"sensor": "CPU Package"},
+    filename="lhm_sensor_polls.csv"
 )
 ```
 

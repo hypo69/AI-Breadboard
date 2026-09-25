@@ -3,7 +3,6 @@
 
 import unittest
 from apps.windows.hardware.hardware_monitor import HardwareMonitor, HardwareSnapshot
-from apps.windows.hardware.smartctl_probe import SmartProber, SmartDriveInfo
 from apps.windows.hardware.gpu_prober import GpuProber, GpuDeviceTelemetry
 from apps.windows.hardware.cpuz_aida_prober import CpuzAidaProber, HardwareAuditReport
 from apps.windows.hardware.stress_benchmark import StressBenchmarkEngine, StressTestResult
@@ -19,15 +18,6 @@ class TestHardwareProbers(unittest.TestCase):
         self.assertIsInstance(snapshot, HardwareSnapshot)
         self.assertIsNotNone(snapshot.cpu)
         self.assertIsNotNone(snapshot.memory)
-
-    def test_smartctl_prober(self):
-        """Test smartctl scanner."""
-        prober = SmartProber()
-        drives = prober.scan_drives()
-        self.assertIsInstance(drives, list)
-        if drives:
-            self.assertIsInstance(drives[0], SmartDriveInfo)
-            self.assertIsNotNone(drives[0].device)
 
     def test_gpu_prober(self):
         """Test GPU prober."""

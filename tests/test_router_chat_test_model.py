@@ -42,6 +42,7 @@ class TestRouterChatTestModel(unittest.TestCase):
 
         # Create isolated FastAPI application for testing
         self.app: FastAPI = FastAPI()
+        self.app.state.chat_model = self.mock_chat_model
         self.app.include_router(self.router)
         self.client: TestClient = TestClient(self.app)
 
@@ -78,3 +79,116 @@ class TestRouterChatTestModel(unittest.TestCase):
         self.assertEqual(data.get("status", ""), "success", "Response status should be success")
         self.assertEqual(data.get("model", ""), "gemini-3.7-flash", "Model name should match request")
         self.assertEqual(data.get("provider", ""), "gemini", "Provider name should match request")
+
+    @patch("src.api.router_chat.get_chat_model")
+    def test_test_model_default_fallback_when_empty_model_and_provider(self, mock_get_chat_model: MagicMock) -> None:
+        """Test verification request with empty model and provider falling back to default settings."""
+        mock_instance: MagicMock = MagicMock()
+        mock_instance.ask = AsyncMock(return_value="Default model ready.")
+        mock_get_chat_model.return_value = mock_instance
+
+        payload: dict[str, str] = {
+            "model": "",
+            "provider": "",
+            "message": "Тест настроек по умолчанию.",
+        }
+
+        response = self.client.post("/api/chat/test-model", json=payload)
+        self.assertEqual(response.status_code, 200)
+        data: dict = response.json()
+        self.assertEqual(data.get("status"), "success")
+        self.assertTrue(data.get("model"))
+        self.assertTrue(data.get("provider"))
+
+    @patch("src.api.router_chat.get_chat_model")
+    def test_test_model_default_fallback_when_only_provider_specified(self, mock_get_chat_model: MagicMock) -> None:
+        """Test verification request with provider specified but empty model falling back to provider default."""
+        mock_instance: MagicMock = MagicMock()
+        mock_instance.ask = AsyncMock(return_value="Ollama model ready.")
+        mock_get_chat_model.return_value = mock_instance
+
+        payload: dict[str, str] = {
+            "model": "",
+            "provider": "ollama",
+            "message": "Тест ollama по умолчанию.",
+        }
+
+        response = self.client.post("/api/chat/test-model", json=payload)
+        self.assertEqual(response.status_code, 200)
+        data: dict = response.json()
+        self.assertEqual(data.get("status"), "success")
+        self.assertEqual(data.get("provider"), "ollama")
+        self.assertIn("ollama:", data.get("model", ""))
+
+    def test_get_model_instruction(self) -> None:
+        """Test GET /api/chat/model_instruction returns active system instruction."""
+        response = self.client.get("/api/chat/model_instruction")
+        self.assertEqual(response.status_code, 200)
+        data: dict = response.json()
+        self.assertEqual(data.get("status"), "success")
+        self.assertIn("instruction", data)
+        self.assertIn("system_instruction", data)
+        self.assertIn("provider", data)
+
+    def test_set_model_instruction(self) -> None:
+        """Test POST /api/chat/model_instruction updates active system instruction."""
+        new_instruction = "Вы — тестовый AI-ассистент для юнит-тестов."
+        response = self.client.post("/api/chat/model_instruction", json={
+            "instruction": new_instruction,
+            "save_to_disk": False,
+        })
+        self.assertEqual(response.status_code, 200)
+        data: dict = response.json()
+        self.assertEqual(data.get("status"), "success")
+        self.assertEqual(data.get("instruction"), new_instruction)
+        self.mock_chat_model.update_system_instruction.assert_called_with(new_instruction)
+
+    def test_set_model_instruction_empty_error(self) -> None:
+        """Test POST /api/chat/model_instruction with empty instruction returns 400."""
+        response = self.client.post("/api/chat/model_instruction", json={
+            "instruction": "",
+        })
+        self.assertEqual(response.status_code, 400)
+
+    def test_get_model_endpoint(self) -> None:
+        """Test GET /api/chat/models/model returns active model info."""
+        response = self.client.get("/api/chat/models/model")
+        self.assertEqual(response.status_code, 200)
+        data: dict = response.json()
+        self.assertEqual(data.get("status"), "success")
+        self.assertTrue(data.get("model"))
+        self.assertTrue(data.get("provider"))
+
+    def test_set_model_endpoint(self) -> None:
+        """Test POST /api/chat/models/set_model updates active model."""
+        response = self.client.post("/api/chat/models/set_model", json={
+            "model": "llama3.1",
+            "provider": "ollama",
+        })
+        self.assertEqual(response.status_code, 200)
+        data: dict = response.json()
+        self.assertEqual(data.get("status"), "success")
+        self.assertEqual(data.get("model"), "ollama:llama3.1")
+        self.assertEqual(data.get("provider"), "OLLAMA")
+
+    def test_get_provider_endpoint(self) -> None:
+        """Test GET /api/chat/models_provider/provider returns active provider."""
+        response = self.client.get("/api/chat/models_provider/provider")
+        self.assertEqual(response.status_code, 200)
+        data: dict = response.json()
+        self.assertEqual(data.get("status"), "success")
+        self.assertTrue(data.get("provider"))
+
+    def test_set_provider_endpoint(self) -> None:
+        """Test POST /api/chat/models_provider/set_provider updates active provider."""
+        response = self.client.post("/api/chat/models_provider/set_provider", json={
+            "provider": "agy",
+        })
+        self.assertEqual(response.status_code, 200)
+        data: dict = response.json()
+        self.assertEqual(data.get("status"), "success")
+        self.assertEqual(data.get("provider"), "AGY")
+        self.assertIn("agy-", data.get("model", ""))
+
+
+

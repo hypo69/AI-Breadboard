@@ -28,7 +28,6 @@ from apps.windows.hardware.providers.gpuz_provider import GpuzProvider
 from apps.windows.hardware.providers.hwinfo_provider import HwinfoProvider
 from apps.windows.hardware.providers.lhm_provider import LhmProvider
 from apps.windows.hardware.providers.native_win_provider import NativeWinProvider
-from apps.windows.hardware.providers.smartmontools_provider import SmartmontoolsProvider
 
 
 class HardwareProviderRegistry:
@@ -56,9 +55,7 @@ class HardwareProviderRegistry:
         lhm_path = self.discovery.find_utility("lhm")
         self._providers["lhm"] = LhmProvider(binary_path=lhm_path)
 
-        # Tier 3: smartctl, CPU-Z, GPU-Z
-        smartctl_path = self.discovery.find_utility("smartctl")
-        self._providers["smartmontools"] = SmartmontoolsProvider(binary_path=smartctl_path)
+        # Tier 3: CPU-Z, GPU-Z
 
         cpuz_path = self.discovery.find_utility("cpuz")
         self._providers["cpuz"] = CpuzProvider(binary_path=cpuz_path)

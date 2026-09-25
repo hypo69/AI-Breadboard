@@ -110,7 +110,7 @@ def init_router() -> APIRouter:
             _csv_logger.log_event(
                 event_type="scan_triggered",
                 status="SUCCESS" if res.success else "FAILED",
-                details={"scan_type": req.scan_type.value, "path": req.custom_path, "msg": res.message},
+                details={"scan_type": req.scan_type.value, "path": req.target_path, "msg": res.message},
                 filename="windows_defender_scan_events.csv",
             )
             return res

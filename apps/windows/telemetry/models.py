@@ -80,6 +80,9 @@ class DiskPartitionMetrics(BaseModel):
     used_gb: float = Field(default=0.0, description="Used space in GB")
     free_gb: float = Field(default=0.0, description="Free space in GB")
     percent: float = Field(default=0.0, description="Utilization percentage")
+    volume_name: Optional[str] = Field(default=None, description="Метка тома или описание аккаунта")
+    is_virtual: bool = Field(default=False, description="Признак виртуального/облачного тома (Google Drive, OneDrive и др.)")
+    drive_type: str = Field(default="Fixed", description="Тип диска (Fixed, Google Drive, Cloud / Virtual, Removable)")
 
 
 class DiskIoMetrics(BaseModel):

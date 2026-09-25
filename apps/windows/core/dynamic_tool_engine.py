@@ -833,7 +833,7 @@ class DynamicWindowsToolEngine:
         query: str,
         auto_create_skill: bool = False,
         conversation_id: Optional[str] = None,
-        keep_context: bool = True,
+        keep_context: bool = False,
         use_rag: bool = True,
     ) -> Dict[str, Any]:
         """Полный конвейер: планирование инструмента -> сбор фактов -> синтез ответа -> сохранение навыка."""
@@ -880,7 +880,7 @@ class DynamicWindowsToolEngine:
         query: str,
         auto_create_skill: bool = False,
         conversation_id: Optional[str] = None,
-        keep_context: bool = True,
+        keep_context: bool = False,
         use_rag: bool = True,
     ):
         """Потоковый генератор этапов зондирования и фрагментов ответа в реальном времени."""

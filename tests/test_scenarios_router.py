@@ -299,6 +299,68 @@ def test_save_approved_response_endpoint(client, tmp_path):
         assert "cpu" in saved_items[0]["tags"]
 
 
+def test_scenario_chat_keep_context_default_is_false(client, monkeypatch):
+    """Проверка, что по умолчанию история диалога НЕ сохраняется (keep_context=False)."""
+    from apps.windows.core.dynamic_tool_engine import DynamicWindowsToolEngine
+
+    async def mock_get_model(self):
+        return None
+    monkeypatch.setattr(DynamicWindowsToolEngine, "_get_model", mock_get_model)
+
+    conv_id = "test-conv-no-history"
+
+    # Первый запрос (по умолчанию keep_context=False)
+    resp1 = client.post(
+        "/api/v1/scenarios/chat",
+        json={"message": "привет", "conversation_id": conv_id},
+    )
+    assert resp1.status_code == 200
+    data1 = resp1.json()
+    assert "Контекст предыдущего диалога:" not in (data1.get("generated_prompt") or "")
+
+    # Второй запрос в ту же сессию
+    resp2 = client.post(
+        "/api/v1/scenarios/chat",
+        json={"message": "Кто использует сеть?", "conversation_id": conv_id},
+    )
+    assert resp2.status_code == 200
+    data2 = resp2.json()
+    # Промпт НЕ должен содержать контекст предыдущего вопроса
+    assert "Контекст предыдущего диалога:" not in (data2.get("generated_prompt") or "")
+    assert "привет" not in (data2.get("generated_prompt") or "")
+
+
+def test_scenario_chat_keep_context_toggle_enabled(client, monkeypatch):
+    """Проверка, что при явном включении keep_context=True история сохраняется в контексте."""
+    from apps.windows.core.dynamic_tool_engine import DynamicWindowsToolEngine
+
+    async def mock_get_model(self):
+        return None
+    monkeypatch.setattr(DynamicWindowsToolEngine, "_get_model", mock_get_model)
+
+    conv_id = "test-conv-with-history"
+
+    # Первый запрос с keep_context=True
+    resp1 = client.post(
+        "/api/v1/scenarios/chat",
+        json={"message": "первый тестовый запрос", "conversation_id": conv_id, "keep_context": True},
+    )
+    assert resp1.status_code == 200
+
+    # Второй запрос с keep_context=True
+    resp2 = client.post(
+        "/api/v1/scenarios/chat",
+        json={"message": "второй тестовый запрос", "conversation_id": conv_id, "keep_context": True},
+    )
+    assert resp2.status_code == 200
+    data2 = resp2.json()
+    # Промпт ДОЛЖЕН содержать контекст предыдущего вопроса
+    prompt2 = data2.get("generated_prompt") or ""
+    assert "Контекст предыдущего диалога:" in prompt2
+    assert "первый тестовый запрос" in prompt2
+
+
+
 
 
 

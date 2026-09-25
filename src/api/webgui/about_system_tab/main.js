@@ -1512,22 +1512,61 @@
       if (pct > 88) barClass = 'bg-danger';
       else if (pct > 70) barClass = 'bg-warning';
 
+      const devStr = String(d.device || d.mountpoint || '');
+      const volStr = String(d.volume_name || '');
+      const isGoogleDrive = d.is_virtual || d.drive_type === 'Google Drive' || volStr.toLowerCase().includes('google') || volStr.includes('@') || devStr.startsWith('G:') || devStr.startsWith('J:');
+
+      let driveIcon = 'bi-hdd-fill text-primary';
+      let driveBadge = '';
+      let driveSubtitle = '';
+      let fsBadge = `<span class="badge bg-secondary-subtle text-secondary border border-secondary">${escapeHtml(d.fstype || 'NTFS')}</span>`;
+      let smartBadge = `<span class="about-sys-badge-ok">OK</span>`;
+
+      if (isGoogleDrive) {
+        driveIcon = 'bi-cloud-fill text-warning';
+        driveBadge = `<span class="badge bg-warning-subtle text-warning border border-warning-subtle ms-1 font-monospace" style="font-size: 0.68rem;">Google Drive</span>`;
+        let emailDesc = 'Google Drive for Desktop';
+        if (volStr.includes('@')) {
+          emailDesc = volStr.replace(' - Google Drive', '').replace(' - Goog...', '');
+        } else if (devStr.startsWith('G:')) {
+          emailDesc = 'one.last.bit@gmail.com';
+        } else if (devStr.startsWith('J:')) {
+          emailDesc = 'e.cat.co.il@gmail.com';
+        }
+        driveSubtitle = `<div class="small text-muted font-monospace mt-0.5">${escapeHtml(emailDesc)}</div>`;
+        fsBadge = `<span class="badge bg-dark border border-secondary text-info">Virtual ${escapeHtml(d.fstype || 'FAT32')}</span>`;
+        smartBadge = `<span class="badge bg-secondary-subtle text-muted border border-secondary font-monospace" title="Виртуальный диск Google Drive — аппаратный контроллер S.M.A.R.T. отсутствует" style="font-size: 0.68rem;">N/A (Облако)</span>`;
+      } else if (d.volume_name) {
+        driveSubtitle = `<div class="small text-secondary font-monospace mt-0.5">${escapeHtml(d.volume_name)}</div>`;
+      }
+
       return `
         <tr>
-          <td><i class="bi bi-hdd me-1 text-primary"></i><strong>${escapeHtml(d.device || d.mountpoint || 'C:\\')}</strong></td>
-          <td><span class="badge bg-secondary-subtle text-secondary border border-secondary">${escapeHtml(d.fstype || 'NTFS')}</span></td>
-          <td>${Number(d.total_gb || 0).toFixed(1)} GB</td>
-          <td class="text-light">${Number(d.used_gb || 0).toFixed(1)} GB</td>
-          <td class="text-info fw-semibold">${Number(d.free_gb || 0).toFixed(1)} GB</td>
+          <td>
+            <div class="d-flex align-items-center">
+              <i class="bi ${driveIcon} me-1.5 fs-6"></i>
+              <div>
+                <div class="d-flex align-items-center">
+                  <strong>${escapeHtml(devStr || 'C:\\')}</strong>
+                  ${driveBadge}
+                </div>
+                ${driveSubtitle}
+              </div>
+            </div>
+          </td>
+          <td>${fsBadge}</td>
+          <td class="font-monospace">${Number(d.total_gb || 0).toFixed(1)} GB</td>
+          <td class="text-light font-monospace">${Number(d.used_gb || 0).toFixed(1)} GB</td>
+          <td class="text-info fw-semibold font-monospace">${Number(d.free_gb || 0).toFixed(1)} GB</td>
           <td>
             <div class="d-flex align-items-center gap-2">
               <div class="about-sys-progress-track flex-grow-1" style="height: 6px;">
                 <div class="about-sys-progress-bar ${barClass}" style="width: ${pct}%;"></div>
               </div>
-              <span class="small" style="min-width: 42px; text-align: right;">${pct.toFixed(1)}%</span>
+              <span class="small font-monospace" style="min-width: 42px; text-align: right;">${pct.toFixed(1)}%</span>
             </div>
           </td>
-          <td><span class="about-sys-badge-ok">OK</span></td>
+          <td>${smartBadge}</td>
         </tr>
       `;
     }).join('');

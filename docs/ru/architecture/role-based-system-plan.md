@@ -145,7 +145,6 @@ AI-Breadboard/
         "windows_defender",
         "windows_backup_manager",
         "hardware_monitor",
-        "smartmontools",
         "librehardwaremonitor",
         "autolog_manager"
       ],

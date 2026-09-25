@@ -390,6 +390,38 @@ class SystemCollector:
             for part in psutil.disk_partitions(all=False):
                 try:
                     usage = psutil.disk_usage(part.mountpoint)
+                    vol_name = ""
+                    is_virtual = False
+                    drive_type = "Fixed"
+
+                    if os.name == "nt":
+                        try:
+                            import ctypes
+                            vol_buf = ctypes.create_unicode_buffer(1024)
+                            fs_buf = ctypes.create_unicode_buffer(1024)
+                            mount_root = part.mountpoint if part.mountpoint.endswith("\\") else f"{part.mountpoint}\\"
+                            if ctypes.windll.kernel32.GetVolumeInformationW(
+                                mount_root, vol_buf, 1024, None, None, None, fs_buf, 1024
+                            ):
+                                vol_name = vol_buf.value
+
+                            dos_buf = ctypes.create_unicode_buffer(1024)
+                            clean_dev = part.device.rstrip("\\")
+                            ctypes.windll.kernel32.QueryDosDeviceW(clean_dev, dos_buf, 1024)
+                            dos_dev = dos_buf.value
+
+                            if (
+                                "google" in vol_name.lower()
+                                or "@" in vol_name
+                                or "onedrive" in vol_name.lower()
+                                or "dropbox" in vol_name.lower()
+                                or ("volume{" in dos_dev.lower() and "harddiskvolume" not in dos_dev.lower())
+                            ):
+                                is_virtual = True
+                                drive_type = "Google Drive" if ("google" in vol_name.lower() or "@" in vol_name) else "Cloud / Virtual"
+                        except Exception:
+                            pass
+
                     partitions.append(
                         DiskPartitionMetrics(
                             device=part.device,
@@ -399,6 +431,9 @@ class SystemCollector:
                             used_gb=round(usage.used / (1024**3), 2),
                             free_gb=round(usage.free / (1024**3), 2),
                             percent=round(usage.percent, 1),
+                            volume_name=vol_name or None,
+                            is_virtual=is_virtual,
+                            drive_type=drive_type,
                         )
                     )
                 except (PermissionError, OSError):
@@ -584,69 +619,32 @@ class SystemCollector:
         )
 
     def get_physical_disks_health(self) -> List[PhysicalDiskHealth]:
-        """Collect physical drives SMART, media type and health status via WMI/Storage.
+        """Собрать данные о физических дисках, SMART, типах носителей и здоровье через единый сенсор.
 
         Returns:
-            List[PhysicalDiskHealth]: Detected physical drives.
+            List[PhysicalDiskHealth]: Список обнаруженных физических накопителей.
         """
         disks: List[PhysicalDiskHealth] = []
         if os.name == "nt":
             try:
-                import wmi  # type: ignore
-
-                # Try Microsoft Storage namespace for NVMe/SSD Health
-                try:
-                    w_storage = wmi.WMI(namespace=r"root\Microsoft\Windows\Storage")
-                    phys_disks = w_storage.MSFT_PhysicalDisk()
-                    for d in phys_disks:
-                        media_map = {3: "HDD", 4: "SSD", 5: "SCM"}
-                        media_type = media_map.get(d.MediaType, "NVMe/SSD" if "NVMe" in str(d.Model) else "Disk")
-                        health_map = {0: "Healthy", 1: "Warning", 2: "Unhealthy"}
-                        health = health_map.get(d.HealthStatus, "Healthy")
-                        size_gb = round(int(d.Size or 0) / (1024**3), 1)
-
-                        temp_c: Optional[float] = None
-                        if hasattr(d, "OperationalDetails") and d.OperationalDetails:
-                            pass
-
-                        bus_map = {17: "NVMe", 11: "SATA", 8: "USB", 7: "SCSI", 6: "Fibre Channel", 3: "ATAPI", 1: "SCSI"}
-                        bus_type = bus_map.get(getattr(d, "BusType", None), "NVMe" if "NVMe" in str(d.Model or "") else "SATA")
-
-                        disks.append(
-                            PhysicalDiskHealth(
-                                device_id=str(d.DeviceId or d.FriendlyName or "Disk"),
-                                model=str(d.FriendlyName or d.Model or "Physical Drive").strip(),
-                                media_type=media_type,
-                                size_gb=size_gb,
-                                health_status=health,
-                                operational_status="OK" if health == "Healthy" else "Check",
-                                temperature_celsius=temp_c,
-                                interface_type=bus_type,
-                            )
+                from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
+                sensor = WindowsStorageSensor()
+                phys_disks = sensor.get_physical_disks()
+                for d in phys_disks:
+                    disks.append(
+                        PhysicalDiskHealth(
+                            device_id=d.device_id,
+                            model=d.model or d.friendly_name or "Physical Drive",
+                            media_type=d.media_type or "SSD",
+                            size_gb=round(d.size_gb, 1) if d.size_gb else 0.0,
+                            health_status=d.health_status or "Healthy",
+                            operational_status=d.operational_status or "OK",
+                            temperature_celsius=d.temperature_c,
+                            interface_type=d.bus_type or "NVMe",
                         )
-                except Exception:
-                    pass
-
-                # Fallback to Win32_DiskDrive if Storage namespace is unavailable
-                if not disks:
-                    w = wmi.WMI()
-                    for d in w.Win32_DiskDrive():
-                        size_gb = round(int(d.Size or 0) / (1024**3), 1)
-                        status = str(d.Status or "OK")
-                        iface = str(getattr(d, "InterfaceType", None) or ("NVMe" if "NVMe" in str(d.Model or "") else "SATA")).strip()
-                        disks.append(
-                            PhysicalDiskHealth(
-                                device_id=str(d.DeviceID or d.Index or "Disk"),
-                                model=str(d.Model or d.Caption or "Disk Drive").strip(),
-                                media_type="NVMe/SSD" if "NVMe" in str(d.Model) or "SSD" in str(d.Model) else "HDD",
-                                size_gb=size_gb,
-                                health_status="Healthy" if status == "OK" else "Warning",
-                                operational_status=status,
-                                interface_type=iface,
-                            )
-                        )
+                    )
             except Exception as ex:
-                logger.debug(f"Failed to query physical disk health: {ex}")
+                logger.debug(f"Ошибка сбора физических дисков через WindowsStorageSensor: {ex}")
 
         if not disks:
             disks.append(

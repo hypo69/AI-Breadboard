@@ -3,13 +3,13 @@
  */
 
 export const APP_TAB_DEFS = [
-  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20260925_v2', js: '/html/about_system_tab/main.js?v=20260925_v2' },
-  { id: 'scenarios', tab: 'scenarios', tabId: 'tab-scenarios', html: '/html/scenarios_tab/index.html?v=20260924_v2', js: '/html/scenarios_tab/main.js?v=20260924_v2' },
+  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20260925_v3', js: '/html/about_system_tab/main.js?v=20260925_v3' },
+  { id: 'scenarios', tab: 'scenarios', tabId: 'tab-scenarios', html: '/html/scenarios_tab/index.html?v=20260925_v2', js: '/html/scenarios_tab/main.js?v=20260925_v2' },
   { id: 'chat', tab: 'chat', tabId: 'tab-chat', html: '/html/chat/index.html?v=20260923_v5', js: '/html/chat/main.js?v=20260923_v5' },
   { id: 'network_terminal', tab: 'network', tabId: 'tab-network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
   { id: 'system_inspector', tab: 'system-inspector', tabId: 'tab-system-inspector', html: '/html/system_inspector_tab/index.html?v=20260924_v5', js: '/html/system_inspector_tab/main.js?v=20260924_v5' },
   { id: 'windows_sysadmin', tab: 'windows-admin', tabId: 'tab-windows-admin', html: '/html/windows_admin_tab/index.html', js: '/html/windows_admin_tab/main.js' },
-  { id: 'system_control_center', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html?v=20260924_v1', js: '/html/system_control_tab/main.js?v=20260924_v1' },
+  { id: 'system_control_center', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html?v=20260925_v1', js: '/html/system_control_tab/main.js?v=20260925_v1' },
   { id: 'system_log_viewer', tab: 'system-logs', tabId: 'tab-system-logs', html: '/html/system_logs_tab/index.html', js: '/html/system_logs_tab/main.js' },
   { id: 'software_audit', tab: 'software-audit', tabId: 'tab-software-audit', html: '/html/software_audit_tab/index.html', js: '/html/software_audit_tab/main.js' },
   { id: 'registry_viewer', tab: 'registry-viewer', tabId: 'tab-registry-viewer', html: '/html/registry_viewer_tab/index.html', js: '/html/registry_viewer_tab/main.js' },

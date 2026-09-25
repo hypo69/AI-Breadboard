@@ -3,8 +3,8 @@
 # Process Name: Standalone Utility Apps Unit Tests
 # =============================================================================
 # Description:
-#   Модульные тесты для автономных приложений утилит в /apps (smartmontools,
-#   LibreHardwareMonitor).
+#   Модульные тесты для автономных приложений утилит в /apps
+#   (LibreHardwareMonitor).
 #
 # File: test_standalone_utility_apps.py
 # Project: ai-breadboard
@@ -20,20 +20,8 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
-from apps.smartmontools.router import init_router as init_smartmontools_router
 from apps.librehardwaremonitor.router import init_router as init_lhm_router
 from fastapi import FastAPI
-
-
-def test_smartmontools_standalone_app():
-    """Тестирование эндпоинтов приложения smartmontools."""
-    app = FastAPI()
-    app.include_router(init_smartmontools_router())
-    client = TestClient(app)
-
-    res = client.get("/api/v1/smartmontools/status")
-    assert res.status_code == 200
-    assert "is_available" in res.json()
 
 
 def test_lhm_standalone_app():

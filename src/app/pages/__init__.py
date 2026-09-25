@@ -6,8 +6,11 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, FileResponse, Response
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+from fastapi.openapi.utils import get_openapi
+from fastapi.responses import HTMLResponse, FileResponse, Response, JSONResponse, RedirectResponse
 
+from src.app.middleware import is_localhost, get_request_hostname
 from src.config import server_cfg
 from logger import logger
 
@@ -390,6 +393,42 @@ def register_pages(app: FastAPI) -> None:
         if auth_response:
             return auth_response
         return RedirectResponse(url='/admin#tab-logs', status_code=303)
+
+    # === API Documentation & OpenAPI Schema (Localhost / LAN only) ===
+
+    def _verify_docs_access(request: Request) -> None:
+        user_domain = os.getenv('USER_DOMAIN', 'kino.davidka.net').strip().lower()
+        req_host = get_request_hostname(request)
+        if req_host == user_domain or not (
+            is_localhost(request)
+            or req_host in ("localhost", "127.0.0.1", "::1", "0.0.0.0", "testserver", "testclient")
+        ):
+            raise HTTPException(status_code=404, detail="Not Found")
+
+    @app.get('/docs', include_in_schema=False)
+    async def custom_swagger_ui_html(request: Request) -> HTMLResponse:
+        """Предоставляет интерактивную документацию Swagger UI строго для localhost и доверенной локальной сети."""
+        _verify_docs_access(request)
+        return get_swagger_ui_html(
+            openapi_url='/openapi.json',
+            title=f"{app.title} - Swagger UI",
+        )
+
+    @app.get('/redoc', include_in_schema=False)
+    async def custom_redoc_html(request: Request) -> HTMLResponse:
+        """Предоставляет документацию ReDoc строго для localhost и доверенной локальной сети."""
+        _verify_docs_access(request)
+        return get_redoc_html(
+            openapi_url='/openapi.json',
+            title=f"{app.title} - ReDoc",
+        )
+
+    @app.get('/openapi.json', include_in_schema=False)
+    async def custom_openapi(request: Request) -> JSONResponse:
+        """Предоставляет схему спецификации OpenAPI JSON строго для localhost и доверенной локальной сети."""
+        _verify_docs_access(request)
+        return JSONResponse(get_openapi(title=app.title, version=app.version, routes=app.routes))
+
 
 
 # Admin login HTML (extracted from main.py)

@@ -34,7 +34,6 @@ from apps.windows.hardware.providers.cpuz_provider import CpuzProvider
 from apps.windows.hardware.providers.hwinfo_provider import HwinfoProvider
 from apps.windows.hardware.providers.lhm_provider import LhmProvider
 from apps.windows.hardware.providers.native_win_provider import NativeWinProvider
-from apps.windows.hardware.providers.smartmontools_provider import SmartmontoolsProvider
 from apps.windows.hardware.registry import HardwareProviderRegistry
 from apps.windows.hardware.cross_validator import CrossValidator
 

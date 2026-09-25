@@ -446,6 +446,25 @@ async def read_log_file(
     }
 
 
+@router.get("/export")
+async def export_logs_to_csv(
+    app: Optional[str] = Query(default=None, description="Имя приложения (например, 'cloudflared_monitor')"),
+    target_type: str = Query(default="all", description="Тип выгрузки: 'polls', 'events', 'params', 'all'"),
+) -> Dict[str, Any]:
+    """Генерирует CSV-файлы логов из базы SQLite по требованию (On-Demand)."""
+    try:
+        from apps.common.csv_logger import export_to_csv
+        generated_files = export_to_csv(app=app, target_type=target_type)
+        return {
+            "status": "success",
+            "app": app or "all",
+            "target_type": target_type,
+            "exported_files": {k: str(v) for k, v in generated_files.items()},
+        }
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=f"Ошибка экспорта в CSV: {ex}")
+
+
 @router.delete("/file/{filename}")
 async def delete_log_file(filename: str) -> Dict[str, Any]:
     """Очищает или удаляет указанный CSV-файл лога."""

@@ -197,7 +197,6 @@ $appScripts = @(
     @{ Name = "Windows Defender Center";      Folder = "windows_defender";    File = "Run-Defender.ps1";           Port = 8113; Key = "windows_defender" },
     @{ Name = "Windows Backup Manager";       Folder = "windows_backup_manager"; File = "Run-BackupManager.ps1";   Port = 8115; Key = "windows_backup_manager" },
     @{ Name = "Hardware & Sensors Monitor";   Folder = "windows";             File = "Run-HardwareMonitor.ps1";    Port = 8116; Key = "hardware_monitor" },
-    @{ Name = "smartmontools Storage App";    Folder = "smartmontools";       File = "Run-Smartmontools.ps1";      Port = 8124; Key = "smartmontools" },
     @{ Name = "LibreHardwareMonitor App";     Folder = "librehardwaremonitor"; File = "Run-LHM.ps1";               Port = 8126; Key = "librehardwaremonitor" },
     @{ Name = "AI Chat Assistant";            Folder = "chat";                File = "Run-Chat.ps1";               Port = 8128; Key = "chat" },
     @{ Name = "Enterprise Knowledge Platform"; Folder = "enterprise_knowledge"; File = "Run-EnterpriseKnowledge.ps1"; Port = 8181; Key = "enterprise_knowledge" }

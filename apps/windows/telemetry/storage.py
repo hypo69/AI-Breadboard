@@ -57,9 +57,14 @@ class TelemetryStorage:
             db_path: Путь к файлу SQLite базы данных (по умолчанию: logs/telemetry.db).
         """
         if db_path is None:
-            from apps.common.csv_logger import get_apps_log_dir
+            appdata = os.environ.get("APPDATA") or os.environ.get("LOCALAPPDATA")
+            if appdata and os.path.exists(appdata):
+                base_dir = Path(appdata)
+            else:
+                base_dir = Path.home() / ".config"
 
-            target_dir = get_apps_log_dir()
+            target_dir = base_dir / "AI-Breadboard" / "apps" / "windows" / "telemetry" / "logs"
+            target_dir.mkdir(parents=True, exist_ok=True)
             self.db_path = target_dir / "telemetry.db"
 
             # Бесшовная миграция старой БД, если она лежала в родительской папке
@@ -88,7 +93,7 @@ class TelemetryStorage:
             TelemetryStorage: Экземпляр хранилища.
         """
         with cls._lock:
-            if cls._instance is None:
+            if cls._instance is None or (db_path is not None and cls._instance.db_path != Path(db_path)):
                 cls._instance = TelemetryStorage(db_path=db_path)
             return cls._instance
 
@@ -1081,6 +1086,276 @@ class TelemetryStorage:
             else:
                 cursor.execute("SELECT * FROM custom_records ORDER BY id DESC LIMIT ?", (limit,))
             return [dict(row) for row in cursor.fetchall()]
+
+    def save_app_polls_batch(self, polls: List[Dict[str, Any]]) -> int:
+        """Сохраняет пачку опросов приложений в SQLite за одну транзакцию.
+
+        Args:
+            polls: Список словарей параметров опросов.
+
+        Returns:
+            int: Количество сохраненных записей.
+        """
+        if not polls:
+            return 0
+        now_dt = datetime.now(timezone.utc)
+        now_epoch = now_dt.timestamp()
+
+        rows = []
+        for p in polls:
+            ts_str = p.get("timestamp") or now_dt.isoformat()
+            app = p.get("app", "unknown")
+            poll_type = p.get("poll_type", "poll")
+            metric_name = p.get("metric_name", "metric")
+            val = p.get("value")
+            try:
+                val_num = float(val) if val is not None and not isinstance(val, (dict, list)) else None
+            except (ValueError, TypeError):
+                val_num = None
+            unit = p.get("unit", "")
+            status = p.get("status", "OK")
+            details = p.get("details", "")
+            details_str = json.dumps(details, ensure_ascii=False) if isinstance(details, (dict, list)) else str(details or "")
+            raw_json = json.dumps({
+                "app": app, "poll_type": poll_type, "metric_name": metric_name,
+                "value": val, "unit": unit, "status": status, "details": details,
+            }, ensure_ascii=False)
+            rows.append((ts_str, now_epoch, app, poll_type, metric_name, val_num, unit, status, details_str, raw_json))
+
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.executemany("""
+                INSERT INTO app_polls (
+                    timestamp, created_at, app, poll_type, metric_name, value, unit, status, details, raw_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, rows)
+            conn.commit()
+            return len(rows)
+
+    def save_app_events_batch(self, events: List[Dict[str, Any]]) -> int:
+        """Сохраняет пачку событий приложений в SQLite за одну транзакцию.
+
+        Args:
+            events: Список словарей событий.
+
+        Returns:
+            int: Количество сохраненных записей.
+        """
+        if not events:
+            return 0
+        now_dt = datetime.now(timezone.utc)
+        now_epoch = now_dt.timestamp()
+
+        rows = []
+        for ev in events:
+            ts_str = ev.get("timestamp") or now_dt.isoformat()
+            app = ev.get("app", "unknown")
+            event_type = ev.get("event_type", "event")
+            status = ev.get("status", "OK")
+            details = ev.get("details", "")
+            details_str = json.dumps(details, ensure_ascii=False) if isinstance(details, (dict, list)) else str(details or "")
+            raw_json = json.dumps({
+                "app": app, "event_type": event_type, "status": status, "details": details,
+            }, ensure_ascii=False)
+            rows.append((ts_str, now_epoch, app, event_type, status, details_str, raw_json))
+
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.executemany("""
+                INSERT INTO app_events (
+                    timestamp, created_at, app, event_type, status, details, raw_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, rows)
+            conn.commit()
+            return len(rows)
+
+    def save_app_param_changes_batch(self, param_changes: List[Dict[str, Any]]) -> int:
+        """Сохраняет пачку изменений параметров приложений за одну транзакцию.
+
+        Args:
+            param_changes: Список словарей изменений параметров.
+
+        Returns:
+            int: Количество сохраненных записей.
+        """
+        if not param_changes:
+            return 0
+        now_dt = datetime.now(timezone.utc)
+        now_epoch = now_dt.timestamp()
+
+        rows = []
+        for pc in param_changes:
+            ts_str = pc.get("timestamp") or now_dt.isoformat()
+            app = pc.get("app", "unknown")
+            param_name = pc.get("param_name", "param")
+            old_val = pc.get("old_value")
+            new_val = pc.get("new_value")
+            old_str = json.dumps(old_val, ensure_ascii=False) if isinstance(old_val, (dict, list)) else str(old_val or "")
+            new_str = json.dumps(new_val, ensure_ascii=False) if isinstance(new_val, (dict, list)) else str(new_val or "")
+            status = pc.get("status", "SUCCESS")
+            user = pc.get("user", "system")
+            details = pc.get("details", "")
+            details_str = json.dumps(details, ensure_ascii=False) if isinstance(details, (dict, list)) else str(details or "")
+            raw_json = json.dumps({
+                "app": app, "param_name": param_name, "old_value": old_val,
+                "new_value": new_val, "status": status, "user": user, "details": details,
+            }, ensure_ascii=False)
+            rows.append((ts_str, now_epoch, app, param_name, old_str, new_str, status, user, details_str, raw_json))
+
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.executemany("""
+                INSERT INTO app_param_changes (
+                    timestamp, created_at, app, param_name, old_value, new_value, status, user, details, raw_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, rows)
+            conn.commit()
+            return len(rows)
+
+    def export_query_to_csv(
+        self,
+        query: str,
+        params: Sequence[Any],
+        output_file: Union[str, Path],
+        headers: Optional[Sequence[str]] = None,
+    ) -> Path:
+        """Экспортирует результат произвольного SQL-запроса в CSV-файл (On-Demand).
+
+        Args:
+            query: SQL-запрос SELECT.
+            params: Параметры для подстановки в запрос.
+            output_file: Целевой путь к CSV-файлу.
+            headers: Список имен колонок (если None, берутся имена из курсора).
+
+        Returns:
+            Path: Путь к сгенерированному CSV-файлу.
+        """
+        out_path = Path(output_file)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            cols = [desc[0] for desc in cursor.description] if cursor.description else []
+            final_headers = list(headers) if headers is not None else cols
+
+            with open(out_path, mode="w", newline="", encoding="utf-8-sig") as f:
+                writer = csv.writer(f)
+                if final_headers:
+                    writer.writerow(final_headers)
+                for row in cursor:
+                    writer.writerow([row[c] for c in cols])
+
+        logger.info(f"Сформирован CSV-экспорт On-Demand: {out_path}")
+        return out_path
+
+    def export_app_polls_to_csv(
+        self,
+        app: Optional[str] = None,
+        output_path: Optional[Union[str, Path]] = None,
+        limit: int = 50000,
+    ) -> Path:
+        """Экспортирует замеры опросов приложений в CSV по требованию (On-Demand).
+
+        Args:
+            app: Имя приложения (опционально).
+            output_path: Путь для сохранения (по умолчанию logs/{app}_poll_events.csv).
+            limit: Лимит выгружаемых строк.
+
+        Returns:
+            Path: Путь к экспортированному CSV.
+        """
+        if output_path is None:
+            filename = f"{app}_poll_events.csv" if app else "all_app_polls.csv"
+            output_path = self.db_path.parent / filename
+
+        headers = ["timestamp", "app", "poll_type", "metric_name", "value", "unit", "status", "details"]
+        if app:
+            query = """
+                SELECT timestamp, app, poll_type, metric_name, value, unit, status, details
+                FROM app_polls WHERE app = ? ORDER BY id DESC LIMIT ?
+            """
+            params: tuple = (app, limit)
+        else:
+            query = """
+                SELECT timestamp, app, poll_type, metric_name, value, unit, status, details
+                FROM app_polls ORDER BY id DESC LIMIT ?
+            """
+            params = (limit,)
+
+        return self.export_query_to_csv(query, params, output_path, headers=headers)
+
+    def export_app_events_to_csv(
+        self,
+        app: Optional[str] = None,
+        output_path: Optional[Union[str, Path]] = None,
+        limit: int = 50000,
+    ) -> Path:
+        """Экспортирует события приложений в CSV по требованию (On-Demand).
+
+        Args:
+            app: Имя приложения.
+            output_path: Путь для сохранения.
+            limit: Лимит строк.
+
+        Returns:
+            Path: Путь к экспортированному CSV.
+        """
+        if output_path is None:
+            filename = f"{app}_events.csv" if app else "all_app_events.csv"
+            output_path = self.db_path.parent / filename
+
+        headers = ["timestamp", "app", "event_type", "status", "details"]
+        if app:
+            query = """
+                SELECT timestamp, app, event_type, status, details
+                FROM app_events WHERE app = ? ORDER BY id DESC LIMIT ?
+            """
+            params: tuple = (app, limit)
+        else:
+            query = """
+                SELECT timestamp, app, event_type, status, details
+                FROM app_events ORDER BY id DESC LIMIT ?
+            """
+            params = (limit,)
+
+        return self.export_query_to_csv(query, params, output_path, headers=headers)
+
+    def export_app_param_changes_to_csv(
+        self,
+        app: Optional[str] = None,
+        output_path: Optional[Union[str, Path]] = None,
+        limit: int = 50000,
+    ) -> Path:
+        """Экспортирует изменения параметров приложений в CSV по требованию (On-Demand).
+
+        Args:
+            app: Имя приложения.
+            output_path: Путь для сохранения.
+            limit: Лимит строк.
+
+        Returns:
+            Path: Путь к экспортированному CSV.
+        """
+        if output_path is None:
+            filename = f"{app}_param_changes.csv" if app else "all_app_param_changes.csv"
+            output_path = self.db_path.parent / filename
+
+        headers = ["timestamp", "app", "param_name", "old_value", "new_value", "status", "user", "details"]
+        if app:
+            query = """
+                SELECT timestamp, app, param_name, old_value, new_value, status, user, details
+                FROM app_param_changes WHERE app = ? ORDER BY id DESC LIMIT ?
+            """
+            params: tuple = (app, limit)
+        else:
+            query = """
+                SELECT timestamp, app, param_name, old_value, new_value, status, user, details
+                FROM app_param_changes ORDER BY id DESC LIMIT ?
+            """
+            params = (limit,)
+
+        return self.export_query_to_csv(query, params, output_path, headers=headers)
 
     def get_storage_stats(self) -> Dict[str, Any]:
         """Возвращает агрегированную статистику базы данных телеметрии.

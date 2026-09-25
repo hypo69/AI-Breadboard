@@ -264,35 +264,12 @@
       <span>🔧</span> Внешние утилиты диагностики
     </h6>
     <div class="small text-muted" style="font-size: 0.72rem;">
-      Интеграции со smartmontools и LibreHardwareMonitor.
+      Интеграция с LibreHardwareMonitor.
       Статус портативных версий обновляется автоматически.
     </div>
   </div>
 
   <div class="row g-2 mb-2" id="hw-utilities-grid">
-
-    <!-- smartmontools -->
-    <div class="col-12 col-md-6 col-xl-4">
-      <div class="hw-panel" id="hw-util-smartmontools">
-        <div class="hw-panel-header">
-          <span class="d-flex align-items-center gap-1.5">
-            <i class="bi bi-hdd-fill text-danger"></i>
-            <span>smartmontools</span>
-          </span>
-          <span class="badge bg-secondary" id="hw-util-smartmontools-badge">⏳ Проверка...</span>
-        </div>
-        <div class="p-2" style="font-size: 0.8rem;">
-          <div class="mb-1 text-muted small">Расширенная S.M.A.R.T. диагностика дисков через smartctl</div>
-          <div id="hw-util-smartmontools-actions" class="d-flex gap-1 flex-wrap mb-1">
-            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="hwUtilAction('smartmontools', 'scan')" title="Сканирование дисков">
-              <i class="bi bi-search"></i> Сканировать
-            </button>
-          </div>
-          <div id="hw-util-smartmontools-guide" class="d-none"></div>
-          <div id="hw-util-smartmontools-result" class="mt-1 hw-scrollable"></div>
-        </div>
-      </div>
-    </div>
 
     <!-- LibreHardwareMonitor -->
     <div class="col-12 col-md-6 col-xl-4">

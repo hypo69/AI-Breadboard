@@ -12,7 +12,7 @@
 | :--- | :--- | :--- |
 | 🔌 [**DeviceFlappingSensor**](device_flapping_sensor.md) | Нативный Ctypes-опрос Windows **SetupAPI** и **CfgMgr32** (PnP шина) | • Подключение/отключение всей периферии (USB, накопители/флешки, Wacom pen, мыши, клавиатуры, HDMI/DP мониторы, Bluetooth, принтеры)<br>• Аптайм непрерывной работы каждого девайса<br>• Аппаратные сбои драйверов (**Code 43, Code 10, Code 28**)<br>• **Циклический дребезг (Flapping Alert)** при частых сбросах портов |
 | 🌡️ [**SensorCollector & LHM**](hardware_telemetry.md) | HTTP API **LibreHardwareMonitor**, WMI `root\LibreHardwareMonitor`, `nvidia-smi` CLI, ACPI Thermal Zones | • Температуры CPU Package, ядер, GPU Core, термальных зон материнской платы (°C)<br>• Напряжения питания (VCore, линии +3.3V, +5V, +12V)<br>• Тактовые частоты CPU/GPU (MHz)<br>• Потребляемая мощность CPU/GPU (W)<br>• Скорость вентиляторов (RPM, %) и управление помпами СЖО |
-| 💾 [**SMART & StorageSensor**](hardware_telemetry.md) | Утилита `smartctl.exe` и нативный `WindowsStorageSensor` (`MSFT_PhysicalDisk` + `StorageReliabilityCounter`) | • Наработка дисков в часах (**Power-On Hours**)<br>• Число циклов включения (**Power Cycles**)<br>• Процент износа ячеек (**Wear % / TBW**)<br>• Ошибки чтения/записи и Reallocated Sectors<br>• Задержки операций чтения/записи (Latency ms) |
+| 💾 [**SMART & StorageSensor**](hardware_telemetry.md) | Нативный `WindowsStorageSensor` (`MSFT_PhysicalDisk` + `StorageReliabilityCounter`) | • Наработка дисков в часах (**Power-On Hours**)<br>• Число циклов включения (**Power Cycles**)<br>• Процент износа ячеек (**Wear % / TBW**)<br>• Ошибки чтения/записи и Reallocated Sectors<br>• Задержки операций чтения/записи (Latency ms) |
 | 💻 [**SystemCollector**](hardware_telemetry.md) | Библиотека `psutil`, Win32 API `kernel32`/`advapi32` | • Процент общей загрузки CPU и по ядрам<br>• Физическая память (RAM Used/Available) и файл подкачки (Swap)<br>• Дисковый ввод-вывод (I/O Read/Write Bytes/sec и IOPS)<br>• Сетевой трафик сетевых адаптеров (Rx/Tx Mbps)<br>• Состояние батареи (UPS / Ноутбук), список активных процессов |
 | 🚀 [**InternetSpeedSensor**](hardware_telemetry.md) | Потоковый сетевой пробер (HTTP/TCP ping probe) | • Задержка сети (Ping latency, ms)<br>• Дрожание задержки (Jitter, ms)<br>• Входящая и исходящая пропускная способность канала (Mbps) |
 | 📁 [**FileCollector**](logging.md) | Служба `DirectoryWatcher` (Win32 `ReadDirectoryChangesW`) | • Файловая активность в отслеживаемых каталогах<br>• Создание, удаление, модификация файлов конфигурации и баз данных |
@@ -26,7 +26,7 @@ flowchart TD
     subgraph Сенсоры["Сенсоры и сборщики (Sensors Layer)"]
         DFS["🔌 DeviceFlappingSensor<br/>(Периферия, PnP, Ошибки, Дребезг)"]
         SC["🌡️ SensorCollector<br/>(LHM, HWiNFO, GPU-Z, CPU-Z, AIDA64)"]
-        SMART["💾 Smartmontools / WMI<br/>(S.M.A.R.T., Часы наработки, Износ, TBW)"]
+        SMART["💾 WindowsStorageSensor / WMI<br/>(Накопители, Часы наработки, Износ, TBW)"]
         SysC["💻 SystemCollector<br/>(CPU, RAM, Диски, Сеть)"]
         NetS["🚀 InternetSpeedSensor<br/>(Скорость интернета, Пинг)"]
         FC["📁 FileCollector<br/>(Файловые изменения)"]

@@ -1,0 +1,17 @@
+{
+  "hive": "HKEY_CURRENT_USER",
+  "path": "Software\\AIBreadboardAPITest",
+  "full_path": "HKEY_CURRENT_USER\\Software\\AIBreadboardAPITest",
+  "subkeys": [],
+  "values": [
+    {
+      "name": "ApiVal",
+      "type_code": 1,
+      "type_name": "REG_SZ",
+      "data": "123",
+      "size_bytes": 3
+    }
+  ],
+  "subkeys_count": 0,
+  "values_count": 1
+}

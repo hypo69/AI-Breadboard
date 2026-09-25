@@ -39,8 +39,6 @@ class UtilityDiscovery:
         "lhm": ["LibreHardwareMonitor.exe", "LibreHardwareMonitorLib.dll"],
         "librehardwaremonitor": ["LibreHardwareMonitor.exe"],
         "ohm": ["OpenHardwareMonitor.exe"],
-        "smartctl": ["smartctl.exe"],
-        "smartmontools": ["smartctl.exe"],
         "crystaldiskinfo": ["DiskInfo64.exe", "DiskInfo32.exe", "DiskInfo.exe"],
         "speccy": ["Speccy64.exe", "Speccy.exe"],
         "coretemp": ["Core Temp.exe", "CoreTemp.exe"],
@@ -70,14 +68,6 @@ class UtilityDiscovery:
             "GPU-Z",
             "TechPowerUp GPU-Z",
             "gpuz",
-        ],
-        "smartmontools": [
-            "smartmontools/bin",
-            "smartmontools",
-        ],
-        "smartctl": [
-            "smartmontools/bin",
-            "smartmontools",
         ],
         "crystaldiskinfo": [
             "CrystalDiskInfo",

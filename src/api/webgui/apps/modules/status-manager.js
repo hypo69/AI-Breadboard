@@ -62,11 +62,38 @@ export async function updateModelBadge(statusData) {
   let mod = '';
   let cfgFile = statusData?.config_file || '';
 
-  if (statusData?.ai) {
+  // 1. Приоритет: запрос актуальной активной модели с сервера (учитывает профиль и настройки пользователя)
+  try {
+    const isTcRoute = window.location.pathname.startsWith('/tc');
+    const query = isTcRoute ? '?profile=tc' : '';
+    const resp = await fetch(`/api/chat/active-model${query}`);
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data && data.model) {
+        prov = data.provider || '';
+        mod = data.model;
+        cfgFile = data.config_file || cfgFile;
+      }
+    }
+  } catch (err) {
+    console.warn('[AppsHub] Failed to fetch active model from /api/chat/active-model:', err);
+  }
+
+  // 2. Резервный парсинг конфигурации statusData.ai, если эндпоинт не вернул модель
+  if (!mod && statusData?.ai) {
     const ai = statusData.ai;
     if (ai.provider) {
-      prov = ai.provider.toUpperCase();
-      mod = ai.model || ai[`${ai.provider.toLowerCase()}_model_id`] || 'default';
+      const p = String(ai.provider).toLowerCase();
+      prov = String(ai.provider).toUpperCase();
+      mod = ai.model || (ai[p] && typeof ai[p] === 'object' ? ai[p].model : null) || (ai.providers && ai.providers[p] ? ai.providers[p].model : null) || ai[`${p}_model_id`] || '';
+    } else if (ai.providers && typeof ai.providers === 'object') {
+      for (const [pk, pv] of Object.entries(ai.providers)) {
+        if (pv && pv.enabled) {
+          prov = pk.toUpperCase();
+          mod = pv.model || '';
+          break;
+        }
+      }
     } else if (ai.use_gemini) {
       prov = 'GEMINI';
       mod = ai.gemini_model_id || ai.model || 'gemini-2.5-flash';
@@ -85,28 +112,26 @@ export async function updateModelBadge(statusData) {
     }
   }
 
-  // Если модель всё ещё не определена, делаем прямой запрос к /api/chat/active-model
-  if (!mod || !prov) {
-    try {
-      const isTcRoute = window.location.pathname.startsWith('/tc');
-      const query = isTcRoute ? '?profile=tc' : '';
-      const resp = await fetch(`/api/chat/active-model${query}`);
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data && data.model) {
-          prov = data.provider || 'AI';
-          mod = data.model;
-          cfgFile = data.config_file || cfgFile;
-        }
-      }
-    } catch {}
+  // 3. Очистка и форматирование отображаемой строки
+  if (mod && mod.startsWith(`${prov.toLowerCase()}:`)) {
+    mod = mod.substring(prov.length + 1);
   }
 
-  if (prov && mod) {
+  if (prov && mod && mod !== 'default') {
     modelBadgeText.textContent = `${prov}: ${mod}`;
     if (modelBadge) {
       const fileLabel = cfgFile ? `, Профиль: ${cfgFile}` : '';
       modelBadge.title = `Используемая модель: ${mod} (Провайдер: ${prov}${fileLabel})`;
+    }
+  } else if (mod && mod !== 'default') {
+    modelBadgeText.textContent = `${mod}`;
+    if (modelBadge) {
+      modelBadge.title = `Используемая модель: ${mod}`;
+    }
+  } else if (prov) {
+    modelBadgeText.textContent = `${prov}`;
+    if (modelBadge) {
+      modelBadge.title = `Используемый провайдер: ${prov}`;
     }
   } else {
     modelBadgeText.textContent = 'AI: Не определена';

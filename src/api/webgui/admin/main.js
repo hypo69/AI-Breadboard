@@ -597,7 +597,7 @@ async function initInterface() {
 
   // Определение и фильтрация вкладок микроприложений (/apps)
   const appTabDefs = [
-    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20260925_v2', js: '/html/about_system_tab/main.js?v=20260925_v2' },
+    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20260925_v3', js: '/html/about_system_tab/main.js?v=20260925_v3' },
     { id: 'trading_terminal', tab: 'trading', html: '/html/trading_tab/index.html', js: '/html/trading_tab/main.js' },
     { id: 'network_terminal', tab: 'network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
     { id: 'system_inspector', tab: 'system-inspector', html: '/html/system_inspector_tab/index.html', js: '/html/system_inspector_tab/main.js' },

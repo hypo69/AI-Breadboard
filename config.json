@@ -46,10 +46,6 @@
         "interval": "5 seconds",
         "enabled": true
       },
-      "smartmontools": {
-        "interval": "10 minutes",
-        "enabled": true
-      },
       "website_monitor": {
         "interval": "5 minutes",
         "enabled": true

@@ -100,8 +100,6 @@ timestamp,app,param_name,old_value,new_value,status,user,details
 | 🔬 **AIDA64** | `aida64_sensor_polls.csv` | [`apps/~aida64`](../../apps/~aida64) | Опрос датчиков материнской платы через AIDA64 Shared Memory XML |
 | 🔬 **AIDA64** | `aida64_status_polls.csv` | [`apps/~aida64`](../../apps/~aida64) | Доступность движка аудита AIDA64 |
 | 📄 **AIDA64** | `aida64_report_events.csv` | [`apps/~aida64`](../../apps/~aida64) | События генерации CSV-отчетов аудита аппаратного обеспечения |
-| 💾 **SMART / Disks** | `smartmontools_drives_polls.csv` | [`apps/smartmontools`](../../apps/smartmontools) | S.M.A.R.T. накопителей: наработка часов (Power-On Hours), Power Cycles, % износа (Wear), TBW, Reallocated Sectors |
-| 💾 **SMART / Disks** | `smartmontools_status_polls.csv` | [`apps/smartmontools`](../../apps/smartmontools) | Доступность утилиты `smartctl.exe` и драйверов дисковой подсистемы |
 | 🪟 **Windows System** | `windows_audit_polls.csv` | [`apps/windows`](../../apps/windows) | Загрузка CPU/RAM, активность логических дисков, сетевые интерфейсы psutil |
 | 🪟 **Windows System** | `windows_audit_events.csv` | [`apps/windows`](../../apps/windows) | Аппаратные аномалии, события ядра и падения компонентов |
 | 🛡️ **Defender** | `windows_defender_polls.csv` | [`apps/windows/defender`](../../apps/windows/defender) | Статус антивируса, версии сигнатур, активность Real-time protection |

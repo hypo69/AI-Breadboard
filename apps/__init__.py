@@ -24,7 +24,6 @@ __all__ = [
     "helpdesk",
     "librehardwaremonitor",
     "research_and_statistic",
-    "smartmontools",
     "software_transparency_scanner",
     "telemetry_research",
     "trading_terminal",

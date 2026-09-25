@@ -52,7 +52,6 @@ flowchart TD
         W4["🔬 Software Transparency & Audit"]
         W5["💾 Windows Backup Manager"]
         H1["🌡️ LibreHardwareMonitor (LHM)"]
-        H2["💾 S.M.A.R.T. (smartmontools)"]
         H3["🏎️ AI Inference Benchmark (Замер скорости токенизации)"]
         H4["📋 Scenarios & Autolog Manager (Автологгер)"]
     end
@@ -115,7 +114,7 @@ flowchart TD
 
 ### 2. Test Computer (`/tc`)
 Специализированный стенд для комплексного мониторинга хоста Windows:
-* **Аппаратный мониторинг**: интеграция с LibreHardwareMonitor, smartmontools, датчиками AIDA64, HWiNFO, CPU-Z, GPU-Z.
+* **Аппаратный мониторинг**: интеграция с LibreHardwareMonitor, датчиками AIDA64, HWiNFO, CPU-Z, GPU-Z.
 * **Автологгер датчиков и сценарии**: `Scenarios & Autolog Manager` для циклического логирования телеметрии.
 * **Управление Windows**: просмотр и правка реестра (`Registry Viewer`), аудит автозагрузки (`Startup Auditor`), прозрачность процессов (`Software Transparency & Audit`), бэкапы и управление политиками Defender.
 
