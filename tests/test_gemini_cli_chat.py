@@ -321,7 +321,6 @@ class TestUnifiedChatGeminiCliIntegration:
     async def test_unified_chat_gemini_cli_dispatch(self):
         """Проверка перенаправления запросов в Gemini CLI через UnifiedChatModel."""
         unified = UnifiedChatModel(
-            api_key_names=[],
             system_instruction="Default system",
         )
 

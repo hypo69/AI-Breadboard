@@ -317,6 +317,15 @@
           </button>
         </div>
 
+        <!-- Уведомление о live-fallback (БД сенсоров пуста) -->
+        <div class="d-none px-2 py-1 border-bottom" id="sys-lhm-fallback-notice"
+             style="background: rgba(234,179,8,0.08); border-color: rgba(234,179,8,0.25) !important;">
+          <div class="d-flex align-items-center gap-1.5" style="font-size: 0.72rem; color: #ca8a04;">
+            <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+            <span>БД сенсоров пуста — используется <strong>прямой опрос (live)</strong>. Запустите телеметрию для накопления данных в SQLite.</span>
+          </div>
+        </div>
+
         <!-- Sensors list container -->
         <div class="p-2 flex-grow-1" id="sys-lhm-sensors-container" style="max-height: 520px; overflow-y: auto;">
           <div class="text-center py-4 small" style="color: var(--text-muted);">
@@ -332,10 +341,15 @@
       <!-- Process Stream Table -->
       <div class="sys-panel flex-grow-1">
         <div class="sys-panel-header">
-          <span><i class="bi bi-list-task me-1"></i> Топ процессов хоста (Live Stream)</span>
           <div class="d-flex align-items-center gap-2">
+            <span><i class="bi bi-list-task me-1"></i> Топ процессов хоста</span>
+            <span class="badge bg-primary-subtle text-primary border border-primary font-monospace" id="sys-proc-db-badge" style="font-size: 0.72rem;">● БД SQLite (замер 5с)</span>
+            <span class="small text-muted font-monospace" id="sys-proc-updated-time" style="font-size: 0.7rem;">--:--:--</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-info rounded-pill px-2.5" id="btn-sys-proc-stats" title="Статистика и выбросы процессов"><i class="bi bi-bar-chart-line-fill me-1"></i>Статистика</button>
             <input type="text" class="form-control form-control-sm" id="sys-proc-search"
-                   placeholder="Фильтр по имени или PID..." style="max-width: 200px;">
+                   placeholder="Фильтр по имени или PID..." style="max-width: 180px;">
             <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-sys-pause-proc">Пауза</button>
           </div>
         </div>
@@ -406,7 +420,7 @@
               <tr>
                 <th style="width: 170px;">Программа / PID</th>
                 <th style="width: 220px;">Удаленный сервер (Интернет)</th>
-                <th style="width: 140px;">Служба / Протокол</th>
+                <th style="width: 240px;">Служба / Протокол</th>
                 <th style="width: 100px; text-align: center;">Статус</th>
                 <th style="min-width: 220px;"><i class="bi bi-arrow-up-right text-warning me-1"></i>Отправка (За период / Всего / Данные)</th>
                 <th style="min-width: 220px;"><i class="bi bi-arrow-down-left text-success me-1"></i>Прием (Скачано за период / Всего / Данные)</th>
@@ -604,6 +618,143 @@
           </button>
           <button class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Закрыть</button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Process Statistics & Outliers Modal -->
+<div class="modal fade" id="sysProcStatsModal" tabindex="-1" aria-labelledby="sysProcStatsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+    <div class="modal-content text-white border-secondary shadow-lg" style="background: var(--surface-1); border-color: var(--border-color) !important;">
+      <div class="modal-header py-2.5 px-3 border-secondary" style="background: var(--surface-2); border-color: var(--border-color) !important;">
+        <h6 class="modal-title d-flex align-items-center gap-2 mb-0" id="sysProcStatsModalLabel">
+          <i class="bi bi-bar-chart-line-fill text-info"></i>
+          <span class="fw-bold">Статистика процессов хоста (SQLite Агрегаты & Выбросы)</span>
+          <span class="badge bg-info-subtle text-info border border-info ms-2" id="modal-proc-stats-count-badge">0 записей</span>
+        </h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-3" style="max-height: 75vh; overflow-y: auto;">
+        <!-- Top Toolbar -->
+        <div class="p-2.5 rounded mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2" style="background: var(--surface-2); border: 1px solid var(--border-color);">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fs-4">📊</span>
+            <div>
+              <div class="fw-bold small" style="color: var(--text-color);">Обобщение данных процессов и сохранение аномалий</div>
+              <div class="small text-muted" style="font-size: 0.73rem;">Записи &gt; 2 мин обобщаются по средним показателям со всплесками. Данные &gt; 1 дня агрегируются в суточную историю.</div>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <input type="text" class="form-control form-control-sm" id="modal-proc-stats-filter" placeholder="Поиск процесса..." style="max-width: 170px;">
+            <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-trigger-proc-rollup" title="Принудительно обобщить записи старше 2 минут и 1 дня">
+              <i class="bi bi-lightning-charge me-1"></i>Обобщить сейчас
+            </button>
+            <button class="btn btn-sm btn-outline-info rounded-pill px-2.5" id="btn-refresh-proc-stats" title="Обновить статистику">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-pills mb-3 gap-2" id="procStatsTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active btn-sm rounded-pill px-3 py-1" id="tab-btn-proc-rollups" data-bs-toggle="pill" data-bs-target="#tab-pane-proc-rollups" type="button" role="tab">
+              <i class="bi bi-clock-history me-1"></i>2-минутные обобщения
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link btn-sm rounded-pill px-3 py-1" id="tab-btn-proc-outliers" data-bs-toggle="pill" data-bs-target="#tab-pane-proc-outliers" type="button" role="tab">
+              <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Выбросы и пики нагрузки (<span id="proc-outliers-count">0</span>)
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link btn-sm rounded-pill px-3 py-1" id="tab-btn-proc-daily" data-bs-toggle="pill" data-bs-target="#tab-pane-proc-daily" type="button" role="tab">
+              <i class="bi bi-calendar3 me-1"></i>Суточная статистика (> 1 дня)
+            </button>
+          </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="procStatsTabContent">
+          <!-- 1. 2-min rollups -->
+          <div class="tab-pane fade show active" id="tab-pane-proc-rollups" role="tabpanel">
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+              <table class="table table-dark table-hover table-sm align-middle font-monospace" style="font-size: 0.76rem;">
+                <thead class="table-secondary text-dark sticky-top">
+                  <tr>
+                    <th>Период</th>
+                    <th>Процесс</th>
+                    <th>PID</th>
+                    <th>Пользователь</th>
+                    <th class="text-end">Замеров</th>
+                    <th class="text-end">CPU ср.</th>
+                    <th class="text-end">CPU макс.</th>
+                    <th class="text-end">Память ср.</th>
+                    <th class="text-end">Память макс.</th>
+                    <th class="text-end">Выбросов</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-proc-rollups">
+                  <tr><td colspan="10" class="text-center py-3 text-muted">Загрузка обобщений...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 2. Outliers -->
+          <div class="tab-pane fade" id="tab-pane-proc-outliers" role="tabpanel">
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+              <table class="table table-dark table-hover table-sm align-middle font-monospace" style="font-size: 0.76rem;">
+                <thead class="table-secondary text-dark sticky-top">
+                  <tr>
+                    <th>Время всплеска</th>
+                    <th>Процесс</th>
+                    <th>PID</th>
+                    <th class="text-end">CPU %</th>
+                    <th class="text-end">Память MB</th>
+                    <th>Потоки</th>
+                    <th>Пользователь</th>
+                    <th>Детали аномалии</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-proc-outliers">
+                  <tr><td colspan="8" class="text-center py-3 text-muted">Загрузка выбросов...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 3. Daily stats -->
+          <div class="tab-pane fade" id="tab-pane-proc-daily" role="tabpanel">
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+              <table class="table table-dark table-hover table-sm align-middle font-monospace" style="font-size: 0.76rem;">
+                <thead class="table-secondary text-dark sticky-top">
+                  <tr>
+                    <th>Дата</th>
+                    <th>Процесс</th>
+                    <th class="text-end">Всего замеров</th>
+                    <th class="text-end">CPU взвеш. ср.</th>
+                    <th class="text-end">CPU пик</th>
+                    <th class="text-end">Память ср.</th>
+                    <th class="text-end">Память пик</th>
+                    <th class="text-end">Выбросов</th>
+                    <th>Последняя активность</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-proc-daily">
+                  <tr><td colspan="9" class="text-center py-3 text-muted">Загрузка суточной статистики...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer py-2 px-3 border-secondary" style="background: var(--surface-2); border-color: var(--border-color) !important;">
+        <span class="small text-muted me-auto font-monospace" id="modal-proc-rollup-status">Служба телеметрии пишет каждые 5с</span>
+        <button class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Закрыть</button>
       </div>
     </div>
   </div>

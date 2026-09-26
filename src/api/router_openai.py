@@ -24,6 +24,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from src.ai.model_manager import get_available_models
 from src.api.router_chat import get_chat_model
 from logger.logger import logger
+from .constants import BASE_API_PREFIX
 
 router = APIRouter(tags=["openai"])
 

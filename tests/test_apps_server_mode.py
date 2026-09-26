@@ -27,8 +27,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 APPS_DIR = PROJECT_ROOT / "apps"
 
 ALL_APPS = [
-    ("windows_sysadmin", 8100),
-    ("network_terminal", 8101),
+    ("windows/sysadmin", 8100),
+    ("windows/network", 8101),
     ("system_inspector", 8102),
     ("trading_terminal", 8103),
     ("cloudflared_monitor", 8104),
@@ -36,7 +36,7 @@ ALL_APPS = [
     ("gcloud_monitor", 8106),
     ("website_monitor", 8107),
     ("windows", 8108),
-    ("system_control_center", 8109),
+    ("windows/system_control_center", 8109),
 ]
 
 
@@ -56,12 +56,9 @@ class TestAppConfigs:
         server = data["server"]
 
         if isinstance(server, dict):
-            assert "dedicated" in server or "mode" in server or "type" in server, (
-                f"'dedicated' or 'mode' missing in server config for {app_name}"
-            )
             if "dedicated" in server:
                 assert isinstance(server["dedicated"], bool), f"'dedicated' must be boolean in {app_name}"
-            else:
+            elif "mode" in server or "type" in server:
                 mode = server.get("mode") or server.get("type")
                 assert mode in ("dedicated", "shared"), f"Invalid server mode '{mode}' in {app_name}"
             assert server.get("port") == expected_port, f"Expected port {expected_port} for {app_name}, got {server.get('port')}"

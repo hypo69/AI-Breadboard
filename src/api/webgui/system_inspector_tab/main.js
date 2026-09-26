@@ -5,11 +5,31 @@
   let isSysPaused = false;
   let isNetPaused = false;
   let currentNetFilter = 'internet';
-  let cachedNetworkActivities = [];
-  let latestTelemetrySnapshot = null;
-  let cachedSensors = [];
-  let currentSensorCategory = 'all';
-  let isLhmRunning = false;
+  let _currentUiRefreshSeconds = 5;
+  let cachedProcStats = null;
+
+  async function fetchProcessesFromDb() {
+    if (isSysPaused) return;
+    try {
+      const res = await fetch('/api/v1/system/processes?limit=35&source=db');
+      if (res.ok) {
+        const procs = await res.json();
+        if (!latestTelemetrySnapshot) {
+          latestTelemetrySnapshot = { top_processes: [] };
+        }
+        latestTelemetrySnapshot.top_processes = procs;
+        renderProcessTable();
+
+        const timeBadge = document.getElementById('sys-proc-updated-time');
+        if (timeBadge) {
+          const now = new Date();
+          timeBadge.textContent = now.toLocaleTimeString();
+        }
+      }
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Ошибка получения процессов из базы данных SQLite:', e);
+    }
+  }
 
   async function fetchLhmSensors() {
     const container = document.getElementById('sys-lhm-sensors-container');
@@ -43,48 +63,175 @@
           badgeStatus.textContent = '● LHM Active';
           badgeStatus.className = 'badge bg-success';
         }
+        showLhmFallbackNotice(false);
         const mRes = await fetch('/api/v1/lhm/metrics');
         if (mRes.ok) {
           const mData = await mRes.json();
           sensorsList = mData.sensors || [];
         }
       } else {
-        // Fallback: Опрос аппаратных сенсоров хоста (WMI + NVIDIA-SMI)
+        // Fallback: читаем последний замер сенсоров из БД SQLite (аналогично «Топ процессов»)
         if (badgeStatus) {
-          badgeStatus.textContent = 'WMI/GPU';
-          badgeStatus.className = 'badge bg-secondary';
+          badgeStatus.textContent = '● БД SQLite';
+          badgeStatus.className = 'badge bg-primary';
         }
         try {
-          const hwRes = await fetch('/api/windows/hardware/sensors');
-          if (hwRes.ok) {
-            const hwData = await hwRes.json();
-            const rawSensors = hwData.sensors || [];
-            sensorsList = rawSensors.map(s => ({
-              id: s.id || s.sensor_id || s.name,
-              hardware_name: s.hardware_name || s.component || (s.sensor_type === 'Temperature' ? 'Thermal Sensors' : 'System Hardware'),
-              hardware_type: s.hardware_type || 'system',
-              sensor_category: s.category || s.sensor_type || s.type || 'Temperatures',
-              sensor_name: s.name || s.label || 'Sensor',
-              value_raw: s.unit ? `${s.value} ${s.unit}` : `${s.value}`,
-              value_numeric: typeof s.value === 'number' ? s.value : parseFloat(s.value),
-              unit: s.unit || ''
-            }));
+          const dbRes = await fetch('/api/v1/system/sensors?source=db');
+          if (dbRes.ok) {
+            const dbData = await dbRes.json();
+            if (Array.isArray(dbData) && dbData.length > 0) {
+              // Данные уже нормализованы бэкендом — минимальный маппинг
+              sensorsList = dbData.map(s => ({
+                id: s.id || s.sensor_id || s.sensor_name,
+                hardware_name: s.hardware_name || 'System Hardware',
+                hardware_type: s.hardware_type || 'system',
+                sensor_category: s.sensor_category || 'General',
+                sensor_name: s.sensor_name || 'Sensor',
+                value_raw: s.value_raw || `${s.value_numeric ?? 0} ${s.unit || ''}`.trim(),
+                value_numeric: s.value_numeric ?? 0,
+                unit: s.unit || '',
+              }));
+              showLhmFallbackNotice(false);
+            }
           }
-        } catch {
-          // Второй fallback
-          const sysRes = await fetch('/api/v1/system/sensors');
-          if (sysRes.ok) {
-            const raw = await sysRes.json();
-            sensorsList = (raw || []).map(s => ({
-              id: s.sensor_id || s.name,
-              hardware_name: s.category ? s.category.toUpperCase() : 'System Hardware',
-              hardware_type: 'system',
-              sensor_category: s.category || 'Temperatures',
-              sensor_name: s.name,
-              value_raw: s.unit ? `${s.value} ${s.unit}` : `${s.value}`,
-              value_numeric: s.value,
-              unit: s.unit
-            }));
+        } catch { /* продолжаем к live-fallback */ }
+
+        // Live-fallback: если БД пуста (телеметрия ещё не запущена)
+        if (sensorsList.length === 0) {
+          if (badgeStatus) {
+            badgeStatus.textContent = 'WMI/GPU (live)';
+            badgeStatus.className = 'badge bg-secondary';
+          }
+          // Показываем уведомление о переключении на live
+          showLhmFallbackNotice(true);
+          try {
+            const liveRes = await fetch('/api/v1/system/sensors?source=live');
+            if (liveRes.ok) {
+              const raw = await liveRes.json();
+              sensorsList = (raw || []).map(s => ({
+                id: s.sensor_id || s.id || s.name,
+                hardware_name: s.hardware_name || (s.category ? s.category.toUpperCase() : 'System Hardware'),
+                hardware_type: s.hardware_type || 'system',
+                sensor_category: s.sensor_category || s.category || 'Temperatures',
+                sensor_name: s.sensor_name || s.name,
+                value_raw: s.value_raw || (s.unit ? `${s.value} ${s.unit}` : `${s.value}`),
+                value_numeric: s.value_numeric ?? (typeof s.value === 'number' ? s.value : parseFloat(s.value)),
+                unit: s.unit || '',
+              }));
+            }
+          } catch (liveErr) {
+            console.warn('[SystemInspectorTab] Live-fallback сенсоров недоступен:', liveErr);
+          }
+        }
+      }
+
+      cachedSensors = sensorsList;
+      if (badgeCount) {
+        badgeCount.textContent = `${sensorsList.length} шт.`;
+      }
+
+      renderSensors();
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Failed to fetch LHM sensors:', e);
+      if (container) {
+        container.innerHTML = `<div class="text-center py-4 text-muted small">Датчики опрашиваются... (${e.message})</div>`;
+      }
+    }
+  }
+
+  /** Показывает или скрывает предупреждение о live-fallback при пустой БД сенсоров. */
+  function showLhmFallbackNotice(visible) {
+    const notice = document.getElementById('sys-lhm-fallback-notice');
+    if (!notice) return;
+    if (visible) {
+      notice.classList.remove('d-none');
+    } else {
+      notice.classList.add('d-none');
+    }
+  }
+
+
+    if (!container) return;
+
+    try {
+      // 1. Проверяем статус LHM
+      let lhmStatus = null;
+      try {
+        const sRes = await fetch('/api/v1/lhm/status');
+        if (sRes.ok) lhmStatus = await sRes.json();
+      } catch {}
+
+      isLhmRunning = lhmStatus && lhmStatus.is_running;
+
+      if (btnLaunch) {
+        if (!isLhmRunning && lhmStatus && lhmStatus.is_binary_available) {
+          btnLaunch.classList.remove('d-none');
+        } else {
+          btnLaunch.classList.add('d-none');
+        }
+      }
+
+      let sensorsList = [];
+
+      if (isLhmRunning) {
+        if (badgeStatus) {
+          badgeStatus.textContent = '● LHM Active';
+          badgeStatus.className = 'badge bg-success';
+        }
+        const mRes = await fetch('/api/v1/lhm/metrics');
+        if (mRes.ok) {
+          const mData = await mRes.json();
+          sensorsList = mData.sensors || [];
+        }
+      } else {
+        // Fallback: читаем последний замер сенсоров из БД SQLite (аналогично «Топ процессов»)
+        if (badgeStatus) {
+          badgeStatus.textContent = '● БД SQLite';
+          badgeStatus.className = 'badge bg-primary';
+        }
+        try {
+          const dbRes = await fetch('/api/v1/system/sensors?source=db');
+          if (dbRes.ok) {
+            const dbData = await dbRes.json();
+            if (Array.isArray(dbData) && dbData.length > 0) {
+              // Данные уже нормализованы бэкендом — минимальный маппинг
+              sensorsList = dbData.map(s => ({
+                id: s.id || s.sensor_id || s.sensor_name,
+                hardware_name: s.hardware_name || 'System Hardware',
+                hardware_type: s.hardware_type || 'system',
+                sensor_category: s.sensor_category || 'General',
+                sensor_name: s.sensor_name || 'Sensor',
+                value_raw: s.value_raw || `${s.value_numeric ?? 0} ${s.unit || ''}`.trim(),
+                value_numeric: s.value_numeric ?? 0,
+                unit: s.unit || '',
+              }));
+            }
+          }
+        } catch { /* продолжаем к live-fallback */ }
+
+        // Live-fallback: если БД пуста (телеметрия ещё не запущена)
+        if (sensorsList.length === 0) {
+          if (badgeStatus) {
+            badgeStatus.textContent = 'WMI/GPU (live)';
+            badgeStatus.className = 'badge bg-secondary';
+          }
+          try {
+            const liveRes = await fetch('/api/v1/system/sensors?source=live');
+            if (liveRes.ok) {
+              const raw = await liveRes.json();
+              sensorsList = (raw || []).map(s => ({
+                id: s.sensor_id || s.id || s.name,
+                hardware_name: s.hardware_name || (s.category ? s.category.toUpperCase() : 'System Hardware'),
+                hardware_type: s.hardware_type || 'system',
+                sensor_category: s.sensor_category || s.category || 'Temperatures',
+                sensor_name: s.sensor_name || s.name,
+                value_raw: s.value_raw || (s.unit ? `${s.value} ${s.unit}` : `${s.value}`),
+                value_numeric: s.value_numeric ?? (typeof s.value === 'number' ? s.value : parseFloat(s.value)),
+                unit: s.unit || '',
+              }));
+            }
+          } catch (liveErr) {
+            console.warn('[SystemInspectorTab] Live-fallback сенсоров недоступен:', liveErr);
           }
         }
       }
@@ -502,7 +649,7 @@
       `\n======================================================`;
   }
 
-  function updateTelemetryDashboard(snap) {
+  function updateCoreMetrics(snap) {
     if (!snap) return;
 
     // CPU
@@ -555,23 +702,6 @@
       if (diskSub) diskSub.innerText = `Чтение: ${rKb} KB/s | Запись: ${wKb} KB/s`;
     }
 
-    // Physical Disks SMART Health
-    const diskCont = document.getElementById('sys-physical-disks-container');
-    const diskBadge = document.getElementById('sys-disk-health-badge');
-    if (diskCont && Array.isArray(snap.physical_disks) && snap.physical_disks.length > 0) {
-      const allHealthy = snap.physical_disks.every(d => d.health_status === 'Healthy');
-      if (diskBadge) {
-        diskBadge.textContent = allHealthy ? 'SMART OK' : 'Внимание';
-        diskBadge.className = allHealthy ? 'badge bg-success-subtle text-success border border-success' : 'badge bg-warning-subtle text-warning border border-warning';
-      }
-      diskCont.innerHTML = snap.physical_disks.map(d => `
-        <div class="d-flex justify-content-between align-items-center py-0.5 border-bottom border-dark-subtle" style="border-bottom-style: dashed !important;">
-          <span class="text-truncate me-2" style="max-width: 160px;" title="${escapeHtml(d.model)}">${escapeHtml(d.model)}</span>
-          <span class="badge bg-secondary font-monospace" style="font-size: 0.65rem;">${d.size_gb} GB ${escapeHtml(d.media_type || '')}</span>
-        </div>
-      `).join('');
-    }
-
     // Battery & Power
     const powerCont = document.getElementById('sys-power-info-container');
     const powerBadge = document.getElementById('sys-power-status-badge');
@@ -597,6 +727,27 @@
         `;
       }
     }
+  }
+
+  function updateHardwareQuick(snap) {
+    if (!snap) return;
+
+    // Physical Disks SMART Health
+    const diskCont = document.getElementById('sys-physical-disks-container');
+    const diskBadge = document.getElementById('sys-disk-health-badge');
+    if (diskCont && Array.isArray(snap.physical_disks) && snap.physical_disks.length > 0) {
+      const allHealthy = snap.physical_disks.every(d => d.health_status === 'Healthy');
+      if (diskBadge) {
+        diskBadge.textContent = allHealthy ? 'SMART OK' : 'Внимание';
+        diskBadge.className = allHealthy ? 'badge bg-success-subtle text-success border border-success' : 'badge bg-warning-subtle text-warning border border-warning';
+      }
+      diskCont.innerHTML = snap.physical_disks.map(d => `
+        <div class="d-flex justify-content-between align-items-center py-0.5 border-bottom border-dark-subtle" style="border-bottom-style: dashed !important;">
+          <span class="text-truncate me-2" style="max-width: 160px;" title="${escapeHtml(d.model)}">${escapeHtml(d.model)}</span>
+          <span class="badge bg-secondary font-monospace" style="font-size: 0.65rem;">${d.size_gb} GB ${escapeHtml(d.media_type || '')}</span>
+        </div>
+      `).join('');
+    }
 
     // RAM SPD Modules
     const ramSticksCont = document.getElementById('sys-ram-sticks-container');
@@ -611,8 +762,8 @@
           <span class="font-monospace text-primary">${m.capacity_gb} GB @ ${m.speed_mhz} MT/s</span>
         </div>
       `).join('');
-    } else if (ramSticksCont) {
-      ramSticksCont.innerHTML = `<div>RAM: ${snap.memory ? snap.memory.total_gb : '--'} GB физической памяти</div>`;
+    } else if (ramSticksCont && snap.memory) {
+      ramSticksCont.innerHTML = `<div>RAM: ${snap.memory.total_gb || '--'} GB физической памяти</div>`;
     }
 
     // Reliability & Open Ports
@@ -630,7 +781,40 @@
         <div class="text-truncate" title="${escapeHtml(snap.alerts?.latest_alert || '')}">${escapeHtml(snap.alerts?.latest_alert || 'Система стабильна')}</div>
       `;
     }
+  }
 
+  async function fetchCoreMetrics() {
+    try {
+      const res = await fetch('/api/v1/system/metrics/core');
+      if (res.ok) {
+        const data = await res.json();
+        if (!latestTelemetrySnapshot) latestTelemetrySnapshot = {};
+        Object.assign(latestTelemetrySnapshot, data);
+        updateCoreMetrics(data);
+      }
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Ошибка получения базовых метрик:', e);
+    }
+  }
+
+  async function fetchHardwareQuick() {
+    try {
+      const res = await fetch('/api/v1/system/hardware/quick');
+      if (res.ok) {
+        const data = await res.json();
+        if (!latestTelemetrySnapshot) latestTelemetrySnapshot = {};
+        Object.assign(latestTelemetrySnapshot, data);
+        updateHardwareQuick(data);
+      }
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Ошибка получения данных оборудования:', e);
+    }
+  }
+
+  function updateTelemetryDashboard(snap) {
+    if (!snap) return;
+    updateCoreMetrics(snap);
+    updateHardwareQuick(snap);
     renderProcessTable();
     if (snap.network_activity) {
       renderNetworkActivityTable(snap.network_activity);
@@ -832,18 +1016,18 @@
           <td>
             <div class="d-flex align-items-center gap-1 mb-0.5">
               ${protoBadge}
-              <span class="fw-semibold text-truncate" style="max-width: 110px; font-size: 0.74rem; color: #a855f7;" title="${escapeHtml(item.service_type)}">${escapeHtml(item.service_type)}</span>
+              <span class="fw-semibold text-truncate" style="max-width: 210px; font-size: 0.74rem; color: #a855f7;" title="${escapeHtml(item.service_type)}">${escapeHtml(item.service_type)}</span>
             </div>
           </td>
           <td style="text-align: center;">
             <span class="${statusBadgeClass}" style="font-size: 0.68rem;">${escapeHtml(item.status)}</span>
           </td>
           <td>
-            <div class="d-flex align-items-center justify-content-between gap-1 mb-1">
+            <div class="d-flex align-items-center justify-content-start gap-2 mb-1">
               <span class="badge bg-warning-subtle text-warning border border-warning px-1.5 py-0.5" style="font-size: 0.68rem;" title="Отправлено за измеряемый период">
                 ${deltaSentStr}
               </span>
-              <span class="text-muted font-monospace" style="font-size: 0.66rem;" title="Всего отправлено/записано">
+              <span class="text-muted font-monospace" style="font-size: 0.68rem;" title="Всего отправлено/записано">
                 Σ ${totalSentStr}
               </span>
             </div>
@@ -855,11 +1039,11 @@
             </div>
           </td>
           <td>
-            <div class="d-flex align-items-center justify-content-between gap-1 mb-1">
+            <div class="d-flex align-items-center justify-content-start gap-2 mb-1">
               <span class="badge bg-success-subtle text-success border border-success px-1.5 py-0.5" style="font-size: 0.68rem;" title="Скачано/получено за измеряемый период">
                 ${deltaRecvStr}
               </span>
-              <span class="text-muted font-monospace" style="font-size: 0.66rem;" title="Всего скачано/прочитано">
+              <span class="text-muted font-monospace" style="font-size: 0.68rem;" title="Всего скачано/прочитано">
                 Σ ${totalRecvStr}
               </span>
             </div>
@@ -1076,7 +1260,7 @@
     }
   }
 
-  function bindTabEvents() {
+  function bindSensorTabEvents() {
     const btnPause = document.getElementById('btn-sys-pause-proc');
     if (btnPause) {
       btnPause.onclick = () => {
@@ -1169,6 +1353,166 @@
           console.warn('[SystemInspectorTab] Clipboard copy failed:', e);
         }
       };
+    }
+  }
+
+  async function openProcStatsModal() {
+    const modalEl = document.getElementById('sysProcStatsModal');
+    if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+      const modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+    }
+    await fetchProcStats();
+  }
+
+  async function fetchProcStats(filterName = '') {
+    const tbodyRollups = document.getElementById('tbody-proc-rollups');
+    const tbodyOutliers = document.getElementById('tbody-proc-outliers');
+    const tbodyDaily = document.getElementById('tbody-proc-daily');
+    const badgeCount = document.getElementById('modal-proc-stats-count-badge');
+    const badgeOutliers = document.getElementById('proc-outliers-count');
+
+    try {
+      const url = `/api/v1/system/processes/stats?limit=60${filterName ? '&name=' + encodeURIComponent(filterName) : ''}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      cachedProcStats = data;
+
+      const rollups = data.rollups_2min || [];
+      const outliers = data.outliers || [];
+      const daily = data.daily_stats || [];
+
+      if (badgeCount) badgeCount.textContent = `${rollups.length + daily.length} записей`;
+      if (badgeOutliers) badgeOutliers.textContent = String(outliers.length);
+
+      // 1. Рендерим 2-минутные обобщения
+      if (tbodyRollups) {
+        if (rollups.length === 0) {
+          tbodyRollups.innerHTML = '<tr><td colspan="10" class="text-center py-3 text-muted">Обобщённых записей (&gt; 2 мин) пока нет. Данные собираются каждые 5 сек.</td></tr>';
+        } else {
+          tbodyRollups.innerHTML = rollups.map(r => {
+            const timeRange = `${(r.period_start || '').slice(11, 19)} - ${(r.period_end || '').slice(11, 19)}`;
+            const cpuClass = r.avg_cpu_percent > 30 ? 'text-danger fw-bold' : (r.avg_cpu_percent > 10 ? 'text-warning' : 'text-info');
+            return `
+              <tr>
+                <td style="color: #94a3b8;">${timeRange}</td>
+                <td style="font-weight: 600; color: #38bdf8;">${escapeHtml(r.name || '')}</td>
+                <td>${r.pid || '-'}</td>
+                <td style="color: #94a3b8;">${escapeHtml(r.username || '')}</td>
+                <td class="text-end text-white">${r.sample_count}</td>
+                <td class="text-end ${cpuClass}">${Number(r.avg_cpu_percent).toFixed(1)}%</td>
+                <td class="text-end text-danger">${Number(r.max_cpu_percent).toFixed(1)}%</td>
+                <td class="text-end text-success">${Number(r.avg_memory_mb).toFixed(1)} MB</td>
+                <td class="text-end text-success">${Number(r.max_memory_mb).toFixed(1)} MB</td>
+                <td class="text-end">${r.outliers_count > 0 ? `<span class="badge bg-warning text-dark">${r.outliers_count}</span>` : '0'}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      // 2. Рендерим зафиксированные выбросы
+      if (tbodyOutliers) {
+        if (outliers.length === 0) {
+          tbodyOutliers.innerHTML = '<tr><td colspan="8" class="text-center py-3 text-muted">Аномальных выбросов нагрузки не зафиксировано.</td></tr>';
+        } else {
+          tbodyOutliers.innerHTML = outliers.map(o => {
+            return `
+              <tr>
+                <td style="color: #f59e0b;">${(o.timestamp || '').replace('T', ' ').slice(0, 19)}</td>
+                <td style="font-weight: 600; color: #38bdf8;">${escapeHtml(o.name || '')}</td>
+                <td>${o.pid}</td>
+                <td class="text-end text-danger fw-bold">${Number(o.cpu_percent).toFixed(1)}%</td>
+                <td class="text-end text-success">${Number(o.memory_mb).toFixed(1)} MB</td>
+                <td>${o.num_threads || 1}</td>
+                <td style="color: #94a3b8;">${escapeHtml(o.username || '')}</td>
+                <td class="text-warning">${escapeHtml(o.details || 'Пиковый всплеск CPU')}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      // 3. Рендерим суточную статистику
+      if (tbodyDaily) {
+        if (daily.length === 0) {
+          tbodyDaily.innerHTML = '<tr><td colspan="9" class="text-center py-3 text-muted">Данных старше 1 дня пока нет. Обобщение формируется автоматически.</td></tr>';
+        } else {
+          tbodyDaily.innerHTML = daily.map(d => {
+            return `
+              <tr>
+                <td class="text-info">${d.date}</td>
+                <td style="font-weight: 600; color: #38bdf8;">${escapeHtml(d.name || '')}</td>
+                <td class="text-end text-white">${d.sample_count}</td>
+                <td class="text-end text-warning">${Number(d.avg_cpu_percent).toFixed(1)}%</td>
+                <td class="text-end text-danger">${Number(d.max_cpu_percent).toFixed(1)}%</td>
+                <td class="text-end text-success">${Number(d.avg_memory_mb).toFixed(1)} MB</td>
+                <td class="text-end text-success">${Number(d.max_memory_mb).toFixed(1)} MB</td>
+                <td class="text-end">${d.outliers_count > 0 ? `<span class="badge bg-warning text-dark">${d.outliers_count}</span>` : '0'}</td>
+                <td style="color: #94a3b8;">${(d.last_seen || '').slice(11, 19)}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+    } catch (err) {
+      console.warn('[SystemInspectorTab] Ошибка загрузки статистики процессов:', err);
+      if (tbodyRollups) tbodyRollups.innerHTML = `<tr><td colspan="10" class="text-center py-3 text-danger">Ошибка: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  async function triggerProcRollupNow() {
+    const btn = document.getElementById('btn-trigger-proc-rollup');
+    const statusText = document.getElementById('modal-proc-rollup-status');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Обобщение...';
+    }
+    try {
+      const res = await fetch('/api/v1/system/processes/rollup?cutoff_seconds=120&outlier_cpu_threshold=30.0', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        if (statusText) {
+          statusText.textContent = `Обобщено: 2мин_агрегатов=${data.rollup_2min?.rollups_created || 0}, выбросов=${data.rollup_2min?.outliers_saved || 0}`;
+        }
+        await fetchProcStats();
+      }
+    } catch (e) {
+      console.error('[SystemInspectorTab] Ошибка выполнения роллапа:', e);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-lightning-charge me-1"></i>Обобщить сейчас';
+      }
+    }
+  }
+
+  function bindTabEvents() {
+    bindSensorTabEvents();
+
+    const btnProcStats = document.getElementById('btn-sys-proc-stats');
+    if (btnProcStats) {
+      btnProcStats.onclick = () => openProcStatsModal();
+    }
+
+    const btnRefreshStats = document.getElementById('btn-refresh-proc-stats');
+    if (btnRefreshStats) {
+      btnRefreshStats.onclick = () => {
+        const q = (document.getElementById('modal-proc-stats-filter')?.value || '').trim();
+        fetchProcStats(q);
+      };
+    }
+
+    const btnRollupTrigger = document.getElementById('btn-trigger-proc-rollup');
+    if (btnRollupTrigger) {
+      btnRollupTrigger.onclick = () => triggerProcRollupNow();
+    }
+
+    const inputStatsFilter = document.getElementById('modal-proc-stats-filter');
+    if (inputStatsFilter) {
+      inputStatsFilter.oninput = (e) => fetchProcStats(e.target.value.trim());
     }
 
     const searchProc = document.getElementById('sys-proc-search');
@@ -1549,7 +1893,6 @@
   };
 
   let _sysIntervalsConfigData = null;
-  let _currentUiRefreshSeconds = 5;
 
   function showAlertInModal(msg, type = 'success') {
     const alertEl = document.getElementById('modal-intervals-alert');
@@ -2635,13 +2978,17 @@
   }
 
   function setupSysSensorInterval(seconds) {
-    _currentUiRefreshSeconds = seconds;
+    _currentUiRefreshSeconds = seconds || 5;
     const pollHandler = async () => {
-      await fetchLhmSensors();
-      await fetchLiveFileEvents();
+      // Поэтапный независимый опрос подсистем
+      fetchCoreMetrics();
+      fetchProcessesFromDb();
+      fetchLhmSensors();
+      fetchLiveFileEvents();
+      fetchNetworkActivity();
     };
     if (window.registerTabPoller) {
-      window.registerTabPoller('tab-system-inspector', pollHandler, seconds * 1000, { immediate: false });
+      window.registerTabPoller('tab-system-inspector', pollHandler, _currentUiRefreshSeconds * 1000, { immediate: false });
     } else {
       if (window._sysSensorInterval) {
         clearInterval(window._sysSensorInterval);
@@ -2651,9 +2998,9 @@
         if (window.isTabActive ? window.isTabActive('tab-system-inspector') : true) {
           pollHandler();
         }
-      }, seconds * 1000);
+      }, _currentUiRefreshSeconds * 1000);
     }
-    console.log(`[SystemInspectorTab] UI sensor refresh interval set to ${seconds}s`);
+    console.log(`[SystemInspectorTab] UI sensor refresh interval set to ${_currentUiRefreshSeconds}s (SQLite processes & telemetry)`);
   }
 
   function openSysIntervalsModal() {
@@ -2695,33 +3042,41 @@
   }
 
   async function initSystemInspectorTab() {
-    console.log('[SystemInspectorTab] Initializing...');
+    console.log('[SystemInspectorTab] Initializing (progressive telemetry & SQLite processes)...');
     bindTabEvents();
-    await fetchLhmSensors();
-    await fetchLiveFileEvents();
-    await fetchNetworkActivity();
 
-    try {
-      const snapRes = await fetch('/api/v1/system/summary');
-      if (snapRes.ok) {
-        latestTelemetrySnapshot = await snapRes.json();
-        updateTelemetryDashboard(latestTelemetrySnapshot);
-      }
-    } catch (e) {
-      console.warn('[SystemInspectorTab] Initial snapshot fetch failed:', e);
-    }
+    // 1. Поэтапный прогрессивный запуск: немедленно запрашиваем быстрые базовые метрики
+    fetchCoreMetrics();
 
+    // 2. Сразу же запрашиваем процессы из базы данных SQLite
+    fetchProcessesFromDb();
+
+    // 3. Запрашиваем состояние аппаратных модулей (SMART дисков, планки RAM, порты)
+    fetchHardwareQuick();
+
+    // 4. Опрашиваем аппаратные сенсоры хоста / LHM
+    fetchLhmSensors();
+
+    // 5. Опрашиваем сетевую активность и события файлов
+    fetchNetworkActivity();
+    fetchLiveFileEvents();
+
+    // 6. Подключаем живой WebSocket-поток телеметрии
     connectSystemWebSocket();
 
-    // Periodic sensor refresh
+    // 7. Настраиваем периодический опрос (5 сек)
     if (!window._sysSensorInterval) {
-      setupSysSensorInterval(_currentUiRefreshSeconds);
+      setupSysSensorInterval(_currentUiRefreshSeconds || 5);
     }
   }
 
   function activateSystemInspectorTab() {
     if (window.isTabActive && !window.isTabActive('tab-system-inspector')) return;
     console.log('[SystemInspectorTab] Tab activated, resuming telemetry stream...');
+    fetchCoreMetrics();
+    fetchProcessesFromDb();
+    fetchHardwareQuick();
+    fetchLhmSensors();
     connectSystemWebSocket();
   }
 
@@ -2734,5 +3089,7 @@
   window.activateSystemInspectorTab = activateSystemInspectorTab;
   window.deactivateSystemInspectorTab = deactivateSystemInspectorTab;
   window.openSysIntervalsModal = openSysIntervalsModal;
+  window.openProcStatsModal = openProcStatsModal;
+  window.fetchProcessesFromDb = fetchProcessesFromDb;
 })();
 

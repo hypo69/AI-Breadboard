@@ -120,13 +120,13 @@ async function refreshTelemetryStats() {
       if (alertEl) alertEl.className = 'alert alert-success py-2 px-3 small d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3';
     } else {
       if (badgeEl) {
-        badgeEl.className = 'badge bg-secondary-subtle text-secondary';
+        badgeEl.className = 'badge bg-danger-subtle text-danger border border-danger-subtle';
         badgeEl.textContent = 'Туннель: Остановлен';
       }
       if (urlTextEl) {
         urlTextEl.textContent = 'Не запущен (запустите .\\launchers\\Run-Ngrok.ps1)';
       }
-      if (alertEl) alertEl.className = 'alert alert-secondary py-2 px-3 small d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3';
+      if (alertEl) alertEl.className = 'alert alert-danger py-2 px-3 small d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3';
     }
 
     // 2. Event & User metrics

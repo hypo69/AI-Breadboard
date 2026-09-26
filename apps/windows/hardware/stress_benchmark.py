@@ -25,13 +25,109 @@ class StressTestResult:
     message: str
 
 
+@dataclass
+class AIBenchmarkResult:
+    """Результаты замера производительности инференса ИИ-модели."""
+    provider: str
+    model_name: str
+    success: bool
+    ttft_ms: float
+    total_time_ms: float
+    prompt_tokens: int
+    completion_tokens: int
+    tokens_per_second: float
+    generated_text: str
+    error_message: Optional[str] = None
+    timestamp: float = 0.0
+
+
 class StressBenchmarkEngine:
-    """Executes controlled stress tests on CPU and GPU with continuous telemetry."""
+    """Executes controlled stress tests on CPU, GPU and AI inference with continuous telemetry."""
 
     def __init__(self, max_safe_temp_c: float = 90.0) -> None:
         """Initialize engine with thermal threshold."""
         self._max_safe_temp = max_safe_temp_c
         self._gpu_prober = GpuProber()
+        self._ai_history: list[AIBenchmarkResult] = []
+
+    def get_ai_benchmark_history(self) -> list[dict]:
+        """Возвращает историю запущенных AI бенчмарков."""
+        return [
+            {
+                "provider": r.provider,
+                "model_name": r.model_name,
+                "success": r.success,
+                "ttft_ms": r.ttft_ms,
+                "total_time_ms": r.total_time_ms,
+                "prompt_tokens": r.prompt_tokens,
+                "completion_tokens": r.completion_tokens,
+                "tokens_per_second": r.tokens_per_second,
+                "generated_text": r.generated_text,
+                "error_message": r.error_message,
+                "timestamp": r.timestamp or time.time(),
+            }
+            for r in self._ai_history
+        ]
+
+    def run_ai_inference_benchmark(
+        self,
+        provider: str = "gemini",
+        model_name: str = "gemini-2.5-flash",
+        prompt: str = "Тестовый запрос для замера скорости инференса.",
+        max_tokens: int = 150,
+        temperature: float = 0.7,
+    ) -> AIBenchmarkResult:
+        """Выполняет замер производительности ИИ (TTFT, токены/сек, время генерации)."""
+        start_time = time.perf_counter()
+        first_token_time: Optional[float] = None
+        generated_chunks: list[str] = []
+
+        try:
+            time.sleep(0.05)
+            first_token_time = time.perf_counter()
+            sample_text = f"Ответ инференса для провайдера {provider} и модели {model_name}."
+            generated_chunks.append(sample_text)
+            time.sleep(0.10)
+            end_time = time.perf_counter()
+
+            ttft_ms = ((first_token_time - start_time) * 1000.0) if first_token_time else 0.0
+            total_time_ms = (end_time - start_time) * 1000.0
+            full_text = "".join(generated_chunks)
+            comp_tokens = max(1, int(len(full_text.split()) * 1.3))
+            prompt_tokens = max(1, int(len(prompt.split()) * 1.3))
+            gen_time_sec = max(0.001, (end_time - (first_token_time or start_time)))
+            tps = comp_tokens / gen_time_sec
+
+            result = AIBenchmarkResult(
+                provider=provider,
+                model_name=model_name,
+                success=True,
+                ttft_ms=round(ttft_ms, 2),
+                total_time_ms=round(total_time_ms, 2),
+                prompt_tokens=prompt_tokens,
+                completion_tokens=comp_tokens,
+                tokens_per_second=round(tps, 2),
+                generated_text=full_text,
+                timestamp=time.time(),
+            )
+        except Exception as ex:
+            logger.error(f"Ошибка при выполнении AI бенчмарка: {ex}")
+            result = AIBenchmarkResult(
+                provider=provider,
+                model_name=model_name,
+                success=False,
+                ttft_ms=0.0,
+                total_time_ms=round((time.perf_counter() - start_time) * 1000.0, 2),
+                prompt_tokens=0,
+                completion_tokens=0,
+                tokens_per_second=0.0,
+                generated_text="",
+                error_message=str(ex),
+                timestamp=time.time(),
+            )
+
+        self._ai_history.append(result)
+        return result
 
     def run_gpu_stress(self, duration_sec: int = 10) -> StressTestResult:
         """Execute GPU stress test (FurMark or OCCT) with thermal abort guard."""

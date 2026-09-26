@@ -30,11 +30,42 @@
             <i class="bi bi-play-fill"></i>
             <span>Запустить все</span>
           </button>
+          <button class="btn btn-outline-warning btn-sm d-flex align-items-center gap-1 shadow-sm fw-semibold" id="btn-toggle-post-install" data-bs-toggle="collapse" data-bs-target="#postInstallWizardCollapse" aria-expanded="false" aria-controls="postInstallWizardCollapse" title="Открыть мастер первоначальной настройки Windows">
+            <i class="bi bi-magic"></i>
+            <span>Post-Install Wizard</span>
+          </button>
           <button class="btn btn-primary btn-sm d-flex align-items-center gap-1.5 shadow-sm fw-semibold" id="btn-open-scenarios-drawer" data-bs-toggle="offcanvas" data-bs-target="#scenariosOffcanvas" aria-controls="scenariosOffcanvas" title="Открыть выдвижную панель со сценариями">
             <i class="bi bi-layout-sidebar-reverse"></i>
             <span>Сценарии</span>
             <span class="badge bg-white text-dark ms-1" id="scenarios-count-badge-header">6</span>
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Collapsible Post-Install Wizard Panel -->
+  <div class="collapse mb-3" id="postInstallWizardCollapse">
+    <div class="card bg-dark border-secondary shadow-sm">
+      <div class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center flex-wrap gap-2 py-2 px-3">
+        <div>
+          <h6 class="mb-0 fw-bold text-warning"><i class="bi bi-magic me-1"></i> Windows Post-Install Setup Checklist</h6>
+          <span class="small text-muted">Выберите профиль базовой настройки или отметьте необходимые шаги для применения.</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <select class="form-select form-select-sm bg-dark text-white border-secondary" id="wizard-profile-select" style="width: 240px;">
+            <option value="post_install">Windows Post-Install Baseline</option>
+            <option value="secure_hardening">Security Hardening Profile</option>
+            <option value="developer_setup">Developer Workstation Profile</option>
+          </select>
+          <button class="btn btn-sm btn-primary px-3 rounded-pill" id="btn-wizard-apply-profile">
+            <i class="bi bi-play-fill me-1"></i> Применить профиль
+          </button>
+        </div>
+      </div>
+      <div class="card-body p-3">
+        <div id="wizard-steps-container" class="d-flex flex-column gap-2">
+          <div class="text-muted small text-center py-2">Загрузка профилей первоначальной настройки...</div>
         </div>
       </div>
     </div>

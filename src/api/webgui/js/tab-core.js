@@ -159,6 +159,14 @@ export function setTabPollerEnabled(pollerId, enabled) {
   }
 }
 
+const TAB_ALIASES = {
+  'tab-process-leaks': { parentTab: 'tab-about-system', subtab: 'subtab-leaks' },
+  'tab-forensics': { parentTab: 'tab-about-system', subtab: 'subtab-forensics' },
+  'tab-throttling': { parentTab: 'tab-about-system', subtab: 'subtab-throttling' },
+  'tab-storage-wear': { parentTab: 'tab-about-system', subtab: 'subtab-wear' },
+  'tab-peripherals': { parentTab: 'tab-about-system', subtab: 'subtab-peripherals' },
+};
+
 /**
  * Переключает активную вкладку и управляет жизненным циклом (активация/деактивация/поллеры).
  * Приоритет: кнопки навигации имеют самый высокий приоритет.
@@ -167,7 +175,9 @@ export function setTabPollerEnabled(pollerId, enabled) {
  */
 export function switchTab(tabId) {
   if (!tabId) return;
-  const id = normalizeTabId(tabId);
+  const rawId = normalizeTabId(tabId);
+  const alias = TAB_ALIASES[rawId] || TAB_ALIASES[tabId];
+  const id = alias ? alias.parentTab : rawId;
   const prevTabId = currentActiveTabId;
 
   // 1. Остановка фонового аудио / синтеза речи при переходе
@@ -190,7 +200,7 @@ export function switchTab(tabId) {
 
   // 3. МГНОВЕННОЕ обновление UI элементов в DOM (Zero-Delay)
   document.querySelectorAll('[data-tab]').forEach(btn =>
-    btn.classList.toggle('active', btn.dataset.tab === id)
+    btn.classList.toggle('active', btn.dataset.tab === rawId || btn.dataset.tab === id)
   );
 
   document.querySelectorAll('#mainTabContent .tab-pane').forEach(pane => {
@@ -199,9 +209,17 @@ export function switchTab(tabId) {
     pane.classList.toggle('active', isTarget);
   });
 
+  // Если это подвкладка, активируем ее внутри родительской страницы
+  if (alias && alias.subtab) {
+    setTimeout(() => {
+      const subBtn = document.querySelector(`.about-subtab-btn[data-subtab="${alias.subtab}"]`);
+      if (subBtn) subBtn.click();
+    }, 20);
+  }
+
   // 4. Бейдж заголовка
   const badge = document.getElementById('active-tab-title-badge');
-  const activeBtn = document.querySelector(`[data-tab="${id}"]`);
+  const activeBtn = document.querySelector(`[data-tab="${rawId}"]`) || document.querySelector(`[data-tab="${id}"]`);
   if (badge && activeBtn) badge.innerHTML = activeBtn.innerHTML;
 
   // 5. Быстро закрыть offcanvas меню
@@ -212,7 +230,7 @@ export function switchTab(tabId) {
 
   // 6. Обновить URL hash
   try {
-    history.replaceState(null, null, `#${id}`);
+    history.replaceState(null, null, `#${rawId}`);
   } catch (e) {}
 
   // 7. Запуск опросников новой активной вкладки

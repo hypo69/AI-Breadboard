@@ -43,6 +43,18 @@ class TestHardwareProbers(unittest.TestCase):
         self.assertEqual(res.target, "CPU")
         self.assertEqual(res.status, "COMPLETED")
 
+    def test_ai_inference_benchmark(self):
+        """Test AI inference benchmark execution."""
+        from apps.windows.hardware.stress_benchmark import AIBenchmarkResult
+        engine = StressBenchmarkEngine()
+        res = engine.run_ai_inference_benchmark(provider="gemini", model_name="gemini-2.5-flash")
+        self.assertIsInstance(res, AIBenchmarkResult)
+        self.assertTrue(res.success)
+        self.assertGreater(res.tokens_per_second, 0.0)
+        self.assertGreater(res.total_time_ms, 0.0)
+        history = engine.get_ai_benchmark_history()
+        self.assertEqual(len(history), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

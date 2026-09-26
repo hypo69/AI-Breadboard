@@ -26,24 +26,13 @@ try:
 except ImportError:
     from logger import logger
 
-DirectoryWatcher = None
-LiveFileEvent = None
-
-
-def _get_directory_watcher_cls():
-    """Лениво импортирует DirectoryWatcher для предотвращения циклических импортов."""
-    global DirectoryWatcher, LiveFileEvent
-    if DirectoryWatcher is None:
-        try:
-            from apps.windows.sysadmin.src.directory_watcher import (
-                DirectoryWatcher as _DW,
-                LiveFileEvent as _LFE,
-            )
-            DirectoryWatcher = _DW
-            LiveFileEvent = _LFE
-        except ImportError as e:
-            logger.warning(f"Не удалось импортировать DirectoryWatcher: {e}")
-    return DirectoryWatcher
+# Импорт DirectoryWatcher из существующих модулей
+try:
+    from apps.windows.sysadmin.src.directory_watcher import DirectoryWatcher, LiveFileEvent
+except ImportError as e:
+    logger.warning(f"Не удалось импортировать DirectoryWatcher: {e}")
+    DirectoryWatcher = None
+    LiveFileEvent = None
 
 
 class FileCollector:
@@ -63,21 +52,20 @@ class FileCollector:
         self.watch_dirs = watch_dirs or [str(Path.home() / "Documents")]
         self.max_history = max_history
 
-        self._watchers: Dict[str, Any] = {}
+        self._watchers: Dict[str, DirectoryWatcher] = {}
         self._lock = threading.Lock()
 
         self._init_watchers()
 
     def _init_watchers(self) -> None:
         """Инициализирует DirectoryWatcher для каждой директории."""
-        watcher_cls = _get_directory_watcher_cls()
-        if watcher_cls is None:
+        if DirectoryWatcher is None:
             logger.warning("DirectoryWatcher недоступен")
             return
 
         for watch_dir in self.watch_dirs:
             try:
-                watcher = watcher_cls(watch_dirs=[watch_dir], max_history=self.max_history)
+                watcher = DirectoryWatcher(watch_dir=watch_dir, max_history=self.max_history)
                 if watcher.start():
                     self._watchers[watch_dir] = watcher
                     logger.info(f"DirectoryWatcher запущен для: {watch_dir}")
@@ -123,6 +111,7 @@ class FileCollector:
                 except Exception as e:
                     logger.error(f"Ошибка получения событий из {watch_dir}: {e}")
 
+            # Сортируем по времени и берем последние
             events.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
             return events[:limit]
 
@@ -191,10 +180,7 @@ class FileCollector:
             return False
 
         try:
-            watcher_cls = _get_directory_watcher_cls()
-            if watcher_cls is None:
-                return False
-            watcher = watcher_cls(watch_dirs=[watch_dir], max_history=self.max_history)
+            watcher = DirectoryWatcher(watch_dir=watch_dir, max_history=self.max_history)
             if watcher.start():
                 self._watchers[watch_dir] = watcher
                 logger.info(f"Добавлена директория для мониторинга: {watch_dir}")

@@ -27,7 +27,14 @@ from pydantic import BaseModel, Field
 
 from apps.windows.telemetry.research.analyzer import TelemetryResearcher
 from apps.windows.telemetry.research.charts import TelemetryChartGenerator
-from apps.windows.telemetry.research.models import ChartConfig, TelemetryResearchReport
+from apps.windows.telemetry.research.models import (
+    ChartConfig,
+    CorrelationMatrixItem,
+    DeepResearchReport,
+    HypothesisResult,
+    ResearchScenarioRequest,
+    TelemetryResearchReport,
+)
 
 
 class AnalyzeRequest(BaseModel):
@@ -41,18 +48,15 @@ def init_research_router(
     researcher: Optional[TelemetryResearcher] = None,
     chart_generator: Optional[TelemetryChartGenerator] = None,
 ) -> APIRouter:
-    """Инициализация роутера исследования телеметрии с внедрением зависимостей.
-
-    Args:
-        researcher: Экземпляр аналитического движка.
-        chart_generator: Экземпляр генератора графиков.
-
-    Returns:
-        APIRouter: Сконфигурированный FastAPI роутер.
-    """
+    """Инициализация роутера исследования телеметрии с внедрением зависимостей."""
     router = APIRouter(prefix="/api/windows/telemetry/research", tags=["telemetry-research"])
     _researcher = researcher or TelemetryResearcher()
     _chart_gen = chart_generator or TelemetryChartGenerator()
+
+    @router.get("/health")
+    def health_check() -> Dict[str, str]:
+        """Проверка работоспособности сервиса исследования телеметрии."""
+        return {"status": "ok", "app": "telemetry_research"}
 
     @router.post("/report", response_model=TelemetryResearchReport)
     def run_research(request: Optional[AnalyzeRequest] = None) -> TelemetryResearchReport:
@@ -62,11 +66,38 @@ def init_research_router(
             source = request.records if request.records is not None else request.source_path
 
         report = _researcher.analyze(source)
-        # Генерируем конфигурации графиков
         records = _researcher.extractor.load_all_records(source)
         ts_map = _researcher._extract_time_series(records)
         report.charts = _chart_gen.generate_chart_configs(ts_map, report)
         return report
+
+    @router.post("/run-research", response_model=DeepResearchReport)
+    def run_deep_research(
+        scenario: Optional[ResearchScenarioRequest] = None,
+    ) -> DeepResearchReport:
+        """Запустить комплексное глубокое исследование логов телеметрии (с корреляциями и гипотезами)."""
+        try:
+            return _researcher.run_deep_research(scenario=scenario, chart_generator=_chart_gen)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Ошибка исследования: {str(e)}")
+
+    @router.get("/correlations", response_model=List[CorrelationMatrixItem])
+    def get_correlations(
+        source_path: Optional[str] = Query(default=None),
+    ) -> List[CorrelationMatrixItem]:
+        """Получить матрицу корреляций между системными метриками."""
+        req = ResearchScenarioRequest(source_path=source_path)
+        report = _researcher.run_deep_research(scenario=req, chart_generator=_chart_gen)
+        return report.correlations
+
+    @router.get("/hypotheses", response_model=List[HypothesisResult])
+    def get_hypotheses(
+        source_path: Optional[str] = Query(default=None),
+    ) -> List[HypothesisResult]:
+        """Получить результаты автоматической проверки системных гипотез."""
+        req = ResearchScenarioRequest(source_path=source_path)
+        report = _researcher.run_deep_research(scenario=req, chart_generator=_chart_gen)
+        return report.hypotheses
 
     @router.get("/dashboard", response_class=Response)
     def get_html_dashboard(source_path: Optional[str] = Query(default=None)) -> Response:
@@ -103,6 +134,7 @@ def init_research_router(
         return Response(content=svg_content, media_type="image/svg+xml; charset=utf-8")
 
     @router.get("/files")
+    @router.get("/sources")
     def list_log_files(source_path: Optional[str] = Query(default=None)) -> List[Dict[str, Any]]:
         """Получить список обнаруженных файлов логов с метаданными."""
         files = _researcher.extractor.discover_log_files(source_path)
@@ -154,3 +186,4 @@ def init_research_router(
         }
 
     return router
+

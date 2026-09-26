@@ -1,12 +1,224 @@
 /**
- * apps/modules/status-manager.js — Управление состоянием приложений и бейджем модели
+ * apps/modules/status-manager.js — Управление состоянием приложений и бейджем/дропдауном модели
  */
 
+/**
+ * Получение текущей активной модели из настроек пользователя и активного профиля
+ * @returns {Promise<{provider: string, model: string, display: string, configFile: string}>}
+ */
+export async function fetchActiveModelInfo() {
+  const isTcRoute = window.location.pathname.startsWith('/tc');
+  const query = isTcRoute ? '?profile=tc' : '';
+
+  let provider = '';
+  let model = '';
+  let configFile = '';
+
+  // 1. Проверяем настройки пользователя
+  try {
+    const sResp = await fetch('/auth/settings');
+    if (sResp.ok) {
+      const sData = await sResp.json();
+      if (sData && sData.model) {
+        let raw = sData.model.trim();
+        if (raw.includes(':')) {
+          const parts = raw.split(':');
+          provider = parts[0].toUpperCase();
+          model = parts.slice(1).join(':');
+        } else if (raw.startsWith('agy-')) {
+          provider = 'AGY';
+          model = raw;
+        } else if (raw.toLowerCase().includes('gemini')) {
+          provider = 'GEMINI';
+          model = raw;
+        } else {
+          provider = 'AI';
+          model = raw;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[AppsHub] Could not fetch user settings:', err);
+  }
+
+  // 2. Если модель не получена из профиля, запрашиваем эндпоинт активной модели
+  if (!model) {
+    try {
+      const resp = await fetch(`/api/chat/active-model${query}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data && data.model) {
+          provider = data.provider || provider || 'AI';
+          model = data.model;
+          configFile = data.config_file || '';
+        }
+      }
+    } catch (err) {
+      console.warn('[AppsHub] Could not fetch active model from /api/chat/active-model:', err);
+    }
+  }
+
+  // Очищаем префикс провайдера из имени модели, если он продублирован
+  if (provider && model && model.toLowerCase().startsWith(`${provider.toLowerCase()}:`)) {
+    model = model.substring(provider.length + 1);
+  }
+
+  const display = (provider && model && model !== 'default')
+    ? `${provider}: ${model}`
+    : (model && model !== 'default')
+      ? model
+      : (provider ? provider : 'AI: Не определена');
+
+  return { provider, model, display, configFile };
+}
+
+/**
+ * Получение списка доступных моделей из /api/chat/models
+ * @returns {Promise<Array<{provider: string, model: string, fullId: string, label: string}>>}
+ */
+export async function fetchAvailableModels() {
+  try {
+    const resp = await fetch('/api/chat/models');
+    if (!resp.ok) return [];
+
+    const data = await resp.json();
+    const grouped = data.models || {};
+    const result = [];
+
+    for (const [prov, mList] of Object.entries(grouped)) {
+      if (!Array.isArray(mList)) continue;
+      const provUpper = prov.toUpperCase();
+
+      for (const m of mList) {
+        let cleanName = m;
+        if (cleanName.startsWith(`${prov}:`)) cleanName = cleanName.substring(prov.length + 1);
+        else if (cleanName.startsWith('gemini_cli:')) cleanName = cleanName.substring(11);
+        else if (cleanName.startsWith('agy-')) cleanName = cleanName.substring(4);
+        else if (cleanName.startsWith('foundry:')) cleanName = cleanName.substring(8);
+        else if (cleanName.startsWith('ollama:')) cleanName = cleanName.substring(7);
+        else if (cleanName.startsWith('onnx:')) cleanName = cleanName.substring(5);
+
+        result.push({
+          provider: provUpper,
+          model: cleanName,
+          fullId: m.includes(':') || m.startsWith('agy-') ? m : `${prov}:${m}`,
+          label: `${provUpper}: ${cleanName}`
+        });
+      }
+    }
+
+    return result;
+  } catch (err) {
+    console.warn('[AppsHub] Could not fetch available models from /api/chat/models:', err);
+    return [];
+  }
+}
+
+/**
+ * Обновляет выпадающий список и текст кнопки активной модели
+ */
+export async function updateModelDropdown() {
+  const dropdownBtn = document.getElementById('apps-model-dropdown-btn');
+  const dropdownMenu = document.getElementById('apps-model-dropdown-menu');
+  const modelText = document.getElementById('apps-model-text');
+
+  if (!dropdownBtn && !modelText) return;
+
+  // 1. Получаем и отображаем текущую активную модель
+  const activeInfo = await fetchActiveModelInfo();
+  if (modelText) {
+    modelText.textContent = activeInfo.display;
+  }
+  if (dropdownBtn) {
+    const fileLabel = activeInfo.configFile ? `, Профиль: ${activeInfo.configFile}` : '';
+    dropdownBtn.title = `Используемая модель: ${activeInfo.model || 'не определена'} (Провайдер: ${activeInfo.provider || 'AI'}${fileLabel})`;
+  }
+
+  if (!dropdownMenu) return;
+
+  // 2. Загружаем доступные модели для меню
+  try {
+    const models = await fetchAvailableModels();
+
+    if (models.length === 0) {
+      dropdownMenu.innerHTML = '<li><span class="dropdown-item-text text-muted small px-2">Нет доступных моделей</span></li>';
+      return;
+    }
+
+    dropdownMenu.innerHTML = '';
+
+    // Группируем по провайдерам
+    let currentProvider = '';
+    models.forEach(({ provider, model, fullId, label }) => {
+      if (provider !== currentProvider) {
+        if (currentProvider !== '') {
+          const divider = document.createElement('li');
+          divider.innerHTML = '<hr class="dropdown-divider border-secondary my-1">';
+          dropdownMenu.appendChild(divider);
+        }
+        currentProvider = provider;
+        const header = document.createElement('li');
+        header.innerHTML = `<h6 class="dropdown-header text-info py-0 px-2 small">${provider}</h6>`;
+        dropdownMenu.appendChild(header);
+      }
+
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.className = 'dropdown-item text-white small px-2 py-1';
+      a.href = '#';
+
+      const isActive = activeInfo.model === model || activeInfo.display.includes(model);
+      a.innerHTML = isActive
+        ? `<i class="bi bi-check2 text-success me-1"></i><strong>${model}</strong>`
+        : `<span class="ms-3">${model}</span>`;
+
+      a.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        try {
+          // Сохраняем выбранную модель в настройках пользователя
+          const saveResp = await fetch('/auth/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: fullId })
+          });
+
+          if (saveResp.ok) {
+            window.activeModelName = fullId;
+            if (typeof window.updateChatBadges === 'function') {
+              window.updateChatBadges(fullId);
+            }
+            if (modelText) {
+              modelText.textContent = `${provider}: ${model}`;
+            }
+            if (window.toast && typeof window.toast.success === 'function') {
+              window.toast.success('Модель обновлена', `Активная модель: ${provider}: ${model}`);
+            }
+            // Перерисовываем список для обновления галочки
+            await updateModelDropdown();
+          }
+        } catch (saveErr) {
+          console.error('[AppsHub] Error saving selected model:', saveErr);
+        }
+      });
+
+      li.appendChild(a);
+      dropdownMenu.appendChild(li);
+    });
+  } catch (err) {
+    console.error('[AppsHub] Failed to build model dropdown:', err);
+    dropdownMenu.innerHTML = '<li><span class="dropdown-item-text text-muted small px-2">Ошибка загрузки моделей</span></li>';
+  }
+}
+
+/**
+ * Получение статуса приложений и AI-конфига
+ */
 export async function fetchAppsStatus() {
   const isTcRoute = window.location.pathname.startsWith('/tc');
   const query = isTcRoute ? '?profile=tc' : '';
-  
-  // 1. Пытаемся получить полный статус приложений и AI-конфига
+
   let statusData = null;
   const urls = [
     `/api/apps/status${query}`,
@@ -30,111 +242,12 @@ export async function fetchAppsStatus() {
     window.appsStatusMap = statusData.apps;
   }
 
-  // 2. Если в ответе нет секции ai, явно запрашиваем активную модель через /api/chat/active-model
-  if (!statusData?.ai) {
-    try {
-      const modelResp = await fetch(`/api/chat/active-model${query}`);
-      if (modelResp.ok) {
-        const modelData = await modelResp.json();
-        if (modelData && modelData.model) {
-          statusData = statusData || {};
-          statusData.ai = {
-            provider: modelData.provider,
-            model: modelData.model
-          };
-          statusData.config_file = modelData.config_file;
-        }
-      }
-    } catch (err) {
-      console.warn('[AppsHub] Could not fetch active model from /api/chat/active-model:', err);
-    }
-  }
-
   return statusData;
 }
 
+/**
+ * Алиас для совместимости с бейджами
+ */
 export async function updateModelBadge(statusData) {
-  const modelBadgeText = document.getElementById('apps-model-text');
-  const modelBadge = document.getElementById('apps-model-badge');
-  if (!modelBadgeText) return;
-
-  let prov = '';
-  let mod = '';
-  let cfgFile = statusData?.config_file || '';
-
-  // 1. Приоритет: запрос актуальной активной модели с сервера (учитывает профиль и настройки пользователя)
-  try {
-    const isTcRoute = window.location.pathname.startsWith('/tc');
-    const query = isTcRoute ? '?profile=tc' : '';
-    const resp = await fetch(`/api/chat/active-model${query}`);
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data && data.model) {
-        prov = data.provider || '';
-        mod = data.model;
-        cfgFile = data.config_file || cfgFile;
-      }
-    }
-  } catch (err) {
-    console.warn('[AppsHub] Failed to fetch active model from /api/chat/active-model:', err);
-  }
-
-  // 2. Резервный парсинг конфигурации statusData.ai, если эндпоинт не вернул модель
-  if (!mod && statusData?.ai) {
-    const ai = statusData.ai;
-    if (ai.provider) {
-      const p = String(ai.provider).toLowerCase();
-      prov = String(ai.provider).toUpperCase();
-      mod = ai.model || (ai[p] && typeof ai[p] === 'object' ? ai[p].model : null) || (ai.providers && ai.providers[p] ? ai.providers[p].model : null) || ai[`${p}_model_id`] || '';
-    } else if (ai.providers && typeof ai.providers === 'object') {
-      for (const [pk, pv] of Object.entries(ai.providers)) {
-        if (pv && pv.enabled) {
-          prov = pk.toUpperCase();
-          mod = pv.model || '';
-          break;
-        }
-      }
-    } else if (ai.use_gemini) {
-      prov = 'GEMINI';
-      mod = ai.gemini_model_id || ai.model || 'gemini-2.5-flash';
-    } else if (ai.use_agy) {
-      prov = 'AGY';
-      mod = ai.agy_model_id || ai.model || 'gemini-3.6-flash';
-    } else if (ai.use_ollama) {
-      prov = 'OLLAMA';
-      mod = ai.ollama_model_id || ai.model || 'llama3.1';
-    } else if (ai.use_foundry) {
-      prov = 'FOUNDRY';
-      mod = ai.foundry_model_id || ai.model || 'local';
-    } else if (ai.model) {
-      mod = ai.model;
-      prov = 'AI';
-    }
-  }
-
-  // 3. Очистка и форматирование отображаемой строки
-  if (mod && mod.startsWith(`${prov.toLowerCase()}:`)) {
-    mod = mod.substring(prov.length + 1);
-  }
-
-  if (prov && mod && mod !== 'default') {
-    modelBadgeText.textContent = `${prov}: ${mod}`;
-    if (modelBadge) {
-      const fileLabel = cfgFile ? `, Профиль: ${cfgFile}` : '';
-      modelBadge.title = `Используемая модель: ${mod} (Провайдер: ${prov}${fileLabel})`;
-    }
-  } else if (mod && mod !== 'default') {
-    modelBadgeText.textContent = `${mod}`;
-    if (modelBadge) {
-      modelBadge.title = `Используемая модель: ${mod}`;
-    }
-  } else if (prov) {
-    modelBadgeText.textContent = `${prov}`;
-    if (modelBadge) {
-      modelBadge.title = `Используемый провайдер: ${prov}`;
-    }
-  } else {
-    modelBadgeText.textContent = 'AI: Не определена';
-  }
+  return updateModelDropdown();
 }
-

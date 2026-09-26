@@ -80,7 +80,7 @@ class TestNiniteRouterHappyPath:
             assert data["time"] == "20:00"
             assert mock_ps.called
             all_ps_commands = [call[0][0] for call in mock_ps.call_args_list]
-            assert any("-Argument '/silent'" in cmd for cmd in all_ps_commands)
+            assert any("/silent >" in cmd for cmd in all_ps_commands)
 
     def test_schedule_existing_task_override_no_duplicate(self, app_client):
         """При повторной настройке с другими параметрами существующая задача должна переопределяться без дублирования."""
@@ -105,7 +105,7 @@ class TestNiniteRouterHappyPath:
             data = response.json()
             assert data["success"] is True
             assert data["is_update"] is True
-            assert "без дублирования" in data["message"]
+            assert "обновлена" in data["message"]
             assert data["interval_weeks"] == 4
             assert data["time"] == "22:30"
 

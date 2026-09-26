@@ -691,7 +691,6 @@ class TestGoogleGenerativeAI_Regression:
              patch('src.ai.gemini.core.get_status'):
 
             unified_model: UnifiedChatModel = UnifiedChatModel(
-                api_key_names=['key_dev'],
                 system_instruction='Test instruction',
             )
 

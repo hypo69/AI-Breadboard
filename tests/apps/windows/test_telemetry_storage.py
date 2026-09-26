@@ -349,3 +349,154 @@ def test_extractor_load_from_database(test_storage: TelemetryStorage) -> None:
     # Проверка через load_all_records
     all_recs = extractor.load_all_records(include_database=True)
     assert len(all_recs) >= 2
+
+
+def test_get_latest_processes(test_storage: TelemetryStorage) -> None:
+    """Тестирование извлечения процессов из последнего снимка в SQLite."""
+    # Пустая база
+    empty_procs = test_storage.get_latest_processes()
+    assert empty_procs == []
+
+    # Снимок 1
+    snap1 = _create_sample_snapshot()
+    test_storage.save_snapshot(snap1)
+
+    # Снимок 2 с другими процессами
+    snap2 = _create_sample_snapshot()
+    snap2.top_processes = [
+        ProcessMetrics(
+            pid=2001,
+            name="worker.exe",
+            status="running",
+            cpu_percent=45.0,
+            memory_mb=600.0,
+            memory_percent=3.7,
+            num_threads=16,
+            num_handles=500,
+            username="SYSTEM",
+        ),
+        ProcessMetrics(
+            pid=2002,
+            name="helper.exe",
+            status="running",
+            cpu_percent=5.0,
+            memory_mb=100.0,
+            memory_percent=0.6,
+            num_threads=4,
+            num_handles=1200,
+            username="SYSTEM",
+        ),
+    ]
+    test_storage.save_snapshot(snap2)
+
+    latest_procs = test_storage.get_latest_processes(limit=10, sort_by="cpu")
+    assert len(latest_procs) == 2
+    assert latest_procs[0]["name"] == "worker.exe"
+    assert latest_procs[0]["cpu_percent"] == 45.0
+    assert latest_procs[1]["name"] == "helper.exe"
+
+    handles_procs = test_storage.get_latest_processes(limit=0, sort_by="handles")
+    assert len(handles_procs) == 2
+    assert handles_procs[0]["name"] == "helper.exe"
+    assert handles_procs[0]["num_handles"] == 1200
+
+
+def test_aggregate_process_metrics_2min_with_outliers(test_storage: TelemetryStorage) -> None:
+    """Тестирование обобщения записей процессов старше 2 минут с сохранением выбросов."""
+    # Создаем старый снимок (3 минуты назад = 180 сек назад)
+    old_time_epoch = datetime.now(timezone.utc).timestamp() - 180
+    old_time_iso = datetime.fromtimestamp(old_time_epoch, tz=timezone.utc).isoformat()
+
+    snap_old = _create_sample_snapshot()
+    snap_old.timestamp = old_time_iso
+    snap_old.top_processes = [
+        # Нормальный процесс
+        ProcessMetrics(
+            pid=3001,
+            name="app.exe",
+            status="running",
+            cpu_percent=10.0,
+            memory_mb=200.0,
+            memory_percent=1.2,
+            num_threads=4,
+            username="USER",
+        ),
+        # Выброс по CPU (> 30%)
+        ProcessMetrics(
+            pid=3002,
+            name="spike_task.exe",
+            status="running",
+            cpu_percent=88.5,
+            memory_mb=500.0,
+            memory_percent=3.1,
+            num_threads=12,
+            username="USER",
+        ),
+    ]
+
+    snap_id = test_storage.save_snapshot(snap_old)
+
+    # Искусственно обновляем created_at системного снимка на 180 секунд назад
+    with test_storage._lock, test_storage._get_connection() as conn:
+        conn.execute("UPDATE system_snapshots SET created_at = ? WHERE id = ?", (old_time_epoch, snap_id))
+        conn.commit()
+
+    # Создаем свежий снимок (5 секунд назад)
+    snap_fresh = _create_sample_snapshot()
+    test_storage.save_snapshot(snap_fresh)
+
+    # Запускаем агрегацию записей старше 120 секунд
+    res = test_storage.aggregate_process_metrics_2min(cutoff_seconds=120, outlier_cpu_threshold=30.0)
+
+    assert res["rollups_created"] >= 2
+    assert res["outliers_saved"] >= 1  # spike_task.exe (88.5%) зафиксирован в выбросах
+    assert res["raw_deleted"] >= 2
+
+    # Проверяем, что в process_outliers появился выброс
+    stats = test_storage.get_process_stats(name="spike_task.exe")
+    assert stats["total_outliers_count"] >= 1
+    assert stats["outliers"][0]["cpu_percent"] == 88.5
+    assert stats["outliers"][0]["name"] == "spike_task.exe"
+
+    # Проверяем, что в rollups_2min появились средние показатели
+    assert len(stats["rollups_2min"]) >= 1
+    assert stats["rollups_2min"][0]["avg_cpu_percent"] == 88.5
+    assert stats["rollups_2min"][0]["outliers_count"] == 1
+
+    # Проверяем, что свежий снимок не удалился из process_snapshots
+    fresh_procs = test_storage.get_latest_processes()
+    assert len(fresh_procs) > 0
+
+
+def test_aggregate_process_metrics_daily(test_storage: TelemetryStorage) -> None:
+    """Тестирование обобщения данных старше 1 дня в суточную статистику."""
+    old_time_epoch = datetime.now(timezone.utc).timestamp() - (2 * 86400)  # 2 дня назад
+    old_time_iso = datetime.fromtimestamp(old_time_epoch, tz=timezone.utc).isoformat()
+
+    # Вставляем искусственные 2-минутные агрегаты 2-дневной давности
+    with test_storage._lock, test_storage._get_connection() as conn:
+        conn.execute("""
+            INSERT INTO process_rollups_2min (
+                period_start, period_end, period_start_epoch, period_end_epoch,
+                name, pid, username, sample_count, avg_cpu_percent, max_cpu_percent,
+                min_cpu_percent, avg_memory_mb, max_memory_mb, min_memory_mb,
+                avg_num_threads, outliers_count
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            old_time_iso, old_time_iso, old_time_epoch, old_time_epoch,
+            "daemon.exe", 4001, "SYSTEM", 10, 15.0, 45.0, 5.0, 300.0, 350.0, 250.0, 8.0, 1
+        ))
+        conn.commit()
+
+    # Запускаем суточную агрегацию (порог 1 день)
+    daily_res = test_storage.aggregate_process_metrics_daily(cutoff_days=1)
+    assert daily_res["daily_rollups_created"] >= 1
+    assert daily_res["2min_rollups_cleaned"] >= 1
+
+    stats = test_storage.get_process_stats(name="daemon.exe")
+    assert len(stats["daily_stats"]) >= 1
+    assert stats["daily_stats"][0]["name"] == "daemon.exe"
+    assert stats["daily_stats"][0]["sample_count"] == 10
+    assert stats["daily_stats"][0]["avg_cpu_percent"] == 15.0
+    assert stats["daily_stats"][0]["max_cpu_percent"] == 45.0
+

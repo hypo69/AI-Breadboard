@@ -1,86 +1,196 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "tc": {
-        "name": "Test Computer (tc)",
-        "description": "Configuration profile for test computer apps runner (Run-TC.ps1)"
-    },
-    "server": {
-        "host": "127.0.0.1",
-        "port": 8000,
-        "protocol": "https",
-        "use_ssl": true,
-        "open_browser": true,
-        "enable_oauth": true
-    },
-    "ai": {
-        "gemini": {
-            "model": "gemini-2.5-flash"
-        },
-        "gemini_cli": {
-            "model": "gemini-3.1-flash-lite"
-        },
-        "agy": {
-            "model": "gemini-3.6-flash",
-            "effort": "medium"
-        },
-        "provider": "gemini_cli"
-    },
-    "schedulers": {
-        "enabled": false
-    },
-    "apps": {
-      "enabled": [
-        "about_system",
-        "scenarios",
-        "windows_sysadmin",
-        "network_terminal",
-        "system_inspector",
-        "system_control_center",
-        "system_log_viewer",
-        "software_audit",
-        "registry_viewer",
-        "windows_startup_auditor",
-        "windows_defender",
-        "windows_backup_manager",
-        "hardware_monitor",
-        "librehardwaremonitor",
-        "autolog_manager",
-        "ai_benchmark",
-        "ninite_updater",
-        "file_recovery",
-        "telemetry_history",
-        "telemetry_research"
-      ],
-      "disabled": [
-        "chat",
-        "cloudflared_monitor",
-        "gcloud_monitor",
-        "website_monitor",
-        "user_assistant",
-        "wikipedia_research",
-        "trading_terminal",
-        "helpdesk",
-        "lawyer_assistant",
-        "ai_breadboard_admin",
-        "research_and_statistic",
-        "tshark"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "tc": {
+    "name": "Test Computer (tc)",
+    "description": "Configuration profile for test computer apps runner (Run-TC.ps1)"
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8000,
+    "protocol": "https",
+    "use_ssl": true,
+    "open_browser": true,
+    "enable_oauth": true
+  },
+  "ai": {
+    "enable_narrator": false,
+    "providers": {
+      "agy": {
+        "enabled": false,
+        "model": "agy-gemini-3.6-flash",
+        "effort": "medium",
+        "unsupported_models": []
+      },
+      "gemini": {
+        "enabled": true,
+        "model": "gemini-3.1-flash-lite",
+        "api_key_names": "*",
+        "unsupported_models": [
+          "gemini-1.0-pro",
+          "gemini-1.0-ultra",
+          "gemini-1.5-flash",
+          "gemini-1.5-pro",
+          "gemini-2.5-flash",
+          "gemini-2.5-flash-preview-tts",
+          "gemini-old"
+        ]
+      },
+      "gemini_cli": {
+        "enabled": true,
+        "model": "gemini:gemini-3.1-flash-lite",
+        "unsupported_models": []
+      }
+    }
+  },
+  "schedulers": {
+    "enabled": false
+  },
+  "apps": {
+    "enabled": [
+      "about_system",
+      "scenarios",
+      "windows_sysadmin",
+      "network_terminal",
+      "system_inspector",
+      "system_control_center",
+      "system_log_viewer",
+      "software_audit",
+      "registry_viewer",
+      "windows_startup_auditor",
+      "windows_defender",
+      "windows_backup_manager",
+      "hardware_monitor",
+      "librehardwaremonitor",
+      "autolog_manager",
+      "ninite_updater",
+      "file_recovery",
+      "telemetry_history",
+      "telemetry_research"
+    ],
+    "disabled": [
+      "chat",
+      "cloudflared_monitor",
+      "gcloud_monitor",
+      "website_monitor",
+      "user_assistant",
+      "wikipedia_research",
+      "trading_terminal",
+      "helpdesk",
+      "lawyer_assistant",
+      "ai_breadboard_admin",
+      "research_and_statistic",
+      "tshark"
+    ]
+  },
+  "plugins": {
+    "enabled": [],
+    "disabled": [
+      "application_log_analyzer",
+      "facebook",
+      "gdrive_sync",
+      "generate_rag_from_codebase",
+      "google_workspace",
+      "ifttt",
+      "invoice_processor",
+      "news_feed",
+      "rag_cleaner",
+      "telegram_bot",
+      "telegram_channel_rag",
+      "user_storage"
+    ]
+  },
+  "sensors": {
+    "cpu": {
+      "enabled": true,
+      "interval_seconds": 5.0,
+      "metrics": [
+        "temperature",
+        "load",
+        "clocks"
       ]
     },
-    "plugins": {
-        "enabled": [],
-        "disabled": [
-            "application_log_analyzer",
-            "facebook",
-            "gdrive_sync",
-            "generate_rag_from_codebase",
-            "google_workspace",
-            "ifttt",
-            "invoice_processor",
-            "news_feed",
-            "rag_cleaner",
-            "telegram_bot",
-            "telegram_channel_rag",
-            "user_storage"
-        ]
+    "gpu": {
+      "enabled": true,
+      "interval_seconds": 10.0,
+      "metrics": [
+        "temperature",
+        "load",
+        "memory",
+        "power"
+      ]
+    },
+    "ram": {
+      "enabled": true,
+      "interval_seconds": 10.0,
+      "metrics": [
+        "usage",
+        "swap"
+      ]
+    },
+    "disk": {
+      "enabled": true,
+      "interval_seconds": 30.0,
+      "metrics": [
+        "usage",
+        "io"
+      ]
+    },
+    "network": {
+      "enabled": true,
+      "interval_seconds": 10.0,
+      "metrics": [
+        "throughput",
+        "connections",
+        "bytes_sent",
+        "bytes_recv",
+        "errors"
+      ]
+    },
+    "sensors": {
+      "enabled": true,
+      "interval_seconds": 10.0,
+      "metrics": [
+        "temperature",
+        "fan",
+        "voltage"
+      ]
+    },
+    "internet": {
+      "enabled": true,
+      "interval_seconds": 120.0,
+      "metrics": [
+        "ping",
+        "download",
+        "upload",
+        "dns"
+      ]
+    },
+    "storage": {
+      "enabled": true,
+      "interval_seconds": 32000.0,
+      "metrics": [
+        "smart_attributes",
+        "temperature",
+        "wear_level"
+      ]
+    },
+    "device_flapping": {
+      "enabled": true,
+      "interval_seconds": 30.0,
+      "metrics": [
+        "connect_events",
+        "disconnect_events",
+        "flapping_count"
+      ]
     }
+  },
+  "telemetry_options": {
+    "collect_serial_numbers": true,
+    "collect_hardware_inventory": true,
+    "collect_file_events": true,
+    "max_file_size_mb": 50,
+    "watch_directories": [
+      "C:\\Users\\"
+    ]
+  }
 }

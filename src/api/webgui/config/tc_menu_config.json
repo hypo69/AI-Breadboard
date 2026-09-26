@@ -205,8 +205,8 @@
       },
       {
         "id": "autolog_manager",
-        "label": "Управление логами",
-        "icon": "📝",
+        "label": "Телеметрия и логи",
+        "icon": "⚡",
         "tab": "tab-autolog",
         "order": 14,
         "visible": true
@@ -229,7 +229,8 @@
       },
       {
         "id": "software_transparency_scanner",
-        "label": "Transparency Scanner",
+        "label": "Прозрачность ПО",
+        "i18n": "tabs.softwareTransparency",
         "icon": "🔍",
         "tab": "tab-software-transparency",
         "order": 14,
@@ -312,6 +313,14 @@
         "icon": "🔌",
         "tab": "tab-mcp",
         "order": 23,
+        "visible": true
+      },
+      {
+        "id": "ai_benchmark",
+        "label": "AI Benchmark",
+        "icon": "🏎️",
+        "tab": "tab-ai-benchmark",
+        "order": 24,
         "visible": true
       }
     ]

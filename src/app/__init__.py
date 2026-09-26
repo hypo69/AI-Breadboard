@@ -113,6 +113,17 @@ def create_app() -> FastAPI:
     # Add metrics middleware
     app.middleware("http")(metrics_middleware)
     
+    # Add no-cache middleware for static files
+    @app.middleware("http")
+    async def add_no_cache_headers(request: Request, call_next):
+        response = await call_next(request)
+        # Disable caching for static files
+        if request.url.path.startswith('/html/') or request.url.path.startswith('/webinterface/'):
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+        return response
+    
     return app
 
 
@@ -255,14 +266,14 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
 
     if is_app_enabled("system_inspector"):
         try:
-            from apps.system_inspector.router import init_router as init_system_inspector_router
+            from apps.windows.system_inspector_router import init_router as init_system_inspector_router
             app.include_router(init_system_inspector_router())
         except (ImportError, Exception) as e:
             logger.debug(f"System inspector router not registered: {e}")
 
     if is_app_enabled("system_control_center"):
         try:
-            from apps.system_control_center.router import init_router as init_system_control_center_router
+            from apps.windows.system_control_center.router import init_router as init_system_control_center_router
             app.include_router(init_system_control_center_router())
         except (ImportError, Exception) as e:
             logger.debug(f"System control center router not registered: {e}")
@@ -332,31 +343,19 @@ def register_routers(app: FastAPI, state: "AppState") -> None:
 
     if is_app_enabled("software_transparency_scanner"):
         try:
-            from apps.software_transparency_scanner.router import init_router as init_transparency_scanner_router
+            from apps.windows.core.software_transparency import init_software_transparency_router as init_transparency_scanner_router
             app.include_router(init_transparency_scanner_router(state.chat_model if hasattr(state, "chat_model") else None))
         except (ImportError, Exception) as e:
             logger.debug(f"Software transparency scanner router not registered: {e}")
 
-    if is_app_enabled("librehardwaremonitor"):
-        try:
-            from apps.librehardwaremonitor.router import init_router as init_lhm_router
-            app.include_router(init_lhm_router())
-        except (ImportError, Exception) as e:
-            logger.debug(f"LibreHardwareMonitor router not registered: {e}")
-
-    if is_app_enabled("ai_benchmark"):
-        try:
-            from apps.ai_benchmark.router import init_router as init_ai_benchmark_router
-            app.include_router(init_ai_benchmark_router())
-        except (ImportError, Exception) as e:
-            logger.debug(f"AI Benchmark router not registered: {e}")
 
     if is_app_enabled("telemetry_research"):
         try:
-            from apps.telemetry_research.router import init_router as init_telemetry_research_router
-            app.include_router(init_telemetry_research_router(state=state))
+            from apps.windows.telemetry.research.router import init_research_router as init_telemetry_research_router
+            app.include_router(init_telemetry_research_router())
         except (ImportError, Exception) as e:
             logger.debug(f"Telemetry Research app router not registered: {e}")
+
 
     # Auto-discover additional routers in src/app/routers/
     _auto_discover_routers(app)

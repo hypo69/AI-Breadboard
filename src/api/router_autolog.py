@@ -182,6 +182,17 @@ async def get_autolog_config() -> Dict[str, Any]:
     except Exception:
         pass
 
+    # Поддержка legacy формата: сенсоры могут быть в корне, в "logging" или в "telemetry"
+    sensors_data = cfg.get("sensors")
+    if sensors_data is None:
+        sensors_data = cfg.get("logging", {}).get("sensors", {})
+    if sensors_data is None:
+        sensors_data = cfg.get("telemetry", {}).get("sensors", {})
+
+    telemetry_opts = cfg.get("telemetry_options")
+    if telemetry_opts is None:
+        telemetry_opts = cfg.get("logging", {}).get("telemetry_options", {})
+
     return {
         "status": "success",
         "config_file": cfg_file.name,
@@ -190,8 +201,8 @@ async def get_autolog_config() -> Dict[str, Any]:
         "default_interval": cfg.get("default_interval", "1 minute"),
         "is_running": autolog_engine.is_running(),
         "loggers": loggers_out,
-        "sensors": cfg.get("sensors", {}),
-        "telemetry_options": cfg.get("telemetry_options", {}),
+        "sensors": sensors_data or {},
+        "telemetry_options": telemetry_opts or {},
         "raw_json": raw_json_str,
     }
 
@@ -505,6 +516,208 @@ async def download_log_file(filename: str):
         media_type="text/csv",
         filename=safe_name,
     )
+
+
+# =============================================================================
+# ЭНДПОИНТЫ СЛУЖБЫ ТЕЛЕМЕТРИИ (ai-telemetry.exe)
+# =============================================================================
+
+class TelemetryControlRequest(BaseModel):
+    """Модель запроса управления процессом телеметрии."""
+    action: str = Field(..., description="Действие: start, stop, restart, install-task, uninstall-task")
+    mode: Optional[str] = Field(default=None, description="Режим: minimal, hybrid, full")
+    interval: Optional[float] = Field(default=None, description="Интервал быстрого сбора")
+    heavy_interval: Optional[float] = Field(default=None, description="Интервал тяжелого сбора")
+
+
+class TelemetryConfigUpdateRequest(BaseModel):
+    """Модель обновления конфигурации телеметрии."""
+    mode: Optional[str] = Field(default=None, description="Режим: minimal, hybrid, full")
+    interval_seconds: Optional[float] = Field(default=None, description="Интервал быстрой телеметрии")
+    heavy_interval_seconds: Optional[float] = Field(default=None, description="Интервал тяжелых сенсоров")
+    top_processes: Optional[int] = Field(default=None, description="Число процессов в топе")
+    low_priority: Optional[bool] = Field(default=None, description="Пониженный приоритет CPU")
+    heavy_collectors: Optional[Dict[str, bool]] = Field(default=None, description="Флаги тяжелых сенсоров")
+
+
+@router.get("/telemetry/status")
+async def get_telemetry_service_status() -> Dict[str, Any]:
+    """Возвращает живой статус процесса ai-telemetry.exe, потребление RAM/CPU и статус Task Scheduler."""
+    import psutil
+    import sqlite3
+    from apps.windows.telemetry.telemetry_config import TelemetryConfigManager
+
+    cfg_mgr = TelemetryConfigManager()
+
+    # Поиск активных процессов
+    running_procs = []
+    total_mem = 0.0
+
+    for p in psutil.process_iter(["pid", "name", "cmdline", "memory_info"]):
+        try:
+            name = (p.info.get("name") or "").lower()
+            cmdline = " ".join(p.info.get("cmdline") or [])
+            is_match = ("ai-telemetry" in name) or ("telemetry" in cmdline and "main.py" in cmdline)
+            if is_match:
+                mem_mb = round((p.info.get("memory_info").rss if p.info.get("memory_info") else 0) / (1024 * 1024), 1)
+                cpu_p = 0.0
+                try:
+                    cpu_p = p.cpu_percent(interval=None)
+                except Exception:
+                    pass
+                running_procs.append({
+                    "pid": p.info["pid"],
+                    "name": p.info.get("name") or "ai-telemetry.exe",
+                    "memory_mb": mem_mb,
+                    "cpu_percent": cpu_p,
+                })
+                total_mem += mem_mb
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+
+    # Подсчет снапшотов в SQLite
+    db_path = Path(os.environ.get("APPDATA", os.path.expanduser("~\\AppData\\Roaming"))) / "AI-Breadboard" / "apps" / "windows" / "telemetry" / "logs" / "telemetry.db"
+    snapshots_count = 0
+    latest_timestamp = None
+    if db_path.exists():
+        try:
+            conn = sqlite3.connect(str(db_path), timeout=2.0)
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*), MAX(timestamp) FROM system_snapshots")
+            row = cur.fetchone()
+            if row:
+                snapshots_count = row[0]
+                latest_timestamp = row[1]
+            conn.close()
+        except Exception:
+            pass
+
+    # Проверка планировщика заданий Windows
+    task_installed = False
+    task_state = "NotInstalled"
+    wake_to_run = False
+    try:
+        import subprocess
+        ps_cmd = "Get-ScheduledTask -TaskName 'AI-Breadboard-Telemetry' -ErrorAction SilentlyContinue | Select-Object -Property State, @{N='Wake';E={$_.Settings.WakeToRun}} | ConvertTo-Json"
+        res = subprocess.run(["powershell.exe", "-NoProfile", "-Command", ps_cmd], capture_output=True, text=True, timeout=4)
+        if res.returncode == 0 and res.stdout.strip():
+            task_info = json.loads(res.stdout.strip())
+            task_installed = True
+            task_state = str(task_info.get("State", "Ready"))
+            wake_to_run = bool(task_info.get("Wake", False))
+    except Exception:
+        pass
+
+    return {
+        "is_running": len(running_procs) > 0,
+        "processes": running_procs,
+        "total_memory_mb": round(total_mem, 1),
+        "mode": cfg_mgr.get_mode(),
+        "interval_seconds": cfg_mgr.get_interval_seconds(),
+        "heavy_interval_seconds": cfg_mgr.get_heavy_interval_seconds(),
+        "top_processes": cfg_mgr.get_top_processes(),
+        "heavy_collectors": cfg_mgr.get_heavy_collectors(),
+        "snapshots_count": snapshots_count,
+        "latest_timestamp": latest_timestamp,
+        "db_path": str(db_path),
+        "task_scheduler": {
+            "installed": task_installed,
+            "state": task_state,
+            "wake_to_run": wake_to_run,
+        },
+    }
+
+
+@router.post("/telemetry/control")
+async def control_telemetry_service(req: TelemetryControlRequest) -> Dict[str, Any]:
+    """Управляет службой телеметрии: start, stop, restart, install-task, uninstall-task."""
+    import subprocess
+
+    launcher_path = __root__ / "launchers" / "Run-Telemetry.ps1"
+    if not launcher_path.exists():
+        raise HTTPException(status_code=500, detail="Лончер Run-Telemetry.ps1 не найден")
+
+    action = req.action.lower()
+    valid_actions = ["start", "stop", "restart", "install-task", "uninstall-task"]
+    if action not in valid_actions:
+        raise HTTPException(status_code=400, detail=f"Недопустимое действие '{action}'. Допустимы: {valid_actions}")
+
+    cmd = [
+        "powershell.exe",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        str(launcher_path),
+        "-Action",
+        action,
+    ]
+    if req.mode:
+        cmd.extend(["-Mode", req.mode])
+    if req.interval:
+        cmd.extend(["-Interval", str(req.interval)])
+    if req.heavy_interval:
+        cmd.extend(["-HeavyInterval", str(req.heavy_interval)])
+
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        output_txt = proc.stdout.strip() or proc.stderr.strip()
+        return {
+            "status": "success" if proc.returncode == 0 else "warning",
+            "action": action,
+            "returncode": proc.returncode,
+            "output": output_txt,
+        }
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=f"Ошибка выполнения действия {action}: {ex}")
+
+
+@router.get("/telemetry/config")
+async def get_telemetry_config() -> Dict[str, Any]:
+    """Возвращает полную конфигурацию телеметрии."""
+    from apps.windows.telemetry.telemetry_config import TelemetryConfigManager
+    cfg_mgr = TelemetryConfigManager()
+    return {
+        "config_file": cfg_mgr.config_path,
+        "mode": cfg_mgr.get_mode(),
+        "interval_seconds": cfg_mgr.get_interval_seconds(),
+        "heavy_interval_seconds": cfg_mgr.get_heavy_interval_seconds(),
+        "top_processes": cfg_mgr.get_top_processes(),
+        "low_priority": cfg_mgr.is_low_priority(),
+        "heavy_collectors": cfg_mgr.get_heavy_collectors(),
+        "raw_config": cfg_mgr._config,
+    }
+
+
+@router.post("/telemetry/config")
+async def update_telemetry_config(req: TelemetryConfigUpdateRequest) -> Dict[str, Any]:
+    """Обновляет и сохраняет конфигурацию телеметрии."""
+    from apps.windows.telemetry.telemetry_config import TelemetryConfigManager
+    cfg_mgr = TelemetryConfigManager()
+
+    updates = {}
+    if req.mode is not None:
+        updates["mode"] = req.mode
+    if req.interval_seconds is not None:
+        updates["interval_seconds"] = req.interval_seconds
+    if req.heavy_interval_seconds is not None:
+        updates["heavy_interval_seconds"] = req.heavy_interval_seconds
+    if req.top_processes is not None:
+        updates["top_processes"] = req.top_processes
+    if req.low_priority is not None:
+        updates["low_priority"] = req.low_priority
+    if req.heavy_collectors is not None:
+        updates["heavy_collectors"] = req.heavy_collectors
+
+    saved = cfg_mgr.save_config(updates)
+    if not saved:
+        raise HTTPException(status_code=500, detail="Не удалось сохранить конфигурацию")
+
+    return {
+        "status": "success",
+        "message": "Конфигурация телеметрии успешно сохранена",
+        "config": updates,
+    }
 
 
 def init_router() -> APIRouter:

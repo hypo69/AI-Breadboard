@@ -1329,6 +1329,108 @@
     }
 
     setupMiniChat();
+
+    // Post-Install Wizard Event Listeners
+    const applyProfBtn = document.getElementById('btn-wizard-apply-profile');
+    if (applyProfBtn) applyProfBtn.onclick = applyCurrentWizardProfile;
+  }
+
+  // =========================================================================
+  // Post-Install Wizard Logic
+  // =========================================================================
+
+  let activeProfileSteps = [];
+
+  async function loadWizardProfiles() {
+    try {
+      const res = await fetch('/api/system-control/profiles');
+      if (!res.ok) return;
+      const data = await res.json();
+      const profiles = data.profiles || [];
+      const sel = document.getElementById('wizard-profile-select');
+
+      if (sel && profiles.length > 0) {
+        sel.innerHTML = profiles.map(p => `<option value="${p.profile_id}">${p.name}</option>`).join('');
+        renderStepsForSelectedProfile(profiles[0]);
+
+        sel.onchange = () => {
+          const selected = profiles.find(p => p.profile_id === sel.value);
+          if (selected) renderStepsForSelectedProfile(selected);
+        };
+      }
+    } catch (e) {
+      console.error('[ScenariosTab] Failed to load wizard profiles:', e);
+    }
+  }
+
+  function renderStepsForSelectedProfile(profile) {
+    const container = document.getElementById('wizard-steps-container');
+    if (!container) return;
+    activeProfileSteps = profile.steps || [];
+
+    container.innerHTML = activeProfileSteps.map((s) => `
+      <div class="card bg-body-tertiary border-secondary p-2 d-flex flex-row align-items-center justify-content-between" id="step-row-${s.id}">
+        <div class="d-flex align-items-center gap-3">
+          <input class="form-check-input wizard-step-checkbox" type="checkbox" id="chk-step-${s.id}" data-id="${s.id}" ${s.enabled ? 'checked' : ''} style="cursor: pointer;">
+          <div>
+            <div class="fw-semibold text-white">${s.title}</div>
+            <div class="small text-muted">${s.description}</div>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          ${s.requires_elevation ? '<span class="badge bg-secondary font-monospace" style="font-size: 0.7rem;">Admin</span>' : ''}
+          <span class="badge ${s.status === 'SUCCESS' ? 'bg-success text-white' : (s.status === 'WARNING' ? 'bg-warning text-dark' : (s.status === 'FAILED' ? 'bg-danger text-white' : 'bg-secondary'))}" id="step-status-${s.id}">
+            ${s.status}
+          </span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function applyCurrentWizardProfile() {
+    const sel = document.getElementById('wizard-profile-select');
+    const profileId = sel ? sel.value : 'post_install';
+    const applyBtn = document.getElementById('btn-wizard-apply-profile');
+
+    const selectedStepIds = [];
+    document.querySelectorAll('.wizard-step-checkbox:checked').forEach(chk => {
+      selectedStepIds.push(chk.getAttribute('data-id'));
+    });
+
+    if (applyBtn) {
+      applyBtn.disabled = true;
+      applyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Применение...';
+    }
+
+    try {
+      const res = await fetch('/api/system-control/profiles/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profile_id: profileId,
+          selected_step_ids: selectedStepIds
+        })
+      });
+      if (res.ok) {
+        const outcome = await res.json();
+        (outcome.steps || []).forEach(st => {
+          const badge = document.getElementById(`step-status-${st.id}`);
+          if (badge) {
+            badge.innerText = st.status;
+            badge.className = `badge ${st.status === 'SUCCESS' ? 'bg-success text-white' : (st.status === 'WARNING' ? 'bg-warning text-dark' : 'bg-danger text-white')}`;
+            badge.title = st.result_message;
+          }
+        });
+        window.showToast?.('Профиль первоначальной настройки успешно применён', 'success');
+      }
+    } catch (e) {
+      console.error('[ScenariosTab] Failed to apply profile:', e);
+    } finally {
+      if (applyBtn) {
+        applyBtn.disabled = false;
+        applyBtn.innerHTML = '<i class="bi bi-play-fill me-1"></i> Применить профиль';
+      }
+    }
   }
 
   // Public initialization entrypoint
@@ -1336,6 +1438,7 @@
     console.log('[ScenariosTab] Initializing Scenarios & Test Computer Tab...');
     setupEvents();
     loadQuestionsFromConfig();
+    loadWizardProfiles();
     await loadScenarios();
     console.log('[ScenariosTab] Scenarios tab ready.');
   };

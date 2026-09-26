@@ -27,11 +27,21 @@ from typing import Optional
 try:
     from rich.console import Console
     from rich.layout import Layout
+    from rich.live import Live
     from rich.panel import Panel
     from rich.table import Table
     from rich.text import Text
+    from rich.tree import Tree
+    RICH_AVAILABLE = True
 except ImportError:
     Console = None  # type: ignore
+    Layout = None  # type: ignore
+    Live = None  # type: ignore
+    Panel = None  # type: ignore
+    Table = None  # type: ignore
+    Text = None  # type: ignore
+    Tree = None  # type: ignore
+    RICH_AVAILABLE = False
 
 from apps.windows.core.models import FullAuditReport, RiskLevel
 from apps.windows.core.root_cause_engine import RootCauseEngine
@@ -306,14 +316,192 @@ async def run_hardware_monitor_dashboard(interval: float = 1.0) -> None:
             await asyncio.sleep(interval)
 
 
+class SystemInspectorState:
+    """Сессия состояния интерактивного системного инспектора."""
+
+    def __init__(self, sort_by: str = "cpu", process_limit: int = 15) -> None:
+        """Инициализация состояния сессии."""
+        from apps.windows.telemetry import SystemCollector, SystemDiagnosticEngine
+        self.collector = SystemCollector()
+        self.diagnostician = SystemDiagnosticEngine()
+        self.sort_by: str = sort_by
+        self.process_limit: int = process_limit
+        self.latest_snapshot = None
+        self.latest_report = None
+        self.hardware_tree_nodes = []
+
+    async def refresh(self) -> None:
+        """Сбор свежего моментального снимка телеметрии и эвристический анализ."""
+        from apps.windows.telemetry import SystemDiagnosticReport
+        self.latest_snapshot = await self.collector.get_snapshot(process_limit=self.process_limit)
+        if not self.hardware_tree_nodes:
+            self.hardware_tree_nodes = await self.collector.get_hardware_tree_async()
+
+        score, anomalies, recommendations = self.diagnostician.evaluate_heuristics(self.latest_snapshot)
+        self.latest_report = SystemDiagnosticReport(
+            health_score=score,
+            summary=f"System Health: {score}/100. Telemetry stream nominal.",
+            anomalies=anomalies,
+            recommendations=recommendations,
+            ai_model_used="Heuristic Monitor",
+        )
+
+
+def _render_inspector_process_table(snapshot: Any, sort_by: str) -> Any:
+    """Отрисовка таблицы активных процессов."""
+    table = Table(
+        title=f"Live Process Stream (Сортировка: {sort_by.upper()})",
+        expand=True,
+        header_style="bold cyan",
+        border_style="bright_black",
+    )
+    table.add_column("PID", style="cyan", width=8, justify="right")
+    table.add_column("Имя процесса", style="bold white", min_width=18)
+    table.add_column("Статус", style="dim", width=10)
+    table.add_column("CPU %", style="yellow", justify="right", width=8)
+    table.add_column("RAM (MB)", style="green", justify="right", width=10)
+    table.add_column("RAM %", style="dim green", justify="right", width=8)
+    table.add_column("Потоки", style="magenta", justify="right", width=8)
+    table.add_column("Дескрипторы", style="blue", justify="right", width=8)
+    table.add_column("Пользователь", style="dim", width=12)
+
+    for proc in snapshot.top_processes:
+        cpu_style = "bold red" if proc.cpu_percent > 50 else ("yellow" if proc.cpu_percent > 20 else "white")
+        table.add_row(
+            str(proc.pid),
+            proc.name,
+            proc.status,
+            f"[{cpu_style}]{proc.cpu_percent:.1f}%[/{cpu_style}]",
+            f"{proc.memory_mb:.1f}",
+            f"{proc.memory_percent:.1f}%",
+            str(proc.num_threads),
+            str(getattr(proc, "num_handles", 0) or 0),
+            proc.username or "SYSTEM",
+        )
+    return table
+
+
+def _render_inspector_hardware_tree(nodes: list, sensors: list) -> Any:
+    """Отрисовка дерева оборудования в стиле AIDA64."""
+    tree = Tree("[bold cyan]🖥️ Оборудование и датчики хоста[/bold cyan]")
+
+    for node in nodes:
+        branch = tree.add(f"[bold yellow]{node.category}[/bold yellow]: {node.name}")
+        for k, v in node.properties.items():
+            branch.add(f"[dim]{k}:[/dim] [white]{v}[/white]")
+
+    if sensors:
+        sensor_branch = tree.add("[bold red]🌡️ Активные датчики[/bold red]")
+        for s in sensors:
+            color = "red" if s.value >= 80 else ("yellow" if s.value >= 65 else "green")
+            sensor_branch.add(f"{s.name}: [{color}]{s.value} {s.unit}[/{color}]")
+
+    return tree
+
+
+def render_inspector_ui(state: SystemInspectorState) -> Any:
+    """Отрисовка интерфейса системного инспектора."""
+    if not RICH_AVAILABLE or not state.latest_snapshot:
+        return None
+
+    snap = state.latest_snapshot
+    layout = Layout()
+    layout.split_column(
+        Layout(name="header", size=4),
+        Layout(name="main", ratio=1),
+        Layout(name="footer", size=3),
+    )
+
+    layout["main"].split_row(
+        Layout(name="processes", ratio=3),
+        Layout(name="hardware_side", ratio=2),
+    )
+
+    layout["hardware_side"].split_column(
+        Layout(name="hardware", ratio=3),
+        Layout(name="ai_copilot", ratio=2),
+    )
+
+    cpu_bar = f"CPU: {snap.cpu.total_percent}% ({snap.cpu.physical_cores}C/{snap.cpu.logical_cores}T)"
+    ram_bar = f"RAM: {snap.memory.used_gb}/{snap.memory.total_gb} GB ({snap.memory.percent}%)"
+    uptime_h = round(snap.uptime_seconds / 3600, 1)
+
+    gpu_str = ", ".join([f"{g.name} ({g.memory_total_gb}GB)" for g in snap.gpus]) or "Integrated"
+    header_text = Text.assemble(
+        ("AI-BREADBOARD SYSTEM & HARDWARE INSPECTOR\n", "bold cyan"),
+        (f"Host: {snap.hostname} | OS: {snap.os_name} | Uptime: {uptime_h}h | ", "dim"),
+        (f"{cpu_bar} | {ram_bar} | GPU: {gpu_str}", "bold green"),
+    )
+    layout["header"].update(Panel(header_text, border_style="cyan"))
+
+    proc_table = _render_inspector_process_table(snap, state.sort_by)
+    layout["processes"].update(Panel(proc_table, border_style="blue"))
+
+    hw_tree = _render_inspector_hardware_tree(state.hardware_tree_nodes, snap.sensors)
+    layout["hardware"].update(Panel(hw_tree, title="AIDA64 Hardware & Sensor Tree", border_style="yellow"))
+
+    rep = state.latest_report
+    copilot_content = Text()
+    if rep:
+        health_color = "green" if rep.health_score >= 80 else ("yellow" if rep.health_score >= 60 else "red")
+        copilot_content.append(f"System Health: {rep.health_score}/100\n", style=f"bold {health_color}")
+        copilot_content.append(f"AI Engine: {rep.ai_model_used}\n\n", style="dim")
+        if rep.anomalies:
+            copilot_content.append("⚠️ Обнаруженные аномалии:\n", style="bold yellow")
+            for a in rep.anomalies:
+                copilot_content.append(f" • [{a.severity.upper()}] {a.title}: {a.description}\n", style="white")
+        else:
+            copilot_content.append("✅ Все аппаратные подсистемы работают в норме.\n", style="green")
+
+        if rep.recommendations:
+            copilot_content.append("\n💡 Рекомендации:\n", style="bold cyan")
+            for r in rep.recommendations:
+                copilot_content.append(f" • {r}\n", style="dim")
+
+    layout["ai_copilot"].update(Panel(copilot_content, title="🤖 AI Performance Copilot", border_style="magenta"))
+
+    footer_text = Text(" [Q] Выход  |  [S] Сортировка CPU/RAM  |  [D] AI Диагностика  |  Интервал: 1.0s", style="dim white")
+    layout["footer"].update(Panel(footer_text, border_style="bright_black"))
+
+    return layout
+
+
+async def run_system_inspector(interval: float = 1.0, sort_by: str = "cpu", max_iterations: Optional[int] = None) -> None:
+    """Запуск интерактивного системного инспектора процессов и оборудования."""
+    import asyncio
+    if not RICH_AVAILABLE or Console is None:
+        print("Для запуска интерактивного TUI интерфейса требуется библиотека rich.")
+        return
+
+    console = Console()
+    state = SystemInspectorState(sort_by=sort_by)
+    await state.refresh()
+
+    iterations = 0
+    with Live(render_inspector_ui(state), console=console, refresh_per_second=4, screen=True) as live:
+        try:
+            while True:
+                await state.refresh()
+                live.update(render_inspector_ui(state))
+                iterations += 1
+                if max_iterations and iterations >= max_iterations:
+                    break
+                await asyncio.sleep(interval)
+        except (KeyboardInterrupt, asyncio.CancelledError):
+            pass
+
+
 __all__ = [
+    "SystemInspectorState",
     "render_dashboard",
     "run_hardware_monitor_dashboard",
     "run_log_dashboard",
+    "run_system_inspector",
     "run_tui",
 ]
 
 
 if __name__ == "__main__":
     run_tui()
+
 

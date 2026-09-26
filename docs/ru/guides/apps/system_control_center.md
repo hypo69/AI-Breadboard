@@ -1,9 +1,9 @@
-# Центр управления системой (`apps/system_control_center`)
+# Центр управления системой (`apps/windows/system_control_center`)
 
 **Статус:** ✅ Активно  
 **Язык:** Русский (документация) / Английский (код)  
 **Автор:** hypo69  
-**Пакет:** `apps.system_control_center`
+**Пакет:** `apps.windows.system_control_center`
 
 ---
 
@@ -28,5 +28,5 @@
 .\launchers\Run-SystemControlCenter.ps1
 
 # Прямой запуск через Python
-python -m apps.system_control_center --mode server --port 8109
+python -m apps.windows.system_control_center --mode server --port 8109
 ```

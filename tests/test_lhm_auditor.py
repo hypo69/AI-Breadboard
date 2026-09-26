@@ -26,8 +26,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from apps.librehardwaremonitor.core.lhm_auditor import LhmSensorAuditor
-from apps.librehardwaremonitor.router import router as lhm_router
+from apps.windows.hardware.lhm_auditor import LhmSensorAuditor
 from src.api.router_system import init_router as init_system_router
 
 
@@ -116,27 +115,6 @@ async def test_lhm_auditor_ai_audit_with_mock_model(mock_lhm_logs: Path) -> None
     mock_chat_model.ask.assert_awaited_once()
 
 
-def test_lhm_router_audit_endpoint(mock_lhm_logs: Path) -> None:
-    """Проверка REST API эндпоинта POST /api/v1/lhm/audit."""
-    app = FastAPI()
-    app.include_router(lhm_router)
-    client = TestClient(app)
-
-    with patch("apps.librehardwaremonitor.router._auditor", LhmSensorAuditor(log_dir=mock_lhm_logs)):
-        res = client.post("/api/v1/lhm/audit")
-        assert res.status_code == 200
-        data = res.json()
-        assert data["success"] is True
-        assert data["devices_count"] == 3
-        assert len(data["devices"]) == 3
-        assert "comparison_report" in data
-
-        res_sum = client.get("/api/v1/lhm/audit/summary")
-        assert res_sum.status_code == 200
-        sum_data = res_sum.json()
-        assert sum_data["devices_count"] == 3
-
-
 def test_system_router_lhm_audit_endpoint(mock_lhm_logs: Path) -> None:
     """Проверка REST API эндпоинта POST /api/v1/system/lhm-audit."""
     app = FastAPI()
@@ -146,7 +124,7 @@ def test_system_router_lhm_audit_endpoint(mock_lhm_logs: Path) -> None:
     app.include_router(sys_router)
     client = TestClient(app)
 
-    with patch("apps.librehardwaremonitor.core.lhm_auditor.get_apps_log_dir", return_value=mock_lhm_logs):
+    with patch("apps.windows.hardware.lhm_auditor.get_apps_log_dir", return_value=mock_lhm_logs):
         res = client.post("/api/v1/system/lhm-audit")
         assert res.status_code == 200
         data = res.json()

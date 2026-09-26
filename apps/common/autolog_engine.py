@@ -109,14 +109,15 @@ def parse_interval_seconds(
 
 
 def load_autolog_config(config_path: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
-    """Загружает секцию logging/autolog из autolog_sensors.json или активного файла конфигурации.
+    """Загружает секцию logging/autolog из apps/windows/telemetry/config.json или активного файла конфигурации.
 
     Порядок поиска:
-        1. start_scenarios_config/~autolog_sensors.json / autolog_sensors.json (приоритетный источник)
-        2. config/autolog_sensors.json
-        3. Явно переданный config_path
-        4. Переменные окружения AIBREADBOARD_CONFIG / CONFIG_FILE
-        5. config_tc.json / config.json в cwd (fallback)
+        1. apps/windows/telemetry/config.json (приоритетный источник - единая конфигурация)
+        2. start_scenarios_config/~autolog_sensors.json / autolog_sensors.json (deprecated)
+        3. config/autolog_sensors.json
+        4. Явно переданный config_path
+        5. Переменные окружения AIBREADBOARD_CONFIG / CONFIG_FILE
+        6. config_tc.json / config.json в cwd (fallback)
 
     Args:
         config_path: Явный путь к файлу конфигурации (опционально).
@@ -143,7 +144,7 @@ def load_autolog_config(config_path: Optional[Union[str, Path]] = None) -> Dict[
                     "enable_autolog": bool(data.get("enable_autolog", True)),
                     "default_interval": data.get("default_interval", "1 minute"),
                     "loggers": data.get("loggers", {}),
-                    "sensors": data.get("sensors", {}),
+                    "sensors": data.get("sensors", data.get("telemetry", {}).get("sensors", {})),
                     "telemetry_options": data.get("telemetry_options", {}),
                 }
             # dashboard.json / tc.json хранят в секции logging
@@ -170,7 +171,15 @@ def load_autolog_config(config_path: Optional[Union[str, Path]] = None) -> Dict[
         else:
             return default_config
 
-    # 2. start_scenarios_config/~autolog_sensors.json и autolog_sensors.json
+    # 2. apps/windows/telemetry/config.json (единая конфигурация)
+    for base in (Path.cwd(), Path(__file__).resolve().parent.parent):
+        telemetry_cfg_path = base / "apps" / "windows" / "telemetry" / "config.json"
+        if telemetry_cfg_path.exists():
+            result = _extract(telemetry_cfg_path)
+            if result is not None:
+                return result
+
+    # 3. start_scenarios_config/~autolog_sensors.json и autolog_sensors.json (deprecated)
     for base in (Path.cwd(), Path(__file__).resolve().parent.parent):
         for candidate_name in ("~autolog_sensors.json", "autolog_sensors.json"):
             scenario_path = base / "start_scenarios_config" / candidate_name
@@ -185,7 +194,7 @@ def load_autolog_config(config_path: Optional[Union[str, Path]] = None) -> Dict[
             if result is not None:
                 return result
 
-    # 3. Переменные окружения
+    # 4. Переменные окружения
     env_cfg = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
     if env_cfg:
         p = Path(env_cfg)
@@ -196,7 +205,7 @@ def load_autolog_config(config_path: Optional[Union[str, Path]] = None) -> Dict[
             if result is not None:
                 return result
 
-    # 4. Fallback
+    # 5. Fallback
     for candidate in ("config_tc.json", "config.json"):
         p = Path.cwd() / candidate
         if p.exists():
@@ -558,7 +567,7 @@ class AutoLogEngine:
 
     def _poll_librehardwaremonitor(self) -> None:
         """Опрашивает сенсоры LibreHardwareMonitor через Web JSON API. Записывает только изменённые значения."""
-        from apps.librehardwaremonitor.core.lhm_service import LhmService
+        from apps.windows.hardware.lhm_service import LhmService
         lhm = LhmService()
         sensors = lhm.get_flattened_sensors()
 

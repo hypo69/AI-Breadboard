@@ -178,7 +178,8 @@ class HardwareAuditor:
                     "is_signed": bool(getattr(d, "IsSigned", True)),
                 }
         except Exception as ex:
-            logger.debug(f"Ошибка чтения WMI Win32_PnPSignedDriver: {ex}")
+                # logger.debug(f"Ошибка чтения WMI Win32_PnPSignedDriver: {ex}")
+                pass
 
         return drivers_map
 

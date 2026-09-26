@@ -4,10 +4,6 @@
             "status": "passed",
             "last_run": "2026-09-19T05:20:46.740391"
         },
-        "antigravity-support": {
-            "status": "passed",
-            "last_run": "2026-09-19T05:14:10.945567"
-        },
         "assistant-manager": {
             "status": "passed",
             "last_run": "2026-09-19T05:14:10.945674"
@@ -39,10 +35,6 @@
         "folder-sharing-manager": {
             "status": "passed",
             "last_run": "2026-09-19T05:14:10.947342"
-        },
-        "foundry-manager": {
-            "status": "passed",
-            "last_run": "2026-09-19T05:14:10.947560"
         },
         "gcloud-manager": {
             "status": "passed",
@@ -152,10 +144,6 @@
             "status": "passed",
             "last_run": "2026-09-19T05:14:10.953107"
         },
-        "skill-creator": {
-            "status": "passed",
-            "last_run": "2026-09-19T05:14:10.953331"
-        },
         "skill-factory": {
             "status": "passed",
             "last_run": "2026-09-19T05:14:10.953525"
@@ -164,10 +152,6 @@
             "status": "passed",
             "last_run": "2026-09-19T05:14:10.953714"
         },
-        "smart-migration": {
-            "status": "passed",
-            "last_run": "2026-09-19T05:14:10.953926"
-        },
         "smtp-mail-agent": {
             "status": "passed",
             "last_run": "2026-09-19T05:14:10.954121"
@@ -175,10 +159,6 @@
         "storage-controller": {
             "status": "passed",
             "last_run": "2026-09-19T05:14:10.954315"
-        },
-        "storage-tool": {
-            "status": "passed",
-            "last_run": "2026-09-19T05:14:10.954538"
         },
         "system-control": {
             "status": "passed",

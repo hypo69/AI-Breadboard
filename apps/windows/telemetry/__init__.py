@@ -41,7 +41,9 @@ from .models import (
     ProcessNetworkActivity,
     RamStickInfo,
     StorageBatteryWearReport,
+    SystemCoreMetrics,
     SystemDiagnosticReport,
+    SystemHardwareQuick,
     SystemHealthAlerts,
     SystemSnapshot,
 )
@@ -52,23 +54,10 @@ from .storage import TelemetryStorage
 from .collector import SystemCollector
 from .service import TelemetryLoggerService
 from .telemetry_config import TelemetryConfigManager
-from .json_logger import TelemetryJsonLogger
 from .file_collector import FileCollector
 from .sensor_collector import SensorCollector
 from .aggregator import TelemetryAggregator
-from .device_flapping_sensor import DeviceFlappingSensor, DeviceTransitionEvent
-from .deep_diagnostics import DeepDiagnosticsEngine
-from .research import (
-    ChartConfig,
-    MetricPoint,
-    MetricStats,
-    TelemetryChartGenerator,
-    TelemetryDataExtractor,
-    TelemetryResearchReport,
-    TelemetryResearcher,
-    TimeSeriesDataset,
-    init_research_router,
-)
+# research и deep_diagnostics подгружаются лениво через __getattr__ для снижения потребления RAM
 
 __all__ = [
     "CpuMetrics",
@@ -92,6 +81,8 @@ __all__ = [
     "HardwareSensor",
     "HardwareNode",
     "SystemSnapshot",
+    "SystemCoreMetrics",
+    "SystemHardwareQuick",
     "AnomalyItem",
     "SystemDiagnosticReport",
     "DriverInfo",
@@ -106,7 +97,6 @@ __all__ = [
     "SystemCollector",
     "TelemetryLoggerService",
     "TelemetryConfigManager",
-    "TelemetryJsonLogger",
     "FileCollector",
     "SensorCollector",
     "TelemetryAggregator",
@@ -126,10 +116,31 @@ __all__ = [
 ]
 
 
+_LAZY_TELEMETRY_EXPORTS = {
+    "DeepDiagnosticsEngine": ("apps.windows.telemetry.deep_diagnostics", "DeepDiagnosticsEngine"),
+    "DeviceFlappingSensor": ("apps.windows.telemetry.device_flapping_sensor", "DeviceFlappingSensor"),
+    "DeviceTransitionEvent": ("apps.windows.telemetry.device_flapping_sensor", "DeviceTransitionEvent"),
+    "TelemetryResearcher": ("apps.windows.telemetry.research", "TelemetryResearcher"),
+    "TelemetryChartGenerator": ("apps.windows.telemetry.research", "TelemetryChartGenerator"),
+    "TelemetryDataExtractor": ("apps.windows.telemetry.research", "TelemetryDataExtractor"),
+    "TelemetryResearchReport": ("apps.windows.telemetry.research", "TelemetryResearchReport"),
+    "ChartConfig": ("apps.windows.telemetry.research", "ChartConfig"),
+    "MetricPoint": ("apps.windows.telemetry.research", "MetricPoint"),
+    "MetricStats": ("apps.windows.telemetry.research", "MetricStats"),
+    "TimeSeriesDataset": ("apps.windows.telemetry.research", "TimeSeriesDataset"),
+    "init_research_router": ("apps.windows.telemetry.research", "init_research_router"),
+    "SystemDiagnosticEngine": ("src.ai.observability.system_engine", "SystemDiagnosticEngine"),
+    "TelemetryJsonLogger": ("apps.windows.telemetry.json_logger", "TelemetryJsonLogger"),
+}
+
+
 def __getattr__(name: str):
-    """Lazy import to prevent circular dependency cycles."""
-    if name == "SystemDiagnosticEngine":
-        from src.ai.observability.system_engine import SystemDiagnosticEngine
-        return SystemDiagnosticEngine
+    """Ленивая загрузка для экономии памяти и предотвращения циклических зависимостей."""
+    if name in _LAZY_TELEMETRY_EXPORTS:
+        module_path, attr_name = _LAZY_TELEMETRY_EXPORTS[name]
+        module = __import__(module_path, fromlist=[attr_name])
+        attr = getattr(module, attr_name)
+        globals()[name] = attr
+        return attr
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 

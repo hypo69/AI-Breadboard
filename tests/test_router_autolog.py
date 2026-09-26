@@ -121,8 +121,7 @@ def test_list_read_delete_csv_files(test_app: TestClient, tmp_path: Path):
     assert resp_after.status_code == 404
 
 
-@pytest.mark.asyncio
-async def test_start_and_stop_autolog(test_app: TestClient):
+def test_start_and_stop_autolog(test_app: TestClient):
     """Проверяет эндпоинты старта и остановки движка."""
     resp_stop = test_app.post("/api/autolog/stop")
     assert resp_stop.status_code == 200
@@ -134,3 +133,33 @@ async def test_start_and_stop_autolog(test_app: TestClient):
     # Очищаем состояние
     resp_cleanup = test_app.post("/api/autolog/stop")
     assert resp_cleanup.status_code == 200
+
+
+def test_telemetry_service_status_and_config(test_app: TestClient):
+    """Проверяет эндпоинты статуса и конфигурации службы телеметрии."""
+    # 1. Получение статуса телеметрии
+    resp_status = test_app.get("/api/autolog/telemetry/status")
+    assert resp_status.status_code == 200
+    data = resp_status.json()
+    assert "is_running" in data
+    assert "mode" in data
+    assert "interval_seconds" in data
+    assert "task_scheduler" in data
+
+    # 2. Получение конфигурации телеметрии
+    resp_cfg = test_app.get("/api/autolog/telemetry/config")
+    assert resp_cfg.status_code == 200
+    cfg_data = resp_cfg.json()
+    assert "mode" in cfg_data
+
+    # 3. Сохранение конфигурации
+    update_payload = {
+        "mode": "hybrid",
+        "interval_seconds": 6.0,
+        "heavy_interval_seconds": 90.0,
+        "top_processes": 10,
+    }
+    resp_update = test_app.post("/api/autolog/telemetry/config", json=update_payload)
+    assert resp_update.status_code == 200
+    assert resp_update.json()["status"] == "success"
+

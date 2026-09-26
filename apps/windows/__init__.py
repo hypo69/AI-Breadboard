@@ -18,33 +18,48 @@
 __version__ = "2.0.0"
 __author__ = "hypo69"
 
-from apps.windows.ai.diagnostician import WindowsAIDiagnostician
-from apps.windows.ai.root_cause_analyzer import WindowsAIRootCauseAnalyzer
-from apps.windows.ai_w64_collector import AIW64Collector, get_w64_collector, start_w64_collector, stop_w64_collector
-from apps.windows.ai_w64_etw_collector import AIW64ETWCollector
-from apps.windows.core.data_model import (
-    AppCategory,
-    AppExecutionInfo,
-    InstalledAppInfo,
-    SoftwareAuditReport,
-    SystemState,
-)
-from apps.windows.core.models import (
-    ActionType,
-    AuditFinding,
-    DomainAuditResult,
-    FullAuditReport,
-    HealthScoreSummary,
-    InvestigationReport,
-    RemediationAction,
-    RiskLevel,
-)
-from apps.windows.core.root_cause_engine import RootCauseEngine
-from apps.windows.core.safe_executor import SafeExecutor
-from apps.windows.core.software_audit import SoftwareAuditEngine
-from apps.windows.core.winapi import WinAPI
-from apps.windows.process_intelligence import ProcessIntelligence
-from apps.windows.router import init_router, router
+# Ленивая загрузка экспортов (PEP 562) для предотвращения циклических зависимостей
+# и экономии оперативной памяти (не подгружает тяжелый AI-стек и FastAPI при импорте телеметрии).
+_LAZY_EXPORTS = {
+    "WindowsAIDiagnostician": ("apps.windows.ai.diagnostician", "WindowsAIDiagnostician"),
+    "WindowsAIRootCauseAnalyzer": ("apps.windows.ai.root_cause_analyzer", "WindowsAIRootCauseAnalyzer"),
+    "AIW64Collector": ("apps.windows.ai_w64_collector", "AIW64Collector"),
+    "get_w64_collector": ("apps.windows.ai_w64_collector", "get_w64_collector"),
+    "start_w64_collector": ("apps.windows.ai_w64_collector", "start_w64_collector"),
+    "stop_w64_collector": ("apps.windows.ai_w64_collector", "stop_w64_collector"),
+    "AIW64ETWCollector": ("apps.windows.ai_w64_etw_collector", "AIW64ETWCollector"),
+    "WinAPI": ("apps.windows.core.winapi", "WinAPI"),
+    "SystemState": ("apps.windows.core.data_model", "SystemState"),
+    "ProcessIntelligence": ("apps.windows.process_intelligence", "ProcessIntelligence"),
+    "SoftwareAuditEngine": ("apps.windows.core.software_audit", "SoftwareAuditEngine"),
+    "InstalledAppInfo": ("apps.windows.core.data_model", "InstalledAppInfo"),
+    "AppCategory": ("apps.windows.core.data_model", "AppCategory"),
+    "AppExecutionInfo": ("apps.windows.core.data_model", "AppExecutionInfo"),
+    "SoftwareAuditReport": ("apps.windows.core.data_model", "SoftwareAuditReport"),
+    "RootCauseEngine": ("apps.windows.core.root_cause_engine", "RootCauseEngine"),
+    "SafeExecutor": ("apps.windows.core.safe_executor", "SafeExecutor"),
+    "RiskLevel": ("apps.windows.core.models", "RiskLevel"),
+    "ActionType": ("apps.windows.core.models", "ActionType"),
+    "RemediationAction": ("apps.windows.core.models", "RemediationAction"),
+    "AuditFinding": ("apps.windows.core.models", "AuditFinding"),
+    "DomainAuditResult": ("apps.windows.core.models", "DomainAuditResult"),
+    "HealthScoreSummary": ("apps.windows.core.models", "HealthScoreSummary"),
+    "FullAuditReport": ("apps.windows.core.models", "FullAuditReport"),
+    "InvestigationReport": ("apps.windows.core.models", "InvestigationReport"),
+    "init_router": ("apps.windows.router", "init_router"),
+    "router": ("apps.windows.router", "router"),
+}
+
+
+def __getattr__(name: str):
+    """Ленивая динамическая загрузка модулей и символов пакета."""
+    if name in _LAZY_EXPORTS:
+        module_path, attr_name = _LAZY_EXPORTS[name]
+        module = __import__(module_path, fromlist=[attr_name])
+        attr = getattr(module, attr_name)
+        globals()[name] = attr
+        return attr
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 __all__ = [
     "WinAPI",

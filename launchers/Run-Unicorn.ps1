@@ -116,27 +116,10 @@ if (Test-Path $venvActivate) {
 }
 
 # ============================================
-# DATABASE MIGRATIONS
+# LOADING CONFIGURATION AND SETTING ENV VARIABLES
 # ============================================
 Write-Host ""
-Write-Host "[*] Checking database migrations..." -ForegroundColor Cyan
-try {
-    $dbMigOut = & $venvPython -m src.db.migrations --apply 2>&1
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "    [OK] Database schema is up to date" -ForegroundColor Green
-    } else {
-        Write-Host "    [WARN] Migration check returned: $dbMigOut" -ForegroundColor Yellow
-    }
-} catch {
-    Write-Host "    [WARN] Failed to run database migrations: $_" -ForegroundColor Yellow
-}
-
-# ============================================
-# ============================================
-# LOADING CONFIGURATION
-# ============================================
-Write-Host ""
-Write-Host "[2/4] Loading configuration..." -ForegroundColor Cyan
+Write-Host "[**] Loading configuration and setting environment variables..." -ForegroundColor Cyan
 $cfgFileName = "config.json"
 if ($ConfigFile) {
     $cfgFileName = $ConfigFile
@@ -159,8 +142,11 @@ if (-not $configPath) {
     $configPath = Join-Path $projectRoot "config.json"
 }
 
+# Set environment variables BEFORE importing Python modules
 $env:AIBREADBOARD_CONFIG = $configPath
 $env:CONFIG_FILE = $configPath
+Write-Host "    Config:     $configPath" -ForegroundColor Green
+
 $envFile    = Join-Path $projectRoot ".env"
 $cfgHost    = "0.0.0.0"
 $cfgPort    = "8000"
@@ -212,6 +198,8 @@ if (Test-Path $configPath) {
                 $useCloudflared = [bool]$cfg.server.use_cloudflared
             }
             if ($cfg.server.PSObject.Properties['client_url'] -and $cfg.server.client_url) {
+                $clientUrl = [string]$cfg.server.client_url
+            } elseif ($cfg.server.PSObject.Properties['user_domain'] -and $cfg.server.user_domain) {
                 $clientUrl = [string]$cfg.server.client_url
             } elseif ($cfg.server.PSObject.Properties['user_domain'] -and $cfg.server.user_domain) {
                 $clientUrl = "https://$($cfg.server.user_domain)"
@@ -269,6 +257,22 @@ if (-not $reload) {
 }
 
 # ============================================
+# DATABASE MIGRATIONS
+# ============================================
+Write-Host ""
+Write-Host "[2/4] Checking database migrations..." -ForegroundColor Cyan
+try {
+    $dbMigOut = & $venvPython -m src.db.migrations --apply 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "    [OK] Database schema is up to date" -ForegroundColor Green
+    } else {
+        Write-Host "    [WARN] Migration check returned: $dbMigOut" -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host "    [WARN] Failed to run database migrations: $_" -ForegroundColor Yellow
+}
+
+# ============================================
 # FREEING PORT
 # ============================================
 Write-Host ""
@@ -294,9 +298,9 @@ try {
 # ============================================
 Write-Host ""
 if ($reload) {
-    Write-Host "[4/4] Launching uvicorn in AUTORELOAD mode..." -ForegroundColor Cyan
+    Write-Host "[5/5] Launching uvicorn in AUTORELOAD mode..." -ForegroundColor Cyan
 } else {
-    Write-Host "[4/4] Launching uvicorn with $workers workers..." -ForegroundColor Cyan
+    Write-Host "[5/5] Launching uvicorn with $workers workers..." -ForegroundColor Cyan
 }
 
 $uvicornArgs = @(

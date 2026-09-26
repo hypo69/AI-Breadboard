@@ -479,19 +479,32 @@ window.updateChatBadges = function(modelName, searchEngine) {
 // Автоматически загружаем настройки и обновляем бейджи модели и поиска при загрузке страницы
 document.addEventListener('DOMContentLoaded', async () => {
   try {
+    let modelName = '';
+    let searchEngine = '';
     const response = await fetch('/auth/settings');
     if (response.ok) {
       const settings = await response.json();
-      const modelName = settings.model || '';
-      const searchEngine = settings.search_engine || '';
-      window.activeModelName = modelName;
-      window.activeSearchEngine = searchEngine;
-      
-      window.updateChatBadges(modelName, searchEngine);
-      // На случай если DOM элементы добавились/отрендерились позже
-      setTimeout(() => window.updateChatBadges(), 500);
-      setTimeout(() => window.updateChatBadges(), 1500);
+      modelName = settings.model || '';
+      searchEngine = settings.search_engine || '';
     }
+    if (!modelName) {
+      try {
+        const activeResp = await fetch('/api/chat/active-model');
+        if (activeResp.ok) {
+          const activeData = await activeResp.json();
+          if (activeData && activeData.model) {
+            modelName = activeData.display || (activeData.provider ? `${activeData.provider}: ${activeData.model}` : activeData.model);
+          }
+        }
+      } catch {}
+    }
+    window.activeModelName = modelName;
+    window.activeSearchEngine = searchEngine;
+    
+    window.updateChatBadges(modelName, searchEngine);
+    // На случай если DOM элементы добавились/отрендерились позже
+    setTimeout(() => window.updateChatBadges(), 500);
+    setTimeout(() => window.updateChatBadges(), 1500);
   } catch (e) {
     console.error('Failed to load active model / search badge:', e);
   }

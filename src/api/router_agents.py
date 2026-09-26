@@ -22,6 +22,7 @@ import asyncio
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Request, Depends
+from .constants import BASE_API_PREFIX
 from pydantic import BaseModel, Field
 
 from header import __root__
@@ -253,12 +254,19 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
 
         raw_cfg = _load_raw_config()
         ai_section = raw_cfg.get('ai', {})
+        providers_cfg = ai_section.get('providers', {})
 
         # Deep copy base provider metadata
         providers = copy.deepcopy(_PROVIDERS_CONFIG)
 
         # Dynamically populate models for each provider from model_manager
         for prov_id, prov_info in providers.items():
+            # Skip providers disabled in config
+            prov_config = providers_cfg.get(prov_id, {})
+            if isinstance(prov_config, dict) and prov_config.get('enabled') is False:
+                prov_info['models'] = []
+                continue
+            
             try:
                 raw_models = get_available_models(prov_id)
                 prov_info['models'] = [{'id': m, 'name': m} for m in raw_models]
@@ -270,6 +278,12 @@ def init_agents_router(prefix: str = '/api/agents') -> APIRouter:
         if 'gemini_cli_model_id' in ai_section:
             if 'gemini_cli' in providers:
                 providers['gemini_cli']['default_model'] = ai_section['gemini_cli_model_id']
+
+        # Поддержка новой структуры: ai.providers.agy.model
+        if 'providers' in ai_section and 'agy' in ai_section['providers']:
+            agy_prov = ai_section['providers']['agy']
+            if 'model' in agy_prov and 'agy' in providers:
+                providers['agy']['default_model'] = agy_prov['model']
 
         if 'agy_model_id' in ai_section:
             if 'agy' in providers:

@@ -151,3 +151,14 @@
     border-color: var(--border-color) !important;
   }
 }
+
+/* ── Dark Theme — Повышенный контраст и доминантность описания процессов ──── */
+[data-theme="dark"] .def-desc-text,
+[data-theme="dark"] .process-desc,
+[data-theme="dark"] .table-dark td.text-secondary,
+[data-theme="dark"] .table td.text-secondary,
+.theme-defender td.text-secondary,
+.theme-defender .text-secondary {
+  color: #cbd5e1 !important; /* Высококонтрастный доминантный оттенок (Slate 300) для идеальной читаемости */
+}
+

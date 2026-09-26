@@ -64,6 +64,27 @@ if (Test-Path $configPath) {
         if ($cfg.apps.PSObject.Properties['disabled']) { $cfgAppsDisabled = $cfg.apps.disabled }
 
         # AI-переменные окружения для провайдеров
+        # Поддержка новой структуры: ai.providers.<provider>.model
+        if ($cfg.ai.providers) {
+            # Определяем активный провайдер (первый enabled)
+            foreach ($provName in @('gemini', 'gemini_cli', 'agy', 'ollama', 'foundry')) {
+                $prov = $cfg.ai.providers.$provName
+                if ($prov -and $prov.enabled -eq $true) {
+                    if (-not $env:AI_PROVIDER) { $env:AI_PROVIDER = $provName }
+                    # Устанавливаем переменные окружения только для enabled провайдеров
+                    if ($prov.model) {
+                        switch ($provName) {
+                            'gemini'     { $env:AI_GEMINI_MODEL     = $prov.model }
+                            'gemini_cli' { $env:AI_GEMINI_CLI_MODEL = $prov.model }
+                            'agy'        { $env:AI_AGY_MODEL        = $prov.model; if ($prov.effort) { $env:AI_AGY_EFFORT = $prov.effort } }
+                            'ollama'     { $env:AI_OLLAMA_MODEL     = $prov.model }
+                            'foundry'    { $env:AI_FOUNDRY_MODEL    = $prov.model }
+                        }
+                    }
+                }
+            }
+        }
+        # Поддержка старой структуры (обратная совместимость)
         if ($cfg.ai.provider)          { $env:AI_PROVIDER         = $cfg.ai.provider }
         if ($cfg.ai.gemini.model)      { $env:AI_GEMINI_MODEL      = $cfg.ai.gemini.model }
         if ($cfg.ai.gemini_cli.model)  { $env:AI_GEMINI_CLI_MODEL  = $cfg.ai.gemini_cli.model }
@@ -150,12 +171,24 @@ foreach ($appName in $cfgAppsEnabled) {
 }
 
 # ============================================================================
-# LibreHardwareMonitor (фоновый сбор аппаратных метрик)
+# СЛУЖБА ТЕЛЕМЕТРИИ (ai-telemetry.exe)
 # ============================================================================
-$lhmScript = Join-Path $scriptDir 'launchers\Run-LHM.ps1'
-if (Test-Path $lhmScript) {
-    Write-Host "  Запуск LibreHardwareMonitor..." -ForegroundColor Cyan
-    & $lhmScript -Action start
+$telemetryLauncher = Join-Path $scriptDir 'launchers\Run-Telemetry.ps1'
+if (Test-Path $telemetryLauncher) {
+    $activeTelemetry = Get-Process -Name 'ai-telemetry' -ErrorAction SilentlyContinue
+    if (-not $activeTelemetry) {
+        $activeTelemetry = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+            $_.CommandLine -and ($_.CommandLine -match 'telemetry[\\\/]main\.py')
+        }
+    }
+
+    if ($activeTelemetry) {
+        $tPids = ($activeTelemetry | ForEach-Object { if ($_.Id) { $_.Id } else { $_.ProcessId } }) -join ', '
+        Write-Host "  [OK] Служба телеметрии активна (PID: $tPids)" -ForegroundColor Green
+    } else {
+        Write-Host "  [INFO] Служба телеметрии не запущена. Автозапуск (hybrid mode)..." -ForegroundColor Yellow
+        & $telemetryLauncher -Action start
+    }
 }
 
 # ============================================================================

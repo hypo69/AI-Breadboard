@@ -276,7 +276,7 @@ async def run_ai_synthesis(
         str: Markdown formatted diagnostic report.
     """
     try:
-        from src.ai import GoogleGenerativeAI
+        from src.ai import UnifiedChatModel
 
         api_key_names = [
             n.strip()
@@ -286,7 +286,7 @@ async def run_ai_synthesis(
         if not api_key_names:
             return "_AI synthesis unavailable: GEMINI_API_KEY_NAMES not configured in environment._"
 
-        ai = GoogleGenerativeAI(
+        ai = UnifiedChatModel(
             api_key_names=api_key_names,
             system_instruction=(
                 "You are an expert site reliability engineer and log diagnostics assistant. "

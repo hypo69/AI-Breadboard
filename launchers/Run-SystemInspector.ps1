@@ -107,7 +107,7 @@ if (-not (Test-Path $venvPython)) {
 
 function Get-AppProcesses {
     Get-CimInstance Win32_Process | Where-Object {
-        $_.CommandLine -and $_.CommandLine -match 'apps\.system_inspector'
+        $_.CommandLine -and ($_.CommandLine -match 'apps\.system_inspector' -or $_.CommandLine -match 'apps\.windows.*--(mode|inspector)')
     }
 }
 
@@ -149,7 +149,7 @@ if ($Action -in @('start', 'restart')) {
         exit 0
     }
 
-    $appArgs = "-m apps.system_inspector --mode $Mode --host $HostAddress --port $Port"
+    $appArgs = "-m apps.windows --mode $Mode --port $Port"
 
     if ($Foreground) {
         Write-Host ""
@@ -160,7 +160,7 @@ if ($Action -in @('start', 'restart')) {
         Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Green
         Write-Host ""
         Push-Location $projectRoot
-        & $venvPython -m apps.system_inspector --mode $Mode --host $HostAddress --port $Port
+        & $venvPython -m apps.windows --mode $Mode --port $Port
         Pop-Location
         exit $LASTEXITCODE
     }

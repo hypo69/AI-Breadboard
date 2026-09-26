@@ -46,7 +46,6 @@ apps/
 | Application | CLI Command | Port | FastAPI Endpoints | Description |
 |---|---|---|---|---|
 | **AI Windows Diagnostic Center** | `python -m apps.windows` | `8105` | `/api/windows/*` | Комплексная диагностика Windows, аудит драйверов, нативная диагностика накопителей, GPU (`nvidia-smi`/`amd-smi`), стресс-тесты, журналы событий и безопасное администрирование. |
-| **LibreHardwareMonitor App** | `python -m apps.librehardwaremonitor` | `8126` | `/api/v1/lhm/*` | Сбор телеметрии через Web REST JSON API (`http://localhost:8085/data.json`) и WMI. |
 | **Microsoft Defender Security Center** | `python -m apps.windows_defender` | `8113` | `/api/v1/defender/*` | Мониторинг и управление Microsoft Defender Antivirus, правила ASR, Controlled Folder Access (Ransomware), аудит исключений, детекция Fileless и корреляция событий. |
 | **Windows Startup Auditor** | `python -m apps.windows_startup_auditor` | `8112` | `/api/v1/startup-auditor/*` | Полный поиск всех точек автозагрузки и персистентности Windows (реестр Run/RunOnce, папки Startup, Winlogon, IFEO, службы, задачи), аудит безопасности и оптимизация старта. |
 | **Windows Backup Manager** | `python -m apps.windows_backup_manager` | `8114` | `/api/v1/backup-manager/*` | Управление библиотеками Windows, File History, теневыми копиями VSS и RAG-поиском по резервным копиям. |

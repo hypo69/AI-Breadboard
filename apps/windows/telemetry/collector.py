@@ -41,7 +41,7 @@ except ImportError:
     psutil = None  # type: ignore
     PSUTIL_AVAILABLE = False
 
-from src.ai.orchestration.hardware import probe_hardware
+# probe_hardware импортируется лениво при необходимости, чтобы не загружать AI-библиотеки
 from logger import logger
 from apps.windows.telemetry.models import (
     AnomalyItem,
@@ -67,6 +67,8 @@ from apps.windows.telemetry.models import (
     ProcessMetrics,
     ProcessNetworkActivity,
     RamStickInfo,
+    SystemCoreMetrics,
+    SystemHardwareQuick,
     SystemHealthAlerts,
     SystemSnapshot,
     WindowsUpdateInfo,
@@ -96,6 +98,10 @@ class SystemCollector:
         self._monitors_cached: Optional[List[MonitorInfo]] = None
         self._updates_cached: Optional[WindowsUpdateInfo] = None
         self._office_cached: Optional[OfficeSuiteInfo] = None
+        self._ram_sticks_cached: Optional[List[RamStickInfo]] = None
+        self._ram_sticks_cache_time: float = 0.0
+        self._physical_disks_cached: Optional[List[PhysicalDiskHealth]] = None
+        self._physical_disks_cache_time: float = 0.0
         self.auditor = auditor or HardwareAuditor()
         self.history_manager = history_manager or HardwareHistoryManager()
         self.storage = storage or TelemetryStorage.get_instance()
@@ -353,18 +359,37 @@ class SystemCollector:
         """
         gpus: List[GpuMetrics] = []
         try:
-            hw = probe_hardware()
-            for g in hw.gpus:
+            from apps.windows.hardware.gpu_prober import GpuProber
+            prober = GpuProber()
+            gpu_list = prober.probe_all()
+            for g in gpu_list:
                 gpus.append(
                     GpuMetrics(
-                        name=g.get("name", "NVIDIA GPU"),
-                        memory_total_gb=round(g.get("vram_mb", 0) / 1024.0, 2),
-                        has_cuda=hw.has_cuda,
-                        has_directml=hw.has_directml,
+                        name=g.name,
+                        memory_total_gb=round((g.memory_total_mb or 0.0) / 1024.0, 2),
+                        memory_used_gb=round((g.memory_used_mb or 0.0) / 1024.0, 2),
+                        load_percent=g.utilization_gpu_pct,
+                        temperature_celsius=g.temperature_gpu_c,
+                        has_cuda=(g.vendor.lower() == "nvidia"),
+                        has_directml=True,
                     )
                 )
         except Exception as ex:
-            logger.debug(f"Failed to probe GPUs via hardware module: {ex}")
+            logger.debug(f"Failed to probe GPUs via GpuProber: {ex}")
+            try:
+                from src.ai.orchestration.hardware import probe_hardware
+                hw = probe_hardware()
+                for g in hw.gpus:
+                    gpus.append(
+                        GpuMetrics(
+                            name=g.get("name", "NVIDIA GPU"),
+                            memory_total_gb=round(g.get("vram_mb", 0) / 1024.0, 2),
+                            has_cuda=hw.has_cuda,
+                            has_directml=hw.has_directml,
+                        )
+                    )
+            except Exception as inner_ex:
+                logger.debug(f"Failed to probe GPUs via fallback: {inner_ex}")
 
         if not gpus:
             gpus.append(
@@ -536,8 +561,8 @@ class SystemCollector:
         """Retrieve active processes sorted by resource consumption.
 
         Args:
-            limit: Maximum processes to return.
-            sort_by: Attribute to sort by ('cpu', 'memory').
+            limit: Maximum processes to return (0 for all active processes).
+            sort_by: Attribute to sort by ('cpu', 'memory'/'ram', 'handles'/'descriptors').
 
         Returns:
             List[ProcessMetrics]: Ranked process metrics.
@@ -545,14 +570,15 @@ class SystemCollector:
         procs: List[ProcessMetrics] = []
 
         if PSUTIL_AVAILABLE:
-            for p in psutil.process_iter(
-                attrs=["pid", "name", "status", "cpu_percent", "memory_info", "memory_percent", "num_threads", "username"]
-            ):
+            handle_attr = "num_handles" if os.name == "nt" else "num_fds"
+            proc_attrs = ["pid", "name", "status", "cpu_percent", "memory_info", "memory_percent", "num_threads", "username", handle_attr]
+            for p in psutil.process_iter(attrs=proc_attrs):
                 try:
                     info = p.info
                     mem_info = info.get("memory_info")
                     rss_mb = round(mem_info.rss / (1024 * 1024), 1) if mem_info else 0.0
                     cpu_p = round(info.get("cpu_percent") or 0.0, 1)
+                    num_h = info.get(handle_attr) or 0
 
                     procs.append(
                         ProcessMetrics(
@@ -563,6 +589,7 @@ class SystemCollector:
                             memory_mb=rss_mb,
                             memory_percent=round(info.get("memory_percent") or 0.0, 1),
                             num_threads=info.get("num_threads") or 1,
+                            num_handles=num_h,
                             username=info.get("username"),
                         )
                     )
@@ -579,14 +606,21 @@ class SystemCollector:
                     memory_mb=120.0,
                     memory_percent=1.0,
                     num_threads=8,
+                    num_handles=42,
                     username=os.getenv("USERNAME", "SYSTEM"),
                 )
             )
 
-        if sort_by == "memory":
+        sort_key = (sort_by or "cpu").lower()
+        if sort_key in ("handles", "descriptors"):
+            procs.sort(key=lambda x: x.num_handles, reverse=True)
+        elif sort_key in ("memory", "ram"):
             procs.sort(key=lambda x: x.memory_mb, reverse=True)
         else:
             procs.sort(key=lambda x: x.cpu_percent, reverse=True)
+
+        if limit is None or limit <= 0:
+            return procs
 
         return procs[:limit]
 
@@ -624,6 +658,10 @@ class SystemCollector:
         Returns:
             List[PhysicalDiskHealth]: Список обнаруженных физических накопителей.
         """
+        now = time.time()
+        if self._physical_disks_cached is not None and (now - self._physical_disks_cache_time) < 60.0:
+            return self._physical_disks_cached
+
         disks: List[PhysicalDiskHealth] = []
         if os.name == "nt":
             try:
@@ -658,6 +696,9 @@ class SystemCollector:
                     interface_type="NVMe",
                 )
             )
+
+        self._physical_disks_cached = disks
+        self._physical_disks_cache_time = now
         return disks
 
     async def get_ram_sticks(self) -> List[RamStickInfo]:
@@ -666,6 +707,10 @@ class SystemCollector:
         Returns:
             List[RamStickInfo]: Installed physical RAM modules.
         """
+        now = time.time()
+        if self._ram_sticks_cached is not None and (now - self._ram_sticks_cache_time) < 60.0:
+            return self._ram_sticks_cached
+
         sticks: List[RamStickInfo] = []
         if os.name == "nt":
             from src.utils.com_worker import com_worker
@@ -702,6 +747,9 @@ class SystemCollector:
                 sticks = await _probe()
             except Exception as ex:
                 logger.debug(f"Failed to query physical memory sticks: {ex}")
+
+        self._ram_sticks_cached = sticks
+        self._ram_sticks_cache_time = now
         return sticks
 
     def get_listening_ports(self, limit: int = 15) -> List[NetworkPortMetrics]:
@@ -1439,6 +1487,49 @@ class SystemCollector:
                 status=f"Активен ({target_path})",
             )
 
+    async def get_core_metrics(self) -> SystemCoreMetrics:
+        """Сверхбыстрый сбор базовой телеметрии без вызова тяжелых внешних утилит (< 0.2с).
+
+        Returns:
+            SystemCoreMetrics: Мгновенные показатели загрузки процессора, памяти, дисков и видеокарты.
+        """
+        now = time.time()
+        uptime = round(now - (psutil.boot_time() if PSUTIL_AVAILABLE else now - 3600), 1)
+        _, disk_io = self.get_disk_metrics()
+        mems = self.get_memory_metrics()
+        gpus = self.get_gpu_metrics()
+        batt = self.get_battery_metrics()
+        cpu_metrics = await self.get_cpu_metrics()
+        self._last_time = now
+
+        return SystemCoreMetrics(
+            cpu=cpu_metrics,
+            memory=mems,
+            gpus=gpus,
+            disk_io=disk_io,
+            battery=batt,
+            uptime_seconds=uptime,
+        )
+
+    async def get_hardware_quick(self) -> SystemHardwareQuick:
+        """Сбор сводки физических компонентов (диски, слоты памяти, порты, алерты).
+
+        Returns:
+            SystemHardwareQuick: Состояние накопителей, планок RAM и сетевых сокетов.
+        """
+        ram_sticks = await self.get_ram_sticks()
+        phys_disks = self.get_physical_disks_health()
+        ports = self.get_listening_ports()
+        alerts = self.get_health_alerts()
+
+        return SystemHardwareQuick(
+            ram_sticks=ram_sticks,
+            physical_disks=phys_disks,
+            listening_ports=ports,
+            alerts=alerts,
+        )
+
+
     async def get_snapshot(self, process_limit: int = 20) -> SystemSnapshot:
         """Capture full point-in-time system telemetry snapshot without blocking event loop.
 
@@ -1546,6 +1637,14 @@ class SystemCollector:
         Returns:
             List[HardwareNode]: Hardware devices grouped by category.
         """
+        if os.name == "nt":
+            try:
+                import pythoncom
+
+                pythoncom.CoInitialize()
+            except Exception as e:
+                logger.debug(f"[HardwareTree] CoInitialize warning: {e}")
+
         nodes: List[HardwareNode] = []
         ident = self.get_system_identity()
 

@@ -533,6 +533,45 @@ async def run_stress_benchmark(req: StressTestRequest) -> Dict[str, Any]:
     return res.__dict__
 
 
+class AIBenchmarkRequest(BaseModel):
+    provider: str = "gemini"
+    model_name: str = "gemini-2.5-flash"
+    prompt: str = "Тестовый запрос для замера скорости инференса."
+    max_tokens: int = 150
+    temperature: float = 0.7
+
+
+_stress_engine_instance = None
+
+def _get_stress_engine():
+    global _stress_engine_instance
+    if _stress_engine_instance is None:
+        from apps.windows.hardware.stress_benchmark import StressBenchmarkEngine
+        _stress_engine_instance = StressBenchmarkEngine()
+    return _stress_engine_instance
+
+
+@router.post("/benchmark/ai")
+async def run_ai_benchmark(req: AIBenchmarkRequest) -> Dict[str, Any]:
+    """Запуск замера производительности инференса ИИ-моделей (TTFT, TPS, задержка)."""
+    engine = _get_stress_engine()
+    res = engine.run_ai_inference_benchmark(
+        provider=req.provider,
+        model_name=req.model_name,
+        prompt=req.prompt,
+        max_tokens=req.max_tokens,
+        temperature=req.temperature,
+    )
+    return res.__dict__
+
+
+@router.get("/benchmark/ai/history")
+async def get_ai_benchmark_history() -> List[Dict[str, Any]]:
+    """Получение истории замеров производительности инференса ИИ."""
+    engine = _get_stress_engine()
+    return engine.get_ai_benchmark_history()
+
+
 @router.get("/audit/process-telemetry/status")
 async def get_process_telemetry_status() -> Dict[str, Any]:
     """Проверка доступности и статуса сенсоров телеметрии (Sysmon, Security 4688, CommandLine)."""
@@ -578,7 +617,12 @@ async def get_process_telemetry_file_activity(limit: int = 50) -> List[Dict[str,
 def init_router(app: Optional[Any] = None, state: Optional[Any] = None) -> APIRouter:
     """Инициализация FastAPI роутера."""
     from apps.windows.telemetry.research import init_research_router
+    from apps.windows.system_inspector_router import router as sys_inspector_router
+    from apps.windows.core.software_transparency import init_software_transparency_router
     router.include_router(init_research_router())
+    router.include_router(sys_inspector_router)
+    chat_prov = state.chat_model if state and hasattr(state, "chat_model") else None
+    router.include_router(init_software_transparency_router(chat_provider=chat_prov))
     return router
 
 

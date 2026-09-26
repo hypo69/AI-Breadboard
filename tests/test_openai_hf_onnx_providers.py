@@ -188,7 +188,6 @@ def test_unified_chat_openai_routing():
     async def _run():
         from src.ai.unified_chat import UnifiedChatModel
         chat_model = UnifiedChatModel(
-            api_key_names=[],
             system_instruction="Test system",
         )
         with patch.object(OpenAICompatChat, "chat", new_callable=AsyncMock) as mock_chat:

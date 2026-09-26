@@ -1,0 +1,171 @@
+<!-- AI Inference Benchmark Tab -->
+<style>
+  .bm-container {
+    padding: 0.5rem 0.75rem;
+  }
+  .bm-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+    padding: 0.6rem 0.85rem;
+    height: 100%;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .bm-card:hover {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  .bm-card-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  .bm-card-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: #38bdf8;
+  }
+  .bm-panel {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+  }
+  .bm-panel-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    padding: 0.45rem 0.85rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .bm-table {
+    margin-bottom: 0;
+    font-size: 0.8rem;
+    width: 100%;
+  }
+  .bm-table th {
+    background: #1e293b;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid #334155;
+  }
+  .bm-table td {
+    border-bottom: 1px solid #1e293b;
+    padding: 0.45rem 0.6rem;
+    vertical-align: middle;
+  }
+</style>
+
+<div class="bm-container">
+  <!-- Заголовок и панель параметров запуска -->
+  <div class="bm-panel mb-3">
+    <div class="bm-panel-header">
+      <span><i class="bi bi-speedometer2 me-1"></i> Параметры запуска AI Inference Benchmark</span>
+      <span class="badge bg-primary-subtle text-primary border border-primary-subtle" id="bm-status-badge">Готов</span>
+    </div>
+    <div class="p-3">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3 col-sm-6">
+          <label class="form-label small text-muted mb-1">Провайдер</label>
+          <select class="form-select form-select-sm bg-dark text-white border-secondary" id="bm-provider-select">
+            <option value="gemini" selected>Google Gemini API</option>
+            <option value="ollama">Ollama (Local)</option>
+            <option value="foundry">Microsoft Foundry Local</option>
+            <option value="onnx">ONNX DirectML / NPU</option>
+          </select>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <label class="form-label small text-muted mb-1">Модель</label>
+          <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="bm-model-input" value="gemini-2.5-flash">
+        </div>
+        <div class="col-md-2 col-sm-6">
+          <label class="form-label small text-muted mb-1">Max Tokens</label>
+          <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" id="bm-tokens-input" value="150" min="20" max="2000">
+        </div>
+        <div class="col-md-2 col-sm-6">
+          <label class="form-label small text-muted mb-1">Temperature</label>
+          <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" id="bm-temp-input" value="0.7" min="0" max="1" step="0.1">
+        </div>
+        <div class="col-md-2 col-sm-12">
+          <button class="btn btn-sm btn-primary w-100 fw-semibold d-flex align-items-center justify-content-center gap-1.5" id="bm-run-btn">
+            <i class="bi bi-play-fill fs-6"></i> Запустить тест
+          </button>
+        </div>
+      </div>
+      <div class="mt-2">
+        <label class="form-label small text-muted mb-1">Тестовый промпт</label>
+        <textarea class="form-control form-control-sm bg-dark text-white border-secondary" id="bm-prompt-input" rows="2">Напиши краткий рассказ о квантовых вычислениях на 100 слов.</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Карточки последних результатов -->
+  <div class="row g-2 mb-3">
+    <div class="col-md-3 col-6">
+      <div class="bm-card">
+        <div class="bm-card-label"><i class="bi bi-stopwatch text-info me-1"></i> Time to First Token (TTFT)</div>
+        <div class="bm-card-value" id="bm-card-ttft">— ms</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="bm-card">
+        <div class="bm-card-label"><i class="bi bi-lightning-charge text-warning me-1"></i> Скорость (TPS)</div>
+        <div class="bm-card-value text-success" id="bm-card-tps">— t/s</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="bm-card">
+        <div class="bm-card-label"><i class="bi bi-hourglass-split text-primary me-1"></i> Общее время (Latency)</div>
+        <div class="bm-card-value" id="bm-card-total">— ms</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="bm-card">
+        <div class="bm-card-label"><i class="bi bi-chat-left-text text-secondary me-1"></i> Сгенерировано токенов</div>
+        <div class="bm-card-value text-white" id="bm-card-tokens">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Таблица истории замеров -->
+  <div class="bm-panel">
+    <div class="bm-panel-header">
+      <span><i class="bi bi-clock-history me-1"></i> История бенчмарков инференса</span>
+      <button class="btn btn-xs btn-outline-secondary py-0 px-2 text-white border-secondary" id="bm-refresh-history-btn" style="font-size: 0.75rem;">
+        <i class="bi bi-arrow-clockwise"></i> Обновить
+      </button>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-dark table-hover bm-table" id="bm-history-table">
+        <thead>
+          <tr>
+            <th>Время</th>
+            <th>Провайдер</th>
+            <th>Модель</th>
+            <th>TTFT</th>
+            <th>Скорость (TPS)</th>
+            <th>Общее время</th>
+            <th>Токены (Prompt / Gen)</th>
+            <th>Статус</th>
+          </tr>
+        </thead>
+        <tbody id="bm-history-tbody">
+          <tr>
+            <td colspan="8" class="text-center text-muted py-3">История бенчмарков пуста. Нажмите "Запустить тест".</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

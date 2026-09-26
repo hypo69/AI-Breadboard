@@ -34,29 +34,31 @@ _MAX_DOCS_PER_USER = 500
 # Minimum query length for indexing (exclude "yes", "no", etc)
 _MIN_QUERY_LEN = 10
 
-def _get_user_rag_path(user_id) -> Path:
-    """Return path to RAG database for specific user."""
+def _get_user_rag_path(user_id, rag_name: Optional[str] = None) -> Path:
+    """Возвращает путь к базе данных RAG для конкретного пользователя и именованной базы знаний (роли)."""
     safe_id = str(user_id).replace(".", "_").replace("/", "_").replace("\\", "_")
+    if rag_name and str(rag_name).strip() and str(rag_name).strip().lower() not in ("default", "main", "user"):
+        safe_rag = str(rag_name).strip().replace(".", "_").replace("/", "_").replace("\\", "_").lower()
+        return _USER_RAGS_DIR / f"user_rag_{safe_id}_{safe_rag}.db"
     return _USER_RAGS_DIR / f"user_rag_{safe_id}.db"
 
 def _make_doc_id(user_id, query: str) -> str:
-    """Generate stable unique document ID (deduplication by query)."""
+    """Генерирует уникальный идентификатор документа (дедупликация по тексту запроса)."""
     key = f"{user_id}_{query.strip().lower()}"
     return f"{user_id}_{hashlib.md5(key.encode('utf-8')).hexdigest()}"
 
-def get_user_rag(user_id, api_key: str) -> GeminiRAG:
-    """Return RAG index for specific user.
-
-    Creates database if it doesn't exist. Does not rebuild existing one.
+def get_user_rag(user_id, api_key: str, rag_name: Optional[str] = None) -> GeminiRAG:
+    """Возвращает объект индекса RAG для конкретного пользователя и целевой RAG базы.
 
     Args:
-        user_id: User ID (int from DB or string "anon_<IP>").
-        api_key: Gemini API key for embeddings.
+        user_id: Идентификатор пользователя (int из БД или строка "anon_<IP>").
+        api_key: API ключ Gemini для векторных эмбеддингов.
+        rag_name: Опциональное имя целевой RAG базы данных (роли).
 
     Returns:
-        GeminiRAG: Instance of user RAG index.
+        GeminiRAG: Инстанс индекса RAG.
     """
-    db_path = _get_user_rag_path(user_id)
+    db_path = _get_user_rag_path(user_id, rag_name=rag_name)
     return GeminiRAG(api_key=api_key, db_path=db_path)
 
 def is_garbage_query(query: str) -> bool:
@@ -118,47 +120,44 @@ def index_user_query(
     api_key: str,
     query: str,
     response: str,
+    rag_name: Optional[str] = None,
 ) -> bool:
-    """Index pair (user query + model response) into personal RAG.
-
-    Skips too short/garbage queries and duplicates (by hash).
-    On overflow (> _MAX_DOCS_PER_USER) deletes oldest records.
+    """Индексирует пару (запрос пользователя + ответ модели) в RAG базу знаний.
 
     Args:
-        user_id: User ID or string "anon_<IP>".
-        api_key: Gemini API key.
-        query: User query text.
-        response: Model response.
+        user_id: Идентификатор пользователя или строка "anon_<IP>".
+        api_key: API ключ Gemini.
+        query: Текст запроса пользователя.
+        response: Ответ модели.
+        rag_name: Опциональное имя целевой RAG базы данных (роли).
 
     Returns:
-        bool: True if document added/updated, False if skipped.
+        bool: True если документ был успешно добавлен/обновлен, иначе False.
     """
     if not query or not response:
         return False
 
-    # Filter garbage queries
+    # Фильтрация неинформативных запросов
     if is_garbage_query(query):
-        logger.info(f"UserRAG [{user_id}]: query filtered as garbage: '{query}'")
+        logger.info(f"UserRAG [{user_id}]: запрос отфильтрован как сервисный/мусорный: '{query}'")
         return False
 
-    # Filter responses that are raw JSON, service logs or errors
+    # Фильтрация ответов с сырым JSON, логами или ошибками
     resp_stripped = response.strip()
     if resp_stripped.startswith('{') and ('"title"' in resp_stripped or '"error"' in resp_stripped or '"results"' in resp_stripped):
-        logger.info(f"UserRAG [{user_id}]: response filtered as raw JSON: '{resp_stripped[:60]}...'")
+        logger.info(f"UserRAG [{user_id}]: ответ отфильтрован как сырой JSON: '{resp_stripped[:60]}...'")
         return False
     if any(resp_stripped.startswith(pfx) for pfx in ('❌', 'Error', 'ERROR', 'DEBUG', 'Traceback', '[DIRECT PLAY', '[DIRECT RAG')):
-        logger.info(f"UserRAG [{user_id}]: response filtered as service/error message")
+        logger.info(f"UserRAG [{user_id}]: ответ отфильтрован как системное сообщение об ошибке")
         return False
 
     try:
-        rag = get_user_rag(user_id, api_key)
+        rag = get_user_rag(user_id, api_key, rag_name=rag_name)
 
-        # Prune on overflow - remove oldest records
+        # Очистка старых записей при переполнении
         _prune_if_needed(rag, user_id)
 
         doc_id = _make_doc_id(user_id, query)
-        # Store ultra-compact summary (up to 150 chars) so future searches
-        # insert minimal tokens into model context
         response_summary = _format_compact_summary(response, max_chars=150)
         doc_text = f"User asked: {query.strip()}\nModel response: {response_summary}"
 
@@ -169,14 +168,15 @@ def index_user_query(
                 "user_id": str(user_id),
                 "timestamp": time.time(),
                 "q": query[:500],
-                "response": response[:1000],  # full text in meta, not in prompt
+                "response": response[:1000],
+                "rag_name": str(rag_name or "default"),
                 "is_manual": False
             },
         }])
         return True
 
     except Exception as ex:
-        logger.error(f"Error indexing user query {user_id}", ex, False)
+        logger.error(f"Ошибка индексации запроса пользователя {user_id}", ex, False)
         return False
 
 def search_user_context(
@@ -185,26 +185,28 @@ def search_user_context(
     query: str,
     top_k: int = 3,
     threshold: float = 0.4,
+    rag_name: Optional[str] = None,
 ) -> list:
-    """Semantic search over user's query history.
+    """Семантический поиск по истории RAG конкретной базы данных/роли.
 
     Args:
-        user_id: User ID.
-        api_key: Gemini API key.
-        query: Current query for finding similar context.
-        top_k: Number of results.
-        threshold: Minimum similarity threshold (0.0-1.0).
+        user_id: Идентификатор пользователя.
+        api_key: API ключ Gemini.
+        query: Запрос для поиска похожего контекста.
+        top_k: Количество результатов.
+        threshold: Минимальный порог сходства (0.0-1.0).
+        rag_name: Имя целевой RAG базы данных (роли).
 
     Returns:
-        list[dict]: List of {"id", "text", "meta", "score"} sorted by score descending.
+        list[dict]: Список словарей {"id", "text", "meta", "score"}, отсортированных по релевантности.
     """
     try:
-        rag = get_user_rag(user_id, api_key)
+        rag = get_user_rag(user_id, api_key, rag_name=rag_name)
         if rag.count() == 0:
             return []
         return rag.search(query, top_k=top_k, threshold=threshold)
     except Exception as ex:
-        logger.error(f"Error searching user RAG {user_id}", ex, False)
+        logger.error(f"Ошибка поиска в RAG {user_id} (rag_name={rag_name})", ex, False)
         return []
 
 def get_user_rag_stats(user_id, api_key: str) -> dict:

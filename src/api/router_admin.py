@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Request
+from .constants import BASE_API_PREFIX
 from pydantic import BaseModel, Field
 
 from header import __root__
@@ -29,7 +30,7 @@ from src.config import ai_cfg
 from logger import logger
 from src.api.router_auth import require_admin_user
 
-router = APIRouter(prefix='/api/admin', tags=['admin'])
+router = APIRouter(prefix=BASE_API_PREFIX + "/admin", tags=["admin"])
 
 # ============================================================================
 # Пути к файлам инструкций
@@ -286,7 +287,6 @@ async def check_instruction_in_model(request: Request, data: Dict[str, Any]) -> 
 
         # Создаём временный инстанс модели для теста
         temp_model = UnifiedChatModel(
-            api_key_names=api_key_names,
             system_instruction=system_instruction,
         )
 
@@ -1539,7 +1539,6 @@ async def generate_skill_ai(data: SkillAiGenerateRequest, request: Request) -> D
                 "Output STRICTLY valid JSON without Markdown backticks or commentary."
             )
             chat = UnifiedChatModel(
-                api_key_names=api_key_names,
                 system_instruction=system_prompt,
             )
             raw_response = await chat.chat(f"Create a skill for category '{category}': {user_prompt}")
@@ -1901,15 +1900,11 @@ async def test_admin_skill(name: str, data: SkillTestRunRequest, request: Reques
 
     try:
         from src.ai.unified_chat import UnifiedChatModel
-        import os
-        api_key_names = [n.strip() for n in os.getenv('GEMINI_API_KEY_NAMES', '').split(',') if n.strip()]
-        if api_key_names:
-            chat = UnifiedChatModel(
-                api_key_names=api_key_names,
-                system_instruction=f"You are executing the following agent skill:\n\n{instructions}",
-            )
-            response_text = await chat.chat(user_prompt)
-            model_used = "UnifiedChatModel (LLM)"
+        chat = UnifiedChatModel(
+            system_instruction=f"You are executing the following agent skill:\n\n{instructions}",
+        )
+        response_text = await chat.chat(user_prompt)
+        model_used = "UnifiedChatModel (LLM)"
     except Exception as ex:
         logger.warning(f"Live skill test fallback: {ex}")
 

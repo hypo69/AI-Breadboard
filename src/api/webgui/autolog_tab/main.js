@@ -572,6 +572,143 @@
     }
   }
 
+  // --- Telemetry Service Logic (ai-telemetry.exe) ---
+  let _telemetryStatusData = null;
+
+  async function loadTelemetryServiceStatusAndConfig() {
+    try {
+      const [statusRes, configRes] = await Promise.all([
+        apiGet('/api/autolog/telemetry/status'),
+        apiGet('/api/autolog/telemetry/config'),
+      ]);
+      _telemetryStatusData = statusRes;
+
+      // Обновление карточки живого статуса
+      const badgeNav = document.getElementById('badge-telemetry-status');
+      const badgeCard = document.getElementById('svc-status-badge');
+      const pidsEl = document.getElementById('svc-info-pids');
+      const memEl = document.getElementById('svc-info-memory');
+      const snapEl = document.getElementById('svc-info-snapshots');
+      const schedEl = document.getElementById('svc-info-scheduler');
+
+      const isRunning = Boolean(statusRes.is_running);
+      if (badgeNav) {
+        badgeNav.textContent = isRunning ? 'Online' : 'Offline';
+        badgeNav.className = isRunning ? 'badge bg-success ms-1' : 'badge bg-secondary ms-1';
+      }
+      if (badgeCard) {
+        badgeCard.textContent = isRunning ? 'Активен (ai-telemetry.exe)' : 'Остановлен';
+        badgeCard.className = isRunning ? 'badge bg-success' : 'badge bg-secondary';
+      }
+
+      if (pidsEl) {
+        if (isRunning && statusRes.processes && statusRes.processes.length > 0) {
+          const list = statusRes.processes.map(p => `${p.name} (PID: ${p.pid})`).join(', ');
+          pidsEl.textContent = list;
+          pidsEl.title = list;
+        } else {
+          pidsEl.textContent = 'Не запущен';
+        }
+      }
+
+      if (memEl) {
+        memEl.textContent = isRunning ? `${statusRes.total_memory_mb} МБ` : '0 МБ';
+      }
+
+      if (snapEl) {
+        snapEl.textContent = `${statusRes.snapshots_count} снимков`;
+        if (statusRes.latest_timestamp) {
+          snapEl.title = `Последний: ${statusRes.latest_timestamp}`;
+        }
+      }
+
+      if (schedEl) {
+        const sched = statusRes.task_scheduler || {};
+        if (sched.installed) {
+          schedEl.innerHTML = `<span class="text-success">Установлено (${sched.state})</span> <small class="text-muted" style="font-size:0.7rem;">[Wake: ${sched.wake_to_run}]</small>`;
+        } else {
+          schedEl.innerHTML = '<span class="text-muted">Не установлено</span>';
+        }
+      }
+
+      // Заполнение полей формы конфигурации
+      const mode = (configRes.mode || statusRes.mode || 'hybrid').toLowerCase();
+      const radioMode = document.querySelector(`input[name="telemetryModeRadio"][value="${mode}"]`);
+      if (radioMode) radioMode.checked = true;
+
+      const fastInt = configRes.interval_seconds || statusRes.interval_seconds || 5.0;
+      const inputFast = document.getElementById('cfg-fast-interval');
+      const valFast = document.getElementById('val-fast-interval');
+      if (inputFast) inputFast.value = fastInt;
+      if (valFast) valFast.textContent = `${fastInt}с`;
+
+      const heavyInt = configRes.heavy_interval_seconds || statusRes.heavy_interval_seconds || 60.0;
+      const inputHeavy = document.getElementById('cfg-heavy-interval');
+      const valHeavy = document.getElementById('val-heavy-interval');
+      if (inputHeavy) inputHeavy.value = heavyInt;
+      if (valHeavy) valHeavy.textContent = `${heavyInt}с`;
+
+      const topProcs = configRes.top_processes || statusRes.top_processes || 10;
+      const selTop = document.getElementById('cfg-top-processes');
+      if (selTop) selTop.value = String(topProcs);
+
+      const hColls = configRes.heavy_collectors || statusRes.heavy_collectors || {};
+      const swLhm = document.getElementById('h-sensor-lhm');
+      if (swLhm) swLhm.checked = Boolean(hColls.hardware_sensors ?? true);
+      const swSmart = document.getElementById('h-sensor-smart');
+      if (swSmart) swSmart.checked = Boolean(hColls.storage_smart ?? true);
+      const swPing = document.getElementById('h-sensor-ping');
+      if (swPing) swPing.checked = Boolean(hColls.network_ping ?? true);
+      const swInv = document.getElementById('h-sensor-inventory');
+      if (swInv) swInv.checked = Boolean(hColls.inventory_wmi ?? false);
+
+    } catch (err) {
+      console.warn('[AutoLogTab] Ошибка загрузки статуса службы телеметрии:', err);
+    }
+  }
+
+  async function saveTelemetryConfiguration() {
+    try {
+      const selectedMode = document.querySelector('input[name="telemetryModeRadio"]:checked')?.value || 'hybrid';
+      const fastInt = parseFloat(document.getElementById('cfg-fast-interval')?.value || '5.0');
+      const heavyInt = parseFloat(document.getElementById('cfg-heavy-interval')?.value || '60.0');
+      const topProcs = parseInt(document.getElementById('cfg-top-processes')?.value || '10', 10);
+
+      const hColls = {
+        hardware_sensors: document.getElementById('h-sensor-lhm')?.checked ?? true,
+        storage_smart: document.getElementById('h-sensor-smart')?.checked ?? true,
+        network_ping: document.getElementById('h-sensor-ping')?.checked ?? true,
+        inventory_wmi: document.getElementById('h-sensor-inventory')?.checked ?? false,
+      };
+
+      const payload = {
+        mode: selectedMode,
+        interval_seconds: fastInt,
+        heavy_interval_seconds: heavyInt,
+        top_processes: topProcs,
+        heavy_collectors: hColls,
+      };
+
+      showToast('Сохранение параметров телеметрии...', 'info');
+      const res = await apiPost('/api/autolog/telemetry/config', payload);
+      showToast(res.message || 'Параметры телеметрии успешно сохранены!', 'success');
+      await loadTelemetryServiceStatusAndConfig();
+    } catch (err) {
+      showToast(`Ошибка сохранения телеметрии: ${err.message}`, 'danger');
+    }
+  }
+
+  async function controlTelemetryService(action) {
+    try {
+      showToast(`Выполняется: ${action}...`, 'info');
+      const res = await apiPost('/api/autolog/telemetry/control', { action });
+      showToast(`Действие '${action}' успешно выполнено!`, 'success');
+      setTimeout(loadTelemetryServiceStatusAndConfig, 1000);
+    } catch (err) {
+      showToast(`Ошибка: ${err.message}`, 'danger');
+    }
+  }
+
   // --- Setup Master Event Listeners ---
   function setupEventListeners() {
     // Save buttons
@@ -581,6 +718,41 @@
     if (btnSaveHeader) btnSaveHeader.addEventListener('click', saveFullConfiguration);
     if (btnSaveBottom) btnSaveBottom.addEventListener('click', saveFullConfiguration);
     if (btnSaveSensors) btnSaveSensors.addEventListener('click', saveFullConfiguration);
+
+    // Telemetry service controls & save
+    const btnSaveTelemetry = document.getElementById('btn-save-telemetry-config');
+    if (btnSaveTelemetry) btnSaveTelemetry.addEventListener('click', saveTelemetryConfiguration);
+
+    const btnTelStart = document.getElementById('btn-telemetry-start');
+    if (btnTelStart) btnTelStart.addEventListener('click', () => controlTelemetryService('start'));
+
+    const btnTelStop = document.getElementById('btn-telemetry-stop');
+    if (btnTelStop) btnTelStop.addEventListener('click', () => controlTelemetryService('stop'));
+
+    const btnTelRestart = document.getElementById('btn-telemetry-restart');
+    if (btnTelRestart) btnTelRestart.addEventListener('click', () => controlTelemetryService('restart'));
+
+    const btnTelInstallTask = document.getElementById('btn-telemetry-install-task');
+    if (btnTelInstallTask) btnTelInstallTask.addEventListener('click', () => controlTelemetryService('install-task'));
+
+    const btnTelUninstallTask = document.getElementById('btn-telemetry-uninstall-task');
+    if (btnTelUninstallTask) btnTelUninstallTask.addEventListener('click', () => controlTelemetryService('uninstall-task'));
+
+    // Dynamic label sync for intervals
+    const inputFast = document.getElementById('cfg-fast-interval');
+    if (inputFast) {
+      inputFast.addEventListener('input', () => {
+        const valFast = document.getElementById('val-fast-interval');
+        if (valFast) valFast.textContent = `${inputFast.value}с`;
+      });
+    }
+    const inputHeavy = document.getElementById('cfg-heavy-interval');
+    if (inputHeavy) {
+      inputHeavy.addEventListener('input', () => {
+        const valHeavy = document.getElementById('val-heavy-interval');
+        if (valHeavy) valHeavy.textContent = `${inputHeavy.value}с`;
+      });
+    }
 
     // Toggle Engine button
     const btnToggle = document.getElementById('btn-autolog-toggle-engine');
@@ -630,6 +802,12 @@
     const btnRefSensors = document.getElementById('btn-refresh-sensors');
     if (btnRefSensors) btnRefSensors.addEventListener('click', loadStatusAndConfig);
 
+    // Вкладка службы телеметрии
+    const btnTabTelemetry = document.getElementById('subtab-telemetry-service-btn');
+    if (btnTabTelemetry) {
+      btnTabTelemetry.addEventListener('click', loadTelemetryServiceStatusAndConfig);
+    }
+
     // Search Loggers filter
     const inputSearch = document.getElementById('input-search-loggers');
     if (inputSearch) {
@@ -646,14 +824,17 @@
   }
 
   // --- Initialization ---
-  document.addEventListener('DOMContentLoaded', () => {
+  function initAll() {
     setupEventListeners();
     loadStatusAndConfig();
-  });
+    loadTelemetryServiceStatusAndConfig();
+    setInterval(loadTelemetryServiceStatusAndConfig, 10000);
+  }
+
+  document.addEventListener('DOMContentLoaded', initAll);
 
   // Also initialize immediately if DOM is already ready
   if (document.readyState === 'interactive' || document.readyState === 'complete') {
-    setupEventListeners();
-    loadStatusAndConfig();
+    initAll();
   }
 })();

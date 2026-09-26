@@ -34,7 +34,7 @@ import tempfile
 from pathlib import Path
 from typing import Optional, List
 from concurrent.futures import ThreadPoolExecutor
-from src.ai import GoogleGenerativeAI
+from src.ai import UnifiedChatModel
 from logger import logger
 from header import __root__
 
@@ -69,7 +69,7 @@ def get_max_size_bytes() -> float:
         logger.debug(f"Не удалось прочитать конфиг размера лога: {ex}")
         return DEFAULT_MAX_SIZE_MB * 1024 * 1024
 
-async def analyze_log_file(file_path: Path, ai_model: GoogleGenerativeAI) -> bool:
+async def analyze_log_file(file_path: Path, ai_model: UnifiedChatModel) -> bool:
     """
     Анализирует лог-файл с помощью AI и creates отчёт.
     
@@ -81,7 +81,7 @@ async def analyze_log_file(file_path: Path, ai_model: GoogleGenerativeAI) -> boo
     
     Args:
         file_path: Путь к лог-файлу для анализа.
-        ai_model: Инициализированный экземпляр GoogleGenerativeAI.
+        ai_model: Инициализированный экземпляр UnifiedChatModel.
         
     Returns:
         bool: True если анализ прошёл successfully, False в случае ошибки.
@@ -160,7 +160,7 @@ async def analyze_log_file(file_path: Path, ai_model: GoogleGenerativeAI) -> boo
         logger.error(f"Критическая Error при анализе лог-файла {file_path.name}: {ex}")
         return False
 
-async def update_master_journal(ai_model: GoogleGenerativeAI) -> bool:
+async def update_master_journal(ai_model: UnifiedChatModel) -> bool:
     """
     Creates главный журнал (Master Journal) из последних отчётов анализа.
     
@@ -170,7 +170,7 @@ async def update_master_journal(ai_model: GoogleGenerativeAI) -> bool:
     3. Saves результат в master_journal.md
     
     Args:
-        ai_model: Инициализированный экземпляр GoogleGenerativeAI.
+        ai_model: Инициализированный экземпляр UnifiedChatModel.
         
     Returns:
         bool: True если журнал successfully обновлён, False в случае ошибки.
@@ -281,8 +281,7 @@ async def log_analyzer_loop() -> None:
             return
             
         system_instruction = "Вы — профессиональный аналитик системных логов. Ваша задача — исследовать логи, выявлять ошибки, проблемы, тренды и давать рекомендации по устранению."
-        ai_model = GoogleGenerativeAI(
-            api_key_names=api_key_names,
+        ai_model = UnifiedChatModel(
             system_instruction=system_instruction
         )
     except Exception as ex:

@@ -35,6 +35,9 @@ from apps.windows.telemetry.research.analyzer import TelemetryResearcher
 from apps.windows.telemetry.research.charts import TelemetryChartGenerator
 
 
+from apps.windows.telemetry.research.models import ResearchScenarioRequest
+
+
 def parse_args() -> argparse.Namespace:
     """Парсинг аргументов командной строки."""
     parser = argparse.ArgumentParser(
@@ -52,15 +55,15 @@ def parse_args() -> argparse.Namespace:
         "--output",
         "-o",
         type=str,
-        default="telemetry_research_report.html",
+        default=None,
         help="Путь для сохранения результата (по умолчанию: telemetry_research_report.html)",
     )
     parser.add_argument(
         "--format",
         "-f",
-        choices=["html", "json", "svg"],
+        choices=["html", "json", "svg", "summary"],
         default="html",
-        help="Формат вывода: html (интерактивный дашборд), json (структурированный отчет), svg (графики)",
+        help="Формат вывода: html, json, svg, summary",
     )
     return parser.parse_args()
 
@@ -73,13 +76,38 @@ def main() -> int:
     chart_gen = TelemetryChartGenerator()
 
     logger.info(f"Запуск исследования логов телеметрии (источник: {args.source or 'системные директории по умолчанию'})...")
-    report = researcher.analyze(args.source)
+    
+    if args.format == "summary":
+        req = ResearchScenarioRequest(source_path=args.source)
+        deep_report = researcher.run_deep_research(scenario=req, chart_generator=chart_gen)
+        print("\n" + "=" * 70)
+        print(f"🔬 Отчет исследования телеметрии: {deep_report.report_id}")
+        print("=" * 70)
+        print(f"Дата формирования: {deep_report.generated_at}")
+        print(f"Проанализировано записей: {deep_report.base_report.records_analyzed}")
+        print(f"Индекс здоровья системы: {deep_report.base_report.health_score}/100")
+        print(f"Обнаружено аномалий: {len(deep_report.base_report.anomalies)}")
 
+        print("\n--- Проверенные гипотезы ---")
+        for h in deep_report.hypotheses:
+            status_icon = "⚠️ [ПОДТВЕРЖДЕНА]" if h.confirmed else "✅ [В НОРМЕ]"
+            print(f"{status_icon} {h.title} (уверенность {h.confidence*100:.0f}%)")
+            for ev in h.evidence:
+                print(f"    • {ev}")
+
+        print("\n--- Рекомендации ---")
+        for rec in deep_report.actionable_recommendations:
+            print(f"  👉 {rec}")
+        print("=" * 70 + "\n")
+        return 0
+
+    report = researcher.analyze(args.source)
     records = researcher.extractor.load_all_records(args.source)
     ts_map = researcher._extract_time_series(records)
     report.charts = chart_gen.generate_chart_configs(ts_map, report)
 
-    out_path = Path(args.output)
+    out_path_str = args.output or ("telemetry_research_report.html" if args.format == "html" else "report.json")
+    out_path = Path(out_path_str)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     if args.format == "html":
@@ -106,6 +134,7 @@ def main() -> int:
         print(f" • {conclusion}")
 
     return 0
+
 
 
 if __name__ == "__main__":

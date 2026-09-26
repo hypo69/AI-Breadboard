@@ -170,14 +170,15 @@ def init_router() -> APIRouter:
             raise HTTPException(status_code=400, detail="Файл не передан")
 
         try:
-            # Создаём целевую директорию, если её нет
+            # Создаём целевую директорию Ninite, если её нет
             NINITE_DIR.mkdir(parents=True, exist_ok=True)
 
-            # Сохраняем как ninite.exe
+            # Какое бы имя ни было у исходного файла (например, Ninite 7Zip Chrome Cursor FileZilla Firefox Git Installer.exe),
+            # сохраняем строго как ninite.exe в папке Program Files\Ninite
             with open(NINITE_EXE, "wb") as dst:
                 shutil.copyfileobj(file.file, dst)
 
-            logger.info(f"Файл Ninite успешно сохранён в {NINITE_EXE}")
+            logger.info(f"Файл {file.filename} сохранён и переименован в {NINITE_EXE}")
 
             # Автоматически регистрируем задачу в Task Scheduler
             schedule_req = NiniteScheduleRequest(interval_weeks=interval_weeks, time_str=time_str)
@@ -185,7 +186,8 @@ def init_router() -> APIRouter:
 
             return {
                 "success": True,
-                "message": f"Файл {file.filename} успешно установлен как {NINITE_EXE} и запланирован в Task Scheduler",
+                "message": f"Файл '{file.filename}' успешно сохранён как ninite.exe в {NINITE_DIR} и запланирован в Task Scheduler",
+                "original_filename": file.filename,
                 "path": str(NINITE_EXE),
                 "size_bytes": NINITE_EXE.stat().st_size,
                 "schedule": schedule_result,
@@ -218,7 +220,7 @@ def init_router() -> APIRouter:
         is_update = existing_task.get("exists", False)
 
         # Команда PowerShell для безопасной регистрации / перезаписи задачи
-        # Аргумент /silent запускает Ninite в фоновом тихом режиме
+        # Аргумент /silent с перенаправлением лога в ninite_update.log
         target_path = str(NINITE_EXE).replace("'", "''")
         log_path = str(NINITE_LOG).replace("'", "''")
 
@@ -227,7 +229,7 @@ def init_router() -> APIRouter:
         if (Get-ScheduledTask -TaskName '{TASK_NAME}' -ErrorAction SilentlyContinue) {{
             Unregister-ScheduledTask -TaskName '{TASK_NAME}' -Confirm:$false -ErrorAction SilentlyContinue
         }}
-        $action = New-ScheduledTaskAction -Execute '{target_path}' -Argument '/silent'
+        $action = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument '/c "`"{target_path}`" /silent > `"{log_path}`" 2>&1'
         $trigger = New-ScheduledTaskTrigger -Weekly -WeeksInterval {req.interval_weeks} -DaysOfWeek {req.days_of_week} -At '{req.time_str}'
         $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
         $principal = New-ScheduledTaskPrincipal -UserId "NT AUTHORITY\\SYSTEM" -LogonType ServiceAccount -RunLevel Highest
@@ -241,7 +243,7 @@ def init_router() -> APIRouter:
             if (Get-ScheduledTask -TaskName '{TASK_NAME}' -ErrorAction SilentlyContinue) {{
                 Unregister-ScheduledTask -TaskName '{TASK_NAME}' -Confirm:$false -ErrorAction SilentlyContinue
             }}
-            $action = New-ScheduledTaskAction -Execute '{target_path}' -Argument '/silent'
+            $action = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument '/c "`"{target_path}`" /silent > `"{log_path}`" 2>&1'
             $trigger = New-ScheduledTaskTrigger -Weekly -WeeksInterval {req.interval_weeks} -DaysOfWeek {req.days_of_week} -At '{req.time_str}'
             Register-ScheduledTask -TaskName '{TASK_NAME}' -Action $action -Trigger $trigger -Description 'Автоматическое получение свежих версий ПО через Ninite (/silent)' -Force
             """
@@ -259,7 +261,7 @@ def init_router() -> APIRouter:
         return {
             "success": True,
             "is_update": is_update,
-            "message": f"Задача '{TASK_NAME}' успешно {action_word} в Windows Task Scheduler с флагом 'ninite.exe /silent' (без дублирования)",
+            "message": f"Задача '{TASK_NAME}' успешно {action_word} в Windows Task Scheduler с флагом 'ninite.exe /silent' и ведением логов в {NINITE_LOG}",
             "interval_weeks": req.interval_weeks,
             "time": req.time_str,
             "days_of_week": req.days_of_week,
@@ -280,18 +282,18 @@ def init_router() -> APIRouter:
                 return {
                     "success": True,
                     "mode": "task_scheduler",
-                    "message": f"Задача '{TASK_NAME}' запущена в Task Scheduler с флагом /silent",
+                    "message": f"Задача '{TASK_NAME}' запущена в Task Scheduler с записью логов в {NINITE_LOG}",
                 }
 
-        # Резервный прямой запуск с флагом /silent
+        # Резервный прямой запуск с флагом /silent и записью логов
         try:
-            cmd = f'"{NINITE_EXE}" /silent'
+            cmd = f'cmd.exe /c ""{NINITE_EXE}" /silent > "{NINITE_LOG}" 2>&1"'
             proc = subprocess.Popen(cmd, shell=True)
             return {
                 "success": True,
                 "mode": "direct_process",
                 "pid": proc.pid,
-                "message": "Ninite запущен в фоновом режиме с флагом /silent",
+                "message": f"Ninite запущен в фоновом режиме с ведением логов в {NINITE_LOG}",
             }
         except Exception as e:
             logger.error(f"Ошибка запуска Ninite: {e}")

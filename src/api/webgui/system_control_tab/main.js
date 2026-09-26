@@ -99,54 +99,6 @@
           elevBadge.innerHTML = '👁️ Mode: Standard User (Read-Only)';
         }
       }
-
-      const sys = data.system || {};
-      const sec = data.security || {};
-      const rest = data.restore || {};
-      const disk = data.disk || {};
-      const pwr = data.power || {};
-      const upd = data.update || {};
-
-      const cleanEstimateTxt = document.getElementById('scc-clean-estimate-txt');
-      if (cleanEstimateTxt) {
-        const cleanMb = disk.cleanup_estimate?.total_cleanable_mb || 0;
-        cleanEstimateTxt.innerText = `Cleanable: ~${cleanMb} MB`;
-      }
-
-      // Specifications Table
-      const uptimeSec = sys.uptime_seconds || 0;
-      const uptimeTxt = `${Math.floor(uptimeSec / 3600)}h ${Math.floor((uptimeSec % 3600) / 60)}m`;
-      const upBadge = document.getElementById('scc-overview-uptime');
-      if (upBadge) upBadge.innerText = `Uptime: ${uptimeTxt}`;
-
-      const setTxt = (id, val) => {
-        const el = document.getElementById(id);
-        if (el) el.innerText = val || '-';
-      };
-
-      setTxt('scc-spec-host', sys.hostname);
-      setTxt('scc-spec-os', `${sys.os_caption} (Build ${sys.os_build})`);
-      setTxt('scc-spec-cpu', `${sys.cpu_model} (${sys.cpu_cores_logical} logical cores)`);
-      setTxt('scc-spec-ram', `${sys.ram_available_gb} GB free / ${sys.ram_total_gb} GB total (${sys.ram_percent}% used)`);
-      setTxt('scc-spec-power', pwr.active_plan_name);
-      setTxt('scc-spec-update', `${upd.status} (${upd.recent_hotfixes_count} KBs installed)`);
-
-      // Security Table
-      setTxt('scc-sec-def', sec.defender_enabled ? 'Enabled' : 'Disabled');
-      setTxt('scc-sec-rt', sec.realtime_protection_enabled ? 'Enabled' : 'Disabled');
-      setTxt('scc-sec-fw-dom', sec.firewall_domain_enabled ? 'Active' : 'Disabled');
-      setTxt('scc-sec-fw-priv', sec.firewall_private_enabled ? 'Active' : 'Disabled');
-      setTxt('scc-sec-fw-pub', sec.firewall_public_enabled ? 'Active' : 'Disabled');
-      setTxt('scc-sec-uac', sec.uac_enabled ? 'Enabled' : 'Disabled');
-
-      const secBadge = document.getElementById('scc-sec-badge');
-      if (secBadge) {
-        secBadge.innerText = sec.overall_status;
-        secBadge.className = sec.overall_status === 'SECURE' ? 'badge bg-success-subtle text-success' : 'badge bg-warning-subtle text-warning';
-      }
-
-      // Restore points table
-      fetchRestorePoints();
     } catch (e) {
       console.error('[SystemControl] Failed to fetch status:', e);
     }
@@ -529,15 +481,20 @@
 
   function positionTooltip(e, tip) {
     const margin = 12;
-    let x = e.clientX + margin;
-    let y = e.clientY + margin;
-
     const tipRect = tip.getBoundingClientRect();
+
+    // По умолчанию — НАД курсором
+    let x = e.clientX + margin;
+    let y = e.clientY - tipRect.height - margin;
+
+    // Если не хватает места сверху — показываем снизу
+    if (y < 10) {
+      y = e.clientY + margin;
+    }
+
+    // Если выходит за правый край — сдвигаем влево
     if (x + tipRect.width > window.innerWidth) {
       x = e.clientX - tipRect.width - margin;
-    }
-    if (y + tipRect.height > window.innerHeight) {
-      y = e.clientY - tipRect.height - margin;
     }
 
     tip.style.left = `${Math.max(10, x)}px`;
@@ -675,6 +632,18 @@
     const search = searchInput ? searchInput.value.trim() : '';
     const eventId = eventIdInput && eventIdInput.value.trim() ? eventIdInput.value.trim() : '0';
     const limit = limitSelect ? limitSelect.value : '100';
+
+    // Показываем спиннер в таблице на время загрузки
+    if (tableBody) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center py-4 text-muted">
+            <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
+            Загрузка событий журнала <span class="text-warning font-monospace">${escapeHtml(currentChannel)}</span>...
+          </td>
+        </tr>
+      `;
+    }
 
     try {
       const url = `/api/v1/system_logs/events?channel=${encodeURIComponent(currentChannel)}&limit=${limit}&level=${encodeURIComponent(level)}&search=${encodeURIComponent(search)}&hours=${hours}&event_id=${eventId}&file_path=${encodeURIComponent(currentFilePath)}`;
@@ -1125,6 +1094,10 @@
     };
 
     setElTxt('slc-modal-time', entry.timestamp);
+    // Бейдж уровня в заголовке модала
+    const lvlBadgeEl = document.getElementById('slc-modal-level-badge');
+    if (lvlBadgeEl) lvlBadgeEl.innerHTML = `<span class="badge ${getSeverityClass(entry.level)} text-uppercase px-2 py-1">${escapeHtml(entry.level)}</span>`;
+
     const lvlEl = document.getElementById('slc-modal-level');
     if (lvlEl) lvlEl.innerHTML = `<span class="badge ${getSeverityClass(entry.level)}">${escapeHtml(entry.level)}</span>`;
     setElTxt('slc-modal-id', entry.event_id > 0 ? String(entry.event_id) : '-');
@@ -1172,6 +1145,19 @@
         } catch (err) {
           aiExplanation.innerHTML = `<div class="text-danger">Ошибка диагностики: ${escapeHtml(err.message)}</div>`;
         }
+      };
+    }
+
+    // Кнопка копирования текста сообщения
+    const copyMsgBtn = document.getElementById('btn-slc-modal-copy-msg');
+    if (copyMsgBtn) {
+      copyMsgBtn.onclick = () => {
+        const text = entry.message || '';
+        navigator.clipboard.writeText(text).then(() => {
+          const orig = copyMsgBtn.innerHTML;
+          copyMsgBtn.innerHTML = '<i class="bi bi-check2 me-1 text-success"></i>Скопировано!';
+          setTimeout(() => { copyMsgBtn.innerHTML = orig; }, 1800);
+        }).catch(() => {});
       };
     }
 
@@ -1428,3 +1414,6 @@
 
   window.initSystemControlTab = initSystemControlTab;
 })();
+
+
+

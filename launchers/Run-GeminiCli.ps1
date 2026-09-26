@@ -148,8 +148,15 @@ $defaultModel = "gemini-2.5-flash"
 if (Test-Path $configPath) {
     try {
         $cfg = Get-Content $configPath -Raw | ConvertFrom-Json
-        # New format: config_tc.json style
-        if ($cfg.ai -and $cfg.ai.gemini -and $cfg.ai.gemini.model) {
+        # New format: ai.providers.gemini_cli.model or ai.providers.gemini.model
+        if ($cfg.ai.providers -and $cfg.ai.providers.gemini_cli -and $cfg.ai.providers.gemini_cli.model) {
+            $defaultModel = [string]$cfg.ai.providers.gemini_cli.model
+        }
+        elseif ($cfg.ai.providers -and $cfg.ai.providers.gemini -and $cfg.ai.providers.gemini.model) {
+            $defaultModel = [string]$cfg.ai.providers.gemini.model
+        }
+        # Old format: ai.gemini.model
+        elseif ($cfg.ai -and $cfg.ai.gemini -and $cfg.ai.gemini.model) {
             $defaultModel = [string]$cfg.ai.gemini.model
         } elseif ($cfg.web_search.gemini_cli_model) {
             $defaultModel = [string]$cfg.web_search.gemini_cli_model

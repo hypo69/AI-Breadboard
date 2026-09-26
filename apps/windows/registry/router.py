@@ -141,9 +141,9 @@ def init_router(viewer: Optional[RegistryViewer] = None) -> APIRouter:
             csv_logger.log_param_change(
                 param_name=f"{req.hive}\\{req.path}\\{req.name}",
                 old_value="<previous>",
-                new_value=str(req.value),
-                status="success" if res.success else "error",
-                details=f"type={req.value_type},backup={res.backup_id}",
+                new_value=str(req.data),
+                status="success" if res.status == "ok" else "error",
+                details=f"type={req.type_name},backup={res.backup.backup_id if res.backup else ''}",
                 filename="registry_viewer_param_changes.csv",
             )
             return res
@@ -163,8 +163,8 @@ def init_router(viewer: Optional[RegistryViewer] = None) -> APIRouter:
                 param_name=f"{req.hive}\\{req.path}\\{req.name}",
                 old_value="<deleted>",
                 new_value="<null>",
-                status="success" if res.success else "error",
-                details=f"backup={res.backup_id}",
+                status="success" if res.status == "ok" else "error",
+                details=f"backup={res.backup.backup_id if res.backup else ''}",
                 filename="registry_viewer_param_changes.csv",
             )
             return res
@@ -182,8 +182,8 @@ def init_router(viewer: Optional[RegistryViewer] = None) -> APIRouter:
             res = registry_engine.create_key(req)
             csv_logger.log_event(
                 event_type="create_key",
-                status="success" if res.success else "error",
-                details=f"hive={req.hive},parent={req.parent_path},name={req.new_key_name}",
+                status="success" if res.status == "ok" else "error",
+                details=f"hive={req.hive},path={req.path}",
                 filename="registry_viewer_events.csv",
             )
             return res
@@ -199,8 +199,8 @@ def init_router(viewer: Optional[RegistryViewer] = None) -> APIRouter:
             res = registry_engine.delete_key(req)
             csv_logger.log_event(
                 event_type="delete_key",
-                status="success" if res.success else "error",
-                details=f"hive={req.hive},path={req.path},backup={res.backup_id}",
+                status="success" if res.status == "ok" else "error",
+                details=f"hive={req.hive},path={req.path},backup={res.backup.backup_id if res.backup else ''}",
                 filename="registry_viewer_events.csv",
             )
             return res

@@ -19,7 +19,7 @@ import json
 import time
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile, status
+from .constants import BASE_API_PREFIX
 from pydantic import BaseModel, Field
 
 from src.ai.audio_diarization import AudioDiarizationService, get_audio_diarization_service
@@ -43,7 +43,7 @@ def init_router() -> APIRouter:
     Returns:
         APIRouter: Configured APIRouter instance.
     """
-    router = APIRouter(prefix="/api/audio", tags=["Audio Diarization"])
+    router = APIRouter(prefix=BASE_API_PREFIX + "/audio", tags=["Audio Diarization"])
 
     @router.post("/diarize", summary="Analyze voice message: diarize speakers and summarize")
     async def diarize_audio(

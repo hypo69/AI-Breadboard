@@ -22,14 +22,13 @@ __all__ = [
     "enterprise_knowledge",
     "gcloud_monitor",
     "helpdesk",
-    "librehardwaremonitor",
     "research_and_statistic",
     "software_transparency_scanner",
-    "telemetry_research",
     "trading_terminal",
     "user_assistant",
     "website_monitor",
     "wikipedia_research",
     "windows",
 ]
+
 

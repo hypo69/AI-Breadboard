@@ -44,16 +44,16 @@ flowchart TD
 
     %% 4. [2] Test Computer
     Админ --> TC
-    subgraph TC["🖥️ 2. Test Computer ( /tc — config_tc.json )"]
+    subgraph TC["🖥️ 2. Test Computer ( /tc — apps/windows & start_scenarios_config/tc.json )"]
         direction TB
-        W1["⚙️ System Control Center, Инспектор & Sysadmin"]
+        W1["⚙️ System Control Center, Инспектор & Sysadmin (apps/windows)"]
         W2["🗂️ Registry Viewer (Реестр) & Startup Auditor"]
         W3["🛡️ Windows Defender & Безопасность"]
         W4["🔬 Software Transparency & Audit"]
         W5["💾 Windows Backup Manager"]
-        H1["🌡️ LibreHardwareMonitor (LHM)"]
-        H3["🏎️ AI Inference Benchmark (Замер скорости токенизации)"]
-        H4["📋 Scenarios & Autolog Manager (Автологгер)"]
+        H1["🌡️ LibreHardwareMonitor (LHM) & S.M.A.R.T."]
+        H2["🏎️ Hardware & AI Inference Benchmark (apps/windows/hardware)"]
+        H3["📋 Scenarios & Autolog Manager (Автологгер)"]
     end
 
     %% 5. [3] Пользовательский портал

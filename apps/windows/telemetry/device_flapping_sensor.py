@@ -6,8 +6,7 @@
 #   Сенсор телеметрии аппаратных устройств и периферии (USB, дисконкеи, мыши,
 #   клавиатуры, Wacom pen, принтеры, HDMI/DP мониторы, Bluetooth).
 #   Выполняет непрерывный опрос, детектирует дребезг (flapping), внезапные
-#   отключения, изменения кодов ошибок PnP (Code 43, 10, 28) и ведёт потоковое
-#   логирование в JSONL в соответствии со стандартами телеметрии.
+#   отключения, изменения кодов ошибок PnP (Code 43, 10, 28) и сохраняет события в SQLite.
 #
 # Examples:
 #   >>> from apps.windows.telemetry.device_flapping_sensor import DeviceFlappingSensor
@@ -32,12 +31,11 @@ import threading
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set
 
 from logger import logger
 from apps.windows.api.setupapi import PnPDeviceInfo, SetupAPI
-from apps.windows.telemetry.json_logger import TelemetryJsonLogger
+from apps.windows.telemetry.storage import TelemetryStorage
 
 
 @dataclass
@@ -90,8 +88,9 @@ class DeviceFlappingSensor:
         poll_interval_sec: float = 1.0,
         flapping_window_sec: float = 60.0,
         flapping_threshold: int = 3,
-        json_logger: Optional[TelemetryJsonLogger] = None,
+        storage: Optional[TelemetryStorage] = None,
         on_event_callback: Optional[Callable[[DeviceTransitionEvent], None]] = None,
+        json_logger: Any = None,
     ) -> None:
         """Инициализирует сенсор телеметрии устройств.
 
@@ -99,20 +98,16 @@ class DeviceFlappingSensor:
             poll_interval_sec: Интервал между опросами оборудования в секундах.
             flapping_window_sec: Временное окно для фиксации дребезга (сек).
             flapping_threshold: Количество отключений за окно для вызова тревоги FLAPPING_ALERT.
-            json_logger: Логгер телеметрии (по умолчанию создает logs/device_telemetry.jsonl).
+            storage: Хранилище SQLite (по умолчанию используется синглтон).
             on_event_callback: Опциональный callback-обработчик для передачи событий в UI/RAG.
+            json_logger: Опциональный логгер JSONL для обратной совместимости и тестирования.
         """
         self.poll_interval = max(0.1, poll_interval_sec)
         self.flapping_window = flapping_window_sec
         self.flapping_threshold = flapping_threshold
         self.on_event_callback = on_event_callback
-
-        default_log_dir = Path("logs/telemetry")
-        self.json_logger = json_logger or TelemetryJsonLogger(
-            log_dir=str(default_log_dir),
-            filename="device_telemetry_events.jsonl",
-            max_file_size_mb=50.0,
-        )
+        self.json_logger = json_logger
+        self.storage = storage or TelemetryStorage.get_instance()
 
         self._setupapi = SetupAPI() if os.name == "nt" else None
         self._is_running = False
@@ -188,8 +183,20 @@ class DeviceFlappingSensor:
         Args:
             event: Экземпляр события изменения состояния устройства.
         """
-        # 1. Потоковая запись в JSONL телеметрию
-        self.json_logger.log(event.to_dict())
+        # 1. Сохранение события в SQLite и json_logger
+        try:
+            self.storage.save_device_event(event.to_dict())
+        except Exception as ex:
+            logger.error(f"Ошибка сохранения device_event в БД: {ex}")
+
+        if self.json_logger:
+            try:
+                if hasattr(self.json_logger, "log_event"):
+                    self.json_logger.log_event(event.to_dict())
+                elif hasattr(self.json_logger, "log"):
+                    self.json_logger.log(event.to_dict())
+            except Exception as ex:
+                logger.error(f"Ошибка сохранения device_event в json_logger: {ex}")
 
         # 2. Логирование через структурированный системный логгер
         log_msg = (

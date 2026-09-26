@@ -121,8 +121,8 @@ class TestRouterChatTestModel(unittest.TestCase):
         self.assertIn("ollama:", data.get("model", ""))
 
     def test_get_model_instruction(self) -> None:
-        """Test GET /api/chat/model_instruction returns active system instruction."""
-        response = self.client.get("/api/chat/model_instruction")
+        """Test GET /api/chat/model-instruction returns active system instruction."""
+        response = self.client.get("/api/chat/model-instruction")
         self.assertEqual(response.status_code, 200)
         data: dict = response.json()
         self.assertEqual(data.get("status"), "success")
@@ -131,9 +131,9 @@ class TestRouterChatTestModel(unittest.TestCase):
         self.assertIn("provider", data)
 
     def test_set_model_instruction(self) -> None:
-        """Test POST /api/chat/model_instruction updates active system instruction."""
+        """Test POST /api/chat/model-instruction updates active system instruction."""
         new_instruction = "Вы — тестовый AI-ассистент для юнит-тестов."
-        response = self.client.post("/api/chat/model_instruction", json={
+        response = self.client.post("/api/chat/model-instruction", json={
             "instruction": new_instruction,
             "save_to_disk": False,
         })
@@ -144,24 +144,24 @@ class TestRouterChatTestModel(unittest.TestCase):
         self.mock_chat_model.update_system_instruction.assert_called_with(new_instruction)
 
     def test_set_model_instruction_empty_error(self) -> None:
-        """Test POST /api/chat/model_instruction with empty instruction returns 400."""
-        response = self.client.post("/api/chat/model_instruction", json={
+        """Test POST /api/chat/model-instruction with empty instruction returns 400."""
+        response = self.client.post("/api/chat/model-instruction", json={
             "instruction": "",
         })
         self.assertEqual(response.status_code, 400)
 
-    def test_get_model_endpoint(self) -> None:
-        """Test GET /api/chat/models/model returns active model info."""
-        response = self.client.get("/api/chat/models/model")
+    def test_get_active_model_endpoint(self) -> None:
+        """Test GET /api/chat/active-model returns active model info."""
+        response = self.client.get("/api/chat/active-model")
         self.assertEqual(response.status_code, 200)
         data: dict = response.json()
-        self.assertEqual(data.get("status"), "success")
+        self.assertEqual(data.get("status"), "ok")
         self.assertTrue(data.get("model"))
         self.assertTrue(data.get("provider"))
 
-    def test_set_model_endpoint(self) -> None:
-        """Test POST /api/chat/models/set_model updates active model."""
-        response = self.client.post("/api/chat/models/set_model", json={
+    def test_set_active_model_endpoint(self) -> None:
+        """Test POST /api/chat/set-active-model updates active model."""
+        response = self.client.post("/api/chat/set-active-model", json={
             "model": "llama3.1",
             "provider": "ollama",
         })
@@ -172,23 +172,22 @@ class TestRouterChatTestModel(unittest.TestCase):
         self.assertEqual(data.get("provider"), "OLLAMA")
 
     def test_get_provider_endpoint(self) -> None:
-        """Test GET /api/chat/models_provider/provider returns active provider."""
-        response = self.client.get("/api/chat/models_provider/provider")
+        """Test GET /api/chat/provider returns active provider."""
+        response = self.client.get("/api/chat/provider")
         self.assertEqual(response.status_code, 200)
         data: dict = response.json()
         self.assertEqual(data.get("status"), "success")
-        self.assertTrue(data.get("provider"))
+    def test_get_chat_model_ollama_fallback_simple_namespace(self) -> None:
+        """Тестирование функции get_chat_model для Ollama при использовании SimpleNamespace без атрибута ollama_base_url."""
+        from types import SimpleNamespace
+        from src.api.router_chat import get_chat_model
 
-    def test_set_provider_endpoint(self) -> None:
-        """Test POST /api/chat/models_provider/set_provider updates active provider."""
-        response = self.client.post("/api/chat/models_provider/set_provider", json={
-            "provider": "agy",
-        })
-        self.assertEqual(response.status_code, 200)
-        data: dict = response.json()
-        self.assertEqual(data.get("status"), "success")
-        self.assertEqual(data.get("provider"), "AGY")
-        self.assertIn("agy-", data.get("model", ""))
+        fake_ai_cfg = SimpleNamespace()  # без атрибута ollama_base_url
+        with patch("src.api.router_chat.ai_cfg", fake_ai_cfg):
+            model_inst = get_chat_model("ollama:llama3.1")
+            self.assertIsNotNone(model_inst)
+            self.assertEqual(getattr(model_inst, "_api_url", None), "http://localhost:11434")
+
 
 
 

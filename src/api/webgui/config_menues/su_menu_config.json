@@ -1,15 +1,55 @@
 {
-  "version": "20260923_v3",
+  "version": "20260924_v4",
   "menu": {
     "topButtons": [],
     "sidebarItems": [
+      {
+        "id": "process_leaks",
+        "label": "1. Утечки и микрофризы",
+        "icon": "🔍",
+        "tab": "tab-process-leaks",
+        "order": 1,
+        "visible": true
+      },
+      {
+        "id": "forensics",
+        "label": "2. Поведенческая форензика",
+        "icon": "⏱️",
+        "tab": "tab-forensics",
+        "order": 2,
+        "visible": true
+      },
+      {
+        "id": "throttling",
+        "label": "3. Качество ядра и Троттлинг",
+        "icon": "⚡",
+        "tab": "tab-throttling",
+        "order": 3,
+        "visible": true
+      },
+      {
+        "id": "storage_wear",
+        "label": "4. Износ дисков и батареи",
+        "icon": "💽",
+        "tab": "tab-storage-wear",
+        "order": 4,
+        "visible": true
+      },
+      {
+        "id": "peripherals",
+        "label": "5. Сеть и периферия",
+        "icon": "🔌",
+        "tab": "tab-peripherals",
+        "order": 5,
+        "visible": true
+      },
       {
         "id": "chat",
         "label": "Чат",
         "i18n": "tabs.chat",
         "icon": "💬",
         "tab": "tab-chat",
-        "order": 1,
+        "order": 6,
         "visible": true
       },
       {

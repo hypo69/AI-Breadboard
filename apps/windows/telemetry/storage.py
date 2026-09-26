@@ -5,7 +5,7 @@
 # Description:
 #   Постоянное локальное хранилище системных срезов, процессов, событий,
 #   аппаратных датчиков и архивов аудита в SQLite базе данных.
-#   Обеспечивает транзакционную надежность, индексирование и миграцию из CSV.
+#   Обеспечивает транзакционную надежность и индексирование.
 #
 # Examples:
 #   >>> from apps.windows.telemetry.storage import TelemetryStorage
@@ -24,7 +24,6 @@
 
 from __future__ import annotations
 
-import csv
 import json
 import os
 import sqlite3
@@ -158,12 +157,17 @@ class TelemetryStorage:
                     memory_mb REAL,
                     memory_percent REAL,
                     num_threads INTEGER,
+                    num_handles INTEGER DEFAULT 0,
                     username TEXT,
                     read_bytes_sec REAL,
                     write_bytes_sec REAL,
                     FOREIGN KEY (snapshot_id) REFERENCES system_snapshots(id) ON DELETE CASCADE
                 );
             """)
+            try:
+                cursor.execute("ALTER TABLE process_snapshots ADD COLUMN num_handles INTEGER DEFAULT 0;")
+            except sqlite3.OperationalError:
+                pass
 
             # 3. Таблица показаний сенсоров
             cursor.execute("""
@@ -258,7 +262,28 @@ class TelemetryStorage:
                 );
             """)
 
-            # 9. Таблица произвольных записей и таблиц логов
+            # 9. Таблица событий устройств (подключение/отключение/дребезг/ошибки PnP)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS device_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    created_at REAL NOT NULL,
+                    event_type TEXT NOT NULL,
+                    device_instance_id TEXT NOT NULL,
+                    friendly_name TEXT,
+                    device_class TEXT,
+                    category TEXT,
+                    has_problem INTEGER DEFAULT 0,
+                    problem_code INTEGER DEFAULT 0,
+                    status_code INTEGER DEFAULT 0,
+                    manufacturer TEXT,
+                    flapping_count INTEGER DEFAULT 0,
+                    uptime_seconds REAL DEFAULT 0.0,
+                    raw_json TEXT
+                );
+            """)
+
+            # 10. Таблица произвольных записей и таблиц логов
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS custom_records (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -266,6 +291,64 @@ class TelemetryStorage:
                     created_at REAL NOT NULL,
                     source_file TEXT NOT NULL,
                     payload_json TEXT NOT NULL
+                );
+            """)
+
+            # 10. Таблица зафиксированных выбросов и всплесков процессов
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS process_outliers (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    snapshot_id INTEGER,
+                    timestamp TEXT NOT NULL,
+                    created_at REAL NOT NULL,
+                    pid INTEGER NOT NULL,
+                    name TEXT NOT NULL,
+                    status TEXT,
+                    cpu_percent REAL,
+                    memory_mb REAL,
+                    memory_percent REAL,
+                    num_threads INTEGER,
+                    username TEXT,
+                    details TEXT
+                );
+            """)
+
+            # 11. Таблица агрегированных срезов процессов (обобщение записей старше 2 минут)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS process_rollups_2min (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    period_start TEXT NOT NULL,
+                    period_end TEXT NOT NULL,
+                    period_start_epoch REAL NOT NULL,
+                    period_end_epoch REAL NOT NULL,
+                    name TEXT NOT NULL,
+                    pid INTEGER,
+                    username TEXT,
+                    sample_count INTEGER NOT NULL,
+                    avg_cpu_percent REAL NOT NULL,
+                    max_cpu_percent REAL NOT NULL,
+                    min_cpu_percent REAL NOT NULL,
+                    avg_memory_mb REAL NOT NULL,
+                    max_memory_mb REAL NOT NULL,
+                    min_memory_mb REAL NOT NULL,
+                    avg_num_threads REAL NOT NULL,
+                    outliers_count INTEGER DEFAULT 0
+                );
+            """)
+
+            # 12. Таблица долгосрочной суточной статистики процессов (обобщение данных старше 1 дня)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS process_rollups_daily (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    date TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    sample_count INTEGER NOT NULL,
+                    avg_cpu_percent REAL NOT NULL,
+                    max_cpu_percent REAL NOT NULL,
+                    avg_memory_mb REAL NOT NULL,
+                    max_memory_mb REAL NOT NULL,
+                    outliers_count INTEGER DEFAULT 0,
+                    last_seen TEXT
                 );
             """)
 
@@ -283,6 +366,11 @@ class TelemetryStorage:
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_app_events_type ON app_events(event_type, created_at);")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_app_param_changes_app ON app_param_changes(app, created_at);")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_custom_records_src ON custom_records(source_file, created_at);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_proc_outliers_name_time ON process_outliers(name, created_at);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_proc_rollups_2min_name_time ON process_rollups_2min(name, period_end_epoch);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_proc_rollups_daily_name_date ON process_rollups_daily(name, date);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_device_events_type_time ON device_events(event_type, created_at);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_device_events_instance ON device_events(device_instance_id, created_at);")
 
             conn.commit()
 
@@ -374,8 +462,9 @@ class TelemetryStorage:
 
             snapshot_id = cursor.lastrowid or 0
 
-            # Сохраняем Top-N процессов
-            processes = (snapshot.top_processes or [])[:top_n]
+            # Сохраняем Top-N или все процессы
+            raw_procs = snapshot.top_processes or []
+            processes = raw_procs if (top_n is None or top_n <= 0) else raw_procs[:top_n]
             proc_rows = []
             for p in processes:
                 proc_rows.append((
@@ -388,6 +477,7 @@ class TelemetryStorage:
                     getattr(p, "memory_mb", 0.0) or 0.0,
                     getattr(p, "memory_percent", 0.0) or 0.0,
                     getattr(p, "num_threads", 0) or 0,
+                    getattr(p, "num_handles", 0) or 0,
                     getattr(p, "username", "") or "",
                     getattr(p, "read_bytes_sec", 0.0) or 0.0,
                     getattr(p, "write_bytes_sec", 0.0) or 0.0,
@@ -405,10 +495,11 @@ class TelemetryStorage:
                         memory_mb,
                         memory_percent,
                         num_threads,
+                        num_handles,
                         username,
                         read_bytes_sec,
                         write_bytes_sec
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, proc_rows)
 
             conn.commit()
@@ -726,6 +817,366 @@ class TelemetryStorage:
                 """, (limit,))
 
             return [dict(row) for row in cursor.fetchall()]
+
+    def get_latest_processes(
+        self,
+        limit: int = 50,
+        sort_by: str = "cpu",
+    ) -> List[Dict[str, Any]]:
+        """Извлекает процессы из самого последнего зафиксированного снимка в базе данных SQLite.
+
+        Args:
+            limit: Максимальное количество процессов (Top-N, 0 для Всех процессов).
+            sort_by: Поле сортировки ('cpu', 'memory'/'ram', 'handles'/'descriptors').
+
+        Returns:
+            List[Dict[str, Any]]: Список словарей с метриками процессов последнего замера.
+        """
+        sort_key = (sort_by or "cpu").lower()
+        if sort_key in ("handles", "descriptors"):
+            order_col = "num_handles DESC, cpu_percent DESC"
+        elif sort_key in ("memory", "ram"):
+            order_col = "memory_mb DESC, cpu_percent DESC"
+        else:
+            order_col = "cpu_percent DESC, memory_mb DESC"
+
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT MAX(id) FROM system_snapshots;")
+            row = cursor.fetchone()
+            last_snap_id = row[0] if row and row[0] is not None else None
+
+            if last_snap_id is None:
+                cursor.execute("SELECT MAX(snapshot_id) FROM process_snapshots;")
+                row = cursor.fetchone()
+                last_snap_id = row[0] if row and row[0] is not None else None
+
+            if last_snap_id is None:
+                return []
+
+            if limit is not None and limit > 0:
+                cursor.execute(f"""
+                    SELECT pid, name, status, cpu_percent, memory_mb, memory_percent,
+                           num_threads, num_handles, username, read_bytes_sec, write_bytes_sec, timestamp
+                    FROM process_snapshots
+                    WHERE snapshot_id = ?
+                    ORDER BY {order_col}
+                    LIMIT ?
+                """, (last_snap_id, limit))
+            else:
+                cursor.execute(f"""
+                    SELECT pid, name, status, cpu_percent, memory_mb, memory_percent,
+                           num_threads, num_handles, username, read_bytes_sec, write_bytes_sec, timestamp
+                    FROM process_snapshots
+                    WHERE snapshot_id = ?
+                    ORDER BY {order_col}
+                """, (last_snap_id,))
+
+            return [dict(r) for r in cursor.fetchall()]
+
+    def aggregate_process_metrics_2min(
+        self,
+        cutoff_seconds: int = 120,
+        outlier_cpu_threshold: float = 30.0,
+    ) -> Dict[str, int]:
+        """Обобщает записи процессов старше двух минут по средним показателям с сохранением выбросов.
+
+        Находит все детальные записи процессов старше `cutoff_seconds` (по умолчанию 120 с):
+        1. Идентифицирует выбросы (CPU >= outlier_cpu_threshold или пики) и сохраняет в `process_outliers`.
+        2. Рассчитывает средние, минимальные и максимальные значения по каждому процессу.
+        3. Сохраняет агрегированные сводки в таблицу `process_rollups_2min`.
+        4. Удаляет обработанные детальные записи из `process_snapshots` для экономии места.
+
+        Args:
+            cutoff_seconds: Временной порог в секундах (по умолчанию 120 с / 2 мин).
+            outlier_cpu_threshold: Порог процента CPU, считающийся выбросом (по умолчанию 30.0%).
+
+        Returns:
+            Dict[str, int]: Количество созданных агрегатов, сохраненных выбросов и удаленных строк.
+        """
+        now_epoch = datetime.now(timezone.utc).timestamp()
+        cutoff_epoch = now_epoch - cutoff_seconds
+
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+
+            # Получаем все детальные записи процессов старше cutoff_epoch
+            cursor.execute("""
+                SELECT p.id, p.snapshot_id, p.timestamp, p.pid, p.name, p.status,
+                       p.cpu_percent, p.memory_mb, p.memory_percent, p.num_threads,
+                       p.username, s.created_at as snap_epoch
+                FROM process_snapshots p
+                JOIN system_snapshots s ON p.snapshot_id = s.id
+                WHERE s.created_at < ?
+                ORDER BY p.name, p.pid, s.created_at ASC
+            """, (cutoff_epoch,))
+            raw_rows = cursor.fetchall()
+
+            if not raw_rows:
+                return {"rollups_created": 0, "outliers_saved": 0, "raw_deleted": 0}
+
+            # 1. Выделяем выбросы
+            outlier_rows = []
+            for r in raw_rows:
+                cpu_val = float(r["cpu_percent"] or 0.0)
+                if cpu_val >= outlier_cpu_threshold:
+                    outlier_rows.append((
+                        r["snapshot_id"],
+                        r["timestamp"],
+                        r["snap_epoch"],
+                        r["pid"],
+                        r["name"],
+                        r["status"] or "running",
+                        cpu_val,
+                        float(r["memory_mb"] or 0.0),
+                        float(r["memory_percent"] or 0.0),
+                        int(r["num_threads"] or 1),
+                        r["username"] or "",
+                        f"Outlier detected: CPU={cpu_val:.1f}% >= {outlier_cpu_threshold}%",
+                    ))
+
+            outliers_saved = 0
+            if outlier_rows:
+                cursor.executemany("""
+                    INSERT INTO process_outliers (
+                        snapshot_id, timestamp, created_at, pid, name, status,
+                        cpu_percent, memory_mb, memory_percent, num_threads, username, details
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, outlier_rows)
+                outliers_saved = len(outlier_rows)
+
+            # 2. Группируем записи по (name, pid) для расчета средних и экстремумов
+            from collections import defaultdict
+            grouped = defaultdict(list)
+            for r in raw_rows:
+                key = (r["name"], r["pid"])
+                grouped[key].append(r)
+
+            rollup_rows = []
+            for (p_name, p_pid), procs in grouped.items():
+                sample_count = len(procs)
+                p_start = procs[0]["timestamp"]
+                p_end = procs[-1]["timestamp"]
+                p_start_epoch = procs[0]["snap_epoch"]
+                p_end_epoch = procs[-1]["snap_epoch"]
+                p_user = procs[-1]["username"] or ""
+
+                cpus = [float(p["cpu_percent"] or 0.0) for p in procs]
+                mems = [float(p["memory_mb"] or 0.0) for p in procs]
+                threads = [int(p["num_threads"] or 1) for p in procs]
+
+                avg_cpu = round(sum(cpus) / sample_count, 2)
+                max_cpu = round(max(cpus), 2)
+                min_cpu = round(min(cpus), 2)
+
+                avg_mem = round(sum(mems) / sample_count, 2)
+                max_mem = round(max(mems), 2)
+                min_mem = round(min(mems), 2)
+
+                avg_threads = round(sum(threads) / sample_count, 1)
+                proc_outliers = sum(1 for c in cpus if c >= outlier_cpu_threshold)
+
+                rollup_rows.append((
+                    p_start,
+                    p_end,
+                    p_start_epoch,
+                    p_end_epoch,
+                    p_name,
+                    p_pid,
+                    p_user,
+                    sample_count,
+                    avg_cpu,
+                    max_cpu,
+                    min_cpu,
+                    avg_mem,
+                    max_mem,
+                    min_mem,
+                    avg_threads,
+                    proc_outliers,
+                ))
+
+            if rollup_rows:
+                cursor.executemany("""
+                    INSERT INTO process_rollups_2min (
+                        period_start, period_end, period_start_epoch, period_end_epoch,
+                        name, pid, username, sample_count, avg_cpu_percent, max_cpu_percent,
+                        min_cpu_percent, avg_memory_mb, max_memory_mb, min_memory_mb,
+                        avg_num_threads, outliers_count
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, rollup_rows)
+
+            # 3. Удаляем обобщенные детальные записи из process_snapshots
+            raw_ids = [r["id"] for r in raw_rows]
+            cursor.execute(f"""
+                DELETE FROM process_snapshots
+                WHERE id IN ({','.join(['?'] * len(raw_ids))})
+            """, raw_ids)
+
+            conn.commit()
+            logger.info(
+                f"Обобщение процессов (> {cutoff_seconds}с) выполнено: "
+                f"агрегатов={len(rollup_rows)}, выбросов={outliers_saved}, удалено_сырых={len(raw_ids)}"
+            )
+            return {
+                "rollups_created": len(rollup_rows),
+                "outliers_saved": outliers_saved,
+                "raw_deleted": len(raw_ids),
+            }
+
+    def aggregate_process_metrics_daily(
+        self,
+        cutoff_days: int = 1,
+    ) -> Dict[str, int]:
+        """Обобщает агрегаты процессов старше одного дня в суточную статистику.
+
+        Args:
+            cutoff_days: Порог устаревания в днях (по умолчанию 1 день / 24 часа).
+
+        Returns:
+            Dict[str, int]: Количество созданных суточных записей и очищенных 2-минутных агрегатов.
+        """
+        now_epoch = datetime.now(timezone.utc).timestamp()
+        cutoff_epoch = now_epoch - (cutoff_days * 86400)
+
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, period_start, period_end, period_end_epoch, name,
+                       sample_count, avg_cpu_percent, max_cpu_percent,
+                       avg_memory_mb, max_memory_mb, outliers_count
+                FROM process_rollups_2min
+                WHERE period_end_epoch < ?
+                ORDER BY name, period_start_epoch ASC
+            """, (cutoff_epoch,))
+            old_rollups = cursor.fetchall()
+
+            if not old_rollups:
+                return {"daily_rollups_created": 0, "2min_rollups_cleaned": 0}
+
+            from collections import defaultdict
+            # Группируем по (date, name)
+            grouped_daily = defaultdict(list)
+            for r in old_rollups:
+                d_str = r["period_start"][:10] if len(r["period_start"]) >= 10 else "unknown"
+                key = (d_str, r["name"])
+                grouped_daily[key].append(r)
+
+            daily_rows = []
+            for (d_str, p_name), items in grouped_daily.items():
+                total_samples = sum(int(it["sample_count"]) for it in items)
+                if total_samples <= 0:
+                    continue
+                # Взвешенное среднее CPU и Memory
+                weighted_cpu = sum(float(it["avg_cpu_percent"]) * int(it["sample_count"]) for it in items) / total_samples
+                max_cpu = max(float(it["max_cpu_percent"]) for it in items)
+                weighted_mem = sum(float(it["avg_memory_mb"]) * int(it["sample_count"]) for it in items) / total_samples
+                max_mem = max(float(it["max_memory_mb"]) for it in items)
+                total_outliers = sum(int(it["outliers_count"] or 0) for it in items)
+                last_seen = max(it["period_end"] for it in items)
+
+                daily_rows.append((
+                    d_str,
+                    p_name,
+                    total_samples,
+                    round(weighted_cpu, 2),
+                    round(max_cpu, 2),
+                    round(weighted_mem, 2),
+                    round(max_mem, 2),
+                    total_outliers,
+                    last_seen,
+                ))
+
+            if daily_rows:
+                cursor.executemany("""
+                    INSERT INTO process_rollups_daily (
+                        date, name, sample_count, avg_cpu_percent, max_cpu_percent,
+                        avg_memory_mb, max_memory_mb, outliers_count, last_seen
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, daily_rows)
+
+            del_ids = [r["id"] for r in old_rollups]
+            cursor.execute(f"""
+                DELETE FROM process_rollups_2min
+                WHERE id IN ({','.join(['?'] * len(del_ids))})
+            """, del_ids)
+
+            conn.commit()
+            logger.info(
+                f"Суточное обобщение процессов (> {cutoff_days} дн.) выполнено: "
+                f"суточных_записей={len(daily_rows)}, очищено_2min_агрегатов={len(del_ids)}"
+            )
+            return {
+                "daily_rollups_created": len(daily_rows),
+                "2min_rollups_cleaned": len(del_ids),
+            }
+
+    def get_process_stats(
+        self,
+        name: Optional[str] = None,
+        limit: int = 50,
+    ) -> Dict[str, Any]:
+        """Возвращает историческую статистику процессов, включая агрегаты и выбросы.
+
+        Args:
+            name: Фильтр по имени процесса (подстрока, опционально).
+            limit: Лимит записей.
+
+        Returns:
+            Dict[str, Any]: Словарь с краткосрочными агрегатами, суточной статистикой и выбросами.
+        """
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+
+            # 1. Недавние агрегаты (2min rollups)
+            if name:
+                cursor.execute("""
+                    SELECT * FROM process_rollups_2min
+                    WHERE name LIKE ?
+                    ORDER BY id DESC LIMIT ?
+                """, (f"%{name}%", limit))
+            else:
+                cursor.execute("""
+                    SELECT * FROM process_rollups_2min
+                    ORDER BY id DESC LIMIT ?
+                """, (limit,))
+            rollups_2min = [dict(r) for r in cursor.fetchall()]
+
+            # 2. Долгосрочная суточная статистика
+            if name:
+                cursor.execute("""
+                    SELECT * FROM process_rollups_daily
+                    WHERE name LIKE ?
+                    ORDER BY date DESC LIMIT ?
+                """, (f"%{name}%", limit))
+            else:
+                cursor.execute("""
+                    SELECT * FROM process_rollups_daily
+                    ORDER BY date DESC LIMIT ?
+                """, (limit,))
+            daily_stats = [dict(r) for r in cursor.fetchall()]
+
+            # 3. Зафиксированные выбросы
+            if name:
+                cursor.execute("""
+                    SELECT * FROM process_outliers
+                    WHERE name LIKE ?
+                    ORDER BY id DESC LIMIT ?
+                """, (f"%{name}%", limit))
+            else:
+                cursor.execute("""
+                    SELECT * FROM process_outliers
+                    ORDER BY id DESC LIMIT ?
+                """, (limit,))
+            outliers = [dict(r) for r in cursor.fetchall()]
+
+            return {
+                "name_filter": name,
+                "rollups_2min": rollups_2min,
+                "daily_stats": daily_stats,
+                "outliers": outliers,
+                "total_rollups_count": len(rollups_2min),
+                "total_outliers_count": len(outliers),
+            }
 
     def get_events(
         self,
@@ -1212,150 +1663,94 @@ class TelemetryStorage:
             conn.commit()
             return len(rows)
 
-    def export_query_to_csv(
+    def save_device_event(
         self,
-        query: str,
-        params: Sequence[Any],
-        output_file: Union[str, Path],
-        headers: Optional[Sequence[str]] = None,
-    ) -> Path:
-        """Экспортирует результат произвольного SQL-запроса в CSV-файл (On-Demand).
+        event: Dict[str, Any],
+        timestamp: Optional[str] = None,
+    ) -> int:
+        """Сохраняет событие устройства (подключение/отключение/дребезг/ошибка PnP) в БД.
 
         Args:
-            query: SQL-запрос SELECT.
-            params: Параметры для подстановки в запрос.
-            output_file: Целевой путь к CSV-файлу.
-            headers: Список имен колонок (если None, берутся имена из курсора).
+            event: Словарь с полями DeviceTransitionEvent.
+            timestamp: ISO временная метка.
 
         Returns:
-            Path: Путь к сгенерированному CSV-файлу.
+            int: ID созданной записи.
         """
-        out_path = Path(output_file)
-        out_path.parent.mkdir(parents=True, exist_ok=True)
+        now_dt = datetime.now(timezone.utc)
+        ts_str = timestamp or event.get("timestamp") or now_dt.isoformat()
+        now_epoch = now_dt.timestamp()
+        raw_json = json.dumps(event, ensure_ascii=False, default=str)
 
         with self._lock, self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, params)
-            cols = [desc[0] for desc in cursor.description] if cursor.description else []
-            final_headers = list(headers) if headers is not None else cols
+            cursor.execute("""
+                INSERT INTO device_events (
+                    timestamp, created_at, event_type, device_instance_id,
+                    friendly_name, device_class, category, has_problem,
+                    problem_code, status_code, manufacturer,
+                    flapping_count, uptime_seconds, raw_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                ts_str,
+                now_epoch,
+                event.get("event_type", ""),
+                event.get("device_instance_id", ""),
+                event.get("friendly_name", ""),
+                event.get("device_class", ""),
+                event.get("category", ""),
+                int(bool(event.get("has_problem", False))),
+                event.get("problem_code", 0),
+                event.get("status_code", 0),
+                event.get("manufacturer", ""),
+                event.get("flapping_count_in_window", 0),
+                event.get("uptime_seconds", 0.0),
+                raw_json,
+            ))
+            conn.commit()
+            return cursor.lastrowid or 0
 
-            with open(out_path, mode="w", newline="", encoding="utf-8-sig") as f:
-                writer = csv.writer(f)
-                if final_headers:
-                    writer.writerow(final_headers)
-                for row in cursor:
-                    writer.writerow([row[c] for c in cols])
-
-        logger.info(f"Сформирован CSV-экспорт On-Demand: {out_path}")
-        return out_path
-
-    def export_app_polls_to_csv(
+    def get_device_events(
         self,
-        app: Optional[str] = None,
-        output_path: Optional[Union[str, Path]] = None,
-        limit: int = 50000,
-    ) -> Path:
-        """Экспортирует замеры опросов приложений в CSV по требованию (On-Demand).
+        event_type: Optional[str] = None,
+        device_instance_id: Optional[str] = None,
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """Извлекает события устройств из БД.
 
         Args:
-            app: Имя приложения (опционально).
-            output_path: Путь для сохранения (по умолчанию logs/{app}_poll_events.csv).
-            limit: Лимит выгружаемых строк.
+            event_type: Фильтр по типу (CONNECTED, DISCONNECTED, FLAPPING_ALERT, ERROR_STATE_CHANGED).
+            device_instance_id: Фильтр по конкретному устройству.
+            limit: Лимит записей.
 
         Returns:
-            Path: Путь к экспортированному CSV.
+            List[Dict[str, Any]]: Список событий.
         """
-        if output_path is None:
-            filename = f"{app}_poll_events.csv" if app else "all_app_polls.csv"
-            output_path = self.db_path.parent / filename
-
-        headers = ["timestamp", "app", "poll_type", "metric_name", "value", "unit", "status", "details"]
-        if app:
-            query = """
-                SELECT timestamp, app, poll_type, metric_name, value, unit, status, details
-                FROM app_polls WHERE app = ? ORDER BY id DESC LIMIT ?
-            """
-            params: tuple = (app, limit)
-        else:
-            query = """
-                SELECT timestamp, app, poll_type, metric_name, value, unit, status, details
-                FROM app_polls ORDER BY id DESC LIMIT ?
-            """
-            params = (limit,)
-
-        return self.export_query_to_csv(query, params, output_path, headers=headers)
-
-    def export_app_events_to_csv(
-        self,
-        app: Optional[str] = None,
-        output_path: Optional[Union[str, Path]] = None,
-        limit: int = 50000,
-    ) -> Path:
-        """Экспортирует события приложений в CSV по требованию (On-Demand).
-
-        Args:
-            app: Имя приложения.
-            output_path: Путь для сохранения.
-            limit: Лимит строк.
-
-        Returns:
-            Path: Путь к экспортированному CSV.
-        """
-        if output_path is None:
-            filename = f"{app}_events.csv" if app else "all_app_events.csv"
-            output_path = self.db_path.parent / filename
-
-        headers = ["timestamp", "app", "event_type", "status", "details"]
-        if app:
-            query = """
-                SELECT timestamp, app, event_type, status, details
-                FROM app_events WHERE app = ? ORDER BY id DESC LIMIT ?
-            """
-            params: tuple = (app, limit)
-        else:
-            query = """
-                SELECT timestamp, app, event_type, status, details
-                FROM app_events ORDER BY id DESC LIMIT ?
-            """
-            params = (limit,)
-
-        return self.export_query_to_csv(query, params, output_path, headers=headers)
-
-    def export_app_param_changes_to_csv(
-        self,
-        app: Optional[str] = None,
-        output_path: Optional[Union[str, Path]] = None,
-        limit: int = 50000,
-    ) -> Path:
-        """Экспортирует изменения параметров приложений в CSV по требованию (On-Demand).
-
-        Args:
-            app: Имя приложения.
-            output_path: Путь для сохранения.
-            limit: Лимит строк.
-
-        Returns:
-            Path: Путь к экспортированному CSV.
-        """
-        if output_path is None:
-            filename = f"{app}_param_changes.csv" if app else "all_app_param_changes.csv"
-            output_path = self.db_path.parent / filename
-
-        headers = ["timestamp", "app", "param_name", "old_value", "new_value", "status", "user", "details"]
-        if app:
-            query = """
-                SELECT timestamp, app, param_name, old_value, new_value, status, user, details
-                FROM app_param_changes WHERE app = ? ORDER BY id DESC LIMIT ?
-            """
-            params: tuple = (app, limit)
-        else:
-            query = """
-                SELECT timestamp, app, param_name, old_value, new_value, status, user, details
-                FROM app_param_changes ORDER BY id DESC LIMIT ?
-            """
-            params = (limit,)
-
-        return self.export_query_to_csv(query, params, output_path, headers=headers)
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+            if event_type and device_instance_id:
+                cursor.execute("""
+                    SELECT * FROM device_events
+                    WHERE event_type = ? AND device_instance_id = ?
+                    ORDER BY id DESC LIMIT ?
+                """, (event_type, device_instance_id, limit))
+            elif event_type:
+                cursor.execute("""
+                    SELECT * FROM device_events
+                    WHERE event_type = ?
+                    ORDER BY id DESC LIMIT ?
+                """, (event_type, limit))
+            elif device_instance_id:
+                cursor.execute("""
+                    SELECT * FROM device_events
+                    WHERE device_instance_id = ?
+                    ORDER BY id DESC LIMIT ?
+                """, (device_instance_id, limit))
+            else:
+                cursor.execute("""
+                    SELECT * FROM device_events ORDER BY id DESC LIMIT ?
+                """, (limit,))
+            return [dict(row) for row in cursor.fetchall()]
 
     def get_storage_stats(self) -> Dict[str, Any]:
         """Возвращает агрегированную статистику базы данных телеметрии.
@@ -1392,6 +1787,18 @@ class TelemetryStorage:
             cursor.execute("SELECT COUNT(*) FROM custom_records;")
             custom_count = cursor.fetchone()[0]
 
+            cursor.execute("SELECT COUNT(*) FROM device_events;")
+            device_events_count = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM process_outliers;")
+            outliers_count = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM process_rollups_2min;")
+            rollups_2min_count = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM process_rollups_daily;")
+            rollups_daily_count = cursor.fetchone()[0]
+
             size_bytes = self.db_path.stat().st_size if self.db_path.exists() else 0
             size_mb = round(size_bytes / (1024 * 1024), 2)
 
@@ -1399,6 +1806,9 @@ class TelemetryStorage:
                 "db_path": str(self.db_path),
                 "snapshots_count": snap_count,
                 "process_snapshots_count": proc_count,
+                "process_outliers_count": outliers_count,
+                "process_rollups_2min_count": rollups_2min_count,
+                "process_rollups_daily_count": rollups_daily_count,
                 "sensor_polls_count": sensors_count,
                 "events_count": events_count,
                 "hardware_audits_count": audits_count,
@@ -1406,6 +1816,7 @@ class TelemetryStorage:
                 "app_events_count": app_events_count,
                 "app_param_changes_count": app_params_count,
                 "custom_records_count": custom_count,
+                "device_events_count": device_events_count,
                 "file_size_mb": size_mb,
             }
 
@@ -1443,204 +1854,3 @@ class TelemetryStorage:
             logger.info(f"Очищено {deleted_count} устаревших снимков телеметрии (старше {retention_days} дн.)")
             return deleted_count
 
-    def migrate_csv_to_db(self, csv_dir: Optional[Union[str, Path]] = None) -> Dict[str, int]:
-        """Импортирует исторические данные из CSV и JSON файлов в базу данных SQLite.
-
-        Args:
-            csv_dir: Директория с CSV/JSON файлами (если None, сканируются стандартные каталоги).
-
-        Returns:
-            Dict[str, int]: Статистика импортированных строк по категориям.
-        """
-        imported_stats: Dict[str, int] = {
-            "snapshots": 0,
-            "sensor_polls": 0,
-            "events": 0,
-            "app_polls": 0,
-            "app_param_changes": 0,
-            "app_events": 0,
-            "custom_records": 0,
-            "files_migrated": 0,
-        }
-
-        search_dirs: List[Path] = []
-        if csv_dir:
-            search_dirs.append(Path(csv_dir))
-        else:
-            appdata = os.environ.get("APPDATA") or os.environ.get("LOCALAPPDATA") or os.path.expanduser("~\\AppData\\Roaming")
-            localappdata = os.environ.get("LOCALAPPDATA", os.path.expanduser("~\\AppData\\Local"))
-            base_proj = Path(__file__).resolve().parent.parent.parent.parent
-            search_dirs.extend([
-                Path(appdata) / "AI-Breadboard" / "apps" / "windows" / "telemetry" / "logs",
-                Path(appdata) / "AI-Breadboard" / "apps" / "logs",
-                Path(localappdata) / "AI-Breadboard" / "telemetry_csv",
-                base_proj / "logs" / "telemetry",
-            ])
-
-        with self._lock:
-            conn = self._get_connection()
-            try:
-                cursor = conn.cursor()
-                for target_dir in search_dirs:
-                    if not target_dir.exists() or not target_dir.is_dir():
-                        continue
-
-                    for csv_file in target_dir.glob("*.csv"):
-                        try:
-                            with open(csv_file, "r", encoding="utf-8", errors="replace") as f:
-                                reader = csv.DictReader(f)
-                                fieldnames = [c.strip().lower() for c in (reader.fieldnames or [])]
-                                fname = csv_file.name.lower()
-                                now_epoch = datetime.now(timezone.utc).timestamp()
-
-                                # 1. Формат telemetry_*.csv или system_snapshots
-                                if "cpu_percent" in fieldnames or "cpu_total_percent" in fieldnames:
-                                    batch_snaps = []
-                                    for row in reader:
-                                        ts = row.get("timestamp") or datetime.now(timezone.utc).isoformat()
-                                        cpu_p = float(row.get("cpu_percent") or row.get("cpu_total_percent") or 0.0)
-                                        mem_p = float(row.get("memory_percent") or 0.0)
-                                        gpu_l = float(row.get("gpu_load") or row.get("gpu_load_percent") or 0.0)
-                                        d_read = float(row.get("disk_io_read") or row.get("disk_read_bytes_sec") or 0.0)
-                                        d_write = float(row.get("disk_io_write") or row.get("disk_write_bytes_sec") or 0.0)
-                                        n_recv = float(row.get("network_recv") or row.get("network_recv_bytes_sec") or 0.0)
-                                        n_sent = float(row.get("network_sent") or row.get("network_sent_bytes_sec") or 0.0)
-                                        host = row.get("hostname", "")
-                                        batch_snaps.append((
-                                            ts, now_epoch, host, 0.0,
-                                            cpu_p, 0.0, 0.0, 0.0, mem_p, 0.0, gpu_l, 0.0,
-                                            d_read, d_write, 0.0, 0.0, n_sent, n_recv, json.dumps(row),
-                                        ))
-                                    if batch_snaps:
-                                        cursor.executemany("""
-                                            INSERT INTO system_snapshots (
-                                                timestamp, created_at, hostname, uptime_seconds,
-                                                cpu_total_percent, cpu_frequency_mhz, memory_total_gb,
-                                                memory_used_gb, memory_percent, swap_percent,
-                                                gpu_load_percent, gpu_temp_c, disk_read_bytes_sec,
-                                                disk_write_bytes_sec, disk_read_count_sec,
-                                                disk_write_count_sec, network_sent_bytes_sec,
-                                                network_recv_bytes_sec, raw_json
-                                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                        """, batch_snaps)
-                                        imported_stats["snapshots"] += len(batch_snaps)
-
-                                # 2. Формат аппаратных сенсоров
-                                elif ("sensor_name" in fieldnames or "hardware" in fieldnames) and "app" not in fieldnames:
-                                    batch_sensors = []
-                                    for row in reader:
-                                        s_id = row.get("sensor_id") or row.get("sensor_name") or "sensor"
-                                        ts = row.get("timestamp") or datetime.now(timezone.utc).isoformat()
-                                        try:
-                                            val = float(row.get("value") or row.get("raw_value") or 0.0)
-                                        except (ValueError, TypeError):
-                                            val = 0.0
-                                        batch_sensors.append((
-                                            s_id, ts, now_epoch,
-                                            row.get("hardware") or row.get("hardware_name") or "System",
-                                            row.get("hardware_type", "cpu"),
-                                            row.get("category") or row.get("sensor_category") or "General",
-                                            row.get("sensor_name", "Unknown"),
-                                            row.get("unit", ""), val, json.dumps(row),
-                                        ))
-                                    if batch_sensors:
-                                        cursor.executemany("""
-                                            INSERT INTO sensor_polls (
-                                                sensor_id, timestamp, created_at, hardware_name,
-                                                hardware_type, sensor_category, sensor_name, unit, value, raw_json
-                                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                        """, batch_sensors)
-                                        imported_stats["sensor_polls"] += len(batch_sensors)
-
-                                # 3. Формат изменения параметров приложений
-                                elif "param_name" in fieldnames:
-                                    batch_params = []
-                                    for row in reader:
-                                        app = row.get("app") or fname.split("_param_changes")[0]
-                                        ts = row.get("timestamp") or datetime.now(timezone.utc).isoformat()
-                                        old_str = str(row.get("old_value") or "")
-                                        new_str = str(row.get("new_value") or "")
-                                        det_str = str(row.get("details") or "")
-                                        batch_params.append((
-                                            ts, now_epoch, app, row.get("param_name", "param"),
-                                            old_str, new_str, row.get("status", "SUCCESS"),
-                                            row.get("user", "system"), det_str, json.dumps(row),
-                                        ))
-                                    if batch_params:
-                                        cursor.executemany("""
-                                            INSERT INTO app_param_changes (
-                                                timestamp, created_at, app, param_name, old_value, new_value, status, user, details, raw_json
-                                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                        """, batch_params)
-                                        imported_stats["app_param_changes"] += len(batch_params)
-
-                                # 4. Формат опросов приложений
-                                elif "metric_name" in fieldnames or "poll_type" in fieldnames or "poll_events" in fname or "_polls" in fname:
-                                    batch_polls = []
-                                    for row in reader:
-                                        app = row.get("app") or fname.split("_poll")[0]
-                                        ts = row.get("timestamp") or datetime.now(timezone.utc).isoformat()
-                                        try:
-                                            val_num = float(row.get("value") or row.get("val") or 0.0)
-                                        except (ValueError, TypeError):
-                                            val_num = None
-                                        batch_polls.append((
-                                            ts, now_epoch, app,
-                                            row.get("poll_type", "poll"),
-                                            row.get("metric_name") or row.get("metric") or row.get("name") or "metric",
-                                            val_num, row.get("unit", ""),
-                                            row.get("status", "OK"),
-                                            str(row.get("details") or ""), json.dumps(row),
-                                        ))
-                                    if batch_polls:
-                                        cursor.executemany("""
-                                            INSERT INTO app_polls (
-                                                timestamp, created_at, app, poll_type, metric_name, value, unit, status, details, raw_json
-                                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                        """, batch_polls)
-                                        imported_stats["app_polls"] += len(batch_polls)
-
-                                # 5. Формат событий приложений
-                                elif "event_type" in fieldnames or "action" in fieldnames or "_events" in fname:
-                                    batch_events = []
-                                    for row in reader:
-                                        app = row.get("app") or fname.split("_event")[0]
-                                        ev_type = row.get("event_type") or row.get("action") or "generic_event"
-                                        ts = row.get("timestamp") or datetime.now(timezone.utc).isoformat()
-                                        batch_events.append((
-                                            ts, now_epoch, app, ev_type,
-                                            row.get("status", "OK"),
-                                            str(row.get("details") or row.get("message") or ""), json.dumps(row),
-                                        ))
-                                    if batch_events:
-                                        cursor.executemany("""
-                                            INSERT INTO app_events (
-                                                timestamp, created_at, app, event_type, status, details, raw_json
-                                            ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                                        """, batch_events)
-                                        imported_stats["app_events"] += len(batch_events)
-
-                                # 6. Произвольные строки CSV
-                                else:
-                                    batch_custom = []
-                                    for row in reader:
-                                        ts = row.get("timestamp") or row.get("time") or datetime.now(timezone.utc).isoformat()
-                                        batch_custom.append((ts, now_epoch, csv_file.name, json.dumps(row)))
-                                    if batch_custom:
-                                        cursor.executemany("""
-                                            INSERT INTO custom_records (
-                                                timestamp, created_at, source_file, payload_json
-                                            ) VALUES (?, ?, ?, ?)
-                                        """, batch_custom)
-                                        imported_stats["custom_records"] += len(batch_custom)
-
-                            conn.commit()
-                            imported_stats["files_migrated"] += 1
-
-                        except Exception as ex:
-                            logger.warning(f"Ошибка миграции CSV файла {csv_file}: {ex}")
-            finally:
-                conn.close()
-
-        logger.info(f"Миграция данных в SQLite {self.db_path} завершена: {imported_stats}")
-        return imported_stats

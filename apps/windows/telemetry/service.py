@@ -44,24 +44,27 @@ class TelemetryLoggerService:
 
     def __init__(
         self,
-        interval_sec: float = 1.0,
+        interval_sec: float = 5.0,
         top_processes: int = 20,
         collector: Optional[SystemCollector] = None,
         storage: Optional[TelemetryStorage] = None,
         hardware_audit_interval_sec: float = 60.0,
+        rollup_interval_sec: float = 30.0,
     ) -> None:
         """Инициализирует сервис сбора системных метрик.
 
         Args:
-            interval_sec: Интервал между замерами телеметрии в секундах (по умолчанию 1.0).
+            interval_sec: Интервал между замерами телеметрии в секундах (по умолчанию 5.0).
             top_processes: Лимит сохраняемых активных процессов (по умолчанию 20).
             collector: Экземпляр сборщика SystemCollector (опционально).
             storage: Экземпляр хранилища TelemetryStorage (опционально).
             hardware_audit_interval_sec: Интервал периодического аудита железа (по умолчанию 60.0).
+            rollup_interval_sec: Интервал запуска обобщения старых данных (по умолчанию 30.0 с).
         """
         self.interval_sec = max(0.2, interval_sec)
         self.top_processes = max(1, top_processes)
         self.hardware_audit_interval_sec = max(5.0, hardware_audit_interval_sec)
+        self.rollup_interval_sec = max(5.0, rollup_interval_sec)
         self.collector = collector or SystemCollector()
         self.storage = storage or TelemetryStorage.get_instance()
 
@@ -74,6 +77,7 @@ class TelemetryLoggerService:
         self._start_time: Optional[float] = None
         self._last_tick_time: Optional[float] = None
         self._last_hw_audit_time: Optional[float] = None
+        self._last_rollup_time: Optional[float] = None
         self._last_error: Optional[str] = None
         self._last_snapshot: Optional[Any] = None
 
@@ -165,7 +169,7 @@ class TelemetryLoggerService:
                         self.collector.get_snapshot(process_limit=self.top_processes),
                         loop,
                     )
-                    snapshot = task.result(timeout=5.0)
+                    snapshot = task.result(timeout=30.0)
                 else:
                     snapshot = asyncio.run(self.collector.get_snapshot(process_limit=self.top_processes))
 
@@ -192,6 +196,22 @@ class TelemetryLoggerService:
                     except Exception as hw_ex:
                         logger.debug(f"Ошибка при периодическом аудите железа: {hw_ex}")
 
+                # 3. Периодическое обобщение (Rollup) записей процессов (> 2 мин и > 1 дня)
+                if (
+                    self._last_rollup_time is None
+                    or (loop_start - self._last_rollup_time) >= self.rollup_interval_sec
+                ):
+                    try:
+                        self.run_rollups()
+                        self._last_rollup_time = loop_start
+                    except Exception as roll_ex:
+                        logger.debug(f"Ошибка при периодическом обобщении процессов: {roll_ex}")
+
+            except (RuntimeError, ValueError) as shut_ex:
+                if "shutdown" in str(shut_ex).lower() or "closed file" in str(shut_ex).lower():
+                    break
+                self._last_error = str(shut_ex)
+                logger.debug(f"Ошибка при сборе системной телеметрии: {shut_ex}")
             except Exception as ex:
                 self._last_error = str(ex)
                 logger.debug(f"Ошибка при сборе системной телеметрии: {ex}")
@@ -201,6 +221,19 @@ class TelemetryLoggerService:
             sleep_time = max(0.01, self.interval_sec - elapsed)
             if self._stop_event.wait(timeout=sleep_time):
                 break
+
+    def run_rollups(self) -> Dict[str, Any]:
+        """Принудительно запускает процедуры обобщения устаревших метрик процессов.
+
+        Returns:
+            Dict[str, Any]: Сводная статистика обобщения за 2 минуты и за 1 день.
+        """
+        short_res = self.storage.aggregate_process_metrics_2min(cutoff_seconds=120)
+        daily_res = self.storage.aggregate_process_metrics_daily(cutoff_days=1)
+        return {
+            "rollup_2min": short_res,
+            "rollup_daily": daily_res,
+        }
 
     def get_status(self) -> Dict[str, Any]:
         """Возвращает текущий статус сервиса телеметрии.

@@ -43,9 +43,15 @@ class UnifiedChatModel:
 
     def __init__(
         self,
-        api_key_names: Optional[List[str]] = None,
         system_instruction: str = "",
+        **kwargs: Any,
     ) -> None:
+        if "api_key_names" in kwargs:
+            logger.warning(
+                "[UnifiedChatModel] Параметр api_key_names устарел и не используется в UnifiedChatModel. "
+                "Управление ключами выполняется непосредственно провайдерами моделей."
+            )
+
         from src.ai.gemini.api import GoogleGenerativeAI
         from src.ai.ollama_chat import OllamaChatBase
         from src.ai.gemini_cli_chat import GeminiCliChatBase
@@ -53,7 +59,6 @@ class UnifiedChatModel:
 
         # --- always-available providers ---
         self.gemini_model = GoogleGenerativeAI(
-            api_key_names=api_key_names or [],
             system_instruction=system_instruction,
             sleep_on_exhausted=False,
         )

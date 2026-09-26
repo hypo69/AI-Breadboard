@@ -154,11 +154,14 @@ $defaultModel = "agy-flash"
 if (Test-Path $configPath) {
     try {
         $cfg = Get-Content $configPath -Raw | ConvertFrom-Json
-        # New format: config_tc.json style
-        if ($cfg.ai -and $cfg.ai.agy -and $cfg.ai.agy.model) {
+        # New format: ai.providers.agy.model
+        if ($cfg.ai.providers -and $cfg.ai.providers.agy -and $cfg.ai.providers.agy.model) {
+            $defaultModel = [string]$cfg.ai.providers.agy.model
+        }
+        # Old format: ai.agy.model
+        elseif ($cfg.ai -and $cfg.ai.agy -and $cfg.ai.agy.model) {
             $defaultModel = [string]$cfg.ai.agy.model
         } elseif ($cfg.ai.agy_model_id) {
-            # Old format: config.json style
             $defaultModel = [string]$cfg.ai.agy_model_id
         } elseif ($cfg.web_search.agy_model) {
             $defaultModel = [string]$cfg.web_search.agy_model

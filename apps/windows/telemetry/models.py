@@ -115,6 +115,7 @@ class ProcessMetrics(BaseModel):
     memory_mb: float = Field(default=0.0, description="Resident memory in Megabytes")
     memory_percent: float = Field(default=0.0, description="Memory usage percentage")
     num_threads: int = Field(default=1, description="Number of active threads")
+    num_handles: int = Field(default=0, description="Количество дескрипторов (handles/fds)")
     username: Optional[str] = Field(default=None, description="Owner username")
     cmdline: Optional[str] = Field(default=None, description="Command line invocation")
     read_bytes_sec: float = Field(default=0.0, description="Disk read rate in bytes/sec")
@@ -494,5 +495,26 @@ class PeripheralsNetworkReport(BaseModel):
     usb_devices: List[Dict[str, Any]] = Field(default_factory=list, description="Подключенные USB-устройства и контроллеры")
     wifi_telemetry: Dict[str, Any] = Field(default_factory=dict, description="Параметры текущей беспроводной сети Wi-Fi (SSID, BSSID, RSSI, канал)")
     audio_endpoints: List[Dict[str, Any]] = Field(default_factory=list, description="Аудиоустройства и активные конечные точки")
+
+
+class SystemCoreMetrics(BaseModel):
+    """Быстрые базовые метрики хоста (CPU, RAM, GPU, Disk I/O, Battery)."""
+
+    cpu: CpuMetrics
+    memory: MemoryMetrics
+    gpus: List[GpuMetrics] = Field(default_factory=list, description="Метрики графических ускорителей")
+    disk_io: DiskIoMetrics
+    battery: BatteryMetrics
+    uptime_seconds: float = Field(default=0.0, description="Время непрерывной работы в секундах")
+
+
+class SystemHardwareQuick(BaseModel):
+    """Сводка состояния физических компонентов (диски, слоты памяти, открытые сокеты)."""
+
+    ram_sticks: List[RamStickInfo] = Field(default_factory=list, description="Конфигурация планок RAM (SPD)")
+    physical_disks: List[PhysicalDiskHealth] = Field(default_factory=list, description="Состояние физических накопителей (SMART)")
+    listening_ports: List[NetworkPortMetrics] = Field(default_factory=list, description="Список активных слушающих сокетов")
+    alerts: SystemHealthAlerts = Field(default_factory=SystemHealthAlerts, description="Системные предупреждения и флаг перезагрузки")
+
 
 

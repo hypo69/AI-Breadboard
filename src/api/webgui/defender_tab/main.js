@@ -81,7 +81,7 @@
                 ${s.enabled ? 'ВКЛЮЧЕНО' : 'ОТКЛЮЧЕНО'}
               </span>
             </td>
-            <td class="text-secondary">${s.desc}</td>
+            <td class="def-desc-text">${s.desc}</td>
           </tr>
         `).join('');
       }
@@ -93,7 +93,7 @@
           <tr>
             <td>
               <div class="fw-semibold text-light">${svc.name}</div>
-              <div class="text-secondary" style="font-size: 0.68rem;">${svc.display_name}</div>
+              <div class="def-desc-text" style="font-size: 0.72rem;">${svc.display_name}</div>
             </td>
             <td class="text-center">
               <span class="badge ${svc.running ? 'bg-success' : 'bg-secondary'}">
@@ -131,11 +131,11 @@
             <tr>
               <td>
                 <div class="fw-semibold text-light">${r.name}</div>
-                <div class="text-secondary" style="font-size: 0.72rem;">${r.description}</div>
+                <div class="def-desc-text" style="font-size: 0.72rem;">${r.description}</div>
               </td>
               <td><span class="badge bg-dark border border-secondary">${r.category}</span></td>
               <td class="text-center">${stateBadge}</td>
-              <td class="text-secondary small">${r.recommendation || '-'}</td>
+              <td class="def-desc-text small">${r.recommendation || '-'}</td>
               <td class="text-secondary font-monospace" style="font-size: 0.68rem;">${r.guid}</td>
             </tr>
           `;

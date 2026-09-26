@@ -309,6 +309,7 @@
       btnExpandAll.onclick = () => {
         document.querySelectorAll('.about-sys-tree-body').forEach(b => b.classList.remove('d-none'));
         document.querySelectorAll('.about-sys-chevron').forEach(c => c.textContent = '▲');
+        adjustHardwareTreeHeight();
       };
     }
 
@@ -317,8 +318,11 @@
       btnCollapseAll.onclick = () => {
         document.querySelectorAll('.about-sys-tree-body').forEach(b => b.classList.add('d-none'));
         document.querySelectorAll('.about-sys-chevron').forEach(c => c.textContent = '▼');
+        adjustHardwareTreeHeight();
       };
     }
+
+    window.addEventListener('resize', () => adjustHardwareTreeHeight());
 
     const treeSearch = document.getElementById('about-sys-search');
     if (treeSearch) {
@@ -878,12 +882,20 @@
       setText('about-kpi-stor-clean', `Cleanable: ~${cleanMb} MB${totalGbTxt}`);
 
       // Security table rows
-      setText('about-sec-defender', defActive ? 'Enabled' : 'Disabled');
-      setText('about-sec-realtime', sec.realtime_protection_enabled !== false ? 'Enabled' : 'Disabled');
-      setText('about-sec-fw-domain', sec.firewall_profiles?.Domain ? 'Active' : 'Disabled');
-      setText('about-sec-fw-private', sec.firewall_profiles?.Private ? 'Active' : 'Disabled');
-      setText('about-sec-fw-public', sec.firewall_profiles?.Public ? 'Active' : 'Disabled');
-      setText('about-sec-uac', uacOk ? 'Enabled' : 'Disabled');
+      const setSecStatus = (id, active, activeText = 'Enabled', inactiveText = 'Disabled') => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const stateText = active ? activeText : inactiveText;
+        el.setAttribute('data-status', stateText);
+        el.className = active ? 'text-success fw-bold' : 'text-danger fw-bold';
+        el.textContent = stateText;
+      };
+      setSecStatus('about-sec-defender', defActive);
+      setSecStatus('about-sec-realtime', sec.realtime_protection_enabled !== false);
+      setSecStatus('about-sec-fw-domain', sec.firewall_profiles?.Domain, 'Active', 'Disabled');
+      setSecStatus('about-sec-fw-private', sec.firewall_profiles?.Private, 'Active', 'Disabled');
+      setSecStatus('about-sec-fw-public', sec.firewall_profiles?.Public, 'Active', 'Disabled');
+      setSecStatus('about-sec-uac', uacOk);
 
       // Power Scheme & Updates
       if (pwr.active_plan_name) setText('about-spec-power', pwr.active_plan_name);
@@ -1681,12 +1693,43 @@
     }).join('');
   }
 
+  /**
+   * Динамический расчет высоты контейнера дерева спецификации оборудования
+   * в зависимости от количества категорий и развернутых строк
+   */
+  function adjustHardwareTreeHeight() {
+    const container = document.getElementById('about-sys-tree-container');
+    if (!container) return;
+
+    const visibleNodes = container.querySelectorAll('.about-sys-tree-node');
+    if (visibleNodes.length === 0) {
+      container.style.maxHeight = '300px';
+      return;
+    }
+
+    let totalEstimatedHeight = 32;
+    visibleNodes.forEach(node => {
+      totalEstimatedHeight += 38;
+      const body = node.querySelector('.about-sys-tree-body');
+      if (body && !body.classList.contains('d-none')) {
+        const rows = body.querySelectorAll('.about-sys-prop-row');
+        const gridRowsCount = Math.ceil(rows.length / 2);
+        totalEstimatedHeight += gridRowsCount * 28 + 16;
+      }
+    });
+
+    const vhLimit = Math.floor(window.innerHeight * 0.85);
+    const dynamicMaxHeight = Math.max(500, Math.min(totalEstimatedHeight + 20, Math.max(900, vhLimit)));
+    container.style.maxHeight = `${dynamicMaxHeight}px`;
+  }
+
   function renderHardwareTree(nodes, filter) {
     const container = document.getElementById('about-sys-tree-container');
     if (!container) return;
 
     if (!Array.isArray(nodes) || nodes.length === 0) {
       container.innerHTML = '<div class="text-center py-4 text-muted small">Оборудование не обнаружено или опрашивается...</div>';
+      adjustHardwareTreeHeight();
       return;
     }
 
@@ -1702,18 +1745,22 @@
 
     if (filtered.length === 0) {
       container.innerHTML = `<div class="text-center py-4 text-muted small">По запросу «${escapeHtml(filter)}» компонентов не найдено</div>`;
+      adjustHardwareTreeHeight();
       return;
     }
 
     container.innerHTML = filtered.map((node, idx) => {
       const propsEntries = Object.entries(node.properties || {});
       const propsHtml = propsEntries.length > 0
-        ? propsEntries.map(([k, v]) => `
-            <div class="about-sys-prop-row">
-              <span class="about-sys-prop-key">${escapeHtml(k)}</span>
-              <span class="about-sys-prop-val">${escapeHtml(String(v))}</span>
-            </div>
-          `).join('')
+        ? propsEntries.map(([k, v]) => {
+            const cleanKey = escapeHtml(String(k).replace(/:$/, ''));
+            return `
+              <div class="about-sys-prop-row">
+                <span class="about-sys-prop-key">${cleanKey}</span>
+                <span class="about-sys-prop-val">${escapeHtml(String(v))}</span>
+              </div>
+            `;
+          }).join('')
         : '<div class="text-muted small py-1">Свойства не указаны</div>';
 
       const iconClass = getNodeIcon(node.category);
@@ -1734,6 +1781,8 @@
         </div>
       `;
     }).join('');
+
+    adjustHardwareTreeHeight();
   }
 
   window.toggleNode = function(idx) {
@@ -1744,6 +1793,7 @@
       if (chevron) {
         chevron.textContent = body.classList.contains('d-none') ? '▼' : '▲';
       }
+      adjustHardwareTreeHeight();
     }
   };
 

@@ -37,7 +37,10 @@ param (
 
     [float]$Interval = 60.0,
 
-    [string]$ConfigFile = $null,
+    [ValidateSet('minimal', 'full')]
+    [string]$Mode = 'minimal',
+
+    [switch]$Minimal,
 
     [switch]$Restart,
 
@@ -151,7 +154,8 @@ function Start-AISensors {
         return $false
     }
 
-    $argList = @("-u", $aiSensorsMain)
+    $effectiveMode = if ($Minimal) { "minimal" } else { $Mode }
+    $argList = @("-u", $aiSensorsMain, "--mode", $effectiveMode)
     if ($Interval) {
         $argList += @("--interval", "$Interval")
     }
@@ -269,7 +273,6 @@ if ($Action -in @('start', 'restart')) {
         Write-Host ""
         Write-Host "📊 Сенсоры:" -ForegroundColor Cyan
         Write-Host "   - HardwareMonitor (CPU, RAM, GPU, Disk, Network, Battery)" -ForegroundColor White
-        Write-Host "   - LibreHardwareMonitor Web API" -ForegroundColor White
         Write-Host "   - DirectoryWatcher (файловые события)" -ForegroundColor White
         Write-Host "   - InternetSpeedSensor (ping, download, upload, DNS)" -ForegroundColor White
         Write-Host ""

@@ -70,21 +70,28 @@ class TestLoadAutologConfig:
         assert isinstance(result["loggers"], dict)
 
     def test_real_autolog_sensors_json_exists(self):
-        """start_scenarios_config/autolog_sensors.json существует в проекте."""
-        assert (ROOT / "start_scenarios_config" / "autolog_sensors.json").exists()
+        """apps/windows/telemetry/config.json существует в проекте и содержит все настройки."""
+        telemetry_cfg = ROOT / "apps" / "windows" / "telemetry" / "config.json"
+        assert telemetry_cfg.exists(), "Файл apps/windows/telemetry/config.json должен существовать"
 
     def test_real_autolog_sensors_json_valid(self):
-        """start_scenarios_config/autolog_sensors.json валидный JSON с нужными полями."""
-        data = json.loads((ROOT / "start_scenarios_config" / "autolog_sensors.json").read_text(encoding="utf-8"))
-        assert "enable_autolog" in data
-        assert "loggers" in data
-        assert len(data["loggers"]) > 0
+        """apps/windows/telemetry/config.json валидный JSON с нужными полями."""
+        telemetry_cfg = ROOT / "apps" / "windows" / "telemetry" / "config.json"
+        data = json.loads(telemetry_cfg.read_text(encoding="utf-8"))
+        assert "enable_autolog" in data, "Должно быть поле enable_autolog"
+        assert "loggers" in data, "Должна быть секция loggers"
+        assert "sensors" in data, "Должна быть секция sensors"
+        assert len(data["loggers"]) > 0, "Логгеры не должны быть пустыми"
+        assert len(data["sensors"]) > 0, "Сенсоры не должны быть пустыми"
 
     def test_dashboard_json_has_no_logging_block(self):
-        """start_scenarios_config/autolog_sensors.json содержит настройки логгеров."""
-        data = json.loads((ROOT / "start_scenarios_config" / "autolog_sensors.json").read_text(encoding="utf-8"))
-        assert "loggers" in data
-        assert isinstance(data["loggers"], dict)
+        """apps/windows/telemetry/config.json содержит настройки логгеров и сенсоров."""
+        telemetry_cfg = ROOT / "apps" / "windows" / "telemetry" / "config.json"
+        data = json.loads(telemetry_cfg.read_text(encoding="utf-8"))
+        assert "loggers" in data, "Должна быть секция loggers"
+        assert isinstance(data["loggers"], dict), "loggers должен быть словарем"
+        assert "sensors" in data, "Должна быть секция sensors"
+        assert isinstance(data["sensors"], dict), "sensors должен быть словарем"
 
     def test_tc_json_has_no_logging_block(self):
         """start_scenarios_config/tc.json не содержит блок logging."""

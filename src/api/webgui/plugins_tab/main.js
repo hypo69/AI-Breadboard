@@ -99,7 +99,7 @@ function renderPluginsList(plugins) {
     const isSelected = p.name === selectedPluginName;
     const statusBadge = p.enabled 
       ? '<span class="badge bg-success-subtle text-success border border-success-subtle small">Вкл</span>'
-      : '<span class="badge bg-secondary-subtle text-muted border small">Выкл</span>';
+      : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle small">Выкл</span>';
     const typeBadge = p.is_system
       ? '<span class="badge bg-secondary-subtle text-body-secondary border small">Системный</span>'
       : '<span class="badge bg-info-subtle text-info-emphasis border small">Пользовательский</span>';

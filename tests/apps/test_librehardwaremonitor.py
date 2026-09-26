@@ -26,9 +26,6 @@ from apps.windows.hardware.lhm_service import (
     LhmService,
     parse_sensor_value,
 )
-from apps.windows.hardware import LhmService as LhmServiceWindows
-from apps.librehardwaremonitor.core.lhm_service import LhmService as LhmServiceAlias
-from apps.librehardwaremonitor.router import init_router
 
 
 SAMPLE_LHM_TREE = {
@@ -109,10 +106,7 @@ SAMPLE_LHM_TREE = {
 }
 
 
-def test_lhm_service_import_compatibility() -> None:
-    """Тестирование корректности экспорта LhmService в apps.windows.hardware."""
-    assert LhmService is LhmServiceWindows
-    assert LhmService is LhmServiceAlias
+
 
 
 def test_parse_sensor_value() -> None:
@@ -183,42 +177,4 @@ def test_lhm_start_process() -> None:
         mock_popen.assert_called_once()
 
 
-def test_lhm_fastapi_endpoints() -> None:
-    """Тестирование всех эндпоинтов FastAPI роутера LHM."""
-    app = FastAPI()
-    app.include_router(init_router())
-    client = TestClient(app)
 
-    # 1. /status
-    res = client.get("/api/v1/lhm/status")
-    assert res.status_code == 200
-    data = res.json()
-    assert "is_running" in data
-    assert "portable_guide" in data
-
-    # 2. /sensors
-    with patch.object(LhmService, "get_sensor_tree", return_value=SAMPLE_LHM_TREE):
-        res = client.get("/api/v1/lhm/sensors")
-        assert res.status_code == 200
-        assert "sensors_tree" in res.json()
-
-    # 3. /metrics
-    with patch.object(LhmService, "get_sensor_tree", return_value=SAMPLE_LHM_TREE):
-        res = client.get("/api/v1/lhm/metrics")
-        assert res.status_code == 200
-        data = res.json()
-        assert data["count"] == 7
-        assert len(data["sensors"]) == 7
-
-    # 4. /summary
-    with patch.object(LhmService, "get_sensor_tree", return_value=SAMPLE_LHM_TREE):
-        res = client.get("/api/v1/lhm/summary")
-        assert res.status_code == 200
-        summary = res.json()
-        assert summary["cpu"]["temperature_package_c"] == 54.2
-
-    # 5. /launch
-    with patch.object(LhmService, "start_process", return_value=True):
-        res = client.post("/api/v1/lhm/launch")
-        assert res.status_code == 200
-        assert res.json()["success"] is True

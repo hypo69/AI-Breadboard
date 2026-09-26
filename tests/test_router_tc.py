@@ -224,3 +224,77 @@ class TestTcModelProviderEndpoints:
         response = client.post("/tc/model_provider", json={"provider": ""})
         assert response.status_code == 400
         assert "Имя провайдера не может быть пустым" in response.json().get("detail", "")
+
+
+class TestTcTelemetryEndpoints:
+    """Набор тестов для роутов телеметрии сенсоров (/tc/telemetry)."""
+
+    def test_post_tc_telemetry_sensor_readings(self, client: TestClient, tmp_path: Path) -> None:
+        """Проверка POST /tc/telemetry сохраняет показания реальных сенсоров."""
+        db_file = tmp_path / "telemetry_test.db"
+        fake_storage = MagicMock()
+        fake_storage.save_sensor_polls.return_value = 2
+
+        with patch("apps.windows.telemetry.storage.TelemetryStorage.get_instance", return_value=fake_storage):
+            payload = {
+                "source": "hardware_sensor",
+                "readings": [
+                    {
+                        "id": "cpu_temp_core_0",
+                        "hardware_name": "Intel Core i9",
+                        "hardware_type": "cpu",
+                        "sensor_category": "Temperature",
+                        "sensor_name": "CPU Core #1",
+                        "unit": "°C",
+                        "value": 54.5,
+                    },
+                    {
+                        "id": "gpu_load_total",
+                        "hardware_name": "NVIDIA GeForce RTX 4090",
+                        "hardware_type": "gpu",
+                        "sensor_category": "Load",
+                        "sensor_name": "GPU Core Load",
+                        "unit": "%",
+                        "value": 32.0,
+                    },
+                ],
+            }
+            response = client.post("/tc/telemetry", json=payload)
+            assert response.status_code == 200
+            data = response.json()
+            assert data.get("status") == "success"
+            assert data.get("saved_count") == 2
+            assert data.get("source") == "hardware_sensor"
+            fake_storage.save_sensor_polls.assert_called_once()
+
+    def test_get_tc_telemetry_from_db(self, client: TestClient) -> None:
+        """Проверка GET /tc/telemetry считывает показания сенсоров из базы данных."""
+        fake_records = [
+            {
+                "id": 1,
+                "sensor_id": "cpu_temp_core_0",
+                "timestamp": "2026-09-26T07:40:00Z",
+                "hardware_name": "Intel Core i9",
+                "hardware_type": "cpu",
+                "sensor_category": "Temperature",
+                "sensor_name": "CPU Core #1",
+                "unit": "°C",
+                "value": 54.5,
+            }
+        ]
+        fake_storage = MagicMock()
+        fake_storage.get_latest_sensor_polls.return_value = fake_records
+
+        with patch("apps.windows.telemetry.storage.TelemetryStorage.get_instance", return_value=fake_storage):
+            response = client.get("/tc/telemetry?limit=50&hardware_type=cpu")
+            assert response.status_code == 200
+            data = response.json()
+            assert data.get("status") == "success"
+            assert data.get("count") == 1
+            assert data.get("telemetry") == fake_records
+            fake_storage.get_latest_sensor_polls.assert_called_once_with(
+                limit=50,
+                sensor_id=None,
+                hardware_type="cpu",
+            )
+

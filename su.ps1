@@ -203,7 +203,23 @@ if (Test-Path $cfgPath) {
             }
         }
         if ($cfg.ai) {
-            # Load AI configuration from su.json format
+            # Поддержка новой структуры: ai.providers.<provider>.model
+            if ($cfg.ai.providers) {
+                foreach ($provName in @('gemini', 'gemini_cli', 'agy', 'ollama', 'foundry')) {
+                    $prov = $cfg.ai.providers.$provName
+                    if ($prov -and $prov.enabled -eq $true -and -not $aiProvider) {
+                        $aiProvider = $provName
+                    }
+                    if ($prov -and $prov.model) {
+                        switch ($provName) {
+                            'gemini'     { $aiGeminiModel    = [string]$prov.model }
+                            'gemini_cli' { $aiGeminiCliModel = [string]$prov.model }
+                            'agy'        { $aiAgyModel       = [string]$prov.model; if ($prov.effort) { $aiAgyEffort = [string]$prov.effort } }
+                        }
+                    }
+                }
+            }
+            # Поддержка старой структуры (обратная совместимость)
             if ($cfg.ai.provider) {
                 $aiProvider = [string]$cfg.ai.provider
             }

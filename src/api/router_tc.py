@@ -93,6 +93,24 @@ class TcSetProviderPayload(BaseModel):
     )
 
 
+class TcTelemetryReading(BaseModel):
+    """Модель показаний индивидуального сенсора железа или системы."""
+    id: str = Field(default="", description="Идентификатор сенсора (например, cpu_temp_core_0)")
+    hardware_name: str = Field(default="System", description="Имя устройства/компонента")
+    hardware_type: str = Field(default="cpu", description="Тип оборудования (cpu, gpu, memory, disk, network)")
+    sensor_category: str = Field(default="Temperature", description="Категория показателя (Temperature, Load, Clock, Fan, Power)")
+    sensor_name: str = Field(default="Unknown", description="Название датчика")
+    unit: str = Field(default="", description="Единица измерения (°C, %, MHz, RPM, W)")
+    value: float = Field(default=0.0, description="Численное значение показания сенсора")
+
+
+class TcTelemetryPayload(BaseModel):
+    """Пакет показаний реальных сенсоров для сохранения в телеметрию Test Computer."""
+    readings: list[TcTelemetryReading] = Field(default_factory=list, description="Список показаний сенсоров")
+    source: str = Field(default="hardware_sensor", description="Источник данных (hardware_sensor, lhm, psutil, speedtest)")
+    timestamp: Optional[str] = Field(default=None, description="ISO timestamp отпечатка времени сбора")
+
+
 # -----------------------------------------------------------------------------
 # Вспомогательные функции
 # -----------------------------------------------------------------------------
@@ -599,4 +617,165 @@ def init_router() -> APIRouter:
             logger.error(f"[router_tc] Ошибка при установке провайдера TC: {exc}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(exc))
 
+    # =========================================================================
+    # 4. Телеметрия Test Computer: /tc/telemetry (POST реальные сенсоры / GET из БД)
+    # =========================================================================
+
+    @router.post("/tc/telemetry")
+    @router.post("/api/tc/telemetry")
+    @router.post("/api/v1/tc/telemetry")
+    async def ingest_tc_telemetry(payload: TcTelemetryPayload) -> dict:
+        """Прием показаний от реальных сенсоров и запись в базу данных телеметрии."""
+        try:
+            from datetime import datetime, timezone
+            from apps.windows.telemetry.storage import TelemetryStorage
+
+            now_iso = payload.timestamp or datetime.now(timezone.utc).isoformat()
+            now_ts = datetime.now(timezone.utc).timestamp()
+            storage = TelemetryStorage.get_instance()
+
+            raw_readings = [r.model_dump() for r in payload.readings]
+
+            # Сохранение показаний сенсоров в таблицу sensor_polls SQLite
+            saved_count = storage.save_sensor_polls(
+                polls=raw_readings,
+                timestamp=now_iso,
+                created_at=now_ts,
+            )
+
+            logger.info(f"[router_tc] Сохранено {saved_count} показаний сенсоров через POST /tc/telemetry (источник: {payload.source})")
+
+            return {
+                "status": "success",
+                "message": f"Принято и сохранено {saved_count} показаний сенсоров",
+                "source": payload.source,
+                "saved_count": saved_count,
+                "timestamp": now_iso,
+            }
+        except Exception as exc:
+            logger.error(f"[router_tc] Ошибка при приеме показаний сенсоров /tc/telemetry: {exc}", exc_info=True)
+            raise HTTPException(status_code=500, detail=str(exc))
+
+    @router.get("/tc/telemetry")
+    @router.get("/api/tc/telemetry")
+    @router.get("/api/v1/tc/telemetry")
+    async def get_tc_telemetry(
+        limit: int = 100,
+        sensor_id: str = "",
+        hardware_type: str = "",
+    ) -> dict:
+        """Получение сохраненной телеметрии и показаний сенсоров из базы данных SQLite."""
+        try:
+            from apps.windows.telemetry.storage import TelemetryStorage
+
+            storage = TelemetryStorage.get_instance()
+            sensor_data = storage.get_latest_sensor_polls(
+                limit=limit,
+                sensor_id=sensor_id.strip() or None,
+                hardware_type=hardware_type.strip() or None,
+            )
+
+            return {
+                "status": "success",
+                "count": len(sensor_data),
+                "limit": limit,
+                "sensor_id": sensor_id.strip() or None,
+                "hardware_type": hardware_type.strip() or None,
+                "telemetry": sensor_data,
+            }
+        except Exception as exc:
+            logger.error(f"[router_tc] Ошибка при получении телеметрии из БД /tc/telemetry: {exc}", exc_info=True)
+            raise HTTPException(status_code=500, detail=str(exc))
+    # -----------------------------------------------------------------------------
+    # 5. Unified Tab Endpoint (/tc/tab/{tab_name})
+    # -----------------------------------------------------------------------------
+    async def _build_tab_response(tab_name: str, fastapi_req: Request, limit: int = 100, sensor_id: str = "", hardware_type: str = "") -> dict:
+        """Собирает данные для указанной вкладки и возвращает единый JSON.
+        
+        Поддерживаемые вкладки:
+        - model_instruction
+        - model
+        - provider
+        - telemetry
+        """
+        tab = tab_name.lower()
+        if tab in ("model_instruction", "model-instruction"):
+            user_identifier, system_instruction, selected_model, settings = await _extract_tc_user_auth(fastapi_req)
+            provider, default_model, config_file = _resolve_tc_model_and_provider()
+            effective_model = "".strip() or selected_model or default_model
+            source = "user_settings" if (settings and (settings.get("tc_system_instruction") or settings.get("system_instruction"))) else "file_default"
+            return {
+                "status": "success",
+                "tab": "model_instruction",
+                "data": {
+                    "instruction": system_instruction,
+                    "system_instruction": system_instruction,
+                    "model": effective_model,
+                    "provider": provider,
+                    "source": source,
+                    "config_file": config_file,
+                },
+            }
+        elif tab == "model":
+            _, _, user_selected_model, _ = await _extract_tc_user_auth(fastapi_req)
+            provider, default_model, config_file = _resolve_tc_model_and_provider()
+            effective_model = user_selected_model or default_model
+            return {
+                "status": "success",
+                "tab": "model",
+                "data": {
+                    "model": effective_model,
+                    "provider": provider,
+                    "display": f"{provider}: {effective_model}",
+                    "config_file": config_file,
+                },
+            }
+        elif tab in ("provider", "model_provider", "model-provider"):
+            _, _, user_selected_model, _ = await _extract_tc_user_auth(fastapi_req)
+            provider, default_model, config_file = _resolve_tc_model_and_provider()
+            effective_model = user_selected_model or default_model
+            return {
+                "status": "success",
+                "tab": "provider",
+                "data": {
+                    "provider": provider,
+                    "model": effective_model,
+                    "display": f"{provider}: {effective_model}",
+                    "config_file": config_file,
+                },
+            }
+        elif tab == "telemetry":
+            # Переиспользуем логику получения телеметрии
+            from apps.windows.telemetry.storage import TelemetryStorage
+            storage = TelemetryStorage.get_instance()
+            sensor_data = storage.get_latest_sensor_polls(
+                limit=limit,
+                sensor_id=sensor_id.strip() or None,
+                hardware_type=hardware_type.strip() or None,
+            )
+            return {
+                "status": "success",
+                "tab": "telemetry",
+                "data": {
+                    "count": len(sensor_data),
+                    "limit": limit,
+                    "sensor_id": sensor_id.strip() or None,
+                    "hardware_type": hardware_type.strip() or None,
+                    "telemetry": sensor_data,
+                },
+            }
+        else:
+            raise HTTPException(status_code=404, detail=f"Таб " + tab_name + " не поддерживается")
+    
+    @router.get("/tc/tab/{tab_name}")
+    async def get_tc_tab(tab_name: str, fastapi_req: Request, limit: int = 100, sensor_id: str = "", hardware_type: str = "") -> dict:
+        """Эндпоинт возвращает данные для запрошенной вкладки в едином JSON.
+        """
+        result = await _build_tab_response(tab_name, fastapi_req, limit, sensor_id, hardware_type)
+        # Убираем дублирование статуса
+        return result
+    
+    # -----------------------------------------------------------------------------
+    # Возврат роутера
+    
     return router

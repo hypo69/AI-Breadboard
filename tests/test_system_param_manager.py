@@ -27,7 +27,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from apps.system_control_center.router import init_router
+from apps.windows.system_control_center.router import init_router
 from apps.windows.core.models import RiskLevel
 from apps.windows.core.system_param_manager import (
     ParameterCategory,

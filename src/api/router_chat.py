@@ -43,6 +43,14 @@ class SaveRagRequest(BaseModel):
     query: str
     chat_text: str
     voice_text: str
+    rag_name: str = Field(
+        default="",
+        description="Имя целевой RAG базы данных (например: 'coder', 'secretary', 'technician', 'admin', 'default').",
+    )
+    role: str = Field(
+        default="",
+        description="Роль пользователя или ассистента для автоматического выбора RAG базы данных.",
+    )
 
 class TestModelRequest(BaseModel):
     """Модель данных для проверочного запроса к AI-модели.
@@ -104,18 +112,6 @@ class SetModelPayload(BaseModel):
     provider: str = Field(
         default="",
         description="Опциональное имя провайдера (gemini, agy, foundry, ollama, openai, hf, onnx, gemini_cli).",
-    )
-
-
-class SetProviderPayload(BaseModel):
-    """Модель данных для установки активного AI-провайдера."""
-    provider: str = Field(
-        ...,
-        description="Имя провайдера (gemini, agy, foundry, ollama, openai, hf, onnx, gemini_cli).",
-    )
-    model: str = Field(
-        default="",
-        description="Опциональное имя модели. Если не указано, выбирается модель по умолчанию для провайдера.",
     )
 
 
@@ -186,7 +182,16 @@ def get_chat_model(selected_model_name: str, system_instruction: str = "", user_
     elif is_ollama:
         model_id = selected_model_name.split(':', 1)[-1]
         from src.ai.ollama_chat import OllamaChatBase
-        ollama_url = ai_cfg.ollama_base_url if ai_cfg else 'http://localhost:11434'
+        ollama_url = getattr(ai_cfg, 'ollama_base_url', None) if ai_cfg else None
+        if not ollama_url and ai_cfg and hasattr(ai_cfg, 'providers'):
+            providers = getattr(ai_cfg, 'providers', {})
+            ollama_cfg = providers.get('ollama', {}) if isinstance(providers, dict) else getattr(providers, 'ollama', {})
+            if isinstance(ollama_cfg, dict):
+                ollama_url = ollama_cfg.get('base_url') or ollama_cfg.get('ollama_base_url')
+            else:
+                ollama_url = getattr(ollama_cfg, 'base_url', None) or getattr(ollama_cfg, 'ollama_base_url', None)
+        if not ollama_url:
+            ollama_url = 'http://localhost:11434'
         inst = OllamaChatBase(
             model_id=model_id,
             system_prompt=eff_sys_prompt,
@@ -276,6 +281,24 @@ async def _extract_user_auth(fastapi_req: Request) -> tuple[str, str, str, dict]
         system_instruction = _get_default_system_instruction()
 
     return user_identifier, system_instruction, selected_model, settings
+
+def _resolve_target_rag_name(rag_req: SaveRagRequest, settings: dict) -> str:
+    """Определяет наименование целевой RAG базы данных по запросу и настройкам пользователя.
+
+    :param rag_req: Запрос с опциональными rag_name или role.
+    :param settings: Словарь настроек текущего пользователя.
+    :returns: Строковое имя целевой RAG базы данных.
+    """
+    if rag_req and rag_req.rag_name and rag_req.rag_name.strip():
+        return rag_req.rag_name.strip()
+    if rag_req and rag_req.role and rag_req.role.strip():
+        return rag_req.role.strip()
+    if settings:
+        if settings.get('active_rag') and str(settings['active_rag']).strip():
+            return str(settings['active_rag']).strip()
+        if settings.get('role') and str(settings['role']).strip():
+            return str(settings['role']).strip()
+    return "default"
 
 def _get_voice_gender_rule(settings: dict) -> str:
     """Определяет гендерное правило для ответов ассистента на основе настроек голоса TTS."""
@@ -381,6 +404,82 @@ def _build_debug_prompt(request: ChatRequest, user_context_str: str, voice_gende
     full_prompt_parts.append(f"── USER MESSAGE ──\n{request.message}")
     return "\n\n".join(full_prompt_parts)
 
+def _get_available_providers_and_models(profile: str = "") -> dict:
+    """Получает список всех доступных провайдеров и их моделей из конфигурации.
+
+    :param profile: Опциональное имя профиля конфигурации.
+    :returns: Словарь {provider_name: {"model": model_name, "enabled": bool}, ...}
+    """
+    import json
+    from pathlib import Path
+
+    cfg_env = os.getenv("AIBREADBOARD_CONFIG") or os.getenv("CONFIG_FILE")
+    active_path = None
+    if profile in ("tc", "test-computer", "test_computer", "apps_tc"):
+        for candidate in [__root__ / "start_scenarios_config" / "tc.json", __root__ / "config" / "tc.json", __root__ / "config_tc.json", __root__ / "tc.json"]:
+            if candidate.exists():
+                active_path = candidate
+                break
+    elif cfg_env:
+        p = Path(cfg_env)
+        active_path = p if p.is_absolute() else (__root__ / cfg_env)
+
+    if not active_path or not active_path.exists():
+        for candidate in [__root__ / "start_scenarios_config" / "tc.json", __root__ / "config" / "tc.json", __root__ / "config_tc.json", __root__ / "tc.json"]:
+            if candidate.exists() and not (__root__ / "config.json").exists() and not (__root__ / "config" / "dashboard.json").exists():
+                active_path = candidate
+                break
+        if not active_path or not active_path.exists():
+            active_path = (__root__ / "start_scenarios_config" / "dashboard.json") if (__root__ / "start_scenarios_config" / "dashboard.json").exists() else ((__root__ / "config" / "dashboard.json") if (__root__ / "config" / "dashboard.json").exists() else (__root__ / "config.json"))
+
+    providers_list = {}
+
+    if active_path and active_path.exists():
+        try:
+            with open(active_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                ai_sec = data.get("ai", {})
+                
+                # New format: providers.<prov>.enabled + providers.<prov>.model
+                if isinstance(ai_sec.get("providers"), dict):
+                    providers = ai_sec.get("providers", {})
+                    for prov_key, prov_cfg in providers.items():
+                        if isinstance(prov_cfg, dict):
+                            model = prov_cfg.get("model")
+                            enabled = prov_cfg.get("enabled", False)
+                            if model:  # Добавляем только если есть модель
+                                providers_list[prov_key] = {
+                                    "model": model,
+                                    "enabled": enabled if isinstance(enabled, bool) else (str(enabled).lower() == "true")
+                                }
+                # Legacy format: use_agy, use_gemini, use_ollama, use_foundry
+                else:
+                    if ai_sec.get("use_agy"):
+                        providers_list["agy"] = {
+                            "model": ai_sec.get("agy_model_id") or ai_sec.get("model") or "",
+                            "enabled": True
+                        }
+                    if ai_sec.get("use_gemini"):
+                        providers_list["gemini"] = {
+                            "model": ai_sec.get("gemini_model_id") or ai_sec.get("model") or "",
+                            "enabled": True
+                        }
+                    if ai_sec.get("use_ollama"):
+                        providers_list["ollama"] = {
+                            "model": ai_sec.get("ollama_model_id") or ai_sec.get("model") or "",
+                            "enabled": True
+                        }
+                    if ai_sec.get("use_foundry"):
+                        providers_list["foundry"] = {
+                            "model": ai_sec.get("foundry_model_id") or ai_sec.get("model") or "",
+                            "enabled": True
+                        }
+        except Exception as e:
+            logger.debug(f"[router_chat] Could not read active config {active_path}: {e}")
+
+    return providers_list
+
+
 def _resolve_default_model_and_provider(profile: str = "") -> tuple[str, str, str]:
     """Определяет провайдер и имя модели по умолчанию из активного конфигурационного файла.
 
@@ -431,6 +530,7 @@ def _resolve_default_model_and_provider(profile: str = "") -> tuple[str, str, st
                     elif ai_sec.get("model"):
                         model_name = ai_sec.get("model")
                 # New format: providers.<prov>.enabled + providers.<prov>.model
+                # Используем первый enabled провайдер как дефолтный
                 elif isinstance(ai_sec.get("providers"), dict):
                     providers = ai_sec.get("providers", {})
                     for prov_key, prov_cfg in providers.items():
@@ -601,8 +701,20 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
             }
         }
 
+    @router.get('/available-models')
+    async def get_available_models_endpoint(fastapi_req: Request, profile: str = "") -> dict:
+        """Получение списка всех доступных провайдеров и их моделей из конфигурации."""
+        try:
+            providers_list = _get_available_providers_and_models(profile=profile)
+            return {
+                "status": "ok",
+                "providers": providers_list,
+            }
+        except Exception as e:
+            logger.error(f"[router_chat] Failed to get available models: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
+
     @router.get('/active-model')
-    @router.get('/active_model')
     async def get_active_model_endpoint(fastapi_req: Request, profile: str = "") -> dict:
         """Получение текущей активной модели и провайдера ИИ на основе профиля и пользовательских настроек."""
         provider, model_name, config_file = await _get_effective_model_and_provider(fastapi_req, profile=profile)
@@ -614,26 +726,8 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
             "config_file": config_file,
         }
 
-    @router.get('/models/model')
-    @router.get('/model')
-    async def get_model_endpoint(fastapi_req: Request, profile: str = "") -> dict:
-        """Получение текущей активной AI-модели."""
-        provider, model_name, config_file = await _get_effective_model_and_provider(fastapi_req, profile=profile)
-        return {
-            "status": "success",
-            "model": model_name,
-            "provider": provider,
-            "display": f"{provider}: {model_name}",
-            "config_file": config_file,
-        }
-
-    @router.post('/models/set_model')
-    @router.post('/models/set-model')
-    @router.post('/set_model')
-    @router.post('/set-model')
-    @router.put('/models/set_model')
-    @router.put('/models/set-model')
-    async def set_model_endpoint(req: SetModelPayload, fastapi_req: Request) -> dict:
+    @router.post('/set-active-model')
+    async def set_active_model_endpoint(req: SetModelPayload, fastapi_req: Request) -> dict:
         """Установка активной модели для текущего пользователя и сессии."""
         try:
             target_model = req.model.strip()
@@ -673,8 +767,6 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
             logger.error(f"[router_chat] Ошибка при установке модели: {exc}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(exc))
 
-    @router.get('/models_provider/provider')
-    @router.get('/models-provider/provider')
     @router.get('/provider')
     async def get_provider_endpoint(fastapi_req: Request, profile: str = "") -> dict:
         """Получение текущего активного AI-провайдера."""
@@ -687,54 +779,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
             "config_file": config_file,
         }
 
-    @router.post('/models_provider/set_provider')
-    @router.post('/models_provider/set-provider')
-    @router.post('/models-provider/set-provider')
-    @router.post('/set_provider')
-    @router.post('/set-provider')
-    @router.put('/models_provider/set_provider')
-    @router.put('/models_provider/set-provider')
-    async def set_provider_endpoint(req: SetProviderPayload, fastapi_req: Request) -> dict:
-        """Установка активного AI-провайдера для текущего пользователя и сессии."""
-        try:
-            target_provider = req.provider.strip()
-            if not target_provider:
-                raise HTTPException(status_code=400, detail="Имя провайдера не может быть пустым")
 
-            normalized_model, provider = _normalize_model_and_provider(req.model, target_provider)
-            user_identifier, _, _, _ = await _extract_user_auth(fastapi_req)
-
-            try:
-                from src.user_manager import user_manager
-                user_id_int = int(user_identifier) if str(user_identifier).isdigit() else 1
-                await asyncio.to_thread(user_manager.update_user_settings, user_id_int, model=normalized_model)
-            except Exception as e:
-                logger.debug(f"[router_chat] Не удалось обновить provider/model в user_settings: {e}")
-
-            # Обновление состояния базового chat_model
-            active_chat_ref = getattr(getattr(fastapi_req, "app", None), "state", None)
-            target_chat_model = getattr(active_chat_ref, "chat_model", None) if active_chat_ref else None
-            if not target_chat_model:
-                target_chat_model = chat_model
-            if target_chat_model:
-                if hasattr(target_chat_model, "_model_name"):
-                    target_chat_model._model_name = normalized_model
-                if hasattr(target_chat_model, "model_name"):
-                    target_chat_model.model_name = normalized_model
-
-            return {
-                "status": "success",
-                "message": "Провайдер успешно обновлен",
-                "provider": provider,
-                "model": normalized_model,
-            }
-        except HTTPException:
-            raise
-        except Exception as exc:
-            logger.error(f"[router_chat] Ошибка при установке провайдера: {exc}", exc_info=True)
-            raise HTTPException(status_code=500, detail=str(exc))
-
-    @router.get('/model_instruction')
     @router.get('/model-instruction')
     async def get_model_instruction(fastapi_req: Request, model: str = "") -> dict:
         """Получение текущей системной инструкции для AI-модели или чата."""
@@ -760,10 +805,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
             logger.error(f"[router_chat] Ошибка при получении системной инструкции: {exc}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(exc))
 
-    @router.post('/model_instruction')
     @router.post('/model-instruction')
-    @router.put('/model_instruction')
-    @router.put('/model-instruction')
     async def set_model_instruction(req: ModelInstructionPayload, fastapi_req: Request) -> dict:
         """Установка и сохранение системной инструкции для AI-модели или чата."""
         try:
@@ -966,29 +1008,36 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
         }
 
 
-    @router.post('/save-rag')
+    @router.post('/save-for-rag-indexing')
     async def save_to_rag(rag_req: SaveRagRequest, request: Request):
-        """Ручное сохранение одобренного ответа в постоянный JSON-архив."""
+        """Ручное сохранение одобренного ответа в постоянный JSON-архив с выбором целевой RAG базы."""
         try:
-            user_identifier, _, _, _ = await _extract_user_auth(request)
+            user_identifier, _, _, settings = await _extract_user_auth(request)
+            target_rag = _resolve_target_rag_name(rag_req, settings)
+
             from src.rag import save_user_approved_response
             save_success = await asyncio.to_thread(
                 save_user_approved_response,
-                user_identifier, rag_req.query, rag_req.chat_text, rag_req.voice_text
+                user_identifier, rag_req.query, rag_req.chat_text, rag_req.voice_text, target_rag
             )
             if save_success:
-                return {"status": "success", "message": "Successfully сохранено для последующей компиляции RAG"}
+                return {
+                    "status": "success",
+                    "message": "Успешно сохранено для последующей компиляции RAG",
+                    "rag_name": target_rag,
+                }
             else:
-                raise HTTPException(status_code=500, detail="Error сохранения ответа")
+                raise HTTPException(status_code=500, detail="Ошибка сохранения ответа")
         except Exception as e:
-            logger.error("Error при ручном сохранении ответа", e)
+            logger.error("Ошибка при ручном сохранении ответа", e)
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.post('/save-rag-instant')
     async def save_to_rag_instant(rag_req: SaveRagRequest, request: Request):
-        """Мгновенное сохранение ответа: запись в JSON + векторизация в FAISS."""
+        """Мгновенное сохранение ответа: запись в JSON + векторизация в FAISS с выбором целевой RAG базы."""
         try:
-            user_identifier, _, _, _ = await _extract_user_auth(request)
+            user_identifier, _, _, settings = await _extract_user_auth(request)
+            target_rag = _resolve_target_rag_name(rag_req, settings)
             api_key = getattr(chat_model, 'api_key', '') or os.getenv('GEMINI_API_KEY', '')
 
             content_to_index = rag_req.voice_text if rag_req.voice_text.strip() else rag_req.chat_text
@@ -996,20 +1045,28 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
             from src.rag import save_user_approved_response, index_user_interaction
             save_success = await asyncio.to_thread(
                 save_user_approved_response,
-                user_identifier, rag_req.query, rag_req.chat_text, rag_req.voice_text
+                user_identifier, rag_req.query, rag_req.chat_text, rag_req.voice_text, target_rag
             )
             rag_success = await asyncio.to_thread(
-                index_user_interaction, user_identifier, api_key, rag_req.query, content_to_index
+                index_user_interaction, user_identifier, api_key, rag_req.query, content_to_index, target_rag
             )
 
             if save_success and rag_success:
-                return {"status": "success", "message": "Successfully сохранено в архив и проиндексировано в RAG"}
+                return {
+                    "status": "success",
+                    "message": "Успешно сохранено в архив и проиндексировано в RAG",
+                    "rag_name": target_rag,
+                }
             elif save_success:
-                return {"status": "success", "message": "Сохранено в архив, но произошла Error при индексации в RAG"}
+                return {
+                    "status": "success",
+                    "message": "Сохранено в архив, но произошла ошибка при индексации в RAG",
+                    "rag_name": target_rag,
+                }
             else:
-                raise HTTPException(status_code=500, detail="Error сохранения ответа")
+                raise HTTPException(status_code=500, detail="Ошибка сохранения ответа")
         except Exception as e:
-            logger.error("Error при мгновенном сохранении в RAG", e)
+            logger.error("Ошибка при мгновенном сохранении в RAG", e)
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.get('/sessions')

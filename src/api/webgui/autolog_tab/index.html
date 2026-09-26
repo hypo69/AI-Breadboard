@@ -104,6 +104,13 @@ Copyright: © 2026 hypo69
         <span class="badge bg-secondary ms-1" id="badge-sensors-count">0</span>
       </button>
     </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link d-flex align-items-center gap-1.5 py-1.5 px-3" id="subtab-telemetry-service-btn" data-bs-toggle="tab" data-bs-target="#subtab-telemetry-service" type="button" role="tab">
+        <i class="bi bi-activity text-success"></i>
+        <span>Служба телеметрии (ai-telemetry)</span>
+        <span class="badge bg-secondary ms-1" id="badge-telemetry-status">Проверка...</span>
+      </button>
+    </li>
   </ul>
 
   <!-- Tab Content Panes -->
@@ -230,6 +237,197 @@ Copyright: © 2026 hypo69
           <button id="btn-save-sensors-config" class="btn btn-sm btn-primary d-flex align-items-center gap-1 shadow-sm">
             <i class="bi bi-floppy-fill"></i>
             <span>Сохранить конфигурацию сенсоров</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Telemetry Service Settings & Hybrid Mode (ai-telemetry.exe) -->
+    <div class="tab-pane fade" id="subtab-telemetry-service" role="tabpanel">
+      <!-- Live Status & Service Controls Card -->
+      <div class="card shadow-sm border-secondary-subtle mb-3">
+        <div class="card-header bg-dark d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 border-secondary">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fw-semibold text-white small">⚡ Статус процесса ai-telemetry.exe и управление службой</span>
+            <span class="badge bg-secondary" id="svc-status-badge">Загрузка...</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button id="btn-telemetry-start" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-sm" title="Запустить процесс ai-telemetry.exe">
+              <i class="bi bi-play-fill"></i>
+              <span>Запустить</span>
+            </button>
+            <button id="btn-telemetry-stop" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 shadow-sm" title="Остановить процесс ai-telemetry.exe">
+              <i class="bi bi-stop-fill"></i>
+              <span>Остановить</span>
+            </button>
+            <button id="btn-telemetry-restart" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1 shadow-sm" title="Перезапустить процесс">
+              <i class="bi bi-arrow-clockwise"></i>
+              <span>Перезапуск</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body bg-dark text-white p-3">
+          <div class="row g-3">
+            <div class="col-12 col-md-3">
+              <div class="p-2 rounded border border-secondary" style="background: rgba(15, 23, 42, 0.6);">
+                <div class="text-muted small text-uppercase" style="font-size: 0.7rem;">Активные процессы</div>
+                <div class="fw-bold text-info fs-6 mt-1 text-truncate" id="svc-info-pids">—</div>
+              </div>
+            </div>
+            <div class="col-12 col-md-3">
+              <div class="p-2 rounded border border-secondary" style="background: rgba(15, 23, 42, 0.6);">
+                <div class="text-muted small text-uppercase" style="font-size: 0.7rem;">Потребление памяти (RAM)</div>
+                <div class="fw-bold text-success fs-6 mt-1" id="svc-info-memory">— МБ</div>
+              </div>
+            </div>
+            <div class="col-12 col-md-3">
+              <div class="p-2 rounded border border-secondary" style="background: rgba(15, 23, 42, 0.6);">
+                <div class="text-muted small text-uppercase" style="font-size: 0.7rem;">Снимков в базе SQLite</div>
+                <div class="fw-bold text-warning fs-6 mt-1" id="svc-info-snapshots">—</div>
+              </div>
+            </div>
+            <div class="col-12 col-md-3">
+              <div class="p-2 rounded border border-secondary" style="background: rgba(15, 23, 42, 0.6);">
+                <div class="text-muted small text-uppercase" style="font-size: 0.7rem;">Windows Task Scheduler</div>
+                <div class="fw-bold fs-6 mt-1" id="svc-info-scheduler">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex flex-wrap gap-2 mt-3 pt-2 border-top border-secondary align-items-center">
+            <span class="small text-muted">Планировщик заданий:</span>
+            <button id="btn-telemetry-install-task" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 shadow-sm" title="Зарегистрировать в Task Scheduler с флагом WakeToRun">
+              <i class="bi bi-calendar-plus"></i>
+              <span>Установить в Task Scheduler (WakeToRun)</span>
+            </button>
+            <button id="btn-telemetry-uninstall-task" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-sm" title="Удалить из Task Scheduler">
+              <i class="bi bi-trash"></i>
+              <span>Удалить из Task Scheduler</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode & Intervals Configuration Card -->
+      <div class="card shadow-sm border-secondary-subtle">
+        <div class="card-header bg-dark d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 border-secondary">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fw-semibold text-white small">⚙️ Конфигурация режимов и периодичности сбора</span>
+          </div>
+        </div>
+
+        <div class="card-body bg-dark text-white p-3">
+          <div class="row g-4">
+            <!-- Режим сбора -->
+            <div class="col-12 col-md-4 border-end border-secondary">
+              <label class="form-label fw-bold small text-info text-uppercase">Режим работы службы</label>
+              <div class="d-flex flex-column gap-2 mt-1">
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="telemetryModeRadio" id="mode-minimal" value="minimal">
+                  <label class="form-check-label small" for="mode-minimal">
+                    <span class="fw-bold text-success">Minimal (Ультралегковесный)</span>
+                    <div class="text-muted" style="font-size: 0.75rem;">Только базовая телеметрия (CPU, RAM, GPU, диски, сеть, топ процессов). 28 мс замер, ~120 МБ RAM, 0% CPU. Лишние библиотеки отключены.</div>
+                  </label>
+                </div>
+                <div class="form-check mt-2">
+                  <input class="form-check-input" type="radio" name="telemetryModeRadio" id="mode-hybrid" value="hybrid" checked>
+                  <label class="form-check-label small" for="mode-hybrid">
+                    <span class="fw-bold text-warning">Hybrid (Адаптивный гибридный)</span>
+                    <div class="text-muted" style="font-size: 0.75rem;">Постоянный ультрабыстрый минимальный сбор + периодический опрос ресурсоемких сенсоров (LHM, SMART, сеть) с заданным интервалом.</div>
+                  </label>
+                </div>
+                <div class="form-check mt-2">
+                  <input class="form-check-input" type="radio" name="telemetryModeRadio" id="mode-full" value="full">
+                  <label class="form-check-label small" for="mode-full">
+                    <span class="fw-bold text-danger">Full (Полный стек)</span>
+                    <div class="text-muted" style="font-size: 0.75rem;">Опрос всех подключенных аппаратных сенсоров, LHM и спидтестов на каждом тике.</div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Интервалы опроса -->
+            <div class="col-12 col-md-4 border-end border-secondary">
+              <label class="form-label fw-bold small text-info text-uppercase">Интервалы опроса (секунды)</label>
+              
+              <div class="mb-3">
+                <label for="cfg-fast-interval" class="form-label small mb-1">
+                  Быстрый сбор базовых метрик: <span id="val-fast-interval" class="fw-bold text-warning">5с</span>
+                </label>
+                <div class="input-group input-group-sm">
+                  <input type="number" class="form-control bg-dark text-white border-secondary" id="cfg-fast-interval" value="5.0" min="1" max="60" step="0.5">
+                  <span class="input-group-text bg-dark text-muted border-secondary">секунд</span>
+                </div>
+                <small class="text-muted" style="font-size: 0.72rem;">Частота выборки CPU, RAM, дисков, сети и топа процессов.</small>
+              </div>
+
+              <div class="mb-3">
+                <label for="cfg-heavy-interval" class="form-label small mb-1">
+                  Периодический тяжелый опрос: <span id="val-heavy-interval" class="fw-bold text-warning">60с</span>
+                </label>
+                <div class="input-group input-group-sm">
+                  <input type="number" class="form-control bg-dark text-white border-secondary" id="cfg-heavy-interval" value="60.0" min="10" max="3600" step="5">
+                  <span class="input-group-text bg-dark text-muted border-secondary">секунд</span>
+                </div>
+                <small class="text-muted" style="font-size: 0.72rem;">Применяется в режиме Hybrid для опроса тяжелых сенсоров.</small>
+              </div>
+
+              <div>
+                <label for="cfg-top-processes" class="form-label small mb-1">Топ активных процессов:</label>
+                <select class="form-select form-select-sm bg-dark text-white border-secondary" id="cfg-top-processes">
+                  <option value="5">Топ 5 процессов</option>
+                  <option value="10" selected>Топ 10 процессов (рекомендуется)</option>
+                  <option value="20">Топ 20 процессов</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Тяжелые сенсоры в гибридном цикле -->
+            <div class="col-12 col-md-4">
+              <label class="form-label fw-bold small text-info text-uppercase">Тяжелые сенсоры (Hybrid опрос)</label>
+              <div class="d-flex flex-column gap-2 mt-1">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" role="switch" id="h-sensor-lhm" checked>
+                  <label class="form-check-label small" for="h-sensor-lhm">
+                    Датчики LibreHardwareMonitor
+                    <div class="text-muted" style="font-size: 0.72rem;">Температуры VRM/чипсета, обороты кулеров, вольтажи.</div>
+                  </label>
+                </div>
+                <div class="form-check form-switch mt-1">
+                  <input class="form-check-input" type="checkbox" role="switch" id="h-sensor-smart" checked>
+                  <label class="form-check-label small" for="h-sensor-smart">
+                    SMART и износ накопителей
+                    <div class="text-muted" style="font-size: 0.72rem;">Оценка ресурса SSD и SMART-атрибутов дисков.</div>
+                  </label>
+                </div>
+                <div class="form-check form-switch mt-1">
+                  <input class="form-check-input" type="checkbox" role="switch" id="h-sensor-ping" checked>
+                  <label class="form-check-label small" for="h-sensor-ping">
+                    Сетевой пинг и задержки
+                    <div class="text-muted" style="font-size: 0.72rem;">Пинг до сетевого шлюза и DNS.</div>
+                  </label>
+                </div>
+                <div class="form-check form-switch mt-1">
+                  <input class="form-check-input" type="checkbox" role="switch" id="h-sensor-inventory">
+                  <label class="form-check-label small" for="h-sensor-inventory">
+                    Инвентаризация WMI
+                    <div class="text-muted" style="font-size: 0.72rem;">Сбор серийных номеров и спецификаций оборудования.</div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer bg-dark border-secondary p-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <small class="text-muted">
+            <i class="bi bi-info-circle me-1"></i>
+            Конфигурация сохраняется в <code>apps/windows/telemetry/config.json</code> и немедленно применяется службой.
+          </small>
+          <button id="btn-save-telemetry-config" class="btn btn-sm btn-primary d-flex align-items-center gap-1 shadow-sm">
+            <i class="bi bi-floppy-fill"></i>
+            <span>Сохранить настройки телеметрии</span>
           </button>
         </div>
       </div>

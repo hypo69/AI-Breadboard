@@ -21,6 +21,7 @@ import colorama
 import datetime
 import json
 import inspect
+import sys
 import threading
 import queue
 import atexit
@@ -322,8 +323,12 @@ class Logger(metaclass=SingletonMeta):
 
         # Настройка консольного логгера и перехват root логгера (для SDK и сторонних библиотек)
         console_formatter = PrettyConsoleFormatter("%(asctime)s - %(levelname)s - %(message)s")
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(console_formatter)
+        target_stream = sys.stderr if sys.stderr is not None else sys.stdout
+        if target_stream is not None:
+            console_handler = logging.StreamHandler(target_stream)
+            console_handler.setFormatter(console_formatter)
+        else:
+            console_handler = logging.NullHandler()
 
         self.logger_console: logging.Logger = logging.getLogger("logger_console")
         self.logger_console.setLevel(logging.DEBUG)
@@ -518,6 +523,17 @@ class Logger(metaclass=SingletonMeta):
                     pass
                 break
 
+    def setLevel(self, level: int | str) -> None:
+        """Устанавливает уровень логирования для совместимости.
+        
+        Args:
+            level: Уровень логирования (число или имя уровня).
+        """
+        if isinstance(level, str):
+            self.is_debug_mode = (level.upper() == "DEBUG")
+        elif isinstance(level, int):
+            self.is_debug_mode = (level <= logging.DEBUG)
+
     def log(self, level: int, message: Any, ex: Optional[Exception] = None, 
             exc_info: bool = False, color: Optional[Tuple[str, str]] = None) -> None:
         """
@@ -542,8 +558,13 @@ class Logger(metaclass=SingletonMeta):
         colored_message = self._format_message(message, ex, color)
         
         # Логирование в консоль
+        # Логирование в консоль
         if self.logger_console:
-            self.logger_console.log(level, colored_message, exc_info=exc_info)
+            try:
+                self.logger_console.log(level, colored_message, exc_info=exc_info)
+            except Exception:
+                # Игнорировать ошибки записи в закрытый поток консоли
+                pass
 
         # Логирование в JSON (без ANSI кодов)
         if self.logger_file_json:

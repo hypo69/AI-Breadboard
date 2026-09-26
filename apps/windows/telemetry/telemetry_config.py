@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Управление конфигурацией сенсоров и агрегации телеметрии с поддержкой
-#   персонализированных интервалов опроса.
+#   режимов (minimal, hybrid, full) и персонализированных интервалов опроса.
 #
 # File: telemetry_config.py
 # Project: ai-breadboard
@@ -29,28 +29,20 @@ class TelemetryConfigManager:
         """Инициализирует менеджер конфигурации.
 
         Args:
-            config_path: Путь к файлу config.json (по умолчанию: apps/windows/config.json).
+            config_path: Путь к файлу конфигурации (по умолчанию: apps/windows/telemetry/config.json).
         """
         if config_path:
             self._config_path = config_path
         else:
-            unified_cfg1 = Path(__file__).resolve().parent.parent.parent.parent / "start_scenarios_config" / "~autolog_sensors.json"
-            unified_cfg2 = Path(__file__).resolve().parent.parent.parent.parent / "start_scenarios_config" / "autolog_sensors.json"
-            windows_root_cfg = Path(__file__).parent.parent / "config.json"
+            # Телеметрия должна использовать ТОЛЬКО свою собственную конфигурацию
             telemetry_cfg = Path(__file__).parent / "config.json"
-
-            if unified_cfg1.exists():
-                self._config_path = str(unified_cfg1)
-            elif unified_cfg2.exists():
-                self._config_path = str(unified_cfg2)
-            elif windows_root_cfg.exists():
-                self._config_path = str(windows_root_cfg)
-            else:
-                self._config_path = str(telemetry_cfg)
+            self._config_path = str(telemetry_cfg)
 
         self._config: Dict[str, Any] = {}
         self._sensors_config: Dict[str, Dict[str, Any]] = {}
         self._default_interval = 5.0
+        self._heavy_interval = 60.0
+        self._mode = "hybrid"
 
         self._load_config()
 
@@ -71,83 +63,136 @@ class TelemetryConfigManager:
                     self._config.get("telemetry", {}).get("interval_seconds", 5.0),
                 )
                 self._default_interval = float(raw_interval) if raw_interval is not None else 5.0
+
+                raw_heavy = self._config.get(
+                    "heavy_interval_seconds",
+                    self._config.get("telemetry", {}).get("heavy_interval_seconds", 60.0),
+                )
+                self._heavy_interval = float(raw_heavy) if raw_heavy is not None else 60.0
+
+                self._mode = str(
+                    self._config.get(
+                        "mode",
+                        self._config.get("telemetry", {}).get("mode", "hybrid"),
+                    )
+                ).lower()
         except FileNotFoundError:
             self._config = {}
             self._sensors_config = {}
             self._default_interval = 5.0
+            self._heavy_interval = 60.0
+            self._mode = "hybrid"
         except json.JSONDecodeError as e:
-            raise ValueError(f"Ошибка парсинга config.json: {e}")
+            raise ValueError(f"Ошибка парсинга {self._config_path}: {e}")
+
+    @property
+    def config_path(self) -> str:
+        """Возвращает путь к активному файлу конфигурации."""
+        return self._config_path
+
+    def get_mode(self) -> str:
+        """Возвращает режим сбора: minimal, hybrid, full."""
+        return self._mode if self._mode in ("minimal", "hybrid", "full") else "hybrid"
+
+    def get_interval_seconds(self) -> float:
+        """Возвращает быстрый интервал сбора телеметрии."""
+        return self._default_interval
+
+    def get_heavy_interval_seconds(self) -> float:
+        """Возвращает периодический интервал тяжелых сенсоров."""
+        return self._heavy_interval
+
+    def get_top_processes(self) -> int:
+        """Возвращает число сохраняемых процессов с наибольшей нагрузкой."""
+        return int(self._config.get("top_processes", 25))
+
+    def get_process_mode(self) -> str:
+        """Возвращает режим фильтрации процессов: 'top_n' или 'all'."""
+        mode = str(self._config.get("process_mode", "top_n")).lower()
+        return mode if mode in ("top_n", "all") else "top_n"
+
+    def get_effective_process_limit(self) -> int:
+        """Возвращает эффективное ограничение процессов (0 для Всех процессов)."""
+        if self.get_process_mode() == "all":
+            return 0
+        limit = self.get_top_processes()
+        return limit if limit > 0 else 0
+
+    def is_low_priority(self) -> bool:
+        """Возвращает флаг понижения приоритета процесса CPU."""
+        return bool(self._config.get("low_priority", True))
+
+    def get_heavy_collectors(self) -> Dict[str, bool]:
+        """Возвращает словарь активности тяжелых коллекторов."""
+        default_collectors = {
+            "hardware_sensors": True,
+            "storage_smart": True,
+            "network_ping": True,
+            "inventory_wmi": False,
+        }
+        custom = self._config.get("heavy_collectors", {})
+        default_collectors.update(custom)
+        return default_collectors
 
     def get_sensor_config(self, sensor_name: str) -> Dict[str, Any]:
-        """Возвращает конфигурацию конкретного сенсора.
-
-        Args:
-            sensor_name: Имя сенсора (cpu, gpu, ram, disk, network, sensors, internet).
-
-        Returns:
-            Dict[str, Any]: Конфигурация сенсора (enabled, interval_seconds, metrics).
-        """
+        """Возвращает конфигурацию конкретного сенсора."""
         return self._sensors_config.get(sensor_name, {"enabled": False})
 
     def is_sensor_enabled(self, sensor_name: str) -> bool:
-        """Проверяет, включен ли сенсор.
-
-        Args:
-            sensor_name: Имя сенсора.
-
-        Returns:
-            bool: True если сенсор включен.
-        """
+        """Проверяет, включен ли сенсор."""
         config = self.get_sensor_config(sensor_name)
         return config.get("enabled", False)
 
     def get_sensor_interval(self, sensor_name: str) -> float:
-        """Возвращает интервал опроса сенсора.
-
-        Args:
-            sensor_name: Имя сенсора.
-
-        Returns:
-            float: Интервал в секундах.
-        """
+        """Возвращает интервал опроса сенсора."""
         config = self.get_sensor_config(sensor_name)
         return config.get("interval_seconds", self._default_interval)
 
     def get_sensor_metrics(self, sensor_name: str) -> List[str]:
-        """Возвращает список метрик для сенсора.
-
-        Args:
-            sensor_name: Имя сенсора.
-
-        Returns:
-            List[str]: Список имен метрик.
-        """
+        """Возвращает список метрик для сенсора."""
         config = self.get_sensor_config(sensor_name)
         return config.get("metrics", [])
 
     def get_all_sensor_names(self) -> List[str]:
-        """Возвращает список всех имен сенсоров.
-
-        Returns:
-            List[str]: Список имен сенсоров.
-        """
+        """Возвращает список всех имен сенсоров."""
         return list(self._sensors_config.keys())
 
     def get_enabled_sensors(self) -> List[str]:
-        """Возвращает список включенных сенсоров.
-
-        Returns:
-            List[str]: Список имен включенных сенсоров.
-        """
+        """Возвращает список включенных сенсоров."""
         return [name for name, config in self._sensors_config.items() if config.get("enabled", False)]
 
     def get_general_config(self) -> Dict[str, Any]:
-        """Возвращает общую конфигурацию (без сенсоров).
+        """Возвращает общую конфигурацию (без сенсоров)."""
+        return {k: v for k, v in self._config.items() if k != "sensors"}
+
+    def save_config(self, new_config: Optional[Dict[str, Any]] = None) -> bool:
+        """Сохраняет текущую или переданную конфигурацию в файл.
+
+        Args:
+            new_config: Опциональный словарь новых параметров.
 
         Returns:
-            Dict[str, Any]: Общая конфигурация.
+            bool: True при успешном сохранении.
         """
-        return {k: v for k, v in self._config.items() if k != "sensors"}
+        if new_config:
+            self._config.update(new_config)
+            if "sensors" in new_config:
+                self._sensors_config = new_config["sensors"]
+            if "interval_seconds" in new_config:
+                self._default_interval = float(new_config["interval_seconds"])
+            if "heavy_interval_seconds" in new_config:
+                self._heavy_interval = float(new_config["heavy_interval_seconds"])
+            if "mode" in new_config:
+                self._mode = str(new_config["mode"]).lower()
+
+        try:
+            target_path = Path(self._config_path)
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(target_path, "w", encoding="utf-8") as f:
+                json.dump(self._config, f, indent=2, ensure_ascii=False)
+            return True
+        except Exception:
+            return False
 
     def reload(self) -> None:
         """Перезагружает конфигурацию из файла."""

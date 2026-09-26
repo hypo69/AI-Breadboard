@@ -64,9 +64,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="AI Windows Diagnostic & Administration Center")
     parser.add_argument(
         "--mode",
-        choices=["quick", "full", "security", "performance", "drivers", "clean", "postinstall"],
+        choices=["quick", "full", "security", "performance", "drivers", "clean", "postinstall", "inspector", "dashboard", "server"],
         default="quick",
-        help="Режим аудита системы",
+        help="Режим аудита системы или запуск сервиса/инспектора",
+    )
+    parser.add_argument(
+        "--inspector",
+        action="store_true",
+        help="Запустить интерактивный системный инспектор (System & Hardware Inspector)",
     )
     parser.add_argument(
         "--investigate",
@@ -174,6 +179,14 @@ def main() -> None:
             print("\n[!] Мониторинг оборудования остановлен.")
         return
 
+    if args.inspector or args.mode in ("inspector", "dashboard"):
+        from apps.windows.tui import run_system_inspector
+        try:
+            asyncio.run(run_system_inspector())
+        except (KeyboardInterrupt, SystemExit):
+            print("\n[!] Системный инспектор остановлен.")
+        return
+
     if args.logs:
         from apps.windows.tui import run_log_dashboard
         asyncio.run(run_log_dashboard(channel=args.channel))
@@ -184,8 +197,7 @@ def main() -> None:
         run_tui()
         return
 
-
-    if args.server:
+    if args.server or args.mode == "server":
         import uvicorn
         from fastapi import FastAPI
         from apps.windows.router import init_router

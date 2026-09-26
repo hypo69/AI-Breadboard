@@ -28,9 +28,11 @@ from apps.windows.telemetry import (
     ProcessMetrics,
     ProcessNetworkActivity,
     StorageBatteryWearReport,
+    SystemCoreMetrics,
     SystemDiagnosticEngine,
     SystemCollector,
     SystemDiagnosticReport,
+    SystemHardwareQuick,
     SystemSnapshot,
     TelemetryLoggerService,
 )
@@ -53,25 +55,79 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
     Returns:
         APIRouter: Configured FastAPI router instance.
     """
-    router = APIRouter(prefix="/api/v1/system", tags=["System & Hardware Inspector"])
+    router = APIRouter(prefix="/tc/system", tags=["System & Hardware Inspector"])
+    alias_v1 = APIRouter(prefix="/api/v1/system", include_in_schema=False)
+    alias_tc_v1 = APIRouter(prefix="/tc/api/v1/system", include_in_schema=False)
     collector = SystemCollector()
     diagnostician = SystemDiagnosticEngine(chat_model=chat_model)
     telemetry_service = TelemetryLoggerService.get_instance()
 
+    @router.get("/metrics/core", response_model=SystemCoreMetrics)
+    async def get_core_metrics() -> SystemCoreMetrics:
+        """Сверхбыстрый сбор базовых показателей хоста (CPU, RAM, GPU, Disk I/O, Battery)."""
+        return await collector.get_core_metrics()
+
+    @router.get("/hardware/quick", response_model=SystemHardwareQuick)
+    async def get_hardware_quick() -> SystemHardwareQuick:
+        """Сводка состояния накопителей, планок RAM и сетевых сокетов с кэшированием."""
+        return await collector.get_hardware_quick()
+
     @router.get("/summary", response_model=SystemSnapshot)
     async def get_system_summary(
-        process_limit: int = Query(default=20, ge=1, le=100, description="Top processes count")
+        process_limit: int = Query(default=25, ge=0, le=5000, description="Top processes count (0 for all active processes)")
     ) -> SystemSnapshot:
         """Retrieve live system load, hardware telemetry, and top processes snapshot."""
         return await collector.get_snapshot(process_limit=process_limit)
 
     @router.get("/processes", response_model=List[ProcessMetrics])
     async def list_processes(
-        limit: int = Query(default=50, ge=1, le=200, description="Max processes count"),
-        sort_by: str = Query(default="cpu", pattern="^(cpu|memory)$", description="Sort criteria"),
+        limit: int = Query(default=50, ge=0, le=5000, description="Max processes count (0 for all)"),
+        sort_by: str = Query(default="cpu", pattern="^(cpu|memory|ram|handles|descriptors)$", description="Sort criteria"),
+        mode: Optional[str] = Query(default=None, pattern="^(top_n|all)$", description="Mode: top_n or all (if all, returns all active processes)"),
+        source: str = Query(default="db", pattern="^(db|live)$", description="Data source: db (SQLite) or live"),
     ) -> List[ProcessMetrics]:
-        """Retrieve active process stream sorted by CPU or memory consumption."""
-        return await asyncio.to_thread(collector.get_top_processes, limit=limit, sort_by=sort_by)
+        """Получение последнего замера активных процессов из базы данных SQLite (по умолчанию) или psutil."""
+        effective_limit = 0 if mode == "all" else limit
+
+        if source == "db":
+            procs = await asyncio.to_thread(telemetry_service.storage.get_latest_processes, limit=effective_limit, sort_by=sort_by)
+            if not procs:
+                # Fallback: если БД ещё пуста, фиксируем первый срез в БД и возвращаем
+                snapshot = await collector.get_snapshot(process_limit=effective_limit)
+                await asyncio.to_thread(telemetry_service.storage.save_snapshot, snapshot, top_n=effective_limit)
+                procs = await asyncio.to_thread(telemetry_service.storage.get_latest_processes, limit=effective_limit, sort_by=sort_by)
+            return [ProcessMetrics(**p) for p in procs]
+
+        return await asyncio.to_thread(collector.get_top_processes, limit=effective_limit, sort_by=sort_by)
+
+    @router.get("/processes/stats")
+    async def get_processes_stats(
+        name: Optional[str] = Query(default=None, description="Фильтр по имени процесса"),
+        limit: int = Query(default=50, ge=1, le=200, description="Лимит записей"),
+    ) -> Dict[str, Any]:
+        """Получение статистики процессов: 2-минутные агрегаты, суточная статистика и зафиксированные выбросы."""
+        return await asyncio.to_thread(telemetry_service.storage.get_process_stats, name=name, limit=limit)
+
+    @router.post("/processes/rollup")
+    async def trigger_processes_rollup(
+        cutoff_seconds: int = Query(default=120, ge=10, le=86400, description="Порог обобщения в секундах (по умолчанию 120 с)"),
+        outlier_cpu_threshold: float = Query(default=30.0, ge=0.0, le=100.0, description="Порог выброса по CPU %"),
+    ) -> Dict[str, Any]:
+        """Принудительный запуск обобщения устаревших метрик процессов (> 2 мин со средними/выбросами и > 1 дня)."""
+        short_res = await asyncio.to_thread(
+            telemetry_service.storage.aggregate_process_metrics_2min,
+            cutoff_seconds=cutoff_seconds,
+            outlier_cpu_threshold=outlier_cpu_threshold,
+        )
+        daily_res = await asyncio.to_thread(
+            telemetry_service.storage.aggregate_process_metrics_daily,
+            cutoff_days=1,
+        )
+        return {
+            "success": True,
+            "rollup_2min": short_res,
+            "rollup_daily": daily_res,
+        }
 
     @router.get("/network-activity", response_model=List[ProcessNetworkActivity])
     async def get_process_network_activity(
@@ -110,12 +166,40 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
         """Force capturing and archiving current hardware audit state."""
         return await asyncio.to_thread(collector.archive_hardware_state, auto_diff=True)
 
-    @router.get("/sensors", response_model=List[HardwareSensor])
-    async def get_sensors() -> List[HardwareSensor]:
-        """Retrieve thermal, fan, and voltage sensor readings."""
-        from apps.windows.telemetry.sensors import get_hardware_sensors
+    @router.get("/sensors")
+    async def get_sensors(
+        source: str = Query(default="db", pattern="^(db|live)$", description="Источник данных: db (SQLite) или live (прямой вызов)"),
+    ) -> List[Dict[str, Any]]:
+        """Получение показаний тепловых, вентиляторных и нагрузочных сенсоров хоста.
 
-        return await asyncio.to_thread(get_hardware_sensors)
+        Параметры:
+            source: Источник данных — ``db`` читает последний актуальный замер из БД
+                    (аналогично панели «Топ процессов»), ``live`` делает прямой вызов сенсоров.
+        """
+        if source == "db":
+            rows = await asyncio.to_thread(telemetry_service.storage.get_latest_sensors)
+            if rows:
+                # Нормализуем поля БД в формат HardwareSensor для совместимости с UI
+                return [
+                    {
+                        "id": r.get("sensor_id", ""),
+                        "hardware_name": r.get("hardware_name", "System"),
+                        "hardware_type": r.get("hardware_type", "cpu"),
+                        "sensor_category": r.get("sensor_category", "General"),
+                        "sensor_name": r.get("sensor_name", "Unknown"),
+                        "value_raw": f"{r.get('value', 0.0)} {r.get('unit', '')}".strip(),
+                        "value_numeric": r.get("value", 0.0),
+                        "unit": r.get("unit", ""),
+                        "timestamp": r.get("timestamp"),
+                    }
+                    for r in rows
+                ]
+            # Fallback: если БД ещё пуста — возвращаем live
+            logger.info("[router_system] БД сенсоров пуста, fallback на live-вызов")
+
+        from apps.windows.telemetry.sensors import get_hardware_sensors
+        sensors = await asyncio.to_thread(get_hardware_sensors)
+        return [s.model_dump() if hasattr(s, "model_dump") else dict(s) for s in sensors]
 
     @router.post("/diagnose", response_model=SystemDiagnosticReport)
     async def run_ai_diagnostics(
@@ -192,7 +276,7 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
     @router.post("/lhm-audit")
     async def run_lhm_sensor_hardware_audit() -> Dict[str, Any]:
         """Сбор залогированных данных LHM, усреднение и AI-аудит сравнения с реальным железом."""
-        from apps.librehardwaremonitor.core.lhm_auditor import LhmSensorAuditor
+        from apps.windows.hardware.lhm_auditor import LhmSensorAuditor
         auditor = LhmSensorAuditor()
         return await auditor.audit_sensors_with_ai(chat_model=chat_model)
 
@@ -230,58 +314,31 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
         return await asyncio.to_thread(_deep_engine.collect_peripherals_network)
 
 
-    # =========================================================================
-    # Посекундный логгер телеметрии (CSV)
-    # =========================================================================
-
-    @router.post("/logger/start")
-    async def start_telemetry_logger(
-        interval_sec: float = Query(default=1.0, ge=0.2, le=60.0, description="Интервал сбора в секундах"),
-        top_processes: int = Query(default=20, ge=1, le=100, description="Количество Top-процессов"),
-    ) -> Dict[str, Any]:
-        """Запуск фонового сбора телеметрии в CSV-файлы."""
-        telemetry_service.interval_sec = interval_sec
-        telemetry_service.top_processes = top_processes
-        started = telemetry_service.start()
-        return {
-            "success": True,
-            "started": started,
-            "status": telemetry_service.get_status(),
-        }
-
-    @router.post("/logger/stop")
-    async def stop_telemetry_logger() -> Dict[str, Any]:
-        """Остановка фонового сбора телеметрии."""
-        stopped = telemetry_service.stop()
-        return {
-            "success": True,
-            "stopped": stopped,
-            "status": telemetry_service.get_status(),
-        }
-
-    @router.get("/logger/status")
-    async def get_telemetry_logger_status() -> Dict[str, Any]:
-        """Получение текущего статуса фонового логгера."""
-        return telemetry_service.get_status()
-
     @router.websocket("/stream")
     async def stream_telemetry(websocket: WebSocket) -> None:
-        """Stream real-time system snapshots over WebSocket (Wireshark-style stream)."""
+        """Потоковая передача системных замеров через WebSocket каждые 5 секунд."""
         await websocket.accept()
-        interval_sec = 1.0
-        logger.info("Системная телеметрия: WebSocket клиент успешно подключен к потоку.")
+        interval_sec = 5.0
+        logger.info("Системная телеметрия: WebSocket клиент успешно подключен к потоку (интервал: 5 сек).")
 
         try:
             while True:
-                # Check if client sent configuration or message without blocking
+                # Проверка конфигурационных сообщений от клиента без блокировки
                 try:
                     data = await asyncio.wait_for(websocket.receive_json(), timeout=0.01)
                     if isinstance(data, dict) and "interval" in data:
-                        interval_sec = max(0.5, min(10.0, float(data["interval"])))
+                        interval_sec = max(1.0, min(60.0, float(data["interval"])))
                 except (asyncio.TimeoutError, Exception):
                     pass
 
-                snapshot = await collector.get_snapshot(process_limit=15)
+                snapshot = await collector.get_snapshot(process_limit=20)
+                # Если фоновый логгер не запущен, сохраняем снимок в БД прямо здесь
+                if not telemetry_service.is_running:
+                    try:
+                        await asyncio.to_thread(telemetry_service.storage.save_snapshot, snapshot, top_n=20)
+                    except Exception as save_err:
+                        logger.debug(f"Ошибка сохранения снимка через WebSocket: {save_err}")
+
                 await websocket.send_text(snapshot.model_dump_json())
                 await asyncio.sleep(interval_sec)
 
@@ -290,13 +347,22 @@ def init_router(chat_model: Optional[Any] = None) -> APIRouter:
         except RuntimeError as ex:
             if "websocket.close" in str(ex) or "websocket.send" in str(ex):
                 logger.warning(
-                    f"Системная телеметрия: WebSocket соединение закрыто со стороны сервера/таймаута ({ex}). Ожидание переподключения клиента..."
+                    f"Системная телеметрия: WebSocket соединение закрыто ({ex}). Ожидание переподключения..."
                 )
             else:
                 logger.warning(f"Системная телеметрия: ошибка цикла WebSocket: {ex}")
         except Exception as ex:
             logger.warning(
-                f"Системная телеметрия: разрыв WebSocket соединения ({ex}). Ожидание повторного подключения клиента..."
+                f"Системная телеметрия: разрыв WebSocket соединения ({ex}). Ожидание повторного подключения..."
             )
+
+    # Автозапуск фоновой службы сбора телеметрии каждые 5 секунд
+    try:
+        if not telemetry_service.is_running:
+            telemetry_service.interval_sec = 5.0
+            telemetry_service.start()
+            logger.info("Автоматический запуск службы сбора телеметрии TelemetryLoggerService (каждые 5 сек).")
+    except Exception as auto_start_err:
+        logger.warning(f"Не удалось автоматически запустить службу сбора телеметрии: {auto_start_err}")
 
     return router

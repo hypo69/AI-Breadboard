@@ -981,16 +981,108 @@
   line-height: 1.2;
 }
 
-.ui-badge-success {
-  background: var(--status-success-bg);
-  color: var(--status-success-text);
-  border: 1px solid var(--status-success-border);
+.ui-badge-success,
+.status-active,
+.status-enabled,
+.status-on,
+.status-running,
+.status-online,
+.status-connected,
+.status-true,
+.badge-status-on,
+.badge-status-active,
+.badge-status-enabled,
+.badge-status-running,
+.badge-status-online,
+.badge-status-true,
+.is-status-positive,
+[data-status="active"],
+[data-status="enabled"],
+[data-status="on"],
+[data-status="running"],
+[data-status="online"],
+[data-status="true"],
+[data-status="включен"],
+[data-status="включена"],
+[data-status="включено"],
+[data-status="активен"],
+[data-status="активна"],
+[data-status="активно"],
+[data-status="работает"],
+[data-status="подключен"],
+[data-state="active"],
+[data-state="enabled"],
+[data-state="on"],
+[data-state="running"],
+[data-state="online"],
+[data-state="true"],
+[data-state="включен"],
+[data-state="включена"],
+[data-state="включено"],
+[data-state="активен"],
+[data-state="активна"],
+[data-state="активно"],
+[data-state="работает"],
+[data-state="подключен"] {
+  background-color: var(--status-success-bg) !important;
+  color: var(--status-success-text) !important;
+  border: 1px solid var(--status-success-border) !important;
 }
 
-.ui-badge-danger {
-  background: var(--status-danger-bg);
-  color: var(--status-danger-text);
-  border: 1px solid var(--status-danger-border);
+.ui-badge-danger,
+.status-inactive,
+.status-disabled,
+.status-off,
+.status-stopped,
+.status-offline,
+.status-danger,
+.status-error,
+.status-disconnected,
+.status-false,
+.badge-status-off,
+.badge-status-inactive,
+.badge-status-disabled,
+.badge-status-stopped,
+.badge-status-offline,
+.badge-status-false,
+.is-status-negative,
+[data-status="inactive"],
+[data-status="disabled"],
+[data-status="off"],
+[data-status="stopped"],
+[data-status="offline"],
+[data-status="false"],
+[data-status="error"],
+[data-status="выключен"],
+[data-status="выключена"],
+[data-status="выключено"],
+[data-status="неактивен"],
+[data-status="неактивна"],
+[data-status="неактивно"],
+[data-status="остановлен"],
+[data-status="остановлена"],
+[data-status="отключен"],
+[data-status="ошибка"],
+[data-state="inactive"],
+[data-state="disabled"],
+[data-state="off"],
+[data-state="stopped"],
+[data-state="offline"],
+[data-state="false"],
+[data-state="error"],
+[data-state="выключен"],
+[data-state="выключена"],
+[data-state="выключено"],
+[data-state="неактивен"],
+[data-state="неактивна"],
+[data-state="неактивно"],
+[data-state="остановлен"],
+[data-state="остановлена"],
+[data-state="отключен"],
+[data-state="ошибка"] {
+  background-color: var(--status-danger-bg) !important;
+  color: var(--status-danger-text) !important;
+  border: 1px solid var(--status-danger-border) !important;
 }
 
 .ui-badge-warning {
@@ -1010,6 +1102,50 @@
   color: var(--text-muted);
   border: 1px solid var(--border-color);
 }
+
+/* Точечный индикатор состояния (Status Dot) */
+.status-dot,
+.status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.status-dot.active,
+.status-dot.enabled,
+.status-dot.on,
+.status-dot.running,
+.status-dot.online,
+.status-dot.positive,
+.status-indicator.active,
+.status-indicator.enabled,
+.status-indicator.on,
+.status-indicator.running,
+.status-indicator.online,
+.status-indicator.positive {
+  background-color: #22c55e !important;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+
+.status-dot.inactive,
+.status-dot.disabled,
+.status-dot.off,
+.status-dot.stopped,
+.status-dot.offline,
+.status-dot.negative,
+.status-indicator.inactive,
+.status-indicator.disabled,
+.status-indicator.off,
+.status-indicator.stopped,
+.status-indicator.offline,
+.status-indicator.negative {
+  background-color: #ef4444 !important;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+}
+
 
 /* ── 6. Унифицированная таблица спецификаций (Ключ - Значение) ────────────── */
 .ui-spec-table,

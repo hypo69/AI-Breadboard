@@ -13,17 +13,33 @@
         "enable_oauth": true
     },
     "ai": {
-        "gemini": {
-            "model": "gemini-2.5-flash"
-        },
-        "gemini_cli": {
-            "model": "gemini-3.1-flash-lite"
-        },
-        "agy": {
-            "model": "gemini-3.6-flash",
-            "effort": "medium"
-        },
-        "provider": "gemini_cli"
+        "providers": {
+            "agy": {
+                "enabled": false,
+                "model": "agy-gemini-3.6-flash",
+                "effort": "medium",
+                "unsupported_models": []
+            },
+            "gemini": {
+                "enabled": true,
+                "model": "gemini-3.1-flash-lite",
+                "api_key_names": "*",
+                "unsupported_models": [
+                    "gemini-1.0-pro",
+                    "gemini-1.0-ultra",
+                    "gemini-1.5-flash",
+                    "gemini-1.5-pro",
+                    "gemini-2.5-flash",
+                    "gemini-2.5-flash-preview-tts",
+                    "gemini-old"
+                ]
+            },
+            "gemini_cli": {
+                "enabled": true,
+                "model": "gemini:gemini-3.1-flash-lite",
+                "unsupported_models": []
+            }
+        }
     },
     "apps": {
       "enabled": [

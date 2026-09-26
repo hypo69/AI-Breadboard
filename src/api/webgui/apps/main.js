@@ -4,7 +4,7 @@
  */
 
 import { setupGlobalApi, setupThemeAndLang } from './modules/init-interface.js';
-import { fetchAppsStatus, updateModelBadge } from './modules/status-manager.js';
+import { fetchAppsStatus, updateModelDropdown } from './modules/status-manager.js';
 import { APP_TAB_DEFS } from './modules/tabs-config.js';
 import { applyTranslations } from '../js/i18n.js';
 import { switchTab, loadTab, setupTabClicks } from '../js/tab-core.js';
@@ -46,17 +46,23 @@ window.switchToTab = switchAppTab;
 // ── МЕНЮ ─────────────────────────────────────────────────────────────────────
 
 /**
- * Создает DOM-элемент иконки для кнопок и редактора (поддерживает bi-* и эмодзи)
+ * Создает DOM-элемент иконки для кнопок и редактора (поддерживает bi-*, SVG и эмодзи)
  * @param {string} iconStr
  * @param {string} defaultIcon
  * @returns {HTMLElement}
  */
-function createIconElement(iconStr, defaultIcon = '📄') {
-  const icon = iconStr || defaultIcon;
-  if (/^bi-[a-z0-9-]+$/.test(icon) || icon.startsWith('bi-')) {
+export function createIconElement(iconStr, defaultIcon = '📄') {
+  const icon = (iconStr || defaultIcon).trim();
+  if (/^bi-[a-z0-9-]+$/.test(icon) || icon.startsWith('bi-') || icon.startsWith('bi ')) {
     const i = document.createElement('i');
-    i.className = `bi ${icon}`;
+    const iconClass = icon.startsWith('bi ') ? icon : `bi ${icon}`;
+    i.className = iconClass;
     return i;
+  }
+  if (icon.startsWith('<svg') || icon.startsWith('<i ')) {
+    const span = document.createElement('span');
+    span.innerHTML = icon;
+    return span;
   }
   const span = document.createElement('span');
   span.textContent = icon;
@@ -232,10 +238,38 @@ function initMenuEditor(cfg, appsMap = {}) {
   let draggedIdx = null;
 
   function collectInitialItems() {
-    return [
-      ...(cfg.menu.topButtons || []).map(x => ({ ...x, position: x.visible === false ? 'hidden' : 'top' })),
-      ...(cfg.menu.sidebarItems || []).map(x => ({ ...x, position: x.visible === false ? 'hidden' : 'bottom' })),
-    ];
+    const knownIds = new Set();
+    const items = [];
+
+    (cfg.menu.topButtons || []).forEach(x => {
+      knownIds.add(x.id);
+      items.push({ ...x, position: x.visible === false ? 'hidden' : 'top' });
+    });
+
+    (cfg.menu.sidebarItems || []).forEach(x => {
+      if (!knownIds.has(x.id)) {
+        knownIds.add(x.id);
+        items.push({ ...x, position: x.visible === false ? 'hidden' : 'bottom' });
+      }
+    });
+
+    // Автоподгрузка незарегистрированных вкладок из APP_TAB_DEFS со статусом Скрыть (hidden)
+    APP_TAB_DEFS.forEach(def => {
+      if (!knownIds.has(def.id)) {
+        items.push({
+          id: def.id,
+          label: def.label || def.id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          icon: def.icon || 'bi-app',
+          tab: def.tabId || `tab-${def.tab}`,
+          order: items.length + 1,
+          visible: false,
+          position: 'hidden'
+        });
+        knownIds.add(def.id);
+      }
+    });
+
+    return items;
   }
 
   function renderList() {
@@ -459,9 +493,10 @@ async function init() {
   // Единый обработчик кликов
   setupTabClicks();
 
-  // Статус + бейдж модели
+  // Статус + выпадающий список моделей
   const statusData = await fetchAppsStatus();
-  await updateModelBadge(statusData);
+  window.appsStatusMap = statusData?.apps || {};
+  await updateModelDropdown();
   const appsMap = statusData?.apps || {};
 
   // Меню из конфига

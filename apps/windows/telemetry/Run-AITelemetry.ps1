@@ -41,6 +41,11 @@ param (
 
     [float]$Interval = $null,
 
+    [ValidateSet('minimal', 'full')]
+    [string]$Mode = 'minimal',
+
+    [switch]$Minimal,
+
     [Alias('h', '-help')]
     [switch]$Help
 )
@@ -174,7 +179,8 @@ if ($Action -in @('start', 'restart')) {
         exit 0
     }
 
-    $appArgs = "`"$mainScript`""
+    $effectiveMode = if ($Minimal) { "minimal" } else { $Mode }
+    $appArgs = "`"$mainScript`" --mode $effectiveMode"
     if ($Interval) {
         $appArgs += " --interval $Interval"
     }

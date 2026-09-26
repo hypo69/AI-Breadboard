@@ -201,7 +201,7 @@
     "agy": {
       "name": "Google Antigravity (AGY)",
       "description": "Antigravity agent environment with built-in search",
-      "default_model": "agy-flash"
+      "default_model": "agy-gemini-3.6-flash"
     },
     "foundry": {
       "name": "Microsoft Foundry",

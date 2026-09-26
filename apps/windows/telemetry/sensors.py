@@ -28,6 +28,11 @@ import os
 import subprocess
 from typing import List, Optional
 
+try:
+    import wmi  # type: ignore
+    _WMI_AVAILABLE = True
+except ImportError:
+    _WMI_AVAILABLE = False
 from logger import logger
 from apps.windows.telemetry.models import HardwareSensor
 from apps.windows.telemetry.internet_speed import InternetSpeedSensor
@@ -116,10 +121,13 @@ def _probe_wmi_thermal_zones() -> List[HardwareSensor]:
     if os.name != "nt":
         return sensors
 
+    if not _WMI_AVAILABLE:
+        logger.debug("WMI module not available, skipping thermal zone probe")
+        return sensors
     try:
         import pythoncom
         pythoncom.CoInitialize()
-        import wmi  # type: ignore
+        w = wmi.WMI(namespace="root\\wmi")
 
         w = wmi.WMI(namespace="root\\wmi")
         for idx, zone in enumerate(w.MSAcpi_ThermalZoneTemperature()):

@@ -90,6 +90,15 @@ class TestSystemTelemetryCollector:
         if len(procs_mem) >= 2:
             assert procs_mem[0].memory_mb >= procs_mem[-1].memory_mb
 
+        procs_handles = collector.get_top_processes(limit=10, sort_by="handles")
+        assert isinstance(procs_handles, list)
+        if len(procs_handles) >= 2:
+            assert procs_handles[0].num_handles >= procs_handles[-1].num_handles
+
+        procs_all = collector.get_top_processes(limit=0, sort_by="cpu")
+        assert isinstance(procs_all, list)
+        assert len(procs_all) >= len(procs_cpu)
+
     def test_office_metrics_collection(self, collector: SystemCollector):
         office = collector.get_ms_office_info()
         assert office is not None
@@ -274,4 +283,58 @@ class TestSystemInspectorFastAPI:
             assert "protocol" in item
             assert "sent_summary" in item
             assert "recv_summary" in item
+
+    def test_get_processes_from_db_endpoint(self, client: TestClient):
+        """Проверка получения процессов из SQLite базы данных."""
+        response = client.get("/api/v1/system/processes?limit=10&source=db")
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+        if data:
+            proc = data[0]
+            assert "pid" in proc
+            assert "name" in proc
+            assert "cpu_percent" in proc
+            assert "memory_mb" in proc
+
+    def test_get_processes_stats_endpoint(self, client: TestClient):
+        """Проверка эндпоинта статистики процессов."""
+        response = client.get("/api/v1/system/processes/stats?limit=10")
+        assert response.status_code == 200
+        data = response.json()
+        assert "rollups_2min" in data
+        assert "daily_stats" in data
+        assert "outliers" in data
+
+    def test_post_processes_rollup_endpoint(self, client: TestClient):
+        """Проверка запуска роллапа процессов через API."""
+        response = client.post("/api/v1/system/processes/rollup?cutoff_seconds=120&outlier_cpu_threshold=30.0")
+        assert response.status_code == 200
+        data = response.json()
+        assert data.get("success") is True
+        assert "rollup_2min" in data
+        assert "rollup_daily" in data
+
+    def test_get_core_metrics_endpoint(self, client: TestClient):
+        """Проверка быстрого эндпоинта /api/v1/system/metrics/core."""
+        response = client.get("/api/v1/system/metrics/core")
+        assert response.status_code == 200
+        data = response.json()
+        assert "cpu" in data
+        assert "memory" in data
+        assert "disk_io" in data
+        assert "battery" in data
+        assert "uptime_seconds" in data
+
+    def test_get_hardware_quick_endpoint(self, client: TestClient):
+        """Проверка экспресс-эндпоинта /api/v1/system/hardware/quick."""
+        response = client.get("/api/v1/system/hardware/quick")
+        assert response.status_code == 200
+        data = response.json()
+        assert "ram_sticks" in data
+        assert "physical_disks" in data
+        assert "listening_ports" in data
+        assert "alerts" in data
+
+
 

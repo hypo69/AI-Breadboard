@@ -380,7 +380,10 @@ function onTabSwitched(targetId) {
 // Programmatic tab switcher
 function switchTab(targetId) {
   if (!targetId) return;
-  const cleanId = targetId.startsWith('#') ? targetId.slice(1) : targetId;
+  let cleanId = targetId.startsWith('#') ? targetId.slice(1) : targetId;
+  if (cleanId === 'observability' || cleanId === 'tab-observability') {
+    cleanId = 'tab-system-inspector';
+  }
   const tabId = cleanId.startsWith('tab-') ? cleanId : `tab-${cleanId}`;
 
   // 1. Update active state on dropdown items & toggles
@@ -589,7 +592,6 @@ async function initInterface() {
     loadTabContent('sources', `/html/sources_tab/index.html?v=${cb}`, `/html/sources_tab/main.js?v=${cb}`),
     loadTabContent('skills', `/html/skills_tab/index.html?v=${cb}`, `/html/skills_tab/main.js?v=${cb}`),
     loadTabContent('mcp', `/html/mcp_tab/index.html?v=${cb}`, `/html/mcp_tab/main.js?v=${cb}`),
-    loadTabContent('observability', `/html/system_inspector_tab/index.html?v=${cb}`, `/html/system_inspector_tab/main.js?v=${cb}`),
     loadTabContent('news', `/html/news_tab/index.html?v=${cb}`, `/html/news_tab/main.js?v=${cb}`),
     loadTabContent('logs', `/html/logs/index.html?v=${cb}`, `/html/logs/main.js?v=${cb}`),
     loadTabContent('help', `/html/help/index.html?v=${cb}`, `/html/help/main.js?v=${cb}`),
@@ -597,10 +599,10 @@ async function initInterface() {
 
   // Определение и фильтрация вкладок микроприложений (/apps)
   const appTabDefs = [
-    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20260925_v3', js: '/html/about_system_tab/main.js?v=20260925_v3' },
+    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20260926_v2', js: '/html/about_system_tab/main.js?v=20260926_v2' },
     { id: 'trading_terminal', tab: 'trading', html: '/html/trading_tab/index.html', js: '/html/trading_tab/main.js' },
     { id: 'network_terminal', tab: 'network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
-    { id: 'system_inspector', tab: 'system-inspector', html: '/html/system_inspector_tab/index.html', js: '/html/system_inspector_tab/main.js' },
+    { id: 'system_inspector', tab: 'system-inspector', html: '/html/system_inspector_tab/index.html?v=20260926_v2', js: '/html/system_inspector_tab/main.js?v=20260926_v2' },
     { id: 'chat', tab: 'chat', html: '/html/chat/index.html', js: '/html/chat/main.js' },
     { id: 'scenarios', tab: 'scenarios', html: '/html/scenarios_tab/index.html', js: '/html/scenarios_tab/main.js' },
     { id: 'user_assistant', tab: 'user-assistant', html: '/html/user_assistant_tab/index.html', js: '/html/user_assistant_tab/main.js' },

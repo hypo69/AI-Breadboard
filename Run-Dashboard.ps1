@@ -78,6 +78,16 @@ if (Test-Path $configPath) {
         if ($cfg.server.client_url)  { $clientUrl = [string]$cfg.server.client_url }
         elseif ($cfg.server.user_domain) { $clientUrl = "https://$($cfg.server.user_domain)" }
 
+        # Поддержка новой структуры ai.providers.*
+        if ($cfg.ai.providers) {
+            if ($null -ne $cfg.ai.providers.foundry.PSObject.Properties['enabled']) { 
+                $useFoundry = [bool]$cfg.ai.providers.foundry.enabled 
+            }
+            if ($null -ne $cfg.ai.providers.ollama.PSObject.Properties['enabled']) { 
+                $useOllama = [bool]$cfg.ai.providers.ollama.enabled 
+            }
+        }
+        # Поддержка старой структуры (обратная совместимость)
         if ($null -ne $cfg.ai.PSObject.Properties['use_foundry']) { $useFoundry = [bool]$cfg.ai.use_foundry }
         if ($null -ne $cfg.ai.PSObject.Properties['use_ollama'])  { $useOllama  = [bool]$cfg.ai.use_ollama }
         if ($null -ne $cfg.ai.PSObject.Properties['preload_silero']) { $preloadSilero = [bool]$cfg.ai.preload_silero }

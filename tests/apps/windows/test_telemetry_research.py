@@ -198,3 +198,25 @@ def test_research_router_endpoints(sample_telemetry_records, tmp_path: Path):
     assert "total" in rdata
     assert "items" in rdata
     assert "page" in rdata
+
+    # 6. POST /run-research
+    deep_resp = client.post(
+        "/api/windows/telemetry/research/run-research",
+        json={"records": sample_telemetry_records, "enable_hypotheses_check": True},
+    )
+    assert deep_resp.status_code == 200
+    deep_data = deep_resp.json()
+    assert "correlations" in deep_data
+    assert "hypotheses" in deep_data
+    assert len(deep_data["hypotheses"]) > 0
+
+    # 7. GET /correlations
+    corr_resp = client.get("/api/windows/telemetry/research/correlations")
+    assert corr_resp.status_code == 200
+    assert isinstance(corr_resp.json(), list)
+
+    # 8. GET /hypotheses
+    hyp_resp = client.get("/api/windows/telemetry/research/hypotheses")
+    assert hyp_resp.status_code == 200
+    assert isinstance(hyp_resp.json(), list)
+
