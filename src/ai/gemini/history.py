@@ -1,24 +1,6 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Google Generative AI Chat History Management
-# =============================================================================
-# Description:
-#   Management of chat history and session state for Google Generative AI.
-#   Provides methods for restoring, clearing, and managing chat history.
-#
-# File: history.py
-# Project: ai-breadboard
-# Package: src.ai.gemini
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 from typing import Any
-
 from google.genai import types
-
 from .config import GoogleGenerativeAIConfigMixin
-
 
 class GoogleGenerativeAIHistoryMixin:
     """Mixin class for chat history management in GoogleGenerativeAI.
@@ -50,10 +32,9 @@ class GoogleGenerativeAIHistoryMixin:
                 elif isinstance(p, dict) and 'text' in p:
                     parts_objects.append(types.Part.from_text(text=p['text']))
             history_contents.append(types.Content(role=role, parts=parts_objects))
-
         self._chat = self._start_chat(history=history_contents)
 
-    def _prepare_contents(self, q: str, history: list[dict] = ()) -> list[types.Content]:
+    def _prepare_contents(self, q: str, history: list[dict]=()) -> list[types.Content]:
         """Подготовка списка объектов Content для передачи в stateless API-запросы.
 
         Args:
@@ -71,7 +52,6 @@ class GoogleGenerativeAIHistoryMixin:
                     continue
                 if role == 'assistant':
                     role = 'model'
-
                 parts = entry.get('parts')
                 if not parts:
                     content_str: str = entry.get('content', '')
@@ -87,14 +67,12 @@ class GoogleGenerativeAIHistoryMixin:
                         else:
                             new_parts.append(p)
                     parts = new_parts
-
                 if parts:
                     contents.append(types.Content(role=role, parts=parts))
-
         contents.append(types.Content(role='user', parts=[types.Part.from_text(text=q)]))
         return contents
 
-    def _start_chat(self, history: list = ()) -> Any:
+    def _start_chat(self, history: list=()) -> Any:
         """Initialization сессии чата с поддержкой сохранения истории.
 
         Args:
@@ -105,7 +83,6 @@ class GoogleGenerativeAIHistoryMixin:
         """
         if not self.save_history_chat:
             return False
-
         config = self._build_content_config()
         if history:
             return self._client.chats.create(model=self.model_name, config=config, history=list(history))

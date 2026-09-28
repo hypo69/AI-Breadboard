@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest
 from fastapi.testclient import TestClient
 from src.app import create_app, register_pages, AppState
@@ -31,13 +30,12 @@ def test_admin_endpoint_unauthenticated(client):
     assert response.status_code == 200
     assert 'text/html' in response.headers.get('content-type', '')
     assert len(response.text) > 0
-    # Must contain OAuth login button
     assert '/auth/google?next=/admin' in response.text
     assert 'btn-google' in response.text
 
 def test_admin_endpoint_authenticated_as_admin(client):
-    from src.api.router_auth import TokenData, create_jwt_token
-    token = create_jwt_token(TokenData(email="admin@localhost", name="Admin", id=1))
+    from src.api.routers.core.router_auth import TokenData, create_jwt_token
+    token = create_jwt_token(TokenData(email='admin@localhost', name='Admin', id=1))
     response = client.get('/admin', cookies={'auth_token': token})
     assert response.status_code == 200
     assert 'AI Assistant - Admin' in response.text or 'mainTabs' in response.text
@@ -79,5 +77,3 @@ def test_log_audit_endpoint(client):
     assert response.status_code == 200
     assert 'text/html' in response.headers.get('content-type', '')
     assert 'appsNavTabs' in response.text or 'apps-interface' in response.text
-
-

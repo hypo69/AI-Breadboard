@@ -1,30 +1,10 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: User management and authorization system
-# =============================================================================
-# Description:
-#   User account management, role-based access control, permission handling,
-#   session management, and comprehensive audit logging for system security.
-#
-# File: __init__.py
-# Project: ai-breadboard
-# Package: src.user_manager
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 import os
 import shutil
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
 from logger import logger
-
-# =============================================================================
-# User management class
-# =============================================================================
 
 class UserManager:
     """User management and authorization system.
@@ -37,7 +17,7 @@ class UserManager:
         users_dir (Path): Base directory for user personal file storage.
     """
 
-    def __init__(self, db_path: Path, users_dir: Optional[Path] = None) -> None:
+    def __init__(self, db_path: Path, users_dir: Optional[Path]=None) -> None:
         """Initialization of user manager.
 
         Args:
@@ -62,323 +42,90 @@ class UserManager:
 
     def _register_functions(self, conn: sqlite3.Connection) -> None:
         """Register custom SQLite functions for workspace cleanup."""
+
         def _delete_workspace_udf(user_id: Any) -> int:
             try:
                 self.delete_user_workspace(user_id, remove_files=True)
                 return 1
             except Exception as ex:
-                logger.error(f"UDF error deleting workspace for user {user_id}:", ex, False)
+                logger.error(f'UDF error deleting workspace for user {user_id}:', ex, False)
                 return 0
-
-        conn.create_function("delete_user_workspace_udf", 1, _delete_workspace_udf)
+        conn.create_function('delete_user_workspace_udf', 1, _delete_workspace_udf)
 
     def _init_db(self) -> None:
         """Initialization of user management table schema."""
         with sqlite3.connect(self.db_path) as conn:
             self._register_functions(conn)
-            # Create users table for authorized user management
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    email TEXT NOT NULL UNIQUE,
-                    name TEXT NOT NULL,
-                    picture TEXT,
-                    created_at TEXT DEFAULT (datetime('now')),
-                    last_login TEXT,
-                    is_admin INTEGER DEFAULT 0,
-                    is_active INTEGER DEFAULT 1,
-                    role TEXT DEFAULT 'user'
-                )
-            """)
-
-            # Add new columns for Telegram
+            conn.execute("\n                CREATE TABLE IF NOT EXISTS users (\n                    id INTEGER PRIMARY KEY AUTOINCREMENT,\n                    email TEXT NOT NULL UNIQUE,\n                    name TEXT NOT NULL,\n                    picture TEXT,\n                    created_at TEXT DEFAULT (datetime('now')),\n                    last_login TEXT,\n                    is_admin INTEGER DEFAULT 0,\n                    is_active INTEGER DEFAULT 1,\n                    role TEXT DEFAULT 'user'\n                )\n            ")
             try:
-                conn.execute("ALTER TABLE users ADD COLUMN telegram_id INTEGER")
+                conn.execute('ALTER TABLE users ADD COLUMN telegram_id INTEGER')
             except sqlite3.OperationalError:
                 pass
             try:
-                conn.execute("ALTER TABLE users ADD COLUMN telegram_username TEXT")
+                conn.execute('ALTER TABLE users ADD COLUMN telegram_username TEXT')
             except sqlite3.OperationalError:
                 pass
             try:
-                conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id) WHERE telegram_id IS NOT NULL")
-            except sqlite3.OperationalError:
-                pass
-
-            # Add new columns for email authorization
-            try:
-                conn.execute("ALTER TABLE users ADD COLUMN password_hash TEXT")
+                conn.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id) WHERE telegram_id IS NOT NULL')
             except sqlite3.OperationalError:
                 pass
             try:
-                conn.execute("ALTER TABLE users ADD COLUMN is_email_verified INTEGER DEFAULT 0")
+                conn.execute('ALTER TABLE users ADD COLUMN password_hash TEXT')
             except sqlite3.OperationalError:
                 pass
-
-            # Create user settings table
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS user_settings (
-                    user_id INTEGER PRIMARY KEY,
-                    theme TEXT DEFAULT 'dark',
-                    language TEXT DEFAULT 'ru',
-                    tts_enabled INTEGER DEFAULT 1,
-                    system_instruction TEXT,
-                    tts_system TEXT DEFAULT 'edge-tts',
-                    tts_voice TEXT DEFAULT 'ru-RU-DmitryNeural',
-                    rag_enabled INTEGER DEFAULT 1,
-                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-                )
-            """)
-
             try:
-                conn.execute("ALTER TABLE user_settings ADD COLUMN model TEXT")
+                conn.execute('ALTER TABLE users ADD COLUMN is_email_verified INTEGER DEFAULT 0')
             except sqlite3.OperationalError:
                 pass
-
+            conn.execute("\n                CREATE TABLE IF NOT EXISTS user_settings (\n                    user_id INTEGER PRIMARY KEY,\n                    theme TEXT DEFAULT 'dark',\n                    language TEXT DEFAULT 'ru',\n                    tts_enabled INTEGER DEFAULT 1,\n                    system_instruction TEXT,\n                    tts_system TEXT DEFAULT 'edge-tts',\n                    tts_voice TEXT DEFAULT 'ru-RU-DmitryNeural',\n                    rag_enabled INTEGER DEFAULT 1,\n                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE\n                )\n            ")
+            try:
+                conn.execute('ALTER TABLE user_settings ADD COLUMN model TEXT')
+            except sqlite3.OperationalError:
+                pass
             try:
                 conn.execute("ALTER TABLE user_settings ADD COLUMN tts_system TEXT DEFAULT 'edge-tts'")
             except sqlite3.OperationalError:
                 pass
-
             try:
                 conn.execute("ALTER TABLE user_settings ADD COLUMN tts_voice TEXT DEFAULT 'ru-RU-DmitryNeural'")
             except sqlite3.OperationalError:
                 pass
-
             try:
-                conn.execute("ALTER TABLE user_settings ADD COLUMN rag_enabled INTEGER DEFAULT 1")
+                conn.execute('ALTER TABLE user_settings ADD COLUMN rag_enabled INTEGER DEFAULT 1')
             except sqlite3.OperationalError:
                 pass
-
-            # Create favorite models table
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS user_favorite_models (
-                    user_id INTEGER NOT NULL,
-                    model_name TEXT NOT NULL,
-                    note TEXT DEFAULT '',
-                    created_at TEXT DEFAULT (datetime('now')),
-                    updated_at TEXT DEFAULT (datetime('now')),
-                    PRIMARY KEY (user_id, model_name),
-                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-                )
-            """)
-
-            # Create temporary tokens table for Telegram linking
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS telegram_link_tokens (
-                    token TEXT PRIMARY KEY,
-                    user_id INTEGER NOT NULL,
-                    expires_at TEXT NOT NULL,
-                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-                )
-            """)
-
-            # Create Google OAuth tokens table
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS google_oauth_tokens (
-                    user_id INTEGER PRIMARY KEY,
-                    access_token TEXT NOT NULL,
-                    refresh_token TEXT,
-                    expires_at TEXT,
-                    scope TEXT,
-                    updated_at TEXT DEFAULT (datetime('now')),
-                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-                )
-            """)
-
-            # Create email verification codes table
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS email_verification_tokens (
-                    email TEXT PRIMARY KEY,
-                    code TEXT NOT NULL,
-                    expires_at TEXT NOT NULL
-                )
-            """)
-
-            # Create index for fast email lookup
-            conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)
-            """)
-
-            # Create session tokens table for active session management
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS session_tokens (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL,
-                    token_hash TEXT NOT NULL UNIQUE,
-                    created_at TEXT DEFAULT (datetime('now')),
-                    expires_at TEXT NOT NULL,
-                    is_revoked INTEGER DEFAULT 0,
-                    ip_address TEXT,
-                    user_agent TEXT,
-                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-                )
-            """)
-
-            # Create index for token hash lookup
-            conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_session_token_hash ON session_tokens(token_hash)
-            """)
-
-            # Create user activity log table for activity logging
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS user_activity_log (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL,
-                    action TEXT NOT NULL,
-                    ip_address TEXT,
-                    user_agent TEXT,
-                    timestamp TEXT DEFAULT (datetime('now')),
-                    details TEXT,
-                    event_type TEXT DEFAULT 'action',
-                    tab_name TEXT,
-                    target_element TEXT,
-                    duration_ms INTEGER DEFAULT 0,
-                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-                )
-            """)
-
-            # Add telemetry columns if missing (migration)
-            for col, col_type in [
-                ("event_type", "TEXT DEFAULT 'action'"),
-                ("tab_name", "TEXT"),
-                ("target_element", "TEXT"),
-                ("duration_ms", "INTEGER DEFAULT 0"),
-            ]:
+            conn.execute("\n                CREATE TABLE IF NOT EXISTS user_favorite_models (\n                    user_id INTEGER NOT NULL,\n                    model_name TEXT NOT NULL,\n                    note TEXT DEFAULT '',\n                    created_at TEXT DEFAULT (datetime('now')),\n                    updated_at TEXT DEFAULT (datetime('now')),\n                    PRIMARY KEY (user_id, model_name),\n                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE\n                )\n            ")
+            conn.execute('\n                CREATE TABLE IF NOT EXISTS telegram_link_tokens (\n                    token TEXT PRIMARY KEY,\n                    user_id INTEGER NOT NULL,\n                    expires_at TEXT NOT NULL,\n                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE\n                )\n            ')
+            conn.execute("\n                CREATE TABLE IF NOT EXISTS google_oauth_tokens (\n                    user_id INTEGER PRIMARY KEY,\n                    access_token TEXT NOT NULL,\n                    refresh_token TEXT,\n                    expires_at TEXT,\n                    scope TEXT,\n                    updated_at TEXT DEFAULT (datetime('now')),\n                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE\n                )\n            ")
+            conn.execute('\n                CREATE TABLE IF NOT EXISTS email_verification_tokens (\n                    email TEXT PRIMARY KEY,\n                    code TEXT NOT NULL,\n                    expires_at TEXT NOT NULL\n                )\n            ')
+            conn.execute('\n                CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)\n            ')
+            conn.execute("\n                CREATE TABLE IF NOT EXISTS session_tokens (\n                    id INTEGER PRIMARY KEY AUTOINCREMENT,\n                    user_id INTEGER NOT NULL,\n                    token_hash TEXT NOT NULL UNIQUE,\n                    created_at TEXT DEFAULT (datetime('now')),\n                    expires_at TEXT NOT NULL,\n                    is_revoked INTEGER DEFAULT 0,\n                    ip_address TEXT,\n                    user_agent TEXT,\n                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE\n                )\n            ")
+            conn.execute('\n                CREATE INDEX IF NOT EXISTS idx_session_token_hash ON session_tokens(token_hash)\n            ')
+            conn.execute("\n                CREATE TABLE IF NOT EXISTS user_activity_log (\n                    id INTEGER PRIMARY KEY AUTOINCREMENT,\n                    user_id INTEGER NOT NULL,\n                    action TEXT NOT NULL,\n                    ip_address TEXT,\n                    user_agent TEXT,\n                    timestamp TEXT DEFAULT (datetime('now')),\n                    details TEXT,\n                    event_type TEXT DEFAULT 'action',\n                    tab_name TEXT,\n                    target_element TEXT,\n                    duration_ms INTEGER DEFAULT 0,\n                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE\n                )\n            ")
+            for col, col_type in [('event_type', "TEXT DEFAULT 'action'"), ('tab_name', 'TEXT'), ('target_element', 'TEXT'), ('duration_ms', 'INTEGER DEFAULT 0')]:
                 try:
-                    conn.execute(f"ALTER TABLE user_activity_log ADD COLUMN {col} {col_type}")
+                    conn.execute(f'ALTER TABLE user_activity_log ADD COLUMN {col} {col_type}')
                 except sqlite3.OperationalError:
                     pass
-
-            # Create index for fast user and time lookup
-            conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_activity_user_time ON user_activity_log(user_id, timestamp)
-            """)
-            conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_activity_event_type ON user_activity_log(event_type)
-            """)
-            conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_activity_tab_name ON user_activity_log(tab_name)
-            """)
-
-            # Create roles table for role and permission management
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS roles (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL UNIQUE,
-                    description TEXT,
-                    permissions TEXT
-                )
-            """)
-
-            # Create user-role association table
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS user_roles (
-                    user_id INTEGER NOT NULL,
-                    role_id INTEGER NOT NULL,
-                    PRIMARY KEY (user_id, role_id),
-                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-                    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
-                )
-            """)
-
-            # Create permission grants table
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS permission_grants (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    grantee_id INTEGER NOT NULL,
-                    grant_type TEXT NOT NULL,
-                    resource_type TEXT,
-                    resource_id INTEGER,
-                    permission TEXT NOT NULL,
-                    granted_at TEXT DEFAULT (datetime('now')),
-                    granted_by INTEGER,
-                    FOREIGN KEY (grantee_id) REFERENCES users(id) ON DELETE CASCADE,
-                    FOREIGN KEY (granted_by) REFERENCES users(id)
-                )
-            """)
-
-            # Create index for fast grantee lookup
-            conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_permission_grants_grantee ON permission_grants(grantee_id)
-            """)
-
-            # Create audit log table for important operations audit
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS audit_log (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER,
-                    action TEXT NOT NULL,
-                    target_type TEXT,
-                    target_id INTEGER,
-                    old_values TEXT,
-                    new_values TEXT,
-                    ip_address TEXT,
-                    timestamp TEXT DEFAULT (datetime('now')),
-                    FOREIGN KEY (user_id) REFERENCES users(id)
-                )
-            """)
-
-            # Create index for fast timestamp lookup
-            conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_audit_log_timestamp ON audit_log(timestamp)
-            """)
-
-            # Create permissions table for storing available permissions
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS permissions (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL UNIQUE,
-                    description TEXT,
-                    category TEXT
-                )
-            """)
-
-            # Insert default roles
-            initial_roles = [
-                ('admin', 'System Administrator', '{"all": true}'),
-                ('user', 'Regular User', '{"read": true, "chat": true, "media": true}'),
-                ('guest', 'Guest', '{"read": true, "chat": false, "media": false}')
-            ]
+            conn.execute('\n                CREATE INDEX IF NOT EXISTS idx_activity_user_time ON user_activity_log(user_id, timestamp)\n            ')
+            conn.execute('\n                CREATE INDEX IF NOT EXISTS idx_activity_event_type ON user_activity_log(event_type)\n            ')
+            conn.execute('\n                CREATE INDEX IF NOT EXISTS idx_activity_tab_name ON user_activity_log(tab_name)\n            ')
+            conn.execute('\n                CREATE TABLE IF NOT EXISTS roles (\n                    id INTEGER PRIMARY KEY AUTOINCREMENT,\n                    name TEXT NOT NULL UNIQUE,\n                    description TEXT,\n                    permissions TEXT\n                )\n            ')
+            conn.execute('\n                CREATE TABLE IF NOT EXISTS user_roles (\n                    user_id INTEGER NOT NULL,\n                    role_id INTEGER NOT NULL,\n                    PRIMARY KEY (user_id, role_id),\n                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,\n                    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE\n                )\n            ')
+            conn.execute("\n                CREATE TABLE IF NOT EXISTS permission_grants (\n                    id INTEGER PRIMARY KEY AUTOINCREMENT,\n                    grantee_id INTEGER NOT NULL,\n                    grant_type TEXT NOT NULL,\n                    resource_type TEXT,\n                    resource_id INTEGER,\n                    permission TEXT NOT NULL,\n                    granted_at TEXT DEFAULT (datetime('now')),\n                    granted_by INTEGER,\n                    FOREIGN KEY (grantee_id) REFERENCES users(id) ON DELETE CASCADE,\n                    FOREIGN KEY (granted_by) REFERENCES users(id)\n                )\n            ")
+            conn.execute('\n                CREATE INDEX IF NOT EXISTS idx_permission_grants_grantee ON permission_grants(grantee_id)\n            ')
+            conn.execute("\n                CREATE TABLE IF NOT EXISTS audit_log (\n                    id INTEGER PRIMARY KEY AUTOINCREMENT,\n                    user_id INTEGER,\n                    action TEXT NOT NULL,\n                    target_type TEXT,\n                    target_id INTEGER,\n                    old_values TEXT,\n                    new_values TEXT,\n                    ip_address TEXT,\n                    timestamp TEXT DEFAULT (datetime('now')),\n                    FOREIGN KEY (user_id) REFERENCES users(id)\n                )\n            ")
+            conn.execute('\n                CREATE INDEX IF NOT EXISTS idx_audit_log_timestamp ON audit_log(timestamp)\n            ')
+            conn.execute('\n                CREATE TABLE IF NOT EXISTS permissions (\n                    id INTEGER PRIMARY KEY AUTOINCREMENT,\n                    name TEXT NOT NULL UNIQUE,\n                    description TEXT,\n                    category TEXT\n                )\n            ')
+            initial_roles = [('admin', 'System Administrator', '{"all": true}'), ('user', 'Regular User', '{"read": true, "chat": true, "media": true}'), ('guest', 'Guest', '{"read": true, "chat": false, "media": false}')]
             for role_name, role_desc, role_perms in initial_roles:
-                conn.execute(
-                    'INSERT OR IGNORE INTO roles (name, description, permissions) VALUES (?, ?, ?)',
-                    (role_name, role_desc, role_perms)
-                )
-
-            # Insert default permissions
-            initial_permissions = [
-                ('read', 'Data read access', 'basic'),
-                ('write', 'Data write access', 'basic'),
-                ('delete', 'Data deletion access', 'admin'),
-                ('admin', 'System administration', 'admin'),
-                ('chat', 'Chat access', 'chat'),
-                ('media', 'Media access', 'media'),
-                ('qbt', 'qBittorrent access', 'tools'),
-                ('media_organizer', 'Media organizer access', 'tools')
-            ]
+                conn.execute('INSERT OR IGNORE INTO roles (name, description, permissions) VALUES (?, ?, ?)', (role_name, role_desc, role_perms))
+            initial_permissions = [('read', 'Data read access', 'basic'), ('write', 'Data write access', 'basic'), ('delete', 'Data deletion access', 'admin'), ('admin', 'System administration', 'admin'), ('chat', 'Chat access', 'chat'), ('media', 'Media access', 'media'), ('qbt', 'qBittorrent access', 'tools'), ('media_organizer', 'Media organizer access', 'tools')]
             for perm_name, perm_desc, perm_cat in initial_permissions:
-                conn.execute(
-                    'INSERT OR IGNORE INTO permissions (name, description, category) VALUES (?, ?, ?)',
-                    (perm_name, perm_desc, perm_cat)
-                )
-
-            # Insert default administrator (ID: 1) for local bypass and standard login
+                conn.execute('INSERT OR IGNORE INTO permissions (name, description, category) VALUES (?, ?, ?)', (perm_name, perm_desc, perm_cat))
             default_admin_pw = self.hash_password('onela')
-            conn.execute("""
-                INSERT OR IGNORE INTO users (id, email, name, is_admin, role, password_hash, is_email_verified)
-                VALUES (1, 'admin@localhost', 'Admin', 1, 'admin', ?, 1)
-            """, (default_admin_pw,))
-
-            # Trigger for automatic user workspace cleanup on deletion
-            conn.execute("""
-                CREATE TRIGGER IF NOT EXISTS trg_cleanup_user_dir
-                AFTER DELETE ON users
-                FOR EACH ROW
-                BEGIN
-                    SELECT delete_user_workspace_udf(OLD.id);
-                END;
-            """)
+            conn.execute("\n                INSERT OR IGNORE INTO users (id, email, name, is_admin, role, password_hash, is_email_verified)\n                VALUES (1, 'admin@localhost', 'Admin', 1, 'admin', ?, 1)\n            ", (default_admin_pw,))
+            conn.execute('\n                CREATE TRIGGER IF NOT EXISTS trg_cleanup_user_dir\n                AFTER DELETE ON users\n                FOR EACH ROW\n                BEGIN\n                    SELECT delete_user_workspace_udf(OLD.id);\n                END;\n            ')
 
     def sanitize_user_id(self, user_id: int | str) -> str:
         """Sanitize user identifier for filesystem safety.
@@ -390,10 +137,10 @@ class UserManager:
             str: Sanitized identifier safe for path construction.
         """
         raw = str(user_id).strip()
-        sanitized = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in raw)
-        return sanitized or "anonymous"
+        sanitized = ''.join((c if c.isalnum() or c in ('-', '_') else '_' for c in raw))
+        return sanitized or 'anonymous'
 
-    def get_user_directory(self, user_id: int | str, subfolder: Optional[str] = None, create: bool = True) -> Path:
+    def get_user_directory(self, user_id: int | str, subfolder: Optional[str]=None, create: bool=True) -> Path:
         """Get or create isolated personal directory for a user.
 
         Args:
@@ -406,16 +153,13 @@ class UserManager:
         """
         safe_id = self.sanitize_user_id(user_id)
         user_dir = self.users_dir / safe_id
-
         if subfolder:
             safe_subfolder = self.sanitize_user_id(subfolder)
             target_path = user_dir / safe_subfolder
         else:
             target_path = user_dir
-
         if create:
             target_path.mkdir(parents=True, exist_ok=True)
-
         return target_path
 
     def init_user_workspace(self, user_id: int | str) -> Path:
@@ -449,45 +193,32 @@ class UserManager:
         """
         safe_id = self.sanitize_user_id(user_id)
         user_dir = self.users_dir / safe_id
-
-        stats: Dict[str, Any] = {
-            "user_id": str(user_id),
-            "directory": str(user_dir),
-            "exists": user_dir.exists(),
-            "total_size_bytes": 0,
-            "total_files": 0,
-            "subfolders": {}
-        }
-
+        stats: Dict[str, Any] = {'user_id': str(user_id), 'directory': str(user_dir), 'exists': user_dir.exists(), 'total_size_bytes': 0, 'total_files': 0, 'subfolders': {}}
         if not user_dir.exists():
             return stats
-
         total_size = 0
         total_files = 0
         subfolders_stats: Dict[str, Dict[str, int]] = {}
-
         try:
             for item in user_dir.rglob('*'):
                 if item.is_file():
                     size = item.stat().st_size
                     total_size += size
                     total_files += 1
-
                     rel = item.relative_to(user_dir)
                     subfolder_name = rel.parts[0] if len(rel.parts) > 1 else 'root'
                     if subfolder_name not in subfolders_stats:
-                        subfolders_stats[subfolder_name] = {"files": 0, "size_bytes": 0}
-                    subfolders_stats[subfolder_name]["files"] += 1
-                    subfolders_stats[subfolder_name]["size_bytes"] += size
+                        subfolders_stats[subfolder_name] = {'files': 0, 'size_bytes': 0}
+                    subfolders_stats[subfolder_name]['files'] += 1
+                    subfolders_stats[subfolder_name]['size_bytes'] += size
         except Exception as ex:
-            logger.error(f"Error computing storage stats for user {user_id}:", ex, False)
-
-        stats["total_size_bytes"] = total_size
-        stats["total_files"] = total_files
-        stats["subfolders"] = subfolders_stats
+            logger.error(f'Error computing storage stats for user {user_id}:', ex, False)
+        stats['total_size_bytes'] = total_size
+        stats['total_files'] = total_files
+        stats['subfolders'] = subfolders_stats
         return stats
 
-    def delete_user_workspace(self, user_id: int | str, remove_files: bool = True) -> bool:
+    def delete_user_workspace(self, user_id: int | str, remove_files: bool=True) -> bool:
         """Delete or clean up user's personal storage directory.
 
         Args:
@@ -504,15 +235,13 @@ class UserManager:
             try:
                 shutil.rmtree(user_dir)
             except Exception as ex:
-                logger.error(f"Error deleting user directory {user_dir}:", ex, False)
+                logger.error(f'Error deleting user directory {user_dir}:', ex, False)
                 success = False
-
-        # Clean user rag and profile artifacts in src/ai/gemini/user_rags
         try:
             from header import __root__
-            rag_dir = __root__ / "src" / "ai" / "gemini" / "user_rags"
+            rag_dir = __root__ / 'src' / 'ai' / 'gemini' / 'user_rags'
             if rag_dir.exists():
-                for pat in [f"user_rag_{safe_id}.*", f"user_profile_{safe_id}.*"]:
+                for pat in [f'user_rag_{safe_id}.*', f'user_profile_{safe_id}.*']:
                     for f in rag_dir.glob(pat):
                         try:
                             f.unlink(missing_ok=True)
@@ -520,7 +249,6 @@ class UserManager:
                             pass
         except Exception:
             pass
-
         return success
 
     def get_orphaned_user_directories(self) -> List[Dict[str, Any]]:
@@ -532,16 +260,14 @@ class UserManager:
         """
         if not self.users_dir.exists():
             return []
-
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
-            rows = conn.execute("SELECT id, email FROM users").fetchall()
-            valid_ids = {str(r["id"]) for r in rows}
-            valid_sanitized = {self.sanitize_user_id(r["id"]) for r in rows}
+            rows = conn.execute('SELECT id, email FROM users').fetchall()
+            valid_ids = {str(r['id']) for r in rows}
+            valid_sanitized = {self.sanitize_user_id(r['id']) for r in rows}
             for r in rows:
-                if r["email"]:
-                    valid_sanitized.add(self.sanitize_user_id(r["email"]))
-
+                if r['email']:
+                    valid_sanitized.add(self.sanitize_user_id(r['email']))
         orphaned: List[Dict[str, Any]] = []
         try:
             for item in self.users_dir.iterdir():
@@ -550,8 +276,6 @@ class UserManager:
                 dir_name = item.name
                 if dir_name in valid_ids or dir_name in valid_sanitized:
                     continue
-
-                # Calculate directory statistics
                 total_size = 0
                 total_files = 0
                 latest_mtime = item.stat().st_mtime
@@ -568,26 +292,15 @@ class UserManager:
                             except (OSError, FileNotFoundError):
                                 pass
                 except Exception as walk_err:
-                    logger.error(f"Error inspecting directory {item}:", walk_err, False)
-
-                is_test = dir_name.startswith(("test_", "tmp_")) or dir_name in {"9997", "9998", "9999", "user1"}
-                reason = "Test workspace leftover" if is_test else f"User ID {dir_name} was deleted from database"
-
-                orphaned.append({
-                    "name": dir_name,
-                    "path": str(item.resolve()),
-                    "size_bytes": total_size,
-                    "files_count": total_files,
-                    "modified_at": datetime.fromtimestamp(latest_mtime, timezone.utc).isoformat(),
-                    "is_test_dir": is_test,
-                    "reason": reason
-                })
+                    logger.error(f'Error inspecting directory {item}:', walk_err, False)
+                is_test = dir_name.startswith(('test_', 'tmp_')) or dir_name in {'9997', '9998', '9999', 'user1'}
+                reason = 'Test workspace leftover' if is_test else f'User ID {dir_name} was deleted from database'
+                orphaned.append({'name': dir_name, 'path': str(item.resolve()), 'size_bytes': total_size, 'files_count': total_files, 'modified_at': datetime.fromtimestamp(latest_mtime, timezone.utc).isoformat(), 'is_test_dir': is_test, 'reason': reason})
         except Exception as ex:
-            logger.error("Error scanning orphaned user directories:", ex, False)
+            logger.error('Error scanning orphaned user directories:', ex, False)
+        return sorted(orphaned, key=lambda x: x['name'])
 
-        return sorted(orphaned, key=lambda x: x["name"])
-
-    def cleanup_orphaned_user_directories(self, dir_names: Optional[List[str]] = None) -> Dict[str, Any]:
+    def cleanup_orphaned_user_directories(self, dir_names: Optional[List[str]]=None) -> Dict[str, Any]:
         """Safely delete specified or all orphaned user workspace directories.
 
         Args:
@@ -597,31 +310,26 @@ class UserManager:
             Dict[str, Any]: Summary containing deleted_dirs, freed_bytes, failed_dirs, total_deleted.
         """
         orphaned = self.get_orphaned_user_directories()
-        target_names = set(dir_names) if dir_names is not None else {d["name"] for d in orphaned}
-
+        target_names = set(dir_names) if dir_names is not None else {d['name'] for d in orphaned}
         deleted_dirs: List[str] = []
         failed_dirs: List[Dict[str, str]] = []
         freed_bytes: int = 0
-
         for item in orphaned:
-            name = item["name"]
+            name = item['name']
             if name not in target_names:
                 continue
-
             target_path = self.users_dir / name
             try:
                 if target_path.exists() and target_path.is_dir():
                     shutil.rmtree(target_path)
                     deleted_dirs.append(name)
-                    freed_bytes += item["size_bytes"]
+                    freed_bytes += item['size_bytes']
                     logger.info(f"Cleaned up orphaned user directory: {name} ({item['size_bytes']} bytes freed)")
-
-                    # Also clean matching rag/profile artifacts in src/ai/gemini/user_rags
                     try:
                         from header import __root__
-                        rag_dir = __root__ / "src" / "ai" / "gemini" / "user_rags"
+                        rag_dir = __root__ / 'src' / 'ai' / 'gemini' / 'user_rags'
                         if rag_dir.exists():
-                            for pat in [f"user_rag_{name}.*", f"user_profile_{name}.*"]:
+                            for pat in [f'user_rag_{name}.*', f'user_profile_{name}.*']:
                                 for f in rag_dir.glob(pat):
                                     try:
                                         f.unlink(missing_ok=True)
@@ -630,16 +338,9 @@ class UserManager:
                     except Exception:
                         pass
             except Exception as err:
-                logger.error(f"Failed to delete orphaned directory {name}:", err, False)
-                failed_dirs.append({"name": name, "error": str(err)})
-
-        return {
-            "status": "ok",
-            "total_deleted": len(deleted_dirs),
-            "deleted_dirs": deleted_dirs,
-            "freed_bytes": freed_bytes,
-            "failed_dirs": failed_dirs
-        }
+                logger.error(f'Failed to delete orphaned directory {name}:', err, False)
+                failed_dirs.append({'name': name, 'error': str(err)})
+        return {'status': 'ok', 'total_deleted': len(deleted_dirs), 'deleted_dirs': deleted_dirs, 'freed_bytes': freed_bytes, 'failed_dirs': failed_dirs}
 
     def _get_connection(self) -> sqlite3.Connection:
         """Obtaining database connection with custom functions registered.
@@ -651,7 +352,7 @@ class UserManager:
         self._register_functions(conn)
         return conn
 
-    def add_user(self, email: str, name: str, picture: str = '', role: str = 'user') -> int:
+    def add_user(self, email: str, name: str, picture: str='', role: str='user') -> int:
         """Adding a new user.
 
         Args:
@@ -665,13 +366,7 @@ class UserManager:
         """
         with self._get_connection() as conn:
             try:
-                cursor = conn.execute(
-                    '''
-                    INSERT INTO users (email, name, picture, role)
-                    VALUES (?, ?, ?, ?)
-                    ''',
-                    (email, name, picture, role)
-                )
+                cursor = conn.execute('\n                    INSERT INTO users (email, name, picture, role)\n                    VALUES (?, ?, ?, ?)\n                    ', (email, name, picture, role))
                 conn.commit()
                 user_id = cursor.lastrowid
                 self.init_user_workspace(user_id)
@@ -691,41 +386,22 @@ class UserManager:
         Returns:
             bool: True on success, False on error.
         """
-        allowed_fields = {
-            'name', 'picture', 'role', 'is_active', 'is_admin',
-            'last_login', 'email', 'is_email_verified', 'password_hash',
-            'telegram_id', 'telegram_username'
-        }
+        allowed_fields = {'name', 'picture', 'role', 'is_active', 'is_admin', 'last_login', 'email', 'is_email_verified', 'password_hash', 'telegram_id', 'telegram_username'}
         updates = {k: v for k, v in kwargs.items() if k in allowed_fields}
-
         if not updates:
             return False
-
-        set_clause = ', '.join(f'{k} = ?' for k in updates.keys())
+        set_clause = ', '.join((f'{k} = ?' for k in updates.keys()))
         values = list(updates.values()) + [user_id]
-
         with self._get_connection() as conn:
             try:
-                cursor = conn.execute(
-                    f'UPDATE users SET {set_clause} WHERE id = ?',
-                    values
-                )
+                cursor = conn.execute(f'UPDATE users SET {set_clause} WHERE id = ?', values)
                 conn.commit()
                 return cursor.rowcount > 0
             except Exception as e:
                 logger.error(f'Error updating user {user_id}:', e, False)
                 return False
 
-    def create_user_admin(
-        self,
-        email: str,
-        name: str,
-        password: str = '',
-        role: str = 'user',
-        is_admin: int = 0,
-        is_active: int = 1,
-        is_email_verified: int = 1
-    ) -> int:
+    def create_user_admin(self, email: str, name: str, password: str='', role: str='user', is_admin: int=0, is_active: int=1, is_email_verified: int=1) -> int:
         """Creating user by administrator.
 
         Args:
@@ -744,13 +420,7 @@ class UserManager:
         pw_hash = self.hash_password(password) if password else ''
         with self._get_connection() as conn:
             try:
-                cursor = conn.execute(
-                    '''
-                    INSERT INTO users (email, name, password_hash, role, is_admin, is_active, is_email_verified)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ''',
-                    (email_clean, name, pw_hash, role, is_admin, is_active, is_email_verified)
-                )
+                cursor = conn.execute('\n                    INSERT INTO users (email, name, password_hash, role, is_admin, is_active, is_email_verified)\n                    VALUES (?, ?, ?, ?, ?, ?, ?)\n                    ', (email_clean, name, pw_hash, role, is_admin, is_active, is_email_verified))
                 conn.commit()
                 user_id = cursor.lastrowid or 0
                 if user_id:
@@ -790,10 +460,7 @@ class UserManager:
         """
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
-            row = conn.execute(
-                'SELECT * FROM users WHERE id = ? LIMIT 1',
-                (user_id,)
-            ).fetchone()
+            row = conn.execute('SELECT * FROM users WHERE id = ? LIMIT 1', (user_id,)).fetchone()
             return dict(row) if row else {}
 
     def get_user_by_email(self, email: str) -> Dict:
@@ -807,13 +474,10 @@ class UserManager:
         """
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
-            row = conn.execute(
-                'SELECT * FROM users WHERE email = ? LIMIT 1',
-                (email,)
-            ).fetchone()
+            row = conn.execute('SELECT * FROM users WHERE email = ? LIMIT 1', (email,)).fetchone()
             return dict(row) if row else {}
 
-    def get_all_users(self, active_only: bool = True) -> List[Dict]:
+    def get_all_users(self, active_only: bool=True) -> List[Dict]:
         """Getting all users.
 
         Args:
@@ -825,13 +489,9 @@ class UserManager:
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
             if active_only:
-                rows = conn.execute(
-                    'SELECT * FROM users WHERE is_active = 1 ORDER BY created_at DESC'
-                ).fetchall()
+                rows = conn.execute('SELECT * FROM users WHERE is_active = 1 ORDER BY created_at DESC').fetchall()
             else:
-                rows = conn.execute(
-                    'SELECT * FROM users ORDER BY created_at DESC'
-                ).fetchall()
+                rows = conn.execute('SELECT * FROM users ORDER BY created_at DESC').fetchall()
             return [dict(r) for r in rows]
 
     def delete_user(self, user_id: int) -> bool:
@@ -845,10 +505,7 @@ class UserManager:
         """
         with self._get_connection() as conn:
             try:
-                cursor = conn.execute(
-                    'DELETE FROM users WHERE id = ?',
-                    (user_id,)
-                )
+                cursor = conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
                 conn.commit()
                 if cursor.rowcount > 0:
                     self.delete_user_workspace(user_id, remove_files=True)
@@ -868,10 +525,7 @@ class UserManager:
             bool: True if user exists.
         """
         with self._get_connection() as conn:
-            row = conn.execute(
-                'SELECT 1 FROM users WHERE email = ?',
-                (email,)
-            ).fetchone()
+            row = conn.execute('SELECT 1 FROM users WHERE email = ?', (email,)).fetchone()
             return row is not None
 
     def is_user_active(self, user_id: int) -> bool:
@@ -933,17 +587,14 @@ class UserManager:
         """
         with self._get_connection() as conn:
             try:
-                cursor = conn.execute(
-                    'UPDATE session_tokens SET is_revoked = 1 WHERE token_hash = ?',
-                    (token_hash,)
-                )
+                cursor = conn.execute('UPDATE session_tokens SET is_revoked = 1 WHERE token_hash = ?', (token_hash,))
                 conn.commit()
                 return cursor.rowcount > 0
             except Exception as e:
                 logger.error('Error revoking session:', e, False)
                 return False
 
-    def create_session_token(self, user_id: int, token_hash: str, expires_at: str, ip_address: str = '', user_agent: str = '') -> bool:
+    def create_session_token(self, user_id: int, token_hash: str, expires_at: str, ip_address: str='', user_agent: str='') -> bool:
         """Creating new session.
 
         Args:
@@ -958,13 +609,7 @@ class UserManager:
         """
         with self._get_connection() as conn:
             try:
-                conn.execute(
-                    '''
-                    INSERT INTO session_tokens (user_id, token_hash, expires_at, ip_address, user_agent)
-                    VALUES (?, ?, ?, ?, ?)
-                    ''',
-                    (user_id, token_hash, expires_at, ip_address, user_agent)
-                )
+                conn.execute('\n                    INSERT INTO session_tokens (user_id, token_hash, expires_at, ip_address, user_agent)\n                    VALUES (?, ?, ?, ?, ?)\n                    ', (user_id, token_hash, expires_at, ip_address, user_agent))
                 conn.commit()
                 return True
             except Exception as e:
@@ -983,29 +628,10 @@ class UserManager:
         with self._get_connection() as conn:
             from datetime import datetime
             now = datetime.utcnow().isoformat()
-            row = conn.execute(
-                '''
-                SELECT 1 FROM session_tokens
-                WHERE token_hash = ?
-                  AND is_revoked = 0
-                  AND expires_at > ?
-                ''',
-                (token_hash, now)
-            ).fetchone()
+            row = conn.execute('\n                SELECT 1 FROM session_tokens\n                WHERE token_hash = ?\n                  AND is_revoked = 0\n                  AND expires_at > ?\n                ', (token_hash, now)).fetchone()
             return row is not None
 
-    def log_user_activity(
-        self,
-        user_id: int,
-        action: str,
-        ip_address: str = '',
-        user_agent: str = '',
-        details: str = '',
-        event_type: str = 'action',
-        tab_name: str = '',
-        target_element: str = '',
-        duration_ms: int = 0
-    ) -> bool:
+    def log_user_activity(self, user_id: int, action: str, ip_address: str='', user_agent: str='', details: str='', event_type: str='action', tab_name: str='', target_element: str='', duration_ms: int=0) -> bool:
         """Logging user activity with structured telemetry data.
 
         Args:
@@ -1024,32 +650,14 @@ class UserManager:
         """
         with self._get_connection() as conn:
             try:
-                conn.execute(
-                    '''
-                    INSERT INTO user_activity_log (
-                        user_id, action, ip_address, user_agent, details,
-                        event_type, tab_name, target_element, duration_ms
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ''',
-                    (
-                        user_id, action, ip_address, user_agent, details,
-                        event_type, tab_name, target_element, duration_ms
-                    )
-                )
+                conn.execute('\n                    INSERT INTO user_activity_log (\n                        user_id, action, ip_address, user_agent, details,\n                        event_type, tab_name, target_element, duration_ms\n                    )\n                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)\n                    ', (user_id, action, ip_address, user_agent, details, event_type, tab_name, target_element, duration_ms))
                 conn.commit()
                 return True
             except Exception as e:
                 logger.error('Error logging activity:', e, False)
                 return False
 
-    def log_telemetry_batch(
-        self,
-        user_id: int,
-        events: List[Dict[str, Any]],
-        ip_address: str = '',
-        user_agent: str = ''
-    ) -> int:
+    def log_telemetry_batch(self, user_id: int, events: List[Dict[str, Any]], ip_address: str='', user_agent: str='') -> int:
         """Log a batch of telemetry events for a registered user.
 
         Args:
@@ -1078,27 +686,14 @@ class UserManager:
                         details_str = json.dumps(details, ensure_ascii=False)
                     else:
                         details_str = str(details or '')
-
-                    conn.execute(
-                        '''
-                        INSERT INTO user_activity_log (
-                            user_id, action, ip_address, user_agent, details,
-                            event_type, tab_name, target_element, duration_ms
-                        )
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        ''',
-                        (
-                            user_id, action, ip_address, user_agent, details_str,
-                            event_type, tab_name, target_element, duration_ms
-                        )
-                    )
+                    conn.execute('\n                        INSERT INTO user_activity_log (\n                            user_id, action, ip_address, user_agent, details,\n                            event_type, tab_name, target_element, duration_ms\n                        )\n                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)\n                        ', (user_id, action, ip_address, user_agent, details_str, event_type, tab_name, target_element, duration_ms))
                     inserted += 1
                 except Exception as ex:
                     logger.error(f'Error inserting telemetry event for user {user_id}:', ex, False)
             conn.commit()
         return inserted
 
-    def get_telemetry_stats(self, days: int = 30, user_id: Optional[int] = None) -> Dict[str, Any]:
+    def get_telemetry_stats(self, days: int=30, user_id: Optional[int]=None) -> Dict[str, Any]:
         """Aggregate telemetry statistics for reporting and admin dashboard.
 
         Args:
@@ -1108,91 +703,28 @@ class UserManager:
         Returns:
             Dict[str, Any]: Aggregated stats including tab views, popular actions, and recent events.
         """
-        stats: Dict[str, Any] = {
-            "total_events": 0,
-            "tab_views": {},
-            "top_clicks": {},
-            "active_users_count": 0,
-            "recent_events": [],
-        }
+        stats: Dict[str, Any] = {'total_events': 0, 'tab_views': {}, 'top_clicks': {}, 'active_users_count': 0, 'recent_events': []}
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
             where_clauses = ["timestamp >= datetime('now', ?)"]
-            params: List[Any] = [f"-{days} days"]
-
+            params: List[Any] = [f'-{days} days']
             if user_id is not None:
-                where_clauses.append("user_id = ?")
+                where_clauses.append('user_id = ?')
                 params.append(user_id)
-
-            where_sql = " AND ".join(where_clauses)
-
-            # Total events count & distinct users
-            row = conn.execute(
-                f"SELECT COUNT(*) as total, COUNT(DISTINCT user_id) as users_count FROM user_activity_log WHERE {where_sql}",
-                params
-            ).fetchone()
+            where_sql = ' AND '.join(where_clauses)
+            row = conn.execute(f'SELECT COUNT(*) as total, COUNT(DISTINCT user_id) as users_count FROM user_activity_log WHERE {where_sql}', params).fetchone()
             if row:
-                stats["total_events"] = row["total"]
-                stats["active_users_count"] = row["users_count"]
-
-            # Tab views aggregation
-            tab_rows = conn.execute(
-                f"""
-                SELECT tab_name, COUNT(*) as count, AVG(duration_ms) as avg_duration
-                FROM user_activity_log
-                WHERE {where_sql} AND (event_type = 'tab_view' OR (tab_name IS NOT NULL AND tab_name != ''))
-                GROUP BY tab_name
-                ORDER BY count DESC
-                LIMIT 20
-                """,
-                params
-            ).fetchall()
-            stats["tab_views"] = {
-                (r["tab_name"] or "unknown"): {
-                    "count": r["count"],
-                    "avg_duration_ms": round(r["avg_duration"] or 0, 1)
-                }
-                for r in tab_rows if r["tab_name"]
-            }
-
-            # Top clicked elements
-            click_rows = conn.execute(
-                f"""
-                SELECT target_element, action, COUNT(*) as count
-                FROM user_activity_log
-                WHERE {where_sql} AND event_type = 'click' AND target_element IS NOT NULL AND target_element != ''
-                GROUP BY target_element
-                ORDER BY count DESC
-                LIMIT 20
-                """,
-                params
-            ).fetchall()
-            stats["top_clicks"] = {
-                (r["target_element"] or "unknown"): {
-                    "action": r["action"],
-                    "count": r["count"]
-                }
-                for r in click_rows
-            }
-
-            # Recent events
-            recent = conn.execute(
-                f"""
-                SELECT l.id, l.user_id, u.email, u.name, l.action, l.event_type,
-                       l.tab_name, l.target_element, l.duration_ms, l.details, l.timestamp, l.ip_address
-                FROM user_activity_log l
-                LEFT JOIN users u ON l.user_id = u.id
-                WHERE {where_sql}
-                ORDER BY l.timestamp DESC
-                LIMIT 50
-                """,
-                params
-            ).fetchall()
-            stats["recent_events"] = [dict(r) for r in recent]
-
+                stats['total_events'] = row['total']
+                stats['active_users_count'] = row['users_count']
+            tab_rows = conn.execute(f"\n                SELECT tab_name, COUNT(*) as count, AVG(duration_ms) as avg_duration\n                FROM user_activity_log\n                WHERE {where_sql} AND (event_type = 'tab_view' OR (tab_name IS NOT NULL AND tab_name != ''))\n                GROUP BY tab_name\n                ORDER BY count DESC\n                LIMIT 20\n                ", params).fetchall()
+            stats['tab_views'] = {r['tab_name'] or 'unknown': {'count': r['count'], 'avg_duration_ms': round(r['avg_duration'] or 0, 1)} for r in tab_rows if r['tab_name']}
+            click_rows = conn.execute(f"\n                SELECT target_element, action, COUNT(*) as count\n                FROM user_activity_log\n                WHERE {where_sql} AND event_type = 'click' AND target_element IS NOT NULL AND target_element != ''\n                GROUP BY target_element\n                ORDER BY count DESC\n                LIMIT 20\n                ", params).fetchall()
+            stats['top_clicks'] = {r['target_element'] or 'unknown': {'action': r['action'], 'count': r['count']} for r in click_rows}
+            recent = conn.execute(f'\n                SELECT l.id, l.user_id, u.email, u.name, l.action, l.event_type,\n                       l.tab_name, l.target_element, l.duration_ms, l.details, l.timestamp, l.ip_address\n                FROM user_activity_log l\n                LEFT JOIN users u ON l.user_id = u.id\n                WHERE {where_sql}\n                ORDER BY l.timestamp DESC\n                LIMIT 50\n                ', params).fetchall()
+            stats['recent_events'] = [dict(r) for r in recent]
         return stats
 
-    def log_audit(self, user_id: int, action: str, target_type: str = '', target_id: int = 0, old_values: str = '', new_values: str = '', ip_address: str = '') -> bool:
+    def log_audit(self, user_id: int, action: str, target_type: str='', target_id: int=0, old_values: str='', new_values: str='', ip_address: str='') -> bool:
         """Logging audit of important operations.
 
         Args:
@@ -1209,13 +741,7 @@ class UserManager:
         """
         with self._get_connection() as conn:
             try:
-                conn.execute(
-                    '''
-                    INSERT INTO audit_log (user_id, action, target_type, target_id, old_values, new_values, ip_address)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ''',
-                    (user_id, action, target_type, target_id, old_values, new_values, ip_address)
-                )
+                conn.execute('\n                    INSERT INTO audit_log (user_id, action, target_type, target_id, old_values, new_values, ip_address)\n                    VALUES (?, ?, ?, ?, ?, ?, ?)\n                    ', (user_id, action, target_type, target_id, old_values, new_values, ip_address))
                 conn.commit()
                 return True
             except Exception as e:
@@ -1232,34 +758,13 @@ class UserManager:
         Returns:
             bool: True if user has permission.
         """
-        # Administrators have all permissions
         if self.is_admin(user_id):
             return True
-
         with self._get_connection() as conn:
-            # Check through permission_grants
-            row = conn.execute(
-                '''
-                SELECT 1 FROM permission_grants
-                WHERE grantee_id = ?
-                  AND grant_type = 'user'
-                  AND permission = ?
-                ''',
-                (user_id, permission)
-            ).fetchone()
+            row = conn.execute("\n                SELECT 1 FROM permission_grants\n                WHERE grantee_id = ?\n                  AND grant_type = 'user'\n                  AND permission = ?\n                ", (user_id, permission)).fetchone()
             if row:
                 return True
-
-            # Check through roles
-            row = conn.execute(
-                '''
-                SELECT r.permissions FROM roles r
-                JOIN user_roles ur ON r.id = ur.role_id
-                WHERE ur.user_id = ?
-                  AND r.permissions IS NOT NULL
-                ''',
-                (user_id,)
-            ).fetchone()
+            row = conn.execute('\n                SELECT r.permissions FROM roles r\n                JOIN user_roles ur ON r.id = ur.role_id\n                WHERE ur.user_id = ?\n                  AND r.permissions IS NOT NULL\n                ', (user_id,)).fetchone()
             if row:
                 try:
                     import json
@@ -1267,7 +772,6 @@ class UserManager:
                     return perms.get(permission, False)
                 except json.JSONDecodeError:
                     pass
-
             return False
 
     def get_user_permissions(self, user_id: int) -> List[str]:
@@ -1280,30 +784,14 @@ class UserManager:
             List[str]: List of permissions.
         """
         permissions = []
-
-        # Administrators have all permissions
         if self.is_admin(user_id):
             with self._get_connection() as conn:
                 rows = conn.execute('SELECT name FROM permissions').fetchall()
                 return [r['name'] for r in rows]
-
         with self._get_connection() as conn:
-            # Getting permissions through permission_grants
-            rows = conn.execute(
-                'SELECT permission FROM permission_grants WHERE grantee_id = ? AND grant_type = ?',
-                (user_id, 'user')
-            ).fetchall()
+            rows = conn.execute('SELECT permission FROM permission_grants WHERE grantee_id = ? AND grant_type = ?', (user_id, 'user')).fetchall()
             permissions.extend([r['permission'] for r in rows])
-
-            # Getting permissions through roles
-            rows = conn.execute(
-                '''
-                SELECT r.permissions FROM roles r
-                JOIN user_roles ur ON r.id = ur.role_id
-                WHERE ur.user_id = ?
-                ''',
-                (user_id,)
-            ).fetchall()
+            rows = conn.execute('\n                SELECT r.permissions FROM roles r\n                JOIN user_roles ur ON r.id = ur.role_id\n                WHERE ur.user_id = ?\n                ', (user_id,)).fetchall()
             for row in rows:
                 try:
                     import json
@@ -1311,17 +799,13 @@ class UserManager:
                     permissions.extend(perms.keys())
                 except json.JSONDecodeError:
                     pass
-
         return list(set(permissions))
 
     def get_user_by_telegram_id(self, telegram_id: int) -> Dict:
         """Getting user by telegram_id."""
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
-            row = conn.execute(
-                'SELECT * FROM users WHERE telegram_id = ? LIMIT 1',
-                (telegram_id,)
-            ).fetchone()
+            row = conn.execute('SELECT * FROM users WHERE telegram_id = ? LIMIT 1', (telegram_id,)).fetchone()
             return dict(row) if row else {}
 
     def get_favorite_models(self, user_id: int) -> Dict[str, Dict[str, str]]:
@@ -1335,19 +819,10 @@ class UserManager:
         """
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
-            rows = conn.execute(
-                'SELECT model_name, note, updated_at FROM user_favorite_models WHERE user_id = ? ORDER BY updated_at DESC',
-                (user_id,)
-            ).fetchall()
-            return {
-                row['model_name']: {
-                    'note': row['note'] or '',
-                    'updated_at': row['updated_at'] or ''
-                }
-                for row in rows
-            }
+            rows = conn.execute('SELECT model_name, note, updated_at FROM user_favorite_models WHERE user_id = ? ORDER BY updated_at DESC', (user_id,)).fetchall()
+            return {row['model_name']: {'note': row['note'] or '', 'updated_at': row['updated_at'] or ''} for row in rows}
 
-    def set_favorite_model(self, user_id: int, model_name: str, note: str = '') -> bool:
+    def set_favorite_model(self, user_id: int, model_name: str, note: str='') -> bool:
         """Add or update a favorite model with custom note.
         
         Args:
@@ -1363,16 +838,7 @@ class UserManager:
         clean_model = model_name.strip()
         with self._get_connection() as conn:
             try:
-                conn.execute(
-                    '''
-                    INSERT INTO user_favorite_models (user_id, model_name, note, updated_at)
-                    VALUES (?, ?, ?, datetime('now'))
-                    ON CONFLICT(user_id, model_name) DO UPDATE SET
-                        note = excluded.note,
-                        updated_at = excluded.updated_at
-                    ''',
-                    (user_id, clean_model, note.strip())
-                )
+                conn.execute("\n                    INSERT INTO user_favorite_models (user_id, model_name, note, updated_at)\n                    VALUES (?, ?, ?, datetime('now'))\n                    ON CONFLICT(user_id, model_name) DO UPDATE SET\n                        note = excluded.note,\n                        updated_at = excluded.updated_at\n                    ", (user_id, clean_model, note.strip()))
                 conn.commit()
                 return True
             except Exception as e:
@@ -1393,10 +859,7 @@ class UserManager:
             return False
         with self._get_connection() as conn:
             try:
-                conn.execute(
-                    'DELETE FROM user_favorite_models WHERE user_id = ? AND model_name = ?',
-                    (user_id, model_name.strip())
-                )
+                conn.execute('DELETE FROM user_favorite_models WHERE user_id = ? AND model_name = ?', (user_id, model_name.strip()))
                 conn.commit()
                 return True
             except Exception as e:
@@ -1407,23 +870,14 @@ class UserManager:
         """Getting user settings."""
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
-            row = conn.execute(
-                'SELECT * FROM user_settings WHERE user_id = ? LIMIT 1',
-                (user_id,)
-            ).fetchone()
+            row = conn.execute('SELECT * FROM user_settings WHERE user_id = ? LIMIT 1', (user_id,)).fetchone()
             if not row:
                 try:
-                    conn.execute(
-                        'INSERT OR IGNORE INTO user_settings (user_id) VALUES (?)',
-                        (user_id,)
-                    )
+                    conn.execute('INSERT OR IGNORE INTO user_settings (user_id) VALUES (?)', (user_id,))
                     conn.commit()
                 except Exception as e:
                     logger.error(f'Error inserting default settings for {user_id}:', e, False)
-                row = conn.execute(
-                    'SELECT * FROM user_settings WHERE user_id = ? LIMIT 1',
-                    (user_id,)
-                ).fetchone()
+                row = conn.execute('SELECT * FROM user_settings WHERE user_id = ? LIMIT 1', (user_id,)).fetchone()
             res = dict(row) if row else {'user_id': user_id, 'theme': 'dark', 'language': 'ru', 'tts_enabled': 1, 'system_instruction': None, 'model': None, 'tts_system': 'edge-tts', 'tts_voice': 'ru-RU-DmitryNeural', 'rag_enabled': 1}
             res['favorite_models'] = self.get_favorite_models(user_id)
             return res
@@ -1434,14 +888,11 @@ class UserManager:
         updates = {k: v for k, v in kwargs.items() if k in allowed_fields and v is not None}
         if not updates:
             return False
-        set_clause = ', '.join(f'{k} = ?' for k in updates.keys())
+        set_clause = ', '.join((f'{k} = ?' for k in updates.keys()))
         values = list(updates.values()) + [user_id]
         with self._get_connection() as conn:
             try:
-                conn.execute(
-                    f'UPDATE user_settings SET {set_clause} WHERE user_id = ?',
-                    values
-                )
+                conn.execute(f'UPDATE user_settings SET {set_clause} WHERE user_id = ?', values)
                 conn.commit()
                 return True
             except Exception as e:
@@ -1452,13 +903,10 @@ class UserManager:
         """Generating temporary token for Telegram linking."""
         import secrets
         from datetime import datetime, timedelta
-        token = secrets.token_hex(4).upper()  # 8-character code, e.g. AB12CD34
+        token = secrets.token_hex(4).upper()
         expires_at = (datetime.utcnow() + timedelta(minutes=10)).isoformat()
         with self._get_connection() as conn:
-            conn.execute(
-                'INSERT OR REPLACE INTO telegram_link_tokens (token, user_id, expires_at) VALUES (?, ?, ?)',
-                (token, user_id, expires_at)
-            )
+            conn.execute('INSERT OR REPLACE INTO telegram_link_tokens (token, user_id, expires_at) VALUES (?, ?, ?)', (token, user_id, expires_at))
             conn.commit()
         return token
 
@@ -1468,29 +916,14 @@ class UserManager:
         now = datetime.utcnow().isoformat()
         token = token.strip().upper()
         with self._get_connection() as conn:
-            row = conn.execute(
-                'SELECT user_id FROM telegram_link_tokens WHERE token = ? AND expires_at > ? LIMIT 1',
-                (token, now)
-            ).fetchone()
+            row = conn.execute('SELECT user_id FROM telegram_link_tokens WHERE token = ? AND expires_at > ? LIMIT 1', (token, now)).fetchone()
             if not row:
                 return False
             user_id = row[0]
             try:
-                # Delete temporary telegram user if it was auto-created
-                conn.execute(
-                    'DELETE FROM users WHERE telegram_id = ? AND email = ?',
-                    (telegram_id, f"tg_{telegram_id}@telegram.bot")
-                )
-                # Clear telegram_id from any other records
-                conn.execute(
-                    'UPDATE users SET telegram_id = NULL, telegram_username = NULL WHERE telegram_id = ?',
-                    (telegram_id,)
-                )
-                # Bind telegram_id to target user
-                conn.execute(
-                    'UPDATE users SET telegram_id = ?, telegram_username = ? WHERE id = ?',
-                    (telegram_id, telegram_username, user_id)
-                )
+                conn.execute('DELETE FROM users WHERE telegram_id = ? AND email = ?', (telegram_id, f'tg_{telegram_id}@telegram.bot'))
+                conn.execute('UPDATE users SET telegram_id = NULL, telegram_username = NULL WHERE telegram_id = ?', (telegram_id,))
+                conn.execute('UPDATE users SET telegram_id = ?, telegram_username = ? WHERE id = ?', (telegram_id, telegram_username, user_id))
                 conn.execute('DELETE FROM telegram_link_tokens WHERE token = ?', (token,))
                 conn.commit()
                 return True
@@ -1498,7 +931,7 @@ class UserManager:
                 logger.error(f'Error linking account {user_id}:', e, False)
                 return False
 
-    def link_telegram_account_direct(self, user_id: int, telegram_id: int, telegram_username: Optional[str] = "") -> bool:
+    def link_telegram_account_direct(self, user_id: int, telegram_id: int, telegram_username: Optional[str]='') -> bool:
         """Directly bind a Telegram account to a user ID.
 
         Args:
@@ -1509,39 +942,21 @@ class UserManager:
         Returns:
             bool: True on successful binding.
         """
-        tg_user = str(telegram_username or "")
+        tg_user = str(telegram_username or '')
         with self._get_connection() as conn:
             try:
-                # Delete temporary telegram user if it was auto-created
-                conn.execute(
-                    'DELETE FROM users WHERE telegram_id = ? AND email = ?',
-                    (telegram_id, f"tg_{telegram_id}@telegram.bot")
-                )
-                # Clear telegram_id from any other records
-                conn.execute(
-                    'UPDATE users SET telegram_id = NULL, telegram_username = NULL WHERE telegram_id = ?',
-                    (telegram_id,)
-                )
-                # Bind telegram_id to target user
-                conn.execute(
-                    'UPDATE users SET telegram_id = ?, telegram_username = ? WHERE id = ?',
-                    (telegram_id, tg_user, user_id)
-                )
+                conn.execute('DELETE FROM users WHERE telegram_id = ? AND email = ?', (telegram_id, f'tg_{telegram_id}@telegram.bot'))
+                conn.execute('UPDATE users SET telegram_id = NULL, telegram_username = NULL WHERE telegram_id = ?', (telegram_id,))
+                conn.execute('UPDATE users SET telegram_id = ?, telegram_username = ? WHERE id = ?', (telegram_id, tg_user, user_id))
                 conn.commit()
                 self.init_user_workspace(user_id)
-                logger.info(f"Directly linked Telegram ID {telegram_id} to User ID {user_id}")
+                logger.info(f'Directly linked Telegram ID {telegram_id} to User ID {user_id}')
                 return True
             except Exception as e:
                 logger.error(f'Error directly linking Telegram account for user {user_id}:', e, False)
                 return False
 
-    def save_user_dialog_file(
-        self,
-        user_id: int | str,
-        filename: str,
-        content: bytes,
-        subfolder: str = "dialogs",
-    ) -> Dict[str, Any]:
+    def save_user_dialog_file(self, user_id: int | str, filename: str, content: bytes, subfolder: str='dialogs') -> Dict[str, Any]:
         """Save an uploaded dialogue recording or transcript to the user's isolated workspace.
 
         Args:
@@ -1555,30 +970,17 @@ class UserManager:
         """
         import time
         from datetime import datetime
-
         safe_user_id = self.sanitize_user_id(user_id)
         target_dir = self.get_user_directory(safe_user_id, subfolder, create=True)
-
         clean_name = Path(filename).name
-        clean_name = "".join(c for c in clean_name if c.isalnum() or c in ("-", "_", ".", " ")).strip()
+        clean_name = ''.join((c for c in clean_name if c.isalnum() or c in ('-', '_', '.', ' '))).strip()
         if not clean_name:
-            clean_name = f"dialog_{int(time.time())}.dat"
-
-        timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-        final_filename = f"{timestamp_str}_{clean_name}"
+            clean_name = f'dialog_{int(time.time())}.dat'
+        timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+        final_filename = f'{timestamp_str}_{clean_name}'
         file_path = target_dir / final_filename
-
         file_path.write_bytes(content)
-
-        return {
-            "user_id": str(user_id),
-            "filename": final_filename,
-            "original_filename": filename,
-            "absolute_path": str(file_path),
-            "relative_path": f"{subfolder}/{final_filename}",
-            "size_bytes": len(content),
-            "created_at": datetime.now().isoformat(),
-        }
+        return {'user_id': str(user_id), 'filename': final_filename, 'original_filename': filename, 'absolute_path': str(file_path), 'relative_path': f'{subfolder}/{final_filename}', 'size_bytes': len(content), 'created_at': datetime.now().isoformat()}
 
     @staticmethod
     def hash_password(password: str) -> str:
@@ -1612,30 +1014,18 @@ class UserManager:
         email = email.lower().strip()
         pw_hash = self.hash_password(password)
         db_user = self.get_user_by_email(email)
-        
         with self._get_connection() as conn:
             if db_user:
-                # Update existing account
                 try:
-                    conn.execute(
-                        'UPDATE users SET name = ?, password_hash = ? WHERE id = ?',
-                        (name, pw_hash, db_user['id'])
-                    )
+                    conn.execute('UPDATE users SET name = ?, password_hash = ? WHERE id = ?', (name, pw_hash, db_user['id']))
                     conn.commit()
                     return db_user['id']
                 except Exception as e:
                     logger.error(f'Error updating during registration {email}:', e, False)
                     return 0
             else:
-                # Create new account (unverified)
                 try:
-                    cursor = conn.execute(
-                        '''
-                        INSERT INTO users (email, name, password_hash, is_email_verified)
-                        VALUES (?, ?, ?, 0)
-                        ''',
-                        (email, name, pw_hash)
-                    )
+                    cursor = conn.execute('\n                        INSERT INTO users (email, name, password_hash, is_email_verified)\n                        VALUES (?, ?, ?, 0)\n                        ', (email, name, pw_hash))
                     conn.commit()
                     user_id = cursor.lastrowid
                     if user_id:
@@ -1649,14 +1039,10 @@ class UserManager:
         import random
         from datetime import datetime, timedelta
         email = email.lower().strip()
-        code = f"{random.randint(100000, 999999)}"
+        code = f'{random.randint(100000, 999999)}'
         expires_at = (datetime.utcnow() + timedelta(minutes=15)).isoformat()
-        
         with self._get_connection() as conn:
-            conn.execute(
-                'INSERT OR REPLACE INTO email_verification_tokens (email, code, expires_at) VALUES (?, ?, ?)',
-                (email, code, expires_at)
-            )
+            conn.execute('INSERT OR REPLACE INTO email_verification_tokens (email, code, expires_at) VALUES (?, ?, ?)', (email, code, expires_at))
             conn.commit()
         return code
 
@@ -1666,29 +1052,16 @@ class UserManager:
         email = email.lower().strip()
         code = code.strip()
         now = datetime.utcnow().isoformat()
-        
         with self._get_connection() as conn:
-            row = conn.execute(
-                'SELECT 1 FROM email_verification_tokens WHERE email = ? AND code = ? AND expires_at > ?',
-                (email, code, now)
-            ).fetchone()
+            row = conn.execute('SELECT 1 FROM email_verification_tokens WHERE email = ? AND code = ? AND expires_at > ?', (email, code, now)).fetchone()
             if not row:
                 return False
-            
-            # Verify user email
-            conn.execute(
-                'UPDATE users SET is_email_verified = 1 WHERE email = ?',
-                (email,)
-            )
-            # Delete used token
-            conn.execute(
-                'DELETE FROM email_verification_tokens WHERE email = ?',
-                (email,)
-            )
+            conn.execute('UPDATE users SET is_email_verified = 1 WHERE email = ?', (email,))
+            conn.execute('DELETE FROM email_verification_tokens WHERE email = ?', (email,))
             conn.commit()
             return True
 
-    def save_google_tokens(self, user_id: int, access_token: str, refresh_token: str = '', expires_in: int = 3600, scope: str = '') -> bool:
+    def save_google_tokens(self, user_id: int, access_token: str, refresh_token: str='', expires_in: int=3600, scope: str='') -> bool:
         """Saving or updating Google OAuth tokens.
 
         Args:
@@ -1707,26 +1080,10 @@ class UserManager:
         with self._get_connection() as conn:
             try:
                 if not refresh_token:
-                    existing = conn.execute(
-                        'SELECT refresh_token FROM google_oauth_tokens WHERE user_id = ?',
-                        (user_id,)
-                    ).fetchone()
+                    existing = conn.execute('SELECT refresh_token FROM google_oauth_tokens WHERE user_id = ?', (user_id,)).fetchone()
                     if existing and existing[0]:
                         refresh_token = existing[0]
-
-                conn.execute(
-                    '''
-                    INSERT INTO google_oauth_tokens (user_id, access_token, refresh_token, expires_at, scope, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(user_id) DO UPDATE SET
-                        access_token = excluded.access_token,
-                        refresh_token = CASE WHEN excluded.refresh_token != '' THEN excluded.refresh_token ELSE google_oauth_tokens.refresh_token END,
-                        expires_at = excluded.expires_at,
-                        scope = excluded.scope,
-                        updated_at = excluded.updated_at
-                    ''',
-                    (user_id, access_token, refresh_token, expires_at, scope, now)
-                )
+                conn.execute("\n                    INSERT INTO google_oauth_tokens (user_id, access_token, refresh_token, expires_at, scope, updated_at)\n                    VALUES (?, ?, ?, ?, ?, ?)\n                    ON CONFLICT(user_id) DO UPDATE SET\n                        access_token = excluded.access_token,\n                        refresh_token = CASE WHEN excluded.refresh_token != '' THEN excluded.refresh_token ELSE google_oauth_tokens.refresh_token END,\n                        expires_at = excluded.expires_at,\n                        scope = excluded.scope,\n                        updated_at = excluded.updated_at\n                    ", (user_id, access_token, refresh_token, expires_at, scope, now))
                 conn.commit()
                 logger.info(f'Google OAuth tokens saved for user ID={user_id}')
                 return True
@@ -1745,10 +1102,7 @@ class UserManager:
         """
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
-            row = conn.execute(
-                'SELECT * FROM google_oauth_tokens WHERE user_id = ? LIMIT 1',
-                (user_id,)
-            ).fetchone()
+            row = conn.execute('SELECT * FROM google_oauth_tokens WHERE user_id = ? LIMIT 1', (user_id,)).fetchone()
             return dict(row) if row else {}
 
     def has_google_auth(self, user_id: int) -> bool:
@@ -1762,8 +1116,9 @@ class UserManager:
         """
         tokens = self.get_google_tokens(user_id)
         return bool(tokens and tokens.get('access_token'))
-
-from header import __root__
-db_path = __root__ / 'src' / 'user_manager' / 'users.db'
+from src.config import storage_cfg
+from src.config import storage_cfg
+from pathlib import Path
+Path(storage_cfg.users_dir).mkdir(parents=True, exist_ok=True)
+db_path = Path(storage_cfg.users_dir).with_name('users.db')
 user_manager = UserManager(db_path)
-

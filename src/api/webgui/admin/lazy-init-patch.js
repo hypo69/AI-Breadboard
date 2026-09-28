@@ -90,6 +90,7 @@ window.addEventListener('load', async () => {
     { tabName: 'about-system', appId: 'about_system', htmlUrl: `/html/about_system_tab/index.html?v=20260926_v1`, jsUrl: `/html/about_system_tab/main.js?v=20260926_v1` },
     { tabName: 'windows-admin', appId: 'windows_sysadmin', htmlUrl: `/html/windows_admin_tab/index.html`, jsUrl: `/html/windows_admin_tab/main.js` },
     { tabName: 'cloudflared', appId: 'cloudflared_monitor', htmlUrl: `/html/cloudflared_tab/index.html`, jsUrl: `/html/cloudflared_tab/main.js` },
+    { tabName: 'google-desktop', appId: 'google_user_desktop', htmlUrl: `/html/google_desktop_tab/index.html?v=20260928_v1`, jsUrl: `/html/google_desktop_tab/main.js?v=20260928_v1` },
     { tabName: 'user-assistant', appId: 'user_assistant', htmlUrl: `/html/user_assistant_tab/index.html`, jsUrl: `/html/user_assistant_tab/main.js` },
     { tabName: 'gcloud', appId: 'gcloud_monitor', htmlUrl: `/html/gcloud_tab/index.html`, jsUrl: `/html/gcloud_tab/main.js` },
     { tabName: 'website-monitor', appId: 'website_monitor', htmlUrl: `/html/website_monitor_tab/index.html`, jsUrl: `/html/website_monitor_tab/main.js` },

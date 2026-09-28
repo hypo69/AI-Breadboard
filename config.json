@@ -201,6 +201,7 @@
         "agy_model": "agy-flash",
         "fallback_on_rag_not_found": true
     },
+
     "langchain": {
         "enabled": true,
         "default_llm": "gemini",
@@ -265,7 +266,7 @@
         }
     },
     "storage": {
-        "users_dir": "data/users"
+        "users_dir": "%APPDATA%/AI-Breadboard/users"
     },
     "user_settings": {
         "language": "en"

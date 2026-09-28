@@ -8,9 +8,9 @@ class TestDataModels(unittest.TestCase):
 
     def test_process_info_creation(self):
         """Test ProcessInfo creation."""
-        proc = ProcessInfo(pid=1234, name="test.exe", ppid=0)
+        proc = ProcessInfo(pid=1234, name='test.exe', ppid=0)
         self.assertEqual(proc.pid, 1234)
-        self.assertEqual(proc.name, "test.exe")
+        self.assertEqual(proc.name, 'test.exe')
         self.assertEqual(proc.ppid, 0)
 
     def test_thread_info_creation(self):
@@ -25,7 +25,6 @@ class TestDataModels(unittest.TestCase):
         self.assertIsNotNone(state.timestamp)
         self.assertEqual(len(state.processes), 0)
 
-
 class TestCorrelationEngine(unittest.TestCase):
     """Test correlation engine."""
 
@@ -36,6 +35,5 @@ class TestCorrelationEngine(unittest.TestCase):
     def test_engine_initialization(self):
         """Test engine initializes correctly."""
         self.assertIsNotNone(self.engine)
-
 if __name__ == '__main__':
     unittest.main()

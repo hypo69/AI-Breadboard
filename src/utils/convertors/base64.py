@@ -1,27 +1,7 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Convert Base64 encoded content to temporary file
-# =============================================================================
-# Description:
-#   This module provides a function to decode Base64 encoded content and write it to a temporary file wi
-#
-# File: base64.py
-# Project: ai-breadboard
-# Package: src.utils.convertors
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """Base64 encoded content to temporary file conversion utilities.
 
 Converts Base64 encoded content to temporary files for processing."""
-
-""" This module provides a function to decode Base64 encoded content and write it to a temporary file with the specified extension.
-
-Functions:
-    - `base64_to_tmpfile`: Convert Base64 encoded content to a temporary file.
-"""
-
+' This module provides a function to decode Base64 encoded content and write it to a temporary file with the specified extension.\n\nFunctions:\n    - `base64_to_tmpfile`: Convert Base64 encoded content to a temporary file.\n'
 import base64
 import tempfile
 import os
@@ -52,10 +32,8 @@ def base64_to_tmpfile(content: str, file_name: str) -> str:
     with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
         tmp.write(base64.b64decode(content))
         path = tmp.name
-
     return path
 
 def base64encode(image_path):
-    # Function to encode the image
-  with open(image_path, "rb") as image_file:
-    return base64.b64encode(image_file.read()).decode('utf-8')
+    with open(image_path, 'rb') as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')

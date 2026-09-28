@@ -1,52 +1,34 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Check port availability on host
-# =============================================================================
-# Description:
-#   Search and allocate free TCP port in specified range for launching services.
-#
-# File: get_free_port.py
-# Project: ai-breadboard
-# Package: src.utils
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 import socket
 from typing import List, Tuple, Union
-
 from logger import logger
 
 def _is_port_in_use(host: str, port: int) -> bool:
     """Check port availability on host."""
-    target_host = "127.0.0.1" if host in ("localhost", "") else host
+    target_host = '127.0.0.1' if host in ('localhost', '') else host
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind((target_host, port))
-            return False  # Port is free
+            return False
         except OSError:
-            return True  # Port is in use
+            return True
 
 def _parse_port_range(port_range_str: str) -> Tuple[int, int]:
     """Parse port range string 'min-max'."""
     try:
         parts = port_range_str.split('-')
-        if len(parts) != 2 or not parts[0] or not parts[1]:
+        if len(parts) != 2 or not parts[0] or (not parts[1]):
             raise ValueError(f'Incorrect range format: {port_range_str}')
-        
         min_port = int(parts[0])
         max_port = int(parts[1])
-
         if min_port >= max_port:
             raise ValueError(f'Incorrect range: {port_range_str}')
-        return min_port, max_port
-
+        return (min_port, max_port)
     except ValueError as e:
         logger.error(f'Error parsing range: {port_range_str}')
         raise ValueError(f'Error parsing range: {port_range_str}') from e
 
-def get_free_port(host: str, port_range: Union[str, List[str]] = '') -> int:
+def get_free_port(host: str, port_range: Union[str, List[str]]='') -> int:
     """
     Search and allocate free TCP port.
 
@@ -73,7 +55,6 @@ def get_free_port(host: str, port_range: Union[str, List[str]] = '') -> int:
                 if not _is_port_in_use(host, port):
                     return port
             raise ValueError(f'Free port in range {port_range} not found')
-
         elif isinstance(port_range, list):
             for item in port_range:
                 if not isinstance(item, str):
@@ -84,13 +65,11 @@ def get_free_port(host: str, port_range: Union[str, List[str]] = '') -> int:
                         if not _is_port_in_use(host, port):
                             return port
                 except ValueError:
-                    continue  # Skip incorrect ranges
-
+                    continue
             raise ValueError(f'Free port in ranges {port_range} not found')
         else:
             raise ValueError(f'Incorrect range type: {type(port_range)}')
     else:
-        # Search first available port starting from 1024
         port = 1024
         while port <= 65535:
             if not _is_port_in_use(host, port):

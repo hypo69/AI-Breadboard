@@ -1,22 +1,5 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: System and Hardware Telemetry Data Models
-# =============================================================================
-# Description:
-#   Pydantic data models for CPU, GPU, RAM, Disks, Network, Sensors, Processes,
-#   and AI diagnostic telemetry snapshots.
-#
-# File: models.py
-# Project: ai-breadboard
-# Package: src.system
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """Data models for system metrics, hardware specs, sensors, and telemetry."""
-
 from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -24,497 +7,445 @@ from pydantic import BaseModel, Field
 
 class TelemetryProvider(ABC):
     """Абстрактный базовый класс для всех компонентов системы, предоставляющих телеметрию."""
-    
+
     @abstractmethod
     def get_sensors(self) -> List[HardwareSensor]:
         """Возвращает список сенсоров, предоставляемых данным компонентом."""
         pass
 
-
-
 class CpuMetrics(BaseModel):
     """CPU usage and architecture metrics."""
-
-    model: str = Field(default="", description="CPU model name")
-    architecture: str = Field(default="x86_64", description="CPU architecture")
-    physical_cores: int = Field(default=1, description="Physical core count")
-    logical_cores: int = Field(default=1, description="Logical core count (threads)")
-    total_percent: float = Field(default=0.0, description="Overall CPU usage percentage")
-    per_core_percent: List[float] = Field(default_factory=list, description="Usage percentage per logical core")
-    frequency_mhz: float = Field(default=0.0, description="Current CPU frequency in MHz")
-    temperature_celsius: Optional[float] = Field(default=None, description="Package temperature in Celsius")
-
+    model: str = Field(default='', description='CPU model name')
+    architecture: str = Field(default='x86_64', description='CPU architecture')
+    physical_cores: int = Field(default=1, description='Physical core count')
+    logical_cores: int = Field(default=1, description='Logical core count (threads)')
+    total_percent: float = Field(default=0.0, description='Overall CPU usage percentage')
+    per_core_percent: List[float] = Field(default_factory=list, description='Usage percentage per logical core')
+    frequency_mhz: float = Field(default=0.0, description='Current CPU frequency in MHz')
+    temperature_celsius: Optional[float] = Field(default=None, description='Package temperature in Celsius')
 
 class MemoryMetrics(BaseModel):
     """RAM and Swap memory metrics."""
-
-    total_gb: float = Field(default=0.0, description="Total physical RAM in GB")
-    available_gb: float = Field(default=0.0, description="Available RAM in GB")
-    used_gb: float = Field(default=0.0, description="Used RAM in GB")
-    percent: float = Field(default=0.0, description="Memory utilization percentage")
-    swap_total_gb: float = Field(default=0.0, description="Total swap space in GB")
-    swap_used_gb: float = Field(default=0.0, description="Used swap space in GB")
-    swap_percent: float = Field(default=0.0, description="Swap utilization percentage")
-
+    total_gb: float = Field(default=0.0, description='Total physical RAM in GB')
+    available_gb: float = Field(default=0.0, description='Available RAM in GB')
+    used_gb: float = Field(default=0.0, description='Used RAM in GB')
+    percent: float = Field(default=0.0, description='Memory utilization percentage')
+    swap_total_gb: float = Field(default=0.0, description='Total swap space in GB')
+    swap_used_gb: float = Field(default=0.0, description='Used swap space in GB')
+    swap_percent: float = Field(default=0.0, description='Swap utilization percentage')
 
 class GpuMetrics(BaseModel):
     """GPU accelerator telemetry."""
-
-    name: str = Field(default="Unknown GPU", description="GPU device model name")
-    load_percent: Optional[float] = Field(default=None, description="GPU core load percentage")
-    memory_total_gb: float = Field(default=0.0, description="Total VRAM in GB")
-    memory_used_gb: float = Field(default=0.0, description="Used VRAM in GB")
-    memory_free_gb: float = Field(default=0.0, description="Free VRAM in GB")
-    temperature_celsius: Optional[float] = Field(default=None, description="GPU core temperature in Celsius")
-    has_cuda: bool = Field(default=False, description="CUDA support availability")
-    has_directml: bool = Field(default=False, description="DirectML accelerator availability")
-
+    name: str = Field(default='Unknown GPU', description='GPU device model name')
+    load_percent: Optional[float] = Field(default=None, description='GPU core load percentage')
+    memory_total_gb: float = Field(default=0.0, description='Total VRAM in GB')
+    memory_used_gb: float = Field(default=0.0, description='Used VRAM in GB')
+    memory_free_gb: float = Field(default=0.0, description='Free VRAM in GB')
+    temperature_celsius: Optional[float] = Field(default=None, description='GPU core temperature in Celsius')
+    has_cuda: bool = Field(default=False, description='CUDA support availability')
+    has_directml: bool = Field(default=False, description='DirectML accelerator availability')
 
 class DiskPartitionMetrics(BaseModel):
     """Storage partition metrics."""
-
-    device: str = Field(default="", description="Partition mount device or drive letter")
-    mountpoint: str = Field(default="", description="Mount point path")
-    fstype: str = Field(default="", description="Filesystem type")
-    total_gb: float = Field(default=0.0, description="Total capacity in GB")
-    used_gb: float = Field(default=0.0, description="Used space in GB")
-    free_gb: float = Field(default=0.0, description="Free space in GB")
-    percent: float = Field(default=0.0, description="Utilization percentage")
-    volume_name: Optional[str] = Field(default=None, description="Метка тома или описание аккаунта")
-    is_virtual: bool = Field(default=False, description="Признак виртуального/облачного тома (Google Drive, OneDrive и др.)")
-    drive_type: str = Field(default="Fixed", description="Тип диска (Fixed, Google Drive, Cloud / Virtual, Removable)")
-
+    device: str = Field(default='', description='Partition mount device or drive letter')
+    mountpoint: str = Field(default='', description='Mount point path')
+    fstype: str = Field(default='', description='Filesystem type')
+    total_gb: float = Field(default=0.0, description='Total capacity in GB')
+    used_gb: float = Field(default=0.0, description='Used space in GB')
+    free_gb: float = Field(default=0.0, description='Free space in GB')
+    percent: float = Field(default=0.0, description='Utilization percentage')
+    volume_name: Optional[str] = Field(default=None, description='Метка тома или описание аккаунта')
+    is_virtual: bool = Field(default=False, description='Признак виртуального/облачного тома (Google Drive, OneDrive и др.)')
+    drive_type: str = Field(default='Fixed', description='Тип диска (Fixed, Google Drive, Cloud / Virtual, Removable)')
 
 class DiskIoMetrics(BaseModel):
     """Disk read and write I/O rates."""
+    read_bytes_per_sec: float = Field(default=0.0, description='Read throughput in bytes/s')
+    write_bytes_per_sec: float = Field(default=0.0, description='Write throughput in bytes/s')
+    read_count_per_sec: float = Field(default=0.0, description='Read operations per second')
+    write_count_per_sec: float = Field(default=0.0, description='Write operations per second')
 
-    read_bytes_per_sec: float = Field(default=0.0, description="Read throughput in bytes/s")
-    write_bytes_per_sec: float = Field(default=0.0, description="Write throughput in bytes/s")
-    read_count_per_sec: float = Field(default=0.0, description="Read operations per second")
-    write_count_per_sec: float = Field(default=0.0, description="Write operations per second")
+class NetworkAdapterStatistics(BaseModel):
+    """Накопительная статистика сетевого адаптера (Get-NetAdapterStatistics / MIB_IF_ROW2)."""
+    name: str = Field(default='', description='Имя адаптера/интерфейса')
+    received_bytes: int = Field(default=0, description='Всего получено байт')
+    sent_bytes: int = Field(default=0, description='Всего отправлено байт')
+    received_packets: int = Field(default=0, description='Всего получено пакетов')
+    sent_packets: int = Field(default=0, description='Всего отправлено пакетов')
+    received_discarded: int = Field(default=0, description='Отброшено входящих пакетов')
+    received_errors: int = Field(default=0, description='Ошибок входящих пакетов')
+    outbound_discarded: int = Field(default=0, description='Отброшено исходящих пакетов')
+    outbound_errors: int = Field(default=0, description='Ошибок исходящих пакетов')
 
+class NetworkPerformanceCounter(BaseModel):
+    """Счётчики производительности интерфейса (Windows Performance Counters)."""
+    interface_name: str = Field(default='', description='Имя сетевого интерфейса в Performance Counters')
+    bytes_recv_per_sec: float = Field(default=0.0, description='Скорость получения (байты/сек)')
+    bytes_sent_per_sec: float = Field(default=0.0, description='Скорость отправки (байты/сек)')
+    bytes_total_per_sec: float = Field(default=0.0, description='Суммарная скорость (байты/сек)')
+
+class AppNetworkUsageItem(BaseModel):
+    """Потребление сетевого трафика конкретным приложением/процессом."""
+    process_name: str = Field(default='', description='Имя исполняемого файла процесса (например, chrome.exe)')
+    pid: Optional[int] = Field(default=None, description='Идентификатор процесса (если активен)')
+    rx_bytes: int = Field(default=0, description='Получено байт за период')
+    tx_bytes: int = Field(default=0, description='Отправлено байт за период')
+    total_bytes: int = Field(default=0, description='Всего переданного трафика в байтах')
+    rx_formatted: str = Field(default='0 B', description='Отформатированный объем полученных данных (MB/GB)')
+    tx_formatted: str = Field(default='0 B', description='Отформатированный объем отправленных данных (MB/GB)')
+    share_percent: float = Field(default=0.0, description='Доля трафика от общего объема системы (%)')
+
+class NetworkUsagePeriodReport(BaseModel):
+    """Агрегированный отчет об использовании сети за выбранный интервал времени (10 мин, 1 час, 24 часа)."""
+    period_minutes: int = Field(default=1440, description='Длительность периода в минутах (например, 1440 = 24 часа)')
+    total_rx_bytes: int = Field(default=0, description='Суммарно получено байт за период')
+    total_tx_bytes: int = Field(default=0, description='Суммарно отправлено байт за период')
+    total_rx_formatted: str = Field(default='0 B', description='Человекочитаемый объем входящего трафика')
+    total_tx_formatted: str = Field(default='0 B', description='Человекочитаемый объем исходящего трафика')
+    total_formatted: str = Field(default='0 B', description='Суммарный объем трафика (RX + TX)')
+    adapter_stats: List[NetworkAdapterStatistics] = Field(default_factory=list, description='Статистика по адаптерам')
+    performance_counters: List[NetworkPerformanceCounter] = Field(default_factory=list, description='Текущие Performance Counters')
+    top_apps: List[AppNetworkUsageItem] = Field(default_factory=list, description='Детализация по приложениям за период')
+    summary_text: str = Field(default='', description='Сводный текстовый отчёт для LLM/ai-diagnostics')
 
 class NetworkInterfaceMetrics(BaseModel):
     """Network adapter telemetry."""
-
-    name: str = Field(default="", description="Adapter interface name")
-    is_up: bool = Field(default=True, description="Interface link status")
-    speed_mbps: int = Field(default=0, description="Link speed in Mbps")
-    bytes_sent_per_sec: float = Field(default=0.0, description="Upload rate in bytes/s")
-    bytes_recv_per_sec: float = Field(default=0.0, description="Download rate in bytes/s")
-    ip_addresses: List[str] = Field(default_factory=list, description="Assigned IP addresses")
-
+    name: str = Field(default='', description='Adapter interface name')
+    is_up: bool = Field(default=True, description='Interface link status')
+    speed_mbps: int = Field(default=0, description='Link speed in Mbps')
+    bytes_sent_per_sec: float = Field(default=0.0, description='Upload rate in bytes/s')
+    bytes_recv_per_sec: float = Field(default=0.0, description='Download rate in bytes/s')
+    ip_addresses: List[str] = Field(default_factory=list, description='Assigned IP addresses')
+    statistics: Optional[NetworkAdapterStatistics] = Field(default=None, description='Накопительная статистика адаптера')
 
 class ProcessMetrics(BaseModel):
     """Per-process telemetry item (Wireshark-style stream row)."""
+    pid: int = Field(..., description='Process identifier')
+    name: str = Field(..., description='Process binary name')
+    status: str = Field(default='running', description='Process execution status')
+    cpu_percent: float = Field(default=0.0, description='CPU usage percentage')
+    memory_mb: float = Field(default=0.0, description='Resident memory in Megabytes')
+    memory_percent: float = Field(default=0.0, description='Memory usage percentage')
+    num_threads: int = Field(default=1, description='Number of active threads')
+    num_handles: int = Field(default=0, description='Количество дескрипторов (handles/fds)')
+    username: Optional[str] = Field(default=None, description='Owner username')
+    cmdline: Optional[str] = Field(default=None, description='Command line invocation')
+    read_bytes_sec: float = Field(default=0.0, description='Disk read rate in bytes/sec')
+    write_bytes_sec: float = Field(default=0.0, description='Disk write rate in bytes/sec')
+    # Новые поля токена процесса
+    integrity_level: Optional[str] = Field(default=None, description='Уровень целостности процесса')
+    elevation: Optional[bool] = Field(default=None, description='Статус повышения привилегий UAC')
 
-    pid: int = Field(..., description="Process identifier")
-    name: str = Field(..., description="Process binary name")
-    status: str = Field(default="running", description="Process execution status")
-    cpu_percent: float = Field(default=0.0, description="CPU usage percentage")
-    memory_mb: float = Field(default=0.0, description="Resident memory in Megabytes")
-    memory_percent: float = Field(default=0.0, description="Memory usage percentage")
-    num_threads: int = Field(default=1, description="Number of active threads")
-    num_handles: int = Field(default=0, description="Количество дескрипторов (handles/fds)")
-    username: Optional[str] = Field(default=None, description="Owner username")
-    cmdline: Optional[str] = Field(default=None, description="Command line invocation")
-    read_bytes_sec: float = Field(default=0.0, description="Disk read rate in bytes/sec")
-    write_bytes_sec: float = Field(default=0.0, description="Disk write rate in bytes/sec")
 
 
+class ProcessTokenInfo(BaseModel):
+    """Информация о токене процесса для сбора security‑данных."""
+    pid: int = Field(..., description='Идентификатор процесса')
+    name: str = Field(..., description='Имя процесса')
+    elevation: Optional[bool] = Field(default=None, description='Признак повышения привилегий (UAC)')
+    integrity_level: Optional[str] = Field(default=None, description='Уровень целостности процесса')
+    privileges: List[str] = Field(default_factory=list, description='Список привилегий токена')
 class BatteryMetrics(BaseModel):
     """Battery and power state telemetry."""
+    has_battery: bool = Field(default=False, description='Whether host has battery power')
+    percent: Optional[float] = Field(default=None, description='Battery charge percentage')
+    power_plugged: Optional[bool] = Field(default=None, description='Whether AC power is connected')
+    secs_left: Optional[int] = Field(default=None, description='Seconds of battery remaining')
+    power_profile: str = Field(default='Balanced', description='Active Windows power scheme')
 
-    has_battery: bool = Field(default=False, description="Whether host has battery power")
-    percent: Optional[float] = Field(default=None, description="Battery charge percentage")
-    power_plugged: Optional[bool] = Field(default=None, description="Whether AC power is connected")
-    secs_left: Optional[int] = Field(default=None, description="Seconds of battery remaining")
-    power_profile: str = Field(default="Balanced", description="Active Windows power scheme")
+
 
 
 class PhysicalDiskHealth(BaseModel):
     """Physical drive SMART and health telemetry."""
-
-    device_id: str = Field(default="", description="Drive identifier or disk index")
-    model: str = Field(default="Physical Drive", description="Drive model name")
-    media_type: str = Field(default="SSD", description="Media type (NVMe, SSD, HDD)")
-    size_gb: float = Field(default=0.0, description="Drive total capacity in GB")
-    health_status: str = Field(default="Healthy", description="Drive health status (Healthy, Warning, Unhealthy)")
-    operational_status: str = Field(default="OK", description="Operational status")
-    temperature_celsius: Optional[float] = Field(default=None, description="Drive temperature if available")
-    interface_type: Optional[str] = Field(default=None, description="Drive interface or bus type (NVMe, SATA, USB, etc.)")
-
+    device_id: str = Field(default='', description='Drive identifier or disk index')
+    model: str = Field(default='Physical Drive', description='Drive model name')
+    media_type: str = Field(default='SSD', description='Media type (NVMe, SSD, HDD)')
+    size_gb: float = Field(default=0.0, description='Drive total capacity in GB')
+    health_status: str = Field(default='Healthy', description='Drive health status (Healthy, Warning, Unhealthy)')
+    operational_status: str = Field(default='OK', description='Operational status')
+    temperature_celsius: Optional[float] = Field(default=None, description='Drive temperature if available')
+    interface_type: Optional[str] = Field(default=None, description='Drive interface or bus type (NVMe, SATA, USB, etc.)')
 
 class RamStickInfo(BaseModel):
     """Physical RAM stick SPD details."""
-
-    bank_label: str = Field(default="DIMM", description="Memory slot label")
-    capacity_gb: float = Field(default=0.0, description="Module capacity in GB")
-    speed_mhz: int = Field(default=0, description="Configured clock speed in MHz/MTs")
-    manufacturer: str = Field(default="Generic", description="Memory manufacturer")
-    part_number: str = Field(default="", description="Module part number")
-    memory_type: str = Field(default="DDR4/DDR5", description="Memory technology type")
-
+    bank_label: str = Field(default='DIMM', description='Memory slot label')
+    capacity_gb: float = Field(default=0.0, description='Module capacity in GB')
+    speed_mhz: int = Field(default=0, description='Configured clock speed in MHz/MTs')
+    manufacturer: str = Field(default='Generic', description='Memory manufacturer')
+    part_number: str = Field(default='', description='Module part number')
+    memory_type: str = Field(default='DDR4/DDR5', description='Memory technology type')
 
 class NetworkPortMetrics(BaseModel):
     """Active listening TCP/UDP port item."""
-
-    port: int = Field(..., description="Listening port number")
-    protocol: str = Field(default="TCP", description="Protocol: TCP / UDP")
-    address: str = Field(default="0.0.0.0", description="Bind IP address")
-    pid: Optional[int] = Field(default=None, description="Owning process PID")
-    process_name: Optional[str] = Field(default=None, description="Owning process executable name")
-
+    port: int = Field(..., description='Listening port number')
+    protocol: str = Field(default='TCP', description='Protocol: TCP / UDP')
+    address: str = Field(default='0.0.0.0', description='Bind IP address')
+    pid: Optional[int] = Field(default=None, description='Owning process PID')
+    process_name: Optional[str] = Field(default=None, description='Owning process executable name')
 
 class ProcessNetworkActivity(BaseModel):
     """Сетевая активность процесса (интернет-соединения, отправка и прием трафика)."""
-
-    pid: int = Field(default=0, description="Process ID")
-    name: str = Field(default="", description="Process executable name")
-    user: str = Field(default="", description="Process owner username")
-    local_address: str = Field(default="", description="Local IP:Port")
-    remote_address: str = Field(default="", description="Remote IP:Port")
-    remote_host: Optional[str] = Field(default=None, description="Resolved remote hostname or service name")
-    protocol: str = Field(default="TCP", description="Protocol: TCP / UDP")
-    status: str = Field(default="ESTABLISHED", description="Connection state (ESTABLISHED, LISTEN, etc.)")
-    is_internet: bool = Field(default=True, description="Whether remote address is external Internet vs local loopback")
-    service_type: str = Field(default="Web/HTTPS", description="Recognized protocol service: HTTPS, HTTP, DNS, Cloud Sync, etc.")
-    sent_kb: float = Field(default=0.0, description="Всего отправлено/записано процессом (КБ)")
-    recv_kb: float = Field(default=0.0, description="Всего получено/скачано/прочитано процессом (КБ)")
-    delta_sent_kb: float = Field(default=0.0, description="Объем отправленных данных за последний измеряемый период (КБ)")
-    delta_recv_kb: float = Field(default=0.0, description="Объем скачанных/полученных данных за последний измеряемый период (КБ)")
-    sent_rate_kbs: float = Field(default=0.0, description="Скорость отдачи/отправки данных (КБ/с)")
-    recv_rate_kbs: float = Field(default=0.0, description="Скорость скачивания/приема данных (КБ/с)")
-    sent_summary: str = Field(default="", description="Человекопонятное описание отправляемого (что шлет)")
-    recv_summary: str = Field(default="", description="Человекопонятное описание принимаемого (что принимает)")
-
+    pid: int = Field(default=0, description='Process ID')
+    name: str = Field(default='', description='Process executable name')
+    user: str = Field(default='', description='Process owner username')
+    local_address: str = Field(default='', description='Local IP:Port')
+    remote_address: str = Field(default='', description='Remote IP:Port')
+    remote_host: Optional[str] = Field(default=None, description='Resolved remote hostname or service name')
+    protocol: str = Field(default='TCP', description='Protocol: TCP / UDP')
+    status: str = Field(default='ESTABLISHED', description='Connection state (ESTABLISHED, LISTEN, etc.)')
+    is_internet: bool = Field(default=True, description='Whether remote address is external Internet vs local loopback')
+    service_type: str = Field(default='Web/HTTPS', description='Recognized protocol service: HTTPS, HTTP, DNS, Cloud Sync, etc.')
+    sent_kb: float = Field(default=0.0, description='Всего отправлено/записано процессом (КБ)')
+    recv_kb: float = Field(default=0.0, description='Всего получено/скачано/прочитано процессом (КБ)')
+    delta_sent_kb: float = Field(default=0.0, description='Объем отправленных данных за последний измеряемый период (КБ)')
+    delta_recv_kb: float = Field(default=0.0, description='Объем скачанных/полученных данных за последний измеряемый период (КБ)')
+    sent_rate_kbs: float = Field(default=0.0, description='Скорость отдачи/отправки данных (КБ/с)')
+    recv_rate_kbs: float = Field(default=0.0, description='Скорость скачивания/приема данных (КБ/с)')
+    sent_summary: str = Field(default='', description='Человекопонятное описание отправляемого (что шлет)')
+    recv_summary: str = Field(default='', description='Человекопонятное описание принимаемого (что принимает)')
 
 class SystemHealthAlerts(BaseModel):
     """System reliability and event log alerts."""
-
-    reboot_pending: bool = Field(default=False, description="Whether a system reboot is pending")
-    critical_events_count: int = Field(default=0, description="Critical event logs in last 24h")
-    latest_alert: str = Field(default="Система стабильна", description="Summary of latest health event")
-
+    reboot_pending: bool = Field(default=False, description='Whether a system reboot is pending')
+    critical_events_count: int = Field(default=0, description='Critical event logs in last 24h')
+    latest_alert: str = Field(default='Система стабильна', description='Summary of latest health event')
 
 class HardwareSensor(BaseModel):
     """Hardware sensor reading (AIDA64 style)."""
-
-    sensor_id: str = Field(..., description="Unique sensor identifier")
-    name: str = Field(..., description="Human readable sensor name")
-    category: str = Field(default="temperature", description="Category: temperature, fan, voltage, power")
-    value: float = Field(..., description="Current numeric sensor reading")
-    unit: str = Field(default="°C", description="Measurement unit")
-    min_value: Optional[float] = Field(default=None, description="Recorded minimum")
-    max_value: Optional[float] = Field(default=None, description="Recorded maximum")
-
+    sensor_id: str = Field(..., description='Unique sensor identifier')
+    name: str = Field(..., description='Human readable sensor name')
+    category: str = Field(default='temperature', description='Category: temperature, fan, voltage, power')
+    value: float = Field(..., description='Current numeric sensor reading')
+    unit: str = Field(default='°C', description='Measurement unit')
+    min_value: Optional[float] = Field(default=None, description='Recorded minimum')
+    max_value: Optional[float] = Field(default=None, description='Recorded maximum')
 
 class HardwareNode(BaseModel):
     """AIDA64-like hardware component tree item."""
-
-    category: str = Field(..., description="Component category (Motherboard, CPU, GPU, Memory, Storage)")
-    name: str = Field(..., description="Device or component name")
-    properties: Dict[str, Any] = Field(default_factory=dict, description="Detailed hardware properties")
-    children: List[HardwareNode] = Field(default_factory=list, description="Sub-components or devices")
-
+    category: str = Field(..., description='Component category (Motherboard, CPU, GPU, Memory, Storage)')
+    name: str = Field(..., description='Device or component name')
+    properties: Dict[str, Any] = Field(default_factory=dict, description='Detailed hardware properties')
+    children: List[HardwareNode] = Field(default_factory=list, description='Sub-components or devices')
 
 class MonitorInfo(BaseModel):
     """Connected display monitor details."""
-
-    device: str = Field(default="", description="Display device name (e.g. \\\\.\\DISPLAY1)")
-    name: str = Field(default="Monitor", description="Friendly monitor name or model")
-    adapter: str = Field(default="", description="Display adapter name")
-    width: int = Field(default=1920, description="Display resolution width")
-    height: int = Field(default=1080, description="Display resolution height")
-    frequency_hz: int = Field(default=60, description="Refresh rate in Hz")
-    bits_per_pixel: int = Field(default=32, description="Color bit depth")
-    is_primary: bool = Field(default=False, description="Whether this is the primary display")
-
+    device: str = Field(default='', description='Display device name (e.g. \\\\.\\DISPLAY1)')
+    name: str = Field(default='Monitor', description='Friendly monitor name or model')
+    adapter: str = Field(default='', description='Display adapter name')
+    width: int = Field(default=1920, description='Display resolution width')
+    height: int = Field(default=1080, description='Display resolution height')
+    frequency_hz: int = Field(default=60, description='Refresh rate in Hz')
+    bits_per_pixel: int = Field(default=32, description='Color bit depth')
+    is_primary: bool = Field(default=False, description='Whether this is the primary display')
 
 class WindowsUpdateInfo(BaseModel):
     """Windows Update status and recent hotfixes."""
-
-    status: str = Field(default="Up to date", description="Overall update status")
-    installed_kb_count: int = Field(default=0, description="Total installed KBs")
-    recent_hotfixes: List[str] = Field(default_factory=list, description="Recent KB identifiers")
-    latest_installed_on: Optional[str] = Field(default=None, description="Date of most recent update")
-
+    status: str = Field(default='Up to date', description='Overall update status')
+    installed_kb_count: int = Field(default=0, description='Total installed KBs')
+    recent_hotfixes: List[str] = Field(default_factory=list, description='Recent KB identifiers')
+    latest_installed_on: Optional[str] = Field(default=None, description='Date of most recent update')
 
 class OfficeSuiteInfo(BaseModel):
     """Microsoft Office and productivity suite detection telemetry."""
-
-    installed: bool = Field(default=False, description="Whether an Office suite is installed")
-    product_name: Optional[str] = Field(default=None, description="Product suite name (e.g. Microsoft 365, Office 2021)")
-    version: Optional[str] = Field(default=None, description="Office suite release version string")
-    publisher: Optional[str] = Field(default=None, description="Software vendor/publisher name")
-    status: str = Field(default="Не установлен", description="Human-readable office status summary")
-
+    installed: bool = Field(default=False, description='Whether an Office suite is installed')
+    product_name: Optional[str] = Field(default=None, description='Product suite name (e.g. Microsoft 365, Office 2021)')
+    version: Optional[str] = Field(default=None, description='Office suite release version string')
+    publisher: Optional[str] = Field(default=None, description='Software vendor/publisher name')
+    status: str = Field(default='Не установлен', description='Human-readable office status summary')
 
 class CloudStorageInfo(BaseModel):
     """Cloud drive and synchronization storage telemetry (OneDrive)."""
-
-    installed: bool = Field(default=False, description="Whether cloud storage drive is detected and active")
-    name: str = Field(default="OneDrive", description="Cloud storage service name")
-    path: Optional[str] = Field(default=None, description="Local synchronized root folder path")
-    total_gb: Optional[float] = Field(default=None, description="Total storage volume capacity in GB")
-    used_gb: Optional[float] = Field(default=None, description="Used space in GB")
-    free_gb: Optional[float] = Field(default=None, description="Free available space in GB")
-    percent_used: Optional[float] = Field(default=None, description="Storage disk utilization percentage")
-    status: str = Field(default="Не настроено", description="Human-readable cloud storage status")
-
+    installed: bool = Field(default=False, description='Whether cloud storage drive is detected and active')
+    name: str = Field(default='OneDrive', description='Cloud storage service name')
+    path: Optional[str] = Field(default=None, description='Local synchronized root folder path')
+    total_gb: Optional[float] = Field(default=None, description='Total storage volume capacity in GB')
+    used_gb: Optional[float] = Field(default=None, description='Used space in GB')
+    free_gb: Optional[float] = Field(default=None, description='Free available space in GB')
+    percent_used: Optional[float] = Field(default=None, description='Storage disk utilization percentage')
+    status: str = Field(default='Не настроено', description='Human-readable cloud storage status')
 
 class SystemSnapshot(BaseModel):
     """Complete system and hardware telemetry snapshot."""
-
-    timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
-        description="ISO 8601 UTC timestamp of snapshot",
-    )
-    hostname: str = Field(default="", description="Machine host name")
-    username: str = Field(default="", description="Current logged in username")
-    os_name: str = Field(default="Windows", description="Operating system name and version")
-    os_build: str = Field(default="", description="Operating system build number")
-    system_language: str = Field(default="", description="System UI language")
-    user_locale: str = Field(default="", description="User locale")
-    system_locale: str = Field(default="", description="System locale")
-    timezone: str = Field(default="", description="System timezone")
-    codepage: str = Field(default="", description="Active system code pages")
-    input_languages: List[str] = Field(default_factory=list, description="Installed keyboard input layouts")
-    os_install_date: str = Field(default="", description="Operating system installation date")
-    uptime_seconds: float = Field(default=0.0, description="System uptime in seconds")
-    cpu: CpuMetrics = Field(default_factory=CpuMetrics, description="CPU metrics")
-    memory: MemoryMetrics = Field(default_factory=MemoryMetrics, description="RAM and Swap metrics")
-    ram_sticks: List[RamStickInfo] = Field(default_factory=list, description="Installed physical RAM modules")
-    gpus: List[GpuMetrics] = Field(default_factory=list, description="Detected GPU accelerators")
-    monitors: List[MonitorInfo] = Field(default_factory=list, description="Connected display monitors")
-    updates: WindowsUpdateInfo = Field(default_factory=WindowsUpdateInfo, description="Windows Update information")
-    office: OfficeSuiteInfo = Field(default_factory=OfficeSuiteInfo, description="Office suite telemetry")
-    onedrive: CloudStorageInfo = Field(default_factory=CloudStorageInfo, description="OneDrive cloud storage telemetry")
-    disks: List[DiskPartitionMetrics] = Field(default_factory=list, description="Disk partitions")
-    physical_disks: List[PhysicalDiskHealth] = Field(default_factory=list, description="Physical storage disks and SMART health")
-    disk_io: DiskIoMetrics = Field(default_factory=DiskIoMetrics, description="Aggregate disk I/O rates")
-    network: List[NetworkInterfaceMetrics] = Field(default_factory=list, description="Network interfaces")
-    listening_ports: List[NetworkPortMetrics] = Field(default_factory=list, description="Active listening ports and sockets")
-    network_activity: List[ProcessNetworkActivity] = Field(default_factory=list, description="Сетевая активность программ (соединения и трафик)")
-    battery: BatteryMetrics = Field(default_factory=BatteryMetrics, description="Battery and power state")
-    alerts: SystemHealthAlerts = Field(default_factory=SystemHealthAlerts, description="System health and reliability alerts")
-    sensors: List[HardwareSensor] = Field(default_factory=list, description="Hardware sensor readings")
-    top_processes: List[ProcessMetrics] = Field(default_factory=list, description="Top active processes")
-
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='ISO 8601 UTC timestamp of snapshot')
+    hostname: str = Field(default='', description='Machine host name')
+    username: str = Field(default='', description='Current logged in username')
+    os_name: str = Field(default='Windows', description='Operating system name and version')
+    os_build: str = Field(default='', description='Operating system build number')
+    system_language: str = Field(default='', description='System UI language')
+    user_locale: str = Field(default='', description='User locale')
+    system_locale: str = Field(default='', description='System locale')
+    timezone: str = Field(default='', description='System timezone')
+    codepage: str = Field(default='', description='Active system code pages')
+    input_languages: List[str] = Field(default_factory=list, description='Installed keyboard input layouts')
+    os_install_date: str = Field(default='', description='Operating system installation date')
+    uptime_seconds: float = Field(default=0.0, description='System uptime in seconds')
+    cpu: CpuMetrics = Field(default_factory=CpuMetrics, description='CPU metrics')
+    memory: MemoryMetrics = Field(default_factory=MemoryMetrics, description='RAM and Swap metrics')
+    ram_sticks: List[RamStickInfo] = Field(default_factory=list, description='Installed physical RAM modules')
+    gpus: List[GpuMetrics] = Field(default_factory=list, description='Detected GPU accelerators')
+    monitors: List[MonitorInfo] = Field(default_factory=list, description='Connected display monitors')
+    updates: WindowsUpdateInfo = Field(default_factory=WindowsUpdateInfo, description='Windows Update information')
+    office: OfficeSuiteInfo = Field(default_factory=OfficeSuiteInfo, description='Office suite telemetry')
+    onedrive: CloudStorageInfo = Field(default_factory=CloudStorageInfo, description='OneDrive cloud storage telemetry')
+    disks: List[DiskPartitionMetrics] = Field(default_factory=list, description='Disk partitions')
+    physical_disks: List[PhysicalDiskHealth] = Field(default_factory=list, description='Physical storage disks and SMART health')
+    disk_io: DiskIoMetrics = Field(default_factory=DiskIoMetrics, description='Aggregate disk I/O rates')
+    network: List[NetworkInterfaceMetrics] = Field(default_factory=list, description='Network interfaces')
+    listening_ports: List[NetworkPortMetrics] = Field(default_factory=list, description='Active listening ports and sockets')
+    network_activity: List[ProcessNetworkActivity] = Field(default_factory=list, description='Сетевая активность программ (соединения и трафик)')
+    battery: BatteryMetrics = Field(default_factory=BatteryMetrics, description='Battery and power state')
+    alerts: SystemHealthAlerts = Field(default_factory=SystemHealthAlerts, description='System health and reliability alerts')
+    sensors: List[HardwareSensor] = Field(default_factory=list, description='Hardware sensor readings')
+    top_processes: List[ProcessMetrics] = Field(default_factory=list, description='Top active processes')
 
 class AnomalyItem(BaseModel):
     """Specific detected anomaly or performance bottleneck."""
-
-    subsystem: str = Field(..., description="Subsystem (CPU, RAM, GPU, Disk, Network, Process)")
-    severity: str = Field(default="warning", description="Severity level: info, warning, critical")
-    title: str = Field(..., description="Brief anomaly summary")
-    description: str = Field(..., description="Detailed diagnostic description")
-
+    subsystem: str = Field(..., description='Subsystem (CPU, RAM, GPU, Disk, Network, Process)')
+    severity: str = Field(default='warning', description='Severity level: info, warning, critical')
+    title: str = Field(..., description='Brief anomaly summary')
+    description: str = Field(..., description='Detailed diagnostic description')
 
 class SystemDiagnosticReport(BaseModel):
     """AI-powered diagnostic audit report."""
-
-    timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
-        description="Audit timestamp",
-    )
-    health_score: int = Field(default=100, description="System health score (0-100)")
-    summary: str = Field(..., description="High-level health and performance summary")
-    anomalies: List[AnomalyItem] = Field(default_factory=list, description="List of detected anomalies")
-    recommendations: List[str] = Field(default_factory=list, description="Actionable optimization suggestions")
-    ai_model_used: str = Field(default="heuristic", description="AI Model identifier or heuristic engine")
-    system_instruction: Optional[str] = Field(default=None, description="System instruction used for AI model")
-    generated_prompt: Optional[str] = Field(default=None, description="Exact prompt sent to AI model")
-    raw_response: Optional[str] = Field(default=None, description="Raw response text from AI provider")
-    error: Optional[str] = Field(default=None, description="Error details if inference failed")
-    stages: List[Dict[str, Any]] = Field(default_factory=list, description="Step-by-step audit stages")
-
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='Audit timestamp')
+    health_score: int = Field(default=100, description='System health score (0-100)')
+    summary: str = Field(..., description='High-level health and performance summary')
+    anomalies: List[AnomalyItem] = Field(default_factory=list, description='List of detected anomalies')
+    recommendations: List[str] = Field(default_factory=list, description='Actionable optimization suggestions')
+    ai_model_used: str = Field(default='heuristic', description='AI Model identifier or heuristic engine')
+    system_instruction: Optional[str] = Field(default=None, description='System instruction used for AI model')
+    generated_prompt: Optional[str] = Field(default=None, description='Exact prompt sent to AI model')
+    raw_response: Optional[str] = Field(default=None, description='Raw response text from AI provider')
+    error: Optional[str] = Field(default=None, description='Error details if inference failed')
+    stages: List[Dict[str, Any]] = Field(default_factory=list, description='Step-by-step audit stages')
 
 class DriverInfo(BaseModel):
     """Сведения об установленном драйвере устройства и его актуальности."""
-
-    name: str = Field(default="", description="Имя драйвера или сервиса")
-    driver_version: str = Field(default="", description="Версия установленного драйвера")
-    driver_date: Optional[str] = Field(default=None, description="Дата релиза драйвера (ISO или YYYY-MM-DD)")
-    provider: str = Field(default="Unknown", description="Поставщик драйвера (NVIDIA, Intel, Microsoft и др.)")
-    inf_name: Optional[str] = Field(default=None, description="Имя INF-файла драйвера (oem*.inf)")
-    is_signed: bool = Field(default=True, description="Наличие цифровой подписи WHQL")
-    is_inbox: bool = Field(default=False, description="Является ли драйвер стандартным (inbox) от Microsoft")
-    age_days: Optional[int] = Field(default=None, description="Возраст драйвера в днях")
-    currency_status: str = Field(default="Актуален", description="Статус актуальности: Актуален, Устарел, Базовый драйвер ОС")
-
+    name: str = Field(default='', description='Имя драйвера или сервиса')
+    driver_version: str = Field(default='', description='Версия установленного драйвера')
+    driver_date: Optional[str] = Field(default=None, description='Дата релиза драйвера (ISO или YYYY-MM-DD)')
+    provider: str = Field(default='Unknown', description='Поставщик драйвера (NVIDIA, Intel, Microsoft и др.)')
+    inf_name: Optional[str] = Field(default=None, description='Имя INF-файла драйвера (oem*.inf)')
+    is_signed: bool = Field(default=True, description='Наличие цифровой подписи WHQL')
+    is_inbox: bool = Field(default=False, description='Является ли драйвер стандартным (inbox) от Microsoft')
+    age_days: Optional[int] = Field(default=None, description='Возраст драйвера в днях')
+    currency_status: str = Field(default='Актуален', description='Статус актуальности: Актуален, Устарел, Базовый драйвер ОС')
 
 class HardwareDeviceAudit(BaseModel):
     """Единица аудита аппаратного устройства с драйверами, датами и сенсорами."""
-
-    device_id: str = Field(..., description="Уникальный идентификатор инстанса устройства (PnP Instance ID)")
-    name: str = Field(..., description="Понятное наименование устройства")
-    device_class: str = Field(default="Device", description="Класс устройства (Display, Processor, Net, DiskDrive и др.)")
-    manufacturer: str = Field(default="Unknown", description="Производитель оборудования")
-    install_date: Optional[str] = Field(default=None, description="Дата первой/текущей установки устройства в системе")
-    status: str = Field(default="OK", description="Рабочий статус устройства (OK, Problem, Error, Disabled)")
-    problem_code: int = Field(default=0, description="Код ошибки PnP (0 если исправно, 10, 43, 28 при сбое)")
-    driver: Optional[DriverInfo] = Field(default=None, description="Сведения об используемом драйвере")
-    sensors: List[HardwareSensor] = Field(default_factory=list, description="Сенсоры, привязанные к данному оборудованию")
-    properties: Dict[str, Any] = Field(default_factory=dict, description="Дополнительные аппаратные параметры")
-
+    device_id: str = Field(..., description='Уникальный идентификатор инстанса устройства (PnP Instance ID)')
+    name: str = Field(..., description='Понятное наименование устройства')
+    device_class: str = Field(default='Device', description='Класс устройства (Display, Processor, Net, DiskDrive и др.)')
+    manufacturer: str = Field(default='Unknown', description='Производитель оборудования')
+    install_date: Optional[str] = Field(default=None, description='Дата первой/текущей установки устройства в системе')
+    status: str = Field(default='OK', description='Рабочий статус устройства (OK, Problem, Error, Disabled)')
+    problem_code: int = Field(default=0, description='Код ошибки PnP (0 если исправно, 10, 43, 28 при сбое)')
+    driver: Optional[DriverInfo] = Field(default=None, description='Сведения об используемом драйвере')
+    sensors: List[HardwareSensor] = Field(default_factory=list, description='Сенсоры, привязанные к данному оборудованию')
+    properties: Dict[str, Any] = Field(default_factory=dict, description='Дополнительные аппаратные параметры')
 
 class HardwareChangeItem(BaseModel):
     """Зафиксированное изменение в аппаратной конфигурации или драйверах."""
-
-    change_type: str = Field(..., description="Тип изменения: added, removed, driver_updated, status_changed, hardware_altered")
-    device_id: str = Field(..., description="Идентификатор затронутого устройства")
-    device_name: str = Field(..., description="Наименование устройства")
-    description: str = Field(..., description="Подробное описание изменения на русском языке")
-    previous_value: Optional[Dict[str, Any]] = Field(default=None, description="Предыдущее состояние параметра")
-    current_value: Optional[Dict[str, Any]] = Field(default=None, description="Новое состояние параметра")
-    timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
-        description="Временная метка обнаружения изменения",
-    )
-
+    change_type: str = Field(..., description='Тип изменения: added, removed, driver_updated, status_changed, hardware_altered')
+    device_id: str = Field(..., description='Идентификатор затронутого устройства')
+    device_name: str = Field(..., description='Наименование устройства')
+    description: str = Field(..., description='Подробное описание изменения на русском языке')
+    previous_value: Optional[Dict[str, Any]] = Field(default=None, description='Предыдущее состояние параметра')
+    current_value: Optional[Dict[str, Any]] = Field(default=None, description='Новое состояние параметра')
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='Временная метка обнаружения изменения')
 
 class HardwareAuditReport(BaseModel):
     """Полный отчет аудита аппаратного обеспечения с привязкой сенсоров и драйверов."""
-
-    timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
-        description="Время проведения аудита (UTC)",
-    )
-    devices_count: int = Field(default=0, description="Общее количество обнаруженных устройств")
-    problem_devices_count: int = Field(default=0, description="Количество устройств с ошибками PnP")
-    outdated_drivers_count: int = Field(default=0, description="Количество устройств с устаревшими драйверами")
-    devices: List[HardwareDeviceAudit] = Field(default_factory=list, description="Список проаудированных устройств")
-    summary: str = Field(default="", description="Сводка состояния аппаратной части")
-    changes_since_last_archive: List[HardwareChangeItem] = Field(
-        default_factory=list,
-        description="Изменения, обнаруженные по сравнению с последним сохраненным архивом",
-    )
-
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='Время проведения аудита (UTC)')
+    devices_count: int = Field(default=0, description='Общее количество обнаруженных устройств')
+    problem_devices_count: int = Field(default=0, description='Количество устройств с ошибками PnP')
+    outdated_drivers_count: int = Field(default=0, description='Количество устройств с устаревшими драйверами')
+    devices: List[HardwareDeviceAudit] = Field(default_factory=list, description='Список проаудированных устройств')
+    summary: str = Field(default='', description='Сводка состояния аппаратной части')
+    changes_since_last_archive: List[HardwareChangeItem] = Field(default_factory=list, description='Изменения, обнаруженные по сравнению с последним сохраненным архивом')
 
 class HardwareArchiveEntry(BaseModel):
     """Запись в архиве истории оборудования."""
-
-    archive_id: str = Field(..., description="Уникальный идентификатор архивного снимка")
-    timestamp: str = Field(..., description="Время создания архива")
-    devices_count: int = Field(default=0, description="Количество устройств в архиве")
-    changes_count: int = Field(default=0, description="Количество изменений, зафиксированных в этом архиве")
-    report: HardwareAuditReport = Field(..., description="Полный отчет аудита оборудования")
-
-
-# =============================================================================
-# Модели данных для 5 специализированных направлений глубокой телеметрии
-# =============================================================================
+    archive_id: str = Field(..., description='Уникальный идентификатор архивного снимка')
+    timestamp: str = Field(..., description='Время создания архива')
+    devices_count: int = Field(default=0, description='Количество устройств в архиве')
+    changes_count: int = Field(default=0, description='Количество изменений, зафиксированных в этом архиве')
+    report: HardwareAuditReport = Field(..., description='Полный отчет аудита оборудования')
 
 class ProcessLeakItem(BaseModel):
     """Метрики скрытой диагностики и утечек отдельного процесса."""
-
-    pid: int = Field(..., description="Идентификатор процесса")
-    name: str = Field(..., description="Имя процесса")
-    status: str = Field(default="running", description="Статус процесса")
-    handles_count: int = Field(default=0, description="Количество открытых дескрипторов (Handles)")
-    gdi_objects: int = Field(default=0, description="Количество GDI-объектов (шрифты, битмапы, кисти, лимит 10 000)")
-    user_objects: int = Field(default=0, description="Количество USER-объектов (окна, меню, курсоры)")
-    page_faults_total: int = Field(default=0, description="Общее число страничных ошибок (Page Faults)")
-    peak_working_set_mb: float = Field(default=0.0, description="Пиковый рабочий набор памяти в МБ")
-    memory_mb: float = Field(default=0.0, description="Текущая память (RSS) в МБ")
-    threads_count: int = Field(default=1, description="Количество потоков процесса")
-    cpu_percent: float = Field(default=0.0, description="Нагрузка на CPU %")
-    leak_risk_score: str = Field(default="normal", description="Уровень риска утечки: normal, warning, critical")
-    leak_risk_reasons: List[str] = Field(default_factory=list, description="Список признаков аномального поведения")
-
+    pid: int = Field(..., description='Идентификатор процесса')
+    name: str = Field(..., description='Имя процесса')
+    status: str = Field(default='running', description='Статус процесса')
+    handles_count: int = Field(default=0, description='Количество открытых дескрипторов (Handles)')
+    gdi_objects: int = Field(default=0, description='Количество GDI-объектов (шрифты, битмапы, кисти, лимит 10 000)')
+    user_objects: int = Field(default=0, description='Количество USER-объектов (окна, меню, курсоры)')
+    page_faults_total: int = Field(default=0, description='Общее число страничных ошибок (Page Faults)')
+    peak_working_set_mb: float = Field(default=0.0, description='Пиковый рабочий набор памяти в МБ')
+    memory_mb: float = Field(default=0.0, description='Текущая память (RSS) в МБ')
+    threads_count: int = Field(default=1, description='Количество потоков процесса')
+    cpu_percent: float = Field(default=0.0, description='Нагрузка на CPU %')
+    leak_risk_score: str = Field(default='normal', description='Уровень риска утечки: normal, warning, critical')
+    leak_risk_reasons: List[str] = Field(default_factory=list, description='Список признаков аномального поведения')
 
 class ProcessLeakDiagnosticsReport(BaseModel):
     """Сводный отчет скрытой диагностики процессов, утечек дескрипторов и ресурсов UI."""
-
-    timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
-        description="Время сбора среза",
-    )
-    total_processes: int = Field(default=0, description="Всего проанализировано процессов")
-    suspicious_count: int = Field(default=0, description="Количество процессов с признаками утечки")
-    top_handle_hogs: List[ProcessLeakItem] = Field(default_factory=list, description="Топ процессов по открытым дескрипторам")
-    top_gdi_hogs: List[ProcessLeakItem] = Field(default_factory=list, description="Топ процессов по GDI объектам")
-    top_page_fault_hogs: List[ProcessLeakItem] = Field(default_factory=list, description="Топ процессов по обращениям к файлу подкачки")
-    all_processes: List[ProcessLeakItem] = Field(default_factory=list, description="Полный список проанализированных процессов")
-
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='Время сбора среза')
+    total_processes: int = Field(default=0, description='Всего проанализировано процессов')
+    suspicious_count: int = Field(default=0, description='Количество процессов с признаками утечки')
+    top_handle_hogs: List[ProcessLeakItem] = Field(default_factory=list, description='Топ процессов по открытым дескрипторам')
+    top_gdi_hogs: List[ProcessLeakItem] = Field(default_factory=list, description='Топ процессов по GDI объектам')
+    top_page_fault_hogs: List[ProcessLeakItem] = Field(default_factory=list, description='Топ процессов по обращениям к файлу подкачки')
+    all_processes: List[ProcessLeakItem] = Field(default_factory=list, description='Полный список проанализированных процессов')
 
 class ForensicsActivityReport(BaseModel):
     """Поведенческая телеметрия и форензика активности пользователя."""
-
-    timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
-        description="Время фиксации",
-    )
-    foreground_window: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Активное окно в фокусе (заголовок, процесс, PID, время)",
-    )
-    user_idle_seconds: float = Field(default=0.0, description="Время бездействия пользователя (без ввода с клавиатуры/мыши)")
-    camera_active_apps: List[Dict[str, Any]] = Field(default_factory=list, description="Приложения, использующие или недавно вызывавшие камеру")
-    microphone_active_apps: List[Dict[str, Any]] = Field(default_factory=list, description="Приложения, использующие микрофон")
-    userassist_top_apps: List[Dict[str, Any]] = Field(default_factory=list, description="История запусков из реестра UserAssist (счетчик и фокусное время)")
-
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='Время фиксации')
+    foreground_window: Dict[str, Any] = Field(default_factory=dict, description='Активное окно в фокусе (заголовок, процесс, PID, время)')
+    user_idle_seconds: float = Field(default=0.0, description='Время бездействия пользователя (без ввода с клавиатуры/мыши)')
+    camera_active_apps: List[Dict[str, Any]] = Field(default_factory=list, description='Приложения, использующие или недавно вызывавшие камеру')
+    microphone_active_apps: List[Dict[str, Any]] = Field(default_factory=list, description='Приложения, использующие микрофон')
+    userassist_top_apps: List[Dict[str, Any]] = Field(default_factory=list, description='История запусков из реестра UserAssist (счетчик и фокусное время)')
 
 class KernelThrottlingReport(BaseModel):
     """Качество работы ядра, прерываний и аппаратного троттлинга."""
-
-    timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
-        description="Время среза",
-    )
-    dpc_latency_pct: float = Field(default=0.0, description="Процент времени ЦП в DPC (отложенных вызовах процедур)")
-    interrupt_latency_pct: float = Field(default=0.0, description="Процент времени ЦП в аппаратных прерываниях (ISR)")
-    dpc_status: str = Field(default="optimal", description="Статус латентности прерываний: optimal, elevated, severe")
-    thermal_throttling_detected: bool = Field(default=False, description="Обнаружен термический троттлинг ядер (PROCHOT)")
-    power_limit_throttling_detected: bool = Field(default=False, description="Обнаружено ограничение по питанию (PL1/PL2 Limit)")
-    system_uptime_seconds: float = Field(default=0.0, description="Время непрерывной работы системы (Uptime)")
-    uptime_formatted: str = Field(default="0 дн 0 ч", description="Отформатированное время Uptime")
-    last_bsod_crashes: List[Dict[str, Any]] = Field(default_factory=list, description="Последние зафиксированные падения системы (BugCheck / Minidump)")
-    gpu_pcie_link: Dict[str, Any] = Field(default_factory=dict, description="Режим шины PCIe для видеокарты (Link Speed / Width)")
-
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='Время среза')
+    dpc_latency_pct: float = Field(default=0.0, description='Процент времени ЦП в DPC (отложенных вызовах процедур)')
+    interrupt_latency_pct: float = Field(default=0.0, description='Процент времени ЦП в аппаратных прерываниях (ISR)')
+    dpc_status: str = Field(default='optimal', description='Статус латентности прерываний: optimal, elevated, severe')
+    thermal_throttling_detected: bool = Field(default=False, description='Обнаружен термический троттлинг ядер (PROCHOT)')
+    power_limit_throttling_detected: bool = Field(default=False, description='Обнаружено ограничение по питанию (PL1/PL2 Limit)')
+    system_uptime_seconds: float = Field(default=0.0, description='Время непрерывной работы системы (Uptime)')
+    uptime_formatted: str = Field(default='0 дн 0 ч', description='Отформатированное время Uptime')
+    last_bsod_crashes: List[Dict[str, Any]] = Field(default_factory=list, description='Последние зафиксированные падения системы (BugCheck / Minidump)')
+    gpu_pcie_link: Dict[str, Any] = Field(default_factory=dict, description='Режим шины PCIe для видеокарты (Link Speed / Width)')
 
 class StorageBatteryWearReport(BaseModel):
     """Телеметрия износа накопителей SSD/NVMe и батареи питания."""
-
-    timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
-        description="Время формирования",
-    )
-    disks_wear: List[Dict[str, Any]] = Field(default_factory=list, description="Метрики износа SSD, TBW и здоровье накопителей")
-    battery_wear: Dict[str, Any] = Field(default_factory=dict, description="Глубокая телеметрия износа аккумулятора (Design vs Full Charge)")
-
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='Время формирования')
+    disks_wear: List[Dict[str, Any]] = Field(default_factory=list, description='Метрики износа SSD, TBW и здоровье накопителей')
+    battery_wear: Dict[str, Any] = Field(default_factory=dict, description='Глубокая телеметрия износа аккумулятора (Design vs Full Charge)')
 
 class PeripheralsNetworkReport(BaseModel):
     """Телеметрия сети (Wi-Fi, интерфейсы) и периферийных устройств (USB, Audio)."""
-
-    timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
-        description="Время сбора",
-    )
-    usb_devices: List[Dict[str, Any]] = Field(default_factory=list, description="Подключенные USB-устройства и контроллеры")
-    wifi_telemetry: Dict[str, Any] = Field(default_factory=dict, description="Параметры текущей беспроводной сети Wi-Fi (SSID, BSSID, RSSI, канал)")
-    audio_endpoints: List[Dict[str, Any]] = Field(default_factory=list, description="Аудиоустройства и активные конечные точки")
-
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='Время сбора')
+    usb_devices: List[Dict[str, Any]] = Field(default_factory=list, description='Подключенные USB-устройства и контроллеры')
+    wifi_telemetry: Dict[str, Any] = Field(default_factory=dict, description='Параметры текущей беспроводной сети Wi-Fi (SSID, BSSID, RSSI, канал)')
+    audio_endpoints: List[Dict[str, Any]] = Field(default_factory=list, description='Аудиоустройства и активные конечные точки')
 
 class SystemCoreMetrics(BaseModel):
     """Быстрые базовые метрики хоста (CPU, RAM, GPU, Disk I/O, Battery)."""
-
     cpu: CpuMetrics
     memory: MemoryMetrics
-    gpus: List[GpuMetrics] = Field(default_factory=list, description="Метрики графических ускорителей")
+    gpus: List[GpuMetrics] = Field(default_factory=list, description='Метрики графических ускорителей')
     disk_io: DiskIoMetrics
     battery: BatteryMetrics
-    uptime_seconds: float = Field(default=0.0, description="Время непрерывной работы в секундах")
-
+    uptime_seconds: float = Field(default=0.0, description='Время непрерывной работы в секундах')
 
 class SystemHardwareQuick(BaseModel):
     """Сводка состояния физических компонентов (диски, слоты памяти, открытые сокеты)."""
-
-    ram_sticks: List[RamStickInfo] = Field(default_factory=list, description="Конфигурация планок RAM (SPD)")
-    physical_disks: List[PhysicalDiskHealth] = Field(default_factory=list, description="Состояние физических накопителей (SMART)")
-    listening_ports: List[NetworkPortMetrics] = Field(default_factory=list, description="Список активных слушающих сокетов")
-    alerts: SystemHealthAlerts = Field(default_factory=SystemHealthAlerts, description="Системные предупреждения и флаг перезагрузки")
-
-
-
+    ram_sticks: List[RamStickInfo] = Field(default_factory=list, description='Конфигурация планок RAM (SPD)')
+    physical_disks: List[PhysicalDiskHealth] = Field(default_factory=list, description='Состояние физических накопителей (SMART)')
+    listening_ports: List[NetworkPortMetrics] = Field(default_factory=list, description='Список активных слушающих сокетов')
+    alerts: SystemHealthAlerts = Field(default_factory=SystemHealthAlerts, description='Системные предупреждения и флаг перезагрузки')

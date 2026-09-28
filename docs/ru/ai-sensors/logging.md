@@ -11,7 +11,7 @@
 2. 📄 **Потоковые JSON-Lines логи ([`TelemetryJsonLogger`](../../apps/windows/telemetry/json_logger.py)):**
    * Располагаются в `logs/telemetry/` (`ai_sensors_polls.jsonl` и `device_telemetry_events.jsonl`).
    * Append-only формат с защитой от повреждения при сбоях и автоматической ротацией файлов по достижению 50–100 МБ.
-3. 📝 **Системный журнал ([`src.logger.logger`](../../logger/logger.py)):**
+3. 📝 **Системный журнал ([`logger`](../../logger/logger.py)):**
    * Консольный вывод и файлы журнала (`info.log`, `debug.log`, `errors.log`).
 
 ---
@@ -34,7 +34,7 @@ flowchart TD
         CSVLog["📊 AppCsvLogger<br/>(UTF-8-SIG, Auto-Headers, Lock)"]
         JsonLog["📄 TelemetryJsonLogger<br/>(JSONL, Авторотация, Lock)"]
         Agg["⚙️ TelemetryAggregator<br/>(Сведение снимков, Фильтрация)"]
-        SysLog["📝 src.logger.logger<br/>(Консоль, Уровни логов)"]
+        SysLog["📝 logger<br/>(Консоль, Уровни логов)"]
     end
 
     subgraph ХранилищеCSV["📁 CSV Каталог (%APPDATA%/AI-Breadboard/apps/windows/telemetry/logs/)"]

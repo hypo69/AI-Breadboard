@@ -1,24 +1,6 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Hardware Provider Registry
-# =============================================================================
-# Description:
-#   Центральный реестр всех аппаратных провайдеров. Выполняет автоматическое
-#   обнаружение утилит в /bin и регистрацию соответствующих провайдеров.
-#
-# File: registry.py
-# Project: ai-breadboard
-# Package: apps.windows.hardware
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """Центральный реестр аппаратных провайдеров Windows Diagnostic Engine."""
-
 from __future__ import annotations
-
 from typing import Dict, List, Optional
-
 from logger import logger
 from apps.windows.hardware.base import BaseHardwareProvider, ProviderTier
 from apps.windows.hardware.discovery import UtilityDiscovery
@@ -29,11 +11,10 @@ from apps.windows.hardware.providers.hwinfo_provider import HwinfoProvider
 from apps.windows.hardware.providers.lhm_provider import LhmProvider
 from apps.windows.hardware.providers.native_win_provider import NativeWinProvider
 
-
 class HardwareProviderRegistry:
     """Реестр аппаратных провайдеров с авто-обнаружением внешних утилит."""
 
-    def __init__(self, discovery: Optional[UtilityDiscovery] = None) -> None:
+    def __init__(self, discovery: Optional[UtilityDiscovery]=None) -> None:
         """Инициализация реестра провайдеров."""
         self.discovery = discovery or UtilityDiscovery()
         self._providers: Dict[str, BaseHardwareProvider] = {}
@@ -41,29 +22,19 @@ class HardwareProviderRegistry:
 
     def _init_providers(self) -> None:
         """Зарегистрировать все доступные аппаратные провайдеры."""
-        # Tier 1: Нативный Windows
         native = NativeWinProvider()
-        self._providers["native"] = native
-
-        # Tier 2: AIDA64, HWiNFO, LHM
-        aida_path = self.discovery.find_utility("aida64")
-        self._providers["aida64"] = Aida64Provider(binary_path=aida_path)
-
-        hwinfo_path = self.discovery.find_utility("hwinfo")
-        self._providers["hwinfo"] = HwinfoProvider(binary_path=hwinfo_path)
-
-        lhm_path = self.discovery.find_utility("lhm")
-        self._providers["lhm"] = LhmProvider(binary_path=lhm_path)
-
-        # Tier 3: CPU-Z, GPU-Z
-
-        cpuz_path = self.discovery.find_utility("cpuz")
-        self._providers["cpuz"] = CpuzProvider(binary_path=cpuz_path)
-
-        gpuz_path = self.discovery.find_utility("gpuz")
-        self._providers["gpuz"] = GpuzProvider(binary_path=gpuz_path)
-
-        logger.debug(f"Зарегистрировано {len(self._providers)} аппаратных провайдеров")
+        self._providers['native'] = native
+        aida_path = self.discovery.find_utility('aida64')
+        self._providers['aida64'] = Aida64Provider(binary_path=aida_path)
+        hwinfo_path = self.discovery.find_utility('hwinfo')
+        self._providers['hwinfo'] = HwinfoProvider(binary_path=hwinfo_path)
+        lhm_path = self.discovery.find_utility('lhm')
+        self._providers['lhm'] = LhmProvider(binary_path=lhm_path)
+        cpuz_path = self.discovery.find_utility('cpuz')
+        self._providers['cpuz'] = CpuzProvider(binary_path=cpuz_path)
+        gpuz_path = self.discovery.find_utility('gpuz')
+        self._providers['gpuz'] = GpuzProvider(binary_path=gpuz_path)
+        logger.debug(f'Зарегистрировано {len(self._providers)} аппаратных провайдеров')
 
     def get_provider(self, key: str) -> Optional[BaseHardwareProvider]:
         """Получить конкретный провайдер по ключу."""

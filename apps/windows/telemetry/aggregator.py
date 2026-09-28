@@ -19,11 +19,11 @@ from __future__ import annotations
 
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 
 try:
-    from src.logger.logger import logger
+    from logger import logger
 except ImportError:
     from logger import logger
 from apps.windows.telemetry.telemetry_config import TelemetryConfigManager
@@ -67,6 +67,9 @@ class TelemetryAggregator:
 
         self._last_measurements: Dict[str, Any] = {}
         self._measurement_count = 0
+        # Время запуска агрегатора и момент последней часовой агрегации
+        self._start_time = datetime.now(timezone.utc)
+        self._last_aggregation = self._start_time
 
     def start(self) -> bool:
         """Запускает фоновый поток сбора телеметрии.
@@ -126,45 +129,102 @@ class TelemetryAggregator:
                 break
 
     def _get_min_interval(self) -> float:
-        """Возвращает минимальный интервал среди всех сенсоров.
+        """Возвращает минимальный интервал среди всех сенсоров, учитывая быстрый режим.
 
-        Returns:
-            float: Минимальный интервал в секундах.
+        Если с момента запуска прошло меньше fast_duration_days, используется fast_interval.
+        Иначе – обычный минимум среди включенных сенсоров.
         """
+        now = datetime.now(timezone.utc)
+        fast_days = self.config_manager.get_fast_duration_days()
+        if (now - self._start_time).days < fast_days:
+            return self.config_manager.get_fast_interval()
+        # Обычная логика
         intervals = []
         for sensor_name in self.config_manager.get_enabled_sensors():
             interval = self.config_manager.get_sensor_interval(sensor_name)
             intervals.append(interval)
-
         if not intervals:
             return self.config_manager._default_interval
-
         return min(intervals)
+
 
     def poll_once(self) -> None:
         """Проводит единовременный сбор всей телеметрии."""
         self._measurement_count += 1
         now_iso = datetime.now(timezone.utc).isoformat()
 
-        # Сбор данных от всех сенсоров
-        hardware_data = self.sensor_collector.get_hardware_snapshot()
-        file_events = self.file_collector.get_recent_events()
-
-        sensors_list = hardware_data.get("sensors", [])
-
+        # Сбор сенсорных данных
         try:
-            if sensors_list:
-                self.storage.save_sensor_polls_batch(sensors_list, timestamp=now_iso)
-            logger.debug(f"Записана телеметрия #{self._measurement_count} ({len(sensors_list)} сенсоров в БД)")
+            hw_snapshot = self.sensor_collector.get_hardware_snapshot()
+            sensor_items = []
+            for s in hw_snapshot.get('sensors', []):
+                val_entry = s.get('values', [{}])[0]
+                sensor_items.append({
+                    'id': s.get('id'),
+                    'hardware_name': s.get('hardware_name'),
+                    'hardware_type': s.get('hardware_type'),
+                    'sensor_category': s.get('sensor_category'),
+                    'sensor_name': s.get('sensor_name'),
+                    'unit': s.get('unit'),
+                    'value': val_entry.get('num')
+                })
+            if sensor_items:
+                self.storage.save_sensor_polls_batch(sensor_items, timestamp=now_iso)
         except Exception as e:
-            logger.error(f"Ошибка при записи телеметрии: {e}")
+            logger.error(f'Ошибка при сборе и сохранении сенсоров: {e}')
 
-        self._last_measurements = {
-            "timestamp": now_iso,
-            "sensors": sensors_list,
-            "hardware": hardware_data,
-            "file_events": file_events,
-        }
+        # После обычного поллинга проверяем необходимость часовой агрегации
+        now = datetime.now(timezone.utc)
+        fast_days = self.config_manager.get_fast_duration_days()
+        if (now - self._start_time).days >= fast_days:
+            if (now - self._last_aggregation).total_seconds() >= self.config_manager.get_aggregation_interval():
+                self._aggregate_hourly()
+                self._last_aggregation = now
+
+    def _aggregate_hourly(self) -> None:
+        """Агрегирует данные сенсоров за последний полный час и сохраняет их в таблицу агрегатов."""
+        # Вычисляем границы последнего полного часа
+        now = datetime.now(timezone.utc)
+        period_end = now.replace(minute=0, second=0, microsecond=0)
+        period_start = period_end - timedelta(hours=1)
+
+        # Запрос к базе: агрегируем по sensor_id за указанный период
+        query = """
+            SELECT sensor_id,
+                   AVG(value) as avg_value,
+                   MIN(value) as min_value,
+                   MAX(value) as max_value,
+                   COUNT(*) as count
+            FROM sensor_polls
+            WHERE timestamp >= ? AND timestamp < ?
+            GROUP BY sensor_id
+        """
+        try:
+            with self.storage._lock, self.storage._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, (period_start.isoformat(), period_end.isoformat()))
+                rows = cursor.fetchall()
+                aggregates = []
+                for row in rows:
+                    sensor_id, avg_val, min_val, max_val, cnt = row
+                    aggregates.append({
+                        "sensor_id": sensor_id,
+                        "period_start": period_start.isoformat(),
+                        "period_end": period_end.isoformat(),
+                        "avg": avg_val,
+                        "min": min_val,
+                        "max": max_val,
+                        "count": cnt,
+                    })
+                if aggregates:
+                    saved = self.storage.save_sensor_aggregates_batch(aggregates)
+                    logger.info(f"Сохранено {saved} агрегированных записей за период {period_start} - {period_end}")
+        except Exception as e:
+            logger.error(f"Ошибка при часовой агрегации телеметрии: {e}")
+
+
+
+
 
     def get_status(self) -> Dict[str, Any]:
         """Возвращает текущий статус агрегатора.

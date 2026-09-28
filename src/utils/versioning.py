@@ -1,18 +1,3 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Parse non-standard version string into list of integers
-# =============================================================================
-# Description:
-#   Parse version strings in SemVer format, compare two versions and select best tag.
-#   Implements semantic versioning 2.0 specification with backward compatibility.
-#
-# File: versioning.py
-# Project: ai-breadboard
-# Package: src.utils
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 import re
 from typing import List, Optional, Tuple
 
@@ -31,7 +16,7 @@ def _parse_version_legacy(v: str) -> List[int]:
     """
     if not v:
         return [0, 0, 0]
-    parts = re.findall(r'(\d+)', v)
+    parts = re.findall('(\\d+)', v)
     return [int(p) for p in parts]
 
 def parse_semver(v: str) -> Tuple[int, int, int, List[str]]:
@@ -53,11 +38,7 @@ def parse_semver(v: str) -> Tuple[int, int, int, List[str]]:
     """
     if not v:
         return ()
-    m = re.match(
-        r'^v?(?P<major>0|[1-9]\d*)(?:\.(?P<minor>0|[1-9]\d*))?(?:\.(?P<patch>0|[1-9]\d*))?'
-        r'(?:-(?P<prerelease>[0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$',
-        v,
-    )
+    m = re.match('^v?(?P<major>0|[1-9]\\d*)(?:\\.(?P<minor>0|[1-9]\\d*))?(?:\\.(?P<patch>0|[1-9]\\d*))?(?:-(?P<prerelease>[0-9A-Za-z.-]+))?(?:\\+[0-9A-Za-z.-]+)?$', v)
     if not m:
         return ()
     major = int(m.group('major'))
@@ -85,9 +66,9 @@ def compare_versions(a: str, b: str) -> int:
         >>> compare_versions('1.2.3-alpha', '1.2.3')
         -1
     """
+
     def _compare(a_parsed: tuple, b_parsed: tuple) -> int:
-        # Fallback to legacy parsing for invalid SemVer
-        if not a_parsed and not b_parsed:
+        if not a_parsed and (not b_parsed):
             return 0
         if not a_parsed or not b_parsed:
             pa = _parse_version_legacy(a)
@@ -100,26 +81,19 @@ def compare_versions(a: str, b: str) -> int:
             if pa > pb:
                 return 1
             return 0
-
-        # Compare major.minor.patch
         for i in range(3):
             if a_parsed[i] < b_parsed[i]:
                 return -1
             if a_parsed[i] > b_parsed[i]:
                 return 1
-
-        # Compare prerelease tags (SemVer §11)
         a_pr: List[str] = a_parsed[3]
         b_pr: List[str] = b_parsed[3]
-
-        # Stable release is greater than prerelease
-        if not a_pr and not b_pr:
+        if not a_pr and (not b_pr):
             return 0
         if not a_pr:
             return 1
         if not b_pr:
             return -1
-
         for ai, bi in zip(a_pr, b_pr):
             if ai == bi:
                 continue
@@ -134,16 +108,14 @@ def compare_versions(a: str, b: str) -> int:
                     return -1
                 if ai > bi:
                     return 1
-
         if len(a_pr) < len(b_pr):
             return -1
         if len(a_pr) > len(b_pr):
             return 1
         return 0
-
     return _compare(parse_semver(a), parse_semver(b))
 
-def choose_best_tag(tags: List[str], allow_prerelease: bool = False, debug: bool = False) -> str:
+def choose_best_tag(tags: List[str], allow_prerelease: bool=False, debug: bool=False) -> str:
     """Choose greatest version from list of tags.
 
     Args:
@@ -167,14 +139,11 @@ def choose_best_tag(tags: List[str], allow_prerelease: bool = False, debug: bool
 
     def _is_prerelease(t: str) -> bool:
         return '-' in t.split('+', 1)[0]
-
     stable = [t for t in tags if not _is_prerelease(t)]
-    candidates = stable if stable and not allow_prerelease else tags
-
+    candidates = stable if stable and (not allow_prerelease) else tags
     if debug:
         from logger.logger import logger
         logger.debug(f'[versioning.choose_best_tag] candidates={candidates} allow_prerelease={allow_prerelease}')
-
     best = ''
     for t in candidates:
         if not best or compare_versions(best, t) < 0:

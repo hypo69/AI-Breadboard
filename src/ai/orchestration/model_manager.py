@@ -1,81 +1,29 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Normalize model identifier for consistent comparis
-# =============================================================================
-# Description:
-#   Централизованный реестр моделей ИИ для провайдеров Gemini, Gemini CLI, AGY, Foundry и Ollama.
-#
-# File: model_manager.py
-# Project: ai-breadboard
-# Package: src.ai
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 import asyncio
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Set
-
 import aiohttp
 from google import genai
-
 from header import __root__
 from logger.logger import logger
 from src.utils.jjson import j_dumps, j_loads
-
-_GLOBAL_CONFIG_PATH: Path = __root__ / "config.json"
-_GEMINI_CONFIG_PATH: Path = __root__ / "src" / "ai" / "gemini" / "config.json"
-
-# Локальный кэш доступных моделей в оперативной памяти на весь жизненный цикл
+_GLOBAL_CONFIG_PATH: Path = __root__ / 'config.json'
+_GEMINI_CONFIG_PATH: Path = __root__ / 'src' / 'ai' / 'gemini' / 'config.json'
 _CACHED_MODELS: Dict[str, List[str]] = {}
-
-_DEFAULT_GEMINI_FALLBACK: List[str] = [
-    "gemini-flash-latest",
-    "gemini-flash-lite-latest",
-    "gemini-3.6-flash",
-    "gemini-3.7-flash",
-    "gemini-pro-latest",
-]
-
-_GEMINI_PRIORITY_ORDER: List[str] = [
-    "gemini-flash-latest",
-    "gemini-flash-lite-latest",
-    "gemini-3.6-flash",
-    "gemini-3.7-flash",
-    "gemini-pro-latest",
-]
-
-_DEFAULT_GEMINI_CLI_FALLBACK: List[str] = [
-    "gemini-3.1-flash-lite",
-    "gemini-2.5-flash",
-    "gemini-2.5-pro",
-    "gemini-3.1-pro-preview",
-    "gemini-3.1-flash-lite-preview",
-    "gemini-flash-latest",
-    "gemini-pro-latest",
-]
-
-_GEMINI_CLI_PRIORITY_ORDER: List[str] = [
-    "gemini-3.1-flash-lite",
-    "gemini-2.5-flash",
-    "gemini-2.5-pro",
-    "gemini-3.1-pro-preview",
-    "gemini-3.1-flash-lite-preview",
-    "gemini-flash-latest",
-    "gemini-pro-latest",
-]
+_DEFAULT_GEMINI_FALLBACK: List[str] = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
+_GEMINI_PRIORITY_ORDER: List[str] = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
+_DEFAULT_GEMINI_CLI_FALLBACK: List[str] = ['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite-preview', 'gemini-flash-latest', 'gemini-pro-latest']
+_GEMINI_CLI_PRIORITY_ORDER: List[str] = ['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite-preview', 'gemini-flash-latest', 'gemini-pro-latest']
 
 def _normalize_model_name(name: str) -> str:
     """Normalize model identifier for consistent comparison."""
     res: str = name.strip()
-    if res.startswith("models/"):
-        res = res[len("models/") :]
+    if res.startswith('models/'):
+        res = res[len('models/'):]
     return res
-
 normalize_model_name = _normalize_model_name
 
-def load_unsupported_models(provider: str = "gemini") -> Set[str]:
+def load_unsupported_models(provider: str='gemini') -> Set[str]:
     """Load list of unsupported models from configuration files.
 
     Args:
@@ -93,32 +41,27 @@ def load_unsupported_models(provider: str = "gemini") -> Set[str]:
     """
     prov: str = provider.lower().strip()
     unsupported: Set[str] = set()
-
-    # Loading из конфигурации модуля Gemini при необходимости
-    if prov in ("gemini", "gemini_cli", "agy"):
+    if prov in ('gemini', 'gemini_cli', 'agy'):
         gemini_cfg = j_loads(_GEMINI_CONFIG_PATH)
         if isinstance(gemini_cfg, dict):
-            raw_list = gemini_cfg.get("unsupported_models", [])
+            raw_list = gemini_cfg.get('unsupported_models', [])
             if isinstance(raw_list, list):
                 for item in raw_list:
                     if isinstance(item, str) and item.strip():
                         unsupported.add(_normalize_model_name(item))
-
-    # Loading из глобальной конфигурации (новая структура: ai.providers.<prov>.unsupported_models)
     global_cfg = j_loads(_GLOBAL_CONFIG_PATH)
     if isinstance(global_cfg, dict):
-        ai_sec = global_cfg.get("ai", {})
+        ai_sec = global_cfg.get('ai', {})
         if isinstance(ai_sec, dict):
-            providers = ai_sec.get("providers", {})
+            providers = ai_sec.get('providers', {})
             if isinstance(providers, dict):
                 prov_obj = providers.get(prov, {})
                 if isinstance(prov_obj, dict):
-                    prov_list = prov_obj.get("unsupported_models", [])
+                    prov_list = prov_obj.get('unsupported_models', [])
                     if isinstance(prov_list, list):
                         for item in prov_list:
                             if isinstance(item, str) and item.strip():
                                 unsupported.add(_normalize_model_name(item))
-
     return unsupported
 
 def is_model_supported(provider: str, model_name: str) -> bool:
@@ -127,7 +70,7 @@ def is_model_supported(provider: str, model_name: str) -> bool:
     unsupported = load_unsupported_models(provider)
     return norm not in unsupported
 
-def add_unsupported_model(provider: str = "gemini", model_name: str = "", reason: str = "") -> bool:
+def add_unsupported_model(provider: str='gemini', model_name: str='', reason: str='') -> bool:
     """Add unsupported model to configuration file and remove from cache.
 
     Args:
@@ -148,67 +91,50 @@ def add_unsupported_model(provider: str = "gemini", model_name: str = "", reason
     """
     if not model_name:
         return False
-
     prov: str = provider.lower().strip()
     norm_name: str = _normalize_model_name(model_name)
-
-    # 1. Update конфигурации Gemini
-    if prov in ("gemini", "gemini_cli", "agy"):
+    if prov in ('gemini', 'gemini_cli', 'agy'):
         gemini_cfg = j_loads(_GEMINI_CONFIG_PATH)
         if isinstance(gemini_cfg, dict):
-            curr_list = gemini_cfg.get("unsupported_models", [])
+            curr_list = gemini_cfg.get('unsupported_models', [])
             if not isinstance(curr_list, list):
                 curr_list = []
             if norm_name not in curr_list:
                 curr_list.append(norm_name)
-                gemini_cfg["unsupported_models"] = sorted(list(set(curr_list)))
+                gemini_cfg['unsupported_models'] = sorted(list(set(curr_list)))
                 j_dumps(gemini_cfg, _GEMINI_CONFIG_PATH)
-
-    # 2. Update глобальной конфигурации (новая структура: ai.providers.<prov>.unsupported_models)
     global_cfg = j_loads(_GLOBAL_CONFIG_PATH)
     if isinstance(global_cfg, dict):
-        ai_sec = global_cfg.get("ai", {})
+        ai_sec = global_cfg.get('ai', {})
         if not isinstance(ai_sec, dict):
             ai_sec = {}
-        providers = ai_sec.get("providers", {})
+        providers = ai_sec.get('providers', {})
         if not isinstance(providers, dict):
             providers = {}
         prov_obj = providers.get(prov, {})
         if not isinstance(prov_obj, dict):
             prov_obj = {}
-        prov_list = prov_obj.get("unsupported_models", [])
+        prov_list = prov_obj.get('unsupported_models', [])
         if not isinstance(prov_list, list):
             prov_list = []
         if norm_name not in prov_list:
             prov_list.append(norm_name)
-            prov_obj["unsupported_models"] = sorted(list(set(prov_list)))
+            prov_obj['unsupported_models'] = sorted(list(set(prov_list)))
             providers[prov] = prov_obj
-            ai_sec["providers"] = providers
-            global_cfg["ai"] = ai_sec
+            ai_sec['providers'] = providers
+            global_cfg['ai'] = ai_sec
             j_dumps(global_cfg, _GLOBAL_CONFIG_PATH)
-
-    # 3. Инвалидация модели в оперативной памяти
     if prov in _CACHED_MODELS:
         _CACHED_MODELS[prov] = [m for m in _CACHED_MODELS[prov] if _normalize_model_name(m) != norm_name]
-
-    # Для agy также удаляем agy-<norm_name>
-    if "agy" in _CACHED_MODELS:
-        _CACHED_MODELS["agy"] = [
-            m for m in _CACHED_MODELS["agy"]
-            if _normalize_model_name(m.replace("agy-", "")) != norm_name
-        ]
-
-    logger.warning(
-        f"[ModelManager] Модель '{norm_name}' провайдера '{prov}' добавлена в list неподдерживаемых "
-        f"(причина: {reason[:120]})"
-    )
+    if 'agy' in _CACHED_MODELS:
+        _CACHED_MODELS['agy'] = [m for m in _CACHED_MODELS['agy'] if _normalize_model_name(m.replace('agy-', '')) != norm_name]
+    logger.warning(f"[ModelManager] Модель '{norm_name}' провайдера '{prov}' добавлена в list неподдерживаемых (причина: {reason[:120]})")
     return True
 
-def _fetch_gemini_models_sync(api_key: str = "", include_unsupported: bool = False) -> List[str]:
+def _fetch_gemini_models_sync(api_key: str='', include_unsupported: bool=False) -> List[str]:
     """Synchronously fetch list of models for Gemini with optional filtering."""
-    unsupported: Set[str] = load_unsupported_models("gemini")
+    unsupported: Set[str] = load_unsupported_models('gemini')
     discovered: List[str] = []
-
     key_to_use: str = api_key
     if not key_to_use:
         try:
@@ -217,10 +143,9 @@ def _fetch_gemini_models_sync(api_key: str = "", include_unsupported: bool = Fal
             if keys:
                 key_to_use = keys[0]
         except Exception as e:
-            logger.debug(f"[ModelManager] Failed to load Gemini API key for listing: {e}")
+            logger.debug(f'[ModelManager] Failed to load Gemini API key for listing: {e}')
         if not key_to_use:
-            key_to_use = os.getenv("GEMINI_API_KEY", "") or os.getenv("GEMINI_API_KEY_1", "")
-
+            key_to_use = os.getenv('GEMINI_API_KEY', '') or os.getenv('GEMINI_API_KEY_1', '')
     if key_to_use:
         try:
             client = genai.Client(api_key=key_to_use)
@@ -228,53 +153,48 @@ def _fetch_gemini_models_sync(api_key: str = "", include_unsupported: bool = Fal
                 m_name = getattr(m, 'name', '') or ''
                 norm = _normalize_model_name(m_name)
                 actions = getattr(m, 'supported_actions', []) or getattr(m, 'supported_generation_methods', []) or []
-                if actions and not any('generateContent' in str(a) for a in actions):
+                if actions and (not any(('generateContent' in str(a) for a in actions))):
                     continue
-                # Exclude TTS (Audio-only) models without TEXT output modality
                 out_modalities = getattr(m, 'output_modalities', []) or []
-                if out_modalities and not any('TEXT' in str(mod).upper() for mod in out_modalities):
+                if out_modalities and (not any(('TEXT' in str(mod).upper() for mod in out_modalities))):
                     continue
                 if norm.endswith('-tts') or '-tts-' in norm or norm.startswith('tts-'):
                     continue
                 if norm and norm not in discovered:
                     discovered.append(norm)
         except Exception as e:
-            logger.debug(f"[ModelManager] Could not fetch Gemini models via SDK: {e}")
-
+            logger.debug(f'[ModelManager] Could not fetch Gemini models via SDK: {e}')
     combined: List[str] = list(discovered)
     for fb in _DEFAULT_GEMINI_FALLBACK:
         norm_fb = _normalize_model_name(fb)
         if norm_fb not in combined:
             combined.append(norm_fb)
-
     if include_unsupported:
         for unsup in unsupported:
             if unsup and unsup not in combined:
                 combined.append(unsup)
         return combined
-
     pool: List[str] = [m for m in combined if m not in unsupported]
     if not pool:
-        pool = ["gemini-flash-latest", "gemini-pro-latest"]
+        pool = ['gemini-flash-latest', 'gemini-pro-latest']
     return pool
 
-def _fetch_foundry_models_sync(base_url: str = "", include_unsupported: bool = False) -> List[str]:
+def _fetch_foundry_models_sync(base_url: str='', include_unsupported: bool=False) -> List[str]:
     """Synchronously fetch list of models from local Foundry server."""
     from src.config import ai_cfg
-    providers = getattr(ai_cfg, "providers", {}) if ai_cfg else {}
-    foundry_cfg = providers.get("foundry", {}) if isinstance(providers, dict) else {}
-    base_url = base_url or (foundry_cfg.get("base_url", "http://localhost:54837") if foundry_cfg else "http://localhost:54837")
-    fallback_id = foundry_cfg.get("model", "qwen2.5-1.5b-instruct-generic-cpu:4")
-    unsupported: Set[str] = load_unsupported_models("foundry")
-
+    providers = getattr(ai_cfg, 'providers', {}) if ai_cfg else {}
+    foundry_cfg = providers.get('foundry', {}) if isinstance(providers, dict) else {}
+    base_url = base_url or (foundry_cfg.get('base_url', 'http://localhost:54837') if foundry_cfg else 'http://localhost:54837')
+    fallback_id = foundry_cfg.get('model', 'qwen2.5-1.5b-instruct-generic-cpu:4')
+    unsupported: Set[str] = load_unsupported_models('foundry')
     import requests
     models: List[str] = []
     try:
-        resp = requests.get(f"{base_url}/v1/models", timeout=5)
+        resp = requests.get(f'{base_url}/v1/models', timeout=5)
         if resp.status_code == 200:
             data: Dict[str, Any] = resp.json()
-            for item in data.get("data", []):
-                mid: str = item.get("id", "")
+            for item in data.get('data', []):
+                mid: str = item.get('id', '')
                 if mid:
                     norm = _normalize_model_name(mid)
                     if include_unsupported or norm not in unsupported:
@@ -282,29 +202,27 @@ def _fetch_foundry_models_sync(base_url: str = "", include_unsupported: bool = F
             if models:
                 return models
     except Exception as e:
-        logger.info(f"[ModelManager] Foundry сервер ({base_url}) недоступен или вернул ошибку: {e}")
-
+        logger.info(f'[ModelManager] Foundry сервер ({base_url}) недоступен или вернул ошибку: {e}')
     if include_unsupported or _normalize_model_name(fallback_id) not in unsupported:
         return [fallback_id]
     return []
 
-def _fetch_ollama_models_sync(base_url: str = "", include_unsupported: bool = False) -> List[str]:
+def _fetch_ollama_models_sync(base_url: str='', include_unsupported: bool=False) -> List[str]:
     """Synchronously fetch list of models from Ollama server."""
     from src.config import ai_cfg
-    providers = getattr(ai_cfg, "providers", {}) if ai_cfg else {}
-    ollama_cfg = providers.get("ollama", {}) if isinstance(providers, dict) else {}
-    base_url = base_url or (ollama_cfg.get("base_url", "http://localhost:11434") if ollama_cfg else "http://localhost:11434")
-    fallback_id = ollama_cfg.get("model", "llama3.1")
-    unsupported: Set[str] = load_unsupported_models("ollama")
-
+    providers = getattr(ai_cfg, 'providers', {}) if ai_cfg else {}
+    ollama_cfg = providers.get('ollama', {}) if isinstance(providers, dict) else {}
+    base_url = base_url or (ollama_cfg.get('base_url', 'http://localhost:11434') if ollama_cfg else 'http://localhost:11434')
+    fallback_id = ollama_cfg.get('model', 'llama3.1')
+    unsupported: Set[str] = load_unsupported_models('ollama')
     import requests
     models: List[str] = []
     try:
-        resp = requests.get(f"{base_url}/api/tags", timeout=5)
+        resp = requests.get(f'{base_url}/api/tags', timeout=5)
         if resp.status_code == 200:
             data: Dict[str, Any] = resp.json()
-            for item in data.get("models", []):
-                name: str = item.get("name", "")
+            for item in data.get('models', []):
+                name: str = item.get('name', '')
                 if name:
                     norm = _normalize_model_name(name)
                     if include_unsupported or norm not in unsupported:
@@ -312,15 +230,14 @@ def _fetch_ollama_models_sync(base_url: str = "", include_unsupported: bool = Fa
             if models:
                 return models
     except Exception as e:
-        logger.info(f"[ModelManager] Ollama сервер ({base_url}) недоступен или вернул ошибку: {e}")
-
+        logger.info(f'[ModelManager] Ollama сервер ({base_url}) недоступен или вернул ошибку: {e}')
     if include_unsupported or _normalize_model_name(fallback_id) not in unsupported:
         return [fallback_id]
     return []
 
-def _fetch_gemini_cli_models_sync(include_unsupported: bool = False) -> List[str]:
+def _fetch_gemini_cli_models_sync(include_unsupported: bool=False) -> List[str]:
     """Synchronously fetch list of models for Gemini CLI with optional filtering."""
-    unsupported: Set[str] = load_unsupported_models("gemini_cli")
+    unsupported: Set[str] = load_unsupported_models('gemini_cli')
     if include_unsupported:
         combined = list(_DEFAULT_GEMINI_CLI_FALLBACK)
         for u in unsupported:
@@ -329,18 +246,18 @@ def _fetch_gemini_cli_models_sync(include_unsupported: bool = False) -> List[str
         return combined
     pool: List[str] = [m for m in _DEFAULT_GEMINI_CLI_FALLBACK if m not in unsupported]
     if not pool:
-        pool = ["gemini-3.1-flash-lite", "gemini-2.5-flash"]
+        pool = ['gemini-3.1-flash-lite', 'gemini-2.5-flash']
     return pool
 
-def _fetch_hf_models_sync(include_unsupported: bool = False) -> List[str]:
+def _fetch_hf_models_sync(include_unsupported: bool=False) -> List[str]:
     """Synchronously fetch list of cached HuggingFace models."""
-    unsupported: Set[str] = load_unsupported_models("hf")
+    unsupported: Set[str] = load_unsupported_models('hf')
     models: List[str] = []
     try:
-        from src.ai.hf_chat import hf_client
+        from src.ai.chat.hf import hf_client
         downloaded: List[Dict[str, Any]] = hf_client.list_downloaded()
         for item in downloaded:
-            mid: str = item.get("id", "")
+            mid: str = item.get('id', '')
             if mid:
                 norm = _normalize_model_name(mid)
                 if include_unsupported or norm not in unsupported:
@@ -348,88 +265,75 @@ def _fetch_hf_models_sync(include_unsupported: bool = False) -> List[str]:
         if models:
             return models
     except Exception as e:
-        logger.info(f"[ModelManager] HuggingFace list моделей недоступен: {e}")
-
-    fallback: List[str] = ["Qwen/Qwen2.5-0.5B-Instruct", "google/gemma-2-2b-it"]
+        logger.info(f'[ModelManager] HuggingFace list моделей недоступен: {e}')
+    fallback: List[str] = ['Qwen/Qwen2.5-0.5B-Instruct', 'google/gemma-2-2b-it']
     if include_unsupported:
         return fallback + [u for u in unsupported if u not in fallback]
     return [m for m in fallback if _normalize_model_name(m) not in unsupported]
 
-def _fetch_onnx_models_sync(include_unsupported: bool = False) -> List[str]:
+def _fetch_onnx_models_sync(include_unsupported: bool=False) -> List[str]:
     """Synchronously fetch list of ONNX models from local models/onnx directory, memory, and config."""
-    unsupported: Set[str] = load_unsupported_models("onnx")
+    unsupported: Set[str] = load_unsupported_models('onnx')
     discovered_models: Set[str] = set()
-
-    # 1. Check currently loaded in-memory models
     try:
-        from src.ai.onnx_chat import onnx_client
+        from src.ai.chat.onnx import onnx_client
         loaded: List[Dict[str, Any]] = onnx_client.list_loaded()
         for item in loaded:
-            mid: str = item.get("id", "")
+            mid: str = item.get('id', '')
             if mid:
                 norm = _normalize_model_name(mid)
                 if include_unsupported or norm not in unsupported:
                     discovered_models.add(mid)
     except Exception as e:
-        logger.debug(f"[ModelManager] ONNX memory models check: {e}")
-
-    # 2. Scan local models/onnx directory
+        logger.debug(f'[ModelManager] ONNX memory models check: {e}')
     try:
         global_cfg: Dict[str, Any] = j_loads(_GLOBAL_CONFIG_PATH) or {}
-        onnx_cfg: Dict[str, Any] = global_cfg.get("onnx", {}) if isinstance(global_cfg, dict) else {}
-        models_dir_rel: str = onnx_cfg.get("models_dir", "models/onnx")
+        onnx_cfg: Dict[str, Any] = global_cfg.get('onnx', {}) if isinstance(global_cfg, dict) else {}
+        models_dir_rel: str = onnx_cfg.get('models_dir', 'models/onnx')
         models_dir: Path = __root__ / models_dir_rel if not Path(models_dir_rel).is_absolute() else Path(models_dir_rel)
-
         if models_dir.exists() and models_dir.is_dir():
             for entry in models_dir.iterdir():
-                if entry.is_dir() or entry.suffix in (".onnx", ".ort"):
+                if entry.is_dir() or entry.suffix in ('.onnx', '.ort'):
                     name = entry.name
                     if name:
                         norm = _normalize_model_name(name)
                         if include_unsupported or norm not in unsupported:
                             discovered_models.add(name)
-
-        # Default configured model
-        def_model = onnx_cfg.get("default_model", "")
+        def_model = onnx_cfg.get('default_model', '')
         if def_model:
             norm_def = _normalize_model_name(def_model)
             if include_unsupported or norm_def not in unsupported:
                 discovered_models.add(def_model)
-
     except Exception as e:
-        logger.info(f"[ModelManager] ONNX local directory scan: {e}")
-
+        logger.info(f'[ModelManager] ONNX local directory scan: {e}')
     if not discovered_models:
-        discovered_models = {"phi-3.5-mini-instruct-onnx", "qwen2.5-0.5b-instruct-onnx"}
-
+        discovered_models = {'phi-3.5-mini-instruct-onnx', 'qwen2.5-0.5b-instruct-onnx'}
     if include_unsupported:
         for unsup in unsupported:
             discovered_models.add(unsup)
         return sorted(list(discovered_models))
-
     return [m for m in sorted(discovered_models) if _normalize_model_name(m) not in unsupported]
 
-
-def _fetch_openai_compat_models_sync(include_unsupported: bool = False) -> List[str]:
+def _fetch_openai_compat_models_sync(include_unsupported: bool=False) -> List[str]:
     """Synchronously fetch list of OpenAI-compatible provider models."""
-    unsupported: Set[str] = load_unsupported_models("openai")
+    unsupported: Set[str] = load_unsupported_models('openai')
     global_cfg: Dict[str, Any] = j_loads(_GLOBAL_CONFIG_PATH)
     models: List[str] = []
     if isinstance(global_cfg, dict):
-        compat_sec: Dict[str, Any] = global_cfg.get("openai_compat", {})
+        compat_sec: Dict[str, Any] = global_cfg.get('openai_compat', {})
         if isinstance(compat_sec, dict):
-            for prov_name, prov_data in compat_sec.get("providers", {}).items():
+            for prov_name, prov_data in compat_sec.get('providers', {}).items():
                 if isinstance(prov_data, dict):
-                    for m in prov_data.get("models", []):
+                    for m in prov_data.get('models', []):
                         if isinstance(m, str) and m:
                             norm = _normalize_model_name(m)
                             if include_unsupported or norm not in unsupported:
-                                if prov_name != "openai" and not any(m.startswith(f"{p}:") for p in ("openai", "deepseek", "groq", "openrouter", "lmstudio", "local")):
-                                    models.append(f"{prov_name}:{m}")
+                                if prov_name != 'openai' and (not any((m.startswith(f'{p}:') for p in ('openai', 'deepseek', 'groq', 'openrouter', 'lmstudio', 'local')))):
+                                    models.append(f'{prov_name}:{m}')
                                 else:
                                     models.append(m)
     if not models:
-        models = ["gpt-4o-mini", "gpt-4o", "deepseek:deepseek-chat"]
+        models = ['gpt-4o-mini', 'gpt-4o', 'deepseek:deepseek-chat']
     if include_unsupported:
         for u in unsupported:
             if u not in models:
@@ -437,12 +341,7 @@ def _fetch_openai_compat_models_sync(include_unsupported: bool = False) -> List[
         return models
     return [m for m in models if _normalize_model_name(m) not in unsupported]
 
-def get_available_models(
-    provider: str = "gemini",
-    api_key: str = "",
-    force_refresh: bool = False,
-    include_unsupported: bool = False,
-) -> List[str]:
+def get_available_models(provider: str='gemini', api_key: str='', force_refresh: bool=False, include_unsupported: bool=False) -> List[str]:
     """Get list of current available models for given provider.
 
     Uses single fetch via SDK/API with subsequent caching in memory
@@ -468,74 +367,57 @@ def get_available_models(
         True
     """
     prov: str = provider.lower().strip()
-
-    # Fast return from cache when filtering is default (False)
-    if not force_refresh and not include_unsupported and prov in _CACHED_MODELS and _CACHED_MODELS[prov]:
+    if not force_refresh and (not include_unsupported) and (prov in _CACHED_MODELS) and _CACHED_MODELS[prov]:
         return list(_CACHED_MODELS[prov])
-
     result_models: List[str] = []
-
-    if prov == "gemini":
+    if prov == 'gemini':
         result_models = _fetch_gemini_models_sync(api_key=api_key, include_unsupported=include_unsupported)
         if not include_unsupported:
-            _CACHED_MODELS["gemini"] = result_models
+            _CACHED_MODELS['gemini'] = result_models
         return list(result_models)
-
-    elif prov in ("gemini_cli", "gemini-cli"):
+    elif prov in ('gemini_cli', 'gemini-cli'):
         result_models = _fetch_gemini_cli_models_sync(include_unsupported=include_unsupported)
         if not include_unsupported:
-            _CACHED_MODELS["gemini_cli"] = result_models
+            _CACHED_MODELS['gemini_cli'] = result_models
         return list(result_models)
-
-    elif prov == "agy":
-        gemini_models: List[str] = get_available_models(
-            "gemini", api_key=api_key, force_refresh=force_refresh, include_unsupported=include_unsupported
-        )
-        agy_unsupported: Set[str] = load_unsupported_models("agy")
+    elif prov == 'agy':
+        gemini_models: List[str] = get_available_models('gemini', api_key=api_key, force_refresh=force_refresh, include_unsupported=include_unsupported)
+        agy_unsupported: Set[str] = load_unsupported_models('agy')
         if include_unsupported:
-            result_models = [f"agy-{m}" if not m.startswith("agy-") else m for m in gemini_models]
+            result_models = [f'agy-{m}' if not m.startswith('agy-') else m for m in gemini_models]
         else:
-            result_models = [
-                f"agy-{m}" for m in gemini_models
-                if _normalize_model_name(m) not in agy_unsupported and f"agy-{m}" not in agy_unsupported
-            ]
+            result_models = [f'agy-{m}' for m in gemini_models if _normalize_model_name(m) not in agy_unsupported and f'agy-{m}' not in agy_unsupported]
         if not include_unsupported:
-            _CACHED_MODELS["agy"] = result_models
+            _CACHED_MODELS['agy'] = result_models
         return list(result_models)
-
-    elif prov == "foundry":
+    elif prov == 'foundry':
         result_models = _fetch_foundry_models_sync(include_unsupported=include_unsupported)
         if not include_unsupported:
-            _CACHED_MODELS["foundry"] = result_models
+            _CACHED_MODELS['foundry'] = result_models
         return list(result_models)
-
-    elif prov == "ollama":
+    elif prov == 'ollama':
         result_models = _fetch_ollama_models_sync(include_unsupported=include_unsupported)
         if not include_unsupported:
-            _CACHED_MODELS["ollama"] = result_models
+            _CACHED_MODELS['ollama'] = result_models
         return list(result_models)
-
-    elif prov in ("hf", "huggingface"):
+    elif prov in ('hf', 'huggingface'):
         result_models = _fetch_hf_models_sync(include_unsupported=include_unsupported)
         if not include_unsupported:
-            _CACHED_MODELS["hf"] = result_models
+            _CACHED_MODELS['hf'] = result_models
         return list(result_models)
-
-    elif prov == "onnx":
+    elif prov == 'onnx':
         result_models = _fetch_onnx_models_sync(include_unsupported=include_unsupported)
         if not include_unsupported:
-            _CACHED_MODELS["onnx"] = result_models
+            _CACHED_MODELS['onnx'] = result_models
         return list(result_models)
-
-    elif prov in ("openai", "openai_compat", "openai-compat", "deepseek", "groq", "openrouter", "lmstudio"):
+    elif prov in ('openai', 'openai_compat', 'openai-compat', 'deepseek', 'groq', 'openrouter', 'lmstudio'):
         result_models = _fetch_openai_compat_models_sync(include_unsupported=include_unsupported)
         if not include_unsupported:
-            _CACHED_MODELS["openai"] = result_models
+            _CACHED_MODELS['openai'] = result_models
         return list(result_models)
-
     return result_models
 
-async def actualize_all_models(force_refresh: bool = True) -> Dict[str, List[str]]:
+async def actualize_all_models(force_refresh: bool=True) -> Dict[str, List[str]]:
     """Asynchronously actualize and warm up model caches for all active providers.
 
     Executes once at server application startup.
@@ -554,23 +436,16 @@ async def actualize_all_models(force_refresh: bool = True) -> Dict[str, List[str
         >>> 'gemini' in pool
         True
     """
-    logger.info("[ModelManager] Запуск актуализации моделей для всех провайдеров...")
-
+    logger.info('[ModelManager] Запуск актуализации моделей для всех провайдеров...')
     loop = asyncio.get_running_loop()
-
-    # Параллельный опрос провайдеров в отдельных потоках
-    gemini_task = loop.run_in_executor(None, get_available_models, "gemini", "", force_refresh)
-    gemini_cli_task = loop.run_in_executor(None, get_available_models, "gemini_cli", "", force_refresh)
-    foundry_task = loop.run_in_executor(None, get_available_models, "foundry", "", force_refresh)
-    ollama_task = loop.run_in_executor(None, get_available_models, "ollama", "", force_refresh)
-    hf_task = loop.run_in_executor(None, get_available_models, "hf", "", force_refresh)
-    onnx_task = loop.run_in_executor(None, get_available_models, "onnx", "", force_refresh)
-    openai_task = loop.run_in_executor(None, get_available_models, "openai", "", force_refresh)
-
-    gemini_res, gemini_cli_res, foundry_res, ollama_res, hf_res, onnx_res, openai_res = await asyncio.gather(
-        gemini_task, gemini_cli_task, foundry_task, ollama_task, hf_task, onnx_task, openai_task, return_exceptions=True
-    )
-
+    gemini_task = loop.run_in_executor(None, get_available_models, 'gemini', '', force_refresh)
+    gemini_cli_task = loop.run_in_executor(None, get_available_models, 'gemini_cli', '', force_refresh)
+    foundry_task = loop.run_in_executor(None, get_available_models, 'foundry', '', force_refresh)
+    ollama_task = loop.run_in_executor(None, get_available_models, 'ollama', '', force_refresh)
+    hf_task = loop.run_in_executor(None, get_available_models, 'hf', '', force_refresh)
+    onnx_task = loop.run_in_executor(None, get_available_models, 'onnx', '', force_refresh)
+    openai_task = loop.run_in_executor(None, get_available_models, 'openai', '', force_refresh)
+    gemini_res, gemini_cli_res, foundry_res, ollama_res, hf_res, onnx_res, openai_res = await asyncio.gather(gemini_task, gemini_cli_task, foundry_task, ollama_task, hf_task, onnx_task, openai_task, return_exceptions=True)
     gemini_list: List[str] = gemini_res if isinstance(gemini_res, list) else []
     gemini_cli_list: List[str] = gemini_cli_res if isinstance(gemini_cli_res, list) else []
     foundry_list: List[str] = foundry_res if isinstance(foundry_res, list) else []
@@ -578,25 +453,7 @@ async def actualize_all_models(force_refresh: bool = True) -> Dict[str, List[str
     hf_list: List[str] = hf_res if isinstance(hf_res, list) else []
     onnx_list: List[str] = onnx_res if isinstance(onnx_res, list) else []
     openai_list: List[str] = openai_res if isinstance(openai_res, list) else []
-
-    # AGY формируется на основе актуализированных моделей Gemini
-    agy_list = get_available_models("agy", force_refresh=force_refresh)
-
-    result_pool: Dict[str, List[str]] = {
-        "gemini": gemini_list,
-        "gemini_cli": gemini_cli_list,
-        "agy": agy_list,
-        "foundry": foundry_list,
-        "ollama": ollama_list,
-        "hf": hf_list,
-        "onnx": onnx_list,
-        "openai": openai_list,
-    }
-
-    logger.info(
-        f"[ModelManager] Актуализация завершена: Gemini={len(gemini_list)}, "
-        f"Gemini_CLI={len(gemini_cli_list)}, AGY={len(agy_list)}, "
-        f"Foundry={len(foundry_list)}, Ollama={len(ollama_list)}, "
-        f"HF={len(hf_list)}, ONNX={len(onnx_list)}, OpenAI={len(openai_list)}"
-    )
+    agy_list = get_available_models('agy', force_refresh=force_refresh)
+    result_pool: Dict[str, List[str]] = {'gemini': gemini_list, 'gemini_cli': gemini_cli_list, 'agy': agy_list, 'foundry': foundry_list, 'ollama': ollama_list, 'hf': hf_list, 'onnx': onnx_list, 'openai': openai_list}
+    logger.info(f'[ModelManager] Актуализация завершена: Gemini={len(gemini_list)}, Gemini_CLI={len(gemini_cli_list)}, AGY={len(agy_list)}, Foundry={len(foundry_list)}, Ollama={len(ollama_list)}, HF={len(hf_list)}, ONNX={len(onnx_list)}, OpenAI={len(openai_list)}')
     return result_pool

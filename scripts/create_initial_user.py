@@ -53,7 +53,12 @@ class InitialUserManager:
         if db_path and str(db_path).strip() and str(db_path) != ".":
             self.db_path: Path = Path(db_path)
         else:
-            self.db_path = PROJECT_ROOT / "src" / "user_manager" / "users.db"
+            from src.config import storage_cfg
+from pathlib import Path
+# Ensure users directory exists
+Path(storage_cfg.users_dir).mkdir(parents=True, exist_ok=True)
+# DB path next to users directory
+db_path = Path(storage_cfg.users_dir).with_name('users.db')
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
     @staticmethod

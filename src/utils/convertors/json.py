@@ -1,18 +1,3 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: JSON format conversion utilities
-# =============================================================================
-# Description:
-#   Converts JSON data into various formats: CSV, SimpleNamespace, XML, and XLS.
-#   Provides flexible serialization methods for different output formats.
-#
-# File: json.py
-# Project: ai-breadboard
-# Package: src.utils.convertors
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """
 JSON data conversion module.
 
@@ -22,13 +7,11 @@ Functions:
     - `json2xml`: Convert JSON data to XML format.
     - `json2xls`: Convert JSON data to XLS format.
 """
-
 import json
 import csv
 from types import SimpleNamespace
 from pathlib import Path
 from typing import List, Dict
-
 from src.utils.csv import save_csv_file
 from src.utils.jjson import j_dumps, j_loads, j_loads_ns
 from src.utils.xls import save_xls_file
@@ -58,15 +41,14 @@ def json2csv(json_data: str | list | dict | Path, csv_file_path: str | Path) -> 
         elif isinstance(json_data, (str, Path)):
             loaded = j_loads(json_data)
             if loaded is None:
-                raise ValueError(f"Failed to parse json_data: {json_data}")
+                raise ValueError(f'Failed to parse json_data: {json_data}')
             data = [loaded] if isinstance(loaded, dict) else loaded
         else:
-            raise ValueError("Unsupported type for json_data")
-
+            raise ValueError('Unsupported type for json_data')
         save_csv_file(data, csv_file_path)
         return True
     except Exception as ex:
-        logger.error(f"json2csv failed", ex, True)
+        logger.error(f'json2csv failed', ex, True)
         return False
 
 def json2ns(json_data: str | dict | Path) -> SimpleNamespace:
@@ -86,14 +68,13 @@ def json2ns(json_data: str | dict | Path) -> SimpleNamespace:
     try:
         ns = j_loads_ns(json_data)
         if ns is None:
-            raise ValueError(f"Failed to parse JSON into SimpleNamespace: {json_data}")
+            raise ValueError(f'Failed to parse JSON into SimpleNamespace: {json_data}')
         return ns
     except Exception as ex:
-        logger.error(f"json2ns failed", ex, True)
+        logger.error(f'json2ns failed', ex, True)
         raise
 
-
-def json2xml(json_data: str | dict | Path, root_tag: str = "root") -> str:
+def json2xml(json_data: str | dict | Path, root_tag: str='root') -> str:
     """
     Convert JSON data or JSON file to XML format.
 
@@ -126,4 +107,3 @@ def json2xls(json_data: str | list | dict | Path, xls_file_path: str | Path) -> 
         Exception: If unable to parse JSON or write XLS.
     """
     return save_xls_file(json_data, xls_file_path)
-        

@@ -35,6 +35,5 @@ class TestPsapiAPI(unittest.TestCase):
         pids = self.api.enumerate_processes()
         self.assertIsInstance(pids, list)
         self.assertGreater(len(pids), 0)
-
 if __name__ == '__main__':
     unittest.main()

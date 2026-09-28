@@ -1,32 +1,8 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Dynamic Windows Tool Registry
-# =============================================================================
-# Description:
-#   Реестр инструментов (ToolRegistry) для централизованного хранения,
-#   динамической регистрации, поиска и формирования Function Calling схем.
-#
-# Examples:
-#   >>> from apps.windows.core.tools.registry import ToolRegistry
-#   >>> registry = ToolRegistry()
-#   >>> tools_defs = registry.get_function_definitions()
-#
-# File: registry.py
-# Project: AI-Breadboard
-# Package: apps.windows.core.tools
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """Реестр системных и динамических инструментов подсистемы Windows."""
-
 from __future__ import annotations
-
 from typing import Any, Dict, List, Optional
-
 from logger import logger
 from apps.windows.core.tools.base import BaseTool, ToolExecutionResult
-
 
 class ToolRegistry:
     """Реестр встроенных и динамически сгенерированных инструментов."""
@@ -35,7 +11,7 @@ class ToolRegistry:
         """Инициализация реестра."""
         self._tools: Dict[str, BaseTool] = {}
 
-    def register(self, tool: BaseTool, overwrite: bool = True) -> bool:
+    def register(self, tool: BaseTool, overwrite: bool=True) -> bool:
         """Регистрация инструмента в реестре.
 
         Args:
@@ -45,14 +21,12 @@ class ToolRegistry:
         Returns:
             bool: True если зарегистрирован успешно, False если инструмент уже существовал.
         """
-        if not tool or not getattr(tool, "name", None):
-            logger.warning("[ToolRegistry] Попытка зарегистрировать невалидный инструмент.")
+        if not tool or not getattr(tool, 'name', None):
+            logger.warning('[ToolRegistry] Попытка зарегистрировать невалидный инструмент.')
             return False
-
-        if tool.name in self._tools and not overwrite:
+        if tool.name in self._tools and (not overwrite):
             logger.debug(f"[ToolRegistry] Инструмент '{tool.name}' уже зарегистрирован.")
             return False
-
         self._tools[tool.name] = tool
         logger.info(f"[ToolRegistry] Зарегистрирован инструмент '{tool.name}' ({tool.title})")
         return True
@@ -122,20 +96,9 @@ class ToolRegistry:
         """
         tool = self.get(_tool_name)
         if not tool:
-            return ToolExecutionResult(
-                tool_name=_tool_name,
-                status="error",
-                data=None,
-                message=f"Инструмент '{_tool_name}' не найден в реестре.",
-            )
+            return ToolExecutionResult(tool_name=_tool_name, status='error', data=None, message=f"Инструмент '{_tool_name}' не найден в реестре.")
         try:
             return await tool.execute(**kwargs)
         except Exception as e:
             logger.error(f"[ToolRegistry] Сбой выполнения инструмента '{_tool_name}': {e}", exc_info=True)
-            return ToolExecutionResult(
-                tool_name=_tool_name,
-                status="error",
-                data=None,
-                message=f"Ошибка выполнения инструмента '{_tool_name}': {e}",
-            )
-
+            return ToolExecutionResult(tool_name=_tool_name, status='error', data=None, message=f"Ошибка выполнения инструмента '{_tool_name}': {e}")

@@ -1,44 +1,17 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Google Workspace Multi-Account Pool & Secrets Manager
-# =============================================================================
-# Description:
-#   Manages Google Workspace (Gmail, Drive, Sheets, Docs) multi-account pool,
-#   OAuth 2.0 credentials, Service Accounts, token caching, and quota cooldowns.
-#   Stored in src/secrets/google_accounts.json with token persistence in src/secrets/tokens/.
-#
-# File: google_accounts_state.py
-# Project: ai-breadboard
-# Package: src.ai
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 from __future__ import annotations
-
 import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-
 from header import __root__
 from logger.logger import logger
-
 _SECRETS_DIR: Path = __root__ / 'src' / 'secrets'
 _OAUTH_FILES_DIR: Path = _SECRETS_DIR / 'google_ouath_files'
 _TOKENS_DIR: Path = _SECRETS_DIR / 'google_oauth_tokens'
 _ACCOUNTS_FILE: Path = _SECRETS_DIR / 'google_accounts.json'
 _DAY_SECONDS: float = 86400.0
-
-DEFAULT_SCOPES = [
-    "https://www.googleapis.com/auth/gmail.readonly",
-    "https://www.googleapis.com/auth/gmail.compose",
-    "https://www.googleapis.com/auth/drive",
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/documents",
-]
-
+DEFAULT_SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/gmail.compose', 'https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/documents']
 
 def _ensure_dirs() -> None:
     """Ensure secrets and tokens directories exist."""
@@ -47,18 +20,15 @@ def _ensure_dirs() -> None:
         _OAUTH_FILES_DIR.mkdir(parents=True, exist_ok=True)
         _TOKENS_DIR.mkdir(parents=True, exist_ok=True)
     except Exception as ex:
-        logger.error(f"Failed to create Google accounts directories: {ex}")
-
+        logger.error(f'Failed to create Google accounts directories: {ex}')
 
 def _now_iso() -> str:
     """Get current UTC ISO 8601 string."""
     return datetime.now(timezone.utc).isoformat()
 
-
 def _now_ts() -> float:
     """Get current UTC timestamp."""
     return datetime.now(timezone.utc).timestamp()
-
 
 def _iso_to_ts(iso_str: str) -> float:
     """Convert ISO string to timestamp."""
@@ -69,7 +39,6 @@ def _iso_to_ts(iso_str: str) -> float:
         return datetime.fromisoformat(cleaned).timestamp()
     except Exception:
         return 0.0
-
 
 def _load_accounts_data() -> Dict[str, Any]:
     """Load accounts metadata from google_accounts.json.
@@ -88,84 +57,39 @@ def _load_accounts_data() -> Dict[str, Any]:
                         data = {'default_account': '', 'accounts': data}
                     return data
         except Exception as ex:
-            logger.warning(f"Error reading {_ACCOUNTS_FILE}: {ex}")
-
-    # Bootstrap default single account if existing secrets exist
+            logger.warning(f'Error reading {_ACCOUNTS_FILE}: {ex}')
     bootstrapped = _bootstrap_from_existing_files()
     if bootstrapped.get('accounts'):
         _save_accounts_data(bootstrapped)
         return bootstrapped
-
     return {'default_account': '', 'accounts': {}}
-
 
 def _bootstrap_from_existing_files() -> Dict[str, Any]:
     """Discover existing credentials in google_ouath_files, google_oauth_tokens, src/secrets, or root."""
     accounts: Dict[str, Any] = {}
-
-    # 1. Check google_ouath_files directory for <user>_secret.json
     if _OAUTH_FILES_DIR.exists():
-        for f in _OAUTH_FILES_DIR.glob("*.json"):
-            if f.name == "gemini_keys.json":
+        for f in _OAUTH_FILES_DIR.glob('*.json'):
+            if f.name == 'gemini_keys.json':
                 continue
-            acc_name = f.stem.removesuffix("_secret").removesuffix("_credentials")
+            acc_name = f.stem.removesuffix('_secret').removesuffix('_credentials')
             if not acc_name:
                 acc_name = f.stem
-            token_cand = _TOKENS_DIR / f"{acc_name}_token.json"
-            accounts[acc_name] = {
-                "name": acc_name,
-                "email": "",
-                "type": "oauth2",
-                "credentials_file": str(f.relative_to(__root__)) if str(f).startswith(str(__root__)) else str(f),
-                "token_file": str(token_cand.relative_to(__root__)) if str(token_cand).startswith(str(__root__)) else str(token_cand),
-                "status": "active",
-                "last_run": "",
-                "exhausted_at": "",
-            }
-
-    # 2. Check google_oauth_tokens directory for <user>_token.json
+            token_cand = _TOKENS_DIR / f'{acc_name}_token.json'
+            accounts[acc_name] = {'name': acc_name, 'email': '', 'type': 'oauth2', 'credentials_file': str(f.relative_to(__root__)) if str(f).startswith(str(__root__)) else str(f), 'token_file': str(token_cand.relative_to(__root__)) if str(token_cand).startswith(str(__root__)) else str(token_cand), 'status': 'active', 'last_run': '', 'exhausted_at': ''}
     if _TOKENS_DIR.exists():
-        for f in _TOKENS_DIR.glob("*_token.json"):
-            acc_name = f.stem.removesuffix("_token")
+        for f in _TOKENS_DIR.glob('*_token.json'):
+            acc_name = f.stem.removesuffix('_token')
             if acc_name not in accounts:
-                secret_cand = _OAUTH_FILES_DIR / f"{acc_name}_secret.json"
-                accounts[acc_name] = {
-                    "name": acc_name,
-                    "email": "",
-                    "type": "oauth2",
-                    "credentials_file": str(secret_cand.relative_to(__root__)) if str(secret_cand).startswith(str(__root__)) else str(secret_cand),
-                    "token_file": str(f.relative_to(__root__)) if str(f).startswith(str(__root__)) else str(f),
-                    "status": "active",
-                    "last_run": "",
-                    "exhausted_at": "",
-                }
-
-    # 3. Fallback candidates in root and secrets
-    candidates = [
-        (_SECRETS_DIR / "credentials.json", "oauth2"),
-        (_SECRETS_DIR / "service_account.json", "service_account"),
-        (__root__ / "credentials.json", "oauth2"),
-        (__root__ / "service_account.json", "service_account"),
-    ]
-
+                secret_cand = _OAUTH_FILES_DIR / f'{acc_name}_secret.json'
+                accounts[acc_name] = {'name': acc_name, 'email': '', 'type': 'oauth2', 'credentials_file': str(secret_cand.relative_to(__root__)) if str(secret_cand).startswith(str(__root__)) else str(secret_cand), 'token_file': str(f.relative_to(__root__)) if str(f).startswith(str(__root__)) else str(f), 'status': 'active', 'last_run': '', 'exhausted_at': ''}
+    candidates = [(_SECRETS_DIR / 'credentials.json', 'oauth2'), (_SECRETS_DIR / 'service_account.json', 'service_account'), (__root__ / 'credentials.json', 'oauth2'), (__root__ / 'service_account.json', 'service_account')]
     for cand_path, acc_type in candidates:
         if cand_path.exists():
-            acc_name = "default" if "default" not in accounts else cand_path.stem
+            acc_name = 'default' if 'default' not in accounts else cand_path.stem
             if acc_name not in accounts:
-                accounts[acc_name] = {
-                    "name": acc_name,
-                    "email": "",
-                    "type": acc_type,
-                    "credentials_file": str(cand_path.relative_to(__root__)) if str(cand_path).startswith(str(__root__)) else str(cand_path),
-                    "token_file": str((_TOKENS_DIR / f"{acc_name}_token.json").relative_to(__root__)) if str(_TOKENS_DIR).startswith(str(__root__)) else str(_TOKENS_DIR / f"{acc_name}_token.json"),
-                    "status": "active",
-                    "last_run": "",
-                    "exhausted_at": "",
-                }
-
-    default_name = next(iter(accounts.keys()), "")
-    return {"default_account": default_name, "accounts": accounts}
-
+                accounts[acc_name] = {'name': acc_name, 'email': '', 'type': acc_type, 'credentials_file': str(cand_path.relative_to(__root__)) if str(cand_path).startswith(str(__root__)) else str(cand_path), 'token_file': str((_TOKENS_DIR / f'{acc_name}_token.json').relative_to(__root__)) if str(_TOKENS_DIR).startswith(str(__root__)) else str(_TOKENS_DIR / f'{acc_name}_token.json'), 'status': 'active', 'last_run': '', 'exhausted_at': ''}
+    default_name = next(iter(accounts.keys()), '')
+    return {'default_account': default_name, 'accounts': accounts}
 
 def _save_accounts_data(data: Dict[str, Any]) -> bool:
     """Save accounts dictionary to JSON file.
@@ -181,11 +105,10 @@ def _save_accounts_data(data: Dict[str, Any]) -> bool:
         _ACCOUNTS_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding='utf-8')
         return True
     except Exception as ex:
-        logger.error(f"Failed to save Google accounts data to {_ACCOUNTS_FILE}: {ex}")
+        logger.error(f'Failed to save Google accounts data to {_ACCOUNTS_FILE}: {ex}')
         return False
 
-
-def list_google_accounts(skip_exhausted: bool = False) -> List[Dict[str, Any]]:
+def list_google_accounts(skip_exhausted: bool=False) -> List[Dict[str, Any]]:
     """List all configured Google Workspace accounts in pool.
 
     Args:
@@ -200,62 +123,45 @@ def list_google_accounts(skip_exhausted: bool = False) -> List[Dict[str, Any]]:
     now = _now_ts()
     result = []
     updates_needed = False
-
     for acc_name, acc_info in accounts.items():
         status = acc_info.get('status', 'active')
         exhausted_at = acc_info.get('exhausted_at', '')
-
-        # Auto-reset 24h cooldown
         if status == 'exhausted' or exhausted_at:
             ref_ts = _iso_to_ts(exhausted_at)
-            if ref_ts > 0 and (now - ref_ts) >= _DAY_SECONDS:
+            if ref_ts > 0 and now - ref_ts >= _DAY_SECONDS:
                 acc_info['status'] = 'active'
                 acc_info['exhausted_at'] = ''
                 status = 'active'
                 updates_needed = True
-
         if skip_exhausted and status == 'exhausted':
             continue
-
         item = dict(acc_info)
         item['name'] = acc_name
-        item['is_default'] = (acc_name == default_acc)
+        item['is_default'] = acc_name == default_acc
         result.append(item)
-
     if updates_needed:
         _save_accounts_data(data)
-
     return result
 
-
-def get_account_info(account_name: Optional[str] = None) -> Optional[Dict[str, Any]]:
+def get_account_info(account_name: Optional[str]=None) -> Optional[Dict[str, Any]]:
     """Get metadata for a specific or default Google account."""
     data = _load_accounts_data()
     accounts = data.get('accounts', {})
     target = account_name or data.get('default_account', '')
-
     if target and target in accounts:
         info = dict(accounts[target])
         info['name'] = target
         return info
-
-    # Fallback to first available account
     if accounts:
         first_k = next(iter(accounts.keys()))
         info = dict(accounts[first_k])
         info['name'] = first_k
         return info
-
+    '# TODO: вернуть корректное значение'
+    logger.error('Функция get_account_info вернула пустой результат')
     return None
 
-
-def save_google_account(
-    account_name: str,
-    credentials_path_or_dict: Any,
-    account_type: str = "oauth2",
-    email: str = "",
-    set_as_default: bool = False,
-) -> bool:
+def save_google_account(account_name: str, credentials_path_or_dict: Any, account_type: str='oauth2', email: str='', set_as_default: bool=False) -> bool:
     """Add or update a Google Workspace account in pool.
 
     Args:
@@ -272,14 +178,10 @@ def save_google_account(
     clean_name = account_name.strip()
     if not clean_name:
         return False
-
     data = _load_accounts_data()
     accounts = data.setdefault('accounts', {})
-
-    # Determine credential file destination in _OAUTH_FILES_DIR (<user>_secret.json)
-    creds_filename = f"{clean_name}_secret.json"
+    creds_filename = f'{clean_name}_secret.json'
     dest_file = _OAUTH_FILES_DIR / creds_filename
-
     if isinstance(credentials_path_or_dict, dict):
         dest_file.write_text(json.dumps(credentials_path_or_dict, indent=2, ensure_ascii=False), encoding='utf-8')
     elif isinstance(credentials_path_or_dict, (str, Path)):
@@ -289,53 +191,32 @@ def save_google_account(
         if src_path.exists() and src_path.resolve() != dest_file.resolve():
             dest_file.write_bytes(src_path.read_bytes())
         elif not src_path.exists():
-            logger.error(f"Credentials source file does not exist: {src_path}")
+            logger.error(f'Credentials source file does not exist: {src_path}')
             return False
-
-    token_filename = f"{clean_name}_token.json"
+    token_filename = f'{clean_name}_token.json'
     token_file = _TOKENS_DIR / token_filename
-
-    # For relative path tracking relative to __root__ (or direct filename if outside __root__)
     try:
         creds_rel_path = str(dest_file.relative_to(__root__))
     except ValueError:
         creds_rel_path = str(dest_file)
-
     try:
         token_rel_path = str(token_file.relative_to(__root__))
     except ValueError:
         token_rel_path = str(token_file)
-
-    accounts[clean_name] = {
-        "name": clean_name,
-        "email": email or accounts.get(clean_name, {}).get("email", ""),
-        "type": account_type,
-        "credentials_file": creds_rel_path,
-        "token_file": token_rel_path,
-        "status": "active",
-        "last_run": "",
-        "exhausted_at": "",
-    }
-
+    accounts[clean_name] = {'name': clean_name, 'email': email or accounts.get(clean_name, {}).get('email', ''), 'type': account_type, 'credentials_file': creds_rel_path, 'token_file': token_rel_path, 'status': 'active', 'last_run': '', 'exhausted_at': ''}
     if set_as_default or not data.get('default_account'):
         data['default_account'] = clean_name
-
     return _save_accounts_data(data)
-
 
 def delete_google_account(account_name: str) -> bool:
     """Remove a Google account from the pool."""
     data = _load_accounts_data()
     accounts = data.get('accounts', {})
-
     if account_name not in accounts:
         return False
-
     deleted = accounts.pop(account_name)
     if data.get('default_account') == account_name:
-        data['default_account'] = next(iter(accounts.keys()), "")
-
-    # Cleanup token file if exists
+        data['default_account'] = next(iter(accounts.keys()), '')
     token_str = deleted.get('token_file', '')
     if token_str:
         token_path = Path(token_str)
@@ -347,51 +228,39 @@ def delete_google_account(account_name: str) -> bool:
             try:
                 token_file.unlink()
             except Exception as e:
-                logger.warning(f"Could not delete token file {token_file}: {e}")
-
+                logger.warning(f'Could not delete token file {token_file}: {e}')
     return _save_accounts_data(data)
-
 
 def set_default_account(account_name: str) -> bool:
     """Set specified account as default for pool."""
     data = _load_accounts_data()
     accounts = data.get('accounts', {})
-
     if account_name not in accounts:
         return False
-
     data['default_account'] = account_name
     return _save_accounts_data(data)
-
 
 def mark_account_exhausted(account_name: str) -> None:
     """Mark an account as quota-exhausted and rotate."""
     data = _load_accounts_data()
     accounts = data.get('accounts', {})
-
     if account_name in accounts:
         accounts[account_name]['status'] = 'exhausted'
         accounts[account_name]['exhausted_at'] = _now_iso()
         _save_accounts_data(data)
         logger.warning(f'Google account "{account_name}" marked as quota-exhausted.')
 
-
 def reset_account_status(account_name: str) -> bool:
     """Reset quota status for an account."""
     data = _load_accounts_data()
     accounts = data.get('accounts', {})
-
     if account_name in accounts:
         accounts[account_name]['status'] = 'active'
         accounts[account_name]['exhausted_at'] = ''
         return _save_accounts_data(data)
     return False
 
-
-def load_account_credentials(
-    account_name: Optional[str] = None,
-    scopes: Optional[List[str]] = None,
-):
+def load_account_credentials(account_name: Optional[str]=None, scopes: Optional[List[str]]=None):
     """Retrieve authentic Google Credentials object for specified or active pool account.
 
     Args:
@@ -407,91 +276,69 @@ def load_account_credentials(
         from google.oauth2 import service_account
         from google_auth_oauthlib.flow import InstalledAppFlow
     except ImportError:
-        logger.error("Google Auth libraries are not installed.")
+        logger.error('Google Auth libraries are not installed.')
         return None
-
     active_scopes = scopes or DEFAULT_SCOPES
     acc_info = get_account_info(account_name)
-
     if not acc_info:
-        # Fallback to direct credentials search in root / src/secrets
         return None
-
-    creds_rel = acc_info.get("credentials_file", "")
-    token_rel = acc_info.get("token_file", "")
-    acc_type = acc_info.get("type", "oauth2")
-    name = acc_info.get("name", "default")
-
+    creds_rel = acc_info.get('credentials_file', '')
+    token_rel = acc_info.get('token_file', '')
+    acc_type = acc_info.get('type', 'oauth2')
+    name = acc_info.get('name', 'default')
     if creds_rel:
         p = Path(creds_rel)
         creds_path = p if p.is_absolute() else __root__ / p
     else:
         creds_path = None
-
     if token_rel:
         p = Path(token_rel)
         token_path = p if p.is_absolute() else __root__ / p
     else:
-        token_path = _TOKENS_DIR / f"{name}_token.json"
-
-    # 1. Service Account Mode
-    if acc_type == "service_account" and creds_path and creds_path.exists():
+        token_path = _TOKENS_DIR / f'{name}_token.json'
+    if acc_type == 'service_account' and creds_path and creds_path.exists():
         try:
-            return service_account.Credentials.from_service_account_file(
-                str(creds_path), scopes=active_scopes
-            )
+            return service_account.Credentials.from_service_account_file(str(creds_path), scopes=active_scopes)
         except Exception as e:
-            logger.error(f"Failed to load Service Account for {name}: {e}")
+            logger.error(f'Failed to load Service Account for {name}: {e}')
             return None
-
-    # 2. OAuth 2.0 User Token Mode
     creds = None
     if token_path and token_path.exists():
         try:
             creds = Credentials.from_authorized_user_file(str(token_path), active_scopes)
         except Exception as e:
-            logger.warning(f"Failed to load cached OAuth token for {name}: {e}")
+            logger.warning(f'Failed to load cached OAuth token for {name}: {e}')
             creds = None
-
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             try:
                 logger.info(f"Refreshing expired OAuth token for Google account '{name}'...")
                 creds.refresh(Request())
             except Exception as e:
-                logger.warning(f"Token refresh failed for {name}: {e}")
+                logger.warning(f'Token refresh failed for {name}: {e}')
                 creds = None
-
         if not creds:
             if not creds_path or not creds_path.exists():
-                logger.error(
-                    f"No credentials file found for Google account '{name}' at {creds_path}. "
-                    f"Please place credentials JSON in src/secrets."
-                )
+                logger.error(f"No credentials file found for Google account '{name}' at {creds_path}. Please place credentials JSON in src/secrets.")
                 return None
-
             try:
                 logger.info(f"Starting OAuth consent flow for account '{name}' ({creds_path})...")
                 flow = InstalledAppFlow.from_client_secrets_file(str(creds_path), active_scopes)
                 creds = flow.run_local_server(port=0)
             except Exception as e:
-                logger.error(f"Error during OAuth flow for {name}: {e}")
+                logger.error(f'Error during OAuth flow for {name}: {e}')
                 return None
-
         if creds and token_path:
             try:
                 token_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(token_path, "w", encoding="utf-8") as tf:
+                with open(token_path, 'w', encoding='utf-8') as tf:
                     tf.write(creds.to_json())
                 logger.info(f"Saved OAuth token for account '{name}' to {token_path}")
             except Exception as e:
-                logger.error(f"Failed to save token file for {name}: {e}")
-
-    # Update last run timestamp
+                logger.error(f'Failed to save token file for {name}: {e}')
     if creds:
         data = _load_accounts_data()
         if name in data.get('accounts', {}):
             data['accounts'][name]['last_run'] = _now_iso()
             _save_accounts_data(data)
-
     return creds

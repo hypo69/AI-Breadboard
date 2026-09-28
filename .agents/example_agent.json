@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "example_agent",
+  "name": "Example Agent",
+  "description": "Примерный демонстрационный агент, показывающий базовый шаблон создания агента.",
+  "is_system": true,
+  "enabled": true,
+  "provider": "gemini",
+  "model": "gemini-1.5-flash",
+  "temperature": 0.0,
+  "max_steps": 10,
+  "timeout_seconds": 30,
+  "tools": [
+    "python_eval",
+    "file_read"
+  ],
+  "system_prompt": "Вы — примерный агент, демонстрирующий базовый шаблон реализации агентов. Он умеет выполнять Python‑код и читать файлы проекта.",
+  "class_path": "src.ai.agents.ExampleAgent"
+}

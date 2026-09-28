@@ -1,60 +1,18 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Core Google Generative AI Client
-# =============================================================================
-# Description:
-#   Core client class for Google Generative AI API interaction.
-#   Manages API key pool, model rotation, and base configuration.
-#
-# File: core.py
-# Project: ai-breadboard
-# Package: src.ai.gemini
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
-
 from google import genai
-
-from src.ai.orchestration.model_manager import (
-    add_unsupported_model as _mgr_add_unsupported_model,
-    get_available_models as _mgr_get_available_models,
-    load_unsupported_models as _mgr_load_unsupported_models,
-)
+from src.ai.orchestration.model_manager import add_unsupported_model as _mgr_add_unsupported_model, get_available_models as _mgr_get_available_models, load_unsupported_models as _mgr_load_unsupported_models
 from src.config import server_cfg, ai_cfg
 from logger.logger import logger
-from src.ai.gemini.gemini_api_key_state import (
-    get_status,
-    load_api_keys,
-    mark_exhausted,
-    next_available_in,
-    update_last_run,
-)
+from src.ai.gemini.gemini_api_key_state import get_status, load_api_keys, mark_exhausted, next_available_in, update_last_run
 from src.utils.jjson import j_loads
-
-# Loading local configuration of Gemini module
 _config_path: Path = Path(__file__).parent / 'config.json'
 _gemini_config: dict = j_loads(_config_path) if _config_path.exists() else {}
-_DEFAULT_MODEL: str = (
-    _gemini_config.get('model', 'gemini-flash-latest')
-    if isinstance(_gemini_config, dict)
-    else 'gemini-flash-latest'
-)
-_DEFAULT_SAVE_HISTORY: bool = (
-    _gemini_config.get('save_history_chat', False)
-    if isinstance(_gemini_config, dict)
-    else False
-)
-_DEFAULT_REALTIME_STREAMING: bool = (
-    _gemini_config.get('realtime_streaming', True)
-    if isinstance(_gemini_config, dict)
-    else True
-)
-
+_DEFAULT_MODEL: str = _gemini_config.get('model', 'gemini-flash-latest') if isinstance(_gemini_config, dict) else 'gemini-flash-latest'
+_DEFAULT_SAVE_HISTORY: bool = _gemini_config.get('save_history_chat', False) if isinstance(_gemini_config, dict) else False
+_DEFAULT_REALTIME_STREAMING: bool = _gemini_config.get('realtime_streaming', True) if isinstance(_gemini_config, dict) else True
 
 def load_unsupported_models() -> set[str]:
     """Loading списка неподдерживаемых и устаревших моделей Gemini.
@@ -69,8 +27,7 @@ def load_unsupported_models() -> set[str]:
     """
     return _mgr_load_unsupported_models('gemini')
 
-
-def add_unsupported_model(model_name: str, reason: str = '') -> bool:
+def add_unsupported_model(model_name: str, reason: str='') -> bool:
     """Добавление модели в list неподдерживаемых с сохранением в конфигурации.
 
     Args:
@@ -88,7 +45,6 @@ def add_unsupported_model(model_name: str, reason: str = '') -> bool:
         return False
     return _mgr_add_unsupported_model('gemini', model_name, reason)
 
-
 @dataclass
 class GoogleGenerativeAICore:
     """Base class взаимодействия с моделями Google Generative AI (Gemini).
@@ -103,7 +59,6 @@ class GoogleGenerativeAICore:
         sleep_on_exhausted (bool): Флаг ожидания разблокировки при исчерпании квоты.
         realtime_streaming (bool): Флаг немедленной потоковой передачи токенов без буферизации.
     """
-
     api_key: str = ''
     model_name: str = field(default_factory=lambda: _DEFAULT_MODEL)
     generation_config: dict = field(default_factory=lambda: {'response_mime_type': 'text/plain'})
@@ -119,21 +74,15 @@ class GoogleGenerativeAICore:
     save_history_chat: bool = field(default_factory=lambda: _DEFAULT_SAVE_HISTORY)
     sleep_on_exhausted: bool = True
     use_google_search: bool = False
-    realtime_streaming: bool = field(
-        default_factory=lambda: getattr(ai_cfg, 'realtime_streaming', _DEFAULT_REALTIME_STREAMING)
-        if ai_cfg is not None
-        else _DEFAULT_REALTIME_STREAMING
-    )
-
+    realtime_streaming: bool = field(default_factory=lambda: getattr(ai_cfg, 'realtime_streaming', _DEFAULT_REALTIME_STREAMING) if ai_cfg is not None else _DEFAULT_REALTIME_STREAMING)
     _last_exception: str = field(default='', init=False)
     _key_errors: dict[str, str] = field(default_factory=dict, init=False)
     chat_history: list[dict] = field(default_factory=list, init=False)
     _chat: Any = field(default=False, init=False)
-
     MODELS: list[str] = field(default_factory=list, init=False)
 
     @classmethod
-    def get_available_models(cls, api_key: str = '', force_refresh: bool = False) -> list[str]:
+    def get_available_models(cls, api_key: str='', force_refresh: bool=False) -> list[str]:
         """Получение динамического списка доступных моделей через Google GenAI SDK.
 
         Args:
@@ -157,15 +106,12 @@ class GoogleGenerativeAICore:
         self._unavailable_attempts = 0
         self.chat_history = []
         self._chat = False
-
         self.api_keys, self._key_names_active, _ = load_api_keys(self.api_key_names)
         self.api_key_owners = list(self._key_names_active)
-
         if not self.api_keys:
             logger.warning('GoogleGenerativeAI: Нет доступных API-ключей Gemini.')
             self._all_keys_exhausted = True
             return
-
         get_status(self.api_key_names)
         self.api_key = self.api_keys[0]
         logger.info(f'GoogleGenerativeAI: Initialization с ключом: {self._key_names_active[0]}')
@@ -239,7 +185,7 @@ class GoogleGenerativeAICore:
             wait_sec: float = next_available_in()
             if wait_sec > 0 and self.sleep_on_exhausted:
                 h: int = int(wait_sec) // 3600
-                m: int = (int(wait_sec) % 3600) // 60
+                m: int = int(wait_sec) % 3600 // 60
                 logger.warning(f'GoogleGenerativeAI: Все ключи исчерпаны. Ожидание {h}ч {m}м...')
                 time.sleep(wait_sec + 5)
                 self.api_keys, self._key_names_active, _ = load_api_keys(self.api_key_names)
@@ -251,7 +197,6 @@ class GoogleGenerativeAICore:
                 self._all_keys_exhausted = True
                 logger.warning('GoogleGenerativeAI: Все API-ключи исчерпаны.')
                 return False
-
         self._api_key_index = 0
         self.api_key = self.api_keys[0]
         key_name: str = self._key_names_active[0] if self._key_names_active else '?'
@@ -267,30 +212,20 @@ class GoogleGenerativeAICore:
         """
         active_pool: list[str] = self.get_available_models()
         if not active_pool:
-            active_pool = [
-                'gemini-flash-latest',
-                'gemini-flash-lite-latest',
-                'gemini-3.6-flash',
-                'gemini-3.7-flash',
-                'gemini-pro-latest',
-            ]
+            active_pool = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
         try:
             idx: int = active_pool.index(self.model_name)
             next_idx: int = (idx + 1) % len(active_pool)
         except ValueError:
             next_idx = 0
-
         next_model: str = active_pool[next_idx]
         if next_model == self.model_name and len(active_pool) <= 1:
             return False
-
         logger.info(f'GoogleGenerativeAI: Смена модели {self.model_name} -> {next_model}')
         self.model_name = next_model
-
         self.api_keys, self._key_names_active, _ = load_api_keys(self.api_key_names)
         if not self.api_keys:
             return False
-
         self._all_keys_exhausted = False
         self.api_key = self.api_keys[0]
         self._client = genai.Client(api_key=self.api_key)
@@ -304,30 +239,20 @@ class GoogleGenerativeAICore:
         """
         active_pool: list[str] = self.get_available_models()
         if not active_pool:
-            active_pool = [
-                'gemini-flash-latest',
-                'gemini-flash-lite-latest',
-                'gemini-3.6-flash',
-                'gemini-3.7-flash',
-                'gemini-pro-latest',
-            ]
+            active_pool = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest']
         try:
             idx: int = active_pool.index(self.model_name)
         except ValueError:
             idx = 0
-
         next_idx: int = idx + 1
         if next_idx >= len(active_pool):
             return False
-
         next_model: str = active_pool[next_idx]
         logger.info(f'GoogleGenerativeAI: Понижение модели {self.model_name} -> {next_model}')
         self.model_name = next_model
-
         self.api_keys, self._key_names_active, _ = load_api_keys(self.api_key_names)
         if not self.api_keys:
             return False
-
         self._all_keys_exhausted = False
         self.api_key = self.api_keys[0]
         self._client = genai.Client(api_key=self.api_key)

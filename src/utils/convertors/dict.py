@@ -1,19 +1,3 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Dictionary and SimpleNamespace conversion utilities
-# =============================================================================
-# Description:
-#   Converts between dictionaries and SimpleNamespace objects recursively.
-#   Provides export functions to various formats (XML, CSV, JSON, XLS, HTML, PDF)
-#   for flexible data serialization and format conversion.
-#
-# File: dict.py
-# Project: ai-breadboard
-# Package: src.utils.convertors
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """
 Converter for converting between dict and SimpleNamespace objects.
 
@@ -26,7 +10,6 @@ Functions:
     - `dict2html`: Generate an HTML table string from a dictionary or SimpleNamespace object.
     - `dict2pdf`: Save dictionary data as a PDF file.
 """
-
 import json
 from types import SimpleNamespace
 from typing import Any, Dict, List
@@ -79,13 +62,11 @@ def replace_key_in_dict(data, old_key, new_key) -> dict:
             if key == old_key:
                 data[new_key] = data.pop(old_key)
                 new_k = new_key
-            
             if isinstance(data[new_k], (dict, list)):
                 replace_key_in_dict(data[new_k], old_key, new_key)
     elif isinstance(data, list):
         for item in data:
             replace_key_in_dict(item, old_key, new_key)
-    
     return data
 
 def dict2pdf(data: dict | SimpleNamespace, file_path: str | Path) -> None:
@@ -98,23 +79,18 @@ def dict2pdf(data: dict | SimpleNamespace, file_path: str | Path) -> None:
     """
     if isinstance(data, SimpleNamespace):
         data = data.__dict__
-
     pdf = canvas.Canvas(str(file_path), pagesize=A4)
     width, height = A4
-    x, y = 50, height - 50
-
-    pdf.setFont("Helvetica", 12)
-
+    x, y = (50, height - 50)
+    pdf.setFont('Helvetica', 12)
     for key, value in data.items():
-        line = f"{key}: {value}"
+        line = f'{key}: {value}'
         pdf.drawString(x, y, line)
         y -= 20
-
-        if y < 50:  # Create new page if not enough space
+        if y < 50:
             pdf.showPage()
-            pdf.setFont("Helvetica", 12)
+            pdf.setFont('Helvetica', 12)
             y = height - 50
-
     pdf.save()
 
 def dict2ns(data: Dict[str, Any] | List[Any]) -> Any:
@@ -138,7 +114,7 @@ def dict2ns(data: Dict[str, Any] | List[Any]) -> Any:
         return [dict2ns(item) if isinstance(item, dict) else item for item in data]
     return data
 
-def dict2xml(data: Dict[str, Any], encoding: str = 'UTF-8') -> str:
+def dict2xml(data: Dict[str, Any], encoding: str='UTF-8') -> str:
     """
     Generate an XML string from a dictionary.
 
@@ -152,6 +128,7 @@ def dict2xml(data: Dict[str, Any], encoding: str = 'UTF-8') -> str:
     Raises:
         Exception: If more than one root node is provided.
     """
+
     def _process_simple(doc, tag, tag_value):
         """
         Generate a node for simple types (int, str).
@@ -205,7 +182,7 @@ def dict2xml(data: Dict[str, Any], encoding: str = 'UTF-8') -> str:
             else:
                 nodes = _process(doc, tag, value)
                 nodelist.extend(nodes if isinstance(nodes, list) else [nodes])
-        return nodelist, attrs
+        return (nodelist, attrs)
 
     def _process(doc, tag, tag_value):
         """
@@ -221,16 +198,12 @@ def dict2xml(data: Dict[str, Any], encoding: str = 'UTF-8') -> str:
         """
         if isinstance(tag_value, dict) and list(tag_value.keys()) == ['value']:
             tag_value = tag_value['value']
-
         if tag_value is None:
             tag_value = ''
-
         if isinstance(tag_value, (float, int, str)):
             return _process_simple(doc, tag, tag_value)
-
         if isinstance(tag_value, list):
             return _process_complex(doc, [(tag, x) for x in tag_value])[0]
-
         if isinstance(tag_value, dict):
             node = doc.createElement(tag)
             nodelist, attrs = _process_complex(doc, tag_value.items())
@@ -239,11 +212,9 @@ def dict2xml(data: Dict[str, Any], encoding: str = 'UTF-8') -> str:
             for attr in attrs:
                 node.setAttributeNode(attr)
             return node
-
     doc = getDOMImplementation().createDocument(None, None, None)
     if len(data) > 1:
         raise Exception('Only one root node allowed')
-    
     root, _ = _process_complex(doc, data.items())
     doc.appendChild(root[0])
     return doc.toxml(encoding)
@@ -274,7 +245,7 @@ def dict2xls(data: dict | SimpleNamespace, file_path: str | Path) -> bool:
     """
     return save_xls_file(data, file_path)
 
-def dict2html(data: dict | SimpleNamespace, encoding: str = 'UTF-8') -> str:
+def dict2html(data: dict | SimpleNamespace, encoding: str='UTF-8') -> str:
     """
     Generate an HTML table string from a dictionary or SimpleNamespace object.
 
@@ -285,7 +256,8 @@ def dict2html(data: dict | SimpleNamespace, encoding: str = 'UTF-8') -> str:
     Returns:
         str: The HTML string representing the input dictionary.
     """
-    def dict_to_html_table(data: dict, depth: int = 0) -> str:
+
+    def dict_to_html_table(data: dict, depth: int=0) -> str:
         """
         Recursively convert dictionary to HTML table.
 
@@ -297,7 +269,6 @@ def dict2html(data: dict | SimpleNamespace, encoding: str = 'UTF-8') -> str:
             str: The HTML table as a string.
         """
         html = ['<table border="1" cellpadding="5" cellspacing="0">']
-        
         if isinstance(data, dict):
             for key, value in data.items():
                 html.append('<tr>')
@@ -316,14 +287,9 @@ def dict2html(data: dict | SimpleNamespace, encoding: str = 'UTF-8') -> str:
                 html.append('</tr>')
         else:
             html.append(f'<tr><td colspan="2">{data}</td></tr>')
-        
         html.append('</table>')
         return '\n'.join(html)
-    
-    # Convert data to dictionary if it's a SimpleNamespace
     if isinstance(data, SimpleNamespace):
         data = data.__dict__
-    
     html_content = dict_to_html_table(data)
     return f'<!DOCTYPE html>\n<html>\n<head>\n<meta charset="{encoding}">\n<title>Dictionary to HTML</title>\n</head>\n<body>\n{html_content}\n</body>\n</html>'
-

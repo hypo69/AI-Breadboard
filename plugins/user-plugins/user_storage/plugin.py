@@ -59,7 +59,7 @@ class UserStoragePlugin(BasePlugin):
     def get_router(self) -> Optional[APIRouter]:
         """Return the user personal storage API router."""
         try:
-            from src.api.router_user_storage import router
+from plugins.user_plugins.user_storage.routers.router_user_storage import router
             return router
         except Exception as ex:
             logger.warning(f"Could not load User Storage router for plugin: {ex}")

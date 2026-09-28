@@ -1,0 +1,22 @@
+{
+  "application": "File History AI Search",
+  "version": "1.0.0",
+  "rag": {
+    "db_dir": "data/file_history_rag",
+    "embedding_model": "models/gemini-embedding-2",
+    "update_interval_minutes": 15,
+    "default_top_k": 5
+  },
+  "collector": {
+    "scan_recent_shortcuts": true,
+    "scan_file_history_xml": true,
+    "scan_activities_db": true,
+    "scan_filesystem": true,
+    "fs_max_files": 200,
+    "target_directories": [
+      "%USERPROFILE%\\Documents",
+      "%USERPROFILE%\\Desktop",
+      "%USERPROFILE%\\Downloads"
+    ]
+  }
+}

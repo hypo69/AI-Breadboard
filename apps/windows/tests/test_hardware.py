@@ -1,12 +1,9 @@
-# -*- coding: utf-8 -*-
 """Unit tests for hardware diagnostic probers."""
-
 import unittest
 from apps.windows.hardware.hardware_monitor import HardwareMonitor, HardwareSnapshot
 from apps.windows.hardware.gpu_prober import GpuProber, GpuDeviceTelemetry
 from apps.windows.hardware.cpuz_aida_prober import CpuzAidaProber, HardwareAuditReport
 from apps.windows.hardware.stress_benchmark import StressBenchmarkEngine, StressTestResult
-
 
 class TestHardwareProbers(unittest.TestCase):
     """Test hardware probing modules."""
@@ -40,22 +37,19 @@ class TestHardwareProbers(unittest.TestCase):
         engine = StressBenchmarkEngine()
         res = engine.run_cpu_stress(duration_sec=1)
         self.assertIsInstance(res, StressTestResult)
-        self.assertEqual(res.target, "CPU")
-        self.assertEqual(res.status, "COMPLETED")
+        self.assertEqual(res.target, 'CPU')
+        self.assertEqual(res.status, 'COMPLETED')
 
     def test_ai_inference_benchmark(self):
         """Test AI inference benchmark execution."""
         from apps.windows.hardware.stress_benchmark import AIBenchmarkResult
         engine = StressBenchmarkEngine()
-        res = engine.run_ai_inference_benchmark(provider="gemini", model_name="gemini-2.5-flash")
+        res = engine.run_ai_inference_benchmark(provider='gemini', model_name='gemini-2.5-flash')
         self.assertIsInstance(res, AIBenchmarkResult)
         self.assertTrue(res.success)
         self.assertGreater(res.tokens_per_second, 0.0)
         self.assertGreater(res.total_time_ms, 0.0)
         history = engine.get_ai_benchmark_history()
         self.assertEqual(len(history), 1)
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()
-

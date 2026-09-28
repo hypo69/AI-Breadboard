@@ -1,35 +1,15 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Google Gemini API Key State and Rotation Pool Manager
-# =============================================================================
-# Description:
-#   Manages Google Gemini and AI provider API keys, rotation pools, and 24h quota
-#   exhaustion cooldowns. Keys are stored as {key_name: {value, last_run, status}}
-#   in src/secrets/gemini_keys.json and dynamically injected into GEMINI_API_KEY.
-#
-# File: gemini_api_key_state.py
-# Project: ai-breadboard
-# Package: src.ai.gemini
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 from __future__ import annotations
-
 import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-
 from header import __root__
 from logger.logger import logger
-
 _SECRETS_DIR: Path = __root__ / 'src' / 'secrets'
 _KEYS_FILE: Path = _SECRETS_DIR / 'gemini_keys.json'
 _ENV_FILE: Path = __root__ / '.env'
 _DAY_SECONDS: float = 86400.0
-
 
 def _ensure_secrets_dir() -> None:
     """Ensure that the secrets directory exists on the filesystem."""
@@ -37,7 +17,6 @@ def _ensure_secrets_dir() -> None:
         _SECRETS_DIR.mkdir(parents=True, exist_ok=True)
     except Exception as ex:
         logger.error(f'Failed to create secrets directory: {ex}')
-
 
 def _now_iso() -> str:
     """Get current UTC timestamp in ISO 8601 string format.
@@ -47,7 +26,6 @@ def _now_iso() -> str:
     """
     return datetime.now(timezone.utc).isoformat()
 
-
 def _now_ts() -> float:
     """Get current UTC timestamp as Unix epoch float.
 
@@ -55,7 +33,6 @@ def _now_ts() -> float:
         float: Unix timestamp in seconds.
     """
     return datetime.now(timezone.utc).timestamp()
-
 
 def _iso_to_ts(iso_str: str) -> float:
     """Convert ISO formatted string into Unix timestamp.
@@ -74,7 +51,6 @@ def _iso_to_ts(iso_str: str) -> float:
     except Exception:
         return 0.0
 
-
 def _load_keys_file() -> Dict[str, Dict[str, Any]]:
     """Load keys data dictionary from gemini_keys.json.
 
@@ -89,36 +65,21 @@ def _load_keys_file() -> Dict[str, Dict[str, Any]]:
             if content:
                 data = json.loads(content)
                 if isinstance(data, dict):
-                    # Normalize structure ensuring value, last_run, status fields
                     normalized: Dict[str, Dict[str, Any]] = {}
                     for k, v in data.items():
                         if isinstance(v, dict):
                             val = v.get('value') or v.get('api_key') or ''
-                            normalized[k] = {
-                                'value': str(val),
-                                'last_run': str(v.get('last_run') or ''),
-                                'status': str(v.get('status') or 'active'),
-                                'exhausted_at': str(v.get('exhausted_at') or ''),
-                            }
+                            normalized[k] = {'value': str(val), 'last_run': str(v.get('last_run') or ''), 'status': str(v.get('status') or 'active'), 'exhausted_at': str(v.get('exhausted_at') or '')}
                         elif isinstance(v, str):
-                            normalized[k] = {
-                                'value': v,
-                                'last_run': '',
-                                'status': 'active',
-                                'exhausted_at': '',
-                            }
+                            normalized[k] = {'value': v, 'last_run': '', 'status': 'active', 'exhausted_at': ''}
                     return normalized
         except Exception as ex:
             logger.warning(f'Error reading {_KEYS_FILE}: {ex}')
-
-    # Bootstrap from .env if gemini_keys.json does not exist yet
     bootstrapped = _bootstrap_from_env()
     if bootstrapped:
         _save_keys_file(bootstrapped)
         return bootstrapped
-
     return {}
-
 
 def _bootstrap_from_env() -> Dict[str, Dict[str, Any]]:
     """Extract initial keys from .env if available.
@@ -141,22 +102,11 @@ def _bootstrap_from_env() -> Dict[str, Dict[str, Any]]:
                     continue
                 if k_clean in ('GEMINI_API_KEY_NAMES', 'GEMINI_API_KEYS'):
                     continue
-                if (
-                    k_clean == 'GEMINI_API_KEY'
-                    or (k_clean.startswith('GEMINI_API_KEY_') and k_clean not in ('GEMINI_API_KEY_NAMES', 'GEMINI_API_KEYS'))
-                    or k_clean == 'GEMINI_ANTIGRAVITY_API_KEY'
-                ):
+                if k_clean == 'GEMINI_API_KEY' or (k_clean.startswith('GEMINI_API_KEY_') and k_clean not in ('GEMINI_API_KEY_NAMES', 'GEMINI_API_KEYS')) or k_clean == 'GEMINI_ANTIGRAVITY_API_KEY':
                     if v_clean and v_clean != '*':
-                        keys[k_clean] = {
-                            'value': v_clean,
-                            'last_run': '',
-                            'status': 'active',
-                            'exhausted_at': '',
-                        }
+                        keys[k_clean] = {'value': v_clean, 'last_run': '', 'status': 'active', 'exhausted_at': ''}
         except Exception as ex:
             logger.warning(f'Could not bootstrap keys from .env: {ex}')
-
-    # Check process environment
     for env_k, env_v in os.environ.items():
         if env_k in ('GEMINI_API_KEY_NAMES', 'GEMINI_API_KEYS'):
             continue
@@ -164,15 +114,8 @@ def _bootstrap_from_env() -> Dict[str, Dict[str, Any]]:
         if not v_clean or v_clean == '*':
             continue
         if env_k in ('GEMINI_API_KEY', 'GEMINI_ANTIGRAVITY_API_KEY') and env_k not in keys:
-            keys[env_k] = {
-                'value': v_clean,
-                'last_run': '',
-                'status': 'active',
-                'exhausted_at': '',
-            }
-
+            keys[env_k] = {'value': v_clean, 'last_run': '', 'status': 'active', 'exhausted_at': ''}
     return keys
-
 
 def _save_keys_file(data: Dict[str, Dict[str, Any]]) -> bool:
     """Write keys dictionary to JSON file safely.
@@ -192,7 +135,6 @@ def _save_keys_file(data: Dict[str, Dict[str, Any]]) -> bool:
         logger.error(f'Failed to save keys to {_KEYS_FILE}: {ex}')
         return False
 
-
 def _sync_environment(active_val: str) -> None:
     """Dynamically set the active API key in process environment.
 
@@ -202,11 +144,7 @@ def _sync_environment(active_val: str) -> None:
     if active_val:
         os.environ['GEMINI_API_KEY'] = active_val
 
-
-def load_api_keys(
-    names: Optional[List[str]] = None,
-    skip_exhausted: bool = True,
-) -> Tuple[List[str], List[str], List[Dict[str, Any]]]:
+def load_api_keys(names: Optional[List[str]]=None, skip_exhausted: bool=True) -> Tuple[List[str], List[str], List[Dict[str, Any]]]:
     """Load API keys filtered by status and criteria, with dynamic substitution.
 
     Args:
@@ -221,15 +159,12 @@ def load_api_keys(
     """
     keys_data = _load_keys_file()
     now = _now_ts()
-
-    # Determine desired names filter
     filter_names: List[str] = []
     if names:
         if isinstance(names, str):
             filter_names = [n.strip() for n in str(names).split(',') if n.strip() and n.strip() != '*']
         elif isinstance(names, (list, tuple, set)):
             filter_names = [str(n).strip() for n in names if str(n).strip() and str(n).strip() != '*']
-
     if not filter_names:
         env_names_str = os.getenv('GEMINI_API_KEY_NAMES', '').strip()
         if not env_names_str:
@@ -240,25 +175,19 @@ def load_api_keys(
                 env_names_str = ''
         if env_names_str and env_names_str != '*':
             filter_names = [n.strip() for n in env_names_str.split(',') if n.strip() and n.strip() != '*']
-
     result_keys: List[str] = []
     result_names: List[str] = []
     result_states: List[Dict[str, Any]] = []
     updated_needed: bool = False
-
     for name, data in keys_data.items():
         val = data.get('value') or data.get('api_key') or ''
         val = str(val).strip()
         if not val:
             continue
-
-        if filter_names and name not in filter_names and val not in filter_names:
+        if filter_names and name not in filter_names and (val not in filter_names):
             continue
-
         status = data.get('status', 'active')
         exhausted_at = data.get('exhausted_at', '')
-
-        # Auto-reset 24h expired cooldowns
         if status == 'exhausted' or exhausted_at:
             ref_ts = _iso_to_ts(exhausted_at) if exhausted_at else _iso_to_ts(data.get('last_run', ''))
             elapsed = now - ref_ts
@@ -267,25 +196,17 @@ def load_api_keys(
                 data['exhausted_at'] = ''
                 status = 'active'
                 updated_needed = True
-
         if skip_exhausted and status == 'exhausted':
             continue
-
         if status == 'disabled':
             continue
-
         result_keys.append(val)
         result_names.append(name)
         result_states.append(data)
-
     if updated_needed:
         _save_keys_file(keys_data)
-
-    # Dynamic environment substitution with the first active key
     if result_keys:
         _sync_environment(result_keys[0])
-
-    # Direct raw key fallback if not in file
     if not result_keys and filter_names:
         for item in filter_names:
             if item.startswith('AIza') or len(item) >= 20:
@@ -293,9 +214,7 @@ def load_api_keys(
                 result_names.append('direct_key')
                 result_states.append({'value': item, 'status': 'active', 'last_run': ''})
                 _sync_environment(item)
-
-    return result_keys, result_names, result_states
-
+    return (result_keys, result_names, result_states)
 
 def mark_exhausted(key_name: str) -> None:
     """Mark an API key as exhausted and rotate to next available active key.
@@ -305,32 +224,25 @@ def mark_exhausted(key_name: str) -> None:
     """
     if not key_name:
         return
-
     keys_data = _load_keys_file()
     target_name = key_name
-
     if target_name not in keys_data:
         for name, data in keys_data.items():
             if data.get('value') == key_name or data.get('api_key') == key_name:
                 target_name = name
                 break
-
     if target_name not in keys_data:
         keys_data[target_name] = {'value': key_name, 'last_run': '', 'status': 'exhausted'}
-
     now_str = _now_iso()
     keys_data[target_name]['status'] = 'exhausted'
     keys_data[target_name]['exhausted_at'] = now_str
     _save_keys_file(keys_data)
     logger.warning(f'API key "{target_name}" marked as exhausted.')
-
-    # Rotate to next active key in pool
     for name, data in keys_data.items():
         if data.get('status') == 'active' and (data.get('value') or data.get('api_key')):
             active_val = str(data.get('value') or data.get('api_key'))
             _sync_environment(active_val)
             break
-
 
 def update_last_run(key_name: str) -> None:
     """Update last executed timestamp for specified API key.
@@ -340,20 +252,16 @@ def update_last_run(key_name: str) -> None:
     """
     if not key_name:
         return
-
     keys_data = _load_keys_file()
     target_name = key_name
-
     if target_name not in keys_data:
         for name, data in keys_data.items():
             if data.get('value') == key_name or data.get('api_key') == key_name:
                 target_name = name
                 break
-
     if target_name in keys_data:
         keys_data[target_name]['last_run'] = _now_iso()
         _save_keys_file(keys_data)
-
 
 def next_available_in() -> float:
     """Calculate seconds until the earliest exhausted key becomes active.
@@ -364,18 +272,15 @@ def next_available_in() -> float:
     keys_data = _load_keys_file()
     if not keys_data:
         return 0.0
-
     now = _now_ts()
     min_wait: float = _DAY_SECONDS
     found_exhausted = False
-
     for name, data in keys_data.items():
         status = data.get('status', 'active')
         if status == 'disabled':
             continue
         if status == 'active':
             return 0.0
-
         found_exhausted = True
         exhausted_at = data.get('exhausted_at') or data.get('last_run', '')
         exhausted_ts = _iso_to_ts(exhausted_at) if exhausted_at else 0.0
@@ -385,11 +290,9 @@ def next_available_in() -> float:
         remaining = _DAY_SECONDS - elapsed
         if remaining < min_wait:
             min_wait = remaining
-
     return min_wait if found_exhausted else 0.0
 
-
-def get_status(names: Optional[List[str]] = None) -> Dict[str, Any]:
+def get_status(names: Optional[List[str]]=None) -> Dict[str, Any]:
     """Retrieve detailed runtime status for keys.
 
     Args:
@@ -401,23 +304,19 @@ def get_status(names: Optional[List[str]] = None) -> Dict[str, Any]:
     keys_data = _load_keys_file()
     now = _now_ts()
     statuses: Dict[str, Any] = {}
-
     filter_names: List[str] = []
     if names:
         if isinstance(names, str):
             filter_names = [n.strip() for n in str(names).split(',') if n.strip() and n.strip() != '*']
         elif isinstance(names, (list, tuple, set)):
             filter_names = [str(n).strip() for n in names if str(n).strip() and str(n).strip() != '*']
-
     for name, data in keys_data.items():
         if filter_names and name not in filter_names:
             continue
-
         status = data.get('status', 'active')
         exhausted_at = data.get('exhausted_at', '')
         is_exhausted = status == 'exhausted'
         remaining_sec = 0.0
-
         if is_exhausted:
             ref_ts = _iso_to_ts(exhausted_at) if exhausted_at else _iso_to_ts(data.get('last_run', ''))
             if ref_ts > 0:
@@ -426,20 +325,10 @@ def get_status(names: Optional[List[str]] = None) -> Dict[str, Any]:
                     remaining_sec = _DAY_SECONDS - elapsed
                 else:
                     is_exhausted = False
-
-        statuses[name] = {
-            'value': data.get('value') or data.get('api_key', ''),
-            'status': status,
-            'last_run': data.get('last_run', ''),
-            'exhausted_at': exhausted_at,
-            'is_exhausted': is_exhausted,
-            'reset_in_seconds': int(remaining_sec) if is_exhausted else 0,
-        }
-
+        statuses[name] = {'value': data.get('value') or data.get('api_key', ''), 'status': status, 'last_run': data.get('last_run', ''), 'exhausted_at': exhausted_at, 'is_exhausted': is_exhausted, 'reset_in_seconds': int(remaining_sec) if is_exhausted else 0}
     return statuses
 
-
-def save_api_key(name: str, value: str, status: str = 'active') -> bool:
+def save_api_key(name: str, value: str, status: str='active') -> bool:
     """Save or update an API key in gemini_keys.json.
 
     Args:
@@ -452,27 +341,16 @@ def save_api_key(name: str, value: str, status: str = 'active') -> bool:
     """
     if not name or not value:
         return False
-
     clean_name = name.strip()
     clean_val = value.strip()
-
     keys_data = _load_keys_file()
     existing = keys_data.get(clean_name, {})
-
-    keys_data[clean_name] = {
-        'value': clean_val,
-        'last_run': existing.get('last_run', ''),
-        'status': status,
-        'exhausted_at': existing.get('exhausted_at', '') if status == 'exhausted' else '',
-    }
-
+    keys_data[clean_name] = {'value': clean_val, 'last_run': existing.get('last_run', ''), 'status': status, 'exhausted_at': existing.get('exhausted_at', '') if status == 'exhausted' else ''}
     success = _save_keys_file(keys_data)
     if success and status == 'active':
         _sync_environment(clean_val)
-
     logger.info(f'API key "{clean_name}" saved to {_KEYS_FILE}.')
     return success
-
 
 def delete_api_key(name: str) -> bool:
     """Delete an API key from gemini_keys.json.
@@ -485,31 +363,21 @@ def delete_api_key(name: str) -> bool:
     """
     if not name:
         return False
-
     clean_name = name.strip()
     keys_data = _load_keys_file()
-
     if clean_name not in keys_data:
         return False
-
     deleted_entry = keys_data.pop(clean_name)
     deleted_val = deleted_entry.get('value', '')
     success = _save_keys_file(keys_data)
-
     if os.environ.get('GEMINI_API_KEY') == deleted_val:
-        # Re-sync with next remaining active key
-        remaining_active = [
-            d.get('value') for d in keys_data.values()
-            if d.get('status') == 'active' and d.get('value')
-        ]
+        remaining_active = [d.get('value') for d in keys_data.values() if d.get('status') == 'active' and d.get('value')]
         if remaining_active:
             _sync_environment(remaining_active[0])
         else:
             os.environ.pop('GEMINI_API_KEY', None)
-
     logger.info(f'API key "{clean_name}" deleted from {_KEYS_FILE}.')
     return success
-
 
 def reset_quota(key_name: str) -> bool:
     """Reset quota exhaustion for a specific key.
@@ -522,7 +390,6 @@ def reset_quota(key_name: str) -> bool:
     """
     if not key_name:
         return False
-
     keys_data = _load_keys_file()
     if key_name in keys_data:
         keys_data[key_name]['status'] = 'active'
@@ -533,7 +400,6 @@ def reset_quota(key_name: str) -> bool:
         return True
     return False
 
-
 def reset_all_quotas() -> int:
     """Reset quota exhaustion for all API keys.
 
@@ -542,22 +408,15 @@ def reset_all_quotas() -> int:
     """
     keys_data = _load_keys_file()
     reset_count = 0
-
     for name, data in keys_data.items():
         if data.get('status') == 'exhausted' or data.get('exhausted_at'):
             data['status'] = 'active'
             data['exhausted_at'] = ''
             reset_count += 1
-
     if reset_count > 0:
         _save_keys_file(keys_data)
-        # Resync active key
-        first_active = next(
-            (d.get('value') for d in keys_data.values() if d.get('status') == 'active' and d.get('value')),
-            None,
-        )
+        first_active = next((d.get('value') for d in keys_data.values() if d.get('status') == 'active' and d.get('value')), None)
         if first_active:
             _sync_environment(first_active)
         logger.info(f'Reset quota for {reset_count} keys.')
-
     return reset_count

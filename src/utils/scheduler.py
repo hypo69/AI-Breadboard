@@ -1,31 +1,12 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Background Periodic Scheduler for AI Breadboard
-# =============================================================================
-# Description:
-#   Provides an asynchronous background scheduler running periodic maintenance
-#   tasks: RAG index verification and re-indexing every 24 hours, and Gmail email
-#   verification every 5 minutes.
-#
-# File: scheduler.py
-# Project: ai-breadboard
-# Package: src.utils
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 from __future__ import annotations
-
 import asyncio
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
 from header import __root__
 from logger import logger
 from src.user_manager import user_manager
 from src.rag.user_workspace_rag import user_workspace_rag_manager
-
 
 class BackgroundScheduler:
     """Async background periodic job scheduler."""
@@ -42,35 +23,29 @@ class BackgroundScheduler:
         self._last_rag_run: Optional[datetime] = None
         self._last_email_run: Optional[datetime] = None
         self._latest_unread_emails: List[Dict[str, Any]] = []
-        
         self.load_from_config()
 
     def load_from_config(self) -> None:
         """Reload scheduler configuration parameters from config.json."""
         try:
             from src.config import schedulers_cfg
-            # Планировщик запускается ТОЛЬКО если он явно включен в конфигурации сценария
-            has_schedulers = hasattr(schedulers_cfg, "enabled") or bool(getattr(schedulers_cfg, "__dict__", {}))
+            has_schedulers = hasattr(schedulers_cfg, 'enabled') or bool(getattr(schedulers_cfg, '__dict__', {}))
             if not has_schedulers:
                 self.enabled = False
                 self.rag_enabled = False
                 self.email_enabled = False
                 return
-
-            self.enabled = getattr(schedulers_cfg, "enabled", False)
-            
-            rag_cfg = getattr(schedulers_cfg, "rag_reindex", getattr(schedulers_cfg, "rag", None))
-            email_cfg = getattr(schedulers_cfg, "email_check", getattr(schedulers_cfg, "email", None))
-            
-            self.rag_enabled = getattr(rag_cfg, "enabled", False) if rag_cfg is not None else False
-            rag_hours = getattr(rag_cfg, "interval_hours", 24) if rag_cfg is not None else 24
+            self.enabled = getattr(schedulers_cfg, 'enabled', False)
+            rag_cfg = getattr(schedulers_cfg, 'rag_reindex', getattr(schedulers_cfg, 'rag', None))
+            email_cfg = getattr(schedulers_cfg, 'email_check', getattr(schedulers_cfg, 'email', None))
+            self.rag_enabled = getattr(rag_cfg, 'enabled', False) if rag_cfg is not None else False
+            rag_hours = getattr(rag_cfg, 'interval_hours', 24) if rag_cfg is not None else 24
             self._rag_interval_seconds = max(60.0, float(rag_hours) * 3600.0)
-            
-            self.email_enabled = getattr(email_cfg, "enabled", False) if email_cfg is not None else False
-            email_minutes = getattr(email_cfg, "interval_minutes", 5) if email_cfg is not None else 5
+            self.email_enabled = getattr(email_cfg, 'enabled', False) if email_cfg is not None else False
+            email_minutes = getattr(email_cfg, 'interval_minutes', 5) if email_cfg is not None else 5
             self._email_interval_seconds = max(10.0, float(email_minutes) * 60.0)
         except Exception as ex:
-            logger.error(f"[Scheduler] Failed to load configuration: {ex}")
+            logger.error(f'[Scheduler] Failed to load configuration: {ex}')
             self.enabled = False
             self.rag_enabled = False
             self.email_enabled = False
@@ -92,30 +67,14 @@ class BackgroundScheduler:
     @property
     def status(self) -> Dict[str, Any]:
         """Return diagnostic status of scheduled jobs."""
-        return {
-            "running": self._running,
-            "enabled": self.enabled,
-            "rag_enabled": self.rag_enabled,
-            "rag_interval_hours": self._rag_interval_seconds / 3600.0,
-            "email_enabled": self.email_enabled,
-            "email_interval_minutes": self._email_interval_seconds / 60.0,
-            "last_rag_run": self._last_rag_run.isoformat() if self._last_rag_run else None,
-            "last_email_run": self._last_email_run.isoformat() if self._last_email_run else None,
-            "unread_emails_count": len(self._latest_unread_emails),
-            "latest_unread_emails": self._latest_unread_emails[:5],
-        }
+        return {'running': self._running, 'enabled': self.enabled, 'rag_enabled': self.rag_enabled, 'rag_interval_hours': self._rag_interval_seconds / 3600.0, 'email_enabled': self.email_enabled, 'email_interval_minutes': self._email_interval_seconds / 60.0, 'last_rag_run': self._last_rag_run.isoformat() if self._last_rag_run else None, 'last_email_run': self._last_email_run.isoformat() if self._last_email_run else None, 'unread_emails_count': len(self._latest_unread_emails), 'latest_unread_emails': self._latest_unread_emails[:5]}
 
     async def start(self) -> None:
         """Start periodic background tasks."""
         if self._running or not self.enabled:
             return
-
         self._running = True
-        logger.info(
-            f"Starting BackgroundScheduler (RAG enabled={self.rag_enabled} [{self._rag_interval_seconds/3600:.1f}h], "
-            f"Email enabled={self.email_enabled} [{self._email_interval_seconds/60:.1f}m])..."
-        )
-        
+        logger.info(f'Starting BackgroundScheduler (RAG enabled={self.rag_enabled} [{self._rag_interval_seconds / 3600:.1f}h], Email enabled={self.email_enabled} [{self._email_interval_seconds / 60:.1f}m])...')
         if self.rag_enabled:
             self._tasks.append(asyncio.create_task(self._run_rag_periodically()))
         if self.email_enabled:
@@ -126,10 +85,9 @@ class BackgroundScheduler:
         self._running = False
         for task in self._tasks:
             task.cancel()
-        
         await asyncio.gather(*self._tasks, return_exceptions=True)
         self._tasks.clear()
-        logger.info("BackgroundScheduler stopped.")
+        logger.info('BackgroundScheduler stopped.')
 
     async def _run_rag_periodically(self) -> None:
         """Execute RAG index verification and re-indexing every 24 hours."""
@@ -140,8 +98,7 @@ class BackgroundScheduler:
             except asyncio.CancelledError:
                 break
             except Exception as ex:
-                logger.error(f"[Scheduler] Error during periodic RAG update: {ex}")
-
+                logger.error(f'[Scheduler] Error during periodic RAG update: {ex}')
             try:
                 await asyncio.sleep(self._rag_interval_seconds)
             except asyncio.CancelledError:
@@ -156,8 +113,7 @@ class BackgroundScheduler:
             except asyncio.CancelledError:
                 break
             except Exception as ex:
-                logger.error(f"[Scheduler] Error during periodic Email check: {ex}")
-
+                logger.error(f'[Scheduler] Error during periodic Email check: {ex}')
             try:
                 await asyncio.sleep(self._email_interval_seconds)
             except asyncio.CancelledError:
@@ -169,45 +125,30 @@ class BackgroundScheduler:
         Returns:
             Dict[str, Any]: Summary of re-indexed collections.
         """
-        logger.info("[Scheduler] Starting 24h RAG index verification & update...")
+        logger.info('[Scheduler] Starting 24h RAG index verification & update...')
         users = await asyncio.to_thread(user_manager.get_all_users)
         updated_count = 0
         details = []
-
         for user in users:
-            user_id = user.get("id")
+            user_id = user.get('id')
             if not user_id:
                 continue
-
             try:
                 collections = await asyncio.to_thread(user_workspace_rag_manager.list_collections, user_id)
                 for col in collections:
-                    rag_id = col.get("id")
+                    rag_id = col.get('id')
                     if not rag_id:
                         continue
-                    
-                    # Rebuild collection
                     logger.info(f"[Scheduler] Refreshing RAG collection '{rag_id}' for user {user_id}")
-                    res = await asyncio.to_thread(
-                        user_workspace_rag_manager.build_collection,
-                        user_id=user_id,
-                        rag_id=rag_id,
-                        provider=col.get("provider", "local_tfidf")
-                    )
+                    res = await asyncio.to_thread(user_workspace_rag_manager.build_collection, user_id=user_id, rag_id=rag_id, provider=col.get('provider', 'local_tfidf'))
                     updated_count += 1
-                    details.append({
-                        "user_id": user_id,
-                        "rag_id": rag_id,
-                        "status": res.get("status", "ok"),
-                        "chunks_count": res.get("chunks_count", 0)
-                    })
+                    details.append({'user_id': user_id, 'rag_id': rag_id, 'status': res.get('status', 'ok'), 'chunks_count': res.get('chunks_count', 0)})
             except Exception as ex:
-                logger.error(f"[Scheduler] Failed to update RAG for user {user_id}: {ex}")
+                logger.error(f'[Scheduler] Failed to update RAG for user {user_id}: {ex}')
+        logger.info(f'[Scheduler] Finished 24h RAG re-indexing. Updated {updated_count} collection(s).')
+        return {'updated_count': updated_count, 'details': details}
 
-        logger.info(f"[Scheduler] Finished 24h RAG re-indexing. Updated {updated_count} collection(s).")
-        return {"updated_count": updated_count, "details": details}
-
-    async def check_emails(self, account_name: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def check_emails(self, account_name: Optional[str]=None) -> List[Dict[str, Any]]:
         """Check for unread emails in Gmail via google-workspace manager.
 
         Args:
@@ -216,9 +157,9 @@ class BackgroundScheduler:
         Returns:
             List[Dict[str, Any]]: List of unread message summaries.
         """
-        scripts_dir = __root__ / ".agents" / "skills" / "user-skills" / "google-workspace" / "scripts"
+        scripts_dir = __root__ / '.agents' / 'skills' / 'user-skills' / 'google-workspace' / 'scripts'
         if not scripts_dir.exists():
-            scripts_dir = __root__ / ".agents" / "skills" / "google-workspace" / "scripts"
+            scripts_dir = __root__ / '.agents' / 'skills' / 'google-workspace' / 'scripts'
         import sys
         if scripts_dir.exists() and str(scripts_dir) not in sys.path:
             sys.path.insert(0, str(scripts_dir))
@@ -229,17 +170,13 @@ class BackgroundScheduler:
                 manager = GmailManager(account_name=account_name)
                 if not manager.service:
                     return []
-                return manager.search_messages(query="is:unread", max_results=10)
+                return manager.search_messages(query='is:unread', max_results=10)
             except Exception as ex:
-                logger.warning(f"[Scheduler] Email check skipped or failed: {ex}")
+                logger.warning(f'[Scheduler] Email check skipped or failed: {ex}')
                 return []
-
         messages = await asyncio.to_thread(_fetch_messages)
         if messages:
             self._latest_unread_emails = messages
-            logger.info(f"[Scheduler] Found {len(messages)} unread email(s) in Gmail.")
+            logger.info(f'[Scheduler] Found {len(messages)} unread email(s) in Gmail.')
         return messages
-
-
-# Global singleton instance
 scheduler = BackgroundScheduler()

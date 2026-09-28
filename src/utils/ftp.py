@@ -1,17 +1,3 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: FTP file transfer utilities
-# =============================================================================
-# Description:
-#   Module for AI Breadboard project.
-#
-# File: ftp.py
-# Project: ai-breadboard
-# Package: src.utils
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """FTP interface for sending, receiving, and deleting files from FTP servers.
 
 Allows for sending media files, spreadsheets, and other files to and from an FTP server.
@@ -26,19 +12,11 @@ Functions:
     - `read`: Retrieves a file from an FTP server.
     - `delete`: Deletes a file from an FTP server.
 """
-
 from logger.logger import logger
 from typing import Union
 import ftplib
 from pathlib import Path
-
-# Connection configuration (assumed to be defined elsewhere)
-_connection = {
-    'server': 'ftp.example.com',
-    'port': 21,
-    'user': 'username',
-    'password': 'password'
-}
+_connection = {'server': 'ftp.example.com', 'port': 21, 'user': 'username', 'password': 'password'}
 
 def write(source_file_path: str, dest_dir: str, dest_file_name: str) -> bool:
     """
@@ -58,32 +36,23 @@ def write(source_file_path: str, dest_dir: str, dest_file_name: str) -> bool:
         True
     """
     try:
-        # Establish connection to FTP server
-        session = ftplib.FTP(
-            _connection['server'],
-            _connection['user'],
-            _connection['password'])
+        session = ftplib.FTP(_connection['server'], _connection['user'], _connection['password'])
         session.cwd(dest_dir)
     except Exception as ex:
-        # Log error if connection to FTP server fails
-        logger.error(f"Failed to connect to FTP server. Error: {ex}")
+        logger.error(f'Failed to connect to FTP server. Error: {ex}')
         return False
-
     try:
-        # Open the file and send it to the FTP server
         with open(source_file_path, 'rb') as f:
             session.storbinary(f'STOR {dest_file_name}', f)
         return True
     except Exception as ex:
-        # Log error if file transfer to FTP server fails
-        logger.error(f"Failed to send file to FTP server. Error: {ex}")
+        logger.error(f'Failed to send file to FTP server. Error: {ex}')
         return False
     finally:
         try:
-            # Close the FTP session
             session.quit()
         except Exception as ex:
-            logger.error(f"Failed to close FTP session. Error: {ex}")
+            logger.error(f'Failed to close FTP session. Error: {ex}')
 
 def read(source_file_path: str, dest_dir: str, dest_file_name: str) -> Union[str, bytes, None]:
     """
@@ -103,28 +72,20 @@ def read(source_file_path: str, dest_dir: str, dest_file_name: str) -> Union[str
         b'Some file content'
     """
     try:
-        # Establish connection to FTP server
-        session = ftplib.FTP(
-            _connection['server'],
-            _connection['user'],
-            _connection['password'])
+        session = ftplib.FTP(_connection['server'], _connection['user'], _connection['password'])
         session.cwd(dest_dir)
-
-        # Retrieve the file
         with open(source_file_path, 'wb') as f:
             session.retrbinary(f'RETR {dest_file_name}', f.write)
         with open(source_file_path, 'rb') as f:
             return f.read()
     except Exception as ex:
-        # Log error if file retrieval from FTP server fails
-        logger.error(f"Failed to retrieve file from FTP server. Error: {ex}")
+        logger.error(f'Failed to retrieve file from FTP server. Error: {ex}')
         return
     finally:
         try:
-            # Close the FTP session
             session.quit()
         except Exception as ex:
-            logger.error(f"Failed to close FTP session. Error: {ex}")
+            logger.error(f'Failed to close FTP session. Error: {ex}')
 
 def delete(source_file_path: str, dest_dir: str, dest_file_name: str) -> bool:
     """
@@ -144,23 +105,15 @@ def delete(source_file_path: str, dest_dir: str, dest_file_name: str) -> bool:
         True
     """
     try:
-        # Establish connection to FTP server
-        session = ftplib.FTP(
-            _connection['server'],
-            _connection['user'],
-            _connection['password'])
+        session = ftplib.FTP(_connection['server'], _connection['user'], _connection['password'])
         session.cwd(dest_dir)
-
-        # Delete the file
         session.delete(dest_file_name)
         return True
     except Exception as ex:
-        # Log error if file deletion from FTP server fails
-        logger.error(f"Failed to delete file from FTP server. Error: {ex}")
+        logger.error(f'Failed to delete file from FTP server. Error: {ex}')
         return False
     finally:
         try:
-            # Close the FTP session
             session.quit()
         except Exception as ex:
-            logger.error(f"Failed to close FTP session. Error: {ex}")
+            logger.error(f'Failed to close FTP session. Error: {ex}')

@@ -137,11 +137,19 @@
         "visible": false
       },
       {
+        "id": "google_user_desktop",
+        "label": "Google User Desktop",
+        "icon": "🌐",
+        "tab": "tab-google-desktop",
+        "order": 5,
+        "visible": true
+      },
+      {
         "id": "gcloud_monitor",
         "label": "Google Cloud",
         "icon": "☁️",
         "tab": "tab-gcloud",
-        "order": 5,
+        "order": 6,
         "visible": false
       },
       {
@@ -260,6 +268,15 @@
         "icon": "🗂️",
         "tab": "tab-file-recovery",
         "order": 18,
+        "visible": true
+      },
+      {
+        "id": "file_history_ai_search",
+        "label": "Поиск истории файлов AI",
+        "i18n": "tabs.fileHistorySearch",
+        "icon": "🔍",
+        "tab": "tab-file-history-search",
+        "order": 19,
         "visible": true
       },
       {

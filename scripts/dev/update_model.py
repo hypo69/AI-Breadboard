@@ -21,7 +21,14 @@ import sqlite3
 import sys
 
 try:
-    conn = sqlite3.connect('C:/ai-breadboard/src/user_manager/users.db')
+    import os
+from pathlib import Path
+from src.config import storage_cfg
+# Ensure users directory exists
+Path(storage_cfg.users_dir).mkdir(parents=True, exist_ok=True)
+# DB path next to users directory
+db_path = Path(storage_cfg.users_dir).with_name('users.db')
+conn = sqlite3.connect(str(db_path))
     cursor = conn.cursor()
     cursor.execute("UPDATE user_settings SET model = 'gemini-2.0-flash'")
     conn.commit()

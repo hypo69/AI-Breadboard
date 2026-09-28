@@ -1,30 +1,14 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Speech recognition and text-to-speech conversion utilities
-# =============================================================================
-# Description:
-#   Module for converting text to speech (TTS) and recognizing speech from audio files.
-#   Supports audio file download, format conversion, and multilingual speech recognition.
-#
-# File: tts.py
-# Project: ai-breadboard
-# Package: src.utils.convertors
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 from pathlib import Path
 import tempfile
 import asyncio
 import requests
-import speech_recognition as sr  # Speech recognition library
-from pydub import AudioSegment  # Library for audio conversion
-from gtts import gTTS  # Text-to-speech generation
-
+import speech_recognition as sr
+from pydub import AudioSegment
+from gtts import gTTS
 from src.utils.jjson import j_loads, j_loads_ns, j_dumps
 from logger.logger import logger
 
-def speech_recognizer(audio_url: str = None, audio_file_path: Path = None, language: str = 'ru-RU') -> str:
+def speech_recognizer(audio_url: str=None, audio_file_path: Path=None, language: str='ru-RU') -> str:
     """Download an audio file and recognize speech in it.
 
     Args:
@@ -43,24 +27,17 @@ def speech_recognizer(audio_url: str = None, audio_file_path: Path = None, langu
     """
     try:
         if audio_url:
-            # Download the audio file
             response = requests.get(audio_url)
             audio_file_path = Path(tempfile.gettempdir()) / 'recognized_audio.ogg'
-
             with open(audio_file_path, 'wb') as f:
                 f.write(response.content)
-
-        # Convert OGG to WAV
         wav_file_path = audio_file_path.with_suffix('.wav')
-        audio = AudioSegment.from_file(audio_file_path)  # Load the OGG file
-        audio.export(wav_file_path, format='wav')  # Export as WAV
-
-        # Initialize the recognizer
+        audio = AudioSegment.from_file(audio_file_path)
+        audio.export(wav_file_path, format='wav')
         recognizer = sr.Recognizer()
         with sr.AudioFile(str(wav_file_path)) as source:
             audio_data = recognizer.record(source)
             try:
-                # Recognize speech using Google Speech Recognition
                 text = recognizer.recognize_google(audio_data, language=language)
                 logger.info(f'Recognized text: {text}')
                 return text
@@ -74,7 +51,7 @@ def speech_recognizer(audio_url: str = None, audio_file_path: Path = None, langu
         logger.error('Error in speech recognizer:', ex)
         return 'Error during speech recognition.'
 
-async def text2speech(text: str, lang: str = 'ru') -> str:
+async def text2speech(text: str, lang: str='ru') -> str:
     """Convert text to speech and save it as an audio file.
 
     Args:
@@ -91,12 +68,9 @@ async def text2speech(text: str, lang: str = 'ru') -> str:
             print(audio_path)  # Output: "/tmp/response.mp3"
     """
     try:
-        # Generate speech using gTTS
         tts = gTTS(text=text, lang=lang)
         audio_file_path = f'{tempfile.gettempdir()}/response.mp3'
-        tts.save(audio_file_path)  # Save the audio file
-
-        # Load and export audio using pydub
+        tts.save(audio_file_path)
         try:
             audio = AudioSegment.from_file(audio_file_path, format='mp3')
             wav_file_path = audio_file_path.replace('.mp3', '.wav')

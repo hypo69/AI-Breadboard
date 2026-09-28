@@ -36,7 +36,7 @@ flowchart TD
         CSVLog["📊 AppCsvLogger<br/>(UTF-8-SIG, Auto-Headers, Multi-Thread Lock)"]
         Agg["⚙️ TelemetryAggregator<br/>(Сведение снимков, Дедупликация)"]
         JsonLog["📄 TelemetryJsonLogger<br/>(Потокобезопасный JSONL, Авторотация)"]
-        SysLog["📝 src.logger.logger<br/>(Консоль, Системный журнал)"]
+        SysLog["📝 logger<br/>(Консоль, Системный журнал)"]
     end
 
     subgraph ХранилищеCSV["📁 CSV Каталог (%APPDATA%/AI-Breadboard/apps/windows/telemetry/logs/)"]

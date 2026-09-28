@@ -1,24 +1,8 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: File system operations and text file utilities
-# =============================================================================
-# Description:
-#   Module for file operations including saving, reading, and searching text files.
-#   Provides utilities for directory traversal and file pattern matching.
-#
-# File: file.py
-# Project: ai-breadboard
-# Package: src.utils
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """
 File system operations and text file utilities.
 
 Provides functions for file manipulation, reading, writing, and searching.
 """
-
 import os
 import json
 import fnmatch
@@ -27,12 +11,7 @@ from typing import List, Optional, Union, Generator
 from logger.logger import logger
 from src.utils.printer import pprint as print
 
-def save_text_file(
-    data: str | list[str] | dict,
-    file_path: Union[str, Path],
-    mode: str = "w",
-    exc_info: bool = True,
-) -> bool:
+def save_text_file(data: str | list[str] | dict, file_path: Union[str, Path], mode: str='w', exc_info: bool=True) -> bool:
     """
     Save data to a text file.
 
@@ -48,25 +27,19 @@ def save_text_file(
     try:
         file_path = Path(file_path)
         file_path.parent.mkdir(parents=True, exist_ok=True)
-
-        with file_path.open(mode, encoding="utf-8") as file:
+        with file_path.open(mode, encoding='utf-8') as file:
             if isinstance(data, list):
-                file.writelines(f"{line}\n" for line in data)
+                file.writelines((f'{line}\n' for line in data))
             elif isinstance(data, dict):
                 json.dump(data, file, ensure_ascii=False, indent=4)
             else:
                 file.write(data)
         return True
     except Exception as ex:
-        logger.error(f"Failed to save file {file_path}.", ex, exc_info=exc_info)
+        logger.error(f'Failed to save file {file_path}.', ex, exc_info=exc_info)
         return False
 
-def read_text_file(
-    file_path: Union[str, Path],
-    as_list: bool = False,
-    extensions: Optional[list[str]] = None,
-    exc_info: bool = True,
-) -> Union[str, list[str], None]:
+def read_text_file(file_path: Union[str, Path], as_list: bool=False, extensions: Optional[list[str]]=None, exc_info: bool=True) -> Union[str, list[str], None]:
     """
     Read the contents of a file.
 
@@ -82,24 +55,20 @@ def read_text_file(
     try:
         path = Path(file_path)
         if path.is_file():
-            with path.open("r", encoding="utf-8") as f:
+            with path.open('r', encoding='utf-8') as f:
                 return f.readlines() if as_list else f.read()
         elif path.is_dir():
-            files = [
-                p for p in path.rglob("*") if p.is_file() and (not extensions or p.suffix in extensions)
-            ]
+            files = [p for p in path.rglob('*') if p.is_file() and (not extensions or p.suffix in extensions)]
             contents = [read_text_file(p, as_list) for p in files]
-            return [item for sublist in contents if sublist for item in sublist] if as_list else "\n".join(filter(None, contents))
+            return [item for sublist in contents if sublist for item in sublist] if as_list else '\n'.join(filter(None, contents))
         else:
             logger.warning(f"Path '{file_path}' is invalid.")
             return None
     except Exception as ex:
-        logger.error(f"Failed to read file {file_path}.", ex, exc_info=exc_info)
+        logger.error(f'Failed to read file {file_path}.', ex, exc_info=exc_info)
         return None
 
-def get_filenames(
-    directory: Union[str, Path], extensions: Union[str, list[str]] = "*", exc_info: bool = True
-) -> list[str]:
+def get_filenames(directory: Union[str, Path], extensions: Union[str, list[str]]='*', exc_info: bool=True) -> list[str]:
     """
     Get filenames in a directory optionally filtered by extension.
 
@@ -113,21 +82,14 @@ def get_filenames(
     try:
         path = Path(directory)
         if isinstance(extensions, str):
-            extensions = [extensions] if extensions != "*" else []
-        extensions = [ext if ext.startswith(".") else f".{ext}" for ext in extensions]
-
-        return [
-            file.name
-            for file in path.iterdir()
-            if file.is_file() and (not extensions or file.suffix in extensions)
-        ]
+            extensions = [extensions] if extensions != '*' else []
+        extensions = [ext if ext.startswith('.') else f'.{ext}' for ext in extensions]
+        return [file.name for file in path.iterdir() if file.is_file() and (not extensions or file.suffix in extensions)]
     except Exception as ex:
         logger.warning(f"Failed to list filenames in '{directory}'.", ex, exc_info=exc_info)
         return []
 
-def recursively_yield_file_path(
-    root_dir: Union[str, Path], patterns: Union[str, list[str]] = "*", exc_info: bool = True
-) -> Generator[Path, None, None]:
+def recursively_yield_file_path(root_dir: Union[str, Path], patterns: Union[str, list[str]]='*', exc_info: bool=True) -> Generator[Path, None, None]:
     """
     Recursively yield file paths matching given patterns.
 
@@ -145,11 +107,7 @@ def recursively_yield_file_path(
     except Exception as ex:
         logger.error(f"Failed to search files in '{root_dir}'.", ex, exc_info=exc_info)
 
-def recursively_get_file_path(
-    root_dir: Union[str, Path], 
-    patterns: Union[str, list[str]] = "*", 
-    exc_info: bool = True
-) -> list[Path]:
+def recursively_get_file_path(root_dir: Union[str, Path], patterns: Union[str, list[str]]='*', exc_info: bool=True) -> list[Path]:
     """
     Recursively get file paths matching given patterns.
 
@@ -170,12 +128,7 @@ def recursively_get_file_path(
         logger.error(f"Failed to search files in '{root_dir}'.", ex, exc_info=exc_info)
         return []
 
-def recursively_read_text_files(
-    root_dir: str | Path, 
-    patterns: str | list[str], 
-    as_list: bool = False, 
-    exc_info: bool = True
-) -> list[str]:
+def recursively_read_text_files(root_dir: str | Path, patterns: str | list[str], as_list: bool=False, exc_info: bool=True) -> list[str]:
     """
     Recursively reads text files from the specified root directory that match the given patterns.
 
@@ -198,38 +151,27 @@ def recursively_read_text_files(
     """
     matches = []
     root_path = Path(root_dir)
-
-    # Check if the root directory exists
     if not root_path.is_dir():
         logger.debug(f"The root directory '{root_path}' does not exist or is not a directory.")
         return []
-
-    print(f"Searching in directory: {root_path}")
-
-    # Normalize patterns to a list if it's a single string
+    print(f'Searching in directory: {root_path}')
     if isinstance(patterns, str):
         patterns = [patterns]
-
     for root, dirs, files in os.walk(root_path):
         for filename in files:
-            # Check if the filename matches any of the specified patterns
-            if any(fnmatch.fnmatch(filename, pattern) for pattern in patterns):
+            if any((fnmatch.fnmatch(filename, pattern) for pattern in patterns)):
                 file_path = Path(root) / filename
-
                 try:
-                    with file_path.open("r", encoding="utf-8") as file:
+                    with file_path.open('r', encoding='utf-8') as file:
                         if as_list:
-                            # Read lines if `as_list=True`
                             matches.extend(file.readlines())
                         else:
-                            # Read entire content otherwise
                             matches.append(file.read())
                 except Exception as ex:
                     logger.warning(f"Failed to read file '{file_path}'.", exc_info=exc_info)
-
     return matches
 
-def get_directory_names(directory: str | Path, exc_info: bool = True) -> list[str]:
+def get_directory_names(directory: str | Path, exc_info: bool=True) -> list[str]:
     """
     Retrieves all directory names from the specified directory.
 
@@ -251,19 +193,10 @@ def get_directory_names(directory: str | Path, exc_info: bool = True) -> list[st
         return [entry.name for entry in Path(directory).iterdir() if entry.is_dir()]
     except Exception as ex:
         if exc_info:
-            logger.warning(
-                f"Failed to get directory names from '{directory}'.",
-                ex,
-                exc_info=exc_info,
-            )
-        return 
+            logger.warning(f"Failed to get directory names from '{directory}'.", ex, exc_info=exc_info)
+        return
 
-def read_files_content(
-    root_dir: Union[str, Path],
-    patterns: Union[str, list[str]],
-    as_list: bool = False,
-    exc_info: bool = True,
-) -> list[str]:
+def read_files_content(root_dir: Union[str, Path], patterns: Union[str, list[str]], as_list: bool=False, exc_info: bool=True) -> list[str]:
     """
     Read contents of files matching patterns.
 
@@ -291,8 +224,8 @@ def remove_bom(file_path: Union[str, Path]) -> None:
     """
     path = Path(file_path)
     try:
-        with path.open("r+", encoding="utf-8") as file:
-            content = file.read().replace("\ufeff", "")
+        with path.open('r+', encoding='utf-8') as file:
+            content = file.read().replace('\ufeff', '')
             file.seek(0)
             file.write(content)
             file.truncate()
@@ -306,14 +239,13 @@ def traverse_and_clean(directory: Union[str, Path]) -> None:
     Args:
         directory (str | Path): Root directory to process.
     """
-    for file in recursively_get_files(directory, "*.py"):
+    for file in recursively_get_files(directory, '*.py'):
         remove_bom(file)
 
 def main() -> None:
     """Entry point for BOM removal in Python files."""
-    root_dir = Path("..", "src")
-    logger.info(f"Starting BOM removal in {root_dir}")
+    root_dir = Path('..', 'src')
+    logger.info(f'Starting BOM removal in {root_dir}')
     traverse_and_clean(root_dir)
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

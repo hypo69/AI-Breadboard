@@ -59,7 +59,7 @@ class GoogleOAuthPlugin(BasePlugin):
     def get_router(self) -> Optional[APIRouter]:
         """Return the Google Workspace account pool management FastAPI router."""
         try:
-            from src.api.router_google_accounts import router
+from plugins.system_plugins.google_oauth.routers.router_google_accounts import router
             return router
         except Exception as ex:
             logger.warning(f"Could not load Google accounts router for plugin: {ex}")

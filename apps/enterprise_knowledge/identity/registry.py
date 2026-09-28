@@ -1,11 +1,7 @@
 """Регистр идентичности сотрудников."""
-
 from __future__ import annotations
-
 from typing import Any
-
 from apps.enterprise_knowledge.storage import KnowledgeStore
-
 
 class IdentityRegistry:
     """Регистр идентичности сотрудников с поддержкой алиасов."""

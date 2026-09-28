@@ -1,12 +1,8 @@
 """Рабочий процесс консолидации знаний."""
-
 from __future__ import annotations
-
 from typing import Any
-
 from apps.enterprise_knowledge.storage import KnowledgeStore
 from apps.enterprise_knowledge.knowledge.consolidation import KnowledgeConsolidator
-
 
 class ConsolidationWorker:
     """Рабочий процесс для консолидации знаний и проверки противоречий."""

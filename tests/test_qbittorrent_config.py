@@ -1,22 +1,7 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Testing qBittorrent configuration loading
-# =============================================================================
-# Description:
-#   Unit tests for qBittorrent configuration parameters loading from config.json
-#
-# File: test_qbittorrent_config.py
-# Project: ai-breadboard
-# Package: tests
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 import json
 from pathlib import Path
 from types import SimpleNamespace
 import pytest
-
 from src.config import qbittorrent_cfg, qbt_cfg, CONFIG_FILE
 from src.utils.jjson import j_loads_ns
 
@@ -39,22 +24,10 @@ class TestQBittorrentConfig:
         Check: Custom configuration file correctly parsed into nested
                SimpleNamespace with proper attribute access.
         """
-        sample_config = tmp_path / "sample_config.json"
-        sample_config.write_text(
-            json.dumps(
-                {
-                    "custom_service": {
-                        "host": "192.168.1.50",
-                        "port": 8080,
-                        "user": "custom_user",
-                    }
-                }
-            ),
-            encoding="utf-8",
-        )
-
+        sample_config = tmp_path / 'sample_config.json'
+        sample_config.write_text(json.dumps({'custom_service': {'host': '192.168.1.50', 'port': 8080, 'user': 'custom_user'}}), encoding='utf-8')
         ns = j_loads_ns(sample_config)
-        assert hasattr(ns, "custom_service")
-        assert ns.custom_service.host == "192.168.1.50"
+        assert hasattr(ns, 'custom_service')
+        assert ns.custom_service.host == '192.168.1.50'
         assert ns.custom_service.port == 8080
-        assert ns.custom_service.user == "custom_user"
+        assert ns.custom_service.user == 'custom_user'

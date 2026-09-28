@@ -353,6 +353,9 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-cloudflared' && typeof window.initCloudflaredTab === 'function') {
     console.log('[AdminInterface] Switching to cloudflared tab...');
     window.initCloudflaredTab();
+  } else if (cleanId === 'tab-google-desktop' && typeof window.initGoogleDesktopTab === 'function') {
+    console.log('[AdminInterface] Switching to google desktop tab...');
+    window.initGoogleDesktopTab();
   } else if (cleanId === 'tab-user-assistant' && typeof window.initUserAssistantTab === 'function') {
     console.log('[AdminInterface] Switching to user assistant tab...');
     window.initUserAssistantTab();
@@ -609,6 +612,7 @@ async function initInterface() {
     { id: 'gcloud_monitor', tab: 'gcloud', html: '/html/gcloud_tab/index.html', js: '/html/gcloud_tab/main.js' },
     { id: 'website_monitor', tab: 'website-monitor', html: '/html/website_monitor_tab/index.html', js: '/html/website_monitor_tab/main.js' },
     { id: 'cloudflared_monitor', tab: 'cloudflared', html: '/html/cloudflared_tab/index.html', js: '/html/cloudflared_tab/main.js' },
+    { id: 'google_user_desktop', tab: 'google-desktop', html: '/html/google_desktop_tab/index.html?v=20260928_v1', js: '/html/google_desktop_tab/main.js?v=20260928_v1' },
     { id: 'process_leaks', tab: 'process-leaks', html: '/html/process_leaks_tab/index.html?v=20260924_v1', js: '/html/process_leaks_tab/main.js?v=20260924_v1' },
     { id: 'forensics', tab: 'forensics', html: '/html/forensics_tab/index.html?v=20260924_v1', js: '/html/forensics_tab/main.js?v=20260924_v1' },
     { id: 'throttling', tab: 'throttling', html: '/html/throttling_tab/index.html?v=20260924_v1', js: '/html/throttling_tab/main.js?v=20260924_v1' },

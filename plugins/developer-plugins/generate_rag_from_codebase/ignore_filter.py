@@ -1,42 +1,14 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Codebase RAG Ignore and Secret Filter
-# =============================================================================
-# Description:
-#   Provides glob pattern filtering, .ragignore parsing, and secret detection/redaction
-#   to prevent sensitive keys, build artifacts, and logs from entering the RAG index.
-#
-# File: ignore_filter.py
-# Project: ai-breadboard
-# Package: plugins.generate_rag_from_codebase
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """Ignore filter and secret detector for codebase RAG ingestion.
 
 Handles path exclusions based on standard ignore patterns and .ragignore rules,
 along with regex-based secret detection and redaction.
 """
-
 from __future__ import annotations
-
 import fnmatch
 from pathlib import Path
 import re
 from typing import List, Optional, Sequence
-
-
-# Common secret patterns
-SECRET_PATTERNS: List[re.Pattern[str]] = [
-    re.compile(r"(?i)(api[_-]?key|secret[_-]?key|auth[_-]?token|password|passwd|jwt[_-]?secret)\s*[:=]\s*['\"]?([A-Za-z0-9_\-\.]{8,})['\"]?"),
-    re.compile(r"AIza[0-9A-Za-z-_]{35}"),  # Google API key
-    re.compile(r"sk-[a-zA-Z0-9]{20,48}"),  # OpenAI API key
-    re.compile(r"ghp_[a-zA-Z0-9]{36}"),    # GitHub Personal Access Token
-    re.compile(r"-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----"),
-    re.compile(r"AKIA[0-9A-Z]{16}"),       # AWS Access Key
-]
-
+SECRET_PATTERNS: List[re.Pattern[str]] = [re.compile('(?i)(api[_-]?key|secret[_-]?key|auth[_-]?token|password|passwd|jwt[_-]?secret)\\s*[:=]\\s*[\'\\"]?([A-Za-z0-9_\\-\\.]{8,})[\'\\"]?'), re.compile('AIza[0-9A-Za-z-_]{35}'), re.compile('sk-[a-zA-Z0-9]{20,48}'), re.compile('ghp_[a-zA-Z0-9]{36}'), re.compile('-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----'), re.compile('AKIA[0-9A-Z]{16}')]
 
 class IgnoreFilter:
     """Filter to exclude unwanted paths and redact confidential credentials.
@@ -46,7 +18,7 @@ class IgnoreFilter:
         base_dir (Path): Base project directory root.
     """
 
-    def __init__(self, base_dir: Path, ignore_patterns: Optional[Sequence[str]] = None) -> None:
+    def __init__(self, base_dir: Path, ignore_patterns: Optional[Sequence[str]]=None) -> None:
         """Initialize the filter.
 
         Args:
@@ -59,13 +31,13 @@ class IgnoreFilter:
 
     def _load_ragignore(self) -> None:
         """Load .ragignore file from the project root if present."""
-        ragignore_path = self.base_dir / ".ragignore"
+        ragignore_path = self.base_dir / '.ragignore'
         if ragignore_path.exists():
             try:
-                lines = ragignore_path.read_text(encoding="utf-8").splitlines()
+                lines = ragignore_path.read_text(encoding='utf-8').splitlines()
                 for line in lines:
                     cleaned = line.strip()
-                    if cleaned and not cleaned.startswith("#"):
+                    if cleaned and (not cleaned.startswith('#')):
                         self.ignore_patterns.append(cleaned)
             except Exception:
                 pass
@@ -83,24 +55,18 @@ class IgnoreFilter:
             rel_path = path.resolve().relative_to(self.base_dir).as_posix()
         except ValueError:
             rel_path = path.as_posix()
-
-        parts = rel_path.split("/")
-        
-        # Check explicit parts
+        parts = rel_path.split('/')
         for part in parts:
-            if part in {".git", ".venv", "venv", "env", "__pycache__", "logs", "site", "SANDBOX"}:
+            if part in {'.git', '.venv', 'venv', 'env', '__pycache__', 'logs', 'site', 'SANDBOX'}:
                 return True
-
         for pattern in self.ignore_patterns:
-            norm_pattern = pattern.rstrip("/")
+            norm_pattern = pattern.rstrip('/')
             if fnmatch.fnmatch(rel_path, pattern) or fnmatch.fnmatch(rel_path, norm_pattern):
                 return True
             if fnmatch.fnmatch(path.name, pattern) or fnmatch.fnmatch(path.name, norm_pattern):
                 return True
-            # Also check matching for subdirectory prefixes
-            if pattern.endswith("/**") and rel_path.startswith(pattern[:-3]):
+            if pattern.endswith('/**') and rel_path.startswith(pattern[:-3]):
                 return True
-
         return False
 
     @staticmethod
@@ -130,5 +96,5 @@ class IgnoreFilter:
         """
         redacted = content
         for pattern in SECRET_PATTERNS:
-            redacted = pattern.sub("[REDACTED_SECRET]", redacted)
+            redacted = pattern.sub('[REDACTED_SECRET]', redacted)
         return redacted

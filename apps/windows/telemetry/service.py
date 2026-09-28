@@ -1,56 +1,22 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: System Telemetry Logger Service with SQLite Database Storage
-# =============================================================================
-# Description:
-#   Фоновый сервис непрерывного сбора метрик системы и сохранения их в базу данных SQLite.
-#   Фиксирует системные снапшоты, активные процессы, события и периодический аудит железа.
-#
-# Examples:
-#   >>> from apps.windows.telemetry.service import TelemetryLoggerService
-#   >>> service = TelemetryLoggerService.get_instance()
-#   >>> service.start()
-#
-# File: service.py
-# Project: ai-breadboard
-# Package: apps.windows.telemetry
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """Фоновый сервис посекундного сбора системных метрик с сохранением в SQLite."""
-
 from __future__ import annotations
-
 import asyncio
 import threading
 import time
 from typing import Any, Dict, List, Optional
-
 try:
-    from src.logger.logger import logger
+    from logger import logger
 except ImportError:
     from logger import logger
-
 from apps.windows.telemetry.collector import SystemCollector
 from apps.windows.telemetry.history_manager import HardwareHistoryManager
 from apps.windows.telemetry.storage import TelemetryStorage
 
-
 class TelemetryLoggerService:
     """Сервис периодического сбора системной телеметрии и аудита оборудования в SQLite."""
-
     _instance: Optional[TelemetryLoggerService] = None
 
-    def __init__(
-        self,
-        interval_sec: float = 5.0,
-        top_processes: int = 20,
-        collector: Optional[SystemCollector] = None,
-        storage: Optional[TelemetryStorage] = None,
-        hardware_audit_interval_sec: float = 60.0,
-        rollup_interval_sec: float = 30.0,
-    ) -> None:
+    def __init__(self, interval_sec: float=5.0, top_processes: int=20, collector: Optional[SystemCollector]=None, storage: Optional[TelemetryStorage]=None, hardware_audit_interval_sec: float=60.0, rollup_interval_sec: float=30.0) -> None:
         """Инициализирует сервис сбора системных метрик.
 
         Args:
@@ -67,12 +33,9 @@ class TelemetryLoggerService:
         self.rollup_interval_sec = max(5.0, rollup_interval_sec)
         self.collector = collector or SystemCollector()
         self.storage = storage or TelemetryStorage.get_instance()
-
         self._running = False
         self._thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
-
-        # Статистика сессии
         self._ticks_count = 0
         self._start_time: Optional[float] = None
         self._last_tick_time: Optional[float] = None
@@ -113,26 +76,17 @@ class TelemetryLoggerService:
             bool: True если сервис успешно запущен, False если уже работал.
         """
         if self.is_running:
-            logger.debug("Сервис сбора телеметрии уже запущен.")
+            logger.debug('Сервис сбора телеметрии уже запущен.')
             return False
-
         self._stop_event.clear()
         self._running = True
         self._start_time = time.time()
         self._ticks_count = 0
         self._last_error = None
         self._last_hw_audit_time = None
-
-        self._thread = threading.Thread(
-            target=self._worker_loop,
-            name="TelemetryLoggerWorker",
-            daemon=True,
-        )
+        self._thread = threading.Thread(target=self._worker_loop, name='TelemetryLoggerWorker', daemon=True)
         self._thread.start()
-        logger.info(
-            f"Фоновый сервис телеметрии запущен в БД (интервал: {self.interval_sec}с, "
-            f"аудит железа: {self.hardware_audit_interval_sec}с, БД: {self.storage.db_path})"
-        )
+        logger.info(f'Фоновый сервис телеметрии запущен в БД (интервал: {self.interval_sec}с, аудит железа: {self.hardware_audit_interval_sec}с, БД: {self.storage.db_path})')
         return True
 
     def stop(self) -> bool:
@@ -143,13 +97,12 @@ class TelemetryLoggerService:
         """
         if not self._running:
             return False
-
         self._running = False
         self._stop_event.set()
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=3.0)
         self._thread = None
-        logger.info(f"Фоновый сервис телеметрии остановлен. Всего тиков: {self._ticks_count}")
+        logger.info(f'Фоновый сервис телеметрии остановлен. Всего тиков: {self._ticks_count}')
         return True
 
     def _worker_loop(self) -> None:
@@ -157,66 +110,45 @@ class TelemetryLoggerService:
         while not self._stop_event.is_set():
             loop_start = time.time()
             try:
-                # 1. Сбор живого моментального снимка
                 loop = None
                 try:
                     loop = asyncio.get_event_loop()
                 except RuntimeError:
                     loop = None
-
                 if loop and loop.is_running():
-                    task = asyncio.run_coroutine_threadsafe(
-                        self.collector.get_snapshot(process_limit=self.top_processes),
-                        loop,
-                    )
+                    task = asyncio.run_coroutine_threadsafe(self.collector.get_snapshot(process_limit=self.top_processes), loop)
                     snapshot = task.result(timeout=30.0)
                 else:
                     snapshot = asyncio.run(self.collector.get_snapshot(process_limit=self.top_processes))
-
                 self._last_snapshot = snapshot
                 self._ticks_count += 1
                 self._last_tick_time = time.time()
-
-                # Сохранение среза в SQLite базу данных
                 try:
                     self.storage.save_snapshot(snapshot, top_n=self.top_processes)
                 except Exception as db_err:
-                    logger.warning(f"Ошибка сохранения снимка телеметрии в БД: {db_err}")
-
-                # 2. Периодический аудит железа и фиксация изменений
-                if (
-                    self._last_hw_audit_time is None
-                    or (loop_start - self._last_hw_audit_time) >= self.hardware_audit_interval_sec
-                ):
+                    logger.warning(f'Ошибка сохранения снимка телеметрии в БД: {db_err}')
+                if self._last_hw_audit_time is None or loop_start - self._last_hw_audit_time >= self.hardware_audit_interval_sec:
                     try:
                         archive_entry = self.collector.archive_hardware_state(auto_diff=True)
                         if archive_entry:
                             self.storage.save_hardware_archive(archive_entry)
                         self._last_hw_audit_time = loop_start
                     except Exception as hw_ex:
-                        logger.debug(f"Ошибка при периодическом аудите железа: {hw_ex}")
-
-                # 3. Периодическое обобщение (Rollup) записей процессов (> 2 мин и > 1 дня)
-                if (
-                    self._last_rollup_time is None
-                    or (loop_start - self._last_rollup_time) >= self.rollup_interval_sec
-                ):
+                        logger.debug(f'Ошибка при периодическом аудите железа: {hw_ex}')
+                if self._last_rollup_time is None or loop_start - self._last_rollup_time >= self.rollup_interval_sec:
                     try:
                         self.run_rollups()
                         self._last_rollup_time = loop_start
                     except Exception as roll_ex:
-                        logger.debug(f"Ошибка при периодическом обобщении процессов: {roll_ex}")
-
+                        logger.debug(f'Ошибка при периодическом обобщении процессов: {roll_ex}')
             except (RuntimeError, ValueError) as shut_ex:
-                if "shutdown" in str(shut_ex).lower() or "closed file" in str(shut_ex).lower():
+                if 'shutdown' in str(shut_ex).lower() or 'closed file' in str(shut_ex).lower():
                     break
                 self._last_error = str(shut_ex)
-                logger.debug(f"Ошибка при сборе системной телеметрии: {shut_ex}")
+                logger.debug(f'Ошибка при сборе системной телеметрии: {shut_ex}')
             except Exception as ex:
                 self._last_error = str(ex)
-                logger.debug(f"Ошибка при сборе системной телеметрии: {ex}")
-
-            # Рассчитываем точное время сна для сохранения равномерного интервала
+                logger.debug(f'Ошибка при сборе системной телеметрии: {ex}')
             elapsed = time.time() - loop_start
             sleep_time = max(0.01, self.interval_sec - elapsed)
             if self._stop_event.wait(timeout=sleep_time):
@@ -230,10 +162,7 @@ class TelemetryLoggerService:
         """
         short_res = self.storage.aggregate_process_metrics_2min(cutoff_seconds=120)
         daily_res = self.storage.aggregate_process_metrics_daily(cutoff_days=1)
-        return {
-            "rollup_2min": short_res,
-            "rollup_daily": daily_res,
-        }
+        return {'rollup_2min': short_res, 'rollup_daily': daily_res}
 
     def get_status(self) -> Dict[str, Any]:
         """Возвращает текущий статус сервиса телеметрии.
@@ -242,19 +171,7 @@ class TelemetryLoggerService:
             Dict[str, Any]: Словарь с состоянием и статистикой работы сервиса.
         """
         uptime = round(time.time() - self._start_time, 1) if self._start_time and self.is_running else 0.0
-
-        return {
-            "is_running": self.is_running,
-            "interval_sec": self.interval_sec,
-            "top_processes_limit": self.top_processes,
-            "hardware_audit_interval_sec": self.hardware_audit_interval_sec,
-            "ticks_recorded": self._ticks_count,
-            "uptime_seconds": uptime,
-            "last_tick_epoch": self._last_tick_time,
-            "last_hw_audit_epoch": self._last_hw_audit_time,
-            "last_error": self._last_error,
-            "storage_stats": self.storage.get_storage_stats(),
-        }
+        return {'is_running': self.is_running, 'interval_sec': self.interval_sec, 'top_processes_limit': self.top_processes, 'hardware_audit_interval_sec': self.hardware_audit_interval_sec, 'ticks_recorded': self._ticks_count, 'uptime_seconds': uptime, 'last_tick_epoch': self._last_tick_time, 'last_hw_audit_epoch': self._last_hw_audit_time, 'last_error': self._last_error, 'storage_stats': self.storage.get_storage_stats()}
 
     def get_last_snapshot(self) -> Optional[Any]:
         """Возвращает последний собранный снапшот.
@@ -264,7 +181,7 @@ class TelemetryLoggerService:
         """
         return self._last_snapshot
 
-    def get_history(self, limit: int = 60) -> List[Dict[str, Any]]:
+    def get_history(self, limit: int=60) -> List[Dict[str, Any]]:
         """Возвращает историю системных снимков из SQLite базы данных.
 
         Args:
@@ -275,12 +192,7 @@ class TelemetryLoggerService:
         """
         return self.storage.get_snapshots(limit=limit)
 
-    def record_event(
-        self,
-        event_type: str,
-        event_details: Dict[str, Any],
-        severity: str = "info",
-    ) -> int:
+    def record_event(self, event_type: str, event_details: Dict[str, Any], severity: str='info') -> int:
         """Записывает событие в SQLite базу данных телеметрии.
 
         Args:
@@ -291,9 +203,9 @@ class TelemetryLoggerService:
         Returns:
             int: ID добавленной записи события.
         """
-        logger.info(f"[Событие Telemetry] {event_type}: {event_details}")
+        logger.info(f'[Событие Telemetry] {event_type}: {event_details}')
         try:
             return self.storage.save_event(event_type, event_details, severity=severity)
         except Exception as ex:
-            logger.error(f"Не удалось записать событие в базу данных: {ex}")
+            logger.error(f'Не удалось записать событие в базу данных: {ex}')
             return 0

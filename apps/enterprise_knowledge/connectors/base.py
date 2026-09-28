@@ -1,19 +1,16 @@
 """Базовый интерфейс коннекторов для Enterprise Knowledge Platform."""
-
 from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from typing import Any
-
 
 class BaseConnector(ABC):
     """Базовый класс для всех коннекторов источников данных."""
 
-    def __init__(self, config: dict[str, Any] | None = None) -> None:
+    def __init__(self, config: dict[str, Any] | None=None) -> None:
         self.config = config or {}
 
     @abstractmethod
-    async def fetch_changes(self, since: str | None = None) -> list[dict[str, Any]]:
+    async def fetch_changes(self, since: str | None=None) -> list[dict[str, Any]]:
         """Получить изменения с последней синхронизации."""
         raise NotImplementedError
 

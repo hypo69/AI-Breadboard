@@ -1,34 +1,15 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Base Plugin Interface Definition
-# =============================================================================
-# Description:
-#   Provides the foundational abstract base class for all modular plugins in the
-#   AI Breadboard platform, defining lifecycle, metadata, actions, and handling.
-#
-# File: base.py
-# Project: ai-breadboard
-# Package: plugins
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """Base plugin module for modular extension system.
 
 Defines the BasePlugin abstract interface that all AI Breadboard plugins must
 inherit from to ensure seamless lifecycle management, configuration, action
 execution, and AI routing.
 """
-
 from __future__ import annotations
-
 import abc
 import inspect
 from datetime import datetime
 from typing import Any, AsyncGenerator, Dict, List, Optional
-
 from logger import logger
-
 
 class BasePlugin(abc.ABC):
     """Abstract base class for all system plugins.
@@ -44,20 +25,19 @@ class BasePlugin(abc.ABC):
         ai_model (Any): Optional AI model instance passed for inference.
         config (Dict[str, Any]): Plugin runtime configuration dictionary.
     """
-
-    name: str = "base_plugin"
-    title: str = "Base Plugin"
+    name: str = 'base_plugin'
+    title: str = 'Base Plugin'
     title_i18n: Dict[str, str] = {}
-    version: str = "1.0.0"
-    description: str = "Base plugin interface."
+    version: str = '1.0.0'
+    description: str = 'Base plugin interface.'
     description_i18n: Dict[str, str] = {}
-    icon: str = "🧩"
-    category: str = "general"
+    icon: str = '🧩'
+    category: str = 'general'
     enabled: bool = True
     is_system: bool = True
-    scope: str = "system"  # 'system', 'developer', or 'user'
+    scope: str = 'system'
 
-    def __init__(self, ai_model: Any = None, config: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, ai_model: Any=None, config: Optional[Dict[str, Any]]=None) -> None:
         """Initialize the plugin instance.
 
         Args:
@@ -68,7 +48,7 @@ class BasePlugin(abc.ABC):
         self.config: Dict[str, Any] = config or {}
         self.is_running: bool = False
 
-    def get_title(self, lang: Optional[str] = "en") -> str:
+    def get_title(self, lang: Optional[str]='en') -> str:
         """Return the localized title for the requested language.
 
         Args:
@@ -79,14 +59,14 @@ class BasePlugin(abc.ABC):
         """
         if not lang:
             return self.title
-        lang_key = lang.strip().lower().split("-")[0].split("_")[0]
+        lang_key = lang.strip().lower().split('-')[0].split('_')[0]
         if self.title_i18n and lang_key in self.title_i18n and self.title_i18n[lang_key]:
             return self.title_i18n[lang_key]
-        if self.title_i18n and "en" in self.title_i18n and self.title_i18n["en"]:
-            return self.title_i18n["en"]
+        if self.title_i18n and 'en' in self.title_i18n and self.title_i18n['en']:
+            return self.title_i18n['en']
         return self.title
 
-    def get_description(self, lang: Optional[str] = "en") -> str:
+    def get_description(self, lang: Optional[str]='en') -> str:
         """Return the localized description for the requested language.
 
         Args:
@@ -97,14 +77,14 @@ class BasePlugin(abc.ABC):
         """
         if not lang:
             return self.description
-        lang_key = lang.strip().lower().split("-")[0].split("_")[0]
+        lang_key = lang.strip().lower().split('-')[0].split('_')[0]
         if self.description_i18n and lang_key in self.description_i18n and self.description_i18n[lang_key]:
             return self.description_i18n[lang_key]
-        if self.description_i18n and "en" in self.description_i18n and self.description_i18n["en"]:
-            return self.description_i18n["en"]
+        if self.description_i18n and 'en' in self.description_i18n and self.description_i18n['en']:
+            return self.description_i18n['en']
         return self.description
 
-    def get_manifest(self, lang: Optional[str] = None) -> Dict[str, Any]:
+    def get_manifest(self, lang: Optional[str]=None) -> Dict[str, Any]:
         """Return the plugin manifest schema and metadata.
 
         Args:
@@ -116,24 +96,7 @@ class BasePlugin(abc.ABC):
         """
         resolved_title = self.get_title(lang) if lang else self.title
         resolved_desc = self.get_description(lang) if lang else self.description
-        return {
-            "name": self.name,
-            "title": resolved_title,
-            "title_i18n": dict(self.title_i18n) if self.title_i18n else {"en": self.title},
-            "version": self.version,
-            "description": resolved_desc,
-            "description_i18n": dict(self.description_i18n) if self.description_i18n else {"en": self.description},
-            "icon": self.icon,
-            "category": self.category,
-            "enabled": self.enabled,
-            "is_system": getattr(self, "is_system", True),
-            "scope": getattr(self, "scope", "system" if getattr(self, "is_system", True) else "user"),
-            "is_running": self.is_running,
-            "actions": self.get_actions() if not inspect.iscoroutinefunction(self.get_actions) else [],
-            "tools": self.get_tools() if not inspect.iscoroutinefunction(self.get_tools) else [],
-            "fields": self.get_config_fields() if not inspect.iscoroutinefunction(self.get_config_fields) else [],
-            "config": self.config,
-        }
+        return {'name': self.name, 'title': resolved_title, 'title_i18n': dict(self.title_i18n) if self.title_i18n else {'en': self.title}, 'version': self.version, 'description': resolved_desc, 'description_i18n': dict(self.description_i18n) if self.description_i18n else {'en': self.description}, 'icon': self.icon, 'category': self.category, 'enabled': self.enabled, 'is_system': getattr(self, 'is_system', True), 'scope': getattr(self, 'scope', 'system' if getattr(self, 'is_system', True) else 'user'), 'is_running': self.is_running, 'actions': self.get_actions() if not inspect.iscoroutinefunction(self.get_actions) else [], 'tools': self.get_tools() if not inspect.iscoroutinefunction(self.get_tools) else [], 'fields': self.get_config_fields() if not inspect.iscoroutinefunction(self.get_config_fields) else [], 'config': self.config}
 
     def get_tools(self) -> List[Dict[str, Any]]:
         """Return list of LLM function calling tool definitions.
@@ -165,6 +128,8 @@ class BasePlugin(abc.ABC):
         Returns:
             Optional[APIRouter]: Router instance if this plugin provides HTTP endpoints.
         """
+        '# TODO: вернуть корректное значение'
+        logger.error('Функция get_router вернула пустой результат')
         return None
 
     def update_config(self, new_config: Dict[str, Any]) -> None:
@@ -198,15 +163,9 @@ class BasePlugin(abc.ABC):
         Returns:
             Dict[str, Any]: Health status dictionary with timestamps and states.
         """
-        return {
-            "name": self.name,
-            "enabled": self.enabled,
-            "is_running": self.is_running,
-            "status": "healthy" if self.enabled else "disabled",
-            "last_check": datetime.utcnow().isoformat(),
-        }
+        return {'name': self.name, 'enabled': self.enabled, 'is_running': self.is_running, 'status': 'healthy' if self.enabled else 'disabled', 'last_check': datetime.utcnow().isoformat()}
 
-    async def execute_action(self, action_id: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def execute_action(self, action_id: str, params: Optional[Dict[str, Any]]=None) -> Dict[str, Any]:
         """Execute a declared admin action by identifier.
 
         Args:
@@ -216,10 +175,7 @@ class BasePlugin(abc.ABC):
         Returns:
             Dict[str, Any]: Execution result containing status and payload.
         """
-        return {
-            "success": False,
-            "error": f"Action '{action_id}' is not implemented on plugin '{self.name}'.",
-        }
+        return {'success': False, 'error': f"Action '{action_id}' is not implemented on plugin '{self.name}'."}
 
     @abc.abstractmethod
     async def handle(self, message: str, **kwargs: Any) -> AsyncGenerator[Dict[str, Any], None]:
@@ -232,4 +188,4 @@ class BasePlugin(abc.ABC):
         Yields:
             Dict[str, Any]: Streamed output events and result chunks.
         """
-        yield {"status": "complete", "text": ""}
+        yield {'status': 'complete', 'text': ''}

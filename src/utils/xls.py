@@ -1,53 +1,12 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Excel file processing and conversion utilities
-# =============================================================================
-# Description:
-#   This module provides functions to convert Excel files to JSON format, handle multiple sheets, and sa
-#
-# File: xls.py
-# Project: ai-breadboard
-# Package: src.utils
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """Excel file conversion utilities for converting between XLS and JSON formats."""
-
-""" This module provides functions to convert Excel files to JSON format, handle multiple sheets, and save JSON data back to Excel files.
-
-Functions:
-    read_xls_as_dict(xls_file: str, json_file: str = None, sheet_name: Union[str, int] = None) -> Union[Dict, List[Dict], bool]:
-        Reads an Excel file and converts it to JSON.  Optionally, converts a specific sheet and saves the result to a JSON file.  Handles errors gracefully.
-
-    save_xls_file(data: Dict[str, List[Dict]], file_path: str) -> bool:
-        Saves JSON data to an Excel file.  The data should be a dictionary where keys are sheet names and values are lists of dictionaries representing rows. Handles errors gracefully.
-
-Examples:
-    # Reading and optionally saving to JSON
-    data = read_xls_as_dict('input.xlsx', 'output.json', 'Sheet1')  # Reads sheet named 'Sheet1'
-    if data:
-        print(data)  # Output will be {'Sheet1': [{...}]}
-
-    # Saving from JSON data
-    data_to_save = {'Sheet1': [{'column1': 'value1', 'column2': 'value2'}]}
-    success = save_xls_file(data_to_save, 'output.xlsx')
-    if success:
-        print("Successfully saved to output.xlsx")
-"""
-
+' This module provides functions to convert Excel files to JSON format, handle multiple sheets, and save JSON data back to Excel files.\n\nFunctions:\n    read_xls_as_dict(xls_file: str, json_file: str = None, sheet_name: Union[str, int] = None) -> Union[Dict, List[Dict], bool]:\n        Reads an Excel file and converts it to JSON.  Optionally, converts a specific sheet and saves the result to a JSON file.  Handles errors gracefully.\n\n    save_xls_file(data: Dict[str, List[Dict]], file_path: str) -> bool:\n        Saves JSON data to an Excel file.  The data should be a dictionary where keys are sheet names and values are lists of dictionaries representing rows. Handles errors gracefully.\n\nExamples:\n    # Reading and optionally saving to JSON\n    data = read_xls_as_dict(\'input.xlsx\', \'output.json\', \'Sheet1\')  # Reads sheet named \'Sheet1\'\n    if data:\n        print(data)  # Output will be {\'Sheet1\': [{...}]}\n\n    # Saving from JSON data\n    data_to_save = {\'Sheet1\': [{\'column1\': \'value1\', \'column2\': \'value2\'}]}\n    success = save_xls_file(data_to_save, \'output.xlsx\')\n    if success:\n        print("Successfully saved to output.xlsx")\n'
 import pandas as pd
 import json
 from typing import List, Dict, Union
 from pathlib import Path
-
 from logger import logger
 
-def read_xls_as_dict(
-    xls_file: str,
-    json_file: str = None,
-    sheet_name: Union[str, int] = None
-) -> Union[Dict, List[Dict], bool]:
+def read_xls_as_dict(xls_file: str, json_file: str=None, sheet_name: Union[str, int]=None) -> Union[Dict, List[Dict], bool]:
     """
     Reads an Excel file and converts it to JSON.  Optionally, converts a specific sheet and saves the result to a JSON file.
     Handles errors gracefully.
@@ -55,11 +14,9 @@ def read_xls_as_dict(
     try:
         xls_file_path = Path(xls_file)
         if not xls_file_path.exists():
-            logger.error(f"Excel file not found: {xls_file}")
-            return False  # Indicate failure
-
+            logger.error(f'Excel file not found: {xls_file}')
+            return False
         xls = pd.ExcelFile(xls_file)
-
         if sheet_name is None:
             data_dict = {}
             for sheet in xls.sheet_names:
@@ -69,7 +26,6 @@ def read_xls_as_dict(
                 except Exception as e:
                     logger.error(f"Error processing sheet '{sheet}': {e}")
                     return False
-
         else:
             try:
                 df = pd.read_excel(xls, sheet_name=sheet_name)
@@ -77,19 +33,16 @@ def read_xls_as_dict(
             except Exception as e:
                 logger.error(f"Error processing sheet '{sheet_name}': {e}")
                 return False
-
         if json_file:
             with open(json_file, 'w', encoding='utf-8') as f:
                 json.dump(data_dict, f, ensure_ascii=False, indent=4)
-                logger.info(f"JSON data saved to {json_file}")
-
+                logger.info(f'JSON data saved to {json_file}')
         return data_dict
-
     except FileNotFoundError as e:
-        logger.error(f"File not found: {e}")
+        logger.error(f'File not found: {e}')
         return False
     except Exception as e:
-        logger.error(f"An error occurred: {e}")
+        logger.error(f'An error occurred: {e}')
         return False
 
 def save_xls_file(data: Dict[str, List[Dict]], file_path: str) -> bool:
@@ -102,6 +55,5 @@ def save_xls_file(data: Dict[str, List[Dict]], file_path: str) -> bool:
                 logger.info(f"Sheet '{sheet_name}' saved to {file_path}")
         return True
     except Exception as e:
-        logger.error(f"Error saving Excel file: {e}")
+        logger.error(f'Error saving Excel file: {e}')
         return False
-

@@ -1,0 +1,5 @@
+{
+  "search_paths": [".skills", ".agents/skills", ".gemini/skills", "skills"],
+  "include": [],
+  "exclude": []
+}

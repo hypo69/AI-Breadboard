@@ -1,0 +1,25 @@
+{
+  "launcher": "Run-GoogleUserDesktop.ps1",
+  "server": {
+    "dedicated": false,
+    "port": 8106,
+    "use_ssl": false,
+    "workers": 1
+  },
+  "google_desktop": {
+    "poll_interval_seconds": 5.0,
+    "max_mail_items": 20,
+    "max_calendar_items": 20,
+    "max_docs_items": 20,
+    "max_drive_items": 20
+  },
+  "server_cors_origins": [],
+  "server_cors_allow_credentials": true,
+  "cors": {
+    "allow_origins": [],
+    "allow_origin_regex": null,
+    "allow_credentials": true,
+    "allow_methods": ["*"],
+    "allow_headers": ["*"]
+  }
+}

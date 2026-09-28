@@ -1,34 +1,6 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Unit Tests for Windows Hardware Monitor
-# =============================================================================
-# Description:
-#   Тесты для модуля аппаратного мониторинга реального времени (HardwareMonitor)
-#   в приложении apps/windows: проверка моделей, сбора метрик и API.
-#
-# File: test_hardware_monitor.py
-# Package: apps.windows.tests
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """Unit-тесты для модуля HardwareMonitor."""
-
 import unittest
-from apps.windows.hardware.hardware_monitor import (
-    BatteryMetrics,
-    CpuMetrics,
-    DiskIoMetrics,
-    DiskPartitionMetrics,
-    GpuMetrics,
-    HardwareMonitor,
-    HardwareSnapshot,
-    MemoryMetrics,
-    NetworkMetrics,
-    SensorMetrics,
-    StorageMetrics,
-)
-
+from apps.windows.hardware.hardware_monitor import BatteryMetrics, CpuMetrics, DiskIoMetrics, DiskPartitionMetrics, GpuMetrics, HardwareMonitor, HardwareSnapshot, MemoryMetrics, NetworkMetrics, SensorMetrics, StorageMetrics
 
 class TestHardwareMonitor(unittest.TestCase):
     """Тестирование функциональности HardwareMonitor."""
@@ -110,23 +82,20 @@ class TestHardwareMonitor(unittest.TestCase):
         self.assertIsInstance(snap.memory, MemoryMetrics)
         self.assertIsInstance(snap.storage, StorageMetrics)
         self.assertIsInstance(snap.network, NetworkMetrics)
-
         d = snap.to_dict()
         self.assertIsInstance(d, dict)
-        self.assertIn("cpu", d)
-        self.assertIn("memory", d)
-        self.assertIn("storage", d)
-        self.assertIn("network", d)
-        self.assertIn("status_summary", d)
+        self.assertIn('cpu', d)
+        self.assertIn('memory', d)
+        self.assertIn('storage', d)
+        self.assertIn('network', d)
+        self.assertIn('status_summary', d)
 
     def test_get_summary_thresholds(self) -> None:
         """Проверка работы логики расчета сводного здоровья."""
         summary = self.monitor.get_summary()
         self.assertIsInstance(summary, dict)
-        self.assertIn("status", summary)
-        self.assertIn(summary["status"], ["HEALTHY", "WARNING", "CRITICAL"])
-        self.assertIn("metrics", summary)
-
-
-if __name__ == "__main__":
+        self.assertIn('status', summary)
+        self.assertIn(summary['status'], ['HEALTHY', 'WARNING', 'CRITICAL'])
+        self.assertIn('metrics', summary)
+if __name__ == '__main__':
     unittest.main()

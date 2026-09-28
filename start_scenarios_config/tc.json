@@ -64,6 +64,7 @@
       "autolog_manager",
       "ninite_updater",
       "file_recovery",
+      "file_history_ai_search",
       "telemetry_history",
       "telemetry_research"
     ],

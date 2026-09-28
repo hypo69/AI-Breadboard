@@ -1,12 +1,8 @@
 """Рабочий процесс разрешения идентичности."""
-
 from __future__ import annotations
-
 from typing import Any
-
 from apps.enterprise_knowledge.storage import KnowledgeStore
 from apps.enterprise_knowledge.identity.resolution import IdentityResolver
-
 
 class ResolutionWorker:
     """Рабочий процесс для разрешения идентичности сотрудников."""
@@ -21,5 +17,4 @@ class ResolutionWorker:
 
     async def find_duplicates(self) -> list[dict[str, Any]]:
         """Найти потенциальные дубликаты сотрудников."""
-        # TODO: Реализовать поиск дубликатов
         return []

@@ -1,39 +1,20 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Network Terminal Sensors Module (Windows Native)
-# =============================================================================
-# Description:
-#   Network monitoring sensors using ONLY Windows native tools (PowerShell, IP Helper API).
-#   No TShark or external packet capture tools - only OS-native network monitoring.
-#
-# File: sensors.py
-# Project: ai-breadboard
-# Package: apps.windows.network
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """Network monitoring sensors for telemetry integration using Windows native tools."""
-
 from __future__ import annotations
-
 import json
 import subprocess
 import time
 from datetime import datetime, timezone
 from typing import List, Optional
-
 from logger import logger
 from apps.common.csv_logger import AppCsvLogger
 from apps.windows.telemetry.models import HardwareSensor
-
 
 class NetworkTerminalSensor:
     """Network monitoring sensor using Windows native tools only."""
 
     def __init__(self) -> None:
         """Initialize network sensor with CSV logging."""
-        self._csv_logger = AppCsvLogger("network_terminal")
+        self._csv_logger = AppCsvLogger('network_terminal')
         self._last_net_io = None
         self._last_time = time.time()
 
@@ -44,65 +25,41 @@ class NetworkTerminalSensor:
             List[HardwareSensor]: Network interface telemetry as sensors.
         """
         sensors: List[HardwareSensor] = []
-        
         try:
             import psutil
-            
-            # Get network I/O counters using psutil (Windows native wrapper)
             current_net_io = psutil.net_io_counters(pernic=True)
             now = time.time()
             elapsed = max(now - self._last_time, 0.1)
-            
             if current_net_io and self._last_net_io:
                 for name, current in current_net_io.items():
                     if name in self._last_net_io:
                         prev = self._last_net_io[name]
-                        
-                        # Calculate rates
                         bytes_sent_rate = max(0.0, (current.bytes_sent - prev.bytes_sent) / elapsed)
                         bytes_recv_rate = max(0.0, (current.bytes_recv - prev.bytes_recv) / elapsed)
                         packets_sent_rate = max(0.0, (current.packets_sent - prev.packets_sent) / elapsed)
                         packets_recv_rate = max(0.0, (current.packets_recv - prev.packets_recv) / elapsed)
-                        
-                        # Create sensors for each interface
-                        sensors.append(HardwareSensor(
-                            sensor_id=f"net_{name}_bytes_sent",
-                            name=f"Network {name} Bytes Sent",
-                            category="network",
-                            value=round(bytes_sent_rate, 2),
-                            unit="B/s",
-                        ))
-                        
-                        sensors.append(HardwareSensor(
-                            sensor_id=f"net_{name}_bytes_recv",
-                            name=f"Network {name} Bytes Received",
-                            category="network",
-                            value=round(bytes_recv_rate, 2),
-                            unit="B/s",
-                        ))
-                        
-                        sensors.append(HardwareSensor(
-                            sensor_id=f"net_{name}_packets_sent",
-                            name=f"Network {name} Packets Sent",
-                            category="network",
-                            value=round(packets_sent_rate, 2),
-                            unit="pkt/s",
-                        ))
-                        
-                        sensors.append(HardwareSensor(
-                            sensor_id=f"net_{name}_packets_recv",
-                            name=f"Network {name} Packets Received",
-                            category="network",
-                            value=round(packets_recv_rate, 2),
-                            unit="pkt/s",
-                        ))
-            
+                        sensors.append(HardwareSensor(sensor_id=f'net_{name}_bytes_sent', name=f'Network {name} Bytes Sent', category='network', value=round(bytes_sent_rate, 2), unit='B/s'))
+                        sensors.append(HardwareSensor(sensor_id=f'net_{name}_bytes_recv', name=f'Network {name} Bytes Received', category='network', value=round(bytes_recv_rate, 2), unit='B/s'))
+                        sensors.append(HardwareSensor(sensor_id=f'net_{name}_packets_sent', name=f'Network {name} Packets Sent', category='network', value=round(packets_sent_rate, 2), unit='pkt/s'))
+                        sensors.append(HardwareSensor(sensor_id=f'net_{name}_packets_recv', name=f'Network {name} Packets Received', category='network', value=round(packets_recv_rate, 2), unit='pkt/s'))
             self._last_net_io = current_net_io
             self._last_time = now
-            
+
+            # Добавляем накопительные сенсоры адаптеров
+            try:
+                from apps.windows.network.network_usage import WindowsNetworkUsageCollector
+                collector = WindowsNetworkUsageCollector()
+                stats = collector.get_adapter_statistics()
+                for st in stats:
+                    recv_mb = round(st.received_bytes / (1024 * 1024), 2)
+                    sent_mb = round(st.sent_bytes / (1024 * 1024), 2)
+                    sensors.append(HardwareSensor(sensor_id=f'net_{st.name}_total_recv_mb', name=f'Network {st.name} Total Received', category='network', value=recv_mb, unit='MB'))
+                    sensors.append(HardwareSensor(sensor_id=f'net_{st.name}_total_sent_mb', name=f'Network {st.name} Total Sent', category='network', value=sent_mb, unit='MB'))
+            except Exception as ex_stat:
+                logger.debug(f'Failed to add adapter cumulative sensors: {ex_stat}')
+
         except Exception as ex:
-            logger.debug(f"Network sensor probe failed: {ex}")
-        
+            logger.debug(f'Network sensor probe failed: {ex}')
         return sensors
 
     def get_listening_ports_native(self) -> List[dict]:
@@ -113,22 +70,14 @@ class NetworkTerminalSensor:
         """
         ports = []
         try:
-            # Use PowerShell Get-NetTCPConnection (Windows native)
-            cmd = [
-                "powershell",
-                "-NoProfile",
-                "-Command",
-                "Get-NetTCPConnection -State Listen | Select-Object LocalAddress, LocalPort, OwningProcess | ConvertTo-Json -Compress"
-            ]
-            
+            cmd = ['powershell', '-NoProfile', '-Command', 'Get-NetTCPConnection -State Listen | Select-Object LocalAddress, LocalPort, OwningProcess | ConvertTo-Json -Compress']
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
             if result.returncode == 0 and result.stdout.strip():
                 data = json.loads(result.stdout.strip())
                 items = data if isinstance(data, list) else [data]
-                
                 for item in items:
                     try:
-                        pid = item.get("OwningProcess", 0)
+                        pid = item.get('OwningProcess', 0)
                         proc_name = None
                         if pid and pid > 4:
                             try:
@@ -137,19 +86,11 @@ class NetworkTerminalSensor:
                                 proc_name = proc.name()
                             except Exception:
                                 pass
-                        
-                        ports.append({
-                            "port": item.get("LocalPort"),
-                            "ip": item.get("LocalAddress", "0.0.0.0"),
-                            "pid": pid,
-                            "process": proc_name,
-                        })
+                        ports.append({'port': item.get('LocalPort'), 'ip': item.get('LocalAddress', '0.0.0.0'), 'pid': pid, 'process': proc_name})
                     except Exception:
                         continue
-                        
         except Exception as ex:
-            logger.debug(f"Failed to get listening ports via PowerShell: {ex}")
-        
+            logger.debug(f'Failed to get listening ports via PowerShell: {ex}')
         return ports
 
     def get_active_connections_native(self) -> List[dict]:
@@ -160,32 +101,18 @@ class NetworkTerminalSensor:
         """
         connections = []
         try:
-            # Use PowerShell Get-NetTCPConnection for established connections
-            cmd = [
-                "powershell",
-                "-NoProfile",
-                "-Command",
-                "Get-NetTCPConnection -State Established | Select-Object LocalAddress, LocalPort, RemoteAddress, RemotePort, OwningProcess | ConvertTo-Json -Compress"
-            ]
-            
+            cmd = ['powershell', '-NoProfile', '-Command', 'Get-NetTCPConnection -State Established | Select-Object LocalAddress, LocalPort, RemoteAddress, RemotePort, OwningProcess | ConvertTo-Json -Compress']
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
             if result.returncode == 0 and result.stdout.strip():
                 data = json.loads(result.stdout.strip())
                 items = data if isinstance(data, list) else [data]
-                
                 for item in items:
                     try:
-                        connections.append({
-                            "local": f"{item.get('LocalAddress', '0.0.0.0')}:{item.get('LocalPort', 0)}",
-                            "remote": f"{item.get('RemoteAddress', '0.0.0.0')}:{item.get('RemotePort', 0)}",
-                            "pid": item.get("OwningProcess"),
-                        })
+                        connections.append({'local': f"{item.get('LocalAddress', '0.0.0.0')}:{item.get('LocalPort', 0)}", 'remote': f"{item.get('RemoteAddress', '0.0.0.0')}:{item.get('RemotePort', 0)}", 'pid': item.get('OwningProcess')})
                     except Exception:
                         continue
-                        
         except Exception as ex:
-            logger.debug(f"Failed to get active connections via PowerShell: {ex}")
-        
+            logger.debug(f'Failed to get active connections via PowerShell: {ex}')
         return connections
 
     def get_network_adapters_native(self) -> List[dict]:
@@ -196,34 +123,18 @@ class NetworkTerminalSensor:
         """
         adapters = []
         try:
-            # Use PowerShell Get-NetAdapter
-            cmd = [
-                "powershell",
-                "-NoProfile",
-                "-Command",
-                "Get-NetAdapter | Select-Object Name, InterfaceDescription, Status, LinkSpeed, MacAddress | ConvertTo-Json -Compress"
-            ]
-            
+            cmd = ['powershell', '-NoProfile', '-Command', 'Get-NetAdapter | Select-Object Name, InterfaceDescription, Status, LinkSpeed, MacAddress | ConvertTo-Json -Compress']
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
             if result.returncode == 0 and result.stdout.strip():
                 data = json.loads(result.stdout.strip())
                 items = data if isinstance(data, list) else [data]
-                
                 for item in items:
                     try:
-                        adapters.append({
-                            "name": item.get("Name"),
-                            "description": item.get("InterfaceDescription"),
-                            "status": item.get("Status"),
-                            "speed_mbps": self._parse_speed(item.get("LinkSpeed")),
-                            "mac": item.get("MacAddress"),
-                        })
+                        adapters.append({'name': item.get('Name'), 'description': item.get('InterfaceDescription'), 'status': item.get('Status'), 'speed_mbps': self._parse_speed(item.get('LinkSpeed')), 'mac': item.get('MacAddress')})
                     except Exception:
                         continue
-                        
         except Exception as ex:
-            logger.debug(f"Failed to get network adapters via PowerShell: {ex}")
-        
+            logger.debug(f'Failed to get network adapters via PowerShell: {ex}')
         return adapters
 
     def _parse_speed(self, speed_str: Optional[str]) -> int:
@@ -239,18 +150,17 @@ class NetworkTerminalSensor:
             return 0
         try:
             speed_str = speed_str.lower()
-            if "gbps" in speed_str:
-                return int(float(speed_str.replace("gbps", "").strip()) * 1000)
-            elif "mbps" in speed_str:
-                return int(float(speed_str.replace("mbps", "").strip()))
-            elif "kbps" in speed_str:
-                return int(float(speed_str.replace("kbps", "").strip()) / 1000)
+            if 'gbps' in speed_str:
+                return int(float(speed_str.replace('gbps', '').strip()) * 1000)
+            elif 'mbps' in speed_str:
+                return int(float(speed_str.replace('mbps', '').strip()))
+            elif 'kbps' in speed_str:
+                return int(float(speed_str.replace('kbps', '').strip()) / 1000)
             return 0
         except Exception:
             return 0
 
-    def log_network_metrics(self, interface: str, bytes_sent: float, bytes_recv: float, 
-                           packets_sent: float, packets_recv: float) -> None:
+    def log_network_metrics(self, interface: str, bytes_sent: float, bytes_recv: float, packets_sent: float, packets_recv: float) -> None:
         """Log network metrics to CSV.
 
         Args:
@@ -261,49 +171,12 @@ class NetworkTerminalSensor:
             packets_recv: Packets received per second.
         """
         try:
-            self._csv_logger.log_poll(
-                poll_type="network_metrics",
-                metric_name=f"{interface}_bytes_sent",
-                value=round(bytes_sent, 2),
-                unit="B/s",
-                status="OK",
-                details={"interface": interface},
-                filename="network_terminal_sensors.csv",
-            )
-            
-            self._csv_logger.log_poll(
-                poll_type="network_metrics",
-                metric_name=f"{interface}_bytes_recv",
-                value=round(bytes_recv, 2),
-                unit="B/s",
-                status="OK",
-                details={"interface": interface},
-                filename="network_terminal_sensors.csv",
-            )
-            
-            self._csv_logger.log_poll(
-                poll_type="network_metrics",
-                metric_name=f"{interface}_packets_sent",
-                value=round(packets_sent, 2),
-                unit="pkt/s",
-                status="OK",
-                details={"interface": interface},
-                filename="network_terminal_sensors.csv",
-            )
-            
-            self._csv_logger.log_poll(
-                poll_type="network_metrics",
-                metric_name=f"{interface}_packets_recv",
-                value=round(packets_recv, 2),
-                unit="pkt/s",
-                status="OK",
-                details={"interface": interface},
-                filename="network_terminal_sensors.csv",
-            )
-            
+            self._csv_logger.log_poll(poll_type='network_metrics', metric_name=f'{interface}_bytes_sent', value=round(bytes_sent, 2), unit='B/s', status='OK', details={'interface': interface}, filename='network_terminal_sensors.csv')
+            self._csv_logger.log_poll(poll_type='network_metrics', metric_name=f'{interface}_bytes_recv', value=round(bytes_recv, 2), unit='B/s', status='OK', details={'interface': interface}, filename='network_terminal_sensors.csv')
+            self._csv_logger.log_poll(poll_type='network_metrics', metric_name=f'{interface}_packets_sent', value=round(packets_sent, 2), unit='pkt/s', status='OK', details={'interface': interface}, filename='network_terminal_sensors.csv')
+            self._csv_logger.log_poll(poll_type='network_metrics', metric_name=f'{interface}_packets_recv', value=round(packets_recv, 2), unit='pkt/s', status='OK', details={'interface': interface}, filename='network_terminal_sensors.csv')
         except Exception as ex:
-            logger.error(f"Failed to log network metrics: {ex}")
-
+            logger.error(f'Failed to log network metrics: {ex}')
 
 def get_network_sensors() -> List[HardwareSensor]:
     """Convenience function to get network sensors.

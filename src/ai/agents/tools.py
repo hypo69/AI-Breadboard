@@ -1,28 +1,14 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Search for current information on the internet
-# =============================================================================
-# Description:
-#   Набор нативных LangChain-инструментов для AI-агентов.
-#
-# File: langchain_tools.py
-# Project: ai-breadboard
-# Package: src.ai
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 from __future__ import annotations
-
 import os
 import json
 from pathlib import Path
 from typing import Any, Dict
-
 try:
     from langchain_core.tools import tool
 except ImportError:
+
     class DummyTool:
+
         def __init__(self, func):
             self.func = func
             self.__name__ = getattr(func, '__name__', 'DummyTool')
@@ -42,7 +28,6 @@ except ImportError:
         if func is not None:
             return DummyTool(func)
         return lambda f: DummyTool(f)
-
 from logger import logger
 from header import __root__
 
@@ -54,16 +39,16 @@ async def web_search(query: str) -> str:
         query: Поисковый запрос.
     """
     try:
-        from src.api.router_chat import get_chat_model
+        from src.api.routers.core.router_chat import get_chat_model
         model = get_chat_model()
-        response = await model.ask(f"Найди в интернете актуальную информацию по запросу: {query}")
+        response = await model.ask(f'Найди в интернете актуальную информацию по запросу: {query}')
         return response
     except Exception as e:
-        logger.error(f"[langchain_tools] Error веб-поиска: {e}")
-        return json.dumps({"error": str(e)}, ensure_ascii=False)
+        logger.error(f'[langchain_tools] Error веб-поиска: {e}')
+        return json.dumps({'error': str(e)}, ensure_ascii=False)
 
 @tool
-async def rag_search(query: str, top_k: int = 5) -> str:
+async def rag_search(query: str, top_k: int=5) -> str:
     """Семантический поиск по локальной базе знаний и документам.
 
     Args:
@@ -75,7 +60,7 @@ async def rag_search(query: str, top_k: int = 5) -> str:
         results = await rag_manager.search(query=query, limit=top_k)
         return json.dumps(results, ensure_ascii=False)
     except Exception as e:
-        logger.error(f"[langchain_tools] Error RAG-поиска: {e}")
+        logger.error(f'[langchain_tools] Error RAG-поиска: {e}')
         return json.dumps([], ensure_ascii=False)
 
 @tool
@@ -86,11 +71,11 @@ def python_eval(code: str) -> str:
         code: Выражение или фрагмент кода для вычисления.
     """
     try:
-        allowed_globals = {"__builtins__": {"abs": abs, "min": min, "max": max, "sum": sum, "round": round, "len": len}}
+        allowed_globals = {'__builtins__': {'abs': abs, 'min': min, 'max': max, 'sum': sum, 'round': round, 'len': len}}
         result = eval(code, allowed_globals, {})
         return str(result)
     except Exception as e:
-        return f"Error вычисления: {e}"
+        return f'Error вычисления: {e}'
 
 @tool
 def file_read(file_path: str) -> str:
@@ -104,20 +89,13 @@ def file_read(file_path: str) -> str:
         if not p.is_absolute():
             p = __root__ / p
         if not p.exists() or not p.is_file():
-            return f"Файл не найден: {file_path}"
-        return p.read_text(encoding="utf-8", errors="replace")[:10000]
+            return f'Файл не найден: {file_path}'
+        return p.read_text(encoding='utf-8', errors='replace')[:10000]
     except Exception as e:
-        return f"Error чтения файла: {e}"
+        return f'Error чтения файла: {e}'
 
 @tool
-async def flight_search(
-    origin: str,
-    destination: str,
-    date: str,
-    return_date: str = "",
-    passengers: int = 1,
-    travel_class: str = "economy",
-) -> str:
+async def flight_search(origin: str, destination: str, date: str, return_date: str='', passengers: int=1, travel_class: str='economy') -> str:
     """Поиск авиабилетов и рейсов через поисковые адаптеры и агрегаторы.
 
     Args:
@@ -129,57 +107,29 @@ async def flight_search(
         travel_class: Класс обслуживания ('economy', 'premium_economy', 'business', 'first').
     """
     try:
-        from src.api.router_chat import get_chat_model
-        
-        # Build search query
-        query_parts = [
-            f"Найди актуальные авиабилеты и рейсы из {origin} в {destination} на дату {date}"
-        ]
+        from src.api.routers.core.router_chat import get_chat_model
+        query_parts = [f'Найди актуальные авиабилеты и рейсы из {origin} в {destination} на дату {date}']
         if return_date:
-            query_parts.append(f"обратно {return_date}")
-        query_parts.append(f"пассажиров: {passengers}, класс: {travel_class}.")
-        query_parts.append(
-            "Укажи авиакомпании, прямые рейсы или пересадки, время вылета/прилета, цены и ссылки на бронирование."
-        )
-        full_query = " ".join(query_parts)
-
+            query_parts.append(f'обратно {return_date}')
+        query_parts.append(f'пассажиров: {passengers}, класс: {travel_class}.')
+        query_parts.append('Укажи авиакомпании, прямые рейсы или пересадки, время вылета/прилета, цены и ссылки на бронирование.')
+        full_query = ' '.join(query_parts)
         model = get_chat_model()
         response = await model.ask(full_query)
-        
-        # Construct helpful direct aggregator links
         import urllib.parse
         encoded_origin = urllib.parse.quote(origin)
         encoded_dest = urllib.parse.quote(destination)
-        google_flights_url = f"https://www.google.com/travel/flights?q=Flights%20to%20{encoded_dest}%20from%20{encoded_origin}%20on%20{urllib.parse.quote(date)}"
-        aviasales_url = f"https://www.aviasales.ru/search/{origin}{date}{destination}"
-        skyscanner_url = f"https://www.skyscanner.com/transport/flights/{encoded_origin}/{encoded_dest}/{urllib.parse.quote(date)}"
-
-        links_block = (
-            f"\n\nПолезные прямые ссылки для бронирования:\n"
-            f"- [Google Flights]({google_flights_url})\n"
-            f"- [Aviasales]({aviasales_url})\n"
-            f"- [Skyscanner]({skyscanner_url})"
-        )
-
-        return f"{response}\n{links_block}"
+        google_flights_url = f'https://www.google.com/travel/flights?q=Flights%20to%20{encoded_dest}%20from%20{encoded_origin}%20on%20{urllib.parse.quote(date)}'
+        aviasales_url = f'https://www.aviasales.ru/search/{origin}{date}{destination}'
+        skyscanner_url = f'https://www.skyscanner.com/transport/flights/{encoded_origin}/{encoded_dest}/{urllib.parse.quote(date)}'
+        links_block = f'\n\nПолезные прямые ссылки для бронирования:\n- [Google Flights]({google_flights_url})\n- [Aviasales]({aviasales_url})\n- [Skyscanner]({skyscanner_url})'
+        return f'{response}\n{links_block}'
     except Exception as e:
-        logger.error(f"[langchain_tools] Error поиска авиабилетов: {e}")
-        return json.dumps({
-            "error": f"Flight search failed: {str(e)}",
-            "origin": origin,
-            "destination": destination,
-            "date": date
-        }, ensure_ascii=False)
+        logger.error(f'[langchain_tools] Error поиска авиабилетов: {e}')
+        return json.dumps({'error': f'Flight search failed: {str(e)}', 'origin': origin, 'destination': destination, 'date': date}, ensure_ascii=False)
 
 @tool
-def flight_price_calculator(
-    base_price: float,
-    currency: str = "USD",
-    baggage_fee: float = 0.0,
-    passengers: int = 1,
-    tax_rate: float = 0.0,
-    discount_percent: float = 0.0,
-) -> str:
+def flight_price_calculator(base_price: float, currency: str='USD', baggage_fee: float=0.0, passengers: int=1, tax_rate: float=0.0, discount_percent: float=0.0) -> str:
     """Точный расчет полной стоимости перелета с учетом багажа, налогов, скидок и количества пассажиров.
 
     Args:
@@ -194,32 +144,19 @@ def flight_price_calculator(
         subtotal_per_person = float(base_price) + float(baggage_fee)
         taxes_per_person = subtotal_per_person * (float(tax_rate) / 100.0)
         total_per_person = subtotal_per_person + taxes_per_person
-        
         discount_amount = total_per_person * (float(discount_percent) / 100.0)
         final_per_person = total_per_person - discount_amount
         total_all_passengers = final_per_person * int(passengers)
-
-        breakdown = {
-            "currency": currency,
-            "passengers_count": passengers,
-            "base_price_per_passenger": base_price,
-            "baggage_fee_per_passenger": baggage_fee,
-            "tax_amount_per_passenger": round(taxes_per_person, 2),
-            "discount_per_passenger": round(discount_amount, 2),
-            "final_per_passenger": round(final_per_person, 2),
-            "total_overall": round(total_all_passengers, 2)
-        }
+        breakdown = {'currency': currency, 'passengers_count': passengers, 'base_price_per_passenger': base_price, 'baggage_fee_per_passenger': baggage_fee, 'tax_amount_per_passenger': round(taxes_per_person, 2), 'discount_per_passenger': round(discount_amount, 2), 'final_per_passenger': round(final_per_person, 2), 'total_overall': round(total_all_passengers, 2)}
         return json.dumps(breakdown, ensure_ascii=False, indent=2)
     except Exception as e:
-        return f"Error расчета цены: {e}"
-
-# --- Google Workspace Tools (Gmail, Drive, Sheets, Docs) ---
+        return f'Error расчета цены: {e}'
 
 def _get_google_workspace_managers():
     """Dynamically import Google Workspace managers from skill scripts."""
-    scripts_dir = __root__ / ".agents" / "skills" / "user-skills" / "google-workspace" / "scripts"
+    scripts_dir = __root__ / '.agents' / 'skills' / 'user-skills' / 'google-workspace' / 'scripts'
     if not scripts_dir.exists():
-        scripts_dir = __root__ / ".agents" / "skills" / "google-workspace" / "scripts"
+        scripts_dir = __root__ / '.agents' / 'skills' / 'google-workspace' / 'scripts'
     import sys
     if scripts_dir.exists() and str(scripts_dir) not in sys.path:
         sys.path.insert(0, str(scripts_dir))
@@ -227,13 +164,13 @@ def _get_google_workspace_managers():
         from gmail_manager import GmailManager
         from gdrive_manager import GDriveManager
         from gsheets_manager import GSheetsManager
-        return GmailManager, GDriveManager, GSheetsManager
+        return (GmailManager, GDriveManager, GSheetsManager)
     except Exception as e:
-        logger.error(f"[google_workspace_tools] Failed to import managers: {e}")
-        return None, None, None
+        logger.error(f'[google_workspace_tools] Failed to import managers: {e}')
+        return (None, None, None)
 
 @tool
-def gmail_search(query: str = "is:unread", limit: int = 10, account_name: str = "") -> str:
+def gmail_search(query: str='is:unread', limit: int=10, account_name: str='') -> str:
     """Поиск и получение списка писем в Gmail по запросу (например: 'is:unread', 'from:boss', 'subject:report').
 
     Args:
@@ -244,20 +181,18 @@ def gmail_search(query: str = "is:unread", limit: int = 10, account_name: str = 
     try:
         GmailManager, _, _ = _get_google_workspace_managers()
         if not GmailManager:
-            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+            return json.dumps({'error': 'Google Workspace manager is not available'}, ensure_ascii=False)
         manager = GmailManager(account_name=account_name or None)
         if not manager.service:
-            return json.dumps({
-                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
-            }, ensure_ascii=False)
+            return json.dumps({'error': f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."}, ensure_ascii=False)
         messages = manager.search_messages(query=query, max_results=limit)
         return json.dumps(messages, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.error(f"[google_workspace_tools] Error in gmail_search: {e}")
-        return json.dumps({"error": str(e)}, ensure_ascii=False)
+        logger.error(f'[google_workspace_tools] Error in gmail_search: {e}')
+        return json.dumps({'error': str(e)}, ensure_ascii=False)
 
 @tool
-def gmail_create_draft(to: str, subject: str, body: str, account_name: str = "") -> str:
+def gmail_create_draft(to: str, subject: str, body: str, account_name: str='') -> str:
     """Создание черновика электронного письма в Gmail.
 
     Args:
@@ -269,22 +204,20 @@ def gmail_create_draft(to: str, subject: str, body: str, account_name: str = "")
     try:
         GmailManager, _, _ = _get_google_workspace_managers()
         if not GmailManager:
-            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+            return json.dumps({'error': 'Google Workspace manager is not available'}, ensure_ascii=False)
         manager = GmailManager(account_name=account_name or None)
         if not manager.service:
-            return json.dumps({
-                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
-            }, ensure_ascii=False)
+            return json.dumps({'error': f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."}, ensure_ascii=False)
         draft = manager.create_draft(to=to, subject=subject, body_text=body)
         if draft:
-            return json.dumps({"status": "ok", "draft_id": draft.get("id"), "message": f"Draft created for {to}"}, ensure_ascii=False)
-        return json.dumps({"error": "Failed to create draft"}, ensure_ascii=False)
+            return json.dumps({'status': 'ok', 'draft_id': draft.get('id'), 'message': f'Draft created for {to}'}, ensure_ascii=False)
+        return json.dumps({'error': 'Failed to create draft'}, ensure_ascii=False)
     except Exception as e:
-        logger.error(f"[google_workspace_tools] Error in gmail_create_draft: {e}")
-        return json.dumps({"error": str(e)}, ensure_ascii=False)
+        logger.error(f'[google_workspace_tools] Error in gmail_create_draft: {e}')
+        return json.dumps({'error': str(e)}, ensure_ascii=False)
 
 @tool
-def gdrive_list_files(query: str = "", limit: int = 10, account_name: str = "") -> str:
+def gdrive_list_files(query: str='', limit: int=10, account_name: str='') -> str:
     """Поиск и получение списка файлов и папок на Google Диске (например: "name contains 'Report'", "trashed = false").
 
     Args:
@@ -295,20 +228,18 @@ def gdrive_list_files(query: str = "", limit: int = 10, account_name: str = "") 
     try:
         _, GDriveManager, _ = _get_google_workspace_managers()
         if not GDriveManager:
-            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+            return json.dumps({'error': 'Google Workspace manager is not available'}, ensure_ascii=False)
         manager = GDriveManager(account_name=account_name or None)
         if not manager.service:
-            return json.dumps({
-                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
-            }, ensure_ascii=False)
+            return json.dumps({'error': f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."}, ensure_ascii=False)
         files = manager.list_files(query=query if query else None, page_size=limit)
         return json.dumps(files, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.error(f"[google_workspace_tools] Error in gdrive_list_files: {e}")
-        return json.dumps({"error": str(e)}, ensure_ascii=False)
+        logger.error(f'[google_workspace_tools] Error in gdrive_list_files: {e}')
+        return json.dumps({'error': str(e)}, ensure_ascii=False)
 
 @tool
-def gdrive_download_file(file_id: str, mime_type: str = "", dest_path: str = "data/downloads/document", account_name: str = "") -> str:
+def gdrive_download_file(file_id: str, mime_type: str='', dest_path: str='data/downloads/document', account_name: str='') -> str:
     """Выгрузка файла с Google Диска или экспорт документа Google Docs / Sheets в локальный файл.
 
     Args:
@@ -320,25 +251,23 @@ def gdrive_download_file(file_id: str, mime_type: str = "", dest_path: str = "da
     try:
         _, GDriveManager, _ = _get_google_workspace_managers()
         if not GDriveManager:
-            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+            return json.dumps({'error': 'Google Workspace manager is not available'}, ensure_ascii=False)
         manager = GDriveManager(account_name=account_name or None)
         if not manager.service:
-            return json.dumps({
-                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
-            }, ensure_ascii=False)
+            return json.dumps({'error': f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."}, ensure_ascii=False)
         target_path = Path(dest_path)
         if not target_path.is_absolute():
             target_path = __root__ / target_path
         success = manager.download_or_export_file(file_id=file_id, mime_type=mime_type, dest_path=target_path)
         if success:
-            return json.dumps({"status": "ok", "saved_path": str(target_path)}, ensure_ascii=False)
-        return json.dumps({"error": f"Failed to download file {file_id}"}, ensure_ascii=False)
+            return json.dumps({'status': 'ok', 'saved_path': str(target_path)}, ensure_ascii=False)
+        return json.dumps({'error': f'Failed to download file {file_id}'}, ensure_ascii=False)
     except Exception as e:
-        logger.error(f"[google_workspace_tools] Error in gdrive_download_file: {e}")
-        return json.dumps({"error": str(e)}, ensure_ascii=False)
+        logger.error(f'[google_workspace_tools] Error in gdrive_download_file: {e}')
+        return json.dumps({'error': str(e)}, ensure_ascii=False)
 
 @tool
-def gsheets_info(spreadsheet_id: str, account_name: str = "") -> str:
+def gsheets_info(spreadsheet_id: str, account_name: str='') -> str:
     """Получение структуры и списка листов Google Таблицы по её ID.
 
     Args:
@@ -348,22 +277,20 @@ def gsheets_info(spreadsheet_id: str, account_name: str = "") -> str:
     try:
         _, _, GSheetsManager = _get_google_workspace_managers()
         if not GSheetsManager:
-            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+            return json.dumps({'error': 'Google Workspace manager is not available'}, ensure_ascii=False)
         manager = GSheetsManager(account_name=account_name or None)
         if not manager.service:
-            return json.dumps({
-                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
-            }, ensure_ascii=False)
+            return json.dumps({'error': f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."}, ensure_ascii=False)
         info = manager.get_spreadsheet_info(spreadsheet_id)
         if info:
             return json.dumps(info, ensure_ascii=False, indent=2)
-        return json.dumps({"error": f"Failed to get info for spreadsheet {spreadsheet_id}"}, ensure_ascii=False)
+        return json.dumps({'error': f'Failed to get info for spreadsheet {spreadsheet_id}'}, ensure_ascii=False)
     except Exception as e:
-        logger.error(f"[google_workspace_tools] Error in gsheets_info: {e}")
-        return json.dumps({"error": str(e)}, ensure_ascii=False)
+        logger.error(f'[google_workspace_tools] Error in gsheets_info: {e}')
+        return json.dumps({'error': str(e)}, ensure_ascii=False)
 
 @tool
-def gsheets_read(spreadsheet_id: str, range_name: str = "A1:Z50", account_name: str = "") -> str:
+def gsheets_read(spreadsheet_id: str, range_name: str='A1:Z50', account_name: str='') -> str:
     """Чтение значений ячеек из Google Таблицы в указанном диапазоне (например: 'Sheet1!A1:D20').
 
     Args:
@@ -374,20 +301,18 @@ def gsheets_read(spreadsheet_id: str, range_name: str = "A1:Z50", account_name: 
     try:
         _, _, GSheetsManager = _get_google_workspace_managers()
         if not GSheetsManager:
-            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+            return json.dumps({'error': 'Google Workspace manager is not available'}, ensure_ascii=False)
         manager = GSheetsManager(account_name=account_name or None)
         if not manager.service:
-            return json.dumps({
-                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
-            }, ensure_ascii=False)
+            return json.dumps({'error': f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."}, ensure_ascii=False)
         rows = manager.read_range(spreadsheet_id=spreadsheet_id, range_name=range_name)
-        return json.dumps({"range": range_name, "rows": rows}, ensure_ascii=False, indent=2)
+        return json.dumps({'range': range_name, 'rows': rows}, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.error(f"[google_workspace_tools] Error in gsheets_read: {e}")
-        return json.dumps({"error": str(e)}, ensure_ascii=False)
+        logger.error(f'[google_workspace_tools] Error in gsheets_read: {e}')
+        return json.dumps({'error': str(e)}, ensure_ascii=False)
 
 @tool
-def gsheets_search(spreadsheet_id: str, query: str, range_name: str = "A1:Z500", account_name: str = "") -> str:
+def gsheets_search(spreadsheet_id: str, query: str, range_name: str='A1:Z500', account_name: str='') -> str:
     """Поиск строк в Google Таблице по текстовому запросу.
 
     Args:
@@ -399,20 +324,18 @@ def gsheets_search(spreadsheet_id: str, query: str, range_name: str = "A1:Z500",
     try:
         _, _, GSheetsManager = _get_google_workspace_managers()
         if not GSheetsManager:
-            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+            return json.dumps({'error': 'Google Workspace manager is not available'}, ensure_ascii=False)
         manager = GSheetsManager(account_name=account_name or None)
         if not manager.service:
-            return json.dumps({
-                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
-            }, ensure_ascii=False)
+            return json.dumps({'error': f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."}, ensure_ascii=False)
         matches = manager.search(spreadsheet_id=spreadsheet_id, query=query, range_name=range_name)
-        return json.dumps({"query": query, "matches": matches}, ensure_ascii=False, indent=2)
+        return json.dumps({'query': query, 'matches': matches}, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.error(f"[google_workspace_tools] Error in gsheets_search: {e}")
-        return json.dumps({"error": str(e)}, ensure_ascii=False)
+        logger.error(f'[google_workspace_tools] Error in gsheets_search: {e}')
+        return json.dumps({'error': str(e)}, ensure_ascii=False)
 
 @tool
-def gsheets_append(spreadsheet_id: str, range_name: str, values_json: str, account_name: str = "") -> str:
+def gsheets_append(spreadsheet_id: str, range_name: str, values_json: str, account_name: str='') -> str:
     """Добавление новой строки данных в Google Таблицу.
 
     Args:
@@ -424,35 +347,25 @@ def gsheets_append(spreadsheet_id: str, range_name: str, values_json: str, accou
     try:
         _, _, GSheetsManager = _get_google_workspace_managers()
         if not GSheetsManager:
-            return json.dumps({"error": "Google Workspace manager is not available"}, ensure_ascii=False)
+            return json.dumps({'error': 'Google Workspace manager is not available'}, ensure_ascii=False)
         manager = GSheetsManager(account_name=account_name or None)
         if not manager.service:
-            return json.dumps({
-                "error": f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."
-            }, ensure_ascii=False)
+            return json.dumps({'error': f"Google Workspace authentication failed for account '{account_name or 'default'}'. Please configure credentials in src/secrets/."}, ensure_ascii=False)
         parsed_values = json.loads(values_json)
         if not isinstance(parsed_values, list):
-            return json.dumps({"error": "values_json must be a JSON array"}, ensure_ascii=False)
-        if parsed_values and not isinstance(parsed_values[0], list):
+            return json.dumps({'error': 'values_json must be a JSON array'}, ensure_ascii=False)
+        if parsed_values and (not isinstance(parsed_values[0], list)):
             parsed_values = [parsed_values]
         res = manager.append_rows(spreadsheet_id=spreadsheet_id, range_name=range_name, values=parsed_values)
         if res:
-            return json.dumps({"status": "ok", "updated_range": res.get("updates", {}).get("updatedRange")}, ensure_ascii=False)
-        return json.dumps({"error": "Failed to append rows"}, ensure_ascii=False)
+            return json.dumps({'status': 'ok', 'updated_range': res.get('updates', {}).get('updatedRange')}, ensure_ascii=False)
+        return json.dumps({'error': 'Failed to append rows'}, ensure_ascii=False)
     except Exception as e:
-        logger.error(f"[google_workspace_tools] Error in gsheets_append: {e}")
-        return json.dumps({"error": str(e)}, ensure_ascii=False)
-
-# --- System Logs & OS Diagnostics Tools ---
+        logger.error(f'[google_workspace_tools] Error in gsheets_append: {e}')
+        return json.dumps({'error': str(e)}, ensure_ascii=False)
 
 @tool
-async def system_logs_analyzer(
-    days: int = 20,
-    level: str = "Critical,Error",
-    channel: str = "System,Application",
-    search_query: str = "",
-    limit: int = 150,
-) -> str:
+async def system_logs_analyzer(days: int=20, level: str='Critical,Error', channel: str='System,Application', search_query: str='', limit: int=150) -> str:
     """Анализ системных логов и критических ошибок операционной системы Windows.
 
     Собирает события из журналов Windows Event Log (System, Application) за указанный
@@ -468,37 +381,23 @@ async def system_logs_analyzer(
     """
     try:
         hours = max(1, min(days * 24, 720))
-        channels = [c.strip() for c in channel.split(",") if c.strip()] or ["System", "Application"]
+        channels = [c.strip() for c in channel.split(',') if c.strip()] or ['System', 'Application']
         all_events = []
-
-        # Преобразование уровней для фильтрации в PowerShell
-        level_filter = ""
+        level_filter = ''
         lvl_lower = level.lower()
-        if "crit" in lvl_lower and "err" in lvl_lower:
-            level_filter = "; Level=1,2"
-        elif "crit" in lvl_lower:
-            level_filter = "; Level=1"
-        elif "err" in lvl_lower:
-            level_filter = "; Level=2"
-        elif "warn" in lvl_lower:
-            level_filter = "; Level=3"
-
-        select_expr = (
-            "@{N='timestamp';E={$_.TimeCreated.ToString('yyyy-MM-dd HH:mm:ss')}}, "
-            "@{N='level';E={$_.LevelDisplayName}}, "
-            "@{N='event_id';E={$_.Id}}, "
-            "@{N='provider';E={$_.ProviderName}}, "
-            "@{N='channel';E={$_.LogName}}, "
-            "@{N='message';E={$_.Message}}"
-        )
-
+        if 'crit' in lvl_lower and 'err' in lvl_lower:
+            level_filter = '; Level=1,2'
+        elif 'crit' in lvl_lower:
+            level_filter = '; Level=1'
+        elif 'err' in lvl_lower:
+            level_filter = '; Level=2'
+        elif 'warn' in lvl_lower:
+            level_filter = '; Level=3'
+        select_expr = "@{N='timestamp';E={$_.TimeCreated.ToString('yyyy-MM-dd HH:mm:ss')}}, @{N='level';E={$_.LevelDisplayName}}, @{N='event_id';E={$_.Id}}, @{N='provider';E={$_.ProviderName}}, @{N='channel';E={$_.LogName}}, @{N='message';E={$_.Message}}"
         for chan in channels:
-            ps_query = (
-                f"Get-WinEvent -FilterHashtable @{{LogName='{chan}'{level_filter}; "
-                f"StartTime=(Get-Date).AddHours(-{hours})}} -MaxEvents {limit} -ErrorAction SilentlyContinue"
-            )
-            ps_script = f"{ps_query} | Select-Object {select_expr} | ConvertTo-Json -Compress -Depth 2"
-            cmd = ["powershell", "-NoProfile", "-Command", ps_script]
+            ps_query = f"Get-WinEvent -FilterHashtable @{{LogName='{chan}'{level_filter}; StartTime=(Get-Date).AddHours(-{hours})}} -MaxEvents {limit} -ErrorAction SilentlyContinue"
+            ps_script = f'{ps_query} | Select-Object {select_expr} | ConvertTo-Json -Compress -Depth 2'
+            cmd = ['powershell', '-NoProfile', '-Command', ps_script]
             try:
                 import subprocess
                 res = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
@@ -508,66 +407,29 @@ async def system_logs_analyzer(
                     all_events.extend(items)
             except Exception as ex:
                 logger.debug(f"[system_logs_analyzer] Error querying channel '{chan}': {ex}")
-
         if search_query:
             sq_lower = search_query.lower()
-            all_events = [
-                ev for ev in all_events
-                if sq_lower in str(ev.get("message", "")).lower()
-                or sq_lower in str(ev.get("provider", "")).lower()
-                or sq_lower in str(ev.get("event_id", ""))
-            ]
-
-        # Агрегация и статистика
+            all_events = [ev for ev in all_events if sq_lower in str(ev.get('message', '')).lower() or sq_lower in str(ev.get('provider', '')).lower() or sq_lower in str(ev.get('event_id', ''))]
         total_count = len(all_events)
-        critical_count = len([e for e in all_events if "crit" in str(e.get("level", "")).lower() or e.get("level") == 1])
-        error_count = len([e for e in all_events if "err" in str(e.get("level", "")).lower() or e.get("level") == 2])
-        
-        # Группировка по источникам и Event ID
+        critical_count = len([e for e in all_events if 'crit' in str(e.get('level', '')).lower() or e.get('level') == 1])
+        error_count = len([e for e in all_events if 'err' in str(e.get('level', '')).lower() or e.get('level') == 2])
         clusters: Dict[str, Dict[str, Any]] = {}
         for ev in all_events:
-            provider = ev.get("provider") or "Unknown"
-            ev_id = ev.get("event_id") or 0
-            key = f"{provider} (Event ID: {ev_id})"
+            provider = ev.get('provider') or 'Unknown'
+            ev_id = ev.get('event_id') or 0
+            key = f'{provider} (Event ID: {ev_id})'
             if key not in clusters:
-                clusters[key] = {
-                    "source": provider,
-                    "event_id": ev_id,
-                    "count": 0,
-                    "level": ev.get("level", "Error"),
-                    "sample_message": (ev.get("message") or "")[:250].strip(),
-                    "latest_timestamp": ev.get("timestamp", ""),
-                }
-            clusters[key]["count"] += 1
-
-        sorted_clusters = sorted(clusters.values(), key=lambda x: x["count"], reverse=True)
-
-        summary_data = {
-            "period_days": days,
-            "period_hours": hours,
-            "channels": channels,
-            "total_events_found": total_count,
-            "critical_events": critical_count,
-            "error_events": error_count,
-            "top_incident_clusters": sorted_clusters[:10],
-            "recent_events_sample": all_events[:8],
-        }
-
+                clusters[key] = {'source': provider, 'event_id': ev_id, 'count': 0, 'level': ev.get('level', 'Error'), 'sample_message': (ev.get('message') or '')[:250].strip(), 'latest_timestamp': ev.get('timestamp', '')}
+            clusters[key]['count'] += 1
+        sorted_clusters = sorted(clusters.values(), key=lambda x: x['count'], reverse=True)
+        summary_data = {'period_days': days, 'period_hours': hours, 'channels': channels, 'total_events_found': total_count, 'critical_events': critical_count, 'error_events': error_count, 'top_incident_clusters': sorted_clusters[:10], 'recent_events_sample': all_events[:8]}
         return json.dumps(summary_data, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.error(f"[system_logs_analyzer] Execution error: {e}", exc_info=True)
-        return json.dumps({"status": "error", "error": str(e), "period_days": days}, ensure_ascii=False)
-
-# --- IFTTT & Smart Home Tools ---
+        logger.error(f'[system_logs_analyzer] Execution error: {e}', exc_info=True)
+        return json.dumps({'status': 'error', 'error': str(e), 'period_days': days}, ensure_ascii=False)
 
 @tool
-async def ifttt_trigger_event(
-    event_name: str,
-    value1: str = "",
-    value2: str = "",
-    value3: str = "",
-    json_data: str = "",
-) -> str:
+async def ifttt_trigger_event(event_name: str, value1: str='', value2: str='', value3: str='', json_data: str='') -> str:
     """Триггер события умного дома или вебхука через сервис IFTTT (If This Then That).
 
     Позволяет управлять устройствами умного дома (освещение, климат, сценарии, оповещения, пылесосы)
@@ -588,20 +450,12 @@ async def ifttt_trigger_event(
             try:
                 payload = json.loads(json_data)
             except Exception:
-                payload = {"data": json_data}
-        result = await client.trigger_event(
-            event_name=event_name,
-            value1=value1,
-            value2=value2,
-            value3=value3,
-            json_payload=payload,
-        )
+                payload = {'data': json_data}
+        result = await client.trigger_event(event_name=event_name, value1=value1, value2=value2, value3=value3, json_payload=payload)
         return json.dumps(result, ensure_ascii=False)
     except Exception as e:
         logger.error(f"[ifttt_tools] Error triggering IFTTT event '{event_name}': {e}")
-        return json.dumps({"status": "error", "error": str(e), "event": event_name}, ensure_ascii=False)
-
-# --- Заглушки для обратной совместимости ---
+        return json.dumps({'status': 'error', 'error': str(e), 'event': event_name}, ensure_ascii=False)
 
 @tool
 async def search_torrents(query: str) -> str:
@@ -618,8 +472,6 @@ def get_streaming_sources(title: str) -> str:
     """Устаревший инструмент (артефакт удален)."""
     return json.dumps({}, ensure_ascii=False)
 
-# --- Инструменты сбора счетов-фактур из почты ---
-
 @tool
 def mail_invoices_test_connection() -> str:
     """Проверяет подключение к почтовому ящику, используя учетные данные из secrets.json навыка mail-invoice-collector.
@@ -629,28 +481,22 @@ def mail_invoices_test_connection() -> str:
     """
     try:
         import sys
-        skill_scripts = __root__ / ".agents" / "skills" / "mail-invoice-collector" / "scripts"
+        skill_scripts = __root__ / '.agents' / 'skills' / 'mail-invoice-collector' / 'scripts'
         if not skill_scripts.exists():
-            skill_scripts = __root__ / ".skills" / "mail-invoice-collector" / "scripts"
+            skill_scripts = __root__ / '.skills' / 'mail-invoice-collector' / 'scripts'
         if skill_scripts.exists() and str(skill_scripts) not in sys.path:
             sys.path.insert(0, str(skill_scripts))
-
         from mail_client import MailClient, load_mail_config
         cfg = load_mail_config()
         client = MailClient(cfg)
         result = client.test_connection()
         return json.dumps(result, ensure_ascii=False)
     except Exception as e:
-        logger.error(f"[mail_invoice_tools] Ошибка проверки соединения: {e}")
-        return json.dumps({"success": False, "error": str(e)}, ensure_ascii=False)
-
+        logger.error(f'[mail_invoice_tools] Ошибка проверки соединения: {e}')
+        return json.dumps({'success': False, 'error': str(e)}, ensure_ascii=False)
 
 @tool
-def mail_invoices_collect(
-    output_csv: str = "data/invoices_collected/mail_invoices_summary.csv",
-    max_emails: int = 100,
-    folder: str = "INBOX",
-) -> str:
+def mail_invoices_collect(output_csv: str='data/invoices_collected/mail_invoices_summary.csv', max_emails: int=100, folder: str='INBOX') -> str:
     """Подключается к почтовому ящику через secrets.json, находит входящие счета-фактуры (invoices, חשבונית, счета) и сохраняет их в CSV.
 
     Args:
@@ -663,31 +509,23 @@ def mail_invoices_collect(
     """
     try:
         import sys
-        skill_scripts = __root__ / ".agents" / "skills" / "mail-invoice-collector" / "scripts"
+        skill_scripts = __root__ / '.agents' / 'skills' / 'mail-invoice-collector' / 'scripts'
         if not skill_scripts.exists():
-            skill_scripts = __root__ / ".skills" / "mail-invoice-collector" / "scripts"
+            skill_scripts = __root__ / '.skills' / 'mail-invoice-collector' / 'scripts'
         if skill_scripts.exists() and str(skill_scripts) not in sys.path:
             sys.path.insert(0, str(skill_scripts))
-
         from collector import MailInvoiceCollector
         from mail_client import load_mail_config
-
         cfg = load_mail_config(folder=folder)
         collector = MailInvoiceCollector(cfg)
-        result = collector.run(
-            output_csv=output_csv,
-            max_emails=max_emails,
-        )
+        result = collector.run(output_csv=output_csv, max_emails=max_emails)
         return json.dumps(result, ensure_ascii=False)
     except Exception as e:
-        logger.error(f"[mail_invoice_tools] Ошибка сбора счетов: {e}")
-        return json.dumps({"success": False, "error": str(e)}, ensure_ascii=False)
-
-
-# --- Инструменты мониторинга почты (Mail Watcher) ---
+        logger.error(f'[mail_invoice_tools] Ошибка сбора счетов: {e}')
+        return json.dumps({'success': False, 'error': str(e)}, ensure_ascii=False)
 
 @tool
-def mail_watch_test_connection(account: str = "default") -> str:
+def mail_watch_test_connection(account: str='default') -> str:
     """Проверяет подключение к почтовому ящику IMAP, используя учетные данные из mailboxes.json или secrets.json.
 
     Args:
@@ -698,33 +536,22 @@ def mail_watch_test_connection(account: str = "default") -> str:
     """
     try:
         import sys
-        skill_scripts = __root__ / ".agents" / "skills" / "mail-watcher" / "scripts"
+        skill_scripts = __root__ / '.agents' / 'skills' / 'mail-watcher' / 'scripts'
         if not skill_scripts.exists():
-            skill_scripts = __root__ / ".skills" / "mail-watcher" / "scripts"
+            skill_scripts = __root__ / '.skills' / 'mail-watcher' / 'scripts'
         if skill_scripts.exists() and str(skill_scripts) not in sys.path:
             sys.path.insert(0, str(skill_scripts))
-
         from mail_watcher import MailWatcher, load_mail_watcher_config
         cfg = load_mail_watcher_config(account=account)
         watcher = MailWatcher(cfg)
         result = watcher.test_connection()
         return json.dumps(result, ensure_ascii=False)
     except Exception as e:
-        logger.error(f"[mail_watcher_tools] Ошибка проверки соединения: {e}")
-        return json.dumps({"success": False, "error": str(e)}, ensure_ascii=False)
-
+        logger.error(f'[mail_watcher_tools] Ошибка проверки соединения: {e}')
+        return json.dumps({'success': False, 'error': str(e)}, ensure_ascii=False)
 
 @tool
-def mail_watch_check_sender(
-    sender: str,
-    account: str = "default",
-    unread_only: bool = True,
-    mark_as_read: bool = False,
-    max_emails: int = 30,
-    folder: str = "INBOX",
-    notify_toast: bool = False,
-    forward_whatsapp: str = "",
-) -> str:
+def mail_watch_check_sender(sender: str, account: str='default', unread_only: bool=True, mark_as_read: bool=False, max_emails: int=30, folder: str='INBOX', notify_toast: bool=False, forward_whatsapp: str='') -> str:
     """Проверяет входящую почту по IMAP на наличие писем от определенного отправителя (по адресу, имени или домену).
 
     Args:
@@ -742,47 +569,20 @@ def mail_watch_check_sender(
     """
     try:
         import sys
-        skill_scripts = __root__ / ".agents" / "skills" / "mail-watcher" / "scripts"
+        skill_scripts = __root__ / '.agents' / 'skills' / 'mail-watcher' / 'scripts'
         if not skill_scripts.exists():
-            skill_scripts = __root__ / ".skills" / "mail-watcher" / "scripts"
+            skill_scripts = __root__ / '.skills' / 'mail-watcher' / 'scripts'
         if skill_scripts.exists() and str(skill_scripts) not in sys.path:
             sys.path.insert(0, str(skill_scripts))
-
         from mail_watcher import MailWatcher, load_mail_watcher_config
-        cfg = load_mail_watcher_config(
-            account=account,
-            sender=sender,
-            folder=folder,
-            unread_only=unread_only,
-            mark_as_read=mark_as_read,
-            max_emails=max_emails,
-            whatsapp_recipient=forward_whatsapp or None,
-        )
+        cfg = load_mail_watcher_config(account=account, sender=sender, folder=folder, unread_only=unread_only, mark_as_read=mark_as_read, max_emails=max_emails, whatsapp_recipient=forward_whatsapp or None)
         watcher = MailWatcher(cfg)
-        messages = watcher.check_messages(
-            sender=sender,
-            unread_only=unread_only,
-            max_emails=max_emails,
-            mark_as_read=mark_as_read,
-            notify_toast=notify_toast,
-            forward_whatsapp=forward_whatsapp or None,
-        )
-        report = {
-            "success": True,
-            "target_sender": sender,
-            "folder": folder,
-            "found_count": len(messages),
-            "messages": [m.to_dict() for m in messages],
-            "alerts": [m.format_alert() for m in messages],
-            "whatsapp_forwarded_to": forward_whatsapp or cfg.whatsapp_recipient or None,
-        }
+        messages = watcher.check_messages(sender=sender, unread_only=unread_only, max_emails=max_emails, mark_as_read=mark_as_read, notify_toast=notify_toast, forward_whatsapp=forward_whatsapp or None)
+        report = {'success': True, 'target_sender': sender, 'folder': folder, 'found_count': len(messages), 'messages': [m.to_dict() for m in messages], 'alerts': [m.format_alert() for m in messages], 'whatsapp_forwarded_to': forward_whatsapp or cfg.whatsapp_recipient or None}
         return json.dumps(report, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.error(f"[mail_watcher_tools] Ошибка проверки писем: {e}")
-        return json.dumps({"success": False, "error": str(e)}, ensure_ascii=False)
-
-
-# --- Инструменты WhatsApp Messenger ---
+        logger.error(f'[mail_watcher_tools] Ошибка проверки писем: {e}')
+        return json.dumps({'success': False, 'error': str(e)}, ensure_ascii=False)
 
 @tool
 def whatsapp_test_connection() -> str:
@@ -796,18 +596,16 @@ def whatsapp_test_connection() -> str:
             from plugins.whatsapp.client import WhatsAppClient
         except ImportError:
             import sys
-            plugin_dir = __root__ / "plugins" / "user-plugins" / "whatsapp"
+            plugin_dir = __root__ / 'plugins' / 'user-plugins' / 'whatsapp'
             if plugin_dir.exists() and str(plugin_dir) not in sys.path:
                 sys.path.insert(0, str(plugin_dir))
             from client import WhatsAppClient
-
         client = WhatsAppClient()
         result = client.test_connection()
         return json.dumps(result, ensure_ascii=False)
     except Exception as e:
-        logger.error(f"[whatsapp_tools] Ошибка проверки подключения WhatsApp: {e}")
-        return json.dumps({"success": False, "error": str(e)}, ensure_ascii=False)
-
+        logger.error(f'[whatsapp_tools] Ошибка проверки подключения WhatsApp: {e}')
+        return json.dumps({'success': False, 'error': str(e)}, ensure_ascii=False)
 
 @tool
 def whatsapp_send_message(to: str, message: str) -> str:
@@ -825,18 +623,13 @@ def whatsapp_send_message(to: str, message: str) -> str:
             from plugins.whatsapp.client import WhatsAppClient
         except ImportError:
             import sys
-            plugin_dir = __root__ / "plugins" / "user-plugins" / "whatsapp"
+            plugin_dir = __root__ / 'plugins' / 'user-plugins' / 'whatsapp'
             if plugin_dir.exists() and str(plugin_dir) not in sys.path:
                 sys.path.insert(0, str(plugin_dir))
             from client import WhatsAppClient
-
         client = WhatsAppClient()
         result = client.send_message(to=to, message=message)
         return json.dumps(result, ensure_ascii=False)
     except Exception as e:
-        logger.error(f"[whatsapp_tools] Ошибка отправки сообщения в WhatsApp: {e}")
-        return json.dumps({"success": False, "error": str(e)}, ensure_ascii=False)
-
-
-
-
+        logger.error(f'[whatsapp_tools] Ошибка отправки сообщения в WhatsApp: {e}')
+        return json.dumps({'success': False, 'error': str(e)}, ensure_ascii=False)

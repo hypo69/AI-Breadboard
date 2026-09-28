@@ -1,19 +1,3 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: HTML conversion and parsing utilities
-# =============================================================================
-# Description:
-#   HTML conversion utilities for transforming HTML content to escape sequences,
-#   dictionaries, and SimpleNamespace objects. Includes parsing functions for
-#   HTML to structured data format conversions.
-#
-# File: html.py
-# Project: ai-breadboard
-# Package: src.utils.convertors
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """
 HTML conversion utilities.
 
@@ -23,7 +7,6 @@ Functions:
     - `html2dict`: Convert HTML to dictionaries.
     - `html2ns`: Convert HTML to SimpleNamespace objects.
 """
-
 import re
 import html
 from typing import Dict
@@ -92,7 +75,9 @@ def html2dict(html_str: str) -> Dict[str, str]:
         >>> print(result)
         {'p': 'Hello', 'a': 'World'}
     """
+
     class HTMLToDictParser(HTMLParser):
+
         def __init__(self):
             super().__init__()
             self.result = {}
@@ -107,7 +92,6 @@ def html2dict(html_str: str) -> Dict[str, str]:
         def handle_data(self, data):
             if self.current_tag:
                 self.result[self.current_tag] = data.strip()
-
     parser = HTMLToDictParser()
     parser.feed(html_str)
     return parser.result
@@ -133,49 +117,11 @@ def html2ns(html_str: str) -> SimpleNamespace:
     html_dict = html2dict(html_str)
     return SimpleNamespace(**html_dict)
 
-# def html2pdf(html_str: str, pdf_file: str | Path) -> bool | None:
-#     """Converts HTML content to a PDF file after removing unsupported CSS pseudo-selectors.
-    
-#     Args:
-#         html_str (str): HTML content as a string.
-#         pdf_file (str | Path): Path to the output PDF file.
-    
-#     Returns:
-#         bool | None: Returns `True` if PDF generation is successful; `None` otherwise.
-#     """
-#     ...
-#     def preprocess_css(css_content: str) -> str:
-#         """
-#         Remove unsupported pseudo-classes and simplify CSS for xhtml2pdf.
-    
-#         Args:
-#             css_content (str): Original CSS content.
-
-#         Returns:
-#             str: Preprocessed CSS content without unsupported selectors.
-#         """
-#         # Remove `:not(...)`
-#         css_content = re.sub(r':not\([^)]*\)', '', css_content)
-
-#         return css_content
-#     # Remove unsupported pseudo-classes if present
-#     html_str = preprocess_css(html_str)
-
-#     with open(pdf_file, "wb") as f:
-#         pisa_status = pisa.CreatePDF(html_str, dest=f)
-
-#     if pisa_status.err:
-#         print("Error during PDF generation")
-#         return
-#     else:
-#         return True
-
 def html2pdf(html_str: str, pdf_file: str | Path) -> bool | None:
     """Converts HTML content to a PDF file using WeasyPrint."""
     try:
         HTML(string=html_str).write_pdf(pdf_file)
         return True
     except Exception as e:
-        print(f"Error during PDF generation: {e}")
+        print(f'Error during PDF generation: {e}')
         return
-

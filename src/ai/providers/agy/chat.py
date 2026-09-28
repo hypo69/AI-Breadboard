@@ -1,27 +1,10 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Antigravity SDK chat connection and request routing
-# =============================================================================
-# Description:
-#   Chat adapter for interacting with Antigravity SDK models (agy-flash, agy-pro).
-#   Implements standard chat interfaces for FastAPI router architecture compatibility.
-#
-# File: agy_chat.py
-# Project: ai-breadboard
-# Package: src.ai
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """Antigravity SDK chat connection and request routing adapter.
 
 Implements chat interfaces (ask, chat_stream) for Antigravity SDK models with
 API key management and local conversation history support."""
-
 import os
 import asyncio
 from typing import Optional, List, Dict, AsyncGenerator
-
 from logger.logger import logger
 from src.ai.gemini.gemini_api_key_state import load_api_keys
 
@@ -38,7 +21,7 @@ class AgyChatBase:
     """
 
     @classmethod
-    def get_available_models(cls, force_refresh: bool = False) -> List[str]:
+    def get_available_models(cls, force_refresh: bool=False) -> List[str]:
         """Get list of available models for AGY provider.
         
         Args:
@@ -48,7 +31,7 @@ class AgyChatBase:
             List[str]: List of available model identifiers.
         """
         from src.ai.model_manager import get_available_models as _mgr_get_available_models
-        return _mgr_get_available_models(provider="agy", force_refresh=force_refresh)
+        return _mgr_get_available_models(provider='agy', force_refresh=force_refresh)
 
     @classmethod
     def normalize_model_id(cls, model_id: str) -> str:
@@ -59,18 +42,18 @@ class AgyChatBase:
             
         Returns:
             str: Normalized model identifier."""
-        actual = (model_id or "").strip()
-        while actual.startswith("agy-"):
+        actual = (model_id or '').strip()
+        while actual.startswith('agy-'):
             actual = actual[4:]
-        if actual in ("flash", "flash-latest", "agy-flash", ""):
-            return "gemini-flash-lite-latest"
-        elif actual in ("pro", "pro-latest", "agy-pro"):
-            return "gemini-pro-latest"
-        elif not (actual.startswith("gemini-") or actual.startswith("gemma-") or actual.startswith("deep-research-") or actual.startswith("lyria-")):
-            actual = f"gemini-{actual}"
+        if actual in ('flash', 'flash-latest', 'agy-flash', ''):
+            return 'gemini-flash-lite-latest'
+        elif actual in ('pro', 'pro-latest', 'agy-pro'):
+            return 'gemini-pro-latest'
+        elif not (actual.startswith('gemini-') or actual.startswith('gemma-') or actual.startswith('deep-research-') or actual.startswith('lyria-')):
+            actual = f'gemini-{actual}'
         return actual
 
-    def __init__(self, model_id: str, system_prompt: str = "") -> None:
+    def __init__(self, model_id: str, system_prompt: str='') -> None:
         """Initialize connection to AGY SDK.
         
         Args:
@@ -83,18 +66,16 @@ class AgyChatBase:
         agy_key = os.getenv('AGY_API_KEY', '').strip() or os.getenv('GEMINI_ANTIGRAVITY_API_KEY', '').strip()
         if agy_key:
             valid_keys.append(agy_key)
-
         _api_key_names = [n.strip() for n in os.getenv('GEMINI_API_KEY_NAMES', '').split(',') if n.strip()]
         loaded, _, _ = load_api_keys(_api_key_names if _api_key_names else [])
         for k in loaded:
             if k and k not in valid_keys:
                 valid_keys.append(k)
-
         self.api_keys: List[str] = valid_keys
-        self.api_key: str = valid_keys[0] if valid_keys else ""
+        self.api_key: str = valid_keys[0] if valid_keys else ''
         self._agent: Optional[object] = None
         self._agent_lock: asyncio.Lock = asyncio.Lock()
-        self._active_system_prompt: str = ""
+        self._active_system_prompt: str = ''
 
     @property
     def model_id(self) -> str:
@@ -154,17 +135,17 @@ class AgyChatBase:
         Returns:
             str: Cleaned response text."""
         cleaned = text.strip()
-        if "error executing cascade step:" in cleaned or "RESOURCE_EXHAUSTED" in cleaned or "GenerateContent failed:" in cleaned:
-            if "]]]]" in cleaned:
-                idx = cleaned.find("]]]]")
+        if 'error executing cascade step:' in cleaned or 'RESOURCE_EXHAUSTED' in cleaned or 'GenerateContent failed:' in cleaned:
+            if ']]]]' in cleaned:
+                idx = cleaned.find(']]]]')
                 cleaned = cleaned[idx + 4:].strip()
-            elif "]]" in cleaned:
-                idx = cleaned.rfind("]]")
+            elif ']]' in cleaned:
+                idx = cleaned.rfind(']]')
                 cleaned = cleaned[idx + 2:].strip()
             else:
-                lines = cleaned.split("\n")
-                filtered = [l for l in lines if not l.startswith("error executing cascade step:") and not l.startswith("GenerateContent failed:") and "RESOURCE_EXHAUSTED" not in l]
-                cleaned = "\n".join(filtered).strip()
+                lines = cleaned.split('\n')
+                filtered = [l for l in lines if not l.startswith('error executing cascade step:') and (not l.startswith('GenerateContent failed:')) and ('RESOURCE_EXHAUSTED' not in l)]
+                cleaned = '\n'.join(filtered).strip()
         return cleaned
 
     async def _close_agent_unlocked(self) -> None:
@@ -173,10 +154,10 @@ class AgyChatBase:
             try:
                 await self._agent.__aexit__(None, None, None)
             except Exception as e:
-                logger.warning(f"Error closing Antigravity Agent session: {e}")
+                logger.warning(f'Error closing Antigravity Agent session: {e}')
             finally:
                 self._agent = None
-                self._active_system_prompt = ""
+                self._active_system_prompt = ''
 
     async def close(self) -> None:
         """Explicitly terminate the persistent agent session."""
@@ -189,7 +170,7 @@ class AgyChatBase:
         if self._agent is not None:
             asyncio.create_task(self.close())
 
-    async def _get_or_create_agent(self, sys_prompt: str = "") -> object:
+    async def _get_or_create_agent(self, sys_prompt: str='') -> object:
         """Retrieve existing persistent agent or start a new long-running session.
 
         Args:
@@ -200,34 +181,18 @@ class AgyChatBase:
         """
         async with self._agent_lock:
             is_started = getattr(self._agent, 'is_started', False) if self._agent else False
-            if self._agent is not None and is_started and self._active_system_prompt == sys_prompt:
+            if self._agent is not None and is_started and (self._active_system_prompt == sys_prompt):
                 return self._agent
-
             await self._close_agent_unlocked()
-
             from google.antigravity import Agent, LocalAgentConfig, CapabilitiesConfig
-            config = LocalAgentConfig(
-                model=self.model_id,
-                system_instructions=sys_prompt,
-                api_key=self.api_key,
-                tools=[],
-                policies=[],
-                capabilities=CapabilitiesConfig(enable_subagents=False, enabled_tools=[])
-            )
+            config = LocalAgentConfig(model=self.model_id, system_instructions=sys_prompt, api_key=self.api_key, tools=[], policies=[], capabilities=CapabilitiesConfig(enable_subagents=False, enabled_tools=[]))
             agent = Agent(config)
             await agent.__aenter__()
             self._agent = agent
             self._active_system_prompt = sys_prompt
             return self._agent
 
-    async def ask(
-        self,
-        q: str,
-        system_instruction: Optional[str] = "",
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        **kwargs
-    ) -> str:
+    async def ask(self, q: str, system_instruction: Optional[str]='', temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, **kwargs) -> str:
         """Send single request to agent.
         
         Args:
@@ -240,62 +205,36 @@ class AgyChatBase:
         Returns:
             str: Agent response text."""
         if not q or not q.strip():
-            return ""
-
-        sys_prompt = system_instruction or self.system_prompt or ""
-
+            return ''
+        sys_prompt = system_instruction or self.system_prompt or ''
         try:
             agent = await self._get_or_create_agent(sys_prompt)
             response = await agent.chat(q)
-            text = ""
+            text = ''
             async for token in response:
                 text += token
             return self._clean_output(text)
         except Exception as e:
             await self.close()
             err_str = str(e)
-            
-            # 3. Service temporarily unavailable (503 UNAVAILABLE) - use model pool
             if '503' in err_str or 'UNAVAILABLE' in err_str:
                 from src.ai.orchestration.model_error_hub import record_model_error
                 from src.ai.orchestration.model_pool_state import mark_model_exhausted, switch_model
-                record_model_error(
-                    provider='agy',
-                    model_name=self.model_id,
-                    error=err_str,
-                    status_code=503,
-                    action_taken='switch_model',
-                )
+                record_model_error(provider='agy', model_name=self.model_id, error=err_str, status_code=503, action_taken='switch_model')
                 mark_model_exhausted('agy', self.model_id)
-                err_msg = f"Error in AgyChatBase.ask (503 UNAVAILABLE): {err_str}"
+                err_msg = f'Error in AgyChatBase.ask (503 UNAVAILABLE): {err_str}'
                 logger.error(err_msg, exc_info=True)
                 raise
-            
-            if any(x in err_str for x in ('404', 'NOT_FOUND', 'not supported', 'is no longer available', 'not found')):
+            if any((x in err_str for x in ('404', 'NOT_FOUND', 'not supported', 'is no longer available', 'not found'))):
                 from src.ai.model_manager import add_unsupported_model
                 add_unsupported_model('agy', self.model_id, reason=err_str)
                 add_unsupported_model('gemini', self.model_id, reason=err_str)
-            
             from src.ai.orchestration.model_error_hub import record_model_error
-            record_model_error(
-                provider='agy',
-                model_name=self.model_id,
-                error=err_str,
-                action_taken='failed',
-            )
-            logger.error(f"Error in AgyChatBase.ask: {err_str}", exc_info=True)
+            record_model_error(provider='agy', model_name=self.model_id, error=err_str, action_taken='failed')
+            logger.error(f'Error in AgyChatBase.ask: {err_str}', exc_info=True)
             raise
 
-    async def chat(
-        self,
-        q: str,
-        history: Optional[List[Dict]] = [],
-        system_instruction: Optional[str] = "",
-        save_history: bool = True,
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        **kwargs
-    ) -> str:
+    async def chat(self, q: str, history: Optional[List[Dict]]=[], system_instruction: Optional[str]='', save_history: bool=True, temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, **kwargs) -> str:
         """Send chat request with conversation history.
         
         Args:
@@ -310,33 +249,17 @@ class AgyChatBase:
         Returns:
             str: Chat response text."""
         if not q or not q.strip():
-            return ""
-        
+            return ''
         chunks = []
-        async for chunk in self.chat_stream(
-            q=q,
-            history=history,
-            system_instruction=system_instruction,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs,
-        ):
+        async for chunk in self.chat_stream(q=q, history=history, system_instruction=system_instruction, temperature=temperature, max_tokens=max_tokens, **kwargs):
             chunks.append(chunk)
-        ans = "".join(chunks)
+        ans = ''.join(chunks)
         if save_history and ans:
-            self.history.append({"role": "user", "content": q})
-            self.history.append({"role": "model", "content": ans})
+            self.history.append({'role': 'user', 'content': q})
+            self.history.append({'role': 'model', 'content': ans})
         return ans
 
-    async def chat_stream(
-        self,
-        q: str,
-        history: Optional[List[Dict]] = None,
-        system_instruction: Optional[str] = "",
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        **kwargs
-    ) -> AsyncGenerator[str, None]:
+    async def chat_stream(self, q: str, history: Optional[List[Dict]]=None, system_instruction: Optional[str]='', temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, **kwargs) -> AsyncGenerator[str, None]:
         """Send streaming request to agent using persistent session.
 
         Args:
@@ -351,9 +274,7 @@ class AgyChatBase:
         """
         if not q or not q.strip():
             return
-
-        sys_prompt = system_instruction or self.system_prompt or ""
-
+        sys_prompt = system_instruction or self.system_prompt or ''
         try:
             agent = await self._get_or_create_agent(sys_prompt)
             response = await agent.chat(q)
@@ -362,35 +283,21 @@ class AgyChatBase:
         except Exception as e:
             await self.close()
             err_str = str(e)
-            
-            # 3. Service temporarily unavailable (503 UNAVAILABLE) - use model pool
             if '503' in err_str or 'UNAVAILABLE' in err_str:
                 from src.ai.orchestration.model_error_hub import record_model_error
                 from src.ai.orchestration.model_pool_state import mark_model_exhausted, switch_model
-                record_model_error(
-                    provider='agy',
-                    model_name=self.model_id,
-                    error=err_str,
-                    status_code=503,
-                    action_taken='switch_model',
-                )
+                record_model_error(provider='agy', model_name=self.model_id, error=err_str, status_code=503, action_taken='switch_model')
                 mark_model_exhausted('agy', self.model_id)
-                err_msg = f"Error Antigravity SDK (503 UNAVAILABLE): {err_str}"
+                err_msg = f'Error Antigravity SDK (503 UNAVAILABLE): {err_str}'
                 logger.error(err_msg, exc_info=True)
                 yield err_msg
                 return
-            
-            if any(x in err_str for x in ('404', 'NOT_FOUND', 'not supported', 'is no longer available', 'not found')):
+            if any((x in err_str for x in ('404', 'NOT_FOUND', 'not supported', 'is no longer available', 'not found'))):
                 from src.ai.model_manager import add_unsupported_model
                 add_unsupported_model('agy', self.model_id, reason=err_str)
                 add_unsupported_model('gemini', self.model_id, reason=err_str)
             from src.ai.orchestration.model_error_hub import record_model_error
-            record_model_error(
-                provider='agy',
-                model_name=self.model_id,
-                error=err_str,
-                action_taken='failed',
-            )
-            err_msg = f"Error Antigravity SDK: {err_str}"
+            record_model_error(provider='agy', model_name=self.model_id, error=err_str, action_taken='failed')
+            err_msg = f'Error Antigravity SDK: {err_str}'
             logger.error(err_msg, exc_info=True)
             yield err_msg

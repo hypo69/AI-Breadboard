@@ -59,7 +59,7 @@ class GDriveSyncPlugin(BasePlugin):
     def get_router(self) -> Optional[APIRouter]:
         """Return the Google Drive Sync FastAPI router."""
         try:
-            from src.api.router_sync import router
+from plugins.system_plugins.gdrive_sync.routers.router_sync import router
             return router
         except Exception as ex:
             logger.warning(f"Could not load Sync router for plugin: {ex}")

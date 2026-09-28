@@ -7,8 +7,14 @@
   "process_mode": "top_n",
   "top_processes": 10,
   "low_priority": true,
+  "fast_interval_seconds": 30,
+  "fast_duration_days": 2,
+  "aggregation_interval_seconds": 3600,
   "max_file_size_mb": 50,
   "max_measurements": null,
+  "heavy_disk_scan_interval_seconds": 43200,
+  "heavy_mode_max_duration_days": 5,
+  "heavy_mode_auto_switch_enabled": true,
   "watch_directories": [
     "C:\\Users\\"
   ],

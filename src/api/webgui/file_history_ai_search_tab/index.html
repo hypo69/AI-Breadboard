@@ -1,0 +1,243 @@
+<!-- File History AI Search Tab -->
+<style>
+  .fh-container {
+    padding: 0.75rem 1rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .fh-card {
+    background: var(--bs-body-bg, #1e293b);
+    border: 1px solid var(--bs-border-color, #334155);
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  .fh-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    color: #f8fafc;
+  }
+  .fh-stat-card {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid var(--bs-border-color, #334155);
+    border-radius: 10px;
+    padding: 0.85rem 1.1rem;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .fh-stat-card:hover {
+    transform: translateY(-2px);
+    border-color: #3b82f6;
+  }
+  .fh-stat-val {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .fh-search-box {
+    background: var(--bs-dark, #0f172a);
+    border: 1px solid #3b82f6;
+    border-radius: 12px;
+    padding: 0.75rem 1.25rem;
+  }
+  .fh-result-card {
+    border-left: 4px solid #3b82f6;
+    background: var(--bs-body-bg, #1e293b);
+    border-top: 1px solid var(--bs-border-color, #334155);
+    border-right: 1px solid var(--bs-border-color, #334155);
+    border-bottom: 1px solid var(--bs-border-color, #334155);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    transition: background-color 0.15s ease;
+  }
+  .fh-result-card:hover {
+    background: rgba(59, 130, 246, 0.05);
+  }
+  .fh-score-badge {
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: monospace;
+  }
+  .fh-snippet-box {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    padding: 0.6rem 0.85rem;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.85rem;
+    color: var(--bs-body-color, #cbd5e1);
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+</style>
+
+<div class="fh-container">
+  <!-- Верхняя информационная панель -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 fh-header">
+    <div class="d-flex align-items-center gap-3">
+      <div class="bg-primary bg-opacity-25 p-2.5 rounded-3 text-primary border border-primary border-opacity-25">
+        <i class="bi bi-clock-history fs-3"></i>
+      </div>
+      <div>
+        <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
+          Поиск по истории файлов Windows (File History AI Search)
+          <span class="badge bg-primary bg-opacity-75 fs-7">RAG v1.0</span>
+        </h5>
+        <span class="text-secondary small">Семантический векторный поиск по Windows File History, Recent LNK, Activity DB и файловой системе</span>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <button class="btn btn-sm btn-outline-light rounded-pill px-3" id="btn-fh-refresh-status" type="button">
+        <i class="bi bi-arrow-clockwise me-1"></i> Обновить статус
+      </button>
+      <button class="btn btn-sm btn-success rounded-pill px-3" id="btn-fh-reindex" type="button">
+        <i class="bi bi-cpu me-1"></i> Перестроить RAG
+      </button>
+    </div>
+  </div>
+
+  <!-- Карточки метрик и статусов -->
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-sm-6 col-md-3">
+      <div class="fh-stat-card">
+        <div class="text-secondary small text-uppercase fw-semibold mb-1">Всего в RAG-индексе</div>
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="fh-stat-val text-primary" id="fh-stat-docs-count">0</div>
+          <i class="bi bi-database-check fs-4 text-primary opacity-50"></i>
+        </div>
+        <div class="small text-muted mt-1" id="fh-stat-last-index">Индексация не проводилась</div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-md-3">
+      <div class="fh-stat-card">
+        <div class="text-secondary small text-uppercase fw-semibold mb-1">Фоновый планировщик</div>
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="fh-stat-val" id="fh-stat-scheduler-status">Остановлен</div>
+          <i class="bi bi-arrow-repeat fs-4 text-warning opacity-50" id="fh-scheduler-icon"></i>
+        </div>
+        <div class="small text-muted mt-1" id="fh-stat-scheduler-interval">Интервал: 15 мин</div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-md-3">
+      <div class="fh-stat-card">
+        <div class="text-secondary small text-uppercase fw-semibold mb-1">Файл FAISS индекса</div>
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="fh-stat-val fs-6 text-truncate" id="fh-stat-faiss-file" style="max-width: 180px;">file_history.faiss</div>
+          <i class="bi bi-file-earmark-binary fs-4 text-info opacity-50"></i>
+        </div>
+        <div class="small text-muted mt-1">Векторы Gemini Embeddings</div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-md-3">
+      <div class="fh-stat-card">
+        <div class="text-secondary small text-uppercase fw-semibold mb-1">Управление демоном</div>
+        <div class="d-flex align-items-center gap-2 mt-1">
+          <button class="btn btn-sm btn-outline-success w-50 py-1" id="btn-fh-start-scheduler">
+            <i class="bi bi-play-fill me-1"></i>Старт
+          </button>
+          <button class="btn btn-sm btn-outline-danger w-50 py-1" id="btn-fh-stop-scheduler">
+            <i class="bi bi-stop-fill me-1"></i>Стоп
+          </button>
+        </div>
+        <div class="small text-muted mt-1 text-center">Автообновление каждые 15м</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Блок Семантического Поиска -->
+  <div class="fh-card mb-4">
+    <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+      <i class="bi bi-search text-primary"></i>
+      Быстрый семантический поиск по истории файлов
+    </h6>
+
+    <div class="row g-2 mb-3">
+      <div class="col-12 col-md-7">
+        <div class="input-group">
+          <span class="input-group-text bg-body-tertiary border-end-0">
+            <i class="bi bi-search text-muted"></i>
+          </span>
+          <input type="text" class="form-control border-start-0" id="fh-search-input" placeholder="Введите поисковый запрос (напр., 'финансовый отчет', 'скрипт бэкапа', 'документ Word')...">
+          <button class="btn btn-primary px-4 fw-semibold" id="btn-fh-search" type="button">
+            <i class="bi bi-arrow-right-circle me-1"></i> Найти
+          </button>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <select class="form-select" id="fh-filter-source">
+          <option value="">Все источники (All Sources)</option>
+          <option value="file_history_xml">Windows File History (XML)</option>
+          <option value="recent_lnk">Recent Files (LNK)</option>
+          <option value="activity_db">Activity History (DB)</option>
+          <option value="fs_scan">Сканер модификаций ФС</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <select class="form-select" id="fh-filter-topk">
+          <option value="5" selected>Топ 5</option>
+          <option value="10">Топ 10</option>
+          <option value="20">Топ 20</option>
+          <option value="50">Топ 50</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Индикатор загрузки поиска -->
+    <div class="text-center py-4 d-none" id="fh-search-spinner">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Выполняется RAG поиск...</span>
+      </div>
+      <div class="small text-muted mt-2">Выполняется векторный семантический поиск по FAISS...</div>
+    </div>
+
+    <!-- Контейнер Результатов Поиска -->
+    <div id="fh-search-results-container">
+      <div class="text-center text-muted py-4 border rounded-3 bg-body-tertiary bg-opacity-50">
+        <i class="bi bi-search fs-2 d-block mb-1 text-secondary opacity-50"></i>
+        <span>Введите ключевые слова или естественный запрос выше для семантического поиска по истории файлов.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Блок Обнаруженных Элементов Истории (Телеметрия) -->
+  <div class="fh-card">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
+        <i class="bi bi-list-stars text-info"></i>
+        Телеметрия истории файлов Windows (Сканер системы)
+      </h6>
+      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-fh-scan-now">
+        <i class="bi bi-arrow-repeat me-1"></i> Запустить сканирование ОС
+      </button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" id="fh-items-table">
+        <thead class="table-light">
+          <tr>
+            <th scope="col" style="width: 40px;">#</th>
+            <th scope="col">Файл</th>
+            <th scope="col">Источник</th>
+            <th scope="col">Событие</th>
+            <th scope="col">Время</th>
+            <th scope="col">Размер</th>
+            <th scope="col" class="text-end">Действия</th>
+          </tr>
+        </thead>
+        <tbody id="fh-items-tbody">
+          <tr>
+            <td colspan="7" class="text-center py-4 text-muted">
+              Нажмите «Запустить сканирование ОС» для получения свежей истории файлов Windows.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

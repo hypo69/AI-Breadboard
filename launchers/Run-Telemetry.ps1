@@ -62,6 +62,9 @@ param (
     [Alias('Window', 'SeparateWindow')]
     [switch]$NewWindow,
 
+    [Alias('v', 'DebugLog')]
+    [switch]$VerboseLog,
+
     [switch]$Restart,
 
     [switch]$Force,
@@ -258,7 +261,8 @@ if ($Action -eq 'status') {
         foreach ($proc in $runningProcs) {
             $wsMb = [math]::Round($proc.WorkingSet64 / 1MB, 1)
             $cpuSec = [math]::Round($proc.CPU, 2)
-            Write-Host "   • PID: $($proc.Id) | Процесс: $($proc.ProcessName) | RAM (Working Set): $wsMb МБ | CPU: ${cpuSec}с" -ForegroundColor Cyan
+            $role = if ($proc.ProcessName -eq 'ai-telemetry') { "Лончер" } else { "Воркер Python" }
+            Write-Host "   • PID: $($proc.Id) | Процесс: $($proc.ProcessName) [$role] | RAM (Working Set): $wsMb МБ | CPU: ${cpuSec}с" -ForegroundColor Cyan
         }
         Write-Host ""
         Write-Host "📁 Логи и хранилище:" -ForegroundColor DarkGray
@@ -279,12 +283,6 @@ if ($Action -eq 'status') {
         }
     } catch {}
 
-    # Статус LibreHardwareMonitor (LHM)
-    if (Test-Path $lhmLauncher) {
-        Write-Host ""
-        & $lhmLauncher -Action status
-    }
-
     Write-Host ""
     exit 0
 }
@@ -293,10 +291,6 @@ if ($Action -eq 'status') {
 # ДЕЙСТВИЕ: STOP / RESTART
 # -------------------------------------------------------------
 if ($Action -in @('stop', 'restart')) {
-    if (Test-Path $lhmLauncher) {
-        & $lhmLauncher -Action stop
-    }
-
     if ($runningProcs) {
         Write-Host "🛑 Остановка процессов телеметрии..." -ForegroundColor Yellow
         foreach ($p in $runningProcs) {
@@ -320,20 +314,15 @@ if ($Action -in @('stop', 'restart')) {
 }
 
 # -------------------------------------------------------------
-# ДЕЙСТВИЕ: START / RESTART
+# ДЕЙСТВИЕ: START / RESTART (Изолированный запуск без FastAPI/HTTP)
 # -------------------------------------------------------------
 if ($Action -in @('start', 'restart')) {
-    # Сначала запускаем LibreHardwareMonitor
-    if (Test-Path $lhmLauncher) {
-        & $lhmLauncher -Action start
-    } else {
-        Write-Host "⚠️ Предупреждение: Скрипт LHM не найден по пути: $lhmLauncher" -ForegroundColor Yellow
-    }
-
     $existing = Get-TelemetryProcesses
-    if ($existing) {
+    if ($existing -and $Action -ne 'restart') {
         $pids = ($existing | ForEach-Object { "$($_.ProcessName):$($_.Id)" }) -join ', '
         Write-Host "✅ Телеметрия уже запущена ($pids)" -ForegroundColor Green
+        Write-Host "   Для перезапуска используйте: .\launchers\Run-Telemetry.ps1 -Restart" -ForegroundColor DarkGray
+        Write-Host "   Или с логированием:          .\launchers\Run-Telemetry.ps1 -Foreground -v -Force" -ForegroundColor DarkGray
         exit 0
     }
 
@@ -358,19 +347,25 @@ if ($Action -in @('start', 'restart')) {
     $env:PYTHONIOENCODING = "utf-8"
     $env:PYTHONPATH = $projectRoot
 
+    $isVerbose = $PSBoundParameters.ContainsKey('Verbose') -or $VerboseLog
     $appArgs = "-u `"$telemetryScript`" --mode $Mode --interval $Interval --heavy-interval $HeavyInterval --top-processes $TopProcesses"
+    if ($isVerbose) {
+        $appArgs += " --verbose"
+    }
 
     if ($Foreground) {
         Write-Host ""
         Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Green
-        Write-Host "  📊 ТЕЛЕМЕТРИЯ (ИНТЕРАКТИВНЫЙ РЕЖИМ)                           " -ForegroundColor Green
+        Write-Host "  📊 ТЕЛЕМЕТРИЯ (ИНТЕРАКТИВНЫЙ РЕЖИМ ЛОГИРОВАНИЯ)                " -ForegroundColor Green
         Write-Host "  Режим:      $Mode                                             " -ForegroundColor Cyan
         Write-Host "  Интервал:   быстрый ${Interval}с | тяжелый ${HeavyInterval}с " -ForegroundColor Cyan
         Write-Host "  БД:         $dbFile                                           " -ForegroundColor DarkGray
         Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Green
         Write-Host ""
         Push-Location $projectRoot
-        & $pythonExe -u $telemetryScript --mode $Mode --interval $Interval --heavy-interval $HeavyInterval --top-processes $TopProcesses
+        $pyCmdArgs = @("-u", $telemetryScript, "--mode", $Mode, "--interval", $Interval.ToString(), "--heavy-interval", $HeavyInterval.ToString(), "--top-processes", $TopProcesses.ToString())
+        if ($isVerbose) { $pyCmdArgs += "--verbose" }
+        & $pythonExe @pyCmdArgs
         Pop-Location
         exit $LASTEXITCODE
     }
@@ -383,7 +378,8 @@ if ($Action -in @('start', 'restart')) {
             $thisScript = Join-Path $scriptDir "Run-Telemetry.ps1"
         }
         $shellExe = if (Get-Command pwsh.exe -ErrorAction SilentlyContinue) { "pwsh.exe" } else { "powershell.exe" }
-        $proc = Start-Process $shellExe -ArgumentList "-NoExit -ExecutionPolicy Bypass -File `"$thisScript`" -Foreground -Interval $Interval -HeavyInterval $HeavyInterval -TopProcesses $TopProcesses -Mode $Mode" -WorkingDirectory $projectRoot -PassThru
+        $vFlag = if ($isVerbose) { " -VerboseLog" } else { "" }
+        $proc = Start-Process $shellExe -ArgumentList "-NoExit -ExecutionPolicy Bypass -File `"$thisScript`" -Foreground -Interval $Interval -HeavyInterval $HeavyInterval -TopProcesses $TopProcesses -Mode $Mode$vFlag" -WorkingDirectory $projectRoot -PassThru
         if ($proc) { $launchPid = $proc.Id }
     } else {
         Write-Host "🚀 Фоновый запуск процесса 'ai-telemetry.exe'..." -ForegroundColor Cyan

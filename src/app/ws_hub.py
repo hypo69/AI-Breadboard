@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Unified WebSocket connection hub.
 
 All real-time connections go through /ws/{channel}.
@@ -9,19 +8,14 @@ Usage from a route:
     await hub.broadcast("metrics", {"type": "update", "data": {...}})
 """
 from __future__ import annotations
-
 import asyncio
 import json
 import time
 from collections import defaultdict
 from typing import Dict, Optional, Set
-
 from fastapi import WebSocket
-
 from logger import logger
-
-VALID_CHANNELS: Set[str] = {"chat", "stream", "voice", "metrics", "admin", "events"}
-
+VALID_CHANNELS: Set[str] = {'chat', 'stream', 'voice', 'metrics', 'admin', 'events'}
 
 class WSHub:
     """Manages all active WebSocket connections grouped by channel."""
@@ -33,26 +27,18 @@ class WSHub:
         self._heartbeat_task: Optional[asyncio.Task] = None
         self._shutdown = False
 
-    # ------------------------------------------------------------------
-    # Connection lifecycle
-    # ------------------------------------------------------------------
-
-    async def connect(self, ws: WebSocket, channel: str, user_id: Optional[int] = None) -> None:
+    async def connect(self, ws: WebSocket, channel: str, user_id: Optional[int]=None) -> None:
         await ws.accept()
         self._connections[channel].add(ws)
         self._user_map[ws] = user_id
         self._last_pong[ws] = time.time()
-        logger.info(f"[WSHub] connect channel={channel} user_id={user_id} total={self.active_connections_count}")
+        logger.info(f'[WSHub] connect channel={channel} user_id={user_id} total={self.active_connections_count}')
 
     def disconnect(self, ws: WebSocket, channel: str) -> None:
         self._connections[channel].discard(ws)
         self._user_map.pop(ws, None)
         self._last_pong.pop(ws, None)
-        logger.info(f"[WSHub] disconnect channel={channel} total={self.active_connections_count}")
-
-    # ------------------------------------------------------------------
-    # Messaging
-    # ------------------------------------------------------------------
+        logger.info(f'[WSHub] disconnect channel={channel} total={self.active_connections_count}')
 
     async def broadcast(self, channel: str, data: dict) -> int:
         """Broadcast JSON to all connections in *channel*. Returns send count."""
@@ -86,17 +72,11 @@ class WSHub:
             self.disconnect(ws, channel)
         return sent
 
-    # ------------------------------------------------------------------
-    # Heartbeat
-    # ------------------------------------------------------------------
-
-    async def start_heartbeat(self, interval: int = 30, timeout: int = 90) -> None:
-        if self._heartbeat_task and not self._heartbeat_task.done():
+    async def start_heartbeat(self, interval: int=30, timeout: int=90) -> None:
+        if self._heartbeat_task and (not self._heartbeat_task.done()):
             return
-        self._heartbeat_task = asyncio.create_task(
-            self._heartbeat_loop(interval, timeout), name="ws_hub_heartbeat"
-        )
-        logger.info(f"[WSHub] heartbeat started interval={interval}s")
+        self._heartbeat_task = asyncio.create_task(self._heartbeat_loop(interval, timeout), name='ws_hub_heartbeat')
+        logger.info(f'[WSHub] heartbeat started interval={interval}s')
 
     async def _heartbeat_loop(self, interval: int, timeout: int) -> None:
         while not self._shutdown:
@@ -122,20 +102,16 @@ class WSHub:
     def record_pong(self, ws: WebSocket) -> None:
         self._last_pong[ws] = time.time()
 
-    # ------------------------------------------------------------------
-    # Stats & shutdown
-    # ------------------------------------------------------------------
-
     @property
     def active_connections_count(self) -> int:
-        return sum(len(v) for v in self._connections.values())
+        return sum((len(v) for v in self._connections.values()))
 
     def channel_stats(self) -> dict:
         return {ch: len(c) for ch, c in self._connections.items() if c}
 
     async def stop(self) -> None:
         self._shutdown = True
-        if self._heartbeat_task and not self._heartbeat_task.done():
+        if self._heartbeat_task and (not self._heartbeat_task.done()):
             self._heartbeat_task.cancel()
             try:
                 await self._heartbeat_task
@@ -150,4 +126,4 @@ class WSHub:
         self._connections.clear()
         self._user_map.clear()
         self._last_pong.clear()
-        logger.info("[WSHub] stopped")
+        logger.info('[WSHub] stopped')

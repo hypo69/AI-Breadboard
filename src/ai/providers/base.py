@@ -1,25 +1,11 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Abstract Base Provider Definition
-# =============================================================================
-# Description:
-#   Defines the base interface for all AI chat and capability providers.
-#
-# File: base.py
-# Package: src.ai.providers
-# Author: hypo69
-# Copyright: (c) 2026 hypo69
-# =============================================================================
-
 from abc import ABC, abstractmethod
 from typing import Any, AsyncIterator, Dict, List, Optional, Set
-
 
 class BaseChatProvider(ABC):
     """Abstract base class for all AI model and capability providers."""
 
     @classmethod
-    def get_available_models(cls, force_refresh: bool = False) -> List[str]:
+    def get_available_models(cls, force_refresh: bool=False) -> List[str]:
         """Retrieve list of available model names for this provider."""
         return []
 
@@ -31,7 +17,7 @@ class BaseChatProvider(ABC):
     @classmethod
     def get_capabilities(cls) -> Set[str]:
         """Return set of capabilities supported by this provider."""
-        return {"chat"}
+        return {'chat'}
 
     @property
     @abstractmethod
@@ -46,27 +32,12 @@ class BaseChatProvider(ABC):
         pass
 
     @abstractmethod
-    async def ask(
-        self,
-        q: str,
-        attempts: int = 15,
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        **kwargs: Any,
-    ) -> Optional[str]:
+    async def ask(self, q: str, attempts: int=15, temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, **kwargs: Any) -> Optional[str]:
         """Execute a single-turn query and return response string."""
         pass
 
     @abstractmethod
-    async def stream_chat(
-        self,
-        q: str,
-        attempts: int = 15,
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        history: Optional[List[Dict[str, str]]] = None,
-        **kwargs: Any,
-    ) -> AsyncIterator[str]:
+    async def stream_chat(self, q: str, attempts: int=15, temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, history: Optional[List[Dict[str, str]]]=None, **kwargs: Any) -> AsyncIterator[str]:
         """Stream response chunks for a query."""
         pass
 

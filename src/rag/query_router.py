@@ -1,22 +1,15 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Query Router for Smart Document Search Routing
-# =============================================================================
-# Description:
-#   Analyzes user queries to determine optimal search strategy:
-#   - text: Only search text documents (TF-IDF/Gemini)
-#   - pixel: Only search images (CLIP → FAISS)
-#   - hybrid: Search both text and images
-#
-#   Uses keyword analysis, query patterns, and heuristics to route queries.
-#
-# File: query_router.py
-# Project: ai-breadboard
-# Package: src.rag
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
+"""Модуль роутера запросов для интеллектуального поиска.
 
+Process Name: Query Router for Smart Document Search Routing
+
+Description:
+  Анализирует запросы пользователя и определяет оптимальную стратегию поиска:
+  - text: поиск только по текстовым документам (TF-IDF/Gemini)
+  - pixel: поиск только по изображениям (CLIP → FAISS)
+  - hybrid: комбинированный поиск по тексту и изображениям
+
+Использует ключевые слова, шаблоны и эвристики для маршрутизации запросов.
+"""
 from __future__ import annotations
 
 import re
@@ -44,9 +37,7 @@ class QueryLanguage(str, Enum):
 
 @dataclass
 class QueryAnalysis:
-    """
-    ## hypo69 docblock
-    Result of query analysis with routing decision.
+    """Result of query analysis with routing decision.
 
     Attributes:
         query: Original query string
@@ -71,9 +62,7 @@ class QueryAnalysis:
 
 
 class QueryRouter:
-    """
-    ## hypo69 docblock
-    Smart query router for determining search strategy.
+    """Smart query router for determining search strategy.
 
     Analyzes queries for visual indicators and language patterns
     to route to optimal search provider(s).
@@ -157,9 +146,7 @@ class QueryRouter:
         logger.info("[QueryRouter] Initialized")
 
     def analyze(self, query: str) -> QueryAnalysis:
-        """
-        ## hypo69 docblock
-        Analyze query and determine routing strategy.
+        """Analyze query and determine routing strategy.
 
         Args:
             query (str): User query string
@@ -224,9 +211,7 @@ class QueryRouter:
         return analysis
 
     def _detect_language(self, query: str) -> QueryLanguage:
-        """
-        ## hypo69 docblock
-        Detect query language (Russian, English, or mixed).
+        """Detect query language (Russian, English, or mixed).
 
         Args:
             query (str): Query string
@@ -249,9 +234,7 @@ class QueryRouter:
             return QueryLanguage.MIXED
 
     def _extract_visual_keywords(self, query: str, language: QueryLanguage) -> List[str]:
-        """
-        ## hypo69 docblock
-        Extract visual indicator keywords from query.
+        """Extract visual indicator keywords from query.
 
         Args:
             query (str): Query string
@@ -281,9 +264,7 @@ class QueryRouter:
         return list(set(found_keywords))  # Remove duplicates
 
     def _check_visual_patterns(self, query: str) -> float:
-        """
-        ## hypo69 docblock
-        Check regex patterns for visual intent.
+        """Check regex patterns for visual intent.
 
         Args:
             query (str): Query string
@@ -300,9 +281,7 @@ class QueryRouter:
         return max_score
 
     def _check_text_patterns(self, query: str) -> float:
-        """
-        ## hypo69 docblock
-        Check regex patterns for text intent.
+        """Check regex patterns for text intent.
 
         Args:
             query (str): Query string
@@ -326,9 +305,7 @@ class QueryRouter:
         text_score: float,
         language: QueryLanguage
     ) -> Tuple[RoutingType, float, str]:
-        """
-        ## hypo69 docblock
-        Determine routing decision based on analysis.
+        """Determine routing decision based on analysis.
 
         Args:
             query: Original query
@@ -390,9 +367,7 @@ class QueryRouter:
         )
 
     def get_config(self) -> Dict[str, any]:
-        """
-        ## hypo69 docblock
-        Get router configuration and keyword lists.
+        """Get router configuration and keyword lists.
 
         Returns:
             Dict with configuration details
@@ -412,9 +387,7 @@ _query_router: Optional[QueryRouter] = None
 
 
 def get_query_router() -> QueryRouter:
-    """
-    ## hypo69 docblock
-    Get or create singleton QueryRouter instance.
+    """Get or create singleton QueryRouter instance.
 
     Returns:
         QueryRouter: Singleton instance

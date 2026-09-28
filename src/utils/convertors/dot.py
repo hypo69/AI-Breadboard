@@ -1,21 +1,6 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Convert DOT files to PNG images
-# =============================================================================
-# Description:
-#   Converts a DOT file to a PNG image.
-#
-# File: dot.py
-# Project: ai-breadboard
-# Package: src.utils.convertors
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """DOT file to PNG image conversion utilities.
 
 Converts DOT format graph description files to PNG images using Graphviz library."""
-
 import sys
 from graphviz import Source
 
@@ -54,29 +39,21 @@ def dot2png(dot_file: str, png_file: str) -> None:
         This command will create a PNG file named 'output.png' from the graph defined in 'example.dot'.
     """
     try:
-        # Read the DOT file
         with open(dot_file, 'r') as f:
             dot_content = f.read()
-
-        # Create a Source object from the DOT content
         source = Source(dot_content)
-
-        # Render the source to a PNG file
         source.format = 'png'
         source.render(png_file, cleanup=True)
     except FileNotFoundError as e:
         print(f"Error: The file '{dot_file}' was not found.")
         raise e
     except Exception as e:
-        print(f"An error occurred during the conversion: {e}")
+        print(f'An error occurred during the conversion: {e}')
         raise e
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     if len(sys.argv) != 3:
-        print("Usage: python dot2png.py <input_dot_file> <output_png_file>")
+        print('Usage: python dot2png.py <input_dot_file> <output_png_file>')
         sys.exit(1)
-
     input_dot_file = sys.argv[1]
     output_png_file = sys.argv[2]
-
     dot2png(input_dot_file, output_png_file)

@@ -2,6 +2,7 @@
   "launcher": "Run-NetworkTerminal.ps1",
   "server": {
     "port": 8101,
+    "dedicated": false,
     "use_ssl": false,
     "workers": 1
   },

@@ -1,29 +1,11 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Adapter for interacting with Google Gemini CLI
-# =============================================================================
-# Description:
-#   Высокоуровневый адаптер диалога для взаимодействия с Google Gemini CLI.
-#   Наследует BaseChatProvider и реализует методы генерации, диалога,
-#   потокового вывода и структурированного ответа.
-#
-# File: chat.py
-# Package: src.ai.providers.gemini_cli
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 from __future__ import annotations
-
 import os
 import sys
 from pathlib import Path
 from typing import Any, AsyncGenerator, AsyncIterator, Dict, List, Optional, Set, Union
-
 from logger.logger import logger
 from src.ai.providers.base import BaseChatProvider
 from .client import GeminiCliProvider, GeminiCliResponse
-
 
 class GeminiCliChatBase(BaseChatProvider):
     """Высокоуровневый адаптер взаимодействия с Google Gemini CLI.
@@ -39,18 +21,17 @@ class GeminiCliChatBase(BaseChatProvider):
         executable_path (str): Путь к исполняемому файлу gemini CLI.
         provider (GeminiCliProvider): Низкоуровневый клиент Gemini CLI.
     """
-
-    _DEFAULT_MODEL: str = "gemini-3.1-flash-lite"
+    _DEFAULT_MODEL: str = 'gemini-3.1-flash-lite'
 
     @classmethod
-    def get_available_models(cls, force_refresh: bool = False) -> List[str]:
+    def get_available_models(cls, force_refresh: bool=False) -> List[str]:
         """Получение списка актуальных моделей для Gemini CLI через менеджер моделей.
 
         :param force_refresh: Флаг принудительного обновления кэша.
         :returns: Список доступных идентификаторов моделей.
         """
         from src.ai.model_manager import get_available_models as _mgr_get_available_models
-        return _mgr_get_available_models(provider="gemini_cli", force_refresh=force_refresh)
+        return _mgr_get_available_models(provider='gemini_cli', force_refresh=force_refresh)
 
     @classmethod
     def is_available(cls) -> bool:
@@ -66,7 +47,7 @@ class GeminiCliChatBase(BaseChatProvider):
 
         :returns: Множество строк с названиями возможностей.
         """
-        return {"chat", "stream", "agent", "json"}
+        return {'chat', 'stream', 'agent', 'json'}
 
     @classmethod
     def normalize_model_id(cls, model_id: str) -> str:
@@ -81,28 +62,18 @@ class GeminiCliChatBase(BaseChatProvider):
             >>> GeminiCliChatBase.normalize_model_id('')
             'gemini-3.1-flash-lite'
         """
-        actual = (model_id or "").strip()
-        if actual.startswith("gemini_cli:"):
-            actual = actual[len("gemini_cli:") :]
-        elif actual.startswith("gemini-cli-"):
-            actual = actual[len("gemini-cli-") :]
-
+        actual = (model_id or '').strip()
+        if actual.startswith('gemini_cli:'):
+            actual = actual[len('gemini_cli:'):]
+        elif actual.startswith('gemini-cli-'):
+            actual = actual[len('gemini-cli-'):]
         if not actual:
             return cls._DEFAULT_MODEL
-
-        if actual.startswith("models/"):
-            actual = actual[len("models/") :]
-
+        if actual.startswith('models/'):
+            actual = actual[len('models/'):]
         return actual
 
-    def __init__(
-        self,
-        model_id: str = "",
-        system_prompt: str = "",
-        executable_path: str = "",
-        working_directory: Optional[Union[str, Path]] = None,
-        timeout: int = 300,
-    ) -> None:
+    def __init__(self, model_id: str='', system_prompt: str='', executable_path: str='', working_directory: Optional[Union[str, Path]]=None, timeout: int=300) -> None:
         """Инициализация клиента Gemini CLI.
 
         :param model_id: Идентификатор модели.
@@ -112,22 +83,12 @@ class GeminiCliChatBase(BaseChatProvider):
         :param timeout: Таймаут выполнения в секундах.
         """
         self._model_id: str = self.normalize_model_id(model_id)
-        self.system_prompt: str = system_prompt or ""
+        self.system_prompt: str = system_prompt or ''
         self._history: List[Dict[str, str]] = []
-
-        # Инициализация низкоуровневого провайдера
-        found_exe = executable_path or GeminiCliProvider.find_executable() or "gemini"
+        found_exe = executable_path or GeminiCliProvider.find_executable() or 'gemini'
         self.executable_path: str = found_exe
-        self.provider: GeminiCliProvider = GeminiCliProvider(
-            executable=found_exe,
-            working_directory=working_directory,
-            timeout=timeout,
-            default_model=self._model_id,
-        )
-
-        logger.info(
-            f"[GeminiCliChat] Инициализирован CLI-клиент: модель={self._model_id}, exe={self.executable_path}"
-        )
+        self.provider: GeminiCliProvider = GeminiCliProvider(executable=found_exe, working_directory=working_directory, timeout=timeout, default_model=self._model_id)
+        logger.info(f'[GeminiCliChat] Инициализирован CLI-клиент: модель={self._model_id}, exe={self.executable_path}')
 
     @property
     def model_id(self) -> str:
@@ -148,7 +109,7 @@ class GeminiCliChatBase(BaseChatProvider):
     @system_instruction.setter
     def system_instruction(self, val: str) -> None:
         """Установка системной инструкции."""
-        self.system_prompt = val or ""
+        self.system_prompt = val or ''
 
     @property
     def history(self) -> List[Dict[str, str]]:
@@ -168,12 +129,7 @@ class GeminiCliChatBase(BaseChatProvider):
         """Освобождение ресурсов."""
         pass
 
-    def _build_full_prompt(
-        self,
-        q: str,
-        history: Optional[List[Dict[str, str]]] = None,
-        system_instruction: Optional[str] = "",
-    ) -> str:
+    def _build_full_prompt(self, q: str, history: Optional[List[Dict[str, str]]]=None, system_instruction: Optional[str]='') -> str:
         """Формирование полного контекста запроса с историей и системной инструкцией.
 
         :param q: Текст запроса.
@@ -181,34 +137,23 @@ class GeminiCliChatBase(BaseChatProvider):
         :param system_instruction: Системная инструкция.
         :returns: Объединенная строка контекста.
         """
-        sys_inst = system_instruction or self.system_prompt or ""
+        sys_inst = system_instruction or self.system_prompt or ''
         parts: List[str] = []
-
         if sys_inst:
-            parts.append(f"System Instructions:\n{sys_inst}\n")
-
+            parts.append(f'System Instructions:\n{sys_inst}\n')
         hist = history if history is not None else self._history
         if hist:
-            parts.append("Previous Conversation:")
+            parts.append('Previous Conversation:')
             for item in hist:
-                role = item.get("role", "user")
-                content = item.get("content", "")
+                role = item.get('role', 'user')
+                content = item.get('content', '')
                 if content:
-                    parts.append(f"{role.capitalize()}: {content}")
-            parts.append("")
+                    parts.append(f'{role.capitalize()}: {content}')
+            parts.append('')
+        parts.append(f'User Query:\n{q}')
+        return '\n'.join(parts)
 
-        parts.append(f"User Query:\n{q}")
-        return "\n".join(parts)
-
-    async def ask(
-        self,
-        q: str,
-        attempts: int = 15,
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        system_instruction: Optional[str] = "",
-        **kwargs: Any,
-    ) -> Optional[str]:
+    async def ask(self, q: str, attempts: int=15, temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, system_instruction: Optional[str]='', **kwargs: Any) -> Optional[str]:
         """Выполнение одиночного запроса через Gemini CLI.
 
         :param q: Текстовый запрос пользователя.
@@ -220,21 +165,11 @@ class GeminiCliChatBase(BaseChatProvider):
         :returns: Ответ модели или пустая строка при ошибке.
         """
         if not q or not q.strip():
-            return ""
-
+            return ''
         full_prompt = self._build_full_prompt(q, history=[], system_instruction=system_instruction)
         return await self._execute_cli(full_prompt)
 
-    async def chat(
-        self,
-        q: str,
-        history: Optional[List[Dict[str, str]]] = None,
-        system_instruction: Optional[str] = "",
-        save_history: bool = True,
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        **kwargs: Any,
-    ) -> str:
+    async def chat(self, q: str, history: Optional[List[Dict[str, str]]]=None, system_instruction: Optional[str]='', save_history: bool=True, temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, **kwargs: Any) -> str:
         """Выполнение запроса с учетом контекста истории через Gemini CLI.
 
         :param q: Текстовый запрос пользователя.
@@ -247,30 +182,16 @@ class GeminiCliChatBase(BaseChatProvider):
         :returns: Ответ модели или пустая строка при сбое.
         """
         if not q or not q.strip():
-            return ""
-
+            return ''
         effective_history = history if history is not None else self._history
-        full_prompt = self._build_full_prompt(
-            q, history=effective_history, system_instruction=system_instruction
-        )
+        full_prompt = self._build_full_prompt(q, history=effective_history, system_instruction=system_instruction)
         response_text = await self._execute_cli(full_prompt)
-
         if save_history and response_text:
-            self._history.append({"role": "user", "content": q})
-            self._history.append({"role": "model", "content": response_text})
-
+            self._history.append({'role': 'user', 'content': q})
+            self._history.append({'role': 'model', 'content': response_text})
         return response_text
 
-    async def chat_stream(
-        self,
-        q: str,
-        history: Optional[List[Dict[str, str]]] = None,
-        system_instruction: Optional[str] = "",
-        save_history: bool = True,
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        **kwargs: Any,
-    ) -> AsyncGenerator[str, None]:
+    async def chat_stream(self, q: str, history: Optional[List[Dict[str, str]]]=None, system_instruction: Optional[str]='', save_history: bool=True, temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, **kwargs: Any) -> AsyncGenerator[str, None]:
         """Потоковая генерация ответа от Gemini CLI.
 
         :param q: Текстовый запрос пользователя.
@@ -284,112 +205,55 @@ class GeminiCliChatBase(BaseChatProvider):
         """
         if not q or not q.strip():
             return
-
         effective_history = history if history is not None else self._history
-        full_prompt = self._build_full_prompt(
-            q, history=effective_history, system_instruction=system_instruction
-        )
-
-        logger.info(
-            f"[GeminiCliChat] chat_stream: запуск {self.executable_path} (модель: {self._model_id})"
-        )
-
-        full_response = ""
+        full_prompt = self._build_full_prompt(q, history=effective_history, system_instruction=system_instruction)
+        logger.info(f'[GeminiCliChat] chat_stream: запуск {self.executable_path} (модель: {self._model_id})')
+        full_response = ''
         try:
-            async for chunk in self.provider.stream_async(
-                prompt=full_prompt,
-                model=self._model_id,
-            ):
+            async for chunk in self.provider.stream_async(prompt=full_prompt, model=self._model_id):
                 full_response += chunk
                 yield chunk
         except Exception as ex:
-            logger.error(f"[GeminiCliChat] Ошибка потокового выполнения: {ex}")
-            yield f"\n[Gemini CLI Error: {str(ex)}]"
+            logger.error(f'[GeminiCliChat] Ошибка потокового выполнения: {ex}')
+            yield f'\n[Gemini CLI Error: {str(ex)}]'
         finally:
             if save_history and full_response:
-                self._history.append({"role": "user", "content": q})
-                self._history.append({"role": "model", "content": full_response.strip()})
+                self._history.append({'role': 'user', 'content': q})
+                self._history.append({'role': 'model', 'content': full_response.strip()})
 
-    async def stream_chat(
-        self,
-        q: str,
-        attempts: int = 15,
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        history: Optional[List[Dict[str, str]]] = None,
-        **kwargs: Any,
-    ) -> AsyncIterator[str]:
+    async def stream_chat(self, q: str, attempts: int=15, temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, history: Optional[List[Dict[str, str]]]=None, **kwargs: Any) -> AsyncIterator[str]:
         """Реализация метода интерфейса BaseChatProvider для потокового чата."""
-        async for chunk in self.chat_stream(
-            q=q,
-            history=history,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs,
-        ):
+        async for chunk in self.chat_stream(q=q, history=history, temperature=temperature, max_tokens=max_tokens, **kwargs):
             yield chunk
 
     async def _execute_cli(self, prompt: str) -> str:
         """Асинхронное исполнение CLI процесса и сбор текстового ответа."""
-        logger.info(f"[GeminiCliChat] Выполнение команды: model={self._model_id}")
-
+        logger.info(f'[GeminiCliChat] Выполнение команды: model={self._model_id}')
         try:
-            resp: GeminiCliResponse = await self.provider.generate_async(
-                prompt=prompt,
-                model=self._model_id,
-            )
-
+            resp: GeminiCliResponse = await self.provider.generate_async(prompt=prompt, model=self._model_id)
             if not resp.success:
-                logger.warning(
-                    f"[GeminiCliChat] Код возврата {resp.return_code}. Stderr: {resp.stderr[:200]}"
-                )
+                logger.warning(f'[GeminiCliChat] Код возврата {resp.return_code}. Stderr: {resp.stderr[:200]}')
                 from src.ai.model_manager import add_unsupported_model
                 from src.ai.orchestration.model_error_hub import record_model_error
-
                 err_low = resp.stderr.lower()
-                if "model not found" in err_low or "not supported" in err_low:
-                    add_unsupported_model("gemini_cli", self._model_id, reason=resp.stderr[:120])
-
-                record_model_error(
-                    provider="gemini_cli",
-                    model_name=self._model_id,
-                    error=resp.stderr.strip() or "CLI execution failed",
-                    status_code=resp.return_code if resp.return_code else None,
-                    action_taken="failed",
-                )
-
+                if 'model not found' in err_low or 'not supported' in err_low:
+                    add_unsupported_model('gemini_cli', self._model_id, reason=resp.stderr[:120])
+                record_model_error(provider='gemini_cli', model_name=self._model_id, error=resp.stderr.strip() or 'CLI execution failed', status_code=resp.return_code if resp.return_code else None, action_taken='failed')
                 if not resp.text.strip():
-                    return f"[Gemini CLI Error]: {resp.stderr.strip()}"
-
+                    return f'[Gemini CLI Error]: {resp.stderr.strip()}'
             return resp.text
-
         except RuntimeError as ex:
             logger.error(f"[GeminiCliChat] Исполняемый файл '{self.executable_path}' не найден: {ex}")
             from src.ai.orchestration.model_error_hub import record_model_error
-            record_model_error(
-                provider="gemini_cli",
-                model_name=self._model_id,
-                error=str(ex),
-                action_taken="failed",
-            )
+            record_model_error(provider='gemini_cli', model_name=self._model_id, error=str(ex), action_taken='failed')
             return f"[Gemini CLI Error]: Executable '{self.executable_path}' not found in system PATH."
         except TimeoutError as ex:
-            logger.error(f"[GeminiCliChat] Таймаут выполнения: {ex}")
+            logger.error(f'[GeminiCliChat] Таймаут выполнения: {ex}')
             from src.ai.orchestration.model_error_hub import record_model_error
-            record_model_error(
-                provider="gemini_cli",
-                model_name=self._model_id,
-                error=str(ex),
-                action_taken="failed",
-            )
-            return f"[Gemini CLI Error]: Request timed out."
+            record_model_error(provider='gemini_cli', model_name=self._model_id, error=str(ex), action_taken='failed')
+            return f'[Gemini CLI Error]: Request timed out.'
         except Exception as ex:
-            logger.error(f"[GeminiCliChat] Непредвиденная ошибка запуска CLI: {ex}")
+            logger.error(f'[GeminiCliChat] Непредвиденная ошибка запуска CLI: {ex}')
             from src.ai.orchestration.model_error_hub import record_model_error
-            record_model_error(
-                provider="gemini_cli",
-                model_name=self._model_id,
-                error=str(ex),
-                action_taken="failed",
-            )
-            return f"[Gemini CLI Error]: {str(ex)}"
+            record_model_error(provider='gemini_cli', model_name=self._model_id, error=str(ex), action_taken='failed')
+            return f'[Gemini CLI Error]: {str(ex)}'

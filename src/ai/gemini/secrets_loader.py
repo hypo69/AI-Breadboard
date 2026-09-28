@@ -1,29 +1,6 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Loading Gemini API keys from unified environment storage
-# =============================================================================
-# Description:
-#   Loads and manages Google Gemini API authentication keys from .env.
-#   Provides backwards-compatible functions to retrieve all keys, get keys by name,
-#   and load active keys with proper filtering by status and quota restrictions.
-#
-# File: secrets_loader.py
-# Project: ai-breadboard
-# Package: src.ai.gemini
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 from __future__ import annotations
-
 from typing import Any, Dict, List, Optional, Tuple
-
-from src.ai.gemini.gemini_api_key_state import (
-    _get_merged_keys_data,
-    _read_env_keys,
-    load_api_keys as state_load_api_keys,
-)
-
+from src.ai.gemini.gemini_api_key_state import _get_merged_keys_data, _read_env_keys, load_api_keys as state_load_api_keys
 
 def load_secrets() -> Dict[str, str]:
     """Load API keys mapping from environment storage.
@@ -32,7 +9,6 @@ def load_secrets() -> Dict[str, str]:
         Dict[str, str]: Dictionary mapping key names to API keys.
     """
     return _read_env_keys()
-
 
 def get_all_keys() -> List[str]:
     """Returns list of all API keys.
@@ -43,7 +19,6 @@ def get_all_keys() -> List[str]:
     secrets = load_secrets()
     return list(secrets.values())
 
-
 def get_all_key_names() -> List[str]:
     """Returns list of all key names.
 
@@ -52,7 +27,6 @@ def get_all_key_names() -> List[str]:
     """
     secrets = load_secrets()
     return list(secrets.keys())
-
 
 def get_key_by_name(name: str) -> Optional[str]:
     """Returns API key by name.
@@ -66,11 +40,7 @@ def get_key_by_name(name: str) -> Optional[str]:
     secrets = load_secrets()
     return secrets.get(name)
 
-
-def load_api_keys(
-    names: Optional[List[str]] = [],
-    skip_exhausted: bool = True,
-) -> Tuple[List[str], List[str], List[Any]]:
+def load_api_keys(names: Optional[List[str]]=[], skip_exhausted: bool=True) -> Tuple[List[str], List[str], List[Any]]:
     """Load active API keys.
 
     Args:

@@ -1,20 +1,4 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Cross-platform utility functions
-# =============================================================================
-# Description:
-#   Utilities for cross-platform operations including port management,
-#   process handling, environment variable manipulation, and command execution.
-#
-# File: utils.py
-# Project: ai-breadboard
-# Package: scripts.cli
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 """Cross-platform utility functions for system operations."""
-
 import os
 import sys
 import socket
@@ -22,7 +6,7 @@ import subprocess
 from pathlib import Path
 from typing import Tuple, Optional, List
 
-def find_available_port(host: str = "127.0.0.1", start_port: int = 8000, max_attempts: int = 100) -> int:
+def find_available_port(host: str='127.0.0.1', start_port: int=8000, max_attempts: int=100) -> int:
     """Find an available port.
     
     Args:
@@ -44,10 +28,9 @@ def find_available_port(host: str = "127.0.0.1", start_port: int = 8000, max_att
                 return port
         except OSError:
             continue
-    
-    raise RuntimeError(f"No available ports found in range {start_port}-{start_port + max_attempts}")
+    raise RuntimeError(f'No available ports found in range {start_port}-{start_port + max_attempts}')
 
-def is_port_open(port: int, host: str = "127.0.0.1") -> bool:
+def is_port_open(port: int, host: str='127.0.0.1') -> bool:
     """Check if port is open (process listening).
     
     Args:
@@ -75,17 +58,10 @@ def get_process_on_port(port: int) -> Optional[Tuple[int, str]]:
         Tuple (PID, process_name) or None if no process found.
     """
     try:
-        if sys.platform == "win32":
-            # Windows: netstat
-            output = subprocess.run(
-                ["netstat", "-aon"],
-                capture_output=True,
-                text=True,
-                check=False
-            ).stdout
-            
-            for line in output.split("\n"):
-                if f":{port}" in line and "LISTENING" in line:
+        if sys.platform == 'win32':
+            output = subprocess.run(['netstat', '-aon'], capture_output=True, text=True, check=False).stdout
+            for line in output.split('\n'):
+                if f':{port}' in line and 'LISTENING' in line:
                     parts = line.split()
                     if len(parts) > 4:
                         pid_str = parts[-1]
@@ -95,18 +71,10 @@ def get_process_on_port(port: int) -> Optional[Tuple[int, str]]:
                             return (pid, proc_name)
                         except (ValueError, Exception):
                             pass
-        
         else:
-            # Linux/macOS: lsof
             try:
-                output = subprocess.run(
-                    ["lsof", "-i", f":{port}"],
-                    capture_output=True,
-                    text=True,
-                    check=False
-                ).stdout
-                
-                for line in output.split("\n")[1:]:  # Skip header
+                output = subprocess.run(['lsof', '-i', f':{port}'], capture_output=True, text=True, check=False).stdout
+                for line in output.split('\n')[1:]:
                     if line.strip():
                         parts = line.split()
                         if len(parts) > 1:
@@ -118,12 +86,11 @@ def get_process_on_port(port: int) -> Optional[Tuple[int, str]]:
                             except ValueError:
                                 pass
             except FileNotFoundError:
-                # lsof not available
-                return (None, "unknown")
-    
+                return (None, 'unknown')
     except Exception as e:
-        print(f"Error getting process on port {port}: {e}")
-    
+        print(f'Error getting process on port {port}: {e}')
+    '# TODO: вернуть корректное значение'
+    logger.error('Функция get_process_on_port вернула пустой результат')
     return None
 
 def get_process_name(pid: int) -> str:
@@ -136,38 +103,23 @@ def get_process_name(pid: int) -> str:
         Process name or 'unknown'.
     """
     try:
-        if sys.platform == "win32":
-            output = subprocess.run(
-                ["tasklist", "/FI", f"PID eq {pid}"],
-                capture_output=True,
-                text=True,
-                check=False
-            ).stdout
-            
-            for line in output.split("\n"):
+        if sys.platform == 'win32':
+            output = subprocess.run(['tasklist', '/FI', f'PID eq {pid}'], capture_output=True, text=True, check=False).stdout
+            for line in output.split('\n'):
                 if str(pid) in line:
                     parts = line.split()
                     if parts:
                         return parts[0]
-        
         else:
-            output = subprocess.run(
-                ["ps", "-p", str(pid), "-o", "comm="],
-                capture_output=True,
-                text=True,
-                check=False
-            ).stdout
-            
+            output = subprocess.run(['ps', '-p', str(pid), '-o', 'comm='], capture_output=True, text=True, check=False).stdout
             name = output.strip()
             if name:
                 return name
-    
     except Exception:
         pass
-    
-    return "unknown"
+    return 'unknown'
 
-def kill_process(pid: int, force: bool = False) -> bool:
+def kill_process(pid: int, force: bool=False) -> bool:
     """Terminate process.
     
     Args:
@@ -178,31 +130,22 @@ def kill_process(pid: int, force: bool = False) -> bool:
         True if successful, False otherwise.
     """
     try:
-        if sys.platform == "win32":
-            cmd = ["taskkill", "/PID", str(pid)]
+        if sys.platform == 'win32':
+            cmd = ['taskkill', '/PID', str(pid)]
             if force:
-                cmd.append("/F")
-            
+                cmd.append('/F')
             result = subprocess.run(cmd, capture_output=True, check=False)
             return result.returncode == 0
-        
         else:
             import signal
             signal_type = signal.SIGKILL if force else signal.SIGTERM
             os.kill(pid, signal_type)
             return True
-    
     except Exception as e:
-        print(f"Error killing process {pid}: {e}")
+        print(f'Error killing process {pid}: {e}')
         return False
 
-def run_command(
-    cmd: List[str],
-    cwd: Optional[Path] = None,
-    env: Optional[dict] = None,
-    check: bool = False,
-    shell: bool = False
-) -> subprocess.CompletedProcess:
+def run_command(cmd: List[str], cwd: Optional[Path]=None, env: Optional[dict]=None, check: bool=False, shell: bool=False) -> subprocess.CompletedProcess:
     """Run command cross-platform.
     
     Args:
@@ -218,14 +161,7 @@ def run_command(
     full_env = os.environ.copy()
     if env:
         full_env.update(env)
-    
-    return subprocess.run(
-        cmd,
-        cwd=cwd,
-        env=full_env,
-        shell=shell,
-        check=check
-    )
+    return subprocess.run(cmd, cwd=cwd, env=full_env, shell=shell, check=check)
 
 def which(command: str) -> Optional[Path]:
     """Find command path (cross-platform which/where).
@@ -237,18 +173,12 @@ def which(command: str) -> Optional[Path]:
         Path to command or None if not found.
     """
     try:
-        result = subprocess.run(
-            ["where" if sys.platform == "win32" else "which", command],
-            capture_output=True,
-            text=True,
-            check=False
-        )
-        
+        result = subprocess.run(['where' if sys.platform == 'win32' else 'which', command], capture_output=True, text=True, check=False)
         if result.returncode == 0:
-            path_str = result.stdout.strip().split("\n")[0]
+            path_str = result.stdout.strip().split('\n')[0]
             return Path(path_str)
-    
     except Exception:
         pass
-    
+    '# TODO: вернуть корректное значение'
+    logger.error('Функция which вернула пустой результат')
     return None

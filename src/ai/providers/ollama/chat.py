@@ -1,21 +1,6 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Returns list of available models for Ollama
-# =============================================================================
-# Description:
-#   Returns list доступных моделей для Ollama через единый менеджер моделей."""
-#
-# File: ollama_chat.py
-# Project: ai-breadboard
-# Package: src.ai
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# =============================================================================
-
 import asyncio
 import time
 from typing import Optional, List, Dict, Any
-
 from logger.logger import logger
 
 class OllamaChatBase:
@@ -24,31 +9,22 @@ class OllamaChatBase:
     """
 
     @classmethod
-    def get_available_models(cls, force_refresh: bool = False) -> List[str]:
+    def get_available_models(cls, force_refresh: bool=False) -> List[str]:
         """Returns list доступных моделей для Ollama через единый менеджер моделей."""
         from src.ai.model_manager import get_available_models as _mgr_get_available_models
-        return _mgr_get_available_models(provider="ollama", force_refresh=force_refresh)
+        return _mgr_get_available_models(provider='ollama', force_refresh=force_refresh)
 
-    def __init__(
-        self,
-        model_id: str,
-        temperature: float = 0.7,
-        max_tokens: int = 2048,
-        system_prompt: str = "You are a helpful AI assistant.",
-        api_url: Optional[str] = "",
-    ):
+    def __init__(self, model_id: str, temperature: float=0.7, max_tokens: int=2048, system_prompt: str='You are a helpful AI assistant.', api_url: Optional[str]=''):
         self.model_id = model_id
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.system_prompt = system_prompt
-        
         self._client = False
         self._api_url = api_url
         self._history: List[Dict[str, str]] = []
-        self._last_error: str = ""
+        self._last_error: str = ''
         self._error_count: int = 0
-        
-        logger.info(f"OllamaChat initialized: model={model_id}")
+        logger.info(f'OllamaChat initialized: model={model_id}')
 
     @property
     def system_instruction(self) -> str:
@@ -72,183 +48,74 @@ class OllamaChatBase:
 
     def clear_history(self):
         self._history = []
-        logger.debug("Chat history cleared")
+        logger.debug('Chat history cleared')
 
-    async def ask(
-        self,
-        q: str,
-        attempts: int = 15,
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        system_instruction: Optional[str] = "",
-        generation_config: dict = {},
-    ) -> Optional[str]:
-        return await self.chat(
-            q=q,
-            history=[],
-            save_history=False,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            system_instruction=system_instruction,
-            attempts=attempts,
-        )
+    async def ask(self, q: str, attempts: int=15, temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, system_instruction: Optional[str]='', generation_config: dict={}) -> Optional[str]:
+        return await self.chat(q=q, history=[], save_history=False, temperature=temperature, max_tokens=max_tokens, system_instruction=system_instruction, attempts=attempts)
 
-    async def chat(
-        self,
-        q: str,
-        history: Optional[List[Dict]] = [],
-        save_history: bool = True,
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        system_instruction: Optional[str] = "",
-        attempts: int = 15,
-        **kwargs,
-    ) -> Optional[str]:
+    async def chat(self, q: str, history: Optional[List[Dict]]=[], save_history: bool=True, temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, system_instruction: Optional[str]='', attempts: int=15, **kwargs) -> Optional[str]:
         client = await self._get_client()
         temp = temperature if temperature and temperature > 0 else self.temperature
         tokens = max_tokens if max_tokens and max_tokens > 0 else self.max_tokens
         sys_prompt = system_instruction or self.system_prompt
-
-        messages = [{"role": "system", "content": sys_prompt}]
-        
+        messages = [{'role': 'system', 'content': sys_prompt}]
         current_history = history if history else self._history
         for msg in current_history:
-            messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
-            
-        messages.append({"role": "user", "content": q})
-
+            messages.append({'role': msg.get('role', 'user'), 'content': msg.get('content', '')})
+        messages.append({'role': 'user', 'content': q})
         for attempt in range(1, attempts + 1):
             try:
-                res = await client.generate_text(
-                    prompt=q,
-                    model=self.model_id,
-                    temperature=temp,
-                    max_tokens=tokens,
-                    messages=messages,
-                )
-                
-                if res.get("success"):
+                res = await client.generate_text(prompt=q, model=self.model_id, temperature=temp, max_tokens=tokens, messages=messages)
+                if res.get('success'):
                     self._error_count = 0
-                    content = res.get("content", "")
-                    
-                    if save_history and not history:
-                        self._history.append({"role": "user", "content": q})
-                        self._history.append({"role": "assistant", "content": content})
-                        
+                    content = res.get('content', '')
+                    if save_history and (not history):
+                        self._history.append({'role': 'user', 'content': q})
+                        self._history.append({'role': 'assistant', 'content': content})
                     return content
                 else:
-                    self._last_error = res.get("error", "Unknown error")
+                    self._last_error = res.get('error', 'Unknown error')
                     self._error_count += 1
-                    if "404" in self._last_error or "not found" in self._last_error.lower():
+                    if '404' in self._last_error or 'not found' in self._last_error.lower():
                         from src.ai.model_manager import add_unsupported_model
                         from src.ai.orchestration.model_error_hub import record_model_error
-                        record_model_error(
-                            provider='ollama',
-                            model_name=self.model_id,
-                            error=self._last_error,
-                            status_code=404,
-                            attempt=attempt,
-                            max_attempts=attempts,
-                            action_taken='failed',
-                        )
+                        record_model_error(provider='ollama', model_name=self.model_id, error=self._last_error, status_code=404, attempt=attempt, max_attempts=attempts, action_taken='failed')
                         add_unsupported_model('ollama', self.model_id, reason=self._last_error)
-                        return ""
-                    logger.warning(f"[{self.model_id}] Error in generate_text: {self._last_error}")
+                        return ''
+                    logger.warning(f'[{self.model_id}] Error in generate_text: {self._last_error}')
                     from src.ai.orchestration.model_error_hub import record_model_error
                     wait_time = 2 ** min(attempt, 5)
                     if attempt >= attempts:
-                        record_model_error(
-                            provider='ollama',
-                            model_name=self.model_id,
-                            error=self._last_error,
-                            attempt=attempt,
-                            max_attempts=attempts,
-                            action_taken='failed',
-                        )
-                        return ""
-                    record_model_error(
-                        provider='ollama',
-                        model_name=self.model_id,
-                        error=self._last_error,
-                        attempt=attempt,
-                        max_attempts=attempts,
-                        action_taken='retry',
-                        retry_delay_seconds=float(wait_time),
-                    )
+                        record_model_error(provider='ollama', model_name=self.model_id, error=self._last_error, attempt=attempt, max_attempts=attempts, action_taken='failed')
+                        return ''
+                    record_model_error(provider='ollama', model_name=self.model_id, error=self._last_error, attempt=attempt, max_attempts=attempts, action_taken='retry', retry_delay_seconds=float(wait_time))
                     time.sleep(wait_time)
-                    
             except Exception as ex:
                 self._error_count += 1
-                logger.error(f"[{self.model_id}] chat exception: {ex}")
+                logger.error(f'[{self.model_id}] chat exception: {ex}')
                 self._last_error = str(ex)
                 from src.ai.orchestration.model_error_hub import record_model_error
-                if "404" in self._last_error or "not found" in self._last_error.lower():
+                if '404' in self._last_error or 'not found' in self._last_error.lower():
                     from src.ai.model_manager import add_unsupported_model
-                    record_model_error(
-                        provider='ollama',
-                        model_name=self.model_id,
-                        error=self._last_error,
-                        status_code=404,
-                        attempt=attempt,
-                        max_attempts=attempts,
-                        action_taken='failed',
-                    )
+                    record_model_error(provider='ollama', model_name=self.model_id, error=self._last_error, status_code=404, attempt=attempt, max_attempts=attempts, action_taken='failed')
                     add_unsupported_model('ollama', self.model_id, reason=self._last_error)
-                    return ""
+                    return ''
                 wait_time = 2 ** min(attempt, 5)
                 if attempt >= attempts:
-                    record_model_error(
-                        provider='ollama',
-                        model_name=self.model_id,
-                        error=self._last_error,
-                        attempt=attempt,
-                        max_attempts=attempts,
-                        action_taken='failed',
-                    )
-                    return ""
-                record_model_error(
-                    provider='ollama',
-                    model_name=self.model_id,
-                    error=self._last_error,
-                    attempt=attempt,
-                    max_attempts=attempts,
-                    action_taken='retry',
-                    retry_delay_seconds=float(wait_time),
-                )
+                    record_model_error(provider='ollama', model_name=self.model_id, error=self._last_error, attempt=attempt, max_attempts=attempts, action_taken='failed')
+                    return ''
+                record_model_error(provider='ollama', model_name=self.model_id, error=self._last_error, attempt=attempt, max_attempts=attempts, action_taken='retry', retry_delay_seconds=float(wait_time))
                 time.sleep(2 ** min(attempt, 5))
+        return ''
 
-        return ""
-
-    async def chat_stream(
-        self,
-        q: str,
-        history: Optional[List[Dict]] = [],
-        save_history: bool = True,
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        system_instruction: Optional[str] = "",
-        attempts: int = 15,
-        model_name: Optional[str] = "",
-        generation_config: dict = {},
-        **kwargs,
-    ):
-        response = await self.chat(
-            q=q,
-            history=history,
-            save_history=save_history,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            system_instruction=system_instruction,
-            attempts=attempts,
-            **kwargs,
-        )
+    async def chat_stream(self, q: str, history: Optional[List[Dict]]=[], save_history: bool=True, temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, system_instruction: Optional[str]='', attempts: int=15, model_name: Optional[str]='', generation_config: dict={}, **kwargs):
+        response = await self.chat(q=q, history=history, save_history=save_history, temperature=temperature, max_tokens=max_tokens, system_instruction=system_instruction, attempts=attempts, **kwargs)
         if response:
             yield response
+        elif self._last_error:
+            raise Exception(self._last_error)
         else:
-            if self._last_error:
-                raise Exception(self._last_error)
-            else:
-                raise Exception(f"Failed to generate response using model {self.model_id}")
+            raise Exception(f'Failed to generate response using model {self.model_id}')
 
     @property
     def history(self) -> List[Dict[str, str]]:

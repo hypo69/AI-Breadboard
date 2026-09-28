@@ -1,28 +1,10 @@
-# -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: Google Gemini Provider Adapter
-# =============================================================================
-# Description:
-#   Wraps GoogleGenerativeAI into the unified BaseChatProvider interface.
-#   Implements streaming (chat_stream), single ask, multi-turn chat,
-#   model management and quota tracking for Gemini models.
-#
-# File: chat.py
-# Package: src.ai.providers.gemini
-# Author: hypo69
-# Copyright: (c) 2026 hypo69
-# =============================================================================
-
 """Google Gemini provider adapter for streaming and non-streaming chat."""
-
 import os
 from typing import Any, AsyncGenerator, AsyncIterator, Dict, List, Optional, Set
-
 from src.ai.providers.base import BaseChatProvider
 from src.ai.gemini.api import GoogleGenerativeAI
 from src.ai.gemini.generative_ai import _DEFAULT_MODEL
 from logger import logger
-
 
 class GeminiChatBase(BaseChatProvider):
     """Provider adapter for Google Gemini Generative AI models.
@@ -38,7 +20,7 @@ class GeminiChatBase(BaseChatProvider):
     """
 
     @classmethod
-    def get_available_models(cls, force_refresh: bool = False) -> List[str]:
+    def get_available_models(cls, force_refresh: bool=False) -> List[str]:
         """Retrieve list of available models for Gemini provider.
 
         Args:
@@ -48,7 +30,7 @@ class GeminiChatBase(BaseChatProvider):
             List[str]: List of available Gemini model identifiers.
         """
         from src.ai.model_manager import get_available_models as _mgr_get_available_models
-        return _mgr_get_available_models(provider="gemini", force_refresh=force_refresh)
+        return _mgr_get_available_models(provider='gemini', force_refresh=force_refresh)
 
     @classmethod
     def normalize_model_id(cls, model_id: str) -> str:
@@ -60,36 +42,24 @@ class GeminiChatBase(BaseChatProvider):
         Returns:
             str: Normalized model identifier without provider prefix.
         """
-        actual = (model_id or "").strip()
-        if actual.startswith("gemini:"):
+        actual = (model_id or '').strip()
+        if actual.startswith('gemini:'):
             actual = actual[7:]
-        elif actual.startswith("models/"):
+        elif actual.startswith('models/'):
             actual = actual[7:]
         return actual or _DEFAULT_MODEL
 
     @classmethod
     def get_capabilities(cls) -> Set[str]:
         """Return capabilities supported by Gemini."""
-        return {"chat", "vision", "code", "embedding", "image_generation"}
+        return {'chat', 'vision', 'code', 'embedding', 'image_generation'}
 
     @classmethod
     def is_available(cls) -> bool:
         """Check if Gemini API keys are configured."""
-        return bool(
-            os.environ.get("GEMINI_API_KEY_1")
-            or os.environ.get("GEMINI_API_KEY")
-            or os.environ.get("GEMINI_API_KEY_NAMES")
-        )
+        return bool(os.environ.get('GEMINI_API_KEY_1') or os.environ.get('GEMINI_API_KEY') or os.environ.get('GEMINI_API_KEY_NAMES'))
 
-    def __init__(
-        self,
-        model_id: str = "",
-        system_prompt: str = "",
-        api_key_names: Optional[List[str]] = None,
-        model_name: str = "",
-        system_instruction: str = "",
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, model_id: str='', system_prompt: str='', api_key_names: Optional[List[str]]=None, model_name: str='', system_instruction: str='', **kwargs: Any) -> None:
         """Initialize Google Gemini chat provider adapter.
 
         Args:
@@ -102,22 +72,14 @@ class GeminiChatBase(BaseChatProvider):
         """
         raw_id = model_id or model_name or _DEFAULT_MODEL
         self._model_id: str = self.normalize_model_id(raw_id)
-        self._system_prompt: str = system_prompt or system_instruction or ""
+        self._system_prompt: str = system_prompt or system_instruction or ''
         self.history: List[Dict[str, Any]] = []
-
         active_key_names = api_key_names
         if not active_key_names:
-            env_key_names = [n.strip() for n in os.getenv("GEMINI_API_KEY_NAMES", "").split(",") if n.strip()]
+            env_key_names = [n.strip() for n in os.getenv('GEMINI_API_KEY_NAMES', '').split(',') if n.strip()]
             if env_key_names:
                 active_key_names = env_key_names
-
-        self.model = GoogleGenerativeAI(
-            api_key_names=active_key_names or [],
-            system_instruction=self._system_prompt,
-            model_name=self._model_id,
-            sleep_on_exhausted=False,
-            **kwargs,
-        )
+        self.model = GoogleGenerativeAI(api_key_names=active_key_names or [], system_instruction=self._system_prompt, model_name=self._model_id, sleep_on_exhausted=False, **kwargs)
 
     @property
     def model_id(self) -> str:
@@ -129,7 +91,7 @@ class GeminiChatBase(BaseChatProvider):
         """Set and normalize model identifier."""
         normalized = self.normalize_model_id(val)
         self._model_id = normalized
-        if hasattr(self.model, "model_name"):
+        if hasattr(self.model, 'model_name'):
             self.model.model_name = normalized
 
     @property
@@ -150,8 +112,8 @@ class GeminiChatBase(BaseChatProvider):
     @system_instruction.setter
     def system_instruction(self, val: str) -> None:
         """Set system instruction on adapter and underlying model."""
-        self._system_prompt = val or ""
-        if hasattr(self.model, "system_instruction"):
+        self._system_prompt = val or ''
+        if hasattr(self.model, 'system_instruction'):
             self.model.system_instruction = self._system_prompt
 
     @property
@@ -167,23 +129,15 @@ class GeminiChatBase(BaseChatProvider):
     @property
     def api_key(self) -> str:
         """Get active API key from underlying model."""
-        return getattr(self.model, "api_key", "") or ""
+        return getattr(self.model, 'api_key', '') or ''
 
     def clear_history(self) -> None:
         """Clear local dialogue history."""
         self.history = []
-        if hasattr(self.model, "clear_history"):
+        if hasattr(self.model, 'clear_history'):
             self.model.clear_history()
 
-    async def ask(
-        self,
-        q: str,
-        attempts: int = 15,
-        system_instruction: Optional[str] = "",
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        **kwargs: Any,
-    ) -> Optional[str]:
+    async def ask(self, q: str, attempts: int=15, system_instruction: Optional[str]='', temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, **kwargs: Any) -> Optional[str]:
         """Send a single-turn prompt to Gemini model.
 
         Args:
@@ -198,38 +152,19 @@ class GeminiChatBase(BaseChatProvider):
             Optional[str]: Generated response text.
         """
         if not q or not q.strip():
-            return ""
-
-        gen_cfg: Dict[str, Any] = dict(kwargs.pop("generation_config", {}))
+            return ''
+        gen_cfg: Dict[str, Any] = dict(kwargs.pop('generation_config', {}))
         if temperature:
-            gen_cfg["temperature"] = temperature
+            gen_cfg['temperature'] = temperature
         if max_tokens:
-            gen_cfg["max_output_tokens"] = max_tokens
-
-        eff_inst = system_instruction or self._system_prompt or ""
-        if eff_inst and hasattr(self.model, "system_instruction"):
+            gen_cfg['max_output_tokens'] = max_tokens
+        eff_inst = system_instruction or self._system_prompt or ''
+        if eff_inst and hasattr(self.model, 'system_instruction'):
             self.model.system_instruction = eff_inst
+        kwargs.pop('model_name', None)
+        return await self.model.ask(q=q, attempts=attempts, generation_config=gen_cfg, **kwargs)
 
-        kwargs.pop("model_name", None)
-
-        return await self.model.ask(
-            q=q,
-            attempts=attempts,
-            generation_config=gen_cfg,
-            **kwargs,
-        )
-
-    async def chat(
-        self,
-        q: str,
-        history: Optional[List[Dict[str, Any]]] = None,
-        system_instruction: Optional[str] = "",
-        save_history: bool = True,
-        attempts: int = 15,
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        **kwargs: Any,
-    ) -> str:
+    async def chat(self, q: str, history: Optional[List[Dict[str, Any]]]=None, system_instruction: Optional[str]='', save_history: bool=True, attempts: int=15, temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, **kwargs: Any) -> str:
         """Send chat request with dialogue context.
 
         Args:
@@ -246,36 +181,17 @@ class GeminiChatBase(BaseChatProvider):
             str: Full response text.
         """
         if not q or not q.strip():
-            return ""
-
+            return ''
         chunks: List[str] = []
-        async for chunk in self.chat_stream(
-            q=q,
-            history=history,
-            system_instruction=system_instruction,
-            attempts=attempts,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs,
-        ):
+        async for chunk in self.chat_stream(q=q, history=history, system_instruction=system_instruction, attempts=attempts, temperature=temperature, max_tokens=max_tokens, **kwargs):
             chunks.append(chunk)
-
-        ans = "".join(chunks)
+        ans = ''.join(chunks)
         if save_history and ans:
-            self.history.append({"role": "user", "content": q})
-            self.history.append({"role": "model", "content": ans})
+            self.history.append({'role': 'user', 'content': q})
+            self.history.append({'role': 'model', 'content': ans})
         return ans
 
-    async def chat_stream(
-        self,
-        q: str,
-        history: Optional[List[Dict[str, Any]]] = None,
-        system_instruction: Optional[str] = "",
-        attempts: int = 15,
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        **kwargs: Any,
-    ) -> AsyncGenerator[str, None]:
+    async def chat_stream(self, q: str, history: Optional[List[Dict[str, Any]]]=None, system_instruction: Optional[str]='', attempts: int=15, temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, **kwargs: Any) -> AsyncGenerator[str, None]:
         """Stream response chunks from Gemini model in real-time.
 
         Args:
@@ -292,37 +208,18 @@ class GeminiChatBase(BaseChatProvider):
         """
         if not q or not q.strip():
             return
-
-        gen_cfg: Dict[str, Any] = dict(kwargs.pop("generation_config", {}))
+        gen_cfg: Dict[str, Any] = dict(kwargs.pop('generation_config', {}))
         if temperature:
-            gen_cfg["temperature"] = temperature
+            gen_cfg['temperature'] = temperature
         if max_tokens:
-            gen_cfg["max_output_tokens"] = max_tokens
-
-        eff_inst = system_instruction or self._system_prompt or ""
+            gen_cfg['max_output_tokens'] = max_tokens
+        eff_inst = system_instruction or self._system_prompt or ''
         effective_history = history if history is not None else self.history
-        model_name = kwargs.pop("model_name", None) or self._model_id
-
-        async for chunk in self.model.chat_stream(
-            q=q,
-            history=effective_history,
-            system_instruction=eff_inst,
-            attempts=attempts,
-            model_name=model_name,
-            generation_config=gen_cfg,
-            **kwargs,
-        ):
+        model_name = kwargs.pop('model_name', None) or self._model_id
+        async for chunk in self.model.chat_stream(q=q, history=effective_history, system_instruction=eff_inst, attempts=attempts, model_name=model_name, generation_config=gen_cfg, **kwargs):
             yield chunk
 
-    async def stream_chat(
-        self,
-        q: str,
-        attempts: int = 15,
-        temperature: Optional[float] = 0.0,
-        max_tokens: Optional[int] = 0,
-        history: Optional[List[Dict[str, Any]]] = None,
-        **kwargs: Any,
-    ) -> AsyncIterator[str]:
+    async def stream_chat(self, q: str, attempts: int=15, temperature: Optional[float]=0.0, max_tokens: Optional[int]=0, history: Optional[List[Dict[str, Any]]]=None, **kwargs: Any) -> AsyncIterator[str]:
         """Stream response chunks (BaseChatProvider interface alias).
 
         Args:
@@ -336,17 +233,9 @@ class GeminiChatBase(BaseChatProvider):
         Yields:
             str: Response chunks.
         """
-        async for chunk in self.chat_stream(
-            q=q,
-            history=history,
-            attempts=attempts,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs,
-        ):
+        async for chunk in self.chat_stream(q=q, history=history, attempts=attempts, temperature=temperature, max_tokens=max_tokens, **kwargs):
             yield chunk
 
     async def close(self) -> None:
         """Close client sessions and clean up resources."""
         pass
-
