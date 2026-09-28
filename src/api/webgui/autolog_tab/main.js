@@ -22,24 +22,24 @@
 
   // Preset intervals for quick selection
   const INTERVAL_PRESETS = [
-    { label: '5 сек (5 seconds)', value: '5 seconds' },
-    { label: '10 сек (10 seconds)', value: '10 seconds' },
-    { label: '30 сек (30 seconds)', value: '30 seconds' },
-    { label: '1 мин (1 minute)', value: '1 minute' },
-    { label: '5 мин (5 minutes)', value: '5 minutes' },
-    { label: '10 мин (10 minutes)', value: '10 minutes' },
-    { label: '30 мин (30 minutes)', value: '30 minutes' },
-    { label: '1 час (1 hour)', value: '1 hour' },
-    { label: '6 часов (6 hours)', value: '6 hours' },
-    { label: '24 часа (24 hours)', value: '24 hours' },
-    { label: '1 день (1 day)', value: '1 day' },
-    { label: '7 дней (7 days)', value: '7 days' },
+    { label: i18n.t('auto_5_5_seconds__12fa31'), value: '5 seconds' },
+    { label: i18n.t('auto_10_10_seconds__b7ff71'), value: '10 seconds' },
+    { label: i18n.t('auto_30_30_seconds__864959'), value: '30 seconds' },
+    { label: i18n.t('auto_1_1_minute__23e767'), value: '1 minute' },
+    { label: i18n.t('auto_5_5_minutes__dd04a6'), value: '5 minutes' },
+    { label: i18n.t('auto_10_10_minutes__1cc423'), value: '10 minutes' },
+    { label: i18n.t('auto_30_30_minutes__3de0be'), value: '30 minutes' },
+    { label: i18n.t('auto_1_1_hour__11fe13'), value: '1 hour' },
+    { label: i18n.t('auto_6_6_hours__adbf32'), value: '6 hours' },
+    { label: i18n.t('auto_24_24_hours__112209'), value: '24 hours' },
+    { label: i18n.t('auto_1_1_day__71f9fc'), value: '1 day' },
+    { label: i18n.t('auto_7_7_days__152f62'), value: '7 days' },
   ];
 
   // App readable metadata (icons and titles)
   const APP_META = {
-    system_inspector: { icon: '🖥️', title: 'System Inspector (Потребление ресурсов)' },
-    hardware_monitor: { icon: '⚡', title: 'Hardware Sensors (Датчики оборудования)' },
+    system_inspector: { icon: '🖥️', title: i18n.t('auto_system_inspector__53c369') },
+    hardware_monitor: { icon: '⚡', title: i18n.t('auto_hardware_sensors__e193a8') },
     librehardwaremonitor: { icon: '🌡️', title: 'LibreHardwareMonitor API' },
     website_monitor: { icon: '🌐', title: 'Website Intelligence & Heartbeat' },
     gcloud_monitor: { icon: '☁️', title: 'Google Cloud Observability' },
@@ -58,15 +58,15 @@
 
   // Sensor metadata
   const SENSOR_META = {
-    cpu: { icon: '🧠', title: 'Процессор (CPU)', allMetrics: ['temperature', 'load', 'clocks', 'voltage', 'power'] },
-    gpu: { icon: '🎮', title: 'Видеокарта (GPU)', allMetrics: ['temperature', 'load', 'memory', 'power', 'fan', 'clocks'] },
-    ram: { icon: '🖹', title: 'Оперативная память (RAM)', allMetrics: ['usage', 'swap', 'available', 'total'] },
-    disk: { icon: '💽', title: 'Дисковая подсистема (Disk)', allMetrics: ['usage', 'io', 'read_bytes', 'write_bytes', 'queue_length'] },
-    network: { icon: '🌐', title: 'Сетевой интерфейс (Network)', allMetrics: ['throughput', 'connections', 'bytes_sent', 'bytes_recv', 'errors'] },
-    sensors: { icon: '🌡️', title: 'Сенсоры LHM / WMI', allMetrics: ['temperature', 'fan', 'voltage', 'power', 'control'] },
-    internet: { icon: '🚀', title: 'Интернет-канал (Speed/Ping)', allMetrics: ['ping', 'download', 'upload', 'dns', 'jitter'] },
-    storage: { icon: '💾', title: 'Здоровье дисков (S.M.A.R.T.)', allMetrics: ['smart_attributes', 'temperature', 'wear_level', 'health_status'] },
-    device_flapping: { icon: '🔌', title: 'Дребезг устройств (Flapping)', allMetrics: ['connect_events', 'disconnect_events', 'flapping_count'] },
+    cpu: { icon: '🧠', title: i18n.t('auto__cpu__acaa88'), allMetrics: ['temperature', 'load', 'clocks', 'voltage', 'power'] },
+    gpu: { icon: '🎮', title: i18n.t('auto__gpu__19d6a3'), allMetrics: ['temperature', 'load', 'memory', 'power', 'fan', 'clocks'] },
+    ram: { icon: '🖹', title: i18n.t('auto__ram__d953a0'), allMetrics: ['usage', 'swap', 'available', 'total'] },
+    disk: { icon: '💽', title: i18n.t('auto__disk__d92824'), allMetrics: ['usage', 'io', 'read_bytes', 'write_bytes', 'queue_length'] },
+    network: { icon: '🌐', title: i18n.t('auto__network__4e8e9f'), allMetrics: ['throughput', 'connections', 'bytes_sent', 'bytes_recv', 'errors'] },
+    sensors: { icon: '🌡️', title: i18n.t('auto__lhm_wmi_52ae11'), allMetrics: ['temperature', 'fan', 'voltage', 'power', 'control'] },
+    internet: { icon: '🚀', title: i18n.t('auto__speed_ping__62e3ab'), allMetrics: ['ping', 'download', 'upload', 'dns', 'jitter'] },
+    storage: { icon: '💾', title: i18n.t('auto__s_m_a_r_t__c424e7'), allMetrics: ['smart_attributes', 'temperature', 'wear_level', 'health_status'] },
+    device_flapping: { icon: '🔌', title: i18n.t('auto__flapping__8cb276'), allMetrics: ['connect_events', 'disconnect_events', 'flapping_count'] },
   };
 
   // State
@@ -150,7 +150,7 @@
       renderSensorsCards();
       renderTelemetryOptions();
     } catch (err) {
-      console.error('[AutoLogTab] Ошибка загрузки статуса/конфигурации:', err);
+      console.error(i18n.t('auto__autologtab__61f232'), err);
       showToast(`Ошибка загрузки данных: ${err.message}`, 'danger');
     }
   }
@@ -167,10 +167,10 @@
     if (badge && badgeText) {
       if (isRunning) {
         badge.className = 'badge bg-success d-flex align-items-center gap-1.5 px-3 py-2 fs-6 shadow-sm';
-        badgeText.textContent = 'Движок активен';
+        badgeText.textContent = i18n.t('auto___6dedf5');
       } else {
         badge.className = 'badge bg-secondary d-flex align-items-center gap-1.5 px-3 py-2 fs-6 shadow-sm';
-        badgeText.textContent = isAutologEnabled ? 'Движок остановлен' : 'Автологгирование выключено';
+        badgeText.textContent = isAutologEnabled ? i18n.t('auto___870dfd') : i18n.t('auto___e0beae');
       }
     }
 
@@ -179,10 +179,10 @@
     const btnToggle = document.getElementById('btn-autolog-toggle-engine');
     if (btnToggleText && btnToggle) {
       if (isRunning) {
-        btnToggleText.textContent = 'Остановить';
+        btnToggleText.textContent = i18n.t('auto___d4f447');
         btnToggle.className = 'btn btn-sm btn-outline-danger d-flex align-items-center gap-1 shadow-sm';
       } else {
-        btnToggleText.textContent = 'Запустить';
+        btnToggleText.textContent = i18n.t('auto___85ab1c');
         btnToggle.className = 'btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-sm';
       }
     }
@@ -216,7 +216,7 @@
       masterSwitch.checked = Boolean(isAutologEnabled);
     }
     if (masterText) {
-      masterText.textContent = isAutologEnabled ? 'Включено' : 'Выключено';
+      masterText.textContent = isAutologEnabled ? i18n.t('auto___2e304a') : i18n.t('auto___d934ae');
       masterText.className = isAutologEnabled ? 'fw-bold text-info' : 'fw-bold text-muted';
     }
   }
@@ -261,11 +261,7 @@
         optionsHtml += `<option value="${preset.value}" ${selected}>${preset.label}</option>`;
       }
       if (isCustom) {
-        optionsHtml += `<option value="${intervalVal}" selected>Пользовательский (${intervalVal})</option>`;
-      }
-
-      html += `
-        <tr data-logger-name="${name}">
+        optionsHtml += `<option value="${intervalVal}i18n.t('auto_selected_intervalval_option_html_tr_data_logger_name__a805ef')${name}">
           <td class="text-center">
             <div class="form-check form-switch d-inline-block mb-0">
               <input class="form-check-input logger-enable-switch" type="checkbox" role="switch"
@@ -297,7 +293,7 @@
           </td>
           <td class="text-center">
             <button class="btn btn-sm btn-outline-info btn-poll-single d-inline-flex align-items-center gap-1"
-                    data-app="${name}" title="Опросить немедленно">
+                    data-app="${name}" title=i18n.t('auto___ea58d3')>
               <i class="bi bi-play-fill"></i>
               <span>Опросить</span>
             </button>
@@ -321,14 +317,7 @@
         if (!appName) return;
 
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
-
-        try {
-          await apiPost(`/api/autolog/poll/${appName}`);
-          showToast(`Опрос логгера '${appName}' успешно выполнен`, 'success');
-          await loadStatusAndConfig();
-        } catch (err) {
-          showToast(`Ошибка опроса '${appName}': ${err.message}`, 'danger');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>i18n.t('auto__try_await_apipost_api_autolog_poll_appname_showtoast__dac15c')${appName}i18n.t('auto___fe7962')successi18n.t('auto__await_loadstatusandconfig_catch_err_showtoast__3f2c52')${appName}': ${err.message}`, 'danger');
         } finally {
           btn.disabled = false;
           btn.innerHTML = '<i class="bi bi-play-fill"></i> <span>Опросить</span>';
@@ -412,14 +401,12 @@
             </div>
 
             <div class="d-flex align-items-center gap-2 my-2">
-              <label class="small text-muted text-nowrap mb-0">Интервал (сек):</label>
-              <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary sensor-interval-input"
+              <label class="small text-muted text-nowrap mb-0i18n.t('auto__label_input_type__79f796')number" class="form-control form-control-sm bg-dark text-white border-secondary sensor-interval-input"
                      data-sensor="${sensorName}" value="${intervalSec}" min="0.1" step="0.5" style="max-width: 90px;">
             </div>
 
             <div class="mt-2">
-              <div class="small text-muted mb-1">Собираемые метрики:</div>
-              <div class="d-flex flex-wrap gap-1">
+              <div class="small text-muted mb-1i18n.t('auto__div_div_class__8bf1c3')d-flex flex-wrap gap-1">
                 ${metricsHtml || '<span class="text-muted small">Метрики не заданы</span>'}
               </div>
             </div>
@@ -562,12 +549,12 @@
     };
 
     try {
-      showToast('Сохранение конфигурации...', 'info');
+      showToast(i18n.t('auto___67b232'), 'info');
       const res = await apiPost('/api/autolog/config', payload);
-      showToast(res.message || 'Конфигурация успешно сохранена!', 'success');
+      showToast(res.message || i18n.t('auto___db37c2'), 'success');
       await loadStatusAndConfig();
     } catch (err) {
-      console.error('[AutoLogTab] Ошибка сохранения:', err);
+      console.error(i18n.t('auto__autologtab__4b42a0'), err);
       showToast(`Ошибка сохранения: ${err.message}`, 'danger');
     }
   }
@@ -579,12 +566,7 @@
     try {
       const [statusRes, configRes] = await Promise.all([
         apiGet('/api/autolog/telemetry/status'),
-        apiGet('/api/autolog/telemetry/config'),
-      ]);
-      _telemetryStatusData = statusRes;
-
-      // Обновление карточки живого статуса
-      const badgeNav = document.getElementById('badge-telemetry-status');
+        apiGet('/api/autolog/telemetry/configi18n.t('auto__telemetrystatusdata_statusres_const_badgenav_document_getelementbyid__4ec2cd')badge-telemetry-status');
       const badgeCard = document.getElementById('svc-status-badge');
       const pidsEl = document.getElementById('svc-info-pids');
       const memEl = document.getElementById('svc-info-memory');
@@ -597,7 +579,7 @@
         badgeNav.className = isRunning ? 'badge bg-success ms-1' : 'badge bg-secondary ms-1';
       }
       if (badgeCard) {
-        badgeCard.textContent = isRunning ? 'Активен (ai-telemetry.exe)' : 'Остановлен';
+        badgeCard.textContent = isRunning ? i18n.t('auto__ai_telemetry_exe__2ffa97') : i18n.t('auto___aa0d25');
         badgeCard.className = isRunning ? 'badge bg-success' : 'badge bg-secondary';
       }
 
@@ -607,12 +589,12 @@
           pidsEl.textContent = list;
           pidsEl.title = list;
         } else {
-          pidsEl.textContent = 'Не запущен';
+          pidsEl.textContent = i18n.t('auto___99334f');
         }
       }
 
       if (memEl) {
-        memEl.textContent = isRunning ? `${statusRes.total_memory_mb} МБ` : '0 МБ';
+        memEl.textContent = isRunning ? `${statusRes.total_memory_mb} МБ` : i18n.t('auto_0__2c95b9');
       }
 
       if (snapEl) {
@@ -625,31 +607,16 @@
       if (schedEl) {
         const sched = statusRes.task_scheduler || {};
         if (sched.installed) {
-          schedEl.innerHTML = `<span class="text-success">Установлено (${sched.state})</span> <small class="text-muted" style="font-size:0.7rem;">[Wake: ${sched.wake_to_run}]</small>`;
+          schedEl.innerHTML = `<span class="text-successi18n.t('auto__sched_state_span_small_class__3c04a6')text-muted" style="font-size:0.7rem;">[Wake: ${sched.wake_to_run}]</small>`;
         } else {
-          schedEl.innerHTML = '<span class="text-muted">Не установлено</span>';
-        }
-      }
-
-      // Заполнение полей формы конфигурации
-      const mode = (configRes.mode || statusRes.mode || 'hybrid').toLowerCase();
+          schedEl.innerHTML = '<span class="text-muted">Не установлено</span>i18n.t('auto__const_mode_configres_mode_statusres_mode__d45e6c')hybrid').toLowerCase();
       const radioMode = document.querySelector(`input[name="telemetryModeRadio"][value="${mode}"]`);
       if (radioMode) radioMode.checked = true;
 
       const fastInt = configRes.interval_seconds || statusRes.interval_seconds || 5.0;
       const inputFast = document.getElementById('cfg-fast-interval');
-      const valFast = document.getElementById('val-fast-interval');
-      if (inputFast) inputFast.value = fastInt;
-      if (valFast) valFast.textContent = `${fastInt}с`;
-
-      const heavyInt = configRes.heavy_interval_seconds || statusRes.heavy_interval_seconds || 60.0;
-      const inputHeavy = document.getElementById('cfg-heavy-interval');
-      const valHeavy = document.getElementById('val-heavy-interval');
-      if (inputHeavy) inputHeavy.value = heavyInt;
-      if (valHeavy) valHeavy.textContent = `${heavyInt}с`;
-
-      const topProcs = configRes.top_processes || statusRes.top_processes || 10;
-      const selTop = document.getElementById('cfg-top-processes');
+      const valFast = document.getElementById('val-fast-intervali18n.t('auto__if_inputfast_inputfast_value_fastint_if_valfast_valfast_textcontent_fastint_const_heavyint_configres_heavy_interval_seconds_statusres_heavy_interval_seconds_60_0_const_inputheavy_document_getelementbyid__880fc5')cfg-heavy-interval');
+      const valHeavy = document.getElementById('val-heavy-intervali18n.t('auto__if_inputheavy_inputheavy_value_heavyint_if_valheavy_valheavy_textcontent_heavyint_const_topprocs_configres_top_processes_statusres_top_processes_10_const_seltop_document_getelementbyid__9ec224')cfg-top-processes');
       if (selTop) selTop.value = String(topProcs);
 
       const hColls = configRes.heavy_collectors || statusRes.heavy_collectors || {};
@@ -663,7 +630,7 @@
       if (swInv) swInv.checked = Boolean(hColls.inventory_wmi ?? false);
 
     } catch (err) {
-      console.warn('[AutoLogTab] Ошибка загрузки статуса службы телеметрии:', err);
+      console.warn(i18n.t('auto__autologtab__8634e6'), err);
     }
   }
 
@@ -689,23 +656,10 @@
         heavy_collectors: hColls,
       };
 
-      showToast('Сохранение параметров телеметрии...', 'info');
+      showToast(i18n.t('auto___6ffa28'), 'info');
       const res = await apiPost('/api/autolog/telemetry/config', payload);
-      showToast(res.message || 'Параметры телеметрии успешно сохранены!', 'success');
-      await loadTelemetryServiceStatusAndConfig();
-    } catch (err) {
-      showToast(`Ошибка сохранения телеметрии: ${err.message}`, 'danger');
-    }
-  }
-
-  async function controlTelemetryService(action) {
-    try {
-      showToast(`Выполняется: ${action}...`, 'info');
-      const res = await apiPost('/api/autolog/telemetry/control', { action });
-      showToast(`Действие '${action}' успешно выполнено!`, 'success');
-      setTimeout(loadTelemetryServiceStatusAndConfig, 1000);
-    } catch (err) {
-      showToast(`Ошибка: ${err.message}`, 'danger');
+      showToast(res.message || i18n.t('auto___e842db'), 'successi18n.t('auto__await_loadtelemetryservicestatusandconfig_catch_err_showtoast_err_message__c39fbd')dangeri18n.t('auto__async_function_controltelemetryservice_action_try_showtoast_action__bd4e9b')info');
+      const res = await apiPost('/api/autolog/telemetry/controli18n.t('auto__action_showtoast__d730b7')${action}i18n.t('auto___7a48e8')successi18n.t('auto__settimeout_loadtelemetryservicestatusandconfig_1000_catch_err_showtoast_err_message__3b3083')danger');
     }
   }
 
@@ -742,20 +696,10 @@
     const inputFast = document.getElementById('cfg-fast-interval');
     if (inputFast) {
       inputFast.addEventListener('input', () => {
-        const valFast = document.getElementById('val-fast-interval');
-        if (valFast) valFast.textContent = `${inputFast.value}с`;
-      });
-    }
-    const inputHeavy = document.getElementById('cfg-heavy-interval');
+        const valFast = document.getElementById('val-fast-intervali18n.t('auto__if_valfast_valfast_textcontent_inputfast_value_const_inputheavy_document_getelementbyid__62f10f')cfg-heavy-interval');
     if (inputHeavy) {
       inputHeavy.addEventListener('input', () => {
-        const valHeavy = document.getElementById('val-heavy-interval');
-        if (valHeavy) valHeavy.textContent = `${inputHeavy.value}с`;
-      });
-    }
-
-    // Toggle Engine button
-    const btnToggle = document.getElementById('btn-autolog-toggle-engine');
+        const valHeavy = document.getElementById('val-heavy-intervali18n.t('auto__if_valheavy_valheavy_textcontent_inputheavy_value_toggle_engine_button_const_btntoggle_document_getelementbyid__178b59')btn-autolog-toggle-engine');
     if (btnToggle) {
       btnToggle.addEventListener('click', async () => {
         btnToggle.disabled = true;
@@ -763,14 +707,10 @@
           const isRunning = _statusData?.running || _configData?.is_running;
           if (isRunning) {
             await apiPost('/api/autolog/stop');
-            showToast('AutoLogEngine успешно остановлен', 'info');
+            showToast(i18n.t('auto_autologengine__1fe2cb'), 'info');
           } else {
             await apiPost('/api/autolog/start');
-            showToast('AutoLogEngine успешно запущен', 'success');
-          }
-          await loadStatusAndConfig();
-        } catch (err) {
-          showToast(`Ошибка: ${err.message}`, 'danger');
+            showToast(i18n.t('auto_autologengine__5742cf'), 'successi18n.t('auto__await_loadstatusandconfig_catch_err_showtoast_err_message__49ea54')danger');
         } finally {
           btnToggle.disabled = false;
         }
@@ -784,11 +724,7 @@
         btnPollAll.disabled = true;
         btnPollAll.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Опрос...';
         try {
-          const res = await apiPost('/api/autolog/poll-all');
-          showToast(`Опрос завершен: успешно ${res.successful_count} из ${res.total_polled}`, 'success');
-          await loadStatusAndConfig();
-        } catch (err) {
-          showToast(`Ошибка разового опроса: ${err.message}`, 'danger');
+          const res = await apiPost('/api/autolog/poll-alli18n.t('auto__showtoast_res_successful_count_res_total_polled__b1b668')successi18n.t('auto__await_loadstatusandconfig_catch_err_showtoast_err_message__fb1300')danger');
         } finally {
           btnPollAll.disabled = false;
           btnPollAll.innerHTML = '<i class="bi bi-arrow-repeat"></i> <span>Опросить все сейчас</span>';
@@ -800,10 +736,7 @@
     const btnRefLoggers = document.getElementById('btn-refresh-loggers');
     if (btnRefLoggers) btnRefLoggers.addEventListener('click', loadStatusAndConfig);
     const btnRefSensors = document.getElementById('btn-refresh-sensors');
-    if (btnRefSensors) btnRefSensors.addEventListener('click', loadStatusAndConfig);
-
-    // Вкладка службы телеметрии
-    const btnTabTelemetry = document.getElementById('subtab-telemetry-service-btn');
+    if (btnRefSensors) btnRefSensors.addEventListener('clicki18n.t('auto__loadstatusandconfig_const_btntabtelemetry_document_getelementbyid__5ebaaa')subtab-telemetry-service-btn');
     if (btnTabTelemetry) {
       btnTabTelemetry.addEventListener('click', loadTelemetryServiceStatusAndConfig);
     }

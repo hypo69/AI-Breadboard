@@ -16,79 +16,26 @@
     const diffDays = Math.floor(diffHrs / 24);
 
     if (diffDays > 90) {
-      return `<span class="text-warning" title="${d.toLocaleString()}">${diffDays} дн назад</span>`;
-    } else if (diffDays > 0) {
-      return `<span class="text-success" title="${d.toLocaleString()}">${diffDays} дн назад</span>`;
-    } else if (diffHrs > 0) {
-      return `<span class="text-info" title="${d.toLocaleString()}">${diffHrs} ч назад</span>`;
-    } else if (diffMin > 0) {
-      return `<span class="text-info" title="${d.toLocaleString()}">${diffMin} мин назад</span>`;
-    } else {
-      return `<span class="text-info">Только что</span>`;
+      return `<span class="text-warning" title="${d.toLocaleString()}i18n.t('auto__diffdays_span_else_if_diffdays_0_return_span_class__428f7d')text-success" title="${d.toLocaleString()}i18n.t('auto__diffdays_span_else_if_diffhrs_0_return_span_class__2ea964')text-info" title="${d.toLocaleString()}i18n.t('auto__diffhrs_span_else_if_diffmin_0_return_span_class__a53f85')text-info" title="${d.toLocaleString()}i18n.t('auto__diffmin_span_else_return_span_class__81876f')text-info">Только что</span>`;
     }
   }
 
   function formatDuration(sec) {
-    if (!sec || sec <= 0) return '<span class="text-muted">-</span>';
-    const hrs = Math.floor(sec / 3600);
-    const mins = Math.floor((sec % 3600) / 60);
-    if (hrs > 0) return `${hrs}ч ${mins}м`;
-    if (mins > 0) return `${mins} мин`;
-    return `${sec} сек`;
-  }
-
-  async function loadSoftwareAudit() {
-    const tbody = document.getElementById('sw-audit-tbody');
+    if (!sec || sec <= 0) return '<span class="text-muted">-</span>i18n.t('auto__const_hrs_math_floor_sec_3600_const_mins_math_floor_sec_3600_60_if_hrs_0_return_hrs_mins_if_mins_0_return_mins_return_sec_async_function_loadsoftwareaudit_const_tbody_document_getelementbyid__1d3e7d')sw-audit-tbody');
     const badge = document.getElementById('sw-audit-status-badge');
-    if (badge) badge.innerText = '● Сканирование реестра...';
+    if (badge) badge.innerText = i18n.t('auto___bdbb63');
 
     try {
       // 1. Пытаемся получить сводный аналитический отчет
       let reportRes = await fetch('/api/windows/software/audit');
       if (!reportRes.ok) {
-        reportRes = await fetch('/api/v1/windows-admin/software/audit');
-      }
-      if (reportRes.ok) {
-        auditReport = await reportRes.json();
-      }
-
-      // 2. Получаем полный список установленных приложений
-      let appsRes = await fetch('/api/windows/software?limit=500');
-      if (!appsRes.ok) {
-        // Fallback на router_windows_admin
-        appsRes = await fetch('/api/v1/windows-admin/software?limit=500');
-      }
-
-      if (appsRes.ok) {
-        allApps = await appsRes.json();
-      } else {
-        throw new Error(`HTTP ${appsRes.status}`);
-      }
-
-      // Обновляем метрики
-      updateMetrics();
-      // Заполняем выпадающий список категорий
-      populateCategories();
-      // Рендерим таблицу
-      renderTable();
-
-      if (badge) {
-        badge.className = 'badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2';
-        badge.innerText = `● Аудит: Завершено (${allApps.length} программ)`;
-      }
-
-      const timeEl = document.getElementById('sw-last-scanned-time');
-      if (timeEl) {
-        timeEl.innerText = `Обновлено: ${new Date().toLocaleTimeString()}`;
-      }
-    } catch (err) {
-      console.error('[SoftwareAuditTab] Failed to load software audit:', err);
+        reportRes = await fetch('/api/v1/windows-admin/software/auditi18n.t('auto__if_reportres_ok_auditreport_await_reportres_json_2_let_appsres_await_fetch__588ef9')/api/windows/software?limit=500i18n.t('auto__if_appsres_ok_fallback_router_windows_admin_appsres_await_fetch__3d729e')/api/v1/windows-admin/software?limit=500i18n.t('auto__if_appsres_ok_allapps_await_appsres_json_else_throw_new_error_http_appsres_status_updatemetrics_populatecategories_rendertable_if_badge_badge_classname__c328de')badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2i18n.t('auto__badge_innertext_allapps_length_const_timeel_document_getelementbyid__484012')sw-last-scanned-timei18n.t('auto__if_timeel_timeel_innertext_new_date_tolocaletimestring_catch_err_console_error__75bb10')[SoftwareAuditTab] Failed to load software audit:', err);
       if (tbody) {
         tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger p-4">Ошибка сбора сведений об установленном ПО: ${err.message}</td></tr>`;
       }
       if (badge) {
         badge.className = 'badge rounded-pill bg-danger-subtle text-danger border border-danger px-3 py-2';
-        badge.innerText = '● Ошибка аудита';
+        badge.innerText = i18n.t('auto___0e7d63');
       }
     }
   }
@@ -129,26 +76,7 @@
   function getFilteredApps() {
     const search = (document.getElementById('sw-search-input')?.value || '').toLowerCase().trim();
     const category = document.getElementById('sw-category-filter')?.value || '';
-    const status = document.getElementById('sw-status-filter')?.value || 'all';
-
-    const dormantThresholdMs = 90 * 24 * 3600 * 1000;
-    const now = Date.now();
-
-    return allApps.filter(app => {
-      // Поиск по ключевым полям
-      if (search) {
-        const text = `${app.display_name || ''} ${app.name || ''} ${app.publisher || ''} ${app.purpose_description || ''}`.toLowerCase();
-        if (!text.includes(search)) return false;
-      }
-
-      // Фильтр по категории
-      if (category && app.category !== category) {
-        return false;
-      }
-
-      // Фильтр по статусу использования
-      const lastRun = app.execution_info?.last_run_time ? new Date(app.execution_info.last_run_time).getTime() : null;
-      if (status === 'active') {
+    const status = document.getElementById('sw-status-filter')?.value || 'alli18n.t('auto__const_dormantthresholdms_90_24_3600_1000_const_now_date_now_return_allapps_filter_app_if_search_const_text_app_display_name__e7c00f')'} ${app.name || ''} ${app.publisher || ''} ${app.purpose_description || 'i18n.t('auto__tolowercase_if_text_includes_search_return_false_if_category_app_category_category_return_false_const_lastrun_app_execution_info_last_run_time_new_date_app_execution_info_last_run_time_gettime_null_if_status__731ed9')active') {
         if (!lastRun || (now - lastRun > dormantThresholdMs)) return false;
       } else if (status === 'dormant') {
         if (lastRun && (now - lastRun <= dormantThresholdMs)) return false;
@@ -182,20 +110,20 @@
       const archBadge = app.architecture === 'x64' ? '<span class="badge bg-primary-subtle text-primary" style="font-size: 0.65rem;">x64</span>' : '<span class="badge bg-secondary-subtle text-secondary" style="font-size: 0.65rem;">x86</span>';
 
       return `
-        <tr class="sw-row-item" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для AI-диагностики и подробных сведений">
+        <tr class="sw-row-item" data-idx="${idx}" style="cursor: pointer;" title=i18n.t('auto__ai__36b4b8')>
           <td>
             <div class="fw-bold text-white text-truncate" style="max-width: 260px;" title="${app.display_name || app.name}">
               ${app.display_name || app.name}
             </div>
             <div class="small text-muted text-truncate" style="max-width: 260px; font-size: 0.72rem;" title="${app.purpose_description || ''}">
-              ${app.purpose_description || 'Прикладное ПО'}
+              ${app.purpose_description || i18n.t('auto___aa3245')}
             </div>
           </td>
           <td>
-            <span class="sw-badge-category">${app.category || 'Прочее'}</span>
+            <span class="sw-badge-category">${app.category || i18n.t('auto___2ade33')}</span>
           </td>
           <td>
-            <div class="text-truncate text-light" style="max-width: 180px;" title="${app.publisher || 'Неизвестен'}">${app.publisher || '<span class="text-muted">-</span>'}</div>
+            <div class="text-truncate text-light" style="max-width: 180px;" title="${app.publisher || i18n.t('auto___1fada4')}">${app.publisher || '<span class="text-muted">-</span>'}</div>
             <div class="small text-muted" style="font-size: 0.72rem;">${app.version || '-'}</div>
           </td>
           <td>${lastRunFormatted}</td>
@@ -206,24 +134,15 @@
             <div>${archBadge}</div>
           </td>
           <td style="text-align: right;">
-            <button class="btn btn-sm btn-outline-info p-1 px-2 btn-sw-detail" data-idx="${idx}" title="Подробности">
+            <button class="btn btn-sm btn-outline-info p-1 px-2 btn-sw-detail" data-idx="${idx}" title=i18n.t('auto___ed2f45')>
               <i class="bi bi-info-circle"></i>
             </button>
           </td>
         </tr>
       `;
-    }).join('');
-
-    // Привязка кликабельности всей строки
-    tbody.querySelectorAll('.sw-row-item').forEach(row => {
+    }).join('i18n.t('auto__tbody_queryselectorall__dedad1').sw-row-item').forEach(row => {
       row.onclick = (evt) => {
-        const idx = parseInt(row.getAttribute('data-idx'), 10);
-        showAppDetails(filtered[idx]);
-      };
-    });
-
-    // Привязка обработчиков кнопки деталей
-    tbody.querySelectorAll('.btn-sw-detail').forEach(btn => {
+        const idx = parseInt(row.getAttribute('data-idxi18n.t('auto__10_showappdetails_filtered_idx_tbody_queryselectorall__1ab3f7').btn-sw-detail').forEach(btn => {
       btn.onclick = (evt) => {
         evt.stopPropagation();
         const idx = parseInt(btn.getAttribute('data-idx'), 10);
@@ -240,25 +159,25 @@
       window.AITableModal.show({
         icon: '📦',
         title: app.display_name || app.name,
-        subtitle: app.publisher || 'Неизвестный разработчик',
+        subtitle: app.publisher || i18n.t('auto___e76ec9'),
         tableType: 'software',
         badges: [
-          { text: app.category || 'ПО', class: 'badge bg-info' },
+          { text: app.category || i18n.t('auto___e9178d'), class: 'badge bg-info' },
           { text: app.architecture || 'x64', class: 'badge bg-secondary' }
         ],
         metadata: [
-          { label: 'Продукт', value: app.display_name || app.name },
-          { label: 'Издатель', value: app.publisher || 'Не указан' },
-          { label: 'Версия', value: app.version || 'Не указана' },
-          { label: 'Категория', value: app.category || 'Прочее' },
-          { label: 'Размер на диске', value: app.size_mb > 0 ? `${app.size_mb} MB` : 'Не указан' },
-          { label: 'Дата установки', value: app.install_date || 'Неизвестно' },
-          { label: 'Запусков (UserAssist)', value: exec?.run_count ? `${exec.run_count} раз` : '0' },
-          { label: 'Время в фокусе', value: exec ? formatDuration(exec.focus_time_seconds) : '-' },
-          { label: 'Последний запуск', value: exec?.last_run_time ? new Date(exec.last_run_time).toLocaleString() : 'Нет данных', fullWidth: true },
-          { label: 'Путь установки', value: app.install_location || 'Не указан', isCode: true, fullWidth: true }
+          { label: i18n.t('auto___82a9ca'), value: app.display_name || app.name },
+          { label: i18n.t('auto___cbd626'), value: app.publisher || i18n.t('auto___3b3c4f') },
+          { label: i18n.t('auto___97c248'), value: app.version || i18n.t('auto___72cca1') },
+          { label: i18n.t('auto___19c858'), value: app.category || i18n.t('auto___2ade33') },
+          { label: i18n.t('auto___169c35'), value: app.size_mb > 0 ? `${app.size_mb} MB` : i18n.t('auto___3b3c4f') },
+          { label: i18n.t('auto___e9ca0f'), value: app.install_date || i18n.t('auto___43b44f') },
+          { label: i18n.t('auto__userassist__dc970f'), value: exec?.run_count ? `${exec.run_count} раз` : '0' },
+          { label: i18n.t('auto___1327f1'), value: exec ? formatDuration(exec.focus_time_seconds) : '-' },
+          { label: i18n.t('auto___5e8630'), value: exec?.last_run_time ? new Date(exec.last_run_time).toLocaleString() : i18n.t('auto___d0dd94'), fullWidth: true },
+          { label: i18n.t('auto___a9216d'), value: app.install_location || i18n.t('auto___3b3c4f'), isCode: true, fullWidth: true }
         ],
-        rawTitle: 'Команда удаления / Путь',
+        rawTitle: i18n.t('auto___f6a08b'),
         rawContent: app.uninstall_string || app.install_location || '',
         requestData: {
           install_location: app.install_location,
@@ -283,10 +202,7 @@
   }
 
   window.initSoftwareAuditTab = async function() {
-    console.log('[SoftwareAuditTab] Initializing Software Audit tab...');
-    
-    // Привязываем контролы поиска и фильтрации
-    const searchInput = document.getElementById('sw-search-input');
+    console.log('[SoftwareAuditTab] Initializing Software Audit tab...i18n.t('auto__const_searchinput_document_getelementbyid__005f83')sw-search-input');
     const catSelect = document.getElementById('sw-category-filter');
     const statusSelect = document.getElementById('sw-status-filter');
     const refreshBtn = document.getElementById('btn-sw-audit-refresh');

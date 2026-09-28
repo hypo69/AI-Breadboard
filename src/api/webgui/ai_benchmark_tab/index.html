@@ -68,16 +68,16 @@
 </style>
 
 <div class="bm-container">
-  <!-- Заголовок и панель параметров запуска -->
+  <!-- <span data-i18n="auto___8d61a6"></span> -->
   <div class="bm-panel mb-3">
     <div class="bm-panel-header">
-      <span><i class="bi bi-speedometer2 me-1"></i> Параметры запуска AI Inference Benchmark</span>
-      <span class="badge bg-primary-subtle text-primary border border-primary-subtle" id="bm-status-badge">Готов</span>
+      <span><i class="bi bi-speedometer2 me-1"></i> <span data-i18n="auto___81054b"></span> AI Inference Benchmark</span>
+      <span class="badge bg-primary-subtle text-primary border border-primary-subtle" id="bm-status-badge"><span data-i18n="auto___97b864"></span></span>
     </div>
     <div class="p-3">
       <div class="row g-2 align-items-end">
         <div class="col-md-3 col-sm-6">
-          <label class="form-label small text-muted mb-1">Провайдер</label>
+          <label class="form-label small text-muted mb-1"><span data-i18n="auto___2d385a"></span></label>
           <select class="form-select form-select-sm bg-dark text-white border-secondary" id="bm-provider-select">
             <option value="gemini" selected>Google Gemini API</option>
             <option value="ollama">Ollama (Local)</option>
@@ -86,7 +86,7 @@
           </select>
         </div>
         <div class="col-md-3 col-sm-6">
-          <label class="form-label small text-muted mb-1">Модель</label>
+          <label class="form-label small text-muted mb-1"><span data-i18n="auto___f1f1ee"></span></label>
           <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="bm-model-input" value="gemini-2.5-flash">
         </div>
         <div class="col-md-2 col-sm-6">
@@ -99,18 +99,18 @@
         </div>
         <div class="col-md-2 col-sm-12">
           <button class="btn btn-sm btn-primary w-100 fw-semibold d-flex align-items-center justify-content-center gap-1.5" id="bm-run-btn">
-            <i class="bi bi-play-fill fs-6"></i> Запустить тест
+            <i class="bi bi-play-fill fs-6"></i> <span data-i18n="auto___9632be"></span>
           </button>
         </div>
       </div>
       <div class="mt-2">
-        <label class="form-label small text-muted mb-1">Тестовый промпт</label>
-        <textarea class="form-control form-control-sm bg-dark text-white border-secondary" id="bm-prompt-input" rows="2">Напиши краткий рассказ о квантовых вычислениях на 100 слов.</textarea>
+        <label class="form-label small text-muted mb-1"><span data-i18n="auto___b3f6a4"></span></label>
+        <textarea class="form-control form-control-sm bg-dark text-white border-secondary" id="bm-prompt-input" rows="2"><span data-i18n="auto__100__5d4d7a"></span>.</textarea>
       </div>
     </div>
   </div>
 
-  <!-- Карточки последних результатов -->
+  <!-- <span data-i18n="auto___cca642"></span> -->
   <div class="row g-2 mb-3">
     <div class="col-md-3 col-6">
       <div class="bm-card">
@@ -120,49 +120,49 @@
     </div>
     <div class="col-md-3 col-6">
       <div class="bm-card">
-        <div class="bm-card-label"><i class="bi bi-lightning-charge text-warning me-1"></i> Скорость (TPS)</div>
+        <div class="bm-card-label"><i class="bi bi-lightning-charge text-warning me-1"></i> <span data-i18n="auto___09625b"></span> (TPS)</div>
         <div class="bm-card-value text-success" id="bm-card-tps">— t/s</div>
       </div>
     </div>
     <div class="col-md-3 col-6">
       <div class="bm-card">
-        <div class="bm-card-label"><i class="bi bi-hourglass-split text-primary me-1"></i> Общее время (Latency)</div>
+        <div class="bm-card-label"><i class="bi bi-hourglass-split text-primary me-1"></i> <span data-i18n="auto___46e0d8"></span> (Latency)</div>
         <div class="bm-card-value" id="bm-card-total">— ms</div>
       </div>
     </div>
     <div class="col-md-3 col-6">
       <div class="bm-card">
-        <div class="bm-card-label"><i class="bi bi-chat-left-text text-secondary me-1"></i> Сгенерировано токенов</div>
+        <div class="bm-card-label"><i class="bi bi-chat-left-text text-secondary me-1"></i> <span data-i18n="auto___430610"></span></div>
         <div class="bm-card-value text-white" id="bm-card-tokens">—</div>
       </div>
     </div>
   </div>
 
-  <!-- Таблица истории замеров -->
+  <!-- <span data-i18n="auto___7fbb04"></span> -->
   <div class="bm-panel">
     <div class="bm-panel-header">
-      <span><i class="bi bi-clock-history me-1"></i> История бенчмарков инференса</span>
+      <span><i class="bi bi-clock-history me-1"></i> <span data-i18n="auto___a58a32"></span></span>
       <button class="btn btn-xs btn-outline-secondary py-0 px-2 text-white border-secondary" id="bm-refresh-history-btn" style="font-size: 0.75rem;">
-        <i class="bi bi-arrow-clockwise"></i> Обновить
+        <i class="bi bi-arrow-clockwise"></i> <span data-i18n="auto___c2f668"></span>
       </button>
     </div>
     <div class="table-responsive">
       <table class="table table-dark table-hover bm-table" id="bm-history-table">
         <thead>
           <tr>
-            <th>Время</th>
-            <th>Провайдер</th>
-            <th>Модель</th>
+            <th><span data-i18n="auto___c80d7e"></span></th>
+            <th><span data-i18n="auto___2d385a"></span></th>
+            <th><span data-i18n="auto___f1f1ee"></span></th>
             <th>TTFT</th>
-            <th>Скорость (TPS)</th>
-            <th>Общее время</th>
-            <th>Токены (Prompt / Gen)</th>
-            <th>Статус</th>
+            <th><span data-i18n="auto___09625b"></span> (TPS)</th>
+            <th><span data-i18n="auto___46e0d8"></span></th>
+            <th><span data-i18n="auto___4b1883"></span> (Prompt / Gen)</th>
+            <th><span data-i18n="auto___f7f293"></span></th>
           </tr>
         </thead>
         <tbody id="bm-history-tbody">
           <tr>
-            <td colspan="8" class="text-center text-muted py-3">История бенчмарков пуста. Нажмите "Запустить тест".</td>
+            <td colspan="8" class="text-center text-muted py-3"><span data-i18n="auto___51fbb4"></span>".</td>
           </tr>
         </tbody>
       </table>

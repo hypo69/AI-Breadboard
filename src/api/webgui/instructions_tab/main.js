@@ -33,10 +33,7 @@ let currentMode = 'chat';
 function switchMode(mode) {
   currentMode = mode;
   document.getElementById('mode-chat').classList.toggle('active', mode === 'chat');
-  document.getElementById('mode-narrator').classList.toggle('active', mode === 'narrator');
-
-  // Обновить заголовок редактора
-  const modeLabel = mode === 'chat' ? '💬 Chat' : '🎙️ Narrator';
+  document.getElementById('mode-narrator').classList.toggle('active', mode === 'narratori18n.t('auto__const_modelabel_mode__404f73')chat' ? '💬 Chat' : '🎙️ Narrator';
   const editorTitle = document.getElementById('editor-mode-label');
   if (editorTitle) editorTitle.textContent = modeLabel;
 
@@ -60,7 +57,7 @@ async function loadInstruction() {
       fileInfo.textContent = data.file;
     }
   } catch (e) {
-    notify('Ошибка загрузки инструкции: ' + e.message, 'danger');
+    notify(i18n.t('auto___cf81be') + e.message, 'danger');
     document.getElementById('instruction-editor').value = '';
   }
 }
@@ -68,7 +65,7 @@ async function loadInstruction() {
 async function saveInstruction() {
   const content = document.getElementById('instruction-editor').value.trim();
   if (!content) {
-    notify('Инструкция не может быть пустой', 'warning');
+    notify(i18n.t('auto___f108f8'), 'warning');
     return;
   }
 
@@ -80,13 +77,10 @@ async function saveInstruction() {
   try {
     const data = await adminFetch('/api/admin/instructions/save', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: currentMode, content })
-    });
-    notify(`Инструкция сохранена: ${data.version || ''}`, 'success');
+      headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_mode_currentmode_content_notify_data_version__a2b22c')'}`, 'success');
     await refreshVersions();
   } catch (e) {
-    notify('Ошибка сохранения: ' + e.message, 'danger');
+    notify(i18n.t('auto___bbbabd') + e.message, 'danger');
   } finally {
     btn.disabled = false;
     btn.innerHTML = originalHtml;
@@ -95,7 +89,7 @@ async function saveInstruction() {
 
 async function checkInModel() {
   const content = document.getElementById('instruction-editor').value.trim();
-  const prompt = "Привет! Подтверди, что ты получил инструкцию и готов к работе. Ответь только: 'Понял, готов к работе!'";
+  const prompt = "Привет! Подтверди, что ты получил инструкцию и готов к работе. Ответь только: i18n.t('auto___18a557')";
 
   const btn = document.getElementById('btn-check-model');
   const originalHtml = btn.innerHTML;
@@ -110,21 +104,14 @@ async function checkInModel() {
     });
 
     const statusEl = document.getElementById('token-preview');
-    let tokenInfo = '';
-    if (result.token_count) {
-      tokenInfo = `<br>Использовано токенов: ${result.token_count}`;
-    }
-
-    if (result.response) {
-      statusEl.innerHTML = `<strong>Ответ модели:</strong><br>${escapeHtml(result.response)}${tokenInfo}`;
-      notify('Проверка завершена', 'success');
+    let tokenInfo = 'i18n.t('auto__if_result_token_count_tokeninfo_br_result_token_count_if_result_response_statusel_innerhtml_strong_strong_br_escapehtml_result_response_tokeninfo_notify__cccd46')Проверка завершена', 'success');
     } else {
-      statusEl.innerHTML = 'Ошибка: нет ответа от модели';
-      notify('Ошибка проверки', 'danger');
+      statusEl.innerHTML = i18n.t('auto___bede34');
+      notify(i18n.t('auto___6f4a8d'), 'danger');
     }
   } catch (e) {
     document.getElementById('token-preview').innerHTML = `<strong class="text-danger">Ошибка проверки: ${e.message}</strong>`;
-    notify('Ошибка проверки: ' + e.message, 'danger');
+    notify(i18n.t('auto___38a9e8') + e.message, 'danger');
   } finally {
     btn.disabled = false;
     btn.innerHTML = originalHtml;
@@ -167,27 +154,17 @@ async function useVersion(filename, mode) {
   try {
     await adminFetch('/api/admin/instructions/activate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode, filename })
-    });
-
-    if (mode === currentMode) {
-      await loadInstruction();
-    }
-    await refreshVersions();
-    notify(`Версия ${filename} активирована`, 'success');
+      headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_mode_filename_if_mode_currentmode_await_loadinstruction_await_refreshversions_notify_filename__9c132d')success');
   } catch (e) {
-    notify('Ошибка активации: ' + e.message, 'danger');
+    notify(i18n.t('auto___f5ed3a') + e.message, 'danger');
   }
 }
 
 async function previewPrompt() {
-  const content = document.getElementById('instruction-editor').value.trim();
-  const preview = `
-    <strong>Контекст системной инструкции (${currentMode === 'chat' ? '💬 Chat' : '🎙️ Narrator'}):</strong><br>
+  const content = document.getElementById('instruction-editori18n.t('auto__value_trim_const_preview_strong_currentmode__bf6a14')chat' ? '💬 Chat' : '🎙️ Narrator'}):</strong><br>
     <pre style="white-space:pre-wrap;max-height:400px;overflow-y:auto;">${escapeHtml(content.substring(0, 1000))}${content.length > 1000 ? '\n...' : ''}</pre>
     <strong>Тестовый запрос:</strong><br>
-    "Привет! Подтверди, что ты получил инструкцию и готов к работе."
+    i18n.t('auto___b6002a')
   `;
 
   const modal = new bootstrap.Modal(document.getElementById('prompt-preview-modal'));

@@ -76,11 +76,11 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
       <h4 class="fw-bold text-white mb-0">🌐 Wikipedia Research & Model Laboratory</h4>
-      <small class="text-muted">Кросс-языковой сравнительный анализ контента Википедии и бенчмарк интерпретации моделей ИИ</small>
+      <small class="text-muted"><span data-i18n="auto___7bb9b5"></span></small>
     </div>
     <div class="d-flex gap-2">
-      <button class="btn btn-outline-info btn-sm" id="btn-wiki-health" title="Проверить статус API">
-        <i class="bi bi-heart-pulse"></i> Статус
+      <button class="btn btn-outline-info btn-sm" id="btn-wiki-health" title="<span data-i18n="auto___b8bcfb"></span> API">
+        <i class="bi bi-heart-pulse"></i> <span data-i18n="auto___f7f293"></span>
       </button>
     </div>
   </div>
@@ -90,27 +90,27 @@
     <div class="col-lg-8">
       <div class="wiki-card">
         <div class="wiki-card-title">
-          <i class="bi bi-sliders"></i> Параметры исследования
+          <i class="bi bi-sliders"></i> <span data-i18n="auto___64d21c"></span>
         </div>
         
         <!-- Topic Search -->
         <div class="mb-3">
-          <label class="form-label text-light small fw-bold">Тема для исследования (Wikipedia Topic):</label>
+          <label class="form-label text-light small fw-bold"><span data-i18n="auto___f7cea9"></span> (Wikipedia Topic):</label>
           <div class="input-group">
             <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-search"></i></span>
-            <input type="text" class="form-control bg-dark text-white border-secondary" id="wiki-topic-input" placeholder="Например: Israel–Gaza war, Quantum computing, Artificial intelligence" value="Israel–Gaza war">
-            <button class="btn btn-primary px-3" id="btn-run-exp-a" title="Запустить кросс-языковое сравнение одной моделью">
-              <i class="bi bi-translate"></i> Exp A: Языки
+            <input type="text" class="form-control bg-dark text-white border-secondary" id="wiki-topic-input" placeholder="<span data-i18n="auto___bbc821"></span>: Israel–Gaza war, Quantum computing, Artificial intelligence" value="Israel–Gaza war">
+            <button class="btn btn-primary px-3" id="btn-run-exp-a" title="<span data-i18n="auto___7044a4"></span>">
+              <i class="bi bi-translate"></i> Exp A: <span data-i18n="auto___897325"></span>
             </button>
-            <button class="btn btn-success px-3" id="btn-run-exp-b" title="Запустить кросс-модельный бенчмарк">
-              <i class="bi bi-cpu"></i> Exp B: Модели
+            <button class="btn btn-success px-3" id="btn-run-exp-b" title="<span data-i18n="auto___f869e9"></span>">
+              <i class="bi bi-cpu"></i> Exp B: <span data-i18n="auto___51170e"></span>
             </button>
           </div>
         </div>
 
         <!-- Languages Selector -->
         <div class="mb-3">
-          <label class="form-label text-light small fw-bold">Языковые разделы Википедии:</label>
+          <label class="form-label text-light small fw-bold"><span data-i18n="auto___70e56e"></span>:</label>
           <div class="wiki-checkbox-grid" id="wiki-languages-list">
             <div class="form-check">
               <input class="form-check-input wiki-lang-check" type="checkbox" value="en" id="lang-en" checked>
@@ -118,7 +118,7 @@
             </div>
             <div class="form-check">
               <input class="form-check-input wiki-lang-check" type="checkbox" value="ru" id="lang-ru" checked>
-              <label class="form-check-label text-white small" for="lang-ru">Русский (ru)</label>
+              <label class="form-check-label text-white small" for="lang-ru"><span data-i18n="auto___5537fc"></span> (ru)</label>
             </div>
             <div class="form-check">
               <input class="form-check-input wiki-lang-check" type="checkbox" value="he" id="lang-he" checked>
@@ -134,7 +134,7 @@
             </div>
             <div class="form-check">
               <input class="form-check-input wiki-lang-check" type="checkbox" value="uk" id="lang-uk">
-              <label class="form-check-label text-white small" for="lang-uk">Українська (uk)</label>
+              <label class="form-check-label text-white small" for="lang-uk"><span data-i18n="auto___181bf5"></span> (uk)</label>
             </div>
           </div>
         </div>
@@ -142,7 +142,7 @@
         <!-- Models & Analysis Dimensions -->
         <div class="row">
           <div class="col-md-6">
-            <label class="form-label text-light small fw-bold">AI Модели (Experiment B):</label>
+            <label class="form-label text-light small fw-bold">AI <span data-i18n="auto___51170e"></span> (Experiment B):</label>
             <div class="d-flex flex-wrap gap-2" id="wiki-models-list">
               <div class="form-check form-check-inline">
                 <input class="form-check-input wiki-model-check" type="checkbox" value="gemini" id="mod-gemini" checked>
@@ -163,7 +163,7 @@
             </div>
           </div>
           <div class="col-md-6">
-            <label class="form-label text-light small fw-bold">Базовая модель для Exp A:</label>
+            <label class="form-label text-light small fw-bold"><span data-i18n="auto___200993"></span> Exp A:</label>
             <select class="form-select form-select-sm bg-dark text-white border-secondary" id="wiki-primary-model">
               <option value="gemini" selected>Google Gemini</option>
               <option value="foundry">Microsoft Foundry Local</option>
@@ -179,10 +179,10 @@
     <div class="col-lg-4">
       <div class="wiki-card h-100">
         <div class="wiki-card-title">
-          <i class="bi bi-lightbulb"></i> Аналитические инсайты
+          <i class="bi bi-lightbulb"></i> <span data-i18n="auto___415c25"></span>
         </div>
         <div id="wiki-insights-container" class="text-secondary small">
-          <em>Запустите Experiment A или Experiment B для отображения выводов и кросс-сравнения...</em>
+          <em><span data-i18n="auto__experiment_a_experiment_b__714dbe"></span>...</em>
         </div>
       </div>
     </div>
@@ -191,14 +191,14 @@
   <!-- Loading State -->
   <div id="wiki-loading-spinner" class="text-center my-4 d-none">
     <div class="spinner-border text-primary" role="status"></div>
-    <div class="text-light mt-2 small" id="wiki-loading-text">Выполняется сбор статей и AI-анализ...</div>
+    <div class="text-light mt-2 small" id="wiki-loading-text"><span data-i18n="auto__ai__159940"></span>...</div>
   </div>
 
   <!-- Results Section -->
   <div id="wiki-results-section" class="d-none">
     <div class="wiki-card">
       <div class="wiki-card-title" id="wiki-results-title">
-        <i class="bi bi-bar-chart-fill"></i> Результаты эксперимента
+        <i class="bi bi-bar-chart-fill"></i> <span data-i18n="auto___3324d1"></span>
       </div>
       
       <div class="table-responsive">

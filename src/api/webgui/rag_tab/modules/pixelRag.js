@@ -37,15 +37,7 @@ export async function loadPixelRagStatus() {
     if (imagesEl) imagesEl.textContent = data.total_images || 0;
     if (chunksEl) chunksEl.textContent = data.total_chunks || 0;
     if (sizeEl) sizeEl.textContent = `${(data.total_size_mb || 0).toFixed(2)} MB`;
-    if (providerEl) providerEl.textContent = data.provider || 'FAISS / PixelRAG';
-    if (statusEl) statusEl.textContent = `Текстовых чанков: ${data.sources?.text_chunks || 0} | Картинок: ${data.sources?.images || 0}`;
-
-    if (updatedEl) {
-      if (data.last_built_at && data.last_built_at > 0) {
-        const d = new Date(data.last_built_at * 1000);
-        updatedEl.textContent = d.toLocaleString();
-      } else {
-        updatedEl.textContent = 'Индекс готов';
+    if (providerEl) providerEl.textContent = data.provider || 'FAISS / PixelRAGi18n.t('auto__if_statusel_statusel_textcontent_data_sources_text_chunks_0_data_sources_images_0_if_updatedel_if_data_last_built_at_data_last_built_at_0_const_d_new_date_data_last_built_at_1000_updatedel_textcontent_d_tolocalestring_else_updatedel_textcontent__a530ea')Индекс готов';
       }
     }
   } catch (err) {
@@ -87,24 +79,14 @@ export async function uploadAndIndexPixelImages(files) {
     });
 
     if (progressBar) progressBar.style.width = '100%';
-    if (percentText) percentText.textContent = '100%';
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || `Индексация не удалась (HTTP ${res.status})`);
-
-    if (statusAlert) {
-      statusAlert.className = 'alert alert-success p-2 small mb-0';
-      statusAlert.textContent = `✓ Успешно проиндексировано: ${data.indexed_count || files.length} файл(ов)`;
-      statusAlert.classList.remove('d-none');
+    if (percentText) percentText.textContent = '100%i18n.t('auto__const_data_await_res_json_if_res_ok_throw_new_error_data_detail_http_res_status_if_statusalert_statusalert_classname__e738a1')alert alert-success p-2 small mb-0i18n.t('auto__statusalert_textcontent_data_indexed_count_files_length_statusalert_classlist_remove__5fa5e2')d-none');
     }
 
     await loadPixelRagStatus();
   } catch (err) {
     console.error('[PixelRAG] Indexing error:', err);
     if (statusAlert) {
-      statusAlert.className = 'alert alert-danger p-2 small mb-0';
-      statusAlert.textContent = `Ошибка индексации: ${err.message}`;
-      statusAlert.classList.remove('d-none');
+      statusAlert.className = 'alert alert-danger p-2 small mb-0i18n.t('auto__statusalert_textcontent_err_message_statusalert_classlist_remove__93d53f')d-none');
     }
   } finally {
     setTimeout(() => {
@@ -138,10 +120,7 @@ export async function analyzePixelQuery() {
     if (resultBox) resultBox.classList.remove('d-none');
     if (routingTypeEl) {
       routingTypeEl.textContent = data.routing_type?.toUpperCase() || 'HYBRID';
-      routingTypeEl.className = data.routing_type === 'visual' ? 'badge bg-warning text-dark' : data.routing_type === 'text' ? 'badge bg-info' : 'badge bg-primary';
-    }
-    if (confidenceEl) confidenceEl.textContent = `${Math.round((data.confidence || 1.0) * 100)}%`;
-    if (reasonEl) reasonEl.textContent = `Причина: ${data.reason || 'Авто-определение по ключевым признакам'}`;
+      routingTypeEl.className = data.routing_type === 'visual' ? 'badge bg-warning text-dark' : data.routing_type === 'text' ? 'badge bg-info' : 'badge bg-primaryi18n.t('auto__if_confidenceel_confidenceel_textcontent_math_round_data_confidence_1_0_100_if_reasonel_reasonel_textcontent_data_reason__eba515')Авто-определение по ключевым признакам'}`;
   } catch (err) {
     console.error('[PixelRAG] Analysis failed:', err);
   }
@@ -201,19 +180,9 @@ export async function executePixelRagSearch() {
     if (results.length === 0) {
       resultsContainer.innerHTML = `
         <div class="text-center text-muted py-4">
-          <i class="bi bi-search fs-3 d-block mb-1 opacity-50"></i>
-          <span>По запросу «${escapeHtml(query)}» ничего не найдено.</span>
-        </div>
-      `;
-      return;
-    }
-
-    resultsContainer.innerHTML = `
-      <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-        <span class="small text-muted">Найдено совпадений: <strong>${results.length}</strong> (Маршрут: <span class="badge bg-secondary">${data.routing_type}</span>)</span>
-        <span class="small text-muted">Уверенность: ${(data.query_confidence * 100).toFixed(0)}%</span>
-      </div>
-      <div class="d-flex flex-column gap-2">
+          <i class="bi bi-search fs-3 d-block mb-1 opacity-50i18n.t('auto__i_span_escapehtml_query_span_div_return_resultscontainer_innerhtml_div_class__096358')d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+        <span class="small text-mutedi18n.t('auto__strong_results_length_strong_span_class__29178e')badge bg-secondary">${data.routing_type}</span>)</span>
+        <span class="small text-mutedi18n.t('auto__data_query_confidence_100_tofixed_0_span_div_div_class__0c443d')d-flex flex-column gap-2">
         ${results.map((r, i) => {
           const scorePercent = Math.min(100, Math.round((r.score || 0) * 100));
           const isVisual = r.source_type === 'pixel' || r.source_type === 'image';
@@ -225,7 +194,7 @@ export async function executePixelRagSearch() {
             <div class="card bg-body border-secondary-subtle p-2">
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <span class="fw-bold small text-primary text-truncate" style="max-width: 70%;">
-                  #${i + 1} ${escapeHtml(r.doc_name || 'Без названия')}
+                  #${i + 1} ${escapeHtml(r.doc_name || i18n.t('auto___32b74a'))}
                 </span>
                 <div class="d-flex align-items-center gap-1">
                   ${typeBadge}

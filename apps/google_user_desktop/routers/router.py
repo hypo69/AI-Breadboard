@@ -268,9 +268,18 @@ def init_router() -> APIRouter:
     Returns:
         APIRouter: Экземпляр настроенного роутера.
     """
-    global _sync_router_included
+        global _sync_router_included
     if not _sync_router_included:
+        from .forms_router import router as forms_router
         from .sync_router import router as sync_router
+        router.include_router(forms_router)
+        router.include_router(sync_router)
+        _sync_router_included = True
+    if not _sync_router_included:
+        from .forms_router import router as forms_router
+    # Include forms router
+    router.include_router(forms_router)
+    _sync_router_included = True
         router.include_router(sync_router)
         _sync_router_included = True
     return router

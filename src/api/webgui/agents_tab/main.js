@@ -90,9 +90,7 @@ async function _loadAllData() {
     if (grid) {
       grid.innerHTML = `
         <div class="col-12 text-center py-5 text-danger">
-          <i class="bi bi-exclamation-triangle fs-1 d-block mb-2"></i>
-          <h5>Не удалось загрузить данные агентов</h5>
-          <p class="small text-secondary">${err.message}</p>
+          <i class="bi bi-exclamation-triangle fs-1 d-block mb-2i18n.t('auto__i_h5_h5_p_class__d682a2')small text-secondary">${err.message}</p>
           <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="window.initAgentsTab()">Повторить попытку</button>
         </div>
       `;
@@ -116,7 +114,7 @@ function _bindStaticEvents() {
       refreshBtn.disabled = true;
       await _loadAllData();
       refreshBtn.disabled = false;
-      _showToast('Список агентов обновлен', 'success');
+      _showToast(i18n.t('auto___e27642'), 'success');
     };
   }
 
@@ -171,15 +169,15 @@ function _bindStaticEvents() {
     const promptInput = document.getElementById('agent-system-prompt');
     if (promptInput) {
       promptInput.value =
-        'Ты автономный ReAct-агент Mediteka.\n\n' +
-        'ПРИНЦИП РАБОТЫ (Thought -> Action -> Observation):\n' +
-        '1. Тщательно анализируй вопрос пользователя (Thought).\n' +
-        '2. Выбирай необходимый инструмент из доступных (Action) с корректными параметрами.\n' +
-        '3. Анализируй результат выполнения инструмента (Observation).\n' +
-        '4. Сформируй итоговый структурированный ответ пользователю.\n\n' +
-        'ФОРМАТ ОТВЕТА:\n' +
-        '- Используй Markdown с красивым форматированием (списки, жирный шрифт, эмодзи).\n' +
-        '- Не выводи технические ошибки напрямую, объясняй суть решения.';
+        i18n.t('auto__react_mediteka_n_n_9791d9') +
+        i18n.t('auto__thought_action_observation_n_92af6b') +
+        i18n.t('auto_1_thought_n_141080') +
+        i18n.t('auto_2_action_n_888733') +
+        i18n.t('auto_3_observation_n_20ab7e') +
+        i18n.t('auto_4_n_n_23a6a6') +
+        i18n.t('auto__n_80c0ba') +
+        i18n.t('auto__markdown_n_e5e964') +
+        i18n.t('auto___90e828');
     }
   });
 
@@ -187,9 +185,9 @@ function _bindStaticEvents() {
     const promptInput = document.getElementById('agent-system-prompt');
     if (promptInput) {
       promptInput.value =
-        'Ты специализированный аналитический агент Mediteka.\n\n' +
-        'Твоя задача: структурировать полученные данные и всегда отвечать строго валидным JSON-объектом без лишнего обрамления и markdown-блоков.\n\n' +
-        'Пример структуры:\n{\n  "status": "success",\n  "items": [],\n  "summary": "краткое резюме"\n}';
+        i18n.t('auto__mediteka_n_n_b45671') +
+        i18n.t('auto__json_markdown_n_n_5f8119') +
+        'Пример структуры:\n{\n  "status": "success",\n  "items": [],\n  "summary": i18n.t('auto___895f87')\n}';
     }
   });
 
@@ -241,8 +239,7 @@ function _renderGrid() {
     grid.innerHTML = `
       <div class="col-12 text-center py-5" style="color: #cbd5e1;">
         <i class="bi bi-robot fs-1 d-block mb-2" style="color: #38bdf8;"></i>
-        <h5 class="text-white">Агенты не найдены</h5>
-        <p class="small" style="color: #94a3b8;">Создайте нового агента с помощью AI или вручную</p>
+        <h5 class="text-whitei18n.t('auto__h5_p_class__581a2b')small" style="color: #94a3b8;">Создайте нового агента с помощью AI или вручную</p>
       </div>
     `;
     return;
@@ -276,41 +273,36 @@ function _renderGrid() {
                     : '<span class="badge fw-bold" style="font-size: 0.7rem; background-color: #d97706 !important; color: #ffffff !important;">CUSTOM</span>'
                 }
               </div>
-              <div class="form-check form-switch m-0" title="Включить / Выключить">
+              <div class="form-check form-switch m-0" title=i18n.t('auto___30b91a')>
                 <input class="form-check-input agent-toggle-switch" type="checkbox" data-agent-id="${agent.id}" ${isEnabled ? 'checked' : ''}>
               </div>
             </div>
             <div class="card-body p-3 d-flex flex-column">
-              <p class="small mb-3 flex-grow-1 agent-desc" style="min-height: 40px; color: #cbd5e1; line-height: 1.45;">${agent.description || 'Описание отсутствует'}</p>
+              <p class="small mb-3 flex-grow-1 agent-desc" style="min-height: 40px; color: #cbd5e1; line-height: 1.45;">${agent.description || i18n.t('auto___abb327')}</p>
               
               <div class="agent-spec-box mb-3 small">
                 <div class="d-flex justify-content-between align-items-center mb-1 pb-1" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
-                  <span class="spec-label">Провайдер &amp; Модель:</span>
-                  <span class="badge spec-value-badge text-truncate" style="max-width: 190px;">${providerName}: ${agent.model}</span>
+                  <span class="spec-labeli18n.t('auto__amp_span_span_class__741c37')badge spec-value-badge text-truncate" style="max-width: 190px;">${providerName}: ${agent.model}</span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
-                  <span class="spec-label">Температура / Шаги:</span>
-                  <span class="spec-tech-val font-monospace">T: ${agent.temperature} <span style="color: #64748b;">|</span> Max: ${agent.max_steps}</span>
+                  <span class="spec-labeli18n.t('auto__span_span_class__56e498')spec-tech-val font-monospace">T: ${agent.temperature} <span style="color: #64748b;">|</span> Max: ${agent.max_steps}</span>
                 </div>
               </div>
 
               <div class="mb-3">
-                <div class="small fw-semibold mb-2" style="color: #f1f5f9;">Инструменты (${(agent.tools ?? []).length}):</div>
-                <div class="d-flex flex-wrap">${toolsBadges || '<span class="small" style="color: #94a3b8;">Без внешних инструментов</span>'}</div>
+                <div class="small fw-semibold mb-2" style="color: #f1f5f9;i18n.t('auto__agent_tools_length_div_div_class__8283e2')d-flex flex-wrap">${toolsBadges || '<span class="small" style="color: #94a3b8;">Без внешних инструментов</span>'}</div>
               </div>
 
               <div class="mt-auto d-flex justify-content-between gap-2 pt-2" style="border-top: 1px solid #334155;">
                 <button class="btn btn-sm rounded-pill px-3 btn-test-sandbox" data-agent-id="${agent.id}">
-                  <i class="bi bi-play-fill"></i> Тест в Sandbox
-                </button>
-                <div class="d-flex gap-1">
-                  <button class="btn btn-sm rounded-pill px-2 btn-edit-agent" data-agent-id="${agent.id}" title="Редактировать">
+                  <i class="bi bi-play-filli18n.t('auto__i_sandbox_button_div_class__fe2a26')d-flex gap-1">
+                  <button class="btn btn-sm rounded-pill px-2 btn-edit-agent" data-agent-id="${agent.id}" title=i18n.t('auto___901beb')>
                     <i class="bi bi-pencil-fill"></i>
                   </button>
                   ${
                     !isSystem
                       ? `
-                    <button class="btn btn-sm rounded-pill px-2 btn-delete-agent" data-agent-id="${agent.id}" title="Удалить">
+                    <button class="btn btn-sm rounded-pill px-2 btn-delete-agent" data-agent-id="${agent.id}" title=i18n.t('auto___86ea33')>
                       <i class="bi bi-trash-fill"></i>
                     </button>
                   `
@@ -375,10 +367,9 @@ async function _toggleAgentState(agentId, enabled) {
     });
     _renderCounters();
     _renderGrid();
-    _showToast(`Агент "${agent.name}" ${enabled ? 'включен' : 'отключен'}`, 'success');
+    _showToast(`Агент "${agent.name}" ${enabled ? i18n.t('auto___bb3fc3') : i18n.t('auto___9f961e')}`, 'success');
   } catch (err) {
-    console.error('[AgentsTab] Error toggling agent:', err);
-    _showToast(`Ошибка: ${err.message}`, 'danger');
+    console.error('[AgentsTab] Error toggling agent:i18n.t('auto__err_showtoast_err_message__544152')danger');
     await _loadAllData();
   }
 }
@@ -422,16 +413,7 @@ function _populateToolsMatrix() {
  */
 function _updateSelectedToolsCounter() {
   const count = document.querySelectorAll('#agent-tools-matrix .tool-checkbox:checked').length;
-  const badge = document.getElementById('agent-tools-count');
-  if (badge) badge.textContent = `${count} выбрано`;
-}
-
-/**
- * Updates model selection dropdown options when provider selection changes.
- *
- * @param {string} providerSelectId - ID of provider select element.
- * @param {string} modelSelectId - ID of model select element.
- * @param {string} [selectedModel=''] - Model ID to select by default.
+  const badge = document.getElementById('agent-tools-counti18n.t('auto__if_badge_badge_textcontent_count_updates_model_selection_dropdown_options_when_provider_selection_changes_param_string_providerselectid_id_of_provider_select_element_param_string_modelselectid_id_of_model_select_element_param_string_selectedmodel__214e21')'] - Model ID to select by default.
  * @returns {void}
  */
 function _updateModelDropdown(providerSelectId, modelSelectId, selectedModel = '') {
@@ -513,7 +495,7 @@ function _openEditor(agentId = null, prefillData = null) {
       idInput.value = (prefillData.name || 'agent').toLowerCase().replace(/[^a-z0-9_]/g, '_').slice(0, 25);
       idInput.disabled = false;
     }
-    if (nameInput) nameInput.value = prefillData.name ?? 'Новый ИИ-Агент';
+    if (nameInput) nameInput.value = prefillData.name ?? i18n.t('auto___ad2e44');
     if (descInput) descInput.value = prefillData.description ?? '';
     if (enabledChk) enabledChk.checked = true;
     if (providerSel) providerSel.value = prefillData.provider ?? 'gemini';
@@ -577,7 +559,7 @@ async function _handleSaveAgent() {
   const system_prompt = document.getElementById('agent-system-prompt')?.value.trim() ?? '';
 
   if (!id || !name) {
-    _showToast('ID и Название агента обязательны для заполнения', 'warning');
+    _showToast(i18n.t('auto_id__5823af'), 'warning');
     return;
   }
 
@@ -624,8 +606,7 @@ async function _handleSaveAgent() {
     bootstrap.Modal.getInstance(modalEl)?.hide();
     await _loadAllData();
   } catch (err) {
-    console.error('[AgentsTab] Error saving agent:', err);
-    _showToast(`Ошибка сохранения: ${err.message}`, 'danger');
+    console.error('[AgentsTab] Error saving agent:i18n.t('auto__err_showtoast_err_message__60875f')danger');
   } finally {
     if (saveBtn) saveBtn.disabled = false;
   }
@@ -650,8 +631,7 @@ async function _deleteAgent(agentId) {
     _showToast(`Агент "${agent.name}" удален`, 'success');
     await _loadAllData();
   } catch (err) {
-    console.error('[AgentsTab] Error deleting agent:', err);
-    _showToast(`Ошибка удаления: ${err.message}`, 'danger');
+    console.error('[AgentsTab] Error deleting agent:i18n.t('auto__err_showtoast_err_message__b978f4')danger');
   }
 }
 
@@ -684,7 +664,7 @@ async function _handleRunAiGenerate() {
   const model = document.getElementById('ai-builder-model')?.value ?? 'gemini-2.5-flash';
 
   if (!taskDesc) {
-    _showToast('Пожалуйста, опишите задачу агента', 'warning');
+    _showToast(i18n.t('auto___f81ce1'), 'warning');
     return;
   }
 
@@ -708,17 +688,16 @@ async function _handleRunAiGenerate() {
       if (resultBox && previewBox) {
         resultBox.classList.remove('d-none');
         previewBox.innerHTML = `
-          <div><strong style="color: #38bdf8;">Название:</strong> <span class="text-white fw-bold">${res.data.name}</span></div>
-          <div class="mt-1"><strong style="color: #cbd5e1;">Описание:</strong> <span style="color: #f1f5f9;">${res.data.description}</span></div>
-          <div class="mt-1"><strong style="color: #4ade80;">Инструменты:</strong> <span style="color: #f8fafc;">${(res.data.recommended_tools ?? []).join(', ') || 'нет'}</span></div>
+          <div><strong style="color: #38bdf8;i18n.t('auto__strong_span_class__c73595')text-white fw-bold">${res.data.name}</span></div>
+          <div class="mt-1"><strong style="color: #cbd5e1;i18n.t('auto__strong_span_style__5c2d0f')color: #f1f5f9;">${res.data.description}</span></div>
+          <div class="mt-1"><strong style="color: #4ade80;i18n.t('auto__strong_span_style__8b7876')color: #f8fafc;">${(res.data.recommended_tools ?? []).join(', ') || i18n.t('auto___ced07f')}</span></div>
           <div class="mt-2 p-2 rounded" style="background: #0f172a; border: 1px solid #334155; color: #f8fafc; white-space: pre-wrap; font-size: 0.85rem; line-height: 1.45;">${res.data.system_prompt}</div>
         `;
       }
-      _showToast('Спецификация агента успешно сгенерирована!', 'success');
+      _showToast(i18n.t('auto___3b431a'), 'success');
     }
   } catch (err) {
-    console.error('[AgentsTab] AI Generator error:', err);
-    _showToast(`Ошибка генерации: ${err.message}`, 'danger');
+    console.error('[AgentsTab] AI Generator error:i18n.t('auto__err_showtoast_err_message__d86f31')danger');
   } finally {
     if (runBtn) {
       runBtn.disabled = false;
@@ -745,10 +724,7 @@ function _openSandbox(agentId) {
   const modelBadge = document.getElementById('sandbox-agent-model');
   if (modelBadge) modelBadge.textContent = `${_getProviderDisplayName(agent.provider)}: ${agent.model}`;
 
-  const toolsSummary = document.getElementById('sandbox-agent-tools-summary');
-  if (toolsSummary) toolsSummary.textContent = `Инструментов: ${(agent.tools ?? []).length}`;
-
-  const msgsList = document.getElementById('sandbox-messages-list');
+  const toolsSummary = document.getElementById('sandbox-agent-tools-summaryi18n.t('auto__if_toolssummary_toolssummary_textcontent_agent_tools_length_const_msgslist_document_getelementbyid__0a271e')sandbox-messages-list');
   const placeholder = document.getElementById('sandbox-placeholder');
   if (msgsList) msgsList.innerHTML = '';
   if (placeholder) placeholder.style.display = 'block';
@@ -793,10 +769,7 @@ async function _handleRunSandboxTest() {
   botMsgEl.innerHTML = `
     <div class="p-3 rounded small" style="background: #0f172a; border: 1px solid #334155; color: #f8fafc;">
       <div class="d-flex align-items-center gap-2 mb-2" style="color: #fbbf24; font-weight: 600;">
-        <span class="spinner-border spinner-border-sm"></span>
-        <span>Агент выполняет рассуждение и вызовы инструментов...</span>
-      </div>
-      <div class="steps-trace small font-monospace" style="color: #cbd5e1;"></div>
+        <span class="spinner-border spinner-border-smi18n.t('auto__span_span_span_div_div_class__590d5a')steps-trace small font-monospace" style="color: #cbd5e1;"></div>
     </div>
   `;
   msgsList.appendChild(botMsgEl);
@@ -817,7 +790,7 @@ async function _handleRunSandboxTest() {
         else if (s.type === 'finish') icon = '✅';
         else if (s.type === 'error') icon = '❌';
 
-        return `<div class="mb-1">${icon} <span style="color: #38bdf8; font-weight: bold;">[Шаг ${s.step}]</span> <span style="color: #e2e8f0;">${s.content}</span></div>`;
+        return `<div class="mb-1">${icon} <span style="color: #38bdf8; font-weight: bold;i18n.t('auto__s_step_span_span_style__3a4cb5')color: #e2e8f0;">${s.content}</span></div>`;
       })
       .join('');
 
@@ -825,20 +798,10 @@ async function _handleRunSandboxTest() {
       <div class="p-3 rounded small" style="background: #0f172a; border: 1px solid #334155; color: #f8fafc;">
         <div class="d-flex justify-content-between align-items-center mb-2 pb-1" style="border-bottom: 1px solid #334155;">
           <strong style="color: #38bdf8; font-size: 0.95rem;">🤖 ${agent.name}</strong>
-          <span class="badge" style="background: #334155; color: #f8fafc; font-weight: 600;">${res.duration_ms ?? 0} мс</span>
-        </div>
-        
-        <div class="mb-2" style="white-space: pre-wrap; color: #f8fafc; line-height: 1.5;">${res.response || 'Пустой ответ'}</div>
+          <span class="badge" style="background: #334155; color: #f8fafc; font-weight: 600;i18n.t('auto__res_duration_ms_0_span_div_div_class__47d073')mb-2" style="white-space: pre-wrap; color: #f8fafc; line-height: 1.5;">${res.response || i18n.t('auto___867525')}</div>
         
         <div class="p-2 rounded mt-2 small font-monospace" style="background: #020617; border: 1px solid #334155; font-size: 0.8rem; line-height: 1.45;">
-          <div class="fw-bold mb-1" style="color: #cbd5e1;">Трассировка выполнения (ReAct Trace):</div>
-          ${stepsHtml}
-        </div>
-      </div>
-    `;
-  } catch (err) {
-    botMsgEl.innerHTML = `
-      <div class="p-3 rounded small" style="background: #450a0a; border: 1px solid #dc2626; color: #fecaca;">
+          <div class="fw-bold mb-1" style="color: #cbd5e1;i18n.t('auto__react_trace_div_stepshtml_div_div_catch_err_botmsgel_innerhtml_div_class__c41c4d')p-3 rounded small" style="background: #450a0a; border: 1px solid #dc2626; color: #fecaca;">
         <strong style="color: #ef4444;">Ошибка выполнения:</strong> ${err.message}
       </div>
     `;

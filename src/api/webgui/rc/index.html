@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Медиа Плейер - Пульт ДУ</title>
+  <title><span data-i18n="auto___b7eea7"></span></title>
   
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -345,8 +345,8 @@
     <div class="card-auth">
       <div class="text-center mb-4">
         <i class="bi bi-shield-lock-fill fs-1 text-primary"></i>
-        <h4 class="mt-2 text-white">Вход в пульт ДУ</h4>
-        <p class="text-muted small">Пожалуйста, войдите в аккаунт для продолжения</p>
+        <h4 class="mt-2 text-white"><span data-i18n="auto___bd2f13"></span></h4>
+        <p class="text-muted small"><span data-i18n="auto___f02457"></span></p>
       </div>
 
       <div id="auth-alert" class="alert alert-danger d-none" role="alert"></div>
@@ -359,11 +359,11 @@
             <input type="email" class="form-control" id="login-email" required>
           </div>
           <div class="mb-3">
-            <label for="login-password" class="form-label text-muted small">Пароль</label>
+            <label for="login-password" class="form-label text-muted small"><span data-i18n="auto___14f7c6"></span></label>
             <input type="password" class="form-control" id="login-password" required>
           </div>
-          <button type="submit" class="btn btn-auth-primary w-100 py-2.5 rounded-pill mb-3">Войти</button>
-          <p class="text-center small mb-0">Нет аккаунта? <a href="#" id="go-to-register" class="text-info">Зарегистрироваться</a></p>
+          <button type="submit" class="btn btn-auth-primary w-100 py-2.5 rounded-pill mb-3"><span data-i18n="auto___939e95"></span></button>
+          <p class="text-center small mb-0"><span data-i18n="auto___720761"></span>? <a href="#" id="go-to-register" class="text-info"><span data-i18n="auto___2e4275"></span></a></p>
         </form>
       </div>
 
@@ -371,7 +371,7 @@
       <div id="auth-form-register" class="d-none">
         <form id="form-register">
           <div class="mb-3">
-            <label for="register-name" class="form-label text-muted small">Имя</label>
+            <label for="register-name" class="form-label text-muted small"><span data-i18n="auto___aee78f"></span></label>
             <input type="text" class="form-control" id="register-name" required>
           </div>
           <div class="mb-3">
@@ -379,30 +379,30 @@
             <input type="email" class="form-control" id="register-email" required>
           </div>
           <div class="mb-3">
-            <label for="register-password" class="form-label text-muted small">Пароль</label>
+            <label for="register-password" class="form-label text-muted small"><span data-i18n="auto___14f7c6"></span></label>
             <input type="password" class="form-control" id="register-password" required>
           </div>
-          <button type="submit" class="btn btn-auth-success w-100 py-2.5 rounded-pill mb-3">Зарегистрироваться</button>
-          <p class="text-center small mb-0">Уже есть аккаунт? <a href="#" id="go-to-login" class="text-info">Войти</a></p>
+          <button type="submit" class="btn btn-auth-success w-100 py-2.5 rounded-pill mb-3"><span data-i18n="auto___2e4275"></span></button>
+          <p class="text-center small mb-0"><span data-i18n="auto___bbdb97"></span>? <a href="#" id="go-to-login" class="text-info"><span data-i18n="auto___939e95"></span></a></p>
         </form>
       </div>
 
       <!-- Verify Form -->
       <div id="auth-form-verify" class="d-none">
-        <p class="text-center small">На вашу почту отправлен 6-значный код подтверждения. Пожалуйста, введите его ниже.</p>
+        <p class="text-center small"><span data-i18n="auto__6__fd6ceb"></span>.</p>
         <form id="form-verify">
           <div class="mb-3">
-            <label for="verify-code" class="form-label text-muted small">Код подтверждения</label>
+            <label for="verify-code" class="form-label text-muted small"><span data-i18n="auto___bfee5d"></span></label>
             <input type="text" class="form-control text-center fs-3 py-2" id="verify-code" maxlength="6" placeholder="XXXXXX" required>
           </div>
-          <button type="submit" class="btn btn-info w-100 py-2.5 text-white rounded-pill mb-3">Подтвердить</button>
-          <p class="text-center small mb-0"><a href="#" id="verify-cancel" class="text-info">Назад к входу</a></p>
+          <button type="submit" class="btn btn-info w-100 py-2.5 text-white rounded-pill mb-3"><span data-i18n="auto___0467ae"></span></button>
+          <p class="text-center small mb-0"><a href="#" id="verify-cancel" class="text-info"><span data-i18n="auto___8ab8b6"></span></a></p>
         </form>
       </div>
 
       <div class="my-4 text-center position-relative">
         <hr class="border-secondary">
-        <span class="px-2 text-muted position-absolute top-50 start-50 translate-middle small" style="background-color: var(--tg-theme-secondary-bg-color);">Или войти через</span>
+        <span class="px-2 text-muted position-absolute top-50 start-50 translate-middle small" style="background-color: var(--tg-theme-secondary-bg-color);"><span data-i18n="auto___5ee61c"></span></span>
       </div>
 
       <div class="d-flex flex-column gap-2 align-items-center">
@@ -420,17 +420,17 @@
       <div class="scan-radar">
         <i class="bi bi-laptop fs-2 text-primary"></i>
       </div>
-      <h4 class="text-white" id="scan-title">Поиск открытых компьютеров</h4>
-      <p class="text-muted small" id="scan-status">Сканируем сеть на наличие открытых сессий davidka.net...</p>
+      <h4 class="text-white" id="scan-title"><span data-i18n="auto___f343d5"></span></h4>
+      <p class="text-muted small" id="scan-status"><span data-i18n="auto___1b0b02"></span> davidka.net...</p>
       
       <div id="discovered-players-list" class="mt-4 text-start"></div>
 
       <button id="btn-retry-scan" class="btn btn-outline-primary w-100 py-2.5 rounded-pill mt-3 d-none">
-        <i class="bi bi-arrow-clockwise"></i> Обновить поиск
+        <i class="bi bi-arrow-clockwise"></i> <span data-i18n="auto___7235a6"></span>
       </button>
       
       <button id="btn-scan-logout" class="btn btn-sm btn-outline-danger w-100 mt-2 py-2 border-0 small">
-        <i class="bi bi-box-arrow-right"></i> Выйти из аккаунта
+        <i class="bi bi-box-arrow-right"></i> <span data-i18n="auto___1d5ad0"></span>
       </button>
     </div>
   </div>
@@ -440,13 +440,13 @@
     <div class="card-rc">
       <!-- Status Badge & User info -->
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <span class="badge bg-secondary" id="ws-status"><i class="bi bi-wifi-off"></i> Подключение...</span>
+        <span class="badge bg-secondary" id="ws-status"><i class="bi bi-wifi-off"></i> <span data-i18n="auto___79e350"></span>...</span>
         <div class="d-flex gap-2 align-items-center">
-          <button class="theme-toggle-btn" id="theme-toggle-btn" title="Переключить тему">
+          <button class="theme-toggle-btn" id="theme-toggle-btn" title="<span data-i18n="auto___e8902e"></span>">
             <i class="bi bi-brightness-high"></i>
           </button>
-          <button class="btn btn-sm btn-outline-secondary py-1 px-2 border-secondary small" id="btn-change-player" title="Сменить компьютер">
-            <i class="bi bi-arrow-left-right"></i> <span id="room-info">ПК: default</span>
+          <button class="btn btn-sm btn-outline-secondary py-1 px-2 border-secondary small" id="btn-change-player" title="<span data-i18n="auto___e80ac8"></span>">
+            <i class="bi bi-arrow-left-right"></i> <span id="room-info"><span data-i18n="auto___04bf71"></span>: default</span>
           </button>
         </div>
       </div>
@@ -454,7 +454,7 @@
       <!-- Now Playing Info -->
       <div class="text-center my-3 p-3 rounded bg-dark bg-opacity-25">
         <i class="bi bi-music-note-beamed fs-1 text-primary mb-3 d-block"></i>
-        <div id="track-title" class="track-title mb-1 text-truncate">Файл не выбран</div>
+        <div id="track-title" class="track-title mb-1 text-truncate"><span data-i18n="auto___576895"></span></div>
         <small id="time-display" class="text-muted">00:00 / 00:00</small>
         
         <!-- Progress Bar -->
@@ -465,41 +465,41 @@
 
       <!-- Central Controls -->
       <div class="d-flex justify-content-center align-items-center gap-3 my-4">
-        <button class="btn btn-outline-light btn-circle-lg" id="btn-prev" title="Предыдущий"><i class="bi bi-skip-start-fill fs-3"></i></button>
-        <button class="btn btn-primary btn-circle-xl" id="btn-playtoggle" title="Воспроизведение/Пауза"><i class="bi bi-play-fill fs-1" id="play-icon"></i></button>
-        <button class="btn btn-outline-light btn-circle-lg" id="btn-next" title="Следующий"><i class="bi bi-skip-end-fill fs-3"></i></button>
+        <button class="btn btn-outline-light btn-circle-lg" id="btn-prev" title="<span data-i18n="auto___3a2d25"></span>"><i class="bi bi-skip-start-fill fs-3"></i></button>
+        <button class="btn btn-primary btn-circle-xl" id="btn-playtoggle" title="<span data-i18n="auto___1ae8fe"></span>"><i class="bi bi-play-fill fs-1" id="play-icon"></i></button>
+        <button class="btn btn-outline-light btn-circle-lg" id="btn-next" title="<span data-i18n="auto___e9c094"></span>"><i class="bi bi-skip-end-fill fs-3"></i></button>
       </div>
 
       <!-- Carousel / Random Movie Control -->
       <div class="my-3 px-2">
-        <button class="btn btn-carousel w-100 py-2.5 rounded-pill d-flex align-items-center justify-content-center gap-2" id="btn-carousel" title="Случайный фильм">
+        <button class="btn btn-carousel w-100 py-2.5 rounded-pill d-flex align-items-center justify-content-center gap-2" id="btn-carousel" title="<span data-i18n="auto___3df355"></span>">
           <i class="bi bi-arrow-repeat fs-5"></i>
-          <span>Карусель</span>
+          <span><span data-i18n="auto___b2881b"></span></span>
         </button>
       </div>
 
       <!-- Quick Google Workspace & Social Control Panel Buttons -->
       <div class="row g-2 px-2 my-2">
         <div class="col-6 col-sm-3">
-          <button class="btn btn-outline-primary w-100 py-2 rounded-3 d-flex align-items-center justify-content-center gap-1 small" id="rc-btn-check-mail" title="Проверить почту Gmail">
+          <button class="btn btn-outline-primary w-100 py-2 rounded-3 d-flex align-items-center justify-content-center gap-1 small" id="rc-btn-check-mail" title="<span data-i18n="auto___95c2f9"></span> Gmail">
             <i class="bi bi-envelope-check-fill text-primary"></i>
-            <span>Почта</span>
+            <span><span data-i18n="auto___108aa2"></span></span>
           </button>
         </div>
         <div class="col-6 col-sm-3">
-          <button class="btn btn-outline-info w-100 py-2 rounded-3 d-flex align-items-center justify-content-center gap-1 small" id="rc-btn-search-gdocs" title="Поиск в Google Docs">
+          <button class="btn btn-outline-info w-100 py-2 rounded-3 d-flex align-items-center justify-content-center gap-1 small" id="rc-btn-search-gdocs" title="<span data-i18n="auto___e0b41a"></span> Google Docs">
             <i class="bi bi-file-earmark-text-fill text-info"></i>
             <span>Docs</span>
           </button>
         </div>
         <div class="col-6 col-sm-3">
-          <button class="btn btn-outline-success w-100 py-2 rounded-3 d-flex align-items-center justify-content-center gap-1 small" id="rc-btn-gsheets" title="Работа с Google Sheets">
+          <button class="btn btn-outline-success w-100 py-2 rounded-3 d-flex align-items-center justify-content-center gap-1 small" id="rc-btn-gsheets" title="<span data-i18n="auto___a89bcd"></span> Google Sheets">
             <i class="bi bi-file-earmark-spreadsheet-fill text-success"></i>
-            <span>Таблицы</span>
+            <span><span data-i18n="auto___015dd8"></span></span>
           </button>
         </div>
         <div class="col-6 col-sm-3">
-          <button class="btn btn-outline-primary w-100 py-2 rounded-3 d-flex align-items-center justify-content-center gap-1 small" id="rc-btn-facebook" title="Опубликовать в Facebook">
+          <button class="btn btn-outline-primary w-100 py-2 rounded-3 d-flex align-items-center justify-content-center gap-1 small" id="rc-btn-facebook" title="<span data-i18n="auto___b4de3e"></span> Facebook">
             <i class="bi bi-facebook text-primary"></i>
             <span>Facebook</span>
           </button>
@@ -515,14 +515,14 @@
 
       <!-- Voice Search & AI Chat -->
       <div class="mt-4 p-3 rounded border border-secondary bg-dark bg-opacity-25">
-        <h6 class="text-center mb-3"><i class="bi bi-mic"></i> Голосовой Ассистент</h6>
+        <h6 class="text-center mb-3"><i class="bi bi-mic"></i> <span data-i18n="auto___d7a695"></span></h6>
         
         <!-- Status -->
-        <div class="text-muted small text-center mb-3" id="voice-status">Готов к работе</div>
+        <div class="text-muted small text-center mb-3" id="voice-status"><span data-i18n="auto___d50038"></span></div>
         
         <!-- Control buttons -->
         <div class="d-flex flex-column gap-3 align-items-center">
-          <button class="btn btn-outline-danger btn-circle-xl" id="btn-mic" title="Нажмите, чтобы говорить">
+          <button class="btn btn-outline-danger btn-circle-xl" id="btn-mic" title="<span data-i18n="auto___a20012"></span>">
             <i class="bi bi-mic-fill fs-1" id="mic-icon"></i>
           </button>
           
@@ -542,27 +542,22 @@
 
       <!-- Playlist Picker -->
       <div class="mt-4">
-        <h6 class="border-bottom border-secondary pb-2"><i class="bi bi-collection-play"></i> Список воспроизведения плеера</h6>
+        <h6 class="border-bottom border-secondary pb-2"><i class="bi bi-collection-play"></i> <span data-i18n="auto___49eaef"></span></h6>
         <div class="list-group list-group-flush playlist-box" id="playlist-items">
-          <div class="text-muted small p-3 text-center">Ожидание подключения к плееру...</div>
+          <div class="text-muted small p-3 text-center"><span data-i18n="auto___bce129"></span>...</div>
         </div>
       </div>
 
       <!-- User Manual (Read & Listen) -->
       <div class="mt-4 p-3 rounded border border-secondary bg-dark bg-opacity-25">
         <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-2 mb-2">
-          <h6 class="m-0"><i class="bi bi-info-circle"></i> Инструкция пользователя</h6>
-          <button class="btn btn-outline-info btn-sm d-flex align-items-center gap-1" id="btn-read-manual" title="Прослушать инструкцию">
-            <i class="bi bi-volume-up-fill" id="read-manual-icon"></i> <span>Прослушать</span>
+          <h6 class="m-0"><i class="bi bi-info-circle"></i> <span data-i18n="auto___6dcfea"></span></h6>
+          <button class="btn btn-outline-info btn-sm d-flex align-items-center gap-1" id="btn-read-manual" title="<span data-i18n="auto___faa81d"></span>">
+            <i class="bi bi-volume-up-fill" id="read-manual-icon"></i> <span><span data-i18n="auto___6aa61e"></span></span>
           </button>
         </div>
         <div id="user-manual-text" class="small text-muted" style="line-height: 1.5; text-align: justify;">
-          Для дистанционного управления сначала откройте Медиаплеер на вашем компьютере или телевизоре. 
-          Данный пульт автоматически подключится к нему через сервер. 
-          Вы можете нажимать кнопки для запуска файлов, переключения треков, перемотки или изменения громкости. 
-          Также доступно голосовое управление кнопкой микрофона. 
-          Простые команды: «пауза», «плей», «громче», «тише», «вперед» и «назад» сработают мгновенно. 
-          А любые другие фразы будут отправлены вашему AI-ассистенту Gemini для помощи в выборе фильма или ответа на вопросы.
+          <span data-i18n="auto__ai_gemini__2fc0fc"></span>.
         </div>
       </div>
     </div>
@@ -683,7 +678,7 @@
         await api.auth.loginEmail(email, pass);
         checkAndInit();
       } catch (err) {
-        authAlert.textContent = err.message || 'Ошибка входа';
+        authAlert.textContent = err.message || '<span data-i18n="auto___a88e15"></span>';
         authAlert.classList.remove('d-none');
       }
     });
@@ -702,7 +697,7 @@
         authFormRegister.classList.add('d-none');
         authFormVerify.classList.remove('d-none');
       } catch (err) {
-        authAlert.textContent = err.message || 'Ошибка регистрации';
+        authAlert.textContent = err.message || '<span data-i18n="auto___177e87"></span>';
         authAlert.classList.remove('d-none');
       }
     });
@@ -719,19 +714,7 @@
         authFormVerify.classList.add('d-none');
         authFormLogin.classList.remove('d-none');
         authAlert.className = 'alert alert-success';
-        authAlert.textContent = 'Почта успешно подтверждена. Теперь войдите.';
-        authAlert.classList.remove('d-none');
-      } catch (err) {
-        authAlert.textContent = err.message || 'Неверный код';
-        authAlert.classList.remove('d-none');
-      }
-    });
-
-    // ── COMPUTER DISCOVERY LOGIC ──────────────────────────────────────────
-    async function scanForPlayers() {
-      showPanel('scan');
-      document.getElementById('scan-title').textContent = 'Поиск открытых компьютеров';
-      document.getElementById('scan-status').textContent = 'Сканируем сеть на наличие открытых сессий davidka.net...';
+        authAlert.textContent = '<span data-i18n="auto__authalert_classlist_remove_d_none_catch_err_authalert_textcontent_err_message_authalert_classlist_remove_d_none_computer_discovery_logic_async_function_scanforplayers_showpanel_scan_document_getelementbyid_scan_title_textcontent_document_getelementbyid_scan_status_textcontent__c48a14"></span> davidka.net...';
       document.getElementById('btn-retry-scan').classList.add('d-none');
       
       const listDiv = document.getElementById('discovered-players-list');
@@ -747,27 +730,26 @@
           if (p.includes('@')) {
             return { room: p, name: `davidka.net (${p})` };
           }
-          return { room: p, name: p === 'default' ? 'Основной компьютер (davidka.net)' : `ПК: ${p}` };
+          return { room: p, name: p === 'default' ? '<span data-i18n="auto__davidka_net__f9df2b"></span>: ${p}` };
         });
 
         if (mappedPlayers.length === 0) {
           listDiv.innerHTML = `
             <div class="alert alert-warning text-center small mb-0">
-              <i class="bi bi-exclamation-circle-fill"></i> Открытые компьютеры не обнаружены.<br>
-              Пожалуйста, откройте davidka.net на вашем компьютере.
+              <i class="bi bi-exclamation-circle-fill"></i> <span data-i18n="auto___40e870"></span>.<br>
+              <span data-i18n="auto__davidka_net__606e55"></span>.
             </div>`;
-          document.getElementById('scan-title').textContent = 'Компьютеры не найдены';
+          document.getElementById('scan-title').textContent = '<span data-i18n="auto___728622"></span>';
           document.getElementById('btn-retry-scan').classList.remove('d-none');
         } else if (mappedPlayers.length === 1) {
           // Exactly one computer found - connect automatically
-          listDiv.innerHTML = `<div class="alert alert-success text-center small">Обнаружен компьютер "${mappedPlayers[0].name}". Подключаемся...</div>`;
+          listDiv.innerHTML = `<div class="alert alert-success text-center small"><span data-i18n="auto__mappedplayers_0_name__38c47e"></span>...</div>`;
           setTimeout(() => {
             initStream(mappedPlayers[0].room);
           }, 800);
         } else {
           // Multiple computers found - ask user to select one
-          document.getElementById('scan-title').textContent = 'Куда подключиться?';
-          document.getElementById('scan-status').textContent = 'Обнаружено несколько открытых компьютеров. Выберите один:';
+          document.getElementById('scan-title').textContent = '<span data-i18n="auto__document_getelementbyid_scan_status_textcontent__85fa78"></span>:';
           
           listDiv.innerHTML = mappedPlayers.map(p => `
             <div class="player-list-item">
@@ -775,13 +757,13 @@
                 <i class="bi bi-laptop-fill text-primary me-2"></i>
                 <strong>${p.name}</strong>
               </div>
-              <button class="btn btn-sm btn-primary rounded-pill px-3" onclick="selectPlayer('${p.room}')">Выбрать</button>
+              <button class="btn btn-sm btn-primary rounded-pill px-3" onclick="selectPlayer('${p.room}')"><span data-i18n="auto___fe4b0c"></span></button>
             </div>
           `).join('');
           document.getElementById('btn-retry-scan').classList.remove('d-none');
         }
       } catch (err) {
-        listDiv.innerHTML = `<div class="alert alert-danger text-center small">Ошибка сканирования: ${err.message}</div>`;
+        listDiv.innerHTML = `<div class="alert alert-danger text-center small"><span data-i18n="auto___d958e5"></span>: ${err.message}</div>`;
         document.getElementById('btn-retry-scan').classList.remove('d-none');
       }
     }
@@ -869,7 +851,7 @@
       const roomInfoElement = document.getElementById('room-info');
       if (roomInfoElement) {
         const displayRoom = room.includes('@') ? 'kino.davidka.net.tv' : room;
-        roomInfoElement.textContent = `Плеер: ${displayRoom}`;
+        roomInfoElement.textContent = `<span data-i18n="auto___92c943"></span>: ${displayRoom}`;
       }
 
       // Close previous connection to satisfy "Strictly One Stream" requirement
@@ -884,7 +866,7 @@
 
       ws.onopen = () => {
         statusBadge.className = 'badge bg-success';
-        statusBadge.innerHTML = '<i class="bi bi-wifi"></i> Подключено';
+        statusBadge.innerHTML = '<i class="bi bi-wifi"></i> <span data-i18n="auto___20bebc"></span>';
       };
 
       ws.onmessage = (event) => {
@@ -920,7 +902,7 @@
         if (currentRoomName !== room) return;
 
         statusBadge.className = 'badge bg-warning text-dark';
-        statusBadge.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Переподключение...';
+        statusBadge.innerHTML = '<i class="bi bi-arrow-clockwise"></i> <span data-i18n="auto___a8e2cf"></span>...';
         setTimeout(() => {
           if (currentRoomName === room) {
             initStream(room);
@@ -938,7 +920,7 @@
 
     function updateUI(data) {
       playerState = { ...playerState, ...data };
-      trackTitle.textContent = data.fileName || 'Файл не выбран';
+      trackTitle.textContent = data.fileName || '<span data-i18n="auto___576895"></span>';
       timeDisplay.textContent = `${formatTime(data.currentTime)} / ${formatTime(data.duration)}`;
 
       if (!isSeeking && data.duration > 0) {
@@ -960,14 +942,14 @@
     function updatePlaylist(files) {
       window.playlistFiles = files;
       if (!files.length) {
-        playlistContainer.innerHTML = '<div class="text-muted small p-3 text-center">Плейлист пуст</div>';
+        playlistContainer.innerHTML = '<div class="text-muted small p-3 text-center"><span data-i18n="auto___973902"></span></div>';
         return;
       }
 
       playlistContainer.innerHTML = files.map((f, i) => `
         <button class="list-group-item list-group-item-action bg-transparent text-white border-secondary py-2 px-3 small d-flex justify-content-between align-items-center" onclick="playFile(${i})">
           <span class="text-truncate">${i + 1}. ${f.name}</span>
-          <span class="badge bg-secondary ms-2">${f.type === 'series' ? 'Сериал' : 'Фильм'}</span>
+          <span class="badge bg-secondary ms-2">${f.type === 'series' ? '<span data-i18n="auto___200ff9"></span>'}</span>
         </button>
       `).join('');
     }
@@ -1016,7 +998,7 @@
       let ratingHtml = '';
       if (card.rating) {
         if (card.rating.imdb) ratingHtml += `<span class="badge bg-warning text-dark me-1">IMDb: ${card.rating.imdb}</span>`;
-        if (card.rating.кинопоиск) ratingHtml += `<span class="badge bg-danger text-white me-1">КП: ${card.rating.кинопоиск}</span>`;
+        if (card.rating.<span data-i18n="auto___d2083b"></span>) ratingHtml += `<span class="badge bg-danger text-white me-1"><span data-i18n="auto__card_rating__66c60c"></span>}</span>`;
         if (card.rating.tmdb) ratingHtml += `<span class="badge bg-primary text-white">TMDB: ${card.rating.tmdb}</span>`;
       }
 
@@ -1025,15 +1007,15 @@
           <h5 class="mb-1 text-info">${title}</h5>
           <div class="small text-muted mb-2">${subtitle} ${year ? `(${year})` : ''}</div>
           <div class="mb-2">${ratingHtml}</div>
-          ${category ? `<div class="small text-muted mb-1" style="font-size: 0.8rem;"><strong>Категория:</strong> ${category}</div>` : ''}
-          ${genres ? `<div class="small text-muted mb-1" style="font-size: 0.8rem;"><strong>Жанры:</strong> ${genres}</div>` : ''}
-          ${directors ? `<div class="small text-muted mb-1" style="font-size: 0.8rem;"><strong>Режиссер:</strong> ${directors}</div>` : ''}
-          ${cast ? `<div class="small text-muted mb-2" style="font-size: 0.8rem;"><strong>В ролях:</strong> ${cast}...</div>` : ''}
+          ${category ? `<div class="small text-muted mb-1" style="font-size: 0.8rem;"><strong><span data-i18n="auto___19c858"></span>:</strong> ${category}</div>` : ''}
+          ${genres ? `<div class="small text-muted mb-1" style="font-size: 0.8rem;"><strong><span data-i18n="auto___3a856d"></span>:</strong> ${genres}</div>` : ''}
+          ${directors ? `<div class="small text-muted mb-1" style="font-size: 0.8rem;"><strong><span data-i18n="auto___7b8854"></span>:</strong> ${directors}</div>` : ''}
+          ${cast ? `<div class="small text-muted mb-2" style="font-size: 0.8rem;"><strong><span data-i18n="auto___04c2d6"></span>:</strong> ${cast}...</div>` : ''}
           ${plot ? `<p class="small text-secondary mb-2" style="font-size: 0.85rem; line-height: 1.4;">${plot}</p>` : ''}
-          ${whyWatch ? `<div class="small text-info mb-2" style="font-size: 0.8rem;"><strong>Рекомендация:</strong> ${whyWatch}</div>` : ''}
+          ${whyWatch ? `<div class="small text-info mb-2" style="font-size: 0.8rem;"><strong><span data-i18n="auto___989fed"></span>:</strong> ${whyWatch}</div>` : ''}
           <div class="d-flex justify-content-end mt-2">
             <button class="btn btn-sm btn-primary rounded-pill px-3" onclick="playMovieDirect('${title.replace(/'/g, "\\'")}')">
-              <i class="bi bi-play-fill"></i> Запустить фильм
+              <i class="bi bi-play-fill"></i> <span data-i18n="auto___96adb4"></span>
             </button>
           </div>
         </div>
@@ -1046,9 +1028,7 @@
       const foundIdx = window.playlistFiles.findIndex(f => (f.name || '').toLowerCase().includes(cleanT));
       if (foundIdx !== -1) {
         playFile(foundIdx);
-        speakText(`Запускаю ${window.playlistFiles[foundIdx].name}`);
-      } else {
-        speakText(`Фильм не найден в плейлисте`);
+        speakText(`<span data-i18n="auto__window_playlistfiles_foundidx_name_else_speaktext__3317be"></span>`);
       }
     };
 
@@ -1065,12 +1045,7 @@
       
       // 1. Check local control commands first
       if (handleLocalVoiceCommand(query.toLowerCase())) {
-        speakText('Команда выполнена');
-        return;
-      }
-      
-      // 2. Perform search in playlist
-      const cleanQ = query.toLowerCase().replace(/^(найди|поиск|включи|запусти|покажи|фильм|сериал)\s+/i, '').trim();
+        speakText('<span data-i18n="auto__return_2_perform_search_in_playlist_const_cleanq_query_tolowercase_replace__c92702"></span>)\s+/i, '').trim();
       let matches = [];
       if (window.playlistFiles && cleanQ.length > 1) {
         matches = window.playlistFiles.map((f, idx) => ({ ...f, index: idx })).filter(f => {
@@ -1081,87 +1056,7 @@
       }
       
       if (matches.length > 0) {
-        speakText(`Найдено совпадений: ${matches.length}`);
-        
-        const queryLower = query.toLowerCase();
-        if (matches.length === 1 && (queryLower.includes('включи') || queryLower.includes('запусти') || queryLower.includes('плей') || queryLower.includes('играй'))) {
-          playFile(matches[0].index);
-          speakText(`Запускаю ${matches[0].name}`);
-        }
-        return;
-      }
-      
-      // 3. Forward to AI Chat API with Streaming
-      if (rcAbortController) {
-        try { rcAbortController.abort(); } catch(e) {}
-      }
-      rcAbortController = new AbortController();
-
-      const voiceStatus = document.getElementById('voice-status');
-      voiceStatus.textContent = 'Обработка запроса моделью...';
-      
-      let fullReply = '';
-      let started = false;
-      
-      try {
-        const payload = {
-          message: query,
-          history: rcHistory,
-          generation_config: { is_rc: true }
-        };
-        
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal: rcAbortController.signal
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Ошибка HTTP ${response.status}`);
-        }
-        
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder('utf-8');
-        let buffer = '';
-        let voiceReply = '';
-        
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop();
-          
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed) continue;
-            if (trimmed.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(trimmed.substring(6));
-                if (data.error) {
-                  throw new Error(data.error);
-                }
-                if (data.status) {
-                  voiceStatus.textContent = data.status;
-                }
-                if (data.voice) {
-                  voiceReply += data.voice;
-                }
-                if (data.text) {
-                  fullReply += data.text;
-                }
-              } catch (e) {
-                console.error(e);
-              }
-            }
-          }
-        }
-        
-        voiceStatus.textContent = 'Готов к работе';
-        
-        // ── Обработка тегов <film> из ответа AI ─────────────────────────────
+        speakText(`<span data-i18n="auto__matches_length_const_querylower_query_tolowercase_if_matches_length_1_querylower_includes_querylower_includes_querylower_includes_querylower_includes_playfile_matches_0_index_speaktext_matches_0_name_return_3_forward_to_ai_chat_api_with_streaming_if_rcabortcontroller_try_rcabortcontroller_abort_catch_e_rcabortcontroller_new_abortcontroller_const_voicestatus_document_getelementbyid_voice_status_voicestatus_textcontent_let_fullreply_let_started_false_try_const_payload_message_query_history_rchistory_generation_config_is_rc_true_const_response_await_fetch_api_chat_method_post_headers_content_type_application_json_body_json_stringify_payload_signal_rcabortcontroller_signal_if_response_ok_throw_new_error_http_response_status_const_reader_response_body_getreader_const_decoder_new_textdecoder_utf_8_let_buffer_let_voicereply_while_true_const_value_done_await_reader_read_if_done_break_buffer_decoder_decode_value_stream_true_const_lines_buffer_split_n_buffer_lines_pop_for_const_line_of_lines_const_trimmed_line_trim_if_trimmed_continue_if_trimmed_startswith_data_try_const_data_json_parse_trimmed_substring_6_if_data_error_throw_new_error_data_error_if_data_status_voicestatus_textcontent_data_status_if_data_voice_voicereply_data_voice_if_data_text_fullreply_data_text_catch_e_console_error_e_voicestatus_textcontent__74e45c"></span> <film> <span data-i18n="auto___11368a"></span> AI ─────────────────────────────
         const filmMatches = [...fullReply.matchAll(/<film>(.*?)<\/film>/gi)];
         if (filmMatches.length > 0) {
           const filmTitle = filmMatches[0][1].trim();
@@ -1176,18 +1071,7 @@
               const filmPath = mediaData.path;
               if (filmPath) {
                 sendCommand('play_file_by_path', { path: filmPath });
-                voiceStatus.textContent = `▶ Запускаю: ${filmTitle}`;
-              }
-            }
-          } catch(e) {
-            console.error('Ошибка поиска пути фильма:', e);
-          }
-        }
-        // ─────────────────────────────────────────────────────────────────────
-
-        const card = tryParseMovieCard(fullReply);
-        if (card) {
-          speakText(`Найдена карточка фильма ${card.title_ru || card.title}. ${card.why_watch || card.plot || ''}`);
+                voiceStatus.textContent = `▶ <span data-i18n="auto__filmtitle_catch_e_console_error_e_const_card_tryparsemoviecard_fullreply_if_card_speaktext__314140"></span> ${card.title_ru || card.title}. ${card.why_watch || card.plot || ''}`);
         } else {
           speakText(voiceReply || fullReply);
         }
@@ -1200,18 +1084,7 @@
         
       } catch (err) {
         if (err.name === 'AbortError') return;
-        voiceStatus.textContent = 'Ошибка AI: ' + err.message;
-      }
-    }
-
-    function initVoiceControl() {
-      const btnMic = document.getElementById('btn-mic');
-      const micIcon = document.getElementById('mic-icon');
-      const voiceStatus = document.getElementById('voice-status');
-
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        voiceStatus.textContent = 'Голосовой ввод не поддерживается вашим браузером.';
+        voiceStatus.textContent = '<span data-i18n="auto__ai_err_message_function_initvoicecontrol_const_btnmic_document_getelementbyid_btn_mic_const_micicon_document_getelementbyid_mic_icon_const_voicestatus_document_getelementbyid_voice_status_const_speechrecognition_window_speechrecognition_window_webkitspeechrecognition_if_speechrecognition_voicestatus_textcontent__715d95"></span>.';
         if (btnMic) btnMic.disabled = true;
       } else {
         recognition = new SpeechRecognition();
@@ -1238,18 +1111,18 @@
           isListening = true;
           if (btnMic) btnMic.className = 'btn btn-danger btn-circle-lg flex-shrink-0';
           if (micIcon) micIcon.className = 'bi bi-mic-fill fs-3 animate-pulse';
-          voiceStatus.textContent = 'Слушаю...';
+          voiceStatus.textContent = '<span data-i18n="auto___994cca"></span>...';
         };
 
         recognition.onend = () => {
           isListening = false;
           if (btnMic) btnMic.className = 'btn btn-outline-danger btn-circle-lg flex-shrink-0';
           if (micIcon) micIcon.className = 'bi bi-mic-fill fs-3';
-          voiceStatus.textContent = 'Готов к работе';
+          voiceStatus.textContent = '<span data-i18n="auto___d50038"></span>';
         };
 
         recognition.onerror = (e) => {
-          voiceStatus.textContent = `Ошибка ввода: ${e.error}`;
+          voiceStatus.textContent = `<span data-i18n="auto___3c89c4"></span>: ${e.error}`;
         };
 
         recognition.onresult = async (event) => {
@@ -1327,7 +1200,7 @@
               audio.onended = () => resolve();
               audio.onerror = (e) => {
                 console.error(`Audio error for chunk ${this.currentIndex}:`, e);
-                this.stop(); // Останавливаем всю очередь при ошибке загрузки
+                this.stop(); // <span data-i18n="auto___b857af"></span>
                 resolve();
               };
             });
@@ -1443,50 +1316,7 @@
 
     function handleLocalVoiceCommand(text) {
       const t = text.toLowerCase();
-      if (t.includes('пауз') || t.includes('стоп')) {
-        sendCommand('pause');
-        return true;
-      }
-      if (t.includes('продолж') || t.includes('плей') || t.includes('играй') || t.includes('старт')) {
-        sendCommand('play');
-        return true;
-      }
-      if (t.includes('громче') || t.includes('прибавь звук')) {
-        const targetVol = Math.min(1, playerState.volume + 0.2);
-        sendCommand('set_volume', { level: targetVol });
-        return true;
-      }
-      if (t.includes('тише') || t.includes('убавь звук')) {
-        const targetVol = Math.max(0, playerState.volume - 0.2);
-        sendCommand('set_volume', { level: targetVol });
-        return true;
-      }
-      if (t.includes('следующ') || t.includes('вперед')) {
-        sendCommand('next');
-        return true;
-      }
-      if (t.includes('предыдущ') || t.includes('назад')) {
-        sendCommand('prev');
-        return true;
-      }
-      if (t.includes('карусель') || t.includes('случайн') || t.includes('рандом')) {
-        sendCommand('play_random_movie');
-        return true;
-      }
-      return false;
-    }
-
-    async function sendToAiModel(message) {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, generation_config: { is_rc: true } })
-      });
-      if (!response.ok) {
-        throw new Error('Не удалось получить ответ от AI');
-      }
-      const data = await response.json();
-      return data.response || data.message || 'Модель не ответила';
+      if (t.includes('<span data-i18n="auto__t_includes_sendcommand_pause_return_true_if_t_includes_t_includes_t_includes_t_includes_sendcommand_play_return_true_if_t_includes_t_includes_const_targetvol_math_min_1_playerstate_volume_0_2_sendcommand_set_volume_level_targetvol_return_true_if_t_includes_t_includes_const_targetvol_math_max_0_playerstate_volume_0_2_sendcommand_set_volume_level_targetvol_return_true_if_t_includes_t_includes_sendcommand_next_return_true_if_t_includes_t_includes_sendcommand_prev_return_true_if_t_includes_t_includes_t_includes_sendcommand_play_random_movie_return_true_return_false_async_function_sendtoaimodel_message_const_response_await_fetch_api_chat_method_post_headers_content_type_application_json_body_json_stringify_message_generation_config_is_rc_true_if_response_ok_throw_new_error_ai_const_data_await_response_json_return_data_response_data_message__0b1f34"></span>';
     }
 
     // Set listeners
@@ -1498,16 +1328,14 @@
     const rcCheckMailBtn = document.getElementById('rc-btn-check-mail');
     if (rcCheckMailBtn) {
       rcCheckMailBtn.addEventListener('click', () => {
-        processChatMessage('Проверь мою почту Gmail и покажи последние непрочитанные письма.');
+        processChatMessage('<span data-i18n="auto__gmail__2fc8da"></span>.');
       });
     }
 
     const rcSearchGdocsBtn = document.getElementById('rc-btn-search-gdocs');
     if (rcSearchGdocsBtn) {
       rcSearchGdocsBtn.addEventListener('click', () => {
-        const query = prompt('Введите запрос для поиска в Google Docs / Drive:');
-        if (query && query.trim()) {
-          processChatMessage(`Найди в Google Docs / Google Drive документы по запросу: "${query.trim()}".`);
+        const query = prompt('<span data-i18n="auto__google_docs_drive_if_query_query_trim_processchatmessage_google_docs_google_drive__014cd1"></span>: "${query.trim()}".`);
         }
       });
     }
@@ -1515,7 +1343,7 @@
     const rcGsheetsBtn = document.getElementById('rc-btn-gsheets');
     if (rcGsheetsBtn) {
       rcGsheetsBtn.addEventListener('click', () => {
-        const query = prompt('Введите ID таблицы или команду для Google Sheets (например: "Прочитай диапазон A1:D10 из таблицы ID"):');
+        const query = prompt('<span data-i18n="auto__id_google_sheets_a1_d10__6af7a4"></span> ID"):');
         if (query && query.trim()) {
           processChatMessage(`Google Sheets: ${query.trim()}`);
         }
@@ -1525,9 +1353,7 @@
     const rcFacebookBtn = document.getElementById('rc-btn-facebook');
     if (rcFacebookBtn) {
       rcFacebookBtn.addEventListener('click', () => {
-        const text = prompt('Введите текст для публикации в Facebook:');
-        if (text && text.trim()) {
-          processChatMessage(`Опубликуй пост в Facebook с текстом: "${text.trim()}".`);
+        const text = prompt('<span data-i18n="auto__facebook_if_text_text_trim_processchatmessage_facebook__086f5b"></span>: "${text.trim()}".`);
         }
       });
     }
@@ -1558,7 +1384,7 @@
           window.speechSynthesis.cancel();
           isSpeakingManual = false;
           if (readIcon) readIcon.className = 'bi bi-volume-up-fill';
-          if (readTextSpan) readTextSpan.textContent = 'Прослушать';
+          if (readTextSpan) readTextSpan.textContent = '<span data-i18n="auto___6aa61e"></span>';
           btnRead.className = 'btn btn-outline-info btn-sm d-flex align-items-center gap-1';
         } else {
           window.speechSynthesis.cancel();
@@ -1568,21 +1394,14 @@
           utterance.onend = () => {
             isSpeakingManual = false;
             if (readIcon) readIcon.className = 'bi bi-volume-up-fill';
-            if (readTextSpan) readTextSpan.textContent = 'Прослушать';
+            if (readTextSpan) readTextSpan.textContent = '<span data-i18n="auto___6aa61e"></span>';
             btnRead.className = 'btn btn-outline-info btn-sm d-flex align-items-center gap-1';
           };
 
           utterance.onerror = () => {
             isSpeakingManual = false;
             if (readIcon) readIcon.className = 'bi bi-volume-up-fill';
-            if (readTextSpan) readTextSpan.textContent = 'Прослушать';
-            btnRead.className = 'btn btn-outline-info btn-sm d-flex align-items-center gap-1';
-          };
-
-          window.speechSynthesis.speak(utterance);
-          isSpeakingManual = true;
-          if (readIcon) readIcon.className = 'bi bi-stop-fill';
-          if (readTextSpan) readTextSpan.textContent = 'Остановить';
+            if (readTextSpan) readTextSpan.textContent = '<span data-i18n="auto__btnread_classname_btn_btn_outline_info_btn_sm_d_flex_align_items_center_gap_1_window_speechsynthesis_speak_utterance_isspeakingmanual_true_if_readicon_readicon_classname_bi_bi_stop_fill_if_readtextspan_readtextspan_textcontent__451e5a"></span>';
           btnRead.className = 'btn btn-info btn-sm text-dark d-flex align-items-center gap-1';
         }
       });

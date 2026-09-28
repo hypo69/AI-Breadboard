@@ -1,4 +1,4 @@
-"""Коллектор аудита сетевой активности и открытых портов Windows."""
+﻿"""Коллектор аудита сетевой активности и открытых портов Windows."""
 from __future__ import annotations
 import json
 import subprocess
@@ -6,7 +6,7 @@ import time
 from typing import Any, Dict, List
 import psutil
 from logger import logger
-from apps.windows.api.nethelper import IPHelperAPI
+from apps.windows.telemetry.api_bindings.nethelper import IPHelperAPI
 from apps.windows.core.models import AuditFinding, DomainAuditResult, RiskLevel
 from apps.common.csv_logger import AppCsvLogger
 

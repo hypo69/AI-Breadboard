@@ -1,4 +1,4 @@
-"""Коллектор аудита служб Windows с поддержкой нативного SCM API."""
+﻿"""Коллектор аудита служб Windows с поддержкой нативного SCM API."""
 from __future__ import annotations
 import os
 import time
@@ -6,7 +6,7 @@ import winreg
 from typing import Any, Dict, List
 import psutil
 from logger import logger
-from apps.windows.api.scm import ServiceControlManager
+from apps.windows.telemetry.api_bindings.scm import ServiceControlManager
 from apps.windows.core.models import ActionType, AuditFinding, DomainAuditResult, RemediationAction, RiskLevel
 PROTECTED_SYSTEM_SERVICES = {'appxsvc', 'bfe', 'rpcss', 'dcomlaunch', 'plugplay', 'lanmanworkstation', 'lanmanserver', 'dnscache', 'dhcp', 'mpssvc', 'windefend', 'wuauserv', 'cryptsvc', 'eventlog', 'nsi', 'schedule', 'samss', 'lsass', 'gpsvc', 'bits', 'wsearch', 'trustedinstaller', 'spooler', 'sens', 'profsvc'}
 

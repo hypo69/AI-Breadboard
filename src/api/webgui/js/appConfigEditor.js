@@ -73,9 +73,7 @@
           <div class="modal-content border-secondary shadow-lg" style="background: #0f172a; color: #f8fafc;">
             <div class="modal-header border-secondary" style="background: #1e293b;">
               <h5 class="modal-title d-flex align-items-center gap-2 fw-bold text-info" id="app-config-modal-title">
-                <i class="bi bi-sliders"></i> Настройка конфигурации (config.json)
-              </h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <i class="bi bi-slidersi18n.t('auto__i_config_json_h5_button_type__f4e65b')button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-3">
               <div id="app-config-alert" class="alert d-none py-2 px-3 small"></div>
@@ -84,63 +82,32 @@
               <ul class="nav nav-pills nav-fill mb-3" id="app-config-tabs" role="tablist">
                 <li class="nav-item">
                   <button class="nav-link active py-1 small fw-semibold" id="app-config-tab-visual-btn" data-bs-toggle="pill" data-bs-target="#app-config-tab-visual" type="button">
-                    <i class="bi bi-ui-checks me-1"></i> Визуальная форма
-                  </button>
-                </li>
-                <li class="nav-item">
+                    <i class="bi bi-ui-checks me-1i18n.t('auto__i_button_li_li_class__c61187')nav-item">
                   <button class="nav-link py-1 small fw-semibold" id="app-config-tab-raw-btn" data-bs-toggle="pill" data-bs-target="#app-config-tab-raw" type="button">
-                    <i class="bi bi-code-square me-1"></i> Исходный JSON
-                  </button>
-                </li>
-              </ul>
-
-              <div class="tab-content">
+                    <i class="bi bi-code-square me-1i18n.t('auto__i_json_button_li_ul_div_class__9be14b')tab-content">
                 <!-- Visual Form Pane -->
                 <div class="tab-pane fade show active" id="app-config-tab-visual">
                   <div class="card border-secondary mb-3" style="background: #1e293b;">
                     <div class="card-header border-secondary py-2 small fw-bold text-primary d-flex align-items-center gap-2">
-                      <i class="bi bi-hdd-network"></i> Режим сервера (Server Mode)
-                    </div>
-                    <div class="card-body p-3">
+                      <i class="bi bi-hdd-networki18n.t('auto__i_server_mode_div_div_class__93dff9')card-body p-3">
                       <div class="row g-3">
                         <div class="col-md-6">
-                          <label class="form-label small fw-semibold text-light mb-1">Режим работы сервера:</label>
-                          <select class="form-select form-select-sm bg-dark text-white border-secondary" id="app-cfg-server-mode">
-                            <option value="dedicated">Dedicated (Отдельный процесс / порт)</option>
-                            <option value="shared">Shared (Маршрутизация через главный сервер :8000)</option>
-                          </select>
-                          <div class="form-text small text-muted" id="app-cfg-server-mode-hint">
-                            В режиме dedicated run.ps1 запускает отдельный процесс микросервиса.
-                          </div>
+                          <label class="form-label small fw-semibold text-light mb-1i18n.t('auto__label_select_class__befeb6')form-select form-select-sm bg-dark text-white border-secondary" id="app-cfg-server-mode">
+                            <option value="dedicatedi18n.t('auto__dedicated_option_option_value__ebcc84')sharedi18n.t('auto__shared_8000_option_select_div_class__5704c9')form-text small text-muted" id="app-cfg-server-mode-hinti18n.t('auto__dedicated_run_ps1_div_div_div_class__054952')col-md-6">
+                          <label class="form-label small fw-semibold text-light mb-1i18n.t('auto__port_label_input_type__8fcd6f')number" class="form-control form-control-sm bg-dark text-white border-secondary font-monospace" id="app-cfg-server-port" placeholder="8100">
                         </div>
                         <div class="col-md-6">
-                          <label class="form-label small fw-semibold text-light mb-1">Порт (Port):</label>
-                          <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary font-monospace" id="app-cfg-server-port" placeholder="8100">
+                          <label class="form-label small fw-semibold text-light mb-1i18n.t('auto__host_label_input_type__e35851')text" class="form-control form-control-sm bg-dark text-white border-secondary font-monospace" id="app-cfg-server-host" placeholder="127.0.0.1">
                         </div>
                         <div class="col-md-6">
-                          <label class="form-label small fw-semibold text-light mb-1">Хост (Host):</label>
-                          <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary font-monospace" id="app-cfg-server-host" placeholder="127.0.0.1">
-                        </div>
-                        <div class="col-md-6">
-                          <label class="form-label small fw-semibold text-light mb-1">Воркеры (Workers):</label>
-                          <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary font-monospace" id="app-cfg-server-workers" placeholder="1" min="1" max="16">
+                          <label class="form-label small fw-semibold text-light mb-1i18n.t('auto__workers_label_input_type__4abdde')number" class="form-control form-control-sm bg-dark text-white border-secondary font-monospace" id="app-cfg-server-workers" placeholder="1" min="1" max="16">
                         </div>
                         <div class="col-12">
                           <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="app-cfg-server-ssl">
-                            <label class="form-check-label small text-light" for="app-cfg-server-ssl">Использовать SSL (HTTPS)</label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Dynamic App Extra Params Card -->
-                  <div class="card border-secondary" style="background: #1e293b;" id="app-cfg-extra-card">
+                            <label class="form-check-label small text-light" for="app-cfg-server-ssli18n.t('auto__ssl_https_label_div_div_div_div_div_dynamic_app_extra_params_card_div_class__779746')card border-secondary" style="background: #1e293b;" id="app-cfg-extra-card">
                     <div class="card-header border-secondary py-2 small fw-bold text-info d-flex align-items-center gap-2">
-                      <i class="bi bi-gear-wide-connected"></i> Параметры приложения
-                    </div>
-                    <div class="card-body p-3" id="app-cfg-extra-body">
+                      <i class="bi bi-gear-wide-connectedi18n.t('auto__i_div_div_class__c42add')card-body p-3" id="app-cfg-extra-body">
                       <!-- Populated dynamically based on app properties -->
                     </div>
                   </div>
@@ -151,20 +118,14 @@
                   <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="small text-muted font-monospace" id="app-cfg-file-path">config.json</span>
                     <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="app-cfg-btn-format">
-                      <i class="bi bi-magic"></i> Форматировать
-                    </button>
-                  </div>
-                  <textarea class="form-control font-monospace bg-dark text-white border-secondary" id="app-cfg-raw-json" rows="14" style="font-size: 0.82rem; line-height: 1.4; tab-size: 2;"></textarea>
+                      <i class="bi bi-magici18n.t('auto__i_button_div_textarea_class__8e1c59')form-control font-monospace bg-dark text-white border-secondary" id="app-cfg-raw-json" rows="14" style="font-size: 0.82rem; line-height: 1.4; tab-size: 2;"></textarea>
                 </div>
               </div>
             </div>
             <div class="modal-footer border-secondary justify-content-between" style="background: #1e293b;">
               <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="app-cfg-btn-reload">
-                <i class="bi bi-arrow-clockwise me-1"></i> Сбросить
-              </button>
-              <div class="d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Отмена</button>
-                <button type="button" class="btn btn-sm btn-primary rounded-pill px-4 fw-semibold" id="app-cfg-btn-save">
+                <i class="bi bi-arrow-clockwise me-1i18n.t('auto__i_button_div_class__af8f0f')d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modali18n.t('auto__button_button_type__0c71b4')button" class="btn btn-sm btn-primary rounded-pill px-4 fw-semibold" id="app-cfg-btn-save">
                   <i class="bi bi-save me-1"></i> Сохранить
                 </button>
               </div>
@@ -178,12 +139,7 @@
       document.getElementById('app-cfg-btn-save')?.addEventListener('click', onSaveConfig);
       document.getElementById('app-cfg-btn-reload')?.addEventListener('click', onReloadConfig);
       document.getElementById('app-cfg-btn-format')?.addEventListener('click', () => {
-        const rawEl = document.getElementById('app-cfg-raw-json');
-        try {
-          const parsed = JSON.parse(rawEl.value);
-          rawEl.value = JSON.stringify(parsed, null, 2);
-        } catch (e) {
-          showModalAlert(`Ошибка JSON: ${e.message}`, 'danger');
+        const rawEl = document.getElementById('app-cfg-raw-jsoni18n.t('auto__try_const_parsed_json_parse_rawel_value_rawel_value_json_stringify_parsed_null_2_catch_e_showmodalalert_json_e_message__255bb2')danger');
         }
       });
 
@@ -347,11 +303,7 @@
   function syncRawJsonToForm() {
     try {
       const rawEl = document.getElementById('app-cfg-raw-json');
-      const parsed = JSON.parse(rawEl.value || '{}');
-      activeConfig = parsed;
-      populateVisualForm(parsed);
-    } catch (e) {
-      showModalAlert(`Ошибка парсинга JSON: ${e.message}`, 'danger');
+      const parsed = JSON.parse(rawEl.value || '{}i18n.t('auto__activeconfig_parsed_populatevisualform_parsed_catch_e_showmodalalert_json_e_message__944182')danger');
     }
   }
 
@@ -362,14 +314,10 @@
       const parsed = JSON.parse(rawEl.value);
       
       const res = await saveAppConfig(activeAppName, parsed);
-      showModalAlert(`✓ ${res.message || 'Конфигурация успешно сохранена!'}`, 'success');
+      showModalAlert(`✓ ${res.message || i18n.t('auto___db37c2')}`, 'success');
       activeConfig = parsed;
       
-      if (typeof window.showNotification === 'function') {
-        window.showNotification(`Конфигурация ${activeAppName} сохранена`, 'success');
-      }
-    } catch (e) {
-      showModalAlert(`Ошибка при сохранении: ${e.message}`, 'danger');
+      if (typeof window.showNotification === 'functioni18n.t('auto__window_shownotification_activeappname__2e3076')successi18n.t('auto__catch_e_showmodalalert_e_message__ff1a20')danger');
     }
   }
 
@@ -378,9 +326,7 @@
       const data = await fetchAppConfig(activeAppName);
       activeConfig = data.config;
       populateVisualForm(activeConfig);
-      showModalAlert('Конфигурация перезагружена с диска', 'info');
-    } catch (e) {
-      showModalAlert(`Ошибка загрузки: ${e.message}`, 'danger');
+      showModalAlert(i18n.t('auto___29c954'), 'infoi18n.t('auto__catch_e_showmodalalert_e_message__bd207f')danger');
     }
   }
 
@@ -407,16 +353,7 @@
     if (alertEl) alertEl.classList.add('d-none');
 
     // Show modal
-    const modalEl = document.getElementById('app-config-modal');
-    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-    modal.show();
-
-    try {
-      const data = await fetchAppConfig(appName);
-      activeConfig = data.config;
-      populateVisualForm(activeConfig);
-    } catch (e) {
-      showModalAlert(`Не удалось загрузить конфигурацию: ${e.message}`, 'danger');
+    const modalEl = document.getElementById('app-config-modali18n.t('auto__const_modal_bootstrap_modal_getorcreateinstance_modalel_modal_show_try_const_data_await_fetchappconfig_appname_activeconfig_data_config_populatevisualform_activeconfig_catch_e_showmodalalert_e_message__0a996a')danger');
     }
   };
 })();

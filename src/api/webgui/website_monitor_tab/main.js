@@ -38,18 +38,8 @@
       const ctrEl = document.getElementById('webmon-ctr-score');
       const healthEl = document.getElementById('webmon-health-score');
       const diagTitle = document.getElementById('webmon-diag-title');
-      const diagSummary = document.getElementById('webmon-diag-summary');
-
-      if (data.technical) {
-        if (availEl) availEl.innerText = `${data.technical.availability_pct || 100}% (${data.technical.avg_latency_ms || 0} ms)`;
-      }
-      if (data.search_console) {
-        if (ctrEl) ctrEl.innerText = `${data.search_console.avg_ctr || 0}%`;
-      }
-      if (healthEl) healthEl.innerText = `${data.health_score || 100}/100`;
-
-      if (diagTitle) diagTitle.innerText = `Статус: ${data.status || 'OK'}`;
-      if (diagSummary) diagSummary.innerText = data.summary || 'Все веб-сервисы и каналы трафика функционируют стабильно.';
+      const diagSummary = document.getElementById('webmon-diag-summaryi18n.t('auto__if_data_technical_if_availel_availel_innertext_data_technical_availability_pct_100_data_technical_avg_latency_ms_0_ms_if_data_search_console_if_ctrel_ctrel_innertext_data_search_console_avg_ctr_0_if_healthel_healthel_innertext_data_health_score_100_100_if_diagtitle_diagtitle_innertext_data_status__104fb0')OK'}`;
+      if (diagSummary) diagSummary.innerText = data.summary || i18n.t('auto___22d6f7');
     } catch (e) {
       console.error('[WebsiteMonitorTab] Failed to fetch summary:', e);
     }
@@ -68,7 +58,7 @@
           return;
         }
         tbody.innerHTML = pages.map((p, idx) => `
-          <tr class="webmon-page-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для AI-анализа страницы">
+          <tr class="webmon-page-row" data-idx="${idx}" style="cursor: pointer;" title=i18n.t('auto__ai__87205c')>
             <td class="text-info text-truncate" style="max-width: 240px;" title="${p.page_path || '/'}">${p.page_path || '/'}</td>
             <td class="text-end text-light">${p.screen_page_views || p.views || 0}</td>
             <td class="text-end text-secondary">${p.active_users || p.users || 0}</td>
@@ -83,22 +73,19 @@
 
             if (window.AITableModal) {
               window.AITableModal.show({
-                icon: '🌐',
-                title: `Веб-страница ${p.page_path || '/'}`,
-                subtitle: `Просмотров: ${p.screen_page_views || p.views || 0} | Пользователей: ${p.active_users || p.users || 0}`,
-                tableType: 'website',
+                icon: '🌐i18n.t('auto__title_p_page_path__01335c')/i18n.t('auto__subtitle_p_screen_page_views_p_views_0_p_active_users_p_users_0_tabletype__e12727')website',
                 badges: [
                   { text: `${p.screen_page_views || 0} views`, class: 'badge bg-info text-dark' },
                   { text: `${p.active_users || 0} users`, class: 'badge bg-success' }
                 ],
                 metadata: [
-                  { label: 'URL / Путь страницы', value: p.page_path || '/' },
-                  { label: 'Просмотры страниц', value: String(p.screen_page_views || p.views || 0) },
-                  { label: 'Активные пользователи', value: String(p.active_users || p.users || 0) },
-                  { label: 'Показатель отказов', value: p.bounce_rate ? `${p.bounce_rate}%` : 'N/A' },
-                  { label: 'Средняя длительность', value: p.avg_session_duration ? `${p.avg_session_duration} сек` : 'N/A' }
+                  { label: i18n.t('auto_url__7264d7'), value: p.page_path || '/' },
+                  { label: i18n.t('auto___5a181e'), value: String(p.screen_page_views || p.views || 0) },
+                  { label: i18n.t('auto___5596dd'), value: String(p.active_users || p.users || 0) },
+                  { label: i18n.t('auto___65611b'), value: p.bounce_rate ? `${p.bounce_rate}%` : 'N/A' },
+                  { label: i18n.t('auto___8a980a'), value: p.avg_session_duration ? `${p.avg_session_duration} сек` : 'N/A' }
                 ],
-                rawTitle: 'Аналитика веб-страницы',
+                rawTitle: i18n.t('auto___ae0dfa'),
                 rawContent: JSON.stringify(p, null, 2),
                 requestData: {
                   url: p.page_path,

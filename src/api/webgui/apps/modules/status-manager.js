@@ -12,11 +12,7 @@ export async function fetchActiveModelInfo() {
 
   let provider = '';
   let model = '';
-  let configFile = '';
-
-  // 1. Проверяем настройки пользователя
-  try {
-    const sResp = await fetch('/auth/settings');
+  let configFile = 'i18n.t('auto__1_try_const_sresp_await_fetch__674719')/auth/settings');
     if (sResp.ok) {
       const sData = await sResp.json();
       if (sData && sData.model) {
@@ -38,36 +34,17 @@ export async function fetchActiveModelInfo() {
       }
     }
   } catch (err) {
-    console.warn('[AppsHub] Could not fetch user settings:', err);
-  }
-
-  // 2. Если модель не получена из профиля, запрашиваем эндпоинт активной модели
-  if (!model) {
-    try {
-      const resp = await fetch(`/api/chat/active-model${query}`);
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data && data.model) {
-          provider = data.provider || provider || 'AI';
+    console.warn('[AppsHub] Could not fetch user settings:i18n.t('auto__err_2_if_model_try_const_resp_await_fetch_api_chat_active_model_query_if_resp_ok_const_data_await_resp_json_if_data_data_model_provider_data_provider_provider__896c6b')AI';
           model = data.model;
           configFile = data.config_file || '';
         }
       }
     } catch (err) {
-      console.warn('[AppsHub] Could not fetch active model from /api/chat/active-model:', err);
-    }
-  }
-
-  // Очищаем префикс провайдера из имени модели, если он продублирован
-  if (provider && model && model.toLowerCase().startsWith(`${provider.toLowerCase()}:`)) {
-    model = model.substring(provider.length + 1);
-  }
-
-  const display = (provider && model && model !== 'default')
+      console.warn('[AppsHub] Could not fetch active model from /api/chat/active-model:i18n.t('auto__err_if_provider_model_model_tolowercase_startswith_provider_tolowercase_model_model_substring_provider_length_1_const_display_provider_model_model__a075bf')default')
     ? `${provider}: ${model}`
     : (model && model !== 'default')
       ? model
-      : (provider ? provider : 'AI: Не определена');
+      : (provider ? provider : i18n.t('auto_ai__d14452'));
 
   return { provider, model, display, configFile };
 }
@@ -109,46 +86,13 @@ export async function fetchAvailableModels() {
 
     return result;
   } catch (err) {
-    console.warn('[AppsHub] Could not fetch available models from /api/chat/models:', err);
-    return [];
-  }
-}
-
-/**
- * Обновляет выпадающий список и текст кнопки активной модели
- */
-export async function updateModelDropdown() {
-  const dropdownBtn = document.getElementById('apps-model-dropdown-btn');
+    console.warn('[AppsHub] Could not fetch available models from /api/chat/models:i18n.t('auto__err_return_export_async_function_updatemodeldropdown_const_dropdownbtn_document_getelementbyid__f3ead0')apps-model-dropdown-btn');
   const dropdownMenu = document.getElementById('apps-model-dropdown-menu');
-  const modelText = document.getElementById('apps-model-text');
-
-  if (!dropdownBtn && !modelText) return;
-
-  // 1. Получаем и отображаем текущую активную модель
-  const activeInfo = await fetchActiveModelInfo();
-  if (modelText) {
-    modelText.textContent = activeInfo.display;
-  }
-  if (dropdownBtn) {
-    const fileLabel = activeInfo.configFile ? `, Профиль: ${activeInfo.configFile}` : '';
-    dropdownBtn.title = `Используемая модель: ${activeInfo.model || 'не определена'} (Провайдер: ${activeInfo.provider || 'AI'}${fileLabel})`;
-  }
-
-  if (!dropdownMenu) return;
-
-  // 2. Загружаем доступные модели для меню
-  try {
-    const models = await fetchAvailableModels();
-
-    if (models.length === 0) {
-      dropdownMenu.innerHTML = '<li><span class="dropdown-item-text text-muted small px-2">Нет доступных моделей</span></li>';
+  const modelText = document.getElementById('apps-model-texti18n.t('auto__if_dropdownbtn_modeltext_return_1_const_activeinfo_await_fetchactivemodelinfo_if_modeltext_modeltext_textcontent_activeinfo_display_if_dropdownbtn_const_filelabel_activeinfo_configfile_activeinfo_configfile__809e49')i18n.t('auto__dropdownbtn_title_activeinfo_model__b9b8f5')не определенаi18n.t('auto__activeinfo_provider__91bc0b')AIi18n.t('auto__filelabel_if_dropdownmenu_return_2_try_const_models_await_fetchavailablemodels_if_models_length_0_dropdownmenu_innerhtml__af3ab3')<li><span class="dropdown-item-text text-muted small px-2">Нет доступных моделей</span></li>';
       return;
     }
 
-    dropdownMenu.innerHTML = '';
-
-    // Группируем по провайдерам
-    let currentProvider = '';
+    dropdownMenu.innerHTML = 'i18n.t('auto__let_currentprovider__ed5a2c')';
     models.forEach(({ provider, model, fullId, label }) => {
       if (provider !== currentProvider) {
         if (currentProvider !== '') {
@@ -172,13 +116,7 @@ export async function updateModelDropdown() {
         ? `<i class="bi bi-check2 text-success me-1"></i><strong>${model}</strong>`
         : `<span class="ms-3">${model}</span>`;
 
-      a.addEventListener('click', async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        try {
-          // Сохраняем выбранную модель в настройках пользователя
-          const saveResp = await fetch('/auth/settings', {
+      a.addEventListener('clicki18n.t('auto__async_e_e_preventdefault_e_stoppropagation_try_const_saveresp_await_fetch__e5f3c5')/auth/settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ model: fullId })
@@ -193,7 +131,7 @@ export async function updateModelDropdown() {
               modelText.textContent = `${provider}: ${model}`;
             }
             if (window.toast && typeof window.toast.success === 'function') {
-              window.toast.success('Модель обновлена', `Активная модель: ${provider}: ${model}`);
+              window.toast.success(i18n.t('auto___28266d'), `Активная модель: ${provider}: ${model}`);
             }
             // Перерисовываем список для обновления галочки
             await updateModelDropdown();
@@ -208,15 +146,7 @@ export async function updateModelDropdown() {
     });
   } catch (err) {
     console.error('[AppsHub] Failed to build model dropdown:', err);
-    dropdownMenu.innerHTML = '<li><span class="dropdown-item-text text-muted small px-2">Ошибка загрузки моделей</span></li>';
-  }
-}
-
-/**
- * Получение статуса приложений и AI-конфига
- */
-export async function fetchAppsStatus() {
-  const isTcRoute = window.location.pathname.startsWith('/tc');
+    dropdownMenu.innerHTML = '<li><span class="dropdown-item-text text-muted small px-2">Ошибка загрузки моделей</span></li>i18n.t('auto__ai_export_async_function_fetchappsstatus_const_istcroute_window_location_pathname_startswith__1a4fdd')/tc');
   const query = isTcRoute ? '?profile=tc' : '';
 
   let statusData = null;

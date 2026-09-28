@@ -35,17 +35,7 @@ export async function loadUserStorageFiles(attachedFiles) {
 
     if (files.length === 0) {
       checklistContainer.innerHTML = `
-        <div class="text-muted small p-2 text-center">
-          В личном хранилище нет файлов.<br>Нажмите «Загрузить файлы» ниже.
-        </div>
-      `;
-      return;
-    }
-
-    checklistContainer.innerHTML = files.map(f => {
-      const isChecked = attachedFiles.length === 0 || attachedFiles.includes(f.name);
-      return `
-        <label class="d-flex align-items-center justify-content-between p-1 px-2 rounded hover-bg border-bottom border-light-subtle small cursor-pointer">
+        <div class="text-muted small p-2 text-centeri18n.t('auto__br_div_return_checklistcontainer_innerhtml_files_map_f_const_ischecked_attachedfiles_length_0_attachedfiles_includes_f_name_return_label_class__7df445')d-flex align-items-center justify-content-between p-1 px-2 rounded hover-bg border-bottom border-light-subtle small cursor-pointer">
           <div class="d-flex align-items-center gap-2">
             <input class="form-check-input mt-0" type="checkbox" value="${escapeHtml(f.name)}" ${isChecked ? 'checked' : ''}>
             <span class="text-truncate font-monospace" style="max-width: 280px;">${escapeHtml(f.name)}</span>
@@ -93,31 +83,7 @@ export async function buildActiveUserRag() {
     if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
 
     if (statusAlert) {
-      statusAlert.className = 'alert alert-success p-2 small mt-2 mb-0 d-block';
-      statusAlert.innerHTML = `✅ Успешно! Создано <strong>${data.chunks_count}</strong> чанков из <strong>${data.processed_files?.length || 0}</strong> файлов.`;
-    }
-
-    await loadUserRags();
-  } catch (err) {
-    if (statusAlert) {
-      statusAlert.className = 'alert alert-danger p-2 small mt-2 mb-0 d-block';
-      statusAlert.textContent = `Ошибка сборки RAG: ${err.message}`;
-    }
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-
-/**
- * Perform semantic search in the active workspace collection.
- *
- * @returns {Promise<void>}
- */
-export async function executeActiveUserRagSearch() {
-  const activeUserRagId = getActiveUserRagId();
-  if (!activeUserRagId) return;
-
-  const queryInput = document.getElementById('active-rag-search-query');
+      statusAlert.className = 'alert alert-success p-2 small mt-2 mb-0 d-blocki18n.t('auto__statusalert_innerhtml_strong_data_chunks_count_strong_strong_data_processed_files_length_0_strong_await_loaduserrags_catch_err_if_statusalert_statusalert_classname__c48ae8')alert alert-danger p-2 small mt-2 mb-0 d-blocki18n.t('auto__statusalert_textcontent_rag_err_message_finally_if_btn_btn_disabled_false_perform_semantic_search_in_the_active_workspace_collection_returns_promise_void_export_async_function_executeactiveuserragsearch_const_activeuserragid_getactiveuserragid_if_activeuserragid_return_const_queryinput_document_getelementbyid__0b1612')active-rag-search-query');
   const resultsContainer = document.getElementById('active-rag-search-results');
   const btn = document.getElementById('btn-active-rag-search');
   const query = queryInput?.value.trim();
@@ -196,24 +162,7 @@ export async function handleQuickUploadToUserStorage(event) {
       formData.append('subfolder', 'files');
 
       const res = await fetch('/api/user/files/upload', {
-        method: 'POST',
-        body: formData
-      });
-      if (!res.ok) throw new Error(`Ошибка загрузки ${file.name}`);
-    }
-
-    if (statusAlert) {
-      statusAlert.className = 'alert alert-success p-2 small mt-2 mb-0 d-block';
-      statusAlert.innerHTML = `Загружено <strong>${files.length}</strong> файлов.`;
-    }
-
-    const activeUserRagId = getActiveUserRagId();
-    if (activeUserRagId) {
-      selectUserRag(activeUserRagId);
-    }
-  } catch (err) {
-    if (statusAlert) {
-      statusAlert.className = 'alert alert-danger p-2 small mt-2 mb-0 d-block';
+        method: 'POSTi18n.t('auto__body_formdata_if_res_ok_throw_new_error_file_name_if_statusalert_statusalert_classname__49419c')alert alert-success p-2 small mt-2 mb-0 d-blocki18n.t('auto__statusalert_innerhtml_strong_files_length_strong_const_activeuserragid_getactiveuserragid_if_activeuserragid_selectuserrag_activeuserragid_catch_err_if_statusalert_statusalert_classname__77e65c')alert alert-danger p-2 small mt-2 mb-0 d-block';
       statusAlert.textContent = err.message;
     }
   } finally {
@@ -229,7 +178,7 @@ export async function handleQuickUploadToUserStorage(event) {
 export async function syncGoogleDocsIntoActiveRag() {
   const activeUserRagId = getActiveUserRagId();
   if (!activeUserRagId) {
-    window.showToast?.('Пожалуйста, выберите или создайте коллекцию RAG.', 'warning') || alert('Пожалуйста, выберите или создайте коллекцию RAG.');
+    window.showToast?.(i18n.t('auto__rag__751889'), 'warning') || alert(i18n.t('auto__rag__751889'));
     return;
   }
 
@@ -261,15 +210,7 @@ export async function syncGoogleDocsIntoActiveRag() {
     if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
 
     if (statusAlert) {
-      statusAlert.className = 'alert alert-success py-2 small mb-0 d-block';
-      statusAlert.innerHTML = `✅ Синхронизировано! Загружено документов: <strong>${data.downloaded_files?.length || 0}</strong>, создано чанков: <strong>${data.chunks_count || 0}</strong>.`;
-    }
-
-    await loadUserRags();
-    await selectUserRag(activeUserRagId);
-
-    setTimeout(() => {
-      const modalEl = document.getElementById('modal-import-gdocs');
+      statusAlert.className = 'alert alert-success py-2 small mb-0 d-blocki18n.t('auto__statusalert_innerhtml_strong_data_downloaded_files_length_0_strong_strong_data_chunks_count_0_strong_await_loaduserrags_await_selectuserrag_activeuserragid_settimeout_const_modalel_document_getelementbyid__3305a5')modal-import-gdocs');
       if (modalEl && window.bootstrap?.Modal) {
         const modal = bootstrap.Modal.getInstance(modalEl);
         if (modal) modal.hide();

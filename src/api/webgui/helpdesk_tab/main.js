@@ -53,8 +53,7 @@
     const { type, ticket, message, ticket_id } = packet;
 
     if (type === 'new_ticket_alert') {
-      if (typeof showNotification === 'function') {
-        showNotification(`🛟 Новое обращение #${ticket?.ticket_number}: ${ticket?.subject}`, 'warning');
+      if (typeof showNotification === 'functioni18n.t('auto__shownotification_ticket_ticket_number_ticket_subject__c0e1d4')warning');
       }
       loadTickets();
       updateStats();
@@ -146,7 +145,7 @@
           </div>
           <h6 class="fw-bold mb-1 text-truncate" style="font-size: 0.9rem;">${escapeHtml(t.subject)}</h6>
           <div class="d-flex justify-content-between align-items-center small text-muted" style="font-size: 0.75rem;">
-            <span class="text-truncate" style="max-width: 140px;"><i class="bi bi-person me-1"></i>${escapeHtml(t.user_name || t.user_email || 'Пользователь')}</span>
+            <span class="text-truncate" style="max-width: 140px;"><i class="bi bi-person me-1"></i>${escapeHtml(t.user_name || t.user_email || i18n.t('auto___51aff1'))}</span>
             <span>${timeStr}</span>
           </div>
         </div>
@@ -176,7 +175,7 @@
       scrollMessagesToBottom();
     } catch (err) {
       console.error('[HelpdeskTab] Error loading ticket details:', err);
-      if (typeof showNotification === 'function') showNotification('Ошибка загрузки тикета: ' + err.message, 'danger');
+      if (typeof showNotification === 'function') showNotification(i18n.t('auto___307ba4') + err.message, 'danger');
     }
   }
 
@@ -190,11 +189,10 @@
     if (numEl) numEl.textContent = `#${ticket.ticket_number}`;
     if (subEl) subEl.textContent = ticket.subject;
     if (metaEl) {
-      const author = ticket.user_name || ticket.user_email || 'User';
-      metaEl.textContent = `Автор: ${author} (${ticket.category || 'technical'}) • ${formatTimeAgo(ticket.created_at)}`;
+      const author = ticket.user_name || ticket.user_email || 'Useri18n.t('auto__metael_textcontent_author_ticket_category__649060')technical'}) • ${formatTimeAgo(ticket.created_at)}`;
     }
     if (prioLabel) {
-      const pLabels = { low: '🟢 Низкий', normal: '🔵 Обычный', high: '🟠 Высокий', urgent: '🔴 Срочный' };
+      const pLabels = { low: i18n.t('auto___7b2b75'), normal: i18n.t('auto___ab6ef1'), high: i18n.t('auto___bd6d7d'), urgent: i18n.t('auto___83bd1f') };
       prioLabel.textContent = pLabels[ticket.priority] || ticket.priority;
     }
   }
@@ -234,7 +232,7 @@
       <div class="d-flex flex-column ${align}" style="max-width: 80%;">
         <div class="card p-2 ${cardBg} shadow-sm">
           <div class="d-flex justify-content-between align-items-center mb-1 gap-2 small">
-            <strong>${isNote ? '🔒 Заметка оператора (' + escapeHtml(m.sender_name) + ')' : escapeHtml(m.sender_name || (isStaff ? 'Оператор' : 'Пользователь'))}</strong>
+            <strong>${isNote ? i18n.t('auto___66f055') + escapeHtml(m.sender_name) + ')' : escapeHtml(m.sender_name || (isStaff ? i18n.t('auto___839e57') : i18n.t('auto___51aff1')))}</strong>
             <span class="text-muted" style="font-size: 0.75rem;">${timeStr}</span>
           </div>
           <div class="message-content text-break" style="font-size: 0.88rem;">${parsedText}</div>
@@ -289,7 +287,7 @@
       loadTickets();
     } catch (err) {
       console.error('[HelpdeskTab] Error sending message:', err);
-      if (typeof showNotification === 'function') showNotification('Ошибка отправки: ' + err.message, 'danger');
+      if (typeof showNotification === 'function') showNotification(i18n.t('auto___cab246') + err.message, 'danger');
     }
   }
 
@@ -303,7 +301,7 @@
         body: JSON.stringify({ status })
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      if (typeof showNotification === 'function') showNotification(`Статус изменен на: ${status}`, 'success');
+      if (typeof showNotification === 'functioni18n.t('auto__shownotification_status__9713e9')success');
       loadTickets();
       updateStats();
       selectTicket(hdActiveTicketId);
@@ -322,7 +320,7 @@
         body: JSON.stringify({ priority })
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      if (typeof showNotification === 'function') showNotification(`Приоритет изменен на: ${priority}`, 'success');
+      if (typeof showNotification === 'functioni18n.t('auto__shownotification_priority__1ee94b')success');
       loadTickets();
       selectTicket(hdActiveTicketId);
     } catch (err) {
@@ -335,7 +333,7 @@
     const replyInput = document.getElementById('hd-reply-input');
     if (!replyInput) return;
 
-    replyInput.value = '🤖 Генерация черновика ответа ИИ...';
+    replyInput.value = i18n.t('auto___d484ef');
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -343,9 +341,7 @@
         credentials: 'include',
         body: JSON.stringify({
           prompt: `Сформулируй вежливый, профессиональный и конкретный ответ технической поддержки Helpdesk на следующее обращение пользователя.
-Тема: "${hdActiveTicket.subject}"
-Описание: "${hdActiveTicket.description || ''}"
-Категория: "${hdActiveTicket.category}"
+Тема: "${hdActiveTicket.subject}i18n.t('auto___834d36')${hdActiveTicket.description || ''}i18n.t('auto___e173f2')${hdActiveTicket.category}"
 Ответ должен быть кратким и готовым к отправке клиенту.`,
           use_rag: false
         })
@@ -402,10 +398,10 @@
     if (switchNote && modeBadge) {
       switchNote.onchange = () => {
         if (switchNote.checked) {
-          modeBadge.textContent = '🔒 Режим: Внутренняя скрытая заметка';
+          modeBadge.textContent = i18n.t('auto___0fe62c');
           modeBadge.className = 'badge bg-warning text-dark';
         } else {
-          modeBadge.textContent = 'Режим: Публичный ответ';
+          modeBadge.textContent = i18n.t('auto___2745da');
           modeBadge.className = 'badge bg-secondary-subtle text-body';
         }
       };
@@ -453,7 +449,7 @@
         const message = document.getElementById('hd-new-ticket-message')?.value?.trim();
 
         if (!subject || !message) {
-          window.showToast?.('Пожалуйста, заполните тему и текст обращения.', 'warning') || alert('Пожалуйста, заполните тему и текст обращения.');
+          window.showToast?.(i18n.t('auto___38dedc'), 'warning') || alert(i18n.t('auto___38dedc'));
           return;
         }
 
@@ -468,8 +464,7 @@
 
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
-          if (data.status === 'success') {
-            window.showToast?.(`Тикет #${data.ticket.ticket_number} успешно создан!`, 'success');
+          if (data.status === 'successi18n.t('auto__window_showtoast_data_ticket_ticket_number__4b30bf')success');
             const modalEl = document.getElementById('hdCreateTicketModal');
             const modal = bootstrap.Modal.getInstance(modalEl);
             modal?.hide();
@@ -485,7 +480,7 @@
           }
         } catch (err) {
           console.error('[HelpdeskTab] Create ticket failed:', err);
-          window.showToast?.('Ошибка создания тикета: ' + err.message, 'danger') || alert('Ошибка создания тикета: ' + err.message);
+          window.showToast?.(i18n.t('auto___262bdf') + err.message, 'danger') || alert(i18n.t('auto___262bdf') + err.message);
         } finally {
           btnSubmitNew.disabled = false;
         }
@@ -517,7 +512,7 @@
     try {
       const diffMs = Date.now() - new Date(isoStr).getTime();
       const diffMin = Math.floor(diffMs / 60000);
-      if (diffMin < 1) return 'только что';
+      if (diffMin < 1) return i18n.t('auto___c47cbe');
       if (diffMin < 60) return `${diffMin} мин назад`;
       const diffHours = Math.floor(diffMin / 60);
       if (diffHours < 24) return `${diffHours} ч назад`;

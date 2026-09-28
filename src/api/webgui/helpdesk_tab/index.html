@@ -5,19 +5,19 @@
     <div class="d-flex align-items-center gap-2">
       <span class="fs-4">🛟</span>
       <div>
-        <h5 class="mb-0 fw-bold">Центр управления Helpdesk & Служба поддержки</h5>
-        <p class="mb-0 small text-muted">Единый пульт оператора: управление тикетами, живой чат поддержки, быстрые шаблоны, база знаний и SLA метрики</p>
+        <h5 class="mb-0 fw-bold"><span data-i18n="auto__helpdesk__67b90a"></span></h5>
+        <p class="mb-0 small text-muted"><span data-i18n="auto__sla__65a2e2"></span></p>
       </div>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <button class="btn btn-outline-info btn-sm d-flex align-items-center gap-1" id="hd-tab-btn-refresh" onclick="window.refreshHelpdeskTab && window.refreshHelpdeskTab()">
-        <i class="bi bi-arrow-clockwise"></i> Обновить заявки
+        <i class="bi bi-arrow-clockwise"></i> <span data-i18n="auto___f6b7cc"></span>
       </button>
       <button class="btn btn-primary btn-sm d-flex align-items-center gap-1" id="hd-tab-btn-new-ticket" onclick="window.openCreateTicketModal && window.openCreateTicketModal()">
-        <i class="bi bi-plus-circle"></i> Создать обращение
+        <i class="bi bi-plus-circle"></i> <span data-i18n="auto___74c85a"></span>
       </button>
       <button class="btn btn-outline-light btn-sm d-flex align-items-center gap-1" onclick="switchToTab('admin')">
-        <i class="bi bi-arrow-left-circle"></i> Панель админки
+        <i class="bi bi-arrow-left-circle"></i> <span data-i18n="auto___b1102f"></span>
       </button>
     </div>
   </div>
@@ -28,7 +28,7 @@
       <div class="card shadow-sm border-secondary-subtle p-2 bg-body-tertiary">
         <div class="d-flex align-items-center justify-content-between">
           <div>
-            <div class="text-muted small text-uppercase fw-semibold">Открытые заявки</div>
+            <div class="text-muted small text-uppercase fw-semibold"><span data-i18n="auto___56f7b6"></span></div>
             <h4 class="mb-0 fw-bold text-danger" id="hd-metric-open">0</h4>
           </div>
           <i class="bi bi-exclamation-octagon fs-2 text-danger opacity-75"></i>
@@ -39,7 +39,7 @@
       <div class="card shadow-sm border-secondary-subtle p-2 bg-body-tertiary">
         <div class="d-flex align-items-center justify-content-between">
           <div>
-            <div class="text-muted small text-uppercase fw-semibold">В обработке</div>
+            <div class="text-muted small text-uppercase fw-semibold"><span data-i18n="auto___fc910f"></span></div>
             <h4 class="mb-0 fw-bold text-warning" id="hd-metric-progress">0</h4>
           </div>
           <i class="bi bi-gear-wide-connected fs-2 text-warning opacity-75"></i>
@@ -50,7 +50,7 @@
       <div class="card shadow-sm border-secondary-subtle p-2 bg-body-tertiary">
         <div class="d-flex align-items-center justify-content-between">
           <div>
-            <div class="text-muted small text-uppercase fw-semibold">Решено сегодня</div>
+            <div class="text-muted small text-uppercase fw-semibold"><span data-i18n="auto___263186"></span></div>
             <h4 class="mb-0 fw-bold text-success" id="hd-metric-resolved">0</h4>
           </div>
           <i class="bi bi-check2-all fs-2 text-success opacity-75"></i>
@@ -61,7 +61,7 @@
       <div class="card shadow-sm border-secondary-subtle p-2 bg-body-tertiary">
         <div class="d-flex align-items-center justify-content-between">
           <div>
-            <div class="text-muted small text-uppercase fw-semibold">Всего в базе</div>
+            <div class="text-muted small text-uppercase fw-semibold"><span data-i18n="auto___8d7677"></span></div>
             <h4 class="mb-0 fw-bold text-info" id="hd-metric-total">0</h4>
           </div>
           <i class="bi bi-collection fs-2 text-info opacity-75"></i>
@@ -79,14 +79,14 @@
         <div class="p-2 border-bottom border-secondary-subtle">
           <div class="input-group input-group-sm mb-2">
             <span class="input-group-text bg-body border-secondary-subtle"><i class="bi bi-search"></i></span>
-            <input type="text" class="form-control border-secondary-subtle" id="hd-tab-search-input" placeholder="Поиск по номеру, теме, автору..." />
+            <input type="text" class="form-control border-secondary-subtle" id="hd-tab-search-input" placeholder="<span data-i18n="auto___9f3e41"></span>..." />
           </div>
 
           <div class="d-flex gap-1" role="group" id="hd-tab-status-filters">
-            <button type="button" class="btn btn-sm btn-outline-primary active flex-fill" data-filter="all">Все</button>
-            <button type="button" class="btn btn-sm btn-outline-primary flex-fill" data-filter="open">Новые</button>
-            <button type="button" class="btn btn-sm btn-outline-primary flex-fill" data-filter="in_progress">В работе</button>
-            <button type="button" class="btn btn-sm btn-outline-primary flex-fill" data-filter="resolved">Закрыты</button>
+            <button type="button" class="btn btn-sm btn-outline-primary active flex-fill" data-filter="all"><span data-i18n="auto___fd08da"></span></button>
+            <button type="button" class="btn btn-sm btn-outline-primary flex-fill" data-filter="open"><span data-i18n="auto___db9d03"></span></button>
+            <button type="button" class="btn btn-sm btn-outline-primary flex-fill" data-filter="in_progress"><span data-i18n="auto___9db2ea"></span></button>
+            <button type="button" class="btn btn-sm btn-outline-primary flex-fill" data-filter="resolved"><span data-i18n="auto___116304"></span></button>
           </div>
         </div>
 
@@ -94,7 +94,7 @@
         <div class="flex-grow-1 overflow-auto p-2 d-flex flex-column gap-2" id="hd-tab-ticket-list" style="min-height: 0;">
           <div class="text-center text-muted p-4">
             <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
-            <div>Загрузка тикетов...</div>
+            <div><span data-i18n="auto___a6c810"></span>...</div>
           </div>
         </div>
       </div>
@@ -104,9 +104,9 @@
         <!-- Empty State (No ticket chosen) -->
         <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted p-4 text-center" id="hd-tab-empty-state">
           <i class="bi bi-headset fs-1 mb-2 text-primary opacity-50"></i>
-          <h5 class="fw-bold">Выберите тикет для работы</h5>
+          <h5 class="fw-bold"><span data-i18n="auto___fba185"></span></h5>
           <p class="small text-muted mb-0" style="max-width: 450px;">
-            Здесь отображается полная история обращений, переписка с пользователями, внутренние заметки операторов и инструменты быстрого реагирования.
+            <span data-i18n="auto___740995"></span>.
           </p>
         </div>
 
@@ -117,8 +117,8 @@
             <div class="d-flex align-items-center gap-2 min-w-0">
               <span class="badge bg-secondary fs-6" id="hd-active-number">#0000</span>
               <div class="min-w-0">
-                <h6 class="mb-0 fw-bold text-truncate" id="hd-active-subject">Тема заявки</h6>
-                <small class="text-muted" id="hd-active-meta">Автор: Загрузка...</small>
+                <h6 class="mb-0 fw-bold text-truncate" id="hd-active-subject"><span data-i18n="auto___2762e0"></span></h6>
+                <small class="text-muted" id="hd-active-meta"><span data-i18n="auto___562ba4"></span>...</small>
               </div>
             </div>
 
@@ -126,25 +126,25 @@
             <div class="d-flex align-items-center gap-2 flex-wrap">
               <div class="dropdown">
                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="hd-btn-priority-dropdown" data-bs-toggle="dropdown">
-                  Приоритет: <span id="hd-active-priority-label" class="fw-bold">Обычный</span>
+                  <span data-i18n="auto___b5b6dd"></span>: <span id="hd-active-priority-label" class="fw-bold"><span data-i18n="auto___a2c84d"></span></span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow">
-                  <li><a class="dropdown-item hd-priority-opt" data-priority="low" href="#">🟢 Низкий</a></li>
-                  <li><a class="dropdown-item hd-priority-opt" data-priority="normal" href="#">🔵 Обычный</a></li>
-                  <li><a class="dropdown-item hd-priority-opt" data-priority="high" href="#">🟠 Высокий</a></li>
-                  <li><a class="dropdown-item hd-priority-opt" data-priority="urgent" href="#">🔴 Срочный</a></li>
+                  <li><a class="dropdown-item hd-priority-opt" data-priority="low" href="#">🟢 <span data-i18n="auto___c37cd2"></span></a></li>
+                  <li><a class="dropdown-item hd-priority-opt" data-priority="normal" href="#">🔵 <span data-i18n="auto___a2c84d"></span></a></li>
+                  <li><a class="dropdown-item hd-priority-opt" data-priority="high" href="#">🟠 <span data-i18n="auto___01e753"></span></a></li>
+                  <li><a class="dropdown-item hd-priority-opt" data-priority="urgent" href="#">🔴 <span data-i18n="auto___d22bea"></span></a></li>
                 </ul>
               </div>
 
               <div class="btn-group btn-group-sm">
-                <button class="btn btn-outline-warning hd-status-opt" data-status="in_progress" title="Взять в работу">
-                  <i class="bi bi-play-circle me-1"></i>В работу
+                <button class="btn btn-outline-warning hd-status-opt" data-status="in_progress" title="<span data-i18n="auto___13ded0"></span>">
+                  <i class="bi bi-play-circle me-1"></i><span data-i18n="auto___5868ce"></span>
                 </button>
-                <button class="btn btn-outline-success hd-status-opt" data-status="resolved" title="Отметить решенным">
-                  <i class="bi bi-check2-circle me-1"></i>Решено
+                <button class="btn btn-outline-success hd-status-opt" data-status="resolved" title="<span data-i18n="auto___601b75"></span>">
+                  <i class="bi bi-check2-circle me-1"></i><span data-i18n="auto___8113f2"></span>
                 </button>
-                <button class="btn btn-outline-secondary hd-status-opt" data-status="closed" title="Закрыть обращение">
-                  <i class="bi bi-archive me-1"></i>Закрыть
+                <button class="btn btn-outline-secondary hd-status-opt" data-status="closed" title="<span data-i18n="auto___78f41a"></span>">
+                  <i class="bi bi-archive me-1"></i><span data-i18n="auto___4ae50d"></span>
                 </button>
               </div>
             </div>
@@ -153,25 +153,25 @@
           <!-- Multi-Tool Quick Toolbar (Canned replies, AI Assistant summary, internal note) -->
           <div class="p-2 border-bottom border-secondary-subtle bg-body-tertiary d-flex align-items-center justify-content-between gap-2 flex-shrink-0 flex-wrap">
             <div class="d-flex align-items-center gap-1 flex-wrap">
-              <span class="small fw-semibold text-muted me-1"><i class="bi bi-lightning-charge-fill text-warning"></i> Быстрые ответы:</span>
-              <button class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2 hd-quick-template" data-tpl="Здравствуйте! Ваше обращение принято в работу, уточняем детали.">
-                👋 Принято
+              <span class="small fw-semibold text-muted me-1"><i class="bi bi-lightning-charge-fill text-warning"></i> <span data-i18n="auto___3c73d0"></span>:</span>
+              <button class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2 hd-quick-template" data-tpl="<span data-i18n="auto___0c2640"></span>.">
+                👋 <span data-i18n="auto___322744"></span>
               </button>
-              <button class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2 hd-quick-template" data-tpl="Проблема устранена. Пожалуйста, проверьте работу и подтвердите решение.">
-                ✅ Устранено
+              <button class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2 hd-quick-template" data-tpl="<span data-i18n="auto___4cfba5"></span>.">
+                ✅ <span data-i18n="auto___b6c738"></span>
               </button>
-              <button class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2 hd-quick-template" data-tpl="Уточните, пожалуйста, версию ОС и приложите снимок экрана с ошибкой.">
-                ❓ Запрос инфо
+              <button class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2 hd-quick-template" data-tpl="<span data-i18n="auto___e0e2e7"></span>.">
+                ❓ <span data-i18n="auto___f13d85"></span>
               </button>
-              <button class="btn btn-xs btn-outline-info rounded-pill py-0 px-2" id="hd-btn-ai-assist" title="Сгенерировать черновик ответа через ИИ">
-                🤖 ИИ-Черновик
+              <button class="btn btn-xs btn-outline-info rounded-pill py-0 px-2" id="hd-btn-ai-assist" title="<span data-i18n="auto___1d1126"></span>">
+                🤖 <span data-i18n="auto___58ff53"></span>
               </button>
             </div>
 
             <div class="form-check form-switch m-0">
               <input class="form-check-input" type="checkbox" role="switch" id="hd-switch-internal-note" />
               <label class="form-check-label small fw-semibold text-warning" for="hd-switch-internal-note">
-                <i class="bi bi-lock-fill me-1"></i>Скрытая заметка (Staff)
+                <i class="bi bi-lock-fill me-1"></i><span data-i18n="auto___1f9739"></span> (Staff)
               </label>
             </div>
           </div>
@@ -184,14 +184,14 @@
           <!-- Reply Composer -->
           <div class="p-2 px-3 border-top border-secondary-subtle bg-body-tertiary flex-shrink-0">
             <div class="input-group">
-              <textarea class="form-control" id="hd-reply-input" rows="2" placeholder="Напишите ответ пользователю (или скрытую заметку)..."></textarea>
+              <textarea class="form-control" id="hd-reply-input" rows="2" placeholder="<span data-i18n="auto___549788"></span>)..."></textarea>
               <button class="btn btn-primary px-4 d-flex align-items-center justify-content-center" id="hd-btn-send-reply">
                 <i class="bi bi-send-fill fs-5"></i>
               </button>
             </div>
             <div class="d-flex justify-content-between align-items-center mt-1 text-muted small" style="font-size: 0.75rem;">
-              <span>Ctrl + Enter для быстрой отправки</span>
-              <span id="hd-composer-mode-badge" class="badge bg-secondary-subtle text-body">Режим: Публичный ответ</span>
+              <span>Ctrl + Enter <span data-i18n="auto___16a7df"></span></span>
+              <span id="hd-composer-mode-badge" class="badge bg-secondary-subtle text-body"><span data-i18n="auto___2745da"></span></span>
             </div>
           </div>
         </div>
@@ -207,43 +207,43 @@
       <div class="modal-header border-secondary-subtle">
         <h5 class="modal-title d-flex align-items-center gap-2" id="hdCreateTicketModalLabel">
           <i class="bi bi-plus-circle text-primary"></i>
-          <span>Создать новое обращение в Helpdesk</span>
+          <span><span data-i18n="auto___1c92f2"></span> Helpdesk</span>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-3">
         <div class="mb-3">
-          <label class="form-label small fw-semibold">Тема обращения</label>
-          <input type="text" class="form-control" id="hd-new-ticket-subject" placeholder="Краткая тема проблемы..." />
+          <label class="form-label small fw-semibold"><span data-i18n="auto___55477f"></span></label>
+          <input type="text" class="form-control" id="hd-new-ticket-subject" placeholder="<span data-i18n="auto___42f5da"></span>..." />
         </div>
         <div class="row g-2 mb-3">
           <div class="col-6">
-            <label class="form-label small fw-semibold">Категория</label>
+            <label class="form-label small fw-semibold"><span data-i18n="auto___19c858"></span></label>
             <select class="form-select form-select-sm" id="hd-new-ticket-category">
-              <option value="technical">🔧 Техническая</option>
-              <option value="ai">🤖 ИИ и Модели</option>
-              <option value="account">👤 Аккаунт & Доступ</option>
-              <option value="general">💬 Общие вопросы</option>
+              <option value="technical">🔧 <span data-i18n="auto___d8ab3b"></span></option>
+              <option value="ai">🤖 <span data-i18n="auto___168835"></span></option>
+              <option value="account">👤 <span data-i18n="auto___c92ac9"></span></option>
+              <option value="general">💬 <span data-i18n="auto___090f05"></span></option>
             </select>
           </div>
           <div class="col-6">
-            <label class="form-label small fw-semibold">Приоритет</label>
+            <label class="form-label small fw-semibold"><span data-i18n="auto___b5b6dd"></span></label>
             <select class="form-select form-select-sm" id="hd-new-ticket-priority">
-              <option value="low">🟢 Низкий</option>
-              <option value="normal" selected>🔵 Обычный</option>
-              <option value="high">🟠 Высокий</option>
-              <option value="urgent">🔴 Срочный</option>
+              <option value="low">🟢 <span data-i18n="auto___c37cd2"></span></option>
+              <option value="normal" selected>🔵 <span data-i18n="auto___a2c84d"></span></option>
+              <option value="high">🟠 <span data-i18n="auto___01e753"></span></option>
+              <option value="urgent">🔴 <span data-i18n="auto___d22bea"></span></option>
             </select>
           </div>
         </div>
         <div class="mb-2">
-          <label class="form-label small fw-semibold">Описание проблемы / Текст сообщения</label>
-          <textarea class="form-control" id="hd-new-ticket-message" rows="4" placeholder="Подробное описание обращения..."></textarea>
+          <label class="form-label small fw-semibold"><span data-i18n="auto___4981a6"></span></label>
+          <textarea class="form-control" id="hd-new-ticket-message" rows="4" placeholder="<span data-i18n="auto___33d918"></span>..."></textarea>
         </div>
       </div>
       <div class="modal-footer border-secondary-subtle py-2">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Отмена</button>
-        <button type="button" class="btn btn-primary btn-sm" id="hd-btn-submit-new-ticket">Создать тикет</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"><span data-i18n="auto___0ec753"></span></button>
+        <button type="button" class="btn btn-primary btn-sm" id="hd-btn-submit-new-ticket"><span data-i18n="auto___d4f695"></span></button>
       </div>
     </div>
   </div>

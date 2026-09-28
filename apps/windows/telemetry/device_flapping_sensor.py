@@ -1,4 +1,4 @@
-"""Сенсор непрерывного мониторинга периферии, обнаружения дребезга и PnP-телеметрии."""
+﻿"""Сенсор непрерывного мониторинга периферии, обнаружения дребезга и PnP-телеметрии."""
 from __future__ import annotations
 import os
 import threading
@@ -7,7 +7,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional, Set
 from logger import logger
-from apps.windows.api.setupapi import PnPDeviceInfo, SetupAPI
+from apps.windows.telemetry.api_bindings.setupapi import PnPDeviceInfo, SetupAPI
 from apps.windows.telemetry.storage import TelemetryStorage
 
 @dataclass

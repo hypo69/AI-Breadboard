@@ -27,7 +27,7 @@
         }
       }
     } catch (e) {
-      console.warn('[SystemInspectorTab] Ошибка получения процессов из базы данных SQLite:', e);
+      console.warn(i18n.t('auto__systeminspectortab_sqlite__114b5a'), e);
     }
   }
 
@@ -35,14 +35,7 @@
     const container = document.getElementById('sys-lhm-sensors-container');
     const badgeStatus = document.getElementById('sys-lhm-status-badge');
     const badgeCount = document.getElementById('sys-lhm-sensors-count');
-    const btnLaunch = document.getElementById('btn-sys-launch-lhm');
-    if (!container) return;
-
-    try {
-      // 1. Проверяем статус LHM
-      let lhmStatus = null;
-      try {
-        const sRes = await fetch('/api/v1/lhm/status');
+    const btnLaunch = document.getElementById('btn-sys-launch-lhmi18n.t('auto__if_container_return_try_1_lhm_let_lhmstatus_null_try_const_sres_await_fetch__5fd2e6')/api/v1/lhm/status');
         if (sRes.ok) lhmStatus = await sRes.json();
       } catch {}
 
@@ -64,48 +57,18 @@
           badgeStatus.className = 'badge bg-success';
         }
         showLhmFallbackNotice(false);
-        const mRes = await fetch('/api/v1/lhm/metrics');
-        if (mRes.ok) {
-          const mData = await mRes.json();
-          sensorsList = mData.sensors || [];
-        }
-      } else {
-        // Fallback: читаем последний замер сенсоров из БД SQLite (аналогично «Топ процессов»)
-        if (badgeStatus) {
-          badgeStatus.textContent = '● БД SQLite';
+        const mRes = await fetch('/api/v1/lhm/metricsi18n.t('auto__if_mres_ok_const_mdata_await_mres_json_sensorslist_mdata_sensors_else_fallback_sqlite_if_badgestatus_badgestatus_textcontent__6ac53a')● БД SQLite';
           badgeStatus.className = 'badge bg-primary';
         }
         try {
-          const dbRes = await fetch('/api/v1/system/sensors?source=db');
-          if (dbRes.ok) {
-            const dbData = await dbRes.json();
-            if (Array.isArray(dbData) && dbData.length > 0) {
-              // Данные уже нормализованы бэкендом — минимальный маппинг
-              sensorsList = dbData.map(s => ({
-                id: s.id || s.sensor_id || s.sensor_name,
-                hardware_name: s.hardware_name || 'System Hardware',
+          const dbRes = await fetch('/api/v1/system/sensors?source=dbi18n.t('auto__if_dbres_ok_const_dbdata_await_dbres_json_if_array_isarray_dbdata_dbdata_length_0_sensorslist_dbdata_map_s_id_s_id_s_sensor_id_s_sensor_name_hardware_name_s_hardware_name__2f9160')System Hardware',
                 hardware_type: s.hardware_type || 'system',
                 sensor_category: s.sensor_category || 'General',
                 sensor_name: s.sensor_name || 'Sensor',
                 value_raw: s.value_raw || `${s.value_numeric ?? 0} ${s.unit || ''}`.trim(),
                 value_numeric: s.value_numeric ?? 0,
-                unit: s.unit || '',
-              }));
-              showLhmFallbackNotice(false);
-            }
-          }
-        } catch { /* продолжаем к live-fallback */ }
-
-        // Live-fallback: если БД пуста (телеметрия ещё не запущена)
-        if (sensorsList.length === 0) {
-          if (badgeStatus) {
-            badgeStatus.textContent = 'WMI/GPU (live)';
-            badgeStatus.className = 'badge bg-secondary';
-          }
-          // Показываем уведомление о переключении на live
-          showLhmFallbackNotice(true);
-          try {
-            const liveRes = await fetch('/api/v1/system/sensors?source=live');
+                unit: s.unit || 'i18n.t('auto__showlhmfallbacknotice_false_catch_live_fallback_live_fallback_if_sensorslist_length_0_if_badgestatus_badgestatus_textcontent__ba206b')WMI/GPU (live)';
+            badgeStatus.className = 'badge bg-secondaryi18n.t('auto__live_showlhmfallbacknotice_true_try_const_liveres_await_fetch__ca1d8f')/api/v1/system/sensors?source=live');
             if (liveRes.ok) {
               const raw = await liveRes.json();
               sensorsList = (raw || []).map(s => ({
@@ -120,7 +83,7 @@
               }));
             }
           } catch (liveErr) {
-            console.warn('[SystemInspectorTab] Live-fallback сенсоров недоступен:', liveErr);
+            console.warn(i18n.t('auto__systeminspectortab_live_fallback__df0a7a'), liveErr);
           }
         }
       }
@@ -146,18 +109,7 @@
     if (visible) {
       notice.classList.remove('d-none');
     } else {
-      notice.classList.add('d-none');
-    }
-  }
-
-
-    if (!container) return;
-
-    try {
-      // 1. Проверяем статус LHM
-      let lhmStatus = null;
-      try {
-        const sRes = await fetch('/api/v1/lhm/status');
+      notice.classList.add('d-nonei18n.t('auto__if_container_return_try_1_lhm_let_lhmstatus_null_try_const_sres_await_fetch__b3d7d7')/api/v1/lhm/status');
         if (sRes.ok) lhmStatus = await sRes.json();
       } catch {}
 
@@ -178,41 +130,17 @@
           badgeStatus.textContent = '● LHM Active';
           badgeStatus.className = 'badge bg-success';
         }
-        const mRes = await fetch('/api/v1/lhm/metrics');
-        if (mRes.ok) {
-          const mData = await mRes.json();
-          sensorsList = mData.sensors || [];
-        }
-      } else {
-        // Fallback: читаем последний замер сенсоров из БД SQLite (аналогично «Топ процессов»)
-        if (badgeStatus) {
-          badgeStatus.textContent = '● БД SQLite';
+        const mRes = await fetch('/api/v1/lhm/metricsi18n.t('auto__if_mres_ok_const_mdata_await_mres_json_sensorslist_mdata_sensors_else_fallback_sqlite_if_badgestatus_badgestatus_textcontent__6ac53a')● БД SQLite';
           badgeStatus.className = 'badge bg-primary';
         }
         try {
-          const dbRes = await fetch('/api/v1/system/sensors?source=db');
-          if (dbRes.ok) {
-            const dbData = await dbRes.json();
-            if (Array.isArray(dbData) && dbData.length > 0) {
-              // Данные уже нормализованы бэкендом — минимальный маппинг
-              sensorsList = dbData.map(s => ({
-                id: s.id || s.sensor_id || s.sensor_name,
-                hardware_name: s.hardware_name || 'System Hardware',
+          const dbRes = await fetch('/api/v1/system/sensors?source=dbi18n.t('auto__if_dbres_ok_const_dbdata_await_dbres_json_if_array_isarray_dbdata_dbdata_length_0_sensorslist_dbdata_map_s_id_s_id_s_sensor_id_s_sensor_name_hardware_name_s_hardware_name__2f9160')System Hardware',
                 hardware_type: s.hardware_type || 'system',
                 sensor_category: s.sensor_category || 'General',
                 sensor_name: s.sensor_name || 'Sensor',
                 value_raw: s.value_raw || `${s.value_numeric ?? 0} ${s.unit || ''}`.trim(),
                 value_numeric: s.value_numeric ?? 0,
-                unit: s.unit || '',
-              }));
-            }
-          }
-        } catch { /* продолжаем к live-fallback */ }
-
-        // Live-fallback: если БД пуста (телеметрия ещё не запущена)
-        if (sensorsList.length === 0) {
-          if (badgeStatus) {
-            badgeStatus.textContent = 'WMI/GPU (live)';
+                unit: s.unit || 'i18n.t('auto__catch_live_fallback_live_fallback_if_sensorslist_length_0_if_badgestatus_badgestatus_textcontent__1a00a6')WMI/GPU (live)';
             badgeStatus.className = 'badge bg-secondary';
           }
           try {
@@ -231,7 +159,7 @@
               }));
             }
           } catch (liveErr) {
-            console.warn('[SystemInspectorTab] Live-fallback сенсоров недоступен:', liveErr);
+            console.warn(i18n.t('auto__systeminspectortab_live_fallback__df0a7a'), liveErr);
           }
         }
       }
@@ -259,9 +187,7 @@
 
     if (!Array.isArray(cachedSensors) || cachedSensors.length === 0) {
       container.innerHTML = `
-        <div class="text-center py-4 text-muted small">
-          <div>Сенсоры LibreHardwareMonitor не обнаружены</div>
-          <div class="mt-2 text-muted" style="font-size: 0.72rem;">Убедитесь, что LHM запущен с правами администратора и включен Web Server (:8085)</div>
+        <div class="text-center py-4 text-muted smalli18n.t('auto__div_librehardwaremonitor_div_div_class__341524')mt-2 text-muted" style="font-size: 0.72rem;">Убедитесь, что LHM запущен с правами администратора и включен Web Server (:8085)</div>
         </div>
       `;
       return;
@@ -298,7 +224,7 @@
     // Group sensors by Hardware Name or Category
     const groups = {};
     filtered.forEach(s => {
-      const grpKey = s.hardware_name || s.sensor_category || 'Оборудование';
+      const grpKey = s.hardware_name || s.sensor_category || i18n.t('auto___2cf041');
       if (!groups[grpKey]) groups[grpKey] = [];
       groups[grpKey].push(s);
     });
@@ -375,8 +301,8 @@
     const devCountEl = document.getElementById('modal-sensor-devices-count');
     const modelBadge = document.getElementById('modal-sensor-model-badge');
 
-    if (titleEl) titleEl.textContent = 'Выполняется AI-аудит залогированных сенсоров...';
-    if (subEl) subEl.textContent = 'Чтение CSV-логов, усреднение значений и сравнение со спецификациями железа';
+    if (titleEl) titleEl.textContent = i18n.t('auto__ai__4adf76');
+    if (subEl) subEl.textContent = i18n.t('auto__csv__0d764f');
     if (aiCompEl) {
       aiCompEl.innerHTML = '<div class="d-flex align-items-center gap-2 py-3"><div class="spinner-border spinner-border-sm text-primary" role="status"></div><span>Запрос к модели AI и сравнительный анализ номинальных параметров железа...</span></div>';
     }
@@ -449,17 +375,7 @@
 
     // Update Model Badge
     if (modelBadge && report) {
-      modelBadge.textContent = report.ai_model_used || 'Heuristic Engine';
-    }
-
-    // Render Devices List
-    if (devCountEl) {
-      devCountEl.textContent = `${devices.length} устр.`;
-    }
-    if (devListEl) {
-      if (devices.length > 0) {
-        devListEl.innerHTML = devices.map(d => {
-          let icon = 'bi-hdd-network';
+      modelBadge.textContent = report.ai_model_used || 'Heuristic Enginei18n.t('auto__render_devices_list_if_devcountel_devcountel_textcontent_devices_length_if_devlistel_if_devices_length_0_devlistel_innerhtml_devices_map_d_let_icon__4299a3')bi-hdd-network';
           const low = d.toLowerCase();
           if (low.includes('core') || low.includes('cpu') || low.includes('intel') || low.includes('amd')) icon = 'bi-cpu';
           else if (low.includes('geforce') || low.includes('gpu') || low.includes('nvidia') || low.includes('radeon')) icon = 'bi-gpu-card';
@@ -479,7 +395,7 @@
       if (report && report.comparison_report) {
         aiCompEl.textContent = report.comparison_report;
       } else {
-        aiCompEl.textContent = 'AI-сравнение выполнено по эвристическим профилям оборудования хоста. Все параметры сенсоров в пределах нормы.';
+        aiCompEl.textContent = i18n.t('auto_ai__f28d1c');
       }
     }
 
@@ -489,14 +405,9 @@
     if (maxCpuTemp !== null) {
       if (elCpuBadge) {
         elCpuBadge.textContent = `${Math.round(maxCpuTemp)} °C`;
-        elCpuBadge.className = `badge ${maxCpuTemp > 82 ? 'bg-danger' : maxCpuTemp > 70 ? 'bg-warning text-dark' : 'bg-success'}`;
-      }
-      if (maxCpuTemp > 82) {
-        if (elCpuText) elCpuText.textContent = `Критический нагрев (${Math.round(maxCpuTemp)}°C). Риск теплового троттлинга.`;
-        recommendations.push({
-          type: 'danger',
+        elCpuBadge.className = `badge ${maxCpuTemp > 82 ? 'bg-danger' : maxCpuTemp > 70 ? 'bg-warning text-dark' : 'bg-successi18n.t('auto__if_maxcputemp_82_if_elcputext_elcputext_textcontent_math_round_maxcputemp_c_recommendations_push_type__b1a7a3')danger',
           icon: 'bi-exclamation-triangle-fill',
-          title: 'Высокая температура процессора',
+          title: i18n.t('auto___51cfdb'),
           text: `Пиковая/средняя температура CPU достигает ${Math.round(maxCpuTemp)}°C. Проверьте плотность прижима кулера, термопасту и запыленность радиатора.`
         });
       } else if (maxCpuTemp > 70) {
@@ -504,7 +415,7 @@
         recommendations.push({
           type: 'warning',
           icon: 'bi-thermometer-high',
-          title: 'Повышенный нагрев CPU',
+          title: i18n.t('auto__cpu_b9a733'),
           text: `Температура CPU ${Math.round(maxCpuTemp)}°C выше оптимального порога. Рекомендуется настроить кривую оборотов вентилятора.`
         });
       } else {
@@ -512,13 +423,13 @@
         recommendations.push({
           type: 'success',
           icon: 'bi-check-circle-fill',
-          title: 'Тепловой режим процессора оптимален',
+          title: i18n.t('auto___803b47'),
           text: `Температура процессора ${Math.round(maxCpuTemp)}°C находится в безопасной зоне номинальных характеристик.`
         });
       }
     } else {
       if (elCpuBadge) elCpuBadge.textContent = 'N/A';
-      if (elCpuText) elCpuText.textContent = 'Температурные датчики CPU не предоставили данных.';
+      if (elCpuText) elCpuText.textContent = i18n.t('auto__cpu__6eab63');
     }
 
     // Analyze GPU
@@ -527,14 +438,9 @@
     if (maxGpuTemp !== null) {
       if (elGpuBadge) {
         elGpuBadge.textContent = `${Math.round(maxGpuTemp)} °C`;
-        elGpuBadge.className = `badge ${maxGpuTemp > 80 ? 'bg-danger' : maxGpuTemp > 72 ? 'bg-warning text-dark' : 'bg-success'}`;
-      }
-      if (maxGpuTemp > 80) {
-        if (elGpuText) elGpuText.textContent = `Критический нагрев GPU (${Math.round(maxGpuTemp)}°C).`;
-        recommendations.push({
-          type: 'danger',
+        elGpuBadge.className = `badge ${maxGpuTemp > 80 ? 'bg-danger' : maxGpuTemp > 72 ? 'bg-warning text-dark' : 'bg-successi18n.t('auto__if_maxgputemp_80_if_elgputext_elgputext_textcontent_gpu_math_round_maxgputemp_c_recommendations_push_type__fde995')danger',
           icon: 'bi-gpu-card',
-          title: 'Высокая температура видеокарты',
+          title: i18n.t('auto___cd5b94'),
           text: `Графический чип нагревается до ${Math.round(maxGpuTemp)}°C. Проверьте циркуляцию воздуха в корпусе ПК.`
         });
       } else {
@@ -542,30 +448,19 @@
         recommendations.push({
           type: 'success',
           icon: 'bi-check-circle-fill',
-          title: 'Видеокарта работает штатно',
+          title: i18n.t('auto___33faf5'),
           text: `Температурные показатели GPU (${Math.round(maxGpuTemp)}°C) соответствуют номиналу.`
         });
       }
     } else {
       if (elGpuBadge) elGpuBadge.textContent = 'N/A';
-      if (elGpuText) elGpuText.textContent = 'Дискретный GPU в режиме энергосбережения или данные отсутствуют.';
+      if (elGpuText) elGpuText.textContent = i18n.t('auto__gpu__ab99e3');
     }
 
     // Analyze Cooling
     const elFanBadge = document.getElementById('modal-fan-status-badge');
-    const elFanText = document.getElementById('modal-fan-analysis-text');
-    if (fanSpeeds.length > 0) {
-      const activeFans = fanSpeeds.filter(f => f.value > 0);
-      if (elFanBadge) {
-        elFanBadge.textContent = `${activeFans.length} акт. кулеров`;
-        elFanBadge.className = 'badge bg-success';
-      }
-      if (elFanText) {
-        elFanText.textContent = `Опрошено ${fanSpeeds.length} кулеров. Обороты стабильны.`;
-      }
-    } else {
-      if (elFanBadge) elFanBadge.textContent = 'Пассив / WMI';
-      if (elFanText) elFanText.textContent = 'Управление вентиляторами через BIOS или пассивное охлаждение.';
+    const elFanText = document.getElementById('modal-fan-analysis-texti18n.t('auto__if_fanspeeds_length_0_const_activefans_fanspeeds_filter_f_f_value_0_if_elfanbadge_elfanbadge_textcontent_activefans_length_elfanbadge_classname__134b7b')badge bg-successi18n.t('auto__if_elfantext_elfantext_textcontent_fanspeeds_length_else_if_elfanbadge_elfanbadge_textcontent__8a1f7c')Пассив / WMI';
+      if (elFanText) elFanText.textContent = i18n.t('auto__bios__6d249e');
     }
 
     // Additional recommendations from backend report
@@ -575,7 +470,7 @@
           recommendations.push({
             type: 'info',
             icon: 'bi-info-circle',
-            title: 'Рекомендация по оборудованию',
+            title: i18n.t('auto___b4aa1a'),
             text: r
           });
         }
@@ -589,13 +484,7 @@
       badgeHealth.className = `badge ms-1 ${healthScore >= 85 ? 'bg-success' : healthScore >= 65 ? 'bg-warning text-dark' : 'bg-danger'}`;
     }
 
-    const countStat = document.getElementById('modal-sensor-count-stat');
-    if (countStat) {
-      const totalSmpls = report ? report.total_samples : sensorsList.length;
-      countStat.textContent = `${sensorsList.length} шт. (${totalSmpls} замеров)`;
-    }
-
-    const maxTempStat = document.getElementById('modal-sensor-max-temp');
+    const countStat = document.getElementById('modal-sensor-count-stati18n.t('auto__if_countstat_const_totalsmpls_report_report_total_samples_sensorslist_length_countstat_textcontent_sensorslist_length_totalsmpls_const_maxtempstat_document_getelementbyid__79963f')modal-sensor-max-temp');
     if (maxTempStat) maxTempStat.textContent = overallMaxTemp > 0 ? `${Math.round(overallMaxTemp)} °C` : 'N/A';
 
     const statusTitle = document.getElementById('modal-sensor-status-title');
@@ -604,15 +493,15 @@
 
     if (healthScore >= 85) {
       if (statusIcon) statusIcon.textContent = '✅';
-      if (statusTitle) statusTitle.textContent = 'Все аппаратные подсистемы работают в идеальном режиме';
+      if (statusTitle) statusTitle.textContent = i18n.t('auto___addd1a');
       if (statusSub) statusSub.textContent = `Усредненные показатели соответствуют спецификациям реального железа (макс. ${Math.round(overallMaxTemp)}°C).`;
     } else if (healthScore >= 65) {
       if (statusIcon) statusIcon.textContent = '⚠️';
-      if (statusTitle) statusTitle.textContent = 'Обнаружены параметры оборудования, требующие внимания';
+      if (statusTitle) statusTitle.textContent = i18n.t('auto___7c9b75');
       if (statusSub) statusSub.textContent = `Пиковая температура ${Math.round(overallMaxTemp)}°C. Ознакомьтесь с AI-заключением и рекомендациями.`;
     } else {
       if (statusIcon) statusIcon.textContent = '🚨';
-      if (statusTitle) statusTitle.textContent = 'Внимание: Критические параметры оборудования!';
+      if (statusTitle) statusTitle.textContent = i18n.t('auto___f7118b');
       if (statusSub) statusSub.textContent = `Зафиксирован опасный нагрев или высокая перегрузка компонентов.`;
     }
 
@@ -631,21 +520,7 @@
             <div class="text-muted" style="font-size: 0.76rem; line-height: 1.4;">${escapeHtml(r.text)}</div>
           </div>
         </div>
-      `).join('');
-    }
-
-    // Prepare Clipboard text
-    lastAnalysisReportText = `=== AI-Breadboard: Отчет AI-аудита сенсоров и оборудования ===\n` +
-      `Дата: ${new Date().toLocaleString('ru-RU')}\n` +
-      `Индекс здоровья системы: ${healthScore}/100\n` +
-      `AI-модель: ${report ? report.ai_model_used : 'Heuristic'}\n` +
-      `Распознанные устройства (${devices.length} шт.): ${devices.join(', ')}\n` +
-      `Сенсоров в аудите: ${sensorsList.length}\n` +
-      `Максимальная температура: ${overallMaxTemp > 0 ? Math.round(overallMaxTemp) + ' °C' : 'N/A'}\n\n` +
-      `=== AI СРАВНЕНИЕ СО СПЕЦИФИКАЦИЯМИ РЕАЛЬНОГО ЖЕЛЕЗА ===\n` +
-      `${(report && report.comparison_report) ? report.comparison_report : 'Параметры в норме.'}\n\n` +
-      `=== РЕКОМЕНДАЦИИ И ВЫВОДЫ ===\n` +
-      recommendations.map((r, i) => `${i + 1}. [${r.title}] ${r.text}`).join('\n') +
+      `).join('i18n.t('auto__prepare_clipboard_text_lastanalysisreporttext_ai_breadboard_ai_n_new_date_tolocalestring__efe91f')ru-RUi18n.t('auto__n_healthscore_100_n_ai_report_report_ai_model_used__ed0863')Heuristici18n.t('auto__n_devices_length_devices_join__c4d383'), i18n.t('auto__n_sensorslist_length_n_overallmaxtemp_0_math_round_overallmaxtemp__5a3cf6') °C' : 'N/Ai18n.t('auto__n_n_ai_n_report_report_comparison_report_report_comparison_report__fc1133')Параметры в норме.i18n.t('auto__n_n_n_recommendations_map_r_i_i_1_r_title_r_text_join__b71b38')\n') +
       `\n======================================================`;
   }
 
@@ -661,60 +536,26 @@
       const pct = Number(snap.cpu.total_percent || 0);
       if (cpuVal) cpuVal.innerText = `${pct.toFixed(1)}%`;
       if (cpuFill) cpuFill.style.width = `${Math.min(100, pct)}%`;
-      if (cpuSub) cpuSub.innerText = `${snap.cpu.physical_cores || '--'} Физических / ${snap.cpu.logical_cores || '--'} Потоков`;
-    }
-
-    // RAM
-    if (snap.memory) {
-      const ramVal = document.getElementById('sys-metric-ram-val');
+      if (cpuSub) cpuSub.innerText = `${snap.cpu.physical_cores || '--i18n.t('auto__snap_cpu_logical_cores__27129a')--i18n.t('auto__ram_if_snap_memory_const_ramval_document_getelementbyid__fb9bfc')sys-metric-ram-val');
       const ramFill = document.getElementById('sys-metric-ram-fill');
-      const ramSub = document.getElementById('sys-metric-ram-sub');
-
-      const usedGb = Number(snap.memory.used_gb || 0);
-      const totalGb = Number(snap.memory.total_gb || 0);
-      const pct = Number(snap.memory.percent || 0);
-
-      if (ramVal) ramVal.innerText = `${usedGb.toFixed(1)} / ${totalGb.toFixed(1)} GB`;
-      if (ramFill) ramFill.style.width = `${pct}%`;
-      if (ramSub) ramSub.innerText = `${pct}% занято (${Number(snap.memory.available_gb || 0).toFixed(1)} GB свободно)`;
-    }
-
-    // GPU
-    if (Array.isArray(snap.gpus) && snap.gpus.length > 0) {
-      const g = snap.gpus[0];
-      const gpuVal = document.getElementById('sys-metric-gpu-val');
+      const ramSub = document.getElementById('sys-metric-ram-subi18n.t('auto__const_usedgb_number_snap_memory_used_gb_0_const_totalgb_number_snap_memory_total_gb_0_const_pct_number_snap_memory_percent_0_if_ramval_ramval_innertext_usedgb_tofixed_1_totalgb_tofixed_1_gb_if_ramfill_ramfill_style_width_pct_if_ramsub_ramsub_innertext_pct_number_snap_memory_available_gb_0_tofixed_1_gb_gpu_if_array_isarray_snap_gpus_snap_gpus_length_0_const_g_snap_gpus_0_const_gpuval_document_getelementbyid__e84949')sys-metric-gpu-val');
       const gpuSub = document.getElementById('sys-metric-gpu-sub');
 
       if (gpuVal) gpuVal.innerText = g.name || 'GPU';
-      if (gpuSub) gpuSub.innerText = `VRAM: ${Number(g.memory_total_gb || 0).toFixed(1)} GB | CUDA: ${g.has_cuda ? 'Да' : 'Нет'}`;
+      if (gpuSub) gpuSub.innerText = `VRAM: ${Number(g.memory_total_gb || 0).toFixed(1)} GB | CUDA: ${g.has_cuda ? i18n.t('auto___8d2fab') : i18n.t('auto___f82a82')}`;
     }
 
     // Disk I/O
     if (snap.disk_io) {
       const diskVal = document.getElementById('sys-metric-disk-val');
-      const diskSub = document.getElementById('sys-metric-disk-sub');
-
-      const totalMb = ((snap.disk_io.read_bytes_per_sec + snap.disk_io.write_bytes_per_sec) / (1024 * 1024)).toFixed(2);
-      const rKb = (snap.disk_io.read_bytes_per_sec / 1024).toFixed(0);
-      const wKb = (snap.disk_io.write_bytes_per_sec / 1024).toFixed(0);
-
-      if (diskVal) diskVal.innerText = `${totalMb} MB/s`;
-      if (diskSub) diskSub.innerText = `Чтение: ${rKb} KB/s | Запись: ${wKb} KB/s`;
-    }
-
-    // Battery & Power
-    const powerCont = document.getElementById('sys-power-info-container');
+      const diskSub = document.getElementById('sys-metric-disk-subi18n.t('auto__const_totalmb_snap_disk_io_read_bytes_per_sec_snap_disk_io_write_bytes_per_sec_1024_1024_tofixed_2_const_rkb_snap_disk_io_read_bytes_per_sec_1024_tofixed_0_const_wkb_snap_disk_io_write_bytes_per_sec_1024_tofixed_0_if_diskval_diskval_innertext_totalmb_mb_s_if_disksub_disksub_innertext_rkb_kb_s_wkb_kb_s_battery_power_const_powercont_document_getelementbyid__062600')sys-power-info-container');
     const powerBadge = document.getElementById('sys-power-status-badge');
     if (powerCont && snap.battery) {
       if (snap.battery.has_battery && snap.battery.percent !== null) {
         if (powerBadge) {
-          powerBadge.textContent = `${snap.battery.percent}% ${snap.battery.power_plugged ? '⚡ Зарядка' : '🔋 Батарея'}`;
-          powerBadge.className = snap.battery.power_plugged ? 'badge bg-success-subtle text-success border border-success' : 'badge bg-warning-subtle text-warning border border-warning';
-        }
-        const minsLeft = snap.battery.secs_left ? Math.round(snap.battery.secs_left / 60) : null;
-        powerCont.innerHTML = `
-          <div>Статус: ${snap.battery.power_plugged ? 'Подключено к сети' : 'Работа от батареи'}</div>
-          <div>${minsLeft ? `Осталось ~${minsLeft} мин.` : 'Профиль: ' + (snap.battery.power_profile || 'Balanced')}</div>
+          powerBadge.textContent = `${snap.battery.percent}% ${snap.battery.power_plugged ? i18n.t('auto___7e9ecd') : i18n.t('auto___03aeda')}`;
+          powerBadge.className = snap.battery.power_plugged ? 'badge bg-success-subtle text-success border border-success' : 'badge bg-warning-subtle text-warning border border-warningi18n.t('auto__const_minsleft_snap_battery_secs_left_math_round_snap_battery_secs_left_60_null_powercont_innerhtml_div_snap_battery_power_plugged__deba64')Подключено к сети' : i18n.t('auto___1d7f6d')}</div>
+          <div>${minsLeft ? `Осталось ~${minsLeft} мин.` : i18n.t('auto___13615d') + (snap.battery.power_profile || 'Balanced')}</div>
         `;
       } else {
         if (powerBadge) {
@@ -738,7 +579,7 @@
     if (diskCont && Array.isArray(snap.physical_disks) && snap.physical_disks.length > 0) {
       const allHealthy = snap.physical_disks.every(d => d.health_status === 'Healthy');
       if (diskBadge) {
-        diskBadge.textContent = allHealthy ? 'SMART OK' : 'Внимание';
+        diskBadge.textContent = allHealthy ? 'SMART OK' : i18n.t('auto___5f5f86');
         diskBadge.className = allHealthy ? 'badge bg-success-subtle text-success border border-success' : 'badge bg-warning-subtle text-warning border border-warning';
       }
       diskCont.innerHTML = snap.physical_disks.map(d => `
@@ -763,22 +604,17 @@
         </div>
       `).join('');
     } else if (ramSticksCont && snap.memory) {
-      ramSticksCont.innerHTML = `<div>RAM: ${snap.memory.total_gb || '--'} GB физической памяти</div>`;
-    }
-
-    // Reliability & Open Ports
-    const alertsCont = document.getElementById('sys-alerts-ports-container');
+      ramSticksCont.innerHTML = `<div>RAM: ${snap.memory.total_gb || '--i18n.t('auto__gb_div_reliability_open_ports_const_alertscont_document_getelementbyid__42d5a8')sys-alerts-ports-container');
     const alertsBadge = document.getElementById('sys-alerts-badge');
     if (alertsCont) {
       const portCount = Array.isArray(snap.listening_ports) ? snap.listening_ports.length : 0;
       const isReboot = snap.alerts && snap.alerts.reboot_pending;
       if (alertsBadge) {
-        alertsBadge.textContent = isReboot ? 'Перезагрузка' : 'Стабильно';
+        alertsBadge.textContent = isReboot ? i18n.t('auto___a40813') : i18n.t('auto___331370');
         alertsBadge.className = isReboot ? 'badge bg-warning text-dark' : 'badge bg-info-subtle text-info border border-info';
       }
       alertsCont.innerHTML = `
-        <div>Сетевые сокеты: <span class="fw-bold text-white">${portCount} портов LISTEN</span></div>
-        <div class="text-truncate" title="${escapeHtml(snap.alerts?.latest_alert || '')}">${escapeHtml(snap.alerts?.latest_alert || 'Система стабильна')}</div>
+        <div>Сетевые сокеты: <span class="fw-bold text-whitei18n.t('auto__portcount_listen_span_div_div_class__2003e4')text-truncate" title="${escapeHtml(snap.alerts?.latest_alert || '')}">${escapeHtml(snap.alerts?.latest_alert || i18n.t('auto___f4824e'))}</div>
       `;
     }
   }
@@ -793,7 +629,7 @@
         updateCoreMetrics(data);
       }
     } catch (e) {
-      console.warn('[SystemInspectorTab] Ошибка получения базовых метрик:', e);
+      console.warn(i18n.t('auto__systeminspectortab__b7563c'), e);
     }
   }
 
@@ -807,7 +643,7 @@
         updateHardwareQuick(data);
       }
     } catch (e) {
-      console.warn('[SystemInspectorTab] Ошибка получения данных оборудования:', e);
+      console.warn(i18n.t('auto__systeminspectortab__59c2b7'), e);
     }
   }
 
@@ -849,7 +685,7 @@
       else if (p.cpu_percent > 15) cpuClass = 'badge-cpu-med';
 
       return `
-        <tr class="sys-proc-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для детальной AI-диагностики процесса">
+        <tr class="sys-proc-row" data-idx="${idx}" style="cursor: pointer;" title=i18n.t('auto__ai__923281')>
           <td style="color: #38bdf8;">${p.pid}</td>
           <td style="font-weight: 600; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(p.name || '')}">${escapeHtml(p.name || '')}</td>
           <td style="color: #94a3b8;">${escapeHtml(p.status || 'running')}</td>
@@ -878,16 +714,16 @@
               { text: p.status || 'running', class: 'badge bg-success' }
             ],
             metadata: [
-              { label: 'Имя процесса', value: p.name },
+              { label: i18n.t('auto___79ec71'), value: p.name },
               { label: 'Process ID (PID)', value: String(p.pid) },
-              { label: 'Пользователь / Учетная запись', value: p.username || 'SYSTEM' },
-              { label: 'Статус', value: p.status || 'Выполняется' },
-              { label: 'Загрузка CPU', value: `${Number(p.cpu_percent || 0).toFixed(1)}%` },
-              { label: 'Оперативная память', value: `${Number(p.memory_mb || 0).toFixed(1)} MB` },
-              { label: 'Количество потоков', value: String(p.num_threads || 1) },
-              { label: 'Исполняемый путь', value: p.exe || p.executable_path || 'Системный процесс Windows', isCode: true, fullWidth: true }
+              { label: i18n.t('auto___c42702'), value: p.username || 'SYSTEM' },
+              { label: i18n.t('auto___f7f293'), value: p.status || i18n.t('auto___eff79c') },
+              { label: i18n.t('auto__cpu_15e14e'), value: `${Number(p.cpu_percent || 0).toFixed(1)}%` },
+              { label: i18n.t('auto___5b8b72'), value: `${Number(p.memory_mb || 0).toFixed(1)} MB` },
+              { label: i18n.t('auto___1a2061'), value: String(p.num_threads || 1) },
+              { label: i18n.t('auto___a232b1'), value: p.exe || p.executable_path || i18n.t('auto__windows_0b21b3'), isCode: true, fullWidth: true }
             ],
-            rawTitle: 'Команда запуска / Аргументы',
+            rawTitle: i18n.t('auto___d50554'),
             rawContent: Array.isArray(p.cmdline) ? p.cmdline.join(' ') : (p.cmdline || p.exe || ''),
             requestData: {
               pid: p.pid,
@@ -944,18 +780,7 @@
           (item.local_address || '').toLowerCase().includes(filterText) ||
           (item.service_type || '').toLowerCase().includes(filterText) ||
           (item.sent_summary || '').toLowerCase().includes(filterText) ||
-          (item.recv_summary || '').toLowerCase().includes(filterText)
-        );
-      }
-      return true;
-    });
-
-    const uniqueProcs = new Set(filtered.map(i => i.pid)).size;
-    if (countBadge) countBadge.textContent = `${uniqueProcs} программ`;
-    if (connsBadge) connsBadge.textContent = `${filtered.length} сокетов`;
-
-    if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted small">Нет активных сетевых соединений по выбранному фильтру</td></tr>';
+          (item.recv_summary || 'i18n.t('auto__tolowercase_includes_filtertext_return_true_const_uniqueprocs_new_set_filtered_map_i_i_pid_size_if_countbadge_countbadge_textcontent_uniqueprocs_if_connsbadge_connsbadge_textcontent_filtered_length_if_filtered_length_0_tbody_innerhtml__955048')<tr><td colspan="6" class="text-center py-4 text-muted small">Нет активных сетевых соединений по выбранному фильтру</td></tr>';
       return;
     }
 
@@ -972,8 +797,8 @@
         : '<span class="badge bg-dark border border-secondary text-info" style="font-size: 0.65rem;">TCP</span>';
 
       const isExtBadge = item.is_internet
-        ? '<span class="badge bg-primary-subtle text-primary border border-primary px-1" style="font-size: 0.62rem;" title="Внешний сервер в сети Интернет">WAN</span>'
-        : '<span class="badge bg-secondary px-1" style="font-size: 0.62rem;" title="Локальный сокет Loopback">LAN</span>';
+        ? '<span class="badge bg-primary-subtle text-primary border border-primary px-1" style="font-size: 0.62rem;" title=i18n.t('auto___092aaf')>WAN</span>'
+        : '<span class="badge bg-secondary px-1" style="font-size: 0.62rem;" title=i18n.t('auto__loopback_14dd1c')>LAN</span>';
 
       const formatNetKb = (kb) => {
         if (!kb || kb <= 0) return '0 KB';
@@ -999,7 +824,7 @@
       const totalRecvStr = formatNetKb(item.recv_kb || 0);
 
       return `
-        <tr class="sys-net-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для детальной диагностики сетевого соединения">
+        <tr class="sys-net-row" data-idx="${idx}" style="cursor: pointer;" title=i18n.t('auto___bb922f')>
           <td>
             <div class="fw-bold text-white text-truncate" style="max-width: 165px;" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
             <div class="small text-muted" style="font-size: 0.70rem;">PID: <span style="color: #38bdf8;">${item.pid}</span> ${item.user ? '• ' + escapeHtml(item.user) : ''}</div>
@@ -1024,10 +849,10 @@
           </td>
           <td>
             <div class="d-flex align-items-center justify-content-start gap-2 mb-1">
-              <span class="badge bg-warning-subtle text-warning border border-warning px-1.5 py-0.5" style="font-size: 0.68rem;" title="Отправлено за измеряемый период">
+              <span class="badge bg-warning-subtle text-warning border border-warning px-1.5 py-0.5" style="font-size: 0.68rem;" title=i18n.t('auto___0c1b19')>
                 ${deltaSentStr}
               </span>
-              <span class="text-muted font-monospace" style="font-size: 0.68rem;" title="Всего отправлено/записано">
+              <span class="text-muted font-monospace" style="font-size: 0.68rem;" title=i18n.t('auto___6ebfa4')>
                 Σ ${totalSentStr}
               </span>
             </div>
@@ -1040,10 +865,10 @@
           </td>
           <td>
             <div class="d-flex align-items-center justify-content-start gap-2 mb-1">
-              <span class="badge bg-success-subtle text-success border border-success px-1.5 py-0.5" style="font-size: 0.68rem;" title="Скачано/получено за измеряемый период">
+              <span class="badge bg-success-subtle text-success border border-success px-1.5 py-0.5" style="font-size: 0.68rem;" title=i18n.t('auto___d49345')>
                 ${deltaRecvStr}
               </span>
-              <span class="text-muted font-monospace" style="font-size: 0.68rem;" title="Всего скачано/прочитано">
+              <span class="text-muted font-monospace" style="font-size: 0.68rem;" title=i18n.t('auto___dbb2d6')>
                 Σ ${totalRecvStr}
               </span>
             </div>
@@ -1087,24 +912,24 @@
               { text: `PID ${item.pid}`, class: 'badge bg-info text-dark' },
               { text: item.protocol, class: 'badge bg-primary' },
               { text: item.status, class: 'badge bg-success' },
-              { text: item.is_internet ? 'Интернет (WAN)' : 'Локально (LAN)', class: item.is_internet ? 'badge bg-warning text-dark' : 'badge bg-secondary' }
+              { text: item.is_internet ? i18n.t('auto__wan__6918e6') : i18n.t('auto__lan__b1581a'), class: item.is_internet ? 'badge bg-warning text-dark' : 'badge bg-secondary' }
             ],
             metadata: [
-              { label: 'Программа / Процесс', value: item.name },
+              { label: i18n.t('auto___87d72c'), value: item.name },
               { label: 'Process ID (PID)', value: String(item.pid) },
-              { label: 'Пользователь системы', value: item.user || 'SYSTEM' },
-              { label: 'Удаленный адрес (Remote)', value: item.remote_address },
-              { label: 'Локальный сокет (Local)', value: item.local_address },
-              { label: 'Протокол / Служба', value: `${item.protocol} • ${item.service_type}` },
-              { label: 'Статус соединения', value: item.status },
-              { label: 'Скачано за период (Прием)', value: `${formatNetKb(item.delta_recv_kb || 0)} ${item.recv_rate_kbs > 0.05 ? '(' + formatNetRate(item.recv_rate_kbs) + ')' : ''}` },
-              { label: 'Всего скачано / получено', value: formatNetKb(item.recv_kb || 0) },
-              { label: 'Отправлено за период', value: `${formatNetKb(item.delta_sent_kb || 0)} ${item.sent_rate_kbs > 0.05 ? '(' + formatNetRate(item.sent_rate_kbs) + ')' : ''}` },
-              { label: 'Всего отправлено', value: formatNetKb(item.sent_kb || 0) },
-              { label: 'Что шлет (Отправка)', value: item.sent_summary, fullWidth: true },
-              { label: 'Что принимает (Прием)', value: item.recv_summary, fullWidth: true }
+              { label: i18n.t('auto___e36524'), value: item.user || 'SYSTEM' },
+              { label: i18n.t('auto__remote__1ddfe5'), value: item.remote_address },
+              { label: i18n.t('auto__local__9b2247'), value: item.local_address },
+              { label: i18n.t('auto___6582e4'), value: `${item.protocol} • ${item.service_type}` },
+              { label: i18n.t('auto___6a4666'), value: item.status },
+              { label: i18n.t('auto___79710a'), value: `${formatNetKb(item.delta_recv_kb || 0)} ${item.recv_rate_kbs > 0.05 ? '(' + formatNetRate(item.recv_rate_kbs) + ')' : ''}` },
+              { label: i18n.t('auto___d2f9e3'), value: formatNetKb(item.recv_kb || 0) },
+              { label: i18n.t('auto___dc8000'), value: `${formatNetKb(item.delta_sent_kb || 0)} ${item.sent_rate_kbs > 0.05 ? '(' + formatNetRate(item.sent_rate_kbs) + ')' : ''}` },
+              { label: i18n.t('auto___3f01d4'), value: formatNetKb(item.sent_kb || 0) },
+              { label: i18n.t('auto___1fef33'), value: item.sent_summary, fullWidth: true },
+              { label: i18n.t('auto___4262a1'), value: item.recv_summary, fullWidth: true }
             ],
-            rawTitle: 'Сетевой дамп подключения',
+            rawTitle: i18n.t('auto___561dba'),
             rawContent: JSON.stringify(item, null, 2),
             requestData: item
           });
@@ -1119,7 +944,7 @@
     const anomaliesEl = document.getElementById('sys-ai-anomalies-container');
     const engineTagEl = document.getElementById('sys-ai-model-tag');
 
-    if (summaryEl) summaryEl.innerText = 'Запуск глубокого AI-аудита системы и оборудования...';
+    if (summaryEl) summaryEl.innerText = i18n.t('auto__ai__729be3');
 
     try {
       const res = await fetch('/api/v1/system/diagnose', { method: 'POST' });
@@ -1139,19 +964,13 @@
         if (Array.isArray(report.anomalies) && report.anomalies.length > 0) {
           anomaliesEl.innerHTML = report.anomalies.map(a => `<span class="anomaly-tag">⚠️ [${a.subsystem}] ${escapeHtml(a.title)}</span>`).join('');
         } else {
-          anomaliesEl.innerHTML = '<span style="color: #4ade80; font-size: 0.75rem;"><i class="bi bi-check-circle me-1"></i> Аномалий в работе оборудования не обнаружено</span>';
-        }
-      }
-
-      if (summaryEl) {
-        const recs = Array.isArray(report.recommendations) && report.recommendations.length > 0
-          ? `\nРекомендации: ${report.recommendations.join(', ')}`
+          anomaliesEl.innerHTML = '<span style="color: #4ade80; font-size: 0.75rem;"><i class="bi bi-check-circle me-1"></i> Аномалий в работе оборудования не обнаружено</span>i18n.t('auto__if_summaryel_const_recs_array_isarray_report_recommendations_report_recommendations_length_0_n_report_recommendations_join__537a08'), ')}`
           : '';
-        summaryEl.innerText = `${report.summary || 'Телеметрия в норме.'}${recs}`;
+        summaryEl.innerText = `${report.summary || i18n.t('auto___bba1b2')}${recs}`;
       }
     } catch (e) {
       console.error('[SystemInspectorTab] AI Diagnose error:', e);
-      if (summaryEl) summaryEl.innerText = 'Ошибка выполнения AI-диагностики: ' + e.message;
+      if (summaryEl) summaryEl.innerText = i18n.t('auto__ai__6b4476') + e.message;
     }
   }
 
@@ -1175,7 +994,7 @@
       const statusBadge = document.getElementById('sys-conn-status');
       if (statusBadge) {
         statusBadge.className = 'badge rounded-pill bg-secondary text-light px-3 py-2';
-        statusBadge.innerText = '○ Поток приостановлен';
+        statusBadge.innerText = i18n.t('auto___28ad51');
       }
       return;
     }
@@ -1188,10 +1007,10 @@
       const statusBadge = document.getElementById('sys-conn-status');
 
       sysWs.onopen = () => {
-        console.info('[SystemInspectorTab] WebSocket соединение с телеметрией установлено.');
+        console.info(i18n.t('auto__systeminspectortab_websocket__fbf1b5'));
         if (statusBadge) {
           statusBadge.className = 'badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2';
-          statusBadge.innerText = '● Телеметрия активна';
+          statusBadge.innerText = i18n.t('auto___ff0ae1');
         }
       };
 
@@ -1201,36 +1020,22 @@
           latestTelemetrySnapshot = snap;
           updateTelemetryDashboard(snap);
         } catch (e) {
-          console.error('[SystemInspectorTab] Ошибка разбора сообщения телеметрии:', e);
+          console.error(i18n.t('auto__systeminspectortab__4852f6'), e);
         }
       };
 
       const scheduleReconnect = (reason) => {
         if (sysWsReconnectTimer) return;
-        if (window.isTabActive && !window.isTabActive('tab-system-inspector')) return;
-        console.warn(`[SystemInspectorTab] WebSocket отключен (${reason}). Автопереподключение через 3 сек...`);
-        if (statusBadge) {
-          statusBadge.className = 'badge rounded-pill bg-warning-subtle text-warning border border-warning px-3 py-2';
-          statusBadge.innerText = '○ Переподключение...';
+        if (window.isTabActive && !window.isTabActive('tab-system-inspectori18n.t('auto__return_console_warn_systeminspectortab_websocket_reason_3_if_statusbadge_statusbadge_classname__f6c30c')badge rounded-pill bg-warning-subtle text-warning border border-warning px-3 py-2';
+          statusBadge.innerText = i18n.t('auto___24ff60');
         }
         sysWsReconnectTimer = setTimeout(() => {
           sysWsReconnectTimer = null;
-          if (!window.isTabActive || window.isTabActive('tab-system-inspector')) {
-            connectSystemWebSocket();
-          }
-        }, 3000);
-      };
-
-      sysWs.onclose = (evt) => {
-        scheduleReconnect(`код закрытия: ${evt.code}`);
-      };
-
-      sysWs.onerror = (err) => {
-        console.warn('[SystemInspectorTab] Ошибка соединения WebSocket:', err);
-        scheduleReconnect('ошибка связи');
+          if (!window.isTabActive || window.isTabActive('tab-system-inspectori18n.t('auto__connectsystemwebsocket_3000_sysws_onclose_evt_schedulereconnect_evt_code_sysws_onerror_err_console_warn__98fb7d')[SystemInspectorTab] Ошибка соединения WebSocket:', err);
+        scheduleReconnect(i18n.t('auto___0c3bf9'));
       };
     } catch (err) {
-      console.error('[SystemInspectorTab] Ошибка инициализации WebSocket:', err);
+      console.error(i18n.t('auto__systeminspectortab_websocket__ea6383'), err);
       sysWsReconnectTimer = setTimeout(() => {
         sysWsReconnectTimer = null;
         if (!window.isTabActive || window.isTabActive('tab-system-inspector')) {
@@ -1256,7 +1061,7 @@
     const statusBadge = document.getElementById('sys-conn-status');
     if (statusBadge) {
       statusBadge.className = 'badge rounded-pill bg-secondary text-light px-3 py-2';
-      statusBadge.innerText = '○ Поток приостановлен';
+      statusBadge.innerText = i18n.t('auto___28ad51');
     }
   }
 
@@ -1265,7 +1070,7 @@
     if (btnPause) {
       btnPause.onclick = () => {
         isSysPaused = !isSysPaused;
-        btnPause.innerText = isSysPaused ? 'Возобновить' : 'Пауза';
+        btnPause.innerText = isSysPaused ? i18n.t('auto___fa6a34') : i18n.t('auto___03498e');
         btnPause.className = isSysPaused ? 'btn btn-sm btn-warning rounded-pill px-3' : 'btn btn-sm btn-outline-secondary rounded-pill px-3';
       };
     }
@@ -1375,21 +1180,7 @@
     try {
       const url = `/api/v1/system/processes/stats?limit=60${filterName ? '&name=' + encodeURIComponent(filterName) : ''}`;
       const res = await fetch(url);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      cachedProcStats = data;
-
-      const rollups = data.rollups_2min || [];
-      const outliers = data.outliers || [];
-      const daily = data.daily_stats || [];
-
-      if (badgeCount) badgeCount.textContent = `${rollups.length + daily.length} записей`;
-      if (badgeOutliers) badgeOutliers.textContent = String(outliers.length);
-
-      // 1. Рендерим 2-минутные обобщения
-      if (tbodyRollups) {
-        if (rollups.length === 0) {
-          tbodyRollups.innerHTML = '<tr><td colspan="10" class="text-center py-3 text-muted">Обобщённых записей (&gt; 2 мин) пока нет. Данные собираются каждые 5 сек.</td></tr>';
+      if (!res.ok) throw new Error('HTTP i18n.t('auto__res_status_const_data_await_res_json_cachedprocstats_data_const_rollups_data_rollups_2min_const_outliers_data_outliers_const_daily_data_daily_stats_if_badgecount_badgecount_textcontent_rollups_length_daily_length_if_badgeoutliers_badgeoutliers_textcontent_string_outliers_length_1_2_if_tbodyrollups_if_rollups_length_0_tbodyrollups_innerhtml__962df4')<tr><td colspan="10" class="text-center py-3 text-muted">Обобщённых записей (&gt; 2 мин) пока нет. Данные собираются каждые 5 сек.</td></tr>';
         } else {
           tbodyRollups.innerHTML = rollups.map(r => {
             const timeRange = `${(r.period_start || '').slice(11, 19)} - ${(r.period_end || '').slice(11, 19)}`;
@@ -1408,14 +1199,7 @@
                 <td class="text-end">${r.outliers_count > 0 ? `<span class="badge bg-warning text-dark">${r.outliers_count}</span>` : '0'}</td>
               </tr>
             `;
-          }).join('');
-        }
-      }
-
-      // 2. Рендерим зафиксированные выбросы
-      if (tbodyOutliers) {
-        if (outliers.length === 0) {
-          tbodyOutliers.innerHTML = '<tr><td colspan="8" class="text-center py-3 text-muted">Аномальных выбросов нагрузки не зафиксировано.</td></tr>';
+          }).join('i18n.t('auto__2_if_tbodyoutliers_if_outliers_length_0_tbodyoutliers_innerhtml__083b44')<tr><td colspan="8" class="text-center py-3 text-muted">Аномальных выбросов нагрузки не зафиксировано.</td></tr>';
         } else {
           tbodyOutliers.innerHTML = outliers.map(o => {
             return `
@@ -1427,17 +1211,10 @@
                 <td class="text-end text-success">${Number(o.memory_mb).toFixed(1)} MB</td>
                 <td>${o.num_threads || 1}</td>
                 <td style="color: #94a3b8;">${escapeHtml(o.username || '')}</td>
-                <td class="text-warning">${escapeHtml(o.details || 'Пиковый всплеск CPU')}</td>
+                <td class="text-warning">${escapeHtml(o.details || i18n.t('auto__cpu_51f3d5'))}</td>
               </tr>
             `;
-          }).join('');
-        }
-      }
-
-      // 3. Рендерим суточную статистику
-      if (tbodyDaily) {
-        if (daily.length === 0) {
-          tbodyDaily.innerHTML = '<tr><td colspan="9" class="text-center py-3 text-muted">Данных старше 1 дня пока нет. Обобщение формируется автоматически.</td></tr>';
+          }).join('i18n.t('auto__3_if_tbodydaily_if_daily_length_0_tbodydaily_innerhtml__65630e')<tr><td colspan="9" class="text-center py-3 text-muted">Данных старше 1 дня пока нет. Обобщение формируется автоматически.</td></tr>';
         } else {
           tbodyDaily.innerHTML = daily.map(d => {
             return `
@@ -1458,7 +1235,7 @@
       }
 
     } catch (err) {
-      console.warn('[SystemInspectorTab] Ошибка загрузки статистики процессов:', err);
+      console.warn(i18n.t('auto__systeminspectortab__876d35'), err);
       if (tbodyRollups) tbodyRollups.innerHTML = `<tr><td colspan="10" class="text-center py-3 text-danger">Ошибка: ${escapeHtml(err.message)}</td></tr>`;
     }
   }
@@ -1471,16 +1248,7 @@
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Обобщение...';
     }
     try {
-      const res = await fetch('/api/v1/system/processes/rollup?cutoff_seconds=120&outlier_cpu_threshold=30.0', { method: 'POST' });
-      if (res.ok) {
-        const data = await res.json();
-        if (statusText) {
-          statusText.textContent = `Обобщено: 2мин_агрегатов=${data.rollup_2min?.rollups_created || 0}, выбросов=${data.rollup_2min?.outliers_saved || 0}`;
-        }
-        await fetchProcStats();
-      }
-    } catch (e) {
-      console.error('[SystemInspectorTab] Ошибка выполнения роллапа:', e);
+      const res = await fetch('/api/v1/system/processes/rollup?cutoff_seconds=120&outlier_cpu_threshold=30.0', { method: 'POSTi18n.t('auto__if_res_ok_const_data_await_res_json_if_statustext_statustext_textcontent_2_data_rollup_2min_rollups_created_0_data_rollup_2min_outliers_saved_0_await_fetchprocstats_catch_e_console_error__568741')[SystemInspectorTab] Ошибка выполнения роллапа:', e);
     } finally {
       if (btn) {
         btn.disabled = false;
@@ -1529,7 +1297,7 @@
     if (btnConfig) {
       btnConfig.onclick = () => {
         if (window.appConfigEditor) {
-          window.appConfigEditor.open('system_inspector', 'Настройки телеметрии и инспектора');
+          window.appConfigEditor.open('system_inspector', i18n.t('auto___33a2f8'));
         } else {
           console.info('[SystemInspectorTab] Config editor not available');
         }
@@ -1562,13 +1330,7 @@
       selUiRefresh.onchange = (e) => {
         const sec = parseInt(e.target.value, 10) || 5;
         setupSysSensorInterval(sec);
-        const badge = document.getElementById('modal-ui-refresh-badge');
-        if (badge) badge.textContent = `${sec} сек`;
-      };
-    }
-
-    // Изменения файлов в реальном времени controls
-    const changeWatchDirBtn = document.getElementById('btn-sys-change-watch-dir');
+        const badge = document.getElementById('modal-ui-refresh-badgei18n.t('auto__if_badge_badge_textcontent_sec_controls_const_changewatchdirbtn_document_getelementbyid__a139bc')btn-sys-change-watch-dir');
     if (changeWatchDirBtn) {
       changeWatchDirBtn.onclick = () => openWatchFoldersModal('folders');
     }
@@ -1595,7 +1357,7 @@
     if (btnPauseNet) {
       btnPauseNet.onclick = () => {
         isNetPaused = !isNetPaused;
-        btnPauseNet.innerText = isNetPaused ? 'Возобновить' : 'Пауза';
+        btnPauseNet.innerText = isNetPaused ? i18n.t('auto___fa6a34') : i18n.t('auto___03498e');
         btnPauseNet.className = isNetPaused ? 'btn btn-xs btn-warning rounded-pill px-2.5 py-0.5' : 'btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-0.5';
         if (!isNetPaused) renderNetworkActivityTable();
       };
@@ -1614,18 +1376,7 @@
         });
         btn.classList.remove('btn-outline-secondary');
         btn.classList.add('active', 'btn-outline-primary');
-        currentNetFilter = btn.getAttribute('data-filter') || 'internet';
-        renderNetworkActivityTable();
-      };
-    });
-
-    // Инициализация интерактивных ресайзеров таблиц
-    initNetTableResizer();
-    initWatcherTableResizer();
-  }
-
-  function initNetTableResizer() {
-    const resizer = document.getElementById('sys-net-table-resizer');
+        currentNetFilter = btn.getAttribute('data-filter') || 'interneti18n.t('auto__rendernetworkactivitytable_initnettableresizer_initwatchertableresizer_function_initnettableresizer_const_resizer_document_getelementbyid__cdb184')sys-net-table-resizer');
     const tableContainer = document.getElementById('sys-net-table-container');
     if (!resizer || !tableContainer) return;
 
@@ -1707,15 +1458,7 @@
 
   function initWatcherTableResizer() {
     const resizer = document.getElementById('sys-watcher-table-resizer');
-    const tableContainer = document.getElementById('sys-watcher-table-container');
-    if (!resizer || !tableContainer) return;
-
-    if (resizer._resizerInitialized) return;
-    resizer._resizerInitialized = true;
-
-    // Восстановление сохранённой пользователем высоты
-    try {
-      const savedHeight = localStorage.getItem('sys_inspector_watcher_height');
+    const tableContainer = document.getElementById('sys-watcher-table-containeri18n.t('auto__if_resizer_tablecontainer_return_if_resizer_resizerinitialized_return_resizer_resizerinitialized_true_try_const_savedheight_localstorage_getitem__27a83b')sys_inspector_watcher_height');
       if (savedHeight) {
         const parsed = parseInt(savedHeight, 10);
         if (!isNaN(parsed) && parsed >= 120 && parsed <= 1200) {
@@ -1777,10 +1520,7 @@
     }
 
     resizer.addEventListener('mousedown', onMouseDown);
-    resizer.addEventListener('touchstart', onMouseDown, { passive: false });
-
-    // Сброс по двойному клику
-    resizer.addEventListener('dblclick', () => {
+    resizer.addEventListener('touchstarti18n.t('auto__onmousedown_passive_false_resizer_addeventlistener__c2649d')dblclick', () => {
       tableContainer.style.height = '280px';
       try {
         localStorage.removeItem('sys_inspector_watcher_height');
@@ -1793,19 +1533,19 @@
   // =============================================================================
 
   const INTERVAL_PRESETS = [
-    { value: '1 second', label: '1 сек' },
-    { value: '2 seconds', label: '2 сек' },
-    { value: '3 seconds', label: '3 сек' },
-    { value: '5 seconds', label: '5 сек' },
-    { value: '10 seconds', label: '10 сек' },
-    { value: '30 seconds', label: '30 сек' },
-    { value: '1 minute', label: '1 мин' },
-    { value: '5 minutes', label: '5 мин' },
-    { value: '10 minutes', label: '10 мин' },
-    { value: '30 minutes', label: '30 мин' },
-    { value: '1 hour', label: '1 час' },
-    { value: '6 hours', label: '6 часов' },
-    { value: '24 hours', label: '24 часа' },
+    { value: '1 second', label: i18n.t('auto_1__6a38c5') },
+    { value: '2 seconds', label: i18n.t('auto_2__e3c7e5') },
+    { value: '3 seconds', label: i18n.t('auto_3__542798') },
+    { value: '5 seconds', label: i18n.t('auto_5__a0e595') },
+    { value: '10 seconds', label: i18n.t('auto_10__bc63e4') },
+    { value: '30 seconds', label: i18n.t('auto_30__252c1a') },
+    { value: '1 minute', label: i18n.t('auto_1__f5125b') },
+    { value: '5 minutes', label: i18n.t('auto_5__26b591') },
+    { value: '10 minutes', label: i18n.t('auto_10__a140da') },
+    { value: '30 minutes', label: i18n.t('auto_30__214427') },
+    { value: '1 hour', label: i18n.t('auto_1__e5f168') },
+    { value: '6 hours', label: i18n.t('auto_6__915bfe') },
+    { value: '24 hours', label: i18n.t('auto_24__e14e41') },
   ];
 
   const CORE_RESOURCE_LOGGERS = [
@@ -1818,77 +1558,77 @@
     librehardwaremonitor: {
       icon: '🌡️',
       title: 'LibreHardwareMonitor',
-      desc: 'Аппаратные сенсоры: температура CPU/GPU, вольтаж, обороты вентиляторов, частоты',
+      desc: i18n.t('auto__cpu_gpu__e3c871'),
     },
     system_inspector: {
       icon: '📊',
       title: 'System Inspector',
-      desc: 'Комплексный снимок: загрузка CPU, RAM, дисковый ввод-вывод, процессы хоста',
+      desc: i18n.t('auto__cpu_ram__624f00'),
     },
     hardware_monitor: {
       icon: '💻',
       title: 'Hardware Monitor',
-      desc: 'Аппаратные датчики WMI, GPU SMI (NVIDIA/AMD/Intel) и физические шины',
+      desc: i18n.t('auto__wmi_gpu_smi_nvidia_amd_intel__df24c1'),
     },
     windows_sysadmin: {
       icon: '🛠️',
       title: 'Windows SysAdmin',
-      desc: 'Системные службы Windows, пользователи, локальные группы и сетевые порты',
+      desc: i18n.t('auto__windows__e8148c'),
     },
     windows_defender: {
       icon: '🛡️',
       title: 'Windows Defender',
-      desc: 'Статус антивирусной защиты, сигнатуры, обнаруженные угрозы и карантин',
+      desc: i18n.t('auto___2b7b9c'),
     },
     windows_startup_auditor: {
       icon: '🚀',
       title: 'StartUp Auditor',
-      desc: 'Автозагрузка программ, реестр Run/RunOnce, сервисы и планировщик задач',
+      desc: i18n.t('auto__run_runonce__f31145'),
     },
     windows_backup_manager: {
       icon: '📦',
       title: 'Backup Manager',
-      desc: 'Резервные копии баз данных SQLite, конфигураций и снапшотов системы',
+      desc: i18n.t('auto__sqlite__70e86e'),
     },
     website_monitor: {
       icon: '🌐',
       title: 'Website Monitor',
-      desc: 'Проверка доступности веб-сервисов, задержка ответов HTTP/HTTPS',
+      desc: i18n.t('auto__http_https_af2474'),
     },
     gcloud_monitor: {
       icon: '☁️',
       title: 'GCloud Monitor',
-      desc: 'Телеметрия виртуальных машин, квоты и мониторинг Google Cloud',
+      desc: i18n.t('auto__google_cloud_45eb1d'),
     },
     cloudflared_monitor: {
       icon: '🚇',
       title: 'Cloudflare Tunnel',
-      desc: 'Статус защищенных туннелей cloudflared и исходящих подключений',
+      desc: i18n.t('auto__cloudflared__23e001'),
     },
     user_assistant: {
       icon: '🤖',
       title: 'User Assistant',
-      desc: 'Фоновые периодические напоминания, календарь и уведомления',
+      desc: i18n.t('auto___8a88f9'),
     },
     trading_terminal: {
       icon: '📈',
       title: 'Trading Terminal',
-      desc: 'Торговые котировки, балансы криптобирж и открытые ордера',
+      desc: i18n.t('auto___aaec96'),
     },
     registry_viewer: {
       icon: '📑',
       title: 'Registry Viewer',
-      desc: 'Мониторинг изменений системного реестра Windows',
+      desc: i18n.t('auto__windows_367a25'),
     },
     software_audit: {
       icon: '🔍',
       title: 'Software Audit',
-      desc: 'Аудит неиспользуемого и редко запускаемого ПО (UserAssist/Prefetch)',
+      desc: i18n.t('auto__userassist_prefetch__95f74f'),
     },
     helpdesk: {
       icon: '🎫',
       title: 'Helpdesk',
-      desc: 'Мониторинг тикетов техподдержки и уведомлений',
+      desc: i18n.t('auto___2f5688'),
     },
   };
 
@@ -1998,7 +1738,7 @@
     // Process core loggers
     CORE_RESOURCE_LOGGERS.forEach(name => {
       const cfg = loggers[name] || { interval: '5 seconds', enabled: true };
-      const meta = LOGGER_META[name] || { icon: '⚙️', title: name, desc: 'Системный сбор метрик' };
+      const meta = LOGGER_META[name] || { icon: '⚙️', title: name, desc: i18n.t('auto___b91dfc') };
       const isEnabled = cfg.enabled !== false;
       const intervalVal = cfg.interval || '5 seconds';
 
@@ -2012,11 +1752,11 @@
             </div>
           </div>
           <div class="d-flex align-items-center gap-2 ms-auto">
-            <div class="form-check form-switch m-0" title="Включить/отключить сбор метрик для этого сервиса">
+            <div class="form-check form-switch m-0" title=i18n.t('auto___6f8316')>
               <input class="form-check-input sys-int-enable" type="checkbox" data-logger="${name}" ${isEnabled ? 'checked' : ''}>
             </div>
             ${buildIntervalSelectHtml(name, intervalVal)}
-            <button class="btn btn-xs btn-outline-secondary rounded px-1.5 py-0.5 sys-int-custom-btn" data-logger="${name}" title="Ввести произвольный интервал вручную">
+            <button class="btn btn-xs btn-outline-secondary rounded px-1.5 py-0.5 sys-int-custom-btn" data-logger="${name}" title=i18n.t('auto___87400a')>
               <i class="bi bi-pencil"></i>
             </button>
           </div>
@@ -2033,7 +1773,7 @@
       if (CORE_RESOURCE_LOGGERS.includes(name)) return;
       otherCount++;
       const cfg = loggers[name] || { interval: data.default_interval || '1 minute', enabled: true };
-      const meta = LOGGER_META[name] || { icon: '🔹', title: name, desc: 'Фоновый опрос службы' };
+      const meta = LOGGER_META[name] || { icon: '🔹', title: name, desc: i18n.t('auto___e3b145') };
       const isEnabled = cfg.enabled !== false;
       const intervalVal = cfg.interval || '1 minute';
 
@@ -2047,11 +1787,11 @@
             </div>
           </div>
           <div class="d-flex align-items-center gap-2 ms-auto">
-            <div class="form-check form-switch m-0" title="Включить/выключить">
+            <div class="form-check form-switch m-0" title=i18n.t('auto___a132ad')>
               <input class="form-check-input sys-int-enable" type="checkbox" data-logger="${name}" ${isEnabled ? 'checked' : ''}>
             </div>
             ${buildIntervalSelectHtml(name, intervalVal)}
-            <button class="btn btn-xs btn-outline-secondary rounded px-1.5 py-0.5 sys-int-custom-btn" data-logger="${name}" title="Ввести произвольный интервал вручную">
+            <button class="btn btn-xs btn-outline-secondary rounded px-1.5 py-0.5 sys-int-custom-btn" data-logger="${name}" title=i18n.t('auto___87400a')>
               <i class="bi bi-pencil"></i>
             </button>
           </div>
@@ -2074,19 +1814,7 @@
           const trimmed = custom.trim();
           let opt = sel.querySelector(`option[value="${trimmed}"]`);
           if (!opt) {
-            opt = document.createElement('option');
-            opt.value = trimmed;
-            opt.textContent = `${trimmed} (пользовательский)`;
-            sel.appendChild(opt);
-          }
-          sel.value = trimmed;
-        }
-      };
-    });
-  }
-
-  async function saveSysIntervalsConfig() {
-    const btnSave = document.getElementById('btn-modal-intervals-save');
+            opt = document.createElement('optioni18n.t('auto__opt_value_trimmed_opt_textcontent_trimmed_sel_appendchild_opt_sel_value_trimmed_async_function_savesysintervalsconfig_const_btnsave_document_getelementbyid__63dfbe')btn-modal-intervals-save');
     if (btnSave) {
       btnSave.disabled = true;
       btnSave.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Сохранение...';
@@ -2134,7 +1862,7 @@
 
       const result = await saveRes.json();
       showAlertInModal(
-        `<i class="bi bi-check-circle-fill text-success me-1"></i> ${result.message || 'Интервалы успешно сохранены в config.json и применены!'}`,
+        `<i class="bi bi-check-circle-fill text-success me-1"></i> ${result.message || i18n.t('auto__config_json__83018a')}`,
         'success'
       );
 
@@ -2207,13 +1935,13 @@
         if (elStatus) {
           if (telem.burst_deletions_alert) {
             elStatus.className = 'badge bg-danger-subtle text-danger border border-danger px-2 py-1';
-            elStatus.textContent = '🚨 Всплеск удалений';
+            elStatus.textContent = i18n.t('auto___c5297b');
           } else if (telem.high_activity_alert) {
             elStatus.className = 'badge bg-warning-subtle text-warning border border-warning px-2 py-1';
-            elStatus.textContent = '⚡ Высокий I/O';
+            elStatus.textContent = i18n.t('auto__i_o_964b64');
           } else {
             elStatus.className = 'badge bg-success-subtle text-success border border-success px-2 py-1';
-            elStatus.textContent = '🟢 Штатный режим';
+            elStatus.textContent = i18n.t('auto___f81d71');
           }
         }
       }
@@ -2234,23 +1962,15 @@
       const badge = document.getElementById('sys-watch-dir-badge');
       if (dirPathEl) {
         if (currentWatchDirs.length === 0) {
-          dirPathEl.innerText = 'Папки не выбраны';
+          dirPathEl.innerText = i18n.t('auto___235db6');
         } else if (currentWatchDirs.length === 1) {
           const singleName = currentWatchDirs[0].split('\\').pop() || currentWatchDirs[0];
           dirPathEl.innerText = singleName;
         } else {
-          const firstNames = currentWatchDirs.slice(0, 2).map(p => p.split('\\').pop() || p).join(', ');
-          dirPathEl.innerText = `${currentWatchDirs.length} папок: ${firstNames}${currentWatchDirs.length > 2 ? '...' : ''}`;
-        }
-      }
-      if (badge) {
-        badge.title = `Отслеживаемые каталоги (${currentWatchDirs.length}):\n${currentWatchDirs.join('\n')}\n\n(Нажмите для настройки и выбора папок)`;
-      }
-
-      const tbody = document.getElementById('sys-watcher-tbody');
+          const firstNames = currentWatchDirs.slice(0, 2).map(p => p.split('\\').pop() || p).join(', i18n.t('auto__dirpathel_innertext_currentwatchdirs_length_firstnames_currentwatchdirs_length_2__aee1f8')...' : 'i18n.t('auto__if_badge_badge_title_currentwatchdirs_length_n_currentwatchdirs_join__2ec896')\ni18n.t('auto__n_n_const_tbody_document_getelementbyid__3071c6')sys-watcher-tbody');
       if (tbody) {
         if (events.length === 0) {
-          const labelDirs = currentWatchDirs.length > 0 ? currentWatchDirs.join(', ') : 'проекта';
+          const labelDirs = currentWatchDirs.length > 0 ? currentWatchDirs.join(', ') : i18n.t('auto___890c8b');
           tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted p-2">Ожидание изменений в папках <code>${labelDirs}</code>...</td></tr>`;
           return;
         }
@@ -2260,11 +1980,11 @@
             ? `<span class="badge bg-dark border border-secondary text-info font-monospace text-truncate d-inline-block" style="max-width: 165px; font-size: 0.72rem;" title="Программа: ${escapeHtml(e.process_name)}${e.process_id ? ` (PID: ${e.process_id})` : ''}"><i class="bi bi-cpu me-1"></i>${escapeHtml(e.process_name)}${e.process_id ? ` [${e.process_id}]` : ''}</span>`
             : `<span class="text-muted" style="font-size: 0.72rem;">—</span>`;
           return `
-            <tr class="sys-live-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для AI-диагностики события">
+            <tr class="sys-live-row" data-idx="${idx}" style="cursor: pointer;" title=i18n.t('auto__ai__638c45')>
               <td class="font-monospace text-muted small">${e.timestamp?.slice(11, 19) || ''}</td>
               <td>
                 <span class="badge ${e.is_deletion ? 'bg-danger' : (e.action === 'Created' ? 'bg-success' : 'bg-secondary')}">${e.action}</span>
-                ${rootDirHint && currentWatchDirs.length > 1 ? `<span class="badge bg-dark border border-secondary text-muted ms-1" style="font-size: 0.65rem;" title="Корень: ${escapeHtml(e.watch_dir)}">${rootDirHint}</span>` : ''}
+                ${rootDirHint && currentWatchDirs.length > 1 ? `<span class="badge bg-dark border border-secondary text-muted ms-1" style="font-size: 0.65rem;" title=i18n.t('auto__escapehtml_e_watch_dir__aed9c9')>${rootDirHint}</span>` : ''}
               </td>
               <td>${procDisplay}</td>
               <td class="font-monospace small text-light" style="word-break: break-all;" title="${escapeHtml(e.path)}">${escapeHtml(e.path)}</td>
@@ -2280,25 +2000,21 @@
 
             if (window.AITableModal) {
               window.AITableModal.show({
-                icon: '⚡',
-                title: `Файловое событие: ${e.action}`,
-                subtitle: `${e.path} | ${e.timestamp}`,
-                tableType: 'file_event',
+                icon: '⚡i18n.t('auto__title_e_action_subtitle_e_path_e_timestamp_tabletype__4d5178')file_event',
                 badges: [
-                  { text: e.action, class: e.is_deletion ? 'badge bg-danger' : (e.action === 'Created' ? 'badge bg-success' : 'badge bg-info text-dark') },
-                  { text: e.process_name ? `Программа: ${e.process_name}` : 'WinAPI ReadDirectoryChangesW', class: 'badge bg-dark border border-secondary text-info' },
+                  { text: e.action, class: e.is_deletion ? 'badge bg-danger' : (e.action === 'Created' ? 'badge bg-success' : 'badge bg-info text-darki18n.t('auto__text_e_process_name_e_process_name__6d7996')WinAPI ReadDirectoryChangesW', class: 'badge bg-dark border border-secondary text-info' },
                   { text: 'WinAPI', class: 'badge bg-secondary' }
                 ],
                 metadata: [
-                  { label: 'Действие', value: e.action },
-                  { label: 'Полный путь к файлу', value: e.path },
-                  { label: 'Программа / Процесс', value: e.process_name ? `${e.process_name}${e.process_id ? ` (PID: ${e.process_id})` : ''}` : 'Фоновый процесс / завершен' },
-                  { label: 'Время события', value: e.timestamp },
-                  { label: 'Признак удаления', value: e.is_deletion ? 'Да (Файл удален/переименован)' : 'Нет' },
-                  { label: 'Папка события', value: e.watch_dir || currentWatchDir },
-                  { label: 'Все отслеживаемые папки', value: currentWatchDirs.join('; ') }
+                  { label: i18n.t('auto___4fe9c0'), value: e.action },
+                  { label: i18n.t('auto___f6ae8c'), value: e.path },
+                  { label: i18n.t('auto___87d72c'), value: e.process_name ? `${e.process_name}${e.process_id ? ` (PID: ${e.process_id})` : ''}` : i18n.t('auto___24f084') },
+                  { label: i18n.t('auto___e9fe45'), value: e.timestamp },
+                  { label: i18n.t('auto___73c61c'), value: e.is_deletion ? i18n.t('auto___f835de') : i18n.t('auto___f82a82') },
+                  { label: i18n.t('auto___a4ab77'), value: e.watch_dir || currentWatchDir },
+                  { label: i18n.t('auto___36dec8'), value: currentWatchDirs.join('; ') }
                 ],
-                rawTitle: 'Детали события WinAPI & Process Info',
+                rawTitle: i18n.t('auto__winapi_process_info_8c57dd'),
                 rawContent: JSON.stringify(e, null, 2),
                 requestData: e
               });
@@ -2360,32 +2076,12 @@
               <span class="small text-muted font-monospace d-block text-truncate" style="font-size: 0.72rem;" title="${escapeHtml(dirPath)}">${escapeHtml(dirPath)}</span>
             </div>
           </div>
-          <button class="btn btn-xs btn-outline-danger rounded-pill px-2 py-0.5" onclick="window._removeStagedWatchDir(${idx})" title="Удалить из списка мониторинга">
+          <button class="btn btn-xs btn-outline-danger rounded-pill px-2 py-0.5" onclick="window._removeStagedWatchDir(${idx})" title=i18n.t('auto___b31e8b')>
             <i class="bi bi-trash3"></i>
           </button>
         </div>
       `;
-    }).join('');
-  }
-
-  window._removeStagedWatchDir = function(index) {
-    if (index >= 0 && index < stagedWatchDirs.length) {
-      const removed = stagedWatchDirs.splice(index, 1)[0];
-      renderModalActiveDirsList();
-      showWatchDirsAlert(`Папка удалена из списка: <code>${escapeHtml(removed)}</code>`, 'info');
-    }
-  };
-
-  function addDirToStaged(pathToAdd) {
-    if (!pathToAdd || !pathToAdd.trim()) return;
-    const cleanPath = pathToAdd.trim();
-    if (stagedWatchDirs.includes(cleanPath)) {
-      showWatchDirsAlert(`Папка уже есть в списке: <code>${escapeHtml(cleanPath)}</code>`, 'warning');
-      return;
-    }
-    stagedWatchDirs.push(cleanPath);
-    renderModalActiveDirsList();
-    showWatchDirsAlert(`Папка добавлена: <code>${escapeHtml(cleanPath)}</code>`, 'success');
+    }).join('i18n.t('auto__window_removestagedwatchdir_function_index_if_index_0_index_stagedwatchdirs_length_const_removed_stagedwatchdirs_splice_index_1_0_rendermodalactivedirslist_showwatchdirsalert_code_escapehtml_removed_code__ad56fb')infoi18n.t('auto__function_adddirtostaged_pathtoadd_if_pathtoadd_pathtoadd_trim_return_const_cleanpath_pathtoadd_trim_if_stagedwatchdirs_includes_cleanpath_showwatchdirsalert_code_escapehtml_cleanpath_code__9b1e45')warningi18n.t('auto__return_stagedwatchdirs_push_cleanpath_rendermodalactivedirslist_showwatchdirsalert_code_escapehtml_cleanpath_code__abd723')success');
   }
 
   async function loadSystemDrives() {
@@ -2443,7 +2139,7 @@
         <span class="d-inline-flex align-items-center">
           ${idx > 0 ? '<span class="text-muted mx-1">/</span>' : ''}
           <a href="#" class="sys-breadcrumb-link text-decoration-none ${isLast ? 'fw-bold text-info' : 'text-light'}" data-path="${escapeHtml(clickPath)}">
-            ${escapeHtml(part || 'Корень')}
+            ${escapeHtml(part || i18n.t('auto___16ff06'))}
           </a>
         </span>
       `;
@@ -2470,34 +2166,14 @@
     renderBreadcrumbs(targetPath);
 
     if (!browserList) return;
-    browserList.innerHTML = `<div class="text-center text-muted small py-3"><span class="spinner-border spinner-border-sm me-1"></span> Загрузка директорий...</div>`;
-
-    try {
-      const res = await fetch(`/api/sysadmin/filesystem/browse?path=${encodeURIComponent(targetPath)}`);
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.detail || `HTTP ${res.status}`);
-      }
-
-      const data = await res.json();
-      const dirs = data.directories || [];
-
-      if (dirs.length === 0) {
-        browserList.innerHTML = `<div class="text-center text-muted small py-3">В этой директории нет доступных подпапок</div>`;
-        return;
-      }
-
-      browserList.innerHTML = dirs.map(d => {
-        const isAlreadySelected = stagedWatchDirs.includes(d.path);
-        return `
-          <div class="p-1 px-2 rounded d-flex align-items-center justify-content-between gap-2 sys-folder-browser-item" style="background: var(--surface-1); border: 1px solid var(--border-color); cursor: pointer;">
-            <div class="d-flex align-items-center gap-2 text-truncate flex-grow-1 sys-nav-to-folder" data-path="${escapeHtml(d.path)}" title="Нажмите для перехода в папку">
+    browserList.innerHTML = `<div class="text-center text-muted small py-3"><span class="spinner-border spinner-border-sm me-1i18n.t('auto__span_div_try_const_res_await_fetch_api_sysadmin_filesystem_browse_path_encodeuricomponent_targetpath_if_res_ok_const_errjson_await_res_json_catch_throw_new_error_errjson_detail_http_res_status_const_data_await_res_json_const_dirs_data_directories_if_dirs_length_0_browserlist_innerhtml_div_class__ebc8be')text-center text-muted small py-3i18n.t('auto__div_return_browserlist_innerhtml_dirs_map_d_const_isalreadyselected_stagedwatchdirs_includes_d_path_return_div_class__f915e8')p-1 px-2 rounded d-flex align-items-center justify-content-between gap-2 sys-folder-browser-item" style="background: var(--surface-1); border: 1px solid var(--border-color); cursor: pointer;">
+            <div class="d-flex align-items-center gap-2 text-truncate flex-grow-1 sys-nav-to-folder" data-path="${escapeHtml(d.path)}" title=i18n.t('auto___3976d8')>
               <i class="bi ${d.has_subdirs ? 'bi-folder2 text-warning' : 'bi-folder text-warning'}"></i>
               <span class="small text-light text-truncate">${escapeHtml(d.name)}</span>
               <span class="small text-muted font-monospace ms-auto me-2" style="font-size: 0.68rem;">${d.modified || ''}</span>
             </div>
-            <button class="btn btn-xs ${isAlreadySelected ? 'btn-success' : 'btn-outline-info'} rounded-pill px-2 py-0.5 sys-add-folder-btn" data-path="${escapeHtml(d.path)}" title="Добавить в отслеживаемые">
-              <i class="bi ${isAlreadySelected ? 'bi-check2' : 'bi-plus-lg'} me-1"></i>${isAlreadySelected ? 'Выбрана' : 'Следить'}
+            <button class="btn btn-xs ${isAlreadySelected ? 'btn-success' : 'btn-outline-info'} rounded-pill px-2 py-0.5 sys-add-folder-btn" data-path="${escapeHtml(d.path)}" title=i18n.t('auto___9dab5a')>
+              <i class="bi ${isAlreadySelected ? 'bi-check2' : 'bi-plus-lg'} me-1"></i>${isAlreadySelected ? i18n.t('auto___741829') : i18n.t('auto___a0b8fc')}
             </button>
           </div>
         `;
@@ -2569,10 +2245,10 @@
     if (statusBadge) {
       if (currentExclusions.enabled) {
         statusBadge.className = 'badge bg-success';
-        statusBadge.textContent = 'ВКЛ';
+        statusBadge.textContent = i18n.t('auto___593689');
       } else {
         statusBadge.className = 'badge bg-secondary';
-        statusBadge.textContent = 'ВЫКЛ';
+        statusBadge.textContent = i18n.t('auto___919af8');
       }
     }
 
@@ -2585,12 +2261,9 @@
     if (pathsBadge) pathsBadge.textContent = String(currentExclusions.paths?.length || 0);
     if (pathsContainer) {
       if (!currentExclusions.paths || currentExclusions.paths.length === 0) {
-        pathsContainer.innerHTML = `<div class="text-muted small text-center py-2">Нет исключенных папок</div>`;
-      } else {
-        pathsContainer.innerHTML = currentExclusions.paths.map((p, idx) => `
-          <div class="d-flex align-items-center justify-content-between gap-1.5 p-1 px-2 rounded mb-1" style="background: var(--bg-color); border: 1px solid var(--border-color);">
+        pathsContainer.innerHTML = `<div class="text-muted small text-center py-2i18n.t('auto__div_else_pathscontainer_innerhtml_currentexclusions_paths_map_p_idx_div_class__7b2386')d-flex align-items-center justify-content-between gap-1.5 p-1 px-2 rounded mb-1" style="background: var(--bg-color); border: 1px solid var(--border-color);">
             <span class="small font-monospace text-light text-truncate" style="font-size: 0.72rem;" title="${escapeHtml(p)}">${escapeHtml(p)}</span>
-            <button class="btn btn-xs btn-outline-danger py-0 px-1 rounded-pill" onclick="window._removeExclusionItem('paths', '${escapeHtml(p.replace(/\\/g, '\\\\'))}')" title="Удалить">✕</button>
+            <button class="btn btn-xs btn-outline-danger py-0 px-1 rounded-pill" onclick="window._removeExclusionItem('paths', '${escapeHtml(p.replace(/\\/g, '\\\\'))}')" title=i18n.t('auto___86ea33')>✕</button>
           </div>
         `).join('');
       }
@@ -2602,12 +2275,10 @@
     if (extsBadge) extsBadge.textContent = String(currentExclusions.extensions?.length || 0);
     if (extsContainer) {
       if (!currentExclusions.extensions || currentExclusions.extensions.length === 0) {
-        extsContainer.innerHTML = `<div class="text-muted small text-center py-2">Нет исключенных расширений</div>`;
-      } else {
-        extsContainer.innerHTML = `<div class="d-flex flex-wrap gap-1">` + currentExclusions.extensions.map(e => `
+        extsContainer.innerHTML = `<div class="text-muted small text-center py-2i18n.t('auto__div_else_extscontainer_innerhtml_div_class__c33de1')d-flex flex-wrap gap-1">` + currentExclusions.extensions.map(e => `
           <span class="badge bg-dark border border-secondary text-info d-inline-flex align-items-center gap-1 font-monospace" style="font-size: 0.75rem;">
             ${escapeHtml(e)}
-            <button type="button" class="btn-close btn-close-white" style="font-size: 0.5rem;" onclick="window._removeExclusionItem('extensions', '${escapeHtml(e)}')" title="Удалить"></button>
+            <button type="button" class="btn-close btn-close-white" style="font-size: 0.5rem;" onclick="window._removeExclusionItem('extensions', '${escapeHtml(e)}')" title=i18n.t('auto___86ea33')></button>
           </span>
         `).join('') + `</div>`;
       }
@@ -2619,12 +2290,10 @@
     if (patsBadge) patsBadge.textContent = String(currentExclusions.patterns?.length || 0);
     if (patsContainer) {
       if (!currentExclusions.patterns || currentExclusions.patterns.length === 0) {
-        patsContainer.innerHTML = `<div class="text-muted small text-center py-2">Нет исключенных шаблонов</div>`;
-      } else {
-        patsContainer.innerHTML = `<div class="d-flex flex-wrap gap-1">` + currentExclusions.patterns.map(pat => `
+        patsContainer.innerHTML = `<div class="text-muted small text-center py-2i18n.t('auto__div_else_patscontainer_innerhtml_div_class__7fb86a')d-flex flex-wrap gap-1">` + currentExclusions.patterns.map(pat => `
           <span class="badge bg-dark border border-secondary text-warning d-inline-flex align-items-center gap-1 font-monospace" style="font-size: 0.75rem;">
             ${escapeHtml(pat)}
-            <button type="button" class="btn-close btn-close-white" style="font-size: 0.5rem;" onclick="window._removeExclusionItem('patterns', '${escapeHtml(pat)}')" title="Удалить"></button>
+            <button type="button" class="btn-close btn-close-white" style="font-size: 0.5rem;" onclick="window._removeExclusionItem('patterns', '${escapeHtml(pat)}')" title=i18n.t('auto___86ea33')></button>
           </span>
         `).join('') + `</div>`;
       }
@@ -2636,12 +2305,10 @@
     if (procsBadge) procsBadge.textContent = String(currentExclusions.processes?.length || 0);
     if (procsContainer) {
       if (!currentExclusions.processes || currentExclusions.processes.length === 0) {
-        procsContainer.innerHTML = `<div class="text-muted small text-center py-2">Нет исключенных программ</div>`;
-      } else {
-        procsContainer.innerHTML = `<div class="d-flex flex-wrap gap-1">` + currentExclusions.processes.map(proc => `
+        procsContainer.innerHTML = `<div class="text-muted small text-center py-2i18n.t('auto__div_else_procscontainer_innerhtml_div_class__8fcfb2')d-flex flex-wrap gap-1">` + currentExclusions.processes.map(proc => `
           <span class="badge bg-dark border border-secondary text-danger d-inline-flex align-items-center gap-1 font-monospace" style="font-size: 0.75rem;">
             <i class="bi bi-cpu me-0.5"></i>${escapeHtml(proc)}
-            <button type="button" class="btn-close btn-close-white" style="font-size: 0.5rem;" onclick="window._removeExclusionItem('processes', '${escapeHtml(proc)}')" title="Удалить"></button>
+            <button type="button" class="btn-close btn-close-white" style="font-size: 0.5rem;" onclick="window._removeExclusionItem('processes', '${escapeHtml(proc)}')" title=i18n.t('auto___86ea33')></button>
           </span>
         `).join('') + `</div>`;
       }
@@ -2666,21 +2333,11 @@
     try {
       const res = await fetch('/api/sysadmin/file-audit/exclusions/add', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category, value: cleanVal })
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        currentExclusions = data.exclusions || currentExclusions;
-        renderExclusionsLists();
-        showExclusionsAlert(`Правило добавлено: <code>${escapeHtml(cleanVal)}</code>`, 'success');
+        headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_category_value_cleanval_const_data_await_res_json_if_res_ok_data_success_currentexclusions_data_exclusions_currentexclusions_renderexclusionslists_showexclusionsalert_code_escapehtml_cleanval_code__77510c')success');
         const inputVal = document.getElementById('input-exclusion-value');
         if (inputVal) inputVal.value = '';
       } else {
-        showExclusionsAlert(data.message || 'Правило уже существует или невалидно', 'warning');
-      }
-    } catch (e) {
-      showExclusionsAlert(`Ошибка добавления: ${e.message}`, 'danger');
+        showExclusionsAlert(data.message || i18n.t('auto___6eb64a'), 'warningi18n.t('auto__catch_e_showexclusionsalert_e_message__10c413')danger');
     }
   }
 
@@ -2689,19 +2346,9 @@
     try {
       const res = await fetch('/api/sysadmin/file-audit/exclusions/remove', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category, value })
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        currentExclusions = data.exclusions || currentExclusions;
-        renderExclusionsLists();
-        showExclusionsAlert(`Правило удалено: <code>${escapeHtml(value)}</code>`, 'info');
+        headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_category_value_const_data_await_res_json_if_res_ok_data_success_currentexclusions_data_exclusions_currentexclusions_renderexclusionslists_showexclusionsalert_code_escapehtml_value_code__d88c8a')info');
       } else {
-        showExclusionsAlert(data.message || 'Не удалось удалить правило', 'warning');
-      }
-    } catch (e) {
-      showExclusionsAlert(`Ошибка удаления: ${e.message}`, 'danger');
+        showExclusionsAlert(data.message || i18n.t('auto___6c75fb'), 'warningi18n.t('auto__catch_e_showexclusionsalert_e_message__20d84e')danger');
     }
   };
 
@@ -2709,17 +2356,7 @@
     try {
       const res = await fetch('/api/sysadmin/file-audit/exclusions/toggle', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled })
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        currentExclusions = data.exclusions || currentExclusions;
-        renderExclusionsLists();
-        showExclusionsAlert(`Фильтрация исключений ${data.enabled ? 'включена' : 'отключена'}`, 'info');
-      }
-    } catch (e) {
-      showExclusionsAlert(`Ошибка переключения: ${e.message}`, 'danger');
+        headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_enabled_const_data_await_res_json_if_res_ok_data_success_currentexclusions_data_exclusions_currentexclusions_renderexclusionslists_showexclusionsalert_data_enabled__246a4d')включена' : i18n.t('auto___91e464')}`, 'infoi18n.t('auto__catch_e_showexclusionsalert_e_message__032e3b')danger');
     }
   }
 
@@ -2885,7 +2522,7 @@
     if (btnApply) {
       btnApply.onclick = async () => {
         if (stagedWatchDirs.length === 0) {
-          showWatchDirsAlert('Выберите хотя бы одну папку для мониторинга', 'warning');
+          showWatchDirsAlert(i18n.t('auto___59aa83'), 'warning');
           return;
         }
 
@@ -2905,14 +2542,7 @@
               if (modal) modal.hide();
             } else {
               modalEl.classList.remove('show');
-              modalEl.style.display = 'none';
-            }
-            await fetchLiveFileEvents();
-          } else {
-            showWatchDirsAlert(`Ошибка: ${resData.detail || 'Не удалось применить список папок'}`, 'danger');
-          }
-        } catch (err) {
-          showWatchDirsAlert(`Сетевая ошибка: ${err.message}`, 'danger');
+              modalEl.style.display = 'nonei18n.t('auto__await_fetchlivefileevents_else_showwatchdirsalert_resdata_detail__16d204')Не удалось применить список папок'}`, 'dangeri18n.t('auto__catch_err_showwatchdirsalert_err_message__fc83ed')danger');
         } finally {
           btnApply.disabled = false;
           btnApply.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Применить и запустить';
@@ -2930,26 +2560,26 @@
   }
 
   function showLiveWatcherHelpModal() {
-    const dirsStr = currentWatchDirs.length ? currentWatchDirs.join('\n- ') : (currentWatchDir || 'Рабочая папка');
+    const dirsStr = currentWatchDirs.length ? currentWatchDirs.join('\n- ') : (currentWatchDir || i18n.t('auto___72e5f4'));
     if (window.AITableModal) {
       window.AITableModal.show({
         icon: 'ℹ️',
-        title: 'Справка:Изменения файлов в реальном времени (Multi-Directory)',
-        subtitle: 'Низкоуровневый мониторинг файловой системы Windows через WinAPI ReadDirectoryChangesW',
+        title: i18n.t('auto__multi_directory__b3bfdb'),
+        subtitle: i18n.t('auto__windows_winapi_readdirectorychangesw_a40215'),
         tableType: 'help',
         badges: [
           { text: 'WinAPI ReadDirectoryChangesW', class: 'badge bg-info text-dark' },
           { text: 'Multi-Directory', class: 'badge bg-primary' },
           { text: 'Real-Time Streaming', class: 'badge bg-success' },
-          { text: 'Рекурсивно (bWatchSubtree = True)', class: 'badge bg-warning text-dark' }
+          { text: i18n.t('auto__bwatchsubtree_true__711b17'), class: 'badge bg-warning text-dark' }
         ],
         metadata: [
-          { label: 'Технология', value: 'WinAPI ReadDirectoryChangesW (нативный вызов ядра Windows kernel32.dll)' },
-          { label: 'Режим работы', value: 'Множественные потоки мониторинга с агрегацией в единый кольцевой буфер' },
-          { label: 'Отслеживаемые папки', value: currentWatchDirs.join('; ') || 'Рабочая папка проекта' },
-          { label: 'Хранение настроек', value: 'apps/windows_sysadmin/config.json (ключ watch_directories)' }
+          { label: i18n.t('auto___a4f422'), value: i18n.t('auto_winapi_readdirectorychangesw_windows_kernel32_dll__6baf20') },
+          { label: i18n.t('auto___f23fe5'), value: i18n.t('auto___336209') },
+          { label: i18n.t('auto___178611'), value: currentWatchDirs.join('; ') || i18n.t('auto___39020a') },
+          { label: i18n.t('auto___1e65eb'), value: i18n.t('auto_apps_windows_sysadmin_config_json_watch_directories__b6a336') }
         ],
-        rawTitle: 'Подробное руководство по панели мониторинга',
+        rawTitle: i18n.t('auto___7b02e3'),
         rawContent: `# ПанельИзменения файлов в реальном времени
 
 ### 1. Что это такое?
@@ -2973,7 +2603,7 @@
         }
       });
     } else {
-      alert('Мониторинг файловой системыИзменения файлов в реальном времени (Multi-Directory).\nОтслеживаемые папки:\n- ' + dirsStr);
+      alert(i18n.t('auto__multi_directory_n_n__69cda7') + dirsStr);
     }
   }
 
@@ -3015,18 +2645,7 @@
     if (selUi) {
       selUi.value = String(_currentUiRefreshSeconds);
     }
-    const uiBadge = document.getElementById('modal-ui-refresh-badge');
-    if (uiBadge) {
-      uiBadge.textContent = `${_currentUiRefreshSeconds} сек`;
-    }
-
-    loadSysIntervalsConfig(false);
-
-    if (window.bootstrap && window.bootstrap.Modal) {
-      const modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
-      modal.show();
-    } else {
-      modalEl.classList.add('show');
+    const uiBadge = document.getElementById('modal-ui-refresh-badgei18n.t('auto__if_uibadge_uibadge_textcontent_currentuirefreshseconds_loadsysintervalsconfig_false_if_window_bootstrap_window_bootstrap_modal_const_modal_window_bootstrap_modal_getorcreateinstance_modalel_modal_show_else_modalel_classlist_add__37cc52')show');
       modalEl.style.display = 'block';
     }
   }
@@ -3042,36 +2661,7 @@
   }
 
   async function initSystemInspectorTab() {
-    console.log('[SystemInspectorTab] Initializing (progressive telemetry & SQLite processes)...');
-    bindTabEvents();
-
-    // 1. Поэтапный прогрессивный запуск: немедленно запрашиваем быстрые базовые метрики
-    fetchCoreMetrics();
-
-    // 2. Сразу же запрашиваем процессы из базы данных SQLite
-    fetchProcessesFromDb();
-
-    // 3. Запрашиваем состояние аппаратных модулей (SMART дисков, планки RAM, порты)
-    fetchHardwareQuick();
-
-    // 4. Опрашиваем аппаратные сенсоры хоста / LHM
-    fetchLhmSensors();
-
-    // 5. Опрашиваем сетевую активность и события файлов
-    fetchNetworkActivity();
-    fetchLiveFileEvents();
-
-    // 6. Подключаем живой WebSocket-поток телеметрии
-    connectSystemWebSocket();
-
-    // 7. Настраиваем периодический опрос (5 сек)
-    if (!window._sysSensorInterval) {
-      setupSysSensorInterval(_currentUiRefreshSeconds || 5);
-    }
-  }
-
-  function activateSystemInspectorTab() {
-    if (window.isTabActive && !window.isTabActive('tab-system-inspector')) return;
+    console.log('[SystemInspectorTab] Initializing (progressive telemetry & SQLite processes)...i18n.t('auto__bindtabevents_1_fetchcoremetrics_2_sqlite_fetchprocessesfromdb_3_smart_ram_fetchhardwarequick_4_lhm_fetchlhmsensors_5_fetchnetworkactivity_fetchlivefileevents_6_websocket_connectsystemwebsocket_7_5_if_window_syssensorinterval_setupsyssensorinterval_currentuirefreshseconds_5_function_activatesysteminspectortab_if_window_istabactive_window_istabactive__19cd5f')tab-system-inspector')) return;
     console.log('[SystemInspectorTab] Tab activated, resuming telemetry stream...');
     fetchCoreMetrics();
     fetchProcessesFromDb();

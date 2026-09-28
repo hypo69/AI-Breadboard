@@ -6,20 +6,7 @@
 
   async function checkHealth() {
     try {
-      const res = await fetch('/api/v1/wikipedia-research/health');
-      if (res.ok) {
-        const data = await res.json();
-        alert(`Wikipedia Research API статус: ${data.status.toUpperCase()} (приложение: ${data.app})`);
-      } else {
-        alert(`Ошибка API: HTTP ${res.status}`);
-      }
-    } catch (e) {
-      alert(`Не удалось связаться с API: ${e.message}`);
-    }
-  }
-
-  function getSelectedLanguages() {
-    const checkboxes = document.querySelectorAll('.wiki-lang-check:checked');
+      const res = await fetch('/api/v1/wikipedia-research/healthi18n.t('auto__if_res_ok_const_data_await_res_json_alert_wikipedia_research_api_data_status_touppercase_data_app_else_alert_api_http_res_status_catch_e_alert_api_e_message_function_getselectedlanguages_const_checkboxes_document_queryselectorall__5c6434').wiki-lang-check:checked');
     const langs = [];
     checkboxes.forEach((cb) => langs.push(cb.value));
     return langs.length > 0 ? langs : ['en', 'ru'];
@@ -43,7 +30,7 @@
     return `<span class="wiki-badge-neu">${num.toFixed(2)}</span>`;
   }
 
-  function setLoading(loading, text = 'Выполняется сбор и анализ...') {
+  function setLoading(loading, text = i18n.t('auto___074185')) {
     const spinner = document.getElementById('wiki-loading-spinner');
     const loadingText = document.getElementById('wiki-loading-text');
     const resultsSec = document.getElementById('wiki-results-section');
@@ -85,25 +72,7 @@
     try {
       const response = await fetch('/api/v1/wikipedia-research/experiment/languages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, languages, model }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-      }
-
-      const report = await response.json();
-      renderExperimentAResults(report);
-    } catch (err) {
-      alert(`Ошибка выполнения Эксперимента A: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function renderExperimentAResults(report) {
-    const titleEl = document.getElementById('wiki-results-title');
+        headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_topic_languages_model_if_response_ok_throw_new_error_http_response_status_await_response_text_const_report_await_response_json_renderexperimentaresults_report_catch_err_alert_a_err_message_finally_setloading_false_function_renderexperimentaresults_report_const_titleel_document_getelementbyid__d73228')wiki-results-title');
     if (titleEl) {
       titleEl.innerHTML = `<i class="bi bi-translate"></i> Experiment A: Кросс-языковое сравнение темы «${report.topic}» (Модель: ${report.model_used})`;
     }
@@ -114,28 +83,7 @@
     if (!tableContainer) return;
 
     let html = `
-      <table class="wiki-table">
-        <thead>
-          <tr>
-            <th>Язык</th>
-            <th>Статья</th>
-            <th>Тональность</th>
-            <th>Субъективность</th>
-            <th>Критика</th>
-            <th>Похвала</th>
-            <th>Неопределенность</th>
-            <th>Спорные тезисы</th>
-            <th>Фрейминг</th>
-            <th>Слов</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
-
-    (report.metrics_summary_table || []).forEach((row) => {
-      html += `
-        <tr>
-          <td><strong class="text-info">${row.lang.toUpperCase()}</strong></td>
+      <table class="wiki-tablei18n.t('auto__thead_tr_th_th_th_th_th_th_th_th_th_th_th_th_th_th_th_th_th_th_th_th_tr_thead_tbody_report_metrics_summary_table_foreach_row_html_tr_td_strong_class__c7be14')text-info">${row.lang.toUpperCase()}</strong></td>
           <td><a href="${row.url}" target="_blank" class="text-light text-decoration-underline">${row.title}</a></td>
           <td>${formatSentimentBadge(row.sentiment)}</td>
           <td><span class="text-warning">${row.subjectivity.toFixed(2)}</span></td>
@@ -155,34 +103,12 @@
 
   async function runExperimentB() {
     const topicInput = document.getElementById('wiki-topic-input');
-    const topic = topicInput ? topicInput.value.trim() : 'Israel–Gaza war';
-    const languages = getSelectedLanguages();
-    const models = getSelectedModels();
-
-    setLoading(true, `Эксперимент B: сопоставление интерпретаций моделями [${models.join(', ')}]...`);
+    const topic = topicInput ? topicInput.value.trim() : 'Israel–Gaza wari18n.t('auto__const_languages_getselectedlanguages_const_models_getselectedmodels_setloading_true_b_models_join__91e817'), ')}]...`);
 
     try {
       const response = await fetch('/api/v1/wikipedia-research/experiment/models', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, languages, models }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-      }
-
-      const report = await response.json();
-      renderExperimentBResults(report);
-    } catch (err) {
-      alert(`Ошибка выполнения Эксперимента B: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function renderExperimentBResults(report) {
-    const titleEl = document.getElementById('wiki-results-title');
+        headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_topic_languages_models_if_response_ok_throw_new_error_http_response_status_await_response_text_const_report_await_response_json_renderexperimentbresults_report_catch_err_alert_b_err_message_finally_setloading_false_function_renderexperimentbresults_report_const_titleel_document_getelementbyid__d0b834')wiki-results-title');
     if (titleEl) {
       titleEl.innerHTML = `<i class="bi bi-cpu"></i> Experiment B: Мульти-модельный бенчмарк интерпретации «${report.topic}»`;
     }
@@ -193,24 +119,7 @@
     if (!tableContainer) return;
 
     let html = `
-      <table class="wiki-table">
-        <thead>
-          <tr>
-            <th>Языковой раздел</th>
-    `;
-
-    report.models.forEach((mod) => {
-      html += `<th>Модель: ${mod}</th>`;
-    });
-
-    html += `
-          </tr>
-        </thead>
-        <tbody>
-    `;
-
-    report.languages.forEach((lang) => {
-      html += `<tr><td><strong class="text-warning">${lang.toUpperCase()}</strong></td>`;
+      <table class="wiki-tablei18n.t('auto__thead_tr_th_th_report_models_foreach_mod_html_th_mod_th_html_tr_thead_tbody_report_languages_foreach_lang_html_tr_td_strong_class__b1f9c4')text-warning">${lang.toUpperCase()}</strong></td>`;
       report.models.forEach((mod) => {
         const sentiment = report.sentiment_grid?.[lang]?.[mod];
         const res = report.matrix?.[lang]?.[mod];

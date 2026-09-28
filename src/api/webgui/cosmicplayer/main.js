@@ -167,7 +167,7 @@ window.initCosmicplayerTab = function() {
             return {
                 provider: 'direct',
                 type: 'html5',
-                defaultTitle: isHLS ? 'Прямой HLS поток' : 'Прямой MP4 файл'
+                defaultTitle: isHLS ? i18n.t('auto__hls__f11271') : i18n.t('auto__mp4__320e78')
             };
         }
 
@@ -176,7 +176,7 @@ window.initCosmicplayerTab = function() {
             return {
                 provider: 'seasonvar',
                 type: 'iframe_fallback',
-                defaultTitle: 'СезонВар плеер'
+                defaultTitle: i18n.t('auto___6cd940')
             };
         }
 
@@ -185,7 +185,7 @@ window.initCosmicplayerTab = function() {
             return {
                 provider: 'hdrezka',
                 type: 'iframe_fallback',
-                defaultTitle: 'Резка плеер'
+                defaultTitle: i18n.t('auto___4de7d2')
             };
         }
 
@@ -194,7 +194,7 @@ window.initCosmicplayerTab = function() {
             return {
                 provider: 'kinogo',
                 type: 'iframe_fallback',
-                defaultTitle: 'Киного плеер'
+                defaultTitle: i18n.t('auto___76b9f2')
             };
         }
 
@@ -202,7 +202,7 @@ window.initCosmicplayerTab = function() {
         return {
             provider: 'direct',
             type: 'html5',
-            defaultTitle: 'Прямой видеоисточник'
+            defaultTitle: i18n.t('auto___b81f29')
         };
     }
 

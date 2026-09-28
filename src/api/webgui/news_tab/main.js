@@ -44,12 +44,7 @@ class NewsTabController {
       }
     }
 
-    const countLabel = document.getElementById('news-interactions-count-label');
-    if (countLabel) {
-      countLabel.textContent = `Обработано реакций обучения: ${this.profile.interaction_count || 0}`;
-    }
-
-    const negInput = document.getElementById('news-neg-topics-input');
+    const countLabel = document.getElementById('news-interactions-count-labeli18n.t('auto__if_countlabel_countlabel_textcontent_this_profile_interaction_count_0_const_neginput_document_getelementbyid__f77f74')news-neg-topics-input');
     if (negInput && this.profile.negative_keywords) {
       negInput.value = this.profile.negative_keywords.join(', ');
     }
@@ -131,7 +126,7 @@ class NewsTabController {
             <span class="badge bg-secondary-subtle text-secondary-emphasis border small text-truncate" style="max-width: 130px;">
               ${art.source_name}
             </span>
-            <span class="badge ${matchBadgeClass} rounded-pill small" title="Персональная релевантность">
+            <span class="badge ${matchBadgeClass} rounded-pill small" title=i18n.t('auto___8b72fe')>
               ${matchPercent}% match
             </span>
           </div>
@@ -149,16 +144,16 @@ class NewsTabController {
                 <i class="bi bi-clock me-1"></i>${art.published_at || ''}
               </small>
               <div class="btn-group btn-group-sm" role="group">
-                <button type="button" class="btn ${isLiked ? 'btn-success' : 'btn-outline-secondary'} py-0 px-2" title="Полезно (обучить алгоритм)" onclick="window.newsTab?.sendFeedback('${art.id}', 'like', '${encodeURIComponent(art.title)}', '${art.category}')">
+                <button type="button" class="btn ${isLiked ? 'btn-success' : 'btn-outline-secondary'} py-0 px-2" title=i18n.t('auto___ea449a') onclick="window.newsTab?.sendFeedback('${art.id}', 'like', '${encodeURIComponent(art.title)}', '${art.category}')">
                   <i class="bi bi-hand-thumbs-up"></i>
                 </button>
-                <button type="button" class="btn ${isDisliked ? 'btn-danger' : 'btn-outline-secondary'} py-0 px-2" title="Не интересно (понизить тему)" onclick="window.newsTab?.sendFeedback('${art.id}', 'dislike', '${encodeURIComponent(art.title)}', '${art.category}')">
+                <button type="button" class="btn ${isDisliked ? 'btn-danger' : 'btn-outline-secondary'} py-0 px-2" title=i18n.t('auto___488fed') onclick="window.newsTab?.sendFeedback('${art.id}', 'dislike', '${encodeURIComponent(art.title)}', '${art.category}')">
                   <i class="bi bi-hand-thumbs-down"></i>
                 </button>
-                <button type="button" class="btn ${isBookmarked ? 'btn-warning text-dark' : 'btn-outline-secondary'} py-0 px-2" title="Сохранить в закладки" onclick="window.newsTab?.sendFeedback('${art.id}', 'bookmark', '${encodeURIComponent(art.title)}', '${art.category}')">
+                <button type="button" class="btn ${isBookmarked ? 'btn-warning text-dark' : 'btn-outline-secondary'} py-0 px-2" title=i18n.t('auto___0b214c') onclick="window.newsTab?.sendFeedback('${art.id}', 'bookmark', '${encodeURIComponent(art.title)}', '${art.category}')">
                   <i class="bi bi-bookmark"></i>
                 </button>
-                <button type="button" class="btn btn-outline-info py-0 px-2" title="Сгенерировать AI-выжимку" onclick="window.newsTab?.summarizeArticle('${art.id}')">
+                <button type="button" class="btn btn-outline-info py-0 px-2" title=i18n.t('auto__ai__fc8884') onclick="window.newsTab?.summarizeArticle('${art.id}')">
                   <i class="bi bi-magic"></i>
                 </button>
               </div>
@@ -197,9 +192,9 @@ class NewsTabController {
         this.renderArticles();
         await this.loadProfile();
         if (window.showNotification) {
-          const msg = action === 'like' ? 'Алгоритм обучен: тема получила приоритет 👍' :
-                      action === 'dislike' ? 'Алгоритм обучен: интерес к теме снижен 👎' :
-                      action === 'bookmark' ? 'Добавлено в закладки 🔖' : 'Действие сохранено';
+          const msg = action === 'like' ? i18n.t('auto___78fe11') :
+                      action === 'dislike' ? i18n.t('auto___1dd610') :
+                      action === 'bookmark' ? i18n.t('auto___42b855') : i18n.t('auto___9d5ce8');
           window.showNotification(msg, 'success');
         }
       }
@@ -266,7 +261,7 @@ class NewsTabController {
       const res = await fetch('/api/news/digest', { method: 'POST' });
       if (res.ok) {
         this.currentDigest = await res.json();
-        if (digestTitle) digestTitle.textContent = this.currentDigest.title || 'ИИ-Дайджест';
+        if (digestTitle) digestTitle.textContent = this.currentDigest.title || i18n.t('auto___85b839');
         if (digestContent) {
           if (window.marked) {
             digestContent.innerHTML = window.marked.parse(this.currentDigest.digest_text || '');
@@ -276,14 +271,7 @@ class NewsTabController {
         }
       }
     } catch (e) {
-      console.error('[NewsTab] Error generating digest:', e);
-      if (digestContent) digestContent.textContent = `Ошибка генерации дайджеста: ${e.message}`;
-    }
-  }
-
-  speakDigest() {
-    if (!this.currentDigest || !this.currentDigest.digest_text) return;
-    if (window.chatService && typeof window.chatService.speak === 'function') {
+      console.error('[NewsTab] Error generating digest:i18n.t('auto__e_if_digestcontent_digestcontent_textcontent_e_message_speakdigest_if_this_currentdigest_this_currentdigest_digest_text_return_if_window_chatservice_typeof_window_chatservice_speak__ce150d')function') {
       window.chatService.speak(this.currentDigest.digest_text);
     } else {
       const utterance = new SpeechSynthesisUtterance(this.currentDigest.digest_text);
@@ -311,7 +299,7 @@ class NewsTabController {
       if (res.ok) {
         await this.loadProfile();
         await this.refreshNews(true);
-        if (window.showNotification) window.showNotification('Интересы успешно сохранены!', 'success');
+        if (window.showNotification) window.showNotification(i18n.t('auto___79f66b'), 'success');
         const modalEl = document.getElementById('newsPreferencesModal');
         if (modalEl && window.bootstrap) {
           const modalInstance = window.bootstrap.Modal.getInstance(modalEl);
@@ -324,7 +312,7 @@ class NewsTabController {
   }
 
   async resetProfile() {
-    if (!confirm('Сбросить накопленные веса интересов и начать обучение с чистого листа?')) return;
+    if (!confirm(i18n.t('auto___e37ea6'))) return;
     try {
       const res = await fetch('/api/news/profile', {
         method: 'POST',
@@ -337,7 +325,7 @@ class NewsTabController {
       if (res.ok) {
         await this.loadProfile();
         await this.refreshNews(true);
-        if (window.showNotification) window.showNotification('Профиль обучения сброшен', 'info');
+        if (window.showNotification) window.showNotification(i18n.t('auto___b15895'), 'info');
       }
     } catch (e) {
       console.error('[NewsTab] Error resetting profile:', e);

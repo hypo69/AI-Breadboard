@@ -127,8 +127,7 @@
       renderStats();
       renderTable();
     } catch (err) {
-      console.error('[UsersTab] Error loading users:', err);
-      showStatusAlert(`Ошибка загрузки пользователей: ${err.message}`, 'danger');
+      console.error('[UsersTab] Error loading users:i18n.t('auto__err_showstatusalert_err_message__259d09')danger');
       if (tableBody) {
         tableBody.innerHTML = `
           <tr>
@@ -198,13 +197,8 @@
 
       // Password column
       const pwdHtml = hasPassword
-        ? `<span class="badge bg-success-subtle text-success border border-success-subtle" title="Пароль установлен"><i class="bi bi-key-fill"></i> Задан</span>`
-        : `<span class="badge bg-warning-subtle text-warning border border-warning-subtle" title="Пароль не установлен (OAuth/TG)"><i class="bi bi-dash-circle"></i> Нет</span>`;
-
-      // Email verified badge
-      const emailVerifiedBadge = isEmailVerified
-        ? `<i class="bi bi-patch-check-fill text-success ms-1" title="Email подтвержден"></i>`
-        : `<i class="bi bi-question-circle text-muted ms-1" title="Email не подтвержден"></i>`;
+        ? `<span class="badge bg-success-subtle text-success border border-success-subtle" title=i18n.t('auto___568825')><i class="bi bi-key-filli18n.t('auto__i_span_span_class__8abff5')badge bg-warning-subtle text-warning border border-warning-subtle" title=i18n.t('auto__oauth_tg__f81793')><i class="bi bi-dash-circlei18n.t('auto__i_span_email_verified_badge_const_emailverifiedbadge_isemailverified_i_class__f74fef')bi bi-patch-check-fill text-success ms-1" title=i18n.t('auto_email__2056c7')></i>`
+        : `<i class="bi bi-question-circle text-muted ms-1" title=i18n.t('auto_email__d7d8b2')></i>`;
 
       // If this row is in inline-edit mode:
       if (isRowEditing) {
@@ -217,7 +211,7 @@
                 <div class="w-100">
                   <div class="input-group input-group-sm mb-1">
                     <span class="input-group-text text-muted"><i class="bi bi-person"></i></span>
-                    <input type="text" class="form-control inline-edit-name" value="${escapeHtml(user.name || '')}" placeholder="Имя пользователя">
+                    <input type="text" class="form-control inline-edit-name" value="${escapeHtml(user.name || '')}" placeholder=i18n.t('auto___a79f8a')>
                   </div>
                   <div class="input-group input-group-sm">
                     <span class="input-group-text text-muted"><i class="bi bi-envelope"></i></span>
@@ -247,14 +241,12 @@
             </td>
             <td class="text-center align-middle">${pwdHtml}</td>
             <td class="small align-middle">
-              <div><span class="text-muted">Создан:</span> ${formatDate(user.created_at)}</div>
-            </td>
-            <td class="text-center align-middle">
+              <div><span class="text-mutedi18n.t('auto__span_formatdate_user_created_at_div_td_td_class__085b04')text-center align-middle">
               <div class="d-flex justify-content-center gap-1">
-                <button class="btn btn-success btn-sm btn-save-inline" data-id="${user.id}" title="Сохранить изменения (Enter)" ${isSaving ? 'disabled' : ''}>
+                <button class="btn btn-success btn-sm btn-save-inline" data-id="${user.id}" title=i18n.t('auto__enter__8f6294') ${isSaving ? 'disabled' : ''}>
                   ${isSaving ? '<span class="spinner-border spinner-border-sm"></span>' : '<i class="bi bi-check-lg"></i>'}
                 </button>
-                <button class="btn btn-outline-secondary btn-sm btn-cancel-inline" data-id="${user.id}" title="Отмена (Esc)" ${isSaving ? 'disabled' : ''}>
+                <button class="btn btn-outline-secondary btn-sm btn-cancel-inline" data-id="${user.id}" title=i18n.t('auto__esc__c1fe34') ${isSaving ? 'disabled' : ''}>
                   <i class="bi bi-x-lg"></i>
                 </button>
               </div>
@@ -267,7 +259,7 @@
       const roleSelectHtml = `
         <select class="form-select form-select-sm bg-dark border-secondary user-table-role-select text-center ${isAdmin ? 'text-warning fw-bold' : 'text-info'}"
           data-user-id="${user.id}"
-          ${isRoot ? 'disabled title="Нельзя изменить роль Root"' : 'title="Изменить роль прямо в таблице"'}>
+          ${isRoot ? 'disabled title=i18n.t('auto__root_e84a4a')' : 'title=i18n.t('auto___8fe52e')'}>
           <option value="user" ${user.role === 'user' ? 'selected' : ''} class="text-info">👤 User</option>
           <option value="admin" ${isAdmin ? 'selected' : ''} class="text-warning">🛡️ Admin</option>
           <option value="guest" ${user.role === 'guest' ? 'selected' : ''} class="text-secondary">👀 Guest</option>
@@ -277,16 +269,15 @@
       const statusSelectHtml = `
         <select class="form-select form-select-sm bg-dark border-secondary user-table-status-select text-center ${isActive ? 'text-success' : 'text-danger'}"
           data-user-id="${user.id}"
-          ${isRoot ? 'disabled title="Нельзя деактивировать Root"' : 'title="Изменить статус прямо в таблице"'}>
-          <option value="1" ${isActive ? 'selected' : ''} class="text-success">🟢 Активен</option>
-          <option value="0" ${!isActive ? 'selected' : ''} class="text-danger">🔴 Блок</option>
+          ${isRoot ? 'disabled title=i18n.t('auto__root_b0e6c8')' : 'title=i18n.t('auto___ed143b')'}>
+          <option value="1" ${isActive ? 'selected' : ''} class="text-successi18n.t('auto__option_option_value__152f29')0" ${!isActive ? 'selected' : ''} class="text-danger">🔴 Блок</option>
         </select>
       `;
 
       // Telegram column
       let tgHtml = '<span class="text-muted small">—</span>';
       if (user.telegram_username) {
-        tgHtml = `<a href="https://t.me/${escapeHtml(user.telegram_username)}" target="_blank" class="text-info text-decoration-none small d-flex align-items-center gap-1" title="Открыть профиль Telegram">
+        tgHtml = `<a href="https://t.me/${escapeHtml(user.telegram_username)}" target="_blank" class="text-info text-decoration-none small d-flex align-items-center gap-1" title=i18n.t('auto__telegram_7e4345')>
           <i class="bi bi-telegram"></i> @${escapeHtml(user.telegram_username)}
         </a>`;
       } else if (user.telegram_id) {
@@ -301,11 +292,11 @@
               <div class="d-flex align-items-center">
                 ${avatarHtml}
                 <div>
-                  <div class="fw-bold text-white user-cell-name" title="Дважды кликните для быстрого редактирования" style="cursor: pointer;">
-                    ${escapeHtml(user.name || 'Без имени')}
+                  <div class="fw-bold text-white user-cell-name" title=i18n.t('auto___8a4c6d') style="cursor: pointer;">
+                    ${escapeHtml(user.name || i18n.t('auto___cdf641'))}
                     <i class="bi bi-pencil-fill text-muted ms-1 opacity-25 hover-opacity-100" style="font-size:10px;"></i>
                   </div>
-                  <div class="small text-muted d-flex align-items-center user-cell-email" title="Дважды кликните для быстрого редактирования" style="cursor: pointer;">
+                  <div class="small text-muted d-flex align-items-center user-cell-email" title=i18n.t('auto___8a4c6d') style="cursor: pointer;">
                     ${escapeHtml(user.email)} ${emailVerifiedBadge}
                   </div>
                 </div>
@@ -316,29 +307,28 @@
           <td class="text-center align-middle" style="min-width: 125px;">${statusSelectHtml}</td>
           <td class="align-middle" style="min-width: 140px;">
             <div class="d-flex align-items-center justify-content-between">
-              <div class="user-cell-tg" title="Дважды кликните для быстрого редактирования" style="cursor: pointer;">${tgHtml}</div>
+              <div class="user-cell-tg" title=i18n.t('auto___8a4c6d') style="cursor: pointer;">${tgHtml}</div>
             </div>
           </td>
           <td class="text-center align-middle">${pwdHtml}</td>
           <td class="small align-middle">
-            <div><span class="text-muted">Создан:</span> ${formatDate(user.created_at)}</div>
-            ${user.last_login ? `<div><span class="text-muted">Вход:</span> ${formatDate(user.last_login)}</div>` : ''}
+            <div><span class="text-mutedi18n.t('auto__span_formatdate_user_created_at_div_user_last_login_div_span_class__cb208c')text-muted">Вход:</span> ${formatDate(user.last_login)}</div>` : ''}
           </td>
           <td class="text-center align-middle">
             <div class="btn-group btn-group-sm" role="group">
-              <button class="btn btn-outline-warning btn-inline-edit" data-id="${user.id}" title="Редактировать поля строки прямо в таблице">
+              <button class="btn btn-outline-warning btn-inline-edit" data-id="${user.id}" title=i18n.t('auto___b2fb8d')>
                 <i class="bi bi-pencil-square"></i>
               </button>
-              <button class="btn btn-outline-info btn-pwd-user" data-id="${user.id}" data-name="${escapeHtml(user.name || user.email)}" title="Сменить пароль">
+              <button class="btn btn-outline-info btn-pwd-user" data-id="${user.id}" data-name="${escapeHtml(user.name || user.email)}" title=i18n.t('auto___3fda03')>
                 <i class="bi bi-key-fill"></i>
               </button>
-              <button class="btn btn-outline-light btn-details-user" data-id="${user.id}" title="Профиль и настройки">
+              <button class="btn btn-outline-light btn-details-user" data-id="${user.id}" title=i18n.t('auto___97bd04')>
                 <i class="bi bi-info-circle-fill"></i>
               </button>
-              <button class="btn btn-outline-secondary btn-edit-user-modal" data-id="${user.id}" title="Редактировать в модальном окне">
+              <button class="btn btn-outline-secondary btn-edit-user-modal" data-id="${user.id}" title=i18n.t('auto___039ae4')>
                 <i class="bi bi-sliders"></i>
               </button>
-              <button class="btn btn-outline-danger btn-delete-user" data-id="${user.id}" data-name="${escapeHtml(user.name || user.email)}" ${isRoot ? 'disabled title="Нельзя удалить Root"' : 'title="Удалить"'}>
+              <button class="btn btn-outline-danger btn-delete-user" data-id="${user.id}" data-name="${escapeHtml(user.name || user.email)}" ${isRoot ? 'disabled title=i18n.t('auto__root_1c90df')' : 'title=i18n.t('auto___86ea33')'}>
                 <i class="bi bi-trash-fill"></i>
               </button>
             </div>
@@ -366,7 +356,7 @@
       sel.addEventListener('change', async (e) => {
         const userId = parseInt(e.target.getAttribute('data-user-id'), 10);
         const newStatus = parseInt(e.target.value, 10);
-        await handleUpdateField(userId, { is_active: newStatus }, `Статус изменен на "${newStatus ? 'Активен' : 'Заблокирован'}"`);
+        await handleUpdateField(userId, { is_active: newStatus }, `Статус изменен на "${newStatus ? i18n.t('auto___667904') : i18n.t('auto___2c998b')}"`);
       });
     });
 
@@ -485,11 +475,11 @@
     const tg = tgInput ? tgInput.value.trim().replace(/^@/, '') : '';
 
     if (!email) {
-      showStatusAlert('Email не может быть пустым', 'warning');
+      showStatusAlert(i18n.t('auto_email__a16736'), 'warning');
       return;
     }
     if (!name) {
-      showStatusAlert('Имя пользователя не может быть пустым', 'warning');
+      showStatusAlert(i18n.t('auto___2e7abb'), 'warning');
       return;
     }
 
@@ -509,15 +499,7 @@
     try {
       const res = await apiFetch(`/api/admin/users/${userId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      state.editingUserId = null;
-      showStatusAlert(`Пользователь #${userId} (<strong>${escapeHtml(name)}</strong>) успешно сохранён!`, 'success');
-      loadUsers();
-    } catch (err) {
-      showStatusAlert(`Ошибка сохранения: ${err.message}`, 'danger');
+        headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_payload_state_editinguserid_null_showstatusalert_userid_strong_escapehtml_name_strong__4195bd')successi18n.t('auto__loadusers_catch_err_showstatusalert_err_message__55dca6')danger');
     } finally {
       state.savingUserId = null;
       if (saveBtn) saveBtn.disabled = false;
@@ -525,23 +507,11 @@
   }
 
   // Update a Single Field or Subset of Fields
-  async function handleUpdateField(userId, payload, successMsg = 'Данные сохранены') {
+  async function handleUpdateField(userId, payload, successMsg = i18n.t('auto___927e83')) {
     try {
       const res = await apiFetch(`/api/admin/users/${userId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      // Update local state user
-      const user = state.users.find(u => u.id === userId);
-      if (user && res.user) {
-        Object.assign(user, res.user);
-      }
-      showStatusAlert(`Пользователь #${userId}: ${successMsg}`, 'success');
-      loadUsers();
-    } catch (err) {
-      showStatusAlert(`Ошибка обновления: ${err.message}`, 'danger');
+        headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_payload_update_local_state_user_const_user_state_users_find_u_u_id_userid_if_user_res_user_object_assign_user_res_user_showstatusalert_userid_successmsg__35129d')successi18n.t('auto__loadusers_catch_err_showstatusalert_err_message__fc6bc6')danger');
       loadUsers();
     }
   }
@@ -563,7 +533,7 @@
       editAdminSw.checked = isEditAdmin;
       editAdminSw.disabled = (userId === 1);
       if (editRoleLabel) {
-        editRoleLabel.textContent = isEditAdmin ? 'Администратор (admin)' : 'Пользователь (user)';
+        editRoleLabel.textContent = isEditAdmin ? i18n.t('auto__admin__5514eb') : i18n.t('auto__user__e187b8');
         editRoleLabel.className = isEditAdmin ? 'text-warning' : 'text-info';
       }
     }
@@ -596,25 +566,13 @@
 
     contentEl.innerHTML = `
       <div class="text-center py-4 text-muted">
-        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-        Загрузка профиля пользователя...
-      </div>`;
-
-    try {
-      const data = await apiFetch(`/api/admin/users/${userId}`);
-      const u = data.user || {};
-      const s = data.settings || {};
-      const perms = data.permissions || [];
-
-      contentEl.innerHTML = `
-        <div class="row g-3">
+        <div class="spinner-border spinner-border-sm text-primary me-2" role="statusi18n.t('auto__div_div_try_const_data_await_apifetch_api_admin_users_userid_const_u_data_user_const_s_data_settings_const_perms_data_permissions_contentel_innerhtml_div_class__ae4d03')row g-3">
           <div class="col-md-6">
-            <h6 class="text-primary border-bottom pb-1 mb-2">👤 Основные данные</h6>
-            <table class="table table-sm table-borderless small mb-0">
+            <h6 class="text-primary border-bottom pb-1 mb-2i18n.t('auto__h6_table_class__678bf0')table table-sm table-borderless small mb-0">
               <tr><td class="text-muted" style="width:120px;">ID:</td><td class="fw-bold">${u.id}</td></tr>
               <tr><td class="text-muted">Email:</td><td>${escapeHtml(u.email)} ${u.is_email_verified ? '<span class="badge bg-success">Verified</span>' : '<span class="badge bg-secondary">Unverified</span>'}</td></tr>
               <tr><td class="text-muted">Имя:</td><td>${escapeHtml(u.name || '—')}</td></tr>
-              <tr><td class="text-muted">Роль:</td><td><span class="badge bg-info text-dark">${escapeHtml(u.role || 'user')}</span> ${u.is_admin ? '<span class="badge bg-warning text-dark">Admin</span>' : ''}</td></tr>
+              <tr><td class="text-mutedi18n.t('auto__td_td_span_class__dc79c5')badge bg-info text-dark">${escapeHtml(u.role || 'user')}</span> ${u.is_admin ? '<span class="badge bg-warning text-dark">Admin</span>' : ''}</td></tr>
               <tr><td class="text-muted">Статус:</td><td>${u.is_active ? '<span class="text-success">Активен</span>' : '<span class="text-danger">Заблокирован</span>'}</td></tr>
               <tr><td class="text-muted">Пароль:</td><td>${u.has_password ? '<span class="text-success">Установлен</span>' : '<span class="text-muted">Не задан</span>'}</td></tr>
               <tr><td class="text-muted">Создан:</td><td>${escapeHtml(u.created_at || '—')}</td></tr>
@@ -622,26 +580,23 @@
             </table>
           </div>
           <div class="col-md-6">
-            <h6 class="text-info border-bottom pb-1 mb-2">✈️ Telegram & Настройки</h6>
-            <table class="table table-sm table-borderless small mb-0">
+            <h6 class="text-info border-bottom pb-1 mb-2i18n.t('auto__telegram_h6_table_class__0125bd')table table-sm table-borderless small mb-0">
               <tr><td class="text-muted" style="width:130px;">Telegram ID:</td><td>${u.telegram_id ? escapeHtml(u.telegram_id) : '<span class="text-muted">Не привязан</span>'}</td></tr>
               <tr><td class="text-muted">TG Username:</td><td>${u.telegram_username ? `@${escapeHtml(u.telegram_username)}` : '<span class="text-muted">—</span>'}</td></tr>
               <tr><td class="text-muted">Тема UI:</td><td>${escapeHtml(s.theme || 'dark')}</td></tr>
               <tr><td class="text-muted">Язык:</td><td>${escapeHtml(s.language || 'ru')}</td></tr>
               <tr><td class="text-muted">TTS голос:</td><td>${escapeHtml(s.tts_voice || 'ru-RU-DmitryNeural')} (${escapeHtml(s.tts_system || 'edge-tts')})</td></tr>
-              <tr><td class="text-muted">Модель чата:</td><td>${escapeHtml(s.model || 'По умолчанию')}</td></tr>
+              <tr><td class="text-muted">Модель чата:</td><td>${escapeHtml(s.model || i18n.t('auto___469631'))}</td></tr>
             </table>
           </div>
           <div class="col-12 mt-3">
-            <h6 class="text-warning border-bottom pb-1 mb-2">🛡️ Разрешения системы</h6>
-            <div class="d-flex flex-wrap gap-1">
+            <h6 class="text-warning border-bottom pb-1 mb-2i18n.t('auto__h6_div_class__731671')d-flex flex-wrap gap-1">
               ${perms.length > 0 ? perms.map(p => `<span class="badge bg-secondary">${escapeHtml(p)}</span>`).join('') : '<span class="text-muted small">Нет явных разрешений</span>'}
             </div>
           </div>
           ${s.system_instruction ? `
           <div class="col-12 mt-2">
-            <h6 class="border-bottom pb-1 mb-1">📝 Пользовательская системная инструкция</h6>
-            <pre class="bg-body-tertiary p-2 rounded border small font-monospace" style="max-height:120px;overflow-y:auto;">${escapeHtml(s.system_instruction)}</pre>
+            <h6 class="border-bottom pb-1 mb-1i18n.t('auto__h6_pre_class__6a6e25')bg-body-tertiary p-2 rounded border small font-monospace" style="max-height:120px;overflow-y:auto;">${escapeHtml(s.system_instruction)}</pre>
           </div>` : ''}
         </div>`;
     } catch (err) {
@@ -670,7 +625,7 @@
         document.getElementById('create-user-is-admin').checked = false;
         const createRoleLabel = document.getElementById('create-role-label');
         if (createRoleLabel) {
-          createRoleLabel.textContent = 'Пользователь (user)';
+          createRoleLabel.textContent = i18n.t('auto__user__e187b8');
           createRoleLabel.className = 'text-info';
         }
         document.getElementById('create-user-is-active').checked = true;
@@ -686,7 +641,7 @@
     const createRoleLabel = document.getElementById('create-role-label');
     if (createAdminSw && createRoleLabel) {
       createAdminSw.addEventListener('change', (e) => {
-        createRoleLabel.textContent = e.target.checked ? 'Администратор (admin)' : 'Пользователь (user)';
+        createRoleLabel.textContent = e.target.checked ? i18n.t('auto__admin__5514eb') : i18n.t('auto__user__e187b8');
         createRoleLabel.className = e.target.checked ? 'text-warning' : 'text-info';
       });
     }
@@ -695,7 +650,7 @@
     const editRoleLabel = document.getElementById('edit-role-label');
     if (editAdminSw && editRoleLabel) {
       editAdminSw.addEventListener('change', (e) => {
-        editRoleLabel.textContent = e.target.checked ? 'Администратор (admin)' : 'Пользователь (user)';
+        editRoleLabel.textContent = e.target.checked ? i18n.t('auto__admin__5514eb') : i18n.t('auto__user__e187b8');
         editRoleLabel.className = e.target.checked ? 'text-warning' : 'text-info';
       });
     }
@@ -797,14 +752,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
-          const modalEl = document.getElementById('modal-create-user');
-          const modal = bootstrap.Modal.getInstance(modalEl);
-          if (modal) modal.hide();
-
-          showStatusAlert(`Пользователь ${escapeHtml(payload.name)} успешно создан!`, 'success');
-          loadUsers();
-        } catch (err) {
-          showStatusAlert(`Ошибка создания пользователя: ${err.message}`, 'danger');
+          const modalEl = document.getElementById('modal-create-useri18n.t('auto__const_modal_bootstrap_modal_getinstance_modalel_if_modal_modal_hide_showstatusalert_escapehtml_payload_name__146fc1')successi18n.t('auto__loadusers_catch_err_showstatusalert_err_message__fd85a0')danger');
         } finally {
           if (submitBtn) submitBtn.disabled = false;
         }
@@ -836,14 +784,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
-          const modalEl = document.getElementById('modal-edit-user');
-          const modal = bootstrap.Modal.getInstance(modalEl);
-          if (modal) modal.hide();
-
-          showStatusAlert(`Данные пользователя #${userId} успешно обновлены!`, 'success');
-          loadUsers();
-        } catch (err) {
-          showStatusAlert(`Ошибка обновления: ${err.message}`, 'danger');
+          const modalEl = document.getElementById('modal-edit-useri18n.t('auto__const_modal_bootstrap_modal_getinstance_modalel_if_modal_modal_hide_showstatusalert_userid__ca6a3c')successi18n.t('auto__loadusers_catch_err_showstatusalert_err_message__6c7aa0')danger');
         } finally {
           if (submitBtn) submitBtn.disabled = false;
         }
@@ -867,14 +808,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password: newPassword })
           });
-          const modalEl = document.getElementById('modal-password-user');
-          const modal = bootstrap.Modal.getInstance(modalEl);
-          if (modal) modal.hide();
-
-          showStatusAlert(`Пароль для пользователя #${userId} успешно установлен!`, 'success');
-          loadUsers();
-        } catch (err) {
-          showStatusAlert(`Ошибка установки пароля: ${err.message}`, 'danger');
+          const modalEl = document.getElementById('modal-password-useri18n.t('auto__const_modal_bootstrap_modal_getinstance_modalel_if_modal_modal_hide_showstatusalert_userid__2c7322')successi18n.t('auto__loadusers_catch_err_showstatusalert_err_message__298e60')danger');
         } finally {
           if (submitBtn) submitBtn.disabled = false;
         }
@@ -890,14 +824,7 @@
 
         try {
           await apiFetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
-          const modalEl = document.getElementById('modal-delete-user');
-          const modal = bootstrap.Modal.getInstance(modalEl);
-          if (modal) modal.hide();
-
-          showStatusAlert(`Пользователь #${userId} успешно удалён.`, 'success');
-          loadUsers();
-        } catch (err) {
-          showStatusAlert(`Ошибка удаления пользователя: ${err.message}`, 'danger');
+          const modalEl = document.getElementById('modal-delete-useri18n.t('auto__const_modal_bootstrap_modal_getinstance_modalel_if_modal_modal_hide_showstatusalert_userid__50e877')successi18n.t('auto__loadusers_catch_err_showstatusalert_err_message__77346f')danger');
         } finally {
           btnConfirmDelete.disabled = false;
         }
@@ -929,20 +856,14 @@
     const btnCleanupAll = document.getElementById('btn-cleanup-all-orphaned');
     if (btnCleanupAll) {
       btnCleanupAll.addEventListener('click', async () => {
-        if (!confirm('Вы уверены, что хотите удалить ВСЕ обнаруженные мертвые директории пользователей? Это действие необратимо.')) {
+        if (!confirm(i18n.t('auto___8ada4a'))) {
           return;
         }
         btnCleanupAll.disabled = true;
         try {
           const res = await apiFetch('/api/admin/users/orphaned-dirs/clean', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
-          });
-          showStatusAlert(`Успешно удалено мертвых директорий: ${res.total_deleted} (освобождено: ${formatBytes(res.freed_bytes)})`, 'success');
-          loadOrphanedDirs();
-        } catch (err) {
-          showStatusAlert(`Ошибка очистки мертвых директорий: ${err.message}`, 'danger');
+            headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_showstatusalert_res_total_deleted_formatbytes_res_freed_bytes__e1c8c3')successi18n.t('auto__loadorphaneddirs_catch_err_showstatusalert_err_message__b60db7')danger');
         } finally {
           btnCleanupAll.disabled = false;
         }
@@ -1017,7 +938,7 @@
             <td class="text-center">${formatBytes(d.size_bytes)}</td>
             <td class="small">${formatDate(d.modified_at)}</td>
             <td class="text-center">
-              <button class="btn btn-outline-danger btn-sm py-0 px-2 btn-delete-single-orphaned" data-dir="${escapeHtml(d.name)}" title="Удалить директорию">
+              <button class="btn btn-outline-danger btn-sm py-0 px-2 btn-delete-single-orphaned" data-dir="${escapeHtml(d.name)}" title=i18n.t('auto___e36849')>
                 <i class="bi bi-trash"></i>
               </button>
             </td>
@@ -1038,10 +959,7 @@
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ dirs: [dirName] })
             });
-            showStatusAlert(`Директория "${dirName}" успешно удалена.`, 'success');
-            loadOrphanedDirs();
-          } catch (err) {
-            showStatusAlert(`Ошибка удаления директории ${dirName}: ${err.message}`, 'danger');
+            showStatusAlert(`Директория "${dirName}" успешно удалена.`, 'successi18n.t('auto__loadorphaneddirs_catch_err_showstatusalert_dirname_err_message__d5bd3a')danger');
             btn.disabled = false;
           }
         });

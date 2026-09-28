@@ -1,9 +1,9 @@
-"""Коллектор аудита и корреляции системных журналов Windows."""
+﻿"""Коллектор аудита и корреляции системных журналов Windows."""
 from __future__ import annotations
 import time
 from typing import Any, Dict, List
 from logger import logger
-from apps.windows.api.wevtapi import WevtAPI
+from apps.windows.telemetry.api_bindings.wevtapi import WevtAPI
 from apps.windows.core.models import AuditFinding, DomainAuditResult, RiskLevel
 
 class EventLogCollector:

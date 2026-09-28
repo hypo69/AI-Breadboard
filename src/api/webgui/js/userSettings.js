@@ -31,28 +31,28 @@ export function executeUserAction(actionType) {
 
   if (actionType === 'mail') {
     if (msgInput) {
-      msgInput.value = 'Проверь мою почту Gmail и покажи последние непрочитанные письма.';
+      msgInput.value = i18n.t('auto__gmail__77a1fb');
       setTimeout(send, 100);
     }
   } else if (actionType === 'docs') {
-    const query = prompt('Введите поисковый запрос для поиска документов в Google Docs / Drive:');
+    const query = prompt(i18n.t('auto__google_docs_drive__c0c07c'));
     if (query && query.trim() && msgInput) {
       msgInput.value = `Найди в Google Docs / Google Drive документы по запросу: "${query.trim()}".`;
       setTimeout(send, 100);
     }
   } else if (actionType === 'sheets') {
-    const query = prompt('Введите ID таблицы или команду для Google Sheets (например: "Прочитай данные из таблицы ID диапазон A1:D10" или "Добавь строку"):');
+    const query = prompt('Введите ID таблицы или команду для Google Sheets (например: i18n.t('auto__id_a1_d10_312666') или i18n.t('auto___d7094d')):');
     if (query && query.trim() && msgInput) {
       msgInput.value = `Google Sheets: ${query.trim()}`;
       setTimeout(send, 100);
     }
   } else if (actionType === 'news') {
     if (msgInput) {
-      msgInput.value = 'Подготовь для меня свежий дайджест самых релевантных новостей по моим интересам.';
+      msgInput.value = i18n.t('auto___eeed4d');
       setTimeout(send, 100);
     }
   } else if (actionType === 'facebook') {
-    const text = prompt('Введите текст публикации для Facebook (и при желании ссылку через пробел):');
+    const text = prompt(i18n.t('auto__facebook__4aec1d'));
     if (text && text.trim() && msgInput) {
       msgInput.value = `Опубликуй пост в Facebook с текстом: "${text.trim()}".`;
       setTimeout(send, 100);
@@ -171,7 +171,7 @@ export async function refreshUserProfile() {
         userSettingsBtn.classList.add('d-flex');
       }
 
-      const name = data.name || data.email || 'Пользователь';
+      const name = data.name || data.email || i18n.t('auto___51aff1');
       const email = data.email || '';
       const picture = data.picture || '';
       const role = data.role || (data.is_admin ? 'Admin' : 'User');
@@ -204,7 +204,7 @@ export async function refreshUserProfile() {
         if (hasGoogle) {
           googleBadge.innerHTML = '<i class="bi bi-google text-danger me-1"></i>Google OAuth: <span class="text-success fw-bold">Синхронизирован</span>';
         } else if (isOauthEnabled) {
-          googleBadge.innerHTML = '<i class="bi bi-google text-muted me-1"></i>Google OAuth: <span class="text-warning">Не подключен</span> <button type="button" class="btn btn-sm btn-outline-danger ms-2 py-0 px-2 btn-google-login">Синхронизировать</button>';
+          googleBadge.innerHTML = '<i class="bi bi-google text-muted me-1"></i>Google OAuth: <span class="text-warningi18n.t('auto__span_button_type__4b944f')button" class="btn btn-sm btn-outline-danger ms-2 py-0 px-2 btn-google-login">Синхронизировать</button>';
         } else {
           googleBadge.innerHTML = '<i class="bi bi-google text-muted me-1"></i>Google OAuth: <span class="text-muted">Отключен</span>';
         }

@@ -67,7 +67,7 @@ async function initSearchTab() {
         }
       }
     } catch (err) {
-      console.error('[SearchTab] Ошибка загрузки динамических моделей SDK/CLI:', err);
+      console.error(i18n.t('auto__searchtab_sdk_cli__7270c1'), err);
     }
   }
 
@@ -92,8 +92,8 @@ async function initSearchTab() {
         }
       }
     } catch (e) {
-      console.error('[SearchTab] Ошибка загрузки конфигурации поиска:', e);
-      notifySearch('Ошибка загрузки настроек поиска: ' + e.message, 'danger');
+      console.error(i18n.t('auto__searchtab__7da013'), e);
+      notifySearch(i18n.t('auto___e42477') + e.message, 'danger');
     }
   }
 
@@ -107,11 +107,7 @@ async function initSearchTab() {
     try {
       await window.api.fetch('/api/admin/web-search/config', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ engine, gemini_model, gemini_cli_model, agy_model })
-      });
-      if (engineBadge) engineBadge.textContent = engine;
-      notifySearch(`✅ Настройки веб-поиска сохранены (активен: ${engine})`, 'success');
+        headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_engine_gemini_model_gemini_cli_model_agy_model_if_enginebadge_enginebadge_textcontent_engine_notifysearch_engine__b64f73')success');
 
       let compoundSearch = engine;
       if (engine === 'gemini') compoundSearch = `${engine}:${gemini_model}`;
@@ -122,8 +118,8 @@ async function initSearchTab() {
         window.updateChatBadges(undefined, compoundSearch);
       }
     } catch (e) {
-      console.error('[SearchTab] Ошибка сохранения:', e);
-      notifySearch('❌ Ошибка сохранения настроек: ' + e.message, 'danger');
+      console.error(i18n.t('auto__searchtab__5cc756'), e);
+      notifySearch(i18n.t('auto___e764d2') + e.message, 'danger');
     }
   }
 
@@ -141,7 +137,7 @@ async function initSearchTab() {
     const runTest = async () => {
       const query = testQueryInput.value.trim();
       if (!query) {
-        notifySearch('Введите поисковый запрос для теста!', 'warning');
+        notifySearch(i18n.t('auto___8c3c4c'), 'warning');
         testQueryInput.focus();
         return;
       }
@@ -150,7 +146,7 @@ async function initSearchTab() {
       btnRunTest.disabled = true;
       const originalText = btnRunTest.innerHTML;
       btnRunTest.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Поиск...';
-      testOutputContainer.innerHTML = `<span class="text-info">⏳ Выполнение поиска через <strong>${engine}</strong> по запросу: "${query}"...</span>`;
+      testOutputContainer.innerHTML = `<span class="text-infoi18n.t('auto__strong_engine_strong__636285')${query}"...</span>`;
 
       try {
         const response = await window.api.fetch('/api/admin/web-search/test', {
@@ -160,12 +156,12 @@ async function initSearchTab() {
         });
 
         if (response.status === 'ok') {
-          testOutputContainer.textContent = response.result || 'Пустой ответ.';
+          testOutputContainer.textContent = response.result || i18n.t('auto___70d1e8');
         } else {
-          testOutputContainer.innerHTML = `<span class="text-danger">❌ Ошибка: ${response.message || 'Неизвестная ошибка'}</span>`;
+          testOutputContainer.innerHTML = `<span class="text-danger">❌ Ошибка: ${response.message || i18n.t('auto___1047bb')}</span>`;
         }
       } catch (err) {
-        console.error('[SearchTab] Ошибка теста:', err);
+        console.error(i18n.t('auto__searchtab__facaf2'), err);
         testOutputContainer.innerHTML = `<span class="text-danger">❌ Ошибка запроса: ${err.message}</span>`;
       } finally {
         btnRunTest.disabled = false;

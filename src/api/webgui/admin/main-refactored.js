@@ -25,189 +25,34 @@ import {
   setupLanguageSelector, 
   setupThemeSelector 
 } from './modules/init-interface.js';
-import { syncApplicationsVisibility } from './modules/apps-sync.js';
-
-// ============================================================================
-// ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
-// ============================================================================
-
-let tabLoader = null;
-let apiFetcher = null;
-
-// ============================================================================
-// ГЛАВНАЯ ФУНКЦИЯ ИНИЦИАЛИЗАЦИИ
-// ============================================================================
-
-async function initAdminInterface() {
-  console.log('🚀 [AdminInterface] Starting initialization...');
-  
-  try {
-    // 1. Инициализируем компоненты интерфейса
-    console.log('[AdminInterface] Step 1: Initializing core components...');
-    await initializeInterface();
-    setupGlobalFunctions();
-    setupLanguageSelector();
-    setupThemeSelector();
-    
-    // 2. Регистрируем глобальные функции для UI
-    console.log('[AdminInterface] Step 2: Setting up UI handlers...');
-    registerGlobalFunctions();
-    setupUIHandlers();
-    setupAuthHandlers();
-    
-    // 3. Инициализируем управление вкладками
-    console.log('[AdminInterface] Step 3: Setting up tab management...');
-    setupTabManagement();
-    
-    // 4. Синхронизируем видимость приложений
-    console.log('[AdminInterface] Step 4: Syncing applications visibility...');
-    await syncApplicationsVisibility();
-    
-    // 5. Инициализируем оптимизации (ленивая загрузка, кеширование и т.д.)
-    console.log('[AdminInterface] Step 5: Initializing optimizations...');
-    await initializeOptimizations();
-    
-    // 6. Инициализируем API клиент
-    console.log('[AdminInterface] Step 6: Setting up API client...');
+import { syncApplicationsVisibility } from './modules/apps-sync.jsi18n.t('auto__let_tabloader_null_let_apifetcher_null_async_function_initadmininterface_console_log__23556e')🚀 [AdminInterface] Starting initialization...i18n.t('auto__try_1_console_log__2099b9')[AdminInterface] Step 1: Initializing core components...i18n.t('auto__await_initializeinterface_setupglobalfunctions_setuplanguageselector_setupthemeselector_2_ui_console_log__8f9de3')[AdminInterface] Step 2: Setting up UI handlers...i18n.t('auto__registerglobalfunctions_setupuihandlers_setupauthhandlers_3_console_log__5a171c')[AdminInterface] Step 3: Setting up tab management...i18n.t('auto__setuptabmanagement_4_console_log__4aa4ef')[AdminInterface] Step 4: Syncing applications visibility...i18n.t('auto__await_syncapplicationsvisibility_5_console_log__0d542f')[AdminInterface] Step 5: Initializing optimizations...i18n.t('auto__await_initializeoptimizations_6_api_console_log__7a4b96')[AdminInterface] Step 6: Setting up API client...');
     setupAPIClient();
     
     console.log('✅ [AdminInterface] Initialization complete!');
     
   } catch (error) {
     console.error('❌ [AdminInterface] Initialization error:', error);
-    showNotification('Ошибка инициализации интерфейса: ' + error.message, 'danger');
-  }
-}
-
-// ============================================================================
-// РЕГИСТРАЦИЯ ГЛОБАЛЬНЫХ ФУНКЦИЙ
-// ============================================================================
-
-function registerGlobalFunctions() {
-  window.switchTab = switchTab;
-  window.onTabSwitched = onTabSwitched;
-  window.showHelpModal = showHelpModal;
-  window.showNotification = showNotification;
-  window.showChatLogicModal = showChatLogicModal;
-  window.verifyPassword = verifyPassword;
-}
-
-// ============================================================================
-// УПРАВЛЕНИЕ ВКЛАДКАМИ
-// ============================================================================
-
-/**
- * Переключить на вкладку
- */
-async function switchTab(targetId) {
-  if (!targetId) return;
-
-  const cleanId = targetId.startsWith('#') ? targetId.slice(1) : targetId;
-  const tabName = cleanId.replace(/^tab-/, '');
-
-  console.log(`[AdminInterface] Switching to tab: ${tabName}`);
-
-  // Используем LazyTabLoader если доступен
-  if (tabLoader && typeof tabLoader.isLoaded === 'function') {
-    if (!tabLoader.isLoaded(tabName)) {
-      console.log(`[AdminInterface] Loading tab: ${tabName}`);
-      await tabLoader.loadTab(tabName);
-    }
-  }
-
-  // Обновляем визуальное состояние
-  updateTabUI(cleanId);
-
-  // Вызываем callback
-  if (typeof window.onTabSwitched === 'function') {
-    window.onTabSwitched(cleanId);
-  }
-
-  console.log(`[AdminInterface] Tab switched: ${tabName}`);
-}
-
-/**
- * Обновить визуальное состояние UI
- */
-function updateTabUI(cleanId) {
-  const tabId = cleanId.startsWith('tab-') ? cleanId : `tab-${cleanId}`;
-
-  // Скрываем все вкладки
-  document.querySelectorAll('#mainTabContent > .tab-pane, body > .container-fluid > .tab-content > .tab-pane, [role="tabpanel"]').forEach(tab => {
+    showNotification(i18n.t('auto___ff6b83') + error.message, 'dangeri18n.t('auto__function_registerglobalfunctions_window_switchtab_switchtab_window_ontabswitched_ontabswitched_window_showhelpmodal_showhelpmodal_window_shownotification_shownotification_window_showchatlogicmodal_showchatlogicmodal_window_verifypassword_verifypassword_async_function_switchtab_targetid_if_targetid_return_const_cleanid_targetid_startswith__5ed247')#') ? targetId.slice(1) : targetId;
+  const tabName = cleanId.replace(/^tab-/, 'i18n.t('auto__console_log_admininterface_switching_to_tab_tabname_lazytabloader_if_tabloader_typeof_tabloader_isloaded__05874b')functioni18n.t('auto__if_tabloader_isloaded_tabname_console_log_admininterface_loading_tab_tabname_await_tabloader_loadtab_tabname_updatetabui_cleanid_callback_if_typeof_window_ontabswitched__e3f731')functioni18n.t('auto__window_ontabswitched_cleanid_console_log_admininterface_tab_switched_tabname_ui_function_updatetabui_cleanid_const_tabid_cleanid_startswith__acb6d6')tab-i18n.t('auto__cleanid_tab_cleanid_document_queryselectorall__504a7c')#mainTabContent > .tab-pane, body > .container-fluid > .tab-content > .tab-pane, [role="tabpanel"]').forEach(tab => {
     tab.classList.remove('active', 'show');
-    tab.setAttribute('aria-hidden', 'true');
-  });
-
-  // Показываем целевую вкладку
-  const targetTab = document.getElementById(tabId) || document.getElementById(cleanId);
-  if (targetTab) {
-    targetTab.classList.add('active', 'show');
-    targetTab.setAttribute('aria-hidden', 'false');
-  }
-
-  // Обновляем состояние элементов меню
-  document.querySelectorAll('#mainTabs .list-group-item, #mainTabs .dropdown-item, #mainTabs [data-tab], #mainTabs [data-bs-target]').forEach(item => {
+    tab.setAttribute('aria-hidden', 'truei18n.t('auto__const_targettab_document_getelementbyid_tabid_document_getelementbyid_cleanid_if_targettab_targettab_classlist_add__7bdd4f')active', 'show');
+    targetTab.setAttribute('aria-hidden', 'falsei18n.t('auto__document_queryselectorall__d43cda')#mainTabs .list-group-item, #mainTabs .dropdown-item, #mainTabs [data-tab], #mainTabs [data-bs-target]').forEach(item => {
     const itemTarget = item.getAttribute('data-tab') || item.getAttribute('data-bs-target')?.replace('#', '');
     if (itemTarget === tabId || itemTarget === cleanId) {
       item.classList.add('active');
       item.setAttribute('aria-selected', 'true');
     } else {
       item.classList.remove('active');
-      item.setAttribute('aria-selected', 'false');
-    }
-  });
-
-  // Обновляем активность родительских кнопок dropdown-toggle
-  document.querySelectorAll('#mainTabs .dropdown').forEach(dropdown => {
+      item.setAttribute('aria-selected', 'falsei18n.t('auto__dropdown_toggle_document_queryselectorall__40b83e')#mainTabs .dropdown').forEach(dropdown => {
     const toggle = dropdown.querySelector('.dropdown-toggle');
     const hasActiveChild = dropdown.querySelector('.dropdown-item.active, .list-group-item.active');
     if (toggle) {
       if (hasActiveChild) {
         toggle.classList.add('active');
       } else {
-        toggle.classList.remove('active');
-      }
-    }
-  });
-}
-
-// ============================================================================
-// ИНИЦИАЛИЗАЦИЯ ОПТИМИЗАЦИЙ
-// ============================================================================
-
-async function initializeOptimizations() {
-  // Оптимизации автоматически инициализируются в lazy-init-patch.js
-  // Здесь просто сохраняем ссылки для последующего использования
-  
-  if (window.optimizationModule) {
-    tabLoader = window.optimizationModule.tabLoader;
-    apiFetcher = window.optimizationModule.apiFetcher;
-    console.log('[AdminInterface] Optimizations initialized');
+        toggle.classList.remove('activei18n.t('auto__async_function_initializeoptimizations_lazy_init_patch_js_if_window_optimizationmodule_tabloader_window_optimizationmodule_tabloader_apifetcher_window_optimizationmodule_apifetcher_console_log__885138')[AdminInterface] Optimizations initialized');
   } else {
-    console.warn('[AdminInterface] Optimization module not found');
-  }
-}
-
-// ============================================================================
-// ИНИЦИАЛИЗАЦИЯ API КЛИЕНТА
-// ============================================================================
-
-function setupAPIClient() {
-  if (!window.api) {
-    console.warn('[AdminInterface] API client not found, skipping setup');
-    return;
-  }
-
-  // API клиент уже подключен в main.js (исходный), здесь могут быть
-  // дополнительные настройки
-  console.log('[AdminInterface] API client ready');
-}
-
-// ============================================================================
-// ОБРАБОТКА СОБЫТИЯ LOAD
-// ============================================================================
-
-if (document.readyState === 'loading') {
+    console.warn('[AdminInterface] Optimization module not foundi18n.t('auto__api_function_setupapiclient_if_window_api_console_warn__413ad2')[AdminInterface] API client not found, skipping setupi18n.t('auto__return_api_main_js_console_log__b04560')[AdminInterface] API client readyi18n.t('auto__load_if_document_readystate__1d9054')loading') {
   document.addEventListener('DOMContentLoaded', initAdminInterface);
 } else {
   initAdminInterface();

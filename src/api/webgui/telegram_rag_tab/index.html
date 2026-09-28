@@ -5,16 +5,16 @@
     <div class="d-flex align-items-center gap-2">
       <span class="fs-4">💬</span>
       <div>
-        <h5 class="mb-0 fw-bold">Поиск по Telegram каналам и группам (RAG)</h5>
-        <p class="mb-0 small text-muted">Индексация публичных каналов, поиск по сообщениям с точными ссылками и мгновенным ответом</p>
+        <h5 class="mb-0 fw-bold"><span data-i18n="auto__telegram__8b02d5"></span> (RAG)</h5>
+        <p class="mb-0 small text-muted"><span data-i18n="auto___65ef65"></span></p>
       </div>
     </div>
     <div class="d-flex align-items-center gap-2">
       <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2" id="tgram-stats-badge">
-        Загрузка каналов...
+        <span data-i18n="auto___72c6ae"></span>...
       </span>
       <button class="btn btn-sm btn-outline-primary" id="btn-refresh-tgram-channels" onclick="loadTelegramChannels()">
-        <i class="bi bi-arrow-clockwise"></i> Обновить
+        <i class="bi bi-arrow-clockwise"></i> <span data-i18n="auto___c2f668"></span>
       </button>
     </div>
   </div>
@@ -26,35 +26,35 @@
       <div class="card shadow-sm border-secondary-subtle mb-3">
         <div class="card-header bg-body-tertiary py-2">
           <h6 class="mb-0 fw-bold small text-uppercase d-flex align-items-center gap-2">
-            <i class="bi bi-plus-circle-fill text-primary"></i> Добавить канал / группу
+            <i class="bi bi-plus-circle-fill text-primary"></i> <span data-i18n="auto___234718"></span>
           </h6>
         </div>
         <div class="card-body p-3">
           <form id="tgram-add-channel-form" onsubmit="event.preventDefault(); handleAddTelegramChannel();">
             <div class="mb-2">
-              <label class="form-label small fw-semibold mb-1">Имя или ссылка на канал</label>
+              <label class="form-label small fw-semibold mb-1"><span data-i18n="auto___f27ed6"></span></label>
               <div class="input-group input-group-sm">
                 <span class="input-group-text bg-body-secondary">@</span>
-                <input type="text" class="form-control" id="tgram-channel-input" placeholder="canozrimb или t.me/canozrimb" required>
+                <input type="text" class="form-control" id="tgram-channel-input" placeholder="canozrimb <span data-i18n="auto___30bb03"></span> t.me/canozrimb" required>
               </div>
               <div class="form-text text-muted small" style="font-size: 0.75rem;">
-                Поддерживаются публичные каналы и веб-превью Telegram
+                <span data-i18n="auto___ee8ee1"></span> Telegram
               </div>
             </div>
 
             <div class="mb-3">
-              <label class="form-label small fw-semibold mb-1">Лимит сообщений для сбора</label>
+              <label class="form-label small fw-semibold mb-1"><span data-i18n="auto___a0141c"></span></label>
               <select class="form-select form-select-sm" id="tgram-max-msgs-select">
-                <option value="500" selected>500 сообщений (быстро)</option>
-                <option value="1000">1000 сообщений</option>
-                <option value="3000">3000 сообщений</option>
-                <option value="5000">5000 сообщений (глубокий RAG)</option>
+                <option value="500" selected>500 <span data-i18n="auto___704ee9"></span>)</option>
+                <option value="1000">1000 <span data-i18n="auto___c66f45"></span></option>
+                <option value="3000">3000 <span data-i18n="auto___c66f45"></span></option>
+                <option value="5000">5000 <span data-i18n="auto___229373"></span> RAG)</option>
               </select>
             </div>
 
             <button type="submit" class="btn btn-sm btn-primary w-100 d-flex align-items-center justify-content-center gap-2 shadow-sm" id="btn-tgram-subscribe">
               <i class="bi bi-cloud-arrow-down-fill"></i>
-              <span>Подключить и индексировать</span>
+              <span><span data-i18n="auto___9f3a57"></span></span>
             </button>
           </form>
         </div>
@@ -64,14 +64,14 @@
       <div class="card shadow-sm border-secondary-subtle">
         <div class="card-header bg-body-tertiary d-flex justify-content-between align-items-center py-2">
           <span class="fw-semibold small text-uppercase">
-            Подключенные каналы (<span id="tgram-channels-count">0</span>)
+            <span data-i18n="auto___a6972a"></span> (<span id="tgram-channels-count">0</span>)
           </span>
-          <span class="badge bg-secondary-subtle text-body" id="tgram-active-count-badge">0 в пуле</span>
+          <span class="badge bg-secondary-subtle text-body" id="tgram-active-count-badge">0 <span data-i18n="auto___273b1e"></span></span>
         </div>
         <div class="card-body p-2" id="tgram-channels-list-container" style="max-height: 55vh; overflow-y: auto;">
           <div class="text-center text-muted p-4">
             <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
-            <div>Загрузка списка каналов...</div>
+            <div><span data-i18n="auto___c22afb"></span>...</div>
           </div>
         </div>
       </div>
@@ -86,12 +86,12 @@
           <form id="tgram-search-form" onsubmit="event.preventDefault(); executeTelegramSearch();" class="mb-3">
             <div class="input-group shadow-sm">
               <span class="input-group-text bg-body text-primary"><i class="bi bi-search"></i></span>
-              <input type="text" class="form-control form-control-lg fs-6" id="tgram-search-input" placeholder="Введите поисковый запрос, тему или вопрос..." required autofocus>
-              <button class="btn btn-outline-secondary" type="button" title="Очистить" onclick="document.getElementById('tgram-search-input').value='';">
+              <input type="text" class="form-control form-control-lg fs-6" id="tgram-search-input" placeholder="<span data-i18n="auto___79a7c1"></span>..." required autofocus>
+              <button class="btn btn-outline-secondary" type="button" title="<span data-i18n="auto___98b207"></span>" onclick="document.getElementById('tgram-search-input').value='';">
                 <i class="bi bi-x-lg"></i>
               </button>
               <button class="btn btn-primary px-4 fw-semibold" type="submit" id="btn-tgram-do-search">
-                <i class="bi bi-search me-1"></i> Найти
+                <i class="bi bi-search me-1"></i> <span data-i18n="auto___ed6e1d"></span>
               </button>
             </div>
           </form>
@@ -101,34 +101,34 @@
             <!-- Channel Filter -->
             <div class="col-md-5 col-12">
               <label class="form-label text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">
-                <i class="bi bi-funnel-fill text-primary"></i> Область поиска:
+                <i class="bi bi-funnel-fill text-primary"></i> <span data-i18n="auto___043f0e"></span>:
               </label>
               <select class="form-select form-select-sm" id="tgram-filter-channel">
-                <option value="all" selected>🌐 Все подключенные каналы (Общий пул)</option>
+                <option value="all" selected>🌐 <span data-i18n="auto___565b8d"></span>)</option>
               </select>
             </div>
 
             <!-- Search Mode -->
             <div class="col-md-4 col-12">
               <label class="form-label text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">
-                <i class="bi bi-diagram-2-fill text-info"></i> Режим индексов:
+                <i class="bi bi-diagram-2-fill text-info"></i> <span data-i18n="auto___39a8c3"></span>:
               </label>
               <select class="form-select form-select-sm" id="tgram-search-mode">
-                <option value="unified" selected>Общий RAG пул (Unified)</option>
-                <option value="individual">Раздельно по каналам</option>
+                <option value="unified" selected><span data-i18n="auto__rag__9168c2"></span> (Unified)</option>
+                <option value="individual"><span data-i18n="auto___d17c51"></span></option>
               </select>
             </div>
 
             <!-- Top K -->
             <div class="col-md-3 col-12">
               <label class="form-label text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">
-                <i class="bi bi-list-ol text-warning"></i> Лимит выдачи:
+                <i class="bi bi-list-ol text-warning"></i> <span data-i18n="auto___1c5b78"></span>:
               </label>
               <select class="form-select form-select-sm" id="tgram-topk-select">
-                <option value="5" selected>5 сообщений</option>
-                <option value="10">10 сообщений</option>
-                <option value="20">20 сообщений</option>
-                <option value="50">50 сообщений</option>
+                <option value="5" selected>5 <span data-i18n="auto___c66f45"></span></option>
+                <option value="10">10 <span data-i18n="auto___c66f45"></span></option>
+                <option value="20">20 <span data-i18n="auto___c66f45"></span></option>
+                <option value="50">50 <span data-i18n="auto___c66f45"></span></option>
               </select>
             </div>
           </div>
@@ -139,9 +139,9 @@
           <!-- Initial Placeholder -->
           <div class="d-flex flex-column align-items-center justify-content-center text-muted p-5 text-center" id="tgram-search-placeholder">
             <span class="fs-1 mb-2">🔍</span>
-            <h6 class="fw-bold">Поиск по базе знаний Telegram</h6>
+            <h6 class="fw-bold"><span data-i18n="auto___23300e"></span> Telegram</h6>
             <p class="small text-muted mb-0" style="max-width: 480px;">
-              Введите ключевые слова или вопрос выше, чтобы найти точные сообщения с ссылками на первоисточники в Telegram.
+              <span data-i18n="auto___2861a0"></span> Telegram.
             </p>
           </div>
         </div>

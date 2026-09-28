@@ -10,16 +10,10 @@ export async function initPixelRagTab() {
     if (container) {
       container.innerHTML = `
         <div class="alert alert-info">
-          <i class="bi bi-info-circle"></i> 
-          <strong>PixelRAG</strong> — векторный поиск по изображениям и пиксельным данным.
-        </div>
-        <div class="card border-secondary">
+          <i class="bi bi-info-circlei18n.t('auto__i_strong_pixelrag_strong_div_div_class__ea9356')card border-secondary">
           <div class="card-header bg-dark text-white">
-            <i class="bi bi-image-fill"></i> Настройки PixelRAG
-          </div>
-          <div class="card-body">
-            <p class="text-muted">Функционал PixelRAG будет доступен после настройки модели и индекса.</p>
-            <button class="btn btn-primary" disabled>Настроить PixelRAG</button>
+            <i class="bi bi-image-filli18n.t('auto__i_pixelrag_div_div_class__ad459c')card-body">
+            <p class="text-mutedi18n.t('auto__pixelrag_p_button_class__df244d')btn btn-primary" disabled>Настроить PixelRAG</button>
           </div>
         </div>
       `;

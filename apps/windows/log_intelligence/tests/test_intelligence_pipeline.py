@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 import pytest
 from apps.windows.log_intelligence.src.models import DataProfileReport, IngestionDecision, IngestionStrategy, LogEntry, LogSeverity
 from apps.windows.log_intelligence.src.data_researcher import LogDataResearcher
@@ -44,7 +44,7 @@ def test_adaptive_rag_pipeline(tmp_path: Path) -> None:
 
 def test_wevtapi_channel_enumeration() -> None:
     """Проверка нативного перечисления каналов через WevtAPI."""
-    from apps.windows.api.wevtapi import WevtAPI
+    from apps.windows.telemetry.api_bindings.wevtapi import WevtAPI
     api = WevtAPI()
     channels = api.enumerate_channels()
     assert len(channels) >= 10

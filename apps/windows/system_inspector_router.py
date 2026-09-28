@@ -4,7 +4,8 @@ from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, HTTPException, Request
 from src.api.routers.core.router_auth import require_admin_user
 from apps.common.csv_logger import AppCsvLogger
-from apps.windows.telemetry import SystemDiagnosticEngine as SystemAIDiagnostician, SystemCollector
+from apps.windows.observability.system_engine import SystemDiagnosticEngine as SystemAIDiagnostician
+from apps.windows.telemetry import SystemCollector
 router = APIRouter(prefix='/api/system', tags=['system-inspector'])
 _csv_logger = AppCsvLogger('system_inspector')
 _collector: Optional[SystemCollector] = None

@@ -4,19 +4,19 @@
     <div class="d-flex align-items-center gap-2">
       <span class="fs-4">⚙️</span>
       <div>
-        <h5 class="mb-0 fw-bold">Центральное управление системой</h5>
-        <p class="mb-0 small text-muted">Мониторинг ядра, системные сервисы, провайдеры моделей и глобальное администрирование</p>
+        <h5 class="mb-0 fw-bold"><span data-i18n="auto___631dd8"></span></h5>
+        <p class="mb-0 small text-muted"><span data-i18n="auto___95fe50"></span></p>
       </div>
     </div>
     <div class="d-flex gap-2 flex-wrap">
       <button class="btn btn-warning btn-sm fw-bold d-flex align-items-center gap-1 shadow-sm" onclick="switchToTab('helpdesk')" id="btn-switch-to-helpdesk">
-        <i class="bi bi-headset"></i> Режим Helpdesk
+        <i class="bi bi-headset"></i> <span data-i18n="auto___ff0fbd"></span> Helpdesk
       </button>
       <button class="btn btn-outline-info btn-sm" onclick="rescanStorageDrives()">
-        <i class="bi bi-hdd-network"></i> Пересканировать диски
+        <i class="bi bi-hdd-network"></i> <span data-i18n="auto___fc51a6"></span>
       </button>
       <button class="btn btn-outline-primary btn-sm" onclick="actualizeAiModels()">
-        <i class="bi bi-cpu"></i> Обновить модели ИИ
+        <i class="bi bi-cpu"></i> <span data-i18n="auto___5868cb"></span>
       </button>
     </div>
   </div>
@@ -26,7 +26,7 @@
     <div class="col-md-3 col-sm-6">
       <div class="card shadow-sm border-secondary-subtle h-100">
         <div class="card-body p-3">
-          <div class="text-muted small text-uppercase fw-semibold mb-1">Сервер / Режим</div>
+          <div class="text-muted small text-uppercase fw-semibold mb-1"><span data-i18n="auto___f99e43"></span></div>
           <div class="d-flex align-items-center justify-content-between">
             <h5 class="mb-0 fw-bold text-primary" id="sys-server-mode">FastAPI (DEV)</h5>
             <span class="badge bg-success-subtle text-success">Online</span>
@@ -39,12 +39,12 @@
     <div class="col-md-3 col-sm-6">
       <div class="card shadow-sm border-secondary-subtle h-100">
         <div class="card-body p-3">
-          <div class="text-muted small text-uppercase fw-semibold mb-1">AI Провайдеры</div>
+          <div class="text-muted small text-uppercase fw-semibold mb-1">AI <span data-i18n="auto___cde67f"></span></div>
           <div class="d-flex align-items-center justify-content-between">
             <h5 class="mb-0 fw-bold text-info" id="sys-ai-providers">Gemini / AGY / Foundry</h5>
             <i class="bi bi-robot fs-4 text-info"></i>
           </div>
-          <small class="text-muted">Актуализированный пул</small>
+          <small class="text-muted"><span data-i18n="auto___eeb9b0"></span></small>
         </div>
       </div>
     </div>
@@ -52,9 +52,9 @@
     <div class="col-md-3 col-sm-6">
       <div class="card shadow-sm border-secondary-subtle h-100">
         <div class="card-body p-3">
-          <div class="text-muted small text-uppercase fw-semibold mb-1">Подключено дисков</div>
+          <div class="text-muted small text-uppercase fw-semibold mb-1"><span data-i18n="auto___4075e4"></span></div>
           <div class="d-flex align-items-center justify-content-between">
-            <h5 class="mb-0 fw-bold text-warning" id="sys-drives-count">Загрузка...</h5>
+            <h5 class="mb-0 fw-bold text-warning" id="sys-drives-count"><span data-i18n="auto___c98fa8"></span>...</h5>
             <i class="bi bi-device-hdd fs-4 text-warning"></i>
           </div>
           <small class="text-muted" id="sys-drives-list">CONNECTED_DRIVES</small>
@@ -65,27 +65,27 @@
     <div class="col-md-3 col-sm-6">
       <div class="card shadow-sm border-secondary-subtle h-100">
         <div class="card-body p-3">
-          <div class="text-muted small text-uppercase fw-semibold mb-1">Подключаемые плагины</div>
+          <div class="text-muted small text-uppercase fw-semibold mb-1"><span data-i18n="auto___ccc085"></span></div>
           <div class="d-flex align-items-center justify-content-between">
-            <h5 class="mb-0 fw-bold text-success" id="sys-plugins-count">Загрузка...</h5>
-            <a href="javascript:void(0)" onclick="switchToTab('plugins')" class="badge bg-primary text-decoration-none">Управление ➔</a>
+            <h5 class="mb-0 fw-bold text-success" id="sys-plugins-count"><span data-i18n="auto___c98fa8"></span>...</h5>
+            <a href="javascript:void(0)" onclick="switchToTab('plugins')" class="badge bg-primary text-decoration-none"><span data-i18n="auto___81edf0"></span> ➔</a>
           </div>
-          <small class="text-muted" id="sys-plugins-active-count">Реестр модулей</small>
+          <small class="text-muted" id="sys-plugins-active-count"><span data-i18n="auto___7f21b5"></span></small>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Fast Navigation Hub to Core Subsystems -->
-  <h6 class="fw-bold mb-3 text-uppercase small text-muted"><i class="bi bi-grid-fill me-1"></i> Системные подсистемы</h6>
+  <h6 class="fw-bold mb-3 text-uppercase small text-muted"><i class="bi bi-grid-fill me-1"></i> <span data-i18n="auto___4824fe"></span></h6>
   <div class="row g-3 mb-4">
     <div class="col-lg-4 col-md-6">
       <div class="card shadow-sm border-secondary-subtle h-100 p-3 hover-shadow" style="cursor: pointer;" onclick="switchToTab('plugins')">
         <div class="d-flex align-items-center gap-3">
           <span class="fs-1">🔌</span>
           <div>
-            <h6 class="fw-bold mb-1">Подключатель плагинов (Hub)</h6>
-            <p class="small text-muted mb-0">Управление модулями (web_search, rag, langchain_media и др.), включение/отключение и их органы настройки.</p>
+            <h6 class="fw-bold mb-1"><span data-i18n="auto___c9cce4"></span> (Hub)</h6>
+            <p class="small text-muted mb-0"><span data-i18n="auto__web_search_rag_langchain_media__1df80e"></span>.</p>
           </div>
         </div>
       </div>
@@ -96,8 +96,8 @@
         <div class="d-flex align-items-center gap-3">
           <span class="fs-1">👥</span>
           <div>
-            <h6 class="fw-bold mb-1">Управление пользователями</h6>
-            <p class="small text-muted mb-0">Создание аккаунтов, назначение ролей (admin/user), пароли, активность и права доступа.</p>
+            <h6 class="fw-bold mb-1"><span data-i18n="auto___7b0d4d"></span></h6>
+            <p class="small text-muted mb-0"><span data-i18n="auto__admin_user__0656cf"></span>.</p>
           </div>
         </div>
       </div>
@@ -108,8 +108,8 @@
         <div class="d-flex align-items-center gap-3">
           <span class="fs-1">🤖</span>
           <div>
-            <h6 class="fw-bold mb-1">Модели и API-ключи</h6>
-            <p class="small text-muted mb-0">Конфигурация Google Gemini, Antigravity, Ollama и AI Foundry, пул ротации ключей.</p>
+            <h6 class="fw-bold mb-1"><span data-i18n="auto__api__6551ad"></span></h6>
+            <p class="small text-muted mb-0"><span data-i18n="auto__google_gemini_antigravity_ollama_ai_foundry__ab900f"></span>.</p>
           </div>
         </div>
       </div>
@@ -120,8 +120,8 @@
         <div class="d-flex align-items-center gap-3">
           <span class="fs-1">📝</span>
           <div>
-            <h6 class="fw-bold mb-1">Системные инструкции</h6>
-            <p class="small text-muted mb-0">Редактирование системных промптов чата, стилей диктора и версионирование инструкций.</p>
+            <h6 class="fw-bold mb-1"><span data-i18n="auto___6a585b"></span></h6>
+            <p class="small text-muted mb-0"><span data-i18n="auto___04a965"></span>.</p>
           </div>
         </div>
       </div>
@@ -132,8 +132,8 @@
         <div class="d-flex align-items-center gap-3">
           <span class="fs-1">📋</span>
           <div>
-            <h6 class="fw-bold mb-1">Системные логи</h6>
-            <p class="small text-muted mb-0">Просмотр журнала событий uvicorn, ошибок FastAPI, истории запросов и аудита.</p>
+            <h6 class="fw-bold mb-1"><span data-i18n="auto___6e28ee"></span></h6>
+            <p class="small text-muted mb-0"><span data-i18n="auto__uvicorn_fastapi__e87a1b"></span>.</p>
           </div>
         </div>
       </div>
@@ -144,8 +144,8 @@
         <div class="d-flex align-items-center gap-3">
           <span class="fs-1">🧩</span>
           <div>
-            <h6 class="fw-bold mb-1">Агенты ИИ</h6>
-            <p class="small text-muted mb-0">Конфигурация автономных ReAct агентов, тулов поиска и параметров инференса.</p>
+            <h6 class="fw-bold mb-1"><span data-i18n="auto___af1850"></span></h6>
+            <p class="small text-muted mb-0"><span data-i18n="auto__react__58e318"></span>.</p>
           </div>
         </div>
       </div>
@@ -156,8 +156,8 @@
         <div class="d-flex align-items-center gap-3">
           <span class="fs-1">🌐</span>
           <div>
-            <h6 class="fw-bold mb-1">Google Workspace & Аккаунты</h6>
-            <p class="small text-muted mb-0">Пул аккаунтов OAuth 2.0 и Service Account для Gmail, Drive, Sheets и Docs.</p>
+            <h6 class="fw-bold mb-1">Google Workspace & <span data-i18n="auto___e9af21"></span></h6>
+            <p class="small text-muted mb-0"><span data-i18n="auto__oauth_2_0_service_account_gmail_drive_sheets__e79c3d"></span> Docs.</p>
           </div>
         </div>
       </div>
@@ -168,8 +168,8 @@
         <div class="d-flex align-items-center gap-3">
           <span class="fs-1">🛟</span>
           <div>
-            <h6 class="fw-bold mb-1 text-warning">Helpdesk & Служба поддержки</h6>
-            <p class="small text-muted mb-0">Управление заявками, живой чат с пользователями, шаблоны быстрых ответов и метрики SLA.</p>
+            <h6 class="fw-bold mb-1 text-warning">Helpdesk & <span data-i18n="auto___8a670d"></span></h6>
+            <p class="small text-muted mb-0"><span data-i18n="auto___b72520"></span> SLA.</p>
           </div>
         </div>
       </div>
@@ -180,8 +180,8 @@
         <div class="d-flex align-items-center gap-3">
           <span class="fs-1">🔍</span>
           <div>
-            <h6 class="fw-bold mb-1 text-primary">Observability & Диагностика</h6>
-            <p class="small text-muted mb-0">Мониторинг ресурсов хоста в реальном времени, дерево оборудования и эвристический AI-аудит.</p>
+            <h6 class="fw-bold mb-1 text-primary">Observability & <span data-i18n="auto___9ba1e2"></span></h6>
+            <p class="small text-muted mb-0"><span data-i18n="auto__ai__40910b"></span>.</p>
           </div>
         </div>
       </div>
@@ -192,8 +192,8 @@
         <div class="d-flex align-items-center gap-3">
           <span class="fs-1">⏱️</span>
           <div>
-            <h6 class="fw-bold mb-1 text-info">Фоновый планировщик (Scheduler)</h6>
-            <p class="small text-muted mb-0">24ч переиндексация RAG коллекций, 5м мониторинг почты Gmail и автообновление.</p>
+            <h6 class="fw-bold mb-1 text-info"><span data-i18n="auto___8205bf"></span> (Scheduler)</h6>
+            <p class="small text-muted mb-0">24<span data-i18n="auto__rag_5_gmail__c577b3"></span>.</p>
           </div>
         </div>
       </div>
@@ -204,15 +204,15 @@
   <div class="card shadow-sm border-secondary-subtle mb-3" id="scheduler-management-card">
     <div class="card-header bg-body-tertiary d-flex flex-wrap justify-content-between align-items-center py-2 gap-2">
       <div class="d-flex align-items-center gap-2">
-        <span class="fw-bold"><i class="bi bi-clock-history text-info me-2"></i>⏱️ Фоновые периодические задачи (Schedulers)</span>
-        <span id="sched-main-badge" class="badge bg-success-subtle text-success">Активен</span>
+        <span class="fw-bold"><i class="bi bi-clock-history text-info me-2"></i>⏱️ <span data-i18n="auto___8733d1"></span> (Schedulers)</span>
+        <span id="sched-main-badge" class="badge bg-success-subtle text-success"><span data-i18n="auto___667904"></span></span>
       </div>
       <div class="d-flex gap-2">
         <button class="btn btn-outline-info btn-sm" onclick="refreshSchedulersConfig()">
-          <i class="bi bi-arrow-clockwise me-1"></i> Обновить статус
+          <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___6cc5dc"></span>
         </button>
         <button class="btn btn-primary btn-sm" onclick="saveSchedulersConfig()">
-          <i class="bi bi-check2-circle me-1"></i> Сохранить настройки
+          <i class="bi bi-check2-circle me-1"></i> <span data-i18n="auto___87ae19"></span>
         </button>
       </div>
     </div>
@@ -220,8 +220,8 @@
       <!-- Master toggle -->
       <div class="form-check form-switch mb-3">
         <input class="form-check-input" type="checkbox" id="sched-master-switch" checked>
-        <label class="form-check-label fw-bold" for="sched-master-switch">Включить глобальный фоновый планировщик (BackgroundScheduler)</label>
-        <div class="small text-muted">При отключении все фоновые интервальные циклы будут остановлены.</div>
+        <label class="form-check-label fw-bold" for="sched-master-switch"><span data-i18n="auto___d45441"></span> (BackgroundScheduler)</label>
+        <div class="small text-muted"><span data-i18n="auto___0b0236"></span>.</div>
       </div>
 
       <div class="row g-3">
@@ -229,23 +229,23 @@
         <div class="col-md-6">
           <div class="card bg-body-tertiary border-secondary-subtle h-100 p-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="fw-bold text-primary"><i class="bi bi-cpu me-1"></i>🧠 Переиндексация RAG (RAG Re-indexing)</span>
+              <span class="fw-bold text-primary"><i class="bi bi-cpu me-1"></i>🧠 <span data-i18n="auto___91e954"></span> RAG (RAG Re-indexing)</span>
               <div class="form-check form-switch m-0">
                 <input class="form-check-input" type="checkbox" id="sched-rag-enabled" checked>
               </div>
             </div>
-            <p class="small text-muted mb-2">Автоматический фоновый пересчет и обновление коллекций векторных/TF-IDF индексов.</p>
+            <p class="small text-muted mb-2"><span data-i18n="auto__tf_idf__2b0f82"></span>.</p>
             <div class="mb-2">
-              <label class="form-label small fw-semibold mb-1" for="sched-rag-interval">Интервал запуска (в часах):</label>
+              <label class="form-label small fw-semibold mb-1" for="sched-rag-interval"><span data-i18n="auto___3c7d46"></span>):</label>
               <div class="input-group input-group-sm">
                 <input type="number" class="form-control" id="sched-rag-interval" value="24" min="0.1" step="0.5">
-                <span class="input-group-text">час(ов)</span>
+                <span class="input-group-text"><span data-i18n="auto___74314d"></span>)</span>
               </div>
             </div>
             <div class="d-flex justify-content-between align-items-center small text-muted mt-auto pt-2 border-top border-secondary-subtle">
-              <span>Посл. запуск: <strong id="sched-rag-last-run">Никогда</strong></span>
-              <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="triggerSchedulerJob('rag')" title="Запустить переиндексацию сейчас">
-                <i class="bi bi-play-fill"></i> Запустить сейчас
+              <span><span data-i18n="auto___b19826"></span>: <strong id="sched-rag-last-run"><span data-i18n="auto___f5bf59"></span></strong></span>
+              <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="triggerSchedulerJob('rag')" title="<span data-i18n="auto___b761bf"></span>">
+                <i class="bi bi-play-fill"></i> <span data-i18n="auto___4e2f87"></span>
               </button>
             </div>
           </div>
@@ -255,23 +255,23 @@
         <div class="col-md-6">
           <div class="card bg-body-tertiary border-secondary-subtle h-100 p-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="fw-bold text-success"><i class="bi bi-envelope-check me-1"></i>📨 Проверка Gmail (Email Check)</span>
+              <span class="fw-bold text-success"><i class="bi bi-envelope-check me-1"></i>📨 <span data-i18n="auto___457969"></span> Gmail (Email Check)</span>
               <div class="form-check form-switch m-0">
                 <input class="form-check-input" type="checkbox" id="sched-email-enabled" checked>
               </div>
             </div>
-            <p class="small text-muted mb-2">Опрос ящиков Google Workspace на наличие новых непрочитанных сообщений.</p>
+            <p class="small text-muted mb-2"><span data-i18n="auto__google_workspace__51b764"></span>.</p>
             <div class="mb-2">
-              <label class="form-label small fw-semibold mb-1" for="sched-email-interval">Интервал опроса (в минутах):</label>
+              <label class="form-label small fw-semibold mb-1" for="sched-email-interval"><span data-i18n="auto___c5a390"></span>):</label>
               <div class="input-group input-group-sm">
                 <input type="number" class="form-control" id="sched-email-interval" value="5" min="1" step="1">
-                <span class="input-group-text">мин.</span>
+                <span class="input-group-text"><span data-i18n="auto___d6035d"></span>.</span>
               </div>
             </div>
             <div class="d-flex justify-content-between align-items-center small text-muted mt-auto pt-2 border-top border-secondary-subtle">
-              <span>Посл. запуск: <strong id="sched-email-last-run">Никогда</strong></span>
-              <button class="btn btn-outline-success btn-sm py-0 px-2" onclick="triggerSchedulerJob('email')" title="Проверить почту сейчас">
-                <i class="bi bi-play-fill"></i> Запустить сейчас
+              <span><span data-i18n="auto___b19826"></span>: <strong id="sched-email-last-run"><span data-i18n="auto___f5bf59"></span></strong></span>
+              <button class="btn btn-outline-success btn-sm py-0 px-2" onclick="triggerSchedulerJob('email')" title="<span data-i18n="auto___f40270"></span>">
+                <i class="bi bi-play-fill"></i> <span data-i18n="auto___4e2f87"></span>
               </button>
             </div>
           </div>
@@ -283,14 +283,14 @@
   <!-- Storage & Disks Management Section -->
   <div class="card shadow-sm border-secondary-subtle mb-3">
     <div class="card-header bg-body-tertiary d-flex flex-wrap justify-content-between align-items-center py-2 gap-2">
-      <span class="fw-bold"><i class="bi bi-hdd-network text-warning me-2"></i>💾 Управление дисками и накопителями</span>
+      <span class="fw-bold"><i class="bi bi-hdd-network text-warning me-2"></i>💾 <span data-i18n="auto___fd1623"></span></span>
       <button class="btn btn-outline-info btn-sm" onclick="rescanStorageDrives()">
-        <i class="bi bi-arrow-clockwise me-1"></i> Пересканировать диски
+        <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___fc51a6"></span>
       </button>
     </div>
     <div class="card-body p-3">
       <div id="sys-drives-detailed-container" class="row g-3">
-        <div class="col-12 text-muted small">Загрузка информации о накопителях...</div>
+        <div class="col-12 text-muted small"><span data-i18n="auto___fa2c37"></span>...</div>
       </div>
     </div>
   </div>
@@ -299,12 +299,12 @@
   <div class="card shadow-sm border-secondary-subtle mb-4">
     <div class="card-header bg-body-tertiary d-flex flex-wrap justify-content-between align-items-center py-2 gap-2">
       <div class="d-flex align-items-center gap-2">
-        <span class="fw-bold"><i class="bi bi-graph-up-arrow text-info me-2"></i>📊 Активность пользователей и туннель Ngrok</span>
-        <span id="ngrok-status-badge" class="badge bg-secondary-subtle text-secondary">Туннель: проверка...</span>
+        <span class="fw-bold"><i class="bi bi-graph-up-arrow text-info me-2"></i>📊 <span data-i18n="auto___d7be54"></span> Ngrok</span>
+        <span id="ngrok-status-badge" class="badge bg-secondary-subtle text-secondary"><span data-i18n="auto___7e6b5f"></span>...</span>
       </div>
       <div class="d-flex gap-2">
         <button class="btn btn-outline-primary btn-sm" onclick="refreshTelemetryStats()">
-          <i class="bi bi-arrow-clockwise me-1"></i> Обновить статистику
+          <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___788a7e"></span>
         </button>
       </div>
     </div>
@@ -314,57 +314,57 @@
         <div class="d-flex align-items-center gap-2">
           <i class="bi bi-broadcast fs-5 text-primary"></i>
           <div>
-            <span class="fw-semibold">Ngrok шлюз приема статистики:</span>
-            <span id="ngrok-public-url-text" class="text-primary font-monospace ms-1">Ожидание запуска...</span>
+            <span class="fw-semibold">Ngrok <span data-i18n="auto___77a6a2"></span>:</span>
+            <span id="ngrok-public-url-text" class="text-primary font-monospace ms-1"><span data-i18n="auto___5c6b73"></span>...</span>
           </div>
         </div>
-        <small class="text-muted" id="ngrok-hint-text">Скрипт: <code>.\launchers\Run-Ngrok.ps1</code></small>
+        <small class="text-muted" id="ngrok-hint-text"><span data-i18n="auto___23fb87"></span>: <code>.\launchers\Run-Ngrok.ps1</code></small>
       </div>
 
       <!-- Telemetry Stats Cards -->
       <div class="row g-3 mb-3">
         <div class="col-md-4">
           <div class="card bg-body-tertiary border-0 p-3 h-100">
-            <div class="small text-muted text-uppercase fw-semibold mb-1">Событий за 30 дней</div>
+            <div class="small text-muted text-uppercase fw-semibold mb-1"><span data-i18n="auto__30__c19815"></span></div>
             <h4 class="mb-0 fw-bold text-primary" id="telemetry-total-events">0</h4>
-            <small class="text-muted" id="telemetry-active-users">0 пользователей</small>
+            <small class="text-muted" id="telemetry-active-users">0 <span data-i18n="auto___78e2b7"></span></small>
           </div>
         </div>
         <div class="col-md-4">
           <div class="card bg-body-tertiary border-0 p-3 h-100">
-            <div class="small text-muted text-uppercase fw-semibold mb-1">Популярные вкладки</div>
+            <div class="small text-muted text-uppercase fw-semibold mb-1"><span data-i18n="auto___469133"></span></div>
             <div id="telemetry-tabs-breakdown" class="small text-muted">
-              Загрузка...
+              <span data-i18n="auto___c98fa8"></span>...
             </div>
           </div>
         </div>
         <div class="col-md-4">
           <div class="card bg-body-tertiary border-0 p-3 h-100">
-            <div class="small text-muted text-uppercase fw-semibold mb-1">Топ кликов и действий</div>
+            <div class="small text-muted text-uppercase fw-semibold mb-1"><span data-i18n="auto___f99a87"></span></div>
             <div id="telemetry-clicks-breakdown" class="small text-muted">
-              Загрузка...
+              <span data-i18n="auto___c98fa8"></span>...
             </div>
           </div>
         </div>
       </div>
 
       <!-- Recent Telemetry Log Table -->
-      <h6 class="fw-bold small text-muted text-uppercase mb-2"><i class="bi bi-clock-history me-1"></i> Последние действия зарегистрированных пользователей</h6>
+      <h6 class="fw-bold small text-muted text-uppercase mb-2"><i class="bi bi-clock-history me-1"></i> <span data-i18n="auto___e85c83"></span></h6>
       <div class="table-responsive">
         <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.85rem;">
           <thead class="table-light">
             <tr>
-              <th scope="col">Время</th>
-              <th scope="col">Пользователь</th>
-              <th scope="col">Тип</th>
-              <th scope="col">Вкладка</th>
-              <th scope="col">Действие / Элемент</th>
-              <th scope="col">Длительность</th>
+              <th scope="col"><span data-i18n="auto___c80d7e"></span></th>
+              <th scope="col"><span data-i18n="auto___51aff1"></span></th>
+              <th scope="col"><span data-i18n="auto___d25691"></span></th>
+              <th scope="col"><span data-i18n="auto___bed2b3"></span></th>
+              <th scope="col"><span data-i18n="auto___fb3a6a"></span></th>
+              <th scope="col"><span data-i18n="auto___d4168a"></span></th>
             </tr>
           </thead>
           <tbody id="telemetry-events-tbody">
             <tr>
-              <td colspan="6" class="text-center text-muted py-3">Загрузка журнала активности...</td>
+              <td colspan="6" class="text-center text-muted py-3"><span data-i18n="auto___ae1f01"></span>...</td>
             </tr>
           </tbody>
         </table>

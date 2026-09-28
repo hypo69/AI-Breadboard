@@ -27,7 +27,7 @@ function isRunningInUserInterface() {
 
 // Initialize Plugins Tab
 window.initPluginsTab = async function() {
-  console.log('Инициализация вкладки плагинов...');
+  console.log(i18n.t('auto___eb75b0'));
   await loadPluginsList();
 };
 
@@ -64,20 +64,7 @@ async function loadPluginsList() {
     const countEl = document.getElementById('plugins-count');
     if (countEl) countEl.textContent = loadedPlugins.length;
     const activeCount = loadedPlugins.filter(p => p.enabled).length;
-    const badgeEl = document.getElementById('active-plugins-badge');
-    if (badgeEl) badgeEl.textContent = `${activeCount} активных`;
-
-    renderPluginsList(loadedPlugins);
-    syncPluginTabsVisibility(loadedPlugins);
-
-    if (loadedPlugins.length > 0) {
-      const toSelect = loadedPlugins.find(p => p.name === selectedPluginName) || loadedPlugins[0];
-      selectPlugin(toSelect.name);
-    } else {
-      showPlaceholder();
-    }
-  } catch (ex) {
-    console.error('Ошибка загрузки плагинов:', ex);
+    const badgeEl = document.getElementById('active-plugins-badgei18n.t('auto__if_badgeel_badgeel_textcontent_activecount_renderpluginslist_loadedplugins_syncplugintabsvisibility_loadedplugins_if_loadedplugins_length_0_const_toselect_loadedplugins_find_p_p_name_selectedpluginname_loadedplugins_0_selectplugin_toselect_name_else_showplaceholder_catch_ex_console_error__6e46e6')Ошибка загрузки плагинов:', ex);
     container.innerHTML = `<div class="alert alert-danger m-2 small">Ошибка загрузки плагинов: ${ex.message}</div>`;
   }
 }
@@ -89,7 +76,7 @@ function renderPluginsList(plugins) {
 
   if (plugins.length === 0) {
     const isUserUI = isRunningInUserInterface();
-    const emptyMsg = isUserUI ? 'Пользовательские плагины не найдены' : 'Плагины не найдены';
+    const emptyMsg = isUserUI ? i18n.t('auto___605fd0') : i18n.t('auto___a0a8da');
     container.innerHTML = `<div class="text-center text-muted p-3 small">${emptyMsg}</div>`;
     return;
   }
@@ -122,30 +109,7 @@ function renderPluginsList(plugins) {
       </a>
     `;
   });
-  html += '</div>';
-  container.innerHTML = html;
-}
-
-// Фильтрация списка плагинов
-function filterPluginsList() {
-  const query = (document.getElementById('plugin-search-input')?.value || '').toLowerCase().trim();
-  if (!query) {
-    renderPluginsList(loadedPlugins);
-    return;
-  }
-  const filtered = loadedPlugins.filter(p => 
-    p.name.toLowerCase().includes(query) || 
-    (p.title && p.title.toLowerCase().includes(query)) ||
-    (p.description && p.description.toLowerCase().includes(query))
-  );
-  renderPluginsList(filtered);
-}
-
-// Выбор плагина для отображения органов управления
-function selectPlugin(pluginName) {
-  if (!pluginName) return;
-  selectedPluginName = pluginName;
-  const normalized = pluginName.toLowerCase().replace(/-/g, '_');
+  html += '</div>i18n.t('auto__container_innerhtml_html_function_filterpluginslist_const_query_document_getelementbyid__ff0e09')plugin-search-input')?.value || 'i18n.t('auto__tolowercase_trim_if_query_renderpluginslist_loadedplugins_return_const_filtered_loadedplugins_filter_p_p_name_tolowercase_includes_query_p_title_p_title_tolowercase_includes_query_p_description_p_description_tolowercase_includes_query_renderpluginslist_filtered_function_selectplugin_pluginname_if_pluginname_return_selectedpluginname_pluginname_const_normalized_pluginname_tolowercase_replace_g__04c335')_');
   const plugin = loadedPlugins.find(p => {
     const pName = (p.name || '').toLowerCase().replace(/-/g, '_');
     const pId = (p.id || '').toLowerCase().replace(/-/g, '_');
@@ -182,15 +146,15 @@ function selectPlugin(pluginName) {
   document.getElementById('plugin-version').textContent = `v${plugin.version || '1.0.0'}`;
   document.getElementById('plugin-category').textContent = plugin.category || 'tools';
   document.getElementById('plugin-id').textContent = `id: ${plugin.name}`;
-  document.getElementById('plugin-description').textContent = plugin.description || 'Нет описания';
+  document.getElementById('plugin-description').textContent = plugin.description || i18n.t('auto___f09160');
   
   const scopeBadgeEl = document.getElementById('plugin-scope-badge');
   if (scopeBadgeEl) {
     if (plugin.is_system) {
-      scopeBadgeEl.textContent = 'Системный';
+      scopeBadgeEl.textContent = i18n.t('auto___eca171');
       scopeBadgeEl.className = 'badge bg-secondary-subtle text-body-secondary border';
     } else {
-      scopeBadgeEl.textContent = 'Пользовательский';
+      scopeBadgeEl.textContent = i18n.t('auto___dfbb74');
       scopeBadgeEl.className = 'badge bg-info-subtle text-info-emphasis border';
     }
   }
@@ -203,26 +167,14 @@ function selectPlugin(pluginName) {
     toggleSwitch.checked = Boolean(plugin.enabled);
     toggleSwitch.disabled = isLocked;
     toggleSwitch.title = isLocked 
-      ? 'Системный плагин управляется администратором' 
-      : 'Включить / отключить плагин';
+      ? i18n.t('auto___0f3b3a') 
+      : i18n.t('auto___0535e1');
   }
 
   const saveBtn = document.getElementById('btn-save-plugin-config');
   if (saveBtn) {
     saveBtn.disabled = isLocked;
-    saveBtn.title = isLocked ? 'Настройки системного плагина изменяются только администратором' : '';
-  }
-
-  // Render Actions
-  renderPluginActions(plugin);
-
-  // Render Config Fields
-  renderPluginFields(plugin);
-}
-
-// Отрисовка кнопок действий (Actions)
-function renderPluginActions(plugin) {
-  const container = document.getElementById('plugin-actions-container');
+    saveBtn.title = isLocked ? i18n.t('auto___035aaf') : 'i18n.t('auto__render_actions_renderpluginactions_plugin_render_config_fields_renderpluginfields_plugin_actions_function_renderpluginactions_plugin_const_container_document_getelementbyid__251d60')plugin-actions-container');
   const section = document.getElementById('plugin-actions-section');
   if (!container || !section) return;
 
@@ -300,8 +252,7 @@ function renderPluginFields(plugin) {
       const listVals = Array.isArray(val) ? val.join(', ') : (val || '');
       html += `
         <div class="col-12">
-          <label class="form-label small fw-semibold mb-1">${f.label} (через запятую)</label>
-          <input type="text" class="form-control form-control-sm font-monospace" name="${f.id}" value="${listVals}" data-field-type="list_string">
+          <label class="form-label small fw-semibold mb-1i18n.t('auto__f_label_label_input_type__17b3ea')text" class="form-control form-control-sm font-monospace" name="${f.id}" value="${listVals}" data-field-type="list_string">
           ${desc}
         </div>
       `;
@@ -340,7 +291,7 @@ async function toggleCurrentPlugin(enabled) {
   if (!selectedPluginName) return;
 
   try {
-    logToPluginConsole(`Переключение плагина '${selectedPluginName}' -> ${enabled ? 'ВКЛ' : 'ВЫКЛ'}...`);
+    logToPluginConsole(`Переключение плагина '${selectedPluginName}' -> ${enabled ? i18n.t('auto___593689') : i18n.t('auto___919af8')}...`);
     const res = await window.api.fetch(`/api/admin/plugins/${selectedPluginName}/toggle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -354,23 +305,11 @@ async function toggleCurrentPlugin(enabled) {
 
     renderPluginsList(loadedPlugins);
     syncPluginTabsVisibility(loadedPlugins);
-    showPluginNotification(res.message || 'Статус плагина обновлен', 'success');
-    logToPluginConsole(`✓ ${res.message || 'Статус успешно обновлен'}`);
+    showPluginNotification(res.message || i18n.t('auto___73044b'), 'success');
+    logToPluginConsole(`✓ ${res.message || i18n.t('auto___60064f')}`);
   } catch (ex) {
-    console.error('Ошибка переключения плагина:', ex);
-    showPluginNotification(`Ошибка: ${ex.message}`, 'danger');
-    logToPluginConsole(`✗ Ошибка: ${ex.message}`);
-    // Возвращаем тумблер в исходное состояние
-    const toggleSwitch = document.getElementById('plugin-toggle-switch');
-    if (toggleSwitch) toggleSwitch.checked = !enabled;
-  }
-}
-
-// Сохранение настроек текущего плагина
-async function saveCurrentPluginConfig() {
-  if (!selectedPluginName) return;
-
-  const form = document.getElementById('plugin-config-form');
+    console.error(i18n.t('auto___3deefa'), ex);
+    showPluginNotification(`Ошибка: ${ex.message}`, 'dangeri18n.t('auto__logtopluginconsole_ex_message_const_toggleswitch_document_getelementbyid__39f96a')plugin-toggle-switchi18n.t('auto__if_toggleswitch_toggleswitch_checked_enabled_async_function_savecurrentpluginconfig_if_selectedpluginname_return_const_form_document_getelementbyid__8db223')plugin-config-form');
   if (!form) return;
 
   const newConfig = {};
@@ -386,14 +325,7 @@ async function saveCurrentPluginConfig() {
     } else if (type === 'number') {
       newConfig[name] = Number(el.value);
     } else if (type === 'list_string') {
-      newConfig[name] = el.value.split(',').map(s => s.trim()).filter(Boolean);
-    } else {
-      newConfig[name] = el.value;
-    }
-  });
-
-  try {
-    logToPluginConsole(`Сохранение параметров плагина '${selectedPluginName}'...`);
+      newConfig[name] = el.value.split(',i18n.t('auto__map_s_s_trim_filter_boolean_else_newconfig_name_el_value_try_logtopluginconsole__11265f')${selectedPluginName}'...`);
     const res = await window.api.fetch(`/api/admin/plugins/${selectedPluginName}/config`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -405,23 +337,7 @@ async function saveCurrentPluginConfig() {
       plugin.config = res.config || newConfig;
     }
 
-    showPluginNotification('Параметры успешно сохранены', 'success');
-    logToPluginConsole(`✓ Конфигурация сохранена: ${JSON.stringify(newConfig, null, 2)}`);
-  } catch (ex) {
-    console.error('Ошибка сохранения конфигурации:', ex);
-    showPluginNotification(`Ошибка: ${ex.message}`, 'danger');
-    logToPluginConsole(`✗ Ошибка сохранения: ${ex.message}`);
-  }
-}
-
-// Выполнение специфического действия (Action) плагина
-async function executePluginAction(pluginName, actionId, actionLabel) {
-  try {
-    logToPluginConsole(`[ACTION] Запуск '${actionLabel}' для плагина '${pluginName}'...`);
-    showPluginNotification(`Запуск '${actionLabel}'...`, 'info');
-
-    // Собираем текущие поля формы как параметры действия
-    const form = document.getElementById('plugin-config-form');
+    showPluginNotification(i18n.t('auto___b6f9d2'), 'successi18n.t('auto__logtopluginconsole_json_stringify_newconfig_null_2_catch_ex_console_error__7e715f')Ошибка сохранения конфигурации:i18n.t('auto__ex_showpluginnotification_ex_message__26cf67')dangeri18n.t('auto__logtopluginconsole_ex_message_action_async_function_executepluginaction_pluginname_actionid_actionlabel_try_logtopluginconsole_action__9b1c40')${actionLabel}i18n.t('auto___cdde58')${pluginName}i18n.t('auto__showpluginnotification__10dca9')${actionLabel}'...`, 'infoi18n.t('auto__const_form_document_getelementbyid__0a0370')plugin-config-form');
     const params = {};
     if (form) {
       const elements = form.querySelectorAll('[data-field-type]');
@@ -431,82 +347,38 @@ async function executePluginAction(pluginName, actionId, actionLabel) {
         const type = el.getAttribute('data-field-type');
         if (type === 'boolean') params[name] = el.checked;
         else if (type === 'number') params[name] = Number(el.value);
-        else if (type === 'list_string') params[name] = el.value.split(',').map(s => s.trim()).filter(Boolean);
-        else params[name] = el.value;
-      });
-    }
-
-    // Проверяем, есть ли обязательные параметры действия, которых нет в форме
-    const plugin = (typeof loadedPlugins !== 'undefined') ? loadedPlugins.find(p => p.name === pluginName) : null;
+        else if (type === 'list_string') params[name] = el.value.split(',i18n.t('auto__map_s_s_trim_filter_boolean_else_params_name_el_value_const_plugin_typeof_loadedplugins__c415f0')undefined') ? loadedPlugins.find(p => p.name === pluginName) : null;
     const actDef = plugin?.actions?.find(a => a.id === actionId);
     if (actDef && Array.isArray(actDef.parameters)) {
       for (const param of actDef.parameters) {
-        if (param.required && (params[param.name] === undefined || params[param.name] === '')) {
-          const userVal = prompt(`${param.description || param.name}:`);
-          if (userVal === null) {
-            logToPluginConsole(`[ACTION] Отменено пользователем.`);
-            return;
-          }
-          params[param.name] = userVal;
-        }
-      }
-    }
-
-    const res = await window.api.fetch(`/api/admin/plugins/${pluginName}/action/${actionId}`, {
-      method: 'POST',
+        if (param.required && (params[param.name] === undefined || params[param.name] === 'i18n.t('auto__const_userval_prompt_param_description_param_name_if_userval_null_logtopluginconsole_action_return_params_param_name_userval_const_res_await_window_api_fetch_api_admin_plugins_pluginname_action_actionid_method__296025')POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ params })
     });
 
     if (res.success || res.status === 'success') {
-      showPluginNotification(res.message || 'Действие успешно выполнено', 'success');
-      logToPluginConsole(`✓ ${res.message || 'Успех'}\n${JSON.stringify(res.result || res.results || res, null, 2)}`);
+      showPluginNotification(res.message || i18n.t('auto___5e263d'), 'success');
+      logToPluginConsole(`✓ ${res.message || i18n.t('auto___053399')}\n${JSON.stringify(res.result || res.results || res, null, 2)}`);
     } else {
-      showPluginNotification(res.message || 'Ошибка выполнения действия', 'warning');
-      logToPluginConsole(`⚠ ${res.message || 'Завершено с предупреждением'}`);
+      showPluginNotification(res.message || i18n.t('auto___bb27b8'), 'warning');
+      logToPluginConsole(`⚠ ${res.message || i18n.t('auto___ced8df')}`);
     }
   } catch (ex) {
     console.error(`Ошибка выполнения действия ${actionId}:`, ex);
-    showPluginNotification(`Ошибка: ${ex.message}`, 'danger');
-    logToPluginConsole(`✗ Ошибка выполнения: ${ex.message}`);
-  }
-}
-
-// Логирование в консоль плагина
-function logToPluginConsole(text) {
-  const consoleEl = document.getElementById('plugin-console-output');
-  if (!consoleEl) return;
-  const time = new Date().toLocaleTimeString();
-  consoleEl.textContent = `[${time}] ${text}\n` + consoleEl.textContent;
-}
-
-// Очистка консоли
-function clearPluginConsole() {
-  const consoleEl = document.getElementById('plugin-console-output');
-  if (consoleEl) consoleEl.textContent = 'Консоль очищена.\n';
+    showPluginNotification(`Ошибка: ${ex.message}`, 'dangeri18n.t('auto__logtopluginconsole_ex_message_function_logtopluginconsole_text_const_consoleel_document_getelementbyid__b10cb5')plugin-console-outputi18n.t('auto__if_consoleel_return_const_time_new_date_tolocaletimestring_consoleel_textcontent_time_text_n_consoleel_textcontent_function_clearpluginconsole_const_consoleel_document_getelementbyid__6140c0')plugin-console-output');
+  if (consoleEl) consoleEl.textContent = i18n.t('auto__n_01d8e9');
 }
 
 function showPlaceholder() {
   const placeholder = document.getElementById('plugin-placeholder');
   const contentPane = document.getElementById('plugin-content-pane');
   if (placeholder) placeholder.classList.remove('d-none');
-  if (contentPane) contentPane.classList.add('d-none');
-}
-
-// Переход к конкретному плагину из выпадающего меню
-function openPluginFromDropdown(pluginName) {
-  if (!pluginName) return;
-
-  // 1. Закрываем открытые выпадающие списки
-  document.querySelectorAll('#mainTabs .dropdown-menu.show').forEach((m) => {
+  if (contentPane) contentPane.classList.add('d-nonei18n.t('auto__function_openpluginfromdropdown_pluginname_if_pluginname_return_1_document_queryselectorall__eaa73b')#mainTabs .dropdown-menu.show').forEach((m) => {
     m.classList.remove('show');
     m.closest('.dropdown')?.querySelector('.dropdown-toggle')?.classList.remove('show');
   });
 
-  const normalized = pluginName.toLowerCase().replace(/-/g, '_');
-
-  // 2. Если у плагина есть своя выделенная вкладка в DOM, открываем ее
-  if (normalized === 'telegram_channel_rag' || normalized === 'telegram_rag') {
+  const normalized = pluginName.toLowerCase().replace(/-/g, '_i18n.t('auto__2_dom_if_normalized__25d29a')telegram_channel_rag' || normalized === 'telegram_rag') {
     const pane = document.getElementById('tab-telegram-rag') || document.getElementById('tab-telegram_rag');
     if (pane && typeof window.switchTab === 'function') {
       window.switchTab('tab-telegram-rag');
@@ -516,37 +388,12 @@ function openPluginFromDropdown(pluginName) {
   if (normalized === 'news_feed' || normalized === 'news' || normalized === 'smart_news' || normalized === 'smart_feed_news') {
     const pane = document.getElementById('tab-news');
     if (pane && typeof window.switchTab === 'function') {
-      window.switchTab('tab-news');
-      return;
-    }
-  }
-
-  // 3. Иначе переключаемся на вкладку плагинов и выбираем плагин в каталоге
-  if (typeof window.switchTab === 'function') {
+      window.switchTab('tab-newsi18n.t('auto__return_3_if_typeof_window_switchtab__fcdce2')function') {
     window.switchTab('tab-plugins');
   }
 
   const select = () => {
-    if (typeof window.selectPlugin === 'function') {
-      window.selectPlugin(pluginName);
-    }
-  };
-
-  select();
-  setTimeout(select, 150);
-  setTimeout(select, 400);
-}
-
-// Синхронизация видимости вкладок в навбаре с состоянием активности плагинов
-function syncPluginTabsVisibility(plugins) {
-  if (!Array.isArray(plugins)) return;
-  const pluginMap = {};
-  plugins.forEach(p => {
-    pluginMap[p.name] = Boolean(p.enabled);
-  });
-
-  // 1. Обновляем выпадающие списки включенных плагинов в шапке
-  const enabledContainers = document.querySelectorAll('#nav-enabled-plugins-list, .nav-enabled-plugins-list');
+    if (typeof window.selectPlugin === 'functioni18n.t('auto__window_selectplugin_pluginname_select_settimeout_select_150_settimeout_select_400_function_syncplugintabsvisibility_plugins_if_array_isarray_plugins_return_const_pluginmap_plugins_foreach_p_pluginmap_p_name_boolean_p_enabled_1_const_enabledcontainers_document_queryselectorall__a7a68c')#nav-enabled-plugins-list, .nav-enabled-plugins-list');
   const enabledPlugins = plugins.filter(p => p.enabled);
 
   enabledContainers.forEach(container => {
@@ -586,9 +433,7 @@ function syncPluginTabsVisibility(plugins) {
     if (isEnabled) {
       item.classList.remove('d-none');
     } else {
-      item.classList.add('d-none');
-      // Если отключенная вкладка была активна, переключаемся на вкладку чата
-      const button = item.querySelector('.nav-link, .dropdown-item');
+      item.classList.add('d-nonei18n.t('auto__const_button_item_queryselector__aa6df0').nav-link, .dropdown-item');
       if (button && button.classList.contains('active')) {
         if (typeof window.switchTab === 'function') {
           window.switchTab('tab-chat');

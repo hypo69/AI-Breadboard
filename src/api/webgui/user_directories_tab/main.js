@@ -9,35 +9,7 @@ let state = {
   selectedUserName: '',
   currentSubfolder: '',
   searchQuery: '',
-  extFilter: '',
-  files: [],
-  previewFile: null,
-  orphanedDirs: [],
-};
-
-/**
- * Инициализация вкладки пользовательских директорий
- */
-export async function initUserDirectoriesTab() {
-  const root = document.getElementById('user-directories-tab-root');
-  if (!root) return;
-
-  setupEventListeners();
-  await refreshData();
-}
-
-/**
- * Настройка обработчиков событий элементов управления
- */
-function setupEventListeners() {
-  // Кнопка обновления
-  const refreshBtn = document.getElementById('btn-refresh-user-dirs');
-  if (refreshBtn) {
-    refreshBtn.onclick = () => refreshData();
-  }
-
-  // Поиск с дебаунсом
-  const searchInput = document.getElementById('user-dirs-search-input');
+  extFilter: 'i18n.t('auto__files_previewfile_null_orphaneddirs_export_async_function_inituserdirectoriestab_const_root_document_getelementbyid__e8943c')user-directories-tab-rooti18n.t('auto__if_root_return_setupeventlisteners_await_refreshdata_function_setupeventlisteners_const_refreshbtn_document_getelementbyid__c0ba79')btn-refresh-user-dirsi18n.t('auto__if_refreshbtn_refreshbtn_onclick_refreshdata_const_searchinput_document_getelementbyid__326985')user-dirs-search-input');
   const searchClear = document.getElementById('user-dirs-search-clear');
   if (searchInput) {
     let timeout = null;
@@ -57,39 +29,14 @@ function setupEventListeners() {
     searchClear.onclick = () => {
       searchInput.value = '';
       state.searchQuery = '';
-      searchClear.classList.add('d-none');
-      applyFilters();
-    };
-  }
-
-  // Фильтр по расширениям
-  const extSelect = document.getElementById('user-dirs-ext-filter');
-  if (extSelect) {
-    extSelect.onchange = () => {
-      state.extFilter = extSelect.value;
-      if (state.selectedUserId) {
-        loadUserFiles(state.selectedUserId);
-      }
-    };
-  }
-
-  // Фильтры подпапок
-  const subfolderGroup = document.getElementById('subfolder-filter-group');
+      searchClear.classList.add('d-nonei18n.t('auto__applyfilters_const_extselect_document_getelementbyid__6b1727')user-dirs-ext-filteri18n.t('auto__if_extselect_extselect_onchange_state_extfilter_extselect_value_if_state_selecteduserid_loaduserfiles_state_selecteduserid_const_subfoldergroup_document_getelementbyid__45a429')subfolder-filter-group');
   if (subfolderGroup) {
     subfolderGroup.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-subfolder]');
       if (!btn) return;
       subfolderGroup.querySelectorAll('button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      state.currentSubfolder = btn.dataset.subfolder || '';
-      if (state.selectedUserId) {
-        loadUserFiles(state.selectedUserId);
-      }
-    });
-  }
-
-  // Кнопки модального окна осиротевших каталогов
-  const openOrphanedBtn = document.getElementById('btn-open-orphaned-dirs-modal');
+      state.currentSubfolder = btn.dataset.subfolder || 'i18n.t('auto__if_state_selecteduserid_loaduserfiles_state_selecteduserid_const_openorphanedbtn_document_getelementbyid__aed453')btn-open-orphaned-dirs-modal');
   if (openOrphanedBtn) {
     openOrphanedBtn.onclick = () => openOrphanedModal();
   }
@@ -99,39 +46,7 @@ function setupEventListeners() {
     refreshOrphanedBtn.onclick = () => loadOrphanedDirs();
   }
 
-  const cleanAllOrphanedBtn = document.getElementById('btn-modal-clean-all-orphaned');
-  if (cleanAllOrphanedBtn) {
-    cleanAllOrphanedBtn.onclick = () => cleanOrphanedDirs();
-  }
-
-  // Кнопка удаления файла из предпросмотра
-  const previewDeleteBtn = document.getElementById('btn-preview-delete-file');
-  if (previewDeleteBtn) {
-    previewDeleteBtn.onclick = () => {
-      if (state.previewFile && state.selectedUserId) {
-        deleteFile(state.selectedUserId, state.previewFile.relative_path);
-      }
-    };
-  }
-}
-
-/**
- * Полное обновление данных: сводка и список пользователей
- */
-async function refreshData() {
-  await Promise.all([
-    loadSummary(),
-    loadUsersList(),
-    loadOrphanedBadge(),
-  ]);
-}
-
-/**
- * Загрузка сводной статистики хранилища
- */
-async function loadSummary() {
-  try {
-    const res = await fetch('/api/admin/user-directories/summary');
+  const cleanAllOrphanedBtn = document.getElementById('btn-modal-clean-all-orphanedi18n.t('auto__if_cleanallorphanedbtn_cleanallorphanedbtn_onclick_cleanorphaneddirs_const_previewdeletebtn_document_getelementbyid__7f2304')btn-preview-delete-filei18n.t('auto__if_previewdeletebtn_previewdeletebtn_onclick_if_state_previewfile_state_selecteduserid_deletefile_state_selecteduserid_state_previewfile_relative_path_async_function_refreshdata_await_promise_all_loadsummary_loaduserslist_loadorphanedbadge_async_function_loadsummary_try_const_res_await_fetch__42b2e6')/api/admin/user-directories/summary');
     if (!res.ok) return;
     const data = await res.json();
     if (data.status === 'ok' && data.summary) {
@@ -147,7 +62,7 @@ async function loadSummary() {
       if (elOrphaned) elOrphaned.textContent = s.orphaned_formatted || '0 B';
     }
   } catch (err) {
-    console.warn('Ошибка загрузки сводки хранилища:', err);
+    console.warn(i18n.t('auto___bc2c6d'), err);
   }
 }
 
@@ -164,7 +79,7 @@ async function loadOrphanedBadge() {
       if (badge) badge.textContent = data.total || 0;
     }
   } catch (err) {
-    console.warn('Ошибка проверки осиротевших каталогов:', err);
+    console.warn(i18n.t('auto___8e3836'), err);
   }
 }
 
@@ -177,25 +92,8 @@ async function loadUsersList() {
   const statusLabel = document.getElementById('user-dirs-status-label');
 
   try {
-    if (statusLabel) statusLabel.textContent = 'Обновление списка пользователей...';
-    const res = await fetch('/api/admin/user-directories/users');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    state.users = data.users || [];
-    if (countBadge) countBadge.textContent = state.users.length;
-    if (statusLabel) statusLabel.textContent = `Загружено пользователей: ${state.users.length}`;
-
-    renderUsersList();
-
-    // Если уже был выбран пользователь — перезагрузим его файлы, иначе выберем первого
-    if (state.selectedUserId && state.users.some(u => u.id === state.selectedUserId)) {
-      selectUser(state.selectedUserId);
-    } else if (state.users.length > 0) {
-      selectUser(state.users[0].id);
-    }
-  } catch (err) {
-    console.error('Ошибка загрузки пользователей:', err);
+    if (statusLabel) statusLabel.textContent = i18n.t('auto___b64271');
+    const res = await fetch('/api/admin/user-directories/usersi18n.t('auto__if_res_ok_throw_new_error_http_res_status_const_data_await_res_json_state_users_data_users_if_countbadge_countbadge_textcontent_state_users_length_if_statuslabel_statuslabel_textcontent_state_users_length_renderuserslist_if_state_selecteduserid_state_users_some_u_u_id_state_selecteduserid_selectuser_state_selecteduserid_else_if_state_users_length_0_selectuser_state_users_0_id_catch_err_console_error__fc8d0c')Ошибка загрузки пользователей:', err);
     if (usersListEl) {
       usersListEl.innerHTML = `
         <div class="text-center py-4 text-danger small">
@@ -257,62 +155,25 @@ function renderUsersList() {
           ${escapeHtml(u.email || '-')}
         </div>
         <div class="d-flex justify-content-between align-items-center small mb-1" style="font-size: 0.74rem;">
-          <span class="text-muted"><i class="bi bi-files me-1"></i>${u.files_count} файлов</span>
-          <span class="fw-semibold text-info">${u.size_formatted}</span>
+          <span class="text-muted"><i class="bi bi-files me-1i18n.t('auto__i_u_files_count_span_span_class__89a3b3')fw-semibold text-info">${u.size_formatted}</span>
         </div>
-        <div class="progress" style="height: 4px;" title="Использовано квоты: ${u.quota_percent}%">
+        <div class="progress" style="height: 4px;" title=i18n.t('auto__u_quota_percent__a6f5f2')>
           <div class="progress-bar ${diskWarning}" role="progressbar" style="width: ${u.quota_percent}%;"></div>
         </div>
       </a>
     `;
-  }).join('');
-
-  // Обработчики клика по элементам пользователей
-  usersListEl.querySelectorAll('.user-select-item').forEach(item => {
-    item.onclick = () => {
-      const uid = parseInt(item.dataset.userId, 10);
-      selectUser(uid);
-    };
-  });
-}
-
-/**
- * Выбор пользователя и загрузка его файлового проводника
- */
-function selectUser(userId) {
-  state.selectedUserId = userId;
-  const user = state.users.find(u => u.id === userId);
-  state.selectedUserName = user ? user.name : `Пользователь #${userId}`;
-
-  // Обновление подсветки в списке слева
-  const usersListEl = document.getElementById('user-dirs-users-list');
+  }).join('i18n.t('auto__userslistel_queryselectorall__1ddc83').user-select-itemi18n.t('auto__foreach_item_item_onclick_const_uid_parseint_item_dataset_userid_10_selectuser_uid_function_selectuser_userid_state_selecteduserid_userid_const_user_state_users_find_u_u_id_userid_state_selectedusername_user_user_name_userid_const_userslistel_document_getelementbyid__490665')user-dirs-users-list');
   if (usersListEl) {
     usersListEl.querySelectorAll('.user-select-item').forEach(item => {
       const uid = parseInt(item.dataset.userId, 10);
       item.classList.toggle('active', uid === userId);
-      item.classList.toggle('border-primary', uid === userId);
-    });
-  }
-
-  // Обновление заголовка проводника
-  const titleEl = document.getElementById('explorer-user-title');
+      item.classList.toggle('border-primaryi18n.t('auto__uid_userid_const_titleel_document_getelementbyid__f41549')explorer-user-title');
   const pathBadge = document.getElementById('explorer-user-path-badge');
   if (titleEl) {
     titleEl.innerHTML = `<i class="bi bi-folder-fill text-warning me-1"></i> Хранилище: <strong>${escapeHtml(state.selectedUserName)}</strong> (#${userId})`;
   }
   if (pathBadge && user) {
-    pathBadge.classList.remove('d-none');
-    pathBadge.textContent = `data/users/${userId}/`;
-  }
-
-  loadUserFiles(userId);
-}
-
-/**
- * Загрузка файлов выбранного пользователя
- */
-async function loadUserFiles(userId) {
-  const tbody = document.getElementById('user-files-table-body');
+    pathBadge.classList.remove('d-nonei18n.t('auto__pathbadge_textcontent_data_users_userid_loaduserfiles_userid_async_function_loaduserfiles_userid_const_tbody_document_getelementbyid__45a100')user-files-table-body');
   const footerStats = document.getElementById('explorer-footer-stats');
   const footerQuota = document.getElementById('explorer-footer-quota');
 
@@ -332,26 +193,7 @@ async function loadUserFiles(userId) {
     const params = new URLSearchParams();
     if (state.currentSubfolder) params.append('subfolder', state.currentSubfolder);
     if (state.searchQuery) params.append('q', state.searchQuery);
-    if (state.extFilter) params.append('extension', state.extFilter);
-
-    const res = await fetch(url + params.toString());
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    state.files = data.items || [];
-
-    if (footerStats) {
-      footerStats.innerHTML = `Файлов: <strong>${data.total_items || 0}</strong> | Общий размер: <strong>${data.total_size_formatted || '0 B'}</strong>`;
-    }
-
-    const user = state.users.find(u => u.id === userId);
-    if (footerQuota && user) {
-      footerQuota.innerHTML = `Квота: <strong>${user.size_formatted} / ${user.quota_formatted}</strong> (${user.quota_percent}%)`;
-    }
-
-    renderUserFilesTable();
-  } catch (err) {
-    console.error('Ошибка загрузки файлов:', err);
+    if (state.extFilter) params.append('extensioni18n.t('auto__state_extfilter_const_res_await_fetch_url_params_tostring_if_res_ok_throw_new_error_http_res_status_const_data_await_res_json_state_files_data_items_if_footerstats_footerstats_innerhtml_strong_data_total_items_0_strong_strong_data_total_size_formatted__48eeae')0 Bi18n.t('auto__strong_const_user_state_users_find_u_u_id_userid_if_footerquota_user_footerquota_innerhtml_strong_user_size_formatted_user_quota_formatted_strong_user_quota_percent_renderuserfilestable_catch_err_console_error__a46ea0')Ошибка загрузки файлов:', err);
     if (tbody) {
       tbody.innerHTML = `
         <tr>
@@ -412,12 +254,12 @@ function renderUserFilesTable() {
             ${!isDir ? `
               <button class="btn btn-xs btn-outline-info btn-preview-file" 
                       data-path="${escapeHtml(f.relative_path)}" 
-                      title="Предпросмотр файла">
+                      title=i18n.t('auto___fbf997')>
                 <i class="bi bi-eye"></i>
               </button>
               <a href="/api/admin/user-directories/users/${state.selectedUserId}/file/download?path=${encodeURIComponent(f.relative_path)}" 
                  class="btn btn-xs btn-outline-success" 
-                 title="Скачать файл" 
+                 title=i18n.t('auto___b42155') 
                  download>
                 <i class="bi bi-download"></i>
               </a>
@@ -425,31 +267,19 @@ function renderUserFilesTable() {
             <button class="btn btn-xs btn-outline-danger btn-delete-file" 
                     data-path="${escapeHtml(f.relative_path)}" 
                     data-is-dir="${isDir}"
-                    title="Удалить">
+                    title=i18n.t('auto___86ea33')>
               <i class="bi bi-trash3"></i>
             </button>
           </div>
         </td>
       </tr>
     `;
-  }).join('');
-
-  // Навешивание событий предпросмотра
-  tbody.querySelectorAll('.btn-preview-file').forEach(btn => {
-    btn.onclick = () => {
-      const path = btn.dataset.path;
-      openFilePreview(state.selectedUserId, path);
-    };
-  });
-
-  // Навешивание событий удаления
-  tbody.querySelectorAll('.btn-delete-file').forEach(btn => {
+  }).join('i18n.t('auto__tbody_queryselectorall__7df08d').btn-preview-filei18n.t('auto__foreach_btn_btn_onclick_const_path_btn_dataset_path_openfilepreview_state_selecteduserid_path_tbody_queryselectorall__9a43cc').btn-delete-file').forEach(btn => {
     btn.onclick = () => {
       const path = btn.dataset.path;
       const isDir = btn.dataset.isDir === 'true';
       const promptText = isDir
-        ? `Вы уверены, что хотите удалить директорию "${path}" со всем содержимым?`
-        : `Вы уверены, что хотите удалить файл "${path}"?`;
+        ? `Вы уверены, что хотите удалить директорию "${path}i18n.t('auto___b30093')${path}"?`;
       if (confirm(promptText)) {
         deleteFile(state.selectedUserId, path);
       }
@@ -495,15 +325,7 @@ function getFileIcon(ext) {
     case 'ps1':
       return '<i class="bi bi-filetype-py text-warning fs-6"></i>';
     default:
-      return '<i class="bi bi-file-earmark-fill text-secondary fs-6"></i>';
-  }
-}
-
-/**
- * Открытие модального окна предпросмотра файла
- */
-async function openFilePreview(userId, path) {
-  const modalEl = document.getElementById('modal-file-preview');
+      return '<i class="bi bi-file-earmark-fill text-secondary fs-6"></i>i18n.t('auto__async_function_openfilepreview_userid_path_const_modalel_document_getelementbyid__d13cfe')modal-file-preview');
   if (!modalEl) return;
 
   const titleEl = document.getElementById('modal-file-preview-title');
@@ -511,48 +333,23 @@ async function openFilePreview(userId, path) {
   const sizeEl = document.getElementById('preview-file-size');
   const typeEl = document.getElementById('preview-file-type');
   const contentWrapper = document.getElementById('preview-content-wrapper');
-  const downloadLink = document.getElementById('btn-preview-download-file');
-
-  if (titleEl) titleEl.textContent = `Предпросмотр: ${path.split('/').pop()}`;
+  const downloadLink = document.getElementById('btn-preview-download-filei18n.t('auto__if_titleel_titleel_textcontent_path_split__bb8acf')/').pop()}`;
   if (pathEl) pathEl.textContent = `data/users/${userId}/${path}`;
   if (sizeEl) sizeEl.textContent = '...';
   if (typeEl) typeEl.textContent = '...';
   if (contentWrapper) {
     contentWrapper.innerHTML = `
       <div class="text-center py-4 text-muted">
-        <div class="spinner-border spinner-border-sm text-primary me-2"></div> Загрузка содержимого...
-      </div>
-    `;
-  }
-  if (downloadLink) {
-    downloadLink.href = `/api/admin/user-directories/users/${userId}/file/download?path=${encodeURIComponent(path)}`;
-  }
-
-  const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-  modal.show();
-
-  try {
-    const res = await fetch(`/api/admin/user-directories/users/${userId}/file/preview?path=${encodeURIComponent(path)}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    state.previewFile = data;
-
-    if (sizeEl) sizeEl.textContent = data.size_formatted;
-    if (typeEl) typeEl.textContent = data.mime_type || data.extension;
-
-    if (contentWrapper) {
-      if (data.is_image) {
-        contentWrapper.innerHTML = `
-          <div class="text-center p-2">
+        <div class="spinner-border spinner-border-sm text-primary me-2i18n.t('auto__div_div_if_downloadlink_downloadlink_href_api_admin_user_directories_users_userid_file_download_path_encodeuricomponent_path_const_modal_bootstrap_modal_getorcreateinstance_modalel_modal_show_try_const_res_await_fetch_api_admin_user_directories_users_userid_file_preview_path_encodeuricomponent_path_if_res_ok_throw_new_error_http_res_status_const_data_await_res_json_state_previewfile_data_if_sizeel_sizeel_textcontent_data_size_formatted_if_typeel_typeel_textcontent_data_mime_type_data_extension_if_contentwrapper_if_data_is_image_contentwrapper_innerhtml_div_class__1ed0ec')text-center p-2">
             <img src="${data.content}" class="img-fluid rounded border border-secondary shadow" style="max-height: 400px; object-fit: contain;">
           </div>
         `;
       } else {
-        contentWrapper.textContent = data.content || '(Файл пуст)';
+        contentWrapper.textContent = data.content || i18n.t('auto___dd0cba');
       }
     }
   } catch (err) {
-    console.error('Ошибка предпросмотра файла:', err);
+    console.error(i18n.t('auto___8aaf74'), err);
     if (contentWrapper) {
       contentWrapper.innerHTML = `<div class="text-danger p-3">Ошибка загрузки содержимого: ${err.message}</div>`;
     }
@@ -572,41 +369,7 @@ async function deleteFile(userId, path) {
       throw new Error(errData.detail || `HTTP ${res.status}`);
     }
 
-    showAlert(`Файл "${path}" успешно удален`, 'success');
-
-    // Закрываем модальное окно предпросмотра, если оно открыто
-    const previewModalEl = document.getElementById('modal-file-preview');
-    if (previewModalEl) {
-      const modal = bootstrap.Modal.getInstance(previewModalEl);
-      if (modal) modal.hide();
-    }
-
-    // Перезагружаем файлы и сводку
-    await loadUserFiles(userId);
-    await loadSummary();
-    await loadUsersList();
-  } catch (err) {
-    console.error('Ошибка удаления файла:', err);
-    showAlert(`Ошибка удаления файла: ${err.message}`, 'danger');
-  }
-}
-
-/**
- * Открытие модального окна управления осиротевшими директориями
- */
-async function openOrphanedModal() {
-  const modalEl = document.getElementById('modal-orphaned-user-dirs');
-  if (!modalEl) return;
-  const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-  modal.show();
-  await loadOrphanedDirs();
-}
-
-/**
- * Загрузка списка осиротевших директорий
- */
-async function loadOrphanedDirs() {
-  const tbody = document.getElementById('modal-orphaned-dirs-tbody');
+    showAlert(`Файл "${path}" успешно удален`, 'successi18n.t('auto__const_previewmodalel_document_getelementbyid__ec28d1')modal-file-previewi18n.t('auto__if_previewmodalel_const_modal_bootstrap_modal_getinstance_previewmodalel_if_modal_modal_hide_await_loaduserfiles_userid_await_loadsummary_await_loaduserslist_catch_err_console_error__a11f5a')Ошибка удаления файла:i18n.t('auto__err_showalert_err_message__c31ef1')dangeri18n.t('auto__async_function_openorphanedmodal_const_modalel_document_getelementbyid__20a887')modal-orphaned-user-dirsi18n.t('auto__if_modalel_return_const_modal_bootstrap_modal_getorcreateinstance_modalel_modal_show_await_loadorphaneddirs_async_function_loadorphaneddirs_const_tbody_document_getelementbyid__f70453')modal-orphaned-dirs-tbody');
   const countEl = document.getElementById('modal-orphaned-count');
   const sizeEl = document.getElementById('modal-orphaned-size');
   const filesEl = document.getElementById('modal-orphaned-files');
@@ -637,7 +400,7 @@ async function loadOrphanedDirs() {
 
     renderOrphanedDirsTable();
   } catch (err) {
-    console.error('Ошибка загрузки осиротевших директорий:', err);
+    console.error(i18n.t('auto___136886'), err);
     if (tbody) {
       tbody.innerHTML = `
         <tr>
@@ -661,18 +424,7 @@ function renderOrphanedDirsTable() {
     tbody.innerHTML = `
       <tr>
         <td colspan="6" class="text-center py-4 text-success small">
-          <i class="bi bi-check-circle fs-4 d-block mb-1"></i>
-          Осиротевших каталогов не обнаружено. Все директории привязаны к активным пользователям!
-        </td>
-      </tr>
-    `;
-    return;
-  }
-
-  tbody.innerHTML = state.orphanedDirs.map(d => `
-    <tr>
-      <td>
-        <div class="fw-bold font-monospace text-warning small">${escapeHtml(d.dir_name)}</div>
+          <i class="bi bi-check-circle fs-4 d-block mb-1i18n.t('auto__i_td_tr_return_tbody_innerhtml_state_orphaneddirs_map_d_tr_td_div_class__7dbeba')fw-bold font-monospace text-warning small">${escapeHtml(d.dir_name)}</div>
         <div class="text-muted small" style="font-size: 0.72rem;">${escapeHtml(d.full_path)}</div>
       </td>
       <td><span class="badge bg-secondary-subtle text-secondary border">${escapeHtml(d.reason)}</span></td>
@@ -682,7 +434,7 @@ function renderOrphanedDirsTable() {
       <td class="text-center">
         <button class="btn btn-xs btn-outline-danger btn-clean-single-orphaned" 
                 data-dir="${escapeHtml(d.dir_name)}" 
-                title="Удалить этот каталог">
+                title=i18n.t('auto___20d14d')>
           <i class="bi bi-trash3"></i>
         </button>
       </td>
@@ -703,7 +455,7 @@ function renderOrphanedDirsTable() {
  * Очистка осиротевших каталогов (конкретных или всех)
  */
 async function cleanOrphanedDirs(dirsList = null) {
-  if (!dirsList && !confirm('Вы уверены, что хотите удалить ВСЕ осиротевшие каталоги пользователей? Это действие необратимо.')) {
+  if (!dirsList && !confirm(i18n.t('auto___559e29'))) {
     return;
   }
 
@@ -711,37 +463,13 @@ async function cleanOrphanedDirs(dirsList = null) {
     const payload = dirsList ? { dirs: dirsList } : {};
     const res = await fetch('/api/admin/user-directories/orphaned/clean', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    showAlert(`Удалено каталогов: ${data.deleted_count}, освобождено места: ${data.freed_formatted}`, 'success');
+      headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_payload_if_res_ok_throw_new_error_http_res_status_const_data_await_res_json_showalert_data_deleted_count_data_freed_formatted__cd7680')success');
 
     await loadOrphanedDirs();
     await loadSummary();
   } catch (err) {
-    console.error('Ошибка очистки осиротевших каталогов:', err);
-    showAlert(`Ошибка очистки каталогов: ${err.message}`, 'danger');
-  }
-}
-
-/**
- * Применение клиентских фильтров поиска
- */
-function applyFilters() {
-  renderUsersList();
-  if (state.selectedUserId) {
-    loadUserFiles(state.selectedUserId);
-  }
-}
-
-/**
- * Вывод сообщения alert
- */
-function showAlert(message, type = 'info') {
+    console.error(i18n.t('auto___b56cfb'), err);
+    showAlert(`Ошибка очистки каталогов: ${err.message}`, 'dangeri18n.t('auto__function_applyfilters_renderuserslist_if_state_selecteduserid_loaduserfiles_state_selecteduserid_alert_function_showalert_message_type__a209e0')info') {
   const alertBox = document.getElementById('user-dirs-alert-box');
   const alertMsg = document.getElementById('user-dirs-alert-message');
   if (!alertBox || !alertMsg) return;
@@ -751,15 +479,7 @@ function showAlert(message, type = 'info') {
   alertBox.classList.remove('d-none');
 
   setTimeout(() => {
-    alertBox.classList.add('d-none');
-  }, 6000);
-}
-
-/**
- * Экранирование HTML
- */
-function escapeHtml(text) {
-  if (!text) return '';
+    alertBox.classList.add('d-nonei18n.t('auto__6000_html_function_escapehtml_text_if_text_return_4564a9')';
   const map = {
     '&': '&amp;',
     '<': '&lt;',

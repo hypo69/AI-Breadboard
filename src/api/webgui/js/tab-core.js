@@ -9,197 +9,24 @@
  * Если что-то запущено внутри вкладки, переключение происходит немедленно без ожидания.
  */
 
-const OFFCANVAS_IDS = ['leftSideNavOffcanvas', 'appsSideNavOffcanvas'];
-
-let currentActiveTabId = null;
-const registeredPollers = new Map();
-const processingFlags = new Map(); // хранит флаг isProcessing для каждой вкладки
-
-/**
- * Приводит идентификатор вкладки к стандартному виду 'tab-xxx'.
+const OFFCANVAS_IDS = ['leftSideNavOffcanvas', 'appsSideNavOffcanvasi18n.t('auto__let_currentactivetabid_null_const_registeredpollers_new_map_const_processingflags_new_map_isprocessing__05f3bc')tab-xxx'.
  * @param {string} tabId 
  * @returns {string}
  */
 export function normalizeTabId(tabId) {
   if (!tabId) return '';
-  return tabId.startsWith('tab-') ? tabId : `tab-${tabId}`;
-}
-
-/**
- * Проверяет, активна ли сейчас вкладка (видна пользователю и вкладка браузера в фокусе).
- * @param {string} tabId 
- * @returns {boolean}
- */
-export function isTabActive(tabId) {
-  const normId = normalizeTabId(tabId);
-  if (typeof document !== 'undefined' && document.hidden) {
+  return tabId.startsWith('tab-i18n.t('auto__tabid_tab_tabid_param_string_tabid_returns_boolean_export_function_istabactive_tabid_const_normid_normalizetabid_tabid_if_typeof_document__682162')undefined' && document.hidden) {
     return false;
   }
   if (currentActiveTabId) {
     return currentActiveTabId === normId;
   }
   const pane = document.getElementById(normId);
-  return pane ? pane.classList.contains('active') : false;
-}
-
-/**
- * Останавливает таймер конкретного опросника.
- * @param {Object} poller 
- */
-function stopPoller(poller) {
-  if (poller.timerId) {
-    clearInterval(poller.timerId);
-    poller.timerId = null;
-  }
-}
-
-/**
- * Запускает таймер опросника, если вкладка активна и опрос разрешён.
- * @param {Object} poller 
- * @param {boolean} immediate - Выполнить ли опрос немедленно перед установкой таймера
- */
-function startPoller(poller, immediate = false) {
-  stopPoller(poller);
-  if (!poller.enabled || !isTabActive(poller.tabId)) return;
-
-  const runTick = async () => {
-    if (!poller.enabled || !isTabActive(poller.tabId) || poller.inFlight) return;
-    poller.inFlight = true;
-    try {
-      await poller.pollFn();
-    } catch (err) {
-      console.warn(`[TabPoller] Ошибка выполнения pollFn для [${poller.id}]:`, err);
-    } finally {
-      poller.inFlight = false;
-    }
-  };
-
-  if (immediate) {
-    runTick();
-  }
-
-  poller.timerId = setInterval(runTick, poller.intervalMs);
-}
-
-/**
- * Регистрирует или обновляет периодический опросник (poller) для вкладки.
- * Опросник будет срабатывать ТОЛЬКО тогда, когда вкладка АКТИВНА
- * и документ находится в фокусе (не свёрнут / не скрыт).
- * 
- * @param {string} tabId - ID вкладки (например 'tab-about-system' или 'about-system')
- * @param {Function} pollFn - Функция опроса API
- * @param {number} intervalMs - Интервал опроса в миллисекундах (мин. 1000мс)
- * @param {Object} [options] - Опции: { pollerId, immediate = true, enabled = true }
- * @returns {string} pollerId
- */
-export function registerTabPoller(tabId, pollFn, intervalMs = 3000, options = {}) {
-  const normTabId = normalizeTabId(tabId);
-  const pollerId = options.pollerId || `${normTabId}_default`;
-
-  unregisterTabPoller(pollerId);
-
-  const poller = {
-    id: pollerId,
-    tabId: normTabId,
-    pollFn,
-    intervalMs: Math.max(1000, intervalMs),
-    enabled: options.enabled !== false,
-    timerId: null,
-    inFlight: false,
-  };
-
-  registeredPollers.set(pollerId, poller);
-
-  if (isTabActive(normTabId) && poller.enabled) {
-    startPoller(poller, options.immediate !== false);
-  }
-
-  return pollerId;
-}
-
-/**
- * Удаляет зарегистрированный опросник по его ID.
- * @param {string} pollerId 
- */
-export function unregisterTabPoller(pollerId) {
-  if (registeredPollers.has(pollerId)) {
-    const poller = registeredPollers.get(pollerId);
-    stopPoller(poller);
-    registeredPollers.delete(pollerId);
-  }
-}
-
-/**
- * Удаляет все зарегистрированные опросники для вкладки.
- * @param {string} tabId 
- */
-export function unregisterAllTabPollers(tabId) {
-  const normTabId = normalizeTabId(tabId);
-  for (const [id, poller] of registeredPollers.entries()) {
-    if (poller.tabId === normTabId) {
-      stopPoller(poller);
-      registeredPollers.delete(id);
-    }
-  }
-}
-
-/**
- * Включает или выключает опросник вкладки (например, переключатель Live-режима).
- * @param {string} pollerId 
- * @param {boolean} enabled 
- */
-export function setTabPollerEnabled(pollerId, enabled) {
-  const poller = registeredPollers.get(pollerId);
-  if (!poller) return;
-  poller.enabled = !!enabled;
-  if (poller.enabled && isTabActive(poller.tabId)) {
-    startPoller(poller, true);
-  } else {
-    stopPoller(poller);
-  }
-}
-
-const TAB_ALIASES = {
-  'tab-process-leaks': { parentTab: 'tab-about-system', subtab: 'subtab-leaks' },
+  return pane ? pane.classList.contains('activei18n.t('auto__false_param_object_poller_function_stoppoller_poller_if_poller_timerid_clearinterval_poller_timerid_poller_timerid_null_param_object_poller_param_boolean_immediate_function_startpoller_poller_immediate_false_stoppoller_poller_if_poller_enabled_istabactive_poller_tabid_return_const_runtick_async_if_poller_enabled_istabactive_poller_tabid_poller_inflight_return_poller_inflight_true_try_await_poller_pollfn_catch_err_console_warn_tabpoller_pollfn_poller_id_err_finally_poller_inflight_false_if_immediate_runtick_poller_timerid_setinterval_runtick_poller_intervalms_poller_param_string_tabid_id__d13733')tab-about-systemi18n.t('auto___8bad5b')about-systemi18n.t('auto__param_function_pollfn_api_param_number_intervalms_1000_param_object_options_pollerid_immediate_true_enabled_true_returns_string_pollerid_export_function_registertabpoller_tabid_pollfn_intervalms_3000_options_const_normtabid_normalizetabid_tabid_const_pollerid_options_pollerid_normtabid_default_unregistertabpoller_pollerid_const_poller_id_pollerid_tabid_normtabid_pollfn_intervalms_math_max_1000_intervalms_enabled_options_enabled_false_timerid_null_inflight_false_registeredpollers_set_pollerid_poller_if_istabactive_normtabid_poller_enabled_startpoller_poller_options_immediate_false_return_pollerid_id_param_string_pollerid_export_function_unregistertabpoller_pollerid_if_registeredpollers_has_pollerid_const_poller_registeredpollers_get_pollerid_stoppoller_poller_registeredpollers_delete_pollerid_param_string_tabid_export_function_unregisteralltabpollers_tabid_const_normtabid_normalizetabid_tabid_for_const_id_poller_of_registeredpollers_entries_if_poller_tabid_normtabid_stoppoller_poller_registeredpollers_delete_id_live_param_string_pollerid_param_boolean_enabled_export_function_settabpollerenabled_pollerid_enabled_const_poller_registeredpollers_get_pollerid_if_poller_return_poller_enabled_enabled_if_poller_enabled_istabactive_poller_tabid_startpoller_poller_true_else_stoppoller_poller_const_tab_aliases__104c61')tab-process-leaks': { parentTab: 'tab-about-system', subtab: 'subtab-leaks' },
   'tab-forensics': { parentTab: 'tab-about-system', subtab: 'subtab-forensics' },
   'tab-throttling': { parentTab: 'tab-about-system', subtab: 'subtab-throttling' },
   'tab-storage-wear': { parentTab: 'tab-about-system', subtab: 'subtab-wear' },
-  'tab-peripherals': { parentTab: 'tab-about-system', subtab: 'subtab-peripherals' },
-};
-
-/**
- * Переключает активную вкладку и управляет жизненным циклом (активация/деактивация/поллеры).
- * Приоритет: кнопки навигации имеют самый высокий приоритет.
- * Если что-то запущено внутри вкладки, переключение происходит немедленно без ожидания.
- * @param {string} tabId 
- */
-export function switchTab(tabId) {
-  if (!tabId) return;
-  const rawId = normalizeTabId(tabId);
-  const alias = TAB_ALIASES[rawId] || TAB_ALIASES[tabId];
-  const id = alias ? alias.parentTab : rawId;
-  const prevTabId = currentActiveTabId;
-
-  // 1. Остановка фонового аудио / синтеза речи при переходе
-  if (prevTabId && prevTabId !== id && window.chatService?.stop) {
-    try {
-      window.chatService.stop();
-    } catch (e) {}
-  }
-
-  // 2. Мгновенная деактивация опросников предыдущей вкладки
-  if (prevTabId && prevTabId !== id) {
-    for (const poller of registeredPollers.values()) {
-      if (poller.tabId === prevTabId) {
-        stopPoller(poller);
-      }
-    }
-  }
-
-  currentActiveTabId = id;
-
-  // 3. МГНОВЕННОЕ обновление UI элементов в DOM (Zero-Delay)
-  document.querySelectorAll('[data-tab]').forEach(btn =>
+  'tab-peripherals': { parentTab: 'tab-about-system', subtab: 'subtab-peripheralsi18n.t('auto__param_string_tabid_export_function_switchtab_tabid_if_tabid_return_const_rawid_normalizetabid_tabid_const_alias_tab_aliases_rawid_tab_aliases_tabid_const_id_alias_alias_parenttab_rawid_const_prevtabid_currentactivetabid_1_if_prevtabid_prevtabid_id_window_chatservice_stop_try_window_chatservice_stop_catch_e_2_if_prevtabid_prevtabid_id_for_const_poller_of_registeredpollers_values_if_poller_tabid_prevtabid_stoppoller_poller_currentactivetabid_id_3_ui_dom_zero_delay_document_queryselectorall__c36a41')[data-tab]').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.tab === rawId || btn.dataset.tab === id)
   );
 
@@ -242,23 +69,12 @@ export function switchTab(tabId) {
 
   // 8. Неблокирующий вызов Lifecycle hooks через requestAnimationFrame / setTimeout
   const name = id.replace(/^tab-/, '').replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-  const prevName = prevTabId ? prevTabId.replace(/^tab-/, '').replace(/-([a-z])/g, (_, c) => c.toUpperCase()) : null;
-
-  // Деактивация предыдущей вкладки в фоне
-  if (prevTabId && prevTabId !== id) {
-    const deactivateFn = window[`deactivate${prevName[0].toUpperCase() + prevName.slice(1)}Tab`];
-    if (typeof deactivateFn === 'function') {
+  const prevName = prevTabId ? prevTabId.replace(/^tab-/, 'i18n.t('auto__replace_a_z_g_c_c_touppercase_null_if_prevtabid_prevtabid_id_const_deactivatefn_window_deactivate_prevname_0_touppercase_prevname_slice_1_tab_if_typeof_deactivatefn__b8a725')function') {
       setTimeout(() => {
         try { deactivateFn(); } catch (err) { console.debug('deactivate hook error:', err); }
       }, 0);
     }
-    document.dispatchEvent(new CustomEvent('tab:deactivated', { detail: { tabId: prevTabId, name: prevName } }));
-  }
-
-  // Активация новой вкладки в следующем фрейме анимации
-  requestAnimationFrame(() => {
-    const initFn = window[`init${name[0].toUpperCase() + name.slice(1)}Tab`];
-    if (typeof initFn === 'function') {
+    document.dispatchEvent(new CustomEvent('tab:deactivatedi18n.t('auto__detail_tabid_prevtabid_name_prevname_requestanimationframe_const_initfn_window_init_name_0_touppercase_name_slice_1_tab_if_typeof_initfn__a18f54')function') {
       try { initFn(); } catch (err) { console.debug('init tab hook error:', err); }
     }
     
@@ -315,60 +131,8 @@ export function setupTabClicks() {
   document.addEventListener('click', e => {
     const btn = e.target.closest('button[data-tab], a[data-tab]');
     if (btn && btn.dataset.tab) {
-      if (typeof window.switchTab === 'function') {
-        window.switchTab(btn.dataset.tab);
-      } else {
-        switchTab(btn.dataset.tab);
-      }
-    }
-  });
-}
-
-// Слушатель изменения видимости вкладки браузера
-if (typeof document !== 'undefined') {
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      // Страница скрыта: останавливаем все активные опросники
-      for (const poller of registeredPollers.values()) {
-        stopPoller(poller);
-      }
-    } else {
-      // Страница снова видна: возобновляем опросники ТОЛЬКО для активной вкладки
-      if (currentActiveTabId) {
-        for (const poller of registeredPollers.values()) {
-          if (poller.tabId === currentActiveTabId && poller.enabled) {
-            startPoller(poller, true);
-          }
-        }
-      }
-    }
-  });
-}
-
-/**
- * Устанавливает флаг processing для вкладки (используется при длительных операциях).
- * Позволяет переключать вкладки без ожидания завершения операции.
- * @param {string} tabId - ID вкладки
- * @param {boolean} isProcessing - флаг состояния
- */
-export function setTabProcessing(tabId, isProcessing) {
-  const normId = normalizeTabId(tabId);
-  processingFlags.set(normId, !!isProcessing);
-}
-
-/**
- * Сбрасывает флаг processing для вкладки.
- * @param {string} tabId - ID вкладки
- */
-export function resetTabProcessing(tabId) {
-  const normId = normalizeTabId(tabId);
-  processingFlags.delete(normId);
-}
-
-/**
- * Экспорт в глобальный контекст window для совместимости с инлайн-скриптами и вкладками
- */
-if (typeof window !== 'undefined') {
+      if (typeof window.switchTab === 'functioni18n.t('auto__window_switchtab_btn_dataset_tab_else_switchtab_btn_dataset_tab_if_typeof_document__04ee8b')undefined') {
+  document.addEventListener('visibilitychangei18n.t('auto__if_document_hidden_for_const_poller_of_registeredpollers_values_stoppoller_poller_else_if_currentactivetabid_for_const_poller_of_registeredpollers_values_if_poller_tabid_currentactivetabid_poller_enabled_startpoller_poller_true_processing_param_string_tabid_id_param_boolean_isprocessing_export_function_settabprocessing_tabid_isprocessing_const_normid_normalizetabid_tabid_processingflags_set_normid_isprocessing_processing_param_string_tabid_id_export_function_resettabprocessing_tabid_const_normid_normalizetabid_tabid_processingflags_delete_normid_window_if_typeof_window__533fb4')undefined') {
   window.switchTab = switchTab;
   window.switchToTab = switchTab;
   window.loadTab = loadTab;

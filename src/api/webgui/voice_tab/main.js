@@ -81,7 +81,7 @@
 
   async function startRecording() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert('Доступ к микрофону не поддерживается в вашем браузере.');
+      alert(i18n.t('auto___0b2efe'));
       return;
     }
 
@@ -128,9 +128,9 @@
       if (recordBtn) {
         recordBtn.className = 'btn btn-danger px-4 py-2 rounded-pill fw-bold shadow-sm';
       }
-      if (btnText) btnText.textContent = 'Остановить и разобрать';
+      if (btnText) btnText.textContent = i18n.t('auto___2e7ed7');
       if (cancelBtn) cancelBtn.classList.remove('d-none');
-      if (statusLabel) statusLabel.textContent = 'Идет запись речи...';
+      if (statusLabel) statusLabel.textContent = i18n.t('auto___258bcb');
       if (timerBadge) {
         timerBadge.classList.remove('d-none');
         timerBadge.textContent = '00:00';
@@ -149,14 +149,7 @@
       }, 500);
 
     } catch (err) {
-      console.error('Microphone error:', err);
-      alert(`Не удалось включить микрофон: ${err.message}`);
-    }
-  }
-
-  function stopRecording() {
-    resetRecordingUi();
-    if (tabMediaRecorder && tabMediaRecorder.state === 'recording') {
+      console.error('Microphone error:i18n.t('auto__err_alert_err_message_function_stoprecording_resetrecordingui_if_tabmediarecorder_tabmediarecorder_state__61ed29')recording') {
       tabMediaRecorder.stop();
     }
   }
@@ -181,8 +174,8 @@
     const micCircle = document.getElementById('vtab-mic-circle');
 
     if (cancelBtn) cancelBtn.classList.add('d-none');
-    if (btnText) btnText.textContent = 'Начать запись';
-    if (statusLabel) statusLabel.textContent = 'Нажмите для начала записи';
+    if (btnText) btnText.textContent = i18n.t('auto___099260');
+    if (statusLabel) statusLabel.textContent = i18n.t('auto___183217');
     if (timerBadge) timerBadge.classList.add('d-none');
     if (micCircle) {
       micCircle.classList.remove('bg-danger', 'bg-opacity-25');
@@ -240,8 +233,7 @@
       if (analysisContent) {
         analysisContent.innerHTML = `
           <div class="alert alert-danger p-3 mb-0">
-            <h6 class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i>Ошибка анализа аудио</h6>
-            <p class="mb-0 small">${escapeHtml(err.message)}</p>
+            <h6 class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-2i18n.t('auto__i_h6_p_class__0382fb')mb-0 small">${escapeHtml(err.message)}</p>
           </div>
         `;
         analysisContent.classList.remove('d-none');
@@ -270,8 +262,7 @@
       keyPointsHtml = `
         <div class="card bg-body-tertiary border-0 mb-3 shadow-sm">
           <div class="card-body p-3">
-            <h6 class="fw-bold text-info mb-2"><i class="bi bi-key-fill me-2"></i>Ключевые темы и решения</h6>
-            <ul class="mb-0 ps-3 small text-body-secondary">
+            <h6 class="fw-bold text-info mb-2"><i class="bi bi-key-fill me-2i18n.t('auto__i_h6_ul_class__58e821')mb-0 ps-3 small text-body-secondary">
               ${keyPoints.map(kp => `<li class="mb-1">${escapeHtml(kp)}</li>`).join('')}
             </ul>
           </div>
@@ -284,8 +275,7 @@
       actionItemsHtml = `
         <div class="card bg-body-tertiary border-0 mb-3 shadow-sm">
           <div class="card-body p-3">
-            <h6 class="fw-bold text-success mb-2"><i class="bi bi-check2-square me-2"></i>Задачи и договоренности (Action Items)</h6>
-            <ul class="list-unstyled mb-0 small">
+            <h6 class="fw-bold text-success mb-2"><i class="bi bi-check2-square me-2i18n.t('auto__i_action_items_h6_ul_class__8847d4')list-unstyled mb-0 small">
               ${actionItems.map(ai => `
                 <li class="d-flex align-items-start gap-2 mb-1">
                   <span class="badge bg-success bg-opacity-25 text-success font-monospace">TODO</span>
@@ -303,13 +293,7 @@
       transcriptHtml = `
         <div class="card bg-body-tertiary border-0 shadow-sm">
           <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-2">
-            <span class="fw-semibold small"><i class="bi bi-chat-quote-fill me-2 text-warning"></i>Стенограмма по собеседникам (${speakers.length || 2} участников)</span>
-          </div>
-          <div class="card-body p-3 d-flex flex-column gap-2" style="max-height: 400px; overflow-y: auto;">
-            ${transcript.map((t, idx) => {
-              const sp = t.speaker || `Собеседник ${idx % 2 + 1}`;
-              const col = speakerColors[idx % speakerColors.length];
-              const ts = t.timestamp ? `<span class="badge bg-dark text-muted font-monospace">${escapeHtml(t.timestamp)}</span>` : '';
+            <span class="fw-semibold small"><i class="bi bi-chat-quote-fill me-2 text-warningi18n.t('auto__i_speakers_length_2_span_div_div_class__e31628')card-body p-3 d-flex flex-column gap-2" style="max-height: 400px; overflow-y: auto;i18n.t('auto__transcript_map_t_idx_const_sp_t_speaker_idx_2_1_const_col_speakercolors_idx_speakercolors_length_const_ts_t_timestamp_span_class__14d39b')badge bg-dark text-muted font-monospace">${escapeHtml(t.timestamp)}</span>` : '';
               return `
                 <div class="p-2 rounded bg-body border-start border-3 shadow-sm" style="border-left-color: ${col} !important;">
                   <div class="d-flex align-items-center justify-content-between mb-1">
@@ -328,8 +312,7 @@
     analysisContent.innerHTML = `
       ${summary ? `
         <div class="alert alert-primary mb-3 shadow-sm">
-          <h6 class="fw-bold mb-1"><i class="bi bi-card-text me-2"></i>Краткая сводка (Executive Summary)</h6>
-          <p class="mb-0 small">${escapeHtml(summary)}</p>
+          <h6 class="fw-bold mb-1"><i class="bi bi-card-text me-2i18n.t('auto__i_executive_summary_h6_p_class__2ce854')mb-0 small">${escapeHtml(summary)}</p>
         </div>
       ` : ''}
       ${keyPointsHtml}
@@ -346,10 +329,7 @@
     try {
       const res = await fetch('/api/audio/save-to-rag', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: `Голосовая запись: ${lastAudioFilename}`,
-          summary: lastAnalysisData.summary || '',
+        headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_title_lastaudiofilename_summary_lastanalysisdata_summary__a17a24')',
           transcript: lastAnalysisData.transcript || [],
           key_points: lastAnalysisData.key_points || [],
           action_items: lastAnalysisData.action_items || [],
@@ -360,15 +340,9 @@
       const json = await res.json();
       if (!res.ok) throw new Error(json.detail || 'Save error');
 
-      alert(`✓ ${json.message || 'Разговор успешно сохранен в базу знаний RAG!'}`);
+      alert(`✓ ${json.message || i18n.t('auto__rag__33d303')}`);
     } catch (err) {
-      console.error('[VoiceTab] Failed to save in RAG:', err);
-      alert(`Ошибка сохранения в RAG: ${err.message}`);
-    }
-  }
-
-  function escapeHtml(text) {
-    if (!text) return '';
+      console.error('[VoiceTab] Failed to save in RAG:i18n.t('auto__err_alert_rag_err_message_function_escapehtml_text_if_text_return_26baff')';
     return String(text)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')

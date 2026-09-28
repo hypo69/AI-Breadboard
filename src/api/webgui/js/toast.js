@@ -9,32 +9,11 @@
  */
 
 (function () {
-  'use strict';
-
-  // Конфигурация по умолчанию
-  const DEFAULT_DURATION = 4500;
-  const CONTAINER_ID = 'floating-toast-container';
-
-  /**
-   * Инициализирует контейнер для всплывающих окон.
-   * @returns {HTMLElement} Элемент контейнера.
-   */
-  function getOrCreateContainer() {
-    let container = document.getElementById(CONTAINER_ID);
-    if (!container) {
-      container = document.createElement('div');
+  'use stricti18n.t('auto__const_default_duration_4500_const_container_id__6e5a19')floating-toast-containeri18n.t('auto__returns_htmlelement_function_getorcreatecontainer_let_container_document_getelementbyid_container_id_if_container_container_document_createelement__1c7177')div');
       container.id = CONTAINER_ID;
       container.className = 'floating-toast-container';
       container.setAttribute('aria-live', 'polite');
-      container.setAttribute('aria-atomic', 'true');
-      document.body.appendChild(container);
-    }
-    return container;
-  }
-
-  /**
-   * Определяет иконку и заголовок по типу уведомления.
-   * @param {string} type - Тип ('success', 'danger', 'error', 'warning', 'info').
+      container.setAttribute('aria-atomic', 'truei18n.t('auto__document_body_appendchild_container_return_container_param_string_type__230f05')success', 'danger', 'error', 'warning', 'info').
    * @returns {{iconClass: string, headerText: string, bootstrapType: string}}
    */
   function getMetaForType(type) {
@@ -44,7 +23,7 @@
       case 'ok':
         return {
           iconClass: 'bi bi-check-circle-fill text-success',
-          headerText: 'Успешно',
+          headerText: i18n.t('auto___503d1c'),
           bootstrapType: 'success'
         };
       case 'danger':
@@ -52,73 +31,38 @@
       case 'err':
         return {
           iconClass: 'bi bi-exclamation-octagon-fill text-danger',
-          headerText: 'Ошибка',
+          headerText: i18n.t('auto___72aecd'),
           bootstrapType: 'danger'
         };
       case 'warning':
       case 'warn':
         return {
           iconClass: 'bi bi-exclamation-triangle-fill text-warning',
-          headerText: 'Внимание',
+          headerText: i18n.t('auto___5f5f86'),
           bootstrapType: 'warning'
         };
       case 'info':
       default:
         return {
           iconClass: 'bi bi-info-circle-fill text-info',
-          headerText: 'Уведомление',
-          bootstrapType: 'info'
-        };
-    }
-  }
-
-  /**
-   * Автоматически определяет тип уведомления по содержимому сообщения.
-   * @param {string} text - Текст сообщения.
-   * @returns {string} Определенный тип ('success', 'danger', 'warning', 'info').
+          headerText: i18n.t('auto___3a42cf'),
+          bootstrapType: 'infoi18n.t('auto__param_string_text_returns_string__80ca61')success', 'danger', 'warning', 'info').
    */
   function detectTypeFromText(text) {
     if (!text || typeof text !== 'string') return 'info';
     const lower = text.toLowerCase();
-    if (text.includes('✅') || lower.includes('успешно') || lower.includes('success') || lower.includes('готов')) {
+    if (text.includes('✅') || lower.includes(i18n.t('auto___62e346')) || lower.includes('success') || lower.includes(i18n.t('auto___6aa18d'))) {
       return 'success';
     }
-    if (text.includes('❌') || lower.includes('ошибка') || lower.includes('error') || lower.includes('failed') || lower.includes('не удалось')) {
+    if (text.includes('❌') || lower.includes(i18n.t('auto___c394f7')) || lower.includes('error') || lower.includes('failed') || lower.includes(i18n.t('auto___187b69'))) {
       return 'danger';
     }
-    if (text.includes('⚠️') || lower.includes('внимание') || lower.includes('warning') || lower.includes('заполните') || lower.includes('пожалуйста, выберите') || lower.includes('пожалуйста выберите') || lower.includes('укажите')) {
+    if (text.includes('⚠️') || lower.includes(i18n.t('auto___6fd5d1')) || lower.includes('warning') || lower.includes(i18n.t('auto___5a4980')) || lower.includes(i18n.t('auto___62467e')) || lower.includes(i18n.t('auto___ef8a6e')) || lower.includes(i18n.t('auto___a47268'))) {
       return 'warning';
     }
-    return 'info';
-  }
-
-  /**
-   * Отображает всплывающее окно (Toast).
-   * @param {string} message - Текст сообщения или HTML.
-   * @param {string} [type='info'] - Тип сообщения ('success', 'danger', 'error', 'warning', 'info').
-   * @param {Object} [options={}] - Дополнительные параметры (duration, title, isHtml, autoClose).
-   * @returns {HTMLElement} DOM-элемент тоста.
-   */
-  function showToast(message, type, options = {}) {
-    if (message === undefined || message === null) return null;
-
-    // Если тип не указан, пытаемся определить его автоматически по тексту
-    const resolvedType = type || detectTypeFromText(String(message));
-    const meta = getMetaForType(resolvedType);
-    const duration = options.duration !== undefined ? options.duration : DEFAULT_DURATION;
-    const title = options.title || meta.headerText;
-
-    const container = getOrCreateContainer();
-
-    const toastEl = document.createElement('div');
+    return 'infoi18n.t('auto__toast_param_string_message_html_param_string_type__14ef5d')infoi18n.t('auto___79416d')success', 'danger', 'error', 'warning', 'infoi18n.t('auto__param_object_options_duration_title_ishtml_autoclose_returns_htmlelement_dom_function_showtoast_message_type_options_if_message_undefined_message_null_return_null_const_resolvedtype_type_detecttypefromtext_string_message_const_meta_getmetafortype_resolvedtype_const_duration_options_duration_undefined_options_duration_default_duration_const_title_options_title_meta_headertext_const_container_getorcreatecontainer_const_toastel_document_createelement__a8e33d')div');
     toastEl.className = `floating-toast floating-toast-${meta.bootstrapType}`;
-    toastEl.setAttribute('role', 'alert');
-
-    // Форматирование текста (сохранение переводов строк)
-    const formattedMessage = options.isHtml
-      ? message
-      : String(message)
-          .replace(/&/g, '&amp;')
+    toastEl.setAttribute('role', 'alerti18n.t('auto__const_formattedmessage_options_ishtml_message_string_message_replace_g__bd8a7a')&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;')
           .replace(/\n/g, '<br>');
@@ -127,17 +71,10 @@
       <div class="floating-toast-header">
         <i class="${meta.iconClass} floating-toast-icon"></i>
         <strong class="floating-toast-title">${title}</strong>
-        <button type="button" class="floating-toast-close" aria-label="Закрыть">&times;</button>
+        <button type="button" class="floating-toast-close" aria-label=i18n.t('auto___4ae50d')>&times;</button>
       </div>
       <div class="floating-toast-body">${formattedMessage}</div>
-      ${duration > 0 ? `<div class="floating-toast-progress"><div class="floating-toast-progress-bar bg-${meta.bootstrapType}"></div></div>` : ''}
-    `;
-
-    container.appendChild(toastEl);
-
-    // Анимация появления
-    requestAnimationFrame(() => {
-      toastEl.classList.add('show');
+      ${duration > 0 ? `<div class="floating-toast-progress"><div class="floating-toast-progress-bar bg-${meta.bootstrapType}"></div></div>` : 'i18n.t('auto__container_appendchild_toastel_requestanimationframe_toastel_classlist_add__08627f')show');
     });
 
     let dismissTimeout = null;
@@ -175,15 +112,7 @@
       if (dismissTimeout) clearTimeout(dismissTimeout);
       toastEl.classList.remove('show');
       toastEl.classList.add('hide');
-      toastEl.addEventListener('transitionend', () => {
-        if (toastEl.parentElement) {
-          toastEl.parentElement.removeChild(toastEl);
-        }
-      }, { once: true });
-    };
-
-    // Слушатели событий
-    const closeBtn = toastEl.querySelector('.floating-toast-close');
+      toastEl.addEventListener('transitionendi18n.t('auto__if_toastel_parentelement_toastel_parentelement_removechild_toastel_once_true_const_closebtn_toastel_queryselector__7f1c2a').floating-toast-close');
     if (closeBtn) {
       closeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -193,46 +122,7 @@
 
     if (duration > 0) {
       toastEl.addEventListener('mouseenter', pauseTimer);
-      toastEl.addEventListener('mouseleave', () => {
-        if (remainingTime > 0) startTimer();
-      });
-      startTimer();
-    }
-
-    return toastEl;
-  }
-
-  /**
-   * Отображает уведомление с заголовком и текстом.
-   * @param {string} title - Заголовок.
-   * @param {string} message - Текст сообщения.
-   * @param {string} [type='info'] - Тип.
-   * @param {number} [duration=4500] - Длительность показа.
-   */
-  function showNotification(title, message, type = 'info', duration = DEFAULT_DURATION) {
-    return showToast(message, type, { title, duration });
-  }
-
-  // Экспорт в глобальную область видимости
-  window.showToast = showToast;
-  window.showNotification = showNotification;
-  window._showToast = showToast; // Для совместимости с уже имеющимися вкладками
-
-  // Перехват стандартного window.alert()
-  // Сохраняем ссылку на оригинальный alert на случай необходимости
-  window._originalAlert = window.alert;
-
-  window.alert = function (message) {
-    // Выводим неблокирующее всплывающее окно
-    showToast(message);
-    // Также дублируем в консоль для отладки
-    if (window.console && console.debug) {
-      console.debug('[Toast Alert]:', message);
-    }
-  };
-
-  // Инициализация контейнера при загрузке документа
-  if (document.readyState === 'loading') {
+      toastEl.addEventListener('mouseleavei18n.t('auto__if_remainingtime_0_starttimer_starttimer_return_toastel_param_string_title_param_string_message_param_string_type__888159')infoi18n.t('auto__param_number_duration_4500_function_shownotification_title_message_type__afd651')infoi18n.t('auto__duration_default_duration_return_showtoast_message_type_title_duration_window_showtoast_showtoast_window_shownotification_shownotification_window_showtoast_showtoast_window_alert_alert_window_originalalert_window_alert_window_alert_function_message_showtoast_message_if_window_console_console_debug_console_debug__e2a23c')[Toast Alert]:i18n.t('auto__message_if_document_readystate__0c7b1c')loading') {
     document.addEventListener('DOMContentLoaded', getOrCreateContainer);
   } else {
     getOrCreateContainer();

@@ -29,12 +29,10 @@
 
       if (badge) {
         badge.className = data.daemon_running ? 'badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2' : 'badge rounded-pill bg-danger-subtle text-danger border border-danger px-3 py-2';
-        badge.innerText = data.daemon_running ? '● Туннель активен' : '● Туннель остановлен';
+        badge.innerText = data.daemon_running ? i18n.t('auto___71e971') : i18n.t('auto___b74e26');
       }
 
-      if (ingressEl) ingressEl.innerText = data.public_url || 'https://kino.davidka.net';
-      if (endpointEl) {
-        endpointEl.innerText = data.endpoint_reachable ? `Доступен (${data.latency_ms || 0} ms)` : 'Недоступен';
+      if (ingressEl) ingressEl.innerText = data.public_url || 'https://kino.davidka.neti18n.t('auto__if_endpointel_endpointel_innertext_data_endpoint_reachable_data_latency_ms_0_ms__bb5fde')Недоступен';
         endpointEl.className = data.endpoint_reachable ? 'cf-value text-success' : 'cf-value text-danger';
       }
       if (usageEl) {
@@ -56,12 +54,7 @@
       const logs = data.logs || [];
       
       const terminal = document.getElementById('cf-log-terminal-output');
-      const countBadge = document.getElementById('cf-log-count-badge');
-      if (countBadge) countBadge.innerText = `${logs.length} строк`;
-
-      if (terminal) {
-        if (logs.length === 0) {
-          terminal.innerText = 'Журнал cloudflared пуст.';
+      const countBadge = document.getElementById('cf-log-count-badgei18n.t('auto__if_countbadge_countbadge_innertext_logs_length_if_terminal_if_logs_length_0_terminal_innertext__c10be3')Журнал cloudflared пуст.';
           return;
         }
         terminal.innerHTML = logs.map(l => {
@@ -82,10 +75,8 @@
 
       const titleEl = document.getElementById('cf-diag-summary-title');
       const descEl = document.getElementById('cf-diag-summary-desc');
-      const recList = document.getElementById('cf-recommendations-list');
-
-      if (titleEl) titleEl.innerText = `Здоровье: ${report.status || 'OK'} (${report.health_score || 100}/100)`;
-      if (descEl) descEl.innerText = report.summary || 'Все туннельные соединения стабильны.';
+      const recList = document.getElementById('cf-recommendations-listi18n.t('auto__if_titleel_titleel_innertext_report_status__e8658c')OK'} (${report.health_score || 100}/100)`;
+      if (descEl) descEl.innerText = report.summary || i18n.t('auto___0afd6d');
 
       if (recList && Array.isArray(report.recommendations)) {
         recList.innerHTML = report.recommendations.map(r => `
@@ -122,12 +113,9 @@
           testBtn.disabled = true;
           testBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Проверка...';
           try {
-            const res = await fetch('/api/cloudflared/test-endpoint');
-            const data = await res.json();
-            const msg = `Результат проверки Ingress:\nДоступен: ${data.reachable ? 'ДА' : 'НЕТ'}\nКод ответа: ${data.status_code || 'N/A'}\nЗадержка: ${data.response_time_ms || 0} ms`;
-            window.showToast?.(msg, data.reachable ? 'success' : 'warning') || alert(msg);
+            const res = await fetch('/api/cloudflared/test-endpointi18n.t('auto__const_data_await_res_json_const_msg_ingress_n_data_reachable__800bfb')ДА' : i18n.t('auto___003bbe')}\nКод ответа: ${data.status_code || 'N/Ai18n.t('auto__n_data_response_time_ms_0_ms_window_showtoast_msg_data_reachable__d22306')success' : 'warning') || alert(msg);
           } catch (e) {
-            window.showToast?.('Ошибка проверки эндпоинта: ' + e.message, 'danger') || alert('Ошибка проверки эндпоинта: ' + e.message);
+            window.showToast?.(i18n.t('auto___8ad920') + e.message, 'danger') || alert(i18n.t('auto___8ad920') + e.message);
           } finally {
             testBtn.disabled = false;
             testBtn.innerHTML = '<i class="bi bi-broadcast me-1"></i> Проверить Ingress';

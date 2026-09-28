@@ -1,4 +1,4 @@
-"""ETW Collector для максимального сбора событий Windows."""
+﻿"""ETW Collector для максимального сбора событий Windows."""
 from __future__ import annotations
 import json
 import os
@@ -132,7 +132,7 @@ class AIW64ETWCollector:
         """Собрать события реестра."""
         try:
             from apps.windows.core.process_audit_manager import ProcessAuditManager
-            from apps.windows.api.wevtapi import WevtAPI
+            from apps.windows.telemetry.api_bindings.wevtapi import WevtAPI
             manager = ProcessAuditManager(WevtAPI())
             events = manager.get_process_execution_history(limit=50)
             for event in events:

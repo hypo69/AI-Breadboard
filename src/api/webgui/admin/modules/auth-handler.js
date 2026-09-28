@@ -36,16 +36,7 @@ function setupPasswordModal() {
 
   // Show modal on load if not authenticated
   setTimeout(() => {
-    const isAuthenticated = localStorage.getItem('admin_authenticated');
-    if (!isAuthenticated) {
-      showPasswordModal();
-    }
-  }, 500);
-}
-
-function setupPasswordVerification() {
-  // Проверка аутентификации при загрузке
-  const isAuthenticated = localStorage.getItem('admin_authenticated');
+    const isAuthenticated = localStorage.getItem('admin_authenticatedi18n.t('auto__if_isauthenticated_showpasswordmodal_500_function_setuppasswordverification_const_isauthenticated_localstorage_getitem__b95cbb')admin_authenticated');
   const adminPassword = document.getElementById('admin-password');
 
   if (isAuthenticated && adminPassword) {
@@ -62,7 +53,7 @@ async function verifyPassword() {
   if (!passwordInput.value) {
     if (passwordError) {
       passwordError.classList.remove('d-none');
-      passwordError.textContent = 'Пароль не может быть пустым';
+      passwordError.textContent = i18n.t('auto___d97ab1');
     }
     return;
   }
@@ -70,23 +61,13 @@ async function verifyPassword() {
   try {
     const response = await fetch('/api/admin/verify-password', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: passwordInput.value })
-    });
-
-    if (response.ok) {
-      // Пароль верен
-      if (modal) {
-        const m = bootstrap.Modal.getInstance(modal);
-        if (m) m.hide();
-      }
-      localStorage.setItem('admin_authenticated', 'true');
+      headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_password_passwordinput_value_if_response_ok_if_modal_const_m_bootstrap_modal_getinstance_modal_if_m_m_hide_localstorage_setitem__23ecc6')admin_authenticated', 'true');
       passwordInput.value = '';
       if (passwordError) passwordError.classList.add('d-none');
     } else {
       if (passwordError) {
         passwordError.classList.remove('d-none');
-        passwordError.textContent = 'Неверный пароль';
+        passwordError.textContent = i18n.t('auto___e97cb7');
       }
       passwordInput.value = '';
       passwordInput.focus();
@@ -95,7 +76,7 @@ async function verifyPassword() {
     console.error('Password verification error:', error);
     if (passwordError) {
       passwordError.classList.remove('d-none');
-      passwordError.textContent = 'Ошибка проверки пароля';
+      passwordError.textContent = i18n.t('auto___5ba23e');
     }
   }
 }

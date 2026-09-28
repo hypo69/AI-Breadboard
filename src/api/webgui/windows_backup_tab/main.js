@@ -25,12 +25,12 @@
           const res = await fetch('/api/v1/windows-backup/file-history/trigger', { method: 'POST' });
           const data = await res.json();
           if (res.ok) {
-            alert('Архивация File History успешно запущена: ' + (data.message || 'OK'));
+            alert(i18n.t('auto__file_history__e03fa7') + (data.message || 'OK'));
           } else {
-            alert('Ошибка запуска: ' + (data.detail || JSON.stringify(data)));
+            alert(i18n.t('auto___4c1c20') + (data.detail || JSON.stringify(data)));
           }
         } catch (e) {
-          alert('Сетевая ошибка при запуске архивации: ' + e.message);
+          alert(i18n.t('auto___c4809d') + e.message);
         } finally {
           btnTrigger.disabled = false;
           btnTrigger.innerHTML = '<i class="bi bi-play-fill"></i> <span>Запустить бэкап</span>';
@@ -63,7 +63,7 @@
         const isPinned = document.getElementById('wb-create-lib-pinned')?.checked ?? true;
 
         if (!name) {
-          alert('Укажите название библиотеки');
+          alert(i18n.t('auto___6b272c'));
           return;
         }
 
@@ -91,10 +91,10 @@
             }
             await loadLibraries();
           } else {
-            alert('Ошибка: ' + (data.detail || JSON.stringify(data)));
+            alert(i18n.t('auto___8361fc') + (data.detail || JSON.stringify(data)));
           }
         } catch (e) {
-          alert('Ошибка сети: ' + e.message);
+          alert(i18n.t('auto___c12601') + e.message);
         } finally {
           btnExecCreateLib.disabled = false;
           btnExecCreateLib.innerHTML = '<i class="bi bi-check-lg"></i> <span>Создать</span>';
@@ -132,7 +132,7 @@
         const isDefault = document.getElementById('wb-add-folder-default-save')?.checked ?? false;
 
         if (!libName || !folderPath) {
-          alert('Выберите библиотеку и укажите путь к папке');
+          alert(i18n.t('auto___f66e5c'));
           return;
         }
 
@@ -155,10 +155,10 @@
             }
             await loadLibraries();
           } else {
-            alert('Ошибка: ' + (data.detail || JSON.stringify(data)));
+            alert(i18n.t('auto___8361fc') + (data.detail || JSON.stringify(data)));
           }
         } catch (e) {
-          alert('Ошибка сети: ' + e.message);
+          alert(i18n.t('auto___c12601') + e.message);
         } finally {
           btnExecAddFolder.disabled = false;
           btnExecAddFolder.innerHTML = '<i class="bi bi-check-lg"></i> <span>Добавить</span>';
@@ -175,17 +175,10 @@
         try {
           const res = await fetch('/api/v1/windows-backup/file-history/rag/sync', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ force_rebuild: false })
-          });
-          const data = await res.json();
-          if (res.ok) {
-            alert(`Синхронизация RAG завершена!\nПроиндексировано: ${data.total_indexed || 0} версий файлов.`);
-          } else {
-            alert('Ошибка синхронизации: ' + (data.detail || JSON.stringify(data)));
+            headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_force_rebuild_false_const_data_await_res_json_if_res_ok_alert_rag_n_data_total_indexed_0_else_alert__36d4ac')Ошибка синхронизации: ' + (data.detail || JSON.stringify(data)));
           }
         } catch (e) {
-          alert('Ошибка сети: ' + e.message);
+          alert(i18n.t('auto___c12601') + e.message);
         } finally {
           btnRagSync.disabled = false;
           btnRagSync.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Синхронизация';
@@ -248,7 +241,7 @@
     const btnEnableAudit = document.getElementById('wb-btn-enable-auditpol');
     if (btnEnableAudit) {
       btnEnableAudit.onclick = async () => {
-        if (confirm('Включить системный аудит файловой системы (auditpol /set /subcategory:File System)?')) {
+        if (confirm(i18n.t('auto__auditpol_set_subcategory_file_system__f508c2'))) {
           try {
             const res = await fetch('/api/sysadmin/file-audit/policy', {
               method: 'POST',
@@ -256,7 +249,7 @@
               body: JSON.stringify({ enable_success: true, enable_failure: true })
             });
             const data = await res.json();
-            alert(data.success ? 'Аудит файловой системы успешно активирован!' : `Ошибка: ${data.error || 'Сбой'}`);
+            alert(data.success ? i18n.t('auto___98f406') : `Ошибка: ${data.error || i18n.t('auto___cd4325')}`);
             await loadBackupData();
           } catch (err) {
             alert(`Ошибка выполнения: ${err.message}`);
@@ -268,25 +261,13 @@
     const btnConfigureSacl = document.getElementById('wb-btn-configure-sacl');
     if (btnConfigureSacl) {
       btnConfigureSacl.onclick = async () => {
-        const targetPath = prompt('Укажите путь к папке для настройки SACL аудита удаления:', 'c:\\Users\\onela\\AppData\\Local\\AI-Breadboard');
+        const targetPath = prompt(i18n.t('auto__sacl__85d35f'), 'c:\\Users\\onela\\AppData\\Local\\AI-Breadboard');
         if (targetPath) {
           try {
             const res = await fetch('/api/sysadmin/file-audit/folder-sacl', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ path: targetPath, principal: 'Everyone', enable: true })
-            });
-            const data = await res.json();
-            alert(data.Success ? `SACL успешно настроен для ${targetPath}!` : `Ошибка: ${data.Error || 'Сбой'}`);
-            await loadFileDeletions();
-          } catch (err) {
-            alert(`Ошибка: ${err.message}`);
-          }
-        }
-      };
-    }
-
-    const btnRefreshFolders = document.getElementById('wb-btn-refresh-user-folders');
+              body: JSON.stringify({ path: targetPath, principal: 'Everyonei18n.t('auto__enable_true_const_data_await_res_json_alert_data_success_sacl_targetpath_data_error__64c459')Сбойi18n.t('auto__await_loadfiledeletions_catch_err_alert_err_message_const_btnrefreshfolders_document_getelementbyid__5bab3e')wb-btn-refresh-user-folders');
     if (btnRefreshFolders) {
       btnRefreshFolders.onclick = () => loadUserFoldersOverview();
     }
@@ -328,22 +309,7 @@
           const data = await res.json();
           if (res.ok && data.selected_path) {
             const chosenPath = data.selected_path;
-            const inputPath = document.getElementById('wb-relocate-target-path');
-            if (inputPath) inputPath.value = chosenPath;
-
-            // Синхронизируем выпадающий список дисков
-            const driveLetter = chosenPath.match(/^[a-zA-Z]:/)?.[0]?.toUpperCase();
-            if (driveLetter && selectRelocateDrive) {
-              for (let opt of selectRelocateDrive.options) {
-                if (opt.value && opt.value.toUpperCase().startsWith(driveLetter)) {
-                  selectRelocateDrive.value = opt.value;
-                  break;
-                }
-              }
-            }
-          }
-        } catch (err) {
-          console.error('[WindowsBackup] Browse folder error:', err);
+            const inputPath = document.getElementById('wb-relocate-target-pathi18n.t('auto__if_inputpath_inputpath_value_chosenpath_const_driveletter_chosenpath_match_a_za_z_0_touppercase_if_driveletter_selectrelocatedrive_for_let_opt_of_selectrelocatedrive_options_if_opt_value_opt_value_touppercase_startswith_driveletter_selectrelocatedrive_value_opt_value_break_catch_err_console_error__e59400')[WindowsBackup] Browse folder error:', err);
         } finally {
           btnBrowseFolder.disabled = false;
           btnBrowseFolder.innerHTML = '<i class="bi bi-folder2-open"></i> <span>Обзор...</span>';
@@ -361,7 +327,7 @@
         const deleteSource = document.getElementById('wb-relocate-delete-source')?.checked || false;
 
         if (!folderId || (!targetDrive && !targetPath)) {
-          alert('Пожалуйста, выберите целевой диск или укажите целевую папку для переноса.');
+          alert(i18n.t('auto___dbb091'));
           return;
         }
 
@@ -387,7 +353,7 @@
 
           const data = await res.json();
           if (res.ok && data.success) {
-            alert(data.message || 'Перенос успешно завершен!');
+            alert(data.message || i18n.t('auto___6d6dc0'));
             const modalEl = document.getElementById('wb-relocate-modal');
             if (modalEl && window.bootstrap?.Modal) {
               const modalInstance = window.bootstrap.Modal.getInstance(modalEl);
@@ -395,10 +361,10 @@
             }
             await loadBackupData();
           } else {
-            alert('Ошибка переноса: ' + (data.detail || data.message || JSON.stringify(data)));
+            alert(i18n.t('auto___268b58') + (data.detail || data.message || JSON.stringify(data)));
           }
         } catch (e) {
-          alert('Сетевая ошибка при переносе: ' + e.message);
+          alert(i18n.t('auto___f9eada') + e.message);
         } finally {
           btnExecRelocate.disabled = false;
           btnExecRelocate.innerHTML = '<i class="bi bi-check-circle"></i> <span>Выполнить перенос</span>';
@@ -431,11 +397,11 @@
       const score = data.health_score ?? 0;
       if (elHealth) elHealth.textContent = `${score} / 100`;
       if (elBadge) {
-        elBadge.textContent = score >= 80 ? 'Готов' : score >= 50 ? 'Внимание' : 'Критично';
+        elBadge.textContent = score >= 80 ? i18n.t('auto___97b864') : score >= 50 ? i18n.t('auto___5f5f86') : i18n.t('auto___238b17');
         elBadge.className = `badge bg-${score >= 80 ? 'success' : score >= 50 ? 'warning' : 'danger'}`;
       }
       if (elSub) {
-        elSub.textContent = data.service_running ? 'Служба активна' : 'Служба остановлена';
+        elSub.textContent = data.service_running ? i18n.t('auto___b3fcb0') : i18n.t('auto___c4e687');
       }
 
       const recList = document.getElementById('wb-recommendations-list');
@@ -462,17 +428,7 @@
     const valLibs = document.getElementById('wb-val-libraries');
 
     try {
-      const res = await fetch('/api/v1/windows-backup/libraries');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const libs = await res.json();
-      _librariesData = libs || [];
-
-      if (countBadge) countBadge.textContent = `${libs.length} шт.`;
-      if (valLibs) valLibs.textContent = `${libs.length}`;
-
-      if (!tbody) return;
-      if (!libs || libs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted">Библиотеки не найдены</td></tr>';
+      const res = await fetch('/api/v1/windows-backup/librariesi18n.t('auto__if_res_ok_throw_new_error_http_res_status_const_libs_await_res_json_librariesdata_libs_if_countbadge_countbadge_textcontent_libs_length_if_vallibs_vallibs_textcontent_libs_length_if_tbody_return_if_libs_libs_length_0_tbody_innerhtml__80a1e4')<tr><td colspan="4" class="text-center py-3 text-muted">Библиотеки не найдены</td></tr>';
         return;
       }
 
@@ -499,7 +455,7 @@
               ${lib.default_save_folder ? escapeHtml(lib.default_save_folder) : '<span class="text-muted">—</span>'}
             </td>
             <td>
-              <span class="badge ${lib.is_pinned ? 'bg-primary' : 'bg-secondary'}">${lib.is_pinned ? 'Да' : 'Нет'}</span>
+              <span class="badge ${lib.is_pinned ? 'bg-primary' : 'bg-secondary'}">${lib.is_pinned ? i18n.t('auto___8d2fab') : i18n.t('auto___f82a82')}</span>
             </td>
           </tr>
         `;
@@ -525,22 +481,19 @@
 
       const isRunning = data.is_service_running;
       if (elService) {
-        elService.textContent = isRunning ? 'Работает' : 'Остановлена';
-        elService.className = `wb-card-value ${isRunning ? 'text-success' : 'text-danger'}`;
-      }
-      if (elSubService) {
-        elSubService.textContent = `Запуск: ${data.service_start_type || 'Manual'}`;
+        elService.textContent = isRunning ? i18n.t('auto___e6156d') : i18n.t('auto___6af536');
+        elService.className = `wb-card-value ${isRunning ? 'text-success' : 'text-dangeri18n.t('auto__if_elsubservice_elsubservice_textcontent_data_service_start_type__afacbc')Manual'}`;
       }
 
       const cfg = data.config;
       if (cfg) {
-        if (elTarget) elTarget.textContent = cfg.target_path || cfg.target_url || 'Не настроено';
-        if (elConfig) elConfig.textContent = cfg.config_file_path || 'Стандартный профиль';
-        if (elInterval) elInterval.textContent = cfg.backup_interval_minutes ? `${cfg.backup_interval_minutes} мин.` : 'По умолчанию (1 ч)';
-        if (elRetention) elRetention.textContent = cfg.retention_policy || 'Всегда';
-        if (elLast) elLast.textContent = cfg.last_backup_time || 'Нет записей';
+        if (elTarget) elTarget.textContent = cfg.target_path || cfg.target_url || i18n.t('auto___1411ab');
+        if (elConfig) elConfig.textContent = cfg.config_file_path || i18n.t('auto___12995c');
+        if (elInterval) elInterval.textContent = cfg.backup_interval_minutes ? `${cfg.backup_interval_minutes} мин.` : i18n.t('auto__1__a7e3d1');
+        if (elRetention) elRetention.textContent = cfg.retention_policy || i18n.t('auto___deb9e5');
+        if (elLast) elLast.textContent = cfg.last_backup_time || i18n.t('auto___096309');
       } else {
-        if (elTarget) elTarget.textContent = 'Конфигурация отсутствует';
+        if (elTarget) elTarget.textContent = i18n.t('auto___20bf4c');
         if (elConfig) elConfig.textContent = '—';
         if (elInterval) elInterval.textContent = '—';
         if (elRetention) elRetention.textContent = '—';
@@ -556,15 +509,7 @@
     const countBadge = document.getElementById('wb-vss-count');
 
     try {
-      const res = await fetch('/api/v1/windows-backup/vss/snapshots');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const snapshots = await res.json();
-
-      if (countBadge) countBadge.textContent = `${snapshots.length} шт.`;
-
-      if (!tbody) return;
-      if (!snapshots || snapshots.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted">Теневые копии (VSS) не найдены</td></tr>';
+      const res = await fetch('/api/v1/windows-backup/vss/snapshotsi18n.t('auto__if_res_ok_throw_new_error_http_res_status_const_snapshots_await_res_json_if_countbadge_countbadge_textcontent_snapshots_length_if_tbody_return_if_snapshots_snapshots_length_0_tbody_innerhtml__b2bfac')<tr><td colspan="4" class="text-center py-3 text-muted">Теневые копии (VSS) не найдены</td></tr>';
         return;
       }
 
@@ -592,18 +537,11 @@
 
       const tbody = document.getElementById('wb-deletions-tbody');
       const badge = document.getElementById('wb-deletions-badge');
-      const valDeletions = document.getElementById('wb-val-deletions');
-
-      if (badge) badge.innerText = `${events.length} удалений`;
-      if (valDeletions) valDeletions.innerText = events.length;
-
-      if (tbody) {
-        if (events.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-3">События удаления (4663/4660) не зафиксированы или аудит не включен</td></tr>';
+      const valDeletions = document.getElementById('wb-val-deletionsi18n.t('auto__if_badge_badge_innertext_events_length_if_valdeletions_valdeletions_innertext_events_length_if_tbody_if_events_length_0_tbody_innerhtml__d7ec51')<tr><td colspan="5" class="text-center text-muted p-3">События удаления (4663/4660) не зафиксированы или аудит не включен</td></tr>';
           return;
         }
         tbody.innerHTML = events.slice(0, 30).map((e, idx) => `
-          <tr class="wb-deletion-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для детального анализа удаления">
+          <tr class="wb-deletion-row" data-idx="${idx}" style="cursor: pointer;" title=i18n.t('auto___5b69eb')>
             <td class="font-monospace text-muted small">${e.timestamp?.slice(11, 19) || ''}</td>
             <td class="font-monospace fw-semibold ${e.event_id === 4660 ? 'text-danger' : 'text-warning'}">${e.event_id}</td>
             <td class="font-monospace text-truncate text-white" style="max-width: 260px;" title="${escapeHtml(e.object_name)}">${escapeHtml(e.object_name.split('\\').pop() || e.object_name)}</td>
@@ -620,8 +558,7 @@
 
             if (window.AITableModal) {
               window.AITableModal.show({
-                icon: '🗑️',
-                title: `Удаление: ${e.object_name.split('\\').pop() || e.object_name}`,
+                icon: '🗑️i18n.t('auto__title_e_object_name_split__d97fad')\\').pop() || e.object_name}`,
                 subtitle: `Event ID: ${e.event_id} | ${e.timestamp}`,
                 tableType: 'security_event',
                 badges: [
@@ -629,15 +566,15 @@
                   { text: e.status || 'Success', class: 'badge bg-success' }
                 ],
                 metadata: [
-                  { label: 'Целевой объект', value: e.object_name },
-                  { label: 'Тип объекта', value: e.object_type || 'File' },
-                  { label: 'Процесс-инициатор', value: e.process_name || 'Не указан' },
-                  { label: 'PID процесса', value: e.process_id ? String(e.process_id) : 'N/A' },
-                  { label: 'Пользователь', value: `${e.subject_domain_name}\\${e.subject_user_name}` },
-                  { label: 'Дескриптор HandleId', value: e.handle_id || 'N/A' },
-                  { label: 'Маска доступа', value: e.access_mask || 'DELETE (0x10000)' }
+                  { label: i18n.t('auto___6ebcae'), value: e.object_name },
+                  { label: i18n.t('auto___9748fe'), value: e.object_type || 'File' },
+                  { label: i18n.t('auto___2b3e8f'), value: e.process_name || i18n.t('auto___3b3c4f') },
+                  { label: i18n.t('auto_pid__763699'), value: e.process_id ? String(e.process_id) : 'N/A' },
+                  { label: i18n.t('auto___51aff1'), value: `${e.subject_domain_name}\\${e.subject_user_name}` },
+                  { label: i18n.t('auto__handleid_9d5304'), value: e.handle_id || 'N/A' },
+                  { label: i18n.t('auto___cec473'), value: e.access_mask || 'DELETE (0x10000)' }
                 ],
-                rawTitle: 'Полное сообщение Security Log',
+                rawTitle: i18n.t('auto__security_log_384465'),
                 rawContent: e.raw_message || JSON.stringify(e, null, 2),
                 requestData: e
               });
@@ -656,26 +593,14 @@
     const drivesList = document.getElementById('wb-drives-list');
 
     try {
-      const res = await fetch('/api/v1/windows-backup/user-folders/overview');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      _userFoldersData = data;
-
-      if (totalSizeBadge) {
-        totalSizeBadge.textContent = `Общий объем: ${data.total_user_size_gb} ГБ (${data.total_user_size_mb} МБ)`;
-      }
-
-      if (drivesList) {
-        if (!data.drives || data.drives.length === 0) {
-          drivesList.innerHTML = '<span class="text-muted">Диски не обнаружены</span>';
+      const res = await fetch('/api/v1/windows-backup/user-folders/overviewi18n.t('auto__if_res_ok_throw_new_error_http_res_status_const_data_await_res_json_userfoldersdata_data_if_totalsizebadge_totalsizebadge_textcontent_data_total_user_size_gb_data_total_user_size_mb_if_driveslist_if_data_drives_data_drives_length_0_driveslist_innerhtml__2de266')<span class="text-muted">Диски не обнаружены</span>';
         } else {
           drivesList.innerHTML = data.drives.map(d => `
             <div class="px-2 py-1 rounded border ${d.is_system_drive ? 'border-info bg-dark' : 'border-secondary bg-dark'} d-flex align-items-center gap-1.5">
               <i class="bi ${d.is_system_drive ? 'bi-hdd-fill text-info' : 'bi-hdd text-success'}"></i>
               <span class="fw-bold">${escapeHtml(d.drive_letter)}</span>
               <span class="text-muted">(${escapeHtml(d.fstype)})</span>:
-              <span class="text-success fw-semibold">${d.free_space_gb} ГБ своб.</span>
-              <span class="text-muted small">из ${d.total_space_gb} ГБ</span>
+              <span class="text-success fw-semiboldi18n.t('auto__d_free_space_gb_span_span_class__f43e88')text-muted small">из ${d.total_space_gb} ГБ</span>
               ${d.is_system_drive ? '<span class="badge bg-info-subtle text-info py-0 px-1" style="font-size: 0.65rem;">System</span>' : ''}
             </div>
           `).join('');
@@ -708,14 +633,11 @@
             <td>
               <span class="badge ${f.drive_letter.startsWith('C') ? 'bg-secondary' : 'bg-primary'}">${escapeHtml(f.drive_letter)}</span>
             </td>
-            <td class="fw-semibold font-monospace ${f.size_gb > 1.0 ? 'text-warning' : 'text-info'}">
-              ${f.size_gb >= 0.01 ? `${f.size_gb} ГБ` : `${f.size_mb} МБ`}
-            </td>
-            <td class="small text-muted font-monospace">${f.file_count}</td>
+            <td class="fw-semibold font-monospace ${f.size_gb > 1.0 ? 'text-warning' : 'text-info'}i18n.t('auto__f_size_gb_0_01_f_size_gb_f_size_mb_td_td_class__0f7dc2')small text-muted font-monospace">${f.file_count}</td>
             <td class="text-end">
               <button class="btn btn-xs ${canRelocate ? 'btn-outline-warning' : 'btn-outline-secondary'} py-0 px-2 wb-btn-relocate-modal" 
                       data-folder-id="${escapeHtml(f.folder_id)}"
-                      ${!canRelocate ? 'title="Нет подходящих дисков с достаточным местом"' : 'title="Перенести на другой диск"'}
+                      ${!canRelocate ? 'title=i18n.t('auto___8f78e3')' : 'title=i18n.t('auto___f340a5')'}
                       style="font-size: 0.72rem;">
                 <i class="bi bi-box-arrow-right me-1"></i>Перенести
               </button>
@@ -746,14 +668,7 @@
     const elPath = document.getElementById('wb-relocate-folder-path');
     const elSize = document.getElementById('wb-relocate-folder-size');
     const selectDrive = document.getElementById('wb-relocate-target-drive');
-    const elHint = document.getElementById('wb-relocate-drive-hint');
-
-    if (elId) elId.value = folder.folder_id;
-    if (elName) elName.textContent = folder.name;
-    if (elPath) elPath.textContent = folder.current_path;
-    if (elSize) elSize.textContent = `${folder.size_gb >= 0.01 ? `${folder.size_gb} ГБ` : `${folder.size_mb} МБ`} (${folder.file_count} файлов)`;
-
-    const inputPath = document.getElementById('wb-relocate-target-path');
+    const elHint = document.getElementById('wb-relocate-drive-hinti18n.t('auto__if_elid_elid_value_folder_folder_id_if_elname_elname_textcontent_folder_name_if_elpath_elpath_textcontent_folder_current_path_if_elsize_elsize_textcontent_folder_size_gb_0_01_folder_size_gb_folder_size_mb_folder_file_count_const_inputpath_document_getelementbyid__987ad5')wb-relocate-target-path');
     if (inputPath) inputPath.value = '';
 
     if (selectDrive) {
@@ -766,9 +681,7 @@
         if (dLetter === folderDrive) return;
 
         const isEnough = d.free_space_gb >= (folder.size_gb + 1.0);
-        const opt = document.createElement('option');
-        opt.value = d.drive_letter;
-        opt.textContent = `${d.drive_letter} (${d.fstype}) — Свободно: ${d.free_space_gb} ГБ из ${d.total_space_gb} ГБ ${isEnough ? '✅ Достаточно места' : '⚠️ Мало места'}`;
+        const opt = document.createElement('optioni18n.t('auto__opt_value_d_drive_letter_opt_textcontent_d_drive_letter_d_fstype_d_free_space_gb_d_total_space_gb_isenough__28ec5b')✅ Достаточно места' : i18n.t('auto___db6a47')}`;
         if (!isEnough) {
           opt.disabled = true;
         } else if (!firstSuitableDrive) {
@@ -791,7 +704,7 @@
     }
 
     if (elHint) {
-      elHint.textContent = 'Требуется свободного места: минимум ' + (folder.size_gb + 1.0).toFixed(2) + ' ГБ (размер + 1 ГБ резерва).';
+      elHint.textContent = i18n.t('auto___3416bd') + (folder.size_gb + 1.0).toFixed(2) + i18n.t('auto__1__aa3cbb');
     }
 
     const modalEl = document.getElementById('wb-relocate-modal');

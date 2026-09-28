@@ -28,7 +28,7 @@
 
       if (badge) {
         badge.className = data.authenticated ? 'badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2' : 'badge rounded-pill bg-warning-subtle text-warning border border-warning px-3 py-2';
-        badge.innerText = data.authenticated ? (data.is_mock ? '● Mock Режим' : '● GCP Подключен') : '● Не авторизован';
+        badge.innerText = data.authenticated ? (data.is_mock ? i18n.t('auto__mock__235d2e') : i18n.t('auto__gcp__eddf8b')) : i18n.t('auto___c815fa');
       }
 
       if (projectEl) projectEl.innerText = data.project_id || 'default-project';
@@ -46,12 +46,7 @@
       const logs = await res.json();
 
       const terminal = document.getElementById('gcloud-log-terminal-output');
-      const countBadge = document.getElementById('gcloud-logs-count-badge');
-      if (countBadge) countBadge.innerText = `${logs.length} строк`;
-
-      if (terminal) {
-        if (!Array.isArray(logs) || logs.length === 0) {
-          terminal.innerText = 'Журнал Cloud Logging пуст.';
+      const countBadge = document.getElementById('gcloud-logs-count-badgei18n.t('auto__if_countbadge_countbadge_innertext_logs_length_if_terminal_if_array_isarray_logs_logs_length_0_terminal_innertext__9e2f50')Журнал Cloud Logging пуст.';
           return;
         }
         terminal.innerHTML = logs.map(l => {
@@ -74,11 +69,8 @@
       const scoreEl = document.getElementById('gcloud-health-score');
       const titleEl = document.getElementById('gcloud-diag-summary-title');
       const descEl = document.getElementById('gcloud-diag-summary-desc');
-      const recList = document.getElementById('gcloud-recommendations-list');
-
-      if (scoreEl) scoreEl.innerText = `${report.health_score || 100}/100`;
-      if (titleEl) titleEl.innerText = `Статус: ${report.overall_status || 'HEALTHY'}`;
-      if (descEl) descEl.innerText = report.summary || 'Все сервисы Google Cloud функционируют в штатном режиме.';
+      const recList = document.getElementById('gcloud-recommendations-listi18n.t('auto__if_scoreel_scoreel_innertext_report_health_score_100_100_if_titleel_titleel_innertext_report_overall_status__25e2fe')HEALTHY'}`;
+      if (descEl) descEl.innerText = report.summary || i18n.t('auto__google_cloud__2d1c52');
 
       if (recList && Array.isArray(report.recommendations)) {
         recList.innerHTML = report.recommendations.map(r => `

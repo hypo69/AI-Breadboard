@@ -1,11 +1,11 @@
-"""Менеджер аудита процессов и телеметрии Sysmon / Security Audit для Windows."""
+﻿"""Менеджер аудита процессов и телеметрии Sysmon / Security Audit для Windows."""
 from __future__ import annotations
 import sys
 import winreg
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Set
-from apps.windows.api.wevtapi import WevtAPI
+from apps.windows.telemetry.api_bindings.wevtapi import WevtAPI
 from logger import logger
 
 @dataclass

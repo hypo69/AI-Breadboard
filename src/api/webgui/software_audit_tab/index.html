@@ -98,19 +98,19 @@
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 py-1.5 px-3 rounded-2 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <span class="fs-5">📊</span>
-      <span class="fw-bold text-white small" style="font-size: 0.92rem;">Аудит программного обеспечения</span>
+      <span class="fw-bold text-white small" style="font-size: 0.92rem;"><span data-i18n="auto___fb4f2c"></span></span>
       <span class="badge bg-dark border border-secondary text-info fw-normal" style="font-size: 0.7rem;">Software Audit</span>
-      <span class="text-secondary small d-none d-lg-inline" style="font-size: 0.76rem;">| Инвентаризация ПО, UserAssist & Prefetch</span>
+      <span class="text-secondary small d-none d-lg-inline" style="font-size: 0.76rem;">| <span data-i18n="auto___b89874"></span>, UserAssist & Prefetch</span>
     </div>
     <div class="d-flex align-items-center gap-1.5 flex-wrap">
       <span class="badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1" style="font-size: 0.72rem;" id="sw-audit-status-badge">
-        ● Готов
+        ● <span data-i18n="auto___97b864"></span>
       </span>
       <button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1" style="font-size: 0.75rem;" id="btn-sw-audit-refresh">
-        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+        <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___c2f668"></span>
       </button>
       <button class="btn btn-xs btn-outline-light rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-sw-audit-export">
-        <i class="bi bi-download me-1"></i> Экспорт JSON
+        <i class="bi bi-download me-1"></i> <span data-i18n="auto___dd5016"></span> JSON
       </button>
     </div>
   </div>
@@ -119,37 +119,37 @@
   <div class="row g-2 mb-2">
     <div class="col-6 col-lg-3">
       <div class="sw-audit-card">
-        <span class="sw-audit-label">Всего программ</span>
+        <span class="sw-audit-label"><span data-i18n="auto___e563d6"></span></span>
         <div class="d-flex align-items-baseline justify-content-between mt-1">
           <span class="sw-audit-value text-info" id="sw-metric-total">0</span>
-          <small class="text-muted" style="font-size: 0.7rem;">В реестре</small>
+          <small class="text-muted" style="font-size: 0.7rem;"><span data-i18n="auto___16941a"></span></small>
         </div>
       </div>
     </div>
     <div class="col-6 col-lg-3">
       <div class="sw-audit-card">
-        <span class="sw-audit-label">Активно используются</span>
+        <span class="sw-audit-label"><span data-i18n="auto___828087"></span></span>
         <div class="d-flex align-items-baseline justify-content-between mt-1">
           <span class="sw-audit-value text-success" id="sw-metric-active">0</span>
-          <small class="text-muted" style="font-size: 0.7rem;">Недавние запуски</small>
+          <small class="text-muted" style="font-size: 0.7rem;"><span data-i18n="auto___139281"></span></small>
         </div>
       </div>
     </div>
     <div class="col-6 col-lg-3">
       <div class="sw-audit-card">
-        <span class="sw-audit-label">Неиспользуемые (>90 дн)</span>
+        <span class="sw-audit-label"><span data-i18n="auto___41b2a6"></span> (>90 <span data-i18n="auto___16baca"></span>)</span>
         <div class="d-flex align-items-baseline justify-content-between mt-1">
           <span class="sw-audit-value text-warning" id="sw-metric-dormant">0</span>
-          <small class="text-muted" style="font-size: 0.7rem;">Кандидаты на удаление</small>
+          <small class="text-muted" style="font-size: 0.7rem;"><span data-i18n="auto___cf5d49"></span></small>
         </div>
       </div>
     </div>
     <div class="col-6 col-lg-3">
       <div class="sw-audit-card">
-        <span class="sw-audit-label">Категоризировано</span>
+        <span class="sw-audit-label"><span data-i18n="auto___c5128f"></span></span>
         <div class="d-flex align-items-baseline justify-content-between mt-1">
           <span class="sw-audit-value text-info" id="sw-metric-categorized">0%</span>
-          <small class="text-muted" style="font-size: 0.7rem;">AI эвристика</small>
+          <small class="text-muted" style="font-size: 0.7rem;">AI <span data-i18n="auto___400fb3"></span></small>
         </div>
       </div>
     </div>
@@ -161,19 +161,19 @@
       <div class="col-md-5">
         <div class="input-group input-group-sm">
           <span class="input-group-text bg-dark border-secondary text-light"><i class="bi bi-search"></i></span>
-          <input type="text" class="form-control bg-dark text-white border-secondary" id="sw-search-input" placeholder="Поиск по названию, издателю или назначению...">
+          <input type="text" class="form-control bg-dark text-white border-secondary" id="sw-search-input" placeholder="<span data-i18n="auto___a02ec0"></span>...">
         </div>
       </div>
       <div class="col-md-3">
         <select class="form-select form-select-sm bg-dark text-white border-secondary" id="sw-category-filter">
-          <option value="">Все категории</option>
+          <option value=""><span data-i18n="auto___b3bf7e"></span></option>
         </select>
       </div>
       <div class="col-md-2">
         <select class="form-select form-select-sm bg-dark text-white border-secondary" id="sw-status-filter">
-          <option value="all">Все программы</option>
-          <option value="active">Только активные</option>
-          <option value="dormant">Только неиспользуемые</option>
+          <option value="all"><span data-i18n="auto___4e50b0"></span></option>
+          <option value="active"><span data-i18n="auto___d738cc"></span></option>
+          <option value="dormant"><span data-i18n="auto___a881e2"></span></option>
         </select>
       </div>
       <div class="col-md-2 text-end">
@@ -185,25 +185,25 @@
   <!-- Main Table Panel -->
   <div class="sw-audit-panel">
     <div class="sw-audit-panel-header">
-      <span><i class="bi bi-table me-1"></i> Список установленных программных продуктов</span>
-      <span class="small text-muted" id="sw-last-scanned-time">Сканирование...</span>
+      <span><i class="bi bi-table me-1"></i> <span data-i18n="auto___7152bb"></span></span>
+      <span class="small text-muted" id="sw-last-scanned-time"><span data-i18n="auto___55784c"></span>...</span>
     </div>
     <div class="p-0 table-responsive" style="max-height: 540px; overflow-y: auto;">
       <table class="sw-audit-table">
         <thead>
           <tr>
-            <th>Программа</th>
-            <th>Категория</th>
-            <th>Издатель / Версия</th>
-            <th>Последний запуск</th>
-            <th>Запусков</th>
-            <th>Время работы</th>
-            <th>Размер / Арх</th>
-            <th style="text-align: right;">Действия</th>
+            <th><span data-i18n="auto___87163c"></span></th>
+            <th><span data-i18n="auto___19c858"></span></th>
+            <th><span data-i18n="auto___a36db4"></span></th>
+            <th><span data-i18n="auto___5e8630"></span></th>
+            <th><span data-i18n="auto___8faa90"></span></th>
+            <th><span data-i18n="auto___519192"></span></th>
+            <th><span data-i18n="auto___9805fe"></span></th>
+            <th style="text-align: right;"><span data-i18n="auto___9978ac"></span></th>
           </tr>
         </thead>
         <tbody id="sw-audit-tbody">
-          <tr><td colspan="8" class="text-center text-muted p-4"><i class="bi bi-arrow-repeat spin me-1"></i> Загрузка аудита программного обеспечения...</td></tr>
+          <tr><td colspan="8" class="text-center text-muted p-4"><i class="bi bi-arrow-repeat spin me-1"></i> <span data-i18n="auto___5f6b79"></span>...</td></tr>
         </tbody>
       </table>
     </div>
@@ -216,7 +216,7 @@
     <div class="modal-content bg-dark text-white border-secondary">
       <div class="modal-header border-secondary">
         <h5 class="modal-title d-flex align-items-center gap-2" id="swAppDetailModalLabel">
-          <span class="fs-5">📦</span> <span id="sw-modal-app-name">Детали программы</span>
+          <span class="fs-5">📦</span> <span id="sw-modal-app-name"><span data-i18n="auto___a39392"></span></span>
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -224,7 +224,7 @@
         <!-- Content will be injected by main.js -->
       </div>
       <div class="modal-footer border-secondary">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Закрыть</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"><span data-i18n="auto___4ae50d"></span></button>
       </div>
     </div>
   </div>

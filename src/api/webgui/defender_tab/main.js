@@ -32,21 +32,19 @@
       defenderData = status;
 
       // Badges in header
-      const engBadge = document.getElementById('def-engine-ver-badge');
-      if (engBadge) engBadge.textContent = `Движок: ${status.engine_version || 'N/A'}`;
-      const sigsBadge = document.getElementById('def-sigs-ver-badge');
-      if (sigsBadge) sigsBadge.textContent = `Базы: ${status.antivirus_signature_version || 'N/A'}`;
+      const engBadge = document.getElementById('def-engine-ver-badgei18n.t('auto__if_engbadge_engbadge_textcontent_status_engine_version__bd9264')N/A'}`;
+      const sigsBadge = document.getElementById('def-sigs-ver-badgei18n.t('auto__if_sigsbadge_sigsbadge_textcontent_status_antivirus_signature_version__4c1d67')N/A'}`;
 
       // Stat Cards
       const rtVal = document.getElementById('def-realtime-val');
       if (rtVal) {
-        rtVal.textContent = status.real_time_protection_enabled ? 'ВКЛ' : 'ВЫКЛ';
+        rtVal.textContent = status.real_time_protection_enabled ? i18n.t('auto___593689') : i18n.t('auto___919af8');
         rtVal.className = `def-card-value ${status.real_time_protection_enabled ? 'text-success' : 'text-danger'}`;
       }
 
       const cloudVal = document.getElementById('def-cloud-val');
       if (cloudVal) {
-        cloudVal.textContent = status.cloud_protection_enabled ? 'АКТИВНА' : 'ВЫКЛ';
+        cloudVal.textContent = status.cloud_protection_enabled ? i18n.t('auto___f12754') : i18n.t('auto___919af8');
         cloudVal.className = `def-card-value ${status.cloud_protection_enabled ? 'text-success' : 'text-warning'}`;
       }
 
@@ -62,15 +60,14 @@
       const shieldsTbody = document.getElementById('def-shields-tbody');
       if (shieldsTbody) {
         const shields = [
-          { name: 'Real-time Protection', enabled: status.real_time_protection_enabled, desc: 'Постоянный перехват и проверка файлов при создании и обращении' },
-          { name: 'Cloud Protection (MAPS)', enabled: status.cloud_protection_enabled, desc: `Мгновенная блокировка новых угроз через облачный ИИ Microsoft (${status.cloud_block_level})` },
-          { name: 'Behavior Monitoring', enabled: status.behavior_monitor_enabled, desc: 'Анализ поведения запущенных процессов и цепочек активности' },
-          { name: 'IOAV Protection', enabled: status.ioav_protection_enabled, desc: 'Проверка файлов, загружаемых из браузера, почты и мессенджеров' },
-          { name: 'AMSI Script Scanning', enabled: status.script_scanning_enabled, desc: 'Инспекция скриптов PowerShell, VBScript, JavaScript до их выполнения' },
-          { name: 'Tamper Protection', enabled: status.tamper_protection_enabled, desc: 'Защита настроек антивируса от отключения вредоносным ПО' },
-          { name: 'PUA Protection', enabled: status.pua_protection_enabled, desc: 'Блокировка нежелательного ПО, рекламных инсталляторов и майнеров' },
-          { name: 'Controlled Folder Access', enabled: status.controlled_folder_access_enabled, desc: 'Защита папок Документы/Рабочий стол от шифрования Ransomware' },
-          { name: 'Network Protection', enabled: status.network_protection_enabled, desc: 'Блокировка сетевых соединений с вредоносными доменами и IP' },
+          { name: 'Real-time Protection', enabled: status.real_time_protection_enabled, desc: i18n.t('auto___756338') },
+          { name: 'Cloud Protection (MAPS)i18n.t('auto__enabled_status_cloud_protection_enabled_desc_microsoft_status_cloud_block_level_name__c76066')Behavior Monitoring', enabled: status.behavior_monitor_enabled, desc: i18n.t('auto___286e6a') },
+          { name: 'IOAV Protection', enabled: status.ioav_protection_enabled, desc: i18n.t('auto___81d54e') },
+          { name: 'AMSI Script Scanning', enabled: status.script_scanning_enabled, desc: i18n.t('auto__powershell_vbscript_javascript__530ecd') },
+          { name: 'Tamper Protection', enabled: status.tamper_protection_enabled, desc: i18n.t('auto___2d1444') },
+          { name: 'PUA Protection', enabled: status.pua_protection_enabled, desc: i18n.t('auto___35d0c6') },
+          { name: 'Controlled Folder Access', enabled: status.controlled_folder_access_enabled, desc: i18n.t('auto__ransomware_56de3b') },
+          { name: 'Network Protection', enabled: status.network_protection_enabled, desc: i18n.t('auto__ip_78dc54') },
         ];
 
         shieldsTbody.innerHTML = shields.map(s => `
@@ -78,7 +75,7 @@
             <td class="fw-semibold text-light">${s.name}</td>
             <td class="text-center">
               <span class="badge ${s.enabled ? 'def-badge-active' : 'def-badge-disabled'}">
-                ${s.enabled ? 'ВКЛЮЧЕНО' : 'ОТКЛЮЧЕНО'}
+                ${s.enabled ? i18n.t('auto___b9e023') : i18n.t('auto___90f449')}
               </span>
             </td>
             <td class="def-desc-text">${s.desc}</td>
@@ -97,7 +94,7 @@
             </td>
             <td class="text-center">
               <span class="badge ${svc.running ? 'bg-success' : 'bg-secondary'}">
-                ${svc.running ? 'АКТИВЕН' : 'СТОП'}
+                ${svc.running ? i18n.t('auto___d1ccf9') : i18n.t('auto___bf1365')}
               </span>
             </td>
             <td class="text-end text-secondary">${svc.pid || '-'}</td>
@@ -107,21 +104,9 @@
       }
 
     } catch (err) {
-      console.error('[DefenderTab] Error loading status:', err);
-      showAlert(`Ошибка загрузки статуса Defender: ${err.message}`, true);
-    }
-  }
-
-  async function loadASRRules() {
-    try {
-      const rules = await fetchJSON('/api/v1/defender/asr');
+      console.error('[DefenderTab] Error loading status:i18n.t('auto__err_showalert_defender_err_message_true_async_function_loadasrrules_try_const_rules_await_fetchjson__6e36c3')/api/v1/defender/asr');
       const tbody = document.getElementById('def-asr-tbody');
-      const badge = document.getElementById('def-asr-count-badge');
-      if (badge) badge.textContent = `Всего: ${rules.length}`;
-
-      if (tbody) {
-        tbody.innerHTML = rules.map(r => {
-          let stateBadge = '<span class="badge bg-secondary">Не задано</span>';
+      const badge = document.getElementById('def-asr-count-badgei18n.t('auto__if_badge_badge_textcontent_rules_length_if_tbody_tbody_innerhtml_rules_map_r_let_statebadge__4364d0')<span class="badge bg-secondary">Не задано</span>';
           if (r.state === 'enabled') stateBadge = '<span class="badge def-badge-active">Блокировка (Block)</span>';
           else if (r.state === 'audit') stateBadge = '<span class="badge def-badge-audit">Аудит (Audit)</span>';
           else if (r.state === 'warn') stateBadge = '<span class="badge def-badge-warn">Предупреждение</span>';
@@ -196,18 +181,7 @@
       const countSub = document.getElementById('def-exclusions-sub');
       const summaryBadge = document.getElementById('def-exc-summary-badge');
       const recBox = document.getElementById('def-exc-recommendation-box');
-      const tbody = document.getElementById('def-exclusions-tbody');
-
-      if (countVal) countVal.textContent = rep.total_exclusions;
-      if (countSub) countSub.textContent = `${rep.suspicious_count} подозрительных`;
-      if (summaryBadge) summaryBadge.textContent = `${rep.total_exclusions} исключений (${rep.suspicious_count} риск)`;
-      if (recBox) recBox.textContent = rep.summary_recommendation;
-
-      const allItems = [...rep.path_exclusions, ...rep.extension_exclusions, ...rep.process_exclusions];
-
-      if (tbody) {
-        if (allItems.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Исключения отсутствуют. Защита работает без пропусков.</td></tr>';
+      const tbody = document.getElementById('def-exclusions-tbodyi18n.t('auto__if_countval_countval_textcontent_rep_total_exclusions_if_countsub_countsub_textcontent_rep_suspicious_count_if_summarybadge_summarybadge_textcontent_rep_total_exclusions_rep_suspicious_count_if_recbox_recbox_textcontent_rep_summary_recommendation_const_allitems_rep_path_exclusions_rep_extension_exclusions_rep_process_exclusions_if_tbody_if_allitems_length_0_tbody_innerhtml__a9ca03')<tr><td colspan="4" class="text-center text-muted py-3">Исключения отсутствуют. Защита работает без пропусков.</td></tr>';
         } else {
           tbody.innerHTML = allItems.map(itm => {
             let riskBadge = '<span class="badge bg-success">Безопасно</span>';
@@ -237,17 +211,7 @@
       const countBadge = document.getElementById('def-threats-count-badge');
       const countVal = document.getElementById('def-threats-val');
       const countSub = document.getElementById('def-threats-sub');
-      const tbody = document.getElementById('def-threats-tbody');
-
-      if (countBadge) countBadge.textContent = `${threats.length} записей`;
-      if (countVal) countVal.textContent = threats.length;
-      
-      const quarantined = threats.filter(t => t.status.toLowerCase().includes('quarantine')).length;
-      if (countSub) countSub.textContent = `Карантин: ${quarantined}`;
-
-      if (tbody) {
-        if (threats.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">Активных и архивных угроз не зафиксировано.</td></tr>';
+      const tbody = document.getElementById('def-threats-tbodyi18n.t('auto__if_countbadge_countbadge_textcontent_threats_length_if_countval_countval_textcontent_threats_length_const_quarantined_threats_filter_t_t_status_tolowercase_includes__87b411')quarantinei18n.t('auto__length_if_countsub_countsub_textcontent_quarantined_if_tbody_if_threats_length_0_tbody_innerhtml__33adba')<tr><td colspan="6" class="text-center text-muted py-3">Активных и архивных угроз не зафиксировано.</td></tr>';
         } else {
           tbody.innerHTML = threats.map(t => `
             <tr>
@@ -270,13 +234,7 @@
     try {
       const chains = await fetchJSON('/api/v1/defender/process-tree');
       const badge = document.getElementById('def-procs-count-badge');
-      const tbody = document.getElementById('def-procs-tbody');
-
-      if (badge) badge.textContent = `${chains.length} аномалий`;
-
-      if (tbody) {
-        if (chains.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Подозрительных связей процессов и fileless индикаторов не обнаружено.</td></tr>';
+      const tbody = document.getElementById('def-procs-tbodyi18n.t('auto__if_badge_badge_textcontent_chains_length_if_tbody_if_chains_length_0_tbody_innerhtml__a9a2a6')<tr><td colspan="5" class="text-center text-muted py-3">Подозрительных связей процессов и fileless индикаторов не обнаружено.</td></tr>';
         } else {
           tbody.innerHTML = chains.map(c => `
             <tr>
@@ -301,13 +259,7 @@
     try {
       const events = await fetchJSON('/api/v1/defender/events?limit=50');
       const badge = document.getElementById('def-events-count-badge');
-      const tbody = document.getElementById('def-events-tbody');
-
-      if (badge) badge.textContent = `${events.length} событий`;
-
-      if (tbody) {
-        if (events.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Событий в журнале Defender Operational не обнаружено.</td></tr>';
+      const tbody = document.getElementById('def-events-tbodyi18n.t('auto__if_badge_badge_textcontent_events_length_if_tbody_if_events_length_0_tbody_innerhtml__2086ac')<tr><td colspan="5" class="text-center text-muted py-3">Событий в журнале Defender Operational не обнаружено.</td></tr>';
         } else {
           tbody.innerHTML = events.map(e => `
             <tr>
@@ -384,55 +336,27 @@
     if (btnQuick) {
       btnQuick.onclick = async () => {
         try {
-          showAlert('Запуск быстрого сканирования Defender...');
+          showAlert(i18n.t('auto__defender__caeced'));
           const res = await fetchJSON('/api/v1/defender/scan', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scan_type: 'quick' }),
-          });
-          showAlert(`Быстрое сканирование: ${res.message}`);
-          await loadDefenderStatus();
-        } catch (err) {
-          showAlert(`Ошибка запуска сканирования: ${err.message}`, true);
-        }
-      };
-    }
-
-    const btnFull = document.getElementById('btn-def-full-scan');
+            body: JSON.stringify({ scan_type: 'quicki18n.t('auto__showalert_res_message_await_loaddefenderstatus_catch_err_showalert_err_message_true_const_btnfull_document_getelementbyid__13022e')btn-def-full-scan');
     if (btnFull) {
       btnFull.onclick = async () => {
         try {
-          showAlert('Запуск полного сканирования системы (фоновый процесс Defender)...');
+          showAlert(i18n.t('auto__defender__c6f3f8'));
           const res = await fetchJSON('/api/v1/defender/scan', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scan_type: 'full' }),
-          });
-          showAlert(`Полное сканирование: ${res.message}`);
-        } catch (err) {
-          showAlert(`Ошибка полного сканирования: ${err.message}`, true);
-        }
-      };
-    }
-
-    const btnUpdate = document.getElementById('btn-def-update-sigs');
+            body: JSON.stringify({ scan_type: 'fulli18n.t('auto__showalert_res_message_catch_err_showalert_err_message_true_const_btnupdate_document_getelementbyid__14d775')btn-def-update-sigs');
     if (btnUpdate) {
       btnUpdate.onclick = async () => {
         try {
-          showAlert('Обновление баз сигнатур Defender...');
-          const res = await fetchJSON('/api/v1/defender/update-signatures', { method: 'POST' });
-          showAlert(`Обновление сигнатур: ${res.message}`);
-          await loadDefenderStatus();
-        } catch (err) {
-          showAlert(`Ошибка обновления баз: ${err.message}`, true);
-        }
-      };
-    }
-
-    const btnRefresh = document.getElementById('btn-def-refresh');
+          showAlert(i18n.t('auto__defender__c56ee9'));
+          const res = await fetchJSON('/api/v1/defender/update-signatures', { method: 'POSTi18n.t('auto__showalert_res_message_await_loaddefenderstatus_catch_err_showalert_err_message_true_const_btnrefresh_document_getelementbyid__6be809')btn-def-refresh');
     if (btnRefresh) {
       btnRefresh.onclick = async () => {
-        showAlert('Обновление данных Defender...');
+        showAlert(i18n.t('auto__defender__4caf38'));
         await refreshAll();
       };
     }

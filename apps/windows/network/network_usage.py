@@ -1,4 +1,4 @@
-"""Многоуровневый коллектор сетевой телеметрии и исторического использования трафика Windows."""
+﻿"""Многоуровневый коллектор сетевой телеметрии и исторического использования трафика Windows."""
 from __future__ import annotations
 import json
 import os
@@ -13,7 +13,7 @@ except ImportError:
     PSUTIL_AVAILABLE = False
 
 from logger import logger
-from apps.windows.api.nethelper import IPHelperAPI
+from apps.windows.telemetry.api_bindings.nethelper import IPHelperAPI
 from apps.windows.telemetry.models import (
     AppNetworkUsageItem,
     NetworkAdapterStatistics,
@@ -273,3 +273,4 @@ class WindowsNetworkUsageCollector:
             val /= 1024.0
             idx += 1
         return f"{val:.2f} {units[idx]}"
+

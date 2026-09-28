@@ -112,7 +112,18 @@ def main() -> None:
         action='store_true',
         help='Вывести краткую сводку по состоянию и выйти',
     )
-    parser.add_argument('--mail', action='store_true', help='Вывести последние сообщения Gmail и выйти')
+        # Формы Google Forms
+    parser.add_argument('--create-form', action='store_true', help='Создать новую форму')
+    parser.add_argument('--title', type=str, default='', help='Заголовок формы (для создания/обновления)')
+    parser.add_argument('--description', type=str, default='', help='Описание формы (опционально)')
+    parser.add_argument('--update-form', action='store_true', help='Выполнить batchUpdate для формы')
+    parser.add_argument('--form-id', type=str, default='', help='ID формы для операций')
+    parser.add_argument('--requests', type=str, default='[]', help='JSON массив запросов batchUpdate')
+    parser.add_argument('--publish-form', action='store_true', help='Опубликовать форму (включить ответы)')
+    parser.add_argument('--close-form', action='store_true', help='Закрыть форму (отключить ответы)')
+    parser.add_argument('--form-responses', action='store_true', help='Получить ответы формы')
+    parser.add_argument('--limit', type=int, default=20, help='Лимит записей (для ответов)')
+
     parser.add_argument(
         '--calendar', action='store_true', help='Вывести ближайшие события Календаря и выйти'
     )
@@ -164,7 +175,40 @@ def main() -> None:
             print(f"  Файлов на Диске:  {summary['drive_files_count']}")
             print('========================================')
         return
-
+    # Обработка команд Google Forms
+    if args.create_form:
+        summary = state.create_form(title=args.title, description=args.description or None)
+        if args.json:
+            print(json.dumps(summary.__dict__, ensure_ascii=False, indent=2))
+        else:
+            print(f"Создана форма '{summary.title}' (ID: {summary.form_id})")
+        return
+    if args.update_form:
+        try:
+            requests = json.loads(args.requests)
+        except json.JSONDecodeError as e:
+            print(f"[ERROR] Неверный JSON в параметре --requests: {e}")
+            return
+        state.update_form(form_id=args.form_id, requests=requests)
+        print(f"Форма {args.form_id} обновлена")
+        return
+    if args.publish_form:
+        state.publish_form(form_id=args.form_id)
+        print(f"Форма {args.form_id} опубликована")
+        return
+    if args.close_form:
+        state.close_form(form_id=args.form_id)
+        print(f"Форма {args.form_id} закрыта")
+        return
+    if args.form_responses:
+        responses = state.get_form_responses(form_id=args.form_id, limit=args.limit)
+        if args.json:
+            print(json.dumps(responses, ensure_ascii=False, indent=2))
+        else:
+            print(f"Получено {len(responses)} ответов формы {args.form_id}")
+            for resp in responses:
+                print(resp)
+        return
     if args.mail or args.mode == 'mail':
         msgs = state.fetch_mail_messages(max_results=args.limit)
         if args.json:

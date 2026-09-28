@@ -11,27 +11,7 @@ export function setupUIHandlers() {
 
 function initHelpContent() {
   helpContent = {
-    'overview': `<h4>🚀 Обзор проекта</h4><p>ai-breadboard — интегрированная среда для работы с AI, RAG и системным управлением.</p>`,
-    'google_oauth': `<h4>🔑 Google OAuth и аккаунты</h4><p>Интеграция с Gmail, Drive, Sheets и Docs через OAuth 2.0 и Service Accounts.</p>`,
-    'ai_models': `<h4>🤖 ИИ Провайдеры и Модели</h4><p>Облачные (Gemini, OpenAI, Groq) и локальные (Ollama, Foundry, DirectML) модели.</p>`,
-    'gdrive_sync': `<h4>☁️ Google Drive Sync</h4><p>Автоматическая синхронизация баз данных и файлов с Google Drive.</p>`,
-    'rag_knowledge': `<h4>📚 База знаний и RAG</h4><p>Загрузка и поиск по вашим документам (PDF, Word, TXT, CSV, JSON).</p>`,
-    'rag': `<h4>🧠 RAG-индекс (Векторный поиск)</h4>
-<p><strong>1. База RAG:</strong> Индексирует системные базы знаний, системные инструкции и документы.</p>
-<p><strong>2. Загрузка документов:</strong> Позволяет загрузить внешние <code>.json</code>, <code>.txt</code>, <code>.md</code>, <code>.pdf</code> файлы или сканировать директории напрямую в RAG-индекс.</p>
-<p><strong>3. Чат-RAG:</strong> Индексирует историю сохраненных диалогов и ответов ассистента.</p>`,
-    'voice_tts': `<h4>🎙️ Голос и Озвучка</h4><p>Голосовой ввод (Whisper/WebSpeech) и синтез речи (Edge TTS).</p>`,
-    'plugins_skills': `<h4>🔌 Плагины, Навыки и MCP</h4><p>Telegram-бот, IFTTT, распознавание счетов и расширение через MCP.</p>`,
-    'storage_disks': `<h4>💾 Диски и Хранилище</h4><p>Сканирование накопителей, проверка целостности и консолидация дублей.</p>`,
-    'troubleshooting': `<h4>❓ Решение проблем (FAQ)</h4><p>Ответы на частые вопросы и устранение ошибок подключения.</p>`
-  };
-  
-  window.HELP_CONTENT = helpContent;
-}
-
-function setupModalHandlers() {
-  // Help modal
-  const helpBtn = document.getElementById('help-btn');
+    'overviewi18n.t('auto__h4_h4_p_ai_breadboard_ai_rag_p__da1ad2')google_oauthi18n.t('auto__h4_google_oauth_h4_p_gmail_drive_sheets_docs_oauth_2_0_service_accounts_p__7943c8')ai_modelsi18n.t('auto__h4_h4_p_gemini_openai_groq_ollama_foundry_directml_p__e73c40')gdrive_synci18n.t('auto__h4_google_drive_sync_h4_p_google_drive_p__0650aa')rag_knowledgei18n.t('auto__h4_rag_h4_p_pdf_word_txt_csv_json_p__44bba4')ragi18n.t('auto__h4_rag_h4_p_strong_1_rag_strong_p_p_strong_2_strong_code_json_code_code_txt_code_code_md_code_code_pdf_code_rag_p_p_strong_3_rag_strong_p__0834f8')voice_ttsi18n.t('auto__h4_h4_p_whisper_webspeech_edge_tts_p__632d68')plugins_skillsi18n.t('auto__h4_mcp_h4_p_telegram_ifttt_mcp_p__d059a6')storage_disksi18n.t('auto__h4_h4_p_p__754fb0')troubleshootingi18n.t('auto__h4_faq_h4_p_p_window_help_content_helpcontent_function_setupmodalhandlers_help_modal_const_helpbtn_document_getelementbyid__9a44e7')help-btn');
   if (helpBtn) {
     helpBtn.addEventListener('click', () => {
       showHelpModal('overview');
@@ -48,7 +28,7 @@ function setupModalHandlers() {
 }
 
 export function showHelpModal(key) {
-  const content = helpContent[key] || '<p>Информация не найдена</p>';
+  const content = helpContent[key] || i18n.t('auto__p_p__b6cdfb');
   const contentDiv = document.getElementById('help-modal-content');
   if (contentDiv) {
     contentDiv.innerHTML = content;

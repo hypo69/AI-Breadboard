@@ -32,14 +32,7 @@
       const adStatusEl = document.getElementById('winadmin-ad-status');
       const eventsCountEl = document.getElementById('winadmin-events-count');
 
-      if (hostEl) hostEl.innerText = `${data.hostname || 'LOCAL'} / ${data.domain || 'WORKGROUP'}`;
-      if (userCountEl) {
-        userCountEl.innerText = `${data.total_accounts || data.user_count || 0} (${data.active_users || 0} онлайн)`;
-      }
-      if (userBreakdownEl) {
-        userBreakdownEl.innerText = `${data.hidden_users || 0} скрытых`;
-      }
-      if (adStatusEl) adStatusEl.innerText = data.ad_connected ? 'Подключен' : 'Локальный хост';
+      if (hostEl) hostEl.innerText = `${data.hostname || 'LOCAL'} / ${data.domain || 'WORKGROUPi18n.t('auto__if_usercountel_usercountel_innertext_data_total_accounts_data_user_count_0_data_active_users_0_if_userbreakdownel_userbreakdownel_innertext_data_hidden_users_0_if_adstatusel_adstatusel_innertext_data_ad_connected__727ca8')Подключен' : i18n.t('auto___40fea1');
       if (eventsCountEl) eventsCountEl.innerText = data.event_count || 0;
     } catch (e) {
       console.error('[WinAdminTab] Failed to fetch status:', e);
@@ -54,24 +47,9 @@
       const accounts = data.accounts || [];
       
       const tbody = document.getElementById('winadmin-users-tbody');
-      const badge = document.getElementById('winadmin-users-badge');
-      if (badge) badge.innerText = `${accounts.length} аккаунтов (${data.total || accounts.length} всего)`;
-
-      if (tbody) {
-        if (accounts.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted p-3">Учетные записи по выбранному фильтру не найдены</td></tr>';
-          return;
-        }
-
-        tbody.innerHTML = accounts.map((u, idx) => {
-          // Вычисление бейджей
-          const badges = [];
-          if (u.is_admin) badges.push('<span class="badge badge-admin me-1">Admin</span>');
+      const badge = document.getElementById('winadmin-users-badgei18n.t('auto__if_badge_badge_innertext_accounts_length_data_total_accounts_length_if_tbody_if_accounts_length_0_tbody_innerhtml__bb02f2')<tr><td colspan="6" class="text-center text-muted p-3">Учетные записи по выбранному фильтру не найдены</td></tr>i18n.t('auto__return_tbody_innerhtml_accounts_map_u_idx_const_badges_if_u_is_admin_badges_push__f76aa4')<span class="badge badge-admin me-1">Admin</span>');
           if (u.is_hidden) badges.push('<span class="badge badge-hidden me-1">Скрытый</span>');
-          if (!u.enabled) badges.push('<span class="badge badge-disabled me-1">Отключен</span>');
-
-          // Статус
-          let statusBadge = '<span class="badge bg-secondary">Офлайн</span>';
+          if (!u.enabled) badges.push('<span class="badge badge-disabled me-1">Отключен</span>i18n.t('auto__let_statusbadge__542bd2')<span class="badge bg-secondary">Офлайн</span>';
           if (u.is_logged_in) {
             statusBadge = '<span class="badge bg-success-subtle text-success border border-success">● В сети</span>';
           } else if (!u.enabled) {
@@ -80,19 +58,16 @@
 
           // Ресурсы
           const resInfo = u.process_count > 0 
-            ? `<span class="text-info">${u.process_count} проц.</span> <span class="text-muted">(${u.memory_rss_mb} MB)</span>`
+            ? `<span class="text-infoi18n.t('auto__u_process_count_span_span_class__c12739')text-muted">(${u.memory_rss_mb} MB)</span>`
             : '<span class="text-muted">-</span>';
 
           // Профиль
           const profInfo = u.profile_size_mb > 0 
             ? `<span title="${u.profile_path}">${u.profile_size_mb} MB</span>`
-            : (u.profile_path ? `<span class="text-muted" title="${u.profile_path}">Локальный</span>` : '<span class="text-muted">-</span>');
-
-          // Группы
-          const groupsStr = (u.groups && u.groups.length > 0) ? u.groups.join(', ') : 'Users';
+            : (u.profile_path ? `<span class="text-muted" title="${u.profile_path}">Локальный</span>` : '<span class="text-muted">-</span>i18n.t('auto__const_groupsstr_u_groups_u_groups_length_0_u_groups_join__ce06f0'), ') : 'Users';
 
           return `
-            <tr class="winadmin-user-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для просмотра полного досье пользователя и AI-аудита">
+            <tr class="winadmin-user-row" data-idx="${idx}" style="cursor: pointer;" title=i18n.t('auto__ai__a425d1')>
               <td>
                 <div class="d-flex align-items-center gap-1.5">
                   <i class="bi bi-person-badge text-info"></i>
@@ -114,21 +89,18 @@
               </td>
               <td>${statusBadge}</td>
               <td style="text-align: right;">
-                <button class="btn btn-xs btn-outline-info py-0 px-2 btn-inspect-user me-1" data-user="${u.name}" title="Досье и метрики">
+                <button class="btn btn-xs btn-outline-info py-0 px-2 btn-inspect-user me-1" data-user="${u.name}" title=i18n.t('auto___80659e')>
                   Досье
                 </button>
                 ${u.is_logged_in ? `
-                  <button class="btn btn-xs btn-outline-danger py-0 px-1.5 btn-disconnect-user" data-user="${u.name}" title="Отключить сессию">
+                  <button class="btn btn-xs btn-outline-danger py-0 px-1.5 btn-disconnect-user" data-user="${u.name}" title=i18n.t('auto___c0b220')>
                     Выход
                   </button>
                 ` : ''}
               </td>
             </tr>
           `;
-        }).join('');
-
-        // Клик по строке для открытия досье
-        tbody.querySelectorAll('.winadmin-user-row').forEach(row => {
+        }).join('i18n.t('auto__tbody_queryselectorall__ef80d8').winadmin-user-row').forEach(row => {
           row.onclick = (evt) => {
             if (evt.target.closest('.btn-disconnect-user')) return;
             const idx = parseInt(row.getAttribute('data-idx'), 10);
@@ -139,7 +111,7 @@
           };
         });
 
-        // Кнопки "Досье"
+        // Кнопки i18n.t('auto___003172')
         tbody.querySelectorAll('.btn-inspect-user').forEach(btn => {
           btn.onclick = (evt) => {
             evt.stopPropagation();
@@ -149,13 +121,11 @@
           };
         });
 
-        // Кнопки "Выход"
+        // Кнопки i18n.t('auto___c42457')
         tbody.querySelectorAll('.btn-disconnect-user').forEach(btn => {
           btn.onclick = async (evt) => {
             evt.stopPropagation();
-            const user = btn.getAttribute('data-user');
-            if (confirm(`Отключить сессию пользователя ${user}?`)) {
-              await fetch(`/api/sysadmin/users/${user}/disconnect`, { method: 'POST' });
+            const user = btn.getAttribute('data-useri18n.t('auto__if_confirm_user_await_fetch_api_sysadmin_users_user_disconnect_method__bfb547')POST' });
               fetchAccounts();
               fetchStatus();
             }
@@ -171,37 +141,35 @@
     if (!window.AITableModal) return;
 
     const metadata = [
-      { label: 'Имя пользователя', value: u.name },
-      { label: 'Полное имя', value: u.full_name || 'Не указано' },
-      { label: 'Описание', value: u.description || 'Отсутствует' },
-      { label: 'SID пользователя', value: u.sid || 'N/A' },
-      { label: 'Тип аккаунта', value: `${u.account_type} (${u.is_admin ? 'Администратор' : 'Обычный'})` },
-      { label: 'Скрытая учетная запись', value: u.is_hidden ? 'Да (SpecialAccounts / Built-in)' : 'Нет' },
-      { label: 'Учетная запись включена', value: u.enabled ? 'Да' : 'Отключена' },
-      { label: 'Членство в группах', value: (u.groups && u.groups.length > 0) ? u.groups.join(', ') : 'Users' },
-      { label: 'Путь к профилю', value: u.profile_path || 'Не создан' },
-      { label: 'Размер профиля на диске', value: `${u.profile_size_mb} MB` },
-      { label: 'Последняя смена пароля', value: u.password_last_set || 'N/A' },
-      { label: 'Неверных попыток пароля', value: String(u.bad_password_count || 0) },
-      { label: 'Последний вход в систему', value: u.last_logon || 'Не зафиксирован' },
-      { label: 'Активных процессов', value: `${u.process_count} (RAM: ${u.memory_rss_mb} MB, CPU: ${u.cpu_percent}%)` }
+      { label: i18n.t('auto___a79f8a'), value: u.name },
+      { label: i18n.t('auto___ce2153'), value: u.full_name || i18n.t('auto___5696d9') },
+      { label: i18n.t('auto___f5441f'), value: u.description || i18n.t('auto___f2f7a8') },
+      { label: i18n.t('auto_sid__1240a2'), value: u.sid || 'N/A' },
+      { label: i18n.t('auto___3d10ce'), value: `${u.account_type} (${u.is_admin ? i18n.t('auto___36d00f') : i18n.t('auto___a2c84d')})` },
+      { label: i18n.t('auto___d1bf08'), value: u.is_hidden ? i18n.t('auto__specialaccounts_built_in__bda138') : i18n.t('auto___f82a82') },
+      { label: i18n.t('auto___55b5a4'), value: u.enabled ? i18n.t('auto___8d2fab') : i18n.t('auto___f262f3') },
+      { label: i18n.t('auto___7527d9'), value: (u.groups && u.groups.length > 0) ? u.groups.join(', ') : 'Users' },
+      { label: i18n.t('auto___d96f4c'), value: u.profile_path || i18n.t('auto___07a838') },
+      { label: i18n.t('auto___845157'), value: `${u.profile_size_mb} MB` },
+      { label: i18n.t('auto___0fb011'), value: u.password_last_set || 'N/A' },
+      { label: i18n.t('auto___644d9f'), value: String(u.bad_password_count || 0) },
+      { label: i18n.t('auto___86bfe4'), value: u.last_logon || i18n.t('auto___e5abe5') },
+      { label: i18n.t('auto___010d55'), value: `${u.process_count} (RAM: ${u.memory_rss_mb} MB, CPU: ${u.cpu_percent}%)` }
     ];
 
     const badges = [
       { text: u.is_logged_in ? 'Online' : 'Offline', class: u.is_logged_in ? 'badge bg-success' : 'badge bg-secondary' }
     ];
-    if (u.is_admin) badges.push({ text: 'Администратор', class: 'badge bg-warning text-dark' });
-    if (u.is_hidden) badges.push({ text: 'Скрытый', class: 'badge bg-purple text-white' });
-    if (!u.enabled) badges.push({ text: 'Отключен', class: 'badge bg-danger' });
+    if (u.is_admin) badges.push({ text: i18n.t('auto___36d00f'), class: 'badge bg-warning text-dark' });
+    if (u.is_hidden) badges.push({ text: i18n.t('auto___1bde0d'), class: 'badge bg-purple text-white' });
+    if (!u.enabled) badges.push({ text: i18n.t('auto___cadea0'), class: 'badge bg-danger' });
 
     window.AITableModal.show({
-      icon: '👤',
-      title: `Учетная запись: ${u.name}`,
-      subtitle: `${u.full_name ? u.full_name + ' | ' : ''}SID: ${u.sid}`,
+      icon: '👤i18n.t('auto__title_u_name_subtitle_u_full_name_u_full_name__f3dccb') | ' : ''}SID: ${u.sid}`,
       tableType: 'user_account',
       badges: badges,
       metadata: metadata,
-      rawTitle: 'Полная конфигурация и метрики пользователя',
+      rawTitle: i18n.t('auto___85acdf'),
       rawContent: JSON.stringify(u, null, 2),
       requestData: {
         username: u.name,
@@ -223,17 +191,12 @@
       const events = data.events || [];
       
       const tbody = document.getElementById('winadmin-events-tbody');
-      const badge = document.getElementById('winadmin-events-badge');
-      if (badge) badge.innerText = `${events.length} записей`;
-
-      if (tbody) {
-        if (events.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted p-3">События не зафиксированы</td></tr>';
+      const badge = document.getElementById('winadmin-events-badgei18n.t('auto__if_badge_badge_innertext_events_length_if_tbody_if_events_length_0_tbody_innerhtml__a27213')<tr><td colspan="4" class="text-center text-muted p-3">События не зафиксированы</td></tr>';
           return;
         }
         const displayEvents = events.slice(0, 30);
         tbody.innerHTML = displayEvents.map((e, idx) => `
-          <tr class="winadmin-event-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для AI-диагностики события">
+          <tr class="winadmin-event-row" data-idx="${idx}" style="cursor: pointer;" title=i18n.t('auto__ai__638c45')>
             <td class="font-monospace text-muted small">${e.timestamp?.slice(11, 19) || ''}</td>
             <td class="font-monospace fw-semibold text-info">${e.event_id}</td>
             <td><span class="badge ${e.level === 'Warning' ? 'bg-warning-subtle text-warning' : (e.level === 'Error' ? 'bg-danger-subtle text-danger' : 'bg-info-subtle text-info')}">${e.level}</span></td>
@@ -249,20 +212,18 @@
 
             if (window.AITableModal) {
               window.AITableModal.show({
-                icon: '📋',
-                title: `Событие #${e.event_id} (${e.source})`,
-                subtitle: `Уровень: ${e.level} | ${e.timestamp || ''}`,
+                icon: '📋i18n.t('auto__title_e_event_id_e_source_subtitle_e_level_e_timestamp__53be63')'}`,
                 tableType: 'generic',
                 badges: [
                   { text: e.level || 'Info', class: 'badge bg-info text-dark' }
                 ],
                 metadata: [
                   { label: 'Event ID', value: String(e.event_id) },
-                  { label: 'Источник / Provider', value: e.source },
-                  { label: 'Уровень важности', value: e.level },
-                  { label: 'Время регистрации', value: e.timestamp }
+                  { label: i18n.t('auto__provider_598756'), value: e.source },
+                  { label: i18n.t('auto___e7d258'), value: e.level },
+                  { label: i18n.t('auto___4eba0e'), value: e.timestamp }
                 ],
-                rawTitle: 'Текст сообщения журнала',
+                rawTitle: i18n.t('auto___617ac7'),
                 rawContent: e.description || '',
                 requestData: {
                   event_id: e.event_id,
@@ -288,18 +249,7 @@
 
     if (!isWinAdminInitialized) {
       const refreshBtn = document.getElementById('btn-winadmin-refresh');
-      const configBtn = document.getElementById('btn-winadmin-config');
-
-      if (refreshBtn) {
-        refreshBtn.onclick = () => {
-          fetchStatus();
-          fetchAccounts(currentUserFilter);
-          fetchEvents();
-        };
-      }
-
-      // Фильтры пользователей
-      const filterGroup = document.getElementById('winadmin-user-filters');
+      const configBtn = document.getElementById('btn-winadmin-configi18n.t('auto__if_refreshbtn_refreshbtn_onclick_fetchstatus_fetchaccounts_currentuserfilter_fetchevents_const_filtergroup_document_getelementbyid__866c68')winadmin-user-filters');
       if (filterGroup) {
         filterGroup.querySelectorAll('.winadmin-filter-btn').forEach(btn => {
           btn.onclick = () => {

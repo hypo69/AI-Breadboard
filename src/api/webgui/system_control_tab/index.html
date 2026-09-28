@@ -202,7 +202,7 @@
         <span class="badge rounded-pill bg-primary px-2 py-1" style="font-size: 0.75rem;">System Logs & Activity</span>
       </div>
       <p class="mb-0 small text-light mt-1" style="color: #cbd5e1 !important;">
-        Центр анализа логов операционной системы Windows, аудита событий и истории активности приложений.
+        <span data-i18n="auto__windows__6cbd9a"></span>.
       </p>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -278,10 +278,10 @@
             <button class="nav-link active py-0.5 px-2.5 small rounded-pill" data-mode="live" style="font-size: 0.78rem;">● Live Events</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="audit" style="font-size: 0.78rem;">🔬 Аудит (Smart Digest)</button>
+            <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="audit" style="font-size: 0.78rem;">🔬 <span data-i18n="auto___39846e"></span> (Smart Digest)</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="rag" style="font-size: 0.78rem;">🧠 RAG Поиск</button>
+            <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="rag" style="font-size: 0.78rem;">🧠 RAG <span data-i18n="auto___6433b5"></span></button>
           </li>
           <li class="nav-item">
             <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="errors" style="font-size: 0.78rem;">⚠️ Errors Only</button>
@@ -372,8 +372,8 @@
           <div class="slc-panel-header">
             <span id="slc-main-view-title"><i class="bi bi-list-columns-reverse me-2"></i>Live Windows Event Stream</span>
             <div class="d-flex align-items-center gap-2">
-              <button class="btn btn-sm btn-info rounded-pill px-3 fw-bold text-dark" id="btn-slc-audit" title="Провести аудит текущего журнала логов">
-                <i class="bi bi-shield-check me-1"></i> Аудит
+              <button class="btn btn-sm btn-info rounded-pill px-3 fw-bold text-dark" id="btn-slc-audit" title="<span data-i18n="auto___037c3e"></span>">
+                <i class="bi bi-shield-check me-1"></i> <span data-i18n="auto___39846e"></span>
               </button>
               <span class="badge bg-secondary" id="slc-stream-count-badge">0 entries</span>
             </div>
@@ -412,18 +412,18 @@
           <div class="p-3 d-none" id="slc-rag-container" style="max-height: 540px; overflow-y: auto;">
             <div class="card bg-dark border-info mb-3 shadow">
               <div class="card-header bg-black d-flex justify-content-between align-items-center">
-                <span class="text-info fw-bold"><i class="bi bi-search me-2"></i>Семантический RAG-поиск по логам</span>
+                <span class="text-info fw-bold"><i class="bi bi-search me-2"></i><span data-i18n="auto__rag__537604"></span></span>
                 <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-slc-rag-rebuild">
-                  <i class="bi bi-arrow-repeat me-1"></i> Перестроить RAG-индекс
+                  <i class="bi bi-arrow-repeat me-1"></i> <span data-i18n="auto__rag__f6ce28"></span>
                 </button>
               </div>
               <div class="card-body">
                 <div class="input-group mb-2">
                   <span class="input-group-text bg-black text-info border-secondary"><i class="bi bi-chat-left-dots"></i></span>
-                  <input type="text" class="form-control bg-dark text-light border-secondary" id="slc-rag-input" placeholder="Введите естественный запрос (например: 'почему завис BITS', 'ошибки DCOM 10016', 'сетевые сбои')...">
-                  <button class="btn btn-info px-4 fw-semibold" id="btn-slc-rag-search">Найти</button>
+                  <input type="text" class="form-control bg-dark text-light border-secondary" id="slc-rag-input" placeholder="<span data-i18n="auto__bits_dcom_10016__9990e0"></span>')...">
+                  <button class="btn btn-info px-4 fw-semibold" id="btn-slc-rag-search"><span data-i18n="auto___ed6e1d"></span></button>
                 </div>
-                <div class="small text-muted" id="slc-rag-status-text">Готов к поиску</div>
+                <div class="small text-muted" id="slc-rag-status-text"><span data-i18n="auto___1a4dc7"></span></div>
               </div>
             </div>
             <div id="slc-rag-results"></div>
@@ -437,40 +437,40 @@
           <!-- App Activity Log Container (Hidden by default) -->
           <div class="p-3 d-none" id="slc-activity-container" style="max-height: 540px; overflow-y: auto;">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="fw-bold text-warning"><i class="bi bi-journal-text me-1"></i> Журнал активности веб-интерфейса</span>
+              <span class="fw-bold text-warning"><i class="bi bi-journal-text me-1"></i> <span data-i18n="auto___63cc1e"></span></span>
               <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-scc-refresh-logs">
-                <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+                <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___c2f668"></span>
               </button>
             </div>
-            <pre class="bg-black text-light p-3 rounded font-monospace small" id="slc-activity-log-pre" style="max-height: 440px; overflow-y: auto;">Загрузка логов активности...</pre>
+            <pre class="bg-black text-light p-3 rounded font-monospace small" id="slc-activity-log-pre" style="max-height: 440px; overflow-y: auto;"><span data-i18n="auto___e7b445"></span>...</pre>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Модальное окно деталей события Windows Event Log -->
+  <!-- <span data-i18n="auto___e8c8d5"></span> Windows Event Log -->
   <div class="modal fade" id="slc-event-detail-modal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content border-secondary shadow-lg" style="background: #0f172a; color: #e2e8f0;">
         <div class="modal-header py-2 px-3" style="border-bottom: 1px solid #334155;">
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="fs-5">📋</span>
-            <h5 class="modal-title fw-bold mb-0" style="color: #38bdf8;">Детали события</h5>
+            <h5 class="modal-title fw-bold mb-0" style="color: #38bdf8;"><span data-i18n="auto___c3be93"></span></h5>
             <span id="slc-modal-level-badge"></span>
           </div>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body py-3 px-3">
 
-          <!-- Метаданные события -->
+          <!-- <span data-i18n="auto___e1f83f"></span> -->
           <div class="row g-2 mb-3 small">
             <div class="col-sm-6">
-              <strong style="color:#94a3b8;">Временная метка:</strong>
+              <strong style="color:#94a3b8;"><span data-i18n="auto___5901f0"></span>:</strong>
               <span id="slc-modal-time" class="fw-semibold text-white font-monospace ms-1"></span>
             </div>
             <div class="col-sm-6">
-              <strong style="color:#94a3b8;">Уровень:</strong>
+              <strong style="color:#94a3b8;"><span data-i18n="auto___d9f964"></span>:</strong>
               <span id="slc-modal-level" class="ms-1"></span>
             </div>
             <div class="col-sm-6">
@@ -478,28 +478,28 @@
               <span id="slc-modal-id" class="fw-semibold font-monospace text-info ms-1"></span>
             </div>
             <div class="col-sm-6">
-              <strong style="color:#94a3b8;">Поставщик (Provider):</strong>
+              <strong style="color:#94a3b8;"><span data-i18n="auto___62086d"></span> (Provider):</strong>
               <span id="slc-modal-provider" class="text-info ms-1"></span>
             </div>
             <div class="col-sm-6">
-              <strong style="color:#94a3b8;">Компьютер:</strong>
+              <strong style="color:#94a3b8;"><span data-i18n="auto___1db1b7"></span>:</strong>
               <span id="slc-modal-computer" class="text-light ms-1"></span>
             </div>
             <div class="col-sm-6">
-              <strong style="color:#94a3b8;">PID процесса:</strong>
+              <strong style="color:#94a3b8;">PID <span data-i18n="auto___aad191"></span>:</strong>
               <span id="slc-modal-pid" class="font-monospace text-muted ms-1"></span>
             </div>
             <div class="col-sm-12">
-              <strong style="color:#94a3b8;">Канал журнала:</strong>
+              <strong style="color:#94a3b8;"><span data-i18n="auto___48c664"></span>:</strong>
               <span id="slc-modal-channel" class="font-monospace small ms-1" style="color:#7dd3fc;"></span>
             </div>
           </div>
 
-          <!-- Текст сообщения события -->
+          <!-- <span data-i18n="auto___2f5851"></span> -->
           <div class="card mb-3" style="background:#000; border:1px solid #334155;">
             <div class="card-header py-1 px-3" style="background:#1e293b; border-bottom:1px solid #334155;">
               <h6 class="small text-uppercase fw-bold mb-0" style="color:#94a3b8; letter-spacing:0.05em;">
-                <i class="bi bi-chat-square-text me-1"></i>Сообщение события
+                <i class="bi bi-chat-square-text me-1"></i><span data-i18n="auto___5a7bd9"></span>
               </h6>
             </div>
             <div class="card-body p-3">
@@ -509,19 +509,19 @@
             </div>
           </div>
 
-          <!-- Секция AI-диагностики -->
+          <!-- <span data-i18n="auto__ai__f43f40"></span> -->
           <div class="card" style="background:#0f172a; border:1px solid #38bdf8;">
             <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center" style="background:#1e293b; border-bottom:1px solid #334155;">
               <h6 class="fw-bold mb-0" style="color:#38bdf8;">
                 <i class="bi bi-robot me-1"></i>AI Contextual Explanation
               </h6>
               <button class="btn btn-sm btn-outline-info py-0 px-2 rounded-pill" id="btn-slc-modal-diagnose">
-                <i class="bi bi-magic me-1"></i>Анализ контекста
+                <i class="bi bi-magic me-1"></i><span data-i18n="auto___ec5ee0"></span>
               </button>
             </div>
             <div class="card-body p-3">
               <div class="small" id="slc-modal-ai-explanation" style="color:#94a3b8;">
-                Нажмите «Анализ контекста», чтобы провести диагностику выбранной записи и сопутствующих событий.
+                <span data-i18n="auto___3e79b2"></span>.
               </div>
             </div>
           </div>
@@ -529,9 +529,9 @@
         </div>
         <div class="modal-footer py-2 px-3 d-flex justify-content-between" style="border-top:1px solid #334155;">
           <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-slc-modal-copy-msg">
-            <i class="bi bi-clipboard me-1"></i>Копировать сообщение
+            <i class="bi bi-clipboard me-1"></i><span data-i18n="auto___480e05"></span>
           </button>
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal"><span data-i18n="auto___4ae50d"></span></button>
         </div>
       </div>
     </div>

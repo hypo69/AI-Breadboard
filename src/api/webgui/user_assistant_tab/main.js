@@ -27,27 +27,13 @@
       const eventsBadge = document.getElementById('assistant-events-badge');
       const mailBadge = document.getElementById('assistant-mail-badge');
       const eventsList = document.getElementById('assistant-events-list');
-      const mailList = document.getElementById('assistant-mail-list');
-
-      const events = data.events || [];
-      const emails = data.unread_emails || [];
-      const files = data.recent_files || [];
-
-      if (eventsCountEl) eventsCountEl.innerText = events.length;
-      if (unreadCountEl) unreadCountEl.innerText = emails.length;
-      if (filesCountEl) filesCountEl.innerText = files.length;
-      if (eventsBadge) eventsBadge.innerText = `${events.length} событий`;
-      if (mailBadge) mailBadge.innerText = `${emails.length} писем`;
-
-      if (eventsList) {
-        if (events.length === 0) {
-          eventsList.innerHTML = '<div class="p-3 text-muted text-center small">Нет запланированных событий на сегодня.</div>';
+      const mailList = document.getElementById('assistant-mail-listi18n.t('auto__const_events_data_events_const_emails_data_unread_emails_const_files_data_recent_files_if_eventscountel_eventscountel_innertext_events_length_if_unreadcountel_unreadcountel_innertext_emails_length_if_filescountel_filescountel_innertext_files_length_if_eventsbadge_eventsbadge_innertext_events_length_if_mailbadge_mailbadge_innertext_emails_length_if_eventslist_if_events_length_0_eventslist_innerhtml__90f964')<div class="p-3 text-muted text-center small">Нет запланированных событий на сегодня.</div>';
         } else {
           eventsList.innerHTML = events.map(e => `
             <div class="assistant-list-item d-flex justify-content-between align-items-center">
               <div>
-                <div class="fw-semibold text-light">${e.summary || 'Без названия'}</div>
-                <div class="text-secondary small">⏰ ${e.start || 'Весь день'} ${e.location ? '📍 ' + e.location : ''}</div>
+                <div class="fw-semibold text-light">${e.summary || i18n.t('auto___32b74a')}</div>
+                <div class="text-secondary small">⏰ ${e.start || i18n.t('auto___7bd841')} ${e.location ? '📍 ' + e.location : ''}</div>
               </div>
             </div>
           `).join('');
@@ -61,8 +47,8 @@
           mailList.innerHTML = emails.map(m => `
             <div class="assistant-list-item d-flex justify-content-between align-items-center">
               <div>
-                <div class="fw-semibold text-light">${m.subject || 'Без темы'}</div>
-                <div class="text-secondary small">👤 ${m.from || 'Неизвестный'} &bull; ${m.snippet || ''}</div>
+                <div class="fw-semibold text-light">${m.subject || i18n.t('auto___43b108')}</div>
+                <div class="text-secondary small">👤 ${m.from || i18n.t('auto___3f2757')} &bull; ${m.snippet || ''}</div>
               </div>
             </div>
           `).join('');

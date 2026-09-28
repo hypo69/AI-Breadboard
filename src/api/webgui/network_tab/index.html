@@ -120,22 +120,22 @@
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 py-1.5 px-3 rounded-2 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <span class="fs-5">🌐</span>
-      <span class="fw-bold text-white small" style="font-size: 0.95rem;">Сетевой терминал Windows</span>
+      <span class="fw-bold text-white small" style="font-size: 0.95rem;"><span data-i18n="auto___f6df40"></span> Windows</span>
       <span class="badge bg-dark border border-info text-info fw-normal" style="font-size: 0.72rem;">apps/windows/network</span>
-      <span class="text-secondary small d-none d-lg-inline" style="font-size: 0.76rem;">| Скорость интернета, адаптеры, порты, соединения и DPI</span>
+      <span class="text-secondary small d-none d-lg-inline" style="font-size: 0.76rem;">| <span data-i18n="auto___ab7496"></span> DPI</span>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <span class="badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1" style="font-size: 0.72rem;" id="net-engine-status">
         <i class="bi bi-check-circle-fill me-1"></i> Windows Net: Active
       </span>
       <span class="badge rounded-pill bg-secondary-subtle text-light border border-secondary px-2 py-1" style="font-size: 0.72rem;" id="net-tshark-status">
-        TShark DPI: Проверка...
+        TShark DPI: <span data-i18n="auto___457969"></span>...
       </span>
       <button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1" style="font-size: 0.75rem;" id="btn-refresh-network-all">
-        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+        <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___c2f668"></span>
       </button>
       <button class="btn btn-xs btn-outline-warning rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-network-config">
-        <i class="bi bi-gear-fill me-1"></i> Настройки
+        <i class="bi bi-gear-fill me-1"></i> <span data-i18n="auto___7f17c7"></span>
       </button>
     </div>
   </div>
@@ -144,25 +144,25 @@
   <div class="row g-2 mb-3">
     <div class="col-6 col-md-3">
       <div class="net-card">
-        <span class="net-label">Сетевые адаптеры</span>
+        <span class="net-label"><span data-i18n="auto___7d2941"></span></span>
         <div class="d-flex align-items-baseline justify-content-between mt-1">
           <span class="net-value" id="net-kpi-adapters">--</span>
-          <span class="small text-success" style="font-size: 0.68rem;" id="net-kpi-adapters-active">0 активных</span>
+          <span class="small text-success" style="font-size: 0.68rem;" id="net-kpi-adapters-active">0 <span data-i18n="auto___cbbb7d"></span></span>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="net-card">
-        <span class="net-label">Активные соединения</span>
+        <span class="net-label"><span data-i18n="auto___70881f"></span></span>
         <div class="d-flex align-items-baseline justify-content-between mt-1">
           <span class="net-value" id="net-kpi-conns">--</span>
-          <span class="small text-info" style="font-size: 0.68rem;" id="net-kpi-listening">0 слушающих</span>
+          <span class="small text-info" style="font-size: 0.68rem;" id="net-kpi-listening">0 <span data-i18n="auto___01fb3b"></span></span>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="net-card">
-        <span class="net-label">Скорость Интернета</span>
+        <span class="net-label"><span data-i18n="auto___8f55f4"></span></span>
         <div class="d-flex align-items-baseline justify-content-between mt-1">
           <span class="net-value text-info" id="net-kpi-speed">-- Mbps</span>
           <span class="small text-muted" style="font-size: 0.68rem;" id="net-kpi-ping">Ping: -- ms</span>
@@ -171,10 +171,10 @@
     </div>
     <div class="col-6 col-md-3">
       <div class="net-card">
-        <span class="net-label">DPI & Безопасность</span>
+        <span class="net-label">DPI & <span data-i18n="auto___d4fab1"></span></span>
         <div class="d-flex align-items-baseline justify-content-between mt-1">
           <span class="net-value" id="net-kpi-packets" style="color: #38bdf8;">0</span>
-          <span class="small" style="font-size: 0.68rem; color: #4ade80;" id="net-kpi-anomalies">0 аномалий</span>
+          <span class="small" style="font-size: 0.68rem; color: #4ade80;" id="net-kpi-anomalies">0 <span data-i18n="auto___f15f5b"></span></span>
         </div>
       </div>
     </div>
@@ -184,27 +184,27 @@
   <ul class="nav net-subnav mb-3 gap-1">
     <li class="nav-item">
       <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-net-speedtest">
-        <i class="bi bi-speedometer2 me-1 text-warning"></i> Тест скорости Интернета
+        <i class="bi bi-speedometer2 me-1 text-warning"></i> <span data-i18n="auto___a80d94"></span>
       </button>
     </li>
     <li class="nav-item">
       <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-net-adapters">
-        <i class="bi bi-hdd-network me-1"></i> Сетевые адаптеры
+        <i class="bi bi-hdd-network me-1"></i> <span data-i18n="auto___7d2941"></span>
       </button>
     </li>
     <li class="nav-item">
       <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-net-connections">
-        <i class="bi bi-diagram-3 me-1"></i> Соединения и порты (<span id="badge-conn-count">0</span>)
+        <i class="bi bi-diagram-3 me-1"></i> <span data-i18n="auto___f59e59"></span> (<span id="badge-conn-count">0</span>)
       </button>
     </li>
     <li class="nav-item">
       <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-net-capture">
-        <i class="bi bi-broadcast-pin me-1"></i> Захват пакетов (Live DPI)
+        <i class="bi bi-broadcast-pin me-1"></i> <span data-i18n="auto___9c87ea"></span> (Live DPI)
       </button>
     </li>
     <li class="nav-item">
       <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-net-pcap">
-        <i class="bi bi-file-earmark-binary me-1"></i> Анализ PCAP & AI
+        <i class="bi bi-file-earmark-binary me-1"></i> <span data-i18n="auto___0267f3"></span> PCAP & AI
       </button>
     </li>
   </ul>
@@ -217,11 +217,11 @@
       <!-- Speedtest Action Control Box -->
       <div class="net-panel mb-3">
         <div class="net-panel-header">
-          <span><i class="bi bi-speedometer2 text-warning me-1"></i> Тестирование пропускной способности и задержки Интернета</span>
+          <span><i class="bi bi-speedometer2 text-warning me-1"></i> <span data-i18n="auto___b5f962"></span></span>
           <div class="d-flex align-items-center gap-2">
-            <span class="small text-muted" id="speedtest-status-text">Готов к тестированию</span>
+            <span class="small text-muted" id="speedtest-status-text"><span data-i18n="auto___c911e7"></span></span>
             <button class="btn btn-sm btn-warning rounded-pill px-3 fw-bold shadow-sm" id="btn-run-speedtest">
-              <i class="bi bi-play-fill me-1"></i> Запустить тест скорости
+              <i class="bi bi-play-fill me-1"></i> <span data-i18n="auto___660119"></span>
             </button>
           </div>
         </div>
@@ -230,30 +230,30 @@
           <div class="row g-3 mb-3">
             <div class="col-6 col-lg-3">
               <div class="speed-gauge-card">
-                <div class="text-secondary small text-uppercase fw-semibold mb-1"><i class="bi bi-arrow-down-circle-fill text-success me-1"></i> Скачивание (Download)</div>
+                <div class="text-secondary small text-uppercase fw-semibold mb-1"><i class="bi bi-arrow-down-circle-fill text-success me-1"></i> <span data-i18n="auto___108724"></span> (Download)</div>
                 <div class="speed-gauge-val text-success" id="speed-val-download">--</div>
                 <div class="text-muted small mt-1" id="speed-sub-download">0.0 MB/s</div>
               </div>
             </div>
             <div class="col-6 col-lg-3">
               <div class="speed-gauge-card">
-                <div class="text-secondary small text-uppercase fw-semibold mb-1"><i class="bi bi-arrow-up-circle-fill text-primary me-1"></i> Отдача (Upload)</div>
+                <div class="text-secondary small text-uppercase fw-semibold mb-1"><i class="bi bi-arrow-up-circle-fill text-primary me-1"></i> <span data-i18n="auto___62e8de"></span> (Upload)</div>
                 <div class="speed-gauge-val text-primary" id="speed-val-upload">--</div>
                 <div class="text-muted small mt-1" id="speed-sub-upload">0.0 MB/s</div>
               </div>
             </div>
             <div class="col-6 col-lg-3">
               <div class="speed-gauge-card">
-                <div class="text-secondary small text-uppercase fw-semibold mb-1"><i class="bi bi-stopwatch-fill text-info me-1"></i> Задержка (Ping)</div>
+                <div class="text-secondary small text-uppercase fw-semibold mb-1"><i class="bi bi-stopwatch-fill text-info me-1"></i> <span data-i18n="auto___fa20db"></span> (Ping)</div>
                 <div class="speed-gauge-val text-info" id="speed-val-ping">--</div>
                 <div class="text-muted small mt-1" id="speed-sub-jitter">Jitter: -- ms</div>
               </div>
             </div>
             <div class="col-6 col-lg-3">
               <div class="speed-gauge-card">
-                <div class="text-secondary small text-uppercase fw-semibold mb-1"><i class="bi bi-shield-check text-warning me-1"></i> Качество соединения</div>
+                <div class="text-secondary small text-uppercase fw-semibold mb-1"><i class="bi bi-shield-check text-warning me-1"></i> <span data-i18n="auto___662d7d"></span></div>
                 <div class="speed-gauge-val text-warning" id="speed-val-grade">--</div>
-                <div class="text-muted small text-truncate mt-1" id="speed-sub-isp">Провайдер: --</div>
+                <div class="text-muted small text-truncate mt-1" id="speed-sub-isp"><span data-i18n="auto___2d385a"></span>: --</div>
               </div>
             </div>
           </div>
@@ -261,29 +261,29 @@
           <!-- Quality Summary Bar -->
           <div class="p-2.5 rounded bg-dark border border-secondary mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div class="d-flex align-items-center gap-2">
-              <span class="badge bg-secondary" id="speed-badge-ip">Внешний IP: --</span>
-              <span class="badge bg-dark border border-secondary" id="speed-badge-location">Локация: --</span>
+              <span class="badge bg-secondary" id="speed-badge-ip"><span data-i18n="auto___1c85d9"></span> IP: --</span>
+              <span class="badge bg-dark border border-secondary" id="speed-badge-location"><span data-i18n="auto___119621"></span>: --</span>
             </div>
-            <div class="small text-muted" id="speed-summary-text">Нажмите «Запустить тест скорости», чтобы измерить пропускную способность канала, задержку (Ping) и джиттер.</div>
+            <div class="small text-muted" id="speed-summary-text"><span data-i18n="auto__ping__57c728"></span>.</div>
           </div>
 
           <!-- DNS & Edge Servers Latency Table -->
-          <h6 class="small fw-bold text-info mb-2"><i class="bi bi-globe me-1"></i> Задержка к опорным DNS & CDN серверам:</h6>
+          <h6 class="small fw-bold text-info mb-2"><i class="bi bi-globe me-1"></i> <span data-i18n="auto__dns_cdn__2a6f7d"></span>:</h6>
           <div class="table-responsive">
             <table class="net-table">
               <thead>
                 <tr>
-                  <th>Сервер / Провайдер</th>
-                  <th style="width: 140px;">Хост / IP</th>
-                  <th style="width: 110px; text-align: right;">Средний Ping</th>
+                  <th><span data-i18n="auto___0d39d8"></span></th>
+                  <th style="width: 140px;"><span data-i18n="auto___dfede6"></span> / IP</th>
+                  <th style="width: 110px; text-align: right;"><span data-i18n="auto___afdc98"></span> Ping</th>
                   <th style="width: 90px; text-align: right;">Min</th>
                   <th style="width: 90px; text-align: right;">Max</th>
-                  <th style="width: 100px; text-align: right;">Джиттер</th>
-                  <th style="width: 100px;">Статус</th>
+                  <th style="width: 100px; text-align: right;"><span data-i18n="auto___b53a7c"></span></th>
+                  <th style="width: 100px;"><span data-i18n="auto___f7f293"></span></th>
                 </tr>
               </thead>
               <tbody id="speed-servers-tbody">
-                <tr><td colspan="7" class="text-center py-3 text-muted">Запустите тест скорости для измерения задержки к DNS-серверам.</td></tr>
+                <tr><td colspan="7" class="text-center py-3 text-muted"><span data-i18n="auto__dns__df99bd"></span>.</td></tr>
               </tbody>
             </table>
           </div>
@@ -295,25 +295,25 @@
     <div class="tab-pane fade" id="tab-net-adapters">
       <div class="net-panel">
         <div class="net-panel-header">
-          <span><i class="bi bi-hdd-network me-1"></i> Физические и виртуальные сетевые интерфейсы Windows</span>
-          <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-0" id="btn-refresh-adapters">Обновить адаптеры</button>
+          <span><i class="bi bi-hdd-network me-1"></i> <span data-i18n="auto___a5b083"></span> Windows</span>
+          <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-0" id="btn-refresh-adapters"><span data-i18n="auto___364ce6"></span></button>
         </div>
         <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
           <table class="net-table">
             <thead>
               <tr>
-                <th style="width: 140px;">Адаптер</th>
-                <th>Описание</th>
+                <th style="width: 140px;"><span data-i18n="auto___5958a2"></span></th>
+                <th><span data-i18n="auto___f5441f"></span></th>
                 <th style="width: 130px;">IPv4</th>
-                <th style="width: 140px;">MAC адрес</th>
-                <th style="width: 90px;">Скорость</th>
-                <th style="width: 90px;">Статус</th>
-                <th style="width: 130px; text-align: right;">Отправлено</th>
-                <th style="width: 130px; text-align: right;">Принято</th>
+                <th style="width: 140px;">MAC <span data-i18n="auto___ea1eb3"></span></th>
+                <th style="width: 90px;"><span data-i18n="auto___09625b"></span></th>
+                <th style="width: 90px;"><span data-i18n="auto___f7f293"></span></th>
+                <th style="width: 130px; text-align: right;"><span data-i18n="auto___add0be"></span></th>
+                <th style="width: 130px; text-align: right;"><span data-i18n="auto___322744"></span></th>
               </tr>
             </thead>
             <tbody id="net-adapters-tbody">
-              <tr><td colspan="8" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-info me-2"></div>Загрузка сетевых адаптеров...</td></tr>
+              <tr><td colspan="8" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-info me-2"></div><span data-i18n="auto___0128df"></span>...</td></tr>
             </tbody>
           </table>
         </div>
@@ -325,33 +325,33 @@
       <div class="net-panel">
         <div class="net-panel-header">
           <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span><i class="bi bi-diagram-3 me-1"></i> Таблица сетевых подключений и слушающих портов</span>
+            <span><i class="bi bi-diagram-3 me-1"></i> <span data-i18n="auto___c42c72"></span></span>
             <div class="btn-group btn-group-sm ms-2" role="group">
-              <button type="button" class="btn btn-outline-secondary active btn-filter-conns" data-filter="all">Все</button>
+              <button type="button" class="btn btn-outline-secondary active btn-filter-conns" data-filter="all"><span data-i18n="auto___fd08da"></span></button>
               <button type="button" class="btn btn-outline-secondary btn-filter-conns" data-filter="LISTEN">LISTEN</button>
               <button type="button" class="btn btn-outline-secondary btn-filter-conns" data-filter="ESTABLISHED">ESTABLISHED</button>
               <button type="button" class="btn btn-outline-secondary btn-filter-conns" data-filter="UDP">UDP</button>
             </div>
           </div>
           <div class="d-flex align-items-center gap-2">
-            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="net-conns-filter" placeholder="Поиск (IP, порт, процесс, PID)..." style="max-width: 250px;">
-            <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-0" id="btn-refresh-conns">Обновить</button>
+            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="net-conns-filter" placeholder="<span data-i18n="auto__ip__8e4239"></span>, PID)..." style="max-width: 250px;">
+            <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-0" id="btn-refresh-conns"><span data-i18n="auto___c2f668"></span></button>
           </div>
         </div>
         <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
           <table class="net-table">
             <thead>
               <tr>
-                <th style="width: 70px;">Протокол</th>
-                <th style="width: 180px;">Локальный адрес</th>
-                <th style="width: 180px;">Удалённый адрес</th>
-                <th style="width: 110px;">Статус</th>
+                <th style="width: 70px;"><span data-i18n="auto___382265"></span></th>
+                <th style="width: 180px;"><span data-i18n="auto___370309"></span></th>
+                <th style="width: 180px;"><span data-i18n="auto___f4c2b9"></span></th>
+                <th style="width: 110px;"><span data-i18n="auto___f7f293"></span></th>
                 <th style="width: 80px;">PID</th>
-                <th>Процесс / Исполняемый файл</th>
+                <th><span data-i18n="auto___bcd4f5"></span></th>
               </tr>
             </thead>
             <tbody id="net-conns-tbody">
-              <tr><td colspan="6" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-info me-2"></div>Загрузка соединений...</td></tr>
+              <tr><td colspan="6" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-info me-2"></div><span data-i18n="auto___91afec"></span>...</td></tr>
             </tbody>
           </table>
         </div>
@@ -363,26 +363,26 @@
       <!-- Capture Control Box -->
       <div class="net-panel mb-3">
         <div class="net-panel-header">
-          <span><i class="bi bi-broadcast me-1"></i> Настройка сессии захвата трафика (Live Packet DPI)</span>
+          <span><i class="bi bi-broadcast me-1"></i> <span data-i18n="auto___77a6d0"></span> (Live Packet DPI)</span>
         </div>
         <div class="p-3">
           <div class="row g-2 mb-2 align-items-end">
             <div class="col-md-5">
-              <label class="form-label small fw-semibold text-light mb-1">Сетевой интерфейс для захвата:</label>
+              <label class="form-label small fw-semibold text-light mb-1"><span data-i18n="auto___d0e6a5"></span>:</label>
               <select class="form-select form-select-sm bg-dark text-white border-secondary" id="net-interface-select">
-                <option value="">Загрузка интерфейсов...</option>
+                <option value=""><span data-i18n="auto___17c0b3"></span>...</option>
               </select>
             </div>
             <div class="col-md-4">
-              <label class="form-label small fw-semibold text-light mb-1">Wireshark/BPF фильтр:</label>
+              <label class="form-label small fw-semibold text-light mb-1">Wireshark/BPF <span data-i18n="auto___3a36f3"></span>:</label>
               <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="net-capture-filter" placeholder="tcp, udp, port 80, tls">
             </div>
             <div class="col-md-3 d-flex gap-2">
               <button class="btn btn-sm btn-primary rounded-pill px-3 flex-fill" id="btn-start-live-capture">
-                <i class="bi bi-play-fill me-1"></i> Старт захвата
+                <i class="bi bi-play-fill me-1"></i> <span data-i18n="auto___39d23c"></span>
               </button>
               <button class="btn btn-sm btn-outline-danger rounded-pill px-3 flex-fill" id="btn-stop-live-capture" disabled>
-                <i class="bi bi-stop-fill me-1"></i> Стоп
+                <i class="bi bi-stop-fill me-1"></i> <span data-i18n="auto___6d714e"></span>
               </button>
             </div>
           </div>
@@ -393,12 +393,12 @@
       <div class="net-panel">
         <div class="net-panel-header">
           <div class="d-flex align-items-center gap-2">
-            <span><i class="bi bi-reception-4 me-1"></i> Поток сетевых пакетов (Packet Inspection)</span>
-            <span class="badge bg-secondary" id="net-captured-badge">0 пакетов</span>
+            <span><i class="bi bi-reception-4 me-1"></i> <span data-i18n="auto___42ee62"></span> (Packet Inspection)</span>
+            <span class="badge bg-secondary" id="net-captured-badge">0 <span data-i18n="auto___d62535"></span></span>
           </div>
           <div class="d-flex align-items-center gap-2">
-            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="net-table-filter" placeholder="Поиск по IP / протоколу..." style="max-width: 220px;">
-            <button class="btn btn-xs btn-outline-secondary rounded-pill px-2 py-0" id="btn-clear-packets">Очистить</button>
+            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="net-table-filter" placeholder="<span data-i18n="auto__ip__27cc54"></span>..." style="max-width: 220px;">
+            <button class="btn btn-xs btn-outline-secondary rounded-pill px-2 py-0" id="btn-clear-packets"><span data-i18n="auto___98b207"></span></button>
           </div>
         </div>
         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
@@ -406,16 +406,16 @@
             <thead>
               <tr>
                 <th style="width: 50px;">#</th>
-                <th style="width: 80px;">Время</th>
-                <th style="width: 140px;">Источник</th>
-                <th style="width: 140px;">Назначение</th>
-                <th style="width: 80px;">Протокол</th>
-                <th style="width: 70px; text-align: right;">Размер</th>
-                <th>Сведения о полезной нагрузке / Инфо</th>
+                <th style="width: 80px;"><span data-i18n="auto___c80d7e"></span></th>
+                <th style="width: 140px;"><span data-i18n="auto___8290a3"></span></th>
+                <th style="width: 140px;"><span data-i18n="auto___332fdc"></span></th>
+                <th style="width: 80px;"><span data-i18n="auto___382265"></span></th>
+                <th style="width: 70px; text-align: right;"><span data-i18n="auto___98713e"></span></th>
+                <th><span data-i18n="auto___44ea19"></span></th>
               </tr>
             </thead>
             <tbody id="net-packets-tbody">
-              <tr><td colspan="7" class="text-center py-4 text-muted">Нет захваченных пакетов. Выберите интерфейс и нажмите "Старт захвата".</td></tr>
+              <tr><td colspan="7" class="text-center py-4 text-muted"><span data-i18n="auto___223b6b"></span>".</td></tr>
             </tbody>
           </table>
         </div>
@@ -428,21 +428,21 @@
         <div class="col-lg-5">
           <div class="net-panel h-100">
             <div class="net-panel-header">
-              <span><i class="bi bi-file-earmark-binary me-1"></i> Загрузка файла сетевого дампа (.PCAP)</span>
+              <span><i class="bi bi-file-earmark-binary me-1"></i> <span data-i18n="auto___330f8a"></span> (.PCAP)</span>
             </div>
             <div class="p-3">
               <div class="mb-3">
-                <label class="form-label small fw-semibold text-light">Выберите .pcap, .pcapng или .cap файл:</label>
+                <label class="form-label small fw-semibold text-light"><span data-i18n="auto__pcap_pcapng_cap__7df709"></span>:</label>
                 <input type="file" class="form-control form-control-sm bg-dark text-white border-secondary" id="net-pcap-file" accept=".pcap,.pcapng,.cap">
               </div>
               <div class="d-flex justify-content-between align-items-center mb-3">
-                <span class="small text-muted" id="net-upload-status">Файл не выбран</span>
+                <span class="small text-muted" id="net-upload-status"><span data-i18n="auto___576895"></span></span>
                 <button class="btn btn-sm btn-info rounded-pill px-3 fw-bold" id="btn-analyze-pcap">
-                  <i class="bi bi-cpu me-1"></i> Запустить AI Анализ
+                  <i class="bi bi-cpu me-1"></i> <span data-i18n="auto__ai__6b9774"></span>
                 </button>
               </div>
               <div class="p-2.5 rounded bg-dark border border-secondary small text-muted" style="font-size: 0.75rem;">
-                <i class="bi bi-info-circle text-info me-1"></i> PCAP-анализатор проводит глубокую инспекцию заголовков, эвристический аудит портов и выявляет аномалии с помощью AI-модели.
+                <i class="bi bi-info-circle text-info me-1"></i> PCAP-<span data-i18n="auto__ai__df2763"></span>.
               </div>
             </div>
           </div>
@@ -451,7 +451,7 @@
         <div class="col-lg-7">
           <div class="net-panel h-100">
             <div class="net-panel-header">
-              <span><i class="bi bi-shield-check me-1"></i> Результаты AI-анализа и безопасности</span>
+              <span><i class="bi bi-shield-check me-1"></i> <span data-i18n="auto__ai__16d236"></span></span>
             </div>
             <div class="p-3">
               <div class="row g-2 mb-3">
@@ -463,20 +463,20 @@
                 </div>
                 <div class="col-6">
                   <div class="p-2 rounded bg-dark border border-secondary">
-                    <span class="net-label">Обнаруженные аномалии</span>
+                    <span class="net-label"><span data-i18n="auto___29cf47"></span></span>
                     <div class="net-value mt-1 text-success" id="pcap-anomalies-count">0</div>
                   </div>
                 </div>
               </div>
 
-              <h6 class="small fw-bold text-info mb-1.5">Эвристические предупреждения:</h6>
+              <h6 class="small fw-bold text-info mb-1.5"><span data-i18n="auto___cf0e35"></span>:</h6>
               <div id="pcap-heuristics-list" class="p-2 rounded bg-dark border border-secondary mb-3 small" style="min-height: 60px; max-height: 120px; overflow-y: auto;">
-                <span class="text-muted">Нет предупреждений. Запустите анализ файла.</span>
+                <span class="text-muted"><span data-i18n="auto___1db010"></span>.</span>
               </div>
 
-              <h6 class="small fw-bold text-info mb-1.5">Рекомендации AI:</h6>
+              <h6 class="small fw-bold text-info mb-1.5"><span data-i18n="auto___f0c1c5"></span> AI:</h6>
               <div id="pcap-ai-recommendations" class="p-2 rounded bg-dark border border-secondary small" style="min-height: 60px; max-height: 120px; overflow-y: auto;">
-                <span class="text-muted">Анализ пока не производился.</span>
+                <span class="text-muted"><span data-i18n="auto___d02740"></span>.</span>
               </div>
             </div>
           </div>

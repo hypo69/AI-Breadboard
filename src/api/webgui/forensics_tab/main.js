@@ -49,19 +49,18 @@
       if (!data) return;
 
       if (data.foreground_window) {
-        setText('diag-fg-title', data.foreground_window.title || 'Рабочий стол Windows');
-        setText('diag-fg-proc', `Процесс: ${data.foreground_window.process_name || 'unknown'} (PID: ${data.foreground_window.pid || 0})`);
+        setText('diag-fg-title', data.foreground_window.title || i18n.t('auto__windows_2c9c53'));
+        setText('diag-fg-proci18n.t('auto__data_foreground_window_process_name__e5a705')unknown'} (PID: ${data.foreground_window.pid || 0})`);
       }
 
-      setText('diag-user-idle-time', `${data.user_idle_seconds.toFixed(1)} сек`);
-      const statusBadge = document.getElementById('diag-user-status-badge');
+      setText('diag-user-idle-timei18n.t('auto__data_user_idle_seconds_tofixed_1_const_statusbadge_document_getelementbyid__c17959')diag-user-status-badge');
       if (statusBadge) {
         if (data.user_idle_seconds > 300) {
           statusBadge.className = 'badge bg-warning-subtle text-warning border border-warning';
-          statusBadge.textContent = 'Пользователь отошел (>5 мин)';
+          statusBadge.textContent = i18n.t('auto__5__fad944');
         } else {
           statusBadge.className = 'badge bg-success-subtle text-success border border-success';
-          statusBadge.textContent = 'Пользователь за ПК';
+          statusBadge.textContent = i18n.t('auto___34f9a7');
         }
       }
 
@@ -73,7 +72,7 @@
             <div class="d-flex align-items-center justify-content-between py-1 border-bottom border-secondary-subtle">
               <span class="text-truncate" style="max-width: 140px;">${escapeHtml(a.app_name)}</span>
               <span class="badge ${a.is_active_now ? 'bg-danger' : 'bg-secondary'}" style="font-size: 0.65rem;">
-                ${a.is_active_now ? 'Захват камеры' : 'В доступе'}
+                ${a.is_active_now ? i18n.t('auto___bc790a') : i18n.t('auto___0e9e53')}
               </span>
             </div>
           `).join('');
@@ -90,7 +89,7 @@
             <div class="d-flex align-items-center justify-content-between py-1 border-bottom border-secondary-subtle">
               <span class="text-truncate" style="max-width: 140px;">${escapeHtml(a.app_name)}</span>
               <span class="badge ${a.is_active_now ? 'bg-danger' : 'bg-secondary'}" style="font-size: 0.65rem;">
-                ${a.is_active_now ? 'Запись звука' : 'В доступе'}
+                ${a.is_active_now ? i18n.t('auto___d75908') : i18n.t('auto___0e9e53')}
               </span>
             </div>
           `).join('');
@@ -102,15 +101,12 @@
       // UserAssist Apps Table
       const uaTbody = document.getElementById('diag-userassist-tbody');
       if (uaTbody && data.userassist_top_apps) {
-        setText('diag-userassist-count', `${data.userassist_top_apps.length} программ`);
-        if (data.userassist_top_apps.length === 0) {
-          uaTbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Данных UserAssist в реестре не обнаружено</td></tr>';
+        setText('diag-userassist-counti18n.t('auto__data_userassist_top_apps_length_if_data_userassist_top_apps_length_0_uatbody_innerhtml__b713ff')<tr><td colspan="4" class="text-center py-4 text-muted">Данных UserAssist в реестре не обнаружено</td></tr>';
         } else {
           uaTbody.innerHTML = data.userassist_top_apps.map(a => `
             <tr>
               <td class="fw-bold text-white"><i class="bi bi-app text-info me-1.5"></i>${escapeHtml(a.name)}</td>
-              <td style="text-align: right;" class="text-info font-monospace">${a.run_count} раз</td>
-              <td style="text-align: right;" class="text-warning font-monospace">${a.focus_formatted}</td>
+              <td style="text-align: right;" class="text-info font-monospacei18n.t('auto__a_run_count_td_td_style__303c05')text-align: right;" class="text-warning font-monospace">${a.focus_formatted}</td>
               <td class="small text-muted text-truncate" style="max-width: 280px;" title="${escapeHtml(a.path)}">${escapeHtml(a.path)}</td>
             </tr>
           `).join('');

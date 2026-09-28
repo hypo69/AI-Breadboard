@@ -23,23 +23,7 @@
   let autoRefreshTimer = null;
   let currentPage = 1;
   let pageSize = 50;
-  let currentSearchQuery = '';
-
-  /**
-   * Инициализация вкладки
-   */
-  async function init() {
-    bindEvents();
-    await loadAvailableFiles();
-    await fetchReportAndRender();
-    await loadRecordsTable();
-  }
-
-  /**
-   * Привязка обработчиков событий
-   */
-  function bindEvents() {
-    const btnRefresh = document.getElementById('th-btn-refresh');
+  let currentSearchQuery = 'i18n.t('auto__async_function_init_bindevents_await_loadavailablefiles_await_fetchreportandrender_await_loadrecordstable_function_bindevents_const_btnrefresh_document_getelementbyid__d870c3')th-btn-refresh');
     if (btnRefresh) {
       btnRefresh.addEventListener('click', async () => {
         btnRefresh.classList.add('disabled');
@@ -143,16 +127,7 @@
 
     const btnRefreshFiles = document.getElementById('th-btn-refresh-files');
     if (btnRefreshFiles) {
-      btnRefreshFiles.addEventListener('click', loadAvailableFiles);
-    }
-  }
-
-  /**
-   * Загрузка списка доступных файлов логов
-   */
-  async function loadAvailableFiles() {
-    try {
-      const resp = await fetch('/api/windows/telemetry/research/files');
+      btnRefreshFiles.addEventListener('clicki18n.t('auto__loadavailablefiles_async_function_loadavailablefiles_try_const_resp_await_fetch__91f5db')/api/windows/telemetry/research/files');
       if (!resp.ok) return;
       const files = await resp.json();
 
@@ -209,7 +184,7 @@
         });
       }
     } catch (err) {
-      console.warn('Ошибка загрузки списка файлов логов:', err);
+      console.warn(i18n.t('auto___af1c4d'), err);
     }
   }
 
@@ -253,7 +228,7 @@
       renderAnomalies(currentReport);
       renderCharts(currentReport.charts || []);
     } catch (err) {
-      console.error('Ошибка анализа телеметрии:', err);
+      console.error(i18n.t('auto___fbd8c0'), err);
       if (container) {
         container.innerHTML = `
           <div class="col-12 text-center py-4 text-danger">
@@ -294,7 +269,7 @@
     if (elTimeWindow) {
       const s = report.time_window_start ? report.time_window_start.split('T')[0] : '';
       const e = report.time_window_end ? report.time_window_end.split('T')[0] : '';
-      elTimeWindow.textContent = s && e ? `${s} — ${e}` : 'Актуальный срез';
+      elTimeWindow.textContent = s && e ? `${s} — ${e}` : i18n.t('auto___e0b4ca');
     }
   }
 
@@ -310,15 +285,7 @@
       list.innerHTML = report.summary_conclusions.map((c) => `<li>${c}</li>`).join('');
       card.style.display = 'block';
     } else {
-      card.style.display = 'none';
-    }
-  }
-
-  /**
-   * Рендеринг таблицы аномалий
-   */
-  function renderAnomalies(report) {
-    const tbody = document.getElementById('th-tbody-anomalies');
+      card.style.display = 'nonei18n.t('auto__function_renderanomalies_report_const_tbody_document_getelementbyid__20262e')th-tbody-anomalies');
     const badge = document.getElementById('th-badge-table-anomalies');
     const headerCount = document.getElementById('th-anomalies-header-count');
     const anomalies = report.anomalies || [];
@@ -346,14 +313,7 @@
         </tr>
       `;
       })
-      .join('');
-  }
-
-  /**
-   * Построение графиков с помощью Chart.js
-   */
-  function renderCharts(charts) {
-    const container = document.getElementById('th-charts-container');
+      .join('i18n.t('auto__chart_js_function_rendercharts_charts_const_container_document_getelementbyid__3835c2')th-charts-container');
     if (!container) return;
 
     // Уничтожаем старые инстансы Chart.js
@@ -395,10 +355,7 @@
         </div>
       `;
       })
-      .join('');
-
-    // Инициализируем Chart.js для каждого canvas
-    if (typeof Chart === 'undefined') {
+      .join('i18n.t('auto__chart_js_canvas_if_typeof_chart__ae7f52')undefined') {
       loadChartJsScript(() => initChartObjects(charts));
     } else {
       initChartObjects(charts);
@@ -459,23 +416,7 @@
                   title: {
                     display: !!cfg.y_axis_label,
                     text: cfg.y_axis_label || '',
-                    color: '#94a3b8',
-                    font: { size: 11 },
-                  },
-                },
-              },
-        },
-      });
-
-      chartInstances[cfg.id] = chartObj;
-    });
-  }
-
-  /**
-   * Загрузка записей логов в таблицу
-   */
-  async function loadRecordsTable() {
-    const tbody = document.getElementById('th-tbody-records');
+                    color: '#94a3b8i18n.t('auto__font_size_11_chartinstances_cfg_id_chartobj_async_function_loadrecordstable_const_tbody_document_getelementbyid__9c921a')th-tbody-records');
     const badge = document.getElementById('th-badge-table-records');
     const pageInfo = document.getElementById('th-records-pagination-info');
     const pageIndicator = document.getElementById('th-page-indicator');
@@ -495,19 +436,7 @@
       if (!resp.ok) return;
       const data = await resp.json();
 
-      if (badge) badge.textContent = data.total.toLocaleString('ru-RU');
-      if (pageInfo) {
-        const start = (data.page - 1) * data.page_size + 1;
-        const end = Math.min(data.page * data.page_size, data.total);
-        pageInfo.textContent = `Показано ${data.total > 0 ? start : 0}–${end} из ${data.total}`;
-      }
-      if (pageIndicator) pageIndicator.textContent = `${data.page} / ${data.total_pages}`;
-      if (btnPrev) btnPrev.disabled = data.page <= 1;
-      if (btnNext) btnNext.disabled = data.page >= data.total_pages;
-
-      if (!tbody) return;
-      if (data.items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Нет записей по заданному запросу</td></tr>';
+      if (badge) badge.textContent = data.total.toLocaleString('ru-RUi18n.t('auto__if_pageinfo_const_start_data_page_1_data_page_size_1_const_end_math_min_data_page_data_page_size_data_total_pageinfo_textcontent_data_total_0_start_0_end_data_total_if_pageindicator_pageindicator_textcontent_data_page_data_total_pages_if_btnprev_btnprev_disabled_data_page_1_if_btnnext_btnnext_disabled_data_page_data_total_pages_if_tbody_return_if_data_items_length_0_tbody_innerhtml__ffe447')<tr><td colspan="5" class="text-center text-muted py-4">Нет записей по заданному запросу</td></tr>';
         return;
       }
 
@@ -516,11 +445,7 @@
           const ts = r.timestamp || r.time || r.datetime || '--';
           const metric = r.metric_name || r.sensor_name || r.name || r.category || 'telemetry';
           const val = r.value !== undefined ? r.value : r.val !== undefined ? r.val : '--';
-          const unit = r.unit || r.unit_symbol || '';
-          
-          // Дополнительные детали
-          const details = Object.entries(r)
-            .filter(([k]) => !['timestamp', 'time', 'datetime', 'metric_name', 'sensor_name', 'name', 'value', 'val', 'unit', 'unit_symbol'].includes(k))
+          const unit = r.unit || r.unit_symbol || 'i18n.t('auto__const_details_object_entries_r_filter_k__3811d4')timestamp', 'time', 'datetime', 'metric_name', 'sensor_name', 'name', 'value', 'val', 'unit', 'unit_symbol'].includes(k))
             .map(([k, v]) => `${k}=${typeof v === 'object' ? JSON.stringify(v) : v}`)
             .join(', ');
 
@@ -536,7 +461,7 @@
         })
         .join('');
     } catch (err) {
-      console.error('Ошибка загрузки таблицы записей:', err);
+      console.error(i18n.t('auto___4822aa'), err);
       if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Ошибка загрузки записей</td></tr>';
     }
   }
@@ -546,11 +471,7 @@
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  }
-
-  // Запуск при загрузке
-  if (document.readyState === 'loading') {
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' i18n.t('auto__sizes_i_if_document_readystate__92c489')loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();

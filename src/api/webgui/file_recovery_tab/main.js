@@ -33,7 +33,7 @@
     const fileDate = document.getElementById('recovery-file-date');
 
     try {
-      if (badge) badge.textContent = 'Обновление...';
+      if (badge) badge.textContent = i18n.t('auto___3eeb40');
       const res = await fetch(`/api/recovery/status?t=${Date.now()}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -43,33 +43,31 @@
       if (tool.exists) {
         if (badge) {
           badge.className = 'badge rounded-pill bg-success-subtle border border-success text-success px-2.5 py-1.5';
-          badge.textContent = 'Готов к запуску';
+          badge.textContent = i18n.t('auto___610706');
         }
         if (fileStatus) {
           fileStatus.className = 'recovery-stat-val text-success text-truncate';
-          fileStatus.textContent = 'Файл найден';
+          fileStatus.textContent = i18n.t('auto___01cc45');
         }
-        if (filePath) filePath.textContent = tool.path || tool.relative_path || '';
-        if (fileSize) fileSize.textContent = formatBytes(tool.size_bytes);
-        if (fileDate) fileDate.textContent = `Изменён: ${tool.modified_time || '--'}`;
+        if (filePath) filePath.textContent = tool.path || tool.relative_path || 'i18n.t('auto__if_filesize_filesize_textcontent_formatbytes_tool_size_bytes_if_filedate_filedate_textcontent_tool_modified_time__866f3f')--'}`;
       } else {
         if (badge) {
           badge.className = 'badge rounded-pill bg-warning-subtle border border-warning text-warning px-2.5 py-1.5';
-          badge.textContent = 'Исполняемый файл не найден';
+          badge.textContent = i18n.t('auto___301538');
         }
         if (fileStatus) {
           fileStatus.className = 'recovery-stat-val text-warning text-truncate';
-          fileStatus.textContent = 'Не найден в bin';
+          fileStatus.textContent = i18n.t('auto__bin_eb95e4');
         }
         if (filePath) filePath.textContent = tool.relative_path || '';
         if (fileSize) fileSize.textContent = '0 B';
         if (fileDate) fileDate.textContent = '--';
       }
     } catch (err) {
-      console.error('Ошибка загрузки статуса утилиты восстановления:', err);
+      console.error(i18n.t('auto___b6e10b'), err);
       if (badge) {
         badge.className = 'badge rounded-pill bg-danger-subtle border border-danger text-danger px-2.5 py-1.5';
-        badge.textContent = 'Ошибка связи';
+        badge.textContent = i18n.t('auto___6105a2');
       }
     }
   }
@@ -85,28 +83,22 @@
     try {
       const res = await fetch('/api/recovery/launch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        showAlert(`<strong>Успех:</strong> ${data.message || 'Программа R-Studio успешно запущена!'}`, 'success');
+        headers: { 'Content-Type': 'application/jsoni18n.t('auto__const_data_await_res_json_if_res_ok_data_success_showalert_strong_strong_data_message__7aa3a2')Программа R-Studio успешно запущена!'}`, 'success');
         if (window.toast) {
-          window.toast.success('R-Studio запущена', data.message || 'Окно программы открывается...');
+          window.toast.success(i18n.t('auto_r_studio__de553b'), data.message || i18n.t('auto___380b94'));
         }
       } else {
-        const err = data.detail || 'Не удалось запустить R-Studio';
+        const err = data.detail || i18n.t('auto__r_studio_89e5b2');
         showAlert(`<strong>Ошибка:</strong> ${err}`, 'danger');
         if (window.toast) {
-          window.toast.error('Ошибка запуска', err);
+          window.toast.error(i18n.t('auto___ee6366'), err);
         }
       }
     } catch (err) {
-      console.error('Ошибка вызова API запуска:', err);
+      console.error(i18n.t('auto__api__b901f6'), err);
       showAlert(`<strong>Сетевая ошибка:</strong> ${err.message}`, 'danger');
       if (window.toast) {
-        window.toast.error('Сетевая ошибка', err.message);
+        window.toast.error(i18n.t('auto___af5916'), err.message);
       }
     } finally {
       btn.disabled = false;
@@ -120,25 +112,7 @@
       refreshBtn.onclick = () => loadRecoveryStatus();
     }
 
-    const launchBtn = document.getElementById('btn-recovery-launch');
-    if (launchBtn) {
-      launchBtn.onclick = () => launchRecoveryTool();
-    }
-  }
-
-  function initFileRecoveryTab() {
-    initListeners();
-    loadRecoveryStatus();
-  }
-
-  // Экспорт для жизненного цикла tab-core.js
-  window.initFile_recoveryTab = initFileRecoveryTab;
-  window.initFilerecoveryTab = initFileRecoveryTab;
-  window.initFileRecoveryTab = initFileRecoveryTab;
-  window.initRecoveryTab = initFileRecoveryTab;
-
-  // Автозапуск при самостоятельной загрузке
-  if (document.readyState === 'loading') {
+    const launchBtn = document.getElementById('btn-recovery-launchi18n.t('auto__if_launchbtn_launchbtn_onclick_launchrecoverytool_function_initfilerecoverytab_initlisteners_loadrecoverystatus_tab_core_js_window_initfile_recoverytab_initfilerecoverytab_window_initfilerecoverytab_initfilerecoverytab_window_initfilerecoverytab_initfilerecoverytab_window_initrecoverytab_initfilerecoverytab_if_document_readystate__5c8142')loading') {
     document.addEventListener('DOMContentLoaded', initFileRecoveryTab);
   } else {
     initFileRecoveryTab();

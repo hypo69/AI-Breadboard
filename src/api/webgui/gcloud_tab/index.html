@@ -65,17 +65,17 @@
       <span class="fs-5">☁️</span>
       <span class="fw-bold text-white small" style="font-size: 0.92rem;">Google Cloud Monitor</span>
       <span class="badge bg-dark border border-secondary text-info fw-normal" style="font-size: 0.7rem;">Observability</span>
-      <span class="text-secondary small d-none d-lg-inline" style="font-size: 0.76rem;">| Cloud Logging, метрики Cloud Monitoring & IAM</span>
+      <span class="text-secondary small d-none d-lg-inline" style="font-size: 0.76rem;">| Cloud Logging, <span data-i18n="auto___0c194c"></span> Cloud Monitoring & IAM</span>
     </div>
     <div class="d-flex align-items-center gap-1.5 flex-wrap">
       <span class="badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1" style="font-size: 0.72rem;" id="gcloud-status-badge">
-        ● GCP Подключен
+        ● GCP <span data-i18n="auto___293d71"></span>
       </span>
       <button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1" style="font-size: 0.75rem;" id="btn-gcloud-refresh">
-        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+        <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___c2f668"></span>
       </button>
       <button class="btn btn-xs btn-outline-warning rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-gcloud-config">
-        <i class="bi bi-gear-fill me-1"></i> Настройки
+        <i class="bi bi-gear-fill me-1"></i> <span data-i18n="auto___7f17c7"></span>
       </button>
     </div>
   </div>
@@ -84,7 +84,7 @@
   <div class="row g-2 mb-2">
     <div class="col-6 col-md-3">
       <div class="gcloud-card">
-        <span class="gcloud-label">Проект GCP</span>
+        <span class="gcloud-label"><span data-i18n="auto___48b486"></span> GCP</span>
         <div class="d-flex align-items-baseline justify-content-between mt-1">
           <span class="gcloud-value text-info text-truncate" id="gcloud-project-id">-</span>
         </div>
@@ -92,7 +92,7 @@
     </div>
     <div class="col-6 col-md-3">
       <div class="gcloud-card">
-        <span class="gcloud-label">Тип авторизации</span>
+        <span class="gcloud-label"><span data-i18n="auto___31e297"></span></span>
         <div class="d-flex align-items-baseline justify-content-between mt-1">
           <span class="gcloud-value text-light" style="font-size: 1.05rem;" id="gcloud-auth-type">-</span>
         </div>
@@ -100,7 +100,7 @@
     </div>
     <div class="col-6 col-md-3">
       <div class="gcloud-card">
-        <span class="gcloud-label">Служебный аккаунт</span>
+        <span class="gcloud-label"><span data-i18n="auto___7dea3a"></span></span>
         <div class="d-flex align-items-baseline justify-content-between mt-1">
           <span class="gcloud-value text-secondary text-truncate" style="font-size: 0.85rem;" id="gcloud-client-email">-</span>
         </div>
@@ -108,7 +108,7 @@
     </div>
     <div class="col-6 col-md-3">
       <div class="gcloud-card">
-        <span class="gcloud-label">Здоровье инфраструктуры</span>
+        <span class="gcloud-label"><span data-i18n="auto___d4aa10"></span></span>
         <div class="d-flex align-items-baseline justify-content-between mt-1">
           <span class="gcloud-value text-success" id="gcloud-health-score">100/100</span>
         </div>
@@ -122,12 +122,12 @@
     <div class="col-lg-7">
       <div class="gcloud-panel h-100">
         <div class="gcloud-panel-header">
-          <span>📜 Cloud Logging (Последние события)</span>
-          <span class="badge bg-secondary" id="gcloud-logs-count-badge">0 строк</span>
+          <span>📜 Cloud Logging (<span data-i18n="auto___2355a3"></span>)</span>
+          <span class="badge bg-secondary" id="gcloud-logs-count-badge">0 <span data-i18n="auto___730f20"></span></span>
         </div>
         <div class="p-2">
           <div class="gcloud-log-terminal" id="gcloud-log-terminal-output">
-            Загрузка журналов Cloud Logging...
+            <span data-i18n="auto___8f24ab"></span> Cloud Logging...
           </div>
         </div>
       </div>
@@ -137,15 +137,15 @@
     <div class="col-lg-5">
       <div class="gcloud-panel h-100">
         <div class="gcloud-panel-header">
-          <span>🤖 AI-Диагностика и рекомендации</span>
+          <span>🤖 AI-<span data-i18n="auto___144b08"></span></span>
           <span class="badge bg-info text-dark">Gemini Diagnostics</span>
         </div>
         <div class="p-3">
-          <h6 class="fw-bold text-info mb-1" id="gcloud-diag-summary-title">Анализ телеметрии...</h6>
-          <p class="small text-light mb-3" id="gcloud-diag-summary-desc">Загрузка диагностического заключения...</p>
-          <div class="fw-semibold text-secondary small text-uppercase mb-2">Рекомендованные действия:</div>
+          <h6 class="fw-bold text-info mb-1" id="gcloud-diag-summary-title"><span data-i18n="auto___025fa1"></span>...</h6>
+          <p class="small text-light mb-3" id="gcloud-diag-summary-desc"><span data-i18n="auto___510d3b"></span>...</p>
+          <div class="fw-semibold text-secondary small text-uppercase mb-2"><span data-i18n="auto___d8dfa8"></span>:</div>
           <ul class="list-group list-group-flush small" id="gcloud-recommendations-list">
-            <li class="list-group-item bg-transparent text-light border-secondary py-1 px-0">• Ожидание данных телеметрии...</li>
+            <li class="list-group-item bg-transparent text-light border-secondary py-1 px-0">• <span data-i18n="auto___de8869"></span>...</li>
           </ul>
         </div>
       </div>

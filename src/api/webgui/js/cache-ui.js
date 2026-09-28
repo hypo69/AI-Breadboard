@@ -7,16 +7,12 @@
  * - Обработку действий очистки, экспорта, импорта и запроса персистентности
  */
 
-import { browserCache, STORES } from './browser-cache.js';
-
-// Человекопонятные названия хранилищ
-const STORE_LABELS = {
-  [STORES.API_CACHE]: { title: 'Кеш ответов API', icon: 'bi-hdd-network', desc: 'Кешированные ответы сервера и справочники' },
-  [STORES.RAG_EMBEDDINGS]: { title: 'RAG и Векторы', icon: 'bi-database-fill-gear', desc: 'Эмбеддинги, векторные чанки и поисковый индекс' },
-  [STORES.CHAT_HISTORY]: { title: 'История чатов', icon: 'bi-chat-dots-fill', desc: 'Диалоги, сообщения ассистентов и контекст' },
-  [STORES.MEDIA_BLOBS]: { title: 'Медиа и Аудио TTS', icon: 'bi-file-earmark-music-fill', desc: 'Сгенерированные аудиодорожки, картинки и бинарные файлы' },
-  [STORES.MODELS_REGISTRY]: { title: 'Реестр моделей', icon: 'bi-robot', desc: 'Метаданные локальных и облачных моделей' },
-  [STORES.KEY_VALUE]: { title: 'Пользовательские данные', icon: 'bi-key-fill', desc: 'Локальные параметры и временные значения' }
+import { browserCache, STORES } from './browser-cache.jsi18n.t('auto__const_store_labels_stores_api_cache_title__a5c815')Кеш ответов API', icon: 'bi-hdd-network', desc: i18n.t('auto___810250') },
+  [STORES.RAG_EMBEDDINGS]: { title: i18n.t('auto_rag__1a9db1'), icon: 'bi-database-fill-gear', desc: i18n.t('auto___957103') },
+  [STORES.CHAT_HISTORY]: { title: i18n.t('auto___55e9b4'), icon: 'bi-chat-dots-fill', desc: i18n.t('auto___408efe') },
+  [STORES.MEDIA_BLOBS]: { title: i18n.t('auto__tts_1604f9'), icon: 'bi-file-earmark-music-fill', desc: i18n.t('auto___bb0ef3') },
+  [STORES.MODELS_REGISTRY]: { title: i18n.t('auto___310296'), icon: 'bi-robot', desc: i18n.t('auto___8bec7c') },
+  [STORES.KEY_VALUE]: { title: i18n.t('auto___a7fdda'), icon: 'bi-key-fill', desc: i18n.t('auto___9b83a6') }
 };
 
 /**
@@ -27,42 +23,21 @@ export function initCacheUI() {
   const modalEl = document.getElementById('cacheManagerModal');
 
   if (!modalEl) {
-    console.warn('[CacheUI] Элемент #cacheManagerModal не найден в DOM.');
+    console.warn(i18n.t('auto__cacheui_cachemanagermodal_dom__257797'));
     return;
   }
 
   // Привязка кнопок открытия
   openButtons.forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      openCacheModal();
-    });
-  });
-
-  // Обновление статистики при открытии модального окна
-  modalEl.addEventListener('show.bs.modal', () => {
-    refreshCacheModalStats();
-  });
-
-  // Привязка действий кнопок
-  const btnCleanupExpired = document.getElementById('cache-btn-cleanup-expired');
+    btn.addEventListener('clicki18n.t('auto__e_e_preventdefault_opencachemodal_modalel_addeventlistener__6766e3')show.bs.modali18n.t('auto__refreshcachemodalstats_const_btncleanupexpired_document_getelementbyid__ac73b4')cache-btn-cleanup-expired');
   if (btnCleanupExpired) {
-    btnCleanupExpired.addEventListener('click', async () => {
-      btnCleanupExpired.disabled = true;
-      const count = await browserCache.cleanupExpired();
-      window.showToast?.(`Очищено просроченных записей: ${count}`, 'info') || alert(`Очищено просроченных записей: ${count}`);
-      btnCleanupExpired.disabled = false;
-      await refreshCacheModalStats();
-    });
-  }
-
-  const btnClearAll = document.getElementById('cache-btn-clear-all');
+    btnCleanupExpired.addEventListener('clicki18n.t('auto__async_btncleanupexpired_disabled_true_const_count_await_browsercache_cleanupexpired_window_showtoast_count__4c06ae')infoi18n.t('auto__alert_count_btncleanupexpired_disabled_false_await_refreshcachemodalstats_const_btnclearall_document_getelementbyid__195b1f')cache-btn-clear-all');
   if (btnClearAll) {
     btnClearAll.addEventListener('click', async () => {
-      if (confirm('Вы действительно хотите полностью очистить весь браузерный кеш?')) {
+      if (confirm(i18n.t('auto___8004ca'))) {
         btnClearAll.disabled = true;
         await browserCache.clearAll();
-        window.showToast?.('Все хранилища браузерного кеша успешно очищены.', 'success') || alert('Все хранилища браузерного кеша успешно очищены.');
+        window.showToast?.(i18n.t('auto___371a3c'), 'success') || alert(i18n.t('auto___371a3c'));
         btnClearAll.disabled = false;
         await refreshCacheModalStats();
       }
@@ -73,7 +48,7 @@ export function initCacheUI() {
   if (btnRequestPersist) {
     btnRequestPersist.addEventListener('click', async () => {
       const granted = await browserCache.requestPersistence();
-      const msg = granted ? 'Постоянное хранилище успешно включено браузером.' : 'Браузер отклонил запрос персистентности.';
+      const msg = granted ? i18n.t('auto___1502b5') : i18n.t('auto___445856');
       window.showToast?.(msg, granted ? 'success' : 'warning') || alert(msg);
       await refreshCacheModalStats();
     });
@@ -92,7 +67,7 @@ export function initCacheUI() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      window.showToast?.('Экспорт кеша успешно сохранён', 'success');
+      window.showToast?.(i18n.t('auto___4d4ae0'), 'success');
     });
   }
 
@@ -106,33 +81,13 @@ export function initCacheUI() {
         const text = await file.text();
         const data = JSON.parse(text);
         await browserCache.importData(data);
-        window.showToast?.('Данные кеша успешно импортированы.', 'success') || alert('Данные кеша успешно импортированы.');
+        window.showToast?.(i18n.t('auto___667fc4'), 'success') || alert(i18n.t('auto___667fc4'));
         await refreshCacheModalStats();
       } catch (err) {
-        window.showToast?.('Ошибка при чтении файла импорта: ' + err.message, 'danger') || alert('Ошибка при чтении файла импорта: ' + err.message);
+        window.showToast?.(i18n.t('auto___1bf7e2') + err.message, 'danger') || alert(i18n.t('auto___1bf7e2') + err.message);
       } finally {
-        fileInput.value = '';
-      }
-    });
-  }
-}
-
-/**
- * Открыть модальное окно управления кешем
- */
-export function openCacheModal() {
-  const modalEl = document.getElementById('cacheManagerModal');
-  if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
-    bsModal.show();
-  }
-}
-
-/**
- * Обновить и отрендерить статистику в модальном окне
- */
-export async function refreshCacheModalStats() {
-  const statsContainer = document.getElementById('cache-stores-list');
+        fileInput.value = 'i18n.t('auto__export_function_opencachemodal_const_modalel_document_getelementbyid__3e9045')cacheManagerModal');
+  if (modalEl && typeof bootstrap !== 'undefinedi18n.t('auto__bootstrap_modal_const_bsmodal_bootstrap_modal_getorcreateinstance_modalel_bsmodal_show_export_async_function_refreshcachemodalstats_const_statscontainer_document_getelementbyid__b1e1b4')cache-stores-list');
   const usageText = document.getElementById('cache-usage-text');
   const usageProgress = document.getElementById('cache-usage-progressbar');
   const persistBadge = document.getElementById('cache-persist-badge');
@@ -157,24 +112,13 @@ export async function refreshCacheModalStats() {
       
       usageText.textContent = `${usageMB} МБ из ${quotaMB} МБ (${percent}%)`;
       usageProgress.style.width = `${Math.min(100, Math.max(1, percent))}%`;
-      usageProgress.className = `progress-bar ${percent > 80 ? 'bg-danger' : (percent > 50 ? 'bg-warning' : 'bg-primary')}`;
-    }
-
-    // 2. Статус персистентности
-    if (persistBadge) {
-      if (stats.storageEstimate.isPersisted) {
-        persistBadge.className = 'badge bg-success-subtle text-success border border-success-subtle';
+      usageProgress.className = `progress-bar ${percent > 80 ? 'bg-danger' : (percent > 50 ? 'bg-warning' : 'bg-primaryi18n.t('auto__2_if_persistbadge_if_stats_storageestimate_ispersisted_persistbadge_classname__0b1459')badge bg-success-subtle text-success border border-success-subtle';
         persistBadge.innerHTML = '<i class="bi bi-shield-check me-1"></i>Постоянное хранилище активно';
       } else {
         persistBadge.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle';
-        persistBadge.innerHTML = '<i class="bi bi-shield-exclamation me-1"></i>Временное хранилище';
-      }
-    }
-
-    // 3. Таблица хранилищ
-    let html = '<div class="list-group list-group-flush border rounded overflow-hidden">';
+        persistBadge.innerHTML = '<i class="bi bi-shield-exclamation me-1"></i>Временное хранилищеi18n.t('auto__3_let_html__a4b630')<div class="list-group list-group-flush border rounded overflow-hidden">';
     for (const [storeName, storeInfo] of Object.entries(stats.stores)) {
-      const meta = STORE_LABELS[storeName] || { title: storeName, icon: 'bi-folder', desc: 'Хранилище данных' };
+      const meta = STORE_LABELS[storeName] || { title: storeName, icon: 'bi-folder', desc: i18n.t('auto___d0a83f') };
       html += `
         <div class="list-group-item d-flex align-items-center justify-content-between p-2.5">
           <div class="d-flex align-items-center gap-3">
@@ -188,11 +132,8 @@ export async function refreshCacheModalStats() {
           </div>
           <div class="d-flex align-items-center gap-3">
             <div class="text-end">
-              <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">${storeInfo.count} зап.</span>
-              <div class="small fw-semibold text-muted mt-0.5">${storeInfo.sizeKB} КБ</div>
-            </div>
-            <button class="btn btn-outline-danger btn-sm px-2 py-1 rounded" 
-                    title="Очистить это хранилище" 
+              <span class="badge bg-secondary-subtle text-secondary border px-2 py-1i18n.t('auto__storeinfo_count_span_div_class__59330b')small fw-semibold text-muted mt-0.5i18n.t('auto__storeinfo_sizekb_div_div_button_class__a96f8d')btn btn-outline-danger btn-sm px-2 py-1 rounded" 
+                    title=i18n.t('auto___4f5a8b') 
                     onclick="window.clearSingleStore('${storeName}')">
               <i class="bi bi-trash3"></i>
             </button>
@@ -204,7 +145,7 @@ export async function refreshCacheModalStats() {
 
     statsContainer.innerHTML = html;
   } catch (err) {
-    console.error('[CacheUI] Ошибка обновления статистики:', err);
+    console.error(i18n.t('auto__cacheui__110337'), err);
     statsContainer.innerHTML = `<div class="alert alert-danger p-2 small">Ошибка получения статистики кеша: ${err.message}</div>`;
   }
 }

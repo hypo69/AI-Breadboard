@@ -59,6 +59,14 @@
         "tab": "tab-scenarios",
         "order": 7,
         "visible": true
+      },
+      {
+        "id": "google_user_desktop",
+        "label": "Google User Desktop",
+        "icon": "🌐",
+        "tab": "tab-google-desktop",
+        "order": 8,
+        "visible": true
       }
     ],
     "sidebarItems": [

@@ -6,19 +6,15 @@
  */
 
 (function (window, document) {
-  'use strict';
-
-  // Множества ключевых слов для положительных (зелёных) и отрицательных (красных) состояний
-  const POSITIVE_KEYWORDS = new Set([
-    'active', 'enabled', 'on', 'running', 'online', 'connected', 'true', '1', 'ok', 'success',
-    'включен', 'включена', 'включено', 'активен', 'активна', 'активно',
-    'работает', 'запущен', 'запущена', 'онлайн', 'подключен', 'подключено', 'успех', 'успешно', 'в норме'
+  'use stricti18n.t('auto__const_positive_keywords_new_set__d0d9d2')active', 'enabled', 'on', 'running', 'online', 'connected', 'true', '1', 'ok', 'success',
+    i18n.t('auto___bb3fc3'), i18n.t('auto___b9147a'), i18n.t('auto___547612'), i18n.t('auto___84ce68'), i18n.t('auto___be2f93'), i18n.t('auto___2ae44e'),
+    i18n.t('auto___e23dc6'), i18n.t('auto___db1a92'), i18n.t('auto___7a9758'), i18n.t('auto___f56d3f'), i18n.t('auto___448409'), i18n.t('auto___aa37b8'), i18n.t('auto___7f274e'), i18n.t('auto___62e346'), i18n.t('auto___e5498a')
   ]);
 
   const NEGATIVE_KEYWORDS = new Set([
     'inactive', 'disabled', 'off', 'stopped', 'offline', 'disconnected', 'false', '0', 'error', 'failed', 'failure',
-    'выключен', 'выключена', 'выключено', 'неактивен', 'неактивна', 'неактивно',
-    'остановлен', 'остановлена', 'офлайн', 'отключен', 'отключено', 'ошибка', 'сбой', 'не запущен'
+    i18n.t('auto___0b48cc'), i18n.t('auto___3bafb2'), i18n.t('auto___bedfed'), i18n.t('auto___8007e2'), i18n.t('auto___3b5ab2'), i18n.t('auto___5e1a20'),
+    i18n.t('auto___037aac'), i18n.t('auto___982686'), i18n.t('auto___a07960'), i18n.t('auto___9f961e'), i18n.t('auto___696924'), i18n.t('auto___c394f7'), i18n.t('auto___79ce37'), i18n.t('auto___287eee')
   ]);
 
   /**
@@ -31,7 +27,7 @@
     }
 
     /**
-     * Проверяет, является ли значение положительным состоянием ("включен", "активен")
+     * Проверяет, является ли значение положительным состоянием (i18n.t('auto___bb3fc3'), i18n.t('auto___84ce68'))
      * @param {*} value Проверяемое значение или строка
      * @returns {boolean} True, если состояние положительное
      */
@@ -51,44 +47,15 @@
     }
 
     /**
-     * Проверяет, является ли значение отрицательным состоянием ("выключен", "остановлен")
+     * Проверяет, является ли значение отрицательным состоянием (i18n.t('auto___0b48cc'), i18n.t('auto___037aac'))
      * @param {*} value Проверяемое значение или строка
      * @returns {boolean} True, если состояние отрицательное
      */
     isNegative(value) {
       if (typeof value === 'boolean') return value === false;
-      if (typeof value === 'number') return value === 0;
-      if (!value) return false;
-
-      const normalized = String(value).trim().toLowerCase();
-      if (NEGATIVE_KEYWORDS.has(normalized)) return true;
-
-      // Проверка подстрок
-      for (const kw of NEGATIVE_KEYWORDS) {
-        if (normalized.includes(kw)) return true;
-      }
-      return false;
-    }
-
-    /**
-     * Возвращает название цветовой темы статуса ('success', 'danger', 'neutral')
-     * @param {*} value Состояние
-     * @returns {string} Тема статуса
-     */
-    getStatusTheme(value) {
-      if (this.isPositive(value)) return 'success';
+      if (typeof value === 'numberi18n.t('auto__return_value_0_if_value_return_false_const_normalized_string_value_trim_tolowercase_if_negative_keywords_has_normalized_return_true_for_const_kw_of_negative_keywords_if_normalized_includes_kw_return_true_return_false__d5d39f')success', 'danger', 'neutrali18n.t('auto__param_value_returns_string_getstatustheme_value_if_this_ispositive_value_return_3bfd60')success';
       if (this.isNegative(value)) return 'danger';
-      return 'neutral';
-    }
-
-    /**
-     * Генерирует HTML-строку для бейджа статуса
-     * @param {*} value Значение состояния
-     * @param {string} [customText] Кастомный текст бейджа
-     * @param {string} [extraClasses] Дополнительные CSS классы
-     * @returns {string} HTML бейджа
-     */
-    getBadgeHtml(value, customText = '', extraClasses = '') {
+      return 'neutrali18n.t('auto__html_param_value_param_string_customtext_param_string_extraclasses_css_returns_string_html_getbadgehtml_value_customtext__d57324')', extraClasses = '') {
       const isPos = this.isPositive(value);
       const isNeg = this.isNegative(value);
 
@@ -125,25 +92,7 @@
         element.classList.add('is-status-positive', 'status-active');
       } else if (isNeg) {
         element.classList.remove('is-status-positive', 'status-active', 'status-enabled', 'bg-success', 'text-success', 'bg-success-subtle', 'bg-secondary-subtle', 'text-secondary');
-        element.classList.add('is-status-negative', 'status-inactive');
-      }
-    }
-
-    /**
-     * Сканирует DOM-дерево и применяет подсвечивание ко всем элементам статуса
-     * @param {HTMLElement|Document} [root] Корневой элемент для поиска
-     */
-    scanDOM(root = document) {
-      const selectors = '[data-status], [data-state], [data-auto-status], .badge-status, .status-badge';
-      const elements = root.querySelectorAll(selectors);
-      elements.forEach(el => this.applyElementStatus(el));
-    }
-
-    /**
-     * Инициализирует MutationObserver для автоматической подсветки создаваемых/изменяемых элементов
-     */
-    initObserver() {
-      if (typeof MutationObserver === 'undefined') return;
+        element.classList.add('is-status-negative', 'status-inactivei18n.t('auto__dom_param_htmlelement_document_root_scandom_root_document_const_selectors__5e4ee6')[data-status], [data-state], [data-auto-status], .badge-status, .status-badgei18n.t('auto__const_elements_root_queryselectorall_selectors_elements_foreach_el_this_applyelementstatus_el_mutationobserver_initobserver_if_typeof_mutationobserver__9a1b91')undefined') return;
 
       this.observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
@@ -166,23 +115,7 @@
       });
 
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => this.startObserving());
-      } else {
-        this.startObserving();
-      }
-    }
-
-    /**
-     * Запускает наблюдение MutationObserver за документом
-     */
-    startObserving() {
-      if (!this.observer || !document.body) return;
-      this.scanDOM(document.body);
-      this.observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['data-status', 'data-state', 'data-auto-status']
+        document.addEventListener('DOMContentLoadedi18n.t('auto__this_startobserving_else_this_startobserving_mutationobserver_startobserving_if_this_observer_document_body_return_this_scandom_document_body_this_observer_observe_document_body_childlist_true_subtree_true_attributes_true_attributefilter__9f67e0')data-status', 'data-state', 'data-auto-status']
       });
     }
   }

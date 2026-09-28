@@ -236,10 +236,10 @@ Copyright: © 2026 hypo69
           <button class="nav-link active py-0.5 px-2.5 small rounded-pill" data-mode="live" style="font-size: 0.78rem;">● Live Events</button>
         </li>
         <li class="nav-item">
-          <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="audit" style="font-size: 0.78rem;">🔬 Аудит (Smart Digest)</button>
+          <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="audit" style="font-size: 0.78rem;">🔬 <span data-i18n="auto___39846e"></span> (Smart Digest)</button>
         </li>
         <li class="nav-item">
-          <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="rag" style="font-size: 0.78rem;">🧠 RAG Поиск</button>
+          <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="rag" style="font-size: 0.78rem;">🧠 RAG <span data-i18n="auto___6433b5"></span></button>
         </li>
         <li class="nav-item">
           <button class="nav-link py-0.5 px-2.5 small rounded-pill text-light" data-mode="errors" style="font-size: 0.78rem;">⚠️ Errors Only</button>
@@ -327,8 +327,8 @@ Copyright: © 2026 hypo69
         <div class="slc-panel-header">
           <span id="slc-main-view-title"><i class="bi bi-list-columns-reverse me-2"></i>Live Windows Event Stream</span>
           <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-sm btn-info rounded-pill px-3 fw-bold text-dark" id="btn-slc-audit" title="Провести аудит текущего журнала логов">
-              <i class="bi bi-shield-check me-1"></i> Аудит
+            <button class="btn btn-sm btn-info rounded-pill px-3 fw-bold text-dark" id="btn-slc-audit" title="<span data-i18n="auto___037c3e"></span>">
+              <i class="bi bi-shield-check me-1"></i> <span data-i18n="auto___39846e"></span>
             </button>
             <span class="badge bg-secondary" id="slc-stream-count-badge">0 entries</span>
           </div>
@@ -367,26 +367,26 @@ Copyright: © 2026 hypo69
         <div class="p-3 d-none" id="slc-rag-container" style="max-height: 580px; overflow-y: auto;">
           <div class="card bg-dark border-info mb-3 shadow">
             <div class="card-header bg-black d-flex justify-content-between align-items-center">
-              <span class="text-info fw-bold"><i class="bi bi-search me-2"></i>Семантический RAG-поиск по логам</span>
+              <span class="text-info fw-bold"><i class="bi bi-search me-2"></i><span data-i18n="auto__rag__537604"></span></span>
               <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-slc-rag-rebuild">
-                <i class="bi bi-arrow-repeat me-1"></i> Перестроить RAG-индекс
+                <i class="bi bi-arrow-repeat me-1"></i> <span data-i18n="auto__rag__f6ce28"></span>
               </button>
             </div>
             <div class="card-body">
               <div class="input-group mb-2">
                 <span class="input-group-text bg-black text-info border-secondary"><i class="bi bi-chat-left-dots"></i></span>
-                <input type="text" class="form-control bg-dark text-light border-secondary" id="slc-rag-input" placeholder="Введите естественный запрос (например: 'почему завис BITS', 'ошибки DCOM 10016', 'сетевые сбои')...">
-                <button class="btn btn-info px-4 fw-bold text-dark" id="btn-slc-rag-search">Найти</button>
+                <input type="text" class="form-control bg-dark text-light border-secondary" id="slc-rag-input" placeholder="<span data-i18n="auto__bits_dcom_10016__9990e0"></span>')...">
+                <button class="btn btn-info px-4 fw-bold text-dark" id="btn-slc-rag-search"><span data-i18n="auto___ed6e1d"></span></button>
               </div>
               <div class="small text-muted">
-                Поиск использует динамический TF-IDF/BM25 индекс кластеров, аномалий и сводок с нулевым расходом токенов LLM.
+                <span data-i18n="auto__tf_idf_bm25__39eac4"></span> LLM.
               </div>
             </div>
           </div>
 
           <div id="slc-rag-results">
             <div class="card bg-dark border-secondary p-4 text-center text-muted">
-              Введите запрос для поиска по динамическому RAG-индексу логов или нажмите «Перестроить RAG-индекс».
+              <span data-i18n="auto__rag_rag__9d1d9a"></span>».
             </div>
           </div>
         </div>

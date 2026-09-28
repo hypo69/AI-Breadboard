@@ -69,8 +69,8 @@
       scenariosList = [
         {
           id: 'quick_check',
-          title: 'Быстрая проверка (Smoke Test)',
-          description: 'Экспресс-проверка целостности окружения, доступности ядра FastAPI, AI-провайдеров, свободного места и ключевых логов. Рекомендуется после установки.',
+          title: i18n.t('auto__smoke_test__88289a'),
+          description: i18n.t('auto__fastapi_ai__93db97'),
           category: 'quick',
           icon: '⚡',
           recommended: true,
@@ -78,8 +78,8 @@
         },
         {
           id: 'log_audit',
-          title: 'Запустить аудит логов',
-          description: 'Комплексный анализ файлов логов (info.log, errors.log, app.log) и журналов событий Windows. Поиск критических ошибок и аномалий.',
+          title: i18n.t('auto___1ff0a2'),
+          description: i18n.t('auto__info_log_errors_log_app_log_windows__468cf3'),
           category: 'logs',
           icon: '📜',
           recommended: false,
@@ -87,8 +87,8 @@
         },
         {
           id: 'system_inspector',
-          title: 'Диагностика системы и оборудования',
-          description: 'Срез телеметрии: загрузка ядер процессора, температура, оперативная память, свободное место на дисках и фоновые процессы.',
+          title: i18n.t('auto___2e3401'),
+          description: i18n.t('auto___7a2d7b'),
           category: 'diagnostics',
           icon: '🖥️',
           recommended: false,
@@ -96,8 +96,8 @@
         },
         {
           id: 'windows_admin',
-          title: 'Аудит автозапуска и служб Windows',
-          description: 'Проверка записей реестра Run/RunOnce, папки автозагрузки, системных служб Windows и прав текущего процесса.',
+          title: i18n.t('auto__windows_eeaebf'),
+          description: i18n.t('auto__run_runonce_windows__c61eae'),
           category: 'security',
           icon: '🛡️',
           recommended: false,
@@ -105,8 +105,8 @@
         },
         {
           id: 'network_test',
-          title: 'Проверка сетевой доступности и портов',
-          description: 'Тестирование локального шлюза, разрешения DNS, открытых серверных портов (8000) и доступности внешних AI-сервисов.',
+          title: i18n.t('auto___892fac'),
+          description: i18n.t('auto__dns_8000_ai__42c6b7'),
           category: 'network',
           icon: '🌐',
           recommended: false,
@@ -114,8 +114,8 @@
         },
         {
           id: 'ai_providers_check',
-          title: 'Проверка статуса AI-провайдеров',
-          description: 'Опрос сконфигурированных AI-моделей (Google Gemini, AGY, Ollama, Foundry) и замер времени отклика инференса.',
+          title: i18n.t('auto__ai__92ca85'),
+          description: i18n.t('auto__ai_google_gemini_agy_ollama_foundry__fc16e6'),
           category: 'ai',
           icon: '🤖',
           recommended: false,
@@ -136,11 +136,7 @@
       return sc.category === currentFilter;
     });
 
-    const badgeEl = document.getElementById('scenarios-count-badge');
-    if (badgeEl) {
-      badgeEl.innerText = `Доступно: ${filtered.length}`;
-    }
-    const headerBadgeEl = document.getElementById('scenarios-count-badge-header');
+    const badgeEl = document.getElementById('scenarios-count-badgei18n.t('auto__if_badgeel_badgeel_innertext_filtered_length_const_headerbadgeel_document_getelementbyid__de502a')scenarios-count-badge-header');
     if (headerBadgeEl) {
       headerBadgeEl.innerText = `${scenariosList.length}`;
     }
@@ -165,10 +161,7 @@
                 <strong class="text-white small">${escapeHtml(sc.title)}</strong>
               </div>
               <div>
-                ${isRecommended ? '<span class="badge bg-success small">Рекомендуется</span>' : `<span class="badge bg-secondary small">${sc.estimated_duration_sec || 3} сек</span>`}
-              </div>
-            </div>
-            <div class="card-body p-3 d-flex flex-column justify-content-between">
+                ${isRecommended ? '<span class="badge bg-success small">Рекомендуется</span>' : `<span class="badge bg-secondary smalli18n.t('auto__sc_estimated_duration_sec_3_span_div_div_div_class__e0932c')card-body p-3 d-flex flex-column justify-content-between">
               <p class="text-muted small mb-2" style="font-size: 0.8rem; line-height: 1.35;">
                 ${escapeHtml(sc.description)}
               </p>
@@ -224,14 +217,11 @@
 
     if (resultPanel) {
       resultPanel.style.display = '';
-      resultPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-    if (titleEl) titleEl.innerText = `Выполнение сценария [${scenarioId}]...`;
-    if (metaEl) metaEl.innerText = 'Опрос системных подсистем и выполнение тестов...';
+      resultPanel.scrollIntoView({ behavior: 'smooth', block: 'nearesti18n.t('auto__if_titleel_titleel_innertext_scenarioid_if_metael_metael_innertext__258aed')Опрос системных подсистем и выполнение тестов...';
     if (iconEl) iconEl.innerText = '⏳';
-    if (durationBadge) durationBadge.innerText = 'Выполняется...';
+    if (durationBadge) durationBadge.innerText = i18n.t('auto___fe93d3');
     if (summaryBanner) summaryBanner.className = 'alert alert-info py-2 px-3 mb-3 small d-flex align-items-start gap-2';
-    if (summaryText) summaryText.innerText = 'Идет тестирование компонентов... Пожалуйста, подождите.';
+    if (summaryText) summaryText.innerText = i18n.t('auto___c367fc');
     if (stepsContainer) stepsContainer.innerHTML = '<div class="text-center py-3 text-muted small"><div class="spinner-border spinner-border-sm text-primary mb-2"></div><div>Тестирование запущено...</div></div>';
     if (progressBar) {
       progressBar.style.width = '100%';
@@ -244,18 +234,7 @@
     try {
       const response = await fetch('/api/v1/scenarios/run', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scenario_id: scenarioId }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Ошибка сервера: HTTP ${response.status}`);
-      }
-
-      const res = await response.json();
-      displayScenarioResults(res);
-    } catch (err) {
-      console.error('[ScenariosTab] Error running scenario:', err);
+        headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_scenario_id_scenarioid_if_response_ok_throw_new_error_http_response_status_const_res_await_response_json_displayscenarioresults_res_catch_err_console_error__e6b57c')[ScenariosTab] Error running scenario:', err);
       const totalDur = Math.round(performance.now() - tStart);
       displayScenarioResults({
         scenario_id: scenarioId,
@@ -268,38 +247,15 @@
         failed_steps: 1,
         steps: [
           {
-            name: 'Выполнение запроса сценария',
-            status: 'error',
-            duration_ms: totalDur,
-            details: `Ошибка: ${err.message}`,
-            recommendation: 'Проверьте соединение с бэкенд сервером FastAPI.',
-          },
-        ],
-        summary: `Сбой при выполнении сценария: ${err.message}`,
-      });
-    } finally {
-      isRunning = false;
-      renderScenariosGrid();
-    }
-  }
-
-  // Display structured results in panel
-  function displayScenarioResults(res) {
-    const titleEl = document.getElementById('result-scenario-title');
+            name: i18n.t('auto___528df5'),
+            status: 'errori18n.t('auto__duration_ms_totaldur_details_err_message_recommendation__c084ed')Проверьте соединение с бэкенд сервером FastAPI.i18n.t('auto__summary_err_message_finally_isrunning_false_renderscenariosgrid_display_structured_results_in_panel_function_displayscenarioresults_res_const_titleel_document_getelementbyid__655312')result-scenario-title');
     const metaEl = document.getElementById('result-scenario-meta');
     const iconEl = document.getElementById('result-status-icon');
     const durationBadge = document.getElementById('result-duration-badge');
     const summaryBanner = document.getElementById('result-summary-banner');
     const summaryText = document.getElementById('result-summary-text');
     const stepsContainer = document.getElementById('scenario-steps-container');
-    const progressBar = document.getElementById('scenario-progress-bar');
-
-    if (titleEl) titleEl.innerText = res.title || res.scenario_id;
-    if (metaEl) metaEl.innerText = `Шагов: ${res.total_steps || 0} (Пройдено: ${res.passed_steps || 0}, Замечаний: ${res.warn_steps || 0}, Ошибок: ${res.failed_steps || 0})`;
-    if (durationBadge) durationBadge.innerText = `${res.duration_ms || 0} ms`;
-
-    // Overall status styling
-    if (res.status === 'ok') {
+    const progressBar = document.getElementById('scenario-progress-bari18n.t('auto__if_titleel_titleel_innertext_res_title_res_scenario_id_if_metael_metael_innertext_res_total_steps_0_res_passed_steps_0_res_warn_steps_0_res_failed_steps_0_if_durationbadge_durationbadge_innertext_res_duration_ms_0_ms_overall_status_styling_if_res_status__eddc70')ok') {
       if (iconEl) iconEl.innerText = '✅';
       if (summaryBanner) summaryBanner.className = 'alert alert-success py-2 px-3 mb-3 small d-flex align-items-start gap-2';
       if (progressBar) progressBar.className = 'progress-bar bg-success';
@@ -313,7 +269,7 @@
       if (progressBar) progressBar.className = 'progress-bar bg-danger';
     }
 
-    if (summaryText) summaryText.innerText = res.summary || 'Прогон завершен.';
+    if (summaryText) summaryText.innerText = res.summary || i18n.t('auto___19fd32');
 
     // Steps rendering
     if (stepsContainer && Array.isArray(res.steps)) {
@@ -346,10 +302,7 @@
             ` : ''}
             ${hasData ? `
               <div class="ps-4 mt-1">
-                <button class="btn btn-link btn-sm p-0 text-info text-decoration-none small" style="font-size: 0.72rem;" onclick="const el=document.getElementById('${dataId}'); if(el) el.classList.toggle('d-none')">
-                  🔍 Показать детали JSON
-                </button>
-                <div id="${dataId}" class="d-none mt-1 p-2 bg-dark rounded border border-secondary font-monospace text-light small overflow-auto" style="max-height: 140px; font-size: 0.7rem;">
+                <button class="btn btn-link btn-sm p-0 text-info text-decoration-none small" style="font-size: 0.72rem;" onclick="const el=document.getElementById('${dataId}'); if(el) el.classList.toggle('d-none')i18n.t('auto__json_button_div_id__d5bbc7')${dataId}" class="d-none mt-1 p-2 bg-dark rounded border border-secondary font-monospace text-light small overflow-auto" style="max-height: 140px; font-size: 0.7rem;">
                   <pre class="m-0">${escapeHtml(JSON.stringify(step.data, null, 2))}</pre>
                 </div>
               </div>
@@ -437,10 +390,7 @@
     `).join('');
 
     // Re-bind click handlers
-    container.querySelectorAll('.quick-prompt-btn').forEach(btn => {
-      btn.onclick = () => {
-        if (isChatSubmitting) return;
-        const text = btn.dataset.prompt || btn.innerText.replace(/^[^a-zA-Zа-яА-ЯёЁ]+/, '').trim();
+    container.querySelectorAll('.quick-prompt-btni18n.t('auto__foreach_btn_btn_onclick_if_ischatsubmitting_return_const_text_btn_dataset_prompt_btn_innertext_replace_a_za_z__110769')').trim();
         const chatInput = document.getElementById('scenario-chat-input');
         if (chatInput) {
           chatInput.value = text;
@@ -470,18 +420,15 @@
     const promptsHtml = selected.length ? selected.map(q => `
       <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt="${escapeHtml(q)}">«${escapeHtml(q)}»</a></div>
     `).join('') : `
-      <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt="Какие мыши были подключены к этому компьютеру?">«Какие мыши были подключены к этому компьютеру?»</a></div>
-      <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt="Покажи список сетевых портов и активных соединений">«Покажи список сетевых портов и активных соединений»</a></div>
-      <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt="Проверь автозапуск и службы Windows">«Проверь автозапуск и службы Windows»</a></div>
+      <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt=i18n.t('auto___5a942b')>«Какие мыши были подключены к этому компьютеру?»</a></div>
+      <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt=i18n.t('auto___575786')>«Покажи список сетевых портов и активных соединений»</a></div>
+      <div>• <a href="#" class="chat-prompt-link text-info text-decoration-none border-bottom border-info border-opacity-50" data-prompt=i18n.t('auto__windows_5bb59d')>«Проверь автозапуск и службы Windows»</a></div>
     `;
 
     return `
       <div class="d-flex gap-2 mb-3">
         <div class="fs-5">🤖</div>
-        <div class="bg-secondary bg-opacity-25 p-2 rounded border border-secondary-subtle small text-light flex-grow-1">
-          Привет! Я интеллектуальный ассистент Test Computer. Вы можете задать мне любой вопрос о конфигурации хоста, например:
-          <br><br>
-          <div id="chat-greeting-prompts" class="d-flex flex-column gap-1">
+        <div class="bg-secondary bg-opacity-25 p-2 rounded border border-secondary-subtle small text-light flex-grow-1i18n.t('auto__test_computer_br_br_div_id__557aa5')chat-greeting-prompts" class="d-flex flex-column gap-1">
             ${promptsHtml}
           </div>
           <br>
@@ -545,16 +492,13 @@
         }
         currentConversationId = `scenario-chat-${Date.now()}`;
         chatHistory.innerHTML = getGreetingHtml();
-        if (statusInd) statusInd.innerText = 'Новая сессия начата';
+        if (statusInd) statusInd.innerText = i18n.t('auto___4bfa96');
         chatInput.focus();
       };
     }
 
     // Quick prompt buttons & clickable prompt links
-    document.querySelectorAll('.quick-prompt-btn').forEach(btn => {
-      btn.onclick = () => {
-        if (isChatSubmitting) return;
-        const text = btn.innerText.replace(/^[^a-zA-Zа-яА-ЯёЁ]+/, '').trim();
+    document.querySelectorAll('.quick-prompt-btni18n.t('auto__foreach_btn_btn_onclick_if_ischatsubmitting_return_const_text_btn_innertext_replace_a_za_z__45023d')').trim();
         chatInput.value = text;
         submitChat();
       };
@@ -583,7 +527,7 @@
       chatInput.value = '';
       chatInput.disabled = true;
       if (sendBtn) sendBtn.disabled = true;
-      if (statusInd) statusInd.innerText = '🔌 Инициализация системного зонда...';
+      if (statusInd) statusInd.innerText = i18n.t('auto___f79c8d');
 
       // Append User message
       const userMsgHtml = `
@@ -601,20 +545,7 @@
       if (cleanCmd === '/skills' || cleanCmd === '/skills list' || cleanCmd.startsWith('/skills search')) {
         try {
           const searchParam = cleanCmd.startsWith('/skills search') ? cleanCmd.replace('/skills search', '').trim() : '';
-          const url = searchParam ? `/api/admin/skills?q=${encodeURIComponent(searchParam)}` : '/api/admin/skills';
-          const res = await fetch(url);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
-          const skills = data.skills || [];
-
-          let replyMd = `### 📚 Каталог зарегистрированных навыков (.skills)\n\n`;
-          if (skills.length === 0) {
-            replyMd += `*Навыки не найдены.*`;
-          } else {
-            replyMd += `Всего доступно навыков: **${skills.length}**\n\n`;
-            skills.forEach((s, idx) => {
-              const pathStr = s.root_relative || s.path || `.skills/${s.name}/SKILL.md`;
-              const desc = s.description_ru || s.description || 'Без описания';
+          const url = searchParam ? `/api/admin/skills?q=${encodeURIComponent(searchParam)}` : '/api/admin/skillsi18n.t('auto__const_res_await_fetch_url_if_res_ok_throw_new_error_http_res_status_const_data_await_res_json_const_skills_data_skills_let_replymd_skills_n_n_if_skills_length_0_replymd_else_replymd_skills_length_n_n_skills_foreach_s_idx_const_pathstr_s_root_relative_s_path_skills_s_name_skill_md_const_desc_s_description_ru_s_description__95cdf4')Без описания';
               replyMd += `${idx + 1}. 🧩 **${escapeHtml(s.name)}** — *${escapeHtml(desc)}* (\`${escapeHtml(pathStr)}\`)\n`;
             });
           }
@@ -629,7 +560,7 @@
           `;
           chatHistory.insertAdjacentHTML('beforeend', assistantMsgHtml);
           chatHistory.scrollTop = chatHistory.scrollHeight;
-          if (statusInd) statusInd.innerText = 'Список навыков выведен';
+          if (statusInd) statusInd.innerText = i18n.t('auto___473823');
         } catch (err) {
           const errorMsgHtml = `
             <div class="d-flex gap-2 mb-3">
@@ -641,7 +572,7 @@
           `;
           chatHistory.insertAdjacentHTML('beforeend', errorMsgHtml);
           chatHistory.scrollTop = chatHistory.scrollHeight;
-          if (statusInd) statusInd.innerText = 'Ошибка запроса';
+          if (statusInd) statusInd.innerText = i18n.t('auto___9729bc');
         } finally {
           isChatSubmitting = false;
           chatInput.disabled = false;
@@ -661,18 +592,14 @@
         const isComplete = isFinal;
         const headerIcon = isComplete
           ? '<i class="bi bi-check-circle-fill text-success"></i>'
-          : '<div class="spinner-border spinner-border-sm text-info" role="status" style="width:0.75rem;height:0.75rem;"></div>';
-        const headerText = isComplete
-          ? `Диагностика хоста завершена (${currentCount} шагов)`
-          : `Диагностический конвейер хоста (${currentCount} шагов)...`;
-        const headerClass = isComplete ? 'text-success' : 'text-info';
+          : '<div class="spinner-border spinner-border-sm text-info" role="status" style="width:0.75rem;height:0.75rem;"></div>i18n.t('auto__const_headertext_iscomplete_currentcount_currentcount_const_headerclass_iscomplete__81730d')text-success' : 'text-info';
         const collapseClass = isComplete ? 'd-none' : '';
         const chevronIcon = isComplete ? 'bi-chevron-down' : 'bi-chevron-up';
-        const lastTitle = stages[stages.length - 1]?.title || 'Зонд';
+        const lastTitle = stages[stages.length - 1]?.title || i18n.t('auto___a39c50');
 
         return `
           <div class="mb-2 p-2 bg-black bg-opacity-40 border border-secondary border-opacity-30 rounded shadow-sm" id="${msgId}-stages-wrapper">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-1" onclick="const b=document.getElementById('${msgId}-stages-content'); const c=document.getElementById('${msgId}-stages-chevron'); if(b){b.classList.toggle('d-none'); if(c){c.classList.toggle('bi-chevron-down'); c.classList.toggle('bi-chevron-up');}}" style="cursor:pointer;" title="Нажмите, чтобы развернуть/свернуть детали этапов">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-1" onclick="const b=document.getElementById('${msgId}-stages-content'); const c=document.getElementById('${msgId}-stages-chevron'); if(b){b.classList.toggle('d-none'); if(c){c.classList.toggle('bi-chevron-down'); c.classList.toggle('bi-chevron-up');}}" style="cursor:pointer;" title=i18n.t('auto___843a27')>
               <span class="${headerClass} small fw-semibold d-flex align-items-center gap-1.5" style="font-size:0.75rem;">
                 ${headerIcon}
                 <span>${escapeHtml(headerText)}</span>
@@ -699,16 +626,11 @@
                     ${st.generated_prompt ? `
                       <div class="mt-1 ps-3">
                         <button class="btn btn-sm btn-outline-warning py-0 px-2 d-inline-flex align-items-center gap-1 font-monospace" type="button" onclick="event.stopPropagation(); const p=document.getElementById('${msgId}-stage-prompt-${sIdx}'); const ic=document.getElementById('${msgId}-stage-prompt-ic-${sIdx}'); if(p){p.classList.toggle('d-none'); if(ic){ic.classList.toggle('bi-chevron-down'); ic.classList.toggle('bi-chevron-up');}}" style="font-size: 0.68rem;">
-                          <i class="bi bi-cpu-fill"></i>
-                          <span>Показать отправленный промпт</span>
-                          <i class="bi bi-chevron-down text-warning" id="${msgId}-stage-prompt-ic-${sIdx}" style="font-size:0.6rem;"></i>
+                          <i class="bi bi-cpu-filli18n.t('auto__i_span_span_i_class__51322b')bi bi-chevron-down text-warning" id="${msgId}-stage-prompt-ic-${sIdx}" style="font-size:0.6rem;"></i>
                         </button>
                         <div id="${msgId}-stage-prompt-${sIdx}" class="d-none mt-1.5 p-2 bg-black bg-opacity-70 border border-warning border-opacity-40 rounded text-start" onclick="event.stopPropagation();">
                           <div class="d-flex justify-content-between align-items-center text-warning mb-1" style="font-size: 0.68rem;">
-                            <span><i class="bi bi-terminal me-1"></i>Точный текст промпта, отправленный модели:</span>
-                            <button class="btn btn-dark btn-sm py-0 px-1.5 text-secondary border border-secondary-subtle" type="button" onclick="navigator.clipboard.writeText(this.closest('#${msgId}-stage-prompt-${sIdx}').querySelector('pre')?.innerText || ''); this.innerText='Скопировано!'; setTimeout(()=>this.innerText='Копировать', 1500);" style="font-size: 0.65rem;">Копировать</button>
-                          </div>
-                          <pre class="m-0 p-1.5 bg-dark bg-opacity-75 text-light border border-secondary border-opacity-30 rounded font-monospace" style="font-size: 0.70rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">${escapeHtml(st.generated_prompt)}</pre>
+                            <span><i class="bi bi-terminal me-1i18n.t('auto__i_span_button_class__3f4eef')btn btn-dark btn-sm py-0 px-1.5 text-secondary border border-secondary-subtle" type="button" onclick="navigator.clipboard.writeText(this.closest('#${msgId}-stage-prompt-${sIdx}').querySelector('pre')?.innerText || ''); this.innerText=i18n.t('auto___f266fa'); setTimeout(()=>this.innerText=i18n.t('auto___4a05d8'), 1500);" style="font-size: 0.65rem;i18n.t('auto__button_div_pre_class__b3d1ca')m-0 p-1.5 bg-dark bg-opacity-75 text-light border border-secondary border-opacity-30 rounded font-monospace" style="font-size: 0.70rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">${escapeHtml(st.generated_prompt)}</pre>
                         </div>
                       </div>
                     ` : ''}
@@ -722,9 +644,9 @@
 
       const initialStage = {
         stage: 'init',
-        title: 'Инициализация',
-        message: '🔌 Подключение к локальной подсистеме Windows API и сервисам хоста...',
-        details: 'Подготовка системных интерфейсов WMI/PnP, коллекторов и контекста сессии',
+        title: i18n.t('auto___82d830'),
+        message: i18n.t('auto__windows_api__2ac286'),
+        details: i18n.t('auto__wmi_pnp__866a3b'),
       };
       stagesLog.push(initialStage);
 
@@ -745,22 +667,7 @@
 
         const res = await fetch('/api/v1/scenarios/chat/stream', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: message,
-            conversation_id: currentConversationId,
-            auto_create_skill: false,
-            keep_context: keepContext,
-            use_rag: useRag,
-          }),
-        });
-
-        if (!res.ok) {
-          throw new Error(`Ошибка ответа сервера: HTTP ${res.status}`);
-        }
-
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder('utf-8');
+          headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_message_message_conversation_id_currentconversationid_auto_create_skill_false_keep_context_keepcontext_use_rag_userag_if_res_ok_throw_new_error_http_res_status_const_reader_res_body_getreader_const_decoder_new_textdecoder__9d3f62')utf-8');
         let buffer = '';
         let finalData = null;
         let streamedReplyText = '';
@@ -770,12 +677,7 @@
           if (done) break;
           buffer += decoder.decode(value, { stream: true });
 
-          const lines = buffer.split('\n\n');
-          buffer = lines.pop(); // Оставляем неполный хвост в буфере
-
-          for (const line of lines) {
-            const cleanLine = line.trim();
-            if (!cleanLine.startsWith('data:')) continue;
+          const lines = buffer.split('\n\ni18n.t('auto__buffer_lines_pop_for_const_line_of_lines_const_cleanline_line_trim_if_cleanline_startswith__c8ee44')data:')) continue;
             let evt = null;
             try {
               evt = JSON.parse(cleanLine.substring(5).trim());
@@ -790,7 +692,7 @@
               if (!lastSt || lastSt.stage !== evt.stage || lastSt.message !== evt.message) {
                 stagesLog.push(evt);
               }
-              if (statusInd) statusInd.innerText = evt.message || 'Обработка...';
+              if (statusInd) statusInd.innerText = evt.message || i18n.t('auto___848720');
 
               const bodyElem = document.getElementById(`${msgId}-body`);
               if (bodyElem) {
@@ -815,7 +717,7 @@
             } else if (evt.type === 'done') {
               finalData = evt;
             } else if (evt.type === 'error') {
-              const streamErr = new Error(evt.error || 'Ошибка в потоке');
+              const streamErr = new Error(evt.error || i18n.t('auto___ebf19b'));
               streamErr.details = evt.details || '';
               streamErr.errorType = evt.error_type || 'StreamError';
               streamErr.rawEvent = evt;
@@ -825,12 +727,12 @@
         }
 
         if (!finalData) {
-          throw new Error('Не удалось получить завершающий ответ от сервера.');
+          throw new Error(i18n.t('auto___69afa6'));
         }
 
-        const fullReply = finalData.reply || streamedReplyText || 'Ответ получен.';
+        const fullReply = finalData.reply || streamedReplyText || i18n.t('auto___8d1a8c');
         const { chatText, voiceText } = parseChatAndVoice(fullReply);
-        const formattedReply = formatMarkdown(chatText || 'Ответ получен.');
+        const formattedReply = formatMarkdown(chatText || i18n.t('auto___8d1a8c'));
 
         let remediationHtml = '';
         if (Array.isArray(finalData.remediation_actions) && finalData.remediation_actions.length > 0) {
@@ -839,9 +741,7 @@
             <div class="mt-2.5 p-2.5 bg-black bg-opacity-30 border border-warning border-opacity-50 rounded" id="remediation-container-${msgId}">
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <span class="fw-semibold text-warning small d-flex align-items-center gap-1">
-                  <i class="bi bi-shield-check text-warning"></i> <span>Предложенные действия и исправления:</span>
-                </span>
-                <span class="badge bg-warning text-dark small" style="font-size: 0.68rem;">SafeOps (${actionsList.length})</span>
+                  <i class="bi bi-shield-check text-warningi18n.t('auto__i_span_span_span_span_class__677061')badge bg-warning text-dark small" style="font-size: 0.68rem;">SafeOps (${actionsList.length})</span>
               </div>
               <div class="d-flex flex-column gap-1.5" id="remediation-buttons-${msgId}">
                 ${actionsList.map((act, aIdx) => {
@@ -879,7 +779,7 @@
         let skillActionHtml = '';
         if (finalData.created_skill) {
           const isNew = finalData.created_skill.is_new !== false;
-          const badgeTitle = isNew ? '✨ <strong>Автоматически создан навык:</strong>' : '📁 <strong>Использован существующий навык:</strong>';
+          const badgeTitle = isNew ? i18n.t('auto__strong_strong__763253') : i18n.t('auto__strong_strong__5f2c98');
           const badgeClass = isNew ? 'bg-success bg-opacity-10 border-success border-opacity-50 text-success' : 'bg-info bg-opacity-10 border-info border-opacity-50 text-info';
           skillActionHtml = `
             <div class="mt-2 p-2 ${badgeClass} border rounded small" id="skill-action-container-${msgId}">
@@ -891,31 +791,19 @@
           skillActionHtml = `
             <div class="mt-2 pt-2 border-top border-secondary border-opacity-25 d-flex align-items-center gap-2 flex-wrap" id="skill-action-container-${msgId}">
               <button class="btn btn-outline-success btn-sm d-flex align-items-center gap-1.5 py-1 px-2.5 shadow-sm" id="btn-save-skill-${msgId}" type="button">
-                <i class="bi bi-bookmark-check-fill text-success"></i>
-                <span>Ответ правильный, запомнить как навык</span>
-              </button>
-              <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1.5 py-1 px-2 shadow-sm" id="btn-edit-skill-${msgId}" type="button">
-                <i class="bi bi-pencil-square"></i>
-                <span>Скорректировать</span>
-              </button>
-            </div>
-            <div id="skill-edit-form-${msgId}" class="mt-2 p-2.5 bg-dark bg-opacity-50 border border-secondary-subtle rounded small d-none">
-              <div class="fw-semibold text-warning mb-2"><i class="bi bi-sliders me-1"></i>Корректировка навыка перед сохранением</div>
-              <div class="mb-2">
-                <label class="form-label text-muted mb-1" style="font-size:0.75rem;">Заголовок навыка:</label>
-                <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="edit-title-${msgId}" value="${escapeHtml(finalData.tool_plan.tool_title || '')}">
+                <i class="bi bi-bookmark-check-fill text-successi18n.t('auto__i_span_span_button_button_class__67a41e')btn btn-outline-secondary btn-sm d-flex align-items-center gap-1.5 py-1 px-2 shadow-sm" id="btn-edit-skill-${msgId}" type="button">
+                <i class="bi bi-pencil-squarei18n.t('auto__i_span_span_button_div_div_id__54af62')skill-edit-form-${msgId}" class="mt-2 p-2.5 bg-dark bg-opacity-50 border border-secondary-subtle rounded small d-none">
+              <div class="fw-semibold text-warning mb-2"><i class="bi bi-sliders me-1i18n.t('auto__i_div_div_class__1141a7')mb-2">
+                <label class="form-label text-muted mb-1" style="font-size:0.75rem;i18n.t('auto__label_input_type__0766a7')text" class="form-control form-control-sm bg-dark text-light border-secondary" id="edit-title-${msgId}" value="${escapeHtml(finalData.tool_plan.tool_title || '')}">
               </div>
               <div class="mb-2">
-                <label class="form-label text-muted mb-1" style="font-size:0.75rem;">Описание (русский язык):</label>
-                <textarea class="form-control form-control-sm bg-dark text-light border-secondary" id="edit-desc-${msgId}" rows="2">${escapeHtml(finalData.tool_plan.description_ru || '')}</textarea>
+                <label class="form-label text-muted mb-1" style="font-size:0.75rem;i18n.t('auto__label_textarea_class__dc2069')form-control form-control-sm bg-dark text-light border-secondary" id="edit-desc-${msgId}" rows="2">${escapeHtml(finalData.tool_plan.description_ru || '')}</textarea>
               </div>
               <div class="mb-2">
-                <label class="form-label text-muted mb-1" style="font-size:0.75rem;">Команда проверки / скрипт:</label>
-                <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" id="edit-cmd-${msgId}" value="${escapeHtml(finalData.command_executed || finalData.tool_plan.probe_script || '')}">
+                <label class="form-label text-muted mb-1" style="font-size:0.75rem;i18n.t('auto__label_input_type__e5082f')text" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" id="edit-cmd-${msgId}" value="${escapeHtml(finalData.command_executed || finalData.tool_plan.probe_script || '')}">
               </div>
               <div class="d-flex gap-2 justify-content-end mt-2">
-                <button class="btn btn-secondary btn-sm py-1 px-2" id="btn-cancel-edit-${msgId}" type="button">Отмена</button>
-                <button class="btn btn-success btn-sm py-1 px-2.5" id="btn-save-edited-${msgId}" type="button">
+                <button class="btn btn-secondary btn-sm py-1 px-2" id="btn-cancel-edit-${msgId}" type="buttoni18n.t('auto__button_button_class__971c09')btn btn-success btn-sm py-1 px-2.5" id="btn-save-edited-${msgId}" type="button">
                   <i class="bi bi-check-circle-fill me-1"></i>Сохранить скорректированный навык
                 </button>
               </div>
@@ -934,9 +822,7 @@
             <div class="mt-2.5 pt-2 border-top border-secondary border-opacity-25" id="meta-container-${msgId}">
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
                 <button class="btn btn-sm btn-link p-0 text-info text-decoration-none d-flex align-items-center gap-1.5" type="button" onclick="const el=document.getElementById('${metaCollapseId}'); const ic=document.getElementById('meta-icon-${msgId}'); if(el){el.classList.toggle('d-none'); if(ic) { ic.classList.toggle('bi-chevron-down'); ic.classList.toggle('bi-chevron-up'); }}" style="font-size: 0.75rem;">
-                  <i class="bi bi-diagram-3-fill text-info"></i>
-                  <span><strong>Задействованные знания и агенты</strong> (${totalCount})</span>
-                  <i class="bi bi-chevron-down text-muted" id="meta-icon-${msgId}" style="font-size: 0.7rem;"></i>
+                  <i class="bi bi-diagram-3-fill text-infoi18n.t('auto__i_span_strong_strong_totalcount_span_i_class__671b82')bi bi-chevron-down text-muted" id="meta-icon-${msgId}" style="font-size: 0.7rem;"></i>
                 </button>
                 <div class="d-flex gap-1 flex-wrap">
                   ${agentsList.map(a => `<span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25" style="font-size: 0.65rem;" title="${escapeHtml(a.role || '')}">${escapeHtml(a.icon || '🤖')} ${escapeHtml(a.name)}</span>`).slice(0, 2).join('')}
@@ -947,15 +833,13 @@
                 ${agentsList.length > 0 ? `
                   <div class="mb-2">
                     <div class="text-warning fw-semibold mb-1" style="font-size: 0.73rem;">
-                      <i class="bi bi-robot me-1"></i>Задействованные агенты и модули:
-                    </div>
-                    <div class="d-flex flex-column gap-1 ps-1">
+                      <i class="bi bi-robot me-1i18n.t('auto__i_div_div_class__bb0d7b')d-flex flex-column gap-1 ps-1">
                       ${agentsList.map(ag => `
                         <div class="d-flex align-items-start gap-1.5 text-light" style="font-size: 0.73rem;">
                           <span>${escapeHtml(ag.icon || '🤖')}</span>
                           <div>
                             <strong>${escapeHtml(ag.name)}</strong>
-                            <span class="text-muted ms-1">— ${escapeHtml(ag.role || 'Системный агент')}</span>
+                            <span class="text-muted ms-1">— ${escapeHtml(ag.role || i18n.t('auto___a8897a'))}</span>
                           </div>
                         </div>
                       `).join('')}
@@ -966,12 +850,10 @@
                 ${knowledgeList.length > 0 ? `
                   <div>
                     <div class="text-info fw-semibold mb-1" style="font-size: 0.73rem;">
-                      <i class="bi bi-book-half me-1"></i>Использованные источники знаний и артефакты:
-                    </div>
-                    <div class="d-flex flex-column gap-1 ps-1">
+                      <i class="bi bi-book-half me-1i18n.t('auto__i_div_div_class__1af334')d-flex flex-column gap-1 ps-1">
                       ${knowledgeList.map(kn => `
                         <div class="d-flex align-items-start gap-1.5 text-light" style="font-size: 0.73rem;">
-                          <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25" style="font-size: 0.65rem;">${escapeHtml(kn.badge || 'База')}</span>
+                          <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25" style="font-size: 0.65rem;">${escapeHtml(kn.badge || i18n.t('auto___82e0be'))}</span>
                           <div>
                             <strong>${escapeHtml(kn.title)}</strong>
                             <span class="text-muted ms-1">— ${escapeHtml(kn.description || '')}</span>
@@ -995,24 +877,13 @@
             <div class="mt-2.5 pt-2 border-top border-secondary border-opacity-25" id="prompt-container-${msgId}">
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
                 <button class="btn btn-sm btn-link p-0 text-warning text-decoration-none d-flex align-items-center gap-1.5" type="button" onclick="const el=document.getElementById('${promptCollapseId}'); const ic=document.getElementById('prompt-icon-${msgId}'); if(el){el.classList.toggle('d-none'); if(ic) { ic.classList.toggle('bi-chevron-down'); ic.classList.toggle('bi-chevron-up'); }}" style="font-size: 0.75rem;">
-                  <i class="bi bi-cpu-fill text-warning"></i>
-                  <span><strong>Сформированный промпт модели</strong></span>
-                  <i class="bi bi-chevron-down text-muted" id="prompt-icon-${msgId}" style="font-size: 0.7rem;"></i>
+                  <i class="bi bi-cpu-fill text-warningi18n.t('auto__i_span_strong_strong_span_i_class__9edf70')bi bi-chevron-down text-muted" id="prompt-icon-${msgId}" style="font-size: 0.7rem;"></i>
                 </button>
                 <div class="d-flex align-items-center gap-1">
-                  <button class="btn btn-dark btn-sm py-0 px-2 text-secondary border border-secondary-subtle d-flex align-items-center gap-1" type="button" onclick="navigator.clipboard.writeText(document.getElementById('${promptCodeId}')?.innerText || ''); const s=this.querySelector('span'); if(s){s.innerText='Скопировано!'; setTimeout(()=>s.innerText='Копировать', 1800);}" style="font-size: 0.68rem;" title="Скопировать отправленный промпт">
-                    <i class="bi bi-clipboard"></i>
-                    <span>Копировать</span>
-                  </button>
-                </div>
-              </div>
-
-              <div id="${promptCollapseId}" class="d-none mt-2 p-2.5 bg-black bg-opacity-60 border border-warning border-opacity-40 rounded">
+                  <button class="btn btn-dark btn-sm py-0 px-2 text-secondary border border-secondary-subtle d-flex align-items-center gap-1" type="button" onclick="navigator.clipboard.writeText(document.getElementById('${promptCodeId}')?.innerText || ''); const s=this.querySelector('span'); if(s){s.innerText=i18n.t('auto___f266fa'); setTimeout(()=>s.innerText=i18n.t('auto___4a05d8'), 1800);}" style="font-size: 0.68rem;" title=i18n.t('auto___7f04de')>
+                    <i class="bi bi-clipboardi18n.t('auto__i_span_span_button_div_div_div_id__367762')${promptCollapseId}" class="d-none mt-2 p-2.5 bg-black bg-opacity-60 border border-warning border-opacity-40 rounded">
                 <div class="d-flex align-items-center justify-content-between text-warning small mb-1.5" style="font-size: 0.72rem;">
-                  <span><i class="bi bi-terminal me-1"></i>Точный текст запроса, отправленный языковой модели:</span>
-                  <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 font-monospace" style="font-size: 0.65rem;">${generatedPromptText.length} симв.</span>
-                </div>
-                <pre class="m-0 p-2 bg-dark bg-opacity-75 text-light border border-secondary border-opacity-30 rounded font-monospace small" id="${promptCodeId}" style="font-size: 0.72rem; line-height: 1.4; max-height: 280px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">${escapeHtml(generatedPromptText)}</pre>
+                  <span><i class="bi bi-terminal me-1i18n.t('auto__i_span_span_class__633d1e')badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 font-monospace" style="font-size: 0.65rem;i18n.t('auto__generatedprompttext_length_span_div_pre_class__7d81c9')m-0 p-2 bg-dark bg-opacity-75 text-light border border-secondary border-opacity-30 rounded font-monospace small" id="${promptCodeId}" style="font-size: 0.72rem; line-height: 1.4; max-height: 280px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">${escapeHtml(generatedPromptText)}</pre>
               </div>
             </div>
           `;
@@ -1020,11 +891,8 @@
 
         const trainingActionHtml = `
           <div class="mt-2.5 pt-2 border-top border-secondary border-opacity-25 d-flex align-items-center justify-content-between flex-wrap gap-2" id="training-save-container-${msgId}">
-            <button class="btn btn-outline-info btn-sm d-flex align-items-center gap-1.5 py-1 px-2.5 shadow-sm btn-save-training-qa" id="btn-save-training-${msgId}" type="button" title="Сохранить пару вопрос-ответ в базу данных Test Computer для RAG и последующего обучения (тюнинга) модели">
-              <i class="bi bi-mortarboard-fill text-info"></i>
-              <span>Сохранить ответ для обучения модели</span>
-            </button>
-            <span class="text-muted" style="font-size: 0.68rem;"><i class="bi bi-database me-1"></i>data/tc/approved_responses</span>
+            <button class="btn btn-outline-info btn-sm d-flex align-items-center gap-1.5 py-1 px-2.5 shadow-sm btn-save-training-qa" id="btn-save-training-${msgId}" type="button" title=i18n.t('auto__test_computer_rag__a06dd6')>
+              <i class="bi bi-mortarboard-fill text-infoi18n.t('auto__i_span_span_button_span_class__48b465')text-muted" style="font-size: 0.68rem;"><i class="bi bi-database me-1"></i>data/tc/approved_responses</span>
           </div>
         `;
 
@@ -1076,29 +944,11 @@
                   </div>
                 `;
               }
-              if (statusInd) statusInd.innerText = 'Ответ сохранён в базу для обучения модели!';
+              if (statusInd) statusInd.innerText = i18n.t('auto___66379a');
             } catch (saveErr) {
               console.error('[ScenariosTab] Error saving training QA:', saveErr);
               btnSaveTraining.disabled = false;
-              btnSaveTraining.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-danger me-1"></i><span>Ошибка сохранения. Повторить</span>`;
-            }
-          };
-        }
-
-
-        // Wire up manual save & inline edit logic
-        if (!finalData.created_skill && finalData.tool_plan) {
-          const saveBtn = document.getElementById(`btn-save-skill-${msgId}`);
-          const editBtn = document.getElementById(`btn-edit-skill-${msgId}`);
-          const editForm = document.getElementById(`skill-edit-form-${msgId}`);
-          const cancelEditBtn = document.getElementById(`btn-cancel-edit-${msgId}`);
-          const saveEditedBtn = document.getElementById(`btn-save-edited-${msgId}`);
-
-          const executeSave = async (payload) => {
-            const container = document.getElementById(`skill-action-container-${msgId}`);
-            if (saveBtn) saveBtn.disabled = true;
-            if (saveEditedBtn) saveEditedBtn.disabled = true;
-            if (saveBtn) saveBtn.innerHTML = `<div class="spinner-border spinner-border-sm text-success me-1" role="status"></div><span>Сохранение...</span>`;
+              btnSaveTraining.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-danger me-1i18n.t('auto__i_span_span_wire_up_manual_save_inline_edit_logic_if_finaldata_created_skill_finaldata_tool_plan_const_savebtn_document_getelementbyid_btn_save_skill_msgid_const_editbtn_document_getelementbyid_btn_edit_skill_msgid_const_editform_document_getelementbyid_skill_edit_form_msgid_const_canceleditbtn_document_getelementbyid_btn_cancel_edit_msgid_const_saveeditedbtn_document_getelementbyid_btn_save_edited_msgid_const_executesave_async_payload_const_container_document_getelementbyid_skill_action_container_msgid_if_savebtn_savebtn_disabled_true_if_saveeditedbtn_saveeditedbtn_disabled_true_if_savebtn_savebtn_innerhtml_div_class__73a769')spinner-border spinner-border-sm text-success me-1" role="status"></div><span>Сохранение...</span>`;
 
             try {
               const saveRes = await fetch('/api/v1/scenarios/save-skill', {
@@ -1110,16 +960,11 @@
               const savedData = await saveRes.json();
               if (container) {
                 container.innerHTML = `
-                  <div class="p-2 bg-success bg-opacity-10 border border-success border-opacity-50 text-success rounded small w-100">
-                    ✨ <strong>Навык успешно сохранён:</strong> <code>${escapeHtml(savedData.path)}</code>
-                    <div class="text-muted small mt-1">${escapeHtml(savedData.description_ru)}</div>
+                  <div class="p-2 bg-success bg-opacity-10 border border-success border-opacity-50 text-success rounded small w-100i18n.t('auto__strong_strong_code_escapehtml_saveddata_path_code_div_class__0a119c')text-muted small mt-1">${escapeHtml(savedData.description_ru)}</div>
                   </div>
                 `;
               }
-              if (editForm) editForm.classList.add('d-none');
-              if (statusInd) statusInd.innerText = `Навык '${savedData.name}' сохранён!`;
-            } catch (saveErr) {
-              console.error('[ScenariosTab] Error saving skill:', saveErr);
+              if (editForm) editForm.classList.add('d-nonei18n.t('auto__if_statusind_statusind_innertext__526304')${savedData.name}i18n.t('auto__catch_saveerr_console_error__9f397c')[ScenariosTab] Error saving skill:', saveErr);
               if (saveBtn) {
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-danger me-1"></i><span>Ошибка. Повторить</span>`;
@@ -1221,10 +1066,7 @@
                   if (resData.success) {
                     btn.className = 'btn btn-success btn-sm py-1 px-3 d-flex align-items-center gap-1.5 shadow-sm';
                     btn.innerHTML = `<i class="bi bi-check-circle-fill"></i><span>Подтверждено и выполнено</span>`;
-                    if (statusInd) statusInd.innerText = `Действие '${title}' успешно выполнено!`;
-                  } else {
-                    btn.disabled = false;
-                    btn.className = 'btn btn-danger btn-sm py-0.5 px-2.5 d-flex align-items-center gap-1 shadow-sm';
+                    if (statusInd) statusInd.innerText = `Действие '${title}i18n.t('auto__else_btn_disabled_false_btn_classname__a4094e')btn btn-danger btn-sm py-0.5 px-2.5 d-flex align-items-center gap-1 shadow-sm';
                     btn.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i><span>Ошибка</span>`;
                     btn.title = resData.error_message || resData.message;
                     if (statusInd) statusInd.innerText = `Ошибка: ${resData.error_message || resData.message}`;
@@ -1241,7 +1083,7 @@
           }
         }
 
-        if (statusInd) statusInd.innerText = 'Ответ сформирован';
+        if (statusInd) statusInd.innerText = i18n.t('auto___4c60e5');
       } catch (err) {
         console.error('[ScenariosTab] Chat error:', err);
         const bodyElem = document.getElementById(`${msgId}-body`);
@@ -1254,21 +1096,15 @@
               <div class="fw-semibold d-flex align-items-center justify-content-between flex-wrap gap-1 text-danger small">
                 <span class="d-flex align-items-center gap-1.5">
                   <i class="bi bi-exclamation-triangle-fill text-danger"></i>
-                  <span>Ошибка: ${escapeHtml(err.message || 'Неизвестная ошибка выполнения')}</span>
+                  <span>Ошибка: ${escapeHtml(err.message || i18n.t('auto___3bc9ec'))}</span>
                 </span>
                 ${errorTypeBadge}
               </div>
               ${errDetail && errDetail.trim() !== (err.message || '').trim() ? `
                 <div class="mt-2 pt-1.5 border-top border-danger border-opacity-25">
-                  <div class="text-muted small mb-1" style="font-size: 0.72rem;"><i class="bi bi-code-slash me-1"></i>Параметры и стек ошибки:</div>
-                  <pre class="m-0 p-2 bg-black bg-opacity-60 text-danger border border-danger border-opacity-25 rounded font-monospace small" style="font-size: 0.72rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;">${escapeHtml(errDetail)}</pre>
+                  <div class="text-muted small mb-1" style="font-size: 0.72rem;"><i class="bi bi-code-slash me-1i18n.t('auto__i_div_pre_class__ee0dbb')m-0 p-2 bg-black bg-opacity-60 text-danger border border-danger border-opacity-25 rounded font-monospace small" style="font-size: 0.72rem; line-height: 1.35; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;">${escapeHtml(errDetail)}</pre>
                 </div>
-              ` : ''}
-            </div>
-          `;
-        }
-        chatHistory.scrollTop = chatHistory.scrollHeight;
-        if (statusInd) statusInd.innerText = `Ошибка: ${err.message || 'Сбой'}`;
+              ` : 'i18n.t('auto__div_chathistory_scrolltop_chathistory_scrollheight_if_statusind_statusind_innertext_err_message__5b4dbc')Сбой'}`;
       } finally {
         isChatSubmitting = false;
         chatInput.disabled = false;
@@ -1421,7 +1257,7 @@
             badge.title = st.result_message;
           }
         });
-        window.showToast?.('Профиль первоначальной настройки успешно применён', 'success');
+        window.showToast?.(i18n.t('auto___0bc714'), 'success');
       }
     } catch (e) {
       console.error('[ScenariosTab] Failed to apply profile:', e);

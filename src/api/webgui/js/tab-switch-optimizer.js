@@ -30,20 +30,7 @@ class TabSwitchOptimizer {
    * Вместо удаления содержимого вкладки, сохраняем его в памяти
    */
   enableDOMCaching() {
-    console.log('[TabSwitchOptimizer] Enabling DOM caching...');
-
-    // Перехватываем стандартное управление табами
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'childList' || mutation.type === 'attributes') {
-          // Вызываем автосохранение изменений
-          this._cacheVisibleTabs();
-        }
-      });
-    });
-
-    // Наблюдаем за контейнером с табами
-    const tabContainer = document.getElementById('mainTabsContent') || 
+    console.log('[TabSwitchOptimizer] Enabling DOM caching...i18n.t('auto__const_observer_new_mutationobserver_mutations_mutations_foreach_mutation_if_mutation_type__15dcc3')childList' || mutation.type === 'attributesi18n.t('auto__this_cachevisibletabs_const_tabcontainer_document_getelementbyid__3caf68')mainTabsContent') || 
                          document.querySelector('[role="tablist"]')?.parentElement;
     
     if (tabContainer) {
@@ -56,89 +43,12 @@ class TabSwitchOptimizer {
     }
 
     this.isOptimized = true;
-    console.log('[TabSwitchOptimizer] DOM caching enabled');
-  }
-
-  /**
-   * Кешировать видимые вкладки
-   */
-  _cacheVisibleTabs() {
-    const tabs = document.querySelectorAll('[role="tabpanel"]:not([aria-hidden="true"])');
-    tabs.forEach(tab => {
-      if (tab.id) {
-        // Сохраняем клон вкладки
-        this.domCache.set(tab.id, tab.cloneNode(true));
-      }
-    });
-  }
-
-  /**
-   * Получить кешированное содержимое вкладки
-   */
-  getCachedTabContent(tabId) {
-    return this.domCache.get(tabId);
-  }
-
-  /**
-   * Очистить кеш DOM
-   */
-  clearDOMCache(tabId = null) {
-    if (tabId) {
-      this.domCache.delete(tabId);
-    } else {
-      this.domCache.clear();
-    }
-  }
-
-  /**
-   * Оптимизировать функцию переключения вкладок
-   * Добавляет мгновенную визуальную обратную связь и трекинг времени
-   */
-  optimizeSwitching(originalSwitchFn) {
-    return async (targetTabId) => {
-      const startTime = performance.now();
-      
-      if (!targetTabId) return;
-
-      // Мгновенно показываем активную вкладку визуально (без загрузки)
-      this._showTabImmediately(targetTabId);
-
-      // Выполняем оригинальное переключение
-      if (typeof originalSwitchFn === 'function') {
-        await originalSwitchFn(targetTabId);
-      }
-
-      // Записываем время переключения
-      const switchTime = performance.now() - startTime;
-      this._recordSwitchTime(switchTime, targetTabId);
-
-      console.log(`[TabSwitchOptimizer] Tab switched in ${switchTime.toFixed(2)}ms`);
-    };
-  }
-
-  /**
-   * Мгновенно показать вкладку визуально (до загрузки содержимого)
-   */
-  _showTabImmediately(targetTabId) {
-    const cleanTabId = targetTabId.startsWith('#') ? targetTabId.slice(1) : targetTabId;
-    
-    // Скрываем все остальные вкладки
-    document.querySelectorAll('[role="tabpanel"]').forEach(tab => {
+    console.log('[TabSwitchOptimizer] DOM caching enabledi18n.t('auto__cachevisibletabs_const_tabs_document_queryselectorall__4cef58')[role="tabpanel"]:not([aria-hidden="true"])i18n.t('auto__tabs_foreach_tab_if_tab_id_this_domcache_set_tab_id_tab_clonenode_true_getcachedtabcontent_tabid_return_this_domcache_get_tabid_dom_cleardomcache_tabid_null_if_tabid_this_domcache_delete_tabid_else_this_domcache_clear_optimizeswitching_originalswitchfn_return_async_targettabid_const_starttime_performance_now_if_targettabid_return_this_showtabimmediately_targettabid_if_typeof_originalswitchfn__7c1c2f')functioni18n.t('auto__await_originalswitchfn_targettabid_const_switchtime_performance_now_starttime_this_recordswitchtime_switchtime_targettabid_console_log_tabswitchoptimizer_tab_switched_in_switchtime_tofixed_2_ms_showtabimmediately_targettabid_const_cleantabid_targettabid_startswith__957f8f')#i18n.t('auto__targettabid_slice_1_targettabid_document_queryselectorall__dd80ba')[role="tabpanel"]').forEach(tab => {
       tab.style.display = 'none';
       tab.classList.remove('active', 'show');
-      tab.setAttribute('aria-hidden', 'true');
-    });
-
-    // Показываем целевую вкладку
-    const targetTab = document.getElementById(cleanTabId);
-    if (targetTab) {
-      targetTab.style.display = 'block';
+      tab.setAttribute('aria-hidden', 'truei18n.t('auto__const_targettab_document_getelementbyid_cleantabid_if_targettab_targettab_style_display__b3a591')block';
       targetTab.classList.add('active', 'show');
-      targetTab.setAttribute('aria-hidden', 'false');
-    }
-
-    // Обновляем визуальное состояние кнопок вкладок
-    document.querySelectorAll('[role="tab"]').forEach(tab => {
+      targetTab.setAttribute('aria-hidden', 'falsei18n.t('auto__document_queryselectorall__292226')[role="tab"]').forEach(tab => {
       tab.classList.remove('active');
       tab.setAttribute('aria-selected', 'false');
     });
@@ -147,76 +57,11 @@ class TabSwitchOptimizer {
                         document.querySelector(`[data-bs-target="#${cleanTabId}"]`);
     if (targetButton) {
       targetButton.classList.add('active');
-      targetButton.setAttribute('aria-selected', 'true');
-    }
-  }
-
-  /**
-   * Записать время переключения и вычислить среднее
-   */
-  _recordSwitchTime(time, tabId) {
-    this.switchStats.totalSwitches++;
-    this.switchStats.lastSwitchTime = time;
-    this.switchStats.switchTimes.push({ time, tabId, timestamp: Date.now() });
-
-    // Ограничиваем историю последних 100 переключениями
-    if (this.switchStats.switchTimes.length > 100) {
-      this.switchStats.switchTimes = this.switchStats.switchTimes.slice(-100);
-    }
-
-    // Вычисляем среднее время
-    const sum = this.switchStats.switchTimes.reduce((acc, s) => acc + s.time, 0);
-    this.switchStats.avgSwitchTime = sum / this.switchStats.switchTimes.length;
-  }
-
-  /**
-   * Предварительная загрузка соседних вкладок
-   */
-  preloadAdjacentTabs(currentTabId) {
-    const allTabs = Array.from(document.querySelectorAll('[role="tab"]'));
+      targetButton.setAttribute('aria-selected', 'truei18n.t('auto__recordswitchtime_time_tabid_this_switchstats_totalswitches_this_switchstats_lastswitchtime_time_this_switchstats_switchtimes_push_time_tabid_timestamp_date_now_100_if_this_switchstats_switchtimes_length_100_this_switchstats_switchtimes_this_switchstats_switchtimes_slice_100_const_sum_this_switchstats_switchtimes_reduce_acc_s_acc_s_time_0_this_switchstats_avgswitchtime_sum_this_switchstats_switchtimes_length_preloadadjacenttabs_currenttabid_const_alltabs_array_from_document_queryselectorall__9756fa')[role="tab"]'));
     const currentIndex = allTabs.findIndex(tab => 
       tab.getAttribute('aria-controls') === currentTabId || 
-      tab.getAttribute('data-bs-target') === `#${currentTabId}`
-    );
-
-    if (currentIndex >= 0) {
-      // Предзагружаем соседние вкладки
-      const adjacentIndices = [currentIndex - 1, currentIndex + 1];
-      adjacentIndices.forEach(idx => {
-        if (idx >= 0 && idx < allTabs.length) {
-          const tab = allTabs[idx];
-          const tabId = tab.getAttribute('aria-controls') || 
-                       tab.getAttribute('data-bs-target')?.replace('#', '');
-          
-          if (tabId && window.optimizationModule?.tabLoader) {
-            console.log(`[TabSwitchOptimizer] Preloading adjacent tab: ${tabId}`);
-            window.optimizationModule.tabLoader.preloadTab(tabId);
-          }
-        }
-      });
-    }
-  }
-
-  /**
-   * Получить статистику переключения
-   */
-  getStats() {
-    return {
-      ...this.switchStats,
-      avgSwitchTimeFormatted: `${this.switchStats.avgSwitchTime.toFixed(2)}ms`,
-      lastSwitchTimeFormatted: this.switchStats.lastSwitchTime ? 
-        `${this.switchStats.lastSwitchTime.toFixed(2)}ms` : 'N/A',
-      cachedTabs: this.domCache.size,
-      isOptimized: this.isOptimized
-    };
-  }
-
-  /**
-   * Вывести статистику в консоль
-   */
-  printStats() {
-    const stats = this.getStats();
-    console.group('📊 Tab Switch Performance Stats');
+      tab.getAttribute('data-bs-targeti18n.t('auto__currenttabid_if_currentindex_0_const_adjacentindices_currentindex_1_currentindex_1_adjacentindices_foreach_idx_if_idx_0_idx_alltabs_length_const_tab_alltabs_idx_const_tabid_tab_getattribute__d841f9')aria-controls') || 
+                       tab.getAttribute('data-bs-target')?.replace('#', 'i18n.t('auto__if_tabid_window_optimizationmodule_tabloader_console_log_tabswitchoptimizer_preloading_adjacent_tab_tabid_window_optimizationmodule_tabloader_preloadtab_tabid_getstats_return_this_switchstats_avgswitchtimeformatted_this_switchstats_avgswitchtime_tofixed_2_ms_lastswitchtimeformatted_this_switchstats_lastswitchtime_this_switchstats_lastswitchtime_tofixed_2_ms__79f8d2')N/Ai18n.t('auto__cachedtabs_this_domcache_size_isoptimized_this_isoptimized_printstats_const_stats_this_getstats_console_group__dc6620')📊 Tab Switch Performance Stats');
     console.log('Total Switches:', stats.totalSwitches);
     console.log('Average Switch Time:', stats.avgSwitchTimeFormatted);
     console.log('Last Switch Time:', stats.lastSwitchTimeFormatted);

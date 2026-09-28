@@ -102,7 +102,7 @@
   function showChannelTooltip(e, channel) {
     const tip = getOrCreateTooltipEl();
     const countFormatted = (channel.record_count || 0).toLocaleString();
-    const descText = channel.description || 'Служебный журнал операционной системы Windows.';
+    const descText = channel.description || i18n.t('auto__windows__978326');
     const typeLabel = channel.source_type === 'channel' ? 'Windows Event Channel' : 'Log File';
 
     tip.innerHTML = `
@@ -112,8 +112,7 @@
       </div>
       <div style="color: #cbd5e1; margin-bottom: 0.35rem;">${escapeHtml(descText)}</div>
       <div class="slc-tooltip-meta">
-        <span><strong class="text-info">${countFormatted}</strong> записей</span>
-        <span class="text-muted font-monospace">${typeLabel}</span>
+        <span><strong class="text-infoi18n.t('auto__countformatted_strong_span_span_class__443306')text-muted font-monospace">${typeLabel}</span>
       </div>
     `;
 
@@ -153,25 +152,7 @@
     const filterText = filterInput ? filterInput.value.trim().toLowerCase() : '';
 
     if (!container) return;
-    container.innerHTML = '';
-
-    const filtered = cachedChannels.filter((c) => {
-      // Не выводить каналы и источники, в которых 0 записей
-      if (c.record_count === 0) return false;
-
-      if (!filterText) return true;
-      return (
-        c.channel_name.toLowerCase().includes(filterText) ||
-        c.display_name.toLowerCase().includes(filterText) ||
-        (c.description && c.description.toLowerCase().includes(filterText)) ||
-        (c.category && c.category.toLowerCase().includes(filterText))
-      );
-    });
-
-    // Group by category
-    const grouped = {};
-    filtered.forEach((c) => {
-      const cat = c.category || 'Windows Event Log';
+    container.innerHTML = 'i18n.t('auto__const_filtered_cachedchannels_filter_c_0_if_c_record_count_0_return_false_if_filtertext_return_true_return_c_channel_name_tolowercase_includes_filtertext_c_display_name_tolowercase_includes_filtertext_c_description_c_description_tolowercase_includes_filtertext_c_category_c_category_tolowercase_includes_filtertext_group_by_category_const_grouped_filtered_foreach_c_const_cat_c_category__fa49b4')Windows Event Log';
       if (!grouped[cat]) grouped[cat] = [];
       grouped[cat].push(c);
     });
@@ -499,39 +480,18 @@
     contentEl.innerHTML = `
       <div class="text-center py-5 text-muted">
         <div class="spinner-border text-info mb-3" role="status"></div>
-        <div class="fw-bold text-light">Выполняется многоуровневый аудит массива логов...</div>
-        <div class="small text-secondary mt-1">Фильтрация шума • Шаблонизация • Детекция аномалий • Сжатие данных</div>
-      </div>
-    `;
-
-    try {
-      const url = `/api/v1/system_logs/audit?channel=${encodeURIComponent(currentChannel)}&limit=${limit}&hours=${hours}&file_path=${encodeURIComponent(currentFilePath)}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-
-      const anomaliesHtml = (data.anomalies || []).map((a) => {
-        const badgeClass = getSeverityClass(a.level);
-        return `
-          <div class="p-2 mb-2 rounded bg-black border border-secondary d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="fw-bold text-lighti18n.t('auto__div_div_class__0459e4')small text-secondary mt-1i18n.t('auto__div_div_try_const_url_api_v1_system_logs_audit_channel_encodeuricomponent_currentchannel_limit_limit_hours_hours_file_path_encodeuricomponent_currentfilepath_const_res_await_fetch_url_if_res_ok_throw_new_error_http_res_status_const_data_await_res_json_const_anomalieshtml_data_anomalies_map_a_const_badgeclass_getseverityclass_a_level_return_div_class__7ce76c')p-2 mb-2 rounded bg-black border border-secondary d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
               <span class="badge ${badgeClass} text-uppercase me-2">${escapeHtml(a.level)}</span>
               <strong class="text-info">${escapeHtml(a.provider)}</strong>
               <span class="text-muted font-monospace small">(ID ${a.event_id})</span>
               <div class="small text-light mt-1 font-monospace" style="word-break: break-word;">${escapeHtml(a.sample)}</div>
-              <div class="small text-secondary mt-1"><i class="bi bi-clock me-1"></i>Окно: ${escapeHtml(a.time_window)}</div>
-            </div>
-            <div class="text-end">
+              <div class="small text-secondary mt-1"><i class="bi bi-clock me-1i18n.t('auto__i_escapehtml_a_time_window_div_div_div_class__760db2')text-end">
               <span class="badge bg-danger rounded-pill px-3 py-2 fs-6">${a.count}x</span>
             </div>
           </div>
         `;
-      }).join('') || `<div class="text-success small p-2"><i class="bi bi-check-circle me-1"></i>Аномалий и критических сбоев не обнаружено.</div>`;
-
-      const clustersHtml = (data.top_clusters || []).map((cl, idx) => {
-        const badgeClass = getSeverityClass(cl.level);
-        return `
-          <tr class="small">
+      }).join('') || `<div class="text-success small p-2"><i class="bi bi-check-circle me-1i18n.t('auto__i_div_const_clustershtml_data_top_clusters_map_cl_idx_const_badgeclass_getseverityclass_cl_level_return_tr_class__6dac8d')small">
             <td class="text-center font-monospace">${idx + 1}</td>
             <td><span class="badge ${badgeClass}">${escapeHtml(cl.level)}</span></td>
             <td class="text-info text-truncate" style="max-width: 140px;" title="${escapeHtml(cl.provider)}">${escapeHtml(cl.provider)}</td>
@@ -545,42 +505,32 @@
 
       const totalScanned = data.total_analyzed ?? data.total_scanned ?? 0;
       const uniqueCount = data.unique_patterns_count ?? (data.top_clusters ? data.top_clusters.length : 0);
-      const redundancyPct = data.redundancy_pct !== undefined ? `${data.redundancy_pct.toFixed(1)}%` : (data.compression_ratio || '0%');
-      const errSum = (data.error_count || 0) + (data.critical_count || 0);
-      const warnSum = data.warning_count || 0;
-      const summaryText = data.strategy_rationale || data.executive_summary || `Стратегия обработки: ${data.strategy || 'Стандартная'}. Найдено ${uniqueCount} ключевых шаблонов.`;
+      const redundancyPct = data.redundancy_pct !== undefined ? `${data.redundancy_pct.toFixed(1)}%` : (data.compression_ratio || '0%i18n.t('auto__const_errsum_data_error_count_0_data_critical_count_0_const_warnsum_data_warning_count_0_const_summarytext_data_strategy_rationale_data_executive_summary_data_strategy__fd87ee')Стандартная'}. Найдено ${uniqueCount} ключевых шаблонов.`;
 
       contentEl.innerHTML = `
         <!-- Executive Summary Card (Compact) -->
         <div class="card bg-dark border-info mb-2 shadow-sm">
           <div class="card-header bg-black text-info fw-bold py-1 px-3 d-flex justify-content-between align-items-center small">
-            <span><i class="bi bi-cpu me-1"></i>Сводка аудита: ${escapeHtml(data.channel)}</span>
-            <span class="badge bg-info text-dark font-monospace">Дублирование: ${redundancyPct}</span>
-          </div>
-          <div class="card-body p-2">
+            <span><i class="bi bi-cpu me-1i18n.t('auto__i_escapehtml_data_channel_span_span_class__b285ff')badge bg-info text-dark font-monospacei18n.t('auto__redundancypct_span_div_div_class__88c738')card-body p-2">
             <div class="row g-2 text-center mb-2">
               <div class="col-sm-3 col-6">
                 <div class="p-1 rounded bg-black border border-secondary">
-                  <div class="small text-muted" style="font-size: 0.72rem;">Просканировано</div>
-                  <div class="fs-5 fw-bold text-light font-monospace">${totalScanned}</div>
+                  <div class="small text-muted" style="font-size: 0.72rem;i18n.t('auto__div_div_class__901243')fs-5 fw-bold text-light font-monospace">${totalScanned}</div>
                 </div>
               </div>
               <div class="col-sm-3 col-6">
                 <div class="p-1 rounded bg-black border border-secondary">
-                  <div class="small text-muted" style="font-size: 0.72rem;">Шаблонов</div>
-                  <div class="fs-5 fw-bold text-info font-monospace">${uniqueCount}</div>
+                  <div class="small text-muted" style="font-size: 0.72rem;i18n.t('auto__div_div_class__8dd82d')fs-5 fw-bold text-info font-monospace">${uniqueCount}</div>
                 </div>
               </div>
               <div class="col-sm-3 col-6">
                 <div class="p-1 rounded bg-black border border-secondary">
-                  <div class="small text-muted" style="font-size: 0.72rem;">Ошибок / Сбоев</div>
-                  <div class="fs-5 fw-bold text-danger font-monospace">${errSum}</div>
+                  <div class="small text-muted" style="font-size: 0.72rem;i18n.t('auto__div_div_class__a51977')fs-5 fw-bold text-danger font-monospace">${errSum}</div>
                 </div>
               </div>
               <div class="col-sm-3 col-6">
                 <div class="p-1 rounded bg-black border border-secondary">
-                  <div class="small text-muted" style="font-size: 0.72rem;">Предупреждений</div>
-                  <div class="fs-5 fw-bold text-warning font-monospace">${warnSum}</div>
+                  <div class="small text-muted" style="font-size: 0.72rem;i18n.t('auto__div_div_class__c8c7eb')fs-5 fw-bold text-warning font-monospace">${warnSum}</div>
                 </div>
               </div>
             </div>
@@ -591,9 +541,7 @@
         <!-- Detected Anomalies Section -->
         <div class="card bg-dark border-secondary mb-2 shadow-sm">
           <div class="card-header bg-black text-warning fw-bold py-1 px-3 small">
-            <i class="bi bi-exclamation-triangle me-1"></i>Обнаруженные аномалии и всплески
-          </div>
-          <div class="card-body p-2">
+            <i class="bi bi-exclamation-triangle me-1i18n.t('auto__i_div_div_class__103a79')card-body p-2">
             ${anomaliesHtml}
           </div>
         </div>
@@ -601,31 +549,12 @@
         <!-- Top Clustered Patterns Table -->
         <div class="card bg-dark border-secondary">
           <div class="card-header bg-black text-light fw-bold d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-collection me-2"></i>Топ шаблонов событий (Дедупликация)</span>
-            <span class="small text-muted">Топ 10 кластеров</span>
-          </div>
-          <div class="table-responsive">
+            <span><i class="bi bi-collection me-2i18n.t('auto__i_span_span_class__fb696e')small text-mutedi18n.t('auto__10_span_div_div_class__8ff911')table-responsive">
             <table class="table slc-table mb-0">
               <thead>
                 <tr>
                   <th style="width: 40px;">#</th>
-                  <th style="width: 80px;">Уровень</th>
-                  <th style="width: 140px;">Поставщик</th>
-                  <th style="width: 60px;">ID</th>
-                  <th>Шаблон сообщения (Masked)</th>
-                  <th style="width: 70px;" class="text-center">Кол-во</th>
-                  <th style="width: 140px;">Впервые</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${clustersHtml}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    } catch (err) {
-      contentEl.innerHTML = `<div class="alert alert-danger">Ошибка проведения аудита: ${escapeHtml(err.message)}</div>`;
+                  <th style="width: 80px;i18n.t('auto__th_th_style__1d3b5f')width: 140px;i18n.t('auto__th_th_style__2c7cb7')width: 60px;i18n.t('auto__id_th_th_masked_th_th_style__95f249')width: 70px;" class="text-centeri18n.t('auto__th_th_style__5cbf48')width: 140px;i18n.t('auto__th_tr_thead_tbody_clustershtml_tbody_table_div_div_catch_err_contentel_innerhtml_div_class__0c5993')alert alert-danger">Ошибка проведения аудита: ${escapeHtml(err.message)}</div>`;
     }
   }
 
@@ -700,10 +629,7 @@
       const data = await res.json();
       resultsEl.innerHTML = `
         <div class="alert alert-success d-flex align-items-center gap-2">
-          <i class="bi bi-check-circle-fill fs-5"></i>
-          <div>
-            <strong>RAG-индекс успешно обновлен!</strong> Добавлено ${data.chunks_added} чанков (Всего в индексе: ${data.total_index_chunks}).
-            <div class="small mt-1 text-light">${escapeHtml(data.executive_summary)}</div>
+          <i class="bi bi-check-circle-fill fs-5i18n.t('auto__i_div_strong_rag_strong_data_chunks_added_data_total_index_chunks_div_class__13567f')small mt-1 text-light">${escapeHtml(data.executive_summary)}</div>
           </div>
         </div>
       `;
@@ -733,12 +659,7 @@
     document.getElementById('slc-modal-channel').textContent = entry.channel || currentChannel;
     document.getElementById('slc-modal-message').textContent = entry.message;
 
-    const aiExplanation = document.getElementById('slc-modal-ai-explanation');
-    if (aiExplanation) {
-      aiExplanation.innerHTML = `Нажмите «Анализ контекста», чтобы провести диагностику выбранной записи и сопутствующих событий.`;
-    }
-
-    const diagnoseBtn = document.getElementById('btn-slc-modal-diagnose');
+    const aiExplanation = document.getElementById('slc-modal-ai-explanationi18n.t('auto__if_aiexplanation_aiexplanation_innerhtml_const_diagnosebtn_document_getelementbyid__80b3b4')btn-slc-modal-diagnose');
     if (diagnoseBtn) {
       diagnoseBtn.onclick = async () => {
         aiExplanation.innerHTML = `<div class="spinner-border spinner-border-sm text-info me-2"></div>Анализ выбранной записи...`;
@@ -753,35 +674,18 @@
               event_id: entry.event_id || 0,
               provider: entry.provider || entry.source || '',
               level: entry.level || '',
-              message: entry.message || '',
-              target_entry: entry,
-              query_text: `Диагностика события ${entry.provider || entry.source} (ID ${entry.event_id || 0}): ${entry.message || ''}`,
+              message: entry.message || 'i18n.t('auto__target_entry_entry_query_text_entry_provider_entry_source_id_entry_event_id_0_entry_message__f11aad')'}`,
             }),
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const report = await res.json();
           aiExplanation.innerHTML = `
-            <div class="mb-2"><strong class="text-info">Сводка:</strong> ${escapeHtml(report.summary)}</div>
-            <div class="mb-2"><strong class="text-warning">Причина / Анализ:</strong> ${escapeHtml(report.root_cause)}</div>
-            <h6 class="small text-uppercase text-muted fw-bold mb-1">Рекомендации:</h6>
-            <ul class="mb-0 ps-3">
+            <div class="mb-2"><strong class="text-infoi18n.t('auto__strong_escapehtml_report_summary_div_div_class__ecdf37')mb-2"><strong class="text-warningi18n.t('auto__strong_escapehtml_report_root_cause_div_h6_class__dadb6c')small text-uppercase text-muted fw-bold mb-1i18n.t('auto__h6_ul_class__8f83b2')mb-0 ps-3">
               ${(report.recommendations || []).map(r => `<li>${escapeHtml(r)}</li>`).join('')}
             </ul>
           `;
         } catch (err) {
-          aiExplanation.innerHTML = `<div class="text-danger">Ошибка диагностики: ${escapeHtml(err.message)}</div>`;
-        }
-      };
-    }
-
-    const bsModal = new bootstrap.Modal(modalEl);
-    bsModal.show();
-  }
-
-  /**
-   * Export logs as downloadable file.
-   *
-   * @param {string} format - "json" or "csv".
+          aiExplanation.innerHTML = `<div class="text-dangeri18n.t('auto__escapehtml_err_message_div_const_bsmodal_new_bootstrap_modal_modalel_bsmodal_show_export_logs_as_downloadable_file_param_string_format__6d32d5')json" or "csv".
    */
   function exportLogs(format) {
     const level = (document.getElementById('slc-level-select') || {}).value || '';

@@ -48,83 +48,83 @@
 </style>
 
 <div class="recovery-container">
-  <!-- Верхняя информационная панель -->
+  <!-- <span data-i18n="auto___0105ee"></span> -->
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 recovery-header text-white">
     <div class="d-flex align-items-center gap-2.5">
       <span class="fs-4">🗂️</span>
       <div>
-        <h5 class="mb-0 fw-bold fs-6">Восстановление удаленных файлов</h5>
-        <span class="text-secondary small">Запуск профессионального комплекса R-Studio Technician Portable</span>
+        <h5 class="mb-0 fw-bold fs-6"><span data-i18n="auto___0396a6"></span></h5>
+        <span class="text-secondary small"><span data-i18n="auto___78f441"></span> R-Studio Technician Portable</span>
       </div>
     </div>
     <div class="d-flex align-items-center gap-2">
       <span class="badge rounded-pill bg-dark border border-secondary text-info px-2.5 py-1.5" id="recovery-status-badge">
-        Проверка утилиты...
+        <span data-i18n="auto___430c3a"></span>...
       </span>
       <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-recovery-refresh" type="button">
-        <i class="bi bi-arrow-clockwise me-1"></i> Обновить статус
+        <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___6cc5dc"></span>
       </button>
     </div>
   </div>
 
   <div class="row g-3 mb-3">
-    <!-- Левая колонка: Запуск и возможности -->
+    <!-- <span data-i18n="auto___408c56"></span> -->
     <div class="col-12 col-lg-7">
       <div class="recovery-card h-100 d-flex flex-column justify-content-between">
         <div>
           <h6 class="fw-bold text-info mb-3 d-flex align-items-center gap-2">
-            <i class="bi bi-arrow-counterclockwise"></i> Восстановление данных с накопителей
+            <i class="bi bi-arrow-counterclockwise"></i> <span data-i18n="auto___0395f8"></span>
           </h6>
 
           <p class="text-light small mb-3">
-            <strong>R-Studio Technician</strong> — мощный комплекс для восстановления удалённых, повреждённых и отформатированных файлов с локальных и сетевых дисков, RAID-массивов, флеш-накопителей и виртуальных дисков.
+            <strong>R-Studio Technician</strong> — <span data-i18n="auto__raid__45db7e"></span>.
           </p>
 
           <div class="recovery-feature-item">
             <i class="bi bi-check2-circle text-success fs-5"></i>
             <div>
-              <strong>Поддерживаемые файловые системы:</strong> NTFS, NTFS5, ReFS, FAT12/16/32, exFAT, HFS/HFS+, APFS, Ext2/Ext3/Ext4 FS, UFS.
+              <strong><span data-i18n="auto___072c40"></span>:</strong> NTFS, NTFS5, ReFS, FAT12/16/32, exFAT, HFS/HFS+, APFS, Ext2/Ext3/Ext4 FS, UFS.
             </div>
           </div>
 
           <div class="recovery-feature-item">
             <i class="bi bi-check2-circle text-success fs-5"></i>
             <div>
-              <strong>Сценарии восстановления:</strong> Случайное удаление (Shift+Del), форматирование разделов, повреждение MBR/GPT, сбои питания, вирусные атаки, сбойные сектора.
+              <strong><span data-i18n="auto___8d0819"></span>:</strong> <span data-i18n="auto__shift_del_mbr_gpt__d8e0f0"></span>.
             </div>
           </div>
 
           <div class="recovery-feature-item">
             <i class="bi bi-check2-circle text-success fs-5"></i>
             <div>
-              <strong>Режим работы:</strong> Portable (не требует установки, запускается напрямую из <code>\bin\R-Studio_Technician_9.5.191810_Portable\R-Studio_9.5.exe</code>).
+              <strong><span data-i18n="auto___f23fe5"></span>:</strong> Portable (<span data-i18n="auto___5dee08"></span> <code>\bin\R-Studio_Technician_9.5.191810_Portable\R-Studio_9.5.exe</code>).
             </div>
           </div>
         </div>
 
         <div class="mt-4">
-          <!-- Большая главная кнопка запуска -->
+          <!-- <span data-i18n="auto___a94c28"></span> -->
           <button class="btn btn-primary btn-lg w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 shadow" id="btn-recovery-launch" type="button">
-            <i class="bi bi-play-circle-fill fs-4"></i> Восстановить удаленные файлы (Запустить R-Studio)
+            <i class="bi bi-play-circle-fill fs-4"></i> <span data-i18n="auto___af602e"></span> R-Studio)
           </button>
           <div id="recovery-alert-box" class="mt-3" style="display: none;"></div>
         </div>
       </div>
     </div>
 
-    <!-- Правая колонка: Информация об исполняемом файле -->
+    <!-- <span data-i18n="auto___0e2a26"></span> -->
     <div class="col-12 col-lg-5">
       <div class="recovery-card h-100 d-flex flex-column justify-content-between">
         <div>
           <h6 class="fw-bold text-info mb-3 d-flex align-items-center gap-2">
-            <i class="bi bi-info-circle-fill"></i> Информация о пакете утилиты
+            <i class="bi bi-info-circle-fill"></i> <span data-i18n="auto___b32e9d"></span>
           </h6>
 
           <div class="row g-2 mb-3">
             <div class="col-12">
               <div class="recovery-stat-box">
-                <div class="recovery-stat-title">Исполняемый файл</div>
-                <div class="recovery-stat-val text-truncate" id="recovery-file-status">Проверка...</div>
+                <div class="recovery-stat-title"><span data-i18n="auto___5a005c"></span></div>
+                <div class="recovery-stat-val text-truncate" id="recovery-file-status"><span data-i18n="auto___457969"></span>...</div>
                 <div class="text-secondary small mt-1 text-break font-monospace" id="recovery-file-path" style="font-size: 0.75rem;">
                   \bin\R-Studio_Technician_9.5.191810_Portable\R-Studio_9.5.exe
                 </div>
@@ -133,15 +133,15 @@
 
             <div class="col-12">
               <div class="recovery-stat-box">
-                <div class="recovery-stat-title">Версия и сборка</div>
+                <div class="recovery-stat-title"><span data-i18n="auto___840638"></span></div>
                 <div class="recovery-stat-val text-info" id="recovery-version">R-Studio Technician 9.5</div>
-                <div class="text-secondary small mt-1">Сборка: 191810 (Portable x64/x86)</div>
+                <div class="text-secondary small mt-1"><span data-i18n="auto___930d47"></span>: 191810 (Portable x64/x86)</div>
               </div>
             </div>
 
             <div class="col-12">
               <div class="recovery-stat-box">
-                <div class="recovery-stat-title">Размер файла / Дата модификации</div>
+                <div class="recovery-stat-title"><span data-i18n="auto___9353c6"></span></div>
                 <div class="recovery-stat-val text-truncate" id="recovery-file-size">--</div>
                 <div class="text-secondary small mt-1" id="recovery-file-date">--</div>
               </div>
@@ -150,7 +150,7 @@
         </div>
 
         <div class="p-2 rounded bg-dark border border-secondary text-secondary small">
-          <i class="bi bi-shield-check text-success me-1"></i> Приложение запускается с повышенными привилегиями Windows для доступа к секторам физических дисков.
+          <i class="bi bi-shield-check text-success me-1"></i> <span data-i18n="auto__windows__1ed991"></span>.
         </div>
       </div>
     </div>

@@ -42,11 +42,7 @@ async function refreshTabGoogleAccountsList() {
     if (totalEl) totalEl.textContent = accounts.length;
     if (activeEl) activeEl.textContent = accounts.filter(a => a.status === 'active').length;
     if (oauthEl) oauthEl.textContent = accounts.filter(a => a.type === 'oauth2').length;
-    if (saEl) saEl.textContent = accounts.filter(a => a.type === 'service_account').length;
-    if (countBadge) countBadge.textContent = `${accounts.length} акк.`;
-
-    if (accounts.length === 0) {
-      container.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Список аккаунтов пуст. Загрузите credentials.json или service_account.json.</td></tr>';
+    if (saEl) saEl.textContent = accounts.filter(a => a.type === 'service_accounti18n.t('auto__length_if_countbadge_countbadge_textcontent_accounts_length_if_accounts_length_0_container_innerhtml__a32764')<tr><td colspan="5" class="text-center py-4 text-muted">Список аккаунтов пуст. Загрузите credentials.json или service_account.json.</td></tr>';
       return;
     }
 
@@ -81,7 +77,7 @@ async function refreshTabGoogleAccountsList() {
       if (isActive) {
         tdStatus.innerHTML = '<span class="badge bg-success">Активен</span>';
       } else if (acc.status === 'exhausted') {
-        tdStatus.innerHTML = '<span class="badge bg-danger" title="Исчерпан суточный лимит квоты">Лимит</span>';
+        tdStatus.innerHTML = '<span class="badge bg-danger" title=i18n.t('auto___54a53d')>Лимит</span>';
       } else {
         tdStatus.innerHTML = `<span class="badge bg-secondary">${escapeHtml(acc.status)}</span>`;
       }
@@ -105,7 +101,7 @@ async function refreshTabGoogleAccountsList() {
       if (!acc.is_default) {
         const btnDefault = document.createElement('button');
         btnDefault.className = 'btn btn-xs btn-outline-warning btn-sm me-1';
-        btnDefault.title = 'Сделать аккаунтом по умолчанию';
+        btnDefault.title = i18n.t('auto___d6350d');
         btnDefault.innerHTML = '<i class="bi bi-star"></i>';
         btnDefault.onclick = () => setTabGoogleAccountDefault(acc.name);
         tdActions.appendChild(btnDefault);
@@ -115,7 +111,7 @@ async function refreshTabGoogleAccountsList() {
       if (acc.status === 'exhausted') {
         const btnReset = document.createElement('button');
         btnReset.className = 'btn btn-xs btn-outline-info btn-sm me-1';
-        btnReset.title = 'Сбросить статус исчерпания';
+        btnReset.title = i18n.t('auto___29d113');
         btnReset.innerHTML = '<i class="bi bi-arrow-repeat"></i>';
         btnReset.onclick = () => resetTabGoogleAccountStatus(acc.name);
         tdActions.appendChild(btnReset);
@@ -124,7 +120,7 @@ async function refreshTabGoogleAccountsList() {
       // Test button
       const btnTest = document.createElement('button');
       btnTest.className = 'btn btn-xs btn-outline-info btn-sm me-1';
-      btnTest.title = 'Проверить доступ и авторизацию';
+      btnTest.title = i18n.t('auto___d6a136');
       btnTest.innerHTML = '<i class="bi bi-play-circle"></i> Тест';
       btnTest.onclick = () => testTabGoogleAccount(acc.name);
       tdActions.appendChild(btnTest);
@@ -132,7 +128,7 @@ async function refreshTabGoogleAccountsList() {
       // Delete button
       const btnDelete = document.createElement('button');
       btnDelete.className = 'btn btn-xs btn-outline-danger btn-sm';
-      btnDelete.title = 'Удалить аккаунт из пула';
+      btnDelete.title = i18n.t('auto___ec3b81');
       btnDelete.innerHTML = '<i class="bi bi-trash"></i>';
       btnDelete.onclick = () => deleteTabGoogleAccount(acc.name);
       tdActions.appendChild(btnDelete);
@@ -142,7 +138,7 @@ async function refreshTabGoogleAccountsList() {
     });
 
   } catch (err) {
-    console.error('Ошибка загрузки аккаунтов Google Workspace:', err);
+    console.error(i18n.t('auto__google_workspace__ac8349'), err);
     container.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">Ошибка: ${escapeHtml(err.message)}</td></tr>`;
   }
 }
@@ -164,7 +160,7 @@ async function handleAddTabGoogleAccount() {
   const setAsDefault = defaultCheckbox ? defaultCheckbox.checked : false;
 
   if (!accountName) {
-    showGAccountsNotification('Введите имя аккаунта (например: work, personal)', 'warning');
+    showGAccountsNotification(i18n.t('auto__work_personal__3640ed'), 'warning');
     nameInput.focus();
     return;
   }
@@ -173,7 +169,7 @@ async function handleAddTabGoogleAccount() {
   const jsonContent = jsonTextarea ? jsonTextarea.value.trim() : '';
 
   if (!file && !jsonContent) {
-    showGAccountsNotification('Загрузите файл credentials.json / service_account.json или вставьте JSON', 'warning');
+    showGAccountsNotification(i18n.t('auto__credentials_json_service_account_json_json_c9132d'), 'warning');
     return;
   }
 
@@ -196,7 +192,7 @@ async function handleAddTabGoogleAccount() {
       try {
         parsedJson = JSON.parse(jsonContent);
       } catch (e) {
-        throw new Error('Некорректный JSON в поле учетных данных');
+        throw new Error(i18n.t('auto__json__9896c0'));
       }
 
       await window.api.googleAccounts.create({
@@ -217,8 +213,8 @@ async function handleAddTabGoogleAccount() {
 
     await refreshTabGoogleAccountsList();
   } catch (err) {
-    console.error('Ошибка сохранения аккаунта Google:', err);
-    showGAccountsNotification('Ошибка сохранения: ' + err.message, 'danger');
+    console.error(i18n.t('auto__google__82151e'), err);
+    showGAccountsNotification(i18n.t('auto___bbbabd') + err.message, 'danger');
   } finally {
     addBtn.disabled = false;
     addBtn.innerHTML = originalText;
@@ -231,8 +227,8 @@ async function setTabGoogleAccountDefault(name) {
     showGAccountsNotification(`Аккаунт "${name}" назначен по умолчанию`, 'success');
     await refreshTabGoogleAccountsList();
   } catch (err) {
-    console.error('Ошибка установки аккаунта по умолчанию:', err);
-    showGAccountsNotification('Ошибка: ' + err.message, 'danger');
+    console.error(i18n.t('auto___3fcc5f'), err);
+    showGAccountsNotification(i18n.t('auto___8361fc') + err.message, 'danger');
   }
 }
 
@@ -242,8 +238,8 @@ async function resetTabGoogleAccountStatus(name) {
     showGAccountsNotification(`Статус аккаунта "${name}" сброшен в активный`, 'success');
     await refreshTabGoogleAccountsList();
   } catch (err) {
-    console.error('Ошибка сброса статуса аккаунта:', err);
-    showGAccountsNotification('Ошибка сброса: ' + err.message, 'danger');
+    console.error(i18n.t('auto___608a49'), err);
+    showGAccountsNotification(i18n.t('auto___a413d3') + err.message, 'danger');
   }
 }
 
@@ -274,20 +270,11 @@ async function testTabGoogleAccount(name) {
     }
   } catch (err) {
     if (testBody) {
-      testBody.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Ошибка проверки: ${escapeHtml(err.message)}</span>`;
-    }
-  }
-}
-
-async function deleteTabGoogleAccount(name) {
-  if (!confirm(`Вы уверены, что хотите удалить аккаунт "${name}" из пула Google Workspace?`)) return;
-  try {
-    await window.api.googleAccounts.delete(name);
-    showGAccountsNotification(`Аккаунт "${name}" успешно удален`, 'success');
+      testBody.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle me-1i18n.t('auto__i_escapehtml_err_message_span_async_function_deletetabgoogleaccount_name_if_confirm__be0195')${name}i18n.t('auto__google_workspace_return_try_await_window_api_googleaccounts_delete_name_showgaccountsnotification__e5d4ea')${name}" успешно удален`, 'success');
     await refreshTabGoogleAccountsList();
   } catch (err) {
-    console.error('Ошибка удаления аккаунта Google:', err);
-    showGAccountsNotification('Ошибка удаления: ' + err.message, 'danger');
+    console.error(i18n.t('auto__google__fea33a'), err);
+    showGAccountsNotification(i18n.t('auto___654025') + err.message, 'danger');
   }
 }
 
@@ -302,7 +289,7 @@ async function initGoogleAccountsTab() {
       refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Обновление...';
       try {
         await refreshTabGoogleAccountsList();
-        showGAccountsNotification('Список Google аккаунтов обновлен', 'success');
+        showGAccountsNotification(i18n.t('auto__google__a0b8e2'), 'success');
       } finally {
         refreshBtn.disabled = false;
         refreshBtn.innerHTML = orig;

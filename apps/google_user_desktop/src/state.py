@@ -18,6 +18,7 @@ from src.google_services import (
     get_google_headers,
     list_google_documents,
 )
+from .forms import GoogleFormsClient, FormItemSummary
 
 
 @dataclass
@@ -328,7 +329,54 @@ class GoogleUserDesktopState:
             logger.error(f"Ошибка получения списка файлов Google Drive: {ex}")
             return self._drive_cache
 
-    def fetch_mail_messages(self, max_results: int = 20) -> List[MailItemSummary]:
+    
+    # ---------------------------------------------------------------------
+    # Методы управления Google Forms (делегируют работу клиенту GoogleFormsClient)
+    # ---------------------------------------------------------------------
+    def _get_forms_client(self) -> GoogleFormsClient:
+        """Получить singleton‑клиент GoogleFormsClient для текущего пользователя."""
+        if not hasattr(self, "_forms_client") or self._forms_client is None:
+            self._forms_client = GoogleFormsClient(user_id=self.user_id)
+        return self._forms_client
+
+    def create_form(self, title: str, description: Optional[str] = None) -> FormItemSummary:
+        """Создать форму и добавить её в кеш `_forms_cache`.
+
+        Возвращает объект `FormItemSummary`.
+        """
+        client = self._get_forms_client()
+        summary = client.create_form(title=title, description=description)
+        self._forms_cache.append(summary)
+        return summary
+
+    def update_form(self, form_id: str, requests: List[Dict[str, Any]]) -> None:
+        """Выполнить batchUpdate для указанной формы."""
+        client = self._get_forms_client()
+        client.batch_update(form_id=form_id, requests=requests)
+
+    def publish_form(self, form_id: str) -> None:
+        """Опубликовать форму (включить приём ответов)."""
+        client = self._get_forms_client()
+        client.set_publish(form_id=form_id, publish=True)
+        for f in self._forms_cache:
+            if f.form_id == form_id:
+                f.published = True
+                break
+
+    def close_form(self, form_id: str) -> None:
+        """Закрыть форму (отключить приём ответов)."""
+        client = self._get_forms_client()
+        client.set_publish(form_id=form_id, publish=False)
+        for f in self._forms_cache:
+            if f.form_id == form_id:
+                f.published = False
+                break
+
+    def get_form_responses(self, form_id: str, limit: int = 20) -> List[Dict[str, Any]]:
+        """Получить ответы формы через клиент."""
+        client = self._get_forms_client()
+        return client.get_responses(form_id=form_id, page_size=limit)
+def fetch_mail_messages(self, max_results: int = 20) -> List[MailItemSummary]:
         """Загрузить входящие сообщения Gmail.
 
         Args:

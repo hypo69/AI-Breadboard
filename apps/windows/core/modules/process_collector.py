@@ -1,4 +1,4 @@
-"""Коллектор аудита процессов и дескрипторов Windows."""
+﻿"""Коллектор аудита процессов и дескрипторов Windows."""
 from __future__ import annotations
 import time
 from typing import Any, Dict, List, Optional
@@ -36,7 +36,7 @@ class ProcessCollector(TelemetryProvider):
         new_processes_last_hour = 0
         try:
             if self._audit_manager is None:
-                from apps.windows.api.wevtapi import WevtAPI
+                from apps.windows.telemetry.api_bindings.wevtapi import WevtAPI
                 self._audit_manager = ProcessAuditManager(WevtAPI())
             history = self._audit_manager.get_process_execution_history(limit=100, filter_process=None, filter_user=None)
             one_hour_ago = time.time() - 3600

@@ -1,4 +1,4 @@
-"""Движок аудита оборудования, драйверов и привязки датчиков."""
+﻿"""Движок аудита оборудования, драйверов и привязки датчиков."""
 from __future__ import annotations
 import os
 import platform
@@ -6,7 +6,7 @@ import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from logger import logger
-from apps.windows.api.setupapi import SetupAPI
+from apps.windows.telemetry.api_bindings.setupapi import SetupAPI
 from apps.windows.telemetry.models import DriverInfo, HardwareAuditReport, HardwareDeviceAudit, HardwareSensor
 from apps.windows.telemetry.sensors import get_hardware_sensors
 

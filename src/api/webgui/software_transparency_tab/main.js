@@ -31,7 +31,7 @@
 
     if (badge) {
       badge.className = 'badge rounded-pill bg-warning-subtle text-warning border border-warning px-3 py-2';
-      badge.innerText = '● Идет сбор сведений о ПО и сети...';
+      badge.innerText = i18n.t('auto___865327');
     }
 
     if (tbody && (!allApps || allApps.length === 0)) {
@@ -50,11 +50,11 @@
       document.getElementById('st-metric-total-apps').innerText = summary.total_apps || allApps.length;
       document.getElementById('st-metric-total-configs').innerText = summary.total_configs_found || 0;
       document.getElementById('st-metric-total-domains').innerText = summary.total_network_domains || 0;
-      document.getElementById('st-metric-scan-duration').innerText = (summary.scan_duration_sec || 0) + ' с.';
+      document.getElementById('st-metric-scan-duration').innerText = (summary.scan_duration_sec || 0) + i18n.t('auto___d0b39e');
 
       if (badge) {
         badge.className = 'badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2';
-        badge.innerText = '● Обнаружено: ' + allApps.length + ' программ';
+        badge.innerText = i18n.t('auto___ac4e84') + allApps.length + i18n.t('auto___65a021');
       }
 
       renderTable();
@@ -62,7 +62,7 @@
       console.error('[TransparencyScanner] Scan error:', err);
       if (badge) {
         badge.className = 'badge rounded-pill bg-danger-subtle text-danger border border-danger px-3 py-2';
-        badge.innerText = '● Ошибка сканирования';
+        badge.innerText = i18n.t('auto___690006');
       }
       if (tbody) {
         tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Ошибка: ' + err.message + '</td></tr>';
@@ -116,7 +116,7 @@
         <td>${cfgs}</td>
         <td>${nets}</td>
         <td class="text-end">
-          <button class="btn btn-sm btn-outline-info research-app-btn" data-app-id="${app.id}" title="AI Исследование">
+          <button class="btn btn-sm btn-outline-info research-app-btn" data-app-id="${app.id}" title=i18n.t('auto_ai__ff8e04')>
             <i class="bi bi-robot"></i> Анализ
           </button>
         </td>
@@ -146,7 +146,7 @@
     const cfg = app ? (app.config_files || []).find(c => c.path === cfgPath) : null;
 
     document.getElementById('st-config-modal-path').innerText = cfgPath;
-    document.getElementById('st-config-modal-content').innerText = cfg ? (cfg.content_preview || '[Пустой файл]') : '[Файл не найден]';
+    document.getElementById('st-config-modal-content').innerText = cfg ? (cfg.content_preview || i18n.t('auto___88a3ee')) : i18n.t('auto___b97557');
 
     const modalEl = document.getElementById('st-config-modal');
     if (modalEl && window.bootstrap) {
@@ -159,7 +159,7 @@
     const titleEl = document.getElementById('st-research-modal-title');
     const bodyEl = document.getElementById('st-research-modal-body');
 
-    if (titleEl) titleEl.innerText = 'AI Исследование: ' + (app ? app.name : appId);
+    if (titleEl) titleEl.innerText = i18n.t('auto_ai__dee97c') + (app ? app.name : appId);
     if (bodyEl) {
       bodyEl.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Выполняется аналитическое исследование программы через Gemini...</div>';
     }
@@ -175,15 +175,8 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ app_id: appId })
       });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-
-      if (bodyEl) {
-        bodyEl.innerHTML = `
-          <h6>📋 Описание программы:</h6>
-          <p>${escapeHtml(data.summary || data.description || 'Нет данных')}</p>
-          ${data.risk_score !== undefined ? `<div class="mb-2"><strong>Оценка риска:</strong> <span class="badge bg-${data.risk_score > 5 ? 'danger' : 'success'}">${data.risk_score}/10</span></div>` : ''}
-          ${data.recommendations ? `<h6>💡 Рекомендации:</h6><p>${escapeHtml(data.recommendations)}</p>` : ''}
+      if (!res.ok) throw new Error('HTTP i18n.t('auto__res_status_const_data_await_res_json_if_bodyel_bodyel_innerhtml_h6_h6_p_escapehtml_data_summary_data_description__499b9e')Нет данных')}</p>
+          ${data.risk_score !== undefined ? `<div class="mb-2i18n.t('auto__strong_strong_span_class__57a356')badge bg-${data.risk_score > 5 ? 'danger' : 'success'}">${data.risk_score}/10</span></div>` : 'i18n.t('auto__data_recommendations_h6_h6_p_escapehtml_data_recommendations_p__35142a')'}
         `;
       }
     } catch (err) {

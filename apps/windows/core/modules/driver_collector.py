@@ -1,11 +1,11 @@
-"""Коллектор аудита драйверов и устройств Windows с поддержкой SetupAPI."""
+﻿"""Коллектор аудита драйверов и устройств Windows с поддержкой SetupAPI."""
 from __future__ import annotations
 import json
 import subprocess
 import time
 from typing import Any, Dict, List
 from logger import logger
-from apps.windows.api.setupapi import SetupAPI
+from apps.windows.telemetry.api_bindings.setupapi import SetupAPI
 from apps.windows.core.models import ActionType, AuditFinding, DomainAuditResult, RemediationAction, RiskLevel
 
 class DriverCollector:

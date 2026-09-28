@@ -18,8 +18,7 @@
             <div class="modal-header border-secondary py-2 px-3">
               <div class="d-flex align-items-center gap-2 flex-wrap">
                 <span class="fs-5 text-info" id="uai-modal-icon">🔍</span>
-                <h5 class="modal-title fw-bold text-info mb-0" id="uai-modal-title">Детали записи</h5>
-                <div id="uai-modal-badges" class="d-flex align-items-center gap-1"></div>
+                <h5 class="modal-title fw-bold text-info mb-0" id="uai-modal-titlei18n.t('auto__h5_div_id__bbefd7')uai-modal-badges" class="d-flex align-items-center gap-1"></div>
               </div>
               <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -30,9 +29,7 @@
               <!-- Raw / Code Content Section -->
               <div class="card bg-black border-secondary p-3 mb-3" id="uai-modal-raw-container" style="display: none;">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                  <h6 class="small text-uppercase text-muted fw-bold mb-0" id="uai-modal-raw-title">Контекст / Данные</h6>
-                </div>
-                <div class="small font-monospace text-light" id="uai-modal-raw-content" style="white-space: pre-wrap; word-break: break-all;"></div>
+                  <h6 class="small text-uppercase text-muted fw-bold mb-0" id="uai-modal-raw-titlei18n.t('auto__h6_div_div_class__bc70ed')small font-monospace text-light" id="uai-modal-raw-content" style="white-space: pre-wrap; word-break: break-all;"></div>
               </div>
 
               <!-- AI Contextual Diagnostic Card -->
@@ -40,28 +37,20 @@
                 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                   <div class="d-flex align-items-center gap-2">
                     <h6 class="fw-bold text-info mb-0"><i class="bi bi-robot me-1"></i> AI Contextual Explanation</h6>
-                    <span class="badge bg-info-subtle text-info border border-info-subtle small px-2 py-0.5" id="uai-modal-web-status" title="Сведения обогащаются поиском в интернете">
+                    <span class="badge bg-info-subtle text-info border border-info-subtle small px-2 py-0.5" id="uai-modal-web-status" title=i18n.t('auto___441b4d')>
                       <i class="bi bi-globe me-1"></i>Web Grounding
                     </span>
                   </div>
                   <div class="d-flex align-items-center gap-1.5">
-                    <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" id="btn-uai-modal-edit-prompt" title="Настроить промпт для этого типа таблицы">
-                      <i class="bi bi-gear-fill me-1"></i>Промпт
-                    </button>
-                    <button class="btn btn-sm btn-outline-info py-0 px-2 rounded-pill" id="btn-uai-modal-refresh" title="Обновить AI-анализ">
+                    <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" id="btn-uai-modal-edit-prompt" title=i18n.t('auto___ebcb79')>
+                      <i class="bi bi-gear-fill me-1i18n.t('auto__i_button_button_class__2d84f7')btn btn-sm btn-outline-info py-0 px-2 rounded-pill" id="btn-uai-modal-refresh" title=i18n.t('auto__ai__52c90a')>
                       <i class="bi bi-arrow-clockwise"></i>
                     </button>
                   </div>
                 </div>
                 <div class="small" id="uai-modal-ai-explanation">
                   <div class="d-flex align-items-center gap-2 py-2 text-info">
-                    <div class="spinner-border spinner-border-sm" role="status"></div>
-                    <span>Выполняется экспертный AI-анализ и поиск сведений в интернете...</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="modal-footer border-secondary py-2 px-3 d-flex justify-content-between">
+                    <div class="spinner-border spinner-border-sm" role="statusi18n.t('auto__div_span_ai_span_div_div_div_div_div_class__c64efb')modal-footer border-secondary py-2 px-3 d-flex justify-content-between">
               <div id="uai-modal-custom-actions" class="d-flex gap-1.5 flex-wrap"></div>
               <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Закрыть</button>
             </div>
@@ -89,12 +78,12 @@
    */
   function show(options) {
     const opts = Object.assign({
-      title: 'Детали записи',
+      title: i18n.t('auto___4f7c08'),
       subtitle: '',
       icon: '🔍',
       badges: [],
       metadata: [],
-      rawTitle: 'Данные / Путь',
+      rawTitle: i18n.t('auto___b6d2b4'),
       rawContent: '',
       tableType: 'generic',
       requestData: {},
@@ -155,13 +144,7 @@
     }
 
     // Reset AI Diagnostic section
-    const aiExplanation = document.getElementById('uai-modal-ai-explanation');
-    if (aiExplanation) {
-      aiExplanation.innerHTML = `Нажмите «Анализ контекста», чтобы получить экспертное объяснение от языковой модели, оценку безопасности и рекомендации.`;
-    }
-
-    // Wire up Prompt Editor button
-    const editPromptBtn = document.getElementById('btn-uai-modal-edit-prompt');
+    const aiExplanation = document.getElementById('uai-modal-ai-explanationi18n.t('auto__if_aiexplanation_aiexplanation_innerhtml_wire_up_prompt_editor_button_const_editpromptbtn_document_getelementbyid__1525f8')btn-uai-modal-edit-prompt');
     if (editPromptBtn) {
       editPromptBtn.onclick = () => openPromptEditor(opts.tableType);
     }
@@ -202,16 +185,9 @@
         const data = (res && typeof res.json === 'function') ? await res.json() : res;
 
         aiExplanation.innerHTML = `
-          <div class="mb-2"><strong class="text-info"><i class="bi bi-card-text me-1"></i>Назначение:</strong> ${escapeHtml(data.summary)}</div>
-          <div class="mb-2"><strong class="text-secondary"><i class="bi bi-building me-1"></i>Разработчик / Категория:</strong> ${escapeHtml(data.developer || 'Неизвестен')} (${escapeHtml(data.category || 'Компонент')})</div>
-          <div class="mb-2"><strong class="text-warning"><i class="bi bi-shield-lock me-1"></i>Оценка безопасности:</strong> ${escapeHtml(data.security_verdict)}</div>
-          <div class="mb-2"><strong class="text-info"><i class="bi bi-speedometer2 me-1"></i>Влияние на ресурсы:</strong> ${escapeHtml(data.performance_impact)}</div>
-          <div class="p-2 mb-2 rounded bg-dark-subtle border border-warning-subtle">
-            <strong class="text-warning"><i class="bi bi-lightbulb me-1"></i>Рекомендация:</strong> ${escapeHtml(data.recommendation)}
-          </div>
-          ${data.action_steps && data.action_steps.length > 0 ? `
-            <h6 class="small text-uppercase text-muted fw-bold mb-1">Рекомендуемые действия:</h6>
-            <ul class="mb-0 ps-3">
+          <div class="mb-2"><strong class="text-info"><i class="bi bi-card-text me-1i18n.t('auto__i_strong_escapehtml_data_summary_div_div_class__07b7ca')mb-2"><strong class="text-secondary"><i class="bi bi-building me-1"></i>Разработчик / Категория:</strong> ${escapeHtml(data.developer || i18n.t('auto___1fada4'))} (${escapeHtml(data.category || i18n.t('auto___8879f4'))})</div>
+          <div class="mb-2"><strong class="text-warning"><i class="bi bi-shield-lock me-1i18n.t('auto__i_strong_escapehtml_data_security_verdict_div_div_class__0b8cf0')mb-2"><strong class="text-info"><i class="bi bi-speedometer2 me-1i18n.t('auto__i_strong_escapehtml_data_performance_impact_div_div_class__cb18ac')p-2 mb-2 rounded bg-dark-subtle border border-warning-subtle">
+            <strong class="text-warning"><i class="bi bi-lightbulb me-1i18n.t('auto__i_strong_escapehtml_data_recommendation_div_data_action_steps_data_action_steps_length_0_h6_class__f38d65')small text-uppercase text-muted fw-bold mb-1i18n.t('auto__h6_ul_class__9e4d57')mb-0 ps-3">
               ${data.action_steps.map(s => `<li>${escapeHtml(s)}</li>`).join('')}
             </ul>
           ` : ''}
@@ -267,65 +243,37 @@
             <div class="modal-header border-secondary py-2 px-3">
               <div class="d-flex align-items-center gap-2">
                 <span class="fs-5 text-warning">⚙️</span>
-                <h5 class="modal-title fw-bold text-warning mb-0">Редактор промпта диагностики</h5>
-              </div>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title fw-bold text-warning mb-0i18n.t('auto__h5_div_button_type__8456c2')button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body py-3 px-3">
               <div class="row g-2 mb-3">
                 <div class="col-sm-6">
-                  <label class="form-label small text-secondary fw-bold mb-1">Тип таблицы / сущности</label>
-                  <select class="form-select form-select-sm bg-dark text-light border-secondary" id="uai-prompt-type-select">
-                    <option value="software">software (Установленное ПО)</option>
-                    <option value="process">process (Процессы Windows)</option>
-                    <option value="service">service (Службы Windows)</option>
-                    <option value="task">task (Задачи планировщика)</option>
-                    <option value="network">network (Сетевой мониторинг)</option>
-                    <option value="registry">registry (Реестр Windows)</option>
-                    <option value="user">user (Пользователи и группы)</option>
-                    <option value="website">website (Мониторинг сайтов)</option>
-                    <option value="rag_doc">rag_doc (RAG База знаний)</option>
-                    <option value="disk">disk (Диски и тома)</option>
-                    <option value="startup">startup (Автозагрузка)</option>
-                    <option value="generic">generic (Общий шаблон)</option>
-                  </select>
-                </div>
-                <div class="col-sm-6">
-                  <label class="form-label small text-secondary fw-bold mb-1">Название шаблона</label>
-                  <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="uai-prompt-name-input" placeholder="Название шаблона">
+                  <label class="form-label small text-secondary fw-bold mb-1i18n.t('auto__label_select_class__125b0a')form-select form-select-sm bg-dark text-light border-secondary" id="uai-prompt-type-select">
+                    <option value="softwarei18n.t('auto__software_option_option_value__cab84b')processi18n.t('auto__process_windows_option_option_value__d09cc1')servicei18n.t('auto__service_windows_option_option_value__e876d7')taski18n.t('auto__task_option_option_value__0f4ac1')networki18n.t('auto__network_option_option_value__640b0c')registryi18n.t('auto__registry_windows_option_option_value__748201')useri18n.t('auto__user_option_option_value__1b4037')websitei18n.t('auto__website_option_option_value__8a78b8')rag_doci18n.t('auto__rag_doc_rag_option_option_value__646bc7')diski18n.t('auto__disk_option_option_value__c1466f')startupi18n.t('auto__startup_option_option_value__70f31a')generici18n.t('auto__generic_option_select_div_div_class__b8c2ff')col-sm-6">
+                  <label class="form-label small text-secondary fw-bold mb-1i18n.t('auto__label_input_type__c86976')text" class="form-control form-control-sm bg-dark text-light border-secondary" id="uai-prompt-name-input" placeholder=i18n.t('auto___fa788b')>
                 </div>
               </div>
 
               <div class="mb-3">
-                <label class="form-label small text-secondary fw-bold mb-1">Системная инструкция (System Instruction)</label>
-                <textarea class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" id="uai-prompt-system-input" rows="2" placeholder="Роль и поведение модели..."></textarea>
+                <label class="form-label small text-secondary fw-bold mb-1i18n.t('auto__system_instruction_label_textarea_class__0675d5')form-control form-control-sm bg-dark text-light border-secondary font-monospace" id="uai-prompt-system-input" rows="2" placeholder=i18n.t('auto___f8fea7')></textarea>
               </div>
 
               <div class="mb-2">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                  <label class="form-label small text-secondary fw-bold mb-0">Шаблон текста промпта (Prompt Template)</label>
-                  <div class="d-flex gap-1" id="uai-prompt-variables-bar">
+                  <label class="form-label small text-secondary fw-bold mb-0i18n.t('auto__prompt_template_label_div_class__d61df1')d-flex gap-1" id="uai-prompt-variables-bar">
                     <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AITableModal.insertVariable('{title}')">{title}</button>
                     <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AITableModal.insertVariable('{subtitle}')">{subtitle}</button>
                     <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AITableModal.insertVariable('{metadata}')">{metadata}</button>
                     <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 font-monospace" style="font-size: 0.75rem;" onclick="window.AITableModal.insertVariable('{raw_data}')">{raw_data}</button>
                   </div>
                 </div>
-                <textarea class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" id="uai-prompt-template-input" rows="8" placeholder="Текст промпта с плейсхолдерами..."></textarea>
-                <div class="form-text small text-secondary" style="font-size: 0.75rem;">
-                  Используйте переменные <code>{title}</code>, <code>{subtitle}</code>, <code>{metadata}</code>, <code>{raw_data}</code> для автоматической подстановки контекста строки таблицы.
-                </div>
-              </div>
-
-              <div id="uai-prompt-status-msg" class="small mt-2" style="display: none;"></div>
+                <textarea class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" id="uai-prompt-template-input" rows="8" placeholder=i18n.t('auto___e32441')></textarea>
+                <div class="form-text small text-secondary" style="font-size: 0.75rem;i18n.t('auto__code_title_code_code_subtitle_code_code_metadata_code_code_raw_data_code_div_div_div_id__2fd75d')uai-prompt-status-msg" class="small mt-2" style="display: none;"></div>
             </div>
             <div class="modal-footer border-secondary py-2 px-3 d-flex justify-content-between">
               <button type="button" class="btn btn-sm btn-outline-danger" id="btn-uai-prompt-reset">
-                <i class="bi bi-arrow-counterclockwise me-1"></i>Сбросить по умолчанию
-              </button>
-              <div class="d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                <button type="button" class="btn btn-sm btn-primary" id="btn-uai-prompt-save">
+                <i class="bi bi-arrow-counterclockwise me-1i18n.t('auto__i_button_div_class__b54560')d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modali18n.t('auto__button_button_type__9e4235')button" class="btn btn-sm btn-primary" id="btn-uai-prompt-save">
                   <i class="bi bi-check2 me-1"></i>Сохранить промпт
                 </button>
               </div>
@@ -364,7 +312,7 @@
           if (templateInput) templateInput.value = data.prompt_template || '';
         }
       } catch (e) {
-        console.error('Ошибка загрузки шаблона промпта:', e);
+        console.error(i18n.t('auto___7249c9'), e);
       }
     }
 
@@ -405,12 +353,7 @@
 
     if (resetBtn) {
       resetBtn.onclick = async () => {
-        const currentType = typeSelect ? typeSelect.value : 'generic';
-        if (!confirm(`Сбросить промпт для «${currentType}» к системному значению по умолчанию?`)) return;
-        try {
-          const fetchFn = (window.api && window.api.fetch) ? window.api.fetch : fetch;
-          const res = await fetchFn(`/api/v1/diagnostics/prompts/${encodeURIComponent(currentType)}/reset`, {
-            method: 'POST'
+        const currentType = typeSelect ? typeSelect.value : 'generici18n.t('auto__if_confirm_currenttype_return_try_const_fetchfn_window_api_window_api_fetch_window_api_fetch_fetch_const_res_await_fetchfn_api_v1_diagnostics_prompts_encodeuricomponent_currenttype_reset_method__b5420f')POST'
           });
           const data = (res && typeof res.json === 'function') ? await res.json() : res;
           if (data) {

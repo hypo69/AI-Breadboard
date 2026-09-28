@@ -1,7 +1,7 @@
-"""Тесты для модуля многоуровневой сетевой телеметрии и использования сети."""
+﻿"""Тесты для модуля многоуровневой сетевой телеметрии и использования сети."""
 from __future__ import annotations
 import pytest
-from apps.windows.api.nethelper import IPHelperAPI
+from apps.windows.telemetry.api_bindings.nethelper import IPHelperAPI
 from apps.windows.network.network_usage import WindowsNetworkUsageCollector
 from apps.windows.telemetry.collector import SystemCollector
 from apps.windows.telemetry.models import (
@@ -75,3 +75,4 @@ def test_system_collector_network_integration():
     report = collector.get_network_usage_report(period_minutes=60)
     assert isinstance(report, NetworkUsagePeriodReport)
     assert report.period_minutes == 60
+

@@ -1,28 +1,45 @@
+# -*- coding: utf-8 -*-
 """Tests for manage_tools.py CLI interface."""
+from __future__ import annotations
+
 import subprocess
 import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
+
 import pytest
+
 TEST_DATA_DIR = Path(__file__).parent / 'data' / 'test_manage_tools'
 TEST_DATA_DIR.mkdir(parents=True, exist_ok=True)
+
 
 class TestManageToolsHelp:
     """Test help output and argument parsing."""
 
     def test_help_shows_all_commands(self):
-        """Verify help displays all available commands."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', '--help'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        """Verify help displays active commands."""
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', '--help'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
         assert 'rag' in result.stdout
         assert 'skills' in result.stdout
-        assert 'knowledge' in result.stdout
+        assert 'agents' in result.stdout
         assert 'docs' in result.stdout
+        assert 'db' in result.stdout
         assert 'assist' in result.stdout
 
     def test_rag_help(self):
         """Verify rag subcommand help."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'rag', '--help'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'rag', '--help'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
         assert 'rebuild' in result.stdout
         assert 'status' in result.stdout
@@ -30,92 +47,133 @@ class TestManageToolsHelp:
 
     def test_skills_help(self):
         """Verify skills subcommand help."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'skills', '--help'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'skills', '--help'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
         assert 'list' in result.stdout
         assert 'search' in result.stdout
         assert 'show' in result.stdout
         assert 'export' in result.stdout
 
-    def test_knowledge_help(self):
-        """Verify knowledge subcommand help."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'knowledge', '--help'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
-        assert result.returncode == 0
-        assert 'extract' in result.stdout
-        assert 'add' in result.stdout
-        assert 'init' in result.stdout
 
 class TestSkillsCommand:
     """Test skills command functionality."""
 
     def test_skills_list_returns_zero(self):
         """skills list should return exit code 0."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'skills', 'list'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'skills', 'list'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
 
     def test_skills_search_returns_zero(self):
         """skills search should return exit code 0."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'skills', 'search', 'media'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'skills', 'search', 'media'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
 
     def test_skills_show_nonexistent_returns_error(self):
         """skills show with non-existent skill should return error."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'skills', 'show', 'nonexistent_skill_12345'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'skills', 'show', 'nonexistent_skill_12345'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 1
         assert 'Error' in result.stdout or 'Error' in result.stderr
+
 
 class TestRagCommand:
     """Test rag command functionality."""
 
     def test_rag_status_returns_zero(self):
         """rag status should return exit code 0."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'rag', 'status'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'rag', 'status'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
 
     def test_rag_unknown_subcommand_returns_error(self):
         """rag with unknown subcommand should return error."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'rag', 'unknown_command_12345'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'rag', 'unknown_command_12345'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode in (1, 2)
 
-class TestKnowledgeCommand:
-    """Test knowledge command functionality."""
-
-    def test_knowledge_unknown_subcommand_returns_error(self):
-        """knowledge with unknown subcommand should return error."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'knowledge', 'unknown_command_12345'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
-        assert result.returncode in (1, 2)
 
 class TestDocsCommand:
     """Test docs command functionality."""
 
     def test_docs_unknown_subcommand_returns_error(self):
         """docs with unknown subcommand should return error."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'docs', 'unknown_command_12345'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'docs', 'unknown_command_12345'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode in (1, 2)
+
 
 class TestUnknownCommand:
     """Test handling of unknown main commands."""
 
     def test_unknown_main_command_returns_error(self):
         """Unknown main command should return error and show help."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'unknown_command_12345'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'unknown_command_12345'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
+        assert result.returncode in (1, 2)
+
 
 class TestPluginsCommand:
     """Test plugins command functionality."""
 
     def test_plugins_help(self):
         """plugins --help should return exit code 0."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'plugins', '--help'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'plugins', '--help'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
         assert 'list' in result.stdout
         assert 'create' in result.stdout
+
 
 class TestDbCommand:
     """Test db migration command functionality."""
 
     def test_db_help(self):
         """db --help should return exit code 0."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'db', '--help'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'db', '--help'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
         assert 'status' in result.stdout
         assert 'migrate' in result.stdout
@@ -123,80 +181,105 @@ class TestDbCommand:
 
     def test_db_status_returns_zero(self):
         """db status should return exit code 0."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'db', 'status'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'db', 'status'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
         assert 'DATABASE MIGRATION STATUS' in result.stdout
+
 
 class TestNetworkCommand:
     """Test network command functionality."""
 
     def test_network_help(self):
         """network --help should return exit code 0."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'network', '--help'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'network', '--help'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
         assert 'status' in result.stdout
         assert 'interfaces' in result.stdout
         assert 'analyze' in result.stdout
+
 
 class TestAgentsCommand:
     """Test agents command functionality."""
 
     def test_agents_help(self):
         """agents --help should return exit code 0."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'agents', '--help'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'agents', '--help'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
         assert 'list' in result.stdout
         assert 'run' in result.stdout
 
     def test_agents_list(self):
         """agents list should list registered agents and manifests."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'agents', 'list'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'agents', 'list'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
         assert 'AGENT_REGISTRY' in result.stdout
 
-class TestMcpCommand:
-    """Test mcp command functionality."""
-
-    def test_mcp_help(self):
-        """mcp --help should return exit code 0."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'mcp', '--help'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
-        assert result.returncode == 0
-        assert 'list' in result.stdout
-        assert 'start' in result.stdout
-
-    def test_mcp_list(self):
-        """mcp list should return exit code 0."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'mcp', 'list'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
-        assert result.returncode == 0
-        assert 'MCP-СЕРВЕРЫ' in result.stdout or 'fastapi' in result.stdout
 
 class TestSysParamCommand:
     """Test sys-param command functionality."""
 
     def test_sys_param_help(self):
         """sys-param --help should return exit code 0."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'sys-param', '--help'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'sys-param', '--help'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
         assert 'list' in result.stdout
         assert 'preview' in result.stdout
+
 
 class TestTelemetryCommand:
     """Test telemetry command functionality."""
 
     def test_telemetry_help(self):
         """telemetry --help should return exit code 0."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'telemetry', '--help'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'telemetry', '--help'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
         assert 'start' in result.stdout
         assert 'audit' in result.stdout
+
 
 class TestAssistCommand:
     """Test assist command forwarding."""
 
     def test_assist_help_returns_zero(self):
         """assist help should be forwarded to assist_cli."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'assist', '--help'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'assist', '--help'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode in (0, 2)
+
 
 class TestRunScript:
     """Test _run_script helper function."""
@@ -215,6 +298,7 @@ class TestRunScript:
         result = _run_script(str(test_script.relative_to(Path(__file__).parent.parent)), ['arg1', 'arg2'])
         assert result == 0
 
+
 @pytest.fixture
 def mock_skill_registry(monkeypatch):
     """Create a mock SkillRegistry for testing."""
@@ -229,17 +313,30 @@ def mock_skill_registry(monkeypatch):
     mock_registry.export_json.return_value = '{"name": "test-skill"}'
     return mock_registry
 
+
 class TestIntegration:
     """Integration tests for full CLI workflow."""
 
     def test_full_cli_invocation(self):
         """Test complete CLI invocation with subcommand."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'skills', 'list'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'skills', 'list'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
 
     def test_command_without_subcommand_shows_help(self):
         """Command without subcommand should show help and return 0."""
-        result = subprocess.run([sys.executable, 'manage_tools.py', 'skills'], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        result = subprocess.run(
+            [sys.executable, 'manage_tools.py', 'skills'],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent
+        )
         assert result.returncode == 0
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])

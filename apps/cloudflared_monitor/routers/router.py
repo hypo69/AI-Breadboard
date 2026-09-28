@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from src.api.routers.core.router_auth import require_admin_user
 from apps.common.csv_logger import AppCsvLogger
-from .src.state import CloudflaredState
+from ..src.state import CloudflaredState
 router = APIRouter(prefix='/api/cloudflared', tags=['cloudflared'])
 _state: Optional[CloudflaredState] = None
 _csv_logger = AppCsvLogger('cloudflared_monitor')

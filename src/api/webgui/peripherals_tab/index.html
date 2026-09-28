@@ -3,8 +3,7 @@
 Process Name: Windows Peripherals & Network Tab
 ===============================================================================
 Description:
-    Вкладка радиочастотной телеметрии Wi-Fi (SSID, BSSID, RSSI), аудиоустройств
-    и Plug & Play USB периферии.
+    <span data-i18n="auto__wi_fi_ssid_bssid_rssi_plug_play_usb__024b79"></span>.
 
 File: index.html
 Project: AI-Breadboard
@@ -62,18 +61,18 @@ Copyright: © 2026 hypo69
         <div class="d-flex align-items-center gap-2">
           <div class="fs-4">🔌</div>
           <div>
-            <h5 class="mb-0 fw-bold text-white">5. Сеть и периферия (Peripherals & Wireless Network)</h5>
-            <small class="text-muted">RF-параметры Wi-Fi сетей, аудио конечные точки и Plug-and-Play USB устройства</small>
+            <h5 class="mb-0 fw-bold text-white">5. <span data-i18n="auto___733bf2"></span> (Peripherals & Wireless Network)</h5>
+            <small class="text-muted">RF-<span data-i18n="auto__wi_fi_plug_and_play_usb__fe95a5"></span></small>
           </div>
         </div>
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
           <div class="form-check form-switch mb-0 small text-muted d-flex align-items-center gap-1">
             <input class="form-check-input" type="checkbox" id="diag-peripherals-auto-refresh">
-            <label class="form-check-label small text-nowrap" for="diag-peripherals-auto-refresh">Авто (5с)</label>
+            <label class="form-check-label small text-nowrap" for="diag-peripherals-auto-refresh"><span data-i18n="auto__5__93e6f2"></span>)</label>
           </div>
           <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-semibold d-flex align-items-center gap-1" id="btn-diag-peripherals-refresh">
-            <i class="bi bi-arrow-clockwise"></i> Обновить
+            <i class="bi bi-arrow-clockwise"></i> <span data-i18n="auto___c2f668"></span>
           </button>
         </div>
       </div>
@@ -87,7 +86,7 @@ Copyright: © 2026 hypo69
         <div class="diag-panel-header d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-wifi text-info"></i>
-            <span class="text-white">Беспроводная сеть Wi-Fi (RF & Security)</span>
+            <span class="text-white"><span data-i18n="auto___224990"></span> Wi-Fi (RF & Security)</span>
           </div>
           <span class="badge bg-success-subtle text-success border border-success" id="diag-wifi-status-badge">Wi-Fi Active</span>
         </div>
@@ -95,27 +94,27 @@ Copyright: © 2026 hypo69
           <table class="about-sys-spec-table">
             <tbody>
               <tr>
-                <td class="about-sys-spec-key"><i class="bi bi-broadcast me-1.5 text-info"></i>Сеть (SSID)</td>
+                <td class="about-sys-spec-key"><i class="bi bi-broadcast me-1.5 text-info"></i><span data-i18n="auto___b3c4b1"></span> (SSID)</td>
                 <td class="about-sys-spec-val fw-bold text-white" id="diag-wifi-ssid">--</td>
               </tr>
               <tr>
-                <td class="about-sys-spec-key"><i class="bi bi-router me-1.5 text-primary"></i>Точка доступа (BSSID)</td>
+                <td class="about-sys-spec-key"><i class="bi bi-router me-1.5 text-primary"></i><span data-i18n="auto___186011"></span> (BSSID)</td>
                 <td class="about-sys-spec-val font-monospace" id="diag-wifi-bssid">--</td>
               </tr>
               <tr>
-                <td class="about-sys-spec-key"><i class="bi bi-reception-4 me-1.5 text-success"></i>Сигнал (RSSI)</td>
+                <td class="about-sys-spec-key"><i class="bi bi-reception-4 me-1.5 text-success"></i><span data-i18n="auto___b26f0d"></span> (RSSI)</td>
                 <td class="about-sys-spec-val" id="diag-wifi-signal">0% (-- dBm)</td>
               </tr>
               <tr>
-                <td class="about-sys-spec-key"><i class="bi bi-hash me-1.5 text-warning"></i>Радиоканал</td>
+                <td class="about-sys-spec-key"><i class="bi bi-hash me-1.5 text-warning"></i><span data-i18n="auto___ba41a5"></span></td>
                 <td class="about-sys-spec-val" id="diag-wifi-channel">--</td>
               </tr>
               <tr>
-                <td class="about-sys-spec-key"><i class="bi bi-cpu me-1.5 text-info"></i>Стандарт связи</td>
+                <td class="about-sys-spec-key"><i class="bi bi-cpu me-1.5 text-info"></i><span data-i18n="auto___f8f2fa"></span></td>
                 <td class="about-sys-spec-val font-monospace" id="diag-wifi-radio">--</td>
               </tr>
               <tr>
-                <td class="about-sys-spec-key"><i class="bi bi-shield-lock me-1.5 text-success"></i>Безопасность</td>
+                <td class="about-sys-spec-key"><i class="bi bi-shield-lock me-1.5 text-success"></i><span data-i18n="auto___d4fab1"></span></td>
                 <td class="about-sys-spec-val text-truncate" id="diag-wifi-auth">--</td>
               </tr>
             </tbody>
@@ -130,12 +129,12 @@ Copyright: © 2026 hypo69
         <div class="diag-panel-header d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-volume-up-fill text-warning"></i>
-            <span class="text-white">Аудиоустройства и конечные точки (Audio Endpoints)</span>
+            <span class="text-white"><span data-i18n="auto___d55eee"></span> (Audio Endpoints)</span>
           </div>
-          <span class="badge bg-secondary" id="diag-audio-count">0 устройств</span>
+          <span class="badge bg-secondary" id="diag-audio-count">0 <span data-i18n="auto___c1cd0f"></span></span>
         </div>
         <div class="p-2" id="diag-audio-container" style="max-height: 260px; overflow-y: auto;">
-          <div class="text-center py-4 text-muted small">Опрос аудиоустройств...</div>
+          <div class="text-center py-4 text-muted small"><span data-i18n="auto___c6607a"></span>...</div>
         </div>
       </div>
     </div>
@@ -146,24 +145,24 @@ Copyright: © 2026 hypo69
     <div class="diag-panel-header d-flex justify-content-between align-items-center">
       <div class="d-flex align-items-center gap-2">
         <i class="bi bi-usb-symbol text-info"></i>
-        <span class="text-white">Подключенные PnP USB-устройства и концентраторы</span>
+        <span class="text-white"><span data-i18n="auto__pnp_usb__21c3e7"></span></span>
       </div>
-      <span class="badge bg-secondary" id="diag-usb-count">0 устройств</span>
+      <span class="badge bg-secondary" id="diag-usb-count">0 <span data-i18n="auto___c1cd0f"></span></span>
     </div>
     <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
       <table class="table table-dark table-hover table-sm mb-0" style="font-size: 0.80rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
         <thead>
           <tr class="text-secondary border-secondary">
-            <th>Устройство</th>
+            <th><span data-i18n="auto___bc791d"></span></th>
             <th style="width: 100px;">Vendor ID</th>
             <th style="width: 100px;">Product ID</th>
-            <th style="width: 160px;">Класс устройства</th>
-            <th style="width: 140px;">Статус</th>
+            <th style="width: 160px;"><span data-i18n="auto___9f3cdd"></span></th>
+            <th style="width: 140px;"><span data-i18n="auto___f7f293"></span></th>
             <th>Device Instance ID</th>
           </tr>
         </thead>
         <tbody id="diag-usb-tbody">
-          <tr><td colspan="6" class="text-center py-4 text-muted">Загрузка USB периферии...</td></tr>
+          <tr><td colspan="6" class="text-center py-4 text-muted"><span data-i18n="auto__usb__6d6c7e"></span>...</td></tr>
         </tbody>
       </table>
     </div>

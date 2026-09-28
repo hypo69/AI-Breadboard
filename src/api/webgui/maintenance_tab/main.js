@@ -48,15 +48,7 @@
       const data = await res.json();
       const disk = data.disk || {};
 
-      const cleanEstimateTxt = document.getElementById('mtn-clean-estimate-txt');
-      if (cleanEstimateTxt) {
-        const cleanMb = disk.cleanup_estimate?.total_cleanable_mb || 0;
-        cleanEstimateTxt.innerText = `Очищаемый объём: ~${cleanMb} MB`;
-      }
-
-      await fetchRestorePoints();
-    } catch (e) {
-      console.error('[MaintenanceTab] Failed to fetch maintenance status:', e);
+      const cleanEstimateTxt = document.getElementById('mtn-clean-estimate-txti18n.t('auto__if_cleanestimatetxt_const_cleanmb_disk_cleanup_estimate_total_cleanable_mb_0_cleanestimatetxt_innertext_cleanmb_mb_await_fetchrestorepoints_catch_e_console_error__6d199f')[MaintenanceTab] Failed to fetch maintenance status:', e);
     }
   }
 
@@ -71,7 +63,7 @@
       if (!tbody) return;
 
       if (points.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted p-3">Точки восстановления не найдены. Нажмите "Создать точку восстановления".</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted p-3i18n.t('auto___24ead4')Создать точку восстановления".</td></tr>';
         return;
       }
 
@@ -79,7 +71,7 @@
         const typeBadge = formatRestorePointType(p.restore_point_type);
         const timeFormatted = formatRestoreTime(p.creation_time);
         return `
-          <tr class="mtn-restore-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для детальной информации">
+          <tr class="mtn-restore-row" data-idx="${idx}" style="cursor: pointer;" title=i18n.t('auto___790710')>
             <td class="font-monospace text-info fw-bold">#${p.sequence_number}</td>
             <td class="fw-semibold text-white">${p.description}</td>
             <td><span class="badge bg-secondary text-light px-2 py-1 font-monospace" style="font-size: 0.75rem;">${typeBadge}</span></td>
@@ -95,20 +87,17 @@
           if (!p) return;
           if (window.AITableModal) {
             window.AITableModal.show({
-              icon: '🔄',
-              title: `Точка восстановления #${p.sequence_number}`,
-              subtitle: p.description,
-              tableType: 'generic',
+              icon: '🔄i18n.t('auto__title_p_sequence_number_subtitle_p_description_tabletype__4ac8e2')generic',
               badges: [
                 { text: p.restore_point_type || 'System Checkpoint', class: 'badge bg-info text-dark' }
               ],
               metadata: [
-                { label: 'Номер', value: String(p.sequence_number) },
-                { label: 'Описание', value: p.description },
-                { label: 'Тип', value: p.restore_point_type },
-                { label: 'Дата создания', value: p.creation_time }
+                { label: i18n.t('auto___1bb3d1'), value: String(p.sequence_number) },
+                { label: i18n.t('auto___f5441f'), value: p.description },
+                { label: i18n.t('auto___d25691'), value: p.restore_point_type },
+                { label: i18n.t('auto___9b6495'), value: p.creation_time }
               ],
-              rawTitle: 'Метаданные точки восстановления',
+              rawTitle: i18n.t('auto___fdb4f4'),
               rawContent: JSON.stringify(p, null, 2)
             });
           }
@@ -151,13 +140,7 @@
         const usedGb = (st.used_bytes ? (st.used_bytes / (1024 ** 3)).toFixed(2) : '0.00');
         const maxGb = (st.max_bytes ? (st.max_bytes / (1024 ** 3)).toFixed(2) : '0.00');
         storageBar.style.width = `${Math.min(pct, 100)}%`;
-        storageBar.className = pct > 85 ? 'progress-bar bg-danger' : (pct > 60 ? 'progress-bar bg-warning' : 'progress-bar bg-info');
-        storageLabel.innerHTML = `<span>Занято: ${usedGb} GB (${pct}%)</span><span>Лимит: ${maxGb} GB</span>`;
-      }
-
-      if (triggerSel) {
-        triggerSel.onchange = () => {
-          if (timeWrapper) timeWrapper.style.display = (triggerSel.value === 'daily' || triggerSel.value === 'weekly') ? 'block' : 'none';
+        storageBar.className = pct > 85 ? 'progress-bar bg-danger' : (pct > 60 ? 'progress-bar bg-warning' : 'progress-bar bg-infoi18n.t('auto__storagelabel_innerhtml_span_usedgb_gb_pct_span_span_maxgb_gb_span_if_triggersel_triggersel_onchange_if_timewrapper_timewrapper_style_display_triggersel_value__06ee70')daily' || triggerSel.value === 'weekly') ? 'block' : 'none';
         };
       }
 
@@ -191,7 +174,7 @@
 
     if (saveBtn) {
       saveBtn.disabled = true;
-      saveBtn.innerText = 'Сохранение...';
+      saveBtn.innerText = i18n.t('auto___a91a7e');
     }
 
     try {
@@ -201,7 +184,7 @@
         body: JSON.stringify(payload)
       });
       const d = await res.json();
-      window.showToast?.(d.message || 'Политика успешно сохранена', d.success ? 'success' : 'danger') || alert(d.message || 'Политика сохранена');
+      window.showToast?.(d.message || i18n.t('auto___93a1c6'), d.success ? 'success' : 'danger') || alert(d.message || i18n.t('auto___bf5ac0'));
       const modalEl = document.getElementById('modal-mtn-restore-config');
       if (modalEl && window.bootstrap?.Modal) {
         const modal = bootstrap.Modal.getInstance(modalEl);
@@ -210,7 +193,7 @@
       await fetchRestorePoints();
     } catch (e) {
       console.error('[MaintenanceTab] Failed to save restore policy:', e);
-      alert('Ошибка сохранения политики: ' + e);
+      alert(i18n.t('auto___4355b7') + e);
     } finally {
       if (saveBtn) {
         saveBtn.disabled = false;
@@ -220,19 +203,13 @@
   }
 
   async function pruneRestorePointsNow() {
-    const maxPtsSel = document.getElementById('mtn-policy-max-points');
-    const keep = maxPtsSel ? parseInt(maxPtsSel.value, 10) : 5;
-    if (!confirm(`Выполнить ротацию точек восстановления и оставить только ${keep} последних?`)) {
-      return;
-    }
-    try {
-      const res = await fetch('/api/system-control/restore-points/prune', {
+    const maxPtsSel = document.getElementById('mtn-policy-max-pointsi18n.t('auto__const_keep_maxptssel_parseint_maxptssel_value_10_5_if_confirm_keep_return_try_const_res_await_fetch__ebc724')/api/system-control/restore-points/prune', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ keep_count: keep })
       });
       const d = await res.json();
-      window.showToast?.(d.message || 'Ротация выполнена', 'info') || alert(d.message || 'Ротация выполнена');
+      window.showToast?.(d.message || i18n.t('auto___72d427'), 'info') || alert(d.message || i18n.t('auto___72d427'));
       await fetchRestorePoints();
     } catch (e) {
       console.error('[MaintenanceTab] Failed to prune restore points:', e);
@@ -257,7 +234,7 @@
 
       if (cleanBtn) {
         cleanBtn.onclick = async () => {
-          if (confirm('Выполнить безопасную очистку временных директорий и кэша обновлений?')) {
+          if (confirm(i18n.t('auto___f1f785'))) {
             cleanBtn.disabled = true;
             await fetch('/api/system-control/maintenance/cleanup', { method: 'POST' });
             cleanBtn.disabled = false;
@@ -269,10 +246,10 @@
       if (sfcBtn) {
         sfcBtn.onclick = async () => {
           sfcBtn.disabled = true;
-          sfcBtn.innerText = 'Сканирование...';
+          sfcBtn.innerText = i18n.t('auto___878c2f');
           const res = await fetch('/api/system-control/maintenance/sfc', { method: 'POST' });
           const d = await res.json();
-          window.showToast?.(d.message || 'Проверка SFC завершена', d.status === 'error' ? 'danger' : 'success') || alert(d.message || 'Проверка SFC завершена');
+          window.showToast?.(d.message || i18n.t('auto__sfc__0abc8c'), d.status === 'error' ? 'danger' : 'success') || alert(d.message || i18n.t('auto__sfc__0abc8c'));
           sfcBtn.disabled = false;
           sfcBtn.innerHTML = '<i class="bi bi-search me-1"></i> Запустить проверку SFC';
         };
@@ -281,10 +258,10 @@
       if (dismBtn) {
         dismBtn.onclick = async () => {
           dismBtn.disabled = true;
-          dismBtn.innerText = 'Проверка...';
+          dismBtn.innerText = i18n.t('auto___da97cf');
           const res = await fetch('/api/system-control/maintenance/dism', { method: 'POST' });
           const d = await res.json();
-          window.showToast?.(d.message || 'Проверка DISM завершена', d.status === 'error' ? 'danger' : 'success') || alert(d.message || 'Проверка DISM завершена');
+          window.showToast?.(d.message || i18n.t('auto__dism__7bdc09'), d.status === 'error' ? 'danger' : 'success') || alert(d.message || i18n.t('auto__dism__7bdc09'));
           dismBtn.disabled = false;
           dismBtn.innerHTML = '<i class="bi bi-activity me-1"></i> Проверить хранилище DISM';
         };
@@ -292,7 +269,7 @@
 
       if (createRestoreBtn) {
         createRestoreBtn.onclick = async () => {
-          const desc = prompt('Введите описание точки восстановления:', 'Точка восстановления системы');
+          const desc = prompt(i18n.t('auto___d4f840'), i18n.t('auto___fd0e86'));
           if (desc) {
             createRestoreBtn.disabled = true;
             const res = await fetch('/api/system-control/restore-points', {
@@ -301,7 +278,7 @@
               body: JSON.stringify({ description: desc })
             });
             const d = await res.json();
-            window.showToast?.(d.message || 'Точка восстановления создана.', d.status === 'error' ? 'danger' : 'success') || alert(d.message || 'Точка восстановления создана.');
+            window.showToast?.(d.message || i18n.t('auto___8d81fd'), d.status === 'error' ? 'danger' : 'success') || alert(d.message || i18n.t('auto___8d81fd'));
             createRestoreBtn.disabled = false;
             fetchRestorePoints();
           }

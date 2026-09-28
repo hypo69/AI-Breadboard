@@ -15,21 +15,7 @@ class SyncTab {
   async init() {
     if (this.initialized) return;
 
-    console.log('[SyncTab] Initializing...');
-    
-    // Загрузка HTML
-    await this.loadHTML();
-    
-    // Установка обработчиков
-    this.attachEventListeners();
-    
-    // Загрузка данных
-    await this.updateStatus();
-    await this.updateStats();
-    
-    // Установка автообновления
-    if (window.registerTabPoller) {
-      window.registerTabPoller('tab-sync', () => this.updateStatus(), 5000, { pollerId: 'sync_status', immediate: false });
+    console.log('[SyncTab] Initializing...i18n.t('auto__html_await_this_loadhtml_this_attacheventlisteners_await_this_updatestatus_await_this_updatestats_if_window_registertabpoller_window_registertabpoller__1dafe3')tab-sync', () => this.updateStatus(), 5000, { pollerId: 'sync_status', immediate: false });
       window.registerTabPoller('tab-sync', () => this.updateStats(), 30000, { pollerId: 'sync_stats', immediate: false });
     } else {
       setInterval(() => this.updateStatus(), 5000);
@@ -37,32 +23,19 @@ class SyncTab {
     }
     
     this.initialized = true;
-    console.log('[SyncTab] Initialized');
-  }
-
-  /**
-   * Загрузить HTML компонента
-   */
-  async loadHTML() {
-    const container = document.getElementById('tab-sync');
+    console.log('[SyncTab] Initializedi18n.t('auto__html_async_loadhtml_const_container_document_getelementbyid__11af5b')tab-sync');
     if (!container) {
       console.warn('[SyncTab] Container not found');
       return;
     }
 
     const html = `
-      <div class="sync-panel">
-        <!-- Заголовок -->
-        <div class="mb-4">
+      <div class="sync-paneli18n.t('auto__div_class__2f72cf')mb-4">
           <h4 class="d-flex align-items-center gap-2">
             <i class="bi bi-cloud-upload-fill text-primary"></i>
             <span>Google Drive Synchronization</span>
           </h4>
-          <p class="text-muted mb-0">Manage data synchronization and storage migration</p>
-        </div>
-
-        <!-- Статус -->
-        <div class="card border-secondary-subtle mb-3">
+          <p class="text-muted mb-0i18n.t('auto__manage_data_synchronization_and_storage_migration_p_div_div_class__126a77')card border-secondary-subtle mb-3">
           <div class="card-header bg-body-tertiary border-secondary-subtle">
             <h6 class="mb-0">📊 Synchronization Status</h6>
           </div>
@@ -92,18 +65,7 @@ class SyncTab {
                 <div class="ps-3 border-start border-primary-subtle">
                   <small class="text-muted">Drive Folder</small>
                   <div>
-                    <a id="drive-url" href="#" target="_blank" class="small text-decoration-none">
-                      Open
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Статистика -->
-        <div class="card border-secondary-subtle mb-3">
+                    <a id="drive-url" href="#" target="_blank" class="small text-decoration-nonei18n.t('auto__open_a_div_div_div_div_div_div_div_class__0ec078')card border-secondary-subtle mb-3">
           <div class="card-header bg-body-tertiary border-secondary-subtle">
             <h6 class="mb-0">💾 Storage Statistics</h6>
           </div>
@@ -123,14 +85,7 @@ class SyncTab {
               </div>
               <div class="col-md-3 text-center">
                 <div class="fs-5 fw-bold text-danger" id="sync-errors">0</div>
-                <small class="text-muted">Errors</small>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Управление -->
-        <div class="card border-secondary-subtle mb-3">
+                <small class="text-mutedi18n.t('auto__errors_small_div_div_div_div_div_class__01984d')card border-secondary-subtle mb-3">
           <div class="card-header bg-body-tertiary border-secondary-subtle">
             <h6 class="mb-0">🎮 Synchronization Controls</h6>
           </div>
@@ -156,14 +111,7 @@ class SyncTab {
                 <i class="bi bi-arrow-repeat"></i> Sync Now
               </button>
               <button class="btn btn-info btn-sm" onclick="window.syncTab.testConnection()">
-                <i class="bi bi-link-45deg"></i> Test Connection
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Опции синхронизации -->
-        <div id="sync-options-modal" class="modal fade" tabindex="-1">
+                <i class="bi bi-link-45degi18n.t('auto__i_test_connection_button_div_div_div_div_id__d81349')sync-options-modal" class="modal fade" tabindex="-1">
           <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-white border-secondary">
               <div class="modal-header border-secondary">
@@ -200,19 +148,7 @@ class SyncTab {
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
                   Cancel
                 </button>
-                <button type="button" class="btn btn-primary btn-sm" onclick="window.syncTab.performSync()">
-                  Sync Selected
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Сообщения -->
-        <div id="sync-messages" class="mb-3"></div>
-
-        <!-- Лог активности -->
-        <div class="card border-secondary-subtle">
+                <button type="button" class="btn btn-primary btn-sm" onclick="window.syncTab.performSync()i18n.t('auto__sync_selected_button_div_div_div_div_div_id__e4de77')sync-messages" class="mb-3i18n.t('auto__div_div_class__f1492d')card border-secondary-subtle">
           <div class="card-header bg-body-tertiary border-secondary-subtle">
             <h6 class="mb-0">📋 Recent Activity</h6>
           </div>
@@ -234,40 +170,14 @@ class SyncTab {
   attachEventListeners() {
     // Обработка модального окна
     const modal = new bootstrap.Modal(document.getElementById('sync-options-modal'), {
-      backdrop: 'static'
-    });
-
-    window.syncTab = this; // Для доступа из HTML
-  }
-
-  /**
-   * Обновить статус синхронизации
-   */
-  async updateStatus() {
-    try {
-      const response = await fetch('/api/admin/sync/status');
-      if (!response.ok) throw new Error('Failed to fetch status');
-      
-      const data = await response.json();
-
-      // Обновить статус
-      const badge = document.getElementById('scheduler-status');
+      backdrop: 'statici18n.t('auto__window_synctab_this_html_async_updatestatus_try_const_response_await_fetch__a93059')/api/admin/sync/status');
+      if (!response.ok) throw new Error('Failed to fetch statusi18n.t('auto__const_data_await_response_json_const_badge_document_getelementbyid__8dc09f')scheduler-status');
       badge.textContent = data.is_running ? 'Running' : 'Inactive';
       badge.className = data.is_running 
         ? 'badge bg-success' 
-        : 'badge bg-danger';
-
-      // Обновить кнопки
-      document.getElementById('start-scheduler-btn').disabled = data.is_running;
-      document.getElementById('stop-scheduler-btn').disabled = !data.is_running;
-
-      // Обновить время
-      document.getElementById('last-sync-time').textContent = data.last_sync_time || 'Never';
-      document.getElementById('sync-interval').textContent = `${data.sync_interval_hours} hours`;
-
-      // Обновить Google Drive папку
-      try {
-        const driveResponse = await fetch('/api/admin/sync/drive-info');
+        : 'badge bg-dangeri18n.t('auto__document_getelementbyid__d54e5f')start-scheduler-btn').disabled = data.is_running;
+      document.getElementById('stop-scheduler-btni18n.t('auto__disabled_data_is_running_document_getelementbyid__8950ff')last-sync-time').textContent = data.last_sync_time || 'Never';
+      document.getElementById('sync-intervali18n.t('auto__textcontent_data_sync_interval_hours_hours_google_drive_try_const_driveresponse_await_fetch__1c1b68')/api/admin/sync/drive-info');
         if (driveResponse.ok) {
           const driveData = await driveResponse.json();
           const link = document.getElementById('drive-url');
@@ -277,16 +187,7 @@ class SyncTab {
         console.warn('[SyncTab] Failed to fetch drive info');
       }
     } catch (error) {
-      console.error('[SyncTab] Error updating status:', error);
-    }
-  }
-
-  /**
-   * Обновить статистику
-   */
-  async updateStats() {
-    try {
-      const response = await fetch('/api/admin/sync/stats');
+      console.error('[SyncTab] Error updating status:i18n.t('auto__error_async_updatestats_try_const_response_await_fetch__9a4df7')/api/admin/sync/stats');
       if (!response.ok) throw new Error('Failed to fetch stats');
       
       const data = await response.json();
@@ -297,16 +198,7 @@ class SyncTab {
       document.getElementById('folders-count').textContent = data.folders_count;
       document.getElementById('sync-errors').textContent = data.sync_errors;
     } catch (error) {
-      console.error('[SyncTab] Error updating stats:', error);
-    }
-  }
-
-  /**
-   * Запустить планировщик
-   */
-  async startScheduler() {
-    try {
-      const interval = parseInt(document.getElementById('sync-interval-input').value);
+      console.error('[SyncTab] Error updating stats:i18n.t('auto__error_async_startscheduler_try_const_interval_parseint_document_getelementbyid__01a7ed')sync-interval-input').value);
       const response = await fetch('/api/admin/sync/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -317,16 +209,7 @@ class SyncTab {
       this.showMessage(data.message || 'Scheduler started', 'success');
       await this.updateStatus();
     } catch (error) {
-      this.showMessage('Error: ' + error.message, 'danger');
-    }
-  }
-
-  /**
-   * Остановить планировщик
-   */
-  async stopScheduler() {
-    try {
-      const response = await fetch('/api/admin/sync/stop', {
+      this.showMessage('Error: ' + error.message, 'dangeri18n.t('auto__async_stopscheduler_try_const_response_await_fetch__f1ec20')/api/admin/sync/stop', {
         method: 'POST'
       });
       
@@ -334,16 +217,7 @@ class SyncTab {
       this.showMessage(data.message || 'Scheduler stopped', 'success');
       await this.updateStatus();
     } catch (error) {
-      this.showMessage('Error: ' + error.message, 'danger');
-    }
-  }
-
-  /**
-   * Проверить подключение
-   */
-  async testConnection() {
-    try {
-      const response = await fetch('/api/admin/sync/test-connection', {
+      this.showMessage('Error: ' + error.message, 'dangeri18n.t('auto__async_testconnection_try_const_response_await_fetch__503578')/api/admin/sync/test-connection', {
         method: 'POST'
       });
       
@@ -351,24 +225,8 @@ class SyncTab {
       const type = data.connected ? 'success' : 'warning';
       this.showMessage(data.message || 'Connection test completed', type);
     } catch (error) {
-      this.showMessage('Error: ' + error.message, 'danger');
-    }
-  }
-
-  /**
-   * Показать опции синхронизации
-   */
-  showSyncOptions() {
-    const modal = bootstrap.Modal.getInstance(document.getElementById('sync-options-modal')) ||
-      new bootstrap.Modal(document.getElementById('sync-options-modal'));
-    modal.show();
-  }
-
-  /**
-   * Выполнить синхронизацию
-   */
-  async performSync() {
-    const syncType = document.querySelector('input[name="sync-type"]:checked')?.value || 'all';
+      this.showMessage('Error: ' + error.message, 'dangeri18n.t('auto__showsyncoptions_const_modal_bootstrap_modal_getinstance_document_getelementbyid__05706e')sync-options-modal')) ||
+      new bootstrap.Modal(document.getElementById('sync-options-modali18n.t('auto__modal_show_async_performsync_const_synctype_document_queryselector__a40b11')input[name="sync-type"]:checked')?.value || 'all';
     
     try {
       const response = await fetch('/api/admin/sync/sync-now', {
@@ -378,22 +236,10 @@ class SyncTab {
       });
       
       const data = await response.json();
-      this.showMessage(data.message || 'Sync started', 'success');
-      this.addActivityLog(`Started ${syncType} synchronization`);
-      
-      // Скрыть модаль
-      const modal = bootstrap.Modal.getInstance(document.getElementById('sync-options-modal'));
+      this.showMessage(data.message || 'Sync started', 'successi18n.t('auto__this_addactivitylog_started_synctype_synchronization_const_modal_bootstrap_modal_getinstance_document_getelementbyid__0332c5')sync-options-modal'));
       if (modal) modal.hide();
     } catch (error) {
-      this.showMessage('Error: ' + error.message, 'danger');
-    }
-  }
-
-  /**
-   * Обновить интервал
-   */
-  async updateInterval() {
-    const interval = parseInt(document.getElementById('sync-interval-input').value);
+      this.showMessage('Error: ' + error.message, 'dangeri18n.t('auto__async_updateinterval_const_interval_parseint_document_getelementbyid__92bf2f')sync-interval-input').value);
     
     try {
       const response = await fetch('/api/admin/sync/config', {
@@ -405,14 +251,7 @@ class SyncTab {
       this.showMessage(`Interval updated to ${interval} hours`, 'success');
       await this.updateStatus();
     } catch (error) {
-      this.showMessage('Error: ' + error.message, 'danger');
-    }
-  }
-
-  /**
-   * Показать сообщение
-   */
-  showMessage(text, type = 'info') {
+      this.showMessage('Error: ' + error.message, 'dangeri18n.t('auto__showmessage_text_type__f4dbdf')info') {
     const container = document.getElementById('sync-messages');
     if (!container) return;
 
@@ -445,27 +284,8 @@ class SyncTab {
     item.innerHTML = `<span class="text-muted">${now}</span> - ${text}`;
     
     if (log.textContent.includes('No recent activity')) {
-      log.innerHTML = '';
-    }
-    
-    log.insertBefore(item, log.firstChild);
-  }
-}
-
-// Инициализация при загрузке документа
-document.addEventListener('DOMContentLoaded', async () => {
-  window.syncTab = new SyncTab();
-  
-  // Инициализировать когда вкладка станет видимой
-  const tab = document.getElementById('tab-sync');
-  if (tab) {
-    // Проверить если вкладка уже активна
-    const tabPane = tab.closest('.tab-pane');
-    if (tabPane && tabPane.classList.contains('active')) {
-      await window.syncTab.init();
-    } else if (tabPane) {
-      // Инициализировать при активации вкладки
-      tabPane.addEventListener('shown.bs.tab', () => {
+      log.innerHTML = 'i18n.t('auto__log_insertbefore_item_log_firstchild_document_addeventlistener__a7f3c0')DOMContentLoadedi18n.t('auto__async_window_synctab_new_synctab_const_tab_document_getelementbyid__db0d04')tab-synci18n.t('auto__if_tab_const_tabpane_tab_closest__3de99f').tab-pane');
+    if (tabPane && tabPane.classList.contains('activei18n.t('auto__await_window_synctab_init_else_if_tabpane_tabpane_addeventlistener__a1f76c')shown.bs.tab', () => {
         window.syncTab.init();
       });
     }

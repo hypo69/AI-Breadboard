@@ -102,8 +102,7 @@ export function renderUserRagsList(collections) {
           <span class="badge ${statusBadgeClass} small" style="font-size: 0.7rem;">${escapeHtml(col.status || 'created')}</span>
         </div>
         <div class="d-flex justify-content-between align-items-center small text-muted" style="font-size: 0.75rem;">
-          <span><i class="bi bi-diagram-3 me-1"></i>${col.total_chunks || 0} чанков</span>
-          <span><i class="bi bi-file-earmark me-1"></i>${(col.files || []).length} файлов</span>
+          <span><i class="bi bi-diagram-3 me-1i18n.t('auto__i_col_total_chunks_0_span_span_i_class__144614')bi bi-file-earmark me-1"></i>${(col.files || []).length} файлов</span>
         </div>
       </div>
     `;
@@ -164,7 +163,7 @@ export async function selectUserRag(ragId) {
     const updatedEl = document.getElementById('active-rag-stat-updated');
 
     if (titleEl) titleEl.textContent = col.name || col.id;
-    if (descEl) descEl.textContent = col.description || 'Без описания';
+    if (descEl) descEl.textContent = col.description || i18n.t('auto___9852df');
     if (statusBadge) {
       statusBadge.textContent = col.status || 'created';
       statusBadge.className = `badge ${col.status === 'indexed' ? 'bg-success' : (col.status === 'cleaning' ? 'bg-warning text-dark' : (col.status === 'error' ? 'bg-danger' : 'bg-secondary'))}`;
@@ -232,15 +231,15 @@ export function renderRagEntries(entries, total) {
     const docType = entry.doc_type || 'chunk';
     const isQa = docType === 'qa' || entry.meta?.is_qa;
     const badgeClass = isQa ? 'bg-primary' : 'bg-info text-dark';
-    const badgeLabel = isQa ? 'Q&A' : (entry.source_file || 'Файл');
+    const badgeLabel = isQa ? 'Q&A' : (entry.source_file || i18n.t('auto___94b8df'));
 
     let displayContent = entry.content || '';
     let questionText = entry.meta?.question || '';
     let answerText = entry.meta?.answer || '';
 
-    if (!questionText && displayContent.includes('Вопрос:') && displayContent.includes('Ответ:')) {
-      const parts = displayContent.split('\nОтвет:');
-      questionText = parts[0].replace('Вопрос:', '').trim();
+    if (!questionText && displayContent.includes(i18n.t('auto___9bf735')) && displayContent.includes(i18n.t('auto___fa5ebc'))) {
+      const parts = displayContent.split(i18n.t('auto__n__01e1c0'));
+      questionText = parts[0].replace(i18n.t('auto___9bf735'), '').trim();
       answerText = (parts[1] || '').trim();
     }
 
@@ -251,7 +250,7 @@ export function renderRagEntries(entries, total) {
             <span class="badge ${badgeClass} small" style="font-size: 0.7rem;">${escapeHtml(badgeLabel)}</span>
             <small class="text-muted font-monospace" style="font-size: 0.72rem;">#${escapeHtml(chunkId)}</small>
           </div>
-          <button class="btn btn-outline-danger btn-sm py-0 px-2 rounded-pill btn-delete-entry" data-chunk-id="${escapeHtml(chunkId)}" title="Удалить запись из RAG">
+          <button class="btn btn-outline-danger btn-sm py-0 px-2 rounded-pill btn-delete-entry" data-chunk-id="${escapeHtml(chunkId)}" title=i18n.t('auto__rag_a7f90e')>
             <i class="bi bi-trash"></i>
           </button>
         </div>
@@ -281,7 +280,7 @@ export function renderRagEntries(entries, total) {
  */
 export async function addQaEntry() {
   if (!activeUserRagId) {
-    window.showToast?.('Пожалуйста, выберите коллекцию RAG.', 'warning') || alert('Пожалуйста, выберите коллекцию RAG.');
+    window.showToast?.(i18n.t('auto__rag__0503f8'), 'warning') || alert(i18n.t('auto__rag__0503f8'));
     return;
   }
 
@@ -293,7 +292,7 @@ export async function addQaEntry() {
   const answer = aInput?.value.trim() || '';
 
   if (!answer) {
-    window.showToast?.('Пожалуйста, введите текст ответа или знания.', 'warning') || alert('Пожалуйста, введите текст ответа или знания.');
+    window.showToast?.(i18n.t('auto___5acaf9'), 'warning') || alert(i18n.t('auto___5acaf9'));
     return;
   }
 
@@ -317,49 +316,11 @@ export async function addQaEntry() {
     if (qInput) qInput.value = '';
     if (aInput) aInput.value = '';
 
-    window.showToast?.('Q&A запись успешно добавлена', 'success');
-    await selectUserRag(activeUserRagId);
-    await loadUserRags();
-  } catch (err) {
-    window.showToast?.(`Ошибка сохранения Q&A записи: ${err.message}`, 'danger') || alert(`Ошибка сохранения Q&A записи: ${err.message}`);
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-
-/**
- * Delete a specific chunk/QA entry from the active collection.
- *
- * @param {string} chunkId - Chunk identifier.
- * @returns {Promise<void>}
- */
-export async function deleteRagEntry(chunkId) {
-  if (!activeUserRagId || !chunkId) return;
-
-  const confirmed = confirm(`Удалить эту запись (#${chunkId}) из базы знаний?`);
-  if (!confirmed) return;
-
-  try {
-    const res = await fetch(`/api/user/rags/${encodeURIComponent(activeUserRagId)}/entries/${encodeURIComponent(chunkId)}`, {
-      method: 'DELETE'
+    window.showToast?.(i18n.t('auto_q_a__a800e6'), 'successi18n.t('auto__await_selectuserrag_activeuserragid_await_loaduserrags_catch_err_window_showtoast_q_a_err_message__b8d668')dangeri18n.t('auto__alert_q_a_err_message_finally_if_btn_btn_disabled_false_delete_a_specific_chunk_qa_entry_from_the_active_collection_param_string_chunkid_chunk_identifier_returns_promise_void_export_async_function_deleteragentry_chunkid_if_activeuserragid_chunkid_return_const_confirmed_confirm_chunkid_if_confirmed_return_try_const_res_await_fetch_api_user_rags_encodeuricomponent_activeuserragid_entries_encodeuricomponent_chunkid_method__697e46')DELETE'
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    window.showToast?.('Запись успешно удалена', 'success');
-    await selectUserRag(activeUserRagId);
-    await loadUserRags();
-  } catch (err) {
-    window.showToast?.(`Ошибка удаления записи: ${err.message}`, 'danger') || alert(`Ошибка удаления записи: ${err.message}`);
-  }
-}
-
-/**
- * Create a new user workspace RAG collection via API.
- *
- * @returns {Promise<void>}
- */
-export async function createUserRag() {
-  const nameInput = document.getElementById('new-rag-name');
+    window.showToast?.(i18n.t('auto___6a5625'), 'successi18n.t('auto__await_selectuserrag_activeuserragid_await_loaduserrags_catch_err_window_showtoast_err_message__ed65ff')dangeri18n.t('auto__alert_err_message_create_a_new_user_workspace_rag_collection_via_api_returns_promise_void_export_async_function_createuserrag_const_nameinput_document_getelementbyid__850637')new-rag-name');
   const descInput = document.getElementById('new-rag-desc');
   const minChunkInput = document.getElementById('new-rag-min-chunk');
   const maxChunkInput = document.getElementById('new-rag-max-chunk');
@@ -367,7 +328,7 @@ export async function createUserRag() {
 
   const name = nameInput?.value.trim();
   if (!name) {
-    window.showToast?.('Пожалуйста, укажите имя коллекции.', 'warning') || alert('Пожалуйста, укажите имя коллекции.');
+    window.showToast?.(i18n.t('auto___175897'), 'warning') || alert(i18n.t('auto___175897'));
     return;
   }
 
@@ -396,49 +357,13 @@ export async function createUserRag() {
     }
 
     if (nameInput) nameInput.value = '';
-    if (descInput) descInput.value = '';
-
-    window.showToast?.(`Коллекция '${name}' успешно создана`, 'success');
+    if (descInput) descInput.value = 'i18n.t('auto__window_showtoast__78229b')${name}i18n.t('auto___61c9c5')success');
     await loadUserRags();
     const createdId = data.collection?.id;
     if (createdId) {
       selectUserRag(createdId);
       if (srcType === 'gdocs') {
-        const importModalEl = document.getElementById('modal-import-gdocs');
-        if (importModalEl && window.bootstrap?.Modal) {
-          const importModal = bootstrap.Modal.getInstance(importModalEl) || new bootstrap.Modal(importModalEl);
-          importModal.show();
-        }
-      }
-    }
-  } catch (err) {
-    window.showToast?.(`Ошибка создания коллекции: ${err.message}`, 'danger') || alert(`Ошибка создания коллекции: ${err.message}`);
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-
-/**
- * Delete the currently active workspace collection.
- *
- * @returns {Promise<void>}
- */
-export async function deleteActiveUserRag() {
-  if (!activeUserRagId) return;
-
-  const confirmed = confirm(`Вы уверены, что хотите удалить коллекцию «${activeUserRagId}»?`);
-  if (!confirmed) return;
-
-  try {
-    const res = await fetch(`/api/user/rags/${encodeURIComponent(activeUserRagId)}`, {
-      method: 'DELETE'
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    window.showToast?.(`Коллекция '${activeUserRagId}' успешно удалена`, 'success');
-    activeUserRagId = null;
-    await loadUserRags();
-  } catch (err) {
-    window.showToast?.(`Ошибка удаления коллекции: ${err.message}`, 'danger') || alert(`Ошибка удаления коллекции: ${err.message}`);
+        const importModalEl = document.getElementById('modal-import-gdocsi18n.t('auto__if_importmodalel_window_bootstrap_modal_const_importmodal_bootstrap_modal_getinstance_importmodalel_new_bootstrap_modal_importmodalel_importmodal_show_catch_err_window_showtoast_err_message__2c275b')dangeri18n.t('auto__alert_err_message_finally_if_btn_btn_disabled_false_delete_the_currently_active_workspace_collection_returns_promise_void_export_async_function_deleteactiveuserrag_if_activeuserragid_return_const_confirmed_confirm_activeuserragid_if_confirmed_return_try_const_res_await_fetch_api_user_rags_encodeuricomponent_activeuserragid_method__bce173')DELETEi18n.t('auto__if_res_ok_throw_new_error_http_res_status_window_showtoast__99a05f')${activeUserRagId}i18n.t('auto___e7697e')successi18n.t('auto__activeuserragid_null_await_loaduserrags_catch_err_window_showtoast_err_message__6aed96')danger') || alert(`Ошибка удаления коллекции: ${err.message}`);
   }
 }
 

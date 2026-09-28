@@ -55,19 +55,7 @@
 
       if (data.top_handle_hogs && data.top_handle_hogs.length > 0) {
         const topH = data.top_handle_hogs[0];
-        setText('diag-leaks-peak-handles', `${topH.handles_count.toLocaleString()} шт.`);
-        setText('diag-leaks-peak-handles-proc', `Процесс: ${topH.name} (PID ${topH.pid})`);
-      }
-      if (data.top_gdi_hogs && data.top_gdi_hogs.length > 0) {
-        const topG = data.top_gdi_hogs[0];
-        setText('diag-leaks-peak-gdi', `${topG.gdi_objects.toLocaleString()} шт.`);
-        setText('diag-leaks-peak-gdi-proc', `Процесс: ${topG.name} (PID ${topG.pid})`);
-      }
-
-      rawLeakProcesses = data.all_processes || [];
-      renderProcessLeaksTable(rawLeakProcesses);
-    } catch (err) {
-      console.warn('[ProcessLeaksTab] fetchProcessLeaks error:', err);
+        setText('diag-leaks-peak-handlesi18n.t('auto__toph_handles_count_tolocalestring_settext__93ec28')diag-leaks-peak-handles-proci18n.t('auto__toph_name_pid_toph_pid_if_data_top_gdi_hogs_data_top_gdi_hogs_length_0_const_topg_data_top_gdi_hogs_0_settext__f9eaa6')diag-leaks-peak-gdii18n.t('auto__topg_gdi_objects_tolocalestring_settext__5c9497')diag-leaks-peak-gdi-proci18n.t('auto__topg_name_pid_topg_pid_rawleakprocesses_data_all_processes_renderprocessleakstable_rawleakprocesses_catch_err_console_warn__0df886')[ProcessLeaksTab] fetchProcessLeaks error:', err);
     }
   }
 

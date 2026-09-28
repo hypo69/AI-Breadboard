@@ -3,15 +3,7 @@
  */
 
 (function () {
-  'use strict';
-
-  let currentItems = [];
-
-  /**
-   * Инициализация событий и обработчиков вкладки
-   */
-  function initFileHistoryTab() {
-    const btnSearch = document.getElementById('btn-fh-search');
+  'use stricti18n.t('auto__let_currentitems_function_initfilehistorytab_const_btnsearch_document_getelementbyid__e6ed42')btn-fh-search');
     const searchInput = document.getElementById('fh-search-input');
     const btnRefreshStatus = document.getElementById('btn-fh-refresh-status');
     const btnReindex = document.getElementById('btn-fh-reindex');
@@ -48,19 +40,7 @@
     }
 
     if (btnStopSched) {
-      btnStopSched.addEventListener('click', () => toggleScheduler('stop'));
-    }
-
-    // Первоначальная загрузка статуса
-    loadStatus();
-  }
-
-  /**
-   * Получение текущего статуса RAG индекса и планировщика
-   */
-  async function loadStatus() {
-    try {
-      const resp = await fetch('/api/windows/file-history/status');
+      btnStopSched.addEventListener('click', () => toggleScheduler('stopi18n.t('auto__loadstatus_rag_async_function_loadstatus_try_const_resp_await_fetch__d52650')/api/windows/file-history/status');
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
 
@@ -69,46 +49,19 @@
       const elSchedStat = document.getElementById('fh-stat-scheduler-status');
       const elSchedIcon = document.getElementById('fh-scheduler-icon');
       const elSchedInt = document.getElementById('fh-stat-scheduler-interval');
-      const elFaissFile = document.getElementById('fh-stat-faiss-file');
-
-      if (elCount) elCount.textContent = data.total_indexed_documents || 0;
-      if (elLastIdx) {
-        elLastIdx.textContent = data.last_indexed_at
-          ? `Обновлено: ${new Date(data.last_indexed_at).toLocaleString('ru-RU')}`
-          : 'Индексация не проводилась';
+      const elFaissFile = document.getElementById('fh-stat-faiss-filei18n.t('auto__if_elcount_elcount_textcontent_data_total_indexed_documents_0_if_ellastidx_ellastidx_textcontent_data_last_indexed_at_new_date_data_last_indexed_at_tolocalestring__c32c12')ru-RU')}`
+          : i18n.t('auto___16deed');
       }
 
       if (elSchedStat) {
         if (data.scheduler_running) {
-          elSchedStat.textContent = 'Активен';
+          elSchedStat.textContent = i18n.t('auto___667904');
           elSchedStat.className = 'fh-stat-val text-success';
           if (elSchedIcon) elSchedIcon.className = 'bi bi-arrow-repeat fs-4 text-success opacity-75 spin';
         } else {
-          elSchedStat.textContent = 'Остановлен';
+          elSchedStat.textContent = i18n.t('auto___aa0d25');
           elSchedStat.className = 'fh-stat-val text-warning';
-          if (elSchedIcon) elSchedIcon.className = 'bi bi-arrow-repeat fs-4 text-warning opacity-50';
-        }
-      }
-
-      if (elSchedInt) {
-        elSchedInt.textContent = `Интервал: ${data.update_interval_minutes || 15} мин`;
-      }
-
-      if (elFaissFile && data.index_file_path) {
-        const parts = data.index_file_path.split(/[\\/]/);
-        elFaissFile.textContent = parts[parts.length - 1] || data.index_file_path;
-        elFaissFile.title = data.index_file_path;
-      }
-    } catch (err) {
-      console.error('[FileHistoryUI] Ошибка загрузки статуса:', err);
-    }
-  }
-
-  /**
-   * Принудительный запуск сканирования истории файлов Windows
-   */
-  async function triggerScan() {
-    const tbody = document.getElementById('fh-items-tbody');
+          if (elSchedIcon) elSchedIcon.className = 'bi bi-arrow-repeat fs-4 text-warning opacity-50i18n.t('auto__if_elschedint_elschedint_textcontent_data_update_interval_minutes_15_if_elfaissfile_data_index_file_path_const_parts_data_index_file_path_split_elfaissfile_textcontent_parts_parts_length_1_data_index_file_path_elfaissfile_title_data_index_file_path_catch_err_console_error__3cb452')[FileHistoryUI] Ошибка загрузки статуса:i18n.t('auto__err_windows_async_function_triggerscan_const_tbody_document_getelementbyid__5b14c9')fh-items-tbody');
     if (tbody) {
       tbody.innerHTML = `
         <tr>
@@ -120,15 +73,10 @@
     }
 
     try {
-      const resp = await fetch('/api/windows/file-history/scan');
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      currentItems = await resp.json();
-      renderItemsTable(currentItems);
-      if (window.showToast) {
-        window.showToast(`Сканирование завершено: найдено ${currentItems.length} элементов`, 'info');
+      const resp = await fetch('/api/windows/file-history/scani18n.t('auto__if_resp_ok_throw_new_error_http_resp_status_currentitems_await_resp_json_renderitemstable_currentitems_if_window_showtoast_window_showtoast_currentitems_length__a2f871')info');
       }
     } catch (err) {
-      console.error('[FileHistoryUI] Ошибка сканирования:', err);
+      console.error(i18n.t('auto__filehistoryui__c71a7b'), err);
       if (tbody) {
         tbody.innerHTML = `
           <tr>
@@ -179,7 +127,7 @@
           <td class="small text-muted">${timeStr}</td>
           <td class="small font-monospace">${formattedSize}</td>
           <td class="text-end">
-            <button class="btn btn-sm btn-outline-secondary py-0 px-2 btn-copy-path" data-path="${escapeHtml(item.file_path)}" title="Копировать путь">
+            <button class="btn btn-sm btn-outline-secondary py-0 px-2 btn-copy-path" data-path="${escapeHtml(item.file_path)}" title=i18n.t('auto___8a5b6a')>
               <i class="bi bi-clipboard"></i>
             </button>
           </td>
@@ -194,46 +142,21 @@
         const path = e.currentTarget.getAttribute('data-path');
         if (path) {
           navigator.clipboard.writeText(path);
-          if (window.showToast) window.showToast('Путь скопирован в буфер обмена', 'success');
-        }
-      });
-    });
-  }
-
-  /**
-   * Пересчет и векторизация RAG-индекса
-   */
-  async function triggerReindex() {
-    const btnReindex = document.getElementById('btn-fh-reindex');
+          if (window.showToast) window.showToast(i18n.t('auto___f6358a'), 'successi18n.t('auto__rag_async_function_triggerreindex_const_btnreindex_document_getelementbyid__29bc61')btn-fh-reindex');
     if (btnReindex) btnReindex.disabled = true;
 
     if (window.showToast) {
-      window.showToast('Запущен процесс сканирования и векторной RAG-индексации...', 'info');
+      window.showToast(i18n.t('auto__rag__9ef43b'), 'info');
     }
 
     try {
-      const resp = await fetch('/api/windows/file-history/index', { method: 'POST' });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
-      if (window.showToast) {
-        window.showToast(`RAG-индекс перестроен: проиндексировано ${data.indexed_count} элементов!`, 'success');
+      const resp = await fetch('/api/windows/file-history/index', { method: 'POSTi18n.t('auto__if_resp_ok_throw_new_error_http_resp_status_const_data_await_resp_json_if_window_showtoast_window_showtoast_rag_data_indexed_count__d44568')success');
       }
       loadStatus();
     } catch (err) {
-      console.error('[FileHistoryUI] Ошибка перестроения RAG:', err);
+      console.error(i18n.t('auto__filehistoryui_rag__ffcf9a'), err);
       if (window.showToast) {
-        window.showToast(`Ошибка индексации RAG: ${err.message}`, 'error');
-      }
-    } finally {
-      if (btnReindex) btnReindex.disabled = false;
-    }
-  }
-
-  /**
-   * Выполнение семантического поиска
-   */
-  async function executeSearch() {
-    const searchInput = document.getElementById('fh-search-input');
+        window.showToast(`Ошибка индексации RAG: ${err.message}`, 'errori18n.t('auto__finally_if_btnreindex_btnreindex_disabled_false_async_function_executesearch_const_searchinput_document_getelementbyid__f45f1d')fh-search-input');
     const filterSource = document.getElementById('fh-filter-source');
     const filterTopk = document.getElementById('fh-filter-topk');
     const spinner = document.getElementById('fh-search-spinner');
@@ -241,7 +164,7 @@
 
     const query = searchInput ? searchInput.value.trim() : '';
     if (!query) {
-      if (window.showToast) window.showToast('Введите поисковый запрос', 'warning');
+      if (window.showToast) window.showToast(i18n.t('auto___f4f030'), 'warning');
       return;
     }
 
@@ -266,7 +189,7 @@
       const data = await resp.json();
       renderSearchResults(data);
     } catch (err) {
-      console.error('[FileHistoryUI] Ошибка поиска:', err);
+      console.error(i18n.t('auto__filehistoryui__1be39c'), err);
       if (container) {
         container.innerHTML = `
           <div class="alert alert-danger mb-0">
@@ -274,29 +197,13 @@
           </div>`;
       }
     } finally {
-      if (spinner) spinner.classList.add('d-none');
-    }
-  }
-
-  /**
-   * Отрисовка карточек результатов семантического поиска
-   */
-  function renderSearchResults(data) {
-    const container = document.getElementById('fh-search-results-container');
+      if (spinner) spinner.classList.add('d-nonei18n.t('auto__function_rendersearchresults_data_const_container_document_getelementbyid__482c76')fh-search-results-container');
     if (!container) return;
 
     if (!data.results || data.results.length === 0) {
       container.innerHTML = `
         <div class="text-center text-muted py-4 border rounded-3">
-          <i class="bi bi-emoji-frown fs-3 d-block mb-1 text-warning opacity-50"></i>
-          <span>Совпадений по запросу «<strong>${escapeHtml(data.query)}</strong>» не найдено.</span><br>
-          <small class="text-secondary">Попробуйте изменить запрос или нажать «Перестроить RAG» для обновения индекса.</small>
-        </div>`;
-      return;
-    }
-
-    let html = `
-      <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+          <i class="bi bi-emoji-frown fs-3 d-block mb-1 text-warning opacity-50i18n.t('auto__i_span_strong_escapehtml_data_query_strong_span_br_small_class__5ef260')text-secondaryi18n.t('auto__rag_small_div_return_let_html_div_class__1b153c')d-flex justify-content-between align-items-center mb-2 px-1">
         <span class="small text-muted">
           Найдено результатов: <strong>${data.total_found}</strong> (Время выполнения: <strong>${data.execution_time_ms} мс</strong>)
         </span>
@@ -321,10 +228,10 @@
               ${badgeSource}
             </div>
             <div class="d-flex align-items-center gap-2">
-              <span class="badge ${badgeScoreClass} fh-score-badge" title="Косинусное сходство / Релевантность">
+              <span class="badge ${badgeScoreClass} fh-score-badge" title=i18n.t('auto___4c2381')>
                 Score: ${item.score}
               </span>
-              <button class="btn btn-sm btn-outline-secondary py-0 px-2 btn-copy-path" data-path="${escapeHtml(item.file_path)}" title="Скопировать путь">
+              <button class="btn btn-sm btn-outline-secondary py-0 px-2 btn-copy-path" data-path="${escapeHtml(item.file_path)}" title=i18n.t('auto___bbf33e')>
                 <i class="bi bi-clipboard"></i>
               </button>
             </div>
@@ -332,10 +239,7 @@
 
           <div class="small text-muted text-truncate mb-2 font-monospace">
             <i class="bi bi-folder2-open me-1 text-secondary"></i>${escapeHtml(item.file_path)}
-            <span class="ms-2 text-secondary">| Время: ${timeStr}</span>
-          </div>
-
-          <div class="fh-snippet-box">
+            <span class="ms-2 text-secondaryi18n.t('auto__timestr_span_div_div_class__41bff1')fh-snippet-box">
             ${escapeHtml(item.snippet)}
           </div>
         </div>`;
@@ -349,40 +253,19 @@
         const path = e.currentTarget.getAttribute('data-path');
         if (path) {
           navigator.clipboard.writeText(path);
-          if (window.showToast) window.showToast('Путь скопирован в буфер обмена', 'success');
-        }
-      });
-    });
-  }
-
-  /**
-   * Управление фоновым планировщиком
-   */
-  async function toggleScheduler(action) {
-    const url = `/api/windows/file-history/scheduler/${action}`;
-    try {
-      const resp = await fetch(url, { method: 'POST' });
+          if (window.showToast) window.showToast(i18n.t('auto___f6358a'), 'successi18n.t('auto__async_function_togglescheduler_action_const_url_api_windows_file_history_scheduler_action_try_const_resp_await_fetch_url_method__3e7cc6')POST' });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
       if (window.showToast) {
         window.showToast(
-          action === 'start' ? 'Фоновый планировщик RAG запущен' : 'Фоновый планировщик остановлен',
+          action === 'start' ? i18n.t('auto__rag__8d29a5') : i18n.t('auto___426630'),
           action === 'start' ? 'success' : 'info'
         );
       }
       loadStatus();
     } catch (err) {
-      console.error('[FileHistoryUI] Ошибка управления планировщиком:', err);
-      if (window.showToast) window.showToast(`Ошибка: ${err.message}`, 'error');
-    }
-  }
-
-  /**
-   * Получение бейджа источника
-   */
-  function getSourceBadge(sourceType) {
-    switch (sourceType) {
-      case 'file_history_xml':
+      console.error(i18n.t('auto__filehistoryui__5680c6'), err);
+      if (window.showToast) window.showToast(`Ошибка: ${err.message}`, 'errori18n.t('auto__function_getsourcebadge_sourcetype_switch_sourcetype_case_f06986')file_history_xml':
         return '<span class="badge bg-primary bg-opacity-75"><i class="bi bi-file-earmark-xml me-1"></i>File History XML</span>';
       case 'recent_lnk':
         return '<span class="badge bg-info bg-opacity-75"><i class="bi bi-link-45deg me-1"></i>Recent LNK</span>';
@@ -391,37 +274,18 @@
       case 'fs_scan':
         return '<span class="badge bg-success bg-opacity-75"><i class="bi bi-hdd-network me-1"></i>FS Scan</span>';
       default:
-        return `<span class="badge bg-secondary">${escapeHtml(sourceType || 'unknown')}</span>`;
-    }
-  }
-
-  /**
-   * Форматирование байт
-   */
-  function formatBytes(bytes, decimals = 1) {
-    if (!bytes || bytes === 0) return '0 B';
+        return `<span class="badge bg-secondary">${escapeHtml(sourceType || 'unknowni18n.t('auto__span_function_formatbytes_bytes_decimals_1_if_bytes_bytes_0_return_98f56d')0 B';
     const k = 1024;
     const dm = decimals < 0 ? 0 : decimals;
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-  }
-
-  /**
-   * Экранирование спецсимволов HTML
-   */
-  function escapeHtml(str) {
-    if (!str) return '';
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' i18n.t('auto__sizes_i_html_function_escapehtml_str_if_str_return_ddd7ae')';
     return String(str)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  // Запуск при загрузке DOM
-  if (document.readyState === 'loading') {
+      .replace(/'/g, '&#039;i18n.t('auto__dom_if_document_readystate__83155a')loading') {
     document.addEventListener('DOMContentLoaded', initFileHistoryTab);
   } else {
     initFileHistoryTab();

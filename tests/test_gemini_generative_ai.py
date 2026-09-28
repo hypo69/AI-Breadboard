@@ -352,7 +352,7 @@ class TestGoogleGenerativeAI_Regression:
     @pytest.mark.asyncio
     async def test_unified_chat_model_integration(self):
         """Check UnifiedChatModel integration with updated GoogleGenerativeAI class."""
-        from src.ai.chat.unified_chat import UnifiedChatModel
+        from src.ai.orchestration.unified_chat import UnifiedChatModel
         mock_client: MagicMock = MagicMock()
         mock_response: MagicMock = MagicMock()
         mock_response.text = 'Response via UnifiedChatModel'

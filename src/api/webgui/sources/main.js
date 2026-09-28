@@ -11,7 +11,7 @@ async function loadSourcesRaw() {
     
     if (editor) {
         editor.disabled = true;
-        editor.value = 'Загрузка...';
+        editor.value = i18n.t('auto___a90ed3');
     }
     if (tbody) {
         tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Загрузка источников...</td></tr>';
@@ -27,15 +27,15 @@ async function loadSourcesRaw() {
             currentSourcesObj = JSON.parse(rawContent);
             renderSourcesTable();
         } catch (e) {
-            console.error('Ошибка парсинга JSON для таблицы:', e);
+            console.error(i18n.t('auto__json__3ea759'), e);
             if (tbody) {
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Ошибка формата JSON. Таблица недоступна.</td></tr>';
             }
         }
         
     } catch (err) {
-        console.error('Ошибка загрузки источников:', err);
-        if (editor) editor.value = 'Ошибка загрузки:\n' + err.message;
+        console.error(i18n.t('auto___3e0a7f'), err);
+        if (editor) editor.value = i18n.t('auto__n_d7b40b') + err.message;
         if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">Ошибка загрузки: ${err.message}</td></tr>`;
     } finally {
         if (editor) editor.disabled = false;
@@ -43,16 +43,10 @@ async function loadSourcesRaw() {
 }
 
 async function saveSourcesRaw(content) {
-    const editor = document.getElementById('sources-json-editor');
-    
-    // Проверка синтаксиса на клиенте перед отправкой
-    try {
-        JSON.parse(content);
-    } catch (e) {
-        if (typeof showNotification === 'function') {
-            showNotification('Синтаксическая ошибка JSON: ' + e.message, 'danger');
+    const editor = document.getElementById('sources-json-editori18n.t('auto__try_json_parse_content_catch_e_if_typeof_shownotification__c50f5c')function') {
+            showNotification(i18n.t('auto__json__636c61') + e.message, 'danger');
         } else {
-            alert('Синтаксическая ошибка JSON: ' + e.message);
+            alert(i18n.t('auto__json__636c61') + e.message);
         }
         return false;
     }
@@ -67,14 +61,14 @@ async function saveSourcesRaw(content) {
         
         if (response.status === 'ok') {
             if (typeof showNotification === 'function') {
-                showNotification('Источники успешно сохранены!', 'success');
+                showNotification(i18n.t('auto___17582e'), 'success');
             }
             return true;
         }
     } catch (err) {
-        console.error('Ошибка сохранения источников:', err);
+        console.error(i18n.t('auto___0f089d'), err);
         if (typeof showNotification === 'function') {
-            showNotification('Ошибка сохранения: ' + err.message, 'danger');
+            showNotification(i18n.t('auto___bbbabd') + err.message, 'danger');
         }
         return false;
     } finally {
@@ -119,12 +113,12 @@ function renderSourcesTable() {
                             data-category="${category}" data-index="${index}" ${isEnabled ? 'checked' : ''}>
                     </div>
                 </td>
-                <td class="fw-bold">${item.name || item.id || 'Без названия'}</td>
+                <td class="fw-bold">${item.name || item.id || i18n.t('auto___32b74a')}</td>
                 <td><a href="${item.url || '#'}" target="_blank" class="small text-truncate d-inline-block" style="max-width: 150px;">${item.url || '-'}</a></td>
                 <td><span class="badge bg-secondary">${category}</span></td>
                 <td class="small text-muted">${item.description || '-'}</td>
                 <td class="text-end">
-                    <button class="btn btn-sm btn-outline-danger delete-source-btn" data-category="${category}" data-index="${index}" title="Удалить">
+                    <button class="btn btn-sm btn-outline-danger delete-source-btn" data-category="${category}" data-index="${index}" title=i18n.t('auto___86ea33')>
                         <i class="bi bi-trash"></i>
                     </button>
                 </td>
@@ -134,11 +128,7 @@ function renderSourcesTable() {
     }
     
     if (!hasItems) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Нет источников для отображения</td></tr>';
-    }
-    
-    // Привязываем обработчики к сгенерированным кнопкам
-    document.querySelectorAll('.toggle-source-btn').forEach(btn => {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Нет источников для отображения</td></tr>i18n.t('auto__document_queryselectorall__521712').toggle-source-btn').forEach(btn => {
         btn.addEventListener('change', handleToggleSource);
     });
     
@@ -149,14 +139,7 @@ function renderSourcesTable() {
 
 async function handleToggleSource(e) {
     const category = e.target.getAttribute('data-category');
-    const index = parseInt(e.target.getAttribute('data-index'));
-    
-    if (currentSourcesObj[category] && currentSourcesObj[category][index]) {
-        currentSourcesObj[category][index].enabled = e.target.checked;
-        const newJson = JSON.stringify(currentSourcesObj, null, 2);
-        
-        // Обновляем текстовое поле и сервер
-        const editor = document.getElementById('sources-json-editor');
+    const index = parseInt(e.target.getAttribute('data-indexi18n.t('auto__if_currentsourcesobj_category_currentsourcesobj_category_index_currentsourcesobj_category_index_enabled_e_target_checked_const_newjson_json_stringify_currentsourcesobj_null_2_const_editor_document_getelementbyid__5a75cc')sources-json-editor');
         if (editor) editor.value = newJson;
         
         await saveSourcesRaw(newJson);
@@ -168,7 +151,7 @@ async function handleDeleteSource(e) {
     const category = btn.getAttribute('data-category');
     const index = parseInt(btn.getAttribute('data-index'));
     
-    if (confirm('Вы уверены, что хотите удалить этот источник?')) {
+    if (confirm(i18n.t('auto___102afb'))) {
         if (currentSourcesObj[category] && currentSourcesObj[category][index]) {
             currentSourcesObj[category].splice(index, 1);
             
@@ -190,7 +173,7 @@ async function handleAddSource() {
     const desc = document.getElementById('new-source-description')?.value.trim();
     
     if (!id || !name || !url) {
-        window.showToast?.('Заполните обязательные поля: ID, Название и URL', 'warning') || alert('Заполните обязательные поля: ID, Название и URL');
+        window.showToast?.(i18n.t('auto__id_url_9e1f64'), 'warning') || alert(i18n.t('auto__id_url_9e1f64'));
         return;
     }
     
@@ -218,57 +201,14 @@ async function handleAddSource() {
     currentSourcesObj[targetCategory].push(newItem);
     
     const newJson = JSON.stringify(currentSourcesObj, null, 2);
-    const editor = document.getElementById('sources-json-editor');
-    if (editor) editor.value = newJson;
-    
-    const success = await saveSourcesRaw(newJson);
-    if (success) {
-        renderSourcesTable();
-        // Очищаем форму
-        document.getElementById('form-add-source').reset();
-    }
-}
-
-// Инициализация вкладки
-window.initSourcesTab = function() {
-    console.log('Инициализация вкладки Источники...');
+    const editor = document.getElementById('sources-json-editori18n.t('auto__if_editor_editor_value_newjson_const_success_await_savesourcesraw_newjson_if_success_rendersourcestable_document_getelementbyid__3f13fe')form-add-sourcei18n.t('auto__reset_window_initsourcestab_function_console_log__14f270')Инициализация вкладки Источники...');
     
     const btnRefresh = document.getElementById('btn-refresh-sources-json');
     const btnSave = document.getElementById('btn-save-sources-json');
     const btnSaveAll = document.getElementById('btn-save-all-sources');
     const btnAdd = document.getElementById('btn-add-source');
     const filterSelect = document.getElementById('sources-category-filter');
-    const editor = document.getElementById('sources-json-editor');
-    
-    if (btnRefresh) btnRefresh.onclick = loadSourcesRaw;
-    
-    if (btnSave) {
-        btnSave.onclick = () => {
-            if (editor) saveSourcesRaw(editor.value).then(() => {
-                // Обновляем таблицу после ручного изменения JSON
-                try {
-                    currentSourcesObj = JSON.parse(editor.value);
-                    renderSourcesTable();
-                } catch(e){}
-            });
-        };
-    }
-    
-    if (btnSaveAll) {
-        btnSaveAll.onclick = btnSave.onclick;
-    }
-    
-    if (btnAdd) {
-        btnAdd.onclick = handleAddSource;
-    }
-    
-    if (filterSelect) {
-        filterSelect.addEventListener('change', renderSourcesTable);
-    }
-    
-    // Также обновляем таблицу при потере фокуса редактором, если JSON валидный
-    if (editor) {
-        editor.addEventListener('blur', () => {
+    const editor = document.getElementById('sources-json-editori18n.t('auto__if_btnrefresh_btnrefresh_onclick_loadsourcesraw_if_btnsave_btnsave_onclick_if_editor_savesourcesraw_editor_value_then_json_try_currentsourcesobj_json_parse_editor_value_rendersourcestable_catch_e_if_btnsaveall_btnsaveall_onclick_btnsave_onclick_if_btnadd_btnadd_onclick_handleaddsource_if_filterselect_filterselect_addeventlistener__0d8404')changei18n.t('auto__rendersourcestable_json_if_editor_editor_addeventlistener__231a71')blur', () => {
             try {
                 currentSourcesObj = JSON.parse(editor.value);
                 renderSourcesTable();

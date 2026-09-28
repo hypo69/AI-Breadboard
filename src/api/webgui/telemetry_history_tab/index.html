@@ -3,8 +3,7 @@
 Process Name: Windows Telemetry History & Visualization Tab
 ===============================================================================
 Description:
-    Вкладка комплексной визуализации истории телеметрии, интерактивных графиков
-    (Chart.js / SVG), таблиц логов, детекции аномалий и Health Score.
+    <span data-i18n="auto__chart_js_svg__1393e6"></span> Health Score.
 
 File: index.html
 Project: AI-Breadboard
@@ -22,8 +21,8 @@ Copyright: © 2026 hypo69
         <div class="d-flex align-items-center gap-2">
           <div class="fs-3">📈</div>
           <div>
-            <h5 class="mb-0 fw-bold text-white">Визуализация истории телеметрии и логов</h5>
-            <small class="text-muted">Анализ временных рядов (CPU, RAM, GPU, Диск, Сеть, Температуры), аномалий и сводный Health Score</small>
+            <h5 class="mb-0 fw-bold text-white"><span data-i18n="auto___b8809f"></span></h5>
+            <small class="text-muted"><span data-i18n="auto__cpu_ram_gpu__7b9521"></span> Health Score</small>
           </div>
         </div>
 
@@ -31,26 +30,26 @@ Copyright: © 2026 hypo69
           <div class="input-group input-group-sm" style="width: auto;">
             <span class="input-group-text bg-dark text-muted border-secondary"><i class="bi bi-folder2-open"></i></span>
             <select class="form-select form-select-sm bg-dark text-white border-secondary" id="th-select-source" style="max-width: 260px;">
-              <option value="">Все обнаруженные логи</option>
+              <option value=""><span data-i18n="auto___ce7f49"></span></option>
             </select>
           </div>
 
           <div class="form-check form-switch mb-0 small text-muted d-flex align-items-center gap-1">
             <input class="form-check-input" type="checkbox" id="th-auto-refresh">
-            <label class="form-check-label small text-nowrap" for="th-auto-refresh">Авто (5с)</label>
+            <label class="form-check-label small text-nowrap" for="th-auto-refresh"><span data-i18n="auto__5__93e6f2"></span>)</label>
           </div>
 
-          <button id="th-btn-refresh" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 shadow-sm" title="Пересчитать аналитику и обновить графики">
+          <button id="th-btn-refresh" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto___d3f1e4"></span>">
             <i class="bi bi-arrow-clockwise"></i>
-            <span>Обновить</span>
+            <span><span data-i18n="auto___c2f668"></span></span>
           </button>
 
-          <button id="th-btn-export-html" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-sm" title="Открыть автономный HTML-отчет в новой вкладке">
+          <button id="th-btn-export-html" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto__html__0a74ec"></span>">
             <i class="bi bi-file-earmark-bar-graph"></i>
-            <span>HTML-дашборд</span>
+            <span>HTML-<span data-i18n="auto___c957a3"></span></span>
           </button>
 
-          <button id="th-btn-export-json" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-sm" title="Скачать полный JSON-отчет">
+          <button id="th-btn-export-json" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto__json__6afa33"></span>">
             <i class="bi bi-download"></i>
             <span>JSON</span>
           </button>
@@ -63,7 +62,7 @@ Copyright: © 2026 hypo69
         <div class="col-6 col-md-3">
           <div class="p-2.5 rounded border border-secondary d-flex align-items-center justify-content-between" style="background: rgba(15, 23, 42, 0.7); min-height: 70px;">
             <div>
-              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;">Индекс здоровья (Health)</div>
+              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;"><span data-i18n="auto___cdea77"></span> (Health)</div>
               <div class="fw-bold fs-4 mt-0.5 text-success" id="th-kpi-health-score">--%</div>
             </div>
             <div class="fs-2 text-success opacity-75" id="th-kpi-health-icon"><i class="bi bi-heart-pulse-fill"></i></div>
@@ -74,7 +73,7 @@ Copyright: © 2026 hypo69
         <div class="col-6 col-md-3">
           <div class="p-2.5 rounded border border-secondary d-flex align-items-center justify-content-between" style="background: rgba(15, 23, 42, 0.7); min-height: 70px;">
             <div>
-              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;">Записей в выборке</div>
+              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;"><span data-i18n="auto___d407af"></span></div>
               <div class="fw-bold fs-4 text-white mt-0.5" id="th-kpi-records-count">0</div>
             </div>
             <div class="fs-2 text-info opacity-75"><i class="bi bi-database-fill-check"></i></div>
@@ -85,7 +84,7 @@ Copyright: © 2026 hypo69
         <div class="col-6 col-md-3">
           <div class="p-2.5 rounded border border-secondary d-flex align-items-center justify-content-between" style="background: rgba(15, 23, 42, 0.7); min-height: 70px;">
             <div>
-              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;">Аномалий / Сбоев</div>
+              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;"><span data-i18n="auto___130041"></span></div>
               <div class="fw-bold fs-4 text-warning mt-0.5" id="th-kpi-anomalies-count">0</div>
             </div>
             <div class="fs-2 text-warning opacity-75"><i class="bi bi-exclamation-triangle-fill"></i></div>
@@ -96,8 +95,8 @@ Copyright: © 2026 hypo69
         <div class="col-6 col-md-3">
           <div class="p-2.5 rounded border border-secondary d-flex align-items-center justify-content-between" style="background: rgba(15, 23, 42, 0.7); min-height: 70px;">
             <div class="text-truncate">
-              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;">Временной диапазон</div>
-              <div class="fw-bold text-info small mt-1 text-truncate" id="th-kpi-time-window" title="Диапазон дат">--</div>
+              <div class="text-muted small text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.04em;"><span data-i18n="auto___cbcd2b"></span></div>
+              <div class="fw-bold text-info small mt-1 text-truncate" id="th-kpi-time-window" title="<span data-i18n="auto___86314f"></span>">--</div>
             </div>
             <div class="fs-2 text-secondary opacity-75"><i class="bi bi-clock-history"></i></div>
           </div>
@@ -112,27 +111,27 @@ Copyright: © 2026 hypo69
     <li class="nav-item" role="presentation">
       <button class="nav-link active d-flex align-items-center gap-1.5 py-1.5 px-3" id="th-tab-charts-btn" data-bs-toggle="tab" data-bs-target="#th-subtab-charts" type="button" role="tab">
         <i class="bi bi-graph-up text-primary"></i>
-        <span>Интерактивные графики</span>
+        <span><span data-i18n="auto___b03ee7"></span></span>
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link d-flex align-items-center gap-1.5 py-1.5 px-3" id="th-tab-records-btn" data-bs-toggle="tab" data-bs-target="#th-subtab-records" type="button" role="tab">
         <i class="bi bi-table text-info"></i>
-        <span>Таблица записей логов</span>
+        <span><span data-i18n="auto___525ea9"></span></span>
         <span class="badge bg-secondary ms-1" id="th-badge-table-records">0</span>
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link d-flex align-items-center gap-1.5 py-1.5 px-3" id="th-tab-anomalies-btn" data-bs-toggle="tab" data-bs-target="#th-subtab-anomalies" type="button" role="tab">
         <i class="bi bi-shield-exclamation text-warning"></i>
-        <span>Журнал аномалий</span>
+        <span><span data-i18n="auto___e5e48e"></span></span>
         <span class="badge bg-warning text-dark ms-1" id="th-badge-table-anomalies">0</span>
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link d-flex align-items-center gap-1.5 py-1.5 px-3" id="th-tab-files-btn" data-bs-toggle="tab" data-bs-target="#th-subtab-files" type="button" role="tab">
         <i class="bi bi-files text-success"></i>
-        <span>Файлы источников логов</span>
+        <span><span data-i18n="auto___0ddb02"></span></span>
         <span class="badge bg-secondary ms-1" id="th-badge-table-files">0</span>
       </button>
     </li>
@@ -148,7 +147,7 @@ Copyright: © 2026 hypo69
         <div class="card-body p-3">
           <h6 class="text-success fw-bold d-flex align-items-center gap-1.5 mb-2">
             <i class="bi bi-lightbulb-fill"></i>
-            <span>Выводы и рекомендации аналитического движка</span>
+            <span><span data-i18n="auto___6c87ac"></span></span>
           </h6>
           <ul class="mb-0 text-white small ps-3" id="th-conclusions-list"></ul>
         </div>
@@ -158,7 +157,7 @@ Copyright: © 2026 hypo69
       <div class="row g-3" id="th-charts-container">
         <div class="col-12 text-center py-5 text-muted">
           <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
-          Загрузка и построение графиков телеметрии...
+          <span data-i18n="auto___a0596b"></span>...
         </div>
       </div>
     </div>
@@ -168,27 +167,27 @@ Copyright: © 2026 hypo69
       <div class="card shadow-sm border-secondary-subtle">
         <div class="card-header bg-dark d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 border-secondary">
           <div class="d-flex align-items-center gap-2">
-            <span class="fw-semibold text-white small">Все зафиксированные метрики и события</span>
+            <span class="fw-semibold text-white small"><span data-i18n="auto___4caa92"></span></span>
           </div>
 
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <div class="input-group input-group-sm" style="max-width: 280px;">
               <span class="input-group-text bg-dark text-muted border-secondary"><i class="bi bi-search"></i></span>
-              <input type="text" id="th-input-filter-records" class="form-control bg-dark text-white border-secondary" placeholder="Поиск по метрикам...">
+              <input type="text" id="th-input-filter-records" class="form-control bg-dark text-white border-secondary" placeholder="<span data-i18n="auto___350a80"></span>...">
             </div>
 
             <select class="form-select form-select-sm bg-dark text-white border-secondary" id="th-select-page-size" style="width: 100px;">
-              <option value="25">25 / стр</option>
-              <option value="50" selected>50 / стр</option>
-              <option value="100">100 / стр</option>
+              <option value="25">25 / <span data-i18n="auto___129ce0"></span></option>
+              <option value="50" selected>50 / <span data-i18n="auto___129ce0"></span></option>
+              <option value="100">100 / <span data-i18n="auto___129ce0"></span></option>
             </select>
 
-            <button id="th-btn-reload-records" class="btn btn-sm btn-outline-secondary" title="Обновить таблицу">
+            <button id="th-btn-reload-records" class="btn btn-sm btn-outline-secondary" title="<span data-i18n="auto___a97857"></span>">
               <i class="bi bi-arrow-clockwise"></i>
             </button>
-            <button id="th-btn-log-windows-events" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 shadow-sm" title="Залогировать важные события Windows в базу">
+            <button id="th-btn-log-windows-events" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto__windows__790d63"></span>">
               <i class="bi bi-journal-text"></i>
-              <span>Логи Windows</span>
+              <span><span data-i18n="auto___853d62"></span> Windows</span>
             </button>
           </div>
         </div>
@@ -197,18 +196,18 @@ Copyright: © 2026 hypo69
           <table class="table table-dark table-hover table-bordered align-middle mb-0 small" id="th-table-records">
             <thead class="table-secondary text-nowrap sticky-top">
               <tr>
-                <th style="width: 170px;">Временная метка</th>
-                <th style="min-width: 160px;">Метрика / Категория</th>
-                <th style="width: 120px;" class="text-end">Значение</th>
-                <th style="width: 90px;" class="text-center">Ед. изм.</th>
-                <th style="min-width: 200px;">Детали / Атрибуты</th>
+                <th style="width: 170px;"><span data-i18n="auto___5901f0"></span></th>
+                <th style="min-width: 160px;"><span data-i18n="auto___4ddba7"></span></th>
+                <th style="width: 120px;" class="text-end"><span data-i18n="auto___9f0b99"></span></th>
+                <th style="width: 90px;" class="text-center"><span data-i18n="auto___2ed6c1"></span>.</th>
+                <th style="min-width: 200px;"><span data-i18n="auto___c0b4d2"></span></th>
               </tr>
             </thead>
             <tbody id="th-tbody-records">
               <tr>
                 <td colspan="5" class="text-center text-muted py-4">
                   <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
-                  Загрузка данных телеметрии...
+                  <span data-i18n="auto___79c5d3"></span>...
                 </td>
               </tr>
             </tbody>
@@ -216,11 +215,11 @@ Copyright: © 2026 hypo69
         </div>
 
         <div class="card-footer bg-dark border-secondary p-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <span class="small text-muted" id="th-records-pagination-info">Показано 0 из 0</span>
+          <span class="small text-muted" id="th-records-pagination-info"><span data-i18n="auto__0__c19278"></span> 0</span>
           <div class="d-flex gap-1">
-            <button class="btn btn-sm btn-outline-secondary" id="th-btn-prev-page" disabled>&laquo; Назад</button>
+            <button class="btn btn-sm btn-outline-secondary" id="th-btn-prev-page" disabled>&laquo; <span data-i18n="auto___f6dab0"></span></button>
             <span class="btn btn-sm btn-dark disabled border-0" id="th-page-indicator">1 / 1</span>
-            <button class="btn btn-sm btn-outline-secondary" id="th-btn-next-page" disabled>Вперед &raquo;</button>
+            <button class="btn btn-sm btn-outline-secondary" id="th-btn-next-page" disabled><span data-i18n="auto___25905b"></span> &raquo;</button>
           </div>
         </div>
       </div>
@@ -230,7 +229,7 @@ Copyright: © 2026 hypo69
     <div class="tab-pane fade" id="th-subtab-anomalies" role="tabpanel">
       <div class="card shadow-sm border-secondary-subtle">
         <div class="card-header bg-dark d-flex justify-content-between align-items-center py-2 px-3 border-secondary">
-          <span class="fw-semibold text-white small">Обнаруженные отклонения, перегревы и троттлинг</span>
+          <span class="fw-semibold text-white small"><span data-i18n="auto___414153"></span></span>
           <span class="badge bg-secondary" id="th-anomalies-header-count">0</span>
         </div>
 
@@ -238,16 +237,16 @@ Copyright: © 2026 hypo69
           <table class="table table-dark table-hover table-bordered align-middle mb-0 small" id="th-table-anomalies">
             <thead class="table-secondary text-nowrap sticky-top">
               <tr>
-                <th style="width: 110px;" class="text-center">Уровень</th>
-                <th style="width: 170px;">Время</th>
-                <th style="min-width: 160px;">Метрика</th>
-                <th style="width: 160px;">Значение / Порог</th>
-                <th style="min-width: 250px;">Описание аномалии</th>
+                <th style="width: 110px;" class="text-center"><span data-i18n="auto___d9f964"></span></th>
+                <th style="width: 170px;"><span data-i18n="auto___c80d7e"></span></th>
+                <th style="min-width: 160px;"><span data-i18n="auto___410216"></span></th>
+                <th style="width: 160px;"><span data-i18n="auto___b0fd9c"></span></th>
+                <th style="min-width: 250px;"><span data-i18n="auto___44e9ec"></span></th>
               </tr>
             </thead>
             <tbody id="th-tbody-anomalies">
               <tr>
-                <td colspan="5" class="text-center text-muted py-4">Аномалий не зафиксировано</td>
+                <td colspan="5" class="text-center text-muted py-4"><span data-i18n="auto___eb2639"></span></td>
               </tr>
             </tbody>
           </table>
@@ -259,10 +258,10 @@ Copyright: © 2026 hypo69
     <div class="tab-pane fade" id="th-subtab-files" role="tabpanel">
       <div class="card shadow-sm border-secondary-subtle">
         <div class="card-header bg-dark d-flex justify-content-between align-items-center py-2 px-3 border-secondary">
-          <span class="fw-semibold text-white small">Доступные файлы логов телеметрии</span>
+          <span class="fw-semibold text-white small"><span data-i18n="auto___f3a71c"></span></span>
           <button id="th-btn-refresh-files" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
             <i class="bi bi-arrow-clockwise"></i>
-            <span>Обновить</span>
+            <span><span data-i18n="auto___c2f668"></span></span>
           </button>
         </div>
 
@@ -270,18 +269,18 @@ Copyright: © 2026 hypo69
           <table class="table table-dark table-hover table-bordered align-middle mb-0 small" id="th-table-files">
             <thead class="table-secondary text-nowrap sticky-top">
               <tr>
-                <th style="min-width: 220px;">Имя файла</th>
-                <th style="min-width: 250px;">Полный путь</th>
-                <th style="width: 100px;" class="text-end">Размер</th>
-                <th style="width: 170px;">Дата изменения</th>
-                <th style="width: 130px;" class="text-center">Действие</th>
+                <th style="min-width: 220px;"><span data-i18n="auto___1e5ae1"></span></th>
+                <th style="min-width: 250px;"><span data-i18n="auto___e20d51"></span></th>
+                <th style="width: 100px;" class="text-end"><span data-i18n="auto___98713e"></span></th>
+                <th style="width: 170px;"><span data-i18n="auto___d1d19d"></span></th>
+                <th style="width: 130px;" class="text-center"><span data-i18n="auto___4fe9c0"></span></th>
               </tr>
             </thead>
             <tbody id="th-tbody-files">
               <tr>
                 <td colspan="5" class="text-center text-muted py-4">
                   <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
-                  Поиск файлов логов...
+                  <span data-i18n="auto___e316cd"></span>...
                 </td>
               </tr>
             </tbody>

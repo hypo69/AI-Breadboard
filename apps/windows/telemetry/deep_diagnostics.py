@@ -1,4 +1,4 @@
-"""Модуль глубокой аппаратной и системной диагностики, поведенческой форензики и анализа утечек."""
+﻿"""Модуль глубокой аппаратной и системной диагностики, поведенческой форензики и анализа утечек."""
 from __future__ import annotations
 import codecs
 import ctypes
@@ -418,7 +418,7 @@ class DeepDiagnosticsEngine:
         wifi_data: Dict[str, Any] = {'is_connected': False, 'ssid': 'Не подключено', 'bssid': '--', 'signal_pct': 0, 'rssi_dbm': -100, 'channel': 0, 'radio_type': '--', 'auth_cipher': '--'}
         audio_endpoints: List[Dict[str, Any]] = []
         try:
-            from apps.windows.api.setupapi import SetupAPI
+            from apps.windows.telemetry.api_bindings.setupapi import SetupAPI
             pnp = SetupAPI()
             devs = pnp.get_all_devices()
             for d in devs:

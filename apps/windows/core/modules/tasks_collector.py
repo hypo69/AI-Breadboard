@@ -1,11 +1,11 @@
-"""Коллектор аудита задач планировщика Windows."""
+﻿"""Коллектор аудита задач планировщика Windows."""
 from __future__ import annotations
 import json
 import subprocess
 import time
 from typing import Any, Dict, List
 from logger import logger
-from apps.windows.api.tasksched import TaskSchedulerAPI
+from apps.windows.telemetry.api_bindings.tasksched import TaskSchedulerAPI
 from apps.windows.core.models import ActionType, AuditFinding, DomainAuditResult, RemediationAction, RiskLevel
 
 class TasksCollector:

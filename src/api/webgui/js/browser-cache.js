@@ -17,59 +17,17 @@
  * на наличие предупреждений о недоступности IndexedDB.
  */
 
-const DB_NAME = 'AI_Breadboard_DB';
-const DB_VERSION = 1;
-
-// Стандартные хранилища объектов IndexedDB
-export const STORES = {
-  API_CACHE: 'api_cache',
+const DB_NAME = 'AI_Breadboard_DBi18n.t('auto__const_db_version_1_indexeddb_export_const_stores_api_cache__576b5b')api_cache',
   RAG_EMBEDDINGS: 'rag_embeddings',
   CHAT_HISTORY: 'chat_history',
   MEDIA_BLOBS: 'media_blobs',
   MODELS_REGISTRY: 'models_registry',
-  KEY_VALUE: 'key_value'
-};
-
-export class BrowserCacheManager {
-  /**
-   * Инициализация менеджера браузерного кеша
-   * @param {Object} options - Параметры конфигурации
-   * @param {number} options.defaultTTL - Время жизни по умолчанию (в мс, 1 час = 3600000)
-   * @param {number} options.maxMemoryEntries - Максимальное число записей в L1 памяти
-   */
-  constructor(options = {}) {
-    this.defaultTTL = options.defaultTTL || 60 * 60 * 1000; // 1 час
-    this.maxMemoryEntries = options.maxMemoryEntries || 200;
-    this.memoryCache = new Map(); // L1 Cache: key -> { value, expiresAt, storeName, tags }
-    this.db = null;
-    this.isDbReady = false;
-    this.initPromise = this._initIndexedDB();
-    
-    // Метрики
-    this.stats = {
-      hits: 0,
-      misses: 0,
-      writes: 0,
-      deletes: 0
-    };
-
-    // Периодическая фоновая очистка просроченных записей каждые 10 минут
-    if (typeof window !== 'undefined') {
-      window.setInterval(() => this.cleanupExpired(), 10 * 60 * 1000);
-    }
-  }
-
-  /**
-   * Инициализация базы данных IndexedDB
-   * @private
-   */
-  async _initIndexedDB() {
-    if (typeof window === 'undefined' || !window.indexedDB) {
-      console.warn('[BrowserCache] IndexedDB недоступен в текущем окружении. Используется fallback на память.');
-      console.warn('[BrowserCache] Возможные причины:');
-      console.warn('[BrowserCache] 1. Приложение запущено в PWA-окне (Edge --app=url)');
-      console.warn('[BrowserCache] 2. Ограничения безопасности браузера');
-      console.warn('[BrowserCache] 3. Поврежденный user-data-dir');
+  KEY_VALUE: 'key_valuei18n.t('auto__export_class_browsercachemanager_param_object_options_param_number_options_defaultttl_1_3600000_param_number_options_maxmemoryentries_l1_constructor_options_this_defaultttl_options_defaultttl_60_60_1000_1_this_maxmemoryentries_options_maxmemoryentries_200_this_memorycache_new_map_l1_cache_key_value_expiresat_storename_tags_this_db_null_this_isdbready_false_this_initpromise_this_initindexeddb_this_stats_hits_0_misses_0_writes_0_deletes_0_10_if_typeof_window__c955a8')undefinedi18n.t('auto__window_setinterval_this_cleanupexpired_10_60_1000_indexeddb_private_async_initindexeddb_if_typeof_window__163384')undefined' || !window.indexedDB) {
+      console.warn(i18n.t('auto__browsercache_indexeddb_fallback__e7972e'));
+      console.warn(i18n.t('auto__browsercache__d7bbb5'));
+      console.warn(i18n.t('auto__browsercache_1_pwa_edge_app_url__f064b3'));
+      console.warn(i18n.t('auto__browsercache_2__88ff63'));
+      console.warn(i18n.t('auto__browsercache_3_user_data_dir_5691ae'));
       this.isDbReady = false;
       return null;
     }
@@ -89,28 +47,28 @@ export class BrowserCacheManager {
               store.createIndex('tags', 'tags', { unique: false, multiEntry: true });
             }
           });
-          console.log('[BrowserCache] Структура IndexedDB успешно обновлена до версии', DB_VERSION);
+          console.log(i18n.t('auto__browsercache_indexeddb__daf56a'), DB_VERSION);
         };
 
         request.onsuccess = (event) => {
           this.db = event.target.result;
           this.isDbReady = true;
-          console.log('[BrowserCache] IndexedDB успешно подключена:', DB_NAME);
-          console.log('[BrowserCache] Данные будут сохраняться в профиле пользователя:', this._getUserDataDir());
+          console.log(i18n.t('auto__browsercache_indexeddb__5a2d7f'), DB_NAME);
+          console.log(i18n.t('auto__browsercache__a24f07'), this._getUserDataDir());
           this.cleanupExpired().catch(() => {});
           resolve(this.db);
         };
 
         request.onerror = (event) => {
-          console.error('[BrowserCache] Ошибка открытия IndexedDB:', event.target.error);
-          console.error('[BrowserCache] Проверьте:');
-          console.error('[BrowserCache] 1. Есть ли права на запись в user-data-dir');
-          console.error('[BrowserCache] 2. Не заблокирован ли IndexedDB политикой браузера');
+          console.error(i18n.t('auto__browsercache_indexeddb__47db9e'), event.target.error);
+          console.error(i18n.t('auto__browsercache__c18dde'));
+          console.error(i18n.t('auto__browsercache_1_user_data_dir_57bbba'));
+          console.error(i18n.t('auto__browsercache_2_indexeddb__c5f425'));
           this.isDbReady = false;
           resolve(null);
         };
       } catch (err) {
-        console.error('[BrowserCache] Исключение при инициализации IndexedDB:', err);
+        console.error(i18n.t('auto__browsercache_indexeddb__f7d503'), err);
         this.isDbReady = false;
         resolve(null);
       }
@@ -166,178 +124,9 @@ export class BrowserCacheManager {
     if (this.isDbReady && this.db) {
       try {
         await new Promise((resolve, reject) => {
-          const transaction = this.db.transaction([storeName], 'readwrite');
-          const store = transaction.objectStore(storeName);
-          const request = store.put(record);
-
-          request.onsuccess = () => resolve(true);
-          request.onerror = (e) => reject(e.target.error);
-        });
-        return true;
-      } catch (err) {
-        console.warn(`[BrowserCache] Ошибка записи в IndexedDB (${storeName}/${key}):`, err);
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Получить значение из кеша (L1 -> L2)
-   * @param {string} storeName - Имя хранилища
-   * @param {string} key - Ключ
-   * @returns {Promise<any|null>}
-   */
-  async get(storeName = STORES.KEY_VALUE, key) {
-    if (!key) return null;
-    await this.ready();
-
-    const now = Date.now();
-    const memKey = `${storeName}:${key}`;
-
-    // 1. Проверяем L1 In-Memory Cache
-    const memRecord = this.memoryCache.get(memKey);
-    if (memRecord) {
-      if (memRecord.expiresAt > 0 && now > memRecord.expiresAt) {
-        this.memoryCache.delete(memKey);
-        this.delete(storeName, key).catch(() => {});
-        this.stats.misses++;
-        return null;
-      }
-      this.stats.hits++;
-      return memRecord.value;
-    }
-
-    // 2. Проверяем L2 IndexedDB
-    if (this.isDbReady && this.db) {
-      try {
-        const record = await new Promise((resolve, reject) => {
-          const transaction = this.db.transaction([storeName], 'readonly');
-          const store = transaction.objectStore(storeName);
-          const request = store.get(key);
-
-          request.onsuccess = () => resolve(request.result);
-          request.onerror = (e) => reject(e.target.error);
-        });
-
-        if (!record) {
-          this.stats.misses++;
-          return null;
-        }
-
-        // Проверяем срок действия
-        if (record.expiresAt > 0 && now > record.expiresAt) {
-          this.delete(storeName, key).catch(() => {});
-          this.stats.misses++;
-          return null;
-        }
-
-        // Добавляем в L1 для ускорения повторных обращений
-        this._setMemoryCache(memKey, record);
-        this.stats.hits++;
-        return record.value;
-      } catch (err) {
-        console.warn(`[BrowserCache] Ошибка чтения из IndexedDB (${storeName}/${key}):`, err);
-      }
-    }
-
-    this.stats.misses++;
-    return null;
-  }
-
-  /**
-   * Проверить наличие актуального ключа в кеше
-   */
-  async has(storeName = STORES.KEY_VALUE, key) {
-    const val = await this.get(storeName, key);
-    return val !== null;
-  }
-
-  /**
-   * Удалить запись из кеша
-   * @param {string} storeName - Имя хранилища
-   * @param {string} key - Ключ
-   */
-  async delete(storeName = STORES.KEY_VALUE, key) {
-    if (!key) return false;
-    await this.ready();
-
-    const memKey = `${storeName}:${key}`;
-    this.memoryCache.delete(memKey);
-    this.stats.deletes++;
-
-    if (this.isDbReady && this.db) {
-      try {
-        await new Promise((resolve, reject) => {
-          const transaction = this.db.transaction([storeName], 'readwrite');
-          const store = transaction.objectStore(storeName);
-          const request = store.delete(key);
-
-          request.onsuccess = () => resolve(true);
-          request.onerror = (e) => reject(e.target.error);
-        });
-        return true;
-      } catch (err) {
-        console.warn(`[BrowserCache] Ошибка удаления из IndexedDB (${storeName}/${key}):`, err);
-      }
-    }
-    return true;
-  }
-
-  /**
-   * Инвалидировать записи по тегу (например: 'models', 'chat_session_1')
-   * @param {string} storeName - Имя хранилища
-   * @param {string} tag - Тег для поиска
-   */
-  async invalidateByTag(storeName = STORES.KEY_VALUE, tag) {
-    await this.ready();
-
-    // Удаляем из L1
-    for (const [memKey, record] of this.memoryCache.entries()) {
-      if (memKey.startsWith(`${storeName}:`) && record.tags && record.tags.includes(tag)) {
-        this.memoryCache.delete(memKey);
-      }
-    }
-
-    if (!this.isDbReady || !this.db) return 0;
-
-    let count = 0;
-    try {
-      count = await new Promise((resolve, reject) => {
-        const transaction = this.db.transaction([storeName], 'readwrite');
+          const transaction = this.db.transaction([storeName], 'readwritei18n.t('auto__const_store_transaction_objectstore_storename_const_request_store_put_record_request_onsuccess_resolve_true_request_onerror_e_reject_e_target_error_return_true_catch_err_console_warn_browsercache_indexeddb_storename_key_err_return_true_l1_l2_param_string_storename_param_string_key_returns_promise_any_null_async_get_storename_stores_key_value_key_if_key_return_null_await_this_ready_const_now_date_now_const_memkey_storename_key_1_l1_in_memory_cache_const_memrecord_this_memorycache_get_memkey_if_memrecord_if_memrecord_expiresat_0_now_memrecord_expiresat_this_memorycache_delete_memkey_this_delete_storename_key_catch_this_stats_misses_return_null_this_stats_hits_return_memrecord_value_2_l2_indexeddb_if_this_isdbready_this_db_try_const_record_await_new_promise_resolve_reject_const_transaction_this_db_transaction_storename__2a5bc8')readonlyi18n.t('auto__const_store_transaction_objectstore_storename_const_request_store_get_key_request_onsuccess_resolve_request_result_request_onerror_e_reject_e_target_error_if_record_this_stats_misses_return_null_if_record_expiresat_0_now_record_expiresat_this_delete_storename_key_catch_this_stats_misses_return_null_l1_this_setmemorycache_memkey_record_this_stats_hits_return_record_value_catch_err_console_warn_browsercache_indexeddb_storename_key_err_this_stats_misses_return_null_async_has_storename_stores_key_value_key_const_val_await_this_get_storename_key_return_val_null_param_string_storename_param_string_key_async_delete_storename_stores_key_value_key_if_key_return_false_await_this_ready_const_memkey_storename_key_this_memorycache_delete_memkey_this_stats_deletes_if_this_isdbready_this_db_try_await_new_promise_resolve_reject_const_transaction_this_db_transaction_storename__0e4115')readwritei18n.t('auto__const_store_transaction_objectstore_storename_const_request_store_delete_key_request_onsuccess_resolve_true_request_onerror_e_reject_e_target_error_return_true_catch_err_console_warn_browsercache_indexeddb_storename_key_err_return_true__c8957c')models', 'chat_session_1i18n.t('auto__param_string_storename_param_string_tag_async_invalidatebytag_storename_stores_key_value_tag_await_this_ready_l1_for_const_memkey_record_of_this_memorycache_entries_if_memkey_startswith_storename_record_tags_record_tags_includes_tag_this_memorycache_delete_memkey_if_this_isdbready_this_db_return_0_let_count_0_try_count_await_new_promise_resolve_reject_const_transaction_this_db_transaction_storename__9b6fdb')readwrite');
         const store = transaction.objectStore(storeName);
-        const index = store.index('tags');
-        const request = index.getAllKeys(tag);
-
-        request.onsuccess = () => {
-          const keys = request.result || [];
-          keys.forEach((k) => store.delete(k));
-          resolve(keys.length);
-        };
-        request.onerror = (e) => reject(e.target.error);
-      });
-      console.log(`[BrowserCache] Инвалидировано ${count} записей по тегу '${tag}' в '${storeName}'`);
-    } catch (err) {
-      console.warn(`[BrowserCache] Ошибка инвалидации по тегу '${tag}':`, err);
-    }
-    return count;
-  }
-
-  /**
-   * Инвалидировать записи по регулярному выражению или префиксу ключа
-   * @param {string} storeName - Имя хранилища
-   * @param {string|RegExp} pattern - Регулярное выражение или строка префикса
-   */
-  async invalidateByPattern(storeName = STORES.KEY_VALUE, pattern) {
-    await this.ready();
-
-    const isRegExp = pattern instanceof RegExp;
-    const testMatch = (key) => isRegExp ? pattern.test(key) : (key === pattern || key.startsWith(pattern));
-
-    // Очистка L1
-    for (const [memKey] of this.memoryCache.entries()) {
-      if (memKey.startsWith(`${storeName}:`)) {
-        const rawKey = memKey.replace(`${storeName}:`, '');
+        const index = store.index('tagsi18n.t('auto__const_request_index_getallkeys_tag_request_onsuccess_const_keys_request_result_keys_foreach_k_store_delete_k_resolve_keys_length_request_onerror_e_reject_e_target_error_console_log_browsercache_count__043a38')${tag}i18n.t('auto___1309b9')${storeName}i18n.t('auto__catch_err_console_warn_browsercache__5eccda')${tag}i18n.t('auto__err_return_count_param_string_storename_param_string_regexp_pattern_async_invalidatebypattern_storename_stores_key_value_pattern_await_this_ready_const_isregexp_pattern_instanceof_regexp_const_testmatch_key_isregexp_pattern_test_key_key_pattern_key_startswith_pattern_l1_for_const_memkey_of_this_memorycache_entries_if_memkey_startswith_storename_const_rawkey_memkey_replace_storename__9fe131')');
         if (testMatch(rawKey)) {
           this.memoryCache.delete(memKey);
         }
@@ -349,147 +138,10 @@ export class BrowserCacheManager {
     let deletedCount = 0;
     try {
       deletedCount = await new Promise((resolve, reject) => {
-        const transaction = this.db.transaction([storeName], 'readwrite');
-        const store = transaction.objectStore(storeName);
-        const request = store.openCursor();
-
-        request.onsuccess = (event) => {
-          const cursor = event.target.result;
-          if (cursor) {
-            if (testMatch(cursor.key)) {
-              cursor.delete();
-              deletedCount++;
-            }
-            cursor.continue();
-          } else {
-            resolve(deletedCount);
-          }
-        };
-        request.onerror = (e) => reject(e.target.error);
-      });
-      console.log(`[BrowserCache] Инвалидировано ${deletedCount} записей по паттерну в '${storeName}'`);
-    } catch (err) {
-      console.warn(`[BrowserCache] Ошибка инвалидации по паттерну в '${storeName}':`, err);
-    }
-    return deletedCount;
-  }
-
-  /**
-   * Полностью очистить указанное хранилище
-   * @param {string} storeName - Имя хранилища
-   */
-  async clearStore(storeName = STORES.KEY_VALUE) {
-    await this.ready();
-
-    // Очистка L1
-    for (const [memKey] of this.memoryCache.entries()) {
-      if (memKey.startsWith(`${storeName}:`)) {
-        this.memoryCache.delete(memKey);
-      }
-    }
-
-    if (this.isDbReady && this.db) {
-      try {
-        await new Promise((resolve, reject) => {
-          const transaction = this.db.transaction([storeName], 'readwrite');
+        const transaction = this.db.transaction([storeName], 'readwritei18n.t('auto__const_store_transaction_objectstore_storename_const_request_store_opencursor_request_onsuccess_event_const_cursor_event_target_result_if_cursor_if_testmatch_cursor_key_cursor_delete_deletedcount_cursor_continue_else_resolve_deletedcount_request_onerror_e_reject_e_target_error_console_log_browsercache_deletedcount__e32068')${storeName}i18n.t('auto__catch_err_console_warn_browsercache__2cf4b4')${storeName}i18n.t('auto__err_return_deletedcount_param_string_storename_async_clearstore_storename_stores_key_value_await_this_ready_l1_for_const_memkey_of_this_memorycache_entries_if_memkey_startswith_storename_this_memorycache_delete_memkey_if_this_isdbready_this_db_try_await_new_promise_resolve_reject_const_transaction_this_db_transaction_storename__c1a10a')readwritei18n.t('auto__const_store_transaction_objectstore_storename_const_request_store_clear_request_onsuccess_resolve_true_request_onerror_e_reject_e_target_error_console_log_browsercache__5dae6a')${storeName}i18n.t('auto__return_true_catch_err_console_warn_browsercache__b3110a')${storeName}i18n.t('auto__err_return_true_async_clearall_this_memorycache_clear_for_const_storename_of_object_values_stores_await_this_clearstore_storename_console_log__7c9b5f')[BrowserCache] Все хранилища браузерного кеша очищены.i18n.t('auto__async_cleanupexpired_await_this_ready_const_now_date_now_l1_for_const_memkey_record_of_this_memorycache_entries_if_record_expiresat_0_now_record_expiresat_this_memorycache_delete_memkey_if_this_isdbready_this_db_return_0_let_totaldeleted_0_for_const_storename_of_object_values_stores_try_const_deletedinstore_await_new_promise_resolve_reject_const_transaction_this_db_transaction_storename__8cf8d1')readwrite');
           const store = transaction.objectStore(storeName);
-          const request = store.clear();
-
-          request.onsuccess = () => resolve(true);
-          request.onerror = (e) => reject(e.target.error);
-        });
-        console.log(`[BrowserCache] Хранилище '${storeName}' полностью очищено.`);
-        return true;
-      } catch (err) {
-        console.warn(`[BrowserCache] Ошибка очистки хранилища '${storeName}':`, err);
-      }
-    }
-    return true;
-  }
-
-  /**
-   * Очистить абсолютно все хранилища
-   */
-  async clearAll() {
-    this.memoryCache.clear();
-    for (const storeName of Object.values(STORES)) {
-      await this.clearStore(storeName);
-    }
-    console.log('[BrowserCache] Все хранилища браузерного кеша очищены.');
-  }
-
-  /**
-   * Очистить просроченные записи во всех хранилищах
-   */
-  async cleanupExpired() {
-    await this.ready();
-    const now = Date.now();
-
-    // L1
-    for (const [memKey, record] of this.memoryCache.entries()) {
-      if (record.expiresAt > 0 && now > record.expiresAt) {
-        this.memoryCache.delete(memKey);
-      }
-    }
-
-    if (!this.isDbReady || !this.db) return 0;
-
-    let totalDeleted = 0;
-    for (const storeName of Object.values(STORES)) {
-      try {
-        const deletedInStore = await new Promise((resolve, reject) => {
-          const transaction = this.db.transaction([storeName], 'readwrite');
-          const store = transaction.objectStore(storeName);
-          const index = store.index('expiresAt');
-          const range = IDBKeyRange.bound(1, now);
-          const request = index.openCursor(range);
-          let count = 0;
-
-          request.onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (cursor) {
-              cursor.delete();
-              count++;
-              cursor.continue();
-            } else {
-              resolve(count);
-            }
-          };
-          request.onerror = (e) => reject(e.target.error);
-        });
-        totalDeleted += deletedInStore;
-      } catch (e) {
-        // Игнорируем возможные локальные ошибки курсора
-      }
-    }
-
-    if (totalDeleted > 0) {
-      console.log(`[BrowserCache] Фоновый сборщик мусора удалил ${totalDeleted} просроченных записей.`);
-    }
-    return totalDeleted;
-  }
-
-  /**
-   * Получить детальную статистику использования кеша и дисковой квоты
-   */
-  async getDetailedStats() {
-    await this.ready();
-    const stats = {
-      metrics: { ...this.stats },
-      memoryCacheSize: this.memoryCache.size,
-      stores: {},
-      storageEstimate: {
-        usage: 0,
-        quota: 0,
-        usageMB: '0.00',
-        quotaMB: '0.00',
-        percentUsed: 0,
-        isPersisted: false
-      }
-    };
-
-    // Оценка дискового пространства через navigator.storage API
-    if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.estimate) {
+          const index = store.index('expiresAti18n.t('auto__const_range_idbkeyrange_bound_1_now_const_request_index_opencursor_range_let_count_0_request_onsuccess_event_const_cursor_event_target_result_if_cursor_cursor_delete_count_cursor_continue_else_resolve_count_request_onerror_e_reject_e_target_error_totaldeleted_deletedinstore_catch_e_if_totaldeleted_0_console_log_browsercache_totaldeleted_return_totaldeleted_async_getdetailedstats_await_this_ready_const_stats_metrics_this_stats_memorycachesize_this_memorycache_size_stores_storageestimate_usage_0_quota_0_usagemb__896243')0.00',
+        quotaMB: '0.00i18n.t('auto__percentused_0_ispersisted_false_navigator_storage_api_if_typeof_navigator__52c4a1')undefined' && navigator.storage && navigator.storage.estimate) {
       try {
         const estimate = await navigator.storage.estimate();
         const usage = estimate.usage || 0;
@@ -512,7 +164,7 @@ export class BrowserCacheManager {
           isPersisted
         };
       } catch (err) {
-        console.warn('[BrowserCache] Не удалось получить navigator.storage.estimate:', err);
+        console.warn(i18n.t('auto__browsercache_navigator_storage_estimate__699b30'), err);
       }
     }
 
@@ -547,21 +199,7 @@ export class BrowserCacheManager {
             sizeMB: (storeData.sizeBytes / (1024 * 1024)).toFixed(2)
           };
         } catch (e) {
-          stats.stores[storeName] = { count: 0, sizeBytes: 0, sizeKB: '0', sizeMB: '0' };
-        }
-      }
-    }
-
-    return stats;
-  }
-
-  /**
-   * Запросить у браузера постоянное хранилище (защита от случайной очистки)
-   */
-  async requestPersistence() {
-    if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) {
-      const isPersisted = await navigator.storage.persist();
-      console.log(`[BrowserCache] Запрос персистентности хранилища: ${isPersisted ? 'Одобрено' : 'Отклонено'}`);
+          stats.stores[storeName] = { count: 0, sizeBytes: 0, sizeKB: '0', sizeMB: '0i18n.t('auto__return_stats_async_requestpersistence_if_typeof_navigator__8155bf')undefinedi18n.t('auto__navigator_storage_navigator_storage_persist_const_ispersisted_await_navigator_storage_persist_console_log_browsercache_ispersisted__1f8649')Одобрено' : i18n.t('auto___b0a5f2')}`);
       return isPersisted;
     }
     return false;
@@ -588,85 +226,12 @@ export class BrowserCacheManager {
     for (const storeName of storeNames) {
       try {
         const records = await new Promise((resolve, reject) => {
-          const transaction = this.db.transaction([storeName], 'readonly');
-          const store = transaction.objectStore(storeName);
-          const request = store.getAll();
-          request.onsuccess = () => resolve(request.result || []);
-          request.onerror = (e) => reject(e.target.error);
-        });
-        exportResult.stores[storeName] = records;
-      } catch (err) {
-        console.warn(`[BrowserCache] Ошибка экспорта из ${storeName}:`, err);
-      }
-    }
-
-    return exportResult;
-  }
-
-  /**
-   * Импортировать данные в хранилища
-   * @param {Object} data - Экспортированный объект данных
-   */
-  async importData(data) {
-    if (!data || !data.stores) return false;
-    await this.ready();
-
-    for (const [storeName, records] of Object.entries(data.stores)) {
-      if (!Object.values(STORES).includes(storeName)) continue;
-      if (!Array.isArray(records)) continue;
-
-      for (const record of records) {
-        if (record && record.key) {
-          await this.set(storeName, record.key, record.value, {
-            ttl: record.expiresAt ? Math.max(0, record.expiresAt - Date.now()) : 0,
-            tags: record.tags || []
-          });
-        }
-      }
-    }
-    console.log('[BrowserCache] Импорт данных успешно завершен.');
-    return true;
-  }
-
-  /**
-   * Добавить запись в L1 In-Memory Cache с контролем размера (LRU eviction)
-   * @private
-   */
-  _setMemoryCache(key, record) {
-    if (this.memoryCache.size >= this.maxMemoryEntries) {
-      const firstKey = this.memoryCache.keys().next().value;
-      if (firstKey) this.memoryCache.delete(firstKey);
-    }
-    this.memoryCache.set(key, record);
-  }
-
-  /**
-   * Приблизительная оценка размера объекта в байтах
-   * @private
-   */
-  _estimateSize(value) {
-    if (value === null || value === undefined) return 0;
-    if (typeof value === 'string') return value.length * 2;
+          const transaction = this.db.transaction([storeName], 'readonlyi18n.t('auto__const_store_transaction_objectstore_storename_const_request_store_getall_request_onsuccess_resolve_request_result_request_onerror_e_reject_e_target_error_exportresult_stores_storename_records_catch_err_console_warn_browsercache_storename_err_return_exportresult_param_object_data_async_importdata_data_if_data_data_stores_return_false_await_this_ready_for_const_storename_records_of_object_entries_data_stores_if_object_values_stores_includes_storename_continue_if_array_isarray_records_continue_for_const_record_of_records_if_record_record_key_await_this_set_storename_record_key_record_value_ttl_record_expiresat_math_max_0_record_expiresat_date_now_0_tags_record_tags_console_log__da1984')[BrowserCache] Импорт данных успешно завершен.i18n.t('auto__return_true_l1_in_memory_cache_lru_eviction_private_setmemorycache_key_record_if_this_memorycache_size_this_maxmemoryentries_const_firstkey_this_memorycache_keys_next_value_if_firstkey_this_memorycache_delete_firstkey_this_memorycache_set_key_record_private_estimatesize_value_if_value_null_value_undefined_return_0_if_typeof_value__ba64b3')string') return value.length * 2;
     if (typeof value === 'number') return 8;
     if (typeof value === 'boolean') return 4;
     if (typeof Blob !== 'undefined' && value instanceof Blob) return value.size;
-    if (typeof ArrayBuffer !== 'undefined' && value instanceof ArrayBuffer) return value.byteLength;
-    try {
-      return JSON.stringify(value).length * 2;
-    } catch {
-      return 1024;
-    }
-  }
-  
-  /**
-   * Попытка получить путь к user-data-dir (для отладки)
-   * @private
-   */
-  _getUserDataDir() {
-    // В браузере этот путь недоступен из-за ограничений безопасности
-    // Но мы можем попытаться определить, запущено ли приложение в PWA-окне
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches;
-    return isPWA ? '[PWA-окно - путь недоступен]' : '[Обычное окно]';
+    if (typeof ArrayBuffer !== 'undefinedi18n.t('auto__value_instanceof_arraybuffer_return_value_bytelength_try_return_json_stringify_value_length_2_catch_return_1024_user_data_dir_private_getuserdatadir_pwa_const_ispwa_window_matchmedia__36b4ac')(display-mode: standalone)').matches;
+    return isPWA ? i18n.t('auto__pwa__f7dd6a') : i18n.t('auto___522c32');
   }
 }
 

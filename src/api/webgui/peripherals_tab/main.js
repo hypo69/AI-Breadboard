@@ -51,7 +51,7 @@
       // Wi-Fi
       if (data.wifi_telemetry) {
         const w = data.wifi_telemetry;
-        setText('diag-wifi-ssid', w.ssid || 'Не подключено');
+        setText('diag-wifi-ssid', w.ssid || i18n.t('auto___657ac8'));
         setText('diag-wifi-bssid', w.bssid || '--');
         setText('diag-wifi-signal', `${w.signal_pct}% (${w.rssi_dbm} dBm)`);
         setText('diag-wifi-channel', w.channel || '--');
@@ -62,10 +62,10 @@
         if (wifiBadge) {
           if (w.is_connected) {
             wifiBadge.className = 'badge bg-success-subtle text-success border border-success';
-            wifiBadge.textContent = 'Wi-Fi Подключено';
+            wifiBadge.textContent = i18n.t('auto_wi_fi__820423');
           } else {
             wifiBadge.className = 'badge bg-secondary';
-            wifiBadge.textContent = 'Wi-Fi Отключено';
+            wifiBadge.textContent = i18n.t('auto_wi_fi__4cfdea');
           }
         }
       }
@@ -73,9 +73,7 @@
       // Audio Endpoints
       const audioContainer = document.getElementById('diag-audio-container');
       if (audioContainer && data.audio_endpoints) {
-        setText('diag-audio-count', `${data.audio_endpoints.length} устр.`);
-        if (data.audio_endpoints.length === 0) {
-          audioContainer.innerHTML = '<div class="text-center py-4 text-muted small">Аудиоустройств не обнаружено</div>';
+        setText('diag-audio-counti18n.t('auto__data_audio_endpoints_length_if_data_audio_endpoints_length_0_audiocontainer_innerhtml__3f04b4')<div class="text-center py-4 text-muted small">Аудиоустройств не обнаружено</div>';
         } else {
           audioContainer.innerHTML = data.audio_endpoints.map(a => `
             <div class="p-2 mb-1 rounded bg-black bg-opacity-30 border border-secondary-subtle d-flex align-items-center justify-content-between">
@@ -83,7 +81,7 @@
                 <strong class="text-white"><i class="bi bi-speaker me-1.5 text-warning"></i>${escapeHtml(a.name)}</strong>
                 <div class="small text-muted">${escapeHtml(a.type)}</div>
               </div>
-              <span class="badge ${a.is_default ? 'bg-info text-dark fw-bold' : 'bg-secondary'}">${a.is_default ? 'По умолчанию' : 'Доступно'}</span>
+              <span class="badge ${a.is_default ? 'bg-info text-dark fw-bold' : 'bg-secondary'}">${a.is_default ? i18n.t('auto___469631') : i18n.t('auto___f925ca')}</span>
             </div>
           `).join('');
         }
@@ -92,9 +90,7 @@
       // USB PnP Table
       const usbTbody = document.getElementById('diag-usb-tbody');
       if (usbTbody && data.usb_devices) {
-        setText('diag-usb-count', `${data.usb_devices.length} устройств`);
-        if (data.usb_devices.length === 0) {
-          usbTbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">USB устройств не обнаружено</td></tr>';
+        setText('diag-usb-counti18n.t('auto__data_usb_devices_length_if_data_usb_devices_length_0_usbtbody_innerhtml__85d56a')<tr><td colspan="6" class="text-center py-4 text-muted">USB устройств не обнаружено</td></tr>';
         } else {
           usbTbody.innerHTML = data.usb_devices.map(u => `
             <tr>

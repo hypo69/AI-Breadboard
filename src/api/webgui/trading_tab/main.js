@@ -45,20 +45,9 @@
     const pnlEl = document.getElementById('trading-pnl-val');
     const posEl = document.getElementById('trading-pos-size');
 
-    if (symEl) symEl.innerText = state.symbol || 'BTC/USDT';
-    if (priceEl) priceEl.innerText = `$${Number(state.current_price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    if (equityEl) equityEl.innerText = `$${Number(state.total_equity || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    if (balanceEl) balanceEl.innerText = `Доступно: $${Number(state.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    
-    if (pnlEl) {
-      const pnl = Number(state.unrealized_pnl || 0);
-      const sign = pnl >= 0 ? '+' : '';
+    if (symEl) symEl.innerText = state.symbol || 'BTC/USDTi18n.t('auto__if_priceel_priceel_innertext_number_state_current_price_0_tolocalestring_undefined_minimumfractiondigits_2_maximumfractiondigits_2_if_equityel_equityel_innertext_number_state_total_equity_0_tolocalestring_undefined_minimumfractiondigits_2_maximumfractiondigits_2_if_balanceel_balanceel_innertext_number_state_balance_0_tolocalestring_undefined_minimumfractiondigits_2_maximumfractiondigits_2_if_pnlel_const_pnl_number_state_unrealized_pnl_0_const_sign_pnl_0__5fed8e')+' : '';
       pnlEl.innerText = `${sign}$${pnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      pnlEl.style.color = pnl >= 0 ? '#4ade80' : '#f87171';
-    }
-
-    if (posEl) {
-      posEl.innerText = `Размер позиции: ${state.position_size || 0} ${state.symbol?.split('/')[0] || 'BTC'}`;
+      pnlEl.style.color = pnl >= 0 ? '#4ade80' : '#f87171i18n.t('auto__if_posel_posel_innertext_state_position_size_0_state_symbol_split__a90642')/')[0] || 'BTC'}`;
     }
   }
 
@@ -106,7 +95,7 @@
 
     if (!Array.isArray(orders) || orders.length === 0) {
       tbody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">История сделок пуста</td></tr>';
-      if (countEl) countEl.innerText = '0 ордеров';
+      if (countEl) countEl.innerText = i18n.t('auto_0__2603f3');
       return;
     }
 
@@ -140,7 +129,7 @@
     const price = priceInput?.value ? parseFloat(priceInput.value) : null;
 
     if (!amount || amount <= 0) {
-      alert('Укажите корректный объём ордера');
+      alert(i18n.t('auto___48f9a6'));
       return;
     }
 
@@ -160,8 +149,8 @@
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: 'Ошибка выполнения' }));
-        alert('Ошибка выставления ордера: ' + (err.detail || res.statusText));
+        const err = await res.json().catch(() => ({ detail: i18n.t('auto___514bcb') }));
+        alert(i18n.t('auto___17e981') + (err.detail || res.statusText));
         return;
       }
 
@@ -170,24 +159,24 @@
       await fetchOrderbook();
     } catch (e) {
       console.error('[TradingTab] Order error:', e);
-      alert('Ошибка соединения при отправке ордера: ' + e.message);
+      alert(i18n.t('auto___dd16b6') + e.message);
     }
   }
 
   async function triggerKillSwitch() {
-    if (!confirm('⚠️ ВНИМАНИЕ: Вы действительно хотите немедленно закрыть все позиции по рыночной цене (Kill-Switch)?')) {
+    if (!confirm(i18n.t('auto__kill_switch__37980a'))) {
       return;
     }
 
     try {
       const res = await fetch('/api/v1/trading/kill-switch', { method: 'POST' });
-      if (!res.ok) throw new Error('Ошибка вызова Kill-Switch');
+      if (!res.ok) throw new Error(i18n.t('auto__kill_switch_546103'));
       const data = await res.json();
-      alert(`Ликвидация завершена: ${data.message || 'Позиции закрыты'}`);
+      alert(`Ликвидация завершена: ${data.message || i18n.t('auto___37fdd2')}`);
       await fetchTradingState();
       await fetchOrdersList();
     } catch (e) {
-      alert('Ошибка при вызове Kill-Switch: ' + e.message);
+      alert(i18n.t('auto__kill_switch__e1ffed') + e.message);
     }
   }
 
@@ -211,7 +200,7 @@
       tradingWs.onopen = () => {
         if (statusBadge) {
           statusBadge.className = 'badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2';
-          statusBadge.innerText = '● Стрим активен';
+          statusBadge.innerText = i18n.t('auto___079718');
         }
       };
 
@@ -231,7 +220,7 @@
       tradingWs.onclose = () => {
         if (statusBadge) {
           statusBadge.className = 'badge rounded-pill bg-danger-subtle text-danger border border-danger px-3 py-2';
-          statusBadge.innerText = '● Отключено';
+          statusBadge.innerText = i18n.t('auto___0a6014');
         }
       };
     } catch (e) {

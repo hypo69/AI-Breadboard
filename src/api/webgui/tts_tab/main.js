@@ -24,7 +24,7 @@ function ttsNotify(msg, type = 'info') {
 const ADMIN_VOICE_MAP = {
   'browser': [], // Populated dynamically from window.speechSynthesis
   'gtts': [
-    { value: 'ru', label: 'Русский (Google TTS)' },
+    { value: 'ru', label: i18n.t('auto__google_tts__7a64a4') },
     { value: 'en', label: 'English (Google TTS)' },
     { value: 'he', label: 'עברית (Google TTS)' },
     { value: 'de', label: 'Deutsch (Google TTS)' },
@@ -32,8 +32,8 @@ const ADMIN_VOICE_MAP = {
     { value: 'es', label: 'Español (Google TTS)' }
   ],
   'edge-tts': [
-    { value: 'ru-RU-DmitryNeural', label: 'Дмитрий (RU - Мужской)' },
-    { value: 'ru-RU-SvetlanaNeural', label: 'Светлана (RU - Женский)' },
+    { value: 'ru-RU-DmitryNeural', label: i18n.t('auto__ru__b17f23') },
+    { value: 'ru-RU-SvetlanaNeural', label: i18n.t('auto__ru__561ddc') },
     { value: 'en-US-JennyNeural', label: 'Jenny (US - Female)' },
     { value: 'en-US-GuyNeural', label: 'Guy (US - Male)' },
     { value: 'en-US-AriaNeural', label: 'Aria (US - Female)' },
@@ -49,12 +49,12 @@ const ADMIN_VOICE_MAP = {
     { value: 'es-ES-AlvaroNeural', label: 'Alvaro (ES - Male)' }
   ],
   'silero': [
-    { value: 'eugene', label: 'Евгений (Silero RU)' },
-    { value: 'aidar', label: 'Айдар (Silero RU)' },
-    { value: 'baya', label: 'Бая (Silero RU)' },
-    { value: 'kseniya', label: 'Ксения (Silero RU)' },
-    { value: 'xenia', label: 'Ксения v2 (Silero RU)' },
-    { value: 'random', label: 'Рандомный (Silero RU)' }
+    { value: 'eugene', label: i18n.t('auto__silero_ru__f99bbd') },
+    { value: 'aidar', label: i18n.t('auto__silero_ru__608b29') },
+    { value: 'baya', label: i18n.t('auto__silero_ru__d225bb') },
+    { value: 'kseniya', label: i18n.t('auto__silero_ru__806161') },
+    { value: 'xenia', label: i18n.t('auto__v2_silero_ru__f4517c') },
+    { value: 'random', label: i18n.t('auto__silero_ru__fbfae5') }
   ]
 };
 
@@ -71,8 +71,7 @@ function getFriendlyVoiceName(system, voice) {
     const found = ADMIN_VOICE_MAP['gtts'].find(v => v.value === voice);
     return found ? found.label : `Google TTS (${voice})`;
   }
-  if (system === 'browser') {
-    return `Браузерный (${voice || 'По умолчанию'})`;
+  if (system === 'browseri18n.t('auto__return_voice__265617')По умолчанию'})`;
   }
   return `${system} — ${voice}`;
 }
@@ -132,7 +131,7 @@ async function initTtsTab() {
         .map(v => ({ value: v.name, label: `[${v.lang}] ${v.name}` }));
       
       if (ADMIN_VOICE_MAP['browser'].length === 0) {
-        ADMIN_VOICE_MAP['browser'].push({ value: 'default', label: 'Браузер по умолчанию' });
+        ADMIN_VOICE_MAP['browser'].push({ value: 'default', label: i18n.t('auto___6677a9') });
       }
       
       if (engineSelect.value === 'browser') {
@@ -170,7 +169,7 @@ async function initTtsTab() {
   btnSpeak.addEventListener('click', async () => {
     const text = document.getElementById('admin-tts-text').value.trim();
     if (!text) {
-      ttsNotify('Пожалуйста, введите текст для озвучки', 'warning');
+      ttsNotify(i18n.t('auto___3eeddc'), 'warning');
       return;
     }
 
@@ -192,7 +191,7 @@ async function initTtsTab() {
         }
         
         ttsStatus.classList.remove('d-none');
-        statusText.textContent = 'Воспроизведение браузером...';
+        statusText.textContent = i18n.t('auto___0bd0fc');
         
         utterance.onend = () => ttsStatus.classList.add('d-none');
         utterance.onerror = () => ttsStatus.classList.add('d-none');
@@ -200,14 +199,14 @@ async function initTtsTab() {
         window.speechSynthesis.speak(utterance);
         playerContainer.classList.add('d-none');
       } else {
-        ttsNotify('Ваш браузер не поддерживает Web Speech API', 'danger');
+        ttsNotify(i18n.t('auto__web_speech_api_542e33'), 'danger');
       }
       return;
     }
 
     // Server-side synthesis
     ttsStatus.classList.remove('d-none');
-    statusText.textContent = 'Синтез аудиофайла на сервере...';
+    statusText.textContent = i18n.t('auto___dd2293');
     btnSpeak.disabled = true;
     playerContainer.classList.add('d-none');
 
@@ -232,14 +231,14 @@ async function initTtsTab() {
 
       audioPlayer.onerror = (err) => {
         console.error('Audio element error:', err);
-        statusText.textContent = 'Ошибка загрузки аудиофайла';
+        statusText.textContent = i18n.t('auto___57cd75');
         btnSpeak.disabled = false;
         setTimeout(() => ttsStatus.classList.add('d-none'), 3000);
       };
 
     } catch (err) {
       console.error(err);
-      statusText.textContent = 'Ошибка сети';
+      statusText.textContent = i18n.t('auto___c00aca');
       btnSpeak.disabled = false;
       setTimeout(() => ttsStatus.classList.add('d-none'), 3000);
     }
@@ -269,14 +268,14 @@ async function initTtsTab() {
 
       if (response.ok) {
         updateActiveBadge(engine, voice);
-        ttsNotify('Настройки TTS успешно применены по умолчанию!', 'success');
+        ttsNotify(i18n.t('auto__tts__141e91'), 'success');
       } else {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.detail || 'Ошибка сохранения настроек');
+        throw new Error(errData.detail || i18n.t('auto___65e520'));
       }
     } catch (err) {
       console.error(err);
-      ttsNotify('Не удалось сохранить настройки: ' + err.message, 'danger');
+      ttsNotify(i18n.t('auto___6eda4f') + err.message, 'danger');
     } finally {
       btnSave.disabled = false;
       btnSave.innerHTML = originalText;

@@ -103,20 +103,20 @@
   <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
     <div>
       <h6 class="mb-0 fw-bold text-white d-flex align-items-center gap-2">
-        <span>⚡</span> Монитор оборудования и сенсоров Windows
+        <span>⚡</span> <span data-i18n="auto___a1d784"></span> Windows
       </h6>
       <div class="small text-muted" style="font-size: 0.72rem;">
-        Телеметрия CPU, RAM, GPU, термодатчиков, кулеров, напряжений и диагностика накопителей S.M.A.R.T.
+        <span data-i18n="auto__cpu_ram_gpu__001afc"></span> S.M.A.R.T.
       </div>
     </div>
     <div class="d-flex align-items-center gap-2">
       <div class="form-check form-switch mb-0 small text-muted">
         <input class="form-check-input" type="checkbox" id="hw-auto-refresh" checked>
-        <label class="form-check-label small" for="hw-auto-refresh">Автообновление (3с)</label>
+        <label class="form-check-label small" for="hw-auto-refresh"><span data-i18n="auto__3__87d4e3"></span>)</label>
       </div>
       <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="hw-btn-refresh">
         <i class="bi bi-arrow-clockwise"></i>
-        <span>Обновить</span>
+        <span><span data-i18n="auto___c2f668"></span></span>
       </button>
     </div>
   </div>
@@ -126,41 +126,41 @@
     <div class="col-6 col-md-3">
       <div class="hw-card">
         <div class="hw-card-label">
-          <span>Процессор (CPU)</span>
+          <span><span data-i18n="auto___ef345a"></span> (CPU)</span>
           <span class="badge bg-primary" id="hw-cpu-cores">- cores</span>
         </div>
         <div class="hw-card-value text-info" id="hw-val-cpu">- %</div>
-        <div class="hw-card-sub text-truncate" id="hw-sub-cpu">Загрузка процессора</div>
+        <div class="hw-card-sub text-truncate" id="hw-sub-cpu"><span data-i18n="auto___0e42e9"></span></div>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="hw-card">
         <div class="hw-card-label">
-          <span>Память (RAM)</span>
+          <span><span data-i18n="auto___f63c10"></span> (RAM)</span>
           <span class="badge bg-success" id="hw-ram-total">- GB</span>
         </div>
         <div class="hw-card-value text-success" id="hw-val-ram">- %</div>
-        <div class="hw-card-sub text-truncate" id="hw-sub-ram">Занято памяти</div>
+        <div class="hw-card-sub text-truncate" id="hw-sub-ram"><span data-i18n="auto___07d65a"></span></div>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="hw-card">
         <div class="hw-card-label">
-          <span>Видеокарта (GPU)</span>
+          <span><span data-i18n="auto___ec2d93"></span> (GPU)</span>
           <span class="badge bg-warning text-dark" id="hw-gpu-count">0 GPU</span>
         </div>
         <div class="hw-card-value text-warning" id="hw-val-gpu">- %</div>
-        <div class="hw-card-sub text-truncate" id="hw-sub-gpu">Загрузка GPU</div>
+        <div class="hw-card-sub text-truncate" id="hw-sub-gpu"><span data-i18n="auto___c98fa8"></span> GPU</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="hw-card">
         <div class="hw-card-label">
-          <span>Сенсоры и Температура</span>
-          <span class="badge bg-info text-dark" id="hw-sensor-count">0 шт.</span>
+          <span><span data-i18n="auto___df2f94"></span></span>
+          <span class="badge bg-info text-dark" id="hw-sensor-count">0 <span data-i18n="auto___a5640e"></span>.</span>
         </div>
         <div class="hw-card-value text-danger" id="hw-val-temp">- °C</div>
-        <div class="hw-card-sub text-truncate" id="hw-sub-temp">Максимальная t°</div>
+        <div class="hw-card-sub text-truncate" id="hw-sub-temp"><span data-i18n="auto___bb73cd"></span> t°</div>
       </div>
     </div>
   </div>
@@ -174,23 +174,23 @@
         <div class="hw-panel-header">
           <span class="d-flex align-items-center gap-1.5">
             <i class="bi bi-hdd-network text-info"></i>
-            <span>Диски и накопители</span>
+            <span><span data-i18n="auto___7161bb"></span></span>
           </span>
-          <span class="badge bg-dark border border-secondary text-muted" id="hw-disks-count">0 дисков</span>
+          <span class="badge bg-dark border border-secondary text-muted" id="hw-disks-count">0 <span data-i18n="auto___5e9cc6"></span></span>
         </div>
         <div class="table-responsive hw-scrollable">
           <table class="table table-dark table-hover hw-table">
             <thead>
               <tr>
-                <th>Диск</th>
-                <th>ФС / Тип</th>
-                <th>Всего / Свободно</th>
-                <th>Использование</th>
+                <th><span data-i18n="auto___ca0407"></span></th>
+                <th><span data-i18n="auto___877fd2"></span></th>
+                <th><span data-i18n="auto___e4c5dd"></span></th>
+                <th><span data-i18n="auto___03854c"></span></th>
               </tr>
             </thead>
             <tbody id="hw-disks-body">
               <tr>
-                <td colspan="4" class="text-center py-3 text-muted">Загрузка дисков...</td>
+                <td colspan="4" class="text-center py-3 text-muted"><span data-i18n="auto___2c67b0"></span>...</td>
               </tr>
             </tbody>
           </table>
@@ -202,11 +202,11 @@
         <div class="hw-panel-header">
           <span class="d-flex align-items-center gap-1.5">
             <i class="bi bi-gpu-card text-warning"></i>
-            <span>Графические ускорители (GPU)</span>
+            <span><span data-i18n="auto___9e45f7"></span> (GPU)</span>
           </span>
         </div>
         <div class="p-2.5 hw-scrollable" id="hw-gpu-container" style="font-size: 0.8rem;">
-          <div class="text-center py-3 text-muted">Загрузка информации GPU...</div>
+          <div class="text-center py-3 text-muted"><span data-i18n="auto___e9d9fc"></span> GPU...</div>
         </div>
       </div>
     </div>
@@ -218,23 +218,23 @@
         <div class="hw-panel-header">
           <span class="d-flex align-items-center gap-1.5">
             <i class="bi bi-thermometer-half text-danger"></i>
-            <span>Аппаратные сенсоры (Температура, Вентиляторы, Вольтаж)</span>
+            <span><span data-i18n="auto___3181d7"></span>)</span>
           </span>
-          <span class="badge bg-dark border border-secondary text-muted" id="hw-sensors-total">0 сенсоров</span>
+          <span class="badge bg-dark border border-secondary text-muted" id="hw-sensors-total">0 <span data-i18n="auto___851a55"></span></span>
         </div>
         <div class="table-responsive hw-scrollable">
           <table class="table table-dark table-hover hw-table">
             <thead>
               <tr>
-                <th>Датчик / Компонент</th>
-                <th>Тип</th>
-                <th>Значение</th>
-                <th>Статус</th>
+                <th><span data-i18n="auto___69a8a7"></span></th>
+                <th><span data-i18n="auto___d25691"></span></th>
+                <th><span data-i18n="auto___9f0b99"></span></th>
+                <th><span data-i18n="auto___f7f293"></span></th>
               </tr>
             </thead>
             <tbody id="hw-sensors-body">
               <tr>
-                <td colspan="4" class="text-center py-3 text-muted">Опрос аппаратных сенсоров...</td>
+                <td colspan="4" class="text-center py-3 text-muted"><span data-i18n="auto___64f123"></span>...</td>
               </tr>
             </tbody>
           </table>
@@ -246,26 +246,25 @@
         <div class="hw-panel-header">
           <span class="d-flex align-items-center gap-1.5">
             <i class="bi bi-shield-shaded text-success"></i>
-            <span>S.M.A.R.T. Здоровье накопителей</span>
+            <span>S.M.A.R.T. <span data-i18n="auto___566d0c"></span></span>
           </span>
         </div>
         <div class="p-2.5 hw-scrollable" id="hw-smart-container" style="font-size: 0.8rem;">
-          <div class="text-center py-3 text-muted">Загрузка S.M.A.R.T. телеметрии...</div>
+          <div class="text-center py-3 text-muted"><span data-i18n="auto__s_m_a_r_t__3999e8"></span>...</div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
-  <!-- Внешние утилиты диагностики оборудования                              -->
+  <!-- <span data-i18n="auto___020c04"></span>                              -->
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <div class="mt-3 mb-2">
     <h6 class="fw-bold text-white d-flex align-items-center gap-2 mb-1">
-      <span>🔧</span> Внешние утилиты диагностики
+      <span>🔧</span> <span data-i18n="auto___10ad46"></span>
     </h6>
     <div class="small text-muted" style="font-size: 0.72rem;">
-      Интеграция с LibreHardwareMonitor.
-      Статус портативных версий обновляется автоматически.
+      <span data-i18n="auto__librehardwaremonitor__2e147b"></span>.
     </div>
   </div>
 
@@ -279,13 +278,13 @@
             <i class="bi bi-thermometer-sun text-success"></i>
             <span>LibreHardwareMonitor</span>
           </span>
-          <span class="badge bg-secondary" id="hw-util-lhm-badge">⏳ Проверка...</span>
+          <span class="badge bg-secondary" id="hw-util-lhm-badge">⏳ <span data-i18n="auto___457969"></span>...</span>
         </div>
         <div class="p-2" style="font-size: 0.8rem;">
-          <div class="mb-1 text-muted small">Open-source мониторинг сенсоров через веб-API (HTTP JSON)</div>
+          <div class="mb-1 text-muted small">Open-source <span data-i18n="auto___1285d2"></span>-API (HTTP JSON)</div>
           <div id="hw-util-lhm-actions" class="d-flex gap-1 flex-wrap mb-1">
-            <button class="btn btn-sm btn-outline-success py-0 px-2" onclick="hwUtilAction('lhm', 'sensors')" title="Сенсоры LHM">
-              <i class="bi bi-speedometer2"></i> Сенсоры
+            <button class="btn btn-sm btn-outline-success py-0 px-2" onclick="hwUtilAction('lhm', 'sensors')" title="<span data-i18n="auto___9fc7e9"></span> LHM">
+              <i class="bi bi-speedometer2"></i> <span data-i18n="auto___9fc7e9"></span>
             </button>
           </div>
           <div id="hw-util-lhm-guide" class="d-none"></div>

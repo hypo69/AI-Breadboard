@@ -231,25 +231,23 @@ class McpTabManager {
           </div>
           <div class="card-body p-3 flex-grow-1">
             <p class="card-text small text-secondary mb-3" style="min-height: 38px;">
-              ${this.escapeHtml(server.description || 'Описание отсутствует.')}
+              ${this.escapeHtml(server.description || i18n.t('auto___0a7a40'))}
             </p>
             <div class="p-2 bg-black rounded border border-secondary mb-2 small">
-              <div class="text-muted small mb-1">${isStdio ? 'Исполняемая команда:' : 'Сетевой эндпоинт:'}</div>
+              <div class="text-muted small mb-1">${isStdio ? i18n.t('auto___c94f41') : i18n.t('auto___f9c7df')}</div>
               <div class="text-truncate">${commandOrUrl}</div>
             </div>
           </div>
           <div class="card-footer border-secondary p-2 d-flex align-items-center justify-content-between gap-1 bg-black bg-opacity-25">
             <button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1" onclick="window.mcpTab?.testServer('${this.escapeHtml(server.id)}')">
-              <i class="bi bi-play-circle"></i> Тест & Tools
-            </button>
-            <div class="d-flex align-items-center gap-1">
-              <button class="btn btn-sm ${isEnabled ? 'btn-outline-warning' : 'btn-outline-success'}" title="${isEnabled ? 'Отключить' : 'Включить'}" onclick="window.mcpTab?.toggleServer('${this.escapeHtml(server.id)}')">
+              <i class="bi bi-play-circlei18n.t('auto__i_tools_button_div_class__dd3b9b')d-flex align-items-center gap-1">
+              <button class="btn btn-sm ${isEnabled ? 'btn-outline-warning' : 'btn-outline-success'}" title="${isEnabled ? i18n.t('auto___94d07a') : i18n.t('auto___66be7e')}" onclick="window.mcpTab?.toggleServer('${this.escapeHtml(server.id)}')">
                 <i class="bi ${isEnabled ? 'bi-pause-fill' : 'bi-play-fill'}"></i>
               </button>
-              <button class="btn btn-sm btn-outline-primary" title="Редактировать" onclick="window.mcpTab?.openEditModal('${this.escapeHtml(server.id)}')">
+              <button class="btn btn-sm btn-outline-primary" title=i18n.t('auto___901beb') onclick="window.mcpTab?.openEditModal('${this.escapeHtml(server.id)}')">
                 <i class="bi bi-pencil-fill"></i>
               </button>
-              <button class="btn btn-sm btn-outline-danger" title="Удалить" onclick="window.mcpTab?.deleteServer('${this.escapeHtml(server.id)}')">
+              <button class="btn btn-sm btn-outline-danger" title=i18n.t('auto___86ea33') onclick="window.mcpTab?.deleteServer('${this.escapeHtml(server.id)}')">
                 <i class="bi bi-trash-fill"></i>
               </button>
             </div>
@@ -263,8 +261,8 @@ class McpTabManager {
     const isEnabled = server.enabled !== false;
     const isStdio = (server.transport || 'stdio') === 'stdio';
     const statusDot = isEnabled
-      ? '<span class="badge bg-success rounded-pill" title="Активен">ON</span>'
-      : '<span class="badge bg-secondary rounded-pill" title="Отключен">OFF</span>';
+      ? '<span class="badge bg-success rounded-pill" title=i18n.t('auto___667904')>ON</span>'
+      : '<span class="badge bg-secondary rounded-pill" title=i18n.t('auto___cadea0')>OFF</span>';
 
     const transportBadge = isStdio
       ? '<span class="badge bg-info-subtle text-info border border-info-subtle">stdio</span>'
@@ -286,16 +284,16 @@ class McpTabManager {
         <td class="small text-muted text-truncate" style="max-width: 200px;">${this.escapeHtml(server.description || '—')}</td>
         <td class="text-end">
           <div class="btn-group btn-group-sm">
-            <button class="btn btn-outline-info" title="Тест соединения" onclick="window.mcpTab?.testServer('${this.escapeHtml(server.id)}')">
+            <button class="btn btn-outline-info" title=i18n.t('auto___9e2300') onclick="window.mcpTab?.testServer('${this.escapeHtml(server.id)}')">
               <i class="bi bi-play-circle"></i>
             </button>
-            <button class="btn ${isEnabled ? 'btn-outline-warning' : 'btn-outline-success'}" title="${isEnabled ? 'Отключить' : 'Включить'}" onclick="window.mcpTab?.toggleServer('${this.escapeHtml(server.id)}')">
+            <button class="btn ${isEnabled ? 'btn-outline-warning' : 'btn-outline-success'}" title="${isEnabled ? i18n.t('auto___94d07a') : i18n.t('auto___66be7e')}" onclick="window.mcpTab?.toggleServer('${this.escapeHtml(server.id)}')">
               <i class="bi ${isEnabled ? 'bi-pause-fill' : 'bi-play-fill'}"></i>
             </button>
-            <button class="btn btn-outline-primary" title="Редактировать" onclick="window.mcpTab?.openEditModal('${this.escapeHtml(server.id)}')">
+            <button class="btn btn-outline-primary" title=i18n.t('auto___901beb') onclick="window.mcpTab?.openEditModal('${this.escapeHtml(server.id)}')">
               <i class="bi bi-pencil-fill"></i>
             </button>
-            <button class="btn btn-outline-danger" title="Удалить" onclick="window.mcpTab?.deleteServer('${this.escapeHtml(server.id)}')">
+            <button class="btn btn-outline-danger" title=i18n.t('auto___86ea33') onclick="window.mcpTab?.deleteServer('${this.escapeHtml(server.id)}')">
               <i class="bi bi-trash-fill"></i>
             </button>
           </div>
@@ -323,7 +321,7 @@ class McpTabManager {
       playwright: {
         id: 'playwright',
         name: 'Playwright Browser MCP',
-        description: 'Управление веб-браузером, навигация, клики, скриншоты и парсинг страниц через Playwright.',
+        description: i18n.t('auto__playwright__5306f8'),
         transport: 'stdio',
         command: 'npx',
         args: '@playwright/mcp@latest',
@@ -332,7 +330,7 @@ class McpTabManager {
       filesystem: {
         id: 'filesystem',
         name: 'Filesystem MCP',
-        description: 'Безопасное чтение, запись и навигация по каталогам и файлам на диске.',
+        description: i18n.t('auto___76e30e'),
         transport: 'stdio',
         command: 'npx',
         args: '-y @modelcontextprotocol/server-filesystem ./data',
@@ -341,7 +339,7 @@ class McpTabManager {
       memory: {
         id: 'memory',
         name: 'Knowledge Graph Memory MCP',
-        description: 'Хранилище графа знаний и ассоциативная память для ИИ-агентов.',
+        description: i18n.t('auto___0c47ef'),
         transport: 'stdio',
         command: 'npx',
         args: '-y @modelcontextprotocol/server-memory',
@@ -350,7 +348,7 @@ class McpTabManager {
       sqlite: {
         id: 'sqlite',
         name: 'SQLite Database MCP',
-        description: 'Выполнение запросов, исследование схемы и инспекция таблиц SQLite базы данных.',
+        description: i18n.t('auto__sqlite__436b24'),
         transport: 'stdio',
         command: 'uvx',
         args: 'mcp-server-sqlite --db-path ./data/database.sqlite',
@@ -359,7 +357,7 @@ class McpTabManager {
       fetch: {
         id: 'fetch',
         name: 'Fetch / Web Request MCP',
-        description: 'Преобразование HTML веб-страниц в Markdown и выполнение HTTP-запросов.',
+        description: i18n.t('auto__html_markdown_http__55c7c0'),
         transport: 'stdio',
         command: 'uvx',
         args: 'mcp-server-fetch',
@@ -368,7 +366,7 @@ class McpTabManager {
       sse: {
         id: 'remote_mcp',
         name: 'Remote SSE MCP Server',
-        description: 'Удаленный MCP-сервер, доступный по протоколу Server-Sent Events (SSE).',
+        description: i18n.t('auto__mcp_server_sent_events_sse__a735d0'),
         transport: 'sse',
         url: 'http://localhost:8080/sse'
       }
@@ -403,7 +401,7 @@ class McpTabManager {
     if (form) form.reset();
 
     const titleText = document.getElementById('mcp-modal-title-text');
-    if (titleText) titleText.textContent = 'Добавление нового MCP сервера';
+    if (titleText) titleText.textContent = i18n.t('auto__mcp__7ec16f');
 
     const modeInput = document.getElementById('mcp-form-mode');
     if (modeInput) modeInput.value = 'create';
@@ -427,10 +425,7 @@ class McpTabManager {
     const server = this.servers.find(s => s.id === serverId);
     if (!server) return;
 
-    const titleText = document.getElementById('mcp-modal-title-text');
-    if (titleText) titleText.textContent = `Редактирование: ${server.name || server.id}`;
-
-    const modeInput = document.getElementById('mcp-form-mode');
+    const titleText = document.getElementById('mcp-modal-title-texti18n.t('auto__if_titletext_titletext_textcontent_server_name_server_id_const_modeinput_document_getelementbyid__6e1f6b')mcp-form-mode');
     if (modeInput) modeInput.value = 'edit';
 
     const presetContainer = document.getElementById('mcp-preset-container');
@@ -495,7 +490,7 @@ class McpTabManager {
     const envRaw = document.getElementById('mcp-server-env')?.value.trim();
 
     if (!serverId) {
-      window.showToast?.('Укажите ID сервера', 'warning') || alert('Укажите ID сервера');
+      window.showToast?.(i18n.t('auto__id__69ddf8'), 'warning') || alert(i18n.t('auto__id__69ddf8'));
       return;
     }
 
@@ -519,7 +514,7 @@ class McpTabManager {
       try {
         env = JSON.parse(envRaw);
       } catch (err) {
-        window.showToast?.('Ошибка формата JSON в переменных окружения: ' + err.message, 'danger') || alert('Ошибка формата JSON в переменных окружения: ' + err.message);
+        window.showToast?.(i18n.t('auto__json__cb496c') + err.message, 'danger') || alert(i18n.t('auto__json__cb496c') + err.message);
         return;
       }
     }
@@ -561,19 +556,7 @@ class McpTabManager {
       }
 
       // Close modal
-      const modalEl = document.getElementById('mcpServerModal');
-      if (modalEl && window.bootstrap) {
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        modal?.hide();
-      }
-
-      await this.refresh();
-    } catch (err) {
-      window.showToast?.(`Ошибка сохранения MCP сервера: ${err.message}`, 'danger') || alert(`Ошибка сохранения MCP сервера: ${err.message}`);
-    } finally {
-      if (saveBtn) {
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = 'Сохранить';
+      const modalEl = document.getElementById('mcpServerModali18n.t('auto__if_modalel_window_bootstrap_const_modal_bootstrap_modal_getinstance_modalel_modal_hide_await_this_refresh_catch_err_window_showtoast_mcp_err_message__7cdf30')dangeri18n.t('auto__alert_mcp_err_message_finally_if_savebtn_savebtn_disabled_false_savebtn_innerhtml__75bf95')Сохранить';
       }
     }
   }
@@ -581,15 +564,7 @@ class McpTabManager {
   async toggleServer(serverId) {
     try {
       const res = await this.apiFetch(`/api/admin/mcp/servers/${encodeURIComponent(serverId)}/toggle`, {
-        method: 'POST'
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || `HTTP ${res.status}`);
-      }
-      await this.refresh();
-    } catch (err) {
-      window.showToast?.(`Ошибка переключения статуса сервера: ${err.message}`, 'danger') || alert(`Ошибка переключения статуса сервера: ${err.message}`);
+        method: 'POSTi18n.t('auto__if_res_ok_const_err_await_res_json_catch_throw_new_error_err_detail_http_res_status_await_this_refresh_catch_err_window_showtoast_err_message__6ee952')danger') || alert(`Ошибка переключения статуса сервера: ${err.message}`);
     }
   }
 
@@ -600,23 +575,7 @@ class McpTabManager {
 
     try {
       const res = await this.apiFetch(`/api/admin/mcp/servers/${encodeURIComponent(serverId)}`, {
-        method: 'DELETE'
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || `HTTP ${res.status}`);
-      }
-      await this.refresh();
-    } catch (err) {
-      window.showToast?.(`Ошибка удаления сервера: ${err.message}`, 'danger') || alert(`Ошибка удаления сервера: ${err.message}`);
-    }
-  }
-
-  async testServer(serverId) {
-    const server = this.servers.find(s => s.id === serverId);
-    const serverName = server?.name || serverId;
-
-    const nameEl = document.getElementById('mcp-test-server-name');
+        method: 'DELETEi18n.t('auto__if_res_ok_const_err_await_res_json_catch_throw_new_error_err_detail_http_res_status_await_this_refresh_catch_err_window_showtoast_err_message__0e98f4')dangeri18n.t('auto__alert_err_message_async_testserver_serverid_const_server_this_servers_find_s_s_id_serverid_const_servername_server_name_serverid_const_nameel_document_getelementbyid__c287e1')mcp-test-server-name');
     if (nameEl) nameEl.textContent = serverName;
 
     const statusBox = document.getElementById('mcp-test-status-box');
@@ -630,7 +589,7 @@ class McpTabManager {
     if (statusBox) {
       statusBox.className = 'p-3 mb-3 rounded border border-info bg-black text-info d-flex align-items-center justify-content-between';
     }
-    if (statusText) statusText.textContent = 'Подключение к процессу / эндпоинту и опрос инструментов...';
+    if (statusText) statusText.textContent = i18n.t('auto___693aaa');
     if (latencyBadge) latencyBadge.textContent = '...';
     if (countBadge) countBadge.textContent = '0';
     if (toolsList) toolsList.innerHTML = '<div class="text-muted text-center py-3">Опрос инструментов...</div>';
@@ -652,31 +611,15 @@ class McpTabManager {
 
       if (data.status === 'ok') {
         if (statusBox) {
-          statusBox.className = 'p-3 mb-3 rounded border border-success bg-black text-success d-flex align-items-center justify-content-between';
-        }
-        if (statusText) statusText.innerHTML = `✅ <strong>Успешно:</strong> ${this.escapeHtml(data.message)}`;
-        if (countBadge) countBadge.textContent = data.tools_count || (data.tools || []).length;
-        this.renderDiscoveredTools(data.tools || [], toolsList);
-      } else {
-        if (statusBox) {
-          statusBox.className = 'p-3 mb-3 rounded border border-danger bg-black text-danger d-flex align-items-center justify-content-between';
-        }
-        if (statusText) statusText.innerHTML = `❌ <strong>Ошибка:</strong> ${this.escapeHtml(data.message || 'Не удалось подключиться к серверу')}`;
+          statusBox.className = 'p-3 mb-3 rounded border border-success bg-black text-success d-flex align-items-center justify-content-betweeni18n.t('auto__if_statustext_statustext_innerhtml_strong_strong_this_escapehtml_data_message_if_countbadge_countbadge_textcontent_data_tools_count_data_tools_length_this_renderdiscoveredtools_data_tools_toolslist_else_if_statusbox_statusbox_classname__396fc1')p-3 mb-3 rounded border border-danger bg-black text-danger d-flex align-items-center justify-content-betweeni18n.t('auto__if_statustext_statustext_innerhtml_strong_strong_this_escapehtml_data_message__fc006c')Не удалось подключиться к серверу')}`;
         if (toolsList) {
-          toolsList.innerHTML = `<div class="alert alert-danger bg-dark border-danger text-light small mb-0">${this.escapeHtml(data.message || 'Ошибка соединения')}</div>`;
+          toolsList.innerHTML = `<div class="alert alert-danger bg-dark border-danger text-light small mb-0">${this.escapeHtml(data.message || i18n.t('auto___da6765'))}</div>`;
         }
       }
     } catch (err) {
       if (spinner) spinner.classList.add('d-none');
       if (statusBox) {
-        statusBox.className = 'p-3 mb-3 rounded border border-danger bg-black text-danger d-flex align-items-center justify-content-between';
-      }
-      if (statusText) statusText.innerHTML = `❌ <strong>Сетевая ошибка:</strong> ${this.escapeHtml(err.message)}`;
-    }
-  }
-
-  async testCurrentForm() {
-    const serverId = document.getElementById('mcp-server-id')?.value.trim() || 'test_server';
+        statusBox.className = 'p-3 mb-3 rounded border border-danger bg-black text-danger d-flex align-items-center justify-content-betweeni18n.t('auto__if_statustext_statustext_innerhtml_strong_strong_this_escapehtml_err_message_async_testcurrentform_const_serverid_document_getelementbyid__54e60e')mcp-server-id')?.value.trim() || 'test_server';
     const transport = document.getElementById('mcp-server-transport')?.value || 'stdio';
     const command = document.getElementById('mcp-server-command')?.value.trim();
     const argsRaw = document.getElementById('mcp-server-args')?.value.trim();
@@ -694,7 +637,7 @@ class McpTabManager {
 
     let env = {};
     if (envRaw) {
-      try { env = JSON.parse(envRaw); } catch (e) { window.showToast?.('Неверный формат JSON в env', 'danger') || alert('Неверный формат JSON в env'); return; }
+      try { env = JSON.parse(envRaw); } catch (e) { window.showToast?.(i18n.t('auto__json_env_60c251'), 'danger') || alert(i18n.t('auto__json_env_60c251')); return; }
     }
 
     const testBtn = document.getElementById('btn-test-modal-server');
@@ -717,13 +660,7 @@ class McpTabManager {
         })
       });
       const data = await res.json();
-      if (data.status === 'ok') {
-        window.showToast?.(`✅ Подключение успешно! (${data.latency_ms} ms)\nНайдено инструментов: ${data.tools_count}`, 'success');
-      } else {
-        window.showToast?.(`❌ Ошибка проверки подключения:\n${data.message}`, 'danger');
-      }
-    } catch (err) {
-      window.showToast?.(`❌ Ошибка запроса: ${err.message}`, 'danger');
+      if (data.status === 'oki18n.t('auto__window_showtoast_data_latency_ms_ms_n_data_tools_count__6072a8')successi18n.t('auto__else_window_showtoast_n_data_message__b9cb4e')dangeri18n.t('auto__catch_err_window_showtoast_err_message__3861e6')danger');
     } finally {
       if (testBtn) {
         testBtn.disabled = false;
@@ -769,12 +706,11 @@ class McpTabManager {
                 </strong>
                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">Tool</span>
               </div>
-              <p class="small text-muted mb-2 flex-grow-1">${this.escapeHtml(t.description || 'Нет описания.')}</p>
+              <p class="small text-muted mb-2 flex-grow-1">${this.escapeHtml(t.description || i18n.t('auto___832ce6'))}</p>
               ${t.args_schema ? `
                 <div class="mt-auto">
                   <details class="small">
-                    <summary class="text-secondary cursor-pointer">Схема аргументов</summary>
-                    <pre class="bg-dark text-light p-2 rounded mt-1 mb-0 font-monospace small" style="max-height: 150px; overflow-y: auto;">${this.escapeHtml(typeof t.args_schema === 'object' ? JSON.stringify(t.args_schema, null, 2) : String(t.args_schema))}</pre>
+                    <summary class="text-secondary cursor-pointeri18n.t('auto__summary_pre_class__85a1e1')bg-dark text-light p-2 rounded mt-1 mb-0 font-monospace small" style="max-height: 150px; overflow-y: auto;">${this.escapeHtml(typeof t.args_schema === 'object' ? JSON.stringify(t.args_schema, null, 2) : String(t.args_schema))}</pre>
                   </details>
                 </div>
               ` : ''}
@@ -805,11 +741,10 @@ class McpTabManager {
           </strong>
           <span class="badge bg-dark border border-secondary text-muted">#${idx + 1}</span>
         </div>
-        <div class="small text-muted mb-2">${this.escapeHtml(t.description || 'Описание не указано')}</div>
+        <div class="small text-muted mb-2">${this.escapeHtml(t.description || i18n.t('auto___618103'))}</div>
         ${t.args_schema ? `
           <details class="small">
-            <summary class="text-info cursor-pointer">Параметры и схема вызова</summary>
-            <pre class="bg-black text-white p-2 rounded mt-1 mb-0 font-monospace small" style="max-height: 180px; overflow-y: auto;">${this.escapeHtml(typeof t.args_schema === 'object' ? JSON.stringify(t.args_schema, null, 2) : String(t.args_schema))}</pre>
+            <summary class="text-info cursor-pointeri18n.t('auto__summary_pre_class__2bb216')bg-black text-white p-2 rounded mt-1 mb-0 font-monospace small" style="max-height: 180px; overflow-y: auto;">${this.escapeHtml(typeof t.args_schema === 'object' ? JSON.stringify(t.args_schema, null, 2) : String(t.args_schema))}</pre>
           </details>
         ` : ''}
       </div>

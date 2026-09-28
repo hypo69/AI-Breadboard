@@ -16,9 +16,7 @@
       const bookmarks = data.bookmarks || [];
 
       container.innerHTML = `
-        <span class="text-muted small me-2"><i class="bi bi-bookmark-star-fill text-warning me-1"></i> Закладки:</span>
-      ` + bookmarks.map(b => `
-        <button class="reg-bookmark-btn" data-hive="${b.hive}" data-path="${b.path}" title="${b.description || ''}">
+        <span class="text-muted small me-2"><i class="bi bi-bookmark-star-fill text-warning me-1i18n.t('auto__i_span_bookmarks_map_b_button_class__897981')reg-bookmark-btn" data-hive="${b.hive}" data-path="${b.path}" title="${b.description || ''}">
           <span>${b.icon || '📌'}</span> ${b.title}
         </button>
       `).join('');
@@ -52,26 +50,7 @@
     const valuesTbody = document.getElementById('reg-values-tbody');
     const badge = document.getElementById('reg-status-badge');
     const subkeysCountBadge = document.getElementById('reg-subkeys-count-badge');
-    const valuesCountBadge = document.getElementById('reg-values-count-badge');
-
-    if (badge) badge.innerText = `● Чтение ${hive}...`;
-
-    try {
-      const url = `/api/registry/key?hive=${encodeURIComponent(hive)}&path=${encodeURIComponent(path)}`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.detail || `HTTP ${res.status}`);
-      }
-
-      currentKeyData = await res.json();
-
-      // Рендер подразделов (subkeys)
-      const subkeys = currentKeyData.subkeys || [];
-      if (subkeysCountBadge) subkeysCountBadge.innerText = subkeys.length;
-
-      if (subkeys.length === 0) {
-        subkeysList.innerHTML = '<div class="text-muted text-center py-4 small">Нет подразделов</div>';
+    const valuesCountBadge = document.getElementById('reg-values-count-badgei18n.t('auto__if_badge_badge_innertext_hive_try_const_url_api_registry_key_hive_encodeuricomponent_hive_path_encodeuricomponent_path_const_res_await_fetch_url_if_res_ok_const_errjson_await_res_json_catch_throw_new_error_errjson_detail_http_res_status_currentkeydata_await_res_json_subkeys_const_subkeys_currentkeydata_subkeys_if_subkeyscountbadge_subkeyscountbadge_innertext_subkeys_length_if_subkeys_length_0_subkeyslist_innerhtml__eb3763')<div class="text-muted text-center py-4 small">Нет подразделов</div>';
       } else {
         subkeysList.innerHTML = subkeys.map(sk => `
           <div class="reg-tree-item" data-subkey="${sk}" title="${sk}">
@@ -82,31 +61,13 @@
 
         subkeysList.querySelectorAll('.reg-tree-item').forEach(item => {
           item.onclick = () => {
-            const subkey = item.getAttribute('data-subkey');
-            const newPath = currentPath ? `${currentPath}\\${subkey}` : subkey;
-            navigateTo(currentHive, newPath);
-          };
-        });
-      }
-
-      // Рендер параметров (values)
-      renderValues();
-
-      if (badge) {
-        badge.className = 'badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2';
-        badge.innerText = `● Реестр: ${hive}`;
-      }
-    } catch (err) {
-      console.error('[RegistryViewerTab] Error loading key:', err);
+            const subkey = item.getAttribute('data-subkeyi18n.t('auto__const_newpath_currentpath_currentpath_subkey_subkey_navigateto_currenthive_newpath_values_rendervalues_if_badge_badge_classname__24b3bd')badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2i18n.t('auto__badge_innertext_hive_catch_err_console_error__b3089a')[RegistryViewerTab] Error loading key:', err);
       if (valuesTbody) {
-        valuesTbody.innerHTML = `<tr><td colspan="3" class="text-center text-danger p-4"><i class="bi bi-exclamation-triangle-fill me-1"></i> Ошибка чтения ветки: ${err.message}</td></tr>`;
-      }
-      if (subkeysList) {
-        subkeysList.innerHTML = `<div class="text-danger text-center py-4 small">${err.message}</div>`;
+        valuesTbody.innerHTML = `<tr><td colspan="3" class="text-center text-danger p-4"><i class="bi bi-exclamation-triangle-fill me-1i18n.t('auto__i_err_message_td_tr_if_subkeyslist_subkeyslist_innerhtml_div_class__2d9c62')text-danger text-center py-4 small">${err.message}</div>`;
       }
       if (badge) {
         badge.className = 'badge rounded-pill bg-danger-subtle text-danger border border-danger px-3 py-2';
-        badge.innerText = '● Ошибка доступа';
+        badge.innerText = i18n.t('auto___81edb9');
       }
     }
   }
@@ -141,11 +102,11 @@
         dataDisplay = `<span class="text-light text-break">${escapeHtml(String(dataDisplay))}</span>`;
       }
 
-      const isDefault = v.name === '(Default / По умолчанию)' || v.name === '(Default)';
+      const isDefault = v.name === i18n.t('auto__default__7d867e') || v.name === '(Default)';
       const rawNameAttr = escapeHtml(isDefault ? '' : v.name);
 
       return `
-        <tr class="reg-val-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для AI-объяснения параметра реестра">
+        <tr class="reg-val-row" data-idx="${idx}" style="cursor: pointer;" title=i18n.t('auto__ai__7a9e89')>
           <td>
             <div class="fw-bold text-white text-truncate" style="max-width: 220px;" title="${v.name}">
               <i class="bi bi-file-earmark-binary text-secondary me-1"></i>
@@ -159,19 +120,16 @@
             ${dataDisplay}
           </td>
           <td class="text-center">
-            <button class="btn btn-xs btn-outline-info py-0 px-2 me-1 btn-edit-val" data-idx="${idx}" title="Редактировать">
+            <button class="btn btn-xs btn-outline-info py-0 px-2 me-1 btn-edit-val" data-idx="${idx}" title=i18n.t('auto___901beb')>
               <i class="bi bi-pencil"></i>
             </button>
-            <button class="btn btn-xs btn-outline-danger py-0 px-2 btn-del-val" data-name="${rawNameAttr}" title="Удалить">
+            <button class="btn btn-xs btn-outline-danger py-0 px-2 btn-del-val" data-name="${rawNameAttr}" title=i18n.t('auto___86ea33')>
               <i class="bi bi-trash"></i>
             </button>
           </td>
         </tr>
       `;
-    }).join('');
-
-    // Привязка кликабельности всей строки к AITableModal
-    valuesTbody.querySelectorAll('.reg-val-row').forEach(row => {
+    }).join('i18n.t('auto__aitablemodal_valuestbody_queryselectorall__bc152a').reg-val-row').forEach(row => {
       row.onclick = (evt) => {
         if (evt.target.closest('.btn-edit-val') || evt.target.closest('.btn-del-val')) return;
         const idx = parseInt(row.getAttribute('data-idx'), 10);
@@ -189,28 +147,14 @@
               { text: currentHive, class: 'badge bg-secondary' }
             ],
             metadata: [
-              { label: 'Параметр', value: v.name || '(По умолчанию)' },
-              { label: 'Тип данных', value: v.type_name },
-              { label: 'Ветка реестра (Hive)', value: currentHive },
-              { label: 'Путь к разделу', value: currentPath, isCode: true, fullWidth: true },
-              { label: 'Значение', value: String(v.data ?? ''), isCode: true, fullWidth: true }
+              { label: i18n.t('auto___0db49b'), value: v.name || i18n.t('auto___75241b') },
+              { label: i18n.t('auto___3822a6'), value: v.type_name },
+              { label: i18n.t('auto__hive__453091'), value: currentHive },
+              { label: i18n.t('auto___6097ca'), value: currentPath, isCode: true, fullWidth: true },
+              { label: i18n.t('auto___9f0b99'), value: String(v.data ?? ''), isCode: true, fullWidth: true }
             ],
-            rawTitle: 'Значение параметра',
-            rawContent: typeof v.data === 'object' ? JSON.stringify(v.data, null, 2) : String(v.data ?? ''),
-            requestData: {
-              hive: currentHive,
-              path: currentPath,
-              name: v.name,
-              type: v.type_name,
-              data: v.data
-            }
-          });
-        }
-      };
-    });
-
-    // Привязка событий кнопок редактирования и удаления параметров
-    valuesTbody.querySelectorAll('.btn-edit-val').forEach(btn => {
+            rawTitle: i18n.t('auto___a9a973'),
+            rawContent: typeof v.data === 'object' ? JSON.stringify(v.data, null, 2) : String(v.data ?? 'i18n.t('auto__requestdata_hive_currenthive_path_currentpath_name_v_name_type_v_type_name_data_v_data_valuestbody_queryselectorall__08f087').btn-edit-val').forEach(btn => {
       btn.onclick = (evt) => {
         evt.stopPropagation();
         const idx = parseInt(btn.getAttribute('data-idx'), 10);
@@ -229,18 +173,15 @@
   }
 
   function openEditValueModal(valObj) {
-    const isDefault = !valObj.name || valObj.name === '(Default / По умолчанию)' || valObj.name === '(Default)';
+    const isDefault = !valObj.name || valObj.name === i18n.t('auto__default__7d867e') || valObj.name === '(Default)';
     const nameInput = document.getElementById('regModalValueName');
     const typeSelect = document.getElementById('regModalValueType');
     const dataInput = document.getElementById('regModalValueData');
     const title = document.getElementById('regValueModalTitle');
 
-    if (title) title.innerText = '✏️ Редактирование параметра';
+    if (title) title.innerText = i18n.t('auto___b76c0f');
     if (nameInput) {
-      nameInput.value = isDefault ? '' : valObj.name;
-      nameInput.disabled = true; // имя существующего параметра не меняем
-    }
-    if (typeSelect) typeSelect.value = valObj.type_name || 'REG_SZ';
+      nameInput.value = isDefault ? 'i18n.t('auto__valobj_name_nameinput_disabled_true_if_typeselect_typeselect_value_valobj_type_name__b01b60')REG_SZ';
     if (dataInput) {
       if (Array.isArray(valObj.data)) {
         dataInput.value = valObj.data.join('\n');
@@ -262,7 +203,7 @@
     const dataInput = document.getElementById('regModalValueData');
     const title = document.getElementById('regValueModalTitle');
 
-    if (title) title.innerText = '➕ Создание нового параметра';
+    if (title) title.innerText = i18n.t('auto___607c41');
     if (nameInput) {
       nameInput.value = '';
       nameInput.disabled = false;
@@ -309,20 +250,7 @@
         throw new Error(errJson.detail || `HTTP ${res.status}`);
       }
 
-      const modalEl = document.getElementById('regValueModal');
-      if (modalEl && window.bootstrap) {
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
-      }
-
-      await loadKey(currentHive, currentPath);
-    } catch (e) {
-      window.showToast?.(`Ошибка сохранения параметра: ${e.message}`, 'danger') || alert(`Ошибка сохранения параметра: ${e.message}`);
-    }
-  }
-
-  async function confirmDeleteValue(name) {
-    const displayName = name ? `'${name}'` : '(По умолчанию)';
+      const modalEl = document.getElementById('regValueModali18n.t('auto__if_modalel_window_bootstrap_const_modal_bootstrap_modal_getinstance_modalel_if_modal_modal_hide_await_loadkey_currenthive_currentpath_catch_e_window_showtoast_e_message__04dc24')dangeri18n.t('auto__alert_e_message_async_function_confirmdeletevalue_name_const_displayname_name__049163')${name}'` : i18n.t('auto___75241b');
     if (!confirm(`Вы действительно хотите удалить параметр ${displayName}? Перед удалением будет автоматически создан бэкап.`)) {
       return;
     }
@@ -330,29 +258,7 @@
     try {
       const res = await fetch('/api/registry/value', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          hive: currentHive,
-          path: currentPath,
-          name: name,
-          create_backup: true
-        })
-      });
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.detail || `HTTP ${res.status}`);
-      }
-
-      window.showToast?.(`Параметр ${displayName} удален`, 'success');
-      await loadKey(currentHive, currentPath);
-    } catch (e) {
-      window.showToast?.(`Ошибка удаления параметра: ${e.message}`, 'danger') || alert(`Ошибка удаления параметра: ${e.message}`);
-    }
-  }
-
-  function openCreateKeyModal() {
-    const keyNameInput = document.getElementById('regModalNewKeyName');
+        headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_hive_currenthive_path_currentpath_name_name_create_backup_true_if_res_ok_const_errjson_await_res_json_catch_throw_new_error_errjson_detail_http_res_status_window_showtoast_displayname__b57d66')successi18n.t('auto__await_loadkey_currenthive_currentpath_catch_e_window_showtoast_e_message__02cc2e')dangeri18n.t('auto__alert_e_message_function_opencreatekeymodal_const_keynameinput_document_getelementbyid__dbae76')regModalNewKeyName');
     if (keyNameInput) keyNameInput.value = '';
 
     const modalEl = document.getElementById('regKeyModal');
@@ -366,7 +272,7 @@
     const keyNameInput = document.getElementById('regModalNewKeyName');
     const newKeyName = keyNameInput ? keyNameInput.value.trim() : '';
     if (!newKeyName) {
-      window.showToast?.('Введите имя подраздела', 'warning') || alert('Введите имя подраздела');
+      window.showToast?.(i18n.t('auto___bff380'), 'warning') || alert(i18n.t('auto___bff380'));
       return;
     }
 
@@ -387,31 +293,11 @@
         throw new Error(errJson.detail || `HTTP ${res.status}`);
       }
 
-      const modalEl = document.getElementById('regKeyModal');
-      if (modalEl && window.bootstrap) {
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
-      }
-
-      window.showToast?.(`Подраздел '${newKeyName}' успешно создан`, 'success');
-      await loadKey(currentHive, currentPath);
-    } catch (e) {
-      window.showToast?.(`Ошибка создания ключа: ${e.message}`, 'danger') || alert(`Ошибка создания ключа: ${e.message}`);
-    }
-  }
-
-  async function deleteCurrentKey() {
-    if (!currentPath) {
-      window.showToast?.('Нельзя удалить корневой раздел', 'warning') || alert('Нельзя удалить корневой раздел');
+      const modalEl = document.getElementById('regKeyModali18n.t('auto__if_modalel_window_bootstrap_const_modal_bootstrap_modal_getinstance_modalel_if_modal_modal_hide_window_showtoast__84ff56')${newKeyName}i18n.t('auto___e150b1')successi18n.t('auto__await_loadkey_currenthive_currentpath_catch_e_window_showtoast_e_message__48c6a0')dangeri18n.t('auto__alert_e_message_async_function_deletecurrentkey_if_currentpath_window_showtoast__ed5641')Нельзя удалить корневой раздел', 'warning') || alert(i18n.t('auto___5a6e78'));
       return;
     }
 
-    if (!confirm(`ВНИМАНИЕ: Вы действительно хотите удалить раздел '${currentHive}\\${currentPath}' со всеми подразделами и значениями? Будет создан снимок резервной копии.`)) {
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/registry/key', {
+    if (!confirm(`ВНИМАНИЕ: Вы действительно хотите удалить раздел '${currentHive}\\${currentPath}i18n.t('auto__return_try_const_res_await_fetch__4a8c1c')/api/registry/key', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -427,15 +313,7 @@
         throw new Error(errJson.detail || `HTTP ${res.status}`);
       }
 
-      window.showToast?.('Раздел реестра успешно удален', 'success');
-      goUp();
-    } catch (e) {
-      window.showToast?.(`Ошибка удаления раздела: ${e.message}`, 'danger') || alert(`Ошибка удаления раздела: ${e.message}`);
-    }
-  }
-
-  async function openBackupsModal() {
-    const modalEl = document.getElementById('regBackupsModal');
+      window.showToast?.(i18n.t('auto___8fcfbd'), 'successi18n.t('auto__goup_catch_e_window_showtoast_e_message__97c081')dangeri18n.t('auto__alert_e_message_async_function_openbackupsmodal_const_modalel_document_getelementbyid__b8b3ae')regBackupsModal');
     const tbody = document.getElementById('reg-backups-tbody');
 
     if (modalEl && window.bootstrap) {
@@ -447,7 +325,7 @@
 
     try {
       const res = await fetch('/api/registry/backups');
-      if (!res.ok) throw new Error('Ошибка загрузки бэкапов');
+      if (!res.ok) throw new Error(i18n.t('auto___0d9ef2'));
       const data = await res.json();
       const backups = data.backups || [];
 
@@ -473,21 +351,13 @@
 
       tbody.querySelectorAll('.btn-restore-backup').forEach(btn => {
         btn.onclick = async () => {
-          const backupId = btn.getAttribute('data-id');
-          if (!confirm(`Восстановить реестр из снимка ${backupId}?`)) return;
-
-          try {
-            const rRes = await fetch(`/api/registry/restore?backup_id=${encodeURIComponent(backupId)}`, {
-              method: 'POST'
+          const backupId = btn.getAttribute('data-idi18n.t('auto__if_confirm_backupid_return_try_const_rres_await_fetch_api_registry_restore_backup_id_encodeuricomponent_backupid_method__e5d3f8')POST'
             });
             if (!rRes.ok) {
               const err = await rRes.json().catch(() => ({}));
               throw new Error(err.detail || `HTTP ${rRes.status}`);
             }
-            window.showToast?.('Реестр успешно восстановлен из резервной копии!', 'success');
-            await loadKey(currentHive, currentPath);
-          } catch (err) {
-            window.showToast?.(`Ошибка восстановления: ${err.message}`, 'danger') || alert(`Ошибка восстановления: ${err.message}`);
+            window.showToast?.(i18n.t('auto___2306f0'), 'successi18n.t('auto__await_loadkey_currenthive_currentpath_catch_err_window_showtoast_err_message__a705dc')danger') || alert(`Ошибка восстановления: ${err.message}`);
           }
         };
       });

@@ -147,23 +147,7 @@ window.chatService = {
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, history, generation_config: effectiveGenConfig }),
-        signal: this._abortController.signal
-      });
-      
-      if (!response.ok) {
-        let data;
-        try {
-          data = await response.json();
-        } catch (e) {
-          throw new Error(`Ошибка сервера (HTTP ${response.status}): ${response.statusText}`);
-        }
-        throw (data.detail || data);
-      }
-      
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder('utf-8');
+        headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_message_history_generation_config_effectivegenconfig_signal_this_abortcontroller_signal_if_response_ok_let_data_try_data_await_response_json_catch_e_throw_new_error_http_response_status_response_statustext_throw_data_detail_data_const_reader_response_body_getreader_const_decoder_new_textdecoder__5884f7')utf-8');
       let buffer = '';
       
       while (true) {
@@ -210,21 +194,7 @@ window.chatService = {
         }
       }
     } catch (e) {
-      if (e.name === 'AbortError') {
-        // Возвращаем Promise, который никогда не зарезолвится.
-        // Это остановит старый вызов sendChatMessage() на месте, не вызывая catch/finally в UI-скриптах,
-        // так как они уже перекрыты новым запросом.
-        return new Promise(() => {});
-      }
-      throw e;
-    }
-    
-    let followUpQuery = null;
-    const nextQueryRegex = /\[NEXT_QUERY\](.*?)\[\/NEXT_QUERY\]/i;
-    const match = fullText.match(nextQueryRegex);
-    if (match) {
-      followUpQuery = match[1].trim();
-      fullText = fullText.replace(match[0], '');
+      if (e.name === 'AbortErrori18n.t('auto__promise_sendchatmessage_catch_finally_ui_return_new_promise_throw_e_let_followupquery_null_const_nextqueryregex_next_query_next_query_i_const_match_fulltext_match_nextqueryregex_if_match_followupquery_match_1_trim_fulltext_fulltext_replace_match_0__c1d409')');
     }
 
     return { text: fullText, voice: voiceText, followUp: followUpQuery };
@@ -261,30 +231,11 @@ window.chatService = {
     this.stop();
 
     let cleanText = '';
-    if (typeof text === 'object' && text !== null) {
-      if (text.voice || text.text) {
-        // Если это объект { text, voice } из sendChatMessage
-        cleanText = text.voice || text.text;
-      } else {
-        // Если это карточка фильма
-        const title = text.title_ru || text.title;
-        const rec = text.why_watch || text.plot || '';
-        cleanText = `Найдено: ${title}. ${rec}`;
-      }
-    } else {
-      const trimmed = text.trim();
-      if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    if (typeof text === 'objecti18n.t('auto__text_null_if_text_voice_text_text_text_voice_sendchatmessage_cleantext_text_voice_text_text_else_const_title_text_title_ru_text_title_const_rec_text_why_watch_text_plot__7f1edb')i18n.t('auto__cleantext_title_rec_else_const_trimmed_text_trim_if_trimmed_startswith__1d5693'){') && trimmed.endsWith('}')) {
         try {
           const card = JSON.parse(trimmed);
           const title = card.title_ru || card.title;
-          const rec = card.why_watch || card.plot || '';
-          cleanText = `Найдено: ${title}. ${rec}`;
-        } catch (e) {
-          cleanText = trimmed;
-        }
-      } else {
-        // Strip code blocks
-        cleanText = trimmed.replace(/```[\s\S]*?```/g, '');
+          const rec = card.why_watch || card.plot || 'i18n.t('auto__cleantext_title_rec_catch_e_cleantext_trimmed_else_strip_code_blocks_cleantext_trimmed_replace_s_s_g__36ece1')');
         // Strip HTML tags
         cleanText = cleanText.replace(/<[^>]*>/g, '');
         // Strip Markdown formatting
@@ -343,27 +294,7 @@ window.chatService = {
       // Dynamic language detection for Web Speech API fallback
       const hasHebrew = /[\u0590-\u05FF]/.test(cleanText);
       const hasCyrillic = /[\u0400-\u04FF]/.test(cleanText);
-      window.currentUtterance.lang = hasHebrew ? 'he-IL' : (hasCyrillic ? 'ru-RU' : 'en-US');
-      
-      if (userSettings && userSettings.tts_voice) {
-        const voices = window.speechSynthesis.getVoices();
-        const selectedVoice = voices.find(v => v.name === userSettings.tts_voice);
-        if (selectedVoice) {
-          window.currentUtterance.voice = selectedVoice;
-          if (selectedVoice.lang) {
-            window.currentUtterance.lang = selectedVoice.lang;
-          }
-        }
-      }
-      
-      window.speechSynthesis.speak(window.currentUtterance);
-    }
-  }
-};
-
-// Форматирование отображаемого названия поискового движка
-function formatSearchEngine(engine) {
-  if (!engine) return '';
+      window.currentUtterance.lang = hasHebrew ? 'he-IL' : (hasCyrillic ? 'ru-RU' : 'en-USi18n.t('auto__if_usersettings_usersettings_tts_voice_const_voices_window_speechsynthesis_getvoices_const_selectedvoice_voices_find_v_v_name_usersettings_tts_voice_if_selectedvoice_window_currentutterance_voice_selectedvoice_if_selectedvoice_lang_window_currentutterance_lang_selectedvoice_lang_window_speechsynthesis_speak_window_currentutterance_function_formatsearchengine_engine_if_engine_return_2113dc')';
   let eng = engine;
   let mdl = '';
   if (engine.includes(':') && !engine.startsWith('ollama:') && !engine.startsWith('foundry:')) {
@@ -446,12 +377,9 @@ window.updateChatBadges = function(modelName, searchEngine) {
   if (savedCardBadge) {
     if (curModel) {
       savedCardBadge.textContent = curModel;
-      savedCardBadge.className = 'badge bg-success font-monospace px-2 py-1';
-      savedCardBadge.title = `В вашем профиле сохранена модель: ${curModel}`;
-    } else {
-      savedCardBadge.textContent = 'Не задана (системный fallback)';
+      savedCardBadge.className = 'badge bg-success font-monospace px-2 py-1i18n.t('auto__savedcardbadge_title_curmodel_else_savedcardbadge_textcontent__2ea27d')Не задана (системный fallback)';
       savedCardBadge.className = 'badge bg-secondary font-monospace px-2 py-1';
-      savedCardBadge.title = 'Модель в профиле не выбрана, сервер использует системный дефолт';
+      savedCardBadge.title = i18n.t('auto___fd8ee7');
     }
   }
 
@@ -462,22 +390,12 @@ window.updateChatBadges = function(modelName, searchEngine) {
   msgInputs.forEach(input => {
     if (!curModel) {
       input.disabled = true;
-      input.placeholder = 'Ни одна модель не выбрана. Выберите модель во вкладке «Модели и API».';
+      input.placeholder = i18n.t('auto__api__da6213');
       input.classList.add('is-invalid');
     } else {
       input.disabled = false;
-      input.placeholder = 'Введите сообщение...';
-      input.classList.remove('is-invalid');
-    }
-  });
-
-  sendButtons.forEach(btn => {
-    btn.disabled = !curModel;
-  });
-};
-
-// Автоматически загружаем настройки и обновляем бейджи модели и поиска при загрузке страницы
-document.addEventListener('DOMContentLoaded', async () => {
+      input.placeholder = i18n.t('auto___ed1075');
+      input.classList.remove('is-invalidi18n.t('auto__sendbuttons_foreach_btn_btn_disabled_curmodel_document_addeventlistener__bc2e69')DOMContentLoaded', async () => {
   try {
     let modelName = '';
     let searchEngine = '';
@@ -489,23 +407,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (!modelName) {
       try {
-        const activeResp = await fetch('/api/chat/active-model');
-        if (activeResp.ok) {
-          const activeData = await activeResp.json();
-          if (activeData && activeData.model) {
-            modelName = activeData.display || (activeData.provider ? `${activeData.provider}: ${activeData.model}` : activeData.model);
-          }
-        }
-      } catch {}
-    }
-    window.activeModelName = modelName;
-    window.activeSearchEngine = searchEngine;
-    
-    window.updateChatBadges(modelName, searchEngine);
-    // На случай если DOM элементы добавились/отрендерились позже
-    setTimeout(() => window.updateChatBadges(), 500);
-    setTimeout(() => window.updateChatBadges(), 1500);
-  } catch (e) {
-    console.error('Failed to load active model / search badge:', e);
+        const activeResp = await fetch('/api/chat/active-modeli18n.t('auto__if_activeresp_ok_const_activedata_await_activeresp_json_if_activedata_activedata_model_modelname_activedata_display_activedata_provider_activedata_provider_activedata_model_activedata_model_catch_window_activemodelname_modelname_window_activesearchengine_searchengine_window_updatechatbadges_modelname_searchengine_dom_settimeout_window_updatechatbadges_500_settimeout_window_updatechatbadges_1500_catch_e_console_error__2cc750')Failed to load active model / search badge:', e);
   }
 });

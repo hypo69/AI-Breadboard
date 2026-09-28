@@ -120,14 +120,7 @@ function onTabSwitched(targetId) {
     console.log('[UserInterface] Switching to Plugins tab...');
     window.initPluginsTab();
   } else if (cleanId === 'tab-user-directories' && typeof window.initUserDirectoriesTab === 'function') {
-    console.log('[UserInterface] Switching to User Directories tab...');
-    window.initUserDirectoriesTab();
-  }
-}
-
-// Карта конфигураций вкладок
-const USER_TAB_DEFS = {
-  'chat': { html: '/html/chat/index.html', js: '/html/chat/main.js' },
+    console.log('[UserInterface] Switching to User Directories tab...i18n.t('auto__window_inituserdirectoriestab_const_user_tab_defs__9868a9')chat': { html: '/html/chat/index.html', js: '/html/chat/main.js' },
   'rag': { html: '/html/rag_tab/index.html', js: '/html/rag_tab/main.js' },
   'telegram-rag': { html: '/html/telegram_rag_tab/index.html', js: '/html/telegram_rag_tab/main.js' },
   'news': { html: '/html/news_tab/index.html', js: '/html/news_tab/main.js' },
@@ -207,21 +200,7 @@ async function switchTab(targetId) {
   }
   const targetPane = document.getElementById(tabId) || document.getElementById(cleanId);
   if (targetPane) {
-    targetPane.classList.add('show', 'active');
-  }
-
-  // 3. Загружаем содержимое вкладки по требованию, если ещё не загружено
-  await ensureTabLoaded(tabName);
-
-  // 4. Notify lifecycle callback
-  onTabSwitched(tabId);
-}
-window.switchTab = switchTab;
-window.switchToTab = switchTab;
-
-// Setup dropdowns navigation
-function setupDropdownTabs() {
-  const mainTabs = document.getElementById('mainTabs');
+    targetPane.classList.add('show', 'activei18n.t('auto__3_await_ensuretabloaded_tabname_4_notify_lifecycle_callback_ontabswitched_tabid_window_switchtab_switchtab_window_switchtotab_switchtab_setup_dropdowns_navigation_function_setupdropdowntabs_const_maintabs_document_getelementbyid__e44d02')mainTabs');
   if (!mainTabs) return;
 
   // 1. Dropdown Toggle Buttons
@@ -321,16 +300,7 @@ async function initInterface() {
   // Setup language selector
   document.querySelectorAll('.lang-selector').forEach((sel) => {
     sel.value = savedLang;
-    sel.addEventListener('change', (e) => {
-      switchLang(e.target.value);
-    });
-  });
-
-  // Initialize User Settings & Google OAuth
-  await initUserSettings();
-
-  // Определение и загрузка ТОЛЬКО активной вкладки
-  const hash = location.hash.replace('#', '');
+    sel.addEventListener('changei18n.t('auto__e_switchlang_e_target_value_initialize_user_settings_google_oauth_await_initusersettings_const_hash_location_hash_replace__151d4e')#', '');
   const initialTabId = hash || 'tab-chat';
   const initialTabName = initialTabId.replace(/^tab-/, '');
 
@@ -354,7 +324,7 @@ async function initInterface() {
       }
     }
   } catch (err) {
-    console.error('Ошибка синхронизации видимости плагинов:', err);
+    console.error(i18n.t('auto___88116c'), err);
   }
   
   setupDropdownTabs();

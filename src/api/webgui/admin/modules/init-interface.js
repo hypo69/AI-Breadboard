@@ -7,23 +7,7 @@ import { initTheme, setTheme, getThemeMode, getResolvedTheme } from '../../js/th
 import { initUserSettings, refreshUserProfile } from '../../js/userSettings.js';
 
 export async function initializeInterface() {
-  console.log('[AdminInterface] Initializing core components...');
-
-  try {
-    // Initialize theme
-    initTheme();
-
-    // Initialize i18n
-    await initI18n();
-
-    // Initialize user settings
-    await initUserSettings();
-
-    // Apply translations
-    applyTranslations();
-
-    // Обновляем бейджи активной модели и поиска
-    if (typeof window.updateChatBadges === 'function') {
+  console.log('[AdminInterface] Initializing core components...i18n.t('auto__try_initialize_theme_inittheme_initialize_i18n_await_initi18n_initialize_user_settings_await_initusersettings_apply_translations_applytranslations_if_typeof_window_updatechatbadges__6cddb3')function') {
       window.updateChatBadges();
     }
 

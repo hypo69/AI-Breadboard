@@ -3,11 +3,11 @@
   <!-- Header -->
   <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 shadow-sm">
     <div>
-      <h5 class="mb-1"><i class="bi bi-globe2 me-2"></i>🌐 Провайдеры веб-поиска (MCP)</h5>
-      <p class="mb-0 small text-secondary">Управление серверами интернет-поиска, алгоритмами извлечения и тестирование выдачи.</p>
+      <h5 class="mb-1"><i class="bi bi-globe2 me-2"></i>🌐 <span data-i18n="auto___7a4c9b"></span> (MCP)</h5>
+      <p class="mb-0 small text-secondary"><span data-i18n="auto___b5db3d"></span>.</p>
     </div>
     <div class="input-group input-group-sm" style="max-width: 440px;">
-      <span class="input-group-text fw-bold">Активный движок поиска:</span>
+      <span class="input-group-text fw-bold"><span data-i18n="auto___b9b6e4"></span>:</span>
       <select class="form-select" id="search-tab-engine-selector">
         <option value="playwright">🎭 Playwright MCP</option>
         <option value="langchain">🦜 LangChain MCP</option>
@@ -16,7 +16,7 @@
         <option value="agy">🚀 Antigravity (AGY)</option>
       </select>
       <button class="btn btn-primary" id="btn-save-search-tab-engine">
-        <i class="bi bi-check-circle me-1"></i> Сохранить
+        <i class="bi bi-check-circle me-1"></i> <span data-i18n="auto___486405"></span>
       </button>
     </div>
   </div>
@@ -27,10 +27,10 @@
       <div class="d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-2">
           <i class="bi bi-info-circle-fill text-primary fs-5"></i>
-          <span class="fw-bold">Справка: архитектура и принципы работы 5 серверов веб-поиска</span>
+          <span class="fw-bold"><span data-i18n="auto__5__7f3c78"></span></span>
         </div>
         <button class="btn btn-sm btn-link text-decoration-none p-0 text-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#searchArchCollapse" aria-expanded="true" aria-controls="searchArchCollapse">
-          <i class="bi bi-chevron-down"></i> Развернуть / Скрыть
+          <i class="bi bi-chevron-down"></i> <span data-i18n="auto___b38bf9"></span>
         </button>
       </div>
       <div class="collapse show" id="searchArchCollapse">
@@ -42,13 +42,13 @@
                 🎭 Playwright MCP
               </div>
               <div class="small text-muted mb-2">
-                Прямой headless-браузер (Chromium).
+                <span data-i18n="auto__headless__f19ad4"></span> (Chromium).
               </div>
               <ul class="small text-secondary mb-0 ps-3">
-                <li>Поиск в DuckDuckGo, Bing и Google.</li>
-                <li>Глубокий сбор DOM-структуры и текста сайтов.</li>
-                <li><strong>Плюс:</strong> не расходует токены ИИ на сбор данных.</li>
-                <li><strong>Особенность:</strong> требует запущенного Playwright.</li>
+                <li><span data-i18n="auto__duckduckgo_bing__5a856c"></span> Google.</li>
+                <li><span data-i18n="auto__dom__505e5b"></span>.</li>
+                <li><strong><span data-i18n="auto___51e2a8"></span>:</strong> <span data-i18n="auto___8fd592"></span>.</li>
+                <li><strong><span data-i18n="auto___e56dc5"></span>:</strong> <span data-i18n="auto___06d941"></span> Playwright.</li>
               </ul>
             </div>
           </div>
@@ -60,13 +60,13 @@
                 🦜 LangChain MCP
               </div>
               <div class="small text-muted mb-2">
-                Автономный ReAct-агент Breadboard.
+                <span data-i18n="auto__react__8de4aa"></span> Breadboard.
               </div>
               <ul class="small text-secondary mb-0 ps-3">
-                <li>Инструменты: веб-поиск, RAG, Python-вычисления.</li>
-                <li>Агент сам принимает решение о вызове инструментов.</li>
-                <li><strong>Плюс:</strong> гибкое решение комплексных задач.</li>
-                <li><strong>Особенность:</strong> многошаговый reasoning-цикл.</li>
+                <li><span data-i18n="auto__rag_python__2d56d2"></span>.</li>
+                <li><span data-i18n="auto___050d78"></span>.</li>
+                <li><strong><span data-i18n="auto___51e2a8"></span>:</strong> <span data-i18n="auto___ea0a99"></span>.</li>
+                <li><strong><span data-i18n="auto___e56dc5"></span>:</strong> <span data-i18n="auto__reasoning__a27233"></span>.</li>
               </ul>
             </div>
           </div>
@@ -78,13 +78,13 @@
                 ♊ Google Gemini Grounding
               </div>
               <div class="small text-muted mb-2">
-                Официальный Google Search Grounding.
+                <span data-i18n="auto___8af48c"></span> Google Search Grounding.
               </div>
               <ul class="small text-secondary mb-0 ps-3">
-                <li>Прямой поиск в реальном индексе Google Search.</li>
-                <li>Автоматическая ротация пула ключей при ошибках 429.</li>
-                <li><strong>Плюс:</strong> проверенная точность фактов и цитаты.</li>
-                <li><strong>Особенность:</strong> требует валидных API-ключей.</li>
+                <li><span data-i18n="auto___8c98f2"></span> Google Search.</li>
+                <li><span data-i18n="auto___f69621"></span> 429.</li>
+                <li><strong><span data-i18n="auto___51e2a8"></span>:</strong> <span data-i18n="auto___e0cfb6"></span>.</li>
+                <li><strong><span data-i18n="auto___e56dc5"></span>:</strong> <span data-i18n="auto__api__ae14d6"></span>.</li>
               </ul>
             </div>
           </div>
@@ -96,13 +96,13 @@
                 💻 Google Gemini CLI
               </div>
               <div class="small text-muted mb-2">
-                Локальный терминальный агент Google.
+                <span data-i18n="auto___bc3109"></span> Google.
               </div>
               <ul class="small text-secondary mb-0 ps-3">
-                <li>Прямое выполнение через CLI подпроцесс.</li>
-                <li>Встроенные агентные инструменты веб-поиска.</li>
-                <li><strong>Плюс:</strong> автономный агент, модель по умолчанию flash-lite.</li>
-                <li><strong>Особенность:</strong> требует установленной утилиты gemini CLI.</li>
+                <li><span data-i18n="auto__cli__4ab9a0"></span>.</li>
+                <li><span data-i18n="auto___38fa12"></span>.</li>
+                <li><strong><span data-i18n="auto___51e2a8"></span>:</strong> <span data-i18n="auto___6683df"></span> flash-lite.</li>
+                <li><strong><span data-i18n="auto___e56dc5"></span>:</strong> <span data-i18n="auto___b8e3ef"></span> gemini CLI.</li>
               </ul>
             </div>
           </div>
@@ -114,13 +114,13 @@
                 🚀 Antigravity (AGY)
               </div>
               <div class="small text-muted mb-2">
-                Мультиагентный поиск платформы Google.
+                <span data-i18n="auto___956d6d"></span> Google.
               </div>
               <ul class="small text-secondary mb-0 ps-3">
-                <li>Инструменты <code>SEARCH_WEB</code> и <code>READ_URL_CONTENT</code>.</li>
-                <li>Глубокий ресерч и синтез сложных многоходовок.</li>
-                <li><strong>Плюс:</strong> автономный агентный цикл.</li>
-                <li><strong>Особенность:</strong> использует Antigravity SDK / CLI.</li>
+                <li><span data-i18n="auto___c0eca9"></span> <code>SEARCH_WEB</code> и <code>READ_URL_CONTENT</code>.</li>
+                <li><span data-i18n="auto___ad998b"></span>.</li>
+                <li><strong><span data-i18n="auto___51e2a8"></span>:</strong> <span data-i18n="auto___30b225"></span>.</li>
+                <li><strong><span data-i18n="auto___e56dc5"></span>:</strong> <span data-i18n="auto___05258e"></span> Antigravity SDK / CLI.</li>
               </ul>
             </div>
           </div>
@@ -135,20 +135,20 @@
     <div class="col-lg-6">
       <div class="card shadow-sm border-0 h-100">
         <div class="card-header bg-dark text-white fw-bold">
-          <i class="bi bi-sliders me-1"></i> Параметры поисковых модулей
+          <i class="bi bi-sliders me-1"></i> <span data-i18n="auto___3aa292"></span>
         </div>
         <div class="card-body">
           <!-- Gemini Grounding Settings -->
           <div class="mb-4 p-3 border rounded bg-light">
             <h6 class="fw-bold text-info mb-2"><i class="bi bi-stars me-1"></i> Gemini Grounding</h6>
             <div class="mb-2">
-              <label class="form-label small text-muted fw-bold">Модель для поиска Grounding (динамически из SDK):</label>
+              <label class="form-label small text-muted fw-bold"><span data-i18n="auto__grounding__177cdf"></span> SDK):</label>
               <select class="form-select form-select-sm" id="search-gemini-model">
-                <option value="">Загрузка доступных моделей через Google GenAI SDK...</option>
+                <option value=""><span data-i18n="auto___0e1499"></span> Google GenAI SDK...</option>
               </select>
             </div>
             <div class="small text-muted">
-              Ключи автоматически считываются из вкладки «Модели и API» и ротируются по кругу.
+              <span data-i18n="auto__api__3609e0"></span>.
             </div>
           </div>
 
@@ -156,13 +156,13 @@
           <div class="mb-4 p-3 border rounded bg-light">
             <h6 class="fw-bold text-primary mb-2"><i class="bi bi-terminal-fill me-1"></i> Google Gemini CLI</h6>
             <div class="mb-2">
-              <label class="form-label small text-muted fw-bold">Модель Gemini CLI (динамически из инструмента):</label>
+              <label class="form-label small text-muted fw-bold"><span data-i18n="auto__gemini_cli__372547"></span>):</label>
               <select class="form-select form-select-sm" id="search-gemini-cli-model">
-                <option value="">Загрузка доступных моделей через Gemini CLI...</option>
+                <option value=""><span data-i18n="auto___0e1499"></span> Gemini CLI...</option>
               </select>
             </div>
             <div class="small text-muted">
-              Использует локальную утилиту <code>gemini</code> с автоматическим вызовом поисковых инструментов.
+              <span data-i18n="auto___948666"></span> <code>gemini</code> <span data-i18n="auto___6d27f7"></span>.
             </div>
           </div>
 
@@ -170,19 +170,19 @@
           <div class="mb-4 p-3 border rounded bg-light">
             <h6 class="fw-bold text-warning mb-2"><i class="bi bi-rocket-takeoff me-1"></i> Antigravity (AGY) Search</h6>
             <div class="mb-2">
-              <label class="form-label small text-muted fw-bold">Модель агента Antigravity (динамически из SDK):</label>
+              <label class="form-label small text-muted fw-bold"><span data-i18n="auto__antigravity__369221"></span> SDK):</label>
               <select class="form-select form-select-sm" id="search-agy-model">
-                <option value="">Загрузка доступных моделей через Antigravity SDK...</option>
+                <option value=""><span data-i18n="auto___0e1499"></span> Antigravity SDK...</option>
               </select>
             </div>
             <div class="small text-muted">
-              Использует встроенные агентные инструменты <code>SEARCH_WEB</code> и <code>READ_URL_CONTENT</code>.
+              <span data-i18n="auto___b0b386"></span> <code>SEARCH_WEB</code> и <code>READ_URL_CONTENT</code>.
             </div>
           </div>
 
           <div class="d-grid">
             <button class="btn btn-success fw-bold" id="btn-save-search-params">
-              <i class="bi bi-floppy me-1"></i> Сохранить настройки модулей
+              <i class="bi bi-floppy me-1"></i> <span data-i18n="auto___37d485"></span>
             </button>
           </div>
         </div>
@@ -193,24 +193,24 @@
     <div class="col-lg-6">
       <div class="card shadow-sm border-0 h-100">
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-          <span class="fw-bold"><i class="bi bi-terminal me-1"></i> Интерактивный тест поиска</span>
+          <span class="fw-bold"><i class="bi bi-terminal me-1"></i> <span data-i18n="auto___df0967"></span></span>
           <span class="badge bg-primary" id="test-search-engine-badge">playwright</span>
         </div>
         <div class="card-body d-flex flex-column">
           <div class="mb-3">
-            <label class="form-label small text-muted fw-bold">Тестовый поисковый запрос:</label>
+            <label class="form-label small text-muted fw-bold"><span data-i18n="auto___5d8992"></span>:</label>
             <div class="input-group">
-              <input type="text" class="form-control form-control-sm" id="test-search-query-input" placeholder="Например: последние новости марсохода 2026">
+              <input type="text" class="form-control form-control-sm" id="test-search-query-input" placeholder="<span data-i18n="auto___954a3e"></span> 2026">
               <button class="btn btn-primary btn-sm px-3" id="btn-run-test-search">
-                <i class="bi bi-search me-1"></i> Искать
+                <i class="bi bi-search me-1"></i> <span data-i18n="auto___58212e"></span>
               </button>
             </div>
           </div>
 
           <div class="flex-grow-1 d-flex flex-column">
-            <label class="form-label small text-muted fw-bold">Результат работы провайдера:</label>
+            <label class="form-label small text-muted fw-bold"><span data-i18n="auto___7994fa"></span>:</label>
             <div id="test-search-output-container" class="border rounded p-3 bg-light flex-grow-1 font-monospace" style="min-height: 230px; max-height: 350px; overflow-y: auto; font-size: 0.82rem; white-space: pre-wrap;">
-              <span class="text-muted">Введите запрос и нажмите «Искать» для проверки выбранного провайдера.</span>
+              <span class="text-muted"><span data-i18n="auto___d1d3a9"></span>.</span>
             </div>
           </div>
         </div>

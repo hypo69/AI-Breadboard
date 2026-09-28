@@ -1,4 +1,4 @@
-"""Движок обнаружения и классификации всех источников журналов и логов в системе."""
+﻿"""Движок обнаружения и классификации всех источников журналов и логов в системе."""
 from __future__ import annotations
 import datetime
 import os
@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from logger import logger
-from apps.windows.api.wevtapi import WevtAPI, ChannelMetadata
+from apps.windows.telemetry.api_bindings.wevtapi import WevtAPI, ChannelMetadata
 
 @dataclass
 class LogSource:

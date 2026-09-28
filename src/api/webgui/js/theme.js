@@ -94,18 +94,17 @@ function updateThemeIcon(mode, resolved) {
   const toggleBtn = document.getElementById('theme-toggle');
 
   let iconClass = 'bi-circle-half text-info';
-  let titleText = 'Системная тема';
+  let titleText = i18n.t('auto___1ac01f');
 
   if (mode === 'light') {
     iconClass = 'bi-sun-fill text-warning';
-    titleText = 'Светлая тема';
+    titleText = i18n.t('auto___b45bbb');
   } else if (mode === 'dark') {
     iconClass = 'bi-moon-stars-fill text-primary';
-    titleText = 'Темная тема';
+    titleText = i18n.t('auto___cd53f1');
   } else {
     // system mode
-    iconClass = 'bi-circle-half text-info';
-    titleText = `Системная тема (${resolved === 'dark' ? 'тёмная' : 'светлая'})`;
+    iconClass = 'bi-circle-half text-infoi18n.t('auto__titletext_resolved__d43b06')dark' ? i18n.t('auto___9bb136') : i18n.t('auto___afea31')})`;
   }
 
   if (iconEl) {

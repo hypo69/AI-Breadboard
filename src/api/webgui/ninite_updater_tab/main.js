@@ -3,15 +3,7 @@
  */
 
 (function () {
-  'use strict';
-
-  let selectedFile = null;
-
-  /**
-   * Настройка обработчиков событий
-   */
-  function setupEventListeners() {
-    const dropzone = document.getElementById('ninite-dropzone');
+  'use stricti18n.t('auto__let_selectedfile_null_function_setupeventlisteners_const_dropzone_document_getelementbyid__04d3ad')ninite-dropzone');
     const fileInput = document.getElementById('ninite-file-input');
     const form = document.getElementById('ninite-upload-form');
     const refreshBtn = document.getElementById('btn-ninite-refresh');
@@ -63,15 +55,7 @@
 
     const recoveryBtn = document.getElementById('btn-ninite-recovery-launch');
     if (recoveryBtn) {
-      recoveryBtn.addEventListener('click', handleLaunchRecovery);
-    }
-  }
-
-  /**
-   * Запуск R-Studio для восстановления удаленных файлов
-   */
-  async function handleLaunchRecovery() {
-    const btn = document.getElementById('btn-ninite-recovery-launch');
+      recoveryBtn.addEventListener('clicki18n.t('auto__handlelaunchrecovery_r_studio_async_function_handlelaunchrecovery_const_btn_document_getelementbyid__5057cc')btn-ninite-recovery-launch');
     if (btn) {
       btn.disabled = true;
       btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Запуск R-Studio...`;
@@ -80,21 +64,14 @@
     try {
       const res = await fetch('/api/recovery/launch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.detail || `HTTP ${res.status}`);
-      }
-
-      showAlert(`<strong>Успех:</strong> ${data.message || 'Программа восстановления файлов R-Studio запущена!'}`, 'success');
+        headers: { 'Content-Type': 'application/jsoni18n.t('auto__const_data_await_res_json_if_res_ok_throw_new_error_data_detail_http_res_status_showalert_strong_strong_data_message__95a524')Программа восстановления файлов R-Studio запущена!'}`, 'success');
       if (window.toast) {
-        window.toast.success('R-Studio запущена', data.message || 'Окно программы открывается...');
+        window.toast.success(i18n.t('auto_r_studio__de553b'), data.message || i18n.t('auto___380b94'));
       }
     } catch (err) {
       showAlert(`<strong>Ошибка запуска:</strong> ${err.message}`, 'danger');
       if (window.toast) {
-        window.toast.error('Ошибка запуска R-Studio', err.message);
+        window.toast.error(i18n.t('auto__r_studio_666415'), err.message);
       }
     } finally {
       if (btn) {
@@ -137,19 +114,9 @@
       if (data.file) {
         if (data.file.installed) {
           const sizeMb = (data.file.size_bytes / (1024 * 1024)).toFixed(2);
-          fileStatus.innerHTML = `<span class="text-success">● Установлен</span>`;
-          fileDetails.textContent = `Размер: ${sizeMb} MB | Изменён: ${data.file.modified_time}`;
-        } else {
-          fileStatus.innerHTML = `<span class="text-warning">● Не установлен</span>`;
-          fileDetails.textContent = `Файл ninite.exe отсутствует в Program Files`;
-        }
-      }
-
-      if (data.task) {
-        if (data.task.exists) {
-          taskStatus.innerHTML = `<span class="text-success">● Активна (${data.task.state})</span>`;
-          taskDetails.textContent = `Задача: ${data.task.task_name} | Посл. запуск: ${data.task.last_run_time || 'нет'}`;
-          taskNext.textContent = data.task.next_run_time || 'По расписанию';
+          fileStatus.innerHTML = `<span class="text-successi18n.t('auto__span_filedetails_textcontent_sizemb_mb_data_file_modified_time_else_filestatus_innerhtml_span_class__a0f680')text-warningi18n.t('auto__span_filedetails_textcontent_ninite_exe_program_files_if_data_task_if_data_task_exists_taskstatus_innerhtml_span_class__28e734')text-success">● Активна (${data.task.state})</span>`;
+          taskDetails.textContent = `Задача: ${data.task.task_name} | Посл. запуск: ${data.task.last_run_time || i18n.t('auto___ced07f')}`;
+          taskNext.textContent = data.task.next_run_time || i18n.t('auto___58506a');
         } else {
           taskStatus.innerHTML = `<span class="text-secondary">● Не запланирована</span>`;
           taskDetails.textContent = `Задача NiniteAutoUpdate отсутствует в Task Scheduler`;
@@ -160,13 +127,13 @@
       if (statusBadge) {
         if (data.file?.installed && data.task?.exists) {
           statusBadge.className = 'badge rounded-pill bg-success-subtle text-success border border-success px-2.5 py-1.5';
-          statusBadge.textContent = '● Автообновление активно';
+          statusBadge.textContent = i18n.t('auto___b147e5');
         } else if (data.file?.installed) {
           statusBadge.className = 'badge rounded-pill bg-warning-subtle text-warning border border-warning px-2.5 py-1.5';
-          statusBadge.textContent = '● Файл готов, расписание не задано';
+          statusBadge.textContent = i18n.t('auto___22eddb');
         } else {
           statusBadge.className = 'badge rounded-pill bg-secondary-subtle text-light border border-secondary px-2.5 py-1.5';
-          statusBadge.textContent = '● Ожидание установки';
+          statusBadge.textContent = i18n.t('auto___b055a1');
         }
       }
 
@@ -177,10 +144,10 @@
         }
       }
     } catch (err) {
-      console.error('Ошибка загрузки статуса Ninite:', err);
+      console.error(i18n.t('auto__ninite__fd478f'), err);
       if (statusBadge) {
         statusBadge.className = 'badge rounded-pill bg-danger-subtle text-danger border border-danger px-2.5 py-1.5';
-        statusBadge.textContent = '● Ошибка связи с сервером';
+        statusBadge.textContent = i18n.t('auto___d58857');
       }
     }
   }
@@ -192,7 +159,7 @@
     e.preventDefault();
 
     if (!selectedFile) {
-      showAlert('Пожалуйста, выберите файл инсталлятора Ninite для загрузки.', 'warning');
+      showAlert(i18n.t('auto__ninite__559d79'), 'warning');
       return;
     }
 
@@ -212,19 +179,7 @@
 
     try {
       const res = await fetch('/api/ninite/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.detail || `HTTP ${res.status}`);
-      }
-
-      showAlert(`Успешно! ${data.message}`, 'success');
-      await loadStatus();
-    } catch (err) {
-      showAlert(`Ошибка: ${err.message}`, 'danger');
+        method: 'POSTi18n.t('auto__body_formdata_const_data_await_res_json_if_res_ok_throw_new_error_data_detail_http_res_status_showalert_data_message__c1f861')successi18n.t('auto__await_loadstatus_catch_err_showalert_err_message__a9b143')danger');
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -244,47 +199,14 @@
     try {
       const res = await fetch('/api/ninite/schedule', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          interval_weeks: interval,
-          time_str: timeStr,
-          days_of_week: day,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.detail || `HTTP ${res.status}`);
-      }
-
-      showAlert(`Расписание обновлено: каждые ${interval} нед. в ${timeStr}`, 'success');
-      await loadStatus();
-    } catch (err) {
-      showAlert(`Ошибка обновления расписания: ${err.message}`, 'danger');
-    }
-  }
-
-  /**
-   * Ручной запуск обновления сейчас
-   */
-  async function handleRunNow() {
-    const btn = document.getElementById('btn-ninite-run-now');
+        headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_interval_weeks_interval_time_str_timestr_days_of_week_day_const_data_await_res_json_if_res_ok_throw_new_error_data_detail_http_res_status_showalert_interval_timestr__9900ae')successi18n.t('auto__await_loadstatus_catch_err_showalert_err_message__0e1b43')dangeri18n.t('auto__async_function_handlerunnow_const_btn_document_getelementbyid__a5c30c')btn-ninite-run-now');
     if (btn) {
       btn.disabled = true;
       btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Запуск обновления...`;
     }
 
     try {
-      const res = await fetch('/api/ninite/run-now', { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.detail || `HTTP ${res.status}`);
-      }
-
-      showAlert(`Обновление запущено: ${data.message}`, 'info');
-      setTimeout(loadStatus, 3000);
-    } catch (err) {
-      showAlert(`Ошибка запуска: ${err.message}`, 'danger');
+      const res = await fetch('/api/ninite/run-now', { method: 'POSTi18n.t('auto__const_data_await_res_json_if_res_ok_throw_new_error_data_detail_http_res_status_showalert_data_message__8d7fd7')infoi18n.t('auto__settimeout_loadstatus_3000_catch_err_showalert_err_message__fa737b')danger');
     } finally {
       if (btn) {
         btn.disabled = false;
@@ -303,26 +225,9 @@
     box.className = `alert alert-${type} alert-dismissible fade show small`;
     box.innerHTML = `
       <div>${message}</div>
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label=i18n.t('auto___4ae50d')></button>
     `;
-    box.style.display = 'block';
-  }
-
-  /**
-   * Инициализация вкладки Ninite Updater
-   */
-  function initNiniteUpdaterTab() {
-    setupEventListeners();
-    loadStatus();
-  }
-
-  // Экспорт для жизненного цикла tab-core.js и глобального контекста
-  window.initNiniteUpdaterTab = initNiniteUpdaterTab;
-  window.initNiniteupdaterTab = initNiniteUpdaterTab;
-  window.initNinite_updaterTab = initNiniteUpdaterTab;
-
-  // Автоматический запуск при автономной загрузке
-  if (document.readyState === 'loading') {
+    box.style.display = 'blocki18n.t('auto__ninite_updater_function_initniniteupdatertab_setupeventlisteners_loadstatus_tab_core_js_window_initniniteupdatertab_initniniteupdatertab_window_initniniteupdatertab_initniniteupdatertab_window_initninite_updatertab_initniniteupdatertab_if_document_readystate__5fcf9c')loading') {
     document.addEventListener('DOMContentLoaded', initNiniteUpdaterTab);
   } else {
     initNiniteUpdaterTab();

@@ -23,9 +23,9 @@ class SkillsTabManager {
         title: '🛠️ CLI & Python Tool',
         category: 'tools',
         badge: 'Automation',
-        description: 'Исполняемый навык с Python-скриптом автоматизации в папке scripts/. Подходит для утилит, конвертеров и системных задач.',
+        description: i18n.t('auto__python_scripts__7e0ff4'),
         name: 'custom-cli-tool',
-        descRu: 'Автоматизированная CLI утилита для выполнения задач через скрипты.',
+        descRu: i18n.t('auto__cli__a94582'),
         descEn: 'Automated CLI utility providing executable scripts for system routines.',
         purpose: 'Execute specialized automation commands via internal scripts.',
         triggers: 'Triggered when the user requests executing a custom tool or batch script task.',
@@ -40,9 +40,9 @@ class SkillsTabManager {
         title: '🌐 REST API Connector',
         category: 'api',
         badge: 'Integration',
-        description: 'Интеграция с внешним REST/JSON API. Шаблон с проверкой авторизации, обработкой таймаутов и структурированием ответов.',
+        description: i18n.t('auto__rest_json_api__adbb84'),
         name: 'rest-api-connector',
-        descRu: 'Интеграция с внешним сервисом через REST API.',
+        descRu: i18n.t('auto__rest_api__ed42ec'),
         descEn: 'Connector skill for external REST API services and endpoints.',
         purpose: 'Query external HTTP REST API endpoints and process JSON payloads.',
         triggers: 'Triggered when user asks to fetch data from or post payloads to remote APIs.',
@@ -58,9 +58,9 @@ class SkillsTabManager {
         title: '📊 Data Analyzer & Parser',
         category: 'data',
         badge: 'Analytics',
-        description: 'Обработка и анализ структурированных данных (CSV, JSON, XML, таблицы, логи). Извлечение инсайтов и форматирование результатов.',
+        description: i18n.t('auto__csv_json_xml__dfdc81'),
         name: 'data-analyzer',
-        descRu: 'Анализ структурированных данных, логов и таблиц с выводом статистики.',
+        descRu: i18n.t('auto___f7125f'),
         descEn: 'Analyze structured data, logs, CSV/JSON datasets, and generate statistics.',
         purpose: 'Parse input data files, compute aggregated metrics, and present visual summaries.',
         triggers: 'Triggered when datasets, spreadsheets or data files need parsing and reporting.',
@@ -75,9 +75,9 @@ class SkillsTabManager {
         title: '🎭 AI Expert & Persona',
         category: 'persona',
         badge: 'Agent Role',
-        description: 'Специализированная роль и экспертные инструкции (Архитектор, Аналитик безопасности, Code Reviewer, Консультант).',
+        description: i18n.t('auto__code_reviewer__989386'),
         name: 'domain-expert',
-        descRu: 'Экспертная роль и правила поведения для специализированных консультаций.',
+        descRu: i18n.t('auto___f189a5'),
         descEn: 'Specialized domain expert persona with strict evaluation guidelines.',
         purpose: 'Act as a senior domain expert offering high-level technical feedback.',
         triggers: 'Triggered whenever specialized architectural or domain advice is requested.',
@@ -92,9 +92,9 @@ class SkillsTabManager {
         title: '🔔 Monitor & Notifier',
         category: 'monitoring',
         badge: 'Observability',
-        description: 'Периодическая проверка сервисов, мониторинг системных параметров, выявление сбоев и отправка нотификаций.',
+        description: i18n.t('auto___887206'),
         name: 'health-monitor',
-        descRu: 'Мониторинг доступности сервисов и формирование алертов при сбоях.',
+        descRu: i18n.t('auto___5bfa86'),
         descEn: 'Health monitoring and alerting skill for infrastructure and services.',
         purpose: 'Continuously verify target service endpoints and notify on anomalies.',
         triggers: 'Triggered by scheduled cron jobs or on-demand health check requests.',
@@ -109,9 +109,9 @@ class SkillsTabManager {
         title: '📄 Report & Doc Generator',
         category: 'docgen',
         badge: 'Documentation',
-        description: 'Автоматическая генерация документации, отчетов в Markdown/HTML и сводок по проекту на основе входных данных.',
+        description: i18n.t('auto__markdown_html__ea2bbe'),
         name: 'report-generator',
-        descRu: 'Генератор красивых отчетов, проектной документации и сводок.',
+        descRu: i18n.t('auto___ac50c6'),
         descEn: 'Automated documentation and structured report generation skill.',
         purpose: 'Generate comprehensive Markdown reports, change logs, and release notes.',
         triggers: 'Triggered when documentation, release summaries or audit reports are requested.',
@@ -204,8 +204,7 @@ class SkillsTabManager {
         cardsContainer.innerHTML = `
           <div class="col-12">
             <div class="alert alert-danger d-flex align-items-center justify-content-between p-3 shadow-sm">
-              <div><i class="bi bi-exclamation-triangle-fill me-2"></i><strong>Ошибка загрузки навыков:</strong> ${err.message}</div>
-              <button class="btn btn-sm btn-outline-light" onclick="window.skillsTab?.refresh()">Повторить</button>
+              <div><i class="bi bi-exclamation-triangle-fill me-2i18n.t('auto__i_strong_strong_err_message_div_button_class__89511f')btn btn-sm btn-outline-light" onclick="window.skillsTab?.refresh()">Повторить</button>
             </div>
           </div>
         `;
@@ -319,7 +318,7 @@ class SkillsTabManager {
     if (skill.has_dist) badges.push('<span class="badge bg-success-subtle text-success border border-success-subtle small me-1"><i class="bi bi-box-seam"></i> .skill</span>');
 
     const descRu = skill.descriptions_i18n?.ru || '';
-    const descDisplay = descRu ? `${descRu}` : (skill.description || 'Описание отсутствует');
+    const descDisplay = descRu ? `${descRu}` : (skill.description || i18n.t('auto___abb327'));
 
     return `
       <div class="col-12 col-md-6 col-lg-4">
@@ -328,7 +327,7 @@ class SkillsTabManager {
             <span class="badge bg-primary font-monospace fs-6 text-truncate" style="max-width: 70%;" title="${escapeHtml(skill.name)}">
               ⚡ ${escapeHtml(skill.name)}
             </span>
-            <span class="text-muted small" title="Количество файлов">
+            <span class="text-muted small" title=i18n.t('auto___732867')>
               <i class="bi bi-files"></i> ${skill.files_count || 1}
             </span>
           </div>
@@ -345,16 +344,14 @@ class SkillsTabManager {
           </div>
           <div class="card-footer border-secondary bg-black bg-opacity-25 py-2 d-flex justify-content-between align-items-center">
             <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" onclick="window.skillsTab?.openSkillDetails('${escapeHtml(skill.name)}')">
-              <i class="bi bi-sliders"></i> Детали
-            </button>
-            <div class="btn-group btn-group-sm">
-              <button type="button" class="btn btn-outline-warning" title="Тестировать в Sandbox" onclick="window.skillsTab?.openSkillSandbox('${escapeHtml(skill.name)}')">
+              <i class="bi bi-slidersi18n.t('auto__i_button_div_class__1f6c79')btn-group btn-group-sm">
+              <button type="button" class="btn btn-outline-warning" title=i18n.t('auto__sandbox_ba80f1') onclick="window.skillsTab?.openSkillSandbox('${escapeHtml(skill.name)}')">
                 <i class="bi bi-play-circle"></i>
               </button>
-              <button type="button" class="btn btn-outline-info" title="Собрать .skill архив" onclick="window.skillsTab?.packageSkill('${escapeHtml(skill.name)}')">
+              <button type="button" class="btn btn-outline-info" title=i18n.t('auto__skill__3c74de') onclick="window.skillsTab?.packageSkill('${escapeHtml(skill.name)}')">
                 <i class="bi bi-box-seam"></i>
               </button>
-              <button type="button" class="btn btn-outline-danger" title="Удалить навык" onclick="window.skillsTab?.deleteSkill('${escapeHtml(skill.name)}')">
+              <button type="button" class="btn btn-outline-danger" title=i18n.t('auto___0dd1af') onclick="window.skillsTab?.deleteSkill('${escapeHtml(skill.name)}')">
                 <i class="bi bi-trash"></i>
               </button>
             </div>
@@ -395,16 +392,16 @@ class SkillsTabManager {
         </td>
         <td style="text-align: right;">
           <div class="btn-group btn-group-sm">
-            <button type="button" class="btn btn-outline-primary" title="Открыть детали" onclick="window.skillsTab?.openSkillDetails('${escapeHtml(skill.name)}')">
+            <button type="button" class="btn btn-outline-primary" title=i18n.t('auto___a974a2') onclick="window.skillsTab?.openSkillDetails('${escapeHtml(skill.name)}')">
               <i class="bi bi-sliders"></i>
             </button>
-            <button type="button" class="btn btn-outline-warning" title="Тестировать в Sandbox" onclick="window.skillsTab?.openSkillSandbox('${escapeHtml(skill.name)}')">
+            <button type="button" class="btn btn-outline-warning" title=i18n.t('auto__sandbox_ba80f1') onclick="window.skillsTab?.openSkillSandbox('${escapeHtml(skill.name)}')">
               <i class="bi bi-play-circle"></i>
             </button>
-            <button type="button" class="btn btn-outline-info" title="Собрать архив" onclick="window.skillsTab?.packageSkill('${escapeHtml(skill.name)}')">
+            <button type="button" class="btn btn-outline-info" title=i18n.t('auto___40d80b') onclick="window.skillsTab?.packageSkill('${escapeHtml(skill.name)}')">
               <i class="bi bi-box-seam"></i>
             </button>
-            <button type="button" class="btn btn-outline-danger" title="Удалить" onclick="window.skillsTab?.deleteSkill('${escapeHtml(skill.name)}')">
+            <button type="button" class="btn btn-outline-danger" title=i18n.t('auto___86ea33') onclick="window.skillsTab?.deleteSkill('${escapeHtml(skill.name)}')">
               <i class="bi bi-trash"></i>
             </button>
           </div>
@@ -472,7 +469,7 @@ class SkillsTabManager {
     if (this.currentWizardStep === 1) {
       const name = document.getElementById('wizard-skill-name')?.value.trim();
       if (!name) {
-        this.showCreateAlert('Укажите имя навыка (kebab-case)', 'danger');
+        this.showCreateAlert(i18n.t('auto__kebab_case__5c535c'), 'danger');
         return;
       }
       this.clearCreateAlert();
@@ -487,12 +484,7 @@ class SkillsTabManager {
   generateSlugFromName() {
     const descRu = document.getElementById('wizard-skill-desc-ru')?.value.trim();
     const descEn = document.getElementById('wizard-skill-desc-en')?.value.trim();
-    const source = descEn || descRu || 'custom-skill';
-    
-    // Transliterate or simple slugify
-    let slug = source.toLowerCase()
-      .replace(/[а-яё]/g, char => {
-        const tr = {'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'};
+    const source = descEn || descRu || 'custom-skilli18n.t('auto__transliterate_or_simple_slugify_let_slug_source_tolowercase_replace_g_char_const_tr__420e88')а':'a',i18n.t('auto___a2e9f6'):'b',i18n.t('auto___f3d123'):'v',i18n.t('auto___8e8ca8'):'g',i18n.t('auto___65b7f1'):'d',i18n.t('auto___bea15c'):'e',i18n.t('auto___6baaab'):'yo',i18n.t('auto___6c190c'):'zh',i18n.t('auto___28c993'):'z',i18n.t('auto___a59e2c'):'i',i18n.t('auto___433e4b'):'y',i18n.t('auto___1a7725'):'k',i18n.t('auto___516cbe'):'l',i18n.t('auto___bf6379'):'m',i18n.t('auto___7f7328'):'n',i18n.t('auto___57afad'):'o',i18n.t('auto___9caf4a'):'p',i18n.t('auto___5a3b4b'):'r',i18n.t('auto___b40bbc'):'s',i18n.t('auto___e57626'):'t',i18n.t('auto___d944cd'):'u',i18n.t('auto___577021'):'f',i18n.t('auto___003cc1'):'h',i18n.t('auto___230b58'):'ts',i18n.t('auto___285cc4'):'ch',i18n.t('auto___c13875'):'sh',i18n.t('auto___ffec67'):'sch',i18n.t('auto___e4cedb'):'',i18n.t('auto___5e6c96'):'y',i18n.t('auto___51f784'):'',i18n.t('auto___1bc16a'):'e',i18n.t('auto___baa96c'):'yu',i18n.t('auto___4f566f'):'ya'};
         return tr[char] || char;
       })
       .replace(/[^a-z0-9_-]/g, '-')
@@ -524,7 +516,7 @@ class SkillsTabManager {
 
   fillStandardInstructions() {
     const name = document.getElementById('wizard-skill-name')?.value.trim() || 'custom-skill';
-    const descRu = document.getElementById('wizard-skill-desc-ru')?.value.trim() || 'Выполнение специализированных задач';
+    const descRu = document.getElementById('wizard-skill-desc-ru')?.value.trim() || i18n.t('auto___c6d61a');
     const descEn = document.getElementById('wizard-skill-desc-en')?.value.trim() || 'Specialized agent task execution';
 
     document.getElementById('wizard-inst-purpose').value = descEn;
@@ -647,7 +639,7 @@ ${instructions}`;
     const name = document.getElementById('wizard-skill-name')?.value.trim().toLowerCase();
     if (!name) {
       this.goToStep(1);
-      this.showCreateAlert('Укажите имя навыка', 'danger');
+      this.showCreateAlert(i18n.t('auto___84139d'), 'danger');
       return;
     }
 
@@ -701,8 +693,7 @@ ${instructions}`;
       await this.refresh();
       await this.openSkillDetails(name);
     } catch (err) {
-      console.error('[SkillsTab] Create error:', err);
-      this.showCreateAlert(`Ошибка создания навыка: ${err.message}`, 'danger');
+      console.error('[SkillsTab] Create error:i18n.t('auto__err_this_showcreatealert_err_message__baca64')danger');
     } finally {
       spinner?.classList.add('d-none');
     }
@@ -715,7 +706,7 @@ ${instructions}`;
   async generateSkillWithAi() {
     const prompt = document.getElementById('ai-skill-prompt')?.value.trim();
     if (!prompt) {
-      this.showCreateAlert('Введите описание задачи для генерации навыка', 'warning');
+      this.showCreateAlert(i18n.t('auto___9fd131'), 'warning');
       return;
     }
 
@@ -749,8 +740,7 @@ ${instructions}`;
       if (resPreview) resPreview.textContent = this.aiGeneratedData.instructions;
       resBox?.classList.remove('d-none');
     } catch (err) {
-      console.error('[SkillsTab] AI generate error:', err);
-      this.showCreateAlert(`Ошибка генерации навыка: ${err.message}`, 'danger');
+      console.error('[SkillsTab] AI generate error:i18n.t('auto__err_this_showcreatealert_err_message__73cf27')danger');
     } finally {
       spinner?.classList.add('d-none');
     }
@@ -823,8 +813,7 @@ ${instructions}`;
       await this.refresh();
       await this.openSkillDetails(g.name);
     } catch (err) {
-      console.error('[SkillsTab] AI Direct Save error:', err);
-      this.showCreateAlert(`Ошибка сохранения: ${err.message}`, 'danger');
+      console.error('[SkillsTab] AI Direct Save error:i18n.t('auto__err_this_showcreatealert_err_message__e25ea8')danger');
     }
   }
 
@@ -973,13 +962,7 @@ ${instructions}`;
       }
 
       // Reset sandbox box
-      const sandboxOutput = document.getElementById('sandbox-output-box');
-      if (sandboxOutput) {
-        sandboxOutput.textContent = `Готов к тестированию навыка '${this.currentSkill.name}'. Введите тестовый запрос и нажмите «Запустить».`;
-      }
-
-      // Hide alerts
-      const alertEl = document.getElementById('detail-skill-alert');
+      const sandboxOutput = document.getElementById('sandbox-output-boxi18n.t('auto__if_sandboxoutput_sandboxoutput_textcontent__047ef2')${this.currentSkill.name}i18n.t('auto__hide_alerts_const_alertel_document_getelementbyid__f379c0')detail-skill-alert');
       if (alertEl) alertEl.classList.add('d-none');
 
       // Show modal
@@ -994,13 +977,7 @@ ${instructions}`;
         tab.show();
       }
     } catch (err) {
-      console.error('[SkillsTab] Details error:', err);
-      window.showToast?.(`Ошибка открытия деталей навыка: ${err.message}`, 'danger') || alert(`Ошибка открытия деталей навыка: ${err.message}`);
-    }
-  }
-
-  async openSkillSandbox(name) {
-    await this.openSkillDetails(name, 'detail-tab-sandbox');
+      console.error('[SkillsTab] Details error:i18n.t('auto__err_window_showtoast_err_message__d0bd64')dangeri18n.t('auto__alert_err_message_async_openskillsandbox_name_await_this_openskilldetails_name__aff91a')detail-tab-sandbox');
   }
 
   async runSandboxTest() {
@@ -1010,8 +987,7 @@ ${instructions}`;
     const spinner = document.getElementById('sandbox-spinner');
 
     const prompt = promptInput?.value.trim() || `Test execute skill ${this.currentSkill.name}`;
-    spinner?.classList.remove('d-none');
-    if (outputBox) outputBox.textContent = `⏳ Отправка запроса к модели для навыка '${this.currentSkill.name}'...\n`;
+    spinner?.classList.remove('d-nonei18n.t('auto__if_outputbox_outputbox_textcontent__a0f11c')${this.currentSkill.name}'...\n`;
 
     try {
       const res = await this.apiFetch(`/api/skills/${encodeURIComponent(this.currentSkill.name)}/test`, {
@@ -1030,10 +1006,7 @@ ${instructions}`;
         outputBox.textContent = `[Model: ${data.model_used}]\n\n${data.response}`;
       }
     } catch (err) {
-      console.error('[SkillsTab] Sandbox test error:', err);
-      if (outputBox) outputBox.textContent = `❌ Ошибка тестирования: ${err.message}`;
-    } finally {
-      spinner?.classList.add('d-none');
+      console.error('[SkillsTab] Sandbox test error:i18n.t('auto__err_if_outputbox_outputbox_textcontent_err_message_finally_spinner_classlist_add__c74cf0')d-none');
     }
   }
 
@@ -1062,20 +1035,16 @@ ${instructions}`;
 
       if (alertEl) {
         alertEl.className = 'alert alert-success py-2 mt-3 mb-0';
-        alertEl.textContent = '✅ Изменения успешно сохранены';
+        alertEl.textContent = i18n.t('auto___92f832');
         alertEl.classList.remove('d-none');
       }
-      window.showToast?.('Изменения навыка успешно сохранены', 'success');
+      window.showToast?.(i18n.t('auto___61dcb8'), 'success');
 
       await this.refresh();
     } catch (err) {
       console.error('[SkillsTab] Save error:', err);
       if (alertEl) {
-        alertEl.className = 'alert alert-danger py-2 mt-3 mb-0';
-        alertEl.textContent = `Ошибка сохранения: ${err.message}`;
-        alertEl.classList.remove('d-none');
-      }
-      window.showToast?.(`Ошибка сохранения: ${err.message}`, 'danger');
+        alertEl.className = 'alert alert-danger py-2 mt-3 mb-0i18n.t('auto__alertel_textcontent_err_message_alertel_classlist_remove__d69123')d-nonei18n.t('auto__window_showtoast_err_message__6de532')danger');
     } finally {
       spinner?.classList.add('d-none');
     }
@@ -1084,60 +1053,20 @@ ${instructions}`;
   async packageSkill(name) {
     try {
       const res = await this.apiFetch(`/api/skills/${encodeURIComponent(name)}/package`, {
-        method: 'POST'
-      });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.detail || res.statusText);
-      }
-      const data = await res.json();
-      window.showToast?.(`✅ Навык '${name}' успешно упакован в архив:\n${data.archive?.path} (${this.formatBytes(data.archive?.size)})`, 'success');
+        method: 'POSTi18n.t('auto__if_res_ok_const_errdata_await_res_json_catch_throw_new_error_errdata_detail_res_statustext_const_data_await_res_json_window_showtoast__78180b')${name}i18n.t('auto__n_data_archive_path_this_formatbytes_data_archive_size__c36260')success');
       await this.refresh();
     } catch (err) {
-      console.error('[SkillsTab] Package error:', err);
-      window.showToast?.(`Ошибка сборки архива: ${err.message}`, 'danger') || alert(`Ошибка сборки архива: ${err.message}`);
-    }
-  }
-
-  async packageCurrentSkill() {
-    if (!this.currentSkill) return;
-    await this.packageSkill(this.currentSkill.name);
-    await this.openSkillDetails(this.currentSkill.name);
-  }
-
-  async deleteSkill(name) {
-    if (!confirm(`Вы действительно хотите удалить навык '${name}' и все его файлы? Это действие необратимо.`)) {
-      return;
-    }
-
-    try {
-      const res = await this.apiFetch(`/api/skills/${encodeURIComponent(name)}`, {
-        method: 'DELETE'
+      console.error('[SkillsTab] Package error:i18n.t('auto__err_window_showtoast_err_message__ee423b')dangeri18n.t('auto__alert_err_message_async_packagecurrentskill_if_this_currentskill_return_await_this_packageskill_this_currentskill_name_await_this_openskilldetails_this_currentskill_name_async_deleteskill_name_if_confirm__0725c9')${name}i18n.t('auto__return_try_const_res_await_this_apifetch_api_skills_encodeuricomponent_name_method__39814b')DELETE'
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.detail || res.statusText);
       }
 
-      const modalEl = document.getElementById('skillDetailsModal');
-      const modal = bootstrap.Modal.getInstance(modalEl);
-      modal?.hide();
-
-      window.showToast?.(`Навык '${name}' успешно удален`, 'success');
+      const modalEl = document.getElementById('skillDetailsModali18n.t('auto__const_modal_bootstrap_modal_getinstance_modalel_modal_hide_window_showtoast__d5460c')${name}i18n.t('auto___ed603f')success');
       await this.refresh();
     } catch (err) {
-      console.error('[SkillsTab] Delete error:', err);
-      window.showToast?.(`Ошибка удаления навыка: ${err.message}`, 'danger') || alert(`Ошибка удаления навыка: ${err.message}`);
-    }
-  }
-
-  async deleteCurrentSkill() {
-    if (!this.currentSkill) return;
-    await this.deleteSkill(this.currentSkill.name);
-  }
-
-  showLoading(show) {
-    const loadingEl = document.getElementById('skills-loading');
+      console.error('[SkillsTab] Delete error:i18n.t('auto__err_window_showtoast_err_message__231672')dangeri18n.t('auto__alert_err_message_async_deletecurrentskill_if_this_currentskill_return_await_this_deleteskill_this_currentskill_name_showloading_show_const_loadingel_document_getelementbyid__bf077a')skills-loading');
     if (loadingEl) {
       if (show) loadingEl.classList.remove('d-none');
       else loadingEl.classList.add('d-none');

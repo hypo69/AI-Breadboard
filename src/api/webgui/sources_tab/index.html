@@ -2,12 +2,12 @@
 <div class="container-fluid">
   <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 shadow-sm">
     <div>
-      <h5 class="mb-1"><i class="bi bi-collection-play me-2"></i>📑 Реестр источников данных</h5>
-      <p class="mb-0 small text-secondary">Управление списком сайтов, стримингов и парсеров для медиатеки.</p>
+      <h5 class="mb-1"><i class="bi bi-collection-play me-2"></i>📑 <span data-i18n="auto___036472"></span></h5>
+      <p class="mb-0 small text-secondary"><span data-i18n="auto___0ef454"></span>.</p>
     </div>
     <div>
       <button class="btn btn-outline-primary btn-sm rounded-pill" onclick="const t = document.querySelector('[data-bs-target=\'#tab-search\']'); if(t) t.click();">
-        <i class="bi bi-globe2 me-1"></i> Настройки веб-поиска (MCP) →
+        <i class="bi bi-globe2 me-1"></i> <span data-i18n="auto___7e36e0"></span> (MCP) →
       </button>
     </div>
   </div>
@@ -17,19 +17,19 @@
     <div class="col-4">
       <div class="card mb-3">
         <div class="card-header bg-dark text-white">
-          <span>➕ Добавить источник</span>
+          <span>➕ <span data-i18n="auto___9b4344"></span></span>
         </div>
         <div class="card-body">
           <form id="form-add-source" onsubmit="event.preventDefault();">
             <div class="mb-2">
-              <label for="new-source-id" class="form-label small fw-bold">ID (уникальный):</label>
+              <label for="new-source-id" class="form-label small fw-bold">ID (<span data-i18n="auto___f14150"></span>):</label>
               <input type="text" class="form-control form-control-sm" id="new-source-id"
-                     placeholder="Например: my_site" required>
+                     placeholder="<span data-i18n="auto___bbc821"></span>: my_site" required>
             </div>
             <div class="mb-2">
-              <label for="new-source-name" class="form-label small fw-bold">Название:</label>
+              <label for="new-source-name" class="form-label small fw-bold"><span data-i18n="auto___3de498"></span>:</label>
               <input type="text" class="form-control form-control-sm" id="new-source-name"
-                     placeholder="Например: My Site" required>
+                     placeholder="<span data-i18n="auto___bbc821"></span>: My Site" required>
             </div>
             <div class="mb-2">
               <label for="new-source-url" class="form-label small fw-bold">URL:</label>
@@ -37,25 +37,25 @@
                      placeholder="https://example.com" required>
             </div>
             <div class="mb-2">
-              <label for="new-source-category" class="form-label small fw-bold">Категория:</label>
+              <label for="new-source-category" class="form-label small fw-bold"><span data-i18n="auto___19c858"></span>:</label>
               <select class="form-select form-select-sm" id="new-source-category">
-                <option value="streaming">streaming — стриминг</option>
-                <option value="streaming_search">streaming_search — поиск стримингов</option>
-                <option value="metadata">metadata — метаданные</option>
-                <option value="embed_player">embed_player — встроенный плеер</option>
-                <option value="torrent">torrent — торрент-трекер</option>
-                <option value="search">search — поисковик</option>
-                <option value="other">other — другое</option>
+                <option value="streaming">streaming — <span data-i18n="auto___975de8"></span></option>
+                <option value="streaming_search">streaming_search — <span data-i18n="auto___c4d6d4"></span></option>
+                <option value="metadata">metadata — <span data-i18n="auto___612c04"></span></option>
+                <option value="embed_player">embed_player — <span data-i18n="auto___5aa849"></span></option>
+                <option value="torrent">torrent — <span data-i18n="auto___fbea1d"></span></option>
+                <option value="search">search — <span data-i18n="auto___4884fe"></span></option>
+                <option value="other">other — <span data-i18n="auto___723e8f"></span></option>
               </select>
             </div>
             <div class="mb-3">
-              <label for="new-source-description" class="form-label small fw-bold">Описание:</label>
+              <label for="new-source-description" class="form-label small fw-bold"><span data-i18n="auto___f5441f"></span>:</label>
               <textarea class="form-control form-control-sm" id="new-source-description" rows="2"
-                        placeholder="Краткое описание источника"></textarea>
+                        placeholder="<span data-i18n="auto___9c18d7"></span>"></textarea>
             </div>
             <div class="d-grid">
               <button type="button" class="btn btn-success btn-sm" id="btn-add-source">
-                ➕ Добавить
+                ➕ <span data-i18n="auto___559a87"></span>
               </button>
             </div>
           </form>
@@ -65,18 +65,18 @@
       <!-- JSON Raw Editor -->
       <div class="card">
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-          <span>📄 JSON-редактор</span>
+          <span>📄 JSON-<span data-i18n="auto___b112fb"></span></span>
           <div class="d-flex gap-2">
             <button class="btn btn-outline-light btn-sm" id="btn-refresh-sources-json">
               <i class="bi bi-arrow-clockwise"></i>
             </button>
             <button class="btn btn-success btn-sm" id="btn-save-sources-json">
-              <i class="bi bi-floppy"></i> Сохранить JSON
+              <i class="bi bi-floppy"></i> <span data-i18n="auto___486405"></span> JSON
             </button>
           </div>
         </div>
         <div class="card-body p-2">
-          <p class="small text-muted mb-2">Прямое редактирование JSON. Используйте с осторожностью.</p>
+          <p class="small text-muted mb-2"><span data-i18n="auto__json__e65648"></span>.</p>
           <textarea
             id="sources-json-editor"
             class="form-control font-monospace"
@@ -91,24 +91,24 @@
     <div class="col-8">
       <div class="card">
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-          <span>📋 Список источников</span>
+          <span>📋 <span data-i18n="auto___f3693d"></span></span>
           <button class="btn btn-outline-light btn-sm" id="btn-refresh-sources">
-            <i class="bi bi-arrow-clockwise"></i> Обновить
+            <i class="bi bi-arrow-clockwise"></i> <span data-i18n="auto___c2f668"></span>
           </button>
         </div>
         <div class="card-body p-0">
           <!-- Category filter -->
           <div class="p-2 border-bottom d-flex gap-2 flex-wrap align-items-center">
-            <span class="small text-muted">Фильтр:</span>
+            <span class="small text-muted"><span data-i18n="auto___3a4e34"></span>:</span>
             <select class="form-select form-select-sm" id="sources-category-filter" style="width: auto;">
-              <option value="all">Все категории</option>
-              <option value="streaming">Стриминг</option>
-              <option value="streaming_search">Поиск стримингов</option>
-              <option value="metadata">Метаданные</option>
-              <option value="embed_player">Встроенные плееры</option>
-              <option value="torrent">Торренты</option>
-              <option value="search">Поисковики</option>
-              <option value="other">Другое</option>
+              <option value="all"><span data-i18n="auto___b3bf7e"></span></option>
+              <option value="streaming"><span data-i18n="auto___68db1c"></span></option>
+              <option value="streaming_search"><span data-i18n="auto___71d2b6"></span></option>
+              <option value="metadata"><span data-i18n="auto___527c7d"></span></option>
+              <option value="embed_player"><span data-i18n="auto___e455b9"></span></option>
+              <option value="torrent"><span data-i18n="auto___93e9ba"></span></option>
+              <option value="search"><span data-i18n="auto___9dcf25"></span></option>
+              <option value="other"><span data-i18n="auto___8f96ca"></span></option>
             </select>
           </div>
           <!-- Table container with vertical scroll -->
@@ -117,16 +117,16 @@
               <thead class="table-dark">
                 <tr>
                   <th style="width: 5%;">On</th>
-                  <th style="width: 15%;">Название</th>
+                  <th style="width: 15%;"><span data-i18n="auto___3de498"></span></th>
                   <th style="width: 25%;">URL</th>
-                  <th style="width: 15%;">Категория</th>
-                  <th style="width: 25%;">Описание</th>
-                  <th style="width: 15%;" class="text-end">Действия</th>
+                  <th style="width: 15%;"><span data-i18n="auto___19c858"></span></th>
+                  <th style="width: 25%;"><span data-i18n="auto___f5441f"></span></th>
+                  <th style="width: 15%;" class="text-end"><span data-i18n="auto___9978ac"></span></th>
                 </tr>
               </thead>
               <tbody id="sources-list-body" style="word-wrap: break-word; overflow-wrap: break-word;">
                 <tr>
-                  <td colspan="6" class="text-center py-4 text-muted">Загрузка источников...</td>
+                  <td colspan="6" class="text-center py-4 text-muted"><span data-i18n="auto___7ccee8"></span>...</td>
                 </tr>
               </tbody>
             </table>
@@ -139,7 +139,7 @@
   <!-- Save all button at bottom -->
   <div class="mt-3 text-end">
     <button class="btn btn-primary" id="btn-save-all-sources">
-      <i class="bi bi-floppy"></i> Сохранить все изменения
+      <i class="bi bi-floppy"></i> <span data-i18n="auto___cbe26c"></span>
     </button>
   </div>
 </div>

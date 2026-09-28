@@ -124,18 +124,18 @@
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 shadow-sm text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border: 1px solid #334155;">
     <div>
       <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
-        <span class="fs-4">🧩</span> Управление и создание ИИ-Агентов
+        <span class="fs-4">🧩</span> <span data-i18n="auto___46588a"></span>
       </h5>
       <p class="mb-0 small" style="color: #cbd5e1;">
-        Конфигурирование специализированных агентов, назначение моделей из пула, подключение инструментов и генерация через AI.
+        <span data-i18n="auto___083568"></span> AI.
       </p>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <button class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm fw-semibold" id="btn-open-ai-builder" style="border-width: 1.5px;">
-        <i class="bi bi-magic me-1"></i> ✨ Создать с помощью AI
+        <i class="bi bi-magic me-1"></i> ✨ <span data-i18n="auto___69dc70"></span> AI
       </button>
       <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm fw-semibold" id="btn-open-create-agent">
-        <i class="bi bi-plus-lg me-1"></i> Добавить вручную
+        <i class="bi bi-plus-lg me-1"></i> <span data-i18n="auto___c5e914"></span>
       </button>
     </div>
   </div>
@@ -146,40 +146,40 @@
       <div class="d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-2">
           <i class="bi bi-diagram-3-fill text-info fs-5"></i>
-          <span class="fw-bold" style="color: #f1f5f9;">Интерактивная справка: архитектура работы и создания агентов</span>
+          <span class="fw-bold" style="color: #f1f5f9;"><span data-i18n="auto___133cda"></span></span>
         </div>
         <button class="btn btn-sm btn-link text-decoration-none p-0 fw-semibold" style="color: #38bdf8;" type="button" data-bs-toggle="collapse" data-bs-target="#agentsArchCollapse" aria-expanded="false" aria-controls="agentsArchCollapse">
-          <i class="bi bi-chevron-down"></i> Развернуть / Скрыть схему
+          <i class="bi bi-chevron-down"></i> <span data-i18n="auto___2cc01f"></span>
         </button>
       </div>
       <div class="collapse" id="agentsArchCollapse">
         <div class="mt-3 pt-3" style="border-top: 1px solid rgba(255, 255, 255, 0.1);">
           <div class="text-center p-2 rounded mb-3" style="background: #020617; border: 1px solid rgba(255, 255, 255, 0.08);">
-            <img src="/html/assets/agents_architecture.svg?v=20260817" alt="Архитектура агентов Mediteka" class="img-fluid rounded" style="max-height: 550px; width: 100%; object-fit: contain;">
+            <img src="/html/assets/agents_architecture.svg?v=20260817" alt="<span data-i18n="auto___ac34c0"></span> Mediteka" class="img-fluid rounded" style="max-height: 550px; width: 100%; object-fit: contain;">
           </div>
           <div class="row g-3 small">
             <div class="col-md-3">
               <div class="p-3 rounded h-100" style="background: #1e293b; border: 1px solid #334155; color: #f1f5f9; line-height: 1.55;">
-                <strong class="d-block mb-1" style="color: #38bdf8; font-size: 0.88rem;">1. Пул моделей (Model Pool)</strong>
-                Каждый агент может использовать независимую модель: Google Gemini (с ротацией ключей), Antigravity AGY, Microsoft Foundry или Ollama.
+                <strong class="d-block mb-1" style="color: #38bdf8; font-size: 0.88rem;">1. <span data-i18n="auto___107965"></span> (Model Pool)</strong>
+                <span data-i18n="auto__google_gemini_antigravity_agy_microsoft_foundry__a3ec00"></span> Ollama.
               </div>
             </div>
             <div class="col-md-3">
               <div class="p-3 rounded h-100" style="background: #1e293b; border: 1px solid #334155; color: #f1f5f9; line-height: 1.55;">
-                <strong class="d-block mb-1" style="color: #4ade80; font-size: 0.88rem;">2. Каталог инструментов (Tools)</strong>
-                Набор готовых модулей: интернет-поиск (MCP / Google Grounding), RAG база знаний, Python Code Execution, чтение файлов и синтез речи TTS.
+                <strong class="d-block mb-1" style="color: #4ade80; font-size: 0.88rem;">2. <span data-i18n="auto___dfb0a8"></span> (Tools)</strong>
+                <span data-i18n="auto__mcp_google_grounding_rag_python_code_execution__e529c6"></span> TTS.
               </div>
             </div>
             <div class="col-md-3">
               <div class="p-3 rounded h-100" style="background: #1e293b; border: 1px solid #334155; color: #f1f5f9; line-height: 1.55;">
-                <strong class="d-block mb-1" style="color: #fbbf24; font-size: 0.88rem;">3. AI-Архитектор промптов</strong>
-                Модель из пула анализирует вашу цель и генерирует структурированную роль, правила ReAct и список инструментов.
+                <strong class="d-block mb-1" style="color: #fbbf24; font-size: 0.88rem;">3. AI-<span data-i18n="auto___a6dd2f"></span></strong>
+                <span data-i18n="auto__react__8a1961"></span>.
               </div>
             </div>
             <div class="col-md-3">
               <div class="p-3 rounded h-100" style="background: #1e293b; border: 1px solid #334155; color: #f1f5f9; line-height: 1.55;">
-                <strong class="d-block mb-1" style="color: #f87171; font-size: 0.88rem;">4. Песочница (Sandbox)</strong>
-                Тестирование поведения агента, отслеживание цепочки рассуждений (Thought & Action) и замер задержек ответа до боевого использования.
+                <strong class="d-block mb-1" style="color: #f87171; font-size: 0.88rem;">4. <span data-i18n="auto___c05c76"></span> (Sandbox)</strong>
+                <span data-i18n="auto__thought_action__affb70"></span>.
               </div>
             </div>
           </div>
@@ -191,14 +191,14 @@
   <!-- Filters and Status Toolbar -->
   <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div class="btn-group btn-group-sm" role="group" id="agents-filter-group">
-      <button type="button" class="btn active" data-filter="all">Все (<span id="count-all">0</span>)</button>
-      <button type="button" class="btn" data-filter="active">Активные (<span id="count-active">0</span>)</button>
-      <button type="button" class="btn" data-filter="system">Системные (<span id="count-system">0</span>)</button>
-      <button type="button" class="btn" data-filter="custom">Пользовательские (<span id="count-custom">0</span>)</button>
+      <button type="button" class="btn active" data-filter="all"><span data-i18n="auto___fd08da"></span> (<span id="count-all">0</span>)</button>
+      <button type="button" class="btn" data-filter="active"><span data-i18n="auto___6009f6"></span> (<span id="count-active">0</span>)</button>
+      <button type="button" class="btn" data-filter="system"><span data-i18n="auto___fb4d32"></span> (<span id="count-system">0</span>)</button>
+      <button type="button" class="btn" data-filter="custom"><span data-i18n="auto___9d825e"></span> (<span id="count-custom">0</span>)</button>
     </div>
     <div class="d-flex align-items-center gap-2">
-      <button class="btn btn-sm rounded-pill px-3" id="btn-refresh-agents" title="Обновить список">
-        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+      <button class="btn btn-sm rounded-pill px-3" id="btn-refresh-agents" title="<span data-i18n="auto___0cd9c0"></span>">
+        <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___c2f668"></span>
       </button>
     </div>
   </div>
@@ -207,32 +207,32 @@
   <div class="row g-3" id="agents-grid">
     <div class="col-12 text-center py-5" style="color: #cbd5e1;">
       <div class="spinner-border text-primary mb-2" role="status"></div>
-      <div class="fw-semibold">Загрузка агентов и пула моделей...</div>
+      <div class="fw-semibold"><span data-i18n="auto___2d2626"></span>...</div>
     </div>
   </div>
 
 </div>
 
 <!-- ========================================================================= -->
-<!-- MODAL: AI Agent Builder (Генерация через LLM)                             -->
+<!-- MODAL: AI Agent Builder (<span data-i18n="auto___d45dc3"></span> LLM)                             -->
 <!-- ========================================================================= -->
 <div class="modal fade" id="modal-ai-builder" tabindex="-1" aria-labelledby="modalAiBuilderLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content text-white" style="background-color: #0f172a !important; border: 1px solid #334155 !important; border-radius: 12px;">
       <div class="modal-header" style="background-color: #1e293b !important; border-bottom: 1px solid #334155 !important;">
         <h5 class="modal-title fw-bold" style="color: #38bdf8;" id="modalAiBuilderLabel">
-          <i class="bi bi-magic me-2"></i>AI Agent Builder — Конструктор агентов
+          <i class="bi bi-magic me-2"></i>AI Agent Builder — <span data-i18n="auto___0ca67f"></span>
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-4">
         <p class="small mb-3" style="color: #cbd5e1; line-height: 1.5;">
-          Опишите задачу агента своими словами. Выбранная модель из пула проанализирует цель, подберёт необходимые инструменты и сформирует профессиональный системный промпт.
+          <span data-i18n="auto___4e7ec2"></span>.
         </p>
         
         <div class="row g-3 mb-3">
           <div class="col-md-6">
-            <label class="form-label small fw-semibold" style="color: #f1f5f9;">Провайдер модели-архитектора:</label>
+            <label class="form-label small fw-semibold" style="color: #f1f5f9;"><span data-i18n="auto___2a28a8"></span>:</label>
             <select class="form-select form-select-sm" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important;" id="ai-builder-provider">
               <option value="gemini">Google Gemini</option>
               <option value="gemini_cli">Google Gemini CLI</option>
@@ -242,34 +242,34 @@
             </select>
           </div>
           <div class="col-md-6">
-            <label class="form-label small fw-semibold" style="color: #f1f5f9;">Модель из пула:</label>
+            <label class="form-label small fw-semibold" style="color: #f1f5f9;"><span data-i18n="auto___dc36a4"></span>:</label>
             <select class="form-select form-select-sm" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important;" id="ai-builder-model">
-              <!-- Заполняется динамически -->
+              <!-- <span data-i18n="auto___0eb1eb"></span> -->
             </select>
           </div>
         </div>
 
         <div class="mb-3">
-          <label class="form-label small fw-semibold" style="color: #f1f5f9;">Опишите задачу агента:</label>
-          <textarea class="form-control" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important;" id="ai-builder-prompt" rows="4" placeholder="Например: Создай агента для автономного поиска субтитров к фильмам, проверки их таймингов и сопоставления с медиатекой..."></textarea>
+          <label class="form-label small fw-semibold" style="color: #f1f5f9;"><span data-i18n="auto___f6bfdf"></span>:</label>
+          <textarea class="form-control" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important;" id="ai-builder-prompt" rows="4" placeholder="<span data-i18n="auto___eaa9ca"></span>..."></textarea>
         </div>
 
         <div class="d-flex justify-content-end mb-3">
           <button class="btn btn-info rounded-pill px-4 fw-bold" id="btn-run-ai-generate" style="background-color: #0284c7 !important; border-color: #0284c7 !important; color: #ffffff !important;">
-            <i class="bi bi-stars me-1"></i> Сгенерировать спецификацию
+            <i class="bi bi-stars me-1"></i> <span data-i18n="auto___007801"></span>
           </button>
         </div>
 
         <!-- Result Preview Section -->
         <div id="ai-builder-result" class="d-none pt-3" style="border-top: 1px solid #334155;">
-          <h6 class="fw-bold mb-2" style="color: #4ade80;"><i class="bi bi-check2-circle me-1"></i> Спецификация сформирована:</h6>
+          <h6 class="fw-bold mb-2" style="color: #4ade80;"><i class="bi bi-check2-circle me-1"></i> <span data-i18n="auto___a98203"></span>:</h6>
           <div class="p-3 rounded mb-3 small font-monospace" style="background: #020617; border: 1px solid #334155; color: #f8fafc;" id="ai-builder-preview-box">
-            <!-- Превью JSON / данных -->
+            <!-- <span data-i18n="auto__json__569058"></span> -->
           </div>
           <div class="d-flex justify-content-end gap-2">
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal" style="color: #cbd5e1; border-color: #475569;">Отмена</button>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal" style="color: #cbd5e1; border-color: #475569;"><span data-i18n="auto___0ec753"></span></button>
             <button class="btn btn-success btn-sm rounded-pill px-3 fw-semibold" id="btn-apply-ai-generated">
-              <i class="bi bi-pencil-square me-1"></i> Открыть в редакторе агента
+              <i class="bi bi-pencil-square me-1"></i> <span data-i18n="auto___07d304"></span>
             </button>
           </div>
         </div>
@@ -279,14 +279,14 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- MODAL: Agent Editor (Создание и Редактирование)                           -->
+<!-- MODAL: Agent Editor (<span data-i18n="auto___054592"></span>)                           -->
 <!-- ========================================================================= -->
 <div class="modal fade" id="modal-agent-editor" tabindex="-1" aria-labelledby="modalAgentEditorLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content text-white" style="background-color: #0f172a !important; border: 1px solid #334155 !important; border-radius: 12px;">
       <div class="modal-header" style="background-color: #1e293b !important; border-bottom: 1px solid #334155 !important;">
         <h5 class="modal-title fw-bold text-white" id="modalAgentEditorLabel">
-          <i class="bi bi-robot me-2" style="color: #38bdf8;"></i>Настройка агента
+          <i class="bi bi-robot me-2" style="color: #38bdf8;"></i><span data-i18n="auto___ca4310"></span>
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -296,36 +296,36 @@
           
           <div class="row g-3 mb-3">
             <div class="col-md-4">
-              <label class="form-label small fw-semibold" style="color: #f1f5f9;">Уникальный ID агента:</label>
+              <label class="form-label small fw-semibold" style="color: #f1f5f9;"><span data-i18n="auto__id__3ba011"></span>:</label>
               <input type="text" class="form-control form-control-sm font-monospace" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important;" id="agent-id" placeholder="my_custom_agent" required>
             </div>
             <div class="col-md-5">
-              <label class="form-label small fw-semibold" style="color: #f1f5f9;">Отображаемое имя:</label>
-              <input type="text" class="form-control form-control-sm" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important;" id="agent-name" placeholder="Название агента" required>
+              <label class="form-label small fw-semibold" style="color: #f1f5f9;"><span data-i18n="auto___403372"></span>:</label>
+              <input type="text" class="form-control form-control-sm" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important;" id="agent-name" placeholder="<span data-i18n="auto___163361"></span>" required>
             </div>
             <div class="col-md-3">
-              <label class="form-label small fw-semibold" style="color: #f1f5f9;">Статус активности:</label>
+              <label class="form-label small fw-semibold" style="color: #f1f5f9;"><span data-i18n="auto___519ed0"></span>:</label>
               <div class="form-check form-switch mt-1">
                 <input class="form-check-input" type="checkbox" id="agent-enabled" checked>
-                <label class="form-check-label small fw-medium" style="color: #e2e8f0;" for="agent-enabled">Агент активен</label>
+                <label class="form-check-label small fw-medium" style="color: #e2e8f0;" for="agent-enabled"><span data-i18n="auto___b62f6b"></span></label>
               </div>
             </div>
           </div>
 
           <div class="mb-3">
-            <label class="form-label small fw-semibold" style="color: #f1f5f9;">Краткое описание роли:</label>
-            <input type="text" class="form-control form-control-sm" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important;" id="agent-desc" placeholder="Какую задачу решает данный агент">
+            <label class="form-label small fw-semibold" style="color: #f1f5f9;"><span data-i18n="auto___9b5a53"></span>:</label>
+            <input type="text" class="form-control form-control-sm" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important;" id="agent-desc" placeholder="<span data-i18n="auto___9a6898"></span>">
           </div>
 
           <!-- Model & Provider Selection from Pool -->
           <div class="card mb-3" style="background: #0b0f19 !important; border: 1px solid #334155 !important; border-radius: 8px;">
             <div class="card-header py-2" style="background: #1e293b !important; border-bottom: 1px solid #334155 !important;">
-              <span class="fw-bold small" style="color: #38bdf8;"><i class="bi bi-cpu me-1"></i> Привязка к модели из пула</span>
+              <span class="fw-bold small" style="color: #38bdf8;"><i class="bi bi-cpu me-1"></i> <span data-i18n="auto___ca5216"></span></span>
             </div>
             <div class="card-body p-3">
               <div class="row g-3">
                 <div class="col-md-6">
-                  <label class="form-label small fw-semibold" style="color: #f1f5f9;">Провайдер ИИ:</label>
+                  <label class="form-label small fw-semibold" style="color: #f1f5f9;"><span data-i18n="auto___99db6b"></span>:</label>
                   <select class="form-select form-select-sm" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important;" id="agent-provider">
                     <option value="gemini">Google Gemini</option>
                     <option value="gemini_cli">Google Gemini CLI</option>
@@ -335,9 +335,9 @@
                   </select>
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label small fw-semibold" style="color: #f1f5f9;">Модель:</label>
+                  <label class="form-label small fw-semibold" style="color: #f1f5f9;"><span data-i18n="auto___f1f1ee"></span>:</label>
                   <select class="form-select form-select-sm" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important;" id="agent-model">
-                    <!-- Заполняется динамически -->
+                    <!-- <span data-i18n="auto___0eb1eb"></span> -->
                   </select>
                 </div>
               </div>
@@ -345,16 +345,16 @@
               <div class="row g-3 mt-1">
                 <div class="col-md-4">
                   <label class="form-label small fw-semibold d-flex justify-content-between" style="color: #f1f5f9;">
-                    <span>Температура:</span> <span id="agent-temp-val" class="fw-bold" style="color: #38bdf8;">0.3</span>
+                    <span><span data-i18n="auto___56f765"></span>:</span> <span id="agent-temp-val" class="fw-bold" style="color: #38bdf8;">0.3</span>
                   </label>
                   <input type="range" class="form-range" id="agent-temperature" min="0" max="1" step="0.05" value="0.3">
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label small fw-semibold" style="color: #f1f5f9;">Макс. шагов ReAct (Max Steps):</label>
+                  <label class="form-label small fw-semibold" style="color: #f1f5f9;"><span data-i18n="auto___1a3ce3"></span> ReAct (Max Steps):</label>
                   <input type="number" class="form-control form-control-sm" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important;" id="agent-max-steps" min="1" max="50" value="15">
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label small fw-semibold" style="color: #f1f5f9;">Таймаут (сек):</label>
+                  <label class="form-label small fw-semibold" style="color: #f1f5f9;"><span data-i18n="auto___9a470d"></span>):</label>
                   <input type="number" class="form-control form-control-sm" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important;" id="agent-timeout" min="5" max="300" value="60">
                 </div>
               </div>
@@ -364,12 +364,12 @@
           <!-- Tools Selection Matrix -->
           <div class="card mb-3" style="background: #0b0f19 !important; border: 1px solid #334155 !important; border-radius: 8px;">
             <div class="card-header py-2 d-flex justify-content-between align-items-center" style="background: #1e293b !important; border-bottom: 1px solid #334155 !important;">
-              <span class="fw-bold small" style="color: #4ade80;"><i class="bi bi-tools me-1"></i> Подключенные инструменты (Capabilities)</span>
-              <span class="badge" style="background: #334155; color: #f8fafc; font-weight: 600;" id="agent-tools-count">0 выбрано</span>
+              <span class="fw-bold small" style="color: #4ade80;"><i class="bi bi-tools me-1"></i> <span data-i18n="auto___547868"></span> (Capabilities)</span>
+              <span class="badge" style="background: #334155; color: #f8fafc; font-weight: 600;" id="agent-tools-count">0 <span data-i18n="auto___1d3155"></span></span>
             </div>
             <div class="card-body p-3">
               <div class="row g-2" id="agent-tools-matrix">
-                <!-- Чекбоксы инструментов загружаются динамически -->
+                <!-- <span data-i18n="auto___2d6075"></span> -->
               </div>
             </div>
           </div>
@@ -377,21 +377,21 @@
           <!-- System Instruction Editor -->
           <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center mb-1">
-              <label class="form-label small fw-semibold mb-0" style="color: #f1f5f9;">Системная инструкция (System Prompt):</label>
+              <label class="form-label small fw-semibold mb-0" style="color: #f1f5f9;"><span data-i18n="auto___f885d1"></span> (System Prompt):</label>
               <div class="btn-group btn-group-sm">
-                <button type="button" class="btn btn-outline-secondary btn-sm py-0" style="color: #cbd5e1; border-color: #475569;" id="btn-insert-react-template">Шаблон ReAct</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm py-0" style="color: #cbd5e1; border-color: #475569;" id="btn-insert-json-template">Шаблон JSON-ответа</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm py-0" style="color: #cbd5e1; border-color: #475569;" id="btn-insert-react-template"><span data-i18n="auto___7bd54e"></span> ReAct</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm py-0" style="color: #cbd5e1; border-color: #475569;" id="btn-insert-json-template"><span data-i18n="auto__json__9bda43"></span></button>
               </div>
             </div>
-            <textarea class="form-control font-monospace" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important; font-size: 0.85rem; line-height: 1.45;" id="agent-system-prompt" rows="7" placeholder="Опишите поведение агента, правила вызова инструментов и формат ответа..." spellcheck="false" required></textarea>
+            <textarea class="form-control font-monospace" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important; font-size: 0.85rem; line-height: 1.45;" id="agent-system-prompt" rows="7" placeholder="<span data-i18n="auto___9bed4c"></span>..." spellcheck="false" required></textarea>
           </div>
 
         </form>
       </div>
       <div class="modal-footer" style="background-color: #1e293b !important; border-top: 1px solid #334155 !important;">
-        <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal" style="color: #cbd5e1; border-color: #475569;">Отмена</button>
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal" style="color: #cbd5e1; border-color: #475569;"><span data-i18n="auto___0ec753"></span></button>
         <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" id="btn-save-agent">
-          <i class="bi bi-check-circle me-1"></i> Сохранить агента
+          <i class="bi bi-check-circle me-1"></i> <span data-i18n="auto___dc103d"></span>
         </button>
       </div>
     </div>
@@ -399,14 +399,14 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- MODAL: Agent Sandbox (Песочница тестирования)                             -->
+<!-- MODAL: Agent Sandbox (<span data-i18n="auto___84c63c"></span>)                             -->
 <!-- ========================================================================= -->
 <div class="modal fade" id="modal-agent-sandbox" tabindex="-1" aria-labelledby="modalAgentSandboxLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content text-white" style="background-color: #0f172a !important; border: 1px solid #334155 !important; border-radius: 12px;">
       <div class="modal-header" style="background-color: #1e293b !important; border-bottom: 1px solid #334155 !important;">
         <h5 class="modal-title fw-bold" style="color: #fbbf24;" id="modalAgentSandboxLabel">
-          <i class="bi bi-play-circle me-2"></i>🧪 Песочница тестирования агента
+          <i class="bi bi-play-circle me-2"></i>🧪 <span data-i18n="auto___5eee2d"></span>
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -418,29 +418,29 @@
             <strong id="sandbox-agent-name" class="text-white fs-6">—</strong>
             <span class="badge ms-2" style="background-color: #2563eb; color: #ffffff; font-weight: 600;" id="sandbox-agent-model">—</span>
           </div>
-          <span class="small fw-medium" style="color: #cbd5e1;" id="sandbox-agent-tools-summary">Инструментов: 0</span>
+          <span class="small fw-medium" style="color: #cbd5e1;" id="sandbox-agent-tools-summary"><span data-i18n="auto___8d07f4"></span>: 0</span>
         </div>
 
         <!-- Chat / Trace Container -->
         <div class="rounded p-3 mb-3" style="background: #020617; border: 1px solid #334155; min-height: 240px; max-height: 380px; overflow-y: auto;" id="sandbox-chat-window">
           <div class="text-center small py-4" style="color: #94a3b8;" id="sandbox-placeholder">
             <i class="bi bi-chat-dots fs-3 d-block mb-1"></i>
-            Введите тестовый запрос ниже для проверки логики агента и цепочки вызовов инструментов.
+            <span data-i18n="auto___d40ec6"></span>.
           </div>
           <div id="sandbox-messages-list"></div>
         </div>
 
         <!-- Input Box -->
         <div class="input-group">
-          <input type="text" class="form-control" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important;" id="sandbox-input-msg" placeholder="Например: Найди фильм Интерстеллар и проверь торренты...">
+          <input type="text" class="form-control" style="background-color: #020617 !important; color: #f8fafc !important; border: 1px solid #475569 !important;" id="sandbox-input-msg" placeholder="<span data-i18n="auto___f0d1ac"></span>...">
           <button class="btn btn-warning fw-bold px-4" id="btn-sandbox-send" style="background-color: #f59e0b; border-color: #f59e0b; color: #0f172a;">
-            <i class="bi bi-send-fill me-1"></i> Тест
+            <i class="bi bi-send-fill me-1"></i> <span data-i18n="auto___ec1868"></span>
           </button>
         </div>
 
       </div>
       <div class="modal-footer" style="background-color: #1e293b !important; border-top: 1px solid #334155 !important;">
-        <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal" style="color: #cbd5e1; border-color: #475569;">Закрыть песочницу</button>
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal" style="color: #cbd5e1; border-color: #475569;"><span data-i18n="auto___c12172"></span></button>
       </div>
     </div>
   </div>

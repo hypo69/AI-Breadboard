@@ -7,42 +7,8 @@
  * - Real-time обновлениях (статусы, счетчики)
  */
 
-import { RequestManager } from './request-manager.js';
-
-const tabRequestManagers = new Map(); // { tabName: RequestManager }
-
-/**
- * Получить или создать RequestManager для вкладки
- */
-function getTabRequestManager(tabName) {
-  if (!tabRequestManagers.has(tabName)) {
-    tabRequestManagers.set(tabName, new RequestManager());
-  }
-  return tabRequestManagers.get(tabName);
-}
-
-/**
- * Авто-патч поиска в любой вкладке
- * Находит input с id *-search-input и применяет дебаунс
- */
-export function autoPatchSearchInputs(tabName) {
-  const manager = getTabRequestManager(tabName);
-  
-  // Ищем все input'ы поиска в текущей вкладке
-  const searchInputs = document.querySelectorAll('[id*="search-input"]:not([data-debounce-patched])');
-  
-  searchInputs.forEach(input => {
-    if (!input.id) return;
-    
-    const debounceKey = `${tabName}-${input.id}`;
-    let originalHandler = null;
-
-    // Сохраняем оригинальный обработчик если есть
-    if (input.oninput) {
-      originalHandler = input.oninput;
-    }
-
-    input.addEventListener('input', (e) => {
+import { RequestManager } from './request-manager.jsi18n.t('auto__const_tabrequestmanagers_new_map_tabname_requestmanager_requestmanager_function_gettabrequestmanager_tabname_if_tabrequestmanagers_has_tabname_tabrequestmanagers_set_tabname_new_requestmanager_return_tabrequestmanagers_get_tabname_input_id_search_input_export_function_autopatchsearchinputs_tabname_const_manager_gettabrequestmanager_tabname_input_c8ae6f')ы поиска в текущей вкладке
+  const searchInputs = document.querySelectorAll('[id*="search-input"]:not([data-debounce-patched])i18n.t('auto__searchinputs_foreach_input_if_input_id_return_const_debouncekey_tabname_input_id_let_originalhandler_null_if_input_oninput_originalhandler_input_oninput_input_addeventlistener__c6a337')input', (e) => {
       const value = e.target.value;
       
       manager.debounce(

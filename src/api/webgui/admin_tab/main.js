@@ -3,7 +3,7 @@
 'use strict';
 
 async function initSystemAdminTab() {
-  console.log('Инициализация панели системного управления...');
+  console.log(i18n.t('auto___a221c4'));
   await refreshSystemDashboard();
   await refreshSchedulersConfig();
   await refreshTelemetryStats();
@@ -16,9 +16,7 @@ async function refreshSystemDashboard() {
     const drives = Array.isArray(drivesData.drives) ? drivesData.drives : [];
     const details = Array.isArray(drivesData.details) ? drivesData.details : [];
     const drivesCountEl = document.getElementById('sys-drives-count');
-    const drivesListEl = document.getElementById('sys-drives-list');
-    if (drivesCountEl) drivesCountEl.textContent = `${drives.length} диск(ов)`;
-    if (drivesListEl) drivesListEl.textContent = drives.join(', ') || 'Диски не обнаружены';
+    const drivesListEl = document.getElementById('sys-drives-listi18n.t('auto__if_drivescountel_drivescountel_textcontent_drives_length_if_driveslistel_driveslistel_textcontent_drives_join__3ff5a0'), ') || i18n.t('auto___647cdf');
 
     const detailedContainer = document.getElementById('sys-drives-detailed-container');
     if (detailedContainer) {
@@ -35,16 +33,10 @@ async function refreshSystemDashboard() {
                   <span class="fw-bold text-primary"><i class="bi bi-hdd me-1"></i>${d.device || d.mountpoint}</span>
                   <span class="badge bg-secondary-subtle text-body">${d.fstype || 'NTFS'}</span>
                 </div>
-                <div class="d-flex justify-content-between small text-muted mb-1">
-                  <span>Занято: <strong>${d.used_gb} GB</strong></span>
-                  <span>Свободно: <strong>${d.free_gb} GB</strong></span>
-                </div>
-                <div class="progress mb-2" style="height: 8px;">
+                <div class="d-flex justify-content-between small text-muted mb-1i18n.t('auto__span_strong_d_used_gb_gb_strong_span_span_strong_d_free_gb_gb_strong_span_div_div_class__983178')progress mb-2" style="height: 8px;">
                   <div class="progress-bar ${barClass}" role="progressbar" style="width: ${percent}%;" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
-                <div class="d-flex justify-content-between small text-muted">
-                  <span>Всего: ${d.total_gb} GB</span>
-                  <span class="fw-semibold">${percent}%</span>
+                <div class="d-flex justify-content-between small text-mutedi18n.t('auto__span_d_total_gb_gb_span_span_class__3ec252')fw-semibold">${percent}%</span>
                 </div>
               </div>
             </div>
@@ -57,43 +49,33 @@ async function refreshSystemDashboard() {
               <span class="fw-bold text-primary"><i class="bi bi-hdd me-1"></i>${drv}</span>
             </div>
           </div>
-        `).join('');
-      }
-    }
-
-    // 2. Загрузка статуса плагинов
-    const pluginsData = await window.api.fetch('/api/admin/plugins').catch(() => ({ plugins: [] }));
+        `).join('i18n.t('auto__2_const_pluginsdata_await_window_api_fetch__92fa6f')/api/admin/plugins').catch(() => ({ plugins: [] }));
     const plugins = pluginsData.plugins || [];
     const pluginsCountEl = document.getElementById('sys-plugins-count');
-    const pluginsActiveEl = document.getElementById('sys-plugins-active-count');
-    const activeCount = plugins.filter(p => p.enabled).length;
-    if (pluginsCountEl) pluginsCountEl.textContent = `${plugins.length} модулей`;
-    if (pluginsActiveEl) pluginsActiveEl.textContent = `${activeCount} активно из ${plugins.length}`;
-  } catch (err) {
-    console.error('Ошибка загрузки системного дашборда:', err);
+    const pluginsActiveEl = document.getElementById('sys-plugins-active-counti18n.t('auto__const_activecount_plugins_filter_p_p_enabled_length_if_pluginscountel_pluginscountel_textcontent_plugins_length_if_pluginsactiveel_pluginsactiveel_textcontent_activecount_plugins_length_catch_err_console_error__4c417e')Ошибка загрузки системного дашборда:', err);
   }
 }
 
 async function rescanStorageDrives() {
   try {
-    if (typeof showNotification === 'function') showNotification('Пересканирование накопителей ОС...', 'info');
+    if (typeof showNotification === 'function') showNotification(i18n.t('auto___3b7943'), 'info');
     const result = await window.api.fetch('/api/control/rescan', { method: 'GET' });
     const drivesList = Array.isArray(result.drives) ? result.drives.join(', ') : 'OK';
-    if (typeof showNotification === 'function') showNotification(`Диски обновлены: ${drivesList}`, 'success');
+    if (typeof showNotification === 'functioni18n.t('auto__shownotification_driveslist__172c39')success');
     await refreshSystemDashboard();
   } catch (e) {
-    if (typeof showNotification === 'function') showNotification(`Ошибка: ${e.message}`, 'danger');
+    if (typeof showNotification === 'functioni18n.t('auto__shownotification_e_message__c23014')danger');
   }
 }
 
 async function actualizeAiModels() {
   try {
-    if (typeof showNotification === 'function') showNotification('Актуализация пула моделей ИИ...', 'info');
+    if (typeof showNotification === 'function') showNotification(i18n.t('auto___cc9c52'), 'info');
     await window.api.fetch('/api/keys/actualize-all', { method: 'POST' }).catch(() => {});
-    if (typeof showNotification === 'function') showNotification('Модели успешно синхронизированы', 'success');
+    if (typeof showNotification === 'function') showNotification(i18n.t('auto___897b20'), 'success');
     await refreshSystemDashboard();
   } catch (e) {
-    if (typeof showNotification === 'function') showNotification(`Ошибка: ${e.message}`, 'danger');
+    if (typeof showNotification === 'functioni18n.t('auto__shownotification_e_message__c23014')danger');
   }
 }
 
@@ -112,7 +94,7 @@ async function refreshTelemetryStats() {
     if (tunnel.is_active && tunnel.public_url) {
       if (badgeEl) {
         badgeEl.className = 'badge bg-success-subtle text-success';
-        badgeEl.textContent = 'Туннель: Онлайн';
+        badgeEl.textContent = i18n.t('auto___2b2a43');
       }
       if (urlTextEl) {
         urlTextEl.innerHTML = `<a href="${tunnel.public_url}" target="_blank" class="text-success text-decoration-none fw-bold">${tunnel.public_url}</a>`;
@@ -121,22 +103,17 @@ async function refreshTelemetryStats() {
     } else {
       if (badgeEl) {
         badgeEl.className = 'badge bg-danger-subtle text-danger border border-danger-subtle';
-        badgeEl.textContent = 'Туннель: Остановлен';
+        badgeEl.textContent = i18n.t('auto___bff0e2');
       }
       if (urlTextEl) {
-        urlTextEl.textContent = 'Не запущен (запустите .\\launchers\\Run-Ngrok.ps1)';
+        urlTextEl.textContent = i18n.t('auto__launchers_run_ngrok_ps1__28a0a5');
       }
       if (alertEl) alertEl.className = 'alert alert-danger py-2 px-3 small d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3';
     }
 
     // 2. Event & User metrics
     const totalEl = document.getElementById('telemetry-total-events');
-    const usersEl = document.getElementById('telemetry-active-users');
-    if (totalEl) totalEl.textContent = (stats.total_events || 0).toLocaleString();
-    if (usersEl) usersEl.textContent = `${stats.active_users_count || 0} пользователей`;
-
-    // 3. Tab views
-    const tabsEl = document.getElementById('telemetry-tabs-breakdown');
+    const usersEl = document.getElementById('telemetry-active-usersi18n.t('auto__if_totalel_totalel_textcontent_stats_total_events_0_tolocalestring_if_usersel_usersel_textcontent_stats_active_users_count_0_3_tab_views_const_tabsel_document_getelementbyid__a12c86')telemetry-tabs-breakdown');
     if (tabsEl) {
       const tabEntries = Object.entries(stats.tab_views || {});
       if (tabEntries.length === 0) {
@@ -238,21 +215,21 @@ async function refreshSchedulersConfig() {
     if (badgeEl) {
       if (status.running && cfg.enabled) {
         badgeEl.className = 'badge bg-success-subtle text-success';
-        badgeEl.textContent = 'Активен (Работает)';
+        badgeEl.textContent = i18n.t('auto___44037b');
       } else {
         badgeEl.className = 'badge bg-secondary-subtle text-secondary';
-        badgeEl.textContent = 'Отключен';
+        badgeEl.textContent = i18n.t('auto___cadea0');
       }
     }
 
     if (ragLastRunEl) {
-      ragLastRunEl.textContent = status.last_rag_run ? new Date(status.last_rag_run).toLocaleString() : 'Никогда';
+      ragLastRunEl.textContent = status.last_rag_run ? new Date(status.last_rag_run).toLocaleString() : i18n.t('auto___f5bf59');
     }
     if (emailLastRunEl) {
-      emailLastRunEl.textContent = status.last_email_run ? new Date(status.last_email_run).toLocaleString() : 'Никогда';
+      emailLastRunEl.textContent = status.last_email_run ? new Date(status.last_email_run).toLocaleString() : i18n.t('auto___f5bf59');
     }
   } catch (err) {
-    console.error('Ошибка загрузки настроек планировщика:', err);
+    console.error(i18n.t('auto___6ab546'), err);
   }
 }
 
@@ -276,7 +253,7 @@ async function saveSchedulersConfig() {
       }
     };
 
-    if (typeof showNotification === 'function') showNotification('Сохранение конфигурации планировщика...', 'info');
+    if (typeof showNotification === 'function') showNotification(i18n.t('auto___2258d5'), 'info');
 
     const res = await window.api.fetch('/api/admin/schedulers', {
       method: 'POST',
@@ -285,20 +262,18 @@ async function saveSchedulersConfig() {
     });
 
     if (typeof showNotification === 'function') {
-      showNotification('Настройки планировщика успешно сохранены и применены!', 'success');
+      showNotification(i18n.t('auto___7be3e0'), 'success');
     }
     await refreshSchedulersConfig();
   } catch (err) {
-    if (typeof showNotification === 'function') {
-      showNotification(`Ошибка сохранения: ${err.message}`, 'danger');
+    if (typeof showNotification === 'functioni18n.t('auto__shownotification_err_message__a712c7')danger');
     }
   }
 }
 
 async function triggerSchedulerJob(jobName) {
   try {
-    if (typeof showNotification === 'function') {
-      showNotification(`Запуск фоновой задачи '${jobName}'...`, 'info');
+    if (typeof showNotification === 'functioni18n.t('auto__shownotification__1090db')${jobName}'...`, 'info');
     }
 
     const res = await window.api.fetch(`/api/admin/schedulers/trigger/${jobName}`, {
@@ -307,20 +282,17 @@ async function triggerSchedulerJob(jobName) {
 
     if (jobName === 'rag') {
       const count = res.result?.updated_count ?? 0;
-      if (typeof showNotification === 'function') {
-        showNotification(`Переиндексация RAG завершена! Обновлено коллекций: ${count}`, 'success');
+      if (typeof showNotification === 'functioni18n.t('auto__shownotification_rag_count__e5b479')success');
       }
     } else if (jobName === 'email') {
       const count = res.count ?? 0;
-      if (typeof showNotification === 'function') {
-        showNotification(`Проверка почты завершена! Найдено непрочитанных писем: ${count}`, 'success');
+      if (typeof showNotification === 'functioni18n.t('auto__shownotification_count__16072d')success');
       }
     }
 
     await refreshSchedulersConfig();
   } catch (err) {
-    if (typeof showNotification === 'function') {
-      showNotification(`Ошибка запуска задачи: ${err.message}`, 'danger');
+    if (typeof showNotification === 'functioni18n.t('auto__shownotification_err_message__988ad4')danger');
     }
   }
 }

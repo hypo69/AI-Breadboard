@@ -69,15 +69,15 @@
         if (data.thermal_throttling_detected) {
           thVal.textContent = 'PROCHOT Active';
           thVal.className = 'fs-4 fw-bold text-danger mt-1';
-          thSub.textContent = 'Обнаружен термический сброс частот CPU';
+          thSub.textContent = i18n.t('auto__cpu_4cc69f');
         } else if (data.power_limit_throttling_detected) {
           thVal.textContent = 'Power Limit PL1/PL2';
           thVal.className = 'fs-4 fw-bold text-warning mt-1';
-          thSub.textContent = 'Ограничение по энергопотреблению';
+          thSub.textContent = i18n.t('auto___960395');
         } else {
-          thVal.textContent = 'Inactive (Норма)';
+          thVal.textContent = i18n.t('auto_inactive__592780');
           thVal.className = 'fs-4 fw-bold text-success mt-1';
-          thSub.textContent = 'Терморежим и питание в норме';
+          thSub.textContent = i18n.t('auto___4ed77a');
         }
       }
 
@@ -86,7 +86,7 @@
         setText('diag-gpu-pcie-name', data.gpu_pcie_link.gpu_name || 'GPU Accelerator');
         setText('diag-gpu-pcie-speed', data.gpu_pcie_link.current_link_speed || 'PCIe 3.0 / 4.0');
         setText('diag-gpu-pcie-width', data.gpu_pcie_link.current_link_width || 'x16 Lanes');
-        setText('diag-gpu-pcie-status', data.gpu_pcie_link.status || 'Штатный режим без деградации');
+        setText('diag-gpu-pcie-status', data.gpu_pcie_link.status || i18n.t('auto___9d07d9'));
       }
 
       // BSOD Minidump
@@ -96,13 +96,7 @@
         if (data.last_bsod_crashes.length === 0) {
           bsodContainer.innerHTML = `
             <div class="text-center py-4 text-success small">
-              <i class="bi bi-check-circle-fill fs-5 d-block mb-1 text-success"></i>
-              Аварийных дампов падения ядра (BSOD) в Minidump не обнаружено
-            </div>
-          `;
-        } else {
-          bsodContainer.innerHTML = data.last_bsod_crashes.map(c => `
-            <div class="p-2 mb-1.5 rounded bg-black bg-opacity-40 border border-danger-subtle d-flex align-items-center justify-content-between">
+              <i class="bi bi-check-circle-fill fs-5 d-block mb-1 text-successi18n.t('auto__i_bsod_minidump_div_else_bsodcontainer_innerhtml_data_last_bsod_crashes_map_c_div_class__41ad74')p-2 mb-1.5 rounded bg-black bg-opacity-40 border border-danger-subtle d-flex align-items-center justify-content-between">
               <div>
                 <strong class="text-danger"><i class="bi bi-file-earmark-binary me-1"></i>${escapeHtml(c.file_name)}</strong>
                 <div class="small text-muted font-monospace">${escapeHtml(c.timestamp)} (${c.size_kb} KB)</div>

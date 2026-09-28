@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Голосовой Пульт - AI Breadboard</title>
+  <title><span data-i18n="auto___992636"></span> - AI Breadboard</title>
   
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -386,8 +386,8 @@
     <div class="card-panel my-auto">
       <div class="text-center mb-4">
         <i class="bi bi-mic-fill fs-1 text-primary"></i>
-        <h4 class="mt-2 text-white fw-bold">Голосовой Пульт</h4>
-        <p class="text-muted small">Войдите в систему для передачи голосовых сообщений и медиа в чат</p>
+        <h4 class="mt-2 text-white fw-bold"><span data-i18n="auto___992636"></span></h4>
+        <p class="text-muted small"><span data-i18n="auto___b0d9a6"></span></p>
       </div>
 
       <div id="auth-alert" class="alert alert-danger d-none" role="alert"></div>
@@ -400,11 +400,11 @@
             <input type="email" class="form-control form-control-custom" id="login-email" required>
           </div>
           <div class="mb-3">
-            <label for="login-password" class="form-label text-muted small">Пароль</label>
+            <label for="login-password" class="form-label text-muted small"><span data-i18n="auto___14f7c6"></span></label>
             <input type="password" class="form-control form-control-custom" id="login-password" required>
           </div>
-          <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-pill mb-3">Войти</button>
-          <p class="text-center small mb-0">Нет аккаунта? <a href="#" id="go-to-register" class="text-info">Регистрация</a></p>
+          <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-pill mb-3"><span data-i18n="auto___939e95"></span></button>
+          <p class="text-center small mb-0"><span data-i18n="auto___720761"></span>? <a href="#" id="go-to-register" class="text-info"><span data-i18n="auto___722476"></span></a></p>
         </form>
       </div>
 
@@ -412,7 +412,7 @@
       <div id="auth-form-register" class="d-none">
         <form id="form-register">
           <div class="mb-3">
-            <label for="register-name" class="form-label text-muted small">Имя</label>
+            <label for="register-name" class="form-label text-muted small"><span data-i18n="auto___aee78f"></span></label>
             <input type="text" class="form-control form-control-custom" id="register-name" required>
           </div>
           <div class="mb-3">
@@ -420,34 +420,34 @@
             <input type="email" class="form-control form-control-custom" id="register-email" required>
           </div>
           <div class="mb-3">
-            <label for="register-password" class="form-label text-muted small">Пароль</label>
+            <label for="register-password" class="form-label text-muted small"><span data-i18n="auto___14f7c6"></span></label>
             <input type="password" class="form-control form-control-custom" id="register-password" required>
           </div>
-          <button type="submit" class="btn btn-success w-100 py-2.5 rounded-pill mb-3">Зарегистрироваться</button>
-          <p class="text-center small mb-0">Уже есть аккаунт? <a href="#" id="go-to-login" class="text-info">Войти</a></p>
+          <button type="submit" class="btn btn-success w-100 py-2.5 rounded-pill mb-3"><span data-i18n="auto___2e4275"></span></button>
+          <p class="text-center small mb-0"><span data-i18n="auto___bbdb97"></span>? <a href="#" id="go-to-login" class="text-info"><span data-i18n="auto___939e95"></span></a></p>
         </form>
       </div>
 
       <!-- Verify Form -->
       <div id="auth-form-verify" class="d-none">
-        <p class="text-center small">Код подтверждения отправлен на почту:</p>
+        <p class="text-center small"><span data-i18n="auto___32049e"></span>:</p>
         <form id="form-verify">
           <div class="mb-3">
             <input type="text" class="form-control form-control-custom text-center fs-3 py-2" id="verify-code" maxlength="6" placeholder="XXXXXX" required>
           </div>
-          <button type="submit" class="btn btn-info w-100 py-2.5 text-white rounded-pill mb-3">Подтвердить</button>
-          <p class="text-center small mb-0"><a href="#" id="verify-cancel" class="text-info">Назад</a></p>
+          <button type="submit" class="btn btn-info w-100 py-2.5 text-white rounded-pill mb-3"><span data-i18n="auto___0467ae"></span></button>
+          <p class="text-center small mb-0"><a href="#" id="verify-cancel" class="text-info"><span data-i18n="auto___f6dab0"></span></a></p>
         </form>
       </div>
 
       <div class="my-4 text-center position-relative">
         <hr class="border-secondary">
-        <span class="px-2 text-muted position-absolute top-50 start-50 translate-middle small bg-dark">Или</span>
+        <span class="px-2 text-muted position-absolute top-50 start-50 translate-middle small bg-dark"><span data-i18n="auto___26ffe1"></span></span>
       </div>
 
       <button id="google-signin-btn" class="btn btn-outline-light w-100 rounded-pill d-flex align-items-center justify-content-center gap-2 py-2">
         <i class="bi bi-google text-danger"></i>
-        <span>Войти через Google</span>
+        <span><span data-i18n="auto___4e7b06"></span> Google</span>
       </button>
     </div>
   </div>
@@ -460,7 +460,7 @@
       <div class="d-flex justify-content-between align-items-center mb-2">
         <div class="d-flex align-items-center gap-2">
           <span class="badge bg-success rounded-pill px-2.5 py-1.5" id="connection-status">
-            <i class="bi bi-broadcast"></i> Онлайн
+            <i class="bi bi-broadcast"></i> <span data-i18n="auto___76e9fb"></span>
           </span>
           <span class="small text-muted text-truncate" style="max-width: 120px;" id="user-display-name"></span>
         </div>
@@ -479,12 +479,12 @@
           </div>
 
           <!-- TTS Mute/Unmute Toggle -->
-          <button class="theme-toggle-btn" id="tts-toggle-btn" title="Озвучивание ответов">
+          <button class="theme-toggle-btn" id="tts-toggle-btn" title="<span data-i18n="auto___018d8d"></span>">
             <i class="bi bi-volume-up-fill" id="tts-icon"></i>
           </button>
 
           <!-- Theme Toggle -->
-          <button class="theme-toggle-btn" id="theme-toggle-btn" title="Сменить тему">
+          <button class="theme-toggle-btn" id="theme-toggle-btn" title="<span data-i18n="auto___ce9c6b"></span>">
             <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
           </button>
         </div>
@@ -493,7 +493,7 @@
       <!-- Big Microphone Centerpiece -->
       <div class="mic-centerpiece">
         <div class="mic-button-wrapper">
-          <button class="btn-mic-giant" id="btn-mic" title="Нажмите для голосового ввода">
+          <button class="btn-mic-giant" id="btn-mic" title="<span data-i18n="auto___d92fc5"></span>">
             <i class="bi bi-mic-fill" id="mic-icon"></i>
           </button>
         </div>
@@ -507,21 +507,21 @@
         </div>
 
         <div class="fw-semibold mt-2 text-center" id="voice-status-text" style="font-size: 0.95rem;">
-          Нажмите кнопку и говорите
+          <span data-i18n="auto___f21714"></span>
         </div>
         <div class="small text-muted text-center" id="voice-subtext" style="font-size: 0.78rem;">
-          Голос будет распознан и отправлен в чат
+          <span data-i18n="auto___289c2a"></span>
         </div>
 
         <!-- Quick Media & Audio Upload Actions -->
         <div class="media-actions-bar">
-          <button class="btn-media-action" id="btn-upload-audio" title="Загрузить аудиозапись или диктофон">
+          <button class="btn-media-action" id="btn-upload-audio" title="<span data-i18n="auto___e4d95b"></span>">
             <i class="bi bi-file-earmark-music-fill text-info"></i>
-            <span>Аудиофайл</span>
+            <span><span data-i18n="auto___7a42b8"></span></span>
           </button>
-          <button class="btn-media-action" id="btn-upload-media" title="Загрузить фото, видео или документ">
+          <button class="btn-media-action" id="btn-upload-media" title="<span data-i18n="auto___feb028"></span>">
             <i class="bi bi-cloud-arrow-up-fill text-primary"></i>
-            <span>Медиа</span>
+            <span><span data-i18n="auto___198be2"></span></span>
           </button>
         </div>
 
@@ -532,27 +532,27 @@
 
       <!-- Chat Stream Feed -->
       <div class="d-flex justify-content-between align-items-center mt-1 mb-1 px-1">
-        <span class="small text-muted fw-bold text-uppercase" style="letter-spacing: 0.5px; font-size: 0.75rem;">Диалог</span>
-        <button class="btn btn-sm btn-link text-muted p-0 text-decoration-none small" id="btn-clear-chat" title="Очистить диалог">
-          <i class="bi bi-trash"></i> Очистить
+        <span class="small text-muted fw-bold text-uppercase" style="letter-spacing: 0.5px; font-size: 0.75rem;"><span data-i18n="auto___8e08bd"></span></span>
+        <button class="btn btn-sm btn-link text-muted p-0 text-decoration-none small" id="btn-clear-chat" title="<span data-i18n="auto___a683d8"></span>">
+          <i class="bi bi-trash"></i> <span data-i18n="auto___98b207"></span>
         </button>
       </div>
 
       <div class="chat-container" id="chat-feed">
         <div class="text-muted small text-center my-auto p-3" id="empty-feed-hint">
           <i class="bi bi-chat-dots fs-3 d-block mb-1 opacity-50"></i>
-          Голосовые команды и медиафайлы отобразятся здесь
+          <span data-i18n="auto___d8b99e"></span>
         </div>
       </div>
 
       <!-- Fallback Quick Text Bar & Attach Clip -->
       <div class="mt-2">
         <form id="text-send-form" class="d-flex gap-2">
-          <button type="button" class="btn btn-outline-secondary btn-sm px-2.5 rounded-3 d-flex align-items-center justify-content-center" id="btn-clip-attachment" title="Прикрепить файл">
+          <button type="button" class="btn btn-outline-secondary btn-sm px-2.5 rounded-3 d-flex align-items-center justify-content-center" id="btn-clip-attachment" title="<span data-i18n="auto___897d74"></span>">
             <i class="bi bi-paperclip fs-6"></i>
           </button>
-          <input type="text" class="form-control form-control-custom form-control-sm py-2" id="text-input" placeholder="Или введите сообщение текстом..." autocomplete="off">
-          <button type="submit" class="btn btn-primary btn-sm px-3 rounded-3" id="btn-send-text" title="Отправить">
+          <input type="text" class="form-control form-control-custom form-control-sm py-2" id="text-input" placeholder="<span data-i18n="auto___9f5f3b"></span>..." autocomplete="off">
+          <button type="submit" class="btn btn-primary btn-sm px-3 rounded-3" id="btn-send-text" title="<span data-i18n="auto___76dcf7"></span>">
             <i class="bi bi-send-fill"></i>
           </button>
         </form>
@@ -703,7 +703,7 @@
         authFormRegister.classList.add('d-none');
         authFormVerify.classList.remove('d-none');
       } catch (err) {
-        authAlert.textContent = err.message || 'Ошибка регистрации';
+        authAlert.textContent = err.message || '<span data-i18n="auto___177e87"></span>';
         authAlert.classList.remove('d-none');
       }
     });
@@ -717,10 +717,7 @@
         authFormVerify.classList.add('d-none');
         authFormLogin.classList.remove('d-none');
         authAlert.className = 'alert alert-success';
-        authAlert.textContent = 'Почта подтверждена! Войдите в аккаунт.';
-        authAlert.classList.remove('d-none');
-      } catch (err) {
-        authAlert.textContent = err.message || 'Неверный код';
+        authAlert.textContent = '<span data-i18n="auto__authalert_classlist_remove_d_none_catch_err_authalert_textcontent_err_message__e8f97e"></span>';
         authAlert.classList.remove('d-none');
       }
     });
@@ -734,7 +731,7 @@
         await api.auth.login(email, password);
         await initApp();
       } catch (err) {
-        authAlert.textContent = err.message || 'Ошибка входа';
+        authAlert.textContent = err.message || '<span data-i18n="auto___a88e15"></span>';
         authAlert.classList.remove('d-none');
       }
     });
@@ -747,8 +744,7 @@
     function initSpeechRecognition() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        voiceStatusText.textContent = 'Голосовой ввод не поддерживается';
-        voiceSubtext.textContent = 'Используйте загрузку аудиофайлов или ввод ниже';
+        voiceStatusText.textContent = '<span data-i18n="auto__voicesubtext_textcontent__3d28cc"></span>';
         btnMic.disabled = true;
         btnMic.style.opacity = '0.5';
         return;
@@ -775,8 +771,7 @@
         btnMic.className = 'btn-mic-giant listening';
         micIcon.className = 'bi bi-mic-fill';
         waveBars.classList.add('active');
-        voiceStatusText.textContent = 'Слушаю вас...';
-        voiceSubtext.textContent = 'Говорите команду или вопрос';
+        voiceStatusText.textContent = '<span data-i18n="auto__voicesubtext_textcontent__828e92"></span>';
       };
 
       recognition.onend = () => {
@@ -785,8 +780,7 @@
         if (!btnMic.classList.contains('thinking')) {
           btnMic.className = 'btn-mic-giant';
           micIcon.className = 'bi bi-mic-fill';
-          voiceStatusText.textContent = 'Нажмите кнопку и говорите';
-          voiceSubtext.textContent = 'Голос будет распознан и отправлен в чат';
+          voiceStatusText.textContent = '<span data-i18n="auto__voicesubtext_textcontent__82f4ab"></span>';
         }
       };
 
@@ -794,8 +788,7 @@
         isListening = false;
         waveBars.classList.remove('active');
         btnMic.className = 'btn-mic-giant';
-        voiceStatusText.textContent = 'Ошибка ввода: ' + (e.error || 'попробуйте снова');
-        voiceSubtext.textContent = 'Нажмите микрофон для повторной попытки';
+        voiceStatusText.textContent = '<span data-i18n="auto__e_error_voicesubtext_textcontent__3f0896"></span>';
       };
 
       recognition.onresult = (event) => {
@@ -977,7 +970,7 @@
           <div class="ai-content">${window.marked ? marked.parse(text) : escapeHtml(text)}</div>
           <div class="chat-meta">
             <span>${timeStr}</span>
-            <button class="btn-speak-again" title="Озвучить"><i class="bi bi-volume-up-fill"></i></button>
+            <button class="btn-speak-again" title="<span data-i18n="auto___8cd8ba"></span>"><i class="bi bi-volume-up-fill"></i></button>
           </div>
         `;
         const speakBtn = bubble.querySelector('.btn-speak-again');
@@ -1048,74 +1041,7 @@
 
       btnMic.className = 'btn-mic-giant thinking';
       micIcon.className = 'bi bi-arrow-repeat';
-      voiceStatusText.textContent = 'Обработка ответа AI...';
-      voiceSubtext.textContent = 'Генерация ответа моделью';
-
-      if (abortController) {
-        try { abortController.abort(); } catch (e) {}
-      }
-      abortController = new AbortController();
-
-      const aiBubble = appendMessage('ai', '...');
-      const aiContentDiv = aiBubble.querySelector('.ai-content');
-
-      let fullReply = '';
-      let voiceReply = '';
-
-      try {
-        const payload = {
-          message: query,
-          history: chatHistory,
-          generation_config: { is_rc: true }
-        };
-
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal: abortController.signal
-        });
-
-        if (!response.ok) {
-          throw new Error(`Ошибка сервера: ${response.status}`);
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder('utf-8');
-        let buffer = '';
-
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop();
-
-          for (const line of lines) {
-            const tr = line.trim();
-            if (!tr) continue;
-            if (tr.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(tr.substring(6));
-                if (data.error) throw new Error(data.error);
-                if (data.voice) voiceReply += data.voice;
-                if (data.text) {
-                  fullReply += data.text;
-                  aiContentDiv.innerHTML = window.marked ? marked.parse(fullReply) : escapeHtml(fullReply);
-                  chatFeed.scrollTop = chatFeed.scrollHeight;
-                }
-              } catch (e) {
-                console.error(e);
-              }
-            }
-          }
-        }
-
-        btnMic.className = 'btn-mic-giant';
-        micIcon.className = 'bi bi-mic-fill';
-        voiceStatusText.textContent = 'Нажмите кнопку и говорите';
-        voiceSubtext.textContent = 'Готов к следующему вопросу';
+      voiceStatusText.textContent = '<span data-i18n="auto__ai_voicesubtext_textcontent_if_abortcontroller_try_abortcontroller_abort_catch_e_abortcontroller_new_abortcontroller_const_aibubble_appendmessage_ai_const_aicontentdiv_aibubble_queryselector_ai_content_let_fullreply_let_voicereply_try_const_payload_message_query_history_chathistory_generation_config_is_rc_true_const_response_await_fetch_api_chat_method_post_headers_content_type_application_json_body_json_stringify_payload_signal_abortcontroller_signal_if_response_ok_throw_new_error_response_status_const_reader_response_body_getreader_const_decoder_new_textdecoder_utf_8_let_buffer_while_true_const_value_done_await_reader_read_if_done_break_buffer_decoder_decode_value_stream_true_const_lines_buffer_split_n_buffer_lines_pop_for_const_line_of_lines_const_tr_line_trim_if_tr_continue_if_tr_startswith_data_try_const_data_json_parse_tr_substring_6_if_data_error_throw_new_error_data_error_if_data_voice_voicereply_data_voice_if_data_text_fullreply_data_text_aicontentdiv_innerhtml_window_marked_marked_parse_fullreply_escapehtml_fullreply_chatfeed_scrolltop_chatfeed_scrollheight_catch_e_console_error_e_btnmic_classname_btn_mic_giant_micicon_classname_bi_bi_mic_fill_voicestatustext_textcontent_voicesubtext_textcontent__c52252"></span>';
 
         // Update history
         chatHistory.push({ role: 'user', parts: [query] });
@@ -1127,29 +1053,10 @@
 
       } catch (err) {
         if (err.name === 'AbortError') return;
-        aiContentDiv.innerHTML = `<span class="text-danger">Ошибка: ${escapeHtml(err.message)}</span>`;
+        aiContentDiv.innerHTML = `<span class="text-danger"><span data-i18n="auto___72aecd"></span>: ${escapeHtml(err.message)}</span>`;
         btnMic.className = 'btn-mic-giant';
         micIcon.className = 'bi bi-mic-fill';
-        voiceStatusText.textContent = 'Ошибка выполнения';
-        voiceSubtext.textContent = 'Попробуйте нажать кнопку еще раз';
-      }
-    }
-
-    // Process Uploaded Audio / Media File
-    async function processUploadedFile(file, isAudioOnly = false) {
-      if (!file) return;
-      window.triggerHaptic('medium');
-      stopAudio();
-
-      const previewUrl = URL.createObjectURL(file);
-      appendMediaUserMessage(file, previewUrl);
-
-      btnMic.className = 'btn-mic-giant thinking';
-      micIcon.className = 'bi bi-arrow-repeat';
-      voiceStatusText.textContent = 'Загрузка и анализ медиа...';
-      voiceSubtext.textContent = file.name;
-
-      const aiBubble = appendMessage('ai', '⏳ Загрузка и обработка файла...');
+        voiceStatusText.textContent = '<span data-i18n="auto__voicesubtext_textcontent_process_uploaded_audio_media_file_async_function_processuploadedfile_file_isaudioonly_false_if_file_return_window_triggerhaptic_medium_stopaudio_const_previewurl_url_createobjecturl_file_appendmediausermessage_file_previewurl_btnmic_classname_btn_mic_giant_thinking_micicon_classname_bi_bi_arrow_repeat_voicestatustext_textcontent_voicesubtext_textcontent_file_name_const_aibubble_appendmessage_ai__d2e7db"></span>...');
       const aiContentDiv = aiBubble.querySelector('.ai-content');
 
       const isAudio = isAudioOnly || file.type.startsWith('audio/') || /\.(mp3|wav|ogg|m4a|flac|aac|webm)$/i.test(file.name);
@@ -1169,42 +1076,19 @@
 
           if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.detail || `Ошибка сервера: ${res.status}`);
-          }
-
-          const result = await res.json();
-          const diarizationData = result.data || {};
-          
-          let formattedOutput = '';
-          if (diarizationData.summary) {
-            formattedOutput += `### 📋 Краткая сводка\n${diarizationData.summary}\n\n`;
+            throw new Error(errData.detail || `<span data-i18n="auto__res_status_const_result_await_res_json_const_diarizationdata_result_data_let_formattedoutput_if_diarizationdata_summary_formattedoutput__aa403d"></span>\n${diarizationData.summary}\n\n`;
           }
 
           if (diarizationData.key_points && diarizationData.key_points.length > 0) {
-            formattedOutput += `### 🔑 Ключевые тезисы\n` + diarizationData.key_points.map(kp => `- ${kp}`).join('\n') + `\n\n`;
+            formattedOutput += `### 🔑 <span data-i18n="auto___bc69f3"></span>\n` + diarizationData.key_points.map(kp => `- ${kp}`).join('\n') + `\n\n`;
           }
 
           if (diarizationData.action_items && diarizationData.action_items.length > 0) {
-            formattedOutput += `### ✅ Задачи и решения\n` + diarizationData.action_items.map(ai => `- [ ] ${ai}`).join('\n') + `\n\n`;
+            formattedOutput += `### ✅ <span data-i18n="auto___bf5616"></span>\n` + diarizationData.action_items.map(ai => `- [ ] ${ai}`).join('\n') + `\n\n`;
           }
 
           if (diarizationData.transcript && diarizationData.transcript.length > 0) {
-            formattedOutput += `### 🗣️ Стенограмма диалога\n`;
-            for (const item of diarizationData.transcript) {
-              const speaker = item.speaker || 'Собеседник';
-              const text = item.text || '';
-              formattedOutput += `**${speaker}:** ${text}\n\n`;
-            }
-          }
-
-          if (!formattedOutput) {
-            formattedOutput = diarizationData.markdown_report || 'Аудиозапись успешно обработана.';
-          }
-
-          aiContentDiv.innerHTML = window.marked ? marked.parse(formattedOutput) : escapeHtml(formattedOutput);
-          chatFeed.scrollTop = chatFeed.scrollHeight;
-
-          chatHistory.push({ role: 'user', parts: [`[Аудиозапись ${file.name}]`] });
+            formattedOutput += `### 🗣️ <span data-i18n="auto__n_for_const_item_of_diarizationdata_transcript_const_speaker_item_speaker_const_text_item_text_formattedoutput_speaker_text_n_n_if_formattedoutput_formattedoutput_diarizationdata_markdown_report_aicontentdiv_innerhtml_window_marked_marked_parse_formattedoutput_escapehtml_formattedoutput_chatfeed_scrolltop_chatfeed_scrollheight_chathistory_push_role_user_parts__0c058d"></span> ${file.name}]`] });
           chatHistory.push({ role: 'model', parts: [formattedOutput] });
           if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
 
@@ -1225,57 +1109,7 @@
 
           if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.detail || `Ошибка загрузки: ${res.status}`);
-          }
-
-          const resData = await res.json();
-          const fileName = resData.filename || file.name;
-          
-          // Request AI analysis of the uploaded document/media
-          const prompt = `Пользователь загрузил файл ${fileName} (${file.type || 'документ'}). Подтверди получение и опиши дальнейшие действия.`;
-          
-          const chatRes = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              message: prompt,
-              history: chatHistory,
-              generation_config: { is_rc: true }
-            })
-          });
-
-          let modelReply = `Файл **${escapeHtml(fileName)}** успешно загружен и сохранен в вашем хранилище.`;
-          if (chatRes.ok) {
-            // Read stream or fallback
-            const reader = chatRes.body.getReader();
-            const decoder = new TextDecoder('utf-8');
-            let buffer = '';
-            let streamReply = '';
-
-            while (true) {
-              const { value, done } = await reader.read();
-              if (done) break;
-              buffer += decoder.decode(value, { stream: true });
-              const lines = buffer.split('\n');
-              buffer = lines.pop();
-
-              for (const line of lines) {
-                const tr = line.trim();
-                if (tr.startsWith('data: ')) {
-                  try {
-                    const data = JSON.parse(tr.substring(6));
-                    if (data.text) streamReply += data.text;
-                  } catch (e) {}
-                }
-              }
-            }
-            if (streamReply) modelReply = streamReply;
-          }
-
-          aiContentDiv.innerHTML = window.marked ? marked.parse(modelReply) : escapeHtml(modelReply);
-          chatFeed.scrollTop = chatFeed.scrollHeight;
-
-          chatHistory.push({ role: 'user', parts: [`[Загружен файл ${file.name}]`] });
+            throw new Error(errData.detail || `<span data-i18n="auto__res_status_const_resdata_await_res_json_const_filename_resdata_filename_file_name_request_ai_analysis_of_the_uploaded_document_media_const_prompt_filename_file_type_const_chatres_await_fetch_api_chat_method_post_headers_content_type_application_json_body_json_stringify_message_prompt_history_chathistory_generation_config_is_rc_true_let_modelreply_escapehtml_filename_if_chatres_ok_read_stream_or_fallback_const_reader_chatres_body_getreader_const_decoder_new_textdecoder_utf_8_let_buffer_let_streamreply_while_true_const_value_done_await_reader_read_if_done_break_buffer_decoder_decode_value_stream_true_const_lines_buffer_split_n_buffer_lines_pop_for_const_line_of_lines_const_tr_line_trim_if_tr_startswith_data_try_const_data_json_parse_tr_substring_6_if_data_text_streamreply_data_text_catch_e_if_streamreply_modelreply_streamreply_aicontentdiv_innerhtml_window_marked_marked_parse_modelreply_escapehtml_modelreply_chatfeed_scrolltop_chatfeed_scrollheight_chathistory_push_role_user_parts__6349c7"></span> ${file.name}]`] });
           chatHistory.push({ role: 'model', parts: [modelReply] });
           if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
 
@@ -1284,15 +1118,13 @@
 
         btnMic.className = 'btn-mic-giant';
         micIcon.className = 'bi bi-mic-fill';
-        voiceStatusText.textContent = 'Нажмите кнопку и говорите';
-        voiceSubtext.textContent = 'Готов к следующему вопросу или загрузке';
+        voiceStatusText.textContent = '<span data-i18n="auto__voicesubtext_textcontent__796f8b"></span>';
 
       } catch (err) {
-        aiContentDiv.innerHTML = `<span class="text-danger">Ошибка обработки: ${escapeHtml(err.message)}</span>`;
+        aiContentDiv.innerHTML = `<span class="text-danger"><span data-i18n="auto___e0db63"></span>: ${escapeHtml(err.message)}</span>`;
         btnMic.className = 'btn-mic-giant';
         micIcon.className = 'bi bi-mic-fill';
-        voiceStatusText.textContent = 'Ошибка загрузки';
-        voiceSubtext.textContent = 'Попробуйте загрузить файл повторно';
+        voiceStatusText.textContent = '<span data-i18n="auto__voicesubtext_textcontent__5ee346"></span>';
       }
     }
 
@@ -1360,7 +1192,7 @@
       chatFeed.innerHTML = `
         <div class="text-muted small text-center my-auto p-3" id="empty-feed-hint">
           <i class="bi bi-chat-dots fs-3 d-block mb-1 opacity-50"></i>
-          Голосовые команды и медиафайлы отобразятся здесь
+          <span data-i18n="auto___d8b99e"></span>
         </div>
       `;
     });
@@ -1378,7 +1210,7 @@
       const state = await api.auth.check();
       if (state.authenticated) {
         if (userDisplayName && state.user) {
-          userDisplayName.textContent = state.user.name || state.user.email || 'Пользователь';
+          userDisplayName.textContent = state.user.name || state.user.email || '<span data-i18n="auto___51aff1"></span>';
         }
         showPanel('main');
         initSpeechRecognition();

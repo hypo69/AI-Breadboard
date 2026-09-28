@@ -58,9 +58,7 @@ export async function uploadFiles(files) {
     if (!res.ok) throw new Error(data.detail || `Upload failed (HTTP ${res.status})`);
 
     if (statusAlert) {
-      statusAlert.className = 'alert alert-success p-2 small mb-0';
-      statusAlert.textContent = `Успешно загружено файлов: ${data.uploaded?.length || 0}`;
-      statusAlert.classList.remove('d-none');
+      statusAlert.className = 'alert alert-success p-2 small mb-0i18n.t('auto__statusalert_textcontent_data_uploaded_length_0_statusalert_classlist_remove__eb89e3')d-none');
     }
 
     await loadRagDocuments();
@@ -68,9 +66,7 @@ export async function uploadFiles(files) {
   } catch (err) {
     console.error('[RAG] Upload error:', err);
     if (statusAlert) {
-      statusAlert.className = 'alert alert-danger p-2 small mb-0';
-      statusAlert.textContent = `Ошибка загрузки: ${err.message}`;
-      statusAlert.classList.remove('d-none');
+      statusAlert.className = 'alert alert-danger p-2 small mb-0i18n.t('auto__statusalert_textcontent_err_message_statusalert_classlist_remove__c09e27')d-none');
     }
   } finally {
     setTimeout(() => {
@@ -128,15 +124,7 @@ export async function loadRagDocuments() {
 
   try {
     const res = await ragCachedFetch('/api/rag/documents', {
-      tags: ['rag-documents']
-    });
-    if (!res.ok) return;
-    const data = await res.json();
-    const docs = data.documents || [];
-
-    if (badge) badge.textContent = `${docs.length} файлов`;
-    if (docs.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Документы не загружены.</td></tr>';
+      tags: ['rag-documentsi18n.t('auto__if_res_ok_return_const_data_await_res_json_const_docs_data_documents_if_badge_badge_textcontent_docs_length_if_docs_length_0_tbody_innerhtml__8521bc')<tr><td colspan="5" class="text-center text-muted py-3">Документы не загружены.</td></tr>';
       return;
     }
 
@@ -146,7 +134,7 @@ export async function loadRagDocuments() {
         : (d.status === 'error' ? '<span class="badge bg-danger">Ошибка</span>' : '<span class="badge bg-warning text-dark">Ожидание</span>');
 
       return `
-        <tr class="rag-doc-row" data-idx="${idx}" style="cursor: pointer;" title="Нажмите для AI-анализа документа RAG">
+        <tr class="rag-doc-row" data-idx="${idx}" style="cursor: pointer;" title=i18n.t('auto__ai_rag_f0ee95')>
           <td class="ps-3 text-truncate" style="max-width: 200px;" title="${escapeHtml(d.name)}">
             <i class="bi bi-file-earmark-code me-1 text-primary"></i> ${escapeHtml(d.name)}
           </td>
@@ -154,7 +142,7 @@ export async function loadRagDocuments() {
           <td><span class="badge bg-secondary-subtle text-secondary">${d.chunks_count || 0}</span></td>
           <td>${statusBadge}</td>
           <td class="text-end pe-3">
-            <button class="btn btn-outline-danger btn-sm p-1 py-0 btn-del-rag-doc" data-name="${escapeHtml(d.name)}" title="Удалить">
+            <button class="btn btn-outline-danger btn-sm p-1 py-0 btn-del-rag-doc" data-name="${escapeHtml(d.name)}" title=i18n.t('auto___86ea33')>
               <i class="bi bi-trash"></i>
             </button>
           </td>
@@ -171,23 +159,20 @@ export async function loadRagDocuments() {
 
         if (window.AITableModal) {
           window.AITableModal.show({
-            icon: '🧠',
-            title: d.name,
-            subtitle: `Размер: ${formatBytes(d.size_bytes)} | Чанков: ${d.chunks_count || 0}`,
-            tableType: 'rag_doc',
+            icon: '🧠i18n.t('auto__title_d_name_subtitle_formatbytes_d_size_bytes_d_chunks_count_0_tabletype__14fe3b')rag_doc',
             badges: [
               { text: d.status || 'Indexed', class: d.status === 'indexed' ? 'badge bg-success' : 'badge bg-secondary' },
               { text: `${d.chunks_count || 0} chunks`, class: 'badge bg-info text-dark' }
             ],
             metadata: [
-              { label: 'Имя документа', value: d.name },
-              { label: 'Статус индексации', value: d.status || 'Indexed' },
-              { label: 'Количество чанков', value: String(d.chunks_count || 0) },
-              { label: 'Размер файла', value: formatBytes(d.size_bytes) },
-              { label: 'Дата индексации', value: d.updated_at || d.created_at || 'N/A' },
-              { label: 'Путь источника', value: d.source_path || d.name, isCode: true, fullWidth: true }
+              { label: i18n.t('auto___41d472'), value: d.name },
+              { label: i18n.t('auto___6f09e9'), value: d.status || 'Indexed' },
+              { label: i18n.t('auto___fdc486'), value: String(d.chunks_count || 0) },
+              { label: i18n.t('auto___b2683b'), value: formatBytes(d.size_bytes) },
+              { label: i18n.t('auto___4140fb'), value: d.updated_at || d.created_at || 'N/A' },
+              { label: i18n.t('auto___98ded8'), value: d.source_path || d.name, isCode: true, fullWidth: true }
             ],
-            rawTitle: 'Метаданные документа',
+            rawTitle: i18n.t('auto___3e0497'),
             rawContent: JSON.stringify(d, null, 2),
             requestData: {
               name: d.name,
@@ -208,37 +193,7 @@ export async function loadRagDocuments() {
       };
     });
   } catch (err) {
-    console.error('[RAG] Error loading documents:', err);
-  }
-}
-
-/**
- * Delete a specific document from global RAG.
- *
- * @param {string} filename - Name of the document to delete.
- * @returns {Promise<void>}
- */
-export async function deleteRagDocument(filename) {
-  if (!confirm(`Удалить документ «${filename}» из базы знаний?`)) return;
-  try {
-    const res = await fetch(`/api/rag/documents/${encodeURIComponent(filename)}`, {
-      method: 'DELETE',
-    });
-    window.showToast?.(`Документ «${filename}» успешно удален`, 'success');
-    await loadRagDocuments();
-    await loadRagStatus();
-  } catch (err) {
-    window.showToast?.(`Ошибка удаления: ${err.message}`, 'danger') || alert(`Ошибка удаления: ${err.message}`);
-  }
-}
-
-/**
- * Trigger global RAG index build.
- *
- * @returns {Promise<void>}
- */
-export async function buildRagIndex() {
-  const buildBtn = document.getElementById('btn-build-rag-index');
+    console.error('[RAG] Error loading documents:i18n.t('auto__err_delete_a_specific_document_from_global_rag_param_string_filename_name_of_the_document_to_delete_returns_promise_void_export_async_function_deleteragdocument_filename_if_confirm_filename_return_try_const_res_await_fetch_api_rag_documents_encodeuricomponent_filename_method__2ef265')DELETEi18n.t('auto__window_showtoast_filename__006e95')successi18n.t('auto__await_loadragdocuments_await_loadragstatus_catch_err_window_showtoast_err_message__c841a8')dangeri18n.t('auto__alert_err_message_trigger_global_rag_index_build_returns_promise_void_export_async_function_buildragindex_const_buildbtn_document_getelementbyid__d336a6')btn-build-rag-index');
   const statusEl = document.getElementById('rag-build-status');
   const providerSelect = document.getElementById('rag-provider-select');
   const apiKeyInput = document.getElementById('rag-api-key-input');
@@ -266,30 +221,9 @@ export async function buildRagIndex() {
     if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
 
     if (statusEl) {
-      statusEl.className = 'small mt-2 text-center text-success fw-semibold';
-      statusEl.textContent = `✓ Индекс успешно построен. Всего чанков: ${data.result?.total_chunks || 0}`;
-    }
-
-    await loadRagStatus();
-    await loadRagDocuments();
-  } catch (err) {
-    console.error('[RAG] Build error:', err);
+      statusEl.className = 'small mt-2 text-center text-success fw-semiboldi18n.t('auto__statusel_textcontent_data_result_total_chunks_0_await_loadragstatus_await_loadragdocuments_catch_err_console_error__27fdef')[RAG] Build error:', err);
     if (statusEl) {
-      statusEl.className = 'small mt-2 text-center text-danger';
-      statusEl.textContent = `✗ Ошибка индексации: ${err.message}`;
-    }
-  } finally {
-    if (buildBtn) buildBtn.disabled = false;
-  }
-}
-
-/**
- * Execute semantic query against global RAG index.
- *
- * @returns {Promise<void>}
- */
-export async function executeRagSearch() {
-  const queryInput = document.getElementById('rag-search-query');
+      statusEl.className = 'small mt-2 text-center text-dangeri18n.t('auto__statusel_textcontent_err_message_finally_if_buildbtn_buildbtn_disabled_false_execute_semantic_query_against_global_rag_index_returns_promise_void_export_async_function_executeragsearch_const_queryinput_document_getelementbyid__c417e9')rag-search-query');
   const topKSelect = document.getElementById('rag-top-k');
   const minScoreInput = document.getElementById('rag-min-score');
   const resultsContainer = document.getElementById('rag-search-results');
@@ -321,12 +255,7 @@ export async function executeRagSearch() {
 
     const results = data.results || [];
     if (results.length === 0) {
-      resultsContainer.innerHTML = `<div class="text-center text-muted py-4"><i class="bi bi-search fs-3 d-block mb-1 opacity-50"></i>По запросу «${escapeHtml(query)}» ничего не найдено.</div>`;
-      return;
-    }
-
-    resultsContainer.innerHTML = results.map(r => `
-      <div class="card mb-2 border shadow-sm">
+      resultsContainer.innerHTML = `<div class="text-center text-muted py-4"><i class="bi bi-search fs-3 d-block mb-1 opacity-50i18n.t('auto__i_escapehtml_query_div_return_resultscontainer_innerhtml_results_map_r_div_class__63c097')card mb-2 border shadow-sm">
         <div class="card-header py-1 px-2 bg-body-secondary d-flex justify-content-between align-items-center">
           <span class="small fw-semibold text-truncate" style="max-width: 70%;">
             <i class="bi bi-file-earmark-text me-1 text-primary"></i> ${escapeHtml(r.doc_name)} (#${r.chunk_index})

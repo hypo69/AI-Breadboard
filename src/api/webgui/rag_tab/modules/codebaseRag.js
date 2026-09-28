@@ -62,24 +62,7 @@ export async function loadCodebaseIndexes() {
 export function updateCodebaseStatsDisplay() {
   const select = document.getElementById('codebase-active-index-select');
   const statChunks = document.getElementById('codebase-stat-chunks');
-  const statSymbols = document.getElementById('codebase-stat-symbols');
-  if (!select) return;
-
-  const currentName = select.value;
-  const item = cachedCodebaseIndexes.find(i => i.name === currentName);
-  if (item) {
-    if (statChunks) statChunks.textContent = `${item.total_chunks || 0} чанков`;
-    if (statSymbols) statSymbols.textContent = `${item.total_symbols || 0} символов AST`;
-  }
-}
-
-/**
- * Build or rebuild codebase AST and semantic index for a target directory.
- *
- * @returns {Promise<void>}
- */
-export async function buildCodebaseRag() {
-  const btn = document.getElementById('btn-build-codebase-rag');
+  const statSymbols = document.getElementById('codebase-stat-symbolsi18n.t('auto__if_select_return_const_currentname_select_value_const_item_cachedcodebaseindexes_find_i_i_name_currentname_if_item_if_statchunks_statchunks_textcontent_item_total_chunks_0_if_statsymbols_statsymbols_textcontent_item_total_symbols_0_ast_build_or_rebuild_codebase_ast_and_semantic_index_for_a_target_directory_returns_promise_void_export_async_function_buildcodebaserag_const_btn_document_getelementbyid__9e82be')btn-build-codebase-rag');
   const alertEl = document.getElementById('codebase-build-status-alert');
   const rootInput = document.getElementById('codebase-project-root-input');
   const nameInput = document.getElementById('codebase-index-name-input');
@@ -112,35 +95,13 @@ export async function buildCodebaseRag() {
 
     const stats = data.result || {};
     if (alertEl) {
-      alertEl.className = 'alert alert-success p-2 small mt-3 mb-0';
-      alertEl.innerHTML = `
-        <strong>✓ Индекс «${escapeHtml(indexName)}» успешно создан!</strong><br>
-        Файлов: ${stats.total_files || 0} | Чанков: ${stats.total_chunks || 0} | Символов AST: ${stats.total_symbols || 0} (${stats.elapsed_seconds || 0}с)
-      `;
-    }
-
-    await loadCodebaseIndexes();
-    const select = document.getElementById('codebase-active-index-select');
+      alertEl.className = 'alert alert-success p-2 small mt-3 mb-0i18n.t('auto__alertel_innerhtml_strong_escapehtml_indexname_strong_br_stats_total_files_0_stats_total_chunks_0_ast_stats_total_symbols_0_stats_elapsed_seconds_0_await_loadcodebaseindexes_const_select_document_getelementbyid__48e173')codebase-active-index-select');
     if (select) select.value = indexName;
     updateCodebaseStatsDisplay();
   } catch (err) {
     console.error('[Codebase RAG] Build error:', err);
     if (alertEl) {
-      alertEl.className = 'alert alert-danger p-2 small mt-3 mb-0';
-      alertEl.textContent = `Ошибка сборки: ${err.message}`;
-    }
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-
-/**
- * Execute semantic query against codebase chunks.
- *
- * @returns {Promise<void>}
- */
-export async function executeCodebaseSearch() {
-  const queryInput = document.getElementById('codebase-search-query');
+      alertEl.className = 'alert alert-danger p-2 small mt-3 mb-0i18n.t('auto__alertel_textcontent_err_message_finally_if_btn_btn_disabled_false_execute_semantic_query_against_codebase_chunks_returns_promise_void_export_async_function_executecodebasesearch_const_queryinput_document_getelementbyid__b471c6')codebase-search-query');
   const select = document.getElementById('codebase-active-index-select');
   const resultsContainer = document.getElementById('codebase-search-results');
   const btn = document.getElementById('btn-codebase-search');
@@ -170,13 +131,7 @@ export async function executeCodebaseSearch() {
 
     const results = data.results || [];
     if (results.length === 0) {
-      resultsContainer.innerHTML = `<div class="text-center text-muted py-4">По запросу «${escapeHtml(query)}» совпадений не найдено.</div>`;
-      return;
-    }
-
-    resultsContainer.innerHTML = results.map(r => {
-      return `
-        <div class="card mb-2 border shadow-sm">
+      resultsContainer.innerHTML = `<div class="text-center text-muted py-4i18n.t('auto__escapehtml_query_div_return_resultscontainer_innerhtml_results_map_r_return_div_class__22b57b')card mb-2 border shadow-sm">
           <div class="card-header py-1 px-2 bg-body-secondary d-flex justify-content-between align-items-center">
             <span class="small fw-semibold text-truncate">
               <i class="bi bi-code-slash me-1 text-primary"></i> ${escapeHtml(r.id)}
@@ -232,13 +187,7 @@ export async function executeSymbolLookup() {
 
     const results = data.results || [];
     if (results.length === 0) {
-      resultsContainer.innerHTML = `<div class="text-center text-muted py-4">Символ «${escapeHtml(symbol)}» не найден в AST-индексе.</div>`;
-      return;
-    }
-
-    resultsContainer.innerHTML = results.map(s => {
-      return `
-        <div class="card mb-2 border border-success-subtle shadow-sm">
+      resultsContainer.innerHTML = `<div class="text-center text-muted py-4i18n.t('auto__escapehtml_symbol_ast_div_return_resultscontainer_innerhtml_results_map_s_return_div_class__949fb0')card mb-2 border border-success-subtle shadow-sm">
           <div class="card-header py-1 px-2 bg-success-subtle text-success-emphasis d-flex justify-content-between align-items-center">
             <span class="small fw-semibold">
               <i class="bi bi-tag-fill me-1"></i> ${escapeHtml(s.symbol)}

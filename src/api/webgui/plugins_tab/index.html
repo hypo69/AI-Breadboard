@@ -4,13 +4,13 @@
     <div class="d-flex align-items-center gap-2">
       <span class="fs-4">🔌</span>
       <div>
-        <h5 class="mb-0 fw-bold">Подключатель плагинов и расширений</h5>
-        <p class="mb-0 small text-muted">Централизованный каталог модулей, активация и органы динамической настройки</p>
+        <h5 class="mb-0 fw-bold"><span data-i18n="auto___d39cad"></span></h5>
+        <p class="mb-0 small text-muted"><span data-i18n="auto___afe928"></span></p>
       </div>
     </div>
     <div class="d-flex gap-2">
       <button class="btn btn-sm btn-outline-primary" id="btn-refresh-plugins" onclick="loadPluginsList()">
-        <i class="bi bi-arrow-clockwise"></i> Обновить список
+        <i class="bi bi-arrow-clockwise"></i> <span data-i18n="auto___0cd9c0"></span>
       </button>
     </div>
   </div>
@@ -20,19 +20,19 @@
     <div class="col-lg-4 col-md-5">
       <div class="card shadow-sm h-100 border-secondary-subtle">
         <div class="card-header bg-body-tertiary d-flex justify-content-between align-items-center py-2">
-          <span class="fw-semibold small text-uppercase">Установленные плагины (<span id="plugins-count">0</span>)</span>
-          <span class="badge bg-secondary-subtle text-body" id="active-plugins-badge">0 активных</span>
+          <span class="fw-semibold small text-uppercase"><span data-i18n="auto___c8cb63"></span> (<span id="plugins-count">0</span>)</span>
+          <span class="badge bg-secondary-subtle text-body" id="active-plugins-badge">0 <span data-i18n="auto___cbbb7d"></span></span>
         </div>
         <div class="p-2 border-bottom">
           <div class="input-group input-group-sm">
             <span class="input-group-text bg-body border-secondary-subtle"><i class="bi bi-search"></i></span>
-            <input type="text" class="form-control border-secondary-subtle" id="plugin-search-input" placeholder="Поиск плагина..." oninput="filterPluginsList()">
+            <input type="text" class="form-control border-secondary-subtle" id="plugin-search-input" placeholder="<span data-i18n="auto___4517b7"></span>..." oninput="filterPluginsList()">
           </div>
         </div>
         <div class="card-body p-2" id="plugins-list-container" style="max-height: 70vh; overflow-y: auto;">
           <div class="text-center text-muted p-4">
             <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
-            <div>Загрузка плагинов...</div>
+            <div><span data-i18n="auto___505af4"></span>...</div>
           </div>
         </div>
       </div>
@@ -43,7 +43,7 @@
       <div class="card shadow-sm h-100 border-secondary-subtle" id="plugin-details-card">
         <div class="card-body d-flex flex-column align-items-center justify-content-center text-muted p-5" id="plugin-placeholder">
           <i class="bi bi-puzzle fs-1 mb-2"></i>
-          <h6>Выберите плагин из списка слева для управления и настройки</h6>
+          <h6><span data-i18n="auto___9604bc"></span></h6>
         </div>
 
         <div class="d-none d-flex flex-column h-100" id="plugin-content-pane">
@@ -53,22 +53,22 @@
               <span class="fs-2" id="plugin-icon">🧩</span>
               <div>
                 <div class="d-flex align-items-center gap-2">
-                  <h5 class="mb-0 fw-bold" id="plugin-title">Название плагина</h5>
+                  <h5 class="mb-0 fw-bold" id="plugin-title"><span data-i18n="auto___5f6218"></span></h5>
                   <span class="badge bg-primary-subtle text-primary border border-primary-subtle" id="plugin-version">v1.0.0</span>
                   <span class="badge bg-secondary-subtle text-body border" id="plugin-category">tools</span>
-                  <span class="badge bg-info-subtle text-info-emphasis border" id="plugin-scope-badge">Системный</span>
+                  <span class="badge bg-info-subtle text-info-emphasis border" id="plugin-scope-badge"><span data-i18n="auto___eca171"></span></span>
                 </div>
                 <small class="text-muted" id="plugin-id">id: plugin_name</small>
               </div>
             </div>
-            <div class="form-check form-switch fs-5 mb-0" title="Включить / отключить плагин">
+            <div class="form-check form-switch fs-5 mb-0" title="<span data-i18n="auto___0535e1"></span>">
               <input class="form-check-input" type="checkbox" role="switch" id="plugin-toggle-switch" onchange="toggleCurrentPlugin(this.checked)">
             </div>
           </div>
 
           <!-- Description -->
           <div class="p-3 bg-body-secondary border-bottom">
-            <p class="mb-0 small text-body" id="plugin-description">Описание возможностей плагина.</p>
+            <p class="mb-0 small text-body" id="plugin-description"><span data-i18n="auto___17539e"></span>.</p>
           </div>
 
           <!-- Body: Settings & Actions -->
@@ -76,7 +76,7 @@
             <!-- Actions Section -->
             <div class="mb-4" id="plugin-actions-section">
               <h6 class="fw-bold mb-2 pb-1 border-bottom d-flex align-items-center gap-2">
-                <i class="bi bi-lightning-charge-fill text-warning"></i> Управляющие действия (Actions)
+                <i class="bi bi-lightning-charge-fill text-warning"></i> <span data-i18n="auto___171138"></span> (Actions)
               </h6>
               <div class="d-flex flex-wrap gap-2 pt-1" id="plugin-actions-container">
                 <!-- Action buttons rendered here -->
@@ -86,7 +86,7 @@
             <!-- Configuration Section -->
             <div class="mb-4" id="plugin-config-section">
               <h6 class="fw-bold mb-2 pb-1 border-bottom d-flex align-items-center gap-2">
-                <i class="bi bi-sliders text-primary"></i> Параметры конфигурации
+                <i class="bi bi-sliders text-primary"></i> <span data-i18n="auto___aeb154"></span>
               </h6>
               <form id="plugin-config-form" onsubmit="event.preventDefault(); saveCurrentPluginConfig();">
                 <div class="row g-3" id="plugin-fields-container">
@@ -94,7 +94,7 @@
                 </div>
                 <div class="mt-3 text-end">
                   <button type="submit" class="btn btn-sm btn-primary px-4" id="btn-save-plugin-config">
-                    <i class="bi bi-check2-circle"></i> Сохранить настройки
+                    <i class="bi bi-check2-circle"></i> <span data-i18n="auto___87ae19"></span>
                   </button>
                 </div>
               </form>
@@ -104,11 +104,11 @@
             <div class="mt-3">
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <h6 class="fw-bold mb-0 small text-muted d-flex align-items-center gap-1">
-                  <i class="bi bi-terminal"></i> Консоль выполнения
+                  <i class="bi bi-terminal"></i> <span data-i18n="auto___8fc887"></span>
                 </h6>
-                <button class="btn btn-sm btn-link text-decoration-none text-muted py-0" onclick="clearPluginConsole()">Очистить</button>
+                <button class="btn btn-sm btn-link text-decoration-none text-muted py-0" onclick="clearPluginConsole()"><span data-i18n="auto___98b207"></span></button>
               </div>
-              <pre class="p-2 rounded bg-dark text-light small font-monospace mb-0" id="plugin-console-output" style="max-height: 180px; min-height: 60px; overflow-y: auto;">Готов к работе.</pre>
+              <pre class="p-2 rounded bg-dark text-light small font-monospace mb-0" id="plugin-console-output" style="max-height: 180px; min-height: 60px; overflow-y: auto;"><span data-i18n="auto___d50038"></span>.</pre>
             </div>
           </div>
         </div>

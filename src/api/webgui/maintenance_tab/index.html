@@ -46,17 +46,17 @@
     <div>
       <div class="d-flex align-items-center gap-2">
         <h5 class="mb-0 fw-bold text-white">
-          🛠️ Обслуживание и восстановление
+          🛠️ <span data-i18n="auto___077e6b"></span>
         </h5>
         <span class="badge rounded-pill bg-primary px-2 py-1" style="font-size: 0.75rem;">Maintenance & Protection</span>
       </div>
       <p class="mb-0 small text-light mt-1" style="color: #cbd5e1 !important;">
-        Быстрая очистка кэшей, проверка целостности системных файлов Windows (SFC / DISM) и управление точками восстановления.
+        <span data-i18n="auto__windows_sfc_dism__492d54"></span>.
       </p>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-mtn-refresh">
-        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+        <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___c2f668"></span>
       </button>
     </div>
   </div>
@@ -68,11 +68,11 @@
       <div class="card bg-dark border-secondary p-3 h-100 d-flex flex-column justify-content-between">
         <div>
           <h6 class="fw-bold text-info"><i class="bi bi-trash3-fill me-1"></i> Disk & Cache Cleanup</h6>
-          <p class="small text-muted mb-2">Безопасная очистка временных файлов, логов установки и кэша обновлений Windows.</p>
-          <div class="small fw-semibold text-white mb-3" id="mtn-clean-estimate-txt">Очищаемый объём: ~0 MB</div>
+          <p class="small text-muted mb-2"><span data-i18n="auto___779a5c"></span> Windows.</p>
+          <div class="small fw-semibold text-white mb-3" id="mtn-clean-estimate-txt"><span data-i18n="auto___aa4858"></span>: ~0 MB</div>
         </div>
         <button class="btn btn-sm btn-outline-info w-100 rounded-pill" id="btn-mtn-action-clean">
-          <i class="bi bi-stars me-1"></i> Очистить кэши и временные файлы
+          <i class="bi bi-stars me-1"></i> <span data-i18n="auto___befdae"></span>
         </button>
       </div>
     </div>
@@ -82,10 +82,10 @@
       <div class="card bg-dark border-secondary p-3 h-100 d-flex flex-column justify-content-between">
         <div>
           <h6 class="fw-bold text-warning"><i class="bi bi-shield-shaded me-1"></i> SFC System File Check</h6>
-          <p class="small text-muted mb-2">Проверка целостности защищенных файлов системы (sfc /verifyonly).</p>
+          <p class="small text-muted mb-2"><span data-i18n="auto___593143"></span> (sfc /verifyonly).</p>
         </div>
         <button class="btn btn-sm btn-outline-warning w-100 rounded-pill" id="btn-mtn-action-sfc">
-          <i class="bi bi-search me-1"></i> Запустить проверку SFC
+          <i class="bi bi-search me-1"></i> <span data-i18n="auto___7eb1fb"></span> SFC
         </button>
       </div>
     </div>
@@ -95,10 +95,10 @@
       <div class="card bg-dark border-secondary p-3 h-100 d-flex flex-column justify-content-between">
         <div>
           <h6 class="fw-bold text-success"><i class="bi bi-heart-pulse-fill me-1"></i> DISM Health Check</h6>
-          <p class="small text-muted mb-2">Проверка состояния хранилища компонентов Windows через DISM /CheckHealth.</p>
+          <p class="small text-muted mb-2"><span data-i18n="auto__windows__a589da"></span> DISM /CheckHealth.</p>
         </div>
         <button class="btn btn-sm btn-outline-success w-100 rounded-pill" id="btn-mtn-action-dism">
-          <i class="bi bi-activity me-1"></i> Проверить хранилище DISM
+          <i class="bi bi-activity me-1"></i> <span data-i18n="auto___9457f1"></span> DISM
         </button>
       </div>
     </div>
@@ -107,13 +107,13 @@
     <div class="col-12">
       <div class="card bg-dark border-secondary">
         <div class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <span class="fw-bold text-white"><i class="bi bi-arrow-counterclockwise me-1"></i> Точки восстановления Windows</span>
+          <span class="fw-bold text-white"><i class="bi bi-arrow-counterclockwise me-1"></i> <span data-i18n="auto___7420ba"></span> Windows</span>
           <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-mtn-config-restore" title="Настройка квоты диска, расписания и политик хранения">
-              <i class="bi bi-gear-fill me-1"></i> Настройки и квоты
+            <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-mtn-config-restore" title="<span data-i18n="auto___8b39f6"></span>">
+              <i class="bi bi-gear-fill me-1"></i> <span data-i18n="auto___ea6396"></span>
             </button>
             <button class="btn btn-sm btn-outline-primary rounded-pill px-3" id="btn-mtn-create-restore">
-              <i class="bi bi-plus-lg me-1"></i> Создать точку восстановления
+              <i class="bi bi-plus-lg me-1"></i> <span data-i18n="auto___d07d2e"></span>
             </button>
           </div>
         </div>
@@ -122,13 +122,13 @@
             <thead>
               <tr>
                 <th style="width: 100px;">№</th>
-                <th style="width: 45%;">Описание</th>
-                <th style="width: 25%;">Тип</th>
-                <th style="width: 20%;">Время создания</th>
+                <th style="width: 45%;"><span data-i18n="auto___f5441f"></span></th>
+                <th style="width: 25%;"><span data-i18n="auto___d25691"></span></th>
+                <th style="width: 20%;"><span data-i18n="auto___134baa"></span></th>
               </tr>
             </thead>
             <tbody id="mtn-restore-tbody">
-              <tr><td colspan="4" class="text-center text-muted p-3">Загрузка точек восстановления...</td></tr>
+              <tr><td colspan="4" class="text-center text-muted p-3"><span data-i18n="auto___3ab651"></span>...</td></tr>
             </tbody>
           </table>
         </div>
@@ -143,73 +143,73 @@
     <div class="modal-content bg-dark text-white border-secondary">
       <div class="modal-header border-secondary">
         <h5 class="modal-title fw-bold" id="modalMtnRestoreConfigLabel">
-          <i class="bi bi-gear-fill text-info me-2"></i> Политики и дисковая квота
+          <i class="bi bi-gear-fill text-info me-2"></i> <span data-i18n="auto___9c171a"></span>
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <form id="form-mtn-restore-policy">
           <div class="mb-3">
-            <label class="form-label small text-muted">Максимальный объем диска под точки восстановления</label>
+            <label class="form-label small text-muted"><span data-i18n="auto___089b4c"></span></label>
             <select class="form-select bg-dark text-white border-secondary form-select-sm" id="mtn-policy-storage-size">
-              <option value="3%">3% (Минимальный)</option>
-              <option value="5%">5% (Рекомендуемый)</option>
-              <option value="10%" selected>10% (Стандартный)</option>
-              <option value="15%">15% (Расширенный)</option>
-              <option value="20%">20% (Максимальный)</option>
+              <option value="3%">3% (<span data-i18n="auto___6148a2"></span>)</option>
+              <option value="5%">5% (<span data-i18n="auto___707dd0"></span>)</option>
+              <option value="10%" selected>10% (<span data-i18n="auto___c341df"></span>)</option>
+              <option value="15%">15% (<span data-i18n="auto___770d40"></span>)</option>
+              <option value="20%">20% (<span data-i18n="auto___aa5557"></span>)</option>
             </select>
             <div class="progress mt-2" style="height: 6px;" id="mtn-policy-storage-progress">
               <div class="progress-bar bg-info" id="mtn-policy-storage-bar" role="progressbar" style="width: 0%"></div>
             </div>
             <div class="d-flex justify-content-between small text-muted mt-1" id="mtn-policy-storage-label" style="font-size: 0.75rem;">
-              <span>Занято: 0 GB</span><span>Лимит: 0 GB</span>
+              <span><span data-i18n="auto___ba8daf"></span>: 0 GB</span><span><span data-i18n="auto___1397df"></span>: 0 GB</span>
             </div>
           </div>
 
           <div class="mb-3">
-            <label class="form-label small text-muted">Автоматическое расписание создания</label>
+            <label class="form-label small text-muted"><span data-i18n="auto___c2dbaf"></span></label>
             <select class="form-select bg-dark text-white border-secondary form-select-sm" id="mtn-policy-trigger">
-              <option value="daily">Ежедневно</option>
-              <option value="weekly">Еженедельно</option>
-              <option value="on_update">Перед обновлениями Windows</option>
-              <option value="manual">Только вручную</option>
+              <option value="daily"><span data-i18n="auto___7fcf2e"></span></option>
+              <option value="weekly"><span data-i18n="auto___10c12f"></span></option>
+              <option value="on_update"><span data-i18n="auto___3639e4"></span> Windows</option>
+              <option value="manual"><span data-i18n="auto___f0d9c9"></span></option>
             </select>
           </div>
 
           <div class="mb-3" id="mtn-policy-time-wrapper">
-            <label class="form-label small text-muted">Время создания точки</label>
+            <label class="form-label small text-muted"><span data-i18n="auto___6ce5c4"></span></label>
             <input type="time" class="form-control bg-dark text-white border-secondary form-select-sm" id="mtn-policy-time" value="03:00">
           </div>
 
           <div class="mb-3">
-            <label class="form-label small text-muted">Максимальное число сохраняемых точек</label>
+            <label class="form-label small text-muted"><span data-i18n="auto___b54d0b"></span></label>
             <select class="form-select bg-dark text-white border-secondary form-select-sm" id="mtn-policy-max-points">
-              <option value="3">3 последних</option>
-              <option value="5" selected>5 последних</option>
-              <option value="10">10 последних</option>
-              <option value="20">20 последних</option>
+              <option value="3">3 <span data-i18n="auto___e42f16"></span></option>
+              <option value="5" selected>5 <span data-i18n="auto___e42f16"></span></option>
+              <option value="10">10 <span data-i18n="auto___e42f16"></span></option>
+              <option value="20">20 <span data-i18n="auto___e42f16"></span></option>
             </select>
           </div>
 
           <div class="form-check form-switch mb-2">
             <input class="form-check-input" type="checkbox" id="mtn-policy-freq-limit" checked>
-            <label class="form-check-label small text-light" for="mtn-policy-freq-limit">Ограничивать частоту (не чаще 1 раза в 24 часа)</label>
+            <label class="form-check-label small text-light" for="mtn-policy-freq-limit"><span data-i18n="auto__1_24__cf4b66"></span>)</label>
           </div>
 
           <div class="form-check form-switch mb-3">
             <input class="form-check-input" type="checkbox" id="mtn-policy-auto-prune" checked>
-            <label class="form-check-label small text-light" for="mtn-policy-auto-prune">Автоматически удалять старые точки при превышении квоты</label>
+            <label class="form-check-label small text-light" for="mtn-policy-auto-prune"><span data-i18n="auto___dfbbc7"></span></label>
           </div>
         </form>
       </div>
       <div class="modal-footer border-secondary d-flex justify-content-between">
         <button type="button" class="btn btn-sm btn-outline-danger" id="btn-mtn-policy-prune-now">
-          <i class="bi bi-trash me-1"></i> Очистить старые сейчас
+          <i class="bi bi-trash me-1"></i> <span data-i18n="auto___51dc67"></span>
         </button>
         <div class="d-flex gap-2">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal"><span data-i18n="auto___0ec753"></span></button>
           <button type="button" class="btn btn-sm btn-primary" id="btn-mtn-save-restore-policy">
-            <i class="bi bi-check-lg me-1"></i> Сохранить и применить
+            <i class="bi bi-check-lg me-1"></i> <span data-i18n="auto___8685b4"></span>
           </button>
         </div>
       </div>

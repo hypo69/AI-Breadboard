@@ -27,33 +27,10 @@ async function loadTelegramChannels() {
   const filterSelect = document.getElementById('tgram-filter-channel');
 
   try {
-    const res = await fetch('/api/telegram_rag/channels');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    tgramSubscribedChannels = data.user_subscriptions || [];
-    tgramAvailableChannels = data.available_channels || [];
-
-    // Calculate total messages
-    const totalMsgs = tgramAvailableChannels.reduce((sum, c) => sum + (c.messages_count || 0), 0);
-
-    if (statsBadge) {
-      statsBadge.textContent = `${tgramSubscribedChannels.length} подписок • ${totalMsgs} сообщений`;
-    }
-    if (countEl) countEl.textContent = tgramSubscribedChannels.length;
-    if (activeCountBadge) activeCountBadge.textContent = `${tgramAvailableChannels.length} в пуле`;
-
-    // Render channels list
-    renderTelegramChannelsList(tgramSubscribedChannels, tgramAvailableChannels);
-
-    // Update filter dropdown
-    if (filterSelect) {
-      const currentVal = filterSelect.value || 'all';
+    const res = await fetch('/api/telegram_rag/channelsi18n.t('auto__if_res_ok_throw_new_error_http_res_status_const_data_await_res_json_tgramsubscribedchannels_data_user_subscriptions_tgramavailablechannels_data_available_channels_calculate_total_messages_const_totalmsgs_tgramavailablechannels_reduce_sum_c_sum_c_messages_count_0_0_if_statsbadge_statsbadge_textcontent_tgramsubscribedchannels_length_totalmsgs_if_countel_countel_textcontent_tgramsubscribedchannels_length_if_activecountbadge_activecountbadge_textcontent_tgramavailablechannels_length_render_channels_list_rendertelegramchannelslist_tgramsubscribedchannels_tgramavailablechannels_update_filter_dropdown_if_filterselect_const_currentval_filterselect_value__5e86d4')all';
       let optsHtml = '<option value="all">🌐 Все подключенные каналы (Общий пул)</option>';
       tgramSubscribedChannels.forEach(ch => {
-        const isSel = ch === currentVal ? 'selected' : '';
-        const found = tgramAvailableChannels.find(a => a.channel === ch);
-        const countText = found ? ` (${found.messages_count} сообщ.)` : '';
+        const isSel = ch === currentVal ? 'selected' : 'i18n.t('auto__const_found_tgramavailablechannels_find_a_a_channel_ch_const_counttext_found_found_messages_count__1365d0')';
         optsHtml += `<option value="${ch}" ${isSel}>@${ch}${countText}</option>`;
       });
       filterSelect.innerHTML = optsHtml;
@@ -90,15 +67,11 @@ function renderTelegramChannelsList(userSubs, availablePool) {
     };
 
     const statusBadge = info.is_indexed
-      ? `<span class="badge bg-success-subtle text-success border border-success-subtle">${info.messages_count} сообщ.</span>`
-      : `<span class="badge bg-warning-subtle text-warning border">Не индексирован</span>`;
-
-    html += `
-      <div class="list-group-item p-2 rounded mb-1 border-0 bg-body-tertiary shadow-sm">
+      ? `<span class="badge bg-success-subtle text-success border border-success-subtlei18n.t('auto__info_messages_count_span_span_class__706e06')badge bg-warning-subtle text-warning borderi18n.t('auto__span_html_div_class__6d3330')list-group-item p-2 rounded mb-1 border-0 bg-body-tertiary shadow-sm">
         <div class="d-flex justify-content-between align-items-center mb-1">
           <div class="d-flex align-items-center gap-2 text-truncate">
             <span class="fs-5 text-primary">💬</span>
-            <a href="https://t.me/${channelName}" target="_blank" rel="noopener noreferrer" class="fw-bold text-decoration-none text-truncate" title="Открыть в Telegram">
+            <a href="https://t.me/${channelName}" target="_blank" rel="noopener noreferrer" class="fw-bold text-decoration-none text-truncate" title=i18n.t('auto__telegram_27044c')>
               @${channelName}
               <i class="bi bi-box-arrow-up-right ms-1 text-muted" style="font-size: 0.75rem;"></i>
             </a>
@@ -106,14 +79,12 @@ function renderTelegramChannelsList(userSubs, availablePool) {
           <div>${statusBadge}</div>
         </div>
         <div class="d-flex justify-content-between align-items-center mt-2 pt-1 border-top border-secondary-subtle">
-          <button class="btn btn-sm btn-outline-secondary py-0 px-2 small" onclick="filterByChannel('${channelName}')" title="Искать только в этом канале">
-            <i class="bi bi-search"></i> Искать здесь
-          </button>
-          <div class="btn-group btn-group-sm">
-            <button class="btn btn-outline-primary py-0 px-2" onclick="handleReindexTelegramChannel('${channelName}')" title="Переиндексировать канал">
+          <button class="btn btn-sm btn-outline-secondary py-0 px-2 small" onclick="filterByChannel('${channelName}')" title=i18n.t('auto___f31306')>
+            <i class="bi bi-searchi18n.t('auto__i_button_div_class__8e61f9')btn-group btn-group-sm">
+            <button class="btn btn-outline-primary py-0 px-2" onclick="handleReindexTelegramChannel('${channelName}')" title=i18n.t('auto___0c2634')>
               <i class="bi bi-arrow-clockwise"></i>
             </button>
-            <button class="btn btn-outline-danger py-0 px-2" onclick="handleUnsubscribeTelegramChannel('${channelName}')" title="Отключить канал">
+            <button class="btn btn-outline-danger py-0 px-2" onclick="handleUnsubscribeTelegramChannel('${channelName}')" title=i18n.t('auto___a57e22')>
               <i class="bi bi-trash"></i>
             </button>
           </div>
@@ -150,70 +121,35 @@ async function handleAddTelegramChannel() {
   try {
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Индексация...';
-    }
-
-    showTgramNotification(`Подключение канала @${channel}...`, 'info');
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Индексация...i18n.t('auto__showtgramnotification_channel__c7bb83')info');
     const resp = await fetch('/api/telegram_rag/subscribe', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ channel, max_messages: maxMessages }),
-    });
-
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-
-    showTgramNotification(data.message || `Канал @${channel} успешно подключен`, 'success');
+      headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_channel_max_messages_maxmessages_if_resp_ok_throw_new_error_http_resp_status_const_data_await_resp_json_showtgramnotification_data_message_channel__1c588c')success');
     input.value = '';
     await loadTelegramChannels();
   } catch (err) {
-    console.error('Error adding Telegram channel:', err);
-    showTgramNotification(`Ошибка: ${err.message}`, 'danger');
+    console.error('Error adding Telegram channel:i18n.t('auto__err_showtgramnotification_err_message__e8e665')danger');
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-cloud-arrow-down-fill me-1"></i> Подключить и индексировать';
-    }
-  }
-}
-
-// Unsubscribe Channel Handler
-async function handleUnsubscribeTelegramChannel(channel) {
-  if (!confirm(`Вы действительно хотите отключить канал @${channel}?`)) return;
-
-  try {
-    const resp = await fetch('/api/telegram_rag/unsubscribe', {
+      btn.innerHTML = '<i class="bi bi-cloud-arrow-down-fill me-1"></i> Подключить и индексироватьi18n.t('auto__unsubscribe_channel_handler_async_function_handleunsubscribetelegramchannel_channel_if_confirm_channel_return_try_const_resp_await_fetch__d5fd4d')/api/telegram_rag/unsubscribe', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ channel }),
-    });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-    showTgramNotification(data.message || `Канал @${channel} отключен`, 'info');
+      headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_channel_if_resp_ok_throw_new_error_http_resp_status_const_data_await_resp_json_showtgramnotification_data_message_channel__3ca55c')info');
     await loadTelegramChannels();
   } catch (err) {
-    console.error('Error unsubscribing channel:', err);
-    showTgramNotification(`Ошибка: ${err.message}`, 'danger');
+    console.error('Error unsubscribing channel:i18n.t('auto__err_showtgramnotification_err_message__e8e665')danger');
   }
 }
 
 // Reindex Channel Handler
 async function handleReindexTelegramChannel(channel) {
-  const maxMsgs = parseInt(document.getElementById('tgram-max-msgs-select')?.value || '500', 10);
-  try {
-    showTgramNotification(`Обновление индекса @${channel}...`, 'info');
+  const maxMsgs = parseInt(document.getElementById('tgram-max-msgs-select')?.value || '500i18n.t('auto__10_try_showtgramnotification_channel__0d4599')info');
     const resp = await fetch('/api/telegram_rag/reindex', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ channel, max_messages: maxMsgs }),
-    });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-    showTgramNotification(data.message || `Индекс @${channel} успешно обновлен`, 'success');
+      headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_channel_max_messages_maxmsgs_if_resp_ok_throw_new_error_http_resp_status_const_data_await_resp_json_showtgramnotification_data_message_channel__d621d0')success');
     await loadTelegramChannels();
   } catch (err) {
-    console.error('Error reindexing channel:', err);
-    showTgramNotification(`Ошибка переиндексации: ${err.message}`, 'danger');
+    console.error('Error reindexing channel:i18n.t('auto__err_showtgramnotification_err_message__c4a379')danger');
   }
 }
 
@@ -253,9 +189,7 @@ async function executeTelegramSearch() {
   if (resultsContainer) {
     resultsContainer.innerHTML = `
       <div class="text-center text-muted p-5">
-        <div class="spinner-border text-primary mb-3" role="status"></div>
-        <h6>Поиск в базе знаний Telegram...</h6>
-        <div class="small text-muted">Запрос: «${query}»</div>
+        <div class="spinner-border text-primary mb-3" role="statusi18n.t('auto__div_h6_telegram_h6_div_class__d72b4c')small text-muted">Запрос: «${query}»</div>
       </div>
     `;
   }
@@ -285,8 +219,7 @@ async function executeTelegramSearch() {
     if (resultsContainer) {
       resultsContainer.innerHTML = `
         <div class="alert alert-danger shadow-sm">
-          <h6><i class="bi bi-exclamation-triangle-fill me-2"></i> Ошибка поиска</h6>
-          <p class="mb-0 small">${err.message}</p>
+          <h6><i class="bi bi-exclamation-triangle-fill me-2i18n.t('auto__i_h6_p_class__a2cb0c')mb-0 small">${err.message}</p>
         </div>
       `;
     }
@@ -304,19 +237,8 @@ function renderTelegramSearchResults(results, query, durationMs) {
     container.innerHTML = `
       <div class="text-center text-muted p-5">
         <span class="fs-1 mb-2">🤷‍♂️</span>
-        <h6 class="fw-bold">Ничего не найдено</h6>
-        <p class="small text-muted mb-0">По запросу «${query}» в индексах Telegram сообщений не обнаружено. Попробуйте изменить формулировку или подключить дополнительные каналы.</p>
-      </div>
-    `;
-    return;
-  }
-
-  let html = `
-    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-      <div class="small text-muted">
-        Найдено результатов: <strong class="text-primary">${results.length}</strong> (${durationMs} мс)
-      </div>
-      <span class="badge bg-secondary-subtle text-body border">RAG Ranker</span>
+        <h6 class="fw-boldi18n.t('auto__h6_p_class__784c58')small text-muted mb-0i18n.t('auto__query_telegram_p_div_return_let_html_div_class__a9dbb9')d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+      <div class="small text-mutedi18n.t('auto__strong_class__a2bf79')text-primaryi18n.t('auto__results_length_strong_durationms_div_span_class__cfb494')badge bg-secondary-subtle text-body border">RAG Ranker</span>
     </div>
     <div class="d-flex flex-column gap-3">
   `;
@@ -351,14 +273,9 @@ function renderTelegramSearchResults(results, query, durationMs) {
         </div>
         <div class="card-footer bg-body-secondary py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
           <a href="${msgUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1">
-            <i class="bi bi-box-arrow-up-right"></i>
-            <span>Открыть в Telegram</span>
-          </a>
-          <div class="btn-group btn-group-sm">
-            <button class="btn btn-outline-secondary" onclick="copyTelegramLink('${msgUrl}')" title="Скопировать ссылку на сообщение">
-              <i class="bi bi-clipboard"></i> Ссылка
-            </button>
-            <button class="btn btn-outline-success" onclick="sendTelegramResultToChat('${msgUrl}', '${encodeURIComponent(r.snippet || '')}')" title="Вставить цитату в чат">
+            <i class="bi bi-box-arrow-up-righti18n.t('auto__i_span_telegram_span_a_div_class__5bc20b')btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary" onclick="copyTelegramLink('${msgUrl}')" title=i18n.t('auto___3c6be3')>
+              <i class="bi bi-clipboardi18n.t('auto__i_button_button_class__ba039f')btn btn-outline-success" onclick="sendTelegramResultToChat('${msgUrl}', '${encodeURIComponent(r.snippet || '')}')" title=i18n.t('auto___6844ac')>
               <i class="bi bi-chat-quote-fill"></i> В чат
             </button>
           </div>
@@ -374,9 +291,9 @@ function renderTelegramSearchResults(results, query, durationMs) {
 // Copy link to clipboard
 function copyTelegramLink(url) {
   navigator.clipboard.writeText(url).then(() => {
-    showTgramNotification('Ссылка скопирована в буфер обмена', 'success');
+    showTgramNotification(i18n.t('auto___50f248'), 'success');
   }).catch(() => {
-    prompt('Скопируйте ссылку вручную:', url);
+    prompt(i18n.t('auto___6ee68b'), url);
   });
 }
 
@@ -393,7 +310,7 @@ function sendTelegramResultToChat(url, encodedSnippet) {
   if (msgInput) {
     msgInput.value = (msgInput.value ? msgInput.value + '\n\n' : '') + textToInsert;
     msgInput.focus();
-    showTgramNotification('Цитата вставлена в поле ввода чата', 'success');
+    showTgramNotification(i18n.t('auto___a14f5f'), 'success');
   }
 }
 

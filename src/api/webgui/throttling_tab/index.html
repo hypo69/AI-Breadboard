@@ -3,8 +3,7 @@
 Process Name: Windows Kernel Quality & Throttling Tab
 ===============================================================================
 Description:
-    Вкладка телеметрии качества работы ядра Windows, задержек DPC/ISR прерываний,
-    аппаратного троттлинга PROCHOT / Power Limit, режима PCIe шины GPU и BSOD дампов.
+    <span data-i18n="auto__windows_dpc_isr_prochot_power_limit_pcie_gpu_bsod__5a4199"></span>.
 
 File: index.html
 Project: AI-Breadboard
@@ -68,18 +67,18 @@ Copyright: © 2026 hypo69
         <div class="d-flex align-items-center gap-2">
           <div class="fs-4">⚡</div>
           <div>
-            <h5 class="mb-0 fw-bold text-white">3. Качество ядра и Троттлинг (Kernel Quality & Hardware Health)</h5>
-            <small class="text-muted">DPC/ISR задержки драйверов, аппаратный сброс частот PROCHOT/Power Limit, PCIe линии и аварии BSOD</small>
+            <h5 class="mb-0 fw-bold text-white">3. <span data-i18n="auto___db817a"></span> (Kernel Quality & Hardware Health)</h5>
+            <small class="text-muted">DPC/ISR <span data-i18n="auto__prochot_power_limit_pcie__0291eb"></span> BSOD</small>
           </div>
         </div>
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
           <div class="form-check form-switch mb-0 small text-muted d-flex align-items-center gap-1">
             <input class="form-check-input" type="checkbox" id="diag-throttling-auto-refresh">
-            <label class="form-check-label small text-nowrap" for="diag-throttling-auto-refresh">Авто (5с)</label>
+            <label class="form-check-label small text-nowrap" for="diag-throttling-auto-refresh"><span data-i18n="auto__5__93e6f2"></span>)</label>
           </div>
           <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-semibold d-flex align-items-center gap-1" id="btn-diag-throttling-refresh">
-            <i class="bi bi-arrow-clockwise"></i> Обновить
+            <i class="bi bi-arrow-clockwise"></i> <span data-i18n="auto___c2f668"></span>
           </button>
         </div>
       </div>
@@ -91,7 +90,7 @@ Copyright: © 2026 hypo69
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="diag-meter-card">
         <div class="d-flex justify-content-between align-items-center small text-muted">
-          <span>DPC Latency (Отложенные вызовы)</span>
+          <span>DPC Latency (<span data-i18n="auto___8dcab9"></span>)</span>
           <i class="bi bi-activity text-info"></i>
         </div>
         <div class="fs-4 fw-bold mt-1" id="diag-dpc-latency-val">0.0%</div>
@@ -101,27 +100,27 @@ Copyright: © 2026 hypo69
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="diag-meter-card">
         <div class="d-flex justify-content-between align-items-center small text-muted">
-          <span>ISR Latency (Прерывания драйверов)</span>
+          <span>ISR Latency (<span data-i18n="auto___11d486"></span>)</span>
           <i class="bi bi-cpu text-warning"></i>
         </div>
         <div class="fs-4 fw-bold text-warning mt-1" id="diag-isr-latency-val">0.0%</div>
-        <div class="small text-muted">Нагрузка драйверов на ЦП</div>
+        <div class="small text-muted"><span data-i18n="auto___1344c4"></span></div>
       </div>
     </div>
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="diag-meter-card">
         <div class="d-flex justify-content-between align-items-center small text-muted">
-          <span>Аппаратный троттлинг (PROCHOT)</span>
+          <span><span data-i18n="auto___876c02"></span> (PROCHOT)</span>
           <i class="bi bi-thermometer-sun text-danger"></i>
         </div>
         <div class="fs-4 fw-bold mt-1" id="diag-throttling-status-val">Inactive</div>
-        <div class="small text-muted" id="diag-throttling-status-sub">Терморежим в норме</div>
+        <div class="small text-muted" id="diag-throttling-status-sub"><span data-i18n="auto___2bf492"></span></div>
       </div>
     </div>
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="diag-meter-card">
         <div class="d-flex justify-content-between align-items-center small text-muted">
-          <span>Время непрерывной работы</span>
+          <span><span data-i18n="auto___6dcb4c"></span></span>
           <i class="bi bi-clock text-primary"></i>
         </div>
         <div class="fs-4 fw-bold text-white mt-1" id="diag-uptime-val">--</div>
@@ -137,7 +136,7 @@ Copyright: © 2026 hypo69
         <div class="diag-panel-header d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-gpu-card text-success"></i>
-            <span class="text-white">Режим шины PCIe графического ускорителя (GPU Link)</span>
+            <span class="text-white"><span data-i18n="auto__pcie__81aeb8"></span> (GPU Link)</span>
           </div>
           <span class="badge bg-success-subtle text-success border border-success">PCIe Prober</span>
         </div>
@@ -145,20 +144,20 @@ Copyright: © 2026 hypo69
           <table class="about-sys-spec-table">
             <tbody>
               <tr>
-                <td class="about-sys-spec-key"><i class="bi bi-gpu-card me-1.5 text-success"></i>Видеокарта</td>
+                <td class="about-sys-spec-key"><i class="bi bi-gpu-card me-1.5 text-success"></i><span data-i18n="auto___ec2d93"></span></td>
                 <td class="about-sys-spec-val text-info" id="diag-gpu-pcie-name">GeForce GPU</td>
               </tr>
               <tr>
-                <td class="about-sys-spec-key"><i class="bi bi-speedometer2 me-1.5 text-warning"></i>Скорость шины (Link Speed)</td>
+                <td class="about-sys-spec-key"><i class="bi bi-speedometer2 me-1.5 text-warning"></i><span data-i18n="auto___88bbf4"></span> (Link Speed)</td>
                 <td class="about-sys-spec-val" id="diag-gpu-pcie-speed">PCIe 3.0 / 4.0 (8.0 GT/s)</td>
               </tr>
               <tr>
-                <td class="about-sys-spec-key"><i class="bi bi-arrows-expand me-1.5 text-primary"></i>Ширина линий (Link Width)</td>
+                <td class="about-sys-spec-key"><i class="bi bi-arrows-expand me-1.5 text-primary"></i><span data-i18n="auto___48c601"></span> (Link Width)</td>
                 <td class="about-sys-spec-val" id="diag-gpu-pcie-width">x16 Lanes (Full Width)</td>
               </tr>
               <tr>
-                <td class="about-sys-spec-key"><i class="bi bi-shield-check me-1.5 text-success"></i>Статус пропускной способности</td>
-                <td class="about-sys-spec-val text-success" id="diag-gpu-pcie-status">Штатный режим без деградации</td>
+                <td class="about-sys-spec-key"><i class="bi bi-shield-check me-1.5 text-success"></i><span data-i18n="auto___1c0072"></span></td>
+                <td class="about-sys-spec-val text-success" id="diag-gpu-pcie-status"><span data-i18n="auto___9d07d9"></span></td>
               </tr>
             </tbody>
           </table>
@@ -171,14 +170,14 @@ Copyright: © 2026 hypo69
         <div class="diag-panel-header d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-bug-fill text-danger"></i>
-            <span class="text-white">Журнал аварийных дампов ядра (Minidump / BSOD)</span>
+            <span class="text-white"><span data-i18n="auto___6257a0"></span> (Minidump / BSOD)</span>
           </div>
-          <span class="badge bg-secondary" id="diag-bsod-count">0 сбоев</span>
+          <span class="badge bg-secondary" id="diag-bsod-count">0 <span data-i18n="auto___64d4fe"></span></span>
         </div>
         <div class="p-2" id="diag-bsod-container" style="max-height: 260px; overflow-y: auto;">
           <div class="text-center py-4 text-success small">
             <i class="bi bi-check-circle-fill fs-5 d-block mb-1 text-success"></i>
-            Аварийных дампов падения ядра (BSOD) в Minidump не обнаружено
+            <span data-i18n="auto__bsod_minidump__7d8cf0"></span>
           </div>
         </div>
       </div>

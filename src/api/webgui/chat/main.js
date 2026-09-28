@@ -15,7 +15,7 @@ let activeSessionId = null;
  * Generates a clean, human-friendly title based on the first prompt (ChatGPT-style).
  */
 function generateSessionTitle(prompt) {
-  if (!prompt || typeof prompt !== 'string') return 'Новый чат';
+  if (!prompt || typeof prompt !== 'string') return i18n.t('auto___88c78c');
 
   let clean = prompt
     .replace(/^```[\s\S]*?```/g, '')
@@ -23,7 +23,7 @@ function generateSessionTitle(prompt) {
     .replace(/[*_#`[\]()]/g, '')
     .trim();
 
-  if (!clean) return 'Новый чат';
+  if (!clean) return i18n.t('auto___88c78c');
 
   // Take the first line or first sentence
   const firstLine = clean.split('\n')[0].trim();
@@ -83,7 +83,7 @@ async function syncSessionToServer(session) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id: session.id,
-        title: session.title || 'Новый чат',
+        title: session.title || i18n.t('auto___88c78c'),
         isCustomTitle: Boolean(session.isCustomTitle),
         createdAt: session.createdAt || Date.now(),
         updatedAt: session.updatedAt || Date.now(),
@@ -171,7 +171,7 @@ async function syncSessionsWithServer() {
     }
 
     if (sessions.length === 0) {
-      createNewSession('Новый чат', true);
+      createNewSession(i18n.t('auto___88c78c'), true);
       return;
     }
 
@@ -215,7 +215,7 @@ function loadSessions() {
         const legacyLog = JSON.parse(legacyRaw);
         if (Array.isArray(legacyLog) && legacyLog.length > 0) {
           const firstUserMsg = legacyLog.find((m) => m.sender === 'user');
-          const title = firstUserMsg ? generateSessionTitle(firstUserMsg.text) : 'Предыдущий диалог';
+          const title = firstUserMsg ? generateSessionTitle(firstUserMsg.text) : i18n.t('auto___d24ea0');
           const legacyHistory = [];
           for (const item of legacyLog) {
             legacyHistory.push({
@@ -245,19 +245,19 @@ function loadSessions() {
     }
 
     // Default clean initial session and attempt server sync
-    createNewSession('Новый чат', true);
+    createNewSession(i18n.t('auto___88c78c'), true);
     syncSessionsWithServer();
   } catch (err) {
     console.warn('Failed to load chat sessions:', err);
     sessions = [];
-    createNewSession('Новый чат', true);
+    createNewSession(i18n.t('auto___88c78c'), true);
     syncSessionsWithServer();
   }
 }
 
 function getActiveSession() {
   if (!activeSessionId || sessions.length === 0) {
-    return createNewSession('Новый чат', true);
+    return createNewSession(i18n.t('auto___88c78c'), true);
   }
   let session = sessions.find((s) => s.id === activeSessionId);
   if (!session) {
@@ -267,7 +267,7 @@ function getActiveSession() {
   return session;
 }
 
-function createNewSession(title = 'Новый чат', makeActive = true) {
+function createNewSession(title = i18n.t('auto___88c78c'), makeActive = true) {
   const newSession = {
     id: 'session_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
     title: title,
@@ -308,7 +308,7 @@ function renameSession(sessionId, newTitle = null) {
 
   let title = newTitle;
   if (title === null) {
-    title = prompt('Введите новое название диалога:', session.title);
+    title = prompt(i18n.t('auto___055dfb'), session.title);
   }
 
   if (title && title.trim()) {
@@ -329,7 +329,7 @@ function deleteSession(sessionId) {
 
   sessions.splice(index, 1);
   if (sessions.length === 0) {
-    createNewSession('Новый чат', true);
+    createNewSession(i18n.t('auto___88c78c'), true);
   } else if (activeSessionId === sessionId) {
     activeSessionId = sessions[0].id;
     renderActiveSessionMessages();
@@ -346,7 +346,7 @@ function clearCurrentSession() {
 
   session.messages = [];
   session.chatHistory = [];
-  session.title = 'Новый чат';
+  session.title = i18n.t('auto___88c78c');
   session.isCustomTitle = false;
   session.updatedAt = Date.now();
 
@@ -356,7 +356,7 @@ function clearCurrentSession() {
 }
 
 function clearAllSessions() {
-  if (!confirm('Вы уверены, что хотите удалить ВСЕ сохраненные диалоги?')) return;
+  if (!confirm(i18n.t('auto___a2eb6c'))) return;
 
   sessions = [];
   try {
@@ -369,7 +369,7 @@ function clearAllSessions() {
   clearCacheByTag(CACHE_TAG).catch(err => console.debug('Failed to clear chat cache:', err));
 
   clearAllSessionsFromServer();
-  createNewSession('Новый чат', true);
+  createNewSession(i18n.t('auto___88c78c'), true);
 }
 
 
@@ -377,8 +377,8 @@ function updateCurrentSessionHeader() {
   const titleEl = document.getElementById('chat-current-title');
   const session = getActiveSession();
   if (titleEl && session) {
-    titleEl.textContent = session.title || 'Новый чат';
-    titleEl.title = session.title || 'Новый чат';
+    titleEl.textContent = session.title || i18n.t('auto___88c78c');
+    titleEl.title = session.title || i18n.t('auto___88c78c');
   }
 }
 
@@ -389,7 +389,7 @@ function renderSessionsList() {
 
   listEl.innerHTML = '';
   if (countEl) {
-    countEl.textContent = `${sessions.length} ${sessions.length === 1 ? 'чат' : (sessions.length < 5 ? 'чата' : 'чатов')}`;
+    countEl.textContent = `${sessions.length} ${sessions.length === 1 ? i18n.t('auto___599578') : (sessions.length < 5 ? i18n.t('auto___c0c662') : i18n.t('auto___98d213'))}`;
   }
 
   updateCurrentSessionHeader();
@@ -406,10 +406,10 @@ function renderSessionsList() {
         <span class="text-truncate">${session.title}</span>
       </div>
       <div class="chat-session-actions d-flex align-items-center gap-1 flex-shrink-0">
-        <button class="btn btn-sm btn-link text-muted p-0 btn-rename" title="Переименовать" type="button">
+        <button class="btn btn-sm btn-link text-muted p-0 btn-rename" title=i18n.t('auto___715e8f') type="button">
           <i class="bi bi-pencil" style="font-size: 0.8rem;"></i>
         </button>
-        <button class="btn btn-sm btn-link text-danger p-0 btn-delete" title="Удалить" type="button">
+        <button class="btn btn-sm btn-link text-danger p-0 btn-delete" title=i18n.t('auto___86ea33') type="button">
           <i class="bi bi-trash" style="font-size: 0.8rem;"></i>
         </button>
       </div>
@@ -456,7 +456,7 @@ function renderActiveSessionMessages() {
   } else {
     const welcome = document.createElement('div');
     welcome.className = 'message bot-message';
-    welcome.innerHTML = '<strong>AI Assistant</strong>: Добро пожаловать! Задайте любой вопрос в поле ввода.';
+    welcome.innerHTML = i18n.t('auto__strong_ai_assistant_strong__2639c2');
     chatWindow.appendChild(welcome);
   }
 
@@ -533,7 +533,7 @@ function initChatTab() {
   const newSessionBtn = document.getElementById('chat-new-session-btn');
   if (newSessionBtn) {
     newSessionBtn.addEventListener('click', () => {
-      createNewSession('Новый чат', true);
+      createNewSession(i18n.t('auto___88c78c'), true);
       const msgInput = document.getElementById('message-input');
       if (msgInput) msgInput.focus();
     });
@@ -543,7 +543,7 @@ function initChatTab() {
   const clearBtn = document.getElementById('chat-clear-btn');
   if (clearBtn) {
     clearBtn.addEventListener('click', () => {
-      if (confirm('Очистить сообщения текущего диалога?')) {
+      if (confirm(i18n.t('auto___070cc2'))) {
         clearCurrentSession();
       }
     });
@@ -720,7 +720,7 @@ function handleRemoteTranscript(text) {
   addMessageToDom('user', cleanText, null, userTimeStr);
   session.messages.push({ sender: 'user', text: cleanText, timeStr: userTimeStr });
 
-  if ((!session.title || session.title === 'Новый чат' || session.title === 'Предыдущий диалог') && !session.isCustomTitle) {
+  if ((!session.title || session.title === i18n.t('auto___88c78c') || session.title === i18n.t('auto___d24ea0')) && !session.isCustomTitle) {
     session.title = generateSessionTitle(cleanText);
     renderSessionsList();
   }
@@ -790,7 +790,7 @@ function addMessageToDom(sender, text, voiceText = null, timeStr = null, outputM
     el.innerHTML = `
       <div class="d-flex align-items-center justify-content-between mb-1">
         <div><strong>AI Assistant</strong> ${modeBadge}<span class="text-muted">(${formattedTime})</span></div>
-        <button class="btn btn-sm btn-outline-secondary py-0 px-2 btn-speak-message" title="Озвучить ответ" type="button">
+        <button class="btn btn-sm btn-outline-secondary py-0 px-2 btn-speak-message" title=i18n.t('auto___eac616') type="button">
           <i class="bi bi-volume-up"></i>
         </button>
       </div>
@@ -817,7 +817,7 @@ function setStatus(statusText, isVisible = true) {
   if (!indicator || !textEl) return;
 
   if (isVisible) {
-    textEl.textContent = statusText || 'Обработка запроса...';
+    textEl.textContent = statusText || i18n.t('auto___8f8382');
     indicator.classList.remove('d-none');
   } else {
     indicator.classList.add('d-none');
@@ -837,7 +837,7 @@ async function sendMessage() {
   if (!window.activeModelName) {
     input.disabled = true;
     btn.disabled = true;
-    input.placeholder = 'Ни одна модель не выбрана. Выберите модель во вкладке «Модели и API».';
+    input.placeholder = i18n.t('auto__api__da6213');
     input.classList.add('is-invalid');
     return;
   }
@@ -858,7 +858,7 @@ async function sendMessage() {
   input.disabled = true;
   btn.disabled = true;
 
-  setStatus('Отправка запроса...', true);
+  setStatus(i18n.t('auto___6ac170'), true);
   const userTimeStr = new Date().toLocaleTimeString();
 
   // Clear welcome placeholder if this is the first message
@@ -871,7 +871,7 @@ async function sendMessage() {
   session.messages.push({ sender: 'user', text: msg, timeStr: userTimeStr });
 
   // Auto-name the session based on the first query if not customized
-  if ((!session.title || session.title === 'Новый чат' || session.title === 'Предыдущий диалог') && !session.isCustomTitle) {
+  if ((!session.title || session.title === i18n.t('auto___88c78c') || session.title === i18n.t('auto___d24ea0')) && !session.isCustomTitle) {
     session.title = generateSessionTitle(msg);
     renderSessionsList();
   }
@@ -886,7 +886,7 @@ async function sendMessage() {
   botMessageEl.innerHTML = `
     <div class="d-flex align-items-center justify-content-between mb-1">
       <div><strong>AI Assistant</strong> ${modeBadge}<span class="text-muted">(${timeStr})</span></div>
-      <button class="btn btn-sm btn-outline-secondary py-0 px-2 btn-speak-message d-none" title="Озвучить ответ" type="button">
+      <button class="btn btn-sm btn-outline-secondary py-0 px-2 btn-speak-message d-none" title=i18n.t('auto___eac616') type="button">
         <i class="bi bi-volume-up"></i>
       </button>
     </div>
@@ -993,19 +993,19 @@ async function sendMessage() {
     if (textDiv) {
       textDiv.innerHTML = `<span style="color: #ff7070;">Ошибка: ${errText}</span>`;
     }
-    setStatus('Ошибка исполнения', true);
+    setStatus(i18n.t('auto___683696'), true);
     setTimeout(() => setStatus('', false), 4000);
   } finally {
     if (window.activeModelName) {
       input.disabled = false;
       btn.disabled = false;
-      input.placeholder = 'Введите сообщение...';
+      input.placeholder = i18n.t('auto___ed1075');
       input.classList.remove('is-invalid');
       input.focus();
     } else {
       input.disabled = true;
       btn.disabled = true;
-      input.placeholder = 'Ни одна модель не выбрана. Выберите модель во вкладке «Модели и API».';
+      input.placeholder = i18n.t('auto__api__da6213');
       input.classList.add('is-invalid');
     }
     if (win) win.scrollTop = win.scrollHeight;

@@ -1,96 +1,6 @@
 <!-- System & Hardware Inspector Application Tab -->
 <style>
-  /* Все цвета через переменные main.css — адаптируется к обеим темам */
-  .sys-container {
-    padding: 0.5rem 0.75rem;
-  }
-  /* Сенсоры LHM */
-  .sys-sensor-group {
-    margin-bottom: 6px;
-    background: var(--surface-2);
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    overflow: hidden;
-  }
-  .sys-sensor-group-title {
-    padding: 4px 8px;
-    font-size: 0.76rem;
-    font-weight: 600;
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    color: var(--nav-active);
-    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.05));
-  }
-  .sys-sensor-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 3px 8px;
-    font-size: 0.76rem;
-    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.04));
-    background: var(--bg-color);
-  }
-  .sys-sensor-row:last-child {
-    border-bottom: none;
-  }
-  .sys-sensor-name {
-    color: var(--text-color);
-    max-width: 55%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .sys-sensor-value {
-    font-weight: 600;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 0.78rem;
-    text-align: right;
-  }
-  /* Таблица процессов */
-  .sys-proc-table {
-    width: 100%;
-    font-size: 0.78rem;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    border-collapse: collapse;
-  }
-  .sys-proc-table th {
-    background: var(--surface-2);
-    padding: 4px 8px;
-    color: var(--text-muted);
-    font-weight: 600;
-    border-bottom: 1px solid var(--border-color);
-    position: sticky;
-    top: 0;
-    z-index: 5;
-  }
-  .sys-proc-table td {
-    padding: 4px 8px;
-    border-bottom: 1px solid var(--border-subtle);
-    color: var(--text-color);
-  }
-  /* Статусы загрузки */
-  .badge-cpu-high { color: #ef4444; font-weight: 700; }
-  .badge-cpu-med  { color: #f59e0b; font-weight: 600; }
-  /* Аномалии */
-  .anomaly-tag {
-    display: inline-block;
-    font-size: 0.72rem;
-    padding: 1px 6px;
-    border-radius: 4px;
-    background: rgba(239, 68, 68, 0.12);
-    color: #dc2626;
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    margin-right: 4px;
-    margin-top: 2px;
-  }
-  [data-theme="dark"] .anomaly-tag {
-    background: rgba(239, 68, 68, 0.18);
-    color: #f87171;
-    border-color: rgba(239, 68, 68, 0.35);
-  }
-  /* Интерактивный ресайзер для таблицыИзменения файлов в реальном времени */
+  /* <span data-i18n="auto__main_css_sys_container_padding_0_5rem_0_75rem_lhm_sys_sensor_group_margin_bottom_6px_background_var_surface_2_border_1px_solid_var_border_color_border_radius_5px_overflow_hidden_sys_sensor_group_title_padding_4px_8px_font_size_0_76rem_font_weight_600_background_transparent_display_flex_align_items_center_justify_content_space_between_color_var_nav_active_border_bottom_1px_solid_var_border_subtle_rgba_255_255_255_0_05_sys_sensor_row_display_flex_justify_content_space_between_align_items_center_padding_3px_8px_font_size_0_76rem_border_bottom_1px_solid_var_border_subtle_rgba_255_255_255_0_04_background_var_bg_color_sys_sensor_row_last_child_border_bottom_none_sys_sensor_name_color_var_text_color_max_width_55_overflow_hidden_text_overflow_ellipsis_white_space_nowrap_sys_sensor_value_font_weight_600_font_family_ui_monospace_sfmono_regular_menlo_monaco_consolas_monospace_font_size_0_78rem_text_align_right_sys_proc_table_width_100_font_size_0_78rem_font_family_ui_monospace_sfmono_regular_menlo_monaco_consolas_monospace_border_collapse_collapse_sys_proc_table_th_background_var_surface_2_padding_4px_8px_color_var_text_muted_font_weight_600_border_bottom_1px_solid_var_border_color_position_sticky_top_0_z_index_5_sys_proc_table_td_padding_4px_8px_border_bottom_1px_solid_var_border_subtle_color_var_text_color_badge_cpu_high_color_ef4444_font_weight_700_badge_cpu_med_color_f59e0b_font_weight_600_anomaly_tag_display_inline_block_font_size_0_72rem_padding_1px_6px_border_radius_4px_background_rgba_239_68_68_0_12_color_dc2626_border_1px_solid_rgba_239_68_68_0_3_margin_right_4px_margin_top_2px_data_theme_dark_anomaly_tag_background_rgba_239_68_68_0_18_color_f87171_border_color_rgba_239_68_68_0_35__83476a"></span> */
   .sys-table-resizer {
     height: 10px;
     background: var(--surface-2);
@@ -129,25 +39,25 @@
        style="background: var(--surface-2); border: 1px solid var(--border-color);">
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <span class="fs-5">📡</span>
-      <span class="fw-bold small" style="font-size: 0.92rem; color: var(--text-color);">Телеметрия хоста и оборудования</span>
+      <span class="fw-bold small" style="font-size: 0.92rem; color: var(--text-color);"><span data-i18n="auto___1069e6"></span></span>
       <span class="badge bg-secondary fw-normal" style="font-size: 0.7rem;">Live Telemetry</span>
-      <span class="d-none d-lg-inline" style="font-size: 0.76rem; color: var(--text-muted);">| Комплексный мониторинг CPU, RAM, GPU, дисков, питания и процессов</span>
+      <span class="d-none d-lg-inline" style="font-size: 0.76rem; color: var(--text-muted);">| <span data-i18n="auto__cpu_ram_gpu__ff93db"></span></span>
     </div>
     <div class="d-flex align-items-center gap-1 flex-wrap">
       <span class="badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1" style="font-size: 0.72rem;" id="sys-conn-status">
-        ● Активна
+        ● <span data-i18n="auto___c1ae51"></span>
       </span>
       <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-sys-refresh-sensors">
-        <i class="bi bi-arrow-clockwise me-1"></i> Сенсоры
+        <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___9fc7e9"></span>
       </button>
-      <button class="btn btn-xs btn-outline-primary rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-sys-intervals" title="Настройка интервалов опроса сенсоров и логгеров в config.json">
-        <i class="bi bi-stopwatch me-1"></i> Интервалы
+      <button class="btn btn-xs btn-outline-primary rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-sys-intervals" title="<span data-i18n="auto___0eb74b"></span> config.json">
+        <i class="bi bi-stopwatch me-1"></i> <span data-i18n="auto___3070d7"></span>
       </button>
       <button class="btn btn-xs btn-outline-warning rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-sys-config">
-        <i class="bi bi-gear-fill me-1"></i> Настройки
+        <i class="bi bi-gear-fill me-1"></i> <span data-i18n="auto___7f17c7"></span>
       </button>
       <button class="btn btn-xs btn-primary rounded-pill px-2 py-1 fw-bold" style="font-size: 0.75rem; background: linear-gradient(135deg, #a855f7, #6366f1); border: none;" id="btn-sys-run-audit">
-        🤖 AI Аудит
+        🤖 AI <span data-i18n="auto___39846e"></span>
       </button>
     </div>
   </div>
@@ -157,8 +67,8 @@
     <div class="col-6 col-md-3">
       <div class="sys-card">
         <div class="d-flex justify-content-between align-items-center">
-          <span class="sys-label">Загрузка CPU</span>
-          <span class="small" style="font-size: 0.68rem; color: var(--text-muted);" id="sys-metric-cpu-sub">-- Ядер</span>
+          <span class="sys-label"><span data-i18n="auto___c98fa8"></span> CPU</span>
+          <span class="small" style="font-size: 0.68rem; color: var(--text-muted);" id="sys-metric-cpu-sub">-- <span data-i18n="auto___805e2c"></span></span>
         </div>
         <div class="d-flex align-items-baseline justify-content-between">
           <span class="sys-value" id="sys-metric-cpu-val">0.0%</span>
@@ -171,8 +81,8 @@
     <div class="col-6 col-md-3">
       <div class="sys-card">
         <div class="d-flex justify-content-between align-items-center">
-          <span class="sys-label">Память (RAM)</span>
-          <span class="small" style="font-size: 0.68rem; color: var(--text-muted);" id="sys-metric-ram-sub">0% занято</span>
+          <span class="sys-label"><span data-i18n="auto___f63c10"></span> (RAM)</span>
+          <span class="small" style="font-size: 0.68rem; color: var(--text-muted);" id="sys-metric-ram-sub">0% <span data-i18n="auto___fe2678"></span></span>
         </div>
         <div class="d-flex align-items-baseline justify-content-between">
           <span class="sys-value" id="sys-metric-ram-val">0.0 GB</span>
@@ -185,7 +95,7 @@
     <div class="col-6 col-md-3">
       <div class="sys-card">
         <div class="d-flex justify-content-between align-items-center">
-          <span class="sys-label">GPU Ускоритель</span>
+          <span class="sys-label">GPU <span data-i18n="auto___cf4742"></span></span>
         </div>
         <div class="d-flex align-items-baseline justify-content-between">
           <span class="sys-value text-warning" style="font-size: 1.0rem;" id="sys-metric-gpu-val">--</span>
@@ -198,7 +108,7 @@
     <div class="col-6 col-md-3">
       <div class="sys-card">
         <div class="d-flex justify-content-between align-items-center">
-          <span class="sys-label">Диск (I/O)</span>
+          <span class="sys-label"><span data-i18n="auto___ca0407"></span> (I/O)</span>
           <span class="small" style="font-size: 0.68rem; color: var(--text-muted);" id="sys-metric-disk-sub">0 MB/s</span>
         </div>
         <div class="d-flex align-items-baseline justify-content-between">
@@ -217,11 +127,11 @@
     <div class="col-md-6 col-lg-3">
       <div class="sys-panel p-2 h-100">
         <div class="d-flex justify-content-between align-items-center mb-1">
-          <span class="small fw-bold" style="font-size: 0.76rem; color: var(--text-color);"><i class="bi bi-hdd-network text-info me-1"></i> Здоровье дисков (NVMe/SSD)</span>
+          <span class="small fw-bold" style="font-size: 0.76rem; color: var(--text-color);"><i class="bi bi-hdd-network text-info me-1"></i> <span data-i18n="auto___502133"></span> (NVMe/SSD)</span>
           <span class="badge bg-success-subtle text-success border border-success" style="font-size: 0.65rem;" id="sys-disk-health-badge">SMART OK</span>
         </div>
         <div id="sys-physical-disks-container" class="small text-muted" style="font-size: 0.72rem; line-height: 1.3; max-height: 120px; overflow-y: auto;">
-          Опрос состояния физических дисков...
+          <span data-i18n="auto___06b82c"></span>...
         </div>
       </div>
     </div>
@@ -230,11 +140,11 @@
     <div class="col-md-6 col-lg-3">
       <div class="sys-panel p-2 h-100">
         <div class="d-flex justify-content-between align-items-center mb-1">
-          <span class="small fw-bold" style="font-size: 0.76rem; color: var(--text-color);"><i class="bi bi-battery-charging text-warning me-1"></i> Питание и Энергия</span>
+          <span class="small fw-bold" style="font-size: 0.76rem; color: var(--text-color);"><i class="bi bi-battery-charging text-warning me-1"></i> <span data-i18n="auto___596156"></span></span>
           <span class="badge bg-secondary" style="font-size: 0.65rem;" id="sys-power-status-badge">AC Mains</span>
         </div>
         <div id="sys-power-info-container" class="small text-muted" style="font-size: 0.72rem; line-height: 1.3;">
-          Питание от электросети (Стационарный ПК)
+          <span data-i18n="auto___b31cbc"></span>)
         </div>
       </div>
     </div>
@@ -243,11 +153,11 @@
     <div class="col-md-6 col-lg-3">
       <div class="sys-panel p-2 h-100">
         <div class="d-flex justify-content-between align-items-center mb-1">
-          <span class="small fw-bold" style="font-size: 0.76rem; color: var(--text-color);"><i class="bi bi-memory text-primary me-1"></i> Модули RAM (SPD)</span>
-          <span class="badge bg-dark border border-secondary text-info" style="font-size: 0.65rem;" id="sys-ram-sticks-badge">Слоты</span>
+          <span class="small fw-bold" style="font-size: 0.76rem; color: var(--text-color);"><i class="bi bi-memory text-primary me-1"></i> <span data-i18n="auto___090170"></span> RAM (SPD)</span>
+          <span class="badge bg-dark border border-secondary text-info" style="font-size: 0.65rem;" id="sys-ram-sticks-badge"><span data-i18n="auto___567f8b"></span></span>
         </div>
         <div id="sys-ram-sticks-container" class="small text-muted" style="font-size: 0.72rem; line-height: 1.3;">
-          Опрос конфигурации планок памяти...
+          <span data-i18n="auto___d3d41d"></span>...
         </div>
       </div>
     </div>
@@ -256,11 +166,11 @@
     <div class="col-md-6 col-lg-3">
       <div class="sys-panel p-2 h-100">
         <div class="d-flex justify-content-between align-items-center mb-1">
-          <span class="small fw-bold" style="font-size: 0.76rem; color: var(--text-color);"><i class="bi bi-shield-check text-success me-1"></i> Стабильность и Сеть</span>
-          <span class="badge bg-info-subtle text-info border border-info" style="font-size: 0.65rem;" id="sys-alerts-badge">Стабильно</span>
+          <span class="small fw-bold" style="font-size: 0.76rem; color: var(--text-color);"><i class="bi bi-shield-check text-success me-1"></i> <span data-i18n="auto___2ba16e"></span></span>
+          <span class="badge bg-info-subtle text-info border border-info" style="font-size: 0.65rem;" id="sys-alerts-badge"><span data-i18n="auto___331370"></span></span>
         </div>
         <div id="sys-alerts-ports-container" class="small text-muted" style="font-size: 0.72rem; line-height: 1.3;">
-          Службы активны. Ожидание телеметрии портов.
+          <span data-i18n="auto___9ba72f"></span>.
         </div>
       </div>
     </div>
@@ -274,27 +184,27 @@
         <div class="sys-panel-header">
           <div class="d-flex align-items-center gap-1.5">
             <i class="bi bi-thermometer-half text-danger"></i>
-            <span>Сенсоры LibreHardwareMonitor</span>
+            <span><span data-i18n="auto___9fc7e9"></span> LibreHardwareMonitor</span>
           </div>
           <div class="d-flex align-items-center gap-1">
             <span class="badge bg-secondary" id="sys-lhm-status-badge">LHM</span>
-            <span class="badge bg-dark border border-secondary text-info" id="sys-lhm-sensors-count">0 шт.</span>
+            <span class="badge bg-dark border border-secondary text-info" id="sys-lhm-sensors-count">0 <span data-i18n="auto___a5640e"></span>.</span>
           </div>
         </div>
 
         <!-- Sensor filter and action bar -->
         <div class="p-2 border-bottom d-flex align-items-center justify-content-between gap-1 flex-wrap" style="background: var(--surface-2); border-color: var(--border-color) !important;">
           <input type="text" class="form-control form-control-sm" id="sys-lhm-search"
-                 placeholder="Фильтр сенсоров..." style="max-width: 130px; font-size: 0.74rem; padding: 2px 6px;">
+                 placeholder="<span data-i18n="auto___f57715"></span>..." style="max-width: 130px; font-size: 0.74rem; padding: 2px 6px;">
           <div class="d-flex align-items-center gap-1">
-            <button class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5" id="btn-sys-intervals-lhm" title="Настроить интервалы опроса сенсоров и логгеров (config)">
+            <button class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5" id="btn-sys-intervals-lhm" title="<span data-i18n="auto___97da62"></span> (config)">
               <i class="bi bi-stopwatch"></i>
             </button>
-            <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-0.5" id="btn-sys-refresh-lhm" title="Обновить сенсоры">
+            <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-0.5" id="btn-sys-refresh-lhm" title="<span data-i18n="auto___cbc672"></span>">
               <i class="bi bi-arrow-clockwise"></i>
             </button>
-            <button class="btn btn-xs btn-outline-success rounded-pill px-2 py-0.5 d-none" id="btn-sys-launch-lhm" title="Запустить службу LibreHardwareMonitor">
-              <i class="bi bi-play-fill me-1"></i> Запуск LHM
+            <button class="btn btn-xs btn-outline-success rounded-pill px-2 py-0.5 d-none" id="btn-sys-launch-lhm" title="<span data-i18n="auto___848472"></span> LibreHardwareMonitor">
+              <i class="bi bi-play-fill me-1"></i> <span data-i18n="auto___c001fc"></span> LHM
             </button>
           </div>
         </div>
@@ -302,27 +212,27 @@
         <!-- Category filter pills & Analyze Button -->
         <div class="px-2 pt-1 pb-1 d-flex gap-1 overflow-x-auto border-bottom align-items-center justify-content-between" id="sys-lhm-cat-filters" style="border-color: var(--border-subtle, rgba(255, 255, 255, 0.05)) !important; font-size: 0.72rem;">
           <div class="d-flex gap-1 overflow-x-auto flex-grow-1">
-            <button class="btn btn-xs btn-outline-primary active py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="all">Все</button>
+            <button class="btn btn-xs btn-outline-primary active py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="all"><span data-i18n="auto___fd08da"></span></button>
             <button class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="temperature">🌡️ t°</button>
-            <button class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="load">⚡ Нагрузка</button>
-            <button class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="fan">🌪️ Вентиляторы</button>
-            <button class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="voltage">🔋 Вольтаж</button>
-            <button class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="clock">⏱️ Частоты</button>
+            <button class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="load">⚡ <span data-i18n="auto___213896"></span></button>
+            <button class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="fan">🌪️ <span data-i18n="auto___ab83db"></span></button>
+            <button class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="voltage">🔋 <span data-i18n="auto___3f84cb"></span></button>
+            <button class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill sys-lhm-cat-btn" data-cat="clock">⏱️ <span data-i18n="auto___60815d"></span></button>
           </div>
           <button class="btn btn-xs btn-primary rounded-pill px-2.5 py-0.5 fw-bold text-nowrap flex-shrink-0 ms-1 shadow-sm"
                   id="btn-sys-sensor-analyze"
                   style="font-size: 0.72rem; background: linear-gradient(135deg, #0284c7, #6366f1); border: none;"
-                  title="Комплексный AI-аудит сенсоров и оборудования хоста">
-            <i class="bi bi-shield-check me-1"></i> Аудит
+                  title="<span data-i18n="auto__ai__a0aca2"></span>">
+            <i class="bi bi-shield-check me-1"></i> <span data-i18n="auto___39846e"></span>
           </button>
         </div>
 
-        <!-- Уведомление о live-fallback (БД сенсоров пуста) -->
+        <!-- <span data-i18n="auto__live_fallback__2bd1b7"></span>) -->
         <div class="d-none px-2 py-1 border-bottom" id="sys-lhm-fallback-notice"
              style="background: rgba(234,179,8,0.08); border-color: rgba(234,179,8,0.25) !important;">
           <div class="d-flex align-items-center gap-1.5" style="font-size: 0.72rem; color: #ca8a04;">
             <i class="bi bi-exclamation-triangle-fill text-warning"></i>
-            <span>БД сенсоров пуста — используется <strong>прямой опрос (live)</strong>. Запустите телеметрию для накопления данных в SQLite.</span>
+            <span><span data-i18n="auto___31de3a"></span> <strong><span data-i18n="auto___055db7"></span> (live)</strong>. <span data-i18n="auto___d9c72d"></span> SQLite.</span>
           </div>
         </div>
 
@@ -330,7 +240,7 @@
         <div class="p-2 flex-grow-1" id="sys-lhm-sensors-container" style="max-height: 520px; overflow-y: auto;">
           <div class="text-center py-4 small" style="color: var(--text-muted);">
             <div class="spinner-border spinner-border-sm text-info mb-2" role="status"></div>
-            <div>Опрос сенсоров LibreHardwareMonitor...</div>
+            <div><span data-i18n="auto___723810"></span> LibreHardwareMonitor...</div>
           </div>
         </div>
       </div>
@@ -342,15 +252,15 @@
       <div class="sys-panel flex-grow-1">
         <div class="sys-panel-header">
           <div class="d-flex align-items-center gap-2">
-            <span><i class="bi bi-list-task me-1"></i> Топ процессов хоста</span>
-            <span class="badge bg-primary-subtle text-primary border border-primary font-monospace" id="sys-proc-db-badge" style="font-size: 0.72rem;">● БД SQLite (замер 5с)</span>
+            <span><i class="bi bi-list-task me-1"></i> <span data-i18n="auto___e3aaf0"></span></span>
+            <span class="badge bg-primary-subtle text-primary border border-primary font-monospace" id="sys-proc-db-badge" style="font-size: 0.72rem;">● <span data-i18n="auto__sqlite_5__0d4c7a"></span>)</span>
             <span class="small text-muted font-monospace" id="sys-proc-updated-time" style="font-size: 0.7rem;">--:--:--</span>
           </div>
           <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-sm btn-outline-info rounded-pill px-2.5" id="btn-sys-proc-stats" title="Статистика и выбросы процессов"><i class="bi bi-bar-chart-line-fill me-1"></i>Статистика</button>
+            <button class="btn btn-sm btn-outline-info rounded-pill px-2.5" id="btn-sys-proc-stats" title="<span data-i18n="auto___0f6c8f"></span>"><i class="bi bi-bar-chart-line-fill me-1"></i><span data-i18n="auto___a77d7f"></span></button>
             <input type="text" class="form-control form-control-sm" id="sys-proc-search"
-                   placeholder="Фильтр по имени или PID..." style="max-width: 180px;">
-            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-sys-pause-proc">Пауза</button>
+                   placeholder="<span data-i18n="auto___4d9f11"></span> PID..." style="max-width: 180px;">
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-sys-pause-proc"><span data-i18n="auto___03498e"></span></button>
           </div>
         </div>
         <div class="table-responsive" style="height: 520px; max-height: 520px; overflow-y: auto;">
@@ -358,16 +268,16 @@
             <thead>
               <tr>
                 <th style="width: 70px;">PID</th>
-                <th style="width: 200px; max-width: 240px;">Имя процесса</th>
-                <th style="width: 90px;">Статус</th>
+                <th style="width: 200px; max-width: 240px;"><span data-i18n="auto___79ec71"></span></th>
+                <th style="width: 90px;"><span data-i18n="auto___f7f293"></span></th>
                 <th style="width: 80px; text-align: right;">CPU %</th>
-                <th style="width: 100px; text-align: right;">Память</th>
-                <th style="width: 70px; text-align: right;">Потоки</th>
-                <th>Пользователь</th>
+                <th style="width: 100px; text-align: right;"><span data-i18n="auto___f63c10"></span></th>
+                <th style="width: 70px; text-align: right;"><span data-i18n="auto___3e77ca"></span></th>
+                <th><span data-i18n="auto___51aff1"></span></th>
               </tr>
             </thead>
             <tbody id="sys-proc-tbody">
-              <tr><td colspan="7" class="text-center py-3" style="color: var(--text-muted);">Ожидание потока процессов...</td></tr>
+              <tr><td colspan="7" class="text-center py-3" style="color: var(--text-muted);"><span data-i18n="auto___ff4a7a"></span>...</td></tr>
             </tbody>
           </table>
         </div>
@@ -375,27 +285,27 @@
     </div>
   </div>
 
-  <!-- Сетевая активность программ (Интернет, Отправка и Прием) -->
+  <!-- <span data-i18n="auto___0ac36d"></span>) -->
   <div class="row g-2 mt-1">
     <div class="col-12">
       <div class="sys-panel">
         <div class="sys-panel-header d-flex align-items-center justify-content-between flex-wrap gap-2">
           <div class="d-flex align-items-center gap-2">
             <span class="fs-6">🌐</span>
-            <span class="fw-bold" style="font-size: 0.88rem; color: var(--text-color);">Сетевая активность программ (Интернет)</span>
-            <span class="badge bg-primary-subtle text-primary border border-primary" id="sys-netact-count-badge">0 программ</span>
-            <span class="badge bg-dark border border-secondary text-info" id="sys-netact-conns-badge">0 сокетов</span>
+            <span class="fw-bold" style="font-size: 0.88rem; color: var(--text-color);"><span data-i18n="auto___ed1fda"></span>)</span>
+            <span class="badge bg-primary-subtle text-primary border border-primary" id="sys-netact-count-badge">0 <span data-i18n="auto___6102d4"></span></span>
+            <span class="badge bg-dark border border-secondary text-info" id="sys-netact-conns-badge">0 <span data-i18n="auto___3dbef9"></span></span>
           </div>
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <div class="btn-group btn-group-xs" role="group">
-              <button class="btn btn-xs btn-outline-primary active py-0.5 px-2 sys-net-filter-btn" data-filter="internet" id="btn-sys-net-filter-internet">🌐 Только Интернет</button>
-              <button class="btn btn-xs btn-outline-secondary py-0.5 px-2 sys-net-filter-btn" data-filter="all" id="btn-sys-net-filter-all">Все сокеты</button>
-              <button class="btn btn-xs btn-outline-secondary py-0.5 px-2 sys-net-filter-btn" data-filter="listen" id="btn-sys-net-filter-listen">Слушающие (Listen)</button>
+              <button class="btn btn-xs btn-outline-primary active py-0.5 px-2 sys-net-filter-btn" data-filter="internet" id="btn-sys-net-filter-internet">🌐 <span data-i18n="auto___1b91cf"></span></button>
+              <button class="btn btn-xs btn-outline-secondary py-0.5 px-2 sys-net-filter-btn" data-filter="all" id="btn-sys-net-filter-all"><span data-i18n="auto___11def7"></span></button>
+              <button class="btn btn-xs btn-outline-secondary py-0.5 px-2 sys-net-filter-btn" data-filter="listen" id="btn-sys-net-filter-listen"><span data-i18n="auto___76d49c"></span> (Listen)</button>
             </div>
             <input type="text" class="form-control form-control-sm" id="sys-net-search"
-                   placeholder="Поиск по имени, PID или IP..." style="max-width: 200px; font-size: 0.74rem; padding: 2px 8px;">
-            <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-0.5" id="btn-sys-pause-net">Пауза</button>
-            <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-0.5" id="btn-sys-refresh-net" title="Обновить сетевые соединения">
+                   placeholder="<span data-i18n="auto__pid__fe0f31"></span> IP..." style="max-width: 200px; font-size: 0.74rem; padding: 2px 8px;">
+            <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-0.5" id="btn-sys-pause-net"><span data-i18n="auto___03498e"></span></button>
+            <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-0.5" id="btn-sys-refresh-net" title="<span data-i18n="auto___d59de3"></span>">
               <i class="bi bi-arrow-clockwise"></i>
             </button>
           </div>
@@ -404,13 +314,13 @@
         <!-- Network Activity Sub-header & Live Throughput Bar -->
         <div class="px-3 py-1.5 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2" style="background: var(--surface-2); border-color: var(--border-color) !important; font-size: 0.76rem;">
           <div class="d-flex align-items-center gap-3 flex-wrap text-muted">
-            <span><i class="bi bi-arrow-up-right text-warning me-1"></i>Отправка: <span class="fw-bold text-light" id="sys-net-send-label">HTTPS запросы, данные, API</span></span>
-            <span class="border-start border-secondary ps-3"><i class="bi bi-arrow-down-left text-success me-1"></i>Прием / Скачано: <span class="fw-bold text-light" id="sys-net-recv-label">Веб-контент, медиа, ответы серверов</span></span>
-            <span class="border-start border-secondary ps-3"><i class="bi bi-shield-lock text-info me-1"></i>Протоколы: <span class="badge bg-dark border border-secondary text-info">TLS / HTTPS / DNS</span></span>
+            <span><i class="bi bi-arrow-up-right text-warning me-1"></i><span data-i18n="auto___5b6bc6"></span>: <span class="fw-bold text-light" id="sys-net-send-label">HTTPS <span data-i18n="auto___de6e5f"></span>, API</span></span>
+            <span class="border-start border-secondary ps-3"><i class="bi bi-arrow-down-left text-success me-1"></i><span data-i18n="auto___a70a8b"></span>: <span class="fw-bold text-light" id="sys-net-recv-label"><span data-i18n="auto___8d468b"></span></span></span>
+            <span class="border-start border-secondary ps-3"><i class="bi bi-shield-lock text-info me-1"></i><span data-i18n="auto___512af3"></span>: <span class="badge bg-dark border border-secondary text-info">TLS / HTTPS / DNS</span></span>
           </div>
           <div class="d-flex align-items-center gap-2 text-muted" style="font-size: 0.74rem;">
-            <span class="badge bg-dark border border-secondary text-warning" title="Измерение трафика за интервал опроса">⏱️ Период замера: ~2 сек</span>
-            <span title="Автоматическое сопоставление сокетов с процессами ОС">● Live Socket Attribution</span>
+            <span class="badge bg-dark border border-secondary text-warning" title="<span data-i18n="auto___2f0c06"></span>">⏱️ <span data-i18n="auto__2__dce131"></span></span>
+            <span title="<span data-i18n="auto___c81418"></span>">● Live Socket Attribution</span>
           </div>
         </div>
 
@@ -418,20 +328,20 @@
           <table class="sys-proc-table">
             <thead>
               <tr>
-                <th style="width: 170px;">Программа / PID</th>
-                <th style="width: 220px;">Удаленный сервер (Интернет)</th>
-                <th style="width: 240px;">Служба / Протокол</th>
-                <th style="width: 100px; text-align: center;">Статус</th>
-                <th style="min-width: 220px;"><i class="bi bi-arrow-up-right text-warning me-1"></i>Отправка (За период / Всего / Данные)</th>
-                <th style="min-width: 220px;"><i class="bi bi-arrow-down-left text-success me-1"></i>Прием (Скачано за период / Всего / Данные)</th>
+                <th style="width: 170px;"><span data-i18n="auto___87163c"></span> / PID</th>
+                <th style="width: 220px;"><span data-i18n="auto___e53736"></span>)</th>
+                <th style="width: 240px;"><span data-i18n="auto___eca99a"></span></th>
+                <th style="width: 100px; text-align: center;"><span data-i18n="auto___f7f293"></span></th>
+                <th style="min-width: 220px;"><i class="bi bi-arrow-up-right text-warning me-1"></i><span data-i18n="auto___6e88a6"></span>)</th>
+                <th style="min-width: 220px;"><i class="bi bi-arrow-down-left text-success me-1"></i><span data-i18n="auto___ae1540"></span>)</th>
               </tr>
             </thead>
             <tbody id="sys-net-tbody">
-              <tr><td colspan="6" class="text-center text-muted p-3">Опрос активных интернет-соединений программ...</td></tr>
+              <tr><td colspan="6" class="text-center text-muted p-3"><span data-i18n="auto___68be95"></span>...</td></tr>
             </tbody>
           </table>
         </div>
-        <div id="sys-net-table-resizer" class="sys-table-resizer" title="Потяните для изменения высоты таблицы (двойной клик — сброс)">
+        <div id="sys-net-table-resizer" class="sys-table-resizer" title="<span data-i18n="auto___d22447"></span>)">
           <div class="sys-table-resizer-grip"></div>
         </div>
       </div>
@@ -444,22 +354,22 @@
       <div class="sys-panel">
         <div class="sys-panel-header d-flex align-items-center justify-content-between flex-wrap gap-2">
           <div class="d-flex align-items-center gap-2">
-            <span><i class="bi bi-activity text-info me-1"></i>Изменения файлов в реальном времени</span>
+            <span><i class="bi bi-activity text-info me-1"></i><span data-i18n="auto___285881"></span></span>
             <span class="badge bg-info-subtle text-info" id="sys-live-badge">ReadDirectoryChangesW</span>
-            <span class="badge bg-dark border border-secondary text-truncate" id="sys-watch-dir-badge" style="max-width: 280px; font-size: 0.72rem; cursor: pointer;" title="Текущая отслеживаемая папка. Нажмите для смены.">
-              📁 <span id="sys-watch-dir-path">Загрузка...</span>
+            <span class="badge bg-dark border border-secondary text-truncate" id="sys-watch-dir-badge" style="max-width: 280px; font-size: 0.72rem; cursor: pointer;" title="<span data-i18n="auto___4d4124"></span>.">
+              📁 <span id="sys-watch-dir-path"><span data-i18n="auto___c98fa8"></span>...</span>
             </span>
           </div>
           <div class="d-flex align-items-center gap-1.5">
-            <span class="badge bg-success-subtle text-success border border-success px-2 py-1" id="sys-watcher-sensor-status" style="font-size: 0.7rem;">🟢 Штатный режим</span>
-            <button class="btn btn-xs btn-outline-warning rounded-pill px-2 py-0.5" style="font-size: 0.72rem;" id="btn-sys-watch-exclusions" title="Настроить исключения и фильтры мониторинга">
-              <i class="bi bi-funnel me-1"></i> Исключения <span class="badge bg-dark border border-secondary text-warning" id="sys-exclusions-count-badge">0</span>
+            <span class="badge bg-success-subtle text-success border border-success px-2 py-1" id="sys-watcher-sensor-status" style="font-size: 0.7rem;">🟢 <span data-i18n="auto___f543a7"></span></span>
+            <button class="btn btn-xs btn-outline-warning rounded-pill px-2 py-0.5" style="font-size: 0.72rem;" id="btn-sys-watch-exclusions" title="<span data-i18n="auto___63d7c9"></span>">
+              <i class="bi bi-funnel me-1"></i> <span data-i18n="auto___ea6553"></span> <span class="badge bg-dark border border-secondary text-warning" id="sys-exclusions-count-badge">0</span>
             </button>
-            <button class="btn btn-xs btn-outline-light rounded-pill px-2 py-0.5" style="font-size: 0.72rem;" id="btn-sys-change-watch-dir" title="Выбрать другую папку для мониторинга">
-              <i class="bi bi-folder2-open me-1 text-warning"></i> Папка
+            <button class="btn btn-xs btn-outline-light rounded-pill px-2 py-0.5" style="font-size: 0.72rem;" id="btn-sys-change-watch-dir" title="<span data-i18n="auto___22dfce"></span>">
+              <i class="bi bi-folder2-open me-1 text-warning"></i> <span data-i18n="auto___bc5431"></span>
             </button>
-            <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-0.5" style="font-size: 0.72rem;" id="btn-sys-live-help" title="Подробная справка о работеИзменения файлов в реальном времени">
-              <i class="bi bi-info-circle me-1"></i> Справка
+            <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-0.5" style="font-size: 0.72rem;" id="btn-sys-live-help" title="<span data-i18n="auto___700e18"></span>">
+              <i class="bi bi-info-circle me-1"></i> <span data-i18n="auto___6a45ce"></span>
             </button>
           </div>
         </div>
@@ -467,13 +377,13 @@
         <!-- Real-Time Watcher Telemetry & Hardware Sensors Bar -->
         <div class="px-3 py-2 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2" style="background: var(--surface-2); border-color: var(--border-color) !important; font-size: 0.97rem;">
           <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="text-muted"><i class="bi bi-speedometer2 text-info me-1"></i>Темп: <span class="fw-bold text-info" id="sys-watcher-rate">0.0</span> оп/с</span>
+            <span class="text-muted"><i class="bi bi-speedometer2 text-info me-1"></i><span data-i18n="auto___e0d826"></span>: <span class="fw-bold text-info" id="sys-watcher-rate">0.0</span> <span data-i18n="auto___ae437c"></span></span>
             <span class="text-muted" style="font-size: 0.92rem;">(<span class="text-success" id="sys-watcher-cr">0</span> cr / <span class="text-warning" id="sys-watcher-mod">0</span> mod / <span class="text-danger" id="sys-watcher-del">0</span> del)</span>
-            <span class="border-start border-secondary ps-2 text-muted" title="Количество отфильтрованных событий">
-              <i class="bi bi-funnel text-warning me-1"></i>Исключено: <span class="text-warning fw-bold" id="sys-watcher-filtered-count">0</span>
+            <span class="border-start border-secondary ps-2 text-muted" title="<span data-i18n="auto___76f12d"></span>">
+              <i class="bi bi-funnel text-warning me-1"></i><span data-i18n="auto___6dc3b1"></span>: <span class="text-warning fw-bold" id="sys-watcher-filtered-count">0</span>
             </span>
             <span class="border-start border-secondary ps-2 text-muted">
-              <i class="bi bi-hdd-network text-primary me-1"></i>Диск: <span class="text-light fw-bold" id="sys-watcher-drive">C:</span> (<span class="text-muted" id="sys-watcher-drive-model">Storage</span>)
+              <i class="bi bi-hdd-network text-primary me-1"></i><span data-i18n="auto___ca0407"></span>: <span class="text-light fw-bold" id="sys-watcher-drive">C:</span> (<span class="text-muted" id="sys-watcher-drive-model">Storage</span>)
             </span>
             <span class="badge bg-dark border border-secondary text-info px-2 py-0.5" id="sys-watcher-temp" style="font-size: 0.92rem;">-- °C</span>
             <span class="text-muted" style="font-size: 0.92rem;">R: <span class="text-light" id="sys-watcher-r-kbs">0</span> KB/s | W: <span class="text-light" id="sys-watcher-w-kbs">0</span> KB/s</span>
@@ -481,25 +391,25 @@
           <div class="d-flex align-items-center gap-1 text-muted" style="font-size: 0.92rem;">
             <span><i class="bi bi-shield-check text-success me-1"></i>Audit 4660/4663:</span>
             <span class="badge bg-dark border border-secondary text-muted px-2 py-0.5" id="sys-watcher-sec-matches" style="font-size: 0.92rem;">0</span>
-            <span class="text-muted ms-1" title="Периодическое логирование в file_watcher_telemetry_polls.csv">● AutoLog Active</span>
+            <span class="text-muted ms-1" title="<span data-i18n="auto___034637"></span> file_watcher_telemetry_polls.csv">● AutoLog Active</span>
           </div>
         </div>
         <div id="sys-watcher-table-container" class="p-0 table-responsive" style="height: 280px; min-height: 120px; max-height: 850px; overflow-y: auto;">
           <table class="sys-proc-table">
             <thead>
               <tr>
-                <th style="width: 100px;">Время</th>
-                <th style="width: 120px;">Действие</th>
-                <th style="width: 170px;">Программа / PID</th>
-                <th>Полный путь к файлу</th>
+                <th style="width: 100px;"><span data-i18n="auto___c80d7e"></span></th>
+                <th style="width: 120px;"><span data-i18n="auto___4fe9c0"></span></th>
+                <th style="width: 170px;"><span data-i18n="auto___87163c"></span> / PID</th>
+                <th><span data-i18n="auto___f6ae8c"></span></th>
               </tr>
             </thead>
             <tbody id="sys-watcher-tbody">
-              <tr><td colspan="4" class="text-center text-muted p-3">Мониторинг файловых событий...</td></tr>
+              <tr><td colspan="4" class="text-center text-muted p-3"><span data-i18n="auto___0829a9"></span>...</td></tr>
             </tbody>
           </table>
         </div>
-        <div id="sys-watcher-table-resizer" class="sys-table-resizer" title="Потяните для изменения высоты таблицы (двойной клик — сброс)">
+        <div id="sys-watcher-table-resizer" class="sys-table-resizer" title="<span data-i18n="auto___d22447"></span>)">
           <div class="sys-table-resizer-grip"></div>
         </div>
       </div>
@@ -514,7 +424,7 @@
       <div class="modal-header py-2 px-3 border-secondary" style="background: var(--surface-2); border-color: var(--border-color) !important;">
         <h6 class="modal-title d-flex align-items-center gap-2 mb-0" id="sysSensorAnalysisModalLabel">
           <i class="bi bi-shield-check text-info"></i>
-          <span>Комплексный AI-аудит сенсоров и оборудования</span>
+          <span><span data-i18n="auto__ai__989c21"></span></span>
           <span class="badge bg-success ms-1" id="modal-sensor-health-badge">Health: 100/100</span>
           <span class="badge bg-secondary font-monospace" id="modal-sensor-model-badge" style="font-size: 0.68rem;">Heuristic Engine</span>
         </h6>
@@ -526,17 +436,17 @@
           <div class="d-flex align-items-center gap-2">
             <span class="fs-4" id="modal-sensor-status-icon">✅</span>
             <div>
-              <div class="fw-bold" style="font-size: 0.88rem;" id="modal-sensor-status-title">Все подсистемы работают в штатном режиме</div>
-              <div class="small text-muted" style="font-size: 0.75rem;" id="modal-sensor-status-sub">Сравнение залогированных усреднённых показателей со спецификациями реального железа</div>
+              <div class="fw-bold" style="font-size: 0.88rem;" id="modal-sensor-status-title"><span data-i18n="auto___985f8a"></span></div>
+              <div class="small text-muted" style="font-size: 0.75rem;" id="modal-sensor-status-sub"><span data-i18n="auto___50f88d"></span></div>
             </div>
           </div>
           <div class="d-flex gap-2">
             <div class="text-end">
-              <div class="small text-muted" style="font-size: 0.7rem;">СЕНСОРОВ В АУДИТЕ</div>
+              <div class="small text-muted" style="font-size: 0.7rem;"><span data-i18n="auto___1b6cf8"></span></div>
               <div class="fw-bold font-monospace" id="modal-sensor-count-stat">0</div>
             </div>
             <div class="text-end ps-2 border-start border-secondary">
-              <div class="small text-muted" style="font-size: 0.7rem;">МАКС. ТЕМПЕРАТУРА</div>
+              <div class="small text-muted" style="font-size: 0.7rem;"><span data-i18n="auto___e5d8fb"></span></div>
               <div class="fw-bold font-monospace" id="modal-sensor-max-temp">-- °C</div>
             </div>
           </div>
@@ -545,22 +455,22 @@
         <!-- Detected Real Hardware Devices from Logs -->
         <div class="mb-3 p-2.5 rounded border" style="background: var(--surface-2); border-color: var(--border-color) !important;">
           <div class="d-flex align-items-center justify-content-between mb-1.5">
-            <span class="small fw-bold text-info"><i class="bi bi-cpu me-1"></i> Распознанные устройства хоста (из логов LHM)</span>
-            <span class="badge bg-dark border border-secondary text-muted" id="modal-sensor-devices-count">0 устр.</span>
+            <span class="small fw-bold text-info"><i class="bi bi-cpu me-1"></i> <span data-i18n="auto___b95d72"></span> LHM)</span>
+            <span class="badge bg-dark border border-secondary text-muted" id="modal-sensor-devices-count">0 <span data-i18n="auto___c10ef0"></span>.</span>
           </div>
           <div class="d-flex flex-wrap gap-1.5" id="modal-sensor-devices-list">
-            <span class="badge bg-dark border border-secondary text-muted">Загрузка устройств...</span>
+            <span class="badge bg-dark border border-secondary text-muted"><span data-i18n="auto___928518"></span>...</span>
           </div>
         </div>
 
         <!-- AI Comparison against Real Hardware Specifications -->
         <div class="mb-3 p-2.5 rounded border" style="background: var(--surface-2); border-color: var(--border-color) !important;">
           <div class="d-flex align-items-center justify-content-between mb-1.5">
-            <span class="small fw-bold text-primary"><i class="bi bi-robot me-1"></i> AI-сравнение показателей со спецификациями реального железа</span>
+            <span class="small fw-bold text-primary"><i class="bi bi-robot me-1"></i> AI-<span data-i18n="auto___3c04f9"></span></span>
             <span class="badge bg-primary bg-opacity-25 text-primary border border-primary" id="modal-sensor-ai-tag">AI Expert</span>
           </div>
           <div class="text-light p-2.5 rounded" id="modal-sensor-ai-comparison" style="background: var(--bg-color); font-size: 0.78rem; line-height: 1.5; white-space: pre-wrap;">
-            Сбор залогированных данных и формирование отчёта...
+            <span data-i18n="auto___b4707b"></span>...
           </div>
         </div>
 
@@ -570,30 +480,30 @@
           <div class="col-12 col-md-4">
             <div class="p-2 rounded border" style="background: var(--bg-color); border-color: var(--border-color) !important;">
               <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="small fw-semibold text-info"><i class="bi bi-cpu me-1"></i> Процессор (CPU)</span>
+                <span class="small fw-semibold text-info"><i class="bi bi-cpu me-1"></i> <span data-i18n="auto___ef345a"></span> (CPU)</span>
                 <span class="badge bg-secondary" id="modal-cpu-temp-badge">-- °C</span>
               </div>
-              <div class="small text-muted" id="modal-cpu-analysis-text" style="font-size: 0.74rem;">Анализ теплового режима и нагрузки...</div>
+              <div class="small text-muted" id="modal-cpu-analysis-text" style="font-size: 0.74rem;"><span data-i18n="auto___b1e48a"></span>...</div>
             </div>
           </div>
           <!-- GPU Status -->
           <div class="col-12 col-md-4">
             <div class="p-2 rounded border" style="background: var(--bg-color); border-color: var(--border-color) !important;">
               <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="small fw-semibold text-warning"><i class="bi bi-gpu-card me-1"></i> Видеокарта (GPU)</span>
+                <span class="small fw-semibold text-warning"><i class="bi bi-gpu-card me-1"></i> <span data-i18n="auto___ec2d93"></span> (GPU)</span>
                 <span class="badge bg-secondary" id="modal-gpu-temp-badge">-- °C</span>
               </div>
-              <div class="small text-muted" id="modal-gpu-analysis-text" style="font-size: 0.74rem;">Анализ видеопамяти и графического чипа...</div>
+              <div class="small text-muted" id="modal-gpu-analysis-text" style="font-size: 0.74rem;"><span data-i18n="auto___08de9f"></span>...</div>
             </div>
           </div>
           <!-- Cooling & Motherboard -->
           <div class="col-12 col-md-4">
             <div class="p-2 rounded border" style="background: var(--bg-color); border-color: var(--border-color) !important;">
               <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="small fw-semibold text-success"><i class="bi bi-fan me-1"></i> Охлаждение и Плата</span>
-                <span class="badge bg-secondary" id="modal-fan-status-badge">ОК</span>
+                <span class="small fw-semibold text-success"><i class="bi bi-fan me-1"></i> <span data-i18n="auto___6ac196"></span></span>
+                <span class="badge bg-secondary" id="modal-fan-status-badge"><span data-i18n="auto___e40fc0"></span></span>
               </div>
-              <div class="small text-muted" id="modal-fan-analysis-text" style="font-size: 0.74rem;">Анализ оборотов кулеров и напряжений...</div>
+              <div class="small text-muted" id="modal-fan-analysis-text" style="font-size: 0.74rem;"><span data-i18n="auto___e0872e"></span>...</div>
             </div>
           </div>
         </div>
@@ -601,7 +511,7 @@
         <!-- Recommendations and Findings Section -->
         <div class="mb-2">
           <h6 class="small fw-bold text-uppercase text-muted mb-2" style="letter-spacing: 0.05em; font-size: 0.72rem;">
-            <i class="bi bi-card-checklist text-primary me-1"></i> Экспертные рекомендации и выводы
+            <i class="bi bi-card-checklist text-primary me-1"></i> <span data-i18n="auto___c94aa3"></span>
           </h6>
           <div id="modal-sensor-recommendations-list" class="d-flex flex-column gap-1.5">
             <!-- Will be populated dynamically -->
@@ -610,13 +520,13 @@
       </div>
       <div class="modal-footer py-1.5 px-3 border-secondary d-flex justify-content-between" style="background: var(--surface-2); border-color: var(--border-color) !important;">
         <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-copy-sensor-report">
-          <i class="bi bi-clipboard me-1"></i> Копировать отчёт
+          <i class="bi bi-clipboard me-1"></i> <span data-i18n="auto___b838a7"></span>
         </button>
         <div class="d-flex gap-2">
           <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-re-analyze-sensors">
-            <i class="bi bi-arrow-clockwise me-1"></i> Повторить аудит
+            <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___dc7284"></span>
           </button>
-          <button class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Закрыть</button>
+          <button class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal"><span data-i18n="auto___4ae50d"></span></button>
         </div>
       </div>
     </div>
@@ -630,8 +540,8 @@
       <div class="modal-header py-2.5 px-3 border-secondary" style="background: var(--surface-2); border-color: var(--border-color) !important;">
         <h6 class="modal-title d-flex align-items-center gap-2 mb-0" id="sysProcStatsModalLabel">
           <i class="bi bi-bar-chart-line-fill text-info"></i>
-          <span class="fw-bold">Статистика процессов хоста (SQLite Агрегаты & Выбросы)</span>
-          <span class="badge bg-info-subtle text-info border border-info ms-2" id="modal-proc-stats-count-badge">0 записей</span>
+          <span class="fw-bold"><span data-i18n="auto__sqlite__6ed0cc"></span>)</span>
+          <span class="badge bg-info-subtle text-info border border-info ms-2" id="modal-proc-stats-count-badge">0 <span data-i18n="auto___04ad7c"></span></span>
         </h6>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -642,16 +552,16 @@
           <div class="d-flex align-items-center gap-2">
             <span class="fs-4">📊</span>
             <div>
-              <div class="fw-bold small" style="color: var(--text-color);">Обобщение данных процессов и сохранение аномалий</div>
-              <div class="small text-muted" style="font-size: 0.73rem;">Записи &gt; 2 мин обобщаются по средним показателям со всплесками. Данные &gt; 1 дня агрегируются в суточную историю.</div>
+              <div class="fw-bold small" style="color: var(--text-color);"><span data-i18n="auto___9fc2a9"></span></div>
+              <div class="small text-muted" style="font-size: 0.73rem;"><span data-i18n="auto__gt_2_gt_1__62f61b"></span>.</div>
             </div>
           </div>
           <div class="d-flex align-items-center gap-2 flex-wrap">
-            <input type="text" class="form-control form-control-sm" id="modal-proc-stats-filter" placeholder="Поиск процесса..." style="max-width: 170px;">
-            <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-trigger-proc-rollup" title="Принудительно обобщить записи старше 2 минут и 1 дня">
-              <i class="bi bi-lightning-charge me-1"></i>Обобщить сейчас
+            <input type="text" class="form-control form-control-sm" id="modal-proc-stats-filter" placeholder="<span data-i18n="auto___66d934"></span>..." style="max-width: 170px;">
+            <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-trigger-proc-rollup" title="<span data-i18n="auto__2_1__126f25"></span>">
+              <i class="bi bi-lightning-charge me-1"></i><span data-i18n="auto___800cd4"></span>
             </button>
-            <button class="btn btn-sm btn-outline-info rounded-pill px-2.5" id="btn-refresh-proc-stats" title="Обновить статистику">
+            <button class="btn btn-sm btn-outline-info rounded-pill px-2.5" id="btn-refresh-proc-stats" title="<span data-i18n="auto___788a7e"></span>">
               <i class="bi bi-arrow-clockwise"></i>
             </button>
           </div>
@@ -661,17 +571,17 @@
         <ul class="nav nav-pills mb-3 gap-2" id="procStatsTab" role="tablist">
           <li class="nav-item" role="presentation">
             <button class="nav-link active btn-sm rounded-pill px-3 py-1" id="tab-btn-proc-rollups" data-bs-toggle="pill" data-bs-target="#tab-pane-proc-rollups" type="button" role="tab">
-              <i class="bi bi-clock-history me-1"></i>2-минутные обобщения
+              <i class="bi bi-clock-history me-1"></i>2-<span data-i18n="auto___e4fb14"></span>
             </button>
           </li>
           <li class="nav-item" role="presentation">
             <button class="nav-link btn-sm rounded-pill px-3 py-1" id="tab-btn-proc-outliers" data-bs-toggle="pill" data-bs-target="#tab-pane-proc-outliers" type="button" role="tab">
-              <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Выбросы и пики нагрузки (<span id="proc-outliers-count">0</span>)
+              <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i><span data-i18n="auto___02bf37"></span> (<span id="proc-outliers-count">0</span>)
             </button>
           </li>
           <li class="nav-item" role="presentation">
             <button class="nav-link btn-sm rounded-pill px-3 py-1" id="tab-btn-proc-daily" data-bs-toggle="pill" data-bs-target="#tab-pane-proc-daily" type="button" role="tab">
-              <i class="bi bi-calendar3 me-1"></i>Суточная статистика (> 1 дня)
+              <i class="bi bi-calendar3 me-1"></i><span data-i18n="auto___357578"></span> (> 1 <span data-i18n="auto___aeda12"></span>)
             </button>
           </li>
         </ul>
@@ -684,20 +594,20 @@
               <table class="table table-dark table-hover table-sm align-middle font-monospace" style="font-size: 0.76rem;">
                 <thead class="table-secondary text-dark sticky-top">
                   <tr>
-                    <th>Период</th>
-                    <th>Процесс</th>
+                    <th><span data-i18n="auto___b2822e"></span></th>
+                    <th><span data-i18n="auto___2988c5"></span></th>
                     <th>PID</th>
-                    <th>Пользователь</th>
-                    <th class="text-end">Замеров</th>
-                    <th class="text-end">CPU ср.</th>
-                    <th class="text-end">CPU макс.</th>
-                    <th class="text-end">Память ср.</th>
-                    <th class="text-end">Память макс.</th>
-                    <th class="text-end">Выбросов</th>
+                    <th><span data-i18n="auto___51aff1"></span></th>
+                    <th class="text-end"><span data-i18n="auto___3438f6"></span></th>
+                    <th class="text-end">CPU <span data-i18n="auto___161fe5"></span>.</th>
+                    <th class="text-end">CPU <span data-i18n="auto___362240"></span>.</th>
+                    <th class="text-end"><span data-i18n="auto___d8df3d"></span>.</th>
+                    <th class="text-end"><span data-i18n="auto___fec370"></span>.</th>
+                    <th class="text-end"><span data-i18n="auto___c67b8c"></span></th>
                   </tr>
                 </thead>
                 <tbody id="tbody-proc-rollups">
-                  <tr><td colspan="10" class="text-center py-3 text-muted">Загрузка обобщений...</td></tr>
+                  <tr><td colspan="10" class="text-center py-3 text-muted"><span data-i18n="auto___824bd2"></span>...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -709,18 +619,18 @@
               <table class="table table-dark table-hover table-sm align-middle font-monospace" style="font-size: 0.76rem;">
                 <thead class="table-secondary text-dark sticky-top">
                   <tr>
-                    <th>Время всплеска</th>
-                    <th>Процесс</th>
+                    <th><span data-i18n="auto___136605"></span></th>
+                    <th><span data-i18n="auto___2988c5"></span></th>
                     <th>PID</th>
                     <th class="text-end">CPU %</th>
-                    <th class="text-end">Память MB</th>
-                    <th>Потоки</th>
-                    <th>Пользователь</th>
-                    <th>Детали аномалии</th>
+                    <th class="text-end"><span data-i18n="auto___f63c10"></span> MB</th>
+                    <th><span data-i18n="auto___3e77ca"></span></th>
+                    <th><span data-i18n="auto___51aff1"></span></th>
+                    <th><span data-i18n="auto___c1753b"></span></th>
                   </tr>
                 </thead>
                 <tbody id="tbody-proc-outliers">
-                  <tr><td colspan="8" class="text-center py-3 text-muted">Загрузка выбросов...</td></tr>
+                  <tr><td colspan="8" class="text-center py-3 text-muted"><span data-i18n="auto___6a196e"></span>...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -732,19 +642,19 @@
               <table class="table table-dark table-hover table-sm align-middle font-monospace" style="font-size: 0.76rem;">
                 <thead class="table-secondary text-dark sticky-top">
                   <tr>
-                    <th>Дата</th>
-                    <th>Процесс</th>
-                    <th class="text-end">Всего замеров</th>
-                    <th class="text-end">CPU взвеш. ср.</th>
-                    <th class="text-end">CPU пик</th>
-                    <th class="text-end">Память ср.</th>
-                    <th class="text-end">Память пик</th>
-                    <th class="text-end">Выбросов</th>
-                    <th>Последняя активность</th>
+                    <th><span data-i18n="auto___a5b49d"></span></th>
+                    <th><span data-i18n="auto___2988c5"></span></th>
+                    <th class="text-end"><span data-i18n="auto___a54ea8"></span></th>
+                    <th class="text-end">CPU <span data-i18n="auto___e63020"></span>.</th>
+                    <th class="text-end">CPU <span data-i18n="auto___34aa84"></span></th>
+                    <th class="text-end"><span data-i18n="auto___d8df3d"></span>.</th>
+                    <th class="text-end"><span data-i18n="auto___94ad2b"></span></th>
+                    <th class="text-end"><span data-i18n="auto___c67b8c"></span></th>
+                    <th><span data-i18n="auto___27eace"></span></th>
                   </tr>
                 </thead>
                 <tbody id="tbody-proc-daily">
-                  <tr><td colspan="9" class="text-center py-3 text-muted">Загрузка суточной статистики...</td></tr>
+                  <tr><td colspan="9" class="text-center py-3 text-muted"><span data-i18n="auto___e6e3af"></span>...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -753,8 +663,8 @@
       </div>
 
       <div class="modal-footer py-2 px-3 border-secondary" style="background: var(--surface-2); border-color: var(--border-color) !important;">
-        <span class="small text-muted me-auto font-monospace" id="modal-proc-rollup-status">Служба телеметрии пишет каждые 5с</span>
-        <button class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Закрыть</button>
+        <span class="small text-muted me-auto font-monospace" id="modal-proc-rollup-status"><span data-i18n="auto__5__9c6c3b"></span></span>
+        <button class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal"><span data-i18n="auto___4ae50d"></span></button>
       </div>
     </div>
   </div>
@@ -767,7 +677,7 @@
       <div class="modal-header py-2.5 px-3 border-secondary" style="background: var(--surface-2); border-color: var(--border-color) !important;">
         <h6 class="modal-title d-flex align-items-center gap-2 mb-0" id="sysIntervalsModalLabel">
           <i class="bi bi-stopwatch text-primary"></i>
-          <span class="fw-bold">Редактор интервалов опроса ресурсов</span>
+          <span class="fw-bold"><span data-i18n="auto___6f4cb4"></span></span>
           <span class="badge bg-secondary font-monospace" id="modal-intervals-cfg-file">config.json</span>
         </h6>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -782,15 +692,15 @@
           <div class="d-flex align-items-center gap-2">
             <span class="fs-4">⚙️</span>
             <div>
-              <div class="fw-bold small" style="color: var(--text-color);">Служба автологгирования и опроса телеметрии</div>
-              <div class="small text-muted" style="font-size: 0.73rem;">Интервалы сохраняются напрямую в активный файл конфигурации и применяются без перезапуска сервера</div>
+              <div class="fw-bold small" style="color: var(--text-color);"><span data-i18n="auto___c6b49c"></span></div>
+              <div class="small text-muted" style="font-size: 0.73rem;"><span data-i18n="auto___99db7f"></span></div>
             </div>
           </div>
           <div class="d-flex align-items-center gap-2">
             <span class="badge bg-success" id="modal-intervals-engine-status">AutoLog Active</span>
             <div class="form-check form-switch m-0">
               <input class="form-check-input" type="checkbox" id="modal-intervals-global-enable" checked>
-              <label class="form-check-label small fw-semibold" for="modal-intervals-global-enable">Автологгирование</label>
+              <label class="form-check-label small fw-semibold" for="modal-intervals-global-enable"><span data-i18n="auto___c27e37"></span></label>
             </div>
           </div>
         </div>
@@ -798,22 +708,22 @@
         <!-- Section 1: Live UI Refresh Interval -->
         <div class="card border-secondary mb-3" style="background: var(--surface-2); border-color: var(--border-color) !important;">
           <div class="card-header py-1.5 px-3 border-secondary d-flex align-items-center justify-content-between" style="border-color: var(--border-color) !important;">
-            <span class="small fw-bold text-info"><i class="bi bi-display me-1"></i> Интервал обновления Live-интерфейса вкладки (UI)</span>
-            <span class="badge bg-dark text-info border border-secondary" id="modal-ui-refresh-badge">5 сек</span>
+            <span class="small fw-bold text-info"><i class="bi bi-display me-1"></i> <span data-i18n="auto__live__a851ec"></span> (UI)</span>
+            <span class="badge bg-dark text-info border border-secondary" id="modal-ui-refresh-badge">5 <span data-i18n="auto___0be9aa"></span></span>
           </div>
           <div class="card-body p-3">
             <div class="row g-2 align-items-center">
               <div class="col-sm-7">
-                <label class="form-label small text-muted mb-0">Частота опроса сенсоров и оборудования в открытом окне браузера:</label>
+                <label class="form-label small text-muted mb-0"><span data-i18n="auto___cd6b32"></span>:</label>
               </div>
               <div class="col-sm-5">
                 <select class="form-select form-select-sm bg-dark text-white border-secondary" id="modal-ui-refresh-select">
-                  <option value="1">1 секунда (Высокая частота)</option>
-                  <option value="2">2 секунды</option>
-                  <option value="3">3 секунды</option>
-                  <option value="5" selected>5 секунд (По умолчанию)</option>
-                  <option value="10">10 секунд (Экономный режим)</option>
-                  <option value="30">30 секунд</option>
+                  <option value="1">1 <span data-i18n="auto___dcca2f"></span>)</option>
+                  <option value="2">2 <span data-i18n="auto___86ee6d"></span></option>
+                  <option value="3">3 <span data-i18n="auto___86ee6d"></span></option>
+                  <option value="5" selected>5 <span data-i18n="auto___e5d5c4"></span>)</option>
+                  <option value="10">10 <span data-i18n="auto___30365b"></span>)</option>
+                  <option value="30">30 <span data-i18n="auto___2c2499"></span></option>
                 </select>
               </div>
             </div>
@@ -823,7 +733,7 @@
         <!-- Section 2: Core Resource Loggers (config.json) -->
         <div class="card border-secondary mb-3" style="background: var(--surface-2); border-color: var(--border-color) !important;">
           <div class="card-header py-1.5 px-3 border-secondary d-flex align-items-center justify-content-between" style="border-color: var(--border-color) !important;">
-            <span class="small fw-bold text-primary"><i class="bi bi-hdd-stack me-1"></i> Интервалы опроса основных сенсоров и ресурсов (config.json)</span>
+            <span class="small fw-bold text-primary"><i class="bi bi-hdd-stack me-1"></i> <span data-i18n="auto___55c0fb"></span> (config.json)</span>
             <span class="badge bg-secondary font-monospace" style="font-size: 0.68rem;">logging.loggers</span>
           </div>
           <div class="card-body p-3">
@@ -837,7 +747,7 @@
         <div class="card border-secondary mb-3" style="background: var(--surface-2); border-color: var(--border-color) !important;">
           <div class="card-header py-1.5 px-3 border-secondary d-flex align-items-center justify-content-between" style="border-color: var(--border-color) !important;">
             <a class="small fw-bold text-light text-decoration-none d-flex align-items-center gap-1" data-bs-toggle="collapse" href="#modal-other-loggers-collapse" role="button" aria-expanded="false">
-              <i class="bi bi-chevron-down"></i> Все остальные логгеры и службы системы (<span id="modal-other-loggers-count">0</span>)
+              <i class="bi bi-chevron-down"></i> <span data-i18n="auto___6826fe"></span> (<span id="modal-other-loggers-count">0</span>)
             </a>
             <span class="small text-muted" style="font-size: 0.72rem;">Windows SysAdmin, Defender, StartUp, Net...</span>
           </div>
@@ -854,30 +764,30 @@
         <div class="p-2.5 rounded d-flex align-items-center justify-content-between flex-wrap gap-2" style="background: var(--bg-color); border: 1px solid var(--border-color);">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-clock-history text-muted"></i>
-            <span class="small" style="color: var(--text-color);">Интервал по умолчанию (default_interval):</span>
+            <span class="small" style="color: var(--text-color);"><span data-i18n="auto___a23d72"></span> (default_interval):</span>
           </div>
           <div style="min-width: 170px;">
             <select class="form-select form-select-sm bg-dark text-white border-secondary" id="modal-intervals-default-select">
-              <option value="5 seconds">5 seconds (5 сек)</option>
-              <option value="10 seconds">10 seconds (10 сек)</option>
-              <option value="30 seconds">30 seconds (30 сек)</option>
-              <option value="1 minute" selected>1 minute (1 мин)</option>
-              <option value="5 minutes">5 minutes (5 мин)</option>
-              <option value="10 minutes">10 minutes (10 мин)</option>
-              <option value="1 hour">1 hour (1 час)</option>
+              <option value="5 seconds">5 seconds (5 <span data-i18n="auto___0be9aa"></span>)</option>
+              <option value="10 seconds">10 seconds (10 <span data-i18n="auto___0be9aa"></span>)</option>
+              <option value="30 seconds">30 seconds (30 <span data-i18n="auto___0be9aa"></span>)</option>
+              <option value="1 minute" selected>1 minute (1 <span data-i18n="auto___d6035d"></span>)</option>
+              <option value="5 minutes">5 minutes (5 <span data-i18n="auto___d6035d"></span>)</option>
+              <option value="10 minutes">10 minutes (10 <span data-i18n="auto___d6035d"></span>)</option>
+              <option value="1 hour">1 hour (1 <span data-i18n="auto___1e0e6a"></span>)</option>
             </select>
           </div>
         </div>
       </div>
 
       <div class="modal-footer py-2 px-3 border-secondary d-flex justify-content-between" style="background: var(--surface-2); border-color: var(--border-color) !important;">
-        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-modal-intervals-refresh" title="Перезагрузить текущую конфигурацию из файла">
-          <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-modal-intervals-refresh" title="<span data-i18n="auto___b50053"></span>">
+          <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___c2f668"></span>
         </button>
         <div class="d-flex gap-2">
-          <button class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Отмена</button>
+          <button class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal"><span data-i18n="auto___0ec753"></span></button>
           <button class="btn btn-sm btn-primary rounded-pill px-4 fw-bold" id="btn-modal-intervals-save">
-            <i class="bi bi-check2-circle me-1"></i> Сохранить в config.json
+            <i class="bi bi-check2-circle me-1"></i> <span data-i18n="auto___254e0d"></span> config.json
           </button>
         </div>
       </div>
@@ -892,7 +802,7 @@
       <div class="modal-header py-2.5 px-3 border-secondary" style="background: var(--surface-2); border-color: var(--border-color) !important;">
         <h6 class="modal-title d-flex align-items-center gap-2 mb-0" id="modalSysWatchFoldersLabel">
           <i class="bi bi-folder2-open text-warning fs-5"></i>
-          <span class="fw-bold">Отслеживаемые папки и исключения (Live Watcher)</span>
+          <span class="fw-bold"><span data-i18n="auto___43dbc5"></span> (Live Watcher)</span>
           <span class="badge bg-info-subtle text-info font-monospace ms-1" style="font-size: 0.7rem;">ReadDirectoryChangesW</span>
         </h6>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -902,12 +812,12 @@
         <ul class="nav nav-pills nav-fill mb-3" id="pills-sys-watcher-tabs" role="tablist">
           <li class="nav-item" role="presentation">
             <button class="nav-link active py-1 px-3 small fw-bold" id="tab-btn-watch-folders" data-bs-toggle="pill" data-bs-target="#tab-pane-watch-folders" type="button" role="tab">
-              <i class="bi bi-folder2-open me-1.5 text-warning"></i>Папки мониторинга (<span id="modal-watch-dirs-tab-count">1</span>)
+              <i class="bi bi-folder2-open me-1.5 text-warning"></i><span data-i18n="auto___0bf32d"></span> (<span id="modal-watch-dirs-tab-count">1</span>)
             </button>
           </li>
           <li class="nav-item" role="presentation">
             <button class="nav-link py-1 px-3 small fw-bold" id="tab-btn-watch-exclusions" data-bs-toggle="pill" data-bs-target="#tab-pane-watch-exclusions" type="button" role="tab">
-              <i class="bi bi-funnel me-1.5 text-warning"></i>Исключения и фильтры (<span id="modal-watch-exclusions-tab-count">0</span>)
+              <i class="bi bi-funnel me-1.5 text-warning"></i><span data-i18n="auto___b1add4"></span> (<span id="modal-watch-exclusions-tab-count">0</span>)
             </button>
           </li>
         </ul>
@@ -923,10 +833,10 @@
               <div class="card-header py-2 px-3 border-secondary d-flex align-items-center justify-content-between" style="border-color: var(--border-color) !important;">
                 <div class="d-flex align-items-center gap-2">
                   <i class="bi bi-eye text-success"></i>
-                  <span class="small fw-bold text-light">Активные папки мониторинга</span>
+                  <span class="small fw-bold text-light"><span data-i18n="auto___dd91a4"></span></span>
                   <span class="badge bg-primary rounded-pill" id="modal-watch-dirs-count">0</span>
                 </div>
-                <span class="small text-muted" style="font-size: 0.72rem;">События агрегируются в реальном времени</span>
+                <span class="small text-muted" style="font-size: 0.72rem;"><span data-i18n="auto___3746e3"></span></span>
               </div>
               <div class="card-body p-2">
                 <div class="d-flex flex-column gap-1.5" id="modal-watch-dirs-active-list" style="max-height: 160px; overflow-y: auto;">
@@ -937,16 +847,16 @@
 
             <!-- Section 2: Quick System Presets -->
             <div class="mb-3">
-              <div class="small fw-bold text-muted mb-1.5"><i class="bi bi-lightning-charge text-warning me-1"></i>Быстрые системные каталоги:</div>
+              <div class="small fw-bold text-muted mb-1.5"><i class="bi bi-lightning-charge text-warning me-1"></i><span data-i18n="auto___dd8a9d"></span>:</div>
               <div class="d-flex flex-wrap gap-1.5" id="modal-watch-presets-bar">
                 <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-preset-btn" data-preset="project">
-                  📂 Проект AI-Breadboard
+                  📂 <span data-i18n="auto___48b486"></span> AI-Breadboard
                 </button>
                 <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-preset-btn" data-preset="downloads">
-                  📥 Загрузки (Downloads)
+                  📥 <span data-i18n="auto___dbf2a0"></span> (Downloads)
                 </button>
                 <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-preset-btn" data-preset="desktop">
-                  🖥️ Рабочий стол (Desktop)
+                  🖥️ <span data-i18n="auto___651d54"></span> (Desktop)
                 </button>
                 <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-preset-btn" data-preset="temp">
                   ⚡ Temp
@@ -959,7 +869,7 @@
               <div class="card-header py-2 px-3 border-secondary d-flex align-items-center justify-content-between flex-wrap gap-2" style="border-color: var(--border-color) !important;">
                 <div class="d-flex align-items-center gap-2">
                   <i class="bi bi-compass text-info"></i>
-                  <span class="small fw-bold text-light">Проводник файлов и папок</span>
+                  <span class="small fw-bold text-light"><span data-i18n="auto___566e1c"></span></span>
                 </div>
                 <!-- Drives selection bar -->
                 <div class="d-flex align-items-center gap-1" id="modal-watch-drives-bar">
@@ -969,15 +879,15 @@
               <div class="card-body p-2.5">
                 <!-- Path bar & Search/Input -->
                 <div class="input-group input-group-sm mb-2">
-                  <button class="btn btn-outline-secondary" type="button" id="btn-modal-folder-up" title="Перейти на уровень выше">
-                    <i class="bi bi-arrow-up-circle"></i> Вверх
+                  <button class="btn btn-outline-secondary" type="button" id="btn-modal-folder-up" title="<span data-i18n="auto___15544b"></span>">
+                    <i class="bi bi-arrow-up-circle"></i> <span data-i18n="auto___7032fc"></span>
                   </button>
                   <input type="text" class="form-control bg-dark text-white border-secondary font-monospace" id="modal-folder-path-input" placeholder="C:\..." style="font-size: 0.8rem;">
-                  <button class="btn btn-outline-info" type="button" id="btn-modal-folder-go" title="Открыть указанный путь">
-                    <i class="bi bi-arrow-right-circle me-1"></i> Перейти
+                  <button class="btn btn-outline-info" type="button" id="btn-modal-folder-go" title="<span data-i18n="auto___0235b5"></span>">
+                    <i class="bi bi-arrow-right-circle me-1"></i> <span data-i18n="auto___48db03"></span>
                   </button>
-                  <button class="btn btn-success" type="button" id="btn-modal-folder-add-current" title="Добавить эту папку в мониторинг">
-                    <i class="bi bi-plus-circle me-1"></i> + Добавить папку
+                  <button class="btn btn-success" type="button" id="btn-modal-folder-add-current" title="<span data-i18n="auto___aa65fb"></span>">
+                    <i class="bi bi-plus-circle me-1"></i> + <span data-i18n="auto___585b38"></span>
                   </button>
                 </div>
 
@@ -989,7 +899,7 @@
                 <!-- Subdirectories list -->
                 <div class="border border-secondary rounded p-1" style="background: var(--bg-color); max-height: 200px; overflow-y: auto;">
                   <div id="modal-folder-browser-list" class="d-flex flex-column gap-1">
-                    <div class="text-center text-muted small py-3">Загрузка структуры каталогов...</div>
+                    <div class="text-center text-muted small py-3"><span data-i18n="auto___a084f3"></span>...</div>
                   </div>
                 </div>
               </div>
@@ -1007,31 +917,31 @@
                 <div class="d-flex align-items-center gap-2">
                   <div class="form-check form-switch mb-0">
                     <input class="form-check-input" type="checkbox" role="switch" id="switch-exclusions-active" checked style="cursor: pointer;">
-                    <label class="form-check-label fw-bold text-light small" for="switch-exclusions-active">Фильтрация исключений активна</label>
+                    <label class="form-check-label fw-bold text-light small" for="switch-exclusions-active"><span data-i18n="auto___5d8d09"></span></label>
                   </div>
-                  <span class="badge bg-success" id="badge-exclusions-status">ВКЛ</span>
+                  <span class="badge bg-success" id="badge-exclusions-status"><span data-i18n="auto___593689"></span></span>
                 </div>
                 <div class="text-muted small" style="font-size: 0.75rem;">
-                  Отфильтровано спам-событий: <span class="fw-bold text-warning font-monospace" id="modal-exclusions-filtered-total">0</span>
+                  <span data-i18n="auto___dbe91f"></span>: <span class="fw-bold text-warning font-monospace" id="modal-exclusions-filtered-total">0</span>
                 </div>
               </div>
             </div>
 
             <!-- Quick Exclusions Presets -->
             <div class="mb-3">
-              <div class="small fw-bold text-muted mb-1.5"><i class="bi bi-lightning-charge text-warning me-1"></i>Быстрые пресеты фильтрации:</div>
+              <div class="small fw-bold text-muted mb-1.5"><i class="bi bi-lightning-charge text-warning me-1"></i><span data-i18n="auto___4373b2"></span>:</div>
               <div class="d-flex flex-wrap gap-1.5">
-                <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-ex-preset-btn" data-preset="logs" title="Исключить папки логов, .csv и .log">
-                  📊 Логи & Телеметрия
+                <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-ex-preset-btn" data-preset="logs" title="<span data-i18n="auto__csv__58f0c3"></span> .log">
+                  📊 <span data-i18n="auto___a10a49"></span>
                 </button>
-                <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-ex-preset-btn" data-preset="search" title="Исключить системную службу SearchIndexer.exe и Windows.db">
+                <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-ex-preset-btn" data-preset="search" title="<span data-i18n="auto__searchindexer_exe__3b65e5"></span> Windows.db">
                   🔍 SearchIndexer.exe & Windows.db
                 </button>
-                <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-ex-preset-btn" data-preset="temp" title="Исключить .tmp, ~$* и папку Temp">
-                  ⚡ Temp & Временные (.tmp)
+                <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-ex-preset-btn" data-preset="temp" title="<span data-i18n="auto__tmp__59c218"></span> Temp">
+                  ⚡ Temp & <span data-i18n="auto___1f3e20"></span> (.tmp)
                 </button>
-                <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-ex-preset-btn" data-preset="dev" title="Исключить .git, node_modules, __pycache__">
-                  💻 Разработка (.git, node_modules)
+                <button class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-1 sys-ex-preset-btn" data-preset="dev" title="<span data-i18n="auto___85961c"></span> .git, node_modules, __pycache__">
+                  💻 <span data-i18n="auto___738724"></span> (.git, node_modules)
                 </button>
               </div>
             </div>
@@ -1040,24 +950,24 @@
             <div class="card border-secondary mb-3" style="background: var(--surface-2); border-color: var(--border-color) !important;">
               <div class="card-header py-2 px-3 border-secondary d-flex align-items-center gap-2" style="border-color: var(--border-color) !important;">
                 <i class="bi bi-plus-circle text-info"></i>
-                <span class="small fw-bold text-light">Добавить правило исключения</span>
+                <span class="small fw-bold text-light"><span data-i18n="auto___c3ad33"></span></span>
               </div>
               <div class="card-body p-2.5">
                 <div class="row g-2 align-items-center">
                   <div class="col-md-4">
                     <select class="form-select form-select-sm bg-dark text-white border-secondary" id="select-exclusion-category">
-                      <option value="paths">📁 Папка / Путь (Path)</option>
-                      <option value="extensions">📄 Расширение файла (.ext)</option>
-                      <option value="patterns">🎯 Шаблон имени (*pattern*)</option>
-                      <option value="processes">⚙️ Имя программы (Process.exe)</option>
+                      <option value="paths">📁 <span data-i18n="auto___cc6c76"></span> (Path)</option>
+                      <option value="extensions">📄 <span data-i18n="auto___046699"></span> (.ext)</option>
+                      <option value="patterns">🎯 <span data-i18n="auto___e94110"></span> (*pattern*)</option>
+                      <option value="processes">⚙️ <span data-i18n="auto___06f52f"></span> (Process.exe)</option>
                     </select>
                   </div>
                   <div class="col-md-6">
-                    <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary font-monospace" id="input-exclusion-value" placeholder="Например: AppData\Local\Temp, .csv, SearchIndexer.exe">
+                    <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary font-monospace" id="input-exclusion-value" placeholder="<span data-i18n="auto___bbc821"></span>: AppData\Local\Temp, .csv, SearchIndexer.exe">
                   </div>
                   <div class="col-md-2">
                     <button class="btn btn-sm btn-info w-100 fw-bold rounded-pill" id="btn-add-exclusion">
-                      <i class="bi bi-plus-lg me-1"></i> Добавить
+                      <i class="bi bi-plus-lg me-1"></i> <span data-i18n="auto___559a87"></span>
                     </button>
                   </div>
                 </div>
@@ -1070,7 +980,7 @@
               <div class="col-md-6">
                 <div class="card border-secondary h-100" style="background: var(--surface-2); border-color: var(--border-color) !important;">
                   <div class="card-header py-1.5 px-2.5 border-secondary d-flex justify-content-between align-items-center" style="border-color: var(--border-color) !important;">
-                    <span class="small fw-bold text-light"><i class="bi bi-folder-x text-warning me-1"></i>Папки и пути</span>
+                    <span class="small fw-bold text-light"><i class="bi bi-folder-x text-warning me-1"></i><span data-i18n="auto___89f7cd"></span></span>
                     <span class="badge bg-secondary font-monospace" id="badge-ex-paths-count">0</span>
                   </div>
                   <div class="card-body p-2" id="list-ex-paths" style="max-height: 120px; overflow-y: auto;"></div>
@@ -1080,7 +990,7 @@
               <div class="col-md-6">
                 <div class="card border-secondary h-100" style="background: var(--surface-2); border-color: var(--border-color) !important;">
                   <div class="card-header py-1.5 px-2.5 border-secondary d-flex justify-content-between align-items-center" style="border-color: var(--border-color) !important;">
-                    <span class="small fw-bold text-light"><i class="bi bi-file-earmark-x text-info me-1"></i>Расширения файлов</span>
+                    <span class="small fw-bold text-light"><i class="bi bi-file-earmark-x text-info me-1"></i><span data-i18n="auto___f324d2"></span></span>
                     <span class="badge bg-secondary font-monospace" id="badge-ex-extensions-count">0</span>
                   </div>
                   <div class="card-body p-2" id="list-ex-extensions" style="max-height: 120px; overflow-y: auto;"></div>
@@ -1090,7 +1000,7 @@
               <div class="col-md-6">
                 <div class="card border-secondary h-100" style="background: var(--surface-2); border-color: var(--border-color) !important;">
                   <div class="card-header py-1.5 px-2.5 border-secondary d-flex justify-content-between align-items-center" style="border-color: var(--border-color) !important;">
-                    <span class="small fw-bold text-light"><i class="bi bi-asterisk text-primary me-1"></i>Шаблоны (Wildcards)</span>
+                    <span class="small fw-bold text-light"><i class="bi bi-asterisk text-primary me-1"></i><span data-i18n="auto___67cad9"></span> (Wildcards)</span>
                     <span class="badge bg-secondary font-monospace" id="badge-ex-patterns-count">0</span>
                   </div>
                   <div class="card-body p-2" id="list-ex-patterns" style="max-height: 120px; overflow-y: auto;"></div>
@@ -1100,7 +1010,7 @@
               <div class="col-md-6">
                 <div class="card border-secondary h-100" style="background: var(--surface-2); border-color: var(--border-color) !important;">
                   <div class="card-header py-1.5 px-2.5 border-secondary d-flex justify-content-between align-items-center" style="border-color: var(--border-color) !important;">
-                    <span class="small fw-bold text-light"><i class="bi bi-cpu text-danger me-1"></i>Программы (Процессы)</span>
+                    <span class="small fw-bold text-light"><i class="bi bi-cpu text-danger me-1"></i><span data-i18n="auto___3b2968"></span>)</span>
                     <span class="badge bg-secondary font-monospace" id="badge-ex-processes-count">0</span>
                   </div>
                   <div class="card-body p-2" id="list-ex-processes" style="max-height: 120px; overflow-y: auto;"></div>
@@ -1112,11 +1022,11 @@
       </div>
 
       <div class="modal-footer py-2 px-3 border-secondary d-flex justify-content-between" style="background: var(--surface-2); border-color: var(--border-color) !important;">
-        <span class="small text-muted" id="modal-watch-dirs-footer-hint">Выберите папки и нажмите «Применить»</span>
+        <span class="small text-muted" id="modal-watch-dirs-footer-hint"><span data-i18n="auto___194c14"></span>»</span>
         <div class="d-flex gap-2">
-          <button class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Закрыть</button>
+          <button class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal"><span data-i18n="auto___4ae50d"></span></button>
           <button class="btn btn-sm btn-primary rounded-pill px-4 fw-bold" id="btn-modal-watch-dirs-apply">
-            <i class="bi bi-check2-circle me-1"></i> Применить и запустить
+            <i class="bi bi-check2-circle me-1"></i> <span data-i18n="auto___f2c158"></span>
           </button>
         </div>
       </div>

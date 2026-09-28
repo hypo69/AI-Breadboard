@@ -74,13 +74,21 @@ class GoogleGenerativeAIConfigMixin:
             inst += format_rule
             cfg_kwargs['system_instruction'] = inst
         use_google_search: bool = gen_cfg.pop('use_google_search', getattr(self, 'use_google_search', False))
+        extra_tools = gen_cfg.pop('tools', None)
         all_tools: list = list(tools) if tools else []
+        if extra_tools:
+            if isinstance(extra_tools, (list, tuple)):
+                all_tools.extend(extra_tools)
+            else:
+                all_tools.append(extra_tools)
+
         if use_google_search:
             has_search: bool = any((hasattr(t, 'google_search') or (isinstance(t, dict) and 'google_search' in t) for t in all_tools))
             if not has_search:
                 all_tools.append(types.Tool(google_search=types.GoogleSearch()))
         if all_tools:
             cfg_kwargs['tools'] = all_tools
+
         afc_cfg = gen_cfg.pop('automatic_function_calling', None)
         if afc_cfg is not None:
             if isinstance(afc_cfg, dict):

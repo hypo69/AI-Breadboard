@@ -50,24 +50,10 @@
     const docsDriveCountEl = document.getElementById('gdesktop-docs-drive-count');
     const lastRefreshedEl = document.getElementById('gdesktop-last-refreshed');
 
-    if (nameEl) nameEl.textContent = acc.name || 'Не выбран';
+    if (nameEl) nameEl.textContent = acc.name || i18n.t('auto___922508');
     if (statusEl) {
       statusEl.textContent = acc.status || 'unconfigured';
-      statusEl.className = acc.status === 'active' ? 'badge bg-success' : 'badge bg-warning text-dark';
-    }
-
-    if (mailCountEl) mailCountEl.textContent = data.mail_count || 0;
-    if (calCountEl) calCountEl.textContent = data.calendar_events_count || 0;
-    if (docsDriveCountEl) docsDriveCountEl.textContent = `${data.docs_count || 0} / ${data.drive_files_count || 0}`;
-
-    if (lastRefreshedEl) {
-      lastRefreshedEl.textContent = `Обновлено: ${formatDate(data.last_refreshed)}`;
-    }
-  }
-
-  async function fetchAccounts() {
-    try {
-      const res = await fetch('/api/google-desktop/accounts');
+      statusEl.className = acc.status === 'active' ? 'badge bg-success' : 'badge bg-warning text-darki18n.t('auto__if_mailcountel_mailcountel_textcontent_data_mail_count_0_if_calcountel_calcountel_textcontent_data_calendar_events_count_0_if_docsdrivecountel_docsdrivecountel_textcontent_data_docs_count_0_data_drive_files_count_0_if_lastrefreshedel_lastrefreshedel_textcontent_formatdate_data_last_refreshed_async_function_fetchaccounts_try_const_res_await_fetch__17d494')/api/google-desktop/accounts');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const selectEl = document.getElementById('gdesktop-account-select');
@@ -80,7 +66,7 @@
       if (accounts.length === 0) {
         const opt = document.createElement('option');
         opt.value = '';
-        opt.textContent = 'Нет аккаунтов (unconfigured)';
+        opt.textContent = i18n.t('auto__unconfigured__91fdae');
         selectEl.appendChild(opt);
         return;
       }
@@ -107,10 +93,8 @@
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       await refreshAllData();
-      if (window.toast) window.toast.success('Google Desktop', `Активный аккаунт изменен на ${accName}`);
-    } catch (err) {
-      console.error('[GoogleDesktopTab] Failed to select account:', err);
-      if (window.toast) window.toast.error('Ошибка выбора аккаунта', err.message);
+      if (window.toast) window.toast.success('Google Desktopi18n.t('auto__accname_catch_err_console_error__9b758a')[GoogleDesktopTab] Failed to select account:', err);
+      if (window.toast) window.toast.error(i18n.t('auto___fb6001'), err.message);
     }
   }
 
@@ -130,8 +114,8 @@
         .map(
           (m) => `
         <tr>
-          <td class="fw-semibold text-info text-truncate" style="max-width: 200px;">${escapeHtml(m.sender || 'Неизвестно')}</td>
-          <td class="text-light fw-bold">${escapeHtml(m.subject || '(Без темы)')}</td>
+          <td class="fw-semibold text-info text-truncate" style="max-width: 200px;">${escapeHtml(m.sender || i18n.t('auto___43b44f'))}</td>
+          <td class="text-light fw-bold">${escapeHtml(m.subject || i18n.t('auto___ecdb59'))}</td>
           <td class="text-secondary small">${escapeHtml(formatDate(m.date))}</td>
           <td class="text-muted small text-truncate" style="max-width: 350px;">${escapeHtml(m.snippet || '')}</td>
         </tr>
@@ -160,14 +144,14 @@
         .map(
           (e) => `
         <tr>
-          <td class="fw-bold text-light">${escapeHtml(e.summary || 'Без названия')}</td>
+          <td class="fw-bold text-light">${escapeHtml(e.summary || i18n.t('auto___32b74a'))}</td>
           <td class="text-info small">${escapeHtml(formatDate(e.start_time))}</td>
           <td class="text-secondary small">${escapeHtml(formatDate(e.end_time))}</td>
           <td class="text-muted small text-truncate" style="max-width: 180px;">${escapeHtml(e.location || '-')}</td>
           <td class="text-center">
             ${
               e.html_link
-                ? `<a href="${e.html_link}" target="_blank" class="btn btn-xs btn-outline-info rounded-pill py-0 px-2" title="Открыть в Google Calendar"><i class="bi bi-box-arrow-up-right"></i></a>`
+                ? `<a href="${e.html_link}" target="_blank" class="btn btn-xs btn-outline-info rounded-pill py-0 px-2" title=i18n.t('auto__google_calendar_0d2d3b')><i class="bi bi-box-arrow-up-right"></i></a>`
                 : '-'
             }
           </td>
@@ -197,17 +181,14 @@
         .map(
           (d) => `
         <tr>
-          <td class="fw-bold text-light">${escapeHtml(d.name || 'Без названия')}</td>
+          <td class="fw-bold text-light">${escapeHtml(d.name || i18n.t('auto___32b74a'))}</td>
           <td class="text-secondary small text-truncate" style="max-width: 220px;">${escapeHtml(d.mime_type || '')}</td>
           <td class="text-secondary small">${escapeHtml(formatDate(d.modified_time))}</td>
           <td class="text-center">
             <div class="btn-group btn-group-sm">
               <button class="btn btn-xs btn-outline-primary rounded-start py-0 px-2 btn-view-doc" data-doc-id="${d.id}" data-doc-name="${escapeHtml(
             d.name
-          )}" title="Просмотреть текст"><i class="bi bi-eye"></i> Текст</button>
-              ${
-                d.web_view_link
-                  ? `<a href="${d.web_view_link}" target="_blank" class="btn btn-xs btn-outline-secondary rounded-end py-0 px-2" title="Открыть в браузер"><i class="bi bi-box-arrow-up-right"></i></a>`
+          )}" title=i18n.t('auto___c454b0')><i class="bi bi-eyei18n.t('auto__i_button_d_web_view_link_a_href__e7a671')${d.web_view_link}" target="_blank" class="btn btn-xs btn-outline-secondary rounded-end py-0 px-2" title=i18n.t('auto___3a48f0')><i class="bi bi-box-arrow-up-right"></i></a>`
                   : ''
               }
             </div>
@@ -246,14 +227,14 @@
         .map(
           (f) => `
         <tr>
-          <td class="fw-bold text-light">${escapeHtml(f.name || 'Без названия')}</td>
+          <td class="fw-bold text-light">${escapeHtml(f.name || i18n.t('auto___32b74a'))}</td>
           <td class="text-secondary small text-truncate" style="max-width: 220px;">${escapeHtml(f.mime_type || '')}</td>
           <td class="text-info small font-monospace">${formatBytes(f.size_bytes)}</td>
           <td class="text-secondary small">${escapeHtml(formatDate(f.modified_time))}</td>
           <td class="text-center">
             ${
               f.web_view_link
-                ? `<a href="${f.web_view_link}" target="_blank" class="btn btn-xs btn-outline-info rounded-pill py-0 px-2" title="Открыть на Google Диске"><i class="bi bi-box-arrow-up-right"></i></a>`
+                ? `<a href="${f.web_view_link}" target="_blank" class="btn btn-xs btn-outline-info rounded-pill py-0 px-2" title=i18n.t('auto__google__15157d')><i class="bi bi-box-arrow-up-right"></i></a>`
                 : '-'
             }
           </td>
@@ -270,11 +251,7 @@
   async function openDocumentViewer(docId, docName) {
     const modalEl = document.getElementById('gdesktopDocViewerModal');
     const titleEl = document.getElementById('gdesktop-doc-modal-title');
-    const bodyEl = document.getElementById('gdesktop-doc-modal-body');
-    if (!modalEl || !bodyEl) return;
-
-    if (titleEl) titleEl.textContent = docName || `Документ ${docId}`;
-    bodyEl.textContent = 'Загрузка содержимого...';
+    const bodyEl = document.getElementById('gdesktop-doc-modal-bodyi18n.t('auto__if_modalel_bodyel_return_if_titleel_titleel_textcontent_docname_docid_bodyel_textcontent__370471')Загрузка содержимого...';
 
     const modal = new bootstrap.Modal(modalEl);
     modal.show();
@@ -283,7 +260,7 @@
       const res = await fetch(`/api/google-desktop/docs/${encodeURIComponent(docId)}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      bodyEl.textContent = data.content || '(Документ пуст)';
+      bodyEl.textContent = data.content || i18n.t('auto___d3e937');
     } catch (err) {
       bodyEl.textContent = `Ошибка загрузки содержимого документа: ${err.message}`;
     }
@@ -301,10 +278,10 @@
       const data = await res.json();
       if (data.state) updateStatusUI(data.state);
       await refreshAllData();
-      if (window.toast) window.toast.success('Синхронизация завершена', 'Данные Google Workspace принудительно обновлены');
+      if (window.toast) window.toast.success(i18n.t('auto___200fc6'), i18n.t('auto__google_workspace__76ab81'));
     } catch (err) {
       console.error('[GoogleDesktopTab] Sync failed:', err);
-      if (window.toast) window.toast.error('Ошибка синхронизации', err.message);
+      if (window.toast) window.toast.error(i18n.t('auto___653b75'), err.message);
     } finally {
       if (syncBtn) {
         syncBtn.disabled = false;

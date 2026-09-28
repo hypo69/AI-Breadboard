@@ -66,11 +66,11 @@ async function initModelsTab() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ enabled, model, key, remember })
         });
-        showModelsNotification(`Google Antigravity (AGY) ${enabled ? 'активирован' : 'деактивирован'}${remember ? ' (сохранено в config.json)' : ''}`, 'info');
+        showModelsNotification(`Google Antigravity (AGY) ${enabled ? i18n.t('auto___ff0947') : i18n.t('auto___c98893')}${remember ? i18n.t('auto__config_json__246284') : ''}`, 'info');
         if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
       } catch (err) {
-        console.error('Ошибка переключения Antigravity:', err);
-        showModelsNotification('Ошибка переключения: ' + err.message, 'danger');
+        console.error(i18n.t('auto__antigravity__c76fc9'), err);
+        showModelsNotification(i18n.t('auto___932df8') + err.message, 'danger');
       }
     };
   }
@@ -90,11 +90,11 @@ async function initModelsTab() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ enabled, url, key, model, remember })
         });
-        showModelsNotification(`Microsoft Foundry ${enabled ? 'активирован' : 'деактивирован'}${remember ? ' (сохранено в config.json)' : ''}`, 'info');
+        showModelsNotification(`Microsoft Foundry ${enabled ? i18n.t('auto___ff0947') : i18n.t('auto___c98893')}${remember ? i18n.t('auto__config_json__246284') : ''}`, 'info');
         if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
       } catch (err) {
-        console.error('Ошибка переключения Foundry:', err);
-        showModelsNotification('Ошибка переключения: ' + err.message, 'danger');
+        console.error(i18n.t('auto__foundry__d92256'), err);
+        showModelsNotification(i18n.t('auto___932df8') + err.message, 'danger');
       }
     };
   }
@@ -113,11 +113,11 @@ async function initModelsTab() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ enabled, url, model, remember })
         });
-        showModelsNotification(`Ollama ${enabled ? 'активирован' : 'деактивирован'}${remember ? ' (сохранено в config.json)' : ''}`, 'info');
+        showModelsNotification(`Ollama ${enabled ? i18n.t('auto___ff0947') : i18n.t('auto___c98893')}${remember ? i18n.t('auto__config_json__246284') : ''}`, 'info');
         if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
       } catch (err) {
-        console.error('Ошибка переключения Ollama:', err);
-        showModelsNotification('Ошибка переключения: ' + err.message, 'danger');
+        console.error(i18n.t('auto__ollama__d3a078'), err);
+        showModelsNotification(i18n.t('auto___932df8') + err.message, 'danger');
       }
     };
   }
@@ -145,11 +145,11 @@ async function initModelsTab() {
             remember
           })
         });
-        showModelsNotification(`ONNX / Olive ${enabled ? 'активирован' : 'деактивирован'}${remember ? ' (сохранено в config.json)' : ''}`, 'info');
+        showModelsNotification(`ONNX / Olive ${enabled ? i18n.t('auto___ff0947') : i18n.t('auto___c98893')}${remember ? i18n.t('auto__config_json__246284') : ''}`, 'info');
         if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
       } catch (err) {
-        console.error('Ошибка переключения ONNX / Olive:', err);
-        showModelsNotification('Ошибка переключения: ' + err.message, 'danger');
+        console.error(i18n.t('auto__onnx_olive__cc6394'), err);
+        showModelsNotification(i18n.t('auto___932df8') + err.message, 'danger');
       }
     };
   }
@@ -165,14 +165,11 @@ async function initModelsTab() {
       try {
         await window.api.fetch('/api/agy/config', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ enabled, model, key, remember })
-        });
-        showModelsNotification(`Настройки Antigravity (AGY) успешно сохранены${remember ? ' в config.json' : ''}`, 'success');
+          headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_enabled_model_key_remember_showmodelsnotification_antigravity_agy_remember__dc175e') в config.json' : ''}`, 'success');
         if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
       } catch (err) {
-        console.error('Ошибка сохранения Antigravity:', err);
-        showModelsNotification('Ошибка сохранения: ' + err.message, 'danger');
+        console.error(i18n.t('auto__antigravity__3ed2ca'), err);
+        showModelsNotification(i18n.t('auto___bbbabd') + err.message, 'danger');
       } finally {
         saveAgyBtn.disabled = false;
       }
@@ -191,14 +188,11 @@ async function initModelsTab() {
       try {
         await window.api.fetch('/api/foundry/config', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ enabled, url, key, model, remember })
-        });
-        showModelsNotification(`Настройки Microsoft Foundry успешно сохранены${remember ? ' в config.json' : ''}`, 'success');
+          headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_enabled_url_key_model_remember_showmodelsnotification_microsoft_foundry_remember__f4e2cc') в config.json' : ''}`, 'success');
         if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
       } catch (err) {
-        console.error('Ошибка сохранения Foundry:', err);
-        showModelsNotification('Ошибка сохранения: ' + err.message, 'danger');
+        console.error(i18n.t('auto__foundry__301fb0'), err);
+        showModelsNotification(i18n.t('auto___bbbabd') + err.message, 'danger');
       } finally {
         saveFoundryBtn.disabled = false;
       }
@@ -216,14 +210,11 @@ async function initModelsTab() {
       try {
         await window.api.fetch('/api/ollama/config', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ enabled, url, model, remember })
-        });
-        showModelsNotification(`Настройки Ollama успешно сохранены${remember ? ' в config.json' : ''}`, 'success');
+          headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_enabled_url_model_remember_showmodelsnotification_ollama_remember__5f600b') в config.json' : ''}`, 'success');
         if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
       } catch (err) {
-        console.error('Ошибка сохранения Ollama:', err);
-        showModelsNotification('Ошибка сохранения: ' + err.message, 'danger');
+        console.error(i18n.t('auto__ollama__9b7c48'), err);
+        showModelsNotification(i18n.t('auto___bbbabd') + err.message, 'danger');
       } finally {
         saveOllamaBtn.disabled = false;
       }
@@ -243,21 +234,11 @@ async function initModelsTab() {
       try {
         await window.api.fetch('/api/onnx/config', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            enabled,
-            execution_provider,
-            models_dir,
-            default_model,
-            olive_precision,
-            remember
-          })
-        });
-        showModelsNotification(`Настройки ONNX / Olive успешно сохранены${remember ? ' в config.json' : ''}`, 'success');
+          headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_enabled_execution_provider_models_dir_default_model_olive_precision_remember_showmodelsnotification_onnx_olive_remember__0c79fc') в config.json' : ''}`, 'success');
         if (modelSelect && saveBtn) await loadTabModels(modelSelect, saveBtn);
       } catch (err) {
-        console.error('Ошибка сохранения ONNX / Olive:', err);
-        showModelsNotification('Ошибка сохранения: ' + err.message, 'danger');
+        console.error(i18n.t('auto__onnx_olive__2a27d3'), err);
+        showModelsNotification(i18n.t('auto___bbbabd') + err.message, 'danger');
       } finally {
         saveOnnxBtn.disabled = false;
       }
@@ -269,7 +250,7 @@ async function initModelsTab() {
       const selectedModel = modelSelect.value;
       saveBtn.disabled = true;
       const originalText = saveBtn.textContent;
-      saveBtn.textContent = 'Сохранение...';
+      saveBtn.textContent = i18n.t('auto___a91a7e');
       
       try {
         await window.api.fetch('/auth/settings', {
@@ -277,15 +258,15 @@ async function initModelsTab() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ model: selectedModel })
         });
-        showModelsNotification('Модель успешно обновлена на: ' + selectedModel, 'success');
+        showModelsNotification(i18n.t('auto___4d96e2') + selectedModel, 'success');
         
         const otherModelSelect = document.getElementById('admin-model-select');
         if (otherModelSelect) {
           otherModelSelect.value = selectedModel;
         }
       } catch (err) {
-        console.error('Ошибка сохранения модели:', err);
-        showModelsNotification('Ошибка сохранения: ' + err.message, 'danger');
+        console.error(i18n.t('auto___a9a82f'), err);
+        showModelsNotification(i18n.t('auto___bbbabd') + err.message, 'danger');
       } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = originalText;
@@ -297,13 +278,13 @@ async function initModelsTab() {
     refreshKeysBtn.onclick = async () => {
       refreshKeysBtn.disabled = true;
       const originalText = refreshKeysBtn.textContent;
-      refreshKeysBtn.textContent = '⏳ Сброс...';
+      refreshKeysBtn.textContent = i18n.t('auto___e4d50e');
       try {
         const res = await window.api.fetch('/api/keys/reset-all', { method: 'POST' });
-        showModelsNotification(res.message || 'Квоты всех ключей успешно сброшены', 'success');
+        showModelsNotification(res.message || i18n.t('auto___c173d4'), 'success');
       } catch (err) {
-        console.error('Ошибка сброса квот:', err);
-        showModelsNotification('Ошибка сброса: ' + err.message, 'danger');
+        console.error(i18n.t('auto___26763e'), err);
+        showModelsNotification(i18n.t('auto___a413d3') + err.message, 'danger');
       } finally {
         refreshKeysBtn.disabled = false;
         refreshKeysBtn.textContent = originalText;
@@ -322,7 +303,7 @@ async function initModelsTab() {
       const apiKey = valueInput.value.trim();
 
       if (!name || !apiKey) {
-        showModelsNotification('Заполните все поля!', 'warning');
+        showModelsNotification(i18n.t('auto___eb0a22'), 'warning');
         return;
       }
 
@@ -338,8 +319,8 @@ async function initModelsTab() {
         valueInput.value = '';
         if (keysListBody) await refreshKeysList(keysListBody);
       } catch (err) {
-        console.error('Ошибка добавления ключа:', err);
-        showModelsNotification('Ошибка добавления: ' + err.message, 'danger');
+        console.error(i18n.t('auto___cedd68'), err);
+        showModelsNotification(i18n.t('auto___ce146e') + err.message, 'danger');
       } finally {
         addKeyBtn.disabled = false;
       }
@@ -376,8 +357,8 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
       }
       return grouped;
     } catch (err) {
-      console.error('Ошибка загрузки моделей:', err);
-      showModelsNotification('Ошибка загрузки моделей AI: ' + err.message, 'danger');
+      console.error(i18n.t('auto___688de2'), err);
+      showModelsNotification(i18n.t('auto__ai__ca8a13') + err.message, 'danger');
       return {};
     }
   };
@@ -471,7 +452,7 @@ async function loadTabModels(modelSelect, saveBtn, forceRefresh = false) {
       modelSelect.value = settingsData.model;
     }
   } catch (err) {
-    console.error('Ошибка загрузки настроек AI пользователя:', err);
+    console.error(i18n.t('auto__ai__450d9e'), err);
   }
 }
 
@@ -503,19 +484,19 @@ async function refreshKeysList(container) {
       const tdStatus = document.createElement('td');
       const isEnabled = key.status === 'active';
       const statusClass = isEnabled ? 'bg-success' : 'bg-secondary';
-      const statusText = isEnabled ? 'Активен' : 'Отключен';
+      const statusText = isEnabled ? i18n.t('auto___667904') : i18n.t('auto___cadea0');
       tdStatus.innerHTML = `<span class="badge ${statusClass}">${statusText}</span>`;
       row.appendChild(tdStatus);
 
       const tdQuota = document.createElement('td');
       if (key.exhausted) {
-        let resetText = 'Лимит';
+        let resetText = i18n.t('auto___1397df');
         if (key.reset_in_seconds) {
           const hours = Math.floor(key.reset_in_seconds / 3600);
           const mins = Math.floor((key.reset_in_seconds % 3600) / 60);
           resetText = `Сброс через ${hours}ч ${mins}м`;
         }
-        tdQuota.innerHTML = `<span class="badge bg-danger d-block mb-1" title="Превышен лимит запросов в сутки">${resetText}</span>`;
+        tdQuota.innerHTML = `<span class="badge bg-danger d-block mb-1" title=i18n.t('auto___47f876')>${resetText}</span>`;
       } else {
         tdQuota.innerHTML = `<span class="badge bg-success d-block mb-1">OK</span>`;
       }
@@ -526,22 +507,22 @@ async function refreshKeysList(container) {
 
       const btnToggle = document.createElement('button');
       btnToggle.className = `btn btn-xs btn-sm me-1 ${isEnabled ? 'btn-outline-secondary' : 'btn-outline-success'}`;
-      btnToggle.textContent = isEnabled ? 'Откл' : 'Вкл';
+      btnToggle.textContent = isEnabled ? i18n.t('auto___23c590') : i18n.t('auto___a60b4b');
       btnToggle.onclick = () => toggleKeyStatus(key.name, isEnabled ? 'disabled' : 'active', container);
       tdActions.appendChild(btnToggle);
 
       if (key.exhausted) {
         const btnReset = document.createElement('button');
         btnReset.className = 'btn btn-xs btn-outline-warning btn-sm me-1';
-        btnReset.innerHTML = 'Сброс';
-        btnReset.title = 'Сбросить 24-часовой бан квоты';
+        btnReset.innerHTML = i18n.t('auto___9322bf');
+        btnReset.title = i18n.t('auto__24__1855b1');
         btnReset.onclick = () => resetKeyQuota(key.name, container);
         tdActions.appendChild(btnReset);
       }
 
       const btnDelete = document.createElement('button');
       btnDelete.className = 'btn btn-xs btn-outline-danger btn-sm';
-      btnDelete.textContent = 'Удалить';
+      btnDelete.textContent = i18n.t('auto___86ea33');
       btnDelete.onclick = () => deleteKey(key.name, container);
       tdActions.appendChild(btnDelete);
 
@@ -550,7 +531,7 @@ async function refreshKeysList(container) {
     });
 
   } catch (err) {
-    console.error('Ошибка загрузки ключей:', err);
+    console.error(i18n.t('auto___7c8c18'), err);
     container.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">Ошибка: ${err.message}</td></tr>`;
   }
 }
@@ -563,11 +544,11 @@ async function toggleKeyStatus(name, newStatus, container) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus })
     });
-    showModelsNotification(`Статус ключа "${name}" изменен на ${newStatus === 'active' ? 'активный' : 'отключенный'}`, 'success');
+    showModelsNotification(`Статус ключа "${name}" изменен на ${newStatus === 'active' ? i18n.t('auto___27de6a') : i18n.t('auto___0c94c3')}`, 'success');
     await refreshKeysList(container);
   } catch (err) {
-    console.error('Ошибка переключения статуса ключа:', err);
-    showModelsNotification('Ошибка изменения статуса: ' + err.message, 'danger');
+    console.error(i18n.t('auto___37b90b'), err);
+    showModelsNotification(i18n.t('auto___75dafa') + err.message, 'danger');
   }
 }
 
@@ -577,8 +558,8 @@ async function resetKeyQuota(name, container) {
     showModelsNotification(`Квота для ключа "${name}" успешно сброшена`, 'success');
     await refreshKeysList(container);
   } catch (err) {
-    console.error('Ошибка сброса квоты:', err);
-    showModelsNotification('Ошибка сброса квоты: ' + err.message, 'danger');
+    console.error(i18n.t('auto___02a8d0'), err);
+    showModelsNotification(i18n.t('auto___1ab946') + err.message, 'danger');
   }
 }
 
@@ -589,8 +570,8 @@ async function deleteKey(name, container) {
     showModelsNotification(`Ключ "${name}" успешно удален`, 'success');
     await refreshKeysList(container);
   } catch (err) {
-    console.error('Ошибка удаления ключа:', err);
-    showModelsNotification('Ошибка удаления: ' + err.message, 'danger');
+    console.error(i18n.t('auto___e89e90'), err);
+    showModelsNotification(i18n.t('auto___654025') + err.message, 'danger');
   }
 }
 
@@ -620,7 +601,7 @@ async function loadFoundryConfig() {
     if (keyInput) keyInput.value = config.key || '';
     if (modelInput) modelInput.value = config.model || '';
   } catch (err) {
-    console.error('Ошибка загрузки настроек Foundry:', err);
+    console.error(i18n.t('auto__foundry__623fc9'), err);
   }
 }
 
@@ -635,7 +616,7 @@ async function loadOllamaConfig() {
     if (urlInput) urlInput.value = config.url || '';
     if (modelInput) modelInput.value = config.model || '';
   } catch (err) {
-    console.error('Ошибка загрузки настроек Ollama:', err);
+    console.error(i18n.t('auto__ollama__db8d78'), err);
   }
 }
 
@@ -660,7 +641,7 @@ async function loadAgyConfig() {
           }
         }
       } catch (e) {
-        console.error('Ошибка загрузки моделей AGY:', e);
+        console.error(i18n.t('auto__agy__12d3f1'), e);
       }
     }
 
@@ -672,7 +653,7 @@ async function loadAgyConfig() {
     if (modelSelect && config.model) modelSelect.value = config.model;
     if (keyInput) keyInput.value = config.key || '';
   } catch (err) {
-    console.error('Ошибка загрузки настроек Antigravity (AGY):', err);
+    console.error(i18n.t('auto__antigravity_agy__ad9cec'), err);
   }
 }
 
@@ -691,7 +672,7 @@ async function loadOnnxConfig() {
     if (modelInput && config.default_model) modelInput.value = config.default_model;
     if (precSelect && config.olive_precision) precSelect.value = config.olive_precision;
   } catch (err) {
-    console.error('Ошибка загрузки настроек ONNX / Olive:', err);
+    console.error(i18n.t('auto__onnx_olive__4dcba8'), err);
   }
 }
 
@@ -703,7 +684,7 @@ async function loadSystemInstruction() {
   editor.disabled = true;
   if (statusBadge) {
     statusBadge.className = 'badge bg-warning text-dark';
-    statusBadge.textContent = 'Загрузка...';
+    statusBadge.textContent = i18n.t('auto___a90ed3');
     statusBadge.style.removeProperty('display');
   }
   
@@ -712,19 +693,19 @@ async function loadSystemInstruction() {
     editor.value = data.content || '';
     if (statusBadge) {
       statusBadge.className = 'badge bg-success';
-      statusBadge.textContent = 'Загружено';
+      statusBadge.textContent = i18n.t('auto___d574e3');
       setTimeout(() => {
         if (statusBadge) statusBadge.style.display = 'none';
       }, 2500);
     }
   } catch (err) {
-    console.error('Ошибка загрузки системной инструкции:', err);
+    console.error(i18n.t('auto___c33481'), err);
     if (statusBadge) {
       statusBadge.className = 'badge bg-danger';
-      statusBadge.textContent = 'Ошибка';
+      statusBadge.textContent = i18n.t('auto___72aecd');
       statusBadge.style.removeProperty('display');
     }
-    showModelsNotification('Ошибка загрузки системной инструкции: ' + err.message, 'danger');
+    showModelsNotification(i18n.t('auto___276152') + err.message, 'danger');
   } finally {
     editor.disabled = false;
   }
@@ -746,23 +727,23 @@ async function saveSystemInstruction() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: editor.value })
     });
-    showModelsNotification('✅ Системная инструкция успешно сохранена', 'success');
+    showModelsNotification(i18n.t('auto___8d1e8d'), 'success');
     if (statusBadge) {
       statusBadge.className = 'badge bg-success';
-      statusBadge.textContent = 'Сохранено';
+      statusBadge.textContent = i18n.t('auto___f0dff5');
       statusBadge.style.removeProperty('display');
       setTimeout(() => {
         if (statusBadge) statusBadge.style.display = 'none';
       }, 3000);
     }
   } catch (err) {
-    console.error('Ошибка сохранения системной инструкции:', err);
+    console.error(i18n.t('auto___bcbdfe'), err);
     if (statusBadge) {
       statusBadge.className = 'badge bg-danger';
-      statusBadge.textContent = 'Ошибка сохранения';
+      statusBadge.textContent = i18n.t('auto___c628b5');
       statusBadge.style.removeProperty('display');
     }
-    showModelsNotification('Ошибка сохранения: ' + err.message, 'danger');
+    showModelsNotification(i18n.t('auto___bbbabd') + err.message, 'danger');
   } finally {
     saveBtn.disabled = false;
     saveBtn.innerHTML = originalHtml;

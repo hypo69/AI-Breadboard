@@ -20,22 +20,7 @@ let trChartsInstances = [];
 let trCurrentPage = 1;
 const trPageSize = 25;
 let trTotalPages = 1;
-let trSearchQuery = '';
-
-/**
- * Инициализация вкладки исследования телеметрии.
- */
-export async function initTelemetryResearchTab() {
-  bindEvents();
-  await loadSources();
-  await runResearch();
-}
-
-/**
- * Привязка событий элементов управления.
- */
-function bindEvents() {
-  const btnRun = document.getElementById('tr-btn-run');
+let trSearchQuery = 'i18n.t('auto__export_async_function_inittelemetryresearchtab_bindevents_await_loadsources_await_runresearch_function_bindevents_const_btnrun_document_getelementbyid__aeed93')tr-btn-run');
   if (btnRun) {
     btnRun.onclick = () => runResearch();
   }
@@ -93,17 +78,7 @@ function bindEvents() {
 
   const recordsTabBtn = document.getElementById('tr-tab-records-btn');
   if (recordsTabBtn) {
-    recordsTabBtn.addEventListener('shown.bs.tab', () => {
-      loadRecords();
-    });
-  }
-}
-
-/**
- * Загрузка списка доступных источников телеметрии.
- */
-async function loadSources() {
-  const select = document.getElementById('tr-select-source');
+    recordsTabBtn.addEventListener('shown.bs.tabi18n.t('auto__loadrecords_async_function_loadsources_const_select_document_getelementbyid__415483')tr-select-source');
   if (!select) return;
 
   try {
@@ -119,7 +94,7 @@ async function loadSources() {
       select.appendChild(opt);
     });
   } catch (err) {
-    console.warn('[TelemetryResearch] Ошибка загрузки источников:', err);
+    console.warn(i18n.t('auto__telemetryresearch__e197e9'), err);
   }
 }
 
@@ -139,45 +114,14 @@ async function runResearch() {
   try {
     const res = await fetch('/apps/telemetry_research/run-research', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ source_path: sourcePath || null }),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Ошибка сервера: ${res.status}`);
-    }
-
-    const report = await res.json();
-    trCurrentReport = report;
-
-    renderKPI(report);
-    renderHypotheses(report.hypotheses);
-    renderCorrelations(report.correlations);
-    renderCharts(report.base_report.charts);
-    renderAnomalies(report.base_report.anomalies, report.base_report.device_summary);
-
+      headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_source_path_sourcepath_null_if_res_ok_throw_new_error_res_status_const_report_await_res_json_trcurrentreport_report_renderkpi_report_renderhypotheses_report_hypotheses_rendercorrelations_report_correlations_rendercharts_report_base_report_charts_renderanomalies_report_base_report_anomalies_report_base_report_device_summary_if_window_toast_window_toast_success__5653c8')Исследование завершеноi18n.t('auto__report_base_report_records_analyzed_catch_err_console_error__f12b13')[TelemetryResearch] Ошибка анализа:', err);
     if (window.toast) {
-      window.toast.success('Исследование завершено', `Проанализировано ${report.base_report.records_analyzed} записей.`);
-    }
-  } catch (err) {
-    console.error('[TelemetryResearch] Ошибка анализа:', err);
-    if (window.toast) {
-      window.toast.error('Сбой исследования', err.message);
+      window.toast.error(i18n.t('auto___f0f7da'), err.message);
     }
   } finally {
     if (btnRun) {
       btnRun.disabled = false;
-      btnRun.innerHTML = '<i class="bi bi-play-circle-fill"></i> <span>Исследовать</span>';
-    }
-  }
-}
-
-/**
- * Отрисовка сводных KPI карточек.
- */
-function renderKPI(report) {
-  const base = report.base_report;
-  const valHealth = document.getElementById('tr-val-health');
+      btnRun.innerHTML = '<i class="bi bi-play-circle-fill"></i> <span>Исследовать</span>i18n.t('auto__kpi_function_renderkpi_report_const_base_report_base_report_const_valhealth_document_getelementbyid__7a0af3')tr-val-health');
   const progHealth = document.getElementById('tr-progress-health');
   const valRecords = document.getElementById('tr-val-records');
   const valTimespan = document.getElementById('tr-val-timespan');
@@ -196,34 +140,14 @@ function renderKPI(report) {
   if (valRecords) valRecords.textContent = `${base.records_analyzed}`;
   if (valTimespan && base.time_range) {
     valTimespan.textContent = `${base.time_range.start ? base.time_range.start.slice(11, 19) : ''} - ${
-      base.time_range.end ? base.time_range.end.slice(11, 19) : ''
-    }`;
-  }
-
-  const confirmedCount = (report.hypotheses || []).filter((h) => h.confirmed).length;
-  if (valHypotheses) valHypotheses.textContent = `${confirmedCount} / ${report.hypotheses ? report.hypotheses.length : 0}`;
-
-  if (valAnomalies) valAnomalies.textContent = `${(base.anomalies || []).length}`;
-  if (valDevices) {
-    valDevices.textContent = base.device_summary.error_count > 0
-      ? `Ошибок устройств: ${base.device_summary.error_count}`
-      : 'Оборудование в норме';
+      base.time_range.end ? base.time_range.end.slice(11, 19) : 'i18n.t('auto__const_confirmedcount_report_hypotheses_filter_h_h_confirmed_length_if_valhypotheses_valhypotheses_textcontent_confirmedcount_report_hypotheses_report_hypotheses_length_0_if_valanomalies_valanomalies_textcontent_base_anomalies_length_if_valdevices_valdevices_textcontent_base_device_summary_error_count_0_base_device_summary_error_count__f44a09')Оборудование в норме';
   }
 
   // Summary alert banner
   const banner = document.getElementById('tr-summary-banner');
   const bannerText = document.getElementById('tr-summary-text');
   if (banner && bannerText && report.investigation_summary) {
-    banner.classList.remove('d-none');
-    bannerText.textContent = report.investigation_summary;
-  }
-}
-
-/**
- * Отрисовка списка гипотез.
- */
-function renderHypotheses(hypotheses) {
-  const container = document.getElementById('tr-hypotheses-list');
+    banner.classList.remove('d-nonei18n.t('auto__bannertext_textcontent_report_investigation_summary_function_renderhypotheses_hypotheses_const_container_document_getelementbyid__581640')tr-hypotheses-list');
   if (!container) return;
 
   if (!hypotheses || hypotheses.length === 0) {
@@ -252,8 +176,7 @@ function renderHypotheses(hypotheses) {
         <div class="card-body p-3 small">
           <p class="text-muted mb-2">${h.description}</p>
           <div class="mb-2">
-            <strong class="text-secondary">Факты телеметрии:</strong>
-            <ul class="text-light text-opacity-75 ps-3 mb-1">${evidenceItems}</ul>
+            <strong class="text-secondaryi18n.t('auto__strong_ul_class__9b0c61')text-light text-opacity-75 ps-3 mb-1">${evidenceItems}</ul>
           </div>
           ${
             h.recommendation
@@ -283,7 +206,7 @@ function renderCorrelations(correlations) {
 
   if (!correlations || correlations.length === 0) {
     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Корреляции не рассчитаны</td></tr>';
-    if (countBadge) countBadge.textContent = '0 пар';
+    if (countBadge) countBadge.textContent = i18n.t('auto_0__999dd8');
     return;
   }
 
@@ -307,26 +230,7 @@ function renderCorrelations(correlations) {
         </tr>
       `;
     })
-    .join('');
-}
-
-/**
- * Отрисовка интерактивных графиков Chart.js.
- */
-function renderCharts(charts) {
-  const container = document.getElementById('tr-charts-container');
-  if (!container) return;
-
-  // Очищаем старые инстансы графиков
-  trChartsInstances.forEach((inst) => {
-    try {
-      inst.destroy();
-    } catch {}
-  });
-  trChartsInstances = [];
-
-  if (!charts || charts.length === 0) {
-    container.innerHTML = '<div class="col-12 text-center text-muted py-4">Нет доступных графиков</div>';
+    .join('i18n.t('auto__chart_js_function_rendercharts_charts_const_container_document_getelementbyid__ba34b3')tr-charts-containeri18n.t('auto__if_container_return_trchartsinstances_foreach_inst_try_inst_destroy_catch_trchartsinstances_if_charts_charts_length_0_container_innerhtml__bd323d')<div class="col-12 text-center text-muted py-4">Нет доступных графиков</div>';
     return;
   }
 
@@ -383,21 +287,7 @@ function renderCharts(charts) {
           },
           plugins: {
             legend: {
-              labels: { color: '#e5e7eb', boxWidth: 12, font: { size: 11 } },
-            },
-          },
-        },
-      });
-      trChartsInstances.push(newInst);
-    }
-  });
-}
-
-/**
- * Отрисовка аномалий и состояния устройств.
- */
-function renderAnomalies(anomalies, deviceSummary) {
-  const tbody = document.getElementById('tr-anomalies-tbody');
+              labels: { color: '#e5e7ebi18n.t('auto__boxwidth_12_font_size_11_trchartsinstances_push_newinst_function_renderanomalies_anomalies_devicesummary_const_tbody_document_getelementbyid__1a3f0d')tr-anomalies-tbody');
   const anomBadge = document.getElementById('tr-anomalies-badge');
   const devBadge = document.getElementById('tr-devices-badge');
   const devContent = document.getElementById('tr-devices-content');
@@ -429,7 +319,7 @@ function renderAnomalies(anomalies, deviceSummary) {
     const hasIssues = deviceSummary.error_count > 0 || deviceSummary.flapping_devices.length > 0;
     if (devBadge) {
       devBadge.className = `badge ${hasIssues ? 'bg-danger' : 'bg-success'}`;
-      devBadge.textContent = hasIssues ? 'Внимание' : 'Норма';
+      devBadge.textContent = hasIssues ? i18n.t('auto___5f5f86') : i18n.t('auto___2b9442');
     }
 
     let flapHtml = '<span class="text-success">Нет</span>';
@@ -438,8 +328,7 @@ function renderAnomalies(anomalies, deviceSummary) {
     }
 
     devContent.innerHTML = `
-      <div class="mb-2"><strong>Всего инцидентов:</strong> ${deviceSummary.total_events}</div>
-      <div class="mb-2"><strong>Ошибок и сбоев:</strong> <span class="${deviceSummary.error_count > 0 ? 'text-danger fw-bold' : 'text-success'}">${deviceSummary.error_count}</span></div>
+      <div class="mb-2i18n.t('auto__strong_strong_devicesummary_total_events_div_div_class__811ed8')mb-2i18n.t('auto__strong_strong_span_class__5f8352')${deviceSummary.error_count > 0 ? 'text-danger fw-bold' : 'text-success'}">${deviceSummary.error_count}</span></div>
       <div class="mb-2"><strong>Флаппирующие устройства:</strong> ${flapHtml}</div>
     `;
   }
@@ -463,19 +352,7 @@ async function loadRecords() {
     if (sourcePath) url.searchParams.set('source_path', sourcePath);
     if (trSearchQuery) url.searchParams.set('query', trSearchQuery);
     url.searchParams.set('page', trCurrentPage);
-    url.searchParams.set('page_size', trPageSize);
-
-    const res = await fetch(url.toString());
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    trTotalPages = data.total_pages || 1;
-    if (infoEl) {
-      infoEl.textContent = `Стр. ${data.page} из ${trTotalPages} (всего ${data.total})`;
-    }
-
-    if (!data.items || data.items.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">Записей не найдено</td></tr>';
+    url.searchParams.set('page_sizei18n.t('auto__trpagesize_const_res_await_fetch_url_tostring_if_res_ok_throw_new_error_http_res_status_const_data_await_res_json_trtotalpages_data_total_pages_1_if_infoel_infoel_textcontent_data_page_trtotalpages_data_total_if_data_items_data_items_length_0_tbody_innerhtml__13c4d7')<tr><td colspan="7" class="text-center text-muted py-3">Записей не найдено</td></tr>';
       return;
     }
 
@@ -523,28 +400,12 @@ function openHtmlDashboard() {
   const url = sourcePath
     ? `/apps/telemetry_research/dashboard?source_path=${encodeURIComponent(sourcePath)}`
     : '/apps/telemetry_research/dashboard';
-  window.open(url, '_blank');
-}
-
-/**
- * Экспорт JSON отчета.
- */
-function downloadJsonReport() {
-  if (!trCurrentReport) {
-    if (window.toast) window.toast.warning('Нет данных', 'Сначала выполните исследование.');
+  window.open(url, '_blanki18n.t('auto__json_function_downloadjsonreport_if_trcurrentreport_if_window_toast_window_toast_warning__660dbe')Нет данных', i18n.t('auto___2c6bf6'));
     return;
   }
   const blob = new Blob([JSON.stringify(trCurrentReport, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `telemetry_research_${Date.now()}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// Автозапуск при подключении модуля
-if (document.readyState === 'loading') {
+  const a = document.createElement('ai18n.t('auto__a_href_url_a_download_telemetry_research_date_now_json_a_click_url_revokeobjecturl_url_if_document_readystate__f0e9a1')loading') {
   document.addEventListener('DOMContentLoaded', initTelemetryResearchTab);
 } else {
   initTelemetryResearchTab();

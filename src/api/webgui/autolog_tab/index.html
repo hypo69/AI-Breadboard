@@ -3,8 +3,7 @@
 Process Name: Applications Auto-Logging and Telemetry Sensors Web UI Tab
 ===============================================================================
 Description:
-    Модульный интерфейс управления периодическим автологгированием приложений,
-    сенсорами телеметрии оборудования, инспекции и скачивания CSV-логов.
+    <span data-i18n="auto__csv__1c9ebf"></span>.
 
 File: index.html
 Project: AI-Breadboard
@@ -22,30 +21,30 @@ Copyright: © 2026 hypo69
         <div class="d-flex align-items-center gap-2">
           <div class="fs-3">📝</div>
           <div>
-            <h5 class="mb-0 fw-bold text-white">Управление автологгированием и сенсорами телеметрии</h5>
-            <small class="text-muted">Единый конфигурационный профиль телеметрии и периодический сбор в CSV (<code>%APPDATA%/AI-Breadboard/apps/logs</code>)</small>
+            <h5 class="mb-0 fw-bold text-white"><span data-i18n="auto___322941"></span></h5>
+            <small class="text-muted"><span data-i18n="auto___4ebf39"></span> CSV (<code>%APPDATA%/AI-Breadboard/apps/logs</code>)</small>
           </div>
         </div>
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
           <span id="autolog-engine-badge" class="badge bg-secondary d-flex align-items-center gap-1.5 px-3 py-2 fs-6">
             <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true" style="width: 0.75rem; height: 0.75rem;"></span>
-            <span id="autolog-engine-badge-text">Проверка статуса...</span>
+            <span id="autolog-engine-badge-text"><span data-i18n="auto___0f7f45"></span>...</span>
           </span>
 
-          <button id="btn-autolog-poll-all" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 shadow-sm" title="Немедленно выполнить опрос всех логгеров">
+          <button id="btn-autolog-poll-all" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto___53aacb"></span>">
             <i class="bi bi-arrow-repeat"></i>
-            <span>Опросить все сейчас</span>
+            <span><span data-i18n="auto___9aa12e"></span></span>
           </button>
 
-          <button id="btn-autolog-toggle-engine" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-sm" title="Запустить / Остановить движок">
+          <button id="btn-autolog-toggle-engine" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto___b19bd8"></span>">
             <i class="bi bi-power"></i>
-            <span id="btn-autolog-toggle-text">Запустить</span>
+            <span id="btn-autolog-toggle-text"><span data-i18n="auto___85ab1c"></span></span>
           </button>
 
-          <button id="btn-autolog-save-config" class="btn btn-sm btn-primary d-flex align-items-center gap-1 shadow-sm" title="Сохранить настройки в конфигурационный файл">
+          <button id="btn-autolog-save-config" class="btn btn-sm btn-primary d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto___4e5721"></span>">
             <i class="bi bi-floppy-fill"></i>
-            <span>Сохранить настройки</span>
+            <span><span data-i18n="auto___87ae19"></span></span>
           </button>
         </div>
       </div>
@@ -54,9 +53,9 @@ Copyright: © 2026 hypo69
       <div class="row g-2">
         <div class="col-6 col-md-3">
           <div class="p-2 rounded border border-secondary" style="background: rgba(15, 23, 42, 0.6);">
-            <div class="text-muted small text-uppercase" style="font-size: 0.7rem;">Глобальное автологгирование</div>
+            <div class="text-muted small text-uppercase" style="font-size: 0.7rem;"><span data-i18n="auto___1ae62f"></span></div>
             <div class="d-flex align-items-center justify-content-between mt-1">
-              <span id="autolog-master-status-text" class="fw-bold text-info">Включено</span>
+              <span id="autolog-master-status-text" class="fw-bold text-info"><span data-i18n="auto___2e304a"></span></span>
               <div class="form-check form-switch mb-0">
                 <input class="form-check-input" type="checkbox" role="switch" id="switch-enable-autolog" checked>
               </div>
@@ -66,21 +65,21 @@ Copyright: © 2026 hypo69
 
         <div class="col-6 col-md-3">
           <div class="p-2 rounded border border-secondary" style="background: rgba(15, 23, 42, 0.6);">
-            <div class="text-muted small text-uppercase" style="font-size: 0.7rem;">Активных фоновых задач</div>
+            <div class="text-muted small text-uppercase" style="font-size: 0.7rem;"><span data-i18n="auto___287599"></span></div>
             <div class="fw-bold text-white fs-5 mt-1" id="metric-active-tasks">0</div>
           </div>
         </div>
 
         <div class="col-6 col-md-3">
           <div class="p-2 rounded border border-secondary" style="background: rgba(15, 23, 42, 0.6);">
-            <div class="text-muted small text-uppercase" style="font-size: 0.7rem;">Сенсоров телеметрии</div>
+            <div class="text-muted small text-uppercase" style="font-size: 0.7rem;"><span data-i18n="auto___f13ad6"></span></div>
             <div class="fw-bold text-success fs-5 mt-1" id="metric-active-sensors">0</div>
           </div>
         </div>
 
         <div class="col-6 col-md-3">
           <div class="p-2 rounded border border-secondary" style="background: rgba(15, 23, 42, 0.6);">
-            <div class="text-muted small text-uppercase" style="font-size: 0.7rem;">Конфигурационный файл</div>
+            <div class="text-muted small text-uppercase" style="font-size: 0.7rem;"><span data-i18n="auto___30338d"></span></div>
             <div class="fw-bold text-warning fs-6 mt-1 text-truncate" id="metric-active-config-file">~autolog_sensors.json</div>
           </div>
         </div>
@@ -94,21 +93,21 @@ Copyright: © 2026 hypo69
     <li class="nav-item" role="presentation">
       <button class="nav-link active d-flex align-items-center gap-1.5 py-1.5 px-3" id="subtab-loggers-btn" data-bs-toggle="tab" data-bs-target="#subtab-loggers" type="button" role="tab">
         <i class="bi bi-sliders2-vertical text-info"></i>
-        <span>Логгеры приложений</span>
+        <span><span data-i18n="auto___2801a0"></span></span>
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link d-flex align-items-center gap-1.5 py-1.5 px-3" id="subtab-sensors-btn" data-bs-toggle="tab" data-bs-target="#subtab-sensors" type="button" role="tab">
         <i class="bi bi-cpu text-warning"></i>
-        <span>Сенсоры телеметрии</span>
+        <span><span data-i18n="auto___09f90a"></span></span>
         <span class="badge bg-secondary ms-1" id="badge-sensors-count">0</span>
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link d-flex align-items-center gap-1.5 py-1.5 px-3" id="subtab-telemetry-service-btn" data-bs-toggle="tab" data-bs-target="#subtab-telemetry-service" type="button" role="tab">
         <i class="bi bi-activity text-success"></i>
-        <span>Служба телеметрии (ai-telemetry)</span>
-        <span class="badge bg-secondary ms-1" id="badge-telemetry-status">Проверка...</span>
+        <span><span data-i18n="auto___99e163"></span> (ai-telemetry)</span>
+        <span class="badge bg-secondary ms-1" id="badge-telemetry-status"><span data-i18n="auto___457969"></span>...</span>
       </button>
     </li>
   </ul>
@@ -121,16 +120,16 @@ Copyright: © 2026 hypo69
       <div class="card shadow-sm border-secondary-subtle">
         <div class="card-header bg-dark d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 border-secondary">
           <div class="d-flex align-items-center gap-2">
-            <span class="fw-semibold text-white small">Логгеры приложений и периодичность</span>
+            <span class="fw-semibold text-white small"><span data-i18n="auto___def29d"></span></span>
             <span class="badge bg-secondary" id="badge-total-loggers">0</span>
           </div>
 
           <div class="d-flex align-items-center gap-2">
             <div class="input-group input-group-sm" style="max-width: 250px;">
               <span class="input-group-text bg-dark text-muted border-secondary"><i class="bi bi-search"></i></span>
-              <input type="text" id="input-search-loggers" class="form-control bg-dark text-white border-secondary" placeholder="Поиск приложения...">
+              <input type="text" id="input-search-loggers" class="form-control bg-dark text-white border-secondary" placeholder="<span data-i18n="auto___8ceb23"></span>...">
             </div>
-            <button id="btn-refresh-loggers" class="btn btn-sm btn-outline-secondary" title="Обновить список">
+            <button id="btn-refresh-loggers" class="btn btn-sm btn-outline-secondary" title="<span data-i18n="auto___0cd9c0"></span>">
               <i class="bi bi-arrow-clockwise"></i>
             </button>
           </div>
@@ -140,19 +139,19 @@ Copyright: © 2026 hypo69
           <table class="table table-dark table-hover table-bordered align-middle mb-0 small" id="table-loggers">
             <thead class="table-secondary text-nowrap sticky-top">
               <tr>
-                <th style="width: 45px;" class="text-center">Вкл</th>
-                <th style="min-width: 180px;">Приложение / Логгер</th>
-                <th style="min-width: 200px;">Интервал опроса</th>
-                <th style="width: 100px;" class="text-center">Опросов</th>
-                <th style="min-width: 170px;">Последний опрос</th>
-                <th style="width: 170px;" class="text-center">Действия</th>
+                <th style="width: 45px;" class="text-center"><span data-i18n="auto___a60b4b"></span></th>
+                <th style="min-width: 180px;"><span data-i18n="auto___a02c2c"></span></th>
+                <th style="min-width: 200px;"><span data-i18n="auto___e10185"></span></th>
+                <th style="width: 100px;" class="text-center"><span data-i18n="auto___2bda69"></span></th>
+                <th style="min-width: 170px;"><span data-i18n="auto___d83705"></span></th>
+                <th style="width: 170px;" class="text-center"><span data-i18n="auto___9978ac"></span></th>
               </tr>
             </thead>
             <tbody id="tbody-loggers">
               <tr>
                 <td colspan="6" class="text-center text-muted py-4">
                   <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
-                  Загрузка списка логгеров...
+                  <span data-i18n="auto___da6bca"></span>...
                 </td>
               </tr>
             </tbody>
@@ -162,11 +161,11 @@ Copyright: © 2026 hypo69
         <div class="card-footer bg-dark border-secondary p-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
           <small class="text-muted">
             <i class="bi bi-info-circle me-1"></i>
-            Изменения сохраняются в единый конфигурационный файл и мгновенно перезапускают фоновые воркеры.
+            <span data-i18n="auto___cd1f9f"></span>.
           </small>
           <button id="btn-autolog-save-config-bottom" class="btn btn-sm btn-primary d-flex align-items-center gap-1 shadow-sm">
             <i class="bi bi-floppy-fill"></i>
-            <span>Сохранить изменения</span>
+            <span><span data-i18n="auto___ec0f5d"></span></span>
           </button>
         </div>
       </div>
@@ -177,7 +176,7 @@ Copyright: © 2026 hypo69
       <div class="card shadow-sm border-secondary-subtle mb-3">
         <div class="card-header bg-dark d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 border-secondary">
           <div class="d-flex align-items-center gap-2">
-            <span class="fw-semibold text-white small">⚙️ Глобальные параметры сбора телеметрии</span>
+            <span class="fw-semibold text-white small">⚙️ <span data-i18n="auto___1d55b5"></span></span>
           </div>
         </div>
         <div class="card-body bg-dark text-white p-3">
@@ -185,25 +184,25 @@ Copyright: © 2026 hypo69
             <div class="col-12 col-md-4">
               <div class="form-check form-switch mb-2">
                 <input class="form-check-input" type="checkbox" role="switch" id="opt-collect-inventory" checked>
-                <label class="form-check-label small" for="opt-collect-inventory">Инвентаризация оборудования (WMI/Win32)</label>
+                <label class="form-check-label small" for="opt-collect-inventory"><span data-i18n="auto___47d806"></span> (WMI/Win32)</label>
               </div>
               <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" role="switch" id="opt-collect-serials" checked>
-                <label class="form-check-label small" for="opt-collect-serials">Сбор серийных номеров накопителей/CPU</label>
+                <label class="form-check-label small" for="opt-collect-serials"><span data-i18n="auto___896725"></span>/CPU</label>
               </div>
             </div>
             <div class="col-12 col-md-4">
               <div class="form-check form-switch mb-2">
                 <input class="form-check-input" type="checkbox" role="switch" id="opt-collect-file-events" checked>
-                <label class="form-check-label small" for="opt-collect-file-events">Мониторинг файловых событий</label>
+                <label class="form-check-label small" for="opt-collect-file-events"><span data-i18n="auto___0829a9"></span></label>
               </div>
               <div class="d-flex align-items-center gap-2">
-                <label class="small text-muted text-nowrap mb-0" for="opt-max-file-size">Макс. лог (MB):</label>
+                <label class="small text-muted text-nowrap mb-0" for="opt-max-file-size"><span data-i18n="auto___fd0ace"></span> (MB):</label>
                 <input type="number" id="opt-max-file-size" class="form-control form-control-sm bg-dark text-white border-secondary" style="max-width: 100px;" value="50" min="1" max="1000">
               </div>
             </div>
             <div class="col-12 col-md-4">
-              <label class="small text-muted mb-1" for="opt-watch-dirs">Отслеживаемые директории (через запятую):</label>
+              <label class="small text-muted mb-1" for="opt-watch-dirs"><span data-i18n="auto___2b6c78"></span>):</label>
               <input type="text" id="opt-watch-dirs" class="form-control form-control-sm bg-dark text-white border-secondary" value="C:\Users\">
             </div>
           </div>
@@ -213,9 +212,9 @@ Copyright: © 2026 hypo69
       <div class="card shadow-sm border-secondary-subtle">
         <div class="card-header bg-dark d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 border-secondary">
           <div class="d-flex align-items-center gap-2">
-            <span class="fw-semibold text-white small">📊 Сенсоры оборудования и метрики телеметрии</span>
+            <span class="fw-semibold text-white small">📊 <span data-i18n="auto___2f8e20"></span></span>
           </div>
-          <button id="btn-refresh-sensors" class="btn btn-sm btn-outline-secondary" title="Обновить сенсоры">
+          <button id="btn-refresh-sensors" class="btn btn-sm btn-outline-secondary" title="<span data-i18n="auto___cbc672"></span>">
             <i class="bi bi-arrow-clockwise"></i>
           </button>
         </div>
@@ -224,7 +223,7 @@ Copyright: © 2026 hypo69
           <div class="row g-3" id="sensors-cards-container">
             <div class="col-12 text-center text-muted py-4">
               <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
-              Загрузка конфигурации сенсоров...
+              <span data-i18n="auto___3b074c"></span>...
             </div>
           </div>
         </div>
@@ -232,11 +231,11 @@ Copyright: © 2026 hypo69
         <div class="card-footer bg-dark border-secondary p-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
           <small class="text-muted">
             <i class="bi bi-info-circle me-1"></i>
-            Нажмите на бейджи метрик для включения/выключения отдельных параметров сбора.
+            <span data-i18n="auto___d2c3fb"></span>.
           </small>
           <button id="btn-save-sensors-config" class="btn btn-sm btn-primary d-flex align-items-center gap-1 shadow-sm">
             <i class="bi bi-floppy-fill"></i>
-            <span>Сохранить конфигурацию сенсоров</span>
+            <span><span data-i18n="auto___8b4026"></span></span>
           </button>
         </div>
       </div>
@@ -248,21 +247,21 @@ Copyright: © 2026 hypo69
       <div class="card shadow-sm border-secondary-subtle mb-3">
         <div class="card-header bg-dark d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 border-secondary">
           <div class="d-flex align-items-center gap-2">
-            <span class="fw-semibold text-white small">⚡ Статус процесса ai-telemetry.exe и управление службой</span>
-            <span class="badge bg-secondary" id="svc-status-badge">Загрузка...</span>
+            <span class="fw-semibold text-white small">⚡ <span data-i18n="auto__ai_telemetry_exe__abb2c3"></span></span>
+            <span class="badge bg-secondary" id="svc-status-badge"><span data-i18n="auto___c98fa8"></span>...</span>
           </div>
           <div class="d-flex align-items-center gap-2">
-            <button id="btn-telemetry-start" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-sm" title="Запустить процесс ai-telemetry.exe">
+            <button id="btn-telemetry-start" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto___d365b0"></span> ai-telemetry.exe">
               <i class="bi bi-play-fill"></i>
-              <span>Запустить</span>
+              <span><span data-i18n="auto___85ab1c"></span></span>
             </button>
-            <button id="btn-telemetry-stop" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 shadow-sm" title="Остановить процесс ai-telemetry.exe">
+            <button id="btn-telemetry-stop" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto___d929a2"></span> ai-telemetry.exe">
               <i class="bi bi-stop-fill"></i>
-              <span>Остановить</span>
+              <span><span data-i18n="auto___d4f447"></span></span>
             </button>
-            <button id="btn-telemetry-restart" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1 shadow-sm" title="Перезапустить процесс">
+            <button id="btn-telemetry-restart" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto___584cb2"></span>">
               <i class="bi bi-arrow-clockwise"></i>
-              <span>Перезапуск</span>
+              <span><span data-i18n="auto___41b914"></span></span>
             </button>
           </div>
         </div>
@@ -271,19 +270,19 @@ Copyright: © 2026 hypo69
           <div class="row g-3">
             <div class="col-12 col-md-3">
               <div class="p-2 rounded border border-secondary" style="background: rgba(15, 23, 42, 0.6);">
-                <div class="text-muted small text-uppercase" style="font-size: 0.7rem;">Активные процессы</div>
+                <div class="text-muted small text-uppercase" style="font-size: 0.7rem;"><span data-i18n="auto___2125e4"></span></div>
                 <div class="fw-bold text-info fs-6 mt-1 text-truncate" id="svc-info-pids">—</div>
               </div>
             </div>
             <div class="col-12 col-md-3">
               <div class="p-2 rounded border border-secondary" style="background: rgba(15, 23, 42, 0.6);">
-                <div class="text-muted small text-uppercase" style="font-size: 0.7rem;">Потребление памяти (RAM)</div>
-                <div class="fw-bold text-success fs-6 mt-1" id="svc-info-memory">— МБ</div>
+                <div class="text-muted small text-uppercase" style="font-size: 0.7rem;"><span data-i18n="auto___96da48"></span> (RAM)</div>
+                <div class="fw-bold text-success fs-6 mt-1" id="svc-info-memory">— <span data-i18n="auto___6eaae4"></span></div>
               </div>
             </div>
             <div class="col-12 col-md-3">
               <div class="p-2 rounded border border-secondary" style="background: rgba(15, 23, 42, 0.6);">
-                <div class="text-muted small text-uppercase" style="font-size: 0.7rem;">Снимков в базе SQLite</div>
+                <div class="text-muted small text-uppercase" style="font-size: 0.7rem;"><span data-i18n="auto___840463"></span> SQLite</div>
                 <div class="fw-bold text-warning fs-6 mt-1" id="svc-info-snapshots">—</div>
               </div>
             </div>
@@ -296,14 +295,14 @@ Copyright: © 2026 hypo69
           </div>
 
           <div class="d-flex flex-wrap gap-2 mt-3 pt-2 border-top border-secondary align-items-center">
-            <span class="small text-muted">Планировщик заданий:</span>
-            <button id="btn-telemetry-install-task" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 shadow-sm" title="Зарегистрировать в Task Scheduler с флагом WakeToRun">
+            <span class="small text-muted"><span data-i18n="auto___c4a9d2"></span>:</span>
+            <button id="btn-telemetry-install-task" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto__task_scheduler__d5317e"></span> WakeToRun">
               <i class="bi bi-calendar-plus"></i>
-              <span>Установить в Task Scheduler (WakeToRun)</span>
+              <span><span data-i18n="auto___b3207f"></span> Task Scheduler (WakeToRun)</span>
             </button>
-            <button id="btn-telemetry-uninstall-task" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-sm" title="Удалить из Task Scheduler">
+            <button id="btn-telemetry-uninstall-task" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-sm" title="<span data-i18n="auto___05f483"></span> Task Scheduler">
               <i class="bi bi-trash"></i>
-              <span>Удалить из Task Scheduler</span>
+              <span><span data-i18n="auto___05f483"></span> Task Scheduler</span>
             </button>
           </div>
         </div>
@@ -313,106 +312,106 @@ Copyright: © 2026 hypo69
       <div class="card shadow-sm border-secondary-subtle">
         <div class="card-header bg-dark d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 border-secondary">
           <div class="d-flex align-items-center gap-2">
-            <span class="fw-semibold text-white small">⚙️ Конфигурация режимов и периодичности сбора</span>
+            <span class="fw-semibold text-white small">⚙️ <span data-i18n="auto___a0a01c"></span></span>
           </div>
         </div>
 
         <div class="card-body bg-dark text-white p-3">
           <div class="row g-4">
-            <!-- Режим сбора -->
+            <!-- <span data-i18n="auto___646c37"></span> -->
             <div class="col-12 col-md-4 border-end border-secondary">
-              <label class="form-label fw-bold small text-info text-uppercase">Режим работы службы</label>
+              <label class="form-label fw-bold small text-info text-uppercase"><span data-i18n="auto___0b1576"></span></label>
               <div class="d-flex flex-column gap-2 mt-1">
                 <div class="form-check">
                   <input class="form-check-input" type="radio" name="telemetryModeRadio" id="mode-minimal" value="minimal">
                   <label class="form-check-label small" for="mode-minimal">
-                    <span class="fw-bold text-success">Minimal (Ультралегковесный)</span>
-                    <div class="text-muted" style="font-size: 0.75rem;">Только базовая телеметрия (CPU, RAM, GPU, диски, сеть, топ процессов). 28 мс замер, ~120 МБ RAM, 0% CPU. Лишние библиотеки отключены.</div>
+                    <span class="fw-bold text-success">Minimal (<span data-i18n="auto___03db6d"></span>)</span>
+                    <div class="text-muted" style="font-size: 0.75rem;"><span data-i18n="auto__cpu_ram_gpu_28_120_ram_0_cpu__239abc"></span>.</div>
                   </label>
                 </div>
                 <div class="form-check mt-2">
                   <input class="form-check-input" type="radio" name="telemetryModeRadio" id="mode-hybrid" value="hybrid" checked>
                   <label class="form-check-label small" for="mode-hybrid">
-                    <span class="fw-bold text-warning">Hybrid (Адаптивный гибридный)</span>
-                    <div class="text-muted" style="font-size: 0.75rem;">Постоянный ультрабыстрый минимальный сбор + периодический опрос ресурсоемких сенсоров (LHM, SMART, сеть) с заданным интервалом.</div>
+                    <span class="fw-bold text-warning">Hybrid (<span data-i18n="auto___6d1ef8"></span>)</span>
+                    <div class="text-muted" style="font-size: 0.75rem;"><span data-i18n="auto__lhm_smart__091524"></span>.</div>
                   </label>
                 </div>
                 <div class="form-check mt-2">
                   <input class="form-check-input" type="radio" name="telemetryModeRadio" id="mode-full" value="full">
                   <label class="form-check-label small" for="mode-full">
-                    <span class="fw-bold text-danger">Full (Полный стек)</span>
-                    <div class="text-muted" style="font-size: 0.75rem;">Опрос всех подключенных аппаратных сенсоров, LHM и спидтестов на каждом тике.</div>
+                    <span class="fw-bold text-danger">Full (<span data-i18n="auto___45b6d0"></span>)</span>
+                    <div class="text-muted" style="font-size: 0.75rem;"><span data-i18n="auto__lhm__ecf503"></span>.</div>
                   </label>
                 </div>
               </div>
             </div>
 
-            <!-- Интервалы опроса -->
+            <!-- <span data-i18n="auto___99bd08"></span> -->
             <div class="col-12 col-md-4 border-end border-secondary">
-              <label class="form-label fw-bold small text-info text-uppercase">Интервалы опроса (секунды)</label>
+              <label class="form-label fw-bold small text-info text-uppercase"><span data-i18n="auto___d41bf4"></span>)</label>
               
               <div class="mb-3">
                 <label for="cfg-fast-interval" class="form-label small mb-1">
-                  Быстрый сбор базовых метрик: <span id="val-fast-interval" class="fw-bold text-warning">5с</span>
+                  <span data-i18n="auto___66a8dd"></span>: <span id="val-fast-interval" class="fw-bold text-warning">5с</span>
                 </label>
                 <div class="input-group input-group-sm">
                   <input type="number" class="form-control bg-dark text-white border-secondary" id="cfg-fast-interval" value="5.0" min="1" max="60" step="0.5">
-                  <span class="input-group-text bg-dark text-muted border-secondary">секунд</span>
+                  <span class="input-group-text bg-dark text-muted border-secondary"><span data-i18n="auto___2c2499"></span></span>
                 </div>
-                <small class="text-muted" style="font-size: 0.72rem;">Частота выборки CPU, RAM, дисков, сети и топа процессов.</small>
+                <small class="text-muted" style="font-size: 0.72rem;"><span data-i18n="auto__cpu_ram__b0032a"></span>.</small>
               </div>
 
               <div class="mb-3">
                 <label for="cfg-heavy-interval" class="form-label small mb-1">
-                  Периодический тяжелый опрос: <span id="val-heavy-interval" class="fw-bold text-warning">60с</span>
+                  <span data-i18n="auto___c1ec8c"></span>: <span id="val-heavy-interval" class="fw-bold text-warning">60с</span>
                 </label>
                 <div class="input-group input-group-sm">
                   <input type="number" class="form-control bg-dark text-white border-secondary" id="cfg-heavy-interval" value="60.0" min="10" max="3600" step="5">
-                  <span class="input-group-text bg-dark text-muted border-secondary">секунд</span>
+                  <span class="input-group-text bg-dark text-muted border-secondary"><span data-i18n="auto___2c2499"></span></span>
                 </div>
-                <small class="text-muted" style="font-size: 0.72rem;">Применяется в режиме Hybrid для опроса тяжелых сенсоров.</small>
+                <small class="text-muted" style="font-size: 0.72rem;"><span data-i18n="auto__hybrid__4ff748"></span>.</small>
               </div>
 
               <div>
-                <label for="cfg-top-processes" class="form-label small mb-1">Топ активных процессов:</label>
+                <label for="cfg-top-processes" class="form-label small mb-1"><span data-i18n="auto___2001db"></span>:</label>
                 <select class="form-select form-select-sm bg-dark text-white border-secondary" id="cfg-top-processes">
-                  <option value="5">Топ 5 процессов</option>
-                  <option value="10" selected>Топ 10 процессов (рекомендуется)</option>
-                  <option value="20">Топ 20 процессов</option>
+                  <option value="5"><span data-i18n="auto__5__4cf70c"></span></option>
+                  <option value="10" selected><span data-i18n="auto__10__8c562e"></span>)</option>
+                  <option value="20"><span data-i18n="auto__20__a72bf4"></span></option>
                 </select>
               </div>
             </div>
 
-            <!-- Тяжелые сенсоры в гибридном цикле -->
+            <!-- <span data-i18n="auto___22f84b"></span> -->
             <div class="col-12 col-md-4">
-              <label class="form-label fw-bold small text-info text-uppercase">Тяжелые сенсоры (Hybrid опрос)</label>
+              <label class="form-label fw-bold small text-info text-uppercase"><span data-i18n="auto__hybrid__1e5e26"></span>)</label>
               <div class="d-flex flex-column gap-2 mt-1">
                 <div class="form-check form-switch">
                   <input class="form-check-input" type="checkbox" role="switch" id="h-sensor-lhm" checked>
                   <label class="form-check-label small" for="h-sensor-lhm">
-                    Датчики LibreHardwareMonitor
-                    <div class="text-muted" style="font-size: 0.72rem;">Температуры VRM/чипсета, обороты кулеров, вольтажи.</div>
+                    <span data-i18n="auto___d429e1"></span> LibreHardwareMonitor
+                    <div class="text-muted" style="font-size: 0.72rem;"><span data-i18n="auto__vrm__ccf942"></span>.</div>
                   </label>
                 </div>
                 <div class="form-check form-switch mt-1">
                   <input class="form-check-input" type="checkbox" role="switch" id="h-sensor-smart" checked>
                   <label class="form-check-label small" for="h-sensor-smart">
-                    SMART и износ накопителей
-                    <div class="text-muted" style="font-size: 0.72rem;">Оценка ресурса SSD и SMART-атрибутов дисков.</div>
+                    SMART <span data-i18n="auto___e13c2a"></span>
+                    <div class="text-muted" style="font-size: 0.72rem;"><span data-i18n="auto__ssd_smart__3df614"></span>.</div>
                   </label>
                 </div>
                 <div class="form-check form-switch mt-1">
                   <input class="form-check-input" type="checkbox" role="switch" id="h-sensor-ping" checked>
                   <label class="form-check-label small" for="h-sensor-ping">
-                    Сетевой пинг и задержки
-                    <div class="text-muted" style="font-size: 0.72rem;">Пинг до сетевого шлюза и DNS.</div>
+                    <span data-i18n="auto___57babe"></span>
+                    <div class="text-muted" style="font-size: 0.72rem;"><span data-i18n="auto___d43534"></span> DNS.</div>
                   </label>
                 </div>
                 <div class="form-check form-switch mt-1">
                   <input class="form-check-input" type="checkbox" role="switch" id="h-sensor-inventory">
                   <label class="form-check-label small" for="h-sensor-inventory">
-                    Инвентаризация WMI
-                    <div class="text-muted" style="font-size: 0.72rem;">Сбор серийных номеров и спецификаций оборудования.</div>
+                    <span data-i18n="auto___074ca0"></span> WMI
+                    <div class="text-muted" style="font-size: 0.72rem;"><span data-i18n="auto___be25dc"></span>.</div>
                   </label>
                 </div>
               </div>
@@ -423,11 +422,11 @@ Copyright: © 2026 hypo69
         <div class="card-footer bg-dark border-secondary p-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
           <small class="text-muted">
             <i class="bi bi-info-circle me-1"></i>
-            Конфигурация сохраняется в <code>apps/windows/telemetry/config.json</code> и немедленно применяется службой.
+            <span data-i18n="auto___ed14ba"></span> <code>apps/windows/telemetry/config.json</code> <span data-i18n="auto___1891c8"></span>.
           </small>
           <button id="btn-save-telemetry-config" class="btn btn-sm btn-primary d-flex align-items-center gap-1 shadow-sm">
             <i class="bi bi-floppy-fill"></i>
-            <span>Сохранить настройки телеметрии</span>
+            <span><span data-i18n="auto___714816"></span></span>
           </button>
         </div>
       </div>
@@ -441,9 +440,9 @@ Copyright: © 2026 hypo69
       <div class="d-flex">
         <div class="toast-body d-flex align-items-center gap-2" id="autolog-toast-body">
           <i class="bi bi-info-circle-fill text-info" id="autolog-toast-icon"></i>
-          <span id="autolog-toast-msg">Сообщение</span>
+          <span id="autolog-toast-msg"><span data-i18n="auto___dc7234"></span></span>
         </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Закрыть"></button>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="<span data-i18n="auto___4ae50d"></span>"></button>
       </div>
     </div>
   </div>
