@@ -1,5 +1,27 @@
-"""Cloudflared process supervision, log parsing, endpoint probing, and diagnostics."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Cloudflared_Monitor Src - State
+# =============================================================================
+# Description:
+#   Cloudflared process supervision, log parsing, endpoint probing, and diagnostics.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.cloudflared_monitor.src.state import CloudflaredProcessInfo
+#
+#     service = CloudflaredProcessInfo()
+#
+# File: state.py
+# Project: ai-breadboard
+# Package: apps.cloudflared_monitor.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Cloudflared process supervision, log parsing, endpoint probing, and diagnostics."""
+
 import csv
 import datetime
 import io

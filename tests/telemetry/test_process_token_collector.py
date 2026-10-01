@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests Telemetry - Test Process Token Collector
+# =============================================================================
+# Description:
+#   Тест проверяет, что collector возвращает список ProcessTokenInfo с ожидаемыми полями.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.telemetry.test_process_token_collector import test_collect_returns_token_info
+#
+#     res = test_collect_returns_token_info()
+#
+# File: test_process_token_collector.py
+# Project: ai-breadboard
+# Package: tests.telemetry
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Тест проверяет, что collector возвращает список ProcessTokenInfo с ожидаемыми полями."""
+
 import pytest
 from unittest import mock
 

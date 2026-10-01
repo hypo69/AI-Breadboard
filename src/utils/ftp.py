@@ -1,3 +1,25 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Ftp Module
+# =============================================================================
+# Description:
+#   FTP interface for sending, receiving, and deleting files from FTP servers.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.ftp import write
+#
+#     res = write()
+#     print(res)
+#
+# File: ftp.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """FTP interface for sending, receiving, and deleting files from FTP servers.
 
 Allows for sending media files, spreadsheets, and other files to and from an FTP server.
@@ -10,9 +32,9 @@ Dependencies:
 Functions:
     - `write`: Sends a file to an FTP server.
     - `read`: Retrieves a file from an FTP server.
-    - `delete`: Deletes a file from an FTP server.
-"""
-from logger.logger import logger
+    - `delete`: Deletes a file from an FTP server."""
+
+from logger import logger
 from typing import Union
 import ftplib
 from pathlib import Path

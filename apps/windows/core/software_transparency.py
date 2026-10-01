@@ -1,5 +1,27 @@
-"""Модуль инспекции прозрачности ПО, анализа конфигураций, мест хранения и сетевых доменов."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core - Software Transparency
+# =============================================================================
+# Description:
+#   Модуль инспекции прозрачности ПО, анализа конфигураций, мест хранения и сетевых доменов.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.software_transparency import StorageCategory
+#
+#     service = StorageCategory()
+#
+# File: software_transparency.py
+# Project: ai-breadboard
+# Package: apps.windows.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Модуль инспекции прозрачности ПО, анализа конфигураций, мест хранения и сетевых доменов."""
+
 import datetime
 import json
 import os
@@ -15,9 +37,7 @@ except ImportError:
     psutil = None
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
-from logger import logger
 from apps.windows.core.software_audit import SoftwareAuditEngine
-from apps.common.csv_logger import AppCsvLogger
 
 class StorageCategory(str, Enum):
     """Категории хранилищ данных программы."""
@@ -376,7 +396,6 @@ class GeminiResearcher:
 def init_software_transparency_router(chat_provider: Optional[Any]=None) -> APIRouter:
     """Инициализация FastAPI роутера сканера прозрачности ПО."""
     router = APIRouter(prefix='/api/v1/software-scanner', tags=['AI Software Transparency Scanner'])
-    csv_logger = AppCsvLogger('software_transparency_scanner')
     inventory = SoftwareInventory()
     storage_analyzer = StorageAnalyzer()
     config_inspector = ConfigInspector()
@@ -387,7 +406,6 @@ def init_software_transparency_router(chat_provider: Optional[Any]=None) -> APIR
 
     @router.get('/status')
     async def get_status() -> Dict[str, Any]:
-        csv_logger.log_poll(poll_type='status', metric_name='cached_apps_count', value=len(_cache), unit='count', status='online', details='service_status_check', filename='software_transparency_polls.csv')
         return {'status': 'online', 'service': 'AI Software Transparency Scanner', 'version': '1.0.0', 'cached_apps_count': len(_cache)}
 
     @router.get('/scan', response_model=FullScanReport)
@@ -414,7 +432,6 @@ def init_software_transparency_router(chat_provider: Optional[Any]=None) -> APIR
                 _cache[app.id] = app
             dur = round(time.time() - start_time, 2)
             _last_summary = ScanSummary(total_apps=len(_cache), total_configs_found=total_configs, total_network_domains=total_domains, total_storage_bytes=total_bytes, scan_duration_sec=dur, last_scan_time=time.strftime('%Y-%m-%dT%H:%M:%S'))
-            csv_logger.log_event(event_type='full_scan_completed', status='success', details=f'apps={len(_cache)},configs={total_configs},domains={total_domains},storage_mb={round(total_bytes / (1024 * 1024), 2)},duration_s={dur}', filename='software_transparency_scans.csv')
         return FullScanReport(summary=_last_summary or ScanSummary(total_apps=len(_cache)), apps=list(_cache.values()))
 
     @router.get('/apps', response_model=List[SoftwareItem])
@@ -445,12 +462,10 @@ def init_software_transparency_router(chat_provider: Optional[Any]=None) -> APIR
                     target_app = v
                     break
         if not target_app:
-            csv_logger.log_event(event_type='app_research_failed', status='not_found', details=f'app_id={req.app_id}', filename='software_transparency_scans.csv')
             raise HTTPException(status_code=404, detail=f"Программа '{req.app_id}' не найдена для исследования")
         if target_app.ai_research and (not req.force_refresh):
             return target_app.ai_research
         research_res = await researcher.research_software(target_app)
         target_app.ai_research = research_res
-        csv_logger.log_event(event_type='app_research_completed', status='success', details=f'app_id={req.app_id},app_name={target_app.name}', filename='software_transparency_scans.csv')
         return research_res
     return router

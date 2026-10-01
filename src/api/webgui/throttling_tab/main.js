@@ -1,16 +1,20 @@
 /**
  * =============================================================================
- * Process Name: Windows Kernel Quality & Throttling Logic
+ * Process Name: AI-Breadboard UI - Main Script
  * =============================================================================
  * Description:
- *   Клиентский контроллер вкладки качества ядра и троттлинга:
- *   DPC/ISR задержки, PROCHOT троттлинг, PCIe шина GPU и дампы BSOD.
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/throttling_tab/main.js?v=20261001_v1" type="module"></script>
  *
  * File: main.js
- * Project: AI-Breadboard
- * Module: WebInterface.ThrottlingTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/throttling_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

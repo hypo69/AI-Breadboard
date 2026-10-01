@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Helpdesk Tests - Test Helpdesk App
+# =============================================================================
+# Description:
+#   Ensure database schema is created before each test.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.helpdesk.tests.test_helpdesk_app import setup_database
+#
+#     res = setup_database()
+#
+# File: test_helpdesk_app.py
+# Project: ai-breadboard
+# Package: apps.helpdesk.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Ensure database schema is created before each test."""
+
 import json
 from pathlib import Path
 import pytest

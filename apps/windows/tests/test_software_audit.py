@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Tests - Test Software Audit
+# =============================================================================
+# Description:
+#   Модульные тесты для подсистемы аудита программного обеспечения Windows.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.windows.tests.test_software_audit
+#   Python API:
+#     from apps.windows.tests.test_software_audit import TestSoftwareAuditUtils
+#
+#     service = TestSoftwareAuditUtils()
+#
+# File: test_software_audit.py
+# Project: ai-breadboard
+# Package: apps.windows.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """Модульные тесты для подсистемы аудита программного обеспечения Windows."""
+
 import codecs
 import struct
 import unittest

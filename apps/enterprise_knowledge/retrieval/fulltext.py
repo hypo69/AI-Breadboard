@@ -1,5 +1,27 @@
-"""Полнотекстовый поиск."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Enterprise_Knowledge Retrieval - Fulltext
+# =============================================================================
+# Description:
+#   Полнотекстовый поиск.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.enterprise_knowledge.retrieval.fulltext import FullTextSearch
+#
+#     service = FullTextSearch()
+#
+# File: fulltext.py
+# Project: ai-breadboard
+# Package: apps.enterprise_knowledge.retrieval
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Полнотекстовый поиск."""
+
 from typing import Any
 from apps.enterprise_knowledge.storage import KnowledgeStore
 

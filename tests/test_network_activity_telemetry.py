@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Network Activity Telemetry
+# =============================================================================
+# Description:
+#   Проверяет наличие полей замера объема скачанного/отправленного трафика в модели.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_network_activity_telemetry import test_process_network_activity_model_fields
+#
+#     res = test_process_network_activity_model_fields()
+#
+# File: test_network_activity_telemetry.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Проверяет наличие полей замера объема скачанного/отправленного трафика в модели."""
+
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 import time

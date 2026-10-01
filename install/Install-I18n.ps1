@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Install-I18N Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Install-I18n).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Install-I18n.ps1
+#
+# File: Install-I18n.ps1
+# Project: ai-breadboard
+# Package: install
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:29
+# =============================================================================
+
 <#
 .SYNOPSIS
     Модуль интернационализации (I18N) мастера установки AI Breadboard.

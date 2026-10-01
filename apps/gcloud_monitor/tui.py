@@ -1,5 +1,27 @@
-"""Interactive Rich-based terminal dashboard for Google Cloud Monitor."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Gcloud_Monitor - Tui
+# =============================================================================
+# Description:
+#   Interactive Rich-based terminal dashboard for Google Cloud Monitor.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.gcloud_monitor.tui import create_header
+#
+#     res = create_header()
+#
+# File: tui.py
+# Project: ai-breadboard
+# Package: apps.gcloud_monitor
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Interactive Rich-based terminal dashboard for Google Cloud Monitor."""
+
 import time
 from typing import Any
 from rich.console import Console

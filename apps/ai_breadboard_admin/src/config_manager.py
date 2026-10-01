@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Ai_Breadboard_Admin Src - Config Manager
+# =============================================================================
+# Description:
+#   Менеджер управления конфигурационными параметрами системы.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.ai_breadboard_admin.src.config_manager import AdminConfigManager
+#
+#     service = AdminConfigManager()
+#
+# File: config_manager.py
+# Project: ai-breadboard
+# Package: apps.ai_breadboard_admin.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Менеджер управления конфигурационными параметрами системы."""
+
 import json
 import os
 from pathlib import Path

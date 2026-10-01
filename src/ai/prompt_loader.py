@@ -1,3 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Prompt Loader Module
+# =============================================================================
+# Description:
+#   Прочитать файл из директории prompts.
+#
+# Usage Examples:
+#   CLI:
+#     python -m src.ai.prompt_loader
+#   Python API:
+#     from src.ai.prompt_loader import load_chat_prompt
+#
+#     res = load_chat_prompt()
+#     print(res)
+#
+# File: prompt_loader.py
+# Project: ai-breadboard
+# Package: src.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Прочитать файл из директории prompts."""
+
 import json
 import sys
 from dataclasses import dataclass

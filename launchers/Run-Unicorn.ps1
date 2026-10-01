@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Run-Unicorn Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Run-Unicorn).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Run-Unicorn.ps1
+#
+# File: Run-Unicorn.ps1
+# Project: ai-breadboard
+# Package: launchers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:06
+# =============================================================================
+
 <#
 .SYNOPSIS
     Launch FastAPI server via uvicorn (Unicorn) for ai-breadboard project.
@@ -48,6 +66,9 @@ param (
 
     [Alias('Config', 'Cfg')]
     [string]$ConfigFile,
+
+    [Alias('App', 'Module')]
+    [string]$AppModule = 'main:app',
 
     [Alias('h', '-help')]
     [switch]$Help
@@ -303,9 +324,10 @@ if ($reload) {
     Write-Host "[5/5] Launching uvicorn with $workers workers..." -ForegroundColor Cyan
 }
 
+$targetApp = if ($AppModule) { $AppModule } else { "main:app" }
 $uvicornArgs = @(
     "-m", "uvicorn",
-    "main:app",
+    $targetApp,
     "--host", $host_,
     "--port", $port,
     "--loop", "asyncio"

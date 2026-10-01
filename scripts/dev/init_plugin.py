@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Dev - Init Plugin
+# =============================================================================
+# Description:
+#   Plugin scaffolding utility for AI Breadboard.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.dev.init_plugin
+#   Python API:
+#     from scripts.dev.init_plugin import create_plugin
+#
+#     res = create_plugin()
+#
+# File: init_plugin.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Plugin scaffolding utility for AI Breadboard."""
+
 import argparse
 import re
 import sys

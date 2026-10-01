@@ -1,9 +1,29 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Defender Manager
+# =============================================================================
+# Description:
+#   Модульные тесты для DefenderManager и SecurityCollector.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_defender_manager import test_defender_manager_initialization
+#
+#     res = test_defender_manager_initialization()
+#
+# File: test_defender_manager.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Модульные тесты для DefenderManager и SecurityCollector."""
 
 import pytest
 from apps.windows.core.defender_manager import DefenderManager
-from apps.windows.core.modules.security_collector import SecurityCollector
+from apps.windows.core.audits.security_collector import SecurityCollector
 
 
 def test_defender_manager_initialization():

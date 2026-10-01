@@ -1,16 +1,23 @@
 /**
  * =============================================================================
- * Process Name: RAG Tab Utility Functions
+ * Process Name: AI-Breadboard UI - Utils Script
  * =============================================================================
  * Description:
- *   Formatting utilities, HTML escaping, and recursive file traversal
- *   for drag-and-drop directory parsing in RAG tab.
+ *   Клиентский веб-скрипт модуля utils.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/rag_tab/modules/utils.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { formatBytes, escapeHtml, traverseEntry } from '/src/api/webgui/rag_tab/modules/utils.js';
  *
  * File: utils.js
- * Project: AI Breadboard
- * Module: RAGTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/rag_tab/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

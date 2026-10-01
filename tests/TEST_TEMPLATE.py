@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Template
+# =============================================================================
+# Description:
+#   Testing of normal (expected) scenarios of TargetClass operation.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.TEST_TEMPLATE import TestTargetClass_HappyPath
+#
+#     service = TestTargetClass_HappyPath()
+#
+# File: TEST_TEMPLATE.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Testing of normal (expected) scenarios of TargetClass operation."""
+
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from pathlib import Path

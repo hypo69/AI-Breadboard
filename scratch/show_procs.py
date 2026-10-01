@@ -1,4 +1,4 @@
-from apps.windows.telemetry.storage import TelemetryStorage
+from apps.windows.telemetry.sqlite import TelemetryStorage
 
 def main():
     storage = TelemetryStorage.get_instance()

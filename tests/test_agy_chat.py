@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Agy Chat
+# =============================================================================
+# Description:
+#   Unit tests for AgyChatBase persistent Agent session and streaming.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_agy_chat import TestAgyChat
+#
+#     service = TestAgyChat()
+#
+# File: test_agy_chat.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for AgyChatBase persistent Agent session and streaming."""
+
 import os
 import sys
 import pytest

@@ -1,5 +1,27 @@
-"""Cloud Monitoring metrics collection, time-series querying, and rate computation."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Gcloud_Monitor Src - Metrics Service
+# =============================================================================
+# Description:
+#   Cloud Monitoring metrics collection, time-series querying, and rate computation.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.gcloud_monitor.src.metrics_service import MetricPoint
+#
+#     service = MetricPoint()
+#
+# File: metrics_service.py
+# Project: ai-breadboard
+# Package: apps.gcloud_monitor.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Cloud Monitoring metrics collection, time-series querying, and rate computation."""
+
 import datetime
 import random
 from dataclasses import asdict, dataclass, field

@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - Models Module
+# =============================================================================
+# Description:
+#   User context within the helpdesk subsystem.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.helpdesk.models import HelpdeskUser
+#
+#     service = HelpdeskUser()
+#
+# File: models.py
+# Project: ai-breadboard
+# Package: src.api.helpdesk
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""User context within the helpdesk subsystem."""
+
 from typing import Optional, List, Dict, Any, Literal
 from pydantic import BaseModel, Field
 

@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Run-Websitemonitor Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Run-WebsiteMonitor).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Run-WebsiteMonitor.ps1
+#
+# File: Run-WebsiteMonitor.ps1
+# Project: ai-breadboard
+# Package: launchers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:06
+# =============================================================================
+
 <#
 .SYNOPSIS
     Standalone launcher for Website Intelligence Monitor microservice (GA4 & GSC telemetry).

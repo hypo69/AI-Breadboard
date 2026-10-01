@@ -1,5 +1,26 @@
-"""Модульные тесты для навыка dlq (Dead Letter Queue & TUI)."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Skill Dlq
+# =============================================================================
+# Description:
+#   Модульные тесты для навыка dlq (Dead Letter Queue & TUI).
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_skill_dlq import temp_dlq_storage
+#
+#     res = temp_dlq_storage()
+#
+# File: test_skill_dlq.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Модульные тесты для навыка dlq (Dead Letter Queue & TUI)."""
 
 import json
 import sys

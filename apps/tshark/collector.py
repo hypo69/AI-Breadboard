@@ -1,5 +1,27 @@
-"""TShark telemetry collector for system metrics integration."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Tshark - Collector
+# =============================================================================
+# Description:
+#   TShark telemetry collector for system metrics integration.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.tshark.collector import TSharkTelemetryCollector
+#
+#     service = TSharkTelemetryCollector()
+#
+# File: collector.py
+# Project: ai-breadboard
+# Package: apps.tshark
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""TShark telemetry collector for system metrics integration."""
+
 from typing import List, Optional, Any
 from logger import logger
 from apps.windows.telemetry.models import HardwareSensor

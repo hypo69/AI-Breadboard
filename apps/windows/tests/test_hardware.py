@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Tests - Test Hardware
+# =============================================================================
+# Description:
+#   Unit tests for hardware diagnostic probers.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.windows.tests.test_hardware
+#   Python API:
+#     from apps.windows.tests.test_hardware import TestHardwareProbers
+#
+#     service = TestHardwareProbers()
+#
+# File: test_hardware.py
+# Project: ai-breadboard
+# Package: apps.windows.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """Unit tests for hardware diagnostic probers."""
+
 import unittest
 from apps.windows.hardware.hardware_monitor import HardwareMonitor, HardwareSnapshot
 from apps.windows.hardware.gpu_prober import GpuProber, GpuDeviceTelemetry

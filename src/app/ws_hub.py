@@ -1,3 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard APP - Ws Hub Module
+# =============================================================================
+# Description:
+#   Unified WebSocket connection hub.
+#
+# Usage Examples:
+#   Python API:
+#     from src.app.ws_hub import WSHub
+#
+#     service = WSHub()
+#     result = service.disconnect()
+#     print(result)
+#
+# File: ws_hub.py
+# Project: ai-breadboard
+# Package: src.app
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+from __future__ import annotations
 """Unified WebSocket connection hub.
 
 All real-time connections go through /ws/{channel}.
@@ -5,9 +29,8 @@ Channels: chat, stream, voice, metrics, admin, events.
 
 Usage from a route:
     hub: WSHub = request.app.state.ws_hub
-    await hub.broadcast("metrics", {"type": "update", "data": {...}})
-"""
-from __future__ import annotations
+    await hub.broadcast("metrics", {"type": "update", "data": {...}})"""
+
 import asyncio
 import json
 import time

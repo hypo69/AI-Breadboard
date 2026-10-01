@@ -1,6 +1,26 @@
-"""
-Router для управления API ключами.
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - Router Keys Module
+# =============================================================================
+# Description:
+#   Router для управления API ключами.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.routers.core.router_keys import KeyCreateRequest
+#
+#     service = KeyCreateRequest()
+#
+# File: router_keys.py
+# Project: ai-breadboard
+# Package: src.api.routers.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Router для управления API ключами."""
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Literal

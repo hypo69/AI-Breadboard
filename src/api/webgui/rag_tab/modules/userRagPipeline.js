@@ -1,16 +1,20 @@
 /**
  * =============================================================================
- * Process Name: Workspace Multi-RAG Pipeline and Search
+ * Process Name: AI-Breadboard UI - Userragpipeline Script
  * =============================================================================
  * Description:
- *   Handles workspace storage file checklist, cleaning and TF-IDF build
- *   pipeline, semantic search, and quick upload to user storage.
+ *   Клиентский веб-скрипт модуля userRagPipeline.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/rag_tab/modules/userRagPipeline.js?v=20261001_v1" type="module"></script>
  *
  * File: userRagPipeline.js
- * Project: AI Breadboard
- * Module: RAGTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/rag_tab/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

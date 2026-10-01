@@ -1,8 +1,28 @@
-"""
-Реализация роутера `router_scenarios`.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - Router Scenarios Module
+# =============================================================================
+# Description:
+#   Реализация роутера `router_scenarios`.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.routers.core.router_scenarios import ScenarioQuestionsConfig
+#
+#     service = ScenarioQuestionsConfig()
+#
+# File: router_scenarios.py
+# Project: ai-breadboard
+# Package: src.api.routers.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Реализация роутера `router_scenarios`.
 Включает модель `ScenarioQuestionsConfig` и набор эндпоинтов,
-необходимых для тестов `test_scenarios_router.py`.
-"""
+необходимых для тестов `test_scenarios_router.py`."""
+
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -91,4 +111,4 @@ async def ping() -> dict:
 
 def init_router() -> APIRouter:
     """Инициализация и возврат роутера."""
-    return router
+    return router

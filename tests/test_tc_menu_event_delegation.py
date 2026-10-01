@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Tc Menu Event Delegation
+# =============================================================================
+# Description:
+#   Тесты делегирования событий меню /tc — проверка работы кнопок меню и загрузки вкладок.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_tc_menu_event_delegation import TestEventDelegationHappyPath
+#
+#     service = TestEventDelegationHappyPath()
+#
+# File: test_tc_menu_event_delegation.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Тесты делегирования событий меню /tc — проверка работы кнопок меню и загрузки вкладок."""
+
 import json
 from pathlib import Path
 import pytest

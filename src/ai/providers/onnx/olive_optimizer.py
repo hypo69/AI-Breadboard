@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Olive Optimizer Module
+# =============================================================================
+# Description:
+#   Check if Microsoft Olive package is installed in the current environment.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.providers.onnx.olive_optimizer import check_olive_available
+#
+#     res = check_olive_available()
+#     print(res)
+#
+# File: olive_optimizer.py
+# Project: ai-breadboard
+# Package: src.ai.providers.onnx
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Check if Microsoft Olive package is installed in the current environment."""
+
 import os
 import sys
 import shutil
@@ -6,7 +30,7 @@ import asyncio
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from header import __root__
-from logger.logger import logger
+from logger import logger
 
 def check_olive_available() -> bool:
     """Check if Microsoft Olive package is installed in the current environment.

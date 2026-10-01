@@ -1,5 +1,27 @@
-"""Dedicated executor for COM/WMI operations."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Com Worker Module
+# =============================================================================
+# Description:
+#   Dedicated executor for COM/WMI operations.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.com_worker import ComWorker
+#
+#     service = ComWorker()
+#
+# File: com_worker.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Dedicated executor for COM/WMI operations."""
+
 import asyncio
 import threading
 import pythoncom

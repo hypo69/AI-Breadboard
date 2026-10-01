@@ -1,4 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Maintenance - Generate Ssl Certs
+# =============================================================================
+# Description:
+#   Generate Root CA and server leaf certificate for localhost.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.maintenance.generate_ssl_certs
+#   Python API:
+#     from scripts.maintenance.generate_ssl_certs import generate_certificates
+#
+#     res = generate_certificates()
+#
+# File: generate_ssl_certs.py
+# Project: ai-breadboard
+# Package: scripts.maintenance
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 from __future__ import annotations
+"""Generate Root CA and server leaf certificate for localhost."""
+
 import ipaddress
 import os
 import socket

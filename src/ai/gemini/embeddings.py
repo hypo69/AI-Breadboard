@@ -1,6 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Embeddings Module
+# =============================================================================
+# Description:
+#   Mixin class for embedding generation in GoogleGenerativeAI.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.gemini.embeddings import GoogleGenerativeAIEmbeddingsMixin
+#
+#     service = GoogleGenerativeAIEmbeddingsMixin()
+#
+# File: embeddings.py
+# Project: ai-breadboard
+# Package: src.ai.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Mixin class for embedding generation in GoogleGenerativeAI."""
+
 import asyncio
 import numpy as np
-from logger.logger import logger
+from logger import logger
 from .core import GoogleGenerativeAICore
 
 class GoogleGenerativeAIEmbeddingsMixin:

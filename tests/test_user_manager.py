@@ -1,6 +1,26 @@
-"""
-Tests for core/user_manager module
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test User Manager
+# =============================================================================
+# Description:
+#   Tests for core/user_manager module
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_user_manager import TestUserProfile
+#
+#     service = TestUserProfile()
+#
+# File: test_user_manager.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Tests for core/user_manager module"""
+
 import pytest
 import sqlite3
 from unittest.mock import Mock, patch

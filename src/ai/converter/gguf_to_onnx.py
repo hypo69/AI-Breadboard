@@ -1,11 +1,33 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Gguf To Onnx Module
+# =============================================================================
+# Description:
+#   GGUF to ONNX model converter with optimization support.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.converter.gguf_to_onnx import ConversionResult
+#
+#     service = ConversionResult()
+#
+# File: gguf_to_onnx.py
+# Project: ai-breadboard
+# Package: src.ai.converter
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """GGUF to ONNX model converter with optimization support.
 
 Converts HuggingFace models to ONNX format and optionally optimizes the computational graph."""
+
 import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict
-from logger.logger import logger
+from logger import logger
 CONVERTER_AVAILABLE = False
 OPTIMIZER_AVAILABLE = False
 try:

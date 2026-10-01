@@ -1,12 +1,36 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Chat Module
+# =============================================================================
+# Description:
+#   HuggingFace local model cache and chat client.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.providers.huggingface.chat import HFClient
+#
+#     service = HFClient()
+#     result = service.download_model()
+#     print(result)
+#
+# File: chat.py
+# Project: ai-breadboard
+# Package: src.ai.providers.huggingface
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """HuggingFace local model cache and chat client.
 
 Provides model downloading, loading, unloading, and inference capabilities
 with automatic device detection and memory management."""
+
 import asyncio
 import os
 from pathlib import Path
 from typing import Any, AsyncIterator, Callable, Dict, List
-from logger.logger import logger
+from logger import logger
 
 def _get_models_dir() -> Path:
     """Get HuggingFace model cache directory.

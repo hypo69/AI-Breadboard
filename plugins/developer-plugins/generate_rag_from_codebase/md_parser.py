@@ -1,9 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins Developer-Plugins Generate_Rag_From_Codebase - Md Parser
+# =============================================================================
+# Description:
+#   Hierarchical Markdown section parser for codebase RAG.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.developer-plugins.generate_rag_from_codebase.md_parser import MarkdownParser
+#
+#     service = MarkdownParser()
+#
+# File: md_parser.py
+# Project: ai-breadboard
+# Package: plugins.developer-plugins.generate_rag_from_codebase
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Hierarchical Markdown section parser for codebase RAG.
 
 Splits documentation into logical sections by headings rather than arbitrary character
-splits, maintaining parent breadcrumbs and document type tagging.
-"""
-from __future__ import annotations
+splits, maintaining parent breadcrumbs and document type tagging."""
+
 from pathlib import Path
 import re
 from typing import Any, Dict, List, Tuple

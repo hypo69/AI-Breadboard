@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router Diagnostics
+# =============================================================================
+# Description:
+#   Тесты универсального роутера AI-диагностики таблиц.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_router_diagnostics import get_test_client
+#
+#     res = get_test_client()
+#
+# File: test_router_diagnostics.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Тесты универсального роутера AI-диагностики таблиц."""
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from src.api.routers.core.router_diagnostics import init_router

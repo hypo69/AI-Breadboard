@@ -1,4 +1,24 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Window-Api Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля window-api.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/window-api.js?v=20261001_v1" type="module"></script>
+ *
+ * File: window-api.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * window-api.js — инициализация window.api для всех вкладок и панелей управления
  * Этот файл загружается ДО всех вкладок, чтобы window.api был доступен сразу
  */

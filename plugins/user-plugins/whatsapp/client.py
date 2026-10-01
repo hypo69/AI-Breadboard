@@ -1,5 +1,27 @@
-"""Модуль клиента для отправки сообщений в WhatsApp через внешние API."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins Whatsapp - Client
+# =============================================================================
+# Description:
+#   Модуль клиента для отправки сообщений в WhatsApp через внешние API.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.user-plugins.whatsapp.client import WhatsAppClient
+#
+#     service = WhatsAppClient()
+#
+# File: client.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.whatsapp
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
 from __future__ import annotations
+"""Модуль клиента для отправки сообщений в WhatsApp через внешние API."""
+
 import json
 import logging
 import os
@@ -9,7 +31,7 @@ from typing import Any, Dict, Optional
 import urllib.request
 import urllib.error
 try:
-    from logger.logger import logger
+    from logger import logger
 except ImportError:
     logger = logging.getLogger('whatsapp_plugin')
 

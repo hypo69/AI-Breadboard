@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Tests - Test Core
+# =============================================================================
+# Description:
+#   Tests for core modules.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.windows.tests.test_core
+#   Python API:
+#     from apps.windows.tests.test_core import TestDataModels
+#
+#     service = TestDataModels()
+#
+# File: test_core.py
+# Project: ai-breadboard
+# Package: apps.windows.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """Tests for core modules."""
+
 import unittest
 from apps.windows.core.data_model import ProcessInfo, ThreadInfo, SystemState
 from apps.windows.core.correlation_engine import CorrelationEngine

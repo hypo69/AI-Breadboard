@@ -1,4 +1,25 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Scheduler
+# =============================================================================
+# Description:
+#   Verify scheduler starts, reports active status, and stops cleanly.
+#
+# Usage Examples:
+#   Python API:
+#     import tests.test_scheduler as test_scheduler
+#
+# File: test_scheduler.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Verify scheduler starts, reports active status, and stops cleanly."""
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 import pytest

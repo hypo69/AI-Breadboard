@@ -1,5 +1,27 @@
-"""Multidimensional AI analyzer for Wikipedia articles with structured JSON output."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Wikipedia_Research Src - Analyzer
+# =============================================================================
+# Description:
+#   Multidimensional AI analyzer for Wikipedia articles with structured JSON output.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.wikipedia_research.src.analyzer import WikipediaArticleAnalyzer
+#
+#     service = WikipediaArticleAnalyzer()
+#
+# File: analyzer.py
+# Project: ai-breadboard
+# Package: apps.wikipedia_research.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Multidimensional AI analyzer for Wikipedia articles with structured JSON output."""
+
 import json
 import re
 from typing import Any, List, Optional

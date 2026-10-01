@@ -1,3 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Date Time Module
+# =============================================================================
+# Description:
+#   Check if the current time is within the specified interval.
+#
+# Usage Examples:
+#   CLI:
+#     python -m src.utils.date_time
+#   Python API:
+#     from src.utils.date_time import TimeoutCheck
+#
+#     service = TimeoutCheck()
+#     result = service.interval()
+#     print(result)
+#
+# File: date_time.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Check if the current time is within the specified interval."""
+
 from datetime import datetime, time
 import threading
 from src.utils.printer import pprint as print

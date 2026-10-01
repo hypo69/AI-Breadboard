@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Apps Research Statistic
+# =============================================================================
+# Description:
+#   Скрипт/модуль системы AI-Breadboard (`test_apps_research_statistic`).
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_apps_research_statistic import client
+#
+#     res = client()
+#
+# File: test_apps_research_statistic.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Скрипт/модуль системы AI-Breadboard (`test_apps_research_statistic`)."""
+
 import pytest
 import os
 import pandas as pd

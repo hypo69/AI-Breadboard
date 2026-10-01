@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard RAG - Image Metadata Module
+# =============================================================================
+# Description:
+#   Source information for an image.
+#
+# Usage Examples:
+#   Python API:
+#     from src.rag.pixel.image_metadata import ImageSource
+#
+#     service = ImageSource()
+#
+# File: image_metadata.py
+# Project: ai-breadboard
+# Package: src.rag.pixel
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Source information for an image."""
+
 import hashlib
 import json
 import logging

@@ -1,5 +1,26 @@
-"""FastAPI роутер для Google User Desktop."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Google_User_Desktop Routers - Router
+# =============================================================================
+# Description:
+#   FastAPI роутер для Google User Desktop.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.google_user_desktop.routers.router import get_state
+#
+#     res = get_state()
+#
+# File: router.py
+# Project: ai-breadboard
+# Package: apps.google_user_desktop.routers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""FastAPI роутер для Google User Desktop."""
 
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -268,20 +289,6 @@ def init_router() -> APIRouter:
     Returns:
         APIRouter: Экземпляр настроенного роутера.
     """
-        global _sync_router_included
-    if not _sync_router_included:
-        from .forms_router import router as forms_router
-        from .sync_router import router as sync_router
-        router.include_router(forms_router)
-        router.include_router(sync_router)
-        _sync_router_included = True
-    if not _sync_router_included:
-        from .forms_router import router as forms_router
-    # Include forms router
-    router.include_router(forms_router)
-    _sync_router_included = True
-        router.include_router(sync_router)
-        _sync_router_included = True
     return router
 
 

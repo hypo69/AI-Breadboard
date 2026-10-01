@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Ai_Breadboard_Admin Src - User Admin Service
+# =============================================================================
+# Description:
+#   Сервис для административного управления пользователями и их ресурсами.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.ai_breadboard_admin.src.user_admin_service import UserAdminService
+#
+#     service = UserAdminService()
+#
+# File: user_admin_service.py
+# Project: ai-breadboard
+# Package: apps.ai_breadboard_admin.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Сервис для административного управления пользователями и их ресурсами."""
+
 from typing import Any, Dict, List, Optional
 from logger import logger
 from src.user_manager import user_manager

@@ -1,6 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Утилита запуска внешних скриптов как подпроцессов."""
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli Commands - Common
+# =============================================================================
+# Description:
+#   Утилита запуска внешних скриптов как подпроцессов.
+#
+# Usage Examples:
+#   Python API:
+#     from scripts.cli.commands.common import run_script
+#
+#     res = run_script()
+#
+# File: common.py
+# Project: ai-breadboard
+# Package: scripts.cli.commands
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 from __future__ import annotations
+"""Утилита запуска внешних скриптов как подпроцессов."""
 
 import subprocess
 import sys

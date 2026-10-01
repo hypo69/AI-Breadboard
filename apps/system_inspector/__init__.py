@@ -1,1 +1,21 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps System_Inspector -   Init  
+# =============================================================================
+# Description:
+#   Скрипт/модуль системы AI-Breadboard (`__init__`).
+#
+# Usage Examples:
+#
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: apps.system_inspector
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""Скрипт/модуль системы AI-Breadboard (`__init__`)."""
+
 from .routers.router import router, init_router

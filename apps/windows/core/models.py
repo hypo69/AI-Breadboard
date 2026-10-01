@@ -1,5 +1,27 @@
-"""Модели данных аудита, диагностики и безопасного выполнения для Windows."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core - Models
+# =============================================================================
+# Description:
+#   Модели данных аудита, диагностики и безопасного выполнения для Windows.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.models import RiskLevel
+#
+#     service = RiskLevel()
+#
+# File: models.py
+# Project: ai-breadboard
+# Package: apps.windows.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Модели данных аудита, диагностики и безопасного выполнения для Windows."""
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

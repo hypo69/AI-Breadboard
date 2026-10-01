@@ -1,4 +1,27 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Ui-Handler Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля ui-handler.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/admin/modules/ui-handler.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { setupUIHandlers, showHelpModal, showChatLogicModal } from '/src/api/webgui/admin/modules/ui-handler.js';
+ *
+ * File: ui-handler.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/admin/modules
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * UI Handler Module - Работа с модалями, уведомлениями и помощью
  */
 

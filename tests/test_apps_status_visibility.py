@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Apps Status Visibility
+# =============================================================================
+# Description:
+#   Unit tests for /apps status and visibility filtering based on configuration.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_apps_status_visibility import TestAppsStatusVisibility
+#
+#     service = TestAppsStatusVisibility()
+#
+# File: test_apps_status_visibility.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for /apps status and visibility filtering based on configuration."""
+
 import json
 from pathlib import Path
 import pytest

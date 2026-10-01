@@ -1,7 +1,28 @@
-"""
-Markdown to dictionary conversion module.
-Provides parsing functions for converting markdown strings to structured format.
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Md Module
+# =============================================================================
+# Description:
+#   Markdown to dictionary conversion module.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.convertors.md import md2html
+#
+#     res = md2html()
+#     print(res)
+#
+# File: md.py
+# Project: ai-breadboard
+# Package: src.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Markdown to dictionary conversion module.
+Provides parsing functions for converting markdown strings to structured format."""
+
 import re
 from typing import Dict, List, Any
 try:
@@ -11,7 +32,7 @@ except ImportError:
         from markdown import markdown as md_convert
     except ImportError:
         md_convert = None
-from logger.logger import logger
+from logger import logger
 
 def md2html(md_string: str, extras: List[str]=[]) -> str:
     """

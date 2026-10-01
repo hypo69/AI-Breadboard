@@ -1,7 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Dev - Run Tests
+# =============================================================================
+# Description:
+#   Test runner script for ai-breadboard project.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.dev.run_tests
+#   Python API:
+#     from scripts.dev.run_tests import run_tests
+#
+#     res = run_tests()
+#
+# File: run_tests.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Test runner script for ai-breadboard project.
 
 Provides command-line interface for running project tests with coverage
 analysis, verbose output, and filtering by test markers."""
+
 import subprocess
 import sys
 import argparse

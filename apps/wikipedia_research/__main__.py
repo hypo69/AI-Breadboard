@@ -1,5 +1,29 @@
-"""CLI entry point for Wikipedia Research & Model Benchmark Application."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Wikipedia_Research -   Main  
+# =============================================================================
+# Description:
+#   CLI entry point for Wikipedia Research & Model Benchmark Application.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.wikipedia_research.__main__
+#   Python API:
+#     from apps.wikipedia_research.__main__ import main
+#
+#     res = main()
+#
+# File: __main__.py
+# Project: ai-breadboard
+# Package: apps.wikipedia_research
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""CLI entry point for Wikipedia Research & Model Benchmark Application."""
+
 import argparse
 import asyncio
 import json

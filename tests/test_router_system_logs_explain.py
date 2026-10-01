@@ -1,3 +1,24 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router System Logs Explain
+# =============================================================================
+# Description:
+#   Скрипт/модуль системы AI-Breadboard (`test_router_system_logs_explain`).
+#
+# Usage Examples:
+#   Python API:
+#     import tests.test_router_system_logs_explain as test_router_system_logs_explain
+#
+# File: test_router_system_logs_explain.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Скрипт/модуль системы AI-Breadboard (`test_router_system_logs_explain`)."""
+
 import pytest
 from unittest.mock import AsyncMock, patch
 from src.api.routers.core.router_system_logs import ExplainRequest, explain_event

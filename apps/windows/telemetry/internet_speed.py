@@ -1,5 +1,27 @@
-"""Internet speed measurement using Windows native tools."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Telemetry - Internet Speed
+# =============================================================================
+# Description:
+#   Internet speed measurement using Windows native tools.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.telemetry.internet_speed import InternetSpeedSensor
+#
+#     service = InternetSpeedSensor()
+#
+# File: internet_speed.py
+# Project: ai-breadboard
+# Package: apps.windows.telemetry
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Internet speed measurement using Windows native tools."""
+
 import threading
 import time
 from typing import Dict, List, Optional

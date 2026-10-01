@@ -1,10 +1,32 @@
-"""
-Скрипт для проверки внутренних и внешних ссылок в документации.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Docs - Check Links
+# =============================================================================
+# Description:
+#   Скрипт для проверки внутренних и внешних ссылок в документации.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.docs.check_links
+#   Python API:
+#     from scripts.docs.check_links import LinkChecker
+#
+#     service = LinkChecker()
+#
+# File: check_links.py
+# Project: ai-breadboard
+# Package: scripts.docs
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
+"""Скрипт для проверки внутренних и внешних ссылок в документации.
 
 Использует регулярные выражения для извлечения ссылок из Markdown,
 валидирует внутренние ссылки путём проверки существования файлов,
-пропускает якоря (#раздел) и внешние ссылки (http/https).
-"""
+пропускает якоря (#раздел) и внешние ссылки (http/https)."""
+
 import re
 import sys
 from pathlib import Path

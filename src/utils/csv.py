@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Csv Module
+# =============================================================================
+# Description:
+#   CSV and JSON file conversion utilities.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.csv import save_csv_file
+#
+#     res = save_csv_file()
+#     print(res)
+#
+# File: csv.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""CSV and JSON file conversion utilities."""
+
+# Updated: 2026-10-01 09:26:00
 """CSV and JSON file conversion utilities."""
 import csv
 import json
@@ -5,7 +30,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import List, Dict, Union
 import pandas as pd
-from logger.logger import logger
+from logger import logger
 
 def save_csv_file(data: List[Dict[str, str]], file_path: Union[str, Path], mode: str='a', exc_info: bool=True) -> bool:
     """Saves a list of dictionaries to a CSV file.

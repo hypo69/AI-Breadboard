@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Install Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (install).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\install.ps1
+#
+# File: install.ps1
+# Project: ai-breadboard
+# Package: install
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:29
+# =============================================================================
+
 <#
 .SYNOPSIS
     Установщик проекта ai-breadboard с поддержкой мультиязычности (i18n).

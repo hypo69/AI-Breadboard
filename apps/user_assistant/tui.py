@@ -1,4 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps User_Assistant - Tui
+# =============================================================================
+# Description:
+#   Render the User Assistant daily agenda in terminal.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.user_assistant.tui
+#   Python API:
+#     from apps.user_assistant.tui import render_dashboard
+#
+#     res = render_dashboard()
+#
+# File: tui.py
+# Project: ai-breadboard
+# Package: apps.user_assistant
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Render the User Assistant daily agenda in terminal."""
+
 import sys
 from rich.console import Console
 from rich.table import Table

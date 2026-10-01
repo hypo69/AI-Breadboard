@@ -1,60 +1,103 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Config Module
+# =============================================================================
+# Description:
+#   Модуль реализации компонента `GoogleGenerativeAIConfigMixin` системы AI-Breadboard.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.gemini.config import GoogleGenerativeAIConfigMixin
+#
+#     service = GoogleGenerativeAIConfigMixin()
+#
+# File: config.py
+# Project: ai-breadboard
+# Package: src.ai.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Модуль реализации компонента `GoogleGenerativeAIConfigMixin` системы AI-Breadboard."""
+
 import re
 from typing import Any
 from google.genai import types
-from logger.logger import logger
+from logger import logger
+
 
 def normalize_text(text: str) -> str:
-    """Normalization of model response text.
+    """Нормализация текста ответа модели.
 
-    Replacement of escaped newline sequences with actual line break characters.
+    Заменяет экранированные последовательности переноса строки на реальные символы новой строки.
 
     Args:
-        text (str): Input text for normalization.
+        text (str): Входной текст для нормализации.
 
     Returns:
-        str: Normalized text with actual newlines.
+        str: Нормализованный текст с фактическими переносами строк.
 
     Examples:
-        >>> normalize_text("Line 1\\nLine 2")
-        'Line 1\\nLine 2'
+        >>> normalize_text("Строка 1\\nСтрока 2")
+        'Строка 1\nСтрока 2'
     """
     if not text:
         return ''
-    return re.sub('\\\\n', '\n', text)
+    return re.sub(r'\\n', '\n', text)
+
 
 def remove_html_blocks(text: str) -> str:
-    """Removal of HTML markup blocks from model response.
+    """Удаление блоков разметки HTML из ответа модели.
 
     Args:
-        text (str): Input text with possible HTML blocks.
+        text (str): Входной текст, потенциально содержащий блоки HTML.
 
     Returns:
-        str: Text with ```html ... ``` blocks removed.
+        str: Текст с удалёнными блоками ```html ... ```.
 
     Examples:
-        >>> remove_html_blocks("```html<div>Test</div>```Hello")
-        'Hello'
+        >>> remove_html_blocks("```html<div>Тест</div>```Привет")
+        'Привет'
     """
     if not text:
         return ''
-    return re.sub('```html.*?```', '', text, flags=re.DOTALL)
+    return re.sub(r'```html.*?```', '', text, flags=re.DOTALL)
+
 
 class GoogleGenerativeAIConfigMixin:
-    """Mixin class for configuration building in GoogleGenerativeAI.
+    """Миксин для построения конфигурации запросов Google Generative AI.
 
-    Provides methods for building content config and text normalization.
+    Предоставляет методы для генерации объекта GenerateContentConfig,
+    нормализации текста и логирования параметров исходящих запросов.
     """
 
-    def _build_content_config(self, instruction: str='', tools: list=(), generation_config: dict={}) -> types.GenerateContentConfig:
-        """Build content generation configuration object for Gemini SDK.
+    def _build_content_config(
+        self,
+        instruction: str = '',
+        tools: list = (),
+        generation_config: dict = {},
+    ) -> types.GenerateContentConfig:
+        """Построение объекта конфигурации генерации контента для Gemini SDK.
+
+        Объединяет базовые параметры генерации экземпляра с переданными переопределениями,
+        настраивает форматирование системной инструкции (чат/голос), подключает инструменты
+        (Google Search или пользовательские функции) и конфигурирует AFC (Automatic Function Calling).
 
         Args:
-            instruction (str): System instruction. Default: ''.
-            tools (list): Set of model tools (functions).
-            generation_config (dict): Additional generation parameters.
+            instruction (str): Системная инструкция (системный промпт). Значение по умолчанию: ''.
+            tools (list): Набор инструментов модели (функции или types.Tool). Значение по умолчанию: ().
+            generation_config (dict): Дополнительные параметры генерации (temperature, top_p, tools,
+                automatic_function_calling, response_type). Значение по умолчанию: {}.
 
         Returns:
-            types.GenerateContentConfig: Configured generation object.
+            types.GenerateContentConfig: Сконфигурированный объект генерации контента.
+
+        Examples:
+            >>> cfg = self._build_content_config(
+            ...     instruction="Ты ассистент",
+            ...     generation_config={"temperature": 0.5, "automatic_function_calling": {"disable": False}}
+            ... )
         """
         cfg_kwargs: dict[str, Any] = {}
         gen_cfg: dict[str, Any] = {}
@@ -105,38 +148,55 @@ class GoogleGenerativeAIConfigMixin:
         return types.GenerateContentConfig(**cfg_kwargs)
 
     def _normalize_text(self, text: str) -> str:
-        """Normalization of model response text.
+        """Нормализация текста ответа модели.
 
         Args:
-            text (str): Input text for normalization.
+            text (str): Входной текст для нормализации.
 
         Returns:
-            str: Normalized text with actual newlines.
+            str: Нормализованный текст с фактическими переносами строк.
+
+        Examples:
+            >>> self._normalize_text("A\\nB")
+            'A\nB'
         """
         return normalize_text(text)
 
     def _remove_html_blocks(self, text: str) -> str:
-        """Removal of HTML markup blocks from model response.
+        """Удаление блоков HTML-разметки из ответа модели.
 
         Args:
-            text (str): Input text with possible HTML blocks.
+            text (str): Входной текст с возможными блоками HTML.
 
         Returns:
-            str: Text with ```html ... ``` blocks removed.
+            str: Текст без блоков ```html ... ```.
+
+        Examples:
+            >>> self._remove_html_blocks("```html<b>1</b>```2")
+            '2'
         """
         return remove_html_blocks(text)
 
-    def _log_request_details(self, method: str, model: str, q: str, history: Any=None, system_instruction: str='', tools: Any=None, generation_config: dict={}) -> None:
-        """Log outgoing request structure, prompt size, and configuration for debugging.
+    def _log_request_details(
+        self,
+        method: str,
+        model: str,
+        q: str,
+        history: Any = None,
+        system_instruction: str = '',
+        tools: Any = None,
+        generation_config: dict = {},
+    ) -> None:
+        """Логирование структуры, объёма промпта и параметров исходящего запроса.
 
         Args:
-            method (str): API calling method name (e.g., 'ask', 'chat_stream').
-            model (str): Gemini model identifier.
-            q (str): User query/prompt.
-            history (Any): Dialog history entries if any.
-            system_instruction (str): Applied system prompt.
-            tools (Any): List of attached tools if any.
-            generation_config (dict): Generation parameter overrides.
+            method (str): Имя вызывающего метода API (например, 'ask', 'chat_stream').
+            model (str): Идентификатор модели Gemini.
+            q (str): Пользовательский запрос/промпт.
+            history (Any): Записи истории диалога при наличии. Значение по умолчанию: None.
+            system_instruction (str): Применённая системная инструкция. Значение по умолчанию: ''.
+            tools (Any): Список подключенных инструментов при наличии. Значение по умолчанию: None.
+            generation_config (dict): Переопределения параметров генерации. Значение по умолчанию: {}.
         """
         try:
             q_len: int = len(q) if q else 0
@@ -167,6 +227,13 @@ class GoogleGenerativeAIConfigMixin:
                     tools_summary.append('custom_functions')
                 else:
                     tools_summary.append(type(t).__name__)
-            logger.info(f'''Gemini Outgoing [{method}] -> Model: "{model}" | Prompt ({q_len} chars): {q_preview!r} | History: {history_count} msgs (~{history_chars} chars) | SysInstruction ({inst_len} chars): {inst_preview!r} | Tools: {tools_summary or 'none'} | GenConfig: {generation_config or '{}'}''')
+            logger.info(
+                f'Gemini Outgoing [{method}] -> Model: "{model}" | '
+                f'Prompt ({q_len} chars): {q_preview!r} | '
+                f'History: {history_count} msgs (~{history_chars} chars) | '
+                f'SysInstruction ({inst_len} chars): {inst_preview!r} | '
+                f'Tools: {tools_summary or "none"} | '
+                f'GenConfig: {generation_config or "{}"}'
+            )
         except Exception as log_ex:
             logger.debug(f'Gemini: Failed to log request payload details: {log_ex}')

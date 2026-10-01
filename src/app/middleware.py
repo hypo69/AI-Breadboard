@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard APP - Middleware Module
+# =============================================================================
+# Description:
+#   HTTP middleware and request helpers for the application layer.
+#
+# Usage Examples:
+#   Python API:
+#     from src.app.middleware import is_localhost
+#
+#     res = is_localhost()
+#     print(res)
+#
+# File: middleware.py
+# Project: ai-breadboard
+# Package: src.app
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+from __future__ import annotations
 """HTTP middleware and request helpers for the application layer.
 
 Middleware:
@@ -7,9 +30,8 @@ Middleware:
 Helpers (used by routes):
 - is_localhost(request) -> bool
 - get_request_hostname(request) -> str
-- is_authenticated_user(request) -> bool
-"""
-from __future__ import annotations
+- is_authenticated_user(request) -> bool"""
+
 import time
 from typing import Callable
 from fastapi import Request, Response

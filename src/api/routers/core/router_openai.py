@@ -1,12 +1,32 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - Router Openai Module
+# =============================================================================
+# Description:
+#   Минимальная реализация роутера router_openai.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.routers.core.router_openai import map_to_openai_id
+#
+#     res = map_to_openai_id()
+#     print(res)
+#
+# File: router_openai.py
+# Project: ai-breadboard
+# Package: src.api.routers.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """Минимальная реализация роутера router_openai.
 
 Тесты требуют:
 - функции map_to_openai_id и map_from_openai_id
 - эндпоинт GET /v1/models, возвращающий список моделей в формате OpenAI
 - эндпоинт POST /v1/chat/completions, использующий get_chat_model (мок‑функция)
-- вспомогательная функция get_chat_model, возвращающая объект с методом generate_content
-"""
+- вспомогательная функция get_chat_model, возвращающая объект с методом generate_content"""
 
 from fastapi import APIRouter, HTTPException
 from typing import List, Dict, Any

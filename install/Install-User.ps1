@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Install-User Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Install-User).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Install-User.ps1
+#
+# File: Install-User.ps1
+# Project: ai-breadboard
+# Package: install
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:29
+# =============================================================================
+
 <#
 .SYNOPSIS
     Модуль инициализации и настройки учетной записи администратора по умолчанию.

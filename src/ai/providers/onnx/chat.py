@@ -1,10 +1,35 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Chat Module
+# =============================================================================
+# Description:
+#   Check for optimum and onnxruntime availability.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.providers.onnx.chat import ONNXClient
+#
+#     service = ONNXClient()
+#     result = service.load_model()
+#     print(result)
+#
+# File: chat.py
+# Project: ai-breadboard
+# Package: src.ai.providers.onnx
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Check for optimum and onnxruntime availability."""
+
 import asyncio
 import os
 from pathlib import Path
 from typing import Any, AsyncIterator, Dict, List, Optional
 from header import __root__
-from logger.logger import logger
+from logger import logger
 _loaded_onnx_models: Dict[str, Dict[str, Any]] = {}
 
 def _check_onnx_runtime() -> bool:

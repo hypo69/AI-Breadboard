@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Google Workspace Tools
+# =============================================================================
+# Description:
+#   Test behavior when Google Workspace credentials are not configured.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_google_workspace_tools import TestGoogleWorkspaceToolsNoAuth
+#
+#     service = TestGoogleWorkspaceToolsNoAuth()
+#
+# File: test_google_workspace_tools.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Test behavior when Google Workspace credentials are not configured."""
+
 import json
 from unittest.mock import MagicMock, patch
 import pytest

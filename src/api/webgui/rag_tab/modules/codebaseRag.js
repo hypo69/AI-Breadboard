@@ -1,16 +1,23 @@
 /**
  * =============================================================================
- * Process Name: Codebase AST RAG Management
+ * Process Name: AI-Breadboard UI - Codebaserag Script
  * =============================================================================
  * Description:
- *   Handles project codebase indexing, AST symbol extraction, semantic code
- *   search, and AST symbol lookup across workspace projects.
+ *   Клиентский веб-скрипт модуля codebaseRag.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/rag_tab/modules/codebaseRag.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { updateCodebaseStatsDisplay } from '/src/api/webgui/rag_tab/modules/codebaseRag.js';
  *
  * File: codebaseRag.js
- * Project: AI Breadboard
- * Module: RAGTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/rag_tab/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

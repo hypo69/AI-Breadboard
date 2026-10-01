@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test System Inspector Intervals
+# =============================================================================
+# Description:
+#   Проверяет наличие кнопок и модального окна интервалов в index.html вкладки.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_system_inspector_intervals import test_system_inspector_html_contains_intervals_modal
+#
+#     res = test_system_inspector_html_contains_intervals_modal()
+#
+# File: test_system_inspector_intervals.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Проверяет наличие кнопок и модального окна интервалов в index.html вкладки."""
+
 from pathlib import Path
 import pytest
 
@@ -23,7 +46,7 @@ def test_system_inspector_main_js_contains_intervals_controller():
     assert 'loadSysIntervalsConfig' in content, 'Функция loadSysIntervalsConfig отсутствует в main.js'
     assert 'saveSysIntervalsConfig' in content, 'Функция saveSysIntervalsConfig отсутствует в main.js'
     assert 'setupSysSensorInterval' in content, 'Функция setupSysSensorInterval отсутствует в main.js'
-    assert 'librehardwaremonitor' in content, 'Логгер librehardwaremonitor отсутствует в main.js'
+    assert 'hardware_monitor' in content, 'Логгер hardware_monitor отсутствует в main.js'
 
 def test_system_inspector_contains_realtime_live_watcher():
     """Проверяет наличие панелиИзменения файлов в реальном времени во вкладке 'Потребление ресурсов'."""

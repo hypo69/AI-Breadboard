@@ -1,9 +1,28 @@
-"""Планировщик синхронизации на Google Drive.
-
-Автоматизирует синхронизацию данных по расписанию или по требованию.
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Google_User_Desktop Src - Sync Scheduler
+# =============================================================================
+# Description:
+#   Планировщик синхронизации на Google Drive.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.google_user_desktop.src.sync_scheduler import SyncScheduler
+#
+#     service = SyncScheduler()
+#
+# File: sync_scheduler.py
+# Project: ai-breadboard
+# Package: apps.google_user_desktop.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
 
 from __future__ import annotations
+"""Планировщик синхронизации на Google Drive.
+
+Автоматизирует синхронизацию данных по расписанию или по требованию."""
 
 import json
 import os

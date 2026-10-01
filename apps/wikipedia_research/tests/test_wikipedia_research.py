@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Wikipedia_Research Tests - Test Wikipedia Research
+# =============================================================================
+# Description:
+#   Test suite for Wikipedia Research & Model Benchmark application.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.wikipedia_research.tests.test_wikipedia_research import test_text_normalizer_clean_text
+#
+#     res = test_text_normalizer_clean_text()
+#
+# File: test_wikipedia_research.py
+# Project: ai-breadboard
+# Package: apps.wikipedia_research.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """Test suite for Wikipedia Research & Model Benchmark application."""
+
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from apps.wikipedia_research.src.normalizer import TextNormalizer

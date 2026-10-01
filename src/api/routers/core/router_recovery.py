@@ -1,12 +1,32 @@
-"""
-Роутер восстановления файлов (R‑Studio) для FastAPI.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - Router Recovery Module
+# =============================================================================
+# Description:
+#   Роутер восстановления файлов (R‑Studio) для FastAPI.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.routers.core.router_recovery import init_router
+#
+#     res = init_router()
+#     print(res)
+#
+# File: router_recovery.py
+# Project: ai-breadboard
+# Package: src.api.routers.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Роутер восстановления файлов (R‑Studio) для FastAPI.
 Требования:
 - Константа RSTUDIO_EXE указывает путь к исполняемому файлу R‑Studio.
 - Функция _check_rstudio_exists() проверяет наличие файла.
 - GET /api/recovery/status возвращает информацию о наличии утилиты.
 - POST /api/recovery/launch запускает R‑Studio через subprocess.Popen.
-- Экспортируются init_router и RSTUDIO_EXE.
-"""
+- Экспортируются init_router и RSTUDIO_EXE."""
 
 import subprocess
 from pathlib import Path

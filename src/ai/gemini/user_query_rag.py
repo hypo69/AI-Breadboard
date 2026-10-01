@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - User Query Rag Module
+# =============================================================================
+# Description:
+#   Возвращает путь к базе данных RAG для конкретного пользователя и именованной базы знаний (роли).
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.gemini.user_query_rag import get_user_rag
+#
+#     res = get_user_rag()
+#     print(res)
+#
+# File: user_query_rag.py
+# Project: ai-breadboard
+# Package: src.ai.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Возвращает путь к базе данных RAG для конкретного пользователя и именованной базы знаний (роли)."""
+
 import hashlib
 import time
 import re
@@ -87,14 +111,14 @@ def index_user_query(user_id, api_key: str, query: str, response: str, rag_name:
     if not query or not response:
         return False
     if is_garbage_query(query):
-        logger.info(f"UserRAG [{user_id}]: запрос отфильтрован как сервисный/мусорный: '{query}'")
+        logger.warning(f"UserRAG [{user_id}]: запрос отфильтрован как сервисный/мусорный: '{query}'")
         return False
     resp_stripped = response.strip()
     if resp_stripped.startswith('{') and ('"title"' in resp_stripped or '"error"' in resp_stripped or '"results"' in resp_stripped):
-        logger.info(f"UserRAG [{user_id}]: ответ отфильтрован как сырой JSON: '{resp_stripped[:60]}...'")
+        logger.warning(f"UserRAG [{user_id}]: ответ отфильтрован как сырой JSON: '{resp_stripped[:60]}...'")
         return False
     if any((resp_stripped.startswith(pfx) for pfx in ('❌', 'Error', 'ERROR', 'DEBUG', 'Traceback', '[DIRECT PLAY', '[DIRECT RAG'))):
-        logger.info(f'UserRAG [{user_id}]: ответ отфильтрован как системное сообщение об ошибке')
+        logger.warning(f'UserRAG [{user_id}]: ответ отфильтрован как системное сообщение об ошибке')
         return False
     try:
         rag = get_user_rag(user_id, api_key, rag_name=rag_name)

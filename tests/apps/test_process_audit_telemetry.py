@@ -1,8 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests Apps - Test Process Audit Telemetry
+# =============================================================================
+# Description:
+#   Тесты для модуля системной телеметрии процессов (Security 4688 & Sysmon).
+#
+# Usage Examples:
+#   Python API:
+#     from tests.apps.test_process_audit_telemetry import mock_wevtapi
+#
+#     res = mock_wevtapi()
+#
+# File: test_process_audit_telemetry.py
+# Project: ai-breadboard
+# Package: tests.apps
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Тесты для модуля системной телеметрии процессов (Security 4688 & Sysmon)."""
+
 import pytest
 from unittest.mock import MagicMock
 from apps.windows.core.process_audit_manager import ProcessAuditManager, ProcessTreeNode, TelemetrySensorStatus
-from apps.windows.api.wevtapi import WevtAPI
+from apps.windows.telemetry.win32_ffi.wevtapi import WevtAPI
 
 @pytest.fixture
 def mock_wevtapi():

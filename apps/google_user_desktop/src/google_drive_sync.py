@@ -1,9 +1,30 @@
-"""Google Drive Synchronization Service.
-
-Синхронизация локальных данных (базы данных, RAG‑индексы, логи, секреты) с папкой на Google Drive.
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Google_User_Desktop Src - Google Drive Sync
+# =============================================================================
+# Description:
+#   Google Drive Synchronization Service.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.google_user_desktop.src.google_drive_sync
+#   Python API:
+#     from apps.google_user_desktop.src.google_drive_sync import GoogleDriveSync
+#
+#     service = GoogleDriveSync()
+#
+# File: google_drive_sync.py
+# Project: ai-breadboard
+# Package: apps.google_user_desktop.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
 
 from __future__ import annotations
+"""Google Drive Synchronization Service.
+
+Синхронизация локальных данных (базы данных, RAG‑индексы, логи, секреты) с папкой на Google Drive."""
 
 import hashlib
 import io

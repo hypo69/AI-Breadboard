@@ -1,7 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli - Paths
+# =============================================================================
+# Description:
+#   Cross-platform path management system.
+#
+# Usage Examples:
+#   Python API:
+#     from scripts.cli.paths import CrossPlatformPaths
+#
+#     service = CrossPlatformPaths()
+#
+# File: paths.py
+# Project: ai-breadboard
+# Package: scripts.cli
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Cross-platform path management system.
 
 Automatically determines correct paths for Windows, Linux, and macOS
 using appropriate platform conventions and directory standards."""
+
 import os
 import sys
 from pathlib import Path

@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router Admin Users
+# =============================================================================
+# Description:
+#   Testing user management endpoints in admin panel.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_router_admin_users import TestAdminUsersAPI
+#
+#     service = TestAdminUsersAPI()
+#
+# File: test_router_admin_users.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Testing user management endpoints in admin panel."""
+
 import pytest
 from fastapi.testclient import TestClient
 from main import app

@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - Router Helpdesk Module
+# =============================================================================
+# Description:
+#   Resolve current user for helpdesk from auth cookies or bearer headers.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.helpdesk.router_helpdesk import get_current_helpdesk_user
+#
+#     res = get_current_helpdesk_user()
+#     print(res)
+#
+# File: router_helpdesk.py
+# Project: ai-breadboard
+# Package: src.api.helpdesk
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Resolve current user for helpdesk from auth cookies or bearer headers."""
+
 import uuid
 import json
 import asyncio

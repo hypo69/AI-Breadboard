@@ -1,5 +1,29 @@
-"""Интерактивный TUI интерфейс для Windows AI Diagnostic Center."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows - Tui
+# =============================================================================
+# Description:
+#   Интерактивный TUI интерфейс для Windows AI Diagnostic Center.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.windows.tui
+#   Python API:
+#     from apps.windows.tui import SystemInspectorState
+#
+#     service = SystemInspectorState()
+#
+# File: tui.py
+# Project: ai-breadboard
+# Package: apps.windows
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Интерактивный TUI интерфейс для Windows AI Diagnostic Center."""
+
 import sys
 from typing import Optional
 try:
@@ -65,7 +89,7 @@ async def run_log_dashboard(interval: float=2.0, channel: str='System', level: s
     """Запуск интерактивного дашборда системных журналов в терминале (System Log Viewer)."""
     import asyncio
     import datetime
-    from apps.windows.core.modules.log_discovery_engine import LogDiscoveryEngine
+    from apps.windows.core.audits.log_discovery_engine import LogDiscoveryEngine
     discovery = LogDiscoveryEngine()
     level_display = level.capitalize() if level else 'Все'
     title_header = f'Windows Logs Monitor (Канал/Файл: {channel} | Уровень: {level_display})'
@@ -164,7 +188,7 @@ async def run_hardware_monitor_dashboard(interval: float=1.0) -> None:
                 for s in snap.sensors[:6]:
                     sensor_table.add_row(s.name[:25], s.category, f'{s.value} {s.unit}')
             else:
-                sensor_table.add_row('Датчики WMI/LHM в спящем режиме', '-', '-')
+                sensor_table.add_row('Аппаратные датчики в спящем режиме', '-', '-')
             status_text = snap.status_summary.get('status', 'HEALTHY')
             status_color = 'green' if status_text == 'HEALTHY' else 'yellow' if status_text == 'WARNING' else 'red'
             main_header = f'🎛️ Windows Hardware Monitor | Статус: [{status_color}]{status_text}[/{status_color}] | Время: {snap.timestamp[11:19]}'

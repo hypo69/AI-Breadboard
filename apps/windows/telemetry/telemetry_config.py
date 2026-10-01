@@ -1,5 +1,27 @@
-"""Менеджер конфигурации сбора телеметрии и сенсоров."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Telemetry - Telemetry Config
+# =============================================================================
+# Description:
+#   Менеджер конфигурации сбора телеметрии и сенсоров.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.telemetry.telemetry_config import TelemetryConfigManager
+#
+#     service = TelemetryConfigManager()
+#
+# File: telemetry_config.py
+# Project: ai-breadboard
+# Package: apps.windows.telemetry
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Менеджер конфигурации сбора телеметрии и сенсоров."""
+
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -29,6 +51,10 @@ class TelemetryConfigManager:
         self._heavy_mode_max_duration_days = 5.0
         self._heavy_mode_auto_switch_enabled = True
         self._mode = 'hybrid'
+        self._max_db_size_mb = 50.0
+        self._retention_days = 7
+        self._db_cleanup_interval_seconds = 300.0
+        self._auto_vacuum_enabled = True
         self._load_config()
 
     def _load_config(self) -> None:
@@ -52,6 +78,14 @@ class TelemetryConfigManager:
                 self._heavy_mode_max_duration_days = float(raw_max_days) if raw_max_days is not None else 5.0
                 self._heavy_mode_auto_switch_enabled = bool(self._config.get('heavy_mode_auto_switch_enabled', True))
                 self._mode = str(self._config.get('mode', self._config.get('telemetry', {}).get('mode', 'hybrid'))).lower()
+                
+                raw_max_db = self._config.get('max_db_size_mb', self._config.get('max_file_size_mb', 50.0))
+                self._max_db_size_mb = float(raw_max_db) if raw_max_db is not None else 50.0
+                raw_retention = self._config.get('retention_days', 7)
+                self._retention_days = int(raw_retention) if raw_retention is not None else 7
+                raw_cleanup_interval = self._config.get('db_cleanup_interval_seconds', 300.0)
+                self._db_cleanup_interval_seconds = float(raw_cleanup_interval) if raw_cleanup_interval is not None else 300.0
+                self._auto_vacuum_enabled = bool(self._config.get('auto_vacuum_enabled', True))
         except FileNotFoundError:
             self._config = {}
             self._sensors_config = {}
@@ -61,6 +95,10 @@ class TelemetryConfigManager:
             self._heavy_mode_max_duration_days = 5.0
             self._heavy_mode_auto_switch_enabled = True
             self._mode = 'hybrid'
+            self._max_db_size_mb = 50.0
+            self._retention_days = 7
+            self._db_cleanup_interval_seconds = 300.0
+            self._auto_vacuum_enabled = True
         except json.JSONDecodeError as e:
             raise ValueError(f'Ошибка парсинга {self._config_path}: {e}')
 
@@ -109,6 +147,31 @@ class TelemetryConfigManager:
         """Возвращает число сохраняемых процессов с наибольшей нагрузкой."""
         return int(self._config.get('top_processes', 25))
 
+    def get_buffer_mode(self) -> str:
+        """Возвращает режим буферизации телеметрии ('memory', 'file', 'direct')."""
+        mode = str(self._config.get('buffer_mode', 'memory')).lower()
+        return mode if mode in ('memory', 'file', 'direct') else 'memory'
+
+    def get_buffer_size(self) -> int:
+        """Возвращает максимальный размер буфера перед принудительным сбросом в БД."""
+        try:
+            val = int(self._config.get('buffer_size', 50))
+            return max(1, val)
+        except (ValueError, TypeError):
+            return 50
+
+    def get_flush_interval_seconds(self) -> float:
+        """Возвращает периодический интервал сброса буфера в БД (в секундах)."""
+        try:
+            val = float(self._config.get('flush_interval_seconds', 30.0))
+            return max(1.0, val)
+        except (ValueError, TypeError):
+            return 30.0
+
+    def get_buffer_file(self) -> str:
+        """Возвращает имя файла для буферизации в аварийном режиме сбоев."""
+        return str(self._config.get('buffer_file', 'telemetry_buffer.jsonl'))
+
     def get_process_mode(self) -> str:
         """Возвращает режим фильтрации процессов: 'top_n' или 'all'."""
         mode = str(self._config.get('process_mode', 'top_n')).lower()
@@ -131,6 +194,34 @@ class TelemetryConfigManager:
         custom = self._config.get('heavy_collectors', {})
         default_collectors.update(custom)
         return default_collectors
+
+    def get_max_db_size_mb(self) -> float:
+        """Возвращает максимальный разрешенный размер SQLite базы данных (в МБ)."""
+        try:
+            val = float(self._config.get('max_db_size_mb', self._config.get('max_file_size_mb', 50.0)))
+            return max(1.0, val)
+        except (ValueError, TypeError):
+            return 50.0
+
+    def get_retention_days(self) -> int:
+        """Возвращает срок хранения сырых записей телеметрии (в днях)."""
+        try:
+            val = int(self._config.get('retention_days', 7))
+            return max(1, val)
+        except (ValueError, TypeError):
+            return 7
+
+    def get_db_cleanup_interval_seconds(self) -> float:
+        """Возвращает интервал периодической проверки и очистки БД (в секундах)."""
+        try:
+            val = float(self._config.get('db_cleanup_interval_seconds', 300.0))
+            return max(10.0, val)
+        except (ValueError, TypeError):
+            return 300.0
+
+    def is_auto_vacuum_enabled(self) -> bool:
+        """Возвращает флаг разрешения авто-вакуума (VACUUM) SQLite при усечении."""
+        return bool(self._config.get('auto_vacuum_enabled', True))
 
     def get_sensor_config(self, sensor_name: str) -> Dict[str, Any]:
         """Возвращает конфигурацию конкретного сенсора."""
@@ -163,6 +254,16 @@ class TelemetryConfigManager:
         """Возвращает общую конфигурацию (без сенсоров)."""
         return {k: v for k, v in self._config.items() if k != 'sensors'}
 
+    def get_config(self) -> Dict[str, Any]:
+        """Возвращает полную конфигурацию телеметрии."""
+        return self._config.copy()
+
+    @property
+    def config(self) -> Dict[str, Any]:
+        """Свойство для получения полной конфигурации."""
+        return self.get_config()
+
+
     def save_config(self, new_config: Optional[Dict[str, Any]]=None) -> bool:
         """Сохраняет текущую или переданную конфигурацию в файл.
 
@@ -188,6 +289,14 @@ class TelemetryConfigManager:
                 self._heavy_mode_auto_switch_enabled = bool(new_config['heavy_mode_auto_switch_enabled'])
             if 'mode' in new_config:
                 self._mode = str(new_config['mode']).lower()
+            if 'max_db_size_mb' in new_config:
+                self._max_db_size_mb = float(new_config['max_db_size_mb'])
+            if 'retention_days' in new_config:
+                self._retention_days = int(new_config['retention_days'])
+            if 'db_cleanup_interval_seconds' in new_config:
+                self._db_cleanup_interval_seconds = float(new_config['db_cleanup_interval_seconds'])
+            if 'auto_vacuum_enabled' in new_config:
+                self._auto_vacuum_enabled = bool(new_config['auto_vacuum_enabled'])
         try:
             target_path = Path(self._config_path)
             target_path.parent.mkdir(parents=True, exist_ok=True)

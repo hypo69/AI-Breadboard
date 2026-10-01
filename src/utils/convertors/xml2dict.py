@@ -1,26 +1,23 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Convert XML data to dictionaries
+# Process Name: AI-Breadboard UTILS - Xml2Dict Module
 # =============================================================================
 # Description:
-#   Module for AI Breadboard project.
+#   XML to dictionary conversion utilities.
+#
+# Usage Examples:
+#   Python API:
+#     import src.utils.convertors.xml2dict as xml2dict
 #
 # File: xml2dict.py
 # Project: ai-breadboard
 # Package: src.utils.convertors
 # Author: hypo69
 # Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
 # =============================================================================
 
-"""XML to dictionary conversion utilities.
-
-Provides utilities for converting XML data into dictionaries. Includes functions for
-parsing XML strings and converting XML element trees into dictionary representations."""
-- `_parse_node`: Parses an XML node into a dictionary.
-- `_make_dict`: Generates a dictionary with the tag name and value.
-- `xml2dict`: Parses an XML string into a dictionary.
-- `ET2dict`: Converts an XML element tree into a dictionary.
-"""
+"""XML to dictionary conversion utilities."""
 
 import re
 

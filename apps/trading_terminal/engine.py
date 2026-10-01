@@ -1,14 +1,34 @@
-"""Exchange trading desk engine and portfolio state manager."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Trading_Terminal - Engine
+# =============================================================================
+# Description:
+#   Exchange trading desk engine and portfolio state manager.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.trading_terminal.engine import OrderRequest
+#
+#     service = OrderRequest()
+#
+# File: engine.py
+# Project: ai-breadboard
+# Package: apps.trading_terminal
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Exchange trading desk engine and portfolio state manager."""
+
 import random
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
-from logger import logger
-from apps.windows.observability.trading_engine import TradingDiagnosticEngine
-
+from apps.windows.telemetry.models import AnomalyItem, SystemDiagnosticReport
 from apps.common.csv_logger import AppCsvLogger
 _csv_logger = AppCsvLogger('trading_terminal')
 
@@ -74,14 +94,31 @@ class TradingDeskEngine:
         self.realized_pnl: float = 0.0
         self.orders: List[OrderRecord] = []
         self.logs: List[str] = [f"[{datetime.now().strftime('%H:%M:%S')}] Engine initialized for {self.symbol} with ${self.balance:,.2f}", f"[{datetime.now().strftime('%H:%M:%S')}] Market data feed connected (Ready)"]
-        self.diagnostician = TradingDiagnosticEngine()
-        logger.info(f'TradingDeskEngine started for symbol {self.symbol} with balance ${self.balance:,.2f}')
-
     async def run_diagnostics(self) -> SystemDiagnosticReport:
-        """Run diagnostics on current trading state."""
-
-        state = TradingState(symbol=self.symbol, current_price=self.current_price, balance=self.balance, position_size=self.position_size, entry_price=self.entry_price, unrealized_pnl=self.unrealized_pnl, realized_pnl=self.realized_pnl, total_equity=self.balance + self.unrealized_pnl, recent_logs=self.logs[-10:], recent_orders=self.orders)
-        return await self.diagnostician.diagnose(state)
+        """Выполняет диагностику состояния торгового терминала."""
+        score = 100
+        anomalies: List[AnomalyItem] = []
+        recommendations: List[str] = []
+        error_logs = [log for log in self.logs[-10:] if "ERROR" in log or "failed" in log.lower()]
+        if len(error_logs) > 5:
+            score -= 40
+            anomalies.append(AnomalyItem(subsystem="Trading", severity="critical", title="High Error Rate", description=f"Обнаружено {len(error_logs)} ошибок в последних логах."))
+            recommendations.append("Проверьте сетевое подключение к API биржи.")
+        total_equity = self.balance + self.unrealized_pnl
+        if total_equity > 0 and self.unrealized_pnl / total_equity < -0.1:
+            score -= 20
+            anomalies.append(AnomalyItem(subsystem="Trading", severity="warning", title="Significant Drawdown", description=f"Нереализованная просадка: {self.unrealized_pnl / total_equity * 100:.1f}%."))
+            recommendations.append("Проверьте настройки риск-менеджмента и стоп-лоссов.")
+        score = max(0, min(100, score))
+        if not recommendations:
+            recommendations.append("Состояние торгового терминала в норме.")
+        return SystemDiagnosticReport(
+            health_score=score,
+            summary=f"Индекс состояния терминала: {score}/100. Баланс: ${self.balance:,.2f}, эквити: ${total_equity:,.2f}.",
+            anomalies=anomalies,
+            recommendations=recommendations,
+            ai_model_used="Heuristic Analyzer",
+        )
 
     def update_market(self, delta_pct: Optional[float]=None) -> float:
         """Update market price and recalculate unrealized PnL.

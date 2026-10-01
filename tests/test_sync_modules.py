@@ -1,7 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Sync Modules
+# =============================================================================
+# Description:
+#   Tests for Google Drive Sync modules integrated into apps.google_user_desktop.
+#
+# Usage Examples:
+#   CLI:
+#     python -m tests.test_sync_modules
+#   Python API:
+#     from tests.test_sync_modules import TestImports
+#
+#     service = TestImports()
+#
+# File: test_sync_modules.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Tests for Google Drive Sync modules integrated into apps.google_user_desktop.
 
-Verify that all modules can be imported and have required functionality.
-"""
+Verify that all modules can be imported and have required functionality."""
+
 import sys
 import os
 import pytest

@@ -1,5 +1,27 @@
-"""Google Search Console API service integration."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Website_Monitor Src - Gsc Service
+# =============================================================================
+# Description:
+#   Google Search Console API service integration.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.website_monitor.src.gsc_service import SearchQuery
+#
+#     service = SearchQuery()
+#
+# File: gsc_service.py
+# Project: ai-breadboard
+# Package: apps.website_monitor.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Google Search Console API service integration."""
+
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional

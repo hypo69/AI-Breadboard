@@ -1,5 +1,27 @@
-"""Data structures for intelligent news filtering and user learning."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins News_Feed - Models
+# =============================================================================
+# Description:
+#   Data structures for intelligent news filtering and user learning.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.user-plugins.news_feed.models import NewsArticleModel
+#
+#     service = NewsArticleModel()
+#
+# File: models.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.news_feed
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
 from __future__ import annotations
+"""Data structures for intelligent news filtering and user learning."""
+
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional

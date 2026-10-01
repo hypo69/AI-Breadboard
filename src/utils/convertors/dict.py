@@ -1,5 +1,26 @@
-"""
-Converter for converting between dict and SimpleNamespace objects.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Dict Module
+# =============================================================================
+# Description:
+#   Converter for converting between dict and SimpleNamespace objects.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.convertors.dict import replace_key_in_dict
+#
+#     res = replace_key_in_dict()
+#     print(res)
+#
+# File: dict.py
+# Project: ai-breadboard
+# Package: src.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Converter for converting between dict and SimpleNamespace objects.
 
 Functions:
     - `dict2ns`: Recursively convert dictionaries to SimpleNamespace objects.
@@ -8,8 +29,8 @@ Functions:
     - `dict2json`: Save dictionary or SimpleNamespace data to a JSON file.
     - `dict2xls`: Save dictionary or SimpleNamespace data to an XLS file.
     - `dict2html`: Generate an HTML table string from a dictionary or SimpleNamespace object.
-    - `dict2pdf`: Save dictionary data as a PDF file.
-"""
+    - `dict2pdf`: Save dictionary data as a PDF file."""
+
 import json
 from types import SimpleNamespace
 from typing import Any, Dict, List

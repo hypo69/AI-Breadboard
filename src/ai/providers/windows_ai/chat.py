@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Chat Module
+# =============================================================================
+# Description:
+#   Provider adapter for Windows AI APIs and local system models.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.providers.windows_ai.chat import WindowsAIChatBase
+#
+#     service = WindowsAIChatBase()
+#     result = service.get_available_models()
+#     print(result)
+#
+# File: chat.py
+# Project: ai-breadboard
+# Package: src.ai.providers.windows_ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Provider adapter for Windows AI APIs and local system models."""
+
 from typing import Any, AsyncIterator, Dict, List, Optional, Set
 from logger import logger
 from src.ai.providers.base import BaseChatProvider

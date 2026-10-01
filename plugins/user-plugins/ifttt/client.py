@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins Ifttt - Client
+# =============================================================================
+# Description:
+#   Asynchronous client for interacting with the IFTTT Webhook Maker Channel.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.user-plugins.ifttt.client import IFTTTClient
+#
+#     service = IFTTTClient()
+#
+# File: client.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.ifttt
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
 from __future__ import annotations
+"""Asynchronous client for interacting with the IFTTT Webhook Maker Channel."""
+
 import json
 import os
 from pathlib import Path

@@ -1,17 +1,20 @@
 /**
  * =============================================================================
- * Process Name: Windows Telemetry History & Visualization Logic
+ * Process Name: AI-Breadboard UI - Main Script
  * =============================================================================
  * Description:
- *   Клиентский контроллер вкладки визуализации истории телеметрии:
- *   построение графиков Chart.js, табличный рендеринг логов, пагинация,
- *   детекция аномалий и интеграция с REST API.
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/telemetry_history_tab/main.js?v=20261001_v1" type="module"></script>
  *
  * File: main.js
- * Project: AI-Breadboard
- * Module: WebInterface.TelemetryHistoryTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/telemetry_history_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

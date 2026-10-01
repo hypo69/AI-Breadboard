@@ -1,7 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Dev - Update Docs
+# =============================================================================
+# Description:
+#   Documentation validation for modified Python files.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.dev.update_docs
+#   Python API:
+#     from scripts.dev.update_docs import get_modified_python_files
+#
+#     res = get_modified_python_files()
+#
+# File: update_docs.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Documentation validation for modified Python files.
 
 Checks for presence of docstrings in modified Python files and validates
 that proper documentation standards are met."""
+
 import os
 import sys
 import subprocess

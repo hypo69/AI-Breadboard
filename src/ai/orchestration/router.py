@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Router Module
+# =============================================================================
+# Description:
+#   Represents a unified AI capability request.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.orchestration.router import AIRequest
+#
+#     service = AIRequest()
+#
+# File: router.py
+# Project: ai-breadboard
+# Package: src.ai.orchestration
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Represents a unified AI capability request."""
+
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 from logger import logger

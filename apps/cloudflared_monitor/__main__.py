@@ -1,5 +1,29 @@
-"""CLI entry point for Cloudflared Tunnel Monitor."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Cloudflared_Monitor -   Main  
+# =============================================================================
+# Description:
+#   CLI entry point for Cloudflared Tunnel Monitor.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.cloudflared_monitor.__main__
+#   Python API:
+#     from apps.cloudflared_monitor.__main__ import main
+#
+#     res = main()
+#
+# File: __main__.py
+# Project: ai-breadboard
+# Package: apps.cloudflared_monitor
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""CLI entry point for Cloudflared Tunnel Monitor."""
+
 import argparse
 import asyncio
 import json

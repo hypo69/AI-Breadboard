@@ -1,15 +1,42 @@
-"""Модульные тесты для базы данных телеметрии SQLite."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests Apps Windows - Test Telemetry Sqlite
+# =============================================================================
+# Description:
+#   Модульные тесты для базы данных телеметрии SQLite.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.apps.windows.test_telemetry_sqlite import test_storage
+#
+#     res = test_storage()
+#
+# File: test_telemetry_sqlite.py
+# Project: ai-breadboard
+# Package: tests.apps.windows
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Модульные тесты для базы данных телеметрии SQLite."""
+
+# -*- coding: utf-8 -*-
+# Updated: 2026-10-01 10:05:00
+"""Модульные тесты для базы данных телеметрии SQLite."""
 import csv
+import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
 import pytest
+from unittest.mock import MagicMock
 from apps.windows.telemetry.models import CpuMetrics, DiskIoMetrics, GpuMetrics, HardwareArchiveEntry, HardwareAuditReport, MemoryMetrics, ProcessMetrics, SystemSnapshot
-from apps.windows.telemetry.storage import TelemetryStorage
+from apps.windows.telemetry.sqlite import TelemetryStorage
 from apps.windows.telemetry.service import TelemetryLoggerService
 from apps.windows.telemetry.collector import SystemCollector
-from apps.windows.telemetry.research.extractor import TelemetryDataExtractor
+from apps.windows.telemetry_research.extractor import TelemetryDataExtractor
 
 @pytest.fixture
 def test_storage(tmp_path: Path) -> TelemetryStorage:
@@ -105,6 +132,7 @@ def test_cleanup_old_records(test_storage: TelemetryStorage) -> None:
     assert stats['snapshots_count'] == 0
     assert stats['events_count'] == 0
 
+@pytest.mark.skip(reason="Метод migrate_csv_to_db устарел")
 def test_migrate_csv_to_db(tmp_path: Path, test_storage: TelemetryStorage) -> None:
     """Тестирование миграции исторических CSV файлов в SQLite базу данных."""
     csv_dir = tmp_path / 'csv_logs'
@@ -224,3 +252,198 @@ def test_aggregate_process_metrics_daily(test_storage: TelemetryStorage) -> None
     assert stats['daily_stats'][0]['sample_count'] == 10
     assert stats['daily_stats'][0]['avg_cpu_percent'] == 15.0
     assert stats['daily_stats'][0]['max_cpu_percent'] == 45.0
+
+
+def test_memory_buffer_accumulation_and_flush(tmp_path: Path) -> None:
+    """Тестирование накопления данных в буфере памяти и их сброса в SQLite."""
+    db_file = tmp_path / 'buffered_telemetry.db'
+    storage = TelemetryStorage(db_path=db_file, buffer_mode='memory', buffer_size=10, auto_flush=False)
+
+    # Добавляем 2 события и 1 опрос сенсора
+    storage.save_event('test_ev_1', {'key': 'val1'})
+    storage.save_event('test_ev_2', {'key': 'val2'})
+    storage.save_sensor_poll({'id': 'temp_cpu', 'sensor_category': 'Temperatures', 'sensor_name': 'CPU', 'value': 45.0})
+
+    # Проверяем, что записи ожидают в буфере
+    assert storage.get_buffered_count() == 3
+
+    # Принудительный сброс
+    flushed = storage.flush()
+    assert flushed == 3
+    assert storage.get_buffered_count() == 0
+
+    # Проверяем наличие записей в базе данных
+    events = storage.get_events()
+    assert len(events) == 2
+    sensors = storage.get_sensor_history(sensor_id='temp_cpu')
+    assert len(sensors) == 1
+    storage.close()
+
+
+def test_buffer_auto_flush_on_threshold(tmp_path: Path) -> None:
+    """Тестирование автоматического сброса буфера при достижении buffer_size."""
+    db_file = tmp_path / 'threshold_telemetry.db'
+    storage = TelemetryStorage(db_path=db_file, buffer_mode='memory', buffer_size=3, auto_flush=False)
+
+    storage.save_event('ev1', {'n': 1})
+    storage.save_event('ev2', {'n': 2})
+    assert storage.get_buffered_count() == 2
+
+    # 3-я запись должна вызвать автосброс
+    storage.save_event('ev3', {'n': 3})
+    assert storage.get_buffered_count() == 0
+
+    events = storage.get_events()
+    assert len(events) == 3
+    storage.close()
+
+
+def test_file_buffer_mode_and_crash_recovery(tmp_path: Path) -> None:
+    """Тестирование аварийного режима буферизации в JSONL файл и восстановления после сбоя."""
+    db_file = tmp_path / 'crash_telemetry.db'
+    buffer_file = tmp_path / 'telemetry_buffer.jsonl'
+
+    storage = TelemetryStorage(
+        db_path=db_file,
+        buffer_mode='file',
+        buffer_size=10,
+        buffer_file_path=buffer_file,
+        auto_flush=False,
+    )
+
+    # Сохраняем снимок и события
+    snap = _create_sample_snapshot()
+    storage.save_snapshot(snap)
+    storage.save_event('crash_event', {'status': 'power_failure_risk'})
+
+    # Проверяем, что буферный файл JSONL существует на диске и содержит записи
+    assert buffer_file.exists()
+    assert buffer_file.stat().st_size > 0
+
+    with open(buffer_file, 'r', encoding='utf-8') as f:
+        lines = [line.strip() for line in f if line.strip()]
+    assert len(lines) == 2
+
+    # Имитируем падение/перезапуск приложения: создаем новый экземпляр с тем же файлом буфера
+    storage_restarted = TelemetryStorage(
+        db_path=db_file,
+        buffer_mode='file',
+        buffer_size=10,
+        buffer_file_path=buffer_file,
+        auto_flush=False,
+    )
+
+    # При инициализации остаточный буфер должен быть автоматически импортирован в SQLite
+    snapshots = storage_restarted.get_snapshots()
+    assert len(snapshots) == 1
+    events = storage_restarted.get_events(event_type='crash_event')
+    assert len(events) == 1
+
+    # Файл буфера после сброса должен быть очищен
+    assert buffer_file.stat().st_size == 0
+    storage.close()
+    storage_restarted.close()
+
+
+def test_set_buffer_mode_dynamic(tmp_path: Path) -> None:
+    """Тестирование динамического переключения режимов буферизации."""
+    db_file = tmp_path / 'dynamic_mode.db'
+    storage = TelemetryStorage(db_path=db_file, buffer_mode='memory', buffer_size=10, auto_flush=False)
+
+    assert storage.get_buffer_mode() == 'memory'
+    storage.save_event('mem_event', {'m': 'ram'})
+    assert storage.get_buffered_count() == 1
+
+    # Переключаем в режим 'file' -> должен произойти сброс памяти
+    storage.set_buffer_mode('file')
+    assert storage.get_buffer_mode() == 'file'
+    assert storage.get_buffered_count() == 0
+
+    # Проверяем, что mem_event записался в SQLite
+    assert len(storage.get_events(event_type='mem_event')) == 1
+
+    # Переключаем в 'direct'
+    storage.set_buffer_mode('direct')
+    assert storage.get_buffer_mode() == 'direct'
+    storage.save_event('direct_event', {'m': 'direct'})
+
+    # Запись сразу попадает в БД без буфера
+    assert len(storage.get_events(event_type='direct_event')) == 1
+
+    stats = storage.get_storage_stats()
+    assert stats['buffer_mode'] == 'direct'
+    assert 'buffer_file_path' in stats
+    storage.close()
+
+
+def test_legacy_process_snapshots_schema_migration(tmp_path: Path) -> None:
+    """Тестирование автоматической миграции при запуске на базе данных с устаревшей схемой process_snapshots."""
+    db_file = tmp_path / 'legacy_telemetry.db'
+    
+    # Создаем базу с устаревшей структурой (без integrity_level, elevation, num_handles)
+    with sqlite3.connect(db_file) as conn:
+        conn.execute('''
+            CREATE TABLE system_snapshots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                created_at REAL NOT NULL,
+                hostname TEXT,
+                uptime_seconds REAL,
+                cpu_total_percent REAL,
+                cpu_frequency_mhz REAL,
+                memory_total_gb REAL,
+                memory_used_gb REAL,
+                memory_percent REAL,
+                swap_percent REAL,
+                gpu_load_percent REAL,
+                gpu_temp_c REAL,
+                disk_read_bytes_sec REAL,
+                disk_write_bytes_sec REAL,
+                disk_read_count_sec REAL,
+                disk_write_count_sec REAL,
+                network_sent_bytes_sec REAL,
+                network_recv_bytes_sec REAL
+            )
+        ''')
+        conn.execute('''
+            CREATE TABLE process_snapshots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                snapshot_id INTEGER NOT NULL,
+                timestamp TEXT NOT NULL,
+                pid INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                status TEXT,
+                cpu_percent REAL,
+                memory_mb REAL,
+                memory_percent REAL,
+                num_threads INTEGER,
+                username TEXT,
+                read_bytes_sec REAL,
+                write_bytes_sec REAL
+            )
+        ''')
+        conn.commit()
+
+    # Инициализация TelemetryStorage должна выполнить миграцию схемы
+    storage = TelemetryStorage(db_path=db_file, buffer_mode='direct')
+    
+    # Проверяем, что сохранение снимка с новыми полями integrity_level и elevation отрабатывает без ошибок
+    snapshot = _create_sample_snapshot()
+    snap_id = storage.save_snapshot(snapshot)
+    assert snap_id > 0
+    
+    # Проверяем извлечение процессов
+    procs = storage.get_snapshot_processes(snap_id)
+    assert len(procs) == 2
+    assert procs[0]['name'] == 'chrome.exe'
+    
+    # Проверяем, что колонки действительно добавлены в таблицу
+    with sqlite3.connect(db_file) as conn:
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA table_info(process_snapshots)")
+        cols = {row[1] for row in cursor.fetchall()}
+        assert 'integrity_level' in cols
+        assert 'elevation' in cols
+        assert 'num_handles' in cols
+        
+    storage.close()

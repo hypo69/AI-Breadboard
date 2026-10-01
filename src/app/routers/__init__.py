@@ -1,5 +1,28 @@
-"""Automatically discovered API routers."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard APP -   Init   Module
+# =============================================================================
+# Description:
+#   Automatically discovered API routers.
+#
+# Usage Examples:
+#   Python API:
+#     from src.app.routers.__init__ import auto_discover_routers
+#
+#     res = auto_discover_routers()
+#     print(res)
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: src.app.routers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Automatically discovered API routers."""
+
 from pathlib import Path
 from logger import logger
 __root__ = Path(__file__).parent.parent.parent

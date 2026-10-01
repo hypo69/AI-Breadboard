@@ -1,5 +1,27 @@
-"""Управление временной историей фактов."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Enterprise_Knowledge Knowledge - Temporal
+# =============================================================================
+# Description:
+#   Управление временной историей фактов.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.enterprise_knowledge.knowledge.temporal import TemporalManager
+#
+#     service = TemporalManager()
+#
+# File: temporal.py
+# Project: ai-breadboard
+# Package: apps.enterprise_knowledge.knowledge
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Управление временной историей фактов."""
+
 from typing import Any
 from apps.enterprise_knowledge.storage import KnowledgeStore
 

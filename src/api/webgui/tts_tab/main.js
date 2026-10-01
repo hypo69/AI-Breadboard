@@ -1,3 +1,23 @@
+/**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Main Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/tts_tab/main.js?v=20261001_v1" type="module"></script>
+ *
+ * File: main.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/tts_tab
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
 // TTS Tab Configuration and Testing Logic
 // Called via window.initTtsTab() when tab is loaded
 

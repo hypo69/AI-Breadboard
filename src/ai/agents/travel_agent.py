@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Travel Agent Module
+# =============================================================================
+# Description:
+#   Autonomous agent for flight discovery, pricing, and itinerary evaluation.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.agents.travel_agent import TravelAgent
+#
+#     service = TravelAgent()
+#
+# File: travel_agent.py
+# Project: ai-breadboard
+# Package: src.ai.agents
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Autonomous agent for flight discovery, pricing, and itinerary evaluation."""
+
 import os
 import json
 import asyncio

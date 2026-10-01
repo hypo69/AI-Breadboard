@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Logger - Logger
+# =============================================================================
+# Description:
+#   Модуль реализации компонента `SingletonMeta`.
+#
+# Usage Examples:
+#   Python API:
+#     from logger.logger import SingletonMeta
+#
+#     service = SingletonMeta()
+#
+# File: logger.py
+# Project: ai-breadboard
+# Package: logger
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:29:02
+# =============================================================================
+
 from __future__ import annotations
+"""Модуль реализации компонента `SingletonMeta`."""
+
 import logging
 import logging.handlers
 import colorama

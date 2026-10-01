@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router Codebase Rag
+# =============================================================================
+# Description:
+#   Payment processor service.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_router_codebase_rag import client
+#
+#     res = client()
+#
+# File: test_router_codebase_rag.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Payment processor service."""
+
 from pathlib import Path
 import pytest
 from starlette.testclient import TestClient

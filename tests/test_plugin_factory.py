@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Plugin Factory
+# =============================================================================
+# Description:
+#   Tests for Plugin Initializer and scaffolding utility.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_plugin_factory import test_create_plugin_scaffolds_proper_structure
+#
+#     res = test_create_plugin_scaffolds_proper_structure()
+#
+# File: test_plugin_factory.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Tests for Plugin Initializer and scaffolding utility."""
+
 from pathlib import Path
 import pytest
 from scripts.dev.init_plugin import create_plugin

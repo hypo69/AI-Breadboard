@@ -1,5 +1,27 @@
-"""Text normalization and sanitization utilities for Wikipedia content."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Wikipedia_Research Src - Normalizer
+# =============================================================================
+# Description:
+#   Text normalization and sanitization utilities for Wikipedia content.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.wikipedia_research.src.normalizer import TextNormalizer
+#
+#     service = TextNormalizer()
+#
+# File: normalizer.py
+# Project: ai-breadboard
+# Package: apps.wikipedia_research.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Text normalization and sanitization utilities for Wikipedia content."""
+
 import re
 from typing import List, Tuple
 

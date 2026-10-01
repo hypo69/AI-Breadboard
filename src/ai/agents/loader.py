@@ -1,11 +1,31 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Loader Module
+# =============================================================================
+# Description:
+#   Загрузчик агентов из JSON‑манифестов в каталоге ``.agents``.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.agents.loader import load_agent_from_manifest
+#
+#     res = load_agent_from_manifest()
+#     print(res)
+#
+# File: loader.py
+# Project: ai-breadboard
+# Package: src.ai.agents
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """Загрузчик агентов из JSON‑манифестов в каталоге ``.agents``.
 
 Функция :func:`load_agent_from_manifest` читает файл ``.agents/<name>.json``,
 извлекает поле ``class_path`` и импортирует указанный класс, возвращая его
 инстанс. Это используется CLI‑утилитами ``gemini cli`` и ``agy cli`` для
-динамического создания агентов без необходимости вручную прописывать импорт.
-"""
+динамического создания агентов без необходимости вручную прописывать импорт."""
 
 import json
 from importlib import import_module

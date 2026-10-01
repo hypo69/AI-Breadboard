@@ -1,5 +1,27 @@
-"""Unit test suite for plugins.facebook package."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Plugin Facebook
+# =============================================================================
+# Description:
+#   Unit test suite for plugins.facebook package.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_plugin_facebook import test_facebook_plugin_instantiation_and_manifest
+#
+#     res = test_facebook_plugin_instantiation_and_manifest()
+#
+# File: test_plugin_facebook.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Unit test suite for plugins.facebook package."""
+
 import json
 from typing import Any, Dict
 from unittest.mock import AsyncMock, patch

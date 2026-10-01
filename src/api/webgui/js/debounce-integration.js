@@ -1,4 +1,24 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Debounce-Integration Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля debounce-integration.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/debounce-integration.js?v=20261001_v1" type="module"></script>
+ *
+ * File: debounce-integration.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * Debounce Integration - Интеграция дебаунсинга в популярные операции
  * 
  * Этот модуль предоставляет готовые функции дебаунса/батчинга для:

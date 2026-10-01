@@ -1,5 +1,27 @@
-"""Шаблоны промптов для AI-диагностики Windows."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Ai - Prompt Templates
+# =============================================================================
+# Description:
+#   Системный промпт для эксперта-диагноста Windows.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.ai.prompt_templates import build_system_prompt
+#
+#     res = build_system_prompt()
+#
+# File: prompt_templates.py
+# Project: ai-breadboard
+# Package: apps.windows.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Системный промпт для эксперта-диагноста Windows."""
+
 import json
 from typing import Any, Dict, List
 

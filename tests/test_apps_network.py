@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Apps Network
+# =============================================================================
+# Description:
+#   Unit tests for apps.windows.network package.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_apps_network import TestNetworkTerminalApp
+#
+#     service = TestNetworkTerminalApp()
+#
+# File: test_apps_network.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for apps.windows.network package."""
+
 import pytest
 from fastapi.testclient import TestClient
 from fastapi import FastAPI

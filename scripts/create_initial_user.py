@@ -1,28 +1,28 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Initial Administrator User Creation Script
+# Process Name: AI-Breadboard Scripts - Create Initial User
 # =============================================================================
 # Description:
-#   Sets up, initializes, or updates the initial administrator user account
-#   in the SQLite users database (src/user_manager/users.db). Supports both
-#   interactive input and headless/non-interactive configuration.
+#   Manager for setting up and provisioning the initial administrator account.
 #
 # Usage Examples:
-#   python scripts/create_initial_user.py
-#   python scripts/create_initial_user.py --non-interactive
-#   python scripts/create_initial_user.py --email admin@domain.com --name SuperAdmin --password secret
+#   CLI:
+#     python -m scripts.create_initial_user
+#   Python API:
+#     from scripts.create_initial_user import InitialUserManager
 #
-# File: scripts/create_initial_user.py
-# Project: AI Breadboard
-# Package: Scripts
-# Module: Setup
-# Class: InitialUserManager
-# Function: main
+#     service = InitialUserManager()
+#
+# File: create_initial_user.py
+# Project: ai-breadboard
+# Package: scripts
 # Author: hypo69
 # Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
 # =============================================================================
 
 from __future__ import annotations
+"""Manager for setting up and provisioning the initial administrator account."""
 
 import argparse
 import getpass
@@ -54,11 +54,11 @@ class InitialUserManager:
             self.db_path: Path = Path(db_path)
         else:
             from src.config import storage_cfg
-from pathlib import Path
-# Ensure users directory exists
-Path(storage_cfg.users_dir).mkdir(parents=True, exist_ok=True)
-# DB path next to users directory
-db_path = Path(storage_cfg.users_dir).with_name('users.db')
+
+            # Ensure users directory exists
+            Path(storage_cfg.users_dir).mkdir(parents=True, exist_ok=True)
+            # DB path next to users directory
+            self.db_path = Path(storage_cfg.users_dir).with_name('users.db')
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
     @staticmethod

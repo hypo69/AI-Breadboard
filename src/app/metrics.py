@@ -1,3 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard APP - Metrics Module
+# =============================================================================
+# Description:
+#   Prometheus-compatible metrics collector.
+#
+# Usage Examples:
+#   Python API:
+#     from src.app.metrics import MetricsCollector
+#
+#     service = MetricsCollector()
+#     result = service.record_request()
+#     print(result)
+#
+# File: metrics.py
+# Project: ai-breadboard
+# Package: src.app
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+from __future__ import annotations
 """Prometheus-compatible metrics collector.
 
 Records HTTP request latency + counts, WebSocket connection counts,
@@ -7,9 +31,8 @@ Usage:
     metrics = create_metrics()
     metrics.record_request("/api/chat", 142.3, 200)
     # In a route:
-    return PlainTextResponse(metrics.prometheus_output())
-"""
-from __future__ import annotations
+    return PlainTextResponse(metrics.prometheus_output())"""
+
 import time
 from collections import defaultdict
 from threading import Lock

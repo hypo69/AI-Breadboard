@@ -1,6 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Команды управления миграциями базы данных SQLite (db)."""
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli Commands - Db
+# =============================================================================
+# Description:
+#   Команды управления миграциями базы данных SQLite (db).
+#
+# Usage Examples:
+#   Python API:
+#     from scripts.cli.commands.db import register_db_parser
+#
+#     res = register_db_parser()
+#
+# File: db.py
+# Project: ai-breadboard
+# Package: scripts.cli.commands
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 from __future__ import annotations
+"""Команды управления миграциями базы данных SQLite (db)."""
 
 import argparse
 

@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Run-Windowsadmin Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Run-WindowsAdmin).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Run-WindowsAdmin.ps1
+#
+# File: Run-WindowsAdmin.ps1
+# Project: ai-breadboard
+# Package: launchers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:06
+# =============================================================================
+
 <#
 .SYNOPSIS
     Standalone launcher for Windows System Administrator microservice.

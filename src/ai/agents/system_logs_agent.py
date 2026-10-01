@@ -1,5 +1,29 @@
-"""Модуль автономного агента анализа системных логов и диагностики ОС."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - System Logs Agent Module
+# =============================================================================
+# Description:
+#   Модуль автономного агента анализа системных логов и диагностики ОС.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.agents.system_logs_agent import SystemLogsAgent
+#
+#     service = SystemLogsAgent()
+#     result = service.parse_time_window_days()
+#     print(result)
+#
+# File: system_logs_agent.py
+# Project: ai-breadboard
+# Package: src.ai.agents
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Модуль автономного агента анализа системных логов и диагностики ОС."""
+
 import json
 import re
 from pathlib import Path

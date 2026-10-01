@@ -1,5 +1,27 @@
-"""FastAPI API платформы корпоративных знаний."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Enterprise_Knowledge Routers - Router
+# =============================================================================
+# Description:
+#   FastAPI API платформы корпоративных знаний.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.enterprise_knowledge.routers.router import EmployeeRequest
+#
+#     service = EmployeeRequest()
+#
+# File: router.py
+# Project: ai-breadboard
+# Package: apps.enterprise_knowledge.routers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""FastAPI API платформы корпоративных знаний."""
+
 from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse

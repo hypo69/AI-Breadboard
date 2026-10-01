@@ -177,7 +177,10 @@ Examples: [Working code example]
 File: [filename]
 Author: [author name]
 Copyright: © 2026 [organization]
+Modified: [YYYY-MM-DD HH:MM] — [Краткое описание изменения]
 ```
+
+**Важно:** При каждом изменении кода в файле добавлять или обновлять строку `Modified:` с текущим временем и кратким описанием внесённых изменений. Это позволяет отслеживать историю изменений непосредственно в шапке файла.
 
 ### Docstring Format (hypo69 docblock)
 Required sections in order:

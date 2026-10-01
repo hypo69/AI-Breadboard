@@ -1,5 +1,27 @@
-"""Unit-тесты для FileWatcherTelemetryEngine, Multi-DirectoryWatcher и REST API."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Watcher Telemetry
+# =============================================================================
+# Description:
+#   Unit-тесты для FileWatcherTelemetryEngine, Multi-DirectoryWatcher и REST API.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_watcher_telemetry import test_watcher_telemetry_rates_calculation
+#
+#     res = test_watcher_telemetry_rates_calculation()
+#
+# File: test_watcher_telemetry.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Unit-тесты для FileWatcherTelemetryEngine, Multi-DirectoryWatcher и REST API."""
+
 import csv
 import os
 import time
@@ -38,10 +60,22 @@ def test_watcher_telemetry_burst_detection() -> None:
     assert len(snap.watch_dirs) == 2
 
 def test_watcher_telemetry_drive_metrics() -> None:
-    """Проверка определения дисков, чтения счетчиков и привязки температуры LHM."""
+    """Проверка определения дисков, чтения счетчиков и привязки температуры накопителей."""
+    from apps.windows.storage.windows_storage_sensor import StorageDiskHealthInfo
     engine = FileWatcherTelemetryEngine(window_seconds=5.0)
-    mock_sensors = [{'hardware_name': 'CT1000MX500SSD1', 'hardware_type': 'storage', 'sensor_category': 'Temperatures', 'sensor_name': 'Temperature', 'value_numeric': 34.0}]
-    with patch.object(engine._lhm_service, 'get_flattened_sensors', return_value=mock_sensors):
+    mock_disk = StorageDiskHealthInfo(
+        device_id='\\\\.\\PhysicalDrive0',
+        friendly_name='CT1000MX500SSD1',
+        model='Crucial CT1000MX500SSD1',
+        serial_number='12345678',
+        bus_type='SATA',
+        media_type='SSD',
+        size_gb=1000.0,
+        health_status='Healthy',
+        operational_status='OK',
+        temperature_c=34.0,
+    )
+    with patch('apps.windows.storage.windows_storage_sensor.WindowsStorageSensor.get_physical_disks', return_value=[mock_disk]):
         hw = engine.get_drive_hardware_metrics(watch_dirs=['C:\\Projects\\AI-Breadboard', 'D:\\Data'])
         assert 'C:' in hw['drive_letters']
         assert 'D:' in hw['drive_letters']
@@ -112,7 +146,7 @@ def test_sysadmin_telemetry_and_filesystem_endpoints(tmp_path: Path) -> None:
 def test_watcher_exclusions_logic() -> None:
     """Проверка логики правил исключений (WatcherExclusions)."""
     from apps.windows.sysadmin.src.directory_watcher import WatcherExclusions
-    ex = WatcherExclusions(enabled=True, paths=['AppData\\Roaming\\AI-Breadboard\\apps\\windows\\telemetry\\logs', 'AppData\\Local\\Temp', 'node_modules'], extensions=['.tmp', '.log', '.csv', '.db-wal'], patterns=['*librehardwaremonitor_polls.csv*', '*Windows.db*', '~$*'], processes=['SearchIndexer.exe'])
+    ex = WatcherExclusions(enabled=True, paths=['AppData\\Roaming\\AI-Breadboard\\apps\\windows\\telemetry\\logs', 'AppData\\Local\\Temp', 'node_modules'], extensions=['.tmp', '.log', '.csv', '.db-wal'], patterns=['*system_inspector_polls.csv*', '*Windows.db*', '~$*'], processes=['SearchIndexer.exe'])
     assert ex.is_excluded('C:\\Users\\User\\AppData\\Roaming\\AI-Breadboard\\apps\\windows\\telemetry\\logs\\data.csv') is True
     assert ex.is_excluded('C:\\Users\\User\\AppData\\Local\\Temp\\random.txt') is True
     assert ex.is_excluded('C:\\Projects\\my_code.py') is False

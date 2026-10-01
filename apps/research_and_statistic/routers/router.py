@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Research_And_Statistic Routers - Router
+# =============================================================================
+# Description:
+#   Инициализация роутера для приложения исследований и статистики.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.research_and_statistic.routers.router import init_router
+#
+#     res = init_router()
+#
+# File: router.py
+# Project: ai-breadboard
+# Package: apps.research_and_statistic.routers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""Инициализация роутера для приложения исследований и статистики."""
+
 from fastapi import APIRouter, Body
 from typing import TYPE_CHECKING
 from logger import logger

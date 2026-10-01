@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Pages
+# =============================================================================
+# Description:
+#   Скрипт/модуль системы AI-Breadboard (`test_pages`).
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_pages import app_with_pages
+#
+#     res = app_with_pages()
+#
+# File: test_pages.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Скрипт/модуль системы AI-Breadboard (`test_pages`)."""
+
 import pytest
 from fastapi.testclient import TestClient
 from src.app import create_app, register_pages, AppState

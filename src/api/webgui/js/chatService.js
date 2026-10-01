@@ -1,3 +1,23 @@
+/**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Chatservice Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля chatService.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/chatService.js?v=20261001_v1" type="module"></script>
+ *
+ * File: chatService.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
 // Shared Chat Service Module
 // Exposes window.chatService to unify API calling and message/error formatting.
 

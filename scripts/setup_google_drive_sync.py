@@ -1,12 +1,34 @@
-"""
-Скрипт для настройки и инициализации синхронизации на Google Drive.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts - Setup Google Drive Sync
+# =============================================================================
+# Description:
+#   Скрипт для настройки и инициализации синхронизации на Google Drive.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.setup_google_drive_sync
+#   Python API:
+#     from scripts.setup_google_drive_sync import SyncSetup
+#
+#     service = SyncSetup()
+#
+# File: setup_google_drive_sync.py
+# Project: ai-breadboard
+# Package: scripts
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
+"""Скрипт для настройки и инициализации синхронизации на Google Drive.
 
 Использование:
     python setup_google_drive_sync.py --init              # Инициализация
     python setup_google_drive_sync.py --sync-now          # Синхронизировать
     python setup_google_drive_sync.py --start-scheduler   # Запустить планировщик
-    python setup_google_drive_sync.py --status            # Получить статус
-"""
+    python setup_google_drive_sync.py --status            # Получить статус"""
+
 import os
 import sys
 import argparse

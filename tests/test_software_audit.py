@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Software Audit
+# =============================================================================
+# Description:
+#   Тест успешной инициализации движка аудита.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_software_audit import mock_winreg
+#
+#     res = mock_winreg()
+#
+# File: test_software_audit.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Тест успешной инициализации движка аудита."""
+
 import pytest
 from unittest.mock import MagicMock, patch
 from apps.windows.core.software_audit import SoftwareAuditEngine

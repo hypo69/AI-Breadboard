@@ -1,8 +1,32 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Dev - Assist Cli
+# =============================================================================
+# Description:
+#   AI Assistant CLI tool for model and provider management.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.dev.assist_cli
+#   Python API:
+#     from scripts.dev.assist_cli import cmd_start
+#
+#     res = cmd_start()
+#
+# File: assist_cli.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
+from __future__ import annotations
 """AI Assistant CLI tool for model and provider management.
 
 Provides command-line interface for managing AI model providers, models,
 configuration, and running queries against selected models."""
-from __future__ import annotations
+
 import argparse
 import json
 import os

@@ -1,15 +1,23 @@
 /**
  * =============================================================================
- * Process Name: RAG Tab Cache Module
+ * Process Name: AI-Breadboard UI - Cache Script
  * =============================================================================
  * Description:
- *   Centralized cache management for RAG tab with cachedApiFetch wrapper.
+ *   Клиентский веб-скрипт модуля cache.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/rag_tab/modules/cache.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { CACHE_TAG, updateRagCacheStatus } from '/src/api/webgui/rag_tab/modules/cache.js';
  *
  * File: cache.js
- * Project: AI Breadboard
- * Module: RAGTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/rag_tab/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

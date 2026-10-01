@@ -1,3 +1,23 @@
+/**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Main Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/system_inspector_tab/main.js?v=20261001_v1" type="module"></script>
+ *
+ * File: main.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/system_inspector_tab
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
 // System & Hardware Inspector Tab JS Module
 (function() {
   let sysWs = null;
@@ -1549,17 +1569,11 @@
   ];
 
   const CORE_RESOURCE_LOGGERS = [
-    'librehardwaremonitor',
     'system_inspector',
     'hardware_monitor'
   ];
 
   const LOGGER_META = {
-    librehardwaremonitor: {
-      icon: '🌡️',
-      title: 'LibreHardwareMonitor',
-      desc: i18n.t('auto__cpu_gpu__e3c871'),
-    },
     system_inspector: {
       icon: '📊',
       title: 'System Inspector',

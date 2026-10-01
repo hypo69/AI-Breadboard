@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Travel Agent
+# =============================================================================
+# Description:
+#   Test suite for flight-specific tools.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_travel_agent import TestFlightTools
+#
+#     service = TestFlightTools()
+#
+# File: test_travel_agent.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Test suite for flight-specific tools."""
+
 import json
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock

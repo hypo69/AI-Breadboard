@@ -1,11 +1,33 @@
-"""Движок расследования первопричин и корреляции инцидентов Windows."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core - Root Cause Engine
+# =============================================================================
+# Description:
+#   Движок расследования первопричин и корреляции инцидентов Windows.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.root_cause_engine import RootCauseEngine
+#
+#     service = RootCauseEngine()
+#
+# File: root_cause_engine.py
+# Project: ai-breadboard
+# Package: apps.windows.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Движок расследования первопричин и корреляции инцидентов Windows."""
+
 import re
 import time
 from typing import Any, Dict, List, Optional
 from logger import logger
 from apps.windows.core.models import ActionType, AuditFinding, DomainAuditResult, FullAuditReport, HealthScoreSummary, InvestigationReport, RemediationAction, RiskLevel
-from apps.windows.core.modules import CleanCollector, DriverCollector, EventLogCollector, FileActivityCollector, PerformanceCollector, ProcessCollector, SecurityCollector, ServicesCollector, SoftwareCollector, TasksCollector
+from apps.windows.core.audits import CleanCollector, DriverCollector, EventLogCollector, FileActivityCollector, PerformanceCollector, ProcessCollector, SecurityCollector, ServicesCollector, SoftwareCollector, TasksCollector
 
 class RootCauseEngine:
     """Аналитический движок расследования системных инцидентов и проблем."""

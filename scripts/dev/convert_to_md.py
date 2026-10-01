@@ -1,7 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Dev - Convert To Md
+# =============================================================================
+# Description:
+#   Media data to Markdown conversion utility.
+#
+# Usage Examples:
+#   Python API:
+#     import scripts.dev.convert_to_md as convert_to_md
+#
+# File: convert_to_md.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Media data to Markdown conversion utility.
 
 Converts media metadata and descriptions from JSON format into formatted
 Markdown reports with sections for plot, seasons, episodes, and verdicts."""
+
 import json
 from pathlib import Path
 from header import __root__

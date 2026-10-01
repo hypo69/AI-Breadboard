@@ -1,5 +1,29 @@
-"""Тесты для приложения интеграции с AIDA64."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps ~Aida64 Tests - Test Aida64
+# =============================================================================
+# Description:
+#   Тесты для приложения интеграции с AIDA64.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.~aida64.tests.test_aida64
+#   Python API:
+#     from apps.~aida64.tests.test_aida64 import TestAida64Service
+#
+#     service = TestAida64Service()
+#
+# File: test_aida64.py
+# Project: ai-breadboard
+# Package: apps.~aida64.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Тесты для приложения интеграции с AIDA64."""
+
 import unittest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient

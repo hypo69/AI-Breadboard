@@ -1,6 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Base64 Module
+# =============================================================================
+# Description:
+#   Base64 encoded content to temporary file conversion utilities.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.convertors.base64 import base64_to_tmpfile
+#
+#     res = base64_to_tmpfile()
+#     print(res)
+#
+# File: base64.py
+# Project: ai-breadboard
+# Package: src.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """Base64 encoded content to temporary file conversion utilities.
 
 Converts Base64 encoded content to temporary files for processing."""
+
 ' This module provides a function to decode Base64 encoded content and write it to a temporary file with the specified extension.\n\nFunctions:\n    - `base64_to_tmpfile`: Convert Base64 encoded content to a temporary file.\n'
 import base64
 import tempfile

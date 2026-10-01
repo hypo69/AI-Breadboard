@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Tests - Test Telemetry Autoswitch
+# =============================================================================
+# Description:
+#   Модульный тест автопереключения тяжелого режима телеметрии в легкий через 5 дней.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.tests.test_telemetry_autoswitch import test_telemetry_autoswitch_heavy_to_light
+#
+#     res = test_telemetry_autoswitch_heavy_to_light()
+#
+# File: test_telemetry_autoswitch.py
+# Project: ai-breadboard
+# Package: apps.windows.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """Модульный тест автопереключения тяжелого режима телеметрии в легкий через 5 дней."""
+
 import time
 from unittest.mock import patch, MagicMock
 import pytest

@@ -1,6 +1,26 @@
-"""
-Correlation Engine for analyzing relationships between system components
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core - Correlation Engine
+# =============================================================================
+# Description:
+#   Correlation Engine for analyzing relationships between system components
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.correlation_engine import Correlation
+#
+#     service = Correlation()
+#
+# File: correlation_engine.py
+# Project: ai-breadboard
+# Package: apps.windows.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""Correlation Engine for analyzing relationships between system components"""
+
 from typing import List, Dict, Set, Tuple, Optional, Any
 from dataclasses import dataclass, field
 from datetime import datetime

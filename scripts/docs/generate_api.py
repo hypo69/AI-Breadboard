@@ -1,5 +1,27 @@
-"""
-Скрипт для автоматической генерации API-документации из Python docstrings.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Docs - Generate Api
+# =============================================================================
+# Description:
+#   Скрипт для автоматической генерации API-документации из Python docstrings.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.docs.generate_api
+#   Python API:
+#     from scripts.docs.generate_api import DocstringParser
+#
+#     service = DocstringParser()
+#
+# File: generate_api.py
+# Project: ai-breadboard
+# Package: scripts.docs
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
+"""Скрипт для автоматической генерации API-документации из Python docstrings.
 
 Использует ast для парсинга Python кода и создаёт структурированные Markdown файлы.
 Парсит docstrings в формате Google-style и генерирует полноценную API-документацию
@@ -10,8 +32,8 @@
 - src.utils
 
 Автор: AI-Breadboard Team
-Язык: Русский
-"""
+Язык: Русский"""
+
 import os
 import ast
 import sys

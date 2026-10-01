@@ -1,5 +1,27 @@
-"""TShark network packet sensors for telemetry integration."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Tshark - Sensors
+# =============================================================================
+# Description:
+#   TShark network packet sensors for telemetry integration.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.tshark.sensors import TSharkPacketSensor
+#
+#     service = TSharkPacketSensor()
+#
+# File: sensors.py
+# Project: ai-breadboard
+# Package: apps.tshark
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""TShark network packet sensors for telemetry integration."""
+
 import time
 from typing import List, Optional, Any
 from logger import logger

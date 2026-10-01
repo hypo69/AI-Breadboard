@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Root - Main
+# =============================================================================
+# Description:
+#   Скрипт/модуль системы AI-Breadboard (`main`).
+#
+# Usage Examples:
+#   CLI:
+#     python main.py
+#   Python API:
+#     from main import load_app_config
+#
+#     res = load_app_config()
+#
+# File: main.py
+# Project: ai-breadboard
+# Package: root
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:20:26
+# =============================================================================
+
+"""Скрипт/модуль системы AI-Breadboard (`main`)."""
+
 import os
 import sys
 from pathlib import Path
@@ -114,7 +139,7 @@ async def startup_event():
         except Exception as exc:
             logger.warning(f'Не удалось запустить движок автологгирования приложений: {exc}')
     else:
-        logger.info('AutoLogEngine пропущен: autolog_manager отключен в apps.disabled')
+        logger.warning('AutoLogEngine пропущен: autolog_manager отключен в apps.disabled')
     try:
         result = check_updates()
         if result.get('is_update_available'):

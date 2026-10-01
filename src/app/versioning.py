@@ -1,5 +1,28 @@
-"""Version check and update logic."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard APP - Versioning Module
+# =============================================================================
+# Description:
+#   Version check and update logic.
+#
+# Usage Examples:
+#   Python API:
+#     from src.app.versioning import get_local_version
+#
+#     res = get_local_version()
+#     print(res)
+#
+# File: versioning.py
+# Project: ai-breadboard
+# Package: src.app
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Version check and update logic."""
+
 import configparser
 import json
 import os

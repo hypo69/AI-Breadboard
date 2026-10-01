@@ -1,3 +1,23 @@
+/**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Main Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/user/main.js?v=20261001_v1" type="module"></script>
+ *
+ * File: main.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/user
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
 // User Interface Main JS
 import { initI18n, switchLang, applyTranslations } from '../js/i18n.js';
 import { initTheme, setTheme, getThemeMode, getResolvedTheme } from '../js/theme.js';

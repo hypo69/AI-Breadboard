@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Plugin Telegram Channel Rag
+# =============================================================================
+# Description:
+#   Unit tests for Multi-Channel Telegram RAG & User Subscription Plugin.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_plugin_telegram_channel_rag import test_telegram_collector_username_cleaner
+#
+#     res = test_telegram_collector_username_cleaner()
+#
+# File: test_plugin_telegram_channel_rag.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for Multi-Channel Telegram RAG & User Subscription Plugin."""
+
 import json
 from pathlib import Path
 import pytest

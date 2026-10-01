@@ -1,3 +1,24 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts - Init Skill Test Status
+# =============================================================================
+# Description:
+#   Скрипт/модуль системы AI-Breadboard (`init_skill_test_status`).
+#
+# Usage Examples:
+#   Python API:
+#     import scripts.init_skill_test_status as init_skill_test_status
+#
+# File: init_skill_test_status.py
+# Project: ai-breadboard
+# Package: scripts
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
+"""Скрипт/модуль системы AI-Breadboard (`init_skill_test_status`)."""
+
 import json
 import os
 from pathlib import Path

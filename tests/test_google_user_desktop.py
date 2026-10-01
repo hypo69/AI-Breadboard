@@ -1,5 +1,28 @@
-"""Юнит-тесты для приложения Google User Desktop."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Google User Desktop
+# =============================================================================
+# Description:
+#   Юнит-тесты для приложения Google User Desktop.
+#
+# Usage Examples:
+#   CLI:
+#     python -m tests.test_google_user_desktop
+#   Python API:
+#     from tests.test_google_user_desktop import TestGoogleUserDesktopState
+#
+#     service = TestGoogleUserDesktopState()
+#
+# File: test_google_user_desktop.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Юнит-тесты для приложения Google User Desktop."""
 
 import unittest
 from unittest.mock import MagicMock, patch

@@ -1,5 +1,27 @@
-"""Фоновый сервис посекундного сбора системных метрик с сохранением в SQLite."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Telemetry - Service
+# =============================================================================
+# Description:
+#   Фоновый сервис посекундного сбора системных метрик с сохранением в SQLite.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.telemetry.service import TelemetryLoggerService
+#
+#     instance = TelemetryLoggerService.get_instance()
+#
+# File: service.py
+# Project: ai-breadboard
+# Package: apps.windows.telemetry
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Фоновый сервис посекундного сбора системных метрик с сохранением в SQLite."""
+
 import asyncio
 import threading
 import time
@@ -8,15 +30,30 @@ try:
     from logger import logger
 except ImportError:
     from logger import logger
-from apps.windows.telemetry.collector import SystemCollector
-from apps.windows.telemetry.history_manager import HardwareHistoryManager
-from apps.windows.telemetry.storage import TelemetryStorage
+# Updated: 2026-10-01 11:30:00
+from .collector import SystemCollector
+from apps.windows.telemetry_research.hardware_history_manager import HardwareHistoryManager
+from .sqlite import TelemetryStorage
+from .telemetry_config import TelemetryConfigManager
+from .w64_collector import AIW64Collector
+from .w64_etw_collector import AIW64ETWCollector
 
 class TelemetryLoggerService:
-    """Сервис периодического сбора системной телеметрии и аудита оборудования в SQLite."""
+    """Сервис периодического сбора системной телеметрии, аудита оборудования и W64/ETW событий в SQLite."""
     _instance: Optional[TelemetryLoggerService] = None
 
-    def __init__(self, interval_sec: float=5.0, top_processes: int=20, collector: Optional[SystemCollector]=None, storage: Optional[TelemetryStorage]=None, hardware_audit_interval_sec: float=60.0, rollup_interval_sec: float=30.0) -> None:
+    def __init__(
+        self,
+        interval_sec: float = 5.0,
+        top_processes: int = 20,
+        collector: Optional[SystemCollector] = None,
+        storage: Optional[TelemetryStorage] = None,
+        hardware_audit_interval_sec: float = 60.0,
+        rollup_interval_sec: float = 30.0,
+        enable_w64: Optional[bool] = None,
+        config_manager: Optional[TelemetryConfigManager] = None,
+        db_cleanup_interval_sec: Optional[float] = None,
+    ) -> None:
         """Инициализирует сервис сбора системных метрик.
 
         Args:
@@ -26,13 +63,45 @@ class TelemetryLoggerService:
             storage: Экземпляр хранилища TelemetryStorage (опционально).
             hardware_audit_interval_sec: Интервал периодического аудита железа (по умолчанию 60.0).
             rollup_interval_sec: Интервал запуска обобщения старых данных (по умолчанию 30.0 с).
+            enable_w64: Включение подсистемы сбора событий W64/ETW (по умолчанию из config.json).
+            config_manager: Менеджер конфигурации.
+            db_cleanup_interval_sec: Интервал фонового контроля размера базы данных (сек).
         """
         self.interval_sec = max(0.2, interval_sec)
         self.top_processes = max(1, top_processes)
         self.hardware_audit_interval_sec = max(5.0, hardware_audit_interval_sec)
         self.rollup_interval_sec = max(5.0, rollup_interval_sec)
+        self.config_manager = config_manager or TelemetryConfigManager()
         self.collector = collector or SystemCollector()
         self.storage = storage or TelemetryStorage.get_instance()
+        self.db_cleanup_interval_sec = max(
+            10.0,
+            db_cleanup_interval_sec if db_cleanup_interval_sec is not None else self.config_manager.get_db_cleanup_interval_seconds()
+        )
+
+        cfg = self.config_manager.get_config()
+        w64_cfg = cfg.get('w64_collector', {})
+        self.enable_w64 = enable_w64 if enable_w64 is not None else w64_cfg.get('enabled', True)
+
+        self.w64_collector: Optional[AIW64Collector] = None
+        self.w64_etw_collector: Optional[AIW64ETWCollector] = None
+        if self.enable_w64:
+            self.w64_collector = AIW64Collector(
+                storage=self.storage,
+                enable_file_monitoring=w64_cfg.get('enable_file_monitoring', True),
+                enable_process_monitoring=w64_cfg.get('enable_process_monitoring', True),
+                enable_registry_monitoring=w64_cfg.get('enable_registry_monitoring', True),
+                enable_network_monitoring=w64_cfg.get('enable_network_monitoring', True),
+                enable_event_log_monitoring=w64_cfg.get('enable_event_log_monitoring', True),
+            )
+            self.w64_etw_collector = AIW64ETWCollector(
+                storage=self.storage,
+                enable_process_trace=w64_cfg.get('enable_process_trace', True),
+                enable_disk_trace=w64_cfg.get('enable_disk_trace', True),
+                enable_network_trace=w64_cfg.get('enable_network_trace', True),
+                enable_registry_trace=w64_cfg.get('enable_registry_trace', True),
+            )
+
         self._running = False
         self._thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
@@ -41,6 +110,7 @@ class TelemetryLoggerService:
         self._last_tick_time: Optional[float] = None
         self._last_hw_audit_time: Optional[float] = None
         self._last_rollup_time: Optional[float] = None
+        self._last_db_cleanup_time: Optional[float] = None
         self._last_error: Optional[str] = None
         self._last_snapshot: Optional[Any] = None
 
@@ -70,7 +140,7 @@ class TelemetryLoggerService:
         return self.collector.history_manager
 
     def start(self) -> bool:
-        """Запускает фоновый поток сбора телеметрии и мониторинга оборудования.
+        """Запускает фоновый поток сбора телеметрии, аудита оборудования и W64/ETW сборщиков.
 
         Returns:
             bool: True если сервис успешно запущен, False если уже работал.
@@ -84,13 +154,20 @@ class TelemetryLoggerService:
         self._ticks_count = 0
         self._last_error = None
         self._last_hw_audit_time = None
+        self._last_db_cleanup_time = None
+
+        if self.w64_collector:
+            self.w64_collector.start()
+        if self.w64_etw_collector:
+            self.w64_etw_collector.start()
+
         self._thread = threading.Thread(target=self._worker_loop, name='TelemetryLoggerWorker', daemon=True)
         self._thread.start()
-        logger.info(f'Фоновый сервис телеметрии запущен в БД (интервал: {self.interval_sec}с, аудит железа: {self.hardware_audit_interval_sec}с, БД: {self.storage.db_path})')
+        logger.info(f'Фоновый сервис телеметрии запущен в БД (интервал: {self.interval_sec}с, аудит железа: {self.hardware_audit_interval_sec}с, W64: {self.enable_w64}, БД: {self.storage.db_path})')
         return True
 
     def stop(self) -> bool:
-        """Останавливает фоновый поток сбора телеметрии.
+        """Останавливает фоновый поток сбора телеметрии и W64/ETW сборщиков.
 
         Returns:
             bool: True если сервис был остановлен, False если он не работал.
@@ -99,9 +176,19 @@ class TelemetryLoggerService:
             return False
         self._running = False
         self._stop_event.set()
+
+        if self.w64_collector:
+            self.w64_collector.stop()
+        if self.w64_etw_collector:
+            self.w64_etw_collector.stop()
+
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=3.0)
         self._thread = None
+        try:
+            self.storage.flush()
+        except Exception:
+            pass
         logger.info(f'Фоновый сервис телеметрии остановлен. Всего тиков: {self._ticks_count}')
         return True
 
@@ -132,15 +219,25 @@ class TelemetryLoggerService:
                         archive_entry = self.collector.archive_hardware_state(auto_diff=True)
                         if archive_entry:
                             self.storage.save_hardware_archive(archive_entry)
-                        self._last_hw_audit_time = loop_start
                     except Exception as hw_ex:
                         logger.debug(f'Ошибка при периодическом аудите железа: {hw_ex}')
+                    try:
+                        self.collector.get_extended_system_audit()
+                    except Exception as ext_ex:
+                        logger.debug(f'Ошибка при периодическом расширенном аудите: {ext_ex}')
+                    self._last_hw_audit_time = loop_start
                 if self._last_rollup_time is None or loop_start - self._last_rollup_time >= self.rollup_interval_sec:
                     try:
                         self.run_rollups()
                         self._last_rollup_time = loop_start
                     except Exception as roll_ex:
                         logger.debug(f'Ошибка при периодическом обобщении процессов: {roll_ex}')
+                if self._last_db_cleanup_time is None or loop_start - self._last_db_cleanup_time >= self.db_cleanup_interval_sec:
+                    try:
+                        self.cleanup_db()
+                        self._last_db_cleanup_time = loop_start
+                    except Exception as clean_ex:
+                        logger.debug(f'Ошибка при периодическом контроле размера БД: {clean_ex}')
             except (RuntimeError, ValueError) as shut_ex:
                 if 'shutdown' in str(shut_ex).lower() or 'closed file' in str(shut_ex).lower():
                     break
@@ -163,6 +260,14 @@ class TelemetryLoggerService:
         short_res = self.storage.aggregate_process_metrics_2min(cutoff_seconds=120)
         daily_res = self.storage.aggregate_process_metrics_daily(cutoff_days=1)
         return {'rollup_2min': short_res, 'rollup_daily': daily_res}
+
+    def cleanup_db(self) -> Dict[str, Any]:
+        """Запускает процедуру контроля размера и усечения базы данных телеметрии.
+
+        Returns:
+            Dict[str, Any]: Отчет о результатах контроля размера.
+        """
+        return self.storage.enforce_size_limit()
 
     def get_status(self) -> Dict[str, Any]:
         """Возвращает текущий статус сервиса телеметрии.

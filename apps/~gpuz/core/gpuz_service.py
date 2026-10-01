@@ -1,5 +1,27 @@
-"""Сервис интеграции с GPU-Z."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps ~Gpuz Core - Gpuz Service
+# =============================================================================
+# Description:
+#   Сервис интеграции с GPU-Z.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.~gpuz.core.gpuz_service import GpuzService
+#
+#     service = GpuzService()
+#
+# File: gpuz_service.py
+# Project: ai-breadboard
+# Package: apps.~gpuz.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Сервис интеграции с GPU-Z."""
+
 import os
 from typing import Any, Dict, List, Optional
 from logger import logger

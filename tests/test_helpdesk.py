@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Helpdesk
+# =============================================================================
+# Description:
+#   Ensure clean test environment for helpdesk tables.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_helpdesk import setup_helpdesk_db
+#
+#     res = setup_helpdesk_db()
+#
+# File: test_helpdesk.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Ensure clean test environment for helpdesk tables."""
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient

@@ -1,5 +1,28 @@
-"""Модуль централизованного доступа к конфигурации сетевых портов (ports.json)."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Ports Module
+# =============================================================================
+# Description:
+#   Модуль централизованного доступа к конфигурации сетевых портов (ports.json).
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.ports import load_ports_config
+#
+#     res = load_ports_config()
+#     print(res)
+#
+# File: ports.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Модуль централизованного доступа к конфигурации сетевых портов (ports.json)."""
+
 import json
 from pathlib import Path
 from types import SimpleNamespace

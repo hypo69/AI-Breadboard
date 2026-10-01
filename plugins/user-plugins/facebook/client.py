@@ -1,9 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins Facebook - Client
+# =============================================================================
+# Description:
+#   Facebook Graph API client module.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.user-plugins.facebook.client import FacebookGraphClient
+#
+#     service = FacebookGraphClient()
+#
+# File: client.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.facebook
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Facebook Graph API client module.
 
 Handles network requests to Facebook Graph API endpoints, providing typed methods
-for posting messages, media, inspecting pages, and validating authentication tokens.
-"""
-from __future__ import annotations
+for posting messages, media, inspecting pages, and validating authentication tokens."""
+
 from typing import Any, Dict, List, Optional
 import httpx
 from logger import logger

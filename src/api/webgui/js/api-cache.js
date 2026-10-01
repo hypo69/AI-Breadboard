@@ -1,4 +1,24 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Api-Cache Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля api-cache.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/api-cache.js?v=20261001_v1" type="module"></script>
+ *
+ * File: api-cache.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * api-cache.js - Универсальный кеш-слой для всех API-запросов веб-интерфейса
  * 
  * Предоставляет единую точку входа для всех HTTP-запросов с автоматическим кешированием,

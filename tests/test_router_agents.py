@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router Agents
+# =============================================================================
+# Description:
+#   Testing CRUD and helper endpoints /api/agents.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_router_agents import TestAgentsRouter
+#
+#     service = TestAgentsRouter()
+#
+# File: test_router_agents.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Testing CRUD and helper endpoints /api/agents."""
+
 import json
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock

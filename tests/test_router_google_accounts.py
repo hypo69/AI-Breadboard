@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router Google Accounts
+# =============================================================================
+# Description:
+#   Isolate accounts storage, oauth files, and tokens dir to temporary directory.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_router_google_accounts import TestGoogleAccountsRouter
+#
+#     service = TestGoogleAccountsRouter()
+#
+# File: test_router_google_accounts.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Isolate accounts storage, oauth files, and tokens dir to temporary directory."""
+
 import json
 import io
 from pathlib import Path

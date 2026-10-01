@@ -1,5 +1,27 @@
-"""Менеджер безопасного изменения параметров системы с автоматическим созданием точек восстановления."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core - System Param Manager
+# =============================================================================
+# Description:
+#   Менеджер безопасного изменения параметров системы с автоматическим созданием точек восстановления.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.system_param_manager import ParameterType
+#
+#     service = ParameterType()
+#
+# File: system_param_manager.py
+# Project: ai-breadboard
+# Package: apps.windows.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Менеджер безопасного изменения параметров системы с автоматическим созданием точек восстановления."""
+
 import json
 import os
 import subprocess
@@ -12,8 +34,6 @@ from typing import Any, Dict, List, Optional
 from logger import logger
 from apps.windows.core.models import RiskLevel
 from apps.windows.core.system_restore import WindowsSystemRestoreManager
-from apps.common.csv_logger import AppCsvLogger
-_csv_logger = AppCsvLogger('system_control_center')
 
 class ParameterType(str, Enum):
     """Тип управляемого параметра."""
@@ -208,7 +228,6 @@ class SafeSystemParamManager:
         status_str = 'SUCCESS' if apply_success else 'FAILED'
         record = ParameterChangeRecord(change_id=change_id, param_id=param.param_id, param_name=param.name, old_value=old_value, new_value=new_value, is_sensitive=is_sensitive, risk=param.risk.value, restore_point=rp_result, local_snapshot=local_snapshot_res, status=status_str, error_message=apply_err)
         self._append_history(record)
-        _csv_logger.log_param_change(param_name=param.param_id, old_value=old_value, new_value=new_value, status=status_str, user='system', details={'change_id': change_id, 'name': param.name, 'sensitive': is_sensitive, 'error': apply_err}, filename='system_control_param_changes.csv')
         return {'status': status_str, 'change_id': change_id, 'param_id': param.param_id, 'param_name': param.name, 'old_value': old_value, 'new_value': new_value, 'is_sensitive': is_sensitive, 'restore_point': rp_result, 'local_snapshot': local_snapshot_res, 'requires_reboot': param.requires_reboot, 'message': f"Параметр '{param.name}' успешно изменен на '{new_value}'." if apply_success else f"Ошибка изменения параметра: {apply_err or 'Не удалось применить значение'}"}
 
     def rollback_change(self, change_id: str) -> Dict[str, Any]:

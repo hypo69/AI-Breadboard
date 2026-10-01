@@ -1,6 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Rag Module
+# =============================================================================
+# Description:
+#   RAG index using Gemini Embedding API and FAISS.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.gemini.rag import GeminiRAG
+#
+#     service = GeminiRAG()
+#     result = service.add_documents()
+#     print(result)
+#
+# File: rag.py
+# Project: ai-breadboard
+# Package: src.ai.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """RAG index using Gemini Embedding API and FAISS.
 
 Provides document vectorization, storage, and semantic search capabilities."""
+
 import json
 from pathlib import Path
 from typing import List, Dict

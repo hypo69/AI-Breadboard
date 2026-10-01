@@ -1,4 +1,24 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Status-Highlighter Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля status-highlighter.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/status-highlighter.js?v=20261001_v1" type="module"></script>
+ *
+ * File: status-highlighter.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * ═══════════════════════════════════════════════════════════════════════════
  * STATUS HIGHLIGHTER — AI Breadboard WebGUI
  * Глобальный менеджер программного выделения статусов (Зелёный = Включен/Активен, Красный = Выключен/Неактивен)

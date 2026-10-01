@@ -1,5 +1,26 @@
-"""Консольный интерактивный интерфейс (TUI) для Google User Desktop."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Google_User_Desktop - Tui
+# =============================================================================
+# Description:
+#   Консольный интерактивный интерфейс (TUI) для Google User Desktop.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.google_user_desktop.tui import render_ui
+#
+#     res = render_ui()
+#
+# File: tui.py
+# Project: ai-breadboard
+# Package: apps.google_user_desktop
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Консольный интерактивный интерфейс (TUI) для Google User Desktop."""
 
 import asyncio
 from typing import Any, List, Optional

@@ -1,4 +1,27 @@
-﻿from pathlib import Path
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Log_Intelligence Tests - Test Intelligence Pipeline
+# =============================================================================
+# Description:
+#   Проверка работы Data Researcher: подсчет Redundancy Ratio, Health Score и детекция всплесков.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.log_intelligence.tests.test_intelligence_pipeline import test_data_researcher_profiling
+#
+#     res = test_data_researcher_profiling()
+#
+# File: test_intelligence_pipeline.py
+# Project: ai-breadboard
+# Package: apps.windows.log_intelligence.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""Проверка работы Data Researcher: подсчет Redundancy Ratio, Health Score и детекция всплесков."""
+
+from pathlib import Path
 import pytest
 from apps.windows.log_intelligence.src.models import DataProfileReport, IngestionDecision, IngestionStrategy, LogEntry, LogSeverity
 from apps.windows.log_intelligence.src.data_researcher import LogDataResearcher
@@ -44,7 +67,7 @@ def test_adaptive_rag_pipeline(tmp_path: Path) -> None:
 
 def test_wevtapi_channel_enumeration() -> None:
     """Проверка нативного перечисления каналов через WevtAPI."""
-    from apps.windows.telemetry.api_bindings.wevtapi import WevtAPI
+    from apps.windows.telemetry.win32_ffi.wevtapi import WevtAPI
     api = WevtAPI()
     channels = api.enumerate_channels()
     assert len(channels) >= 10
@@ -54,7 +77,7 @@ def test_wevtapi_channel_enumeration() -> None:
 
 def test_log_discovery_engine_sources() -> None:
     """Проверка обнаружения всех источников логов в системе через LogDiscoveryEngine."""
-    from apps.windows.core.modules.log_discovery_engine import LogDiscoveryEngine
+    from apps.windows.core.audits.log_discovery_engine import LogDiscoveryEngine
     engine = LogDiscoveryEngine()
     sources = engine.discover_all_sources()
     assert len(sources) > 50

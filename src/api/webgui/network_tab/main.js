@@ -1,3 +1,23 @@
+/**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Main Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/network_tab/main.js?v=20261001_v1" type="module"></script>
+ *
+ * File: main.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/network_tab
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
 // =============================================================================
 // Process Name: Windows Network Terminal Tab Client Module
 // =============================================================================
@@ -14,8 +34,10 @@
   let capturedPackets = [];
   let allConnections = [];
   let allAdapters = [];
+  let allLanDevices = [];
   let activeConnFilter = 'all';
   let isSpeedtestRunning = false;
+  let isLanScanRunning = false;
 
   // Format bytes to human readable format
   function formatBytes(bytes, decimals = 1) {
@@ -51,21 +73,28 @@
       if (tsharkBadge) {
         if (data.tshark_available) {
           tsharkBadge.className = 'badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1';
-          tsharkBadge.innerText = i18n.t('auto_tshark_dpi__360aa8');
+          tsharkBadge.innerText = 'TShark DPI: Доступен';
         } else {
           tsharkBadge.className = 'badge rounded-pill bg-warning-subtle text-warning border border-warning px-2 py-1';
-          tsharkBadge.innerText = i18n.t('auto_tshark_dpi__7a38fb');
+          tsharkBadge.innerText = 'TShark DPI: Не найден';
         }
       }
 
       if (kpiAdapters) kpiAdapters.innerText = data.total_adapters ?? '--';
-      if (kpiConns) kpiConns.innerText = data.active_connections_count ?? '--i18n.t('auto__if_kpilistening_kpilistening_innertext_data_listening_ports_count_0_if_kpipackets_kpipackets_innertext_data_total_packets_capturedpackets_length_const_anomaliescount_data_latest_heuristics_length_0_data_latest_ai_report_anomalies_length_0_if_kpianomalies_kpianomalies_innertext_anomaliescount_kpianomalies_style_color_anomaliescount_0__2717e0')#f87171' : '#4ade80';
+      if (kpiConns) kpiConns.innerText = data.active_connections_count ?? '--';
+      if (kpiListening) kpiListening.innerText = `${data.listening_ports_count ?? 0} слушающих`;
+      if (kpiPackets) kpiPackets.innerText = data.total_packets ?? capturedPackets.length;
+      
+      const anomaliesCount = (data.latest_heuristics?.length || 0) + (data.latest_ai_report?.anomalies?.length || 0);
+      if (kpiAnomalies) {
+        kpiAnomalies.innerText = `${anomaliesCount} аномалий`;
+        kpiAnomalies.style.color = anomaliesCount > 0 ? '#f87171' : '#4ade80';
       }
     } catch (e) {
       console.warn('[NetworkTab] Status check error:', e);
       if (engineBadge) {
         engineBadge.className = 'badge rounded-pill bg-danger-subtle text-danger border border-danger px-2 py-1';
-        engineBadge.innerText = i18n.t('auto_windows_net__f32419');
+        engineBadge.innerText = 'Windows Net: Ошибка';
       }
     }
   }
@@ -97,13 +126,19 @@
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Тестирование...';
     }
-    if (statusText) statusText.innerText = i18n.t('auto__ping_download_upload__0f04c3');
-    if (summaryText) summaryText.innerText = i18n.t('auto__cloudflare_dns__a23ee1');
+    if (statusText) statusText.innerText = 'Измерение Ping, Download, Upload...';
+    if (summaryText) summaryText.innerText = 'Выполняется опрос Cloudflare CDN и DNS серверов...';
 
     try {
-      const res = await fetch('/api/network/speedtest/run', { method: 'POSTi18n.t('auto__if_res_ok_throw_new_error_http_res_status_const_data_await_res_json_renderspeedtestresults_data_if_statustext_statustext_innertext_new_date_tolocaletimestring_catch_e_console_error__56dacc')[NetworkTab] Speedtest error:', e);
-      window.showToast?.(i18n.t('auto___138be8') + e.message, 'danger') || alert(i18n.t('auto___138be8') + e.message);
-      if (statusText) statusText.innerText = i18n.t('auto___d482f2');
+      const res = await fetch('/api/network/speedtest/run', { method: 'POST' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      renderSpeedtestResults(data);
+      if (statusText) statusText.innerText = `Завершено: ${new Date().toLocaleTimeString()}`;
+    } catch (e) {
+      console.error('[NetworkTab] Speedtest error:', e);
+      window.showToast?.('Ошибка Speedtest: ' + e.message, 'danger') || alert('Ошибка Speedtest: ' + e.message);
+      if (statusText) statusText.innerText = 'Ошибка выполнения теста';
     } finally {
       isSpeedtestRunning = false;
       if (btn) {
@@ -148,8 +183,12 @@
     
     if (valGrade) {
       valGrade.innerText = quality.rating || '--';
-      valGrade.style.color = quality.color || '#fbbf24i18n.t('auto__if_subisp_subisp_innertext_meta_isp__cd72e0')Неизвестноi18n.t('auto__if_badgeip_badgeip_innertext_ip_meta_ip__cc1436')--i18n.t('auto__if_badgeloc_badgeloc_innertext_meta_city__4883f8')'} ${meta.country || ''} (${meta.colo || 'Edge'})`.trim();
-    if (summaryText) summaryText.innerText = `${quality.grade || i18n.t('auto___398c7d')}. ${quality.summary || ''}`;
+      valGrade.style.color = quality.color || '#fbbf24';
+    }
+    if (subIsp) subIsp.innerText = `Провайдер: ${meta.isp || 'Неизвестно'}`;
+    if (badgeIp) badgeIp.innerText = `Внешний IP: ${meta.ip || '--'}`;
+    if (badgeLoc) badgeLoc.innerText = `Локация: ${meta.city || ''} ${meta.country || ''} (${meta.colo || 'Edge'})`.trim();
+    if (summaryText) summaryText.innerText = `${quality.grade || 'Оценка соединения'}. ${quality.summary || ''}`;
 
     // Top KPI cards
     if (kpiSpeed) kpiSpeed.innerText = `${downMbps} Mbps`;
@@ -222,7 +261,12 @@
               <td style="text-align: right;" class="text-primary">${formatBytes(a.bytes_recv)}</td>
             </tr>
           `;
-        }).join('i18n.t('auto__if_kpiactive_kpiactive_innertext_activecount_catch_e_console_error__854064')[NetworkTab] Failed to fetch adapters:', e);
+        }).join('');
+      }
+
+      if (kpiActive) kpiActive.innerText = `${activeCount} активных`;
+    } catch (e) {
+      console.error('[NetworkTab] Failed to fetch adapters:', e);
       if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="text-center py-3 text-danger">Ошибка загрузки адаптеров: ${e.message}</td></tr>`;
     }
   }
@@ -235,7 +279,20 @@
     const kpiListening = document.getElementById('net-kpi-listening');
 
     try {
-      const res = await fetch('/api/network/connections?limit=250i18n.t('auto__if_res_ok_throw_new_error_http_res_status_const_data_await_res_json_const_conns_array_isarray_data_connections_data_connections_const_listening_array_isarray_data_listening_ports_data_listening_ports_allconnections_listening_conns_if_badgeconn_badgeconn_innertext_allconnections_length_if_kpiconns_kpiconns_innertext_conns_length_if_kpilistening_kpilistening_innertext_listening_length_renderconnectionstable_catch_e_console_error__e73855')[NetworkTab] Failed to fetch connections:', e);
+      const res = await fetch('/api/network/connections?limit=250');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const conns = Array.isArray(data.connections) ? data.connections : [];
+      const listening = Array.isArray(data.listening_ports) ? data.listening_ports : [];
+      allConnections = [...listening, ...conns];
+
+      if (badgeConn) badgeConn.innerText = allConnections.length;
+      if (kpiConns) kpiConns.innerText = conns.length;
+      if (kpiListening) kpiListening.innerText = `${listening.length} слушающих`;
+
+      renderConnectionsTable();
+    } catch (e) {
+      console.error('[NetworkTab] Failed to fetch connections:', e);
       if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-3 text-danger">Ошибка загрузки соединений: ${e.message}</td></tr>`;
     }
   }
@@ -274,13 +331,13 @@
       else if (c.status === 'ESTABLISHED') statusClass = 'status-badge-established';
 
       return `
-        <tr class="net-conn-row" data-idx="${idx}" style="cursor: pointer;" title=i18n.t('auto___59fdea')>
+        <tr class="net-conn-row" data-idx="${idx}" style="cursor: pointer;" title="Кликните для детального анализа">
           <td><span class="proto-badge ${protoClass}">${c.protocol || 'TCP'}</span></td>
           <td class="text-info font-monospace">${c.local_address || '-'}</td>
           <td class="text-secondary font-monospace">${c.remote_address || '-'}</td>
           <td><span class="proto-badge ${statusClass}">${c.status || '-'}</span></td>
           <td class="text-muted font-monospace">${c.pid || '-'}</td>
-          <td class="fw-bold text-white"><i class="bi bi-app me-1 text-muted"></i>${c.process_name || i18n.t('auto___43b44f')}</td>
+          <td class="fw-bold text-white"><i class="bi bi-app me-1 text-muted"></i>${c.process_name || 'Неизвестно'}</td>
         </tr>
       `;
     }).join('');
@@ -293,7 +350,8 @@
         if (!item || !window.AITableModal) return;
 
         window.AITableModal.show({
-          icon: '📡i18n.t('auto__title_item_protocol__3a2e36')TCP'}]`,
+          icon: '📡',
+          title: `Сетевое соединение [${item.protocol || 'TCP'}]`,
           subtitle: `${item.process_name} (PID: ${item.pid || 'N/A'})`,
           tableType: 'network',
           badges: [
@@ -302,14 +360,14 @@
             { text: `PID ${item.pid || '-'}`, class: 'badge bg-secondary' }
           ],
           metadata: [
-            { label: i18n.t('auto___2988c5'), value: item.process_name || '-' },
+            { label: 'Имя процесса', value: item.process_name || '-' },
             { label: 'PID', value: String(item.pid || '-') },
-            { label: i18n.t('auto___382265'), value: item.protocol || '-' },
-            { label: i18n.t('auto___e7a4ba'), value: item.local_address || '-' },
-            { label: i18n.t('auto___34aa72'), value: item.remote_address || '-' },
-            { label: i18n.t('auto___1aa3a3'), value: item.status || '-' }
+            { label: 'Протокол', value: item.protocol || '-' },
+            { label: 'Локальный адрес', value: item.local_address || '-' },
+            { label: 'Удаленный адрес', value: item.remote_address || '-' },
+            { label: 'Состояние', value: item.status || '-' }
           ],
-          rawTitle: i18n.t('auto___a9d76e'),
+          rawTitle: 'Полные данные сокета',
           rawContent: JSON.stringify(item, null, 2),
           requestData: item
         });
@@ -322,7 +380,14 @@
     const tbody = document.getElementById('net-packets-tbody');
     const badge = document.getElementById('net-captured-badge');
     const filterInput = document.getElementById('net-table-filter');
-    const filter = (filterInput?.value || 'i18n.t('auto__tolowercase_trim_if_tbody_return_if_badge_badge_innertext_capturedpackets_length_if_capturedpackets_length_0_tbody_innerhtml__bd9ab6')<tr><td colspan="7" class="text-center py-4 text-mutedi18n.t('auto___16e745')Старт захвата".</td></tr>';
+    const filter = (filterInput?.value || '').toLowerCase().trim();
+
+    if (!tbody) return;
+
+    if (badge) badge.innerText = `${capturedPackets.length} пакетов`;
+
+    if (capturedPackets.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Пакеты не захвачены. Выберите адаптер и нажмите "Старт захвата".</td></tr>';
       return;
     }
 
@@ -343,7 +408,7 @@
       else if (proto.includes('DNS')) protoClass = 'proto-dns';
 
       return `
-        <tr class="net-packet-row" data-idx="${idx}" style="cursor: pointer;" title=i18n.t('auto__ai__f95071')>
+        <tr class="net-packet-row" data-idx="${idx}" style="cursor: pointer;" title="Кликните для AI анализа">
           <td class="text-muted">${p.number || p.packet_number || '--'}</td>
           <td>${p.timestamp ? (typeof p.timestamp === 'number' ? new Date(p.timestamp * 1000).toLocaleTimeString() : p.timestamp) : '--'}</td>
           <td style="color: #38bdf8;">${p.source || '--'}</td>
@@ -362,7 +427,8 @@
         if (!p || !window.AITableModal) return;
 
         window.AITableModal.show({
-          icon: '🌐i18n.t('auto__title_p_number_p_packet_number__96e9d6')N/A'} [${p.protocol || 'TCP'}]`,
+          icon: '🌐',
+          title: `Пакет #${p.number || p.packet_number || 'N/A'} [${p.protocol || 'TCP'}]`,
           subtitle: `${p.source || '0.0.0.0'} ➔ ${p.destination || '0.0.0.0'}`,
           tableType: 'network',
           badges: [
@@ -370,14 +436,14 @@
             { text: `${p.length || 0} Bytes`, class: 'badge bg-secondary' }
           ],
           metadata: [
-            { label: i18n.t('auto___246ebf'), value: String(p.number || p.packet_number || '-') },
-            { label: i18n.t('auto___382265'), value: (p.protocol || 'TCP').toUpperCase() },
-            { label: i18n.t('auto___8290a3'), value: p.source || '-' },
-            { label: i18n.t('auto___332fdc'), value: p.destination || '-' },
-            { label: i18n.t('auto___98713e'), value: `${p.length || 0} байт` },
-            { label: i18n.t('auto___778b60'), value: p.info || i18n.t('auto___d0dd94'), fullWidth: true }
+            { label: 'Номер пакета', value: String(p.number || p.packet_number || '-') },
+            { label: 'Протокол', value: (p.protocol || 'TCP').toUpperCase() },
+            { label: 'Источник (Source)', value: p.source || '-' },
+            { label: 'Назначение (Destination)', value: p.destination || '-' },
+            { label: 'Размер полезной нагрузки', value: `${p.length || 0} байт` },
+            { label: 'Информация', value: p.info || 'Нет данных', fullWidth: true }
           ],
-          rawTitle: i18n.t('auto___18c6aa'),
+          rawTitle: 'Детализация фрейма (DPI)',
           rawContent: JSON.stringify(p, null, 2),
           requestData: p
         });
@@ -423,7 +489,7 @@
       };
     } catch (e) {
       console.error('[NetworkTab] Live capture error:', e);
-      window.showToast?.(i18n.t('auto___13847c') + e.message, 'danger') || alert(i18n.t('auto___13847c') + e.message);
+      window.showToast?.('Ошибка запуска захвата: ' + e.message, 'danger') || alert('Ошибка запуска захвата: ' + e.message);
     }
   }
 
@@ -458,7 +524,7 @@
 
     const file = fileInput?.files?.[0];
     if (!file) {
-      window.showToast?.(i18n.t('auto__pcap_pcapng__699cdf'), 'warning') || alert(i18n.t('auto__pcap_pcapng__699cdf'));
+      window.showToast?.('Выберите файл .pcap для анализа', 'warning') || alert('Выберите файл .pcap для анализа');
       return;
     }
 
@@ -466,11 +532,23 @@
     formData.append('file', file);
     formData.append('max_packets', '500');
 
-    if (statusEl) statusEl.innerText = i18n.t('auto___ebfe25');
+    if (statusEl) statusEl.innerText = 'Загрузка и глубокий анализ пакетов...';
 
     try {
       const res = await fetch('/api/network/analyze/pcap', {
-        method: 'POSTi18n.t('auto__body_formdata_if_res_ok_throw_new_error_http_res_status_const_report_await_res_json_if_statusel_statusel_innertext_report_stats_total_packets_0_if_healthel_healthel_innertext_report_ai_report_health_score_100_100_const_anomaliescount_report_heuristics_length_0_report_ai_report_anomalies_length_0_if_anomaliesel_anomaliesel_innertext_string_anomaliescount_anomaliesel_classname_net_value_mt_1_anomaliescount_0__326abf')text-danger' : 'text-success'}`;
+        method: 'POST',
+        body: formData
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const report = await res.json();
+
+      if (statusEl) statusEl.innerText = `Анализ завершен (${report.stats?.total_packets || 0} пакетов)`;
+      if (healthEl) healthEl.innerText = `${report.ai_report?.health_score ?? 100}/100`;
+
+      const anomaliesCount = (report.heuristics?.length || 0) + (report.ai_report?.anomalies?.length || 0);
+      if (anomaliesEl) {
+        anomaliesEl.innerText = String(anomaliesCount);
+        anomaliesEl.className = `net-value mt-1 ${anomaliesCount > 0 ? 'text-danger' : 'text-success'}`;
       }
 
       if (heuristicsEl) {
@@ -495,9 +573,144 @@
       }
     } catch (e) {
       console.error('[NetworkTab] PCAP upload error:', e);
-      if (statusEl) statusEl.innerText = i18n.t('auto___bf2214') + e.message;
-      window.showToast?.(i18n.t('auto__pcap__cac8b8') + e.message, 'danger') || alert(i18n.t('auto__pcap__cac8b8') + e.message);
+      if (statusEl) statusEl.innerText = 'Ошибка: ' + e.message;
+      window.showToast?.('Ошибка анализа PCAP: ' + e.message, 'danger') || alert('Ошибка анализа PCAP: ' + e.message);
     }
+  }
+
+  // Load available local subnets into dropdown
+  async function fetchLanSubnets() {
+    const select = document.getElementById('select-net-subnet');
+    if (!select) return;
+    try {
+      const res = await fetch('/api/network/subnets');
+      if (!res.ok) return;
+      const data = await res.json();
+      const currentVal = select.value;
+      select.innerHTML = '<option value="">Все локальные подсети</option>';
+      if (Array.isArray(data.subnets)) {
+        data.subnets.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.cidr;
+          opt.innerText = `${s.name}: ${s.cidr} (${s.ip})`;
+          select.appendChild(opt);
+        });
+      }
+      select.value = currentVal;
+    } catch (e) {
+      console.debug('[NetworkTab] fetchLanSubnets error:', e);
+    }
+  }
+
+  // Fetch discovered LAN devices (cache or active scan)
+  async function fetchLanDevices(scan = false) {
+    if (isLanScanRunning && scan) return;
+    const tbody = document.getElementById('table-net-devices-body');
+    const badgeCount = document.getElementById('badge-devices-count');
+    const statusBadge = document.getElementById('net-devices-status-badge');
+    const scanBtn = document.getElementById('btn-scan-lan-devices');
+    const subnetSelect = document.getElementById('select-net-subnet');
+    const targetSubnet = subnetSelect ? subnetSelect.value : '';
+
+    if (scan) {
+      isLanScanRunning = true;
+      if (scanBtn) {
+        scanBtn.disabled = true;
+        scanBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Сканирование...';
+      }
+      if (statusBadge) {
+        statusBadge.className = 'badge bg-warning text-dark';
+        statusBadge.innerText = 'Активный опрос (SendARP)...';
+      }
+    }
+
+    try {
+      const url = `/api/network/devices?scan=${scan}${targetSubnet ? '&subnet=' + encodeURIComponent(targetSubnet) : ''}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      allLanDevices = data.devices || [];
+      if (badgeCount) badgeCount.innerText = allLanDevices.length;
+      if (statusBadge) {
+        statusBadge.className = 'badge bg-dark border border-secondary text-secondary small';
+        statusBadge.innerText = scan ? `Сканировано: ${allLanDevices.length} устр.` : `Кеш: ${allLanDevices.length} устр.`;
+      }
+      renderLanDevicesTable();
+    } catch (e) {
+      console.error('[NetworkTab] fetchLanDevices error:', e);
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-3">Ошибка загрузки устройств: ${e.message}</td></tr>`;
+      }
+    } finally {
+      if (scan) {
+        isLanScanRunning = false;
+        if (scanBtn) {
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = '<i class="bi bi-radar me-1"></i> Сканировать сеть';
+        }
+      }
+    }
+  }
+
+  // Render LAN devices table with search filtering
+  function renderLanDevicesTable() {
+    const tbody = document.getElementById('table-net-devices-body');
+    const searchInput = document.getElementById('search-net-devices');
+    if (!tbody) return;
+
+    const query = (searchInput ? searchInput.value.trim().toLowerCase() : '');
+    const filtered = allLanDevices.filter(d => {
+      if (!query) return true;
+      return (
+        (d.ip && d.ip.toLowerCase().includes(query)) ||
+        (d.mac && d.mac.toLowerCase().includes(query)) ||
+        (d.hostname && d.hostname.toLowerCase().includes(query)) ||
+        (d.vendor && d.vendor.toLowerCase().includes(query)) ||
+        (d.state && d.state.toLowerCase().includes(query))
+      );
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-info-circle me-1"></i> Устройства не найдены. Нажмите «Сканировать сеть» для активного поиска.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(d => {
+      let roleBadge = '';
+      if (d.is_gateway) {
+        roleBadge = '<span class="badge bg-warning text-dark ms-1"><i class="bi bi-router-fill me-1"></i>ШЛЮЗ</span>';
+      } else if (d.is_local) {
+        roleBadge = '<span class="badge bg-primary ms-1"><i class="bi bi-pc-display me-1"></i>Этот ПК</span>';
+      }
+
+      const vendor = d.vendor ? `<span class="fw-semibold text-light">${d.vendor}</span>` : '<span class="text-muted small">Неизвестно</span>';
+      const hostname = d.hostname ? `<span class="text-info">${d.hostname}</span>` : '<span class="text-muted">-</span>';
+      const mac = d.mac ? `<span class="text-monospace">${d.mac}</span>` : '<span class="text-muted">-</span>';
+      
+      const methods = (d.discovery_methods || []).map(m => {
+        if (m === 'arp_sweep') return '<span class="badge proto-badge proto-tcp" title="Активный опрос ARP">ARP</span>';
+        if (m === 'arp_cache') return '<span class="badge proto-badge proto-other" title="Кеш ядра">Cache</span>';
+        if (m === 'ssdp') return '<span class="badge proto-badge proto-tls" title="UPnP/SSDP Multicast">SSDP</span>';
+        if (m === 'local_interface') return '<span class="badge proto-badge proto-dns" title="Локальный интерфейс">Local</span>';
+        return `<span class="badge proto-badge proto-other">${m}</span>`;
+      }).join(' ');
+
+      const latency = d.latency_ms !== null && d.latency_ms !== undefined
+        ? `<span class="small text-success">${d.latency_ms} ms</span>`
+        : '<span class="text-muted small">-</span>';
+
+      return `
+        <tr>
+          <td><strong class="text-white">${d.ip}</strong>${roleBadge}</td>
+          <td>${hostname}</td>
+          <td>${mac}</td>
+          <td>${vendor}</td>
+          <td><span class="badge ${d.state === 'Online' || d.state === 'Reachable' ? 'status-badge-up' : 'status-badge-down'}">${d.state || 'Online'}</span></td>
+          <td>${methods || '-'}</td>
+          <td style="text-align: right;">${latency}</td>
+        </tr>
+      `;
+    }).join('');
   }
 
   // Main init function for Network Terminal Tab
@@ -507,6 +720,8 @@
     fetchLatestSpeedtest();
     fetchAdapters();
     fetchConnections();
+    fetchLanSubnets();
+    fetchLanDevices(false);
 
     if (!isNetInitialized) {
       // Action buttons
@@ -522,11 +737,19 @@
       const tableFilterInput = document.getElementById('net-table-filter');
       const configBtn = document.getElementById('btn-network-config');
 
+      // LAN Devices controls
+      const scanLanBtn = document.getElementById('btn-scan-lan-devices');
+      const refreshLanBtn = document.getElementById('btn-refresh-lan-devices');
+      const searchLanInput = document.getElementById('search-net-devices');
+      const subnetSelect = document.getElementById('select-net-subnet');
+
       if (refreshAllBtn) refreshAllBtn.onclick = () => {
         fetchNetworkStatus();
         fetchLatestSpeedtest();
         fetchAdapters();
         fetchConnections();
+        fetchLanSubnets();
+        fetchLanDevices(false);
       };
       if (runSpeedtestBtn) runSpeedtestBtn.onclick = runInternetSpeedtest;
       if (refreshAdaptersBtn) refreshAdaptersBtn.onclick = fetchAdapters;
@@ -538,6 +761,11 @@
         capturedPackets = [];
         renderPacketsTable();
       };
+
+      if (scanLanBtn) scanLanBtn.onclick = () => fetchLanDevices(true);
+      if (refreshLanBtn) refreshLanBtn.onclick = () => fetchLanDevices(false);
+      if (searchLanInput) searchLanInput.oninput = renderLanDevicesTable;
+      if (subnetSelect) subnetSelect.onchange = () => fetchLanDevices(false);
 
       if (connsFilterInput) connsFilterInput.oninput = renderConnectionsTable;
       if (tableFilterInput) tableFilterInput.oninput = renderPacketsTable;

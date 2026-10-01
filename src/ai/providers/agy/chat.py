@@ -1,11 +1,35 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Chat Module
+# =============================================================================
+# Description:
+#   Antigravity SDK chat connection and request routing adapter.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.providers.agy.chat import AgyChatBase
+#
+#     service = AgyChatBase()
+#     result = service.get_available_models()
+#     print(result)
+#
+# File: chat.py
+# Project: ai-breadboard
+# Package: src.ai.providers.agy
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """Antigravity SDK chat connection and request routing adapter.
 
 Implements chat interfaces (ask, chat_stream) for Antigravity SDK models with
 API key management and local conversation history support."""
+
 import os
 import asyncio
 from typing import Optional, List, Dict, AsyncGenerator
-from logger.logger import logger
+from logger import logger
 from src.ai.gemini.gemini_api_key_state import load_api_keys
 
 class AgyChatBase:

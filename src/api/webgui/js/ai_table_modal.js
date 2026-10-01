@@ -1,3 +1,23 @@
+/**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Ai Table Modal Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля ai_table_modal.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/ai_table_modal.js?v=20261001_v1" type="module"></script>
+ *
+ * File: ai_table_modal.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
 // Universal AI Table Modal Module for AI-Breadboard
 // Enables interactive row inspection and AI contextual explanation across all data tables.
 

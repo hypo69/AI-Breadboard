@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Enabled Auth
+# =============================================================================
+# Description:
+#   Проверяет is_auth_disabled и is_oauth_enabled в режиме включенной аутентификации.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_enabled_auth import test_auth_enabled_helpers
+#
+#     res = test_auth_enabled_helpers()
+#
+# File: test_enabled_auth.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Проверяет is_auth_disabled и is_oauth_enabled в режиме включенной аутентификации."""
+
 import os
 import pytest
 from fastapi import Request, HTTPException

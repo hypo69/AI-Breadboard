@@ -1,7 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Dev - Package Skill
+# =============================================================================
+# Description:
+#   Gemini skills packaging utility.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.dev.package_skill
+#   Python API:
+#     from scripts.dev.package_skill import package_skill
+#
+#     res = package_skill()
+#
+# File: package_skill.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Gemini skills packaging utility.
 
 Packages skill directories into ZIP archive format for distribution,
 automatically excluding build artifacts and version control files."""
+
 import os
 import zipfile
 import argparse

@@ -1,6 +1,28 @@
 # -*- coding: utf-8 -*-
-"""
-Заполняет файлы локалей (en.json, he.json) переводами из CSV.
+# =============================================================================
+# Process Name: AI-Breadboard API - Fill Translations Module
+# =============================================================================
+# Description:
+#   Заполняет файлы локалей (en.json, he.json) переводами из CSV.
+#
+# Usage Examples:
+#   CLI:
+#     python -m src.api.webgui.fill_translations
+#   Python API:
+#     from src.api.webgui.fill_translations import load_json
+#
+#     res = load_json()
+#     print(res)
+#
+# File: fill_translations.py
+# Project: ai-breadboard
+# Package: src.api.webgui
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Заполняет файлы локалей (en.json, he.json) переводами из CSV.
 
 CSV‑файл должен содержать заголовки:
     key,en,he
@@ -10,8 +32,7 @@ CSV‑файл должен содержать заголовки:
 
 Для генерации шаблона `locales/template.json` (ключи с пустыми значениями) используйте опцию `--generate-template`.
 
-Скрипт безопасно обновляет только указанные языки, не затрагивая существующие переводы.
-"""
+Скрипт безопасно обновляет только указанные языки, не затрагивая существующие переводы."""
 
 import argparse
 import csv

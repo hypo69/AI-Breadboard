@@ -1,5 +1,27 @@
-"""
-Unit-тесты для скрипта валидации структуры документации.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Validate Structure
+# =============================================================================
+# Description:
+#   Unit-тесты для скрипта валидации структуры документации.
+#
+# Usage Examples:
+#   CLI:
+#     python -m tests.test_validate_structure
+#   Python API:
+#     from tests.test_validate_structure import TestDocumentationValidatorFileChecks
+#
+#     service = TestDocumentationValidatorFileChecks()
+#
+# File: test_validate_structure.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Unit-тесты для скрипта валидации структуры документации.
 
 Тестирует функциональность класса DocumentationValidator:
 - Проверка наличия файлов
@@ -7,8 +29,8 @@ Unit-тесты для скрипта валидации структуры до
 - Проверка обязательных разделов
 - Генерация отчётов об ошибках
 
-Требования: 7.1, 7.4
-"""
+Требования: 7.1, 7.4"""
+
 import pytest
 import tempfile
 from pathlib import Path

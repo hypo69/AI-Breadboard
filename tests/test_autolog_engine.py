@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Autolog Engine
+# =============================================================================
+# Description:
+#   Тесты движка автологгирования приложений.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_autolog_engine import setup_tmp_log_dir
+#
+#     res = setup_tmp_log_dir()
+#
+# File: test_autolog_engine.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Тесты движка автологгирования приложений."""
+
 import asyncio
 import json
 from pathlib import Path
@@ -57,7 +79,7 @@ def test_autolog_engine_status_and_poll_all():
     assert 'running' in status
     assert 'registered_pollers' in status
     assert 'system_inspector' in status['registered_pollers']
-    assert 'librehardwaremonitor' in status['registered_pollers']
+    assert 'hardware_monitor' in status['registered_pollers']
     results = engine.poll_all_once()
     assert isinstance(results, dict)
     assert 'system_inspector' in results

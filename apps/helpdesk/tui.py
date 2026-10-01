@@ -1,5 +1,29 @@
-"""Interactive Rich-based Terminal User Interface for Helpdesk."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Helpdesk - Tui
+# =============================================================================
+# Description:
+#   Interactive Rich-based Terminal User Interface for Helpdesk.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.helpdesk.tui
+#   Python API:
+#     from apps.helpdesk.tui import HelpdeskTUI
+#
+#     service = HelpdeskTUI()
+#
+# File: tui.py
+# Project: ai-breadboard
+# Package: apps.helpdesk
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Interactive Rich-based Terminal User Interface for Helpdesk."""
+
 import sys
 import time
 from typing import List, Dict, Any, Optional

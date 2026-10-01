@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Gemini Cli Chat
+# =============================================================================
+# Description:
+#   Тесты структуры ответа GeminiCliResponse.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_gemini_cli_chat import TestGeminiCliResponse
+#
+#     service = TestGeminiCliResponse()
+#
+# File: test_gemini_cli_chat.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Тесты структуры ответа GeminiCliResponse."""
+
 import asyncio
 import json
 import subprocess

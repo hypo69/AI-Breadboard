@@ -1,4 +1,23 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Website_Monitor Src -   Init  
+# =============================================================================
+# Description:
+#   Website Intelligence Monitor engine package.
+#
+# Usage Examples:
+#
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: apps.website_monitor.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """Website Intelligence Monitor engine package."""
+
 from apps.website_monitor.src.auth import AuthStatus, WebsiteMonitorAuthManager
 from apps.website_monitor.src.ga4_service import GA4Service, RealtimeReport, GA4PeriodSummary, PageReport, ChannelReport
 from apps.website_monitor.src.gsc_service import GSCService, SearchConsoleSummary, SearchQuery

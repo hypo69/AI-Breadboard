@@ -1,7 +1,30 @@
 # -*- coding: utf-8 -*-
-"""Команды управления телеметрией и аудитом оборудования (telemetry)."""
-from __future__ import annotations
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli Commands - Telemetry
+# =============================================================================
+# Description:
+#   Команды управления телеметрией и аудитом оборудования (telemetry).
+#
+# Usage Examples:
+#   Python API:
+#     from scripts.cli.commands.telemetry import register_telemetry_parser
+#
+#     res = register_telemetry_parser()
+#
+# File: telemetry.py
+# Project: ai-breadboard
+# Package: scripts.cli.commands
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
 
+from __future__ import annotations
+"""Команды управления телеметрией и аудитом оборудования (telemetry)."""
+
+# -*- coding: utf-8 -*-
+# Updated: 2026-10-01 09:30:00
+"""Команды управления телеметрией и аудитом оборудования (telemetry)."""
 import argparse
 
 
@@ -13,13 +36,20 @@ def register_telemetry_parser(subparsers: argparse._SubParsersAction) -> None:
     telemetry_start.add_argument('--interval', '-i', type=float, default=1.0, help='Logging interval in seconds (default: 1.0)')
     telemetry_start.add_argument('--processes', '-p', type=int, default=20, help='Top processes limit (default: 20)')
     telemetry_subparsers.add_parser('status', help='View telemetry & hardware archives status')
+    telemetry_init = telemetry_subparsers.add_parser('init-db', help='Initialize and verify SQLite database telemetry.db')
+    telemetry_init.add_argument('--force', action='store_true', help='Force reinitialize structure')
+    telemetry_init.add_argument('--db-path', type=str, default=None, help='Custom path to telemetry.db')
     telemetry_history = telemetry_subparsers.add_parser('history', help='View saved hardware archive snapshots')
     telemetry_history.add_argument('--limit', '-n', type=int, default=20, help='Limit snapshots count')
     telemetry_subparsers.add_parser('audit', help='Perform live deep hardware & driver audit with sensors')
     telemetry_subparsers.add_parser('changes', help='View hardware configuration changes timeline (Diff)')
     telemetry_subparsers.add_parser('archive', help='Force capture and archive current hardware state')
+    telemetry_reboots = telemetry_subparsers.add_parser('reboots', help='Analyze Windows boot and shutdown causes (Reboot Analyzer)')
+    telemetry_reboots.add_argument('--limit', '-n', type=int, default=10, help='Limit reboot sessions count (default: 10)')
+    telemetry_reboots.add_argument('--json', action='store_true', help='Output in JSON format')
     telemetry_cleanup = telemetry_subparsers.add_parser('cleanup', help='Delete old telemetry records')
     telemetry_cleanup.add_argument('--days', '-d', type=int, default=7, help='Retention days (default: 7)')
+
 
 
 def run_telemetry_command(args: argparse.Namespace) -> int:
@@ -28,6 +58,20 @@ def run_telemetry_command(args: argparse.Namespace) -> int:
     history_mgr = HardwareHistoryManager()
     collector = SystemCollector()
     sub = args.subcommand
+    if sub in ('init-db', 'init_db', 'build-db', 'init'):
+        from apps.windows.telemetry.init_db import init_telemetry_database
+        res = init_telemetry_database(
+            db_path=getattr(args, 'db_path', None),
+            force=getattr(args, 'force', False),
+        )
+        status_icon = '✅' if res['integrity_ok'] else '⚠️'
+        print(f"\n{status_icon} База данных телеметрии: {res['db_path']}")
+        print(f"   • Существует:     {res['exists']}")
+        print(f"   • Вновь создана:  {res['created']}")
+        print(f"   • Размер файла:   {res['size_mb']} МБ ({res['size_bytes']} байт)")
+        print(f"   • Таблиц в схеме: {res['tables_count']}")
+        print(f"   • Целостность:    {res['integrity_message']}\n")
+        return 0 if res['integrity_ok'] else 1
     if sub == 'status':
         history_list = history_mgr.get_history(limit=5)
         latest = history_mgr.get_latest_archive()
@@ -86,6 +130,36 @@ def run_telemetry_command(args: argparse.Namespace) -> int:
         print('\n[+] Фиксация текущего снимка оборудования в архив...')
         entry = collector.archive_hardware_state(auto_diff=True)
         print(f'[OK] Создан архив: {entry.archive_id} (Устройств: {entry.devices_count}, Изменений: {entry.changes_count})\n')
+        return 0
+    if sub in ('reboots', 'reboot'):
+        from apps.windows.telemetry.reboot_analyzer import WindowsRebootAnalyzer
+        import json
+        limit = getattr(args, 'limit', 10) or 10
+        analyzer = WindowsRebootAnalyzer()
+        report = analyzer.collect_reboot_history(limit=limit, persist_to_storage=True)
+        if getattr(args, 'json', False):
+            print(json.dumps(report.model_dump(), ensure_ascii=False, indent=2))
+            return 0
+        print('\n=== АНАЛИЗАТОР ПЕРЕЗАГРУЗОК И ВЫКЛЮЧЕНИЙ WINDOWS ===')
+        print(f"Хост: {report.hostname} | Текущий запуск: {report.current_boot_time} (Аптайм: {report.current_uptime_human})")
+        print(f"Статистика: {report.total_reboots_analyzed} перезапусков | Плановых: {report.planned_count} | Обновлений: {report.update_reboot_count} | Аварийных: {report.unexpected_count} | BSOD: {report.bsod_count}")
+        print(f"Индекс надежности: {report.stability_score}%/100%\n")
+        print('─' * 70)
+        for s in report.sessions:
+            print(f"[{s.shutdown_type.value}] Сессия: {s.boot_id}")
+            print(f"  Запуск: {s.boot_time} | Предыдущий: {s.previous_boot_time or 'N/A'} | Аптайм сессии: {s.uptime_human or 'N/A'}")
+            print(f"  Заключение: {s.conclusion}")
+            if s.initiating_process:
+                print(f"  Инициатор (1074): {s.initiating_process} (пользователь: {s.initiating_user or 'N/A'})")
+            if s.reason_text:
+                print(f"  Причина: {s.reason_text} (код: {s.reason_code or 'N/A'})")
+            if s.bugcheck_code:
+                print(f"  BSOD StopCode: {s.bugcheck_code}")
+            if s.windows_update_kb:
+                print(f"  Обновление: {s.windows_update_kb}")
+            if s.evidence:
+                print(f"  Улики: {' | '.join(s.evidence[:3])}")
+            print('─' * 70)
         return 0
     if sub == 'start':
         interval = getattr(args, 'interval', 1.0)

@@ -1,3 +1,25 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Simulation Module
+# =============================================================================
+# Description:
+#   Модуль симуляции бизнес‑операций.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.simulation import EntityType
+#
+#     service = EntityType()
+#
+# File: simulation.py
+# Project: ai-breadboard
+# Package: src.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+from __future__ import annotations
 """Модуль симуляции бизнес‑операций.
 
 Содержит базовые классы генераторов, конкретный генератор договоров,
@@ -5,9 +27,8 @@
 соответствующий генератор, а также функции обогащения результата
 LLM‑моделью и получения глобального singleton‑движка.
 
-Все публичные функции и классы экспортируются через `__all__`.
-"""
-from __future__ import annotations
+Все публичные функции и классы экспортируются через `__all__`."""
+
 import hashlib
 import random
 from dataclasses import dataclass, field

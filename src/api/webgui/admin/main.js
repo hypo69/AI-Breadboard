@@ -1,7 +1,34 @@
+/**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Main Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/admin/main.js?v=20261001_v1" type="module"></script>
+ *
+ * File: main.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/admin
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
 // Admin Interface Main JS
 import { initI18n, switchLang, applyTranslations } from '../js/i18n.js';
 import { initTheme, setTheme, getThemeMode, getResolvedTheme } from '../js/theme.js';
 import { initUserSettings, refreshUserProfile } from '../js/userSettings.js';
+import { TabRegistry } from '../core/tab-registry.js';
+import { eventBus } from '../core/event-bus.js';
+
+// Подписка на событие переключения вкладок
+eventBus.on('tabSwitched', ({ tabId }) => {
+  onTabSwitched(tabId);
+});
 
 // Make switchLang and theme functions available globally
 window.switchLang = switchLang;
@@ -387,7 +414,12 @@ function switchTab(targetId) {
   if (cleanId === 'observability' || cleanId === 'tab-observability') {
     cleanId = 'tab-system-inspector';
   }
-  const tabId = cleanId.startsWith('tab-') ? cleanId : `tab-${cleanId}`;
+  const tabDef = TabRegistry.getById(cleanId);
+  if (!tabDef) {
+    console.warn(`[AdminInterface] Tab definition not found for ${cleanId}`);
+    return;
+  }
+  const tabId = tabDef.tabId || `tab-${tabDef.id}`;
 
   // 1. Update active state on dropdown items & toggles
   document.querySelectorAll('#mainTabs .dropdown-item').forEach((item) => {
@@ -430,7 +462,7 @@ function switchTab(targetId) {
   }
 
   // 3. Notify lifecycle callback
-  onTabSwitched(tabId);
+
 }
 window.switchTab = switchTab;
 window.switchToTab = switchTab;

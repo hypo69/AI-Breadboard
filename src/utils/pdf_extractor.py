@@ -1,9 +1,33 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Pdf Extractor Module
+# =============================================================================
+# Description:
+#   Synchronously extract textual content from an image.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.pdf_extractor import extract_text_from_image_sync
+#
+#     res = extract_text_from_image_sync()
+#     print(res)
+#
+# File: pdf_extractor.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Synchronously extract textual content from an image."""
+
 from src.utils.pdf import extract_pdf_text
 from src.utils.image import get_image_bytes
 import asyncio
 from pathlib import Path
 from typing import Optional, Union
-from logger.logger import logger
+from logger import logger
 
 def extract_text_from_image_sync(image_input: Union[str, Path, bytes]) -> str:
     """Synchronously extract textual content from an image.

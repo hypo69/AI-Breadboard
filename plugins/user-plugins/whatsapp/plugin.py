@@ -1,5 +1,27 @@
-"""Реализация модульного плагина WhatsApp для платформы AI Breadboard."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins Whatsapp - Plugin
+# =============================================================================
+# Description:
+#   Реализация модульного плагина WhatsApp для платформы AI Breadboard.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.user-plugins.whatsapp.plugin import WhatsAppPlugin
+#
+#     service = WhatsAppPlugin()
+#
+# File: plugin.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.whatsapp
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
 from __future__ import annotations
+"""Реализация модульного плагина WhatsApp для платформы AI Breadboard."""
+
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional

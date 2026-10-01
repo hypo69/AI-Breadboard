@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps User_Assistant -   Main  
+# =============================================================================
+# Description:
+#   CLI entry point for User Assistant Desk.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.user_assistant.__main__
+#   Python API:
+#     from apps.user_assistant.__main__ import main
+#
+#     res = main()
+#
+# File: __main__.py
+# Project: ai-breadboard
+# Package: apps.user_assistant
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""CLI entry point for User Assistant Desk."""
+
 import sys
 from apps.user_assistant.tui import render_dashboard
 

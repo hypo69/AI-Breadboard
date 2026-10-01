@@ -1,8 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Gguf To Onnx Module
+# =============================================================================
+# Description:
+#   Результат конвертации и оптимизации модели.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.voice.converters.gguf_to_onnx import ConversionResult
+#
+#     service = ConversionResult()
+#
+# File: gguf_to_onnx.py
+# Project: ai-breadboard
+# Package: src.ai.voice.converters
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Результат конвертации и оптимизации модели."""
+
 import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict
-from logger.logger import logger
+from logger import logger
 CONVERTER_AVAILABLE = False
 OPTIMIZER_AVAILABLE = False
 try:

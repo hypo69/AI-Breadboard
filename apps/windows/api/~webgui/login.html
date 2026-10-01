@@ -1,0 +1,388 @@
+<!--
+=============================================================================
+Process Name: Windows Web Interface - Login View
+=============================================================================
+Description:
+  Шаблон клиентского веб-интерфейса login.
+
+Usage Examples:
+    Web Route:
+      /windows/api/~webgui/login.html
+
+    Tab Frame Integration:
+      <iframe src="/windows/api/~webgui/login.html" class="w-100 h-100 border-0"></iframe>
+
+File: login.html
+Project: ai-breadboard
+Package: windows/api/~webgui
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-01 13:04:40
+=============================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><span data-i18n="auto___6080cc"></span> — AI Breadboard</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/html/css/main.css?v=20260917_refactor_v1" rel="stylesheet">
+  <style>
+    /* ── <span data-i18n="auto__body_display_flex_align_items_center_justify_content_center_min_height_100vh_margin_0_padding_1rem_bg_color_main_css_background_radial_gradient_circle_at_50_15_rgba_99_102_241_0_08_transparent_65_var_bg_color_auth_card_width_100_max_width_400px_background_var_surface_1_border_1px_solid_var_border_color_border_radius_12px_box_shadow_var_shadow_lg_overflow_hidden_auth_header_padding_1_5rem_1_5rem_1rem_text_align_center_background_var_surface_2_border_bottom_1px_solid_var_border_color_auth_logo_badge_width_48px_height_48px_border_radius_12px_background_linear_gradient_135deg_6366f1_3b82f6_display_inline_flex_align_items_center_justify_content_center_font_size_1_5rem_color_fff_box_shadow_0_4px_12px_rgba_99_102_241_0_3_margin_bottom_0_75rem_auth_nav_tabs_nav_link_border_none_border_bottom_2px_solid_transparent_color_var_text_color_opacity_0_65_font_weight_600_font_size_0_85rem_padding_0_55rem_1rem_background_transparent_transition_all_0_18s_auth_nav_tabs_nav_link_active_background_transparent_border_bottom_2px_solid_6366f1_color_6366f1_opacity_1_data_theme_dark_auth_nav_tabs_nav_link_active_color_818cf8_border_bottom_color_818cf8_google_oauth_btn_google_background_var_surface_1_color_var_text_color_border_1px_solid_var_border_color_font_weight_500_font_size_0_85rem_transition_all_0_18s_btn_google_hover_background_var_surface_2_box_shadow_var_shadow_sm_color_var_text_color_divider_text_display_flex_align_items_center_text_align_center_color_var_text_muted_font_size_0_78rem_margin_1rem_0_divider_text_before_divider_text_after_content_flex_1_border_bottom_1px_solid_var_border_color_divider_text_not_empty_before_margin_right_0_6em_divider_text_not_empty_after_margin_left_0_6em__8d162b"></span> ── */
+    .top-controls {
+      position: fixed;
+      top: 0.75rem;
+      right: 0.75rem;
+      display: flex;
+      gap: 0.375rem;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- <span data-i18n="auto___8cbeea"></span> -->
+  <div class="top-controls">
+    <select class="form-select form-select-sm" id="auth-lang-selector" style="width: auto; font-size: 0.78rem; padding: 0.2rem 0.4rem;">
+      <option value="ru">RU</option>
+      <option value="en">EN</option>
+      <option value="he">HE</option>
+    </select>
+    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center rounded-circle"
+            id="theme-toggle"
+            title="<span data-i18n="auto___e8902e"></span>"
+            style="width: 28px; height: 28px; padding: 0;">
+      <i class="bi bi-circle-half" id="theme-icon"></i>
+    </button>
+  </div>
+
+  <div class="auth-card">
+    <!-- <span data-i18n="auto___5b272f"></span> -->
+    <div class="auth-header">
+      <div class="auth-logo-badge">
+        <i class="bi bi-cpu-fill"></i>
+      </div>
+      <h5 class="fw-bold mb-1" id="title-app-name">AI Breadboard</h5>
+      <p class="small mb-0" style="color: var(--text-muted);" id="title-app-desc"><span data-i18n="auto___c9267b"></span></p>
+    </div>
+
+    <!-- <span data-i18n="auto___611d2c"></span> -->
+    <ul class="nav nav-tabs auth-nav-tabs nav-fill px-3 pt-2" id="authTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-login-btn" data-bs-toggle="tab" data-bs-target="#pane-login" type="button" role="tab">
+          <i class="bi bi-box-arrow-in-right me-1"></i>
+          <span id="label-tab-login"><span data-i18n="auto___939e95"></span></span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-register-btn" data-bs-toggle="tab" data-bs-target="#pane-register" type="button" role="tab">
+          <i class="bi bi-person-plus me-1"></i>
+          <span id="label-tab-register"><span data-i18n="auto___722476"></span></span>
+        </button>
+      </li>
+    </ul>
+
+    <!-- <span data-i18n="auto___6adb81"></span> -->
+    <div class="card-body p-3">
+      <!-- <span data-i18n="auto___c3274b"></span> -->
+      <div id="auth-alert" class="alert d-none mb-3 py-2 small" role="alert"></div>
+
+      <!-- Google OAuth -->
+      <button type="button"
+              class="btn btn-google w-100 d-flex align-items-center justify-content-center gap-2 rounded-3 mb-0"
+              style="padding: 0.45rem 0.75rem;"
+              id="btn-google-auth">
+        <svg width="16" height="16" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span id="label-google-auth"><span data-i18n="auto___f32ea7"></span> Google</span>
+      </button>
+
+      <div class="divider-text" id="label-or-email"><span data-i18n="auto___e509a8"></span></div>
+
+      <!-- <span data-i18n="auto___c1bae4"></span> -->
+      <div class="tab-content" id="authTabsContent">
+
+        <!-- <span data-i18n="auto___9fae77"></span> -->
+        <div class="tab-pane fade show active" id="pane-login" role="tabpanel">
+          <form id="form-login">
+            <div class="mb-2">
+              <label class="form-label fw-semibold" id="label-email-login" for="login-email">Email</label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                <input type="email" class="form-control form-control-sm" id="login-email"
+                       required placeholder="name@example.com" autocomplete="email">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold" id="label-pass-login" for="login-password"><span data-i18n="auto___14f7c6"></span></label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-key"></i></span>
+                <input type="password" class="form-control form-control-sm" id="login-password"
+                       required placeholder="••••••••" autocomplete="current-password">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold" id="btn-submit-login"
+                    style="padding: 0.45rem;">
+              <span class="spinner-border spinner-border-sm d-none me-1" id="login-spinner"></span>
+              <span id="label-btn-login"><span data-i18n="auto___1d7fb0"></span></span>
+            </button>
+          </form>
+        </div>
+
+        <!-- <span data-i18n="auto___850abb"></span> -->
+        <div class="tab-pane fade" id="pane-register" role="tabpanel">
+          <form id="form-register">
+            <div class="mb-2">
+              <label class="form-label fw-semibold" id="label-reg-name" for="reg-name"><span data-i18n="auto___1459cc"></span></label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <input type="text" class="form-control form-control-sm" id="reg-name"
+                       required placeholder="<span data-i18n="auto___ac32a6"></span>" autocomplete="name">
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="form-label fw-semibold" id="label-reg-email" for="reg-email">Email</label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                <input type="email" class="form-control form-control-sm" id="reg-email"
+                       required placeholder="name@example.com" autocomplete="email">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold" id="label-reg-pass" for="reg-password"><span data-i18n="auto___c697db"></span></label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <input type="password" class="form-control form-control-sm" id="reg-password"
+                       required placeholder="<span data-i18n="auto__6__ccbb05"></span>" minlength="6" autocomplete="new-password">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold" id="btn-submit-reg"
+                    style="padding: 0.45rem;">
+              <span class="spinner-border spinner-border-sm d-none me-1" id="reg-spinner"></span>
+              <span id="label-btn-reg"><span data-i18n="auto___2e4275"></span></span>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- <span data-i18n="auto___26b860"></span> email -->
+  <div class="modal fade" id="verifyModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title fw-bold">
+            <i class="bi bi-shield-check text-primary me-1"></i> <span data-i18n="auto___8d3edf"></span>
+          </h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center">
+          <p class="small mb-3" style="color: var(--text-muted);" id="verify-modal-desc">
+            <span data-i18n="auto___1248a2"></span> email:
+          </p>
+          <div class="mb-3">
+            <input type="text" class="form-control form-control-sm text-center"
+                   id="verify-code-input" placeholder="123456" maxlength="6"
+                   autofocus style="letter-spacing: 0.2em; font-size: 1.1rem;">
+          </div>
+          <div id="verify-alert" class="alert d-none py-1 small"></div>
+          <button type="button" class="btn btn-primary btn-sm w-100 fw-semibold" id="btn-submit-verify"
+                  style="padding: 0.45rem;">
+            <span class="spinner-border spinner-border-sm d-none me-1" id="verify-spinner"></span>
+            <span data-i18n="auto___0467ae"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function() {
+      'use strict';
+
+      // ── <span data-i18n="auto__function_getsystemtheme_return_window_matchmedia_window_matchmedia_prefers_color_scheme_dark_matches_dark_light_function_applytheme_mode_mode_light_dark_system_const_resolved_mode_system_getsystemtheme_mode_document_documentelement_setattribute_data_theme_resolved_document_documentelement_setattribute_data_bs_theme_resolved_const_icon_document_getelementbyid_theme_icon_if_icon_if_mode_light_icon_classname_bi_bi_sun_fill_text_warning_else_if_mode_dark_icon_classname_bi_bi_moon_stars_fill_text_primary_else_icon_classname_bi_bi_circle_half_text_info_function_inittheme_const_saved_localstorage_getitem_theme_system_applytheme_saved__3cf8b5"></span>
+        if (window.matchMedia) {
+          window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if ((localStorage.getItem('theme') || 'system') === 'system') {
+              applyTheme('system');
+            }
+          });
+        }
+      }
+
+      // <span data-i18n="auto___1e12a4"></span> system → light → dark → system
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const cur = localStorage.getItem('theme') || 'system';
+        const next = { system: 'light', light: 'dark', dark: 'system' }[cur] || 'system';
+        localStorage.setItem('theme', next);
+        applyTheme(next);
+      });
+
+      initTheme();
+
+      // ── I18n ────────────────────────────────────────────────────────────────
+      const i18nDict = {
+        ru: {
+          appDesc: '<span data-i18n="auto__tablogin_tabreg_btngoogle_google_oremail_email_email_pass_regname_regpass_btnlogin_btnreg_passplaceholder_6_nameplaceholder__5fd327"></span>'
+        },
+        en: {
+          appDesc: 'Sign in to access AI Breadboard services',
+          tabLogin: 'Sign In', tabReg: 'Sign Up',
+          btnGoogle: 'Continue with Google', orEmail: 'or via Email',
+          email: 'Email', pass: 'Password',
+          regName: 'Full Name', regPass: 'Create Password',
+          btnLogin: 'Sign In', btnReg: 'Create Account',
+          passPlaceholder: 'Minimum 6 characters', namePlaceholder: 'John Doe'
+        },
+        he: {
+          appDesc: 'התחבר כדי לגשת לשירותי AI',
+          tabLogin: 'התחברות', tabReg: 'הרשמה',
+          btnGoogle: 'המשך עם Google', orEmail: 'או באמצעות דוא"ל',
+          email: 'דוא"ל', pass: 'סיסמה',
+          regName: 'שם מלא', regPass: 'צור סיסמה',
+          btnLogin: 'התחבר', btnReg: 'הרשמה',
+          passPlaceholder: 'לפחות 6 תווים', namePlaceholder: 'ישראל ישראלי'
+        }
+      };
+
+      const langSelector = document.getElementById('auth-lang-selector');
+      const savedLang = localStorage.getItem('app_language') || 'ru';
+      if (langSelector) {
+        langSelector.value = savedLang;
+        langSelector.addEventListener('change', (e) => {
+          const l = e.target.value;
+          localStorage.setItem('app_language', l);
+          updateLanguageTexts(l);
+        });
+      }
+
+      function updateLanguageTexts(lang) {
+        const d = i18nDict[lang] || i18nDict.ru;
+        document.getElementById('title-app-desc').textContent   = d.appDesc;
+        document.getElementById('label-tab-login').textContent  = d.tabLogin;
+        document.getElementById('label-tab-register').textContent = d.tabReg;
+        document.getElementById('label-google-auth').textContent = d.btnGoogle;
+        document.getElementById('label-or-email').textContent   = d.orEmail;
+        document.getElementById('label-email-login').textContent = d.email;
+        document.getElementById('label-pass-login').textContent = d.pass;
+        document.getElementById('label-reg-name').textContent   = d.regName;
+        document.getElementById('label-reg-email').textContent  = d.email;
+        document.getElementById('label-reg-pass').textContent   = d.regPass;
+        document.getElementById('label-btn-login').textContent  = d.btnLogin;
+        document.getElementById('label-btn-reg').textContent    = d.btnReg;
+        document.getElementById('reg-password').placeholder     = d.passPlaceholder;
+        document.getElementById('reg-name').placeholder         = d.namePlaceholder;
+      }
+      updateLanguageTexts(savedLang);
+
+      // ── <span data-i18n="auto___8c24cb"></span> ──────────────────────────────────────────────────────────────
+      function showAlert(msg, type = 'danger') {
+        const el = document.getElementById('auth-alert');
+        el.className = `alert alert-${type} mb-3 py-2 small`;
+        el.textContent = msg;
+        el.classList.remove('d-none');
+      }
+      function hideAlert() {
+        document.getElementById('auth-alert').classList.add('d-none');
+      }
+
+      // ── Google OAuth ─────────────────────────────────────────────────────────
+      document.getElementById('btn-google-auth').addEventListener('click', () => {
+        window.location.href = '/auth/google?next=/';
+      });
+
+      // ── <span data-i18n="auto___07205a"></span> ─────────────────────────────────────────────────────────────────
+      let pendingVerificationEmail = '';
+      document.getElementById('form-login').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideAlert();
+        const email    = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        const spinner  = document.getElementById('login-spinner');
+        const btn      = document.getElementById('btn-submit-login');
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+        try {
+          const res  = await fetch('/auth/login/email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            if (res.status === 403 && data.detail && data.detail.includes('<span data-i18n="auto__pendingverificationemail_email_const_desc_document_getelementbyid_verify_modal_desc_if_desc_desc_textcontent_email_new_bootstrap_modal_document_getelementbyid_verifymodal_show_showalert_data_detail_warning_else_showalert_data_detail_danger_return_showalert__312abe"></span>...', 'success');
+          setTimeout(() => { window.location.href = '/'; }, 400);
+        } catch (err) {
+          showAlert('<span data-i18n="auto__err_message_danger_finally_btn_disabled_false_spinner_classlist_add_d_none__4a8d03"></span> ───────────────────────────────────────────────────────────
+      document.getElementById('form-register').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideAlert();
+        const name     = document.getElementById('reg-name').value.trim();
+        const email    = document.getElementById('reg-email').value.trim();
+        const password = document.getElementById('reg-password').value;
+        const spinner  = document.getElementById('reg-spinner');
+        const btn      = document.getElementById('btn-submit-reg');
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+        try {
+          const res  = await fetch('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, name })
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            showAlert(data.detail || '<span data-i18n="auto__danger_return_pendingverificationemail_email_const_desc_document_getelementbyid_verify_modal_desc_if_desc_desc_textcontent_email_new_bootstrap_modal_document_getelementbyid_verifymodal_show_showalert_info_catch_err_showalert_err_message_danger_finally_btn_disabled_false_spinner_classlist_add_d_none__0af33f"></span> ────────────────────────────────────────────────────
+      document.getElementById('btn-submit-verify').addEventListener('click', async () => {
+        const codeInput = document.getElementById('verify-code-input');
+        const alertEl   = document.getElementById('verify-alert');
+        const spinner   = document.getElementById('verify-spinner');
+        const btnVerify = document.getElementById('btn-submit-verify');
+        const code = codeInput.value.trim();
+        if (!code) return;
+        alertEl.classList.add('d-none');
+        btnVerify.disabled = true;
+        spinner.classList.remove('d-none');
+        try {
+          const res  = await fetch('/auth/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: pendingVerificationEmail, code })
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            alertEl.className = 'alert alert-danger py-1 small';
+            alertEl.textContent = data.detail || '<span data-i18n="auto__alertel_classlist_remove_d_none_return_alertel_classname_alert_alert_success_py_1_small_alertel_textcontent__1f59da"></span>.';
+          alertEl.classList.remove('d-none');
+          setTimeout(() => {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('verifyModal'));
+            if (modal) modal.hide();
+            document.getElementById('tab-login-btn').click();
+            document.getElementById('login-email').value = pendingVerificationEmail;
+            showAlert('<span data-i18n="auto___47a0fe"></span>.', 'success');
+          }, 1200);
+        } catch (err) {
+          alertEl.className = 'alert alert-danger py-1 small';
+          alertEl.textContent = err.message;
+          alertEl.classList.remove('d-none');
+        } finally {
+          btnVerify.disabled = false;
+          spinner.classList.add('d-none');
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>

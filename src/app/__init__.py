@@ -1,5 +1,27 @@
-"""
-Application builder for AI-Breadboard FastAPI application.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard APP -   Init   Module
+# =============================================================================
+# Description:
+#   Модуль основной системы (`__init__`).
+#
+# Usage Examples:
+#   Python API:
+#     from src.app.__init__ import create_app
+#
+#     res = create_app()
+#     print(res)
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: src.app
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+from __future__ import annotations
+"""Application builder for AI-Breadboard FastAPI application.
 
 This module provides the main application factory pattern that:
 - Initializes FastAPI app with middleware and configuration
@@ -32,9 +54,8 @@ Architecture:
     │   └── *.py            # Individual page handlers
     ├── config_api.py        # AI provider configuration endpoints
     ├── versioning.py        # Version check and update logic
-    └── tests/               # Application tests
-"""
-from __future__ import annotations
+    └── tests/               # Application tests"""
+
 import os
 import sys
 from pathlib import Path
@@ -213,7 +234,7 @@ def register_routers(app: FastAPI, state: 'AppState') -> None:
             logger.debug(f'Windows startup auditor router not registered: {e}')
     if is_app_enabled('windows_backup_manager'):
         try:
-            from apps.windows.backup_manager.router import init_router as init_backup_manager_router
+            from apps.windows.modules.backup_manager.router import init_router as init_backup_manager_router
             app.include_router(init_backup_manager_router())
         except (ImportError, Exception) as e:
             logger.debug(f'Windows backup manager router not registered: {e}')
@@ -229,12 +250,12 @@ def register_routers(app: FastAPI, state: 'AppState') -> None:
             app.include_router(init_transparency_scanner_router(state.chat_model if hasattr(state, 'chat_model') else None))
         except (ImportError, Exception) as e:
             logger.debug(f'Software transparency scanner router not registered: {e}')
-    if is_app_enabled('telemetry_research'):
+    if is_app_enabled('windows_system_checkpoints'):
         try:
-            from apps.windows.telemetry.research.router import init_research_router as init_telemetry_research_router
-            app.include_router(init_telemetry_research_router())
+            from apps.windows.system_checkpoints.router import init_router as init_checkpoints_router
+            app.include_router(init_checkpoints_router(app, state))
         except (ImportError, Exception) as e:
-            logger.debug(f'Telemetry Research app router not registered: {e}')
+            logger.debug(f'Windows system checkpoints router not registered: {e}')
     _auto_discover_routers(app)
     _mount_static_files(app)
 

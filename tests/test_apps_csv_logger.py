@@ -1,10 +1,32 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Apps Csv Logger
+# =============================================================================
+# Description:
+#   Тесты модуля телеметрии и логирования приложений с On-Demand CSV.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_apps_csv_logger import setup_tmp_log_dir
+#
+#     res = setup_tmp_log_dir()
+#
+# File: test_apps_csv_logger.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Тесты модуля телеметрии и логирования приложений с On-Demand CSV."""
+
 import csv
 import threading
 from pathlib import Path
 import pytest
 from apps.common.csv_logger import AppCsvLogger, export_app_events_to_csv, export_app_param_changes_to_csv, export_app_polls_to_csv, export_to_csv, flush_batch_buffer, get_apps_log_dir, is_csv_mirroring_enabled, is_memory_batching_enabled, is_mirroring_logs_to_csv_enabled, log_custom_csv, log_event, log_param_change, log_poll, set_apps_log_dir_override, set_csv_mirroring, set_memory_batching, set_mirroring_logs_to_csv, write_csv_row
-from apps.windows.telemetry.storage import TelemetryStorage
+from apps.windows.telemetry.sqlite import TelemetryStorage
 
 @pytest.fixture(autouse=True)
 def setup_tmp_log_dir(tmp_path: Path):

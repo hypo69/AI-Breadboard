@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Audio Diarization Module
+# =============================================================================
+# Description:
+#   Individual speaker utterance in dialogue.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.audio_diarization import Utterance
+#
+#     service = Utterance()
+#
+# File: audio_diarization.py
+# Project: ai-breadboard
+# Package: src.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Individual speaker utterance in dialogue."""
+
 import json
 import os
 import re

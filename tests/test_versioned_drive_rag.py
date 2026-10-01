@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Versioned Drive Rag
+# =============================================================================
+# Description:
+#   Create isolated mock Drive folder and RAG index directories.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_versioned_drive_rag import TestVersionedDriveRAG
+#
+#     service = TestVersionedDriveRAG()
+#
+# File: test_versioned_drive_rag.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Create isolated mock Drive folder and RAG index directories."""
+
 import os
 import shutil
 import tempfile

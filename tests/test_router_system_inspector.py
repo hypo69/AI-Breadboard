@@ -1,88 +1,115 @@
-"""Unit tests for System Inspector FastAPI router."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router System Inspector
+# =============================================================================
+# Description:
+#   Unit tests for TC System Inspector FastAPI router endpoints.
+#
+# Usage Examples:
+#   CLI:
+#     python -m tests.test_router_system_inspector
+#   Python API:
+#     from tests.test_router_system_inspector import TestSystemInspectorRouter
+#
+#     service = TestSystemInspectorRouter()
+#
+# File: test_router_system_inspector.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Unit tests for TC System Inspector FastAPI router endpoints."""
+
 import unittest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from apps.system_inspector.router import init_router
+from apps.windows.api.routers.router_tc import init_router
+
 
 class TestSystemInspectorRouter(unittest.TestCase):
-    """Test suite for System Inspector router endpoints."""
+    """Набор тестов для эндпоинтов инспектора системы в TC."""
 
     def test_get_status(self):
-        """Test /api/system/status endpoint."""
+        """Тест эндпоинта /api/v1/tc/status."""
         app = FastAPI()
         app.include_router(init_router())
         test_client = TestClient(app)
-        response = test_client.get('/api/system/status')
+        response = test_client.get('/api/v1/tc/status')
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIn('hostname', data)
         self.assertIn('process_count', data)
 
     def test_get_processes(self):
-        """Test /api/system/processes endpoint."""
+        """Тест эндпоинта /api/v1/tc/processes."""
         app = FastAPI()
         app.include_router(init_router())
         test_client = TestClient(app)
-        response = test_client.get('/api/system/processes?limit=10&sort_by=cpu')
+        response = test_client.get('/api/v1/tc/processes?limit=10&sort_by=cpu')
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIn('processes', data)
         self.assertIsInstance(data['processes'], list)
 
     def test_get_hardware(self):
-        """Test /api/system/hardware endpoint."""
+        """Тест эндпоинта /api/v1/tc/hardware."""
         app = FastAPI()
         app.include_router(init_router())
         test_client = TestClient(app)
-        response = test_client.get('/api/system/hardware')
+        response = test_client.get('/api/v1/tc/hardware')
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIn('hardware', data)
         self.assertIn('sensors', data)
 
     def test_get_diagnostic(self):
-        """Test /api/system/diagnostic endpoint."""
+        """Тест эндпоинта /api/v1/tc/diagnostic."""
         app = FastAPI()
         app.include_router(init_router())
         test_client = TestClient(app)
-        response = test_client.get('/api/system/diagnostic?process_limit=15')
+        response = test_client.get('/api/v1/tc/diagnostic?process_limit=15')
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIn('health_score', data)
         self.assertIn('anomalies', data)
 
     def test_get_hardware_tree(self):
-        """Test /api/system/hardware/tree endpoint."""
+        """Тест эндпоинта /api/v1/tc/hardware/tree."""
         app = FastAPI()
         app.include_router(init_router())
         test_client = TestClient(app)
-        response = test_client.get('/api/system/hardware/tree')
+        response = test_client.get('/api/v1/tc/hardware/tree')
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIn('tree', data)
 
     def test_get_hardware_sensors(self):
-        """Test /api/system/hardware/sensors endpoint."""
+        """Тест эндпоинта /api/v1/tc/hardware/sensors."""
         app = FastAPI()
         app.include_router(init_router())
         test_client = TestClient(app)
-        response = test_client.get('/api/system/hardware/sensors')
+        response = test_client.get('/api/v1/tc/hardware/sensors')
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIn('sensors', data)
 
     def test_trigger_diagnostic(self):
-        """Test /api/system/trigger-diagnostic endpoint (admin required)."""
+        """Тест эндпоинта /api/v1/tc/trigger-diagnostic."""
         app = FastAPI()
         app.include_router(init_router())
         test_client = TestClient(app)
-        response = test_client.post('/api/system/trigger-diagnostic')
+        response = test_client.post('/api/v1/tc/trigger-diagnostic')
         self.assertIn(response.status_code, [200, 401, 403])
 
     def test_init_router(self):
-        """Test init_router function returns valid router."""
+        """Тест создания инстанции роутера."""
         router = init_router()
         self.assertIsNotNone(router)
-        self.assertEqual(router.prefix, '/api/system')
+        self.assertEqual(router.prefix, '/api/v1/tc')
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,7 +1,64 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows -   Init  
+# =============================================================================
+# Description:
+#   AI Windows Diagnostic & Administration Center.
+#
+# Usage Examples:
+#
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: apps.windows
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """AI Windows Diagnostic & Administration Center."""
+
+from pathlib import Path
+
+_modules_dir = Path(__file__).resolve().parent / "modules"
+if _modules_dir.exists() and str(_modules_dir) not in __path__:
+    __path__.append(str(_modules_dir))
+
 __version__ = '2.0.0'
 __author__ = 'hypo69'
-_LAZY_EXPORTS = {'WindowsAIDiagnostician': ('apps.windows.ai.diagnostician', 'WindowsAIDiagnostician'), 'WindowsAIRootCauseAnalyzer': ('apps.windows.ai.root_cause_analyzer', 'WindowsAIRootCauseAnalyzer'), 'AIW64Collector': ('apps.windows.ai_w64_collector', 'AIW64Collector'), 'get_w64_collector': ('apps.windows.ai_w64_collector', 'get_w64_collector'), 'start_w64_collector': ('apps.windows.ai_w64_collector', 'start_w64_collector'), 'stop_w64_collector': ('apps.windows.ai_w64_collector', 'stop_w64_collector'), 'AIW64ETWCollector': ('apps.windows.ai_w64_etw_collector', 'AIW64ETWCollector'), 'WinAPI': ('apps.windows.core.winapi', 'WinAPI'), 'SystemState': ('apps.windows.core.data_model', 'SystemState'), 'ProcessIntelligence': ('apps.windows.process_intelligence', 'ProcessIntelligence'), 'SoftwareAuditEngine': ('apps.windows.core.software_audit', 'SoftwareAuditEngine'), 'InstalledAppInfo': ('apps.windows.core.data_model', 'InstalledAppInfo'), 'AppCategory': ('apps.windows.core.data_model', 'AppCategory'), 'AppExecutionInfo': ('apps.windows.core.data_model', 'AppExecutionInfo'), 'SoftwareAuditReport': ('apps.windows.core.data_model', 'SoftwareAuditReport'), 'RootCauseEngine': ('apps.windows.core.root_cause_engine', 'RootCauseEngine'), 'SafeExecutor': ('apps.windows.core.safe_executor', 'SafeExecutor'), 'RiskLevel': ('apps.windows.core.models', 'RiskLevel'), 'ActionType': ('apps.windows.core.models', 'ActionType'), 'RemediationAction': ('apps.windows.core.models', 'RemediationAction'), 'AuditFinding': ('apps.windows.core.models', 'AuditFinding'), 'DomainAuditResult': ('apps.windows.core.models', 'DomainAuditResult'), 'HealthScoreSummary': ('apps.windows.core.models', 'HealthScoreSummary'), 'FullAuditReport': ('apps.windows.core.models', 'FullAuditReport'), 'InvestigationReport': ('apps.windows.core.models', 'InvestigationReport'), 'init_router': ('apps.windows.router', 'init_router'), 'router': ('apps.windows.router', 'router')}
+_LAZY_EXPORTS = {
+    'WindowsAIDiagnostician': ('apps.windows.ai.diagnostician', 'WindowsAIDiagnostician'),
+    'WindowsAIRootCauseAnalyzer': ('apps.windows.ai.root_cause_analyzer', 'WindowsAIRootCauseAnalyzer'),
+    'AIW64Collector': ('apps.windows.telemetry.w64_collector', 'AIW64Collector'),
+    'get_w64_collector': ('apps.windows.telemetry.w64_collector', 'get_w64_collector'),
+    'start_w64_collector': ('apps.windows.telemetry.w64_collector', 'start_w64_collector'),
+    'stop_w64_collector': ('apps.windows.telemetry.w64_collector', 'stop_w64_collector'),
+    'AIW64ETWCollector': ('apps.windows.telemetry.w64_etw_collector', 'AIW64ETWCollector'),
+    'WinAPI': ('apps.windows.core.winapi', 'WinAPI'),
+    'SystemState': ('apps.windows.core.data_model', 'SystemState'),
+    'ProcessIntelligence': ('apps.windows.process_intelligence', 'ProcessIntelligence'),
+    'SoftwareAuditEngine': ('apps.windows.core.software_audit', 'SoftwareAuditEngine'),
+    'InstalledAppInfo': ('apps.windows.core.data_model', 'InstalledAppInfo'),
+    'AppCategory': ('apps.windows.core.data_model', 'AppCategory'),
+    'AppExecutionInfo': ('apps.windows.core.data_model', 'AppExecutionInfo'),
+    'SoftwareAuditReport': ('apps.windows.core.data_model', 'SoftwareAuditReport'),
+    'RootCauseEngine': ('apps.windows.core.root_cause_engine', 'RootCauseEngine'),
+    'SafeExecutor': ('apps.windows.core.safe_executor', 'SafeExecutor'),
+    'RiskLevel': ('apps.windows.core.models', 'RiskLevel'),
+    'ActionType': ('apps.windows.core.models', 'ActionType'),
+    'RemediationAction': ('apps.windows.core.models', 'RemediationAction'),
+    'AuditFinding': ('apps.windows.core.models', 'AuditFinding'),
+    'DomainAuditResult': ('apps.windows.core.models', 'DomainAuditResult'),
+    'HealthScoreSummary': ('apps.windows.core.models', 'HealthScoreSummary'),
+    'FullAuditReport': ('apps.windows.core.models', 'FullAuditReport'),
+    'InvestigationReport': ('apps.windows.core.models', 'InvestigationReport'),
+    'CheckpointCoordinator': ('apps.windows.system_checkpoints.core.checkpoint_coordinator', 'CheckpointCoordinator'),
+    'SystemImageManager': ('apps.windows.system_checkpoints.core.image_manager', 'SystemImageManager'),
+    'WinREManager': ('apps.windows.system_checkpoints.core.winre_manager', 'WinREManager'),
+    'FreshnessAuditor': ('apps.windows.system_checkpoints.core.freshness_auditor', 'FreshnessAuditor'),
+    'init_router': ('apps.windows.router', 'init_router'),
+    'router': ('apps.windows.router', 'router'),
+}
 
 def __getattr__(name: str):
     """Ленивая динамическая загрузка модулей и символов пакета."""
@@ -12,4 +69,4 @@ def __getattr__(name: str):
         globals()[name] = attr
         return attr
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
-__all__ = ['WinAPI', 'SystemState', 'ProcessIntelligence', 'SoftwareAuditEngine', 'InstalledAppInfo', 'AppCategory', 'AppExecutionInfo', 'SoftwareAuditReport', 'RootCauseEngine', 'SafeExecutor', 'WindowsAIDiagnostician', 'WindowsAIRootCauseAnalyzer', 'AIW64Collector', 'AIW64ETWCollector', 'get_w64_collector', 'start_w64_collector', 'stop_w64_collector', 'RiskLevel', 'ActionType', 'RemediationAction', 'AuditFinding', 'DomainAuditResult', 'HealthScoreSummary', 'FullAuditReport', 'InvestigationReport', 'init_router', 'router']
+__all__ = ['WinAPI', 'SystemState', 'ProcessIntelligence', 'SoftwareAuditEngine', 'InstalledAppInfo', 'AppCategory', 'AppExecutionInfo', 'SoftwareAuditReport', 'RootCauseEngine', 'SafeExecutor', 'WindowsAIDiagnostician', 'WindowsAIRootCauseAnalyzer', 'AIW64Collector', 'AIW64ETWCollector', 'get_w64_collector', 'start_w64_collector', 'stop_w64_collector', 'RiskLevel', 'ActionType', 'RemediationAction', 'AuditFinding', 'DomainAuditResult', 'HealthScoreSummary', 'FullAuditReport', 'InvestigationReport', 'CheckpointCoordinator', 'SystemImageManager', 'WinREManager', 'FreshnessAuditor', 'init_router', 'router']

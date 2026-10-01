@@ -1,5 +1,27 @@
-"""Автономный агентский цикл с поддержкой нативного Function Calling и саморасширения."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core - Agent Loop
+# =============================================================================
+# Description:
+#   Автономный агентский цикл с поддержкой нативного Function Calling и саморасширения.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.agent_loop import WindowsAgentLoop
+#
+#     service = WindowsAgentLoop()
+#
+# File: agent_loop.py
+# Project: ai-breadboard
+# Package: apps.windows.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Автономный агентский цикл с поддержкой нативного Function Calling и саморасширения."""
+
 import asyncio
 import json
 import re

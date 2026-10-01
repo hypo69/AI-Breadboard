@@ -12,6 +12,13 @@
     "open_browser": true,
     "enable_oauth": true
   },
+  "internal_api": {
+    "host": "127.0.0.1",
+    "port": 8001,
+    "enabled": true,
+    "log_level": "info",
+    "description": "Выделенный FastAPI-сервис для TC/Windows (телеметрия, дашборды, диагностика)"
+  },
   "ai": {
     "enable_narrator": false,
     "providers": {
@@ -60,7 +67,6 @@
       "windows_defender",
       "windows_backup_manager",
       "hardware_monitor",
-      "librehardwaremonitor",
       "autolog_manager",
       "ninite_updater",
       "file_recovery",

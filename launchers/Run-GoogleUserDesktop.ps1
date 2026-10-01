@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Run-Googleuserdesktop Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Run-GoogleUserDesktop).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Run-GoogleUserDesktop.ps1
+#
+# File: Run-GoogleUserDesktop.ps1
+# Project: ai-breadboard
+# Package: launchers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:06
+# =============================================================================
+
 <#
 .SYNOPSIS
     Standalone launcher for Google User Desktop workspace / microservice / TUI dashboard.

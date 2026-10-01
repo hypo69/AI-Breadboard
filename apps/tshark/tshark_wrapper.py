@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Tshark - Tshark Wrapper
+# =============================================================================
+# Description:
+#   TShark binary detection and async execution wrapper.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.tshark.tshark_wrapper import TSharkWrapper
+#
+#     service = TSharkWrapper()
+#
+# File: tshark_wrapper.py
+# Project: ai-breadboard
+# Package: apps.tshark
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """TShark binary detection and async execution wrapper."""
+
 import asyncio
 import json
 import shutil

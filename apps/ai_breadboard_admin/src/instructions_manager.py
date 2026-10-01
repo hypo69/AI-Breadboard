@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Ai_Breadboard_Admin Src - Instructions Manager
+# =============================================================================
+# Description:
+#   Менеджер управления системными инструкциями и их версиями.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.ai_breadboard_admin.src.instructions_manager import InstructionsManager
+#
+#     service = InstructionsManager()
+#
+# File: instructions_manager.py
+# Project: ai-breadboard
+# Package: apps.ai_breadboard_admin.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Менеджер управления системными инструкциями и их версиями."""
+
 import re
 from datetime import datetime
 from pathlib import Path

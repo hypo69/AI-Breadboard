@@ -1,5 +1,27 @@
-"""
-Tests for ImageMetadataManager - image metadata tracking, versioning, and deduplication.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Image Metadata
+# =============================================================================
+# Description:
+#   Tests for ImageMetadataManager - image metadata tracking, versioning, and deduplication.
+#
+# Usage Examples:
+#   CLI:
+#     python -m tests.test_image_metadata
+#   Python API:
+#     from tests.test_image_metadata import TestImageMetadataManager
+#
+#     service = TestImageMetadataManager()
+#
+# File: test_image_metadata.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Tests for ImageMetadataManager - image metadata tracking, versioning, and deduplication.
 
 Tests:
 - Metadata creation and retrieval
@@ -7,8 +29,8 @@ Tests:
 - Perceptual hashing and duplicate detection
 - Source type tracking
 - EXIF data extraction
-- Statistics and analysis
-"""
+- Statistics and analysis"""
+
 import json
 import shutil
 from pathlib import Path

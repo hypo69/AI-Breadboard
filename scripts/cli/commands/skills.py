@@ -1,6 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Команды управления каталогом навыков (skills)."""
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli Commands - Skills
+# =============================================================================
+# Description:
+#   Команды управления каталогом навыков (skills).
+#
+# Usage Examples:
+#   Python API:
+#     from scripts.cli.commands.skills import register_skills_parser
+#
+#     res = register_skills_parser()
+#
+# File: skills.py
+# Project: ai-breadboard
+# Package: scripts.cli.commands
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 from __future__ import annotations
+"""Команды управления каталогом навыков (skills)."""
 
 import argparse
 from src.skills import SkillRegistry

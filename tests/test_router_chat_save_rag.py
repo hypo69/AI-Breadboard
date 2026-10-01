@@ -1,4 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router Chat Save Rag
+# =============================================================================
+# Description:
+#   Тестовый набор для валидации эндпоинтов сохранения и целевых RAG баз данных.
+#
+# Usage Examples:
+#   CLI:
+#     python -m tests.test_router_chat_save_rag
+#   Python API:
+#     from tests.test_router_chat_save_rag import TestRouterChatSaveRag
+#
+#     service = TestRouterChatSaveRag()
+#
+# File: test_router_chat_save_rag.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Тестовый набор для валидации эндпоинтов сохранения и целевых RAG баз данных."""
+
 import unittest
 from unittest.mock import MagicMock, patch
 from fastapi import FastAPI
@@ -19,10 +44,10 @@ class TestRouterChatSaveRag(unittest.TestCase):
 
     @patch('src.rag.save_user_approved_response')
     def test_save_for_rag_indexing_explicit_rag_name(self, mock_save: MagicMock) -> None:
-        """Проверка работы переименованного эндпоинта /api/chat/save-for-rag-indexing с явным rag_name."""
+        """Проверка работы переименованного эндпоинта /api/v1/chat/save-for-rag-indexing с явным rag_name."""
         mock_save.return_value = True
         payload = {'query': 'Как настроить GPU в Windows?', 'chat_text': 'Откройте диспетчер устройств...', 'voice_text': 'Откройте диспетчер устройств...', 'rag_name': 'technician'}
-        response = self.client.post('/api/chat/save-for-rag-indexing', json=payload)
+        response = self.client.post('/api/v1/chat/save-for-rag-indexing', json=payload)
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data.get('status'), 'success')
@@ -31,10 +56,10 @@ class TestRouterChatSaveRag(unittest.TestCase):
 
     @patch('src.rag.save_user_approved_response')
     def test_save_for_rag_indexing_with_role(self, mock_save: MagicMock) -> None:
-        """Проверка работы эндпоинта /api/chat/save-for-rag-indexing и определения RAG по роли."""
+        """Проверка работы эндпоинта /api/v1/chat/save-for-rag-indexing и определения RAG по роли."""
         mock_save.return_value = True
         payload = {'query': 'Составь расписание встреч', 'chat_text': 'Расписание на сегодня...', 'voice_text': '', 'role': 'secretary'}
-        response = self.client.post('/api/chat/save-for-rag-indexing', json=payload)
+        response = self.client.post('/api/v1/chat/save-for-rag-indexing', json=payload)
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data.get('status'), 'success')
@@ -44,11 +69,11 @@ class TestRouterChatSaveRag(unittest.TestCase):
     @patch('src.rag.index_user_interaction')
     @patch('src.rag.save_user_approved_response')
     def test_save_rag_instant_endpoint(self, mock_save: MagicMock, mock_index: MagicMock) -> None:
-        """Проверка мгновенного сохранения /api/chat/save-rag-instant с векторизацией в целевую RAG базу."""
+        """Проверка мгновенного сохранения /api/v1/chat/save-rag-instant с векторизацией в целевую RAG базу."""
         mock_save.return_value = True
         mock_index.return_value = True
         payload = {'query': 'Напиши скрипт на Python', 'chat_text': "def hello(): print('world')", 'voice_text': '', 'rag_name': 'coder'}
-        response = self.client.post('/api/chat/save-rag-instant', json=payload)
+        response = self.client.post('/api/v1/chat/save-rag-instant', json=payload)
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data.get('status'), 'success')
@@ -61,7 +86,7 @@ class TestRouterChatSaveRag(unittest.TestCase):
         """Проверка fallback значений по умолчанию (default), если rag_name и role не переданы."""
         mock_save.return_value = True
         payload = {'query': 'Простой запрос', 'chat_text': 'Простой ответ', 'voice_text': ''}
-        response = self.client.post('/api/chat/save-for-rag-indexing', json=payload)
+        response = self.client.post('/api/v1/chat/save-for-rag-indexing', json=payload)
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data.get('status'), 'success')

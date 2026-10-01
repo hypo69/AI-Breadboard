@@ -1,9 +1,32 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Images Module
+# =============================================================================
+# Description:
+#   Mixin class for image operations in GoogleGenerativeAI.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.gemini.images import GoogleGenerativeAIImagesMixin
+#
+#     service = GoogleGenerativeAIImagesMixin()
+#
+# File: images.py
+# Project: ai-breadboard
+# Package: src.ai.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Mixin class for image operations in GoogleGenerativeAI."""
+
 import asyncio
 from io import IOBase
 from pathlib import Path
 from typing import Any
 from google.genai import types
-from logger.logger import logger
+from logger import logger
 from src.utils.image import get_image_bytes
 from .core import GoogleGenerativeAICore
 from .errors import GoogleGenerativeAIErrorMixin

@@ -1,9 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins Developer-Plugins Generate_Rag_From_Codebase - Vector Indexer
+# =============================================================================
+# Description:
+#   Vector indexer and search retrieval for codebase RAG.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.developer-plugins.generate_rag_from_codebase.vector_indexer import CodebaseVectorIndexer
+#
+#     service = CodebaseVectorIndexer()
+#
+# File: vector_indexer.py
+# Project: ai-breadboard
+# Package: plugins.developer-plugins.generate_rag_from_codebase
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Vector indexer and search retrieval for codebase RAG.
 
 Calculates vector representations for structured code and markdown chunks,
-supports cosine similarity search, and filters by document type or module.
-"""
-from __future__ import annotations
+supports cosine similarity search, and filters by document type or module."""
+
 import json
 import math
 from pathlib import Path

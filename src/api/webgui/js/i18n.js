@@ -1,4 +1,27 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - I18N Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля i18n.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/i18n.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { applyTranslations, getCurrentLang } from '/src/api/webgui/js/i18n.js';
+ *
+ * File: i18n.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * i18n.js — Internationalization module
  * 
  * Uses i18next (loaded via CDN in index.html).

@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Run-Ollama Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Run-Ollama).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Run-Ollama.ps1
+#
+# File: Run-Ollama.ps1
+# Project: ai-breadboard
+# Package: launchers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:06
+# =============================================================================
+
 <#
 .SYNOPSIS
     Ollama local service launcher and management.

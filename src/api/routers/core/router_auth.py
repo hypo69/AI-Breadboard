@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - Router Auth Module
+# =============================================================================
+# Description:
+#   Данные токена авторизации.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.routers.core.router_auth import TokenData
+#
+#     service = TokenData()
+#
+# File: router_auth.py
+# Project: ai-breadboard
+# Package: src.api.routers.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Данные токена авторизации."""
+
 import json
 import os
 import secrets

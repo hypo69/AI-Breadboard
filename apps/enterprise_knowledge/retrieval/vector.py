@@ -1,5 +1,27 @@
-"""Векторный поиск."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Enterprise_Knowledge Retrieval - Vector
+# =============================================================================
+# Description:
+#   Векторный поиск.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.enterprise_knowledge.retrieval.vector import VectorSearch
+#
+#     service = VectorSearch()
+#
+# File: vector.py
+# Project: ai-breadboard
+# Package: apps.enterprise_knowledge.retrieval
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Векторный поиск."""
+
 from typing import Any
 from apps.enterprise_knowledge.storage import KnowledgeStore
 

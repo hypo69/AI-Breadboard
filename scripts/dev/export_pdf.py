@@ -1,4 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Dev - Export Pdf
+# =============================================================================
+# Description:
+#   Export codebase and documentation to PDF.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.dev.export_pdf
+#   Python API:
+#     from scripts.dev.export_pdf import main
+#
+#     res = main()
+#
+# File: export_pdf.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 from __future__ import annotations
+"""Export codebase and documentation to PDF."""
+
 import argparse
 import sys
 from pathlib import Path
@@ -7,7 +32,7 @@ if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 import header
 from header import __root__
-from logger.logger import logger
+from logger import logger
 from src.utils.pdf import PDFUtils
 
 def main(args_list: list[str] | None=None) -> int:

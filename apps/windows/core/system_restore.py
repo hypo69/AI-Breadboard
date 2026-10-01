@@ -1,5 +1,27 @@
-"""Модуль создания и управления точками восстановления Windows."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core - System Restore
+# =============================================================================
+# Description:
+#   Модуль создания и управления точками восстановления Windows.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.system_restore import WindowsSystemRestoreManager
+#
+#     service = WindowsSystemRestoreManager()
+#
+# File: system_restore.py
+# Project: ai-breadboard
+# Package: apps.windows.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Модуль создания и управления точками восстановления Windows."""
+
 import json
 import os
 import subprocess

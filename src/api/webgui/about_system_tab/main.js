@@ -1,11 +1,30 @@
+/**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Main Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/about_system_tab/main.js?v=20261001_v1" type="module"></script>
+ *
+ * File: main.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/about_system_tab
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
 // =============================================================================
 // Process Name: About System Tab Web Controller
 // =============================================================================
 // Description:
 //   Client-side JavaScript controller for the About System tab.
 //   Provides real-time host telemetry, system identity & locale parameters,
-//   AIDA64-like hardware tree, LibreHardwareMonitor sensors, live top processes,
-//   disk volumes and security status.
+//   AIDA64-like hardware tree, live top processes, disk volumes and security status.
 //
 //   КЕШИРОВАНИЕ (IndexedDB + Memory):
 //   - Stale-While-Revalidate для всех данных
@@ -17,15 +36,93 @@
 // Package: src.api.webgui.about_system_tab
 // Author: hypo69
 // Copyright: © 2026 hypo69
+// Updated: 2026-10-01 06:10:00
 // =============================================================================
 
 (function () {
   let hardwareData = [];
-  let currentSensors = [];
   let currentProcesses = [];
   let currentDisks = [];
-  let activeSensorFilter = 'alli18n.t('auto__let_isliveactive_true_let_liveintervalid_null_let_wearautorefreshtimer_null_let_isupdating_false_let_isairunning_false_ttl_const_cache_strategy_hardware_spec_ttl_30_60_1000_strategy__b1907a')cache-firsti18n.t('auto__30_system_summary_ttl_5_1000_strategy__778b42')stale-while-revalidatei18n.t('auto__5_sensors_ttl_3_1000_strategy__8158d8')network-firsti18n.t('auto__3_control_status_ttl_60_1000_strategy__33f2e3')stale-while-revalidatei18n.t('auto__1_backup_status_ttl_5_60_1000_strategy__583e13')cache-firsti18n.t('auto__5_storage_battery_ttl_10_1000_strategy__426999')stale-while-revalidatei18n.t('auto__10_const_cache_store__748fc1')api_cache';
-  const CACHE_TAG = 'about-system-tabi18n.t('auto__cache_first_network_first_stale_while_revalidate_async_function_cachedfetch_url_cachekey_options_const_ttl_60000_strategy__020612')stale-while-revalidatei18n.t('auto__forcenetwork_false_options_const_cache_window_browsercache_if_cache_fallback_return_await_apifetch_url_cache_first_if_strategy__4cb9e2')cache-firsti18n.t('auto__forcenetwork_const_cached_await_cache_get_cache_store_cachekey_if_cached_console_log_cache_hit_cache_first_cachekey_return_cached_stale_while_revalidate_if_strategy__b88e61')stale-while-revalidatei18n.t('auto__forcenetwork_const_cached_await_cache_get_cache_store_cachekey_if_cached_console_log_cache_hit_stale_while_revalidate_cachekey_updating_in_background_apifetch_url_then_fresh_cache_set_cache_store_cachekey_fresh_ttl_tags_cache_tag_catch_err_console_warn_cache_background_update_failed_for_cachekey_err_return_cached_network_first_try_const_fresh_await_apifetch_url_await_cache_set_cache_store_cachekey_fresh_ttl_tags_cache_tag_console_log_cache_miss_stored_cachekey_return_fresh_catch_err_const_cached_await_cache_get_cache_store_cachekey_if_cached_console_warn_cache_network_failed_returning_stale_cache_cachekey_return_cached_throw_err_async_function_cleartabcache_const_cache_window_browsercache_if_cache_await_cache_invalidatebytag_cache_store_cache_tag_console_log__1be9a3')[Cache] Tab cache cleared');
+  let isLiveActive = true;
+  let liveIntervalId = null;
+  let wearAutoRefreshTimer = null;
+  let isUpdating = false;
+  let isAiRunning = false;
+  
+  // Кеш-стратегия и TTL
+  const CACHE_STRATEGY = {
+    HARDWARE_SPEC: { ttl: 30 * 60 * 1000, strategy: 'cache-first' },      // 30 мин, редко меняется
+    SYSTEM_SUMMARY: { ttl: 5 * 1000, strategy: 'stale-while-revalidate' }, // 5 сек
+    CONTROL_STATUS: { ttl: 60 * 1000, strategy: 'stale-while-revalidate' }, // 1 мин
+    BACKUP_STATUS: { ttl: 5 * 60 * 1000, strategy: 'cache-first' },         // 5 мин
+    STORAGE_BATTERY: { ttl: 10 * 1000, strategy: 'stale-while-revalidate' }, // 10 сек
+    PANEL_KPI: { ttl: 5 * 1000, strategy: 'stale-while-revalidate' }         // 5 сек
+  };
+  
+  const CACHE_STORE = 'api_cache';
+  const CACHE_TAG = 'about-system-tab';
+  
+  /**
+   * Универсальная функция для работы с кешем
+   * Поддерживает стратегии: cache-first, network-first, stale-while-revalidate
+   */
+  async function cachedFetch(url, cacheKey, options = {}) {
+    const { ttl = 60000, strategy = 'stale-while-revalidate', forceNetwork = false } = options;
+    const cache = window.browserCache;
+    
+    if (!cache) {
+      // Fallback: кеш недоступен, прямой запрос
+      return await apiFetch(url);
+    }
+    
+    // Cache-First: сначала кеш, потом сеть (для редко меняющихся данных)
+    if (strategy === 'cache-first' && !forceNetwork) {
+      const cached = await cache.get(CACHE_STORE, cacheKey);
+      if (cached) {
+        console.log(`[Cache] HIT (cache-first): ${cacheKey}`);
+        return cached;
+      }
+    }
+    
+    // Stale-While-Revalidate: показываем кеш, обновляем в фоне
+    if (strategy === 'stale-while-revalidate' && !forceNetwork) {
+      const cached = await cache.get(CACHE_STORE, cacheKey);
+      if (cached) {
+        console.log(`[Cache] HIT (stale-while-revalidate): ${cacheKey}, updating in background...`);
+        // Запускаем обновление в фоне
+        apiFetch(url)
+          .then(fresh => cache.set(CACHE_STORE, cacheKey, fresh, { ttl, tags: [CACHE_TAG] }))
+          .catch(err => console.warn(`[Cache] Background update failed for ${cacheKey}:`, err));
+        return cached;
+      }
+    }
+    
+    // Network-First или первый запрос: сначала сеть, потом кеш
+    try {
+      const fresh = await apiFetch(url);
+      // Сохраняем в кеш
+      await cache.set(CACHE_STORE, cacheKey, fresh, { ttl, tags: [CACHE_TAG] });
+      console.log(`[Cache] MISS → stored: ${cacheKey}`);
+      return fresh;
+    } catch (err) {
+      // Если сеть недоступна, пытаемся вернуть устаревший кеш
+      const cached = await cache.get(CACHE_STORE, cacheKey);
+      if (cached) {
+        console.warn(`[Cache] Network failed, returning stale cache: ${cacheKey}`);
+        return cached;
+      }
+      throw err;
+    }
+  }
+  
+  /**
+   * Очистка кеша вкладки (при необходимости)
+   */
+  async function clearTabCache() {
+    const cache = window.browserCache;
+    if (cache) {
+      await cache.invalidateByTag(CACHE_STORE, CACHE_TAG);
+      console.log('[Cache] Tab cache cleared');
     }
   }
 
@@ -65,18 +162,47 @@
   }
 
   async function initAboutSystemTab() {
-    console.log('[AboutSystemTab] Initializing tab controller...i18n.t('auto__bindevents_bindaievents_updatelocalclock_await_updatecachestatus_prefetch_const_prefetchpromises_fetchsystemsummary_catch_err_console_warn__995727')[AboutSystemTab] Quick summary error:', err)),
-      fetchHardwareSpec().catch(err => console.warn('[AboutSystemTab] Hardware spec error:i18n.t('auto__err_await_promise_allsettled_prefetchpromises_fetchhardwaresensors_catch_err_console_warn__a2af8e')[AboutSystemTab] Sensors error:', err));
+    console.log('[AboutSystemTab] Initializing tab controller...');
+    bindEvents();
+    bindAIEvents();
+    updateLocalClock();
+    
+    // Проверка доступности кеша
+    await updateCacheStatus();
+
+    // Prefetch: предзагрузка критичных данных для мгновенного отображения
+    const prefetchPromises = [
+      fetchSystemSummary().catch(err => console.warn('[AboutSystemTab] Quick summary error:', err)),
+      fetchHardwareSpec().catch(err => console.warn('[AboutSystemTab] Hardware spec error:', err)),
+      fetchKpiPanels().catch(err => console.warn('[AboutSystemTab] KPI panels error:', err))
+    ];
+    
+    // Ждем критичные данные перед отображением
+    await Promise.allSettled(prefetchPromises);
+    
+    // Фоновая загрузка менее критичных данных
     fetchBackupStatus().catch(err => console.warn('[AboutSystemTab] Backup status error:', err));
     fetchSystemControlStatus().catch(err => console.warn('[AboutSystemTab] Control status error:', err));
-    fetchStorageBatteryWear().catch(err => console.warn('[AboutSystemTab] Storage & Battery wear error:i18n.t('auto__err_ai_rescan_start_live_telemetry_ticker_startlivestream_window_initaboutsystemtab_initaboutsystemtab_async_function_updatecachestatus_const_badge_document_getelementbyid__ffa413')about-sys-cache-badge');
+    fetchStorageBatteryWear().catch(err => console.warn('[AboutSystemTab] Storage & Battery wear error:', err));
+
+    // AI-диагностика запускается только пользователем по кнопке Rescan / Запуск
+    // Start live telemetry ticker
+    startLiveStream();
+  }
+  window.initAboutSystemTab = initAboutSystemTab;
+  
+  /**
+   * Обновление статуса кеша в интерфейсе
+   */
+  async function updateCacheStatus() {
+    const badge = document.getElementById('about-sys-cache-badge');
     if (!badge) return;
     
     const cache = window.browserCache;
     if (!cache) {
       badge.textContent = '💾 Cache: Unavailable';
       badge.className = 'badge rounded-pill bg-warning-subtle text-warning border border-warning px-2.5 py-1';
-      badge.title = i18n.t('auto__api_d395a1');
+      badge.title = 'Кеш недоступен, используется прямой запрос к API';
       return;
     }
     
@@ -88,18 +214,43 @@
         : 0;
       
       badge.textContent = `💾 Cache: ${hitRate}% hit`;
-      badge.className = 'badge rounded-pill bg-success-subtle text-success border border-success px-2.5 py-1i18n.t('auto__badge_title_n_stats_metrics_hits_n_stats_metrics_misses_n_stats_memorycachesize_else_badge_textcontent__23e62d')💾 Cache: Error';
+      badge.className = 'badge rounded-pill bg-success-subtle text-success border border-success px-2.5 py-1';
+      badge.title = `Кеш активен\nПопаданий: ${stats.metrics.hits}\nПромахов: ${stats.metrics.misses}\nВ памяти: ${stats.memoryCacheSize} записей`;
+    } else {
+      badge.textContent = '💾 Cache: Error';
       badge.className = 'badge rounded-pill bg-danger-subtle text-danger border border-danger px-2.5 py-1';
-      badge.title = i18n.t('auto___4fed3d');
+      badge.title = 'Ошибка инициализации кеша';
     }
   }
 
   function updateLocalClock() {
-    const clockEl = document.getElementById('about-ident-time-badgei18n.t('auto__if_clockel_const_now_new_date_clockel_textcontent_now_tolocaletimestring_function_startlivestream_if_window_registertabpoller_window_registertabpoller__1a3e0b')tab-about-system', async () => {
+    const clockEl = document.getElementById('about-ident-time-badge');
+    if (clockEl) {
+      const now = new Date();
+      clockEl.textContent = `Локальное время: ${now.toLocaleTimeString()}`;
+    }
+  }
+
+  function startLiveStream() {
+    if (window.registerTabPoller) {
+      window.registerTabPoller('tab-about-system', async () => {
         updateLocalClock();
         if (isLiveActive && !isUpdating) {
           await pollLiveTelemetry();
-          if (activeSubtab !== 'subtab-overviewi18n.t('auto__await_refreshactivesubtab_3_await_updatecachestatus_3000_immediate_true_else_if_liveintervalid_clearinterval_liveintervalid_liveintervalid_setinterval_async_updatelocalclock_if_isliveactive_isupdating_await_polllivetelemetry_if_activesubtab__ad7dca')subtab-overview') {
+          if (activeSubtab !== 'subtab-overview') {
+            await refreshActiveSubtab();
+          }
+        }
+        // Обновляем статус кеша каждые 3 секунды
+        await updateCacheStatus();
+      }, 3000, { immediate: true });
+    } else {
+      if (liveIntervalId) clearInterval(liveIntervalId);
+      liveIntervalId = setInterval(async () => {
+        updateLocalClock();
+        if (isLiveActive && !isUpdating) {
+          await pollLiveTelemetry();
+          if (activeSubtab !== 'subtab-overview') {
             await refreshActiveSubtab();
           }
         }
@@ -126,11 +277,19 @@
       btnClearCache.onclick = async () => {
         btnClearCache.disabled = true;
         const icon = btnClearCache.querySelector('i');
-        if (icon) icon.classList.add('spin-animationi18n.t('auto__await_cleartabcache_await_refreshalldata_true_if_icon_icon_classlist_remove__c6f4d7')spin-animation');
+        if (icon) icon.classList.add('spin-animation');
+        
+        // Очищаем кеш вкладки
+        await clearTabCache();
+        
+        // Принудительно обновляем все данные из сети
+        await refreshAllData(true);
+        
+        if (icon) icon.classList.remove('spin-animation');
         btnClearCache.disabled = false;
         
         if (window.showToast) {
-          window.showToast(i18n.t('auto___0d819b'), 'success');
+          window.showToast('Кеш вкладки очищен, данные обновлены', 'success');
         }
       };
     }
@@ -147,14 +306,14 @@
         const liveBadge = document.getElementById('about-sys-live-badge');
         if (isLiveActive) {
           if (icon) icon.className = 'bi bi-pause-fill me-1';
-          if (txt) txt.textContent = i18n.t('auto___03498e');
+          if (txt) txt.textContent = 'Пауза';
           if (liveBadge) {
             liveBadge.className = 'badge rounded-pill bg-info-subtle text-info border border-info px-2.5 py-1';
             liveBadge.textContent = '● Live Host Telemetry';
           }
         } else {
           if (icon) icon.className = 'bi bi-play-fill me-1';
-          if (txt) txt.textContent = i18n.t('auto___fa6a34');
+          if (txt) txt.textContent = 'Возобновить';
           if (liveBadge) {
             liveBadge.className = 'badge rounded-pill bg-warning-subtle text-warning border border-warning px-2.5 py-1';
             liveBadge.textContent = '⏸ Stream Paused';
@@ -168,7 +327,6 @@
       btnExpandAll.onclick = () => {
         document.querySelectorAll('.about-sys-tree-body').forEach(b => b.classList.remove('d-none'));
         document.querySelectorAll('.about-sys-chevron').forEach(c => c.textContent = '▲');
-        adjustHardwareTreeHeight();
       };
     }
 
@@ -177,23 +335,13 @@
       btnCollapseAll.onclick = () => {
         document.querySelectorAll('.about-sys-tree-body').forEach(b => b.classList.add('d-none'));
         document.querySelectorAll('.about-sys-chevron').forEach(c => c.textContent = '▼');
-        adjustHardwareTreeHeight();
       };
     }
-
-    window.addEventListener('resize', () => adjustHardwareTreeHeight());
 
     const treeSearch = document.getElementById('about-sys-search');
     if (treeSearch) {
       treeSearch.oninput = () => {
         renderHardwareTree(hardwareData, treeSearch.value.trim().toLowerCase());
-      };
-    }
-
-    const sensorSearch = document.getElementById('about-sensor-search');
-    if (sensorSearch) {
-      sensorSearch.oninput = () => {
-        renderSensorsList(currentSensors);
       };
     }
 
@@ -204,29 +352,31 @@
       };
     }
 
-    // Sensor category filter buttons
-    const filterGroup = document.getElementById('about-sensor-filter-group');
-    if (filterGroup) {
-      filterGroup.querySelectorAll('button').forEach(btn => {
-        btn.onclick = () => {
-          filterGroup.querySelectorAll('button').forEach(b => {
-            b.classList.remove('active', 'btn-outline-info');
-            b.classList.add('btn-outline-secondary');
-          });
-          btn.classList.add('active', 'btn-outline-info');
-          btn.classList.remove('btn-outline-secondary');
-          activeSensorFilter = btn.getAttribute('data-sensor-cat') || 'all';
-          renderSensorsList(currentSensors);
-        };
-      });
-    }
-
     const btnWearRefresh = document.getElementById('btn-diag-wear-refresh');
     if (btnWearRefresh) {
       btnWearRefresh.onclick = () => fetchStorageBatteryWear(true);
     }
 
-    const wearAutoSwitch = document.getElementById('diag-wear-auto-refreshi18n.t('auto__if_wearautoswitch_wearautoswitch_onchange_e_if_e_target_checked_wearautorefreshtimer_setinterval_fetchstoragebatterywear_true_10000_else_if_wearautorefreshtimer_clearinterval_wearautorefreshtimer_wearautorefreshtimer_null_async_function_refreshalldata_forcenetwork_false_isupdating_true_try_if_forcenetwork_await_promise_allsettled_apifetch__640ad9')/api/v1/system/summary?process_limit=25').then(data => {
+    const wearAutoSwitch = document.getElementById('diag-wear-auto-refresh');
+    if (wearAutoSwitch) {
+      wearAutoSwitch.onchange = (e) => {
+        if (e.target.checked) {
+          wearAutoRefreshTimer = setInterval(() => fetchStorageBatteryWear(true), 10000);
+        } else if (wearAutoRefreshTimer) {
+          clearInterval(wearAutoRefreshTimer);
+          wearAutoRefreshTimer = null;
+        }
+      };
+    }
+  }
+
+  async function refreshAllData(forceNetwork = false) {
+    isUpdating = true;
+    try {
+      if (forceNetwork) {
+        // Принудительная загрузка из сети (игнорируем кеш)
+        await Promise.allSettled([
+          apiFetch('/api/v1/system/summary?process_limit=25').then(data => {
             if (window.browserCache) {
               window.browserCache.set(CACHE_STORE, 'system_summary', data, { 
                 ttl: CACHE_STRATEGY.SYSTEM_SUMMARY.ttl, 
@@ -253,15 +403,6 @@
             }
             return fetchHardwareSpec();
           }),
-          apiFetch('/api/v1/system/sensors').then(data => {
-            if (window.browserCache) {
-              window.browserCache.set(CACHE_STORE, 'hardware_sensors', data, { 
-                ttl: CACHE_STRATEGY.SENSORS.ttl, 
-                tags: [CACHE_TAG] 
-              });
-            }
-            return fetchHardwareSensors();
-          }),
           apiFetch('/api/v1/windows-backup/health').then(data => {
             if (window.browserCache) {
               window.browserCache.set(CACHE_STORE, 'backup_status', data, { 
@@ -279,16 +420,17 @@
               });
             }
             return fetchStorageBatteryWear(true);
-          })
+          }),
+          fetchKpiPanels(true)
         ]);
       } else {
         await Promise.allSettled([
           fetchSystemSummary(),
           fetchSystemControlStatus(),
           fetchHardwareSpec(),
-          fetchHardwareSensors(),
           fetchBackupStatus(),
-          fetchStorageBatteryWear()
+          fetchStorageBatteryWear(),
+          fetchKpiPanels(false)
         ]);
       }
     } finally {
@@ -309,7 +451,7 @@
       const cfg = data.file_history?.config;
       const storage = data.storage_audit;
 
-      let lastTimeStr = i18n.t('auto___096309');
+      let lastTimeStr = 'Нет записей';
       if (cfg && cfg.last_backup_time) {
         try {
           const d = new Date(cfg.last_backup_time);
@@ -331,16 +473,24 @@
 
       let storageStr = '';
       if (storage && storage.target_exists && storage.free_space_gb !== null && storage.free_space_gb !== undefined) {
-        const target = storage.target_path || i18n.t('auto___ca0407');
-        const freeGb = typeof storage.free_space_gb === 'numberi18n.t('auto__storage_free_space_gb_tofixed_1_storage_free_space_gb_storagestr_target_freegb_gb_else_if_cfg_cfg_target_drive_letter_cfg_target_url_storagestr_cfg_target_drive_letter_cfg_target_url_else_storagestr__8298dd')Хранилище не найдено';
+        const target = storage.target_path || 'Диск';
+        const freeGb = typeof storage.free_space_gb === 'number' ? storage.free_space_gb.toFixed(1) : storage.free_space_gb;
+        storageStr = `${target} (${freeGb} GB своб.)`;
+      } else if (cfg && (cfg.target_drive_letter || cfg.target_url)) {
+        storageStr = cfg.target_drive_letter || cfg.target_url;
+      } else {
+        storageStr = 'Хранилище не найдено';
       }
 
       const backupSummary = `${lastTimeStr} | ${storageStr}`;
-      const backupEl = document.getElementById('about-ident-backupi18n.t('auto__if_backupel_backupel_textcontent_backupsummary_backupel_title_lasttimestr_n_storagestr_n_file_history_data_file_history_service_status__a3f8e0')—'}\nHealth Score: ${data.health_score ?? '--'}/100`;
+      const backupEl = document.getElementById('about-ident-backup');
+      if (backupEl) {
+        backupEl.textContent = backupSummary;
+        backupEl.title = `Последний бэкап: ${lastTimeStr}\nХранилище: ${storageStr}\nСлужба File History: ${data.file_history?.service_status || '—'}\nHealth Score: ${data.health_score ?? '--'}/100`;
       }
     } catch (e) {
       console.warn('[AboutSystemTab] fetchBackupStatus warning:', e);
-      setText('about-ident-backup', i18n.t('auto___1411ab'));
+      setText('about-ident-backup', 'Не настроено');
     }
   }
 
@@ -357,12 +507,29 @@
       // Disks Wear & SMART
       const disksTbody = document.getElementById('diag-wear-disks-tbody');
       if (disksTbody && data.disks_wear) {
-        setText('diag-wear-disks-counti18n.t('auto__data_disks_wear_length_if_data_disks_wear_length_0_diskstbody_innerhtml__438bf3')<tr><td colspan="9" class="text-center py-4 text-muted">Физических накопителей не обнаружено</td></tr>';
+        setText('diag-wear-disks-count', `${data.disks_wear.length} дисков`);
+        if (data.disks_wear.length === 0) {
+          disksTbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">Физических накопителей не обнаружено</td></tr>';
         } else {
           const formatBytesLocal = (bytes) => {
             if (bytes == null || bytes === 0) return '0 B';
             const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PBi18n.t('auto__const_i_math_floor_math_log_bytes_math_log_k_return_parsefloat_bytes_math_pow_k_i_tofixed_1_sizes_i_const_formatpohlocal_hours_if_hours_null_hours_0_return_null_const_days_math_floor_hours_24_const_years_hours_24_365_25_tofixed_1_if_days_365_return_hours_tolocalestring_years_if_days_1_return_hours_tolocalestring_days_return_hours_tolocalestring_diskstbody_innerhtml_data_disks_wear_map_d_const_diskname_d_name_d_model_d_device_id__be61dc')Физический диск';
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+          };
+
+          const formatPohLocal = (hours) => {
+            if (hours == null || hours <= 0) return null;
+            const days = Math.floor(hours / 24);
+            const years = (hours / (24 * 365.25)).toFixed(1);
+            if (days >= 365) return `${hours.toLocaleString()} ч (≈ ${years} г)`;
+            if (days >= 1) return `${hours.toLocaleString()} ч (${days} д)`;
+            return `${hours.toLocaleString()} ч`;
+          };
+
+          disksTbody.innerHTML = data.disks_wear.map(d => {
+            const diskName = d.name || d.model || d.device_id || 'Физический диск';
             const devId = d.device_id ? `<span class="badge bg-secondary-subtle text-light border border-secondary me-1.5">${escapeHtml(d.device_id)}</span>` : '';
             const isSsd = (d.media_type && d.media_type.toUpperCase().includes('SSD')) || (d.bus_type && d.bus_type.toUpperCase().includes('NVME'));
             const diskIcon = isSsd ? 'bi-device-ssd text-info' : 'bi-hdd text-primary';
@@ -382,10 +549,10 @@
 
             // Объемы ввода/вывода (запись и чтение)
             const ioHtml = `
-              <div class="font-monospace text-light" title=i18n.t('auto___2b456e')>
+              <div class="font-monospace text-light" title="Записано данных">
                 <i class="bi bi-arrow-up-circle text-warning me-1"></i>${formatBytesLocal(d.bytes_written)}
               </div>
-              <div class="small font-monospace text-info mt-0.5" title=i18n.t('auto___650fa5')>
+              <div class="small font-monospace text-info mt-0.5" title="Прочитано данных">
                 <i class="bi bi-arrow-down-circle text-info me-1"></i>${formatBytesLocal(d.bytes_read)}
               </div>
             `;
@@ -432,19 +599,29 @@
         if (!b.has_battery) {
           batContainer.innerHTML = `
             <div class="text-center py-4 text-muted small">
-              <i class="bi bi-plug-fill fs-4 text-info d-block mb-1i18n.t('auto__i_div_else_batcontainer_innerhtml_table_class__23689a')about-sys-spec-table">
+              <i class="bi bi-plug-fill fs-4 text-info d-block mb-1"></i>
+              Стационарный компьютер — питание напрямую от электросети
+            </div>
+          `;
+        } else {
+          batContainer.innerHTML = `
+            <table class="about-sys-spec-table">
               <tbody>
                 <tr>
-                  <td class="about-sys-spec-key"><i class="bi bi-battery-charging me-1.5 text-warningi18n.t('auto__i_td_td_class__15f163')about-sys-spec-val fw-bold text-white">${b.percent}% (${b.is_charging ? i18n.t('auto___a03862') : i18n.t('auto___777161')})</td>
+                  <td class="about-sys-spec-key"><i class="bi bi-battery-charging me-1.5 text-warning"></i>Уровень заряда</td>
+                  <td class="about-sys-spec-val fw-bold text-white">${b.percent}% (${b.is_charging ? 'Заряжается' : 'Разряд'})</td>
                 </tr>
                 <tr>
-                  <td class="about-sys-spec-key"><i class="bi bi-shield-shaded me-1.5 text-infoi18n.t('auto__i_td_td_class__b49187')about-sys-spec-val font-monospace">${b.design_capacity_mwh ? b.design_capacity_mwh + ' mWh' : '--'}</td>
+                  <td class="about-sys-spec-key"><i class="bi bi-shield-shaded me-1.5 text-info"></i>Заводская емкость</td>
+                  <td class="about-sys-spec-val font-monospace">${b.design_capacity_mwh ? b.design_capacity_mwh + ' mWh' : '--'}</td>
                 </tr>
                 <tr>
-                  <td class="about-sys-spec-key"><i class="bi bi-battery-full me-1.5 text-successi18n.t('auto__i_td_td_class__2138b6')about-sys-spec-val font-monospace">${b.full_charge_capacity_mwh ? b.full_charge_capacity_mwh + ' mWh' : '--'}</td>
+                  <td class="about-sys-spec-key"><i class="bi bi-battery-full me-1.5 text-success"></i>Текущая емкость</td>
+                  <td class="about-sys-spec-val font-monospace">${b.full_charge_capacity_mwh ? b.full_charge_capacity_mwh + ' mWh' : '--'}</td>
                 </tr>
                 <tr>
-                  <td class="about-sys-spec-key"><i class="bi bi-heart-pulse me-1.5 text-dangeri18n.t('auto__i_td_td_class__6dd619')about-sys-spec-val ${b.wear_level_pct > 20 ? 'text-danger fw-bold' : 'text-success'}">
+                  <td class="about-sys-spec-key"><i class="bi bi-heart-pulse me-1.5 text-danger"></i>Деградация (Износ)</td>
+                  <td class="about-sys-spec-val ${b.wear_level_pct > 20 ? 'text-danger fw-bold' : 'text-success'}">
                     ${b.wear_level_pct}% износа
                   </td>
                 </tr>
@@ -458,12 +635,93 @@
     }
   }
 
+  /**
+   * Загрузка сводных KPI-карточек из персистентной БД telemetry.db
+   */
+  async function fetchKpiPanels(forceNetwork = false) {
+    return Promise.allSettled([
+      fetchPanelOs(forceNetwork),
+      fetchPanelSecurity(forceNetwork),
+      fetchPanelRestorePoints(forceNetwork),
+      fetchPanelStorage(forceNetwork)
+    ]);
+  }
+
+  async function fetchPanelOs(forceNetwork = false) {
+    try {
+      const config = CACHE_STRATEGY.PANEL_KPI || { ttl: 5000, strategy: 'stale-while-revalidate' };
+      const data = await cachedFetch(
+        '/api/v1/panel/os',
+        'panel_os',
+        { ttl: config.ttl, strategy: config.strategy, forceNetwork }
+      );
+      if (data) {
+        if (data.display_title) setText('about-kpi-os-title', data.display_title);
+        if (data.display_host) setText('about-kpi-os-host', data.display_host);
+        if (data.uptime_human) setText('about-spec-uptime', `Uptime: ${data.uptime_human}`);
+      }
+    } catch (err) {
+      console.warn('[AboutSystemTab] fetchPanelOs error:', err);
+    }
+  }
+
+  async function fetchPanelSecurity(forceNetwork = false) {
+    try {
+      const config = CACHE_STRATEGY.PANEL_KPI || { ttl: 5000, strategy: 'stale-while-revalidate' };
+      const data = await cachedFetch(
+        '/api/v1/panel/security',
+        'panel_security',
+        { ttl: config.ttl, strategy: config.strategy, forceNetwork }
+      );
+      if (data) {
+        if (data.display_title) setText('about-kpi-sec-title', data.display_title);
+        if (data.display_subtitle) setText('about-kpi-sec-sub', data.display_subtitle);
+      }
+    } catch (err) {
+      console.warn('[AboutSystemTab] fetchPanelSecurity error:', err);
+    }
+  }
+
+  async function fetchPanelRestorePoints(forceNetwork = false) {
+    try {
+      const config = CACHE_STRATEGY.PANEL_KPI || { ttl: 5000, strategy: 'stale-while-revalidate' };
+      const data = await cachedFetch(
+        '/api/v1/panel/restore-points',
+        'panel_restore_points',
+        { ttl: config.ttl, strategy: config.strategy, forceNetwork }
+      );
+      if (data) {
+        if (data.display_title) setText('about-kpi-prot-title', data.display_title);
+        if (data.display_subtitle) setText('about-kpi-prot-sub', data.display_subtitle);
+      }
+    } catch (err) {
+      console.warn('[AboutSystemTab] fetchPanelRestorePoints error:', err);
+    }
+  }
+
+  async function fetchPanelStorage(forceNetwork = false) {
+    try {
+      const config = CACHE_STRATEGY.PANEL_KPI || { ttl: 5000, strategy: 'stale-while-revalidate' };
+      const data = await cachedFetch(
+        '/api/v1/panel/storage',
+        'panel_storage',
+        { ttl: config.ttl, strategy: config.strategy, forceNetwork }
+      );
+      if (data) {
+        if (data.display_title) setText('about-kpi-stor-title', data.display_title);
+        if (data.display_subtitle) setText('about-kpi-stor-clean', data.display_subtitle);
+      }
+    } catch (err) {
+      console.warn('[AboutSystemTab] fetchPanelStorage error:', err);
+    }
+  }
+
   async function pollLiveTelemetry() {
     isUpdating = true;
     try {
       await Promise.allSettled([
         fetchSystemSummary(true),
-        fetchHardwareSensors(true)
+        fetchKpiPanels(false)
       ]);
     } finally {
       isUpdating = false;
@@ -483,24 +741,26 @@
       // 1. Identity & Locale Block
       const host = snap.hostname || 'DELL-VOSTRO';
       const user = snap.username || 'onela';
-      const lang = snap.system_language || i18n.t('auto__ru_ru__d30645');
+      const lang = snap.system_language || 'Русский (Россия) [ru-RU]';
       const userLoc = snap.user_locale || 'ru-RU';
       const sysLoc = snap.system_locale || 'ru-RU';
       const tz = snap.timezone || 'UTC+03:00';
       const cp = snap.codepage || 'UTF-8 (ACP: 65001)';
       const inputs = Array.isArray(snap.input_languages) && snap.input_languages.length > 0
         ? snap.input_languages.join(', ')
-        : i18n.t('auto__ru_english_us_il__169750');
+        : 'Русский (RU), English (US), עברית (IL)';
       const osBuild = snap.os_build ? `${snap.os_name || 'Windows 11'} (Build ${snap.os_build})` : (snap.os_name || 'Windows 11');
 
       setText('about-ident-hostname', host);
       setText('about-ident-domain', `Workgroup / Host: ${host}`);
       setText('about-ident-username', user);
       setText('about-ident-language', lang);
-      setText('about-ident-localesi18n.t('auto__user_userloc_sys_sysloc_settext__671e3a')about-ident-timezone', tz);
-      setText('about-ident-codepagei18n.t('auto__cp_settext__ddd79f')about-ident-inputs', inputs);
+      setText('about-ident-locales', `Локали: User: ${userLoc} | Sys: ${sysLoc}`);
+      setText('about-ident-timezone', tz);
+      setText('about-ident-codepage', `Кодировка: ${cp}`);
+      setText('about-ident-inputs', inputs);
       setText('about-ident-os-build', osBuild);
-      setText('about-ident-install-date', snap.os_install_date || i18n.t('auto___657510'));
+      setText('about-ident-install-date', snap.os_install_date || 'Не определена');
 
       // Top KPI Card 1: Operating System
       setText('about-kpi-os-title', `${snap.os_name || 'Windows 11'} (${snap.cpu?.architecture || 'AMD64'})`);
@@ -519,7 +779,10 @@
         setText('about-telemetry-cpu-freq', freqTxt);
         const cores = snap.cpu.physical_cores || 6;
         const threads = snap.cpu.logical_cores || 12;
-        setText('about-telemetry-cpu-coresi18n.t('auto__cores_threads_specification_table_cpu_settext__54c885')about-spec-cpu', `${snap.cpu.model || 'Intel Processor'} (${threads} logical cores)`);
+        setText('about-telemetry-cpu-cores', `${cores} физ. / ${threads} Потоков`);
+
+        // Specification Table CPU
+        setText('about-spec-cpu', `${snap.cpu.model || 'Intel Processor'} (${threads} logical cores)`);
       }
 
       if (snap.memory) {
@@ -529,15 +792,22 @@
         const pct = snap.memory.percent || 0;
 
         setText('about-telemetry-ram-val', `${used} / ${total} GB`);
-        setText('about-telemetry-ram-subi18n.t('auto__pct_avail_gb_const_rambar_document_getelementbyid__836395')about-telemetry-ram-bar');
+        setText('about-telemetry-ram-sub', `${pct}% занято (${avail} GB свободно)`);
+        const ramBar = document.getElementById('about-telemetry-ram-bar');
         if (ramBar) {
           ramBar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
           ramBar.className = pct > 85 ? 'about-sys-progress-bar bg-danger' : (pct > 65 ? 'about-sys-progress-bar bg-warning' : 'about-sys-progress-bar bg-info');
         }
 
         // Specification Table RAM (Hardware installed capacity)
-        setText('about-spec-rami18n.t('auto__total_gb_ram_avail_gb_if_array_isarray_snap_gpus_snap_gpus_length_0_const_gpu_snap_gpus_0_settext__d6dc56')about-telemetry-gpu-name', gpu.name || 'GPU');
-        const vramTxt = gpu.memory_total_gb ? `VRAM: ${Number(gpu.memory_total_gb).toFixed(1)} GB` : 'VRAM: N/Ai18n.t('auto__const_loadtxt_gpu_load_percent_null_gpu_load_percent_undefined_gpu_load_percent__0e1d4b')';
+        setText('about-spec-ram', `${total} GB RAM (${avail} GB свободно)`);
+      }
+
+      if (Array.isArray(snap.gpus) && snap.gpus.length > 0) {
+        const gpu = snap.gpus[0];
+        setText('about-telemetry-gpu-name', gpu.name || 'GPU');
+        const vramTxt = gpu.memory_total_gb ? `VRAM: ${Number(gpu.memory_total_gb).toFixed(1)} GB` : 'VRAM: N/A';
+        const loadTxt = gpu.load_percent !== null && gpu.load_percent !== undefined ? ` | Нагрузка: ${gpu.load_percent}%` : '';
         setText('about-telemetry-gpu-vram', `${vramTxt}${loadTxt}`);
 
         const badgeGpu = document.getElementById('about-telemetry-gpu-badge');
@@ -554,7 +824,11 @@
         const wKbs = Math.round((snap.disk_io.write_bytes_per_sec || 0) / 1024);
         const totalMb = (((snap.disk_io.read_bytes_per_sec || 0) + (snap.disk_io.write_bytes_per_sec || 0)) / (1024 * 1024)).toFixed(2);
         setText('about-telemetry-disk-val', `${totalMb} MB/s`);
-        setText('about-telemetry-disk-ratesi18n.t('auto__rkbs_wkbs_specification_table_general_settext__84aedd')about-spec-host', host);
+        setText('about-telemetry-disk-rates', `Чтение: ${rKbs} КБ/с | Запись: ${wKbs} КБ/с`);
+      }
+
+      // Specification Table general
+      setText('about-spec-host', host);
       setText('about-spec-os', osBuild);
       if (snap.uptime_seconds) {
         const sec = snap.uptime_seconds;
@@ -580,7 +854,7 @@
       // 4. Monitors & Displays Block
       if (Array.isArray(snap.monitors) && snap.monitors.length > 0) {
         const monShorts = snap.monitors.map(m => {
-          const prim = m.is_primary ? i18n.t('auto___8ce815') : '';
+          const prim = m.is_primary ? ' [Основной]' : '';
           return `${m.name || 'Monitor'} (${m.width}x${m.height}@${m.frequency_hz}Hz${prim})`;
         });
         setText('about-ident-monitors', monShorts.join(', '));
@@ -597,18 +871,18 @@
 
       // 5.1 MS Office Block
       if (snap.office) {
-        const offTxt = snap.office.status || (snap.office.installed ? `${snap.office.product_name || 'MS Office'} (${snap.office.version || ''})` : i18n.t('auto___11382e'));
+        const offTxt = snap.office.status || (snap.office.installed ? `${snap.office.product_name || 'MS Office'} (${snap.office.version || ''})` : 'Не установлен');
         setText('about-ident-ms-office', offTxt);
       } else {
-        setText('about-ident-ms-office', i18n.t('auto___11382e'));
+        setText('about-ident-ms-office', 'Не установлен');
       }
 
       // 5.2 OneDrive Storage Block
       if (snap.onedrive) {
-        const odTxt = snap.onedrive.status || (snap.onedrive.installed ? `${snap.onedrive.free_gb || 0} GB своб.` : i18n.t('auto___1411ab'));
+        const odTxt = snap.onedrive.status || (snap.onedrive.installed ? `${snap.onedrive.free_gb || 0} GB своб.` : 'Не настроено');
         setText('about-ident-onedrive', odTxt);
       } else {
-        setText('about-ident-onedrive', i18n.t('auto___1411ab'));
+        setText('about-ident-onedrive', 'Не настроено');
       }
 
       // 6. Processes Table
@@ -643,7 +917,7 @@
           privBadge.textContent = '👁️ Standard User Mode';
         }
       }
-      setText('about-ident-privilege', isElevated ? i18n.t('auto__full_access__cb9a53') : i18n.t('auto___e17d95'));
+      setText('about-ident-privilege', isElevated ? 'Права: Администратор (Full Access)' : 'Права: Стандартный пользователь');
 
       // Security Details
       const sec = res.security || {};
@@ -666,24 +940,17 @@
 
       // KPI 4: Cleanable estimate & Total Disk Size
       const cleanMb = disk.cleanup_estimate?.total_cleanable_mb || 150;
-      const cDrive = currentDisks.find(d => (d.device || '').toUpperCase().startsWith('Ci18n.t('auto__currentdisks_0_const_totalgbtxt_cdrive_number_cdrive_total_gb_0_tofixed_1_gb__ebb7d0')';
+      const cDrive = currentDisks.find(d => (d.device || '').toUpperCase().startsWith('C')) || currentDisks[0];
+      const totalGbTxt = cDrive ? ` | Всего: ${Number(cDrive.total_gb || 0).toFixed(1)} GB` : '';
       setText('about-kpi-stor-clean', `Cleanable: ~${cleanMb} MB${totalGbTxt}`);
 
       // Security table rows
-      const setSecStatus = (id, active, activeText = 'Enabled', inactiveText = 'Disabled') => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const stateText = active ? activeText : inactiveText;
-        el.setAttribute('data-status', stateText);
-        el.className = active ? 'text-success fw-bold' : 'text-danger fw-bold';
-        el.textContent = stateText;
-      };
-      setSecStatus('about-sec-defender', defActive);
-      setSecStatus('about-sec-realtime', sec.realtime_protection_enabled !== false);
-      setSecStatus('about-sec-fw-domain', sec.firewall_profiles?.Domain, 'Active', 'Disabled');
-      setSecStatus('about-sec-fw-private', sec.firewall_profiles?.Private, 'Active', 'Disabled');
-      setSecStatus('about-sec-fw-public', sec.firewall_profiles?.Public, 'Active', 'Disabled');
-      setSecStatus('about-sec-uac', uacOk);
+      setText('about-sec-defender', defActive ? 'Enabled' : 'Disabled');
+      setText('about-sec-realtime', sec.realtime_protection_enabled !== false ? 'Enabled' : 'Disabled');
+      setText('about-sec-fw-domain', sec.firewall_profiles?.Domain ? 'Active' : 'Disabled');
+      setText('about-sec-fw-private', sec.firewall_profiles?.Private ? 'Active' : 'Disabled');
+      setText('about-sec-fw-public', sec.firewall_profiles?.Public ? 'Active' : 'Disabled');
+      setText('about-sec-uac', uacOk ? 'Enabled' : 'Disabled');
 
       // Power Scheme & Updates
       if (pwr.active_plan_name) setText('about-spec-power', pwr.active_plan_name);
@@ -699,19 +966,6 @@
     }
   }
 
-  async function fetchHardwareSensors(isPoll = false) {
-    try {
-      const config = CACHE_STRATEGY.SENSORS;
-      const sensors = await cachedFetch(
-        '/api/v1/system/sensors',
-        'hardware_sensors',
-        { ttl: config.ttl, strategy: config.strategy }
-      );
-      if (Array.isArray(sensors)) {
-        currentSensors = sensors;
-        const badge = document.getElementById('about-sensors-count-badgei18n.t('auto__if_badge_badge_textcontent_lhm_active_sensors_length_rendersensorslist_sensors_catch_e_console_warn__159e25')[AboutSystemTab] fetchHardwareSensors warning:', e);
-    }
-  }
 
   function bindAIEvents() {
     const btnRescan = document.getElementById('btn-about-ai-rescan');
@@ -730,7 +984,7 @@
           icStages.className = isHidden ? 'bi bi-chevron-down ms-0.5' : 'bi bi-chevron-up ms-0.5';
         }
         if (txtStages) {
-          txtStages.textContent = isHidden ? i18n.t('auto___62d981') : i18n.t('auto___6bff8b');
+          txtStages.textContent = isHidden ? 'Показать этапы' : 'Свернуть этапы';
         }
       };
     }
@@ -753,8 +1007,8 @@
         const text = document.getElementById('about-ai-instruction-text')?.textContent || '';
         navigator.clipboard.writeText(text).then(() => {
           const s = document.getElementById('txt-about-ai-copy-instruction');
-          if (s) s.textContent = i18n.t('auto___f266fa');
-          setTimeout(() => { if (s) s.textContent = i18n.t('auto___4a05d8'); }, 1800);
+          if (s) s.textContent = 'Скопировано!';
+          setTimeout(() => { if (s) s.textContent = 'Копировать'; }, 1800);
         });
       };
     }
@@ -777,8 +1031,8 @@
         const text = document.getElementById('about-ai-prompt-text')?.textContent || '';
         navigator.clipboard.writeText(text).then(() => {
           const s = document.getElementById('txt-about-ai-copy-prompt');
-          if (s) s.textContent = i18n.t('auto___f266fa');
-          setTimeout(() => { if (s) s.textContent = i18n.t('auto___4a05d8'); }, 1800);
+          if (s) s.textContent = 'Скопировано!';
+          setTimeout(() => { if (s) s.textContent = 'Копировать'; }, 1800);
         });
       };
     }
@@ -801,8 +1055,8 @@
         const text = document.getElementById('about-ai-raw-text')?.textContent || '';
         navigator.clipboard.writeText(text).then(() => {
           const s = document.getElementById('txt-about-ai-copy-raw');
-          if (s) s.textContent = i18n.t('auto___f266fa');
-          setTimeout(() => { if (s) s.textContent = i18n.t('auto___4a05d8'); }, 1800);
+          if (s) s.textContent = 'Скопировано!';
+          setTimeout(() => { if (s) s.textContent = 'Копировать'; }, 1800);
         });
       };
     }
@@ -825,8 +1079,8 @@
         const text = document.getElementById('about-ai-snapshot-text')?.textContent || '';
         navigator.clipboard.writeText(text).then(() => {
           const s = document.getElementById('txt-about-ai-copy-snapshot');
-          if (s) s.textContent = i18n.t('auto___f266fa');
-          setTimeout(() => { if (s) s.textContent = i18n.t('auto__json_74cfdc'); }, 1800);
+          if (s) s.textContent = 'Скопировано!';
+          setTimeout(() => { if (s) s.textContent = 'Копировать JSON'; }, 1800);
         });
       };
     }
@@ -852,7 +1106,7 @@
         <div class="about-ai-stage-row ${textClass}">
           <div class="d-flex align-items-center gap-2">
             <span>${icon}</span>
-            <span>${escapeHtml(st.message || st.title || i18n.t('auto___13d403'))}</span>
+            <span>${escapeHtml(st.message || st.title || 'Выполнение этапа...')}</span>
           </div>
           ${st.details ? `<div class="text-secondary ps-3 font-monospace" style="font-size: 0.68rem; word-break: break-all;">↳ ${escapeHtml(st.details)}</div>` : ''}
         </div>
@@ -906,7 +1160,7 @@
                 ${statusBadge}
               </div>
               <div class="small text-light mt-1" style="font-size: 0.73rem; line-height: 1.45; white-space: pre-line;">
-                ${escapeHtml(g.summary || g.description || i18n.t('auto___8c6ae0'))}
+                ${escapeHtml(g.summary || g.description || 'Ожидание запуска группы...')}
               </div>
             </div>
             ${metricsList}
@@ -927,7 +1181,16 @@
     container.innerHTML = anomalies.map(a => {
       const isCrit = a.severity === 'critical';
       return `<span class="anomaly-pill ${isCrit ? 'critical' : 'warning'}">⚠️ [${escapeHtml(a.subsystem || 'SYS')}] ${escapeHtml(a.title || '')}: ${escapeHtml(a.description || '')}</span>`;
-    }).join('i18n.t('auto__async_function_runaidiagnostics_ismanualrescan_false_if_isairunning_return_isairunning_true_processing_if_window_settabprocessing_window_settabprocessing__eb708e')tab-about-system', true);
+    }).join('');
+  }
+
+  async function runAIDiagnostics(isManualRescan = false) {
+    if (isAiRunning) return;
+    isAiRunning = true;
+    
+    // Устанавливаем флаг processing для немедленного переключения вкладок
+    if (window.setTabProcessing) {
+      window.setTabProcessing('tab-about-system', true);
     }
 
     const btnRescan = document.getElementById('btn-about-ai-rescan');
@@ -959,13 +1222,13 @@
 
     if (btnRescan) btnRescan.disabled = true;
     if (icRescan) icRescan.className = 'spinner-border spinner-border-sm text-dark';
-    if (txtRescan) txtRescan.textContent = i18n.t('auto___f1d9e1');
+    if (txtRescan) txtRescan.textContent = 'Диагностика...';
 
     if (errorSec) errorSec.classList.add('d-none');
     if (actionsBox) actionsBox.classList.add('d-none');
     if (progressBar) progressBar.style.width = '5%';
 
-    if (liveStatusText) liveStatusText.textContent = i18n.t('auto__librehardwaremonitor_wmi_psutil_smart__024830');
+    if (liveStatusText) liveStatusText.textContent = 'Опрос аппаратных датчиков хоста (LibreHardwareMonitor, WMI, psutil, SMART)...';
 
     // Reset chips to active polling state
     [chipLhm, chipWmi, chipRam, chipDisks, chipNet].forEach(c => {
@@ -973,20 +1236,20 @@
     });
 
     if (badgeHealth) {
-      badgeHealth.textContent = i18n.t('auto_health__01af48');
+      badgeHealth.textContent = 'Health: Поэтапный опрос...';
       badgeHealth.className = 'badge bg-warning-subtle text-warning border border-warning font-monospace';
     }
     if (badgeHealthBtn) {
-      badgeHealthBtn.textContent = i18n.t('auto_health__d24baf');
+      badgeHealthBtn.textContent = 'Health: Опрос...';
       badgeHealthBtn.className = 'badge bg-warning-subtle text-warning border border-warning font-monospace ms-1';
     }
 
     const stagesLog = [
       {
         stage: 'init',
-        title: i18n.t('auto___497c64'),
-        message: i18n.t('auto___76f41d'),
-        details: i18n.t('auto__librehardwaremonitor_wmi_systemsnapshot_3de333'),
+        title: 'Сбор телеметрии',
+        message: '🔌 Получение среза телеметрии и сенсоров хоста...',
+        details: 'Опрос LibreHardwareMonitor, WMI счетчиков и SystemSnapshot',
       }
     ];
     renderAIDiagnosticStages(stagesLog, false);
@@ -995,7 +1258,7 @@
       // 1. Получение списка подготовленных 4 групп телеметрии
       const groups = await apiFetch('/api/v1/system/diagnose/groups');
       if (!Array.isArray(groups) || groups.length === 0) {
-        throw new Error(i18n.t('auto___ac81c8'));
+        throw new Error('Не удалось получить список диагностических групп');
       }
 
       if (snapshotText) {
@@ -1010,7 +1273,7 @@
         const temps = compGroup.payload.sensors?.temperatures_celsius || {};
         const tempVals = Object.values(temps);
         const maxT = tempVals.length > 0 ? Math.max(...tempVals) : null;
-        if (tickTemp) tickTemp.textContent = maxT !== null ? `${maxT}°C` : i18n.t('auto___e168bd');
+        if (tickTemp) tickTemp.textContent = maxT !== null ? `${maxT}°C` : 'В норме';
       }
 
       const memGroup = groups.find(g => g.group_id === 'memory_processes');
@@ -1018,24 +1281,30 @@
         const ram = memGroup.payload.ram || {};
         if (tickRam) tickRam.textContent = `${ram.used_gb ?? 0} / ${ram.total_gb ?? 0} GB (${ram.used_percent ?? 0}%)`;
         const procs = memGroup.payload.top_active_processes || [];
-        if (tickTopProc) tickTopProc.textContent = procs.length > 0 ? `${procs[0].name} (${procs[0].cpu_percent ?? 0}%)` : i18n.t('auto___e592fc');
+        if (tickTopProc) tickTopProc.textContent = procs.length > 0 ? `${procs[0].name} (${procs[0].cpu_percent ?? 0}%)` : 'Нет активных';
       }
 
       const diskGroup = groups.find(g => g.group_id === 'storage_smart');
       if (diskGroup && diskGroup.payload) {
         const parts = diskGroup.payload.storage_partitions || [];
-        if (tickDisks) tickDisks.textContent = parts.map(p => `${p.mountpoint || p.device || 'Voli18n.t('auto__p_free_gb_0_gb_join__5e8069'), ') || 'OKi18n.t('auto__4_const_cardsstate_groups_map_g_const_keymetrics_if_g_group_id__c69a71')compute_thermals') {
+        if (tickDisks) tickDisks.textContent = parts.map(p => `${p.mountpoint || p.device || 'Vol'}: ${p.free_gb ?? 0} GB св.`).join(', ') || 'OK';
+      }
+
+      // Отрисовка начальных 4 карточек в режиме ожидания с уже доступными собранными метриками
+      const cardsState = groups.map(g => {
+        const keyMetrics = {};
+        if (g.group_id === 'compute_thermals') {
           const cpu = g.payload?.cpu || {};
           keyMetrics['cpu_load'] = `${cpu.load_percent ?? 0}%`;
           keyMetrics['cpu_model'] = cpu.model || 'CPU';
           const temps = g.payload?.sensors?.temperatures_celsius || {};
           const maxT = Object.values(temps).length > 0 ? Math.max(...Object.values(temps)) : null;
-          keyMetrics['max_temp'] = maxT !== null ? `${maxT}°C` : i18n.t('auto___e168bd');
+          keyMetrics['max_temp'] = maxT !== null ? `${maxT}°C` : 'В норме';
         } else if (g.group_id === 'memory_processes') {
           const ram = g.payload?.ram || {};
           keyMetrics['ram_used'] = `${ram.used_gb ?? 0} / ${ram.total_gb ?? 0} GB (${ram.used_percent ?? 0}%)`;
           const procs = g.payload?.top_active_processes || [];
-          keyMetrics['top_process'] = procs.length > 0 ? `${procs[0].name} (${procs[0].cpu_percent ?? 0}%)` : i18n.t('auto___f82a82');
+          keyMetrics['top_process'] = procs.length > 0 ? `${procs[0].name} (${procs[0].cpu_percent ?? 0}%)` : 'Нет';
         } else if (g.group_id === 'storage_smart') {
           const parts = g.payload?.storage_partitions || [];
           const maxUsed = parts.length > 0 ? Math.max(...parts.map(p => p.used_percent || 0)) : 0;
@@ -1043,7 +1312,7 @@
           keyMetrics['volumes_count'] = parts.length;
         } else if (g.group_id === 'system_network') {
           const updates = g.payload?.system_updates || {};
-          keyMetrics['reboot_pending'] = updates.reboot_pending ? i18n.t('auto___8d2fab') : i18n.t('auto___f82a82');
+          keyMetrics['reboot_pending'] = updates.reboot_pending ? 'Да' : 'Нет';
           keyMetrics['update_status'] = updates.status || 'Up to date';
         }
 
@@ -1051,7 +1320,26 @@
           group_id: g.group_id,
           title: g.title,
           icon: g.icon,
-          status: 'pendingi18n.t('auto__summary_g_description_key_metrics_keymetrics_payload_g_payload_renderaidomaincards_cardsstate_const_completedgroups_2_for_let_i_0_i_groups_length_i_const_group_groups_i_const_stepnum_i_1_const_totalsteps_groups_length_const_pct_math_round_stepnum_totalsteps_85_if_progressbar_progressbar_style_width_pct_if_group_group_id__875b6b')compute_thermals') {
+          status: 'pending',
+          summary: g.description,
+          key_metrics: keyMetrics,
+          payload: g.payload,
+        };
+      });
+      renderAIDomainCards(cardsState);
+
+      const completedGroups = [];
+
+      // 2. Последовательный вызов каждой группы (цепочка Запрос -> Ответ -> Отображение)
+      for (let i = 0; i < groups.length; i++) {
+        const group = groups[i];
+        const stepNum = i + 1;
+        const totalSteps = groups.length;
+        const pct = Math.round((stepNum / totalSteps) * 85);
+        if (progressBar) progressBar.style.width = `${pct}%`;
+
+        // Подсветка активного чипа собираемого домена
+        if (group.group_id === 'compute_thermals') {
           if (chipLhm) chipLhm.className = 'badge bg-info text-dark border border-info fw-bold';
           if (chipWmi) chipWmi.className = 'badge bg-info text-dark border border-info fw-bold';
         } else if (group.group_id === 'memory_processes') {
@@ -1066,8 +1354,21 @@
           liveStatusText.textContent = `🧠 Анализ [${stepNum}/${totalSteps}]: ${group.title} (оценка сенсоров и метрик)...`;
         }
 
-        // Обновляем статус карточки на i18n.t('auto___0267f3')
-        cardsState[i].status = 'analyzingi18n.t('auto__cardsstate_i_summary_stepnum_totalsteps_renderaidomaincards_cardsstate_stageslog_push_stage__39cc75')group_runi18n.t('auto__title_stepnum_totalsteps_message_stepnum_totalsteps_group_title_details_group_description_renderaidiagnosticstages_stageslog_false_ai_const_res_await_apifetch__a5150a')/api/v1/system/diagnose/group', {
+        // Обновляем статус карточки на "Анализ"
+        cardsState[i].status = 'analyzing';
+        cardsState[i].summary = `🧠 Модель выполняет целевой анализ телеметрии группы ${stepNum}/${totalSteps}...`;
+        renderAIDomainCards(cardsState);
+
+        stagesLog.push({
+          stage: 'group_run',
+          title: `Группа ${stepNum}/${totalSteps}`,
+          message: `🧠 [${stepNum}/${totalSteps}] Запрос модели: ${group.title}...`,
+          details: group.description,
+        });
+        renderAIDiagnosticStages(stagesLog, false);
+
+        // Запрос к AI модели по данной группе
+        const res = await apiFetch('/api/v1/system/diagnose/group', {
           method: 'POST',
           body: JSON.stringify({
             group_id: group.group_id,
@@ -1081,7 +1382,7 @@
           completedGroups.push(res);
         } else {
           cardsState[i].status = 'warning';
-          cardsState[i].summary = i18n.t('auto___7ed47e');
+          cardsState[i].summary = 'Ответ не получен, используются базовые метрики.';
           completedGroups.push(cardsState[i]);
         }
 
@@ -1094,22 +1395,32 @@
         } else if (group.group_id === 'storage_smart') {
           if (chipDisks) chipDisks.className = 'badge bg-success-subtle text-success border border-success';
         } else if (group.group_id === 'system_network') {
-          if (chipNet) chipNet.className = 'badge bg-success-subtle text-success border border-successi18n.t('auto__renderaidomaincards_cardsstate_stageslog_push_stage__fe9121')group_donei18n.t('auto__title_stepnum_message_stepnum_totalsteps_group_title_cardsstate_i_status_touppercase_details_cardsstate_i_summary_substring_0_120_cardsstate_i_summary_length_120__2bfb93')...' : ''),
+          if (chipNet) chipNet.className = 'badge bg-success-subtle text-success border border-success';
+        }
+
+        // Немедленно обновляем красивую карточку на экране!
+        renderAIDomainCards(cardsState);
+
+        stagesLog.push({
+          stage: 'group_done',
+          title: `Группа ${stepNum} завершена`,
+          message: `✅ [${stepNum}/${totalSteps}] ${group.title}: ${cardsState[i].status.toUpperCase()}`,
+          details: cardsState[i].summary.substring(0, 120) + (cardsState[i].summary.length > 120 ? '...' : ''),
         });
         renderAIDiagnosticStages(stagesLog, false);
       }
 
       if (liveStatusText) {
-        liveStatusText.textContent = i18n.t('auto___4cf5dc');
+        liveStatusText.textContent = '🏆 Поэтапный опрос и анализ всех доменов завершен.';
       }
 
       // 3. Финальный синтез итогового вердикта
       if (progressBar) progressBar.style.width = '95%';
       stagesLog.push({
         stage: 'synthesis',
-        title: i18n.t('auto___042bba'),
-        message: i18n.t('auto__health_score__06fd4e'),
-        details: i18n.t('auto__4__abf473'),
+        title: 'Финальный синтез',
+        message: '🏆 Формирование итогового заключения и расчет Health Score...',
+        details: 'Агрегация заключений всех 4 доменов',
       });
       renderAIDiagnosticStages(stagesLog, false);
 
@@ -1118,7 +1429,11 @@
         body: JSON.stringify({ groups: completedGroups }),
       });
 
-      if (progressBar) progressBar.style.width = '100%i18n.t('auto__health_badge_const_score_number_synthesis_health_score_100_const_healthclass_score_80__b81c42')bg-success-subtle text-success border border-success' :
+      if (progressBar) progressBar.style.width = '100%';
+
+      // Обновление итогового Health Badge
+      const score = Number(synthesis.health_score || 100);
+      const healthClass = score >= 80 ? 'bg-success-subtle text-success border border-success' :
         score >= 60 ? 'bg-warning-subtle text-warning border border-warning' :
         'bg-danger-subtle text-danger border border-danger';
 
@@ -1145,7 +1460,7 @@
       }
 
       if (summaryEl) {
-        summaryEl.textContent = synthesis.executive_summary || i18n.t('auto___634507');
+        summaryEl.textContent = synthesis.executive_summary || 'Анализ завершён.';
       }
 
       // Отрисовка приоритетных действий
@@ -1158,15 +1473,15 @@
 
       stagesLog.push({
         stage: 'done',
-        title: i18n.t('auto___8f77fd'),
+        title: 'Аудит завершен',
         message: `✅ Поэтапная AI-диагностика успешно завершена (Health: ${score}/100)`,
-        details: i18n.t('auto__4__321da6'),
+        details: 'Все 4 функциональные группы оценены моделью',
       });
       renderAIDiagnosticStages(stagesLog, true);
 
     } catch (e) {
       console.error('[AboutSystemTab] Grouped AI Diagnosis error:', e);
-      if (summaryEl) summaryEl.textContent = i18n.t('auto__ai__130e03') + e.message;
+      if (summaryEl) summaryEl.textContent = 'Ошибка выполнения поэтапной AI-диагностики: ' + e.message;
       if (badgeHealth) {
         badgeHealth.textContent = 'Health: Error';
         badgeHealth.className = 'badge bg-danger-subtle text-danger border border-danger font-monospace';
@@ -1181,9 +1496,9 @@
       }
       stagesLog.push({
         stage: 'error',
-        title: i18n.t('auto___72aecd'),
+        title: 'Ошибка',
         message: `❌ Ошибка выполнения: ${e.message}`,
-        details: i18n.t('auto__api__0e2a8c'),
+        details: 'Проверьте доступность API-сервера',
       });
       renderAIDiagnosticStages(stagesLog, true);
     } finally {
@@ -1210,7 +1525,16 @@
       const config = CACHE_STRATEGY.HARDWARE_SPEC;
       const nodes = await cachedFetch(
         '/api/v1/system/hardware',
-        'hardware_speci18n.t('auto__ttl_config_ttl_strategy_config_strategy_hardwaredata_array_isarray_nodes_nodes_if_badgecount_badgecount_textcontent_hardwaredata_length_const_searchinput_document_getelementbyid__aa7e2f')about-sys-search');
+        'hardware_spec',
+        { ttl: config.ttl, strategy: config.strategy }
+      );
+      hardwareData = Array.isArray(nodes) ? nodes : [];
+
+      if (badgeCount) {
+        badgeCount.textContent = `${hardwareData.length} категорий`;
+      }
+
+      const searchInput = document.getElementById('about-sys-search');
       const filter = searchInput ? searchInput.value.trim().toLowerCase() : '';
       renderHardwareTree(hardwareData, filter);
     } catch (e) {
@@ -1260,7 +1584,9 @@
         }
         driveSubtitle = `<div class="small text-muted font-monospace mt-0.5">${escapeHtml(emailDesc)}</div>`;
         fsBadge = `<span class="badge bg-dark border border-secondary text-info">Virtual ${escapeHtml(d.fstype || 'FAT32')}</span>`;
-        smartBadge = `<span class="badge bg-secondary-subtle text-muted border border-secondary font-monospace" title=i18n.t('auto__google_drive_s_m_a_r_t__e99524') style="font-size: 0.68rem;i18n.t('auto__n_a_span_else_if_d_volume_name_drivesubtitle_div_class__e45cb4')small text-secondary font-monospace mt-0.5">${escapeHtml(d.volume_name)}</div>`;
+        smartBadge = `<span class="badge bg-secondary-subtle text-muted border border-secondary font-monospace" title="Виртуальный диск Google Drive — аппаратный контроллер S.M.A.R.T. отсутствует" style="font-size: 0.68rem;">N/A (Облако)</span>`;
+      } else if (d.volume_name) {
+        driveSubtitle = `<div class="small text-secondary font-monospace mt-0.5">${escapeHtml(d.volume_name)}</div>`;
       }
 
       return `
@@ -1295,67 +1621,6 @@
     }).join('');
   }
 
-  function renderSensorsList(sensors) {
-    const container = document.getElementById('about-sensors-container');
-    if (!container) return;
-
-    if (!Array.isArray(sensors) || sensors.length === 0) {
-      container.innerHTML = '<div class="text-center py-4 text-muted small">Нет доступных сенсоров LHM</div>';
-      return;
-    }
-
-    const searchInput = document.getElementById('about-sensor-search');
-    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
-
-    const filtered = sensors.filter(s => {
-      if (activeSensorFilter !== 'all') {
-        const cat = (s.category || '').toLowerCase();
-        if (activeSensorFilter === 'temperature' && !cat.includes('temp')) return false;
-        if (activeSensorFilter === 'voltage' && !cat.includes('volt')) return false;
-        if (activeSensorFilter === 'clock' && !cat.includes('clock') && !cat.includes('freq')) return false;
-        if (activeSensorFilter === 'power' && !cat.includes('power') && !cat.includes('load')) return false;
-      }
-      if (query) {
-        return (s.name || '').toLowerCase().includes(query) || (s.category || '').toLowerCase().includes(query);
-      }
-      return true;
-    });
-
-    if (filtered.length === 0) {
-      container.innerHTML = '<div class="text-center py-3 text-muted small">Сенсоры по заданному фильтру не найдены</div>';
-      return;
-    }
-
-    container.innerHTML = filtered.map(s => {
-      let icon = 'bi bi-thermometer-half text-danger';
-      let valColor = 'text-info';
-      const cat = (s.category || '').toLowerCase();
-
-      if (cat.includes('volt')) {
-        icon = 'bi bi-lightning-charge text-warning';
-        valColor = 'text-warning';
-      } else if (cat.includes('clock') || cat.includes('freq')) {
-        icon = 'bi bi-speedometer text-info';
-        valColor = 'text-info';
-      } else if (cat.includes('power')) {
-        icon = 'bi bi-plug text-success';
-        valColor = 'text-success';
-      } else if (cat.includes('load')) {
-        icon = 'bi bi-percent text-primary';
-        valColor = 'text-light';
-      }
-
-      return `
-        <div class="d-flex align-items-center justify-content-between py-1 px-2 border-bottom border-secondary-subtle">
-          <div class="d-flex align-items-center gap-2 text-truncate" style="max-width: 68%;">
-            <i class="${icon}" style="font-size: 0.85rem;"></i>
-            <span class="small text-truncate" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}</span>
-          </div>
-          <div class="sensor-badge-val ${valColor}">${s.value} ${escapeHtml(s.unit || '')}</div>
-        </div>
-      `;
-    }).join('');
-  }
 
   function renderProcessesTable(procs) {
     const tbody = document.getElementById('about-sys-procs-tbody');
@@ -1401,29 +1666,7 @@
           </td>
         </tr>
       `;
-    }).join('i18n.t('auto__function_adjusthardwaretreeheight_const_container_document_getelementbyid__a0b378')about-sys-tree-container');
-    if (!container) return;
-
-    const visibleNodes = container.querySelectorAll('.about-sys-tree-node');
-    if (visibleNodes.length === 0) {
-      container.style.maxHeight = '300px';
-      return;
-    }
-
-    let totalEstimatedHeight = 32;
-    visibleNodes.forEach(node => {
-      totalEstimatedHeight += 38;
-      const body = node.querySelector('.about-sys-tree-body');
-      if (body && !body.classList.contains('d-none')) {
-        const rows = body.querySelectorAll('.about-sys-prop-row');
-        const gridRowsCount = Math.ceil(rows.length / 2);
-        totalEstimatedHeight += gridRowsCount * 28 + 16;
-      }
-    });
-
-    const vhLimit = Math.floor(window.innerHeight * 0.85);
-    const dynamicMaxHeight = Math.max(500, Math.min(totalEstimatedHeight + 20, Math.max(900, vhLimit)));
-    container.style.maxHeight = `${dynamicMaxHeight}px`;
+    }).join('');
   }
 
   function renderHardwareTree(nodes, filter) {
@@ -1432,7 +1675,6 @@
 
     if (!Array.isArray(nodes) || nodes.length === 0) {
       container.innerHTML = '<div class="text-center py-4 text-muted small">Оборудование не обнаружено или опрашивается...</div>';
-      adjustHardwareTreeHeight();
       return;
     }
 
@@ -1448,22 +1690,18 @@
 
     if (filtered.length === 0) {
       container.innerHTML = `<div class="text-center py-4 text-muted small">По запросу «${escapeHtml(filter)}» компонентов не найдено</div>`;
-      adjustHardwareTreeHeight();
       return;
     }
 
     container.innerHTML = filtered.map((node, idx) => {
       const propsEntries = Object.entries(node.properties || {});
       const propsHtml = propsEntries.length > 0
-        ? propsEntries.map(([k, v]) => {
-            const cleanKey = escapeHtml(String(k).replace(/:$/, ''));
-            return `
-              <div class="about-sys-prop-row">
-                <span class="about-sys-prop-key">${cleanKey}</span>
-                <span class="about-sys-prop-val">${escapeHtml(String(v))}</span>
-              </div>
-            `;
-          }).join('')
+        ? propsEntries.map(([k, v]) => `
+            <div class="about-sys-prop-row">
+              <span class="about-sys-prop-key">${escapeHtml(k)}</span>
+              <span class="about-sys-prop-val">${escapeHtml(String(v))}</span>
+            </div>
+          `).join('')
         : '<div class="text-muted small py-1">Свойства не указаны</div>';
 
       const iconClass = getNodeIcon(node.category);
@@ -1484,8 +1722,6 @@
         </div>
       `;
     }).join('');
-
-    adjustHardwareTreeHeight();
   }
 
   window.toggleNode = function(idx) {
@@ -1496,24 +1732,23 @@
       if (chevron) {
         chevron.textContent = body.classList.contains('d-none') ? '▼' : '▲';
       }
-      adjustHardwareTreeHeight();
     }
   };
 
   function getNodeIcon(category) {
     const cat = (category || '').toLowerCase();
     if (cat.includes('processor') || cat.includes('cpu')) return 'bi bi-cpu';
-    if (cat.includes('module') || cat.includes(i18n.t('auto___bf3547'))) return 'bi bi-memory';
+    if (cat.includes('module') || cat.includes('планка')) return 'bi bi-memory';
     if (cat.includes('memory') || cat.includes('ram')) return 'bi bi-sd-card';
     if (cat.includes('system') || cat.includes('os')) return 'bi bi-laptop';
     if (cat.includes('motherboard') || cat.includes('mainboard')) return 'bi bi-motherboard';
     if (cat.includes('display') || cat.includes('gpu') || cat.includes('video') || cat.includes('graphics')) return 'bi bi-gpu-card';
-    if (cat.includes('monitor') || cat.includes('screen') || cat.includes(i18n.t('auto___4e8cde'))) return 'bi bi-display';
-    if (cat.includes('physical') || cat.includes(i18n.t('auto___094e84'))) return 'bi bi-hdd-fill';
+    if (cat.includes('monitor') || cat.includes('screen') || cat.includes('экран')) return 'bi bi-display';
+    if (cat.includes('physical') || cat.includes('диск')) return 'bi bi-hdd-fill';
     if (cat.includes('disk') || cat.includes('storage') || cat.includes('drive') || cat.includes('volume')) return 'bi bi-hdd-stack';
-    if (cat.includes('network') || cat.includes('adapter') || cat.includes('ethernet') || cat.includes('wi-fi') || cat.includes(i18n.t('auto___2f481e'))) return 'bi bi-ethernet';
-    if (cat.includes('audio') || cat.includes('sound') || cat.includes(i18n.t('auto___2300cb'))) return 'bi bi-volume-up-fill';
-    if (cat.includes('usb') || cat.includes(i18n.t('auto___7c692f'))) return 'bi bi-usb-symbol';
+    if (cat.includes('network') || cat.includes('adapter') || cat.includes('ethernet') || cat.includes('wi-fi') || cat.includes('сеть')) return 'bi bi-ethernet';
+    if (cat.includes('audio') || cat.includes('sound') || cat.includes('звук')) return 'bi bi-volume-up-fill';
+    if (cat.includes('usb') || cat.includes('контроллер')) return 'bi bi-usb-symbol';
     if (cat.includes('update') || cat.includes('servicing')) return 'bi bi-arrow-repeat';
     return 'bi bi-gear-fill';
   }

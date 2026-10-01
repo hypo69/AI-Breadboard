@@ -1,15 +1,36 @@
-"""Модуль JSON‑логгера телеметрии Windows.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Telemetry - Json Logger
+# =============================================================================
+# Description:
+#   Модуль JSON‑логгера телеметрии Windows.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.telemetry.json_logger import TelemetryJsonLogger
+#
+#     service = TelemetryJsonLogger()
+#
+# File: json_logger.py
+# Project: ai-breadboard
+# Package: apps.windows.telemetry
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
 
- Предоставляет класс :class:`TelemetryJsonLogger` для записи событий телеметрии в формате JSON Lines
- с поддержкой ротации файлов при превышении заданного размера.
-"""
+from __future__ import annotations
+"""Модуль JSON‑логгера телеметрии Windows."""
+
 import json
+import logging
 import os
 import time
 from pathlib import Path
 from typing import List, Optional
-import logging
+
 _logger = logging.getLogger(__name__)
+
 
 class TelemetryJsonLogger:
     """Записывает телеметрические события в JSON‑Lines файл.
@@ -21,10 +42,10 @@ class TelemetryJsonLogger:
     filename: str
         Базовое имя лог‑файла (без расширения).
     max_file_size_mb: float, optional
-        Максимальный размер файла в мегабайтах до ротации. По умолчанию 5\u202fМБ.
+        Максимальный размер файла в мегабайтах до ротации. По умолчанию 5 МБ.
     """
 
-    def __init__(self, log_dir: str, filename: str, max_file_size_mb: float=5.0) -> None:
+    def __init__(self, log_dir: str, filename: str, max_file_size_mb: float = 5.0) -> None:
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.base_filename = filename if filename.endswith('.jsonl') else f'{filename}.jsonl'

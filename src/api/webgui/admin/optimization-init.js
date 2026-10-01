@@ -1,4 +1,27 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Optimization-Init Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля optimization-init.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/admin/optimization-init.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { createAutoSaveDebounce } from '/src/api/webgui/admin/optimization-init.js';
+ *
+ * File: optimization-init.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/admin
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * Optimization Init - Интеграция систем оптимизации в админку
  * 
  * Этот скрипт инициализирует:

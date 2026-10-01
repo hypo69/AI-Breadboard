@@ -1,9 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins Telegram_Bot - Tts
+# =============================================================================
+# Description:
+#   Text-to-speech voice narration module for Telegram bot plugin.
+#
+# Usage Examples:
+#   Python API:
+#     import plugins.user-plugins.telegram_bot.tts as tts
+#
+# File: tts.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.telegram_bot
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Text-to-speech voice narration module for Telegram bot plugin.
 
 Handles generation of adaptive voice chunks using AI and edge-tts or the local
-FastAPI synthesis endpoint, streaming audio directly to Telegram chats.
-"""
-from __future__ import annotations
+FastAPI synthesis endpoint, streaming audio directly to Telegram chats."""
+
 import asyncio
 import io
 from typing import Any, Optional

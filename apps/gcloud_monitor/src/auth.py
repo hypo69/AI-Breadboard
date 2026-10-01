@@ -1,5 +1,27 @@
-"""Google Cloud Platform authentication and credential resolution."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Gcloud_Monitor Src - Auth
+# =============================================================================
+# Description:
+#   Google Cloud Platform authentication and credential resolution.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.gcloud_monitor.src.auth import AuthStatus
+#
+#     service = AuthStatus()
+#
+# File: auth.py
+# Project: ai-breadboard
+# Package: apps.gcloud_monitor.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Google Cloud Platform authentication and credential resolution."""
+
 import json
 import os
 from dataclasses import dataclass
@@ -105,7 +127,7 @@ class GCloudAuthManager:
             self._auth_status = AuthStatus(authenticated=True, auth_type='adc', project_id=final_proj_id, is_mock=False, details='Authenticated via Application Default Credentials (ADC)')
             return (creds, final_proj_id)
         except Exception as exc:
-            logger.info(f'ADC credentials not found: {exc}')
+            logger.warning(f'ADC credentials not found: {exc}')
         fallback_proj = self.project_id_override or os.getenv('GOOGLE_CLOUD_PROJECT', 'local-gcp-dev')
         self._cached_credentials = False
         self._cached_project_id = fallback_proj

@@ -1,5 +1,27 @@
-"""Collector for Wikipedia articles, multilingual langlinks, and pageviews."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Wikipedia_Research Src - Collector
+# =============================================================================
+# Description:
+#   Collector for Wikipedia articles, multilingual langlinks, and pageviews.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.wikipedia_research.src.collector import WikipediaCollector
+#
+#     service = WikipediaCollector()
+#
+# File: collector.py
+# Project: ai-breadboard
+# Package: apps.wikipedia_research.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Collector for Wikipedia articles, multilingual langlinks, and pageviews."""
+
 import asyncio
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional

@@ -1,4 +1,24 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Tab-State-Persistence Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля tab-state-persistence.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/tab-state-persistence.js?v=20261001_v1" type="module"></script>
+ *
+ * File: tab-state-persistence.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * Tab State Persistence - Сохранение состояния вкладок в localStorage
  * 
  * Сохраняет:

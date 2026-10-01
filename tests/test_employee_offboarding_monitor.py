@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Employee Offboarding Monitor
+# =============================================================================
+# Description:
+#   Test suite for employee offboarding monitor skill components.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_employee_offboarding_monitor import TestEmployeeOffboardingMonitor
+#
+#     service = TestEmployeeOffboardingMonitor()
+#
+# File: test_employee_offboarding_monitor.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Test suite for employee offboarding monitor skill components."""
+
 import tempfile
 from pathlib import Path
 import pytest

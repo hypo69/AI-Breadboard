@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Unified Chat Module
+# =============================================================================
+# Description:
+#   Transparent routing wrapper across all configured AI providers.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.orchestration.unified_chat import UnifiedChatModel
+#
+#     service = UnifiedChatModel()
+#     result = service.model_name()
+#     print(result)
+#
+# File: unified_chat.py
+# Project: ai-breadboard
+# Package: src.ai.orchestration
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Transparent routing wrapper across all configured AI providers."""
+
 import inspect
 from typing import Any, AsyncIterator, Dict, List, Optional
 from logger import logger

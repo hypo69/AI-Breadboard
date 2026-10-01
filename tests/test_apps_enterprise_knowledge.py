@@ -1,10 +1,32 @@
-"""Проверки локального ядра Enterprise Knowledge Platform."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Apps Enterprise Knowledge
+# =============================================================================
+# Description:
+#   Проверки локального ядра Enterprise Knowledge Platform.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_apps_enterprise_knowledge import test_ingestion_resolves_identity_and_is_idempotent
+#
+#     res = test_ingestion_resolves_identity_and_is_idempotent()
+#
+# File: test_apps_enterprise_knowledge.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Проверки локального ядра Enterprise Knowledge Platform."""
+
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from apps.enterprise_knowledge.engine import EnterpriseKnowledgeEngine
-from apps.enterprise_knowledge.router import init_router
+from apps.enterprise_knowledge.routers.router import init_router
 
 def _event() -> dict:
     return {'event_id': 'EVT-10001', 'source': {'type': 'email', 'external_id': 'EMAIL-1001'}, 'occurred_at': '2026-09-21T10:30:00Z', 'content': {'text': 'Проверь API до пятницы.'}, 'facts': [{'subject': 'a.petrov@company.com', 'predicate': 'assigned_task', 'object': 'Проверка API'}]}

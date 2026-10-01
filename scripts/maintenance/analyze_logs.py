@@ -1,6 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Maintenance - Analyze Logs
+# =============================================================================
+# Description:
+#   Manual log analysis script.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.maintenance.analyze_logs
+#   Python API:
+#     import scripts.maintenance.analyze_logs as analyze_logs
+#
+# File: analyze_logs.py
+# Project: ai-breadboard
+# Package: scripts.maintenance
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Manual log analysis script.
 
 One-time script for analyzing application logs. Run manually: python scripts/analyze_logs.py"""
+
 import asyncio
 import os
 import sys

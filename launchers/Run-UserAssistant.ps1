@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Run-Userassistant Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Run-UserAssistant).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Run-UserAssistant.ps1
+#
+# File: Run-UserAssistant.ps1
+# Project: ai-breadboard
+# Package: launchers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:06
+# =============================================================================
+
 <#
 .SYNOPSIS
     User Assistant launcher for AI-Breadboard.

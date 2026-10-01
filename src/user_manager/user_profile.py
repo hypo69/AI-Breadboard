@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard USER_MANAGER - User Profile Module
+# =============================================================================
+# Description:
+#   Return path to user profile JSON file in user directory with legacy fallback.
+#
+# Usage Examples:
+#   Python API:
+#     from src.user_manager.user_profile import load_user_profile
+#
+#     res = load_user_profile()
+#     print(res)
+#
+# File: user_profile.py
+# Project: ai-breadboard
+# Package: src.user_manager
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Return path to user profile JSON file in user directory with legacy fallback."""
+
 import json
 import time
 from pathlib import Path

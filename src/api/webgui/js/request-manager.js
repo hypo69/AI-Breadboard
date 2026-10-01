@@ -1,4 +1,24 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Request-Manager Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля request-manager.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/request-manager.js?v=20261001_v1" type="module"></script>
+ *
+ * File: request-manager.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * RequestManager - Умное управление запросами
  * 
  * Предотвращает дублирующиеся запросы через дебаунсинг и батчинг

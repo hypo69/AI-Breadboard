@@ -98,8 +98,8 @@ Service Control Manager (SCM)
 | Функция API | DLL | Назначение | Права | COM / WMI | PowerShell | Python вызов |
 |---|---|---|---|---|---|---|
 | `OpenSCManagerW` | `advapi32.dll` | Открытие дескриптора Service Control Manager | `SC_MANAGER_ENUMERATE_SERVICE` | `Win32_Service` | `Get-Service` | `ctypes.windll.advapi32.OpenSCManagerW` |
-| `EnumServicesStatusExW` | `advapi32.dll` | Пакетное перечисление всех служб и их PID/состояний за 1 вызов | Обычные | `Win32_Service` | `Get-Service` | `apps.windows.api.scm.ServiceControlManager` |
-| `QueryServiceConfigW` | `advapi32.dll` | Получение BinaryPathName, StartType, ServiceAccount | Обычные | `Win32_Service` | `Get-CimInstance Win32_Service` | `apps.windows.api.scm.ServiceControlManager` |
+| `EnumServicesStatusExW` | `advapi32.dll` | Пакетное перечисление всех служб и их PID/состояний за 1 вызов | Обычные | `Win32_Service` | `Get-Service` | `apps.windows.telemetry.win32_ffi.scm.ServiceControlManager` |
+| `QueryServiceConfigW` | `advapi32.dll` | Получение BinaryPathName, StartType, ServiceAccount | Обычные | `Win32_Service` | `Get-CimInstance Win32_Service` | `apps.windows.telemetry.win32_ffi.scm.ServiceControlManager` |
 | `ControlService` | `advapi32.dll` | Остановка, пауза, отправка управляющего сигнала | `SERVICE_STOP` / Admin | Метод `StopService()` в WMI | `Stop-Service` | `ctypes.windll.advapi32.ControlService` |
 
 ---
@@ -129,8 +129,8 @@ Task Scheduler 2.0
 | Интерфейс / Метод | Уровень | Назначение | Права | WMI / PowerShell | Python вызов |
 |---|---|---|---|---|---|
 | `Schedule.Service` | COM API 2.0 | Инициализация сервиса планировщика | Обычные | `Get-ScheduledTask` | `win32com.client.Dispatch("Schedule.Service")` |
-| `ITaskFolder::GetTasks` | COM API 2.0 | Рекурсивный сбор всех зарегистрированных заданий | Обычные | `Get-ScheduledTask` | `apps.windows.api.tasksched.TaskSchedulerAPI` |
-| `IExecAction::get_Path` | COM API 2.0 | Получение исполняемого пути и скрытых аргументов | Обычные | `Get-ScheduledTask \| % Actions` | `apps.windows.api.tasksched.TaskSchedulerAPI` |
+| `ITaskFolder::GetTasks` | COM API 2.0 | Рекурсивный сбор всех зарегистрированных заданий | Обычные | `Get-ScheduledTask` | `apps.windows.telemetry.win32_ffi.tasksched.TaskSchedulerAPI` |
+| `IExecAction::get_Path` | COM API 2.0 | Получение исполняемого пути и скрытых аргументов | Обычные | `Get-ScheduledTask \| % Actions` | `apps.windows.telemetry.win32_ffi.tasksched.TaskSchedulerAPI` |
 
 ---
 
@@ -158,9 +158,9 @@ Windows Event Log API (wevtapi.dll)
 
 | Функция API | DLL | Назначение | Права | WMI / PowerShell | Python вызов |
 |---|---|---|---|---|---|
-| `EvtQuery` | `wevtapi.dll` | Высокоскоростной запрос событий по XPath | Обычные (System/App), Admin (Security) | `Get-WinEvent` | `apps.windows.api.wevtapi.WevtAPI` |
-| `EvtNext` | `wevtapi.dll` | Итерация по дескрипторам событий | Обычные | `Get-WinEvent` | `apps.windows.api.wevtapi.WevtAPI` |
-| `EvtRender` | `wevtapi.dll` | Преобразование бинарного события в структурированный XML | Обычные | `Get-WinEvent` | `apps.windows.api.wevtapi.WevtAPI` |
+| `EvtQuery` | `wevtapi.dll` | Высокоскоростной запрос событий по XPath | Обычные (System/App), Admin (Security) | `Get-WinEvent` | `apps.windows.telemetry.win32_ffi.wevtapi.WevtAPI` |
+| `EvtNext` | `wevtapi.dll` | Итерация по дескрипторам событий | Обычные | `Get-WinEvent` | `apps.windows.telemetry.win32_ffi.wevtapi.WevtAPI` |
+| `EvtRender` | `wevtapi.dll` | Преобразование бинарного события в структурированный XML | Обычные | `Get-WinEvent` | `apps.windows.telemetry.win32_ffi.wevtapi.WevtAPI` |
 
 ---
 
@@ -184,9 +184,9 @@ Device & PnP Architecture
 
 | Функция API | DLL | Назначение | Права | WMI / PowerShell | Python вызов |
 |---|---|---|---|---|---|
-| `SetupDiGetClassDevsW` | `setupapi.dll` | Получение дескриптора списка PnP оборудования | Обычные | `Win32_PnPEntity` | `apps.windows.api.setupapi.SetupAPI` |
-| `SetupDiEnumDeviceInfo` | `setupapi.dll` | Перечисление элементов устройств | Обычные | `Get-PnpDevice` | `apps.windows.api.setupapi.SetupAPI` |
-| `CM_Get_DevNode_Status` | `cfgmgr32.dll` | Чтение флагов статуса и кода ошибки (Code 10, 43, 28) | Обычные | `ProblemCode` в WMI | `apps.windows.api.setupapi.SetupAPI` |
+| `SetupDiGetClassDevsW` | `setupapi.dll` | Получение дескриптора списка PnP оборудования | Обычные | `Win32_PnPEntity` | `apps.windows.telemetry.win32_ffi.setupapi.SetupAPI` |
+| `SetupDiEnumDeviceInfo` | `setupapi.dll` | Перечисление элементов устройств | Обычные | `Get-PnpDevice` | `apps.windows.telemetry.win32_ffi.setupapi.SetupAPI` |
+| `CM_Get_DevNode_Status` | `cfgmgr32.dll` | Чтение флагов статуса и кода ошибки (Code 10, 43, 28) | Обычные | `ProblemCode` в WMI | `apps.windows.telemetry.win32_ffi.setupapi.SetupAPI` |
 
 ---
 
@@ -241,9 +241,9 @@ Network Intelligence & Sockets
 
 | Функция API | DLL | Назначение | Права | WMI / PowerShell | Python вызов |
 |---|---|---|---|---|---|
-| `GetExtendedTcpTable` | `iphlpapi.dll` | Мгновенный сбор всех открытых TCP сокетов со связкой с PID | Обычные | `Get-NetTCPConnection` | `apps.windows.api.nethelper.IPHelperAPI` |
-| `GetExtendedUdpTable` | `iphlpapi.dll` | Мгновенный сбор всех UDP сокетов с PID | Обычные | `Get-NetUDPEndpoint` | `apps.windows.api.nethelper.IPHelperAPI` |
-| `GetAdaptersAddresses` | `iphlpapi.dll` | Полная инвентаризация сетевых интерфейсов, MAC, IPv4/IPv6, MTU | Обычные | `Get-NetAdapter` | `apps.windows.api.nethelper.IPHelperAPI` |
+| `GetExtendedTcpTable` | `iphlpapi.dll` | Мгновенный сбор всех открытых TCP сокетов со связкой с PID | Обычные | `Get-NetTCPConnection` | `apps.windows.telemetry.win32_ffi.nethelper.IPHelperAPI` |
+| `GetExtendedUdpTable` | `iphlpapi.dll` | Мгновенный сбор всех UDP сокетов с PID | Обычные | `Get-NetUDPEndpoint` | `apps.windows.telemetry.win32_ffi.nethelper.IPHelperAPI` |
+| `GetAdaptersAddresses` | `iphlpapi.dll` | Полная инвентаризация сетевых интерфейсов, MAC, IPv4/IPv6, MTU | Обычные | `Get-NetAdapter` | `apps.windows.telemetry.win32_ffi.nethelper.IPHelperAPI` |
 | `INetworkListManager` | COM | Проверка статуса интернета и профиля сети (Private/Public) | Обычные | `Get-NetConnectionProfile` | `win32com.client.Dispatch("{DCB00C01-570F-4A9B-8D69-199FDBA5723B}")` |
 
 ---
@@ -294,7 +294,7 @@ Registry Subsystem (advapi32.dll / winreg)
 
 | Функция API | Модуль | Назначение | Права | PowerShell | Python вызов |
 |---|---|---|---|---|---|
-| `RegOpenKeyExW` | `advapi32.dll` / `winreg` | Чтение системных параметров HKLM / HKCU | Обычные | `Get-ItemProperty` | `winreg.OpenKey` / `apps.windows.api.advapi32.AdvAPI32` |
+| `RegOpenKeyExW` | `advapi32.dll` / `winreg` | Чтение системных параметров HKLM / HKCU | Обычные | `Get-ItemProperty` | `winreg.OpenKey` / `apps.windows.telemetry.win32_ffi.advapi32.AdvAPI32` |
 | `RegQueryValueExW` | `advapi32.dll` / `winreg` | Считывание значений ключей реестра | Обычные | `Get-ItemPropertyValue` | `winreg.QueryValueEx` |
 
 ---
@@ -365,7 +365,7 @@ Security, Users & Tokens
 
 | Функция API | DLL | Назначение | Права | WMI / PowerShell | Python вызов |
 |---|---|---|---|---|---|
-| `GetTokenInformation` | `advapi32.dll` | Определение прав (Admin, Elevation type, SeDebugPrivilege) | Обычные | `whoami /priv` | `apps.windows.api.advapi32.AdvAPI32` |
+| `GetTokenInformation` | `advapi32.dll` | Определение прав (Admin, Elevation type, SeDebugPrivilege) | Обычные | `whoami /priv` | `apps.windows.telemetry.win32_ffi.advapi32.AdvAPI32` |
 | `WTSQuerySessionInformationW` | `wtsapi32.dll` | Перечисление интерактивных и RDP сессий | Обычные / Admin | `quser` / `Get-LocalUser` | `ctypes.windll.wtsapi32.WTSQuerySessionInformationW` |
 
 ---

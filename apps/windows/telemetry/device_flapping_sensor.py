@@ -1,5 +1,27 @@
-﻿"""Сенсор непрерывного мониторинга периферии, обнаружения дребезга и PnP-телеметрии."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Telemetry - Device Flapping Sensor
+# =============================================================================
+# Description:
+#   Сенсор непрерывного мониторинга периферии, обнаружения дребезга и PnP-телеметрии.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.telemetry.device_flapping_sensor import DeviceTransitionEvent
+#
+#     service = DeviceTransitionEvent()
+#
+# File: device_flapping_sensor.py
+# Project: ai-breadboard
+# Package: apps.windows.telemetry
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Сенсор непрерывного мониторинга периферии, обнаружения дребезга и PnP-телеметрии."""
+
 import os
 import threading
 import time
@@ -7,8 +29,8 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional, Set
 from logger import logger
-from apps.windows.telemetry.api_bindings.setupapi import PnPDeviceInfo, SetupAPI
-from apps.windows.telemetry.storage import TelemetryStorage
+from .win32_ffi.setupapi import PnPDeviceInfo, SetupAPI
+from .sqlite import TelemetryStorage
 
 @dataclass
 class DeviceTransitionEvent:

@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Model Error Hub
+# =============================================================================
+# Description:
+#   Проверка классификации ошибки 503 / перегрузки сервиса.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_model_error_hub import test_classify_model_error_503
+#
+#     res = test_classify_model_error_503()
+#
+# File: test_model_error_hub.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Проверка классификации ошибки 503 / перегрузки сервиса."""
+
 import pytest
 from datetime import datetime, timezone
 from typing import List

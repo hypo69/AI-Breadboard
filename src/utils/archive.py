@@ -1,10 +1,34 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Archive Module
+# =============================================================================
+# Description:
+#   Модуль основной системы (`archive`).
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.archive import is_system_file
+#
+#     res = is_system_file()
+#     print(res)
+#
+# File: archive.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Модуль основной системы (`archive`)."""
+
 import os
 import tarfile
 import zipfile
 from pathlib import Path
 from typing import List, Optional, Union
-from logger.logger import logger
+from logger import logger
 
 def is_system_file(name: str) -> bool:
     parts = Path(name).parts

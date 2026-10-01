@@ -1,4 +1,27 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Browser-Cache Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля browser-cache.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/browser-cache.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { browserCache } from '/src/api/webgui/js/browser-cache.js';
+ *
+ * File: browser-cache.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * browser-cache.js - Универсальный менеджер браузерного кеша и долговременного хранилища
  * 
  * Предоставляет многоуровневое хранилище (L1 In-Memory + L2 IndexedDB + L3 Fallback)

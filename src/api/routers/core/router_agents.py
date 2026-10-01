@@ -1,11 +1,31 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - Router Agents Module
+# =============================================================================
+# Description:
+#   Минимальная реализация роутера router_agents с поддержкой CRUD и вспомогательных функций.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.routers.core.router_agents import init_router
+#
+#     res = init_router()
+#     print(res)
+#
+# File: router_agents.py
+# Project: ai-breadboard
+# Package: src.api.routers.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """Минимальная реализация роутера router_agents с поддержкой CRUD и вспомогательных функций.
 
 Тесты используют приватные функции `_get_agents_list` и `_save_agents_list` для сохранения/восстановления состояния.
 Мы сохраняем список агентов в файл `data/agents.json` (если директория отсутствует – создаём).
 
-Все ответы и структуры соответствуют ожиданиям тестов.
-"""
+Все ответы и структуры соответствуют ожиданиям тестов."""
 
 import json
 from pathlib import Path

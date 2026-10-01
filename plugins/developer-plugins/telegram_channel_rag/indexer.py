@@ -1,9 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins Developer-Plugins Telegram_Channel_Rag - Indexer
+# =============================================================================
+# Description:
+#   Telegram RAG Vector Indexer module.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.developer-plugins.telegram_channel_rag.indexer import TelegramChannelIndexer
+#
+#     service = TelegramChannelIndexer()
+#
+# File: indexer.py
+# Project: ai-breadboard
+# Package: plugins.developer-plugins.telegram_channel_rag
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Telegram RAG Vector Indexer module.
 
 Handles chunking, term frequency-inverse document frequency (TF-IDF) vectorization,
-matrix persistence, and cosine similarity ranking with message URL resolution.
-"""
-from __future__ import annotations
+matrix persistence, and cosine similarity ranking with message URL resolution."""
+
 import json
 import math
 from pathlib import Path

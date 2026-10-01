@@ -1,7 +1,28 @@
-"""
-Module for Silero TTS system.
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard TTS - Silero Module
+# =============================================================================
+# Description:
+#   Module for Silero TTS system.
+#
+# Usage Examples:
+#   Python API:
+#     from src.tts.silero import get_silero_model
+#
+#     res = get_silero_model()
+#     print(res)
+#
+# File: silero.py
+# Project: ai-breadboard
+# Package: src.tts
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Module for Silero TTS system."""
+
 import os
 import asyncio
 from pathlib import Path

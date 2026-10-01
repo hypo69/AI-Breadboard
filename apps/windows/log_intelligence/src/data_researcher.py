@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Log_Intelligence Src - Data Researcher
+# =============================================================================
+# Description:
+#   Аналитический движок статистического профилирования и EDA системных журналов.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.log_intelligence.src.data_researcher import LogDataResearcher
+#
+#     service = LogDataResearcher()
+#
+# File: data_researcher.py
+# Project: ai-breadboard
+# Package: apps.windows.log_intelligence.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Аналитический движок статистического профилирования и EDA системных журналов."""
+
 import collections
 import datetime
 import math

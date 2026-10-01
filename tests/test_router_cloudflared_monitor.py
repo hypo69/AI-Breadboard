@@ -1,9 +1,33 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router Cloudflared Monitor
+# =============================================================================
+# Description:
+#   Unit tests for Cloudflared Monitor FastAPI router.
+#
+# Usage Examples:
+#   CLI:
+#     python -m tests.test_router_cloudflared_monitor
+#   Python API:
+#     from tests.test_router_cloudflared_monitor import TestCloudflaredMonitorRouter
+#
+#     service = TestCloudflaredMonitorRouter()
+#
+# File: test_router_cloudflared_monitor.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for Cloudflared Monitor FastAPI router."""
+
 import unittest
 from unittest.mock import MagicMock, patch
 from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
-from apps.cloudflared_monitor.router import get_state, init_router
+from apps.cloudflared_monitor.routers.router import get_state, init_router
 
 class TestCloudflaredMonitorRouter(unittest.TestCase):
     """Test suite for Cloudflared Monitor router endpoints."""
@@ -68,7 +92,7 @@ class TestCloudflaredMonitorRouter(unittest.TestCase):
 
     def test_lifecycle_admin_auth_forbidden(self):
         """Test POST /start, /stop, /restart when non-admin."""
-        with patch('apps.cloudflared_monitor.router.require_admin_user', side_effect=HTTPException(status_code=403, detail='Admin required')):
+        with patch('apps.cloudflared_monitor.routers.router.require_admin_user', side_effect=HTTPException(status_code=403, detail='Admin required')):
             res_start = self.client.post('/api/cloudflared/start')
             self.assertEqual(res_start.status_code, 403)
             res_stop = self.client.post('/api/cloudflared/stop')
@@ -79,7 +103,7 @@ class TestCloudflaredMonitorRouter(unittest.TestCase):
     def test_lifecycle_authorized_success(self):
         """Test POST /start, /stop, /restart when authorized as admin."""
         state = get_state()
-        with patch('apps.cloudflared_monitor.router.require_admin_user', return_value=None):
+        with patch('apps.cloudflared_monitor.routers.router.require_admin_user', return_value=None):
             with patch.object(state, 'start_tunnel', return_value=(True, 'Started')):
                 res_start = self.client.post('/api/cloudflared/start')
                 self.assertEqual(res_start.status_code, 200)

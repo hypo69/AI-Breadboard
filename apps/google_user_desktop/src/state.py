@@ -1,5 +1,26 @@
-"""Модуль управления состоянием и сервисами Google User Desktop."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Google_User_Desktop Src - State
+# =============================================================================
+# Description:
+#   Модуль управления состоянием и сервисами Google User Desktop.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.google_user_desktop.src.state import GoogleAccountSummary
+#
+#     service = GoogleAccountSummary()
+#
+# File: state.py
+# Project: ai-breadboard
+# Package: apps.google_user_desktop.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Модуль управления состоянием и сервисами Google User Desktop."""
 
 import time
 from dataclasses import dataclass, field
@@ -376,7 +397,7 @@ class GoogleUserDesktopState:
         """Получить ответы формы через клиент."""
         client = self._get_forms_client()
         return client.get_responses(form_id=form_id, page_size=limit)
-def fetch_mail_messages(self, max_results: int = 20) -> List[MailItemSummary]:
+    def fetch_mail_messages(self, max_results: int = 20) -> List[MailItemSummary]:
         """Загрузить входящие сообщения Gmail.
 
         Args:

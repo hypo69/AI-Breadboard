@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Google Accounts Pool
+# =============================================================================
+# Description:
+#   Isolate accounts JSON, oauth files, and tokens dir to temp directory.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_google_accounts_pool import TestGoogleAccountsPoolManagement
+#
+#     service = TestGoogleAccountsPoolManagement()
+#
+# File: test_google_accounts_pool.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Isolate accounts JSON, oauth files, and tokens dir to temp directory."""
+
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch

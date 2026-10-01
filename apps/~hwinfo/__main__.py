@@ -1,5 +1,29 @@
-"""Точка входа CLI для HWiNFO."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps ~Hwinfo -   Main  
+# =============================================================================
+# Description:
+#   Точка входа CLI для HWiNFO.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.~hwinfo.__main__
+#   Python API:
+#     from apps.~hwinfo.__main__ import main
+#
+#     res = main()
+#
+# File: __main__.py
+# Project: ai-breadboard
+# Package: apps.~hwinfo
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Точка входа CLI для HWiNFO."""
+
 import argparse
 import json
 from apps.hwinfo.core.hwinfo_service import HwinfoService

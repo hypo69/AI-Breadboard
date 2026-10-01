@@ -1,6 +1,26 @@
-"""
-test_browser_cache_assets.py - Тестирование файлов и структуры подсистемы браузерного кеширования
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Browser Cache Assets
+# =============================================================================
+# Description:
+#   test_browser_cache_assets.py - Тестирование файлов и структуры подсистемы браузерного кеширования
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_browser_cache_assets import test_browser_cache_js_exists_and_contains_stores
+#
+#     res = test_browser_cache_js_exists_and_contains_stores()
+#
+# File: test_browser_cache_assets.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""test_browser_cache_assets.py - Тестирование файлов и структуры подсистемы браузерного кеширования"""
+
 import json
 from pathlib import Path
 import pytest

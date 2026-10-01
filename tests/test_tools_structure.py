@@ -1,11 +1,31 @@
-"""
-Tests for project directory structure.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Tools Structure
+# =============================================================================
+# Description:
+#   Tests for project directory structure.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_tools_structure import TestToolsDirectoryStructure
+#
+#     service = TestToolsDirectoryStructure()
+#
+# File: test_tools_structure.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Tests for project directory structure.
 
 Check presence of all required directories, files and launchers
 according to agent-oriented project strategy.
 
-Documentation: .ai_instructions/knowledge/LAUNCHER_GUIDE.md
-"""
+Documentation: .ai_instructions/knowledge/LAUNCHER_GUIDE.md"""
+
 import pytest
 from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent

@@ -30,7 +30,14 @@ AI WINDOWS DIAGNOSTIC & ADMINISTRATION CENTER
 │   ├── core/root_cause_engine.py  # Построение графа расследования (Timeline Graph)
 │   └── core/models.py             # Нормализованные модели данных и уровни рисков
 │
-└── 4. 15 Доменных модулей сбора фактов (Fact Collectors)
+├── 4. База знаний и самообучение (WikiLLM Progressive Knowledge Base)
+│   ├── wikillm/engine.py          # 4-уровневый координатор (Exact -> Fingerprint -> Semantic -> Gemini)
+│   ├── wikillm/storage.py         # SQLite + FTS5 хранилище сущностей, фактов и наблюдений
+│   ├── wikillm/code_indexer.py    # AST-индексатор структуры Python кода (Code Knowledge)
+│   ├── wikillm/telemetry_bridge.py# Мост обогащения инцидентов и телеметрии Windows
+│   └── wikillm/router.py          # REST API эндпоинты /api/windows/wikillm/*
+│
+└── 5. 15 Доменных модулей сбора фактов (Fact Collectors)
     ├── clean_collector.py         # 1. Очистка кэшей, %TEMP%, WinUpdate, Minidump
     ├── performance_collector.py   # 2. Производительность, автозагрузка, CPU/RAM
     ├── driver_collector.py        # 3. Драйверы, ошибки PnP, DriverStore audit
@@ -140,6 +147,10 @@ python -m apps.windows --server --port 8105
 | `POST` | `/api/windows/investigate` | Расследование симптома (Root-Cause) |
 | `POST` | `/api/windows/actions/simulate` | SafeOps Dry-Run симуляция действия |
 | `POST` | `/api/windows/actions/execute` | Безопасное выполнение действия (Admin) |
+| `POST` | `/api/windows/wikillm/resolve` | 4-уровневое разрешение артефакта (Exact -> FP -> Semantic -> Gemini) |
+| `GET` | `/api/windows/wikillm/entities/{key}` | Получение подробных сведений о сущности базы знаний |
+| `GET` | `/api/windows/wikillm/search` | Полнотекстовый поиск FTS5 по базе знаний |
+| `GET` | `/api/windows/wikillm/stats` | Метрики кэша, статистика хитов L1-L4 и размер хранилища |
 
 ---
 

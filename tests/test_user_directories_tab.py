@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test User Directories Tab
+# =============================================================================
+# Description:
+#   Unit tests for user directories tab and REST API.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_user_directories_tab import TestUserDirectoriesApi
+#
+#     service = TestUserDirectoriesApi()
+#
+# File: test_user_directories_tab.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for user directories tab and REST API."""
+
 import json
 from pathlib import Path
 import pytest

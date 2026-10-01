@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps User_Assistant Routers - Router
+# =============================================================================
+# Description:
+#   Retrieve engine for current request user.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.user_assistant.routers.router import DraftRequest
+#
+#     service = DraftRequest()
+#
+# File: router.py
+# Project: ai-breadboard
+# Package: apps.user_assistant.routers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Retrieve engine for current request user."""
+
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field

@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Api Security
+# =============================================================================
+# Description:
+#   Test suite for core auth dependencies.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_api_security import TestAuthDependencies
+#
+#     service = TestAuthDependencies()
+#
+# File: test_api_security.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Test suite for core auth dependencies."""
+
 import pytest
 from unittest.mock import Mock, patch
 from fastapi import FastAPI, HTTPException, Request, Depends

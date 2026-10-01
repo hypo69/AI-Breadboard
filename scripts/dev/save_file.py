@@ -1,7 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Dev - Save File
+# =============================================================================
+# Description:
+#   File content saving utility.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.dev.save_file
+#   Python API:
+#     from scripts.dev.save_file import save_file
+#
+#     res = save_file()
+#
+# File: save_file.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """File content saving utility.
 
 Provides function to save text content to files with automatic directory
 creation and proper error handling."""
+
 import os
 import argparse
 

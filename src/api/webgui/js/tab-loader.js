@@ -1,4 +1,24 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Tab-Loader Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля tab-loader.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/tab-loader.js?v=20261001_v1" type="module"></script>
+ *
+ * File: tab-loader.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * LazyTabLoader - Система ленивой загрузки вкладок
  * 
  * Управляет загрузкой вкладок по требованию, кешировани в памяти

@@ -1,5 +1,29 @@
-"""Точка входа CLI для CPU-Z."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps ~Cpuz -   Main  
+# =============================================================================
+# Description:
+#   Точка входа CLI для CPU-Z.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.~cpuz.__main__
+#   Python API:
+#     from apps.~cpuz.__main__ import main
+#
+#     res = main()
+#
+# File: __main__.py
+# Project: ai-breadboard
+# Package: apps.~cpuz
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Точка входа CLI для CPU-Z."""
+
 import argparse
 import json
 from apps.cpuz.core.cpuz_service import CpuzService

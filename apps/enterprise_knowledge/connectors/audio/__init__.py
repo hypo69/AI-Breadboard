@@ -1,5 +1,27 @@
-"""Коннектор аудио для Enterprise Knowledge Platform."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Enterprise_Knowledge Connectors Audio -   Init  
+# =============================================================================
+# Description:
+#   Коннектор аудио для Enterprise Knowledge Platform.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.enterprise_knowledge.connectors.audio.__init__ import AudioConnector
+#
+#     service = AudioConnector()
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: apps.enterprise_knowledge.connectors.audio
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Коннектор аудио для Enterprise Knowledge Platform."""
+
 from typing import Any
 from apps.enterprise_knowledge.connectors.base import BaseConnector
 

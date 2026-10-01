@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins Developer-Plugins Generate_Rag_From_Codebase Tests - Test Md Parser
+# =============================================================================
+# Description:
+#   Скрипт/модуль системы AI-Breadboard (`test_md_parser`).
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.developer-plugins.generate_rag_from_codebase.tests.test_md_parser import test_md_parser_headings
+#
+#     res = test_md_parser_headings()
+#
+# File: test_md_parser.py
+# Project: ai-breadboard
+# Package: plugins.developer-plugins.generate_rag_from_codebase.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+"""Скрипт/модуль системы AI-Breadboard (`test_md_parser`)."""
+
 from pathlib import Path
 import pytest
 from plugins.generate_rag_from_codebase.md_parser import MarkdownParser

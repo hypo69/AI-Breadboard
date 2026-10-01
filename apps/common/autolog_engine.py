@@ -1,5 +1,29 @@
-"""Движок периодического автологгирования метрик и событий приложений в CSV."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Common - Autolog Engine
+# =============================================================================
+# Description:
+#   Движок периодического автологгирования метрик и событий приложений в CSV.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.common.autolog_engine import AutoLogEngine
+#
+#     service = AutoLogEngine()
+#
+# File: autolog_engine.py
+# Project: ai-breadboard
+# Package: apps.common
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Движок периодического автологгирования метрик и событий приложений в CSV.
+
+Updated: 2026-10-01 06:40:00"""
+
 import asyncio
 import json
 import os
@@ -165,7 +189,6 @@ class AutoLogEngine:
         """Регистрирует встроенные функции опроса для известных приложений."""
         self.register_poller('system_inspector', self._poll_system_inspector)
         self.register_poller('hardware_monitor', self._poll_hardware_monitor)
-        self.register_poller('librehardwaremonitor', self._poll_librehardwaremonitor)
         self.register_poller('website_monitor', self._poll_website_monitor)
         self.register_poller('gcloud_monitor', self._poll_gcloud_monitor)
         self.register_poller('cloudflared_monitor', self._poll_cloudflared_monitor)
@@ -212,11 +235,11 @@ class AutoLogEngine:
             bool: True, если автологгирование включено и успешно запущено.
         """
         if self._running:
-            logger.info('AutoLogEngine уже запущен.')
+            logger.warning('AutoLogEngine уже запущен.')
             return True
         cfg = load_autolog_config(config_path)
         if not cfg.get('enable_autolog', True):
-            logger.info("AutoLogEngine отключен параметром 'enable_autolog': false в конфигурации.")
+            logger.warning("AutoLogEngine отключен параметром 'enable_autolog': false в конфигурации.")
             return False
         default_sec = parse_interval_seconds(cfg.get('default_interval', '1 minute'))
         loggers_cfg: Dict[str, Any] = cfg.get('loggers', {})
@@ -402,27 +425,6 @@ class AutoLogEngine:
             logger.debug('Hardware Monitor: значения не изменились, пропуск записи')
         if not sensors:
             log_poll('hardware_monitor', 'sensor_read', 'sensors_count', 0, 'count', 'OK', 'No active sensors found')
-
-    def _poll_librehardwaremonitor(self) -> None:
-        """Опрашивает сенсоры LibreHardwareMonitor через Web JSON API. Записывает только изменённые значения."""
-        from apps.windows.hardware.lhm_service import LhmService
-        lhm = LhmService()
-        sensors = lhm.get_flattened_sensors()
-        if sensors:
-            headers = ['timestamp', 'hardware', 'sensor_name', 'category', 'value', 'unit', 'raw_value']
-            now_str = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-            current_sensors = {}
-            for item in sensors:
-                sensor_key = f"{item.get('hardware_name', '')}_{item.get('sensor_name', '')}_{item.get('sensor_category', '')}"
-                current_sensors[sensor_key] = {'value': item.get('value_num', ''), 'unit': item.get('unit', '')}
-            if self._has_value_changed('librehardwaremonitor', current_sensors):
-                for item in sensors:
-                    row = [now_str, item.get('hardware_name', ''), item.get('sensor_name', ''), item.get('sensor_category', ''), item.get('value_num', ''), item.get('unit', ''), item.get('value_raw', '')]
-                    write_csv_row('librehardwaremonitor_polls.csv', headers, row)
-            else:
-                logger.debug('LibreHardwareMonitor: значения не изменились, пропуск записи')
-        else:
-            log_poll('librehardwaremonitor', 'sensor_read', 'lhm_web_api', 'inactive', '', 'UNREACHABLE', 'LibreHardwareMonitor API (:8085) not responding')
 
     def _poll_website_monitor(self) -> None:
         """Опрашивает статус доступности веб-сайтов."""

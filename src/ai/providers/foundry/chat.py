@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Chat Module
+# =============================================================================
+# Description:
+#   Base class for chat interface with Foundry models.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.providers.foundry.chat import FoundryChatBase
+#
+#     service = FoundryChatBase()
+#     result = service.get_available_models()
+#     print(result)
+#
+# File: chat.py
+# Project: ai-breadboard
+# Package: src.ai.providers.foundry
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """Base class for chat interface with Foundry models.
 
 Provides foundation chat interfaces (ask, chat, chat_stream) for Foundry model
@@ -7,12 +30,12 @@ Example usage:
     ai = FoundryChatBase(model_id="qwen3-0.6b-generic-cpu:4")
     answer = await ai.ask("Hello, how are you?")
     answer = await ai.chat("Summarize previous", history=prev_history)
-    ai.clear_history()
-"""
+    ai.clear_history()"""
+
 import asyncio
 import time
 from typing import Any, AsyncIterator, Dict, List, Optional
-from logger.logger import logger
+from logger import logger
 
 class FoundryChatBase:
     """Chat interface for Foundry models.
@@ -173,7 +196,7 @@ class FoundryChatBase:
                     if attempt < attempts:
                         wait = 2 ** min(attempt, 5)
                         record_model_error(provider='foundry', model_name=self.model_id, error=err_str, status_code=503, attempt=attempt, max_attempts=attempts, action_taken='retry', retry_delay_seconds=float(wait))
-                        logger.info(f'[{self.model_id}] Waiting {wait}s before retry...')
+                        logger.warning(f'[{self.model_id}] Waiting {wait}s before retry...')
                         time.sleep(wait)
                     else:
                         record_model_error(provider='foundry', model_name=self.model_id, error=err_str, status_code=503, attempt=attempt, max_attempts=attempts, action_taken='failed')
@@ -187,7 +210,7 @@ class FoundryChatBase:
                 if attempt < attempts:
                     wait = 2 ** min(attempt, 5)
                     record_model_error(provider='foundry', model_name=self.model_id, error=err_str, attempt=attempt, max_attempts=attempts, action_taken='retry', retry_delay_seconds=float(wait))
-                    logger.info(f'Waiting {wait}s before retry...')
+                    logger.warning(f'Waiting {wait}s before retry...')
                     time.sleep(wait)
                 else:
                     record_model_error(provider='foundry', model_name=self.model_id, error=err_str, attempt=attempt, max_attempts=attempts, action_taken='failed')

@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Pdf Export
+# =============================================================================
+# Description:
+#   Test generating docs.pdf from markdown files.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_pdf_export import test_build_docs_pdf
+#
+#     res = test_build_docs_pdf()
+#
+# File: test_pdf_export.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Test generating docs.pdf from markdown files."""
+
 import pytest
 from pathlib import Path
 from src.utils.pdf import PDFUtils

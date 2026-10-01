@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard RAG - Engine Module
+# =============================================================================
+# Description:
+#   Универсальный координатор поиска по базе знаний и маршрутизации RAG-First.
+#
+# Usage Examples:
+#   Python API:
+#     from src.rag.engine import RAGEngine
+#
+#     service = RAGEngine()
+#
+# File: engine.py
+# Project: ai-breadboard
+# Package: src.rag
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Универсальный координатор поиска по базе знаний и маршрутизации RAG-First."""
+
 import asyncio
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional

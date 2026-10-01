@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Install-Sslcertificate Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Install-SslCertificate).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Install-SslCertificate.ps1
+#
+# File: Install-SslCertificate.ps1
+# Project: ai-breadboard
+# Package: install
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:29
+# =============================================================================
+
 <#
 .SYNOPSIS
     Проверка, генерация и установка локальных SSL-сертификатов для ai-breadboard.

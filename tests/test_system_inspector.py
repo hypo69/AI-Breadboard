@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test System Inspector
+# =============================================================================
+# Description:
+#   Unit and integration tests for System & Hardware Inspector.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_system_inspector import TestSystemTelemetryCollector
+#
+#     service = TestSystemTelemetryCollector()
+#
+# File: test_system_inspector.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit and integration tests for System & Hardware Inspector."""
+
 import asyncio
 import pytest
 from fastapi import FastAPI

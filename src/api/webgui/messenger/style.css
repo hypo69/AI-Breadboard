@@ -1,3 +1,23 @@
+/**
+ * =============================================================================
+ * Process Name: AI-Breadboard Styles - Style Stylesheet
+ * =============================================================================
+ * Description:
+ *   Таблица стилей оформления компонентов интерфейса (style).
+ *
+ * Usage Examples:
+ *   HTML Link Tag:
+ *     <link rel="stylesheet" href="/src/api/webgui/messenger/style.css?v=20261001_v1">
+ *
+ * File: style.css
+ * Project: ai-breadboard
+ * Package: src/api/webgui/messenger
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
 /* ═══════════════════════════════════════════════════════════════════════════
    messenger/style.css — Дочерние стили Messenger (наследует main.css)
    Версия: 20260917_refactor_v1

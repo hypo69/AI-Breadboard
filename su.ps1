@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Su Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (su).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\su.ps1
+#
+# File: su.ps1
+# Project: ai-breadboard
+# Package: root
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:20:26
+# =============================================================================
+
 <#
 .SYNOPSIS
     Standalone applications launcher for AI Breadboard SU console (su.ps1).

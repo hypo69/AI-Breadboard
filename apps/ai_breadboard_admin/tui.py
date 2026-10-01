@@ -1,4 +1,25 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Ai_Breadboard_Admin - Tui
+# =============================================================================
+# Description:
+#   Отрисовка панели системных настроек.
+#
+# Usage Examples:
+#   Python API:
+#     import apps.ai_breadboard_admin.tui as tui
+#
+# File: tui.py
+# Project: ai-breadboard
+# Package: apps.ai_breadboard_admin
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Отрисовка панели системных настроек."""
+
 import asyncio
 from datetime import datetime
 from typing import Any, Dict, List

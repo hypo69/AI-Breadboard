@@ -1,10 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins System-Plugins Application_Log_Analyzer - Plugin
+# =============================================================================
+# Description:
+#   Плагин анализатора логов приложения для панели администрирования.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.system-plugins.application_log_analyzer.plugin import ApplicationLogAnalyzerPlugin
+#
+#     service = ApplicationLogAnalyzerPlugin()
+#
+# File: plugin.py
+# Project: ai-breadboard
+# Package: plugins.system-plugins.application_log_analyzer
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Плагин анализатора логов приложения для панели администрирования.
 
 Реализует интерфейс BasePlugin для интерактивного просмотра логов приложения,
 кластеризации паттернов ошибок, фильтрации в реальном времени и
-генерации диагностических отчётов с помощью Gemini AI.
-"""
-from __future__ import annotations
+генерации диагностических отчётов с помощью Gemini AI."""
+
 import asyncio
 import datetime
 import json

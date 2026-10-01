@@ -1,9 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins Developer-Plugins Generate_Rag_From_Codebase - Ignore Filter
+# =============================================================================
+# Description:
+#   Ignore filter and secret detector for codebase RAG ingestion.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.developer-plugins.generate_rag_from_codebase.ignore_filter import IgnoreFilter
+#
+#     service = IgnoreFilter()
+#
+# File: ignore_filter.py
+# Project: ai-breadboard
+# Package: plugins.developer-plugins.generate_rag_from_codebase
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Ignore filter and secret detector for codebase RAG ingestion.
 
 Handles path exclusions based on standard ignore patterns and .ragignore rules,
-along with regex-based secret detection and redaction.
-"""
-from __future__ import annotations
+along with regex-based secret detection and redaction."""
+
 import fnmatch
 from pathlib import Path
 import re

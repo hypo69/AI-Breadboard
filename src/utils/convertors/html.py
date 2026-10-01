@@ -1,17 +1,38 @@
-"""
-HTML conversion utilities.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Html Module
+# =============================================================================
+# Description:
+#   HTML conversion utilities.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.convertors.html import html2escape
+#
+#     res = html2escape()
+#     print(res)
+#
+# File: html.py
+# Project: ai-breadboard
+# Package: src.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""HTML conversion utilities.
 
 Functions:
     - `html2escape`: Convert HTML to escape sequences.
     - `escape2html`: Convert escape sequences to HTML.
     - `html2dict`: Convert HTML to dictionaries.
-    - `html2ns`: Convert HTML to SimpleNamespace objects.
-"""
+    - `html2ns`: Convert HTML to SimpleNamespace objects."""
+
 import re
 import html
 from typing import Dict
 from pathlib import Path
-from logger.logger import logger
+from logger import logger
 from types import SimpleNamespace
 from html.parser import HTMLParser
 try:

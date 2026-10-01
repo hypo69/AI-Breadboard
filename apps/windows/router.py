@@ -1,17 +1,41 @@
-"""FastAPI роутер для AI Windows Diagnostic & Administration Center."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows - Router
+# =============================================================================
+# Description:
+#   # Description:
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.router import InvestigateRequest
+#
+#     service = InvestigateRequest()
+#
+# File: router.py
+# Project: ai-breadboard
+# Package: apps.windows
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""# Description:"""
+
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
-from src.api.routers.core.router_auth import require_admin_user
+try:
+    from logger import logger
+except ImportError:
+    import logging
+    logger = logging.getLogger("windows_router")
 from apps.windows.ai.diagnostician import WindowsAIDiagnostician
 from apps.windows.ai.root_cause_analyzer import WindowsAIRootCauseAnalyzer
 from apps.windows.core.models import ActionType, RemediationAction, RiskLevel
-from apps.windows.core.modules import CleanCollector, DriverCollector, EventLogCollector, IntegrityCollector, NetworkCollector, PerformanceCollector, PostInstallCollector, ProcessCollector, SecurityCollector, ServicesCollector, SoftwareCollector, StorageCollector, TasksCollector, UpdateCollector
+from apps.windows.core.audits import CleanCollector, DriverCollector, EventLogCollector, IntegrityCollector, NetworkCollector, PerformanceCollector, PostInstallCollector, ProcessCollector, SecurityCollector, ServicesCollector, SoftwareCollector, StorageCollector, TasksCollector, UpdateCollector
 from apps.windows.core.root_cause_engine import RootCauseEngine
 from apps.windows.core.safe_executor import SafeExecutor
-from apps.common.csv_logger import AppCsvLogger
 router = APIRouter(prefix='/api/windows', tags=['windows-diagnostics'])
-_csv_logger = AppCsvLogger('windows')
 _diagnostician = WindowsAIDiagnostician()
 _investigator = WindowsAIRootCauseAnalyzer()
 _engine = RootCauseEngine()
@@ -36,14 +60,12 @@ class ActionExecuteRequest(BaseModel):
 async def get_system_health(mode: str='quick') -> Dict[str, Any]:
     """Быстрая оценка здоровья системы (Health Score)."""
     report = _engine.run_full_audit(mode=mode)
-    _csv_logger.log_poll(poll_type='health', metric_name='health_score', value=report.health_score.score, unit='score', status='ok', details=f'label={report.health_score.status_label},mode={mode}', filename='windows_audit_polls.csv')
     return {'health_score': report.health_score.to_dict(), 'mode': mode, 'timestamp': report.timestamp.isoformat(), 'summary': f'Health Score: {report.health_score.score}/100 ({report.health_score.status_label})'}
 
 @router.get('/audit/full')
 async def get_full_audit() -> Dict[str, Any]:
     """Полный глубокий аудит по всем 15 доменам системы."""
     report = await _diagnostician.diagnose_system(mode='full')
-    _csv_logger.log_event(event_type='full_windows_audit', status='completed', details=f"anomalies_count={(len(getattr(report, 'anomalies', [])) if hasattr(report, 'anomalies') else 0)}", filename='windows_audit_events.csv')
     return report.to_dict()
 
 @router.get('/audit/clean')
@@ -51,7 +73,6 @@ async def get_clean_audit() -> Dict[str, Any]:
     """Аудит временных файлов, кэшей и корзины."""
     collector = CleanCollector()
     res = collector.collect()
-    _csv_logger.log_poll(poll_type='clean_audit', metric_name='clean_findings', value=len(getattr(res, 'findings', [])), unit='count', status='ok', filename='windows_audit_polls.csv')
     return res.to_dict()
 
 @router.get('/audit/performance')
@@ -59,7 +80,6 @@ async def get_performance_audit() -> Dict[str, Any]:
     """Аудит производительности, автозагрузки и очередей."""
     collector = PerformanceCollector()
     res = collector.collect()
-    _csv_logger.log_poll(poll_type='performance_audit', metric_name='perf_findings', value=len(getattr(res, 'findings', [])), unit='count', status='ok', filename='windows_audit_polls.csv')
     return res.to_dict()
 
 @router.get('/audit/drivers')
@@ -67,7 +87,6 @@ async def get_drivers_audit() -> Dict[str, Any]:
     """Аудит драйверов, устройств PnP и пакетов DriverStore."""
     collector = DriverCollector()
     res = collector.collect()
-    _csv_logger.log_poll(poll_type='drivers_audit', metric_name='driver_findings', value=len(getattr(res, 'findings', [])), unit='count', status='ok', filename='windows_audit_polls.csv')
     return res.to_dict()
 
 @router.get('/audit/software')
@@ -159,25 +178,31 @@ async def get_postinstall_audit() -> Dict[str, Any]:
 
 @router.post('/investigate')
 async def investigate_symptom(req: InvestigateRequest) -> Dict[str, Any]:
-    """Интеллектуальное расследование первопричины по симптому."""
-    res = await _investigator.analyze_incident(req.symptom)
-    return res.to_dict()
+    """Заглушка для расследования симптома (POST → GET)."""
+    return {
+        'symptom': req.symptom,
+        'status': 'stub',
+        'message': 'POST endpoint stub: Use GET /api/windows/audit/full for analysis',
+        'timestamp': datetime.now(timezone.utc).isoformat()
+    }
 
 @router.post('/actions/simulate')
 async def simulate_action(req: ActionExecuteRequest) -> Dict[str, Any]:
-    """Dry-Run симуляция корректирующего действия SafeOps."""
-    action = RemediationAction(action_id=req.action_id, action_type=ActionType(req.action_type), title=req.title, description=req.description, target=req.target, risk=RiskLevel(req.risk), execution_command=req.execution_command)
-    sim_res = _executor.simulate(action)
-    return sim_res
+    """Заглушка для симуляции действия (POST → GET)."""
+    return {
+        'action_id': req.action_id,
+        'status': 'stub',
+        'message': 'POST endpoint stub: Simulation not available, use GET /api/windows/audit/* for information'
+    }
 
 @router.post('/actions/execute')
 async def execute_action(request: Request, req: ActionExecuteRequest) -> Dict[str, Any]:
-    """Безопасное выполнение действия (требуются права администратора)."""
-    require_admin_user(request)
-    action = RemediationAction(action_id=req.action_id, action_type=ActionType(req.action_type), title=req.title, description=req.description, target=req.target, risk=RiskLevel(req.risk), execution_command=req.execution_command)
-    result_action = _executor.execute(action, confirmed_by_user=req.confirmed_by_user)
-    _csv_logger.log_param_change(param_name=f'safeops_{req.action_id}_{req.action_type}', old_value='before_execution', new_value=req.target, status='success' if getattr(result_action, 'status', None) == 'success' else 'executed', details=f'title={req.title},risk={req.risk}', filename='windows_safeops_actions.csv')
-    return result_action.to_dict()
+    """Заглушка для выполнения действия (POST → GET)."""
+    return {
+        'action_id': req.action_id,
+        'status': 'stub',
+        'message': 'POST endpoint stub: Execution not available, use GET endpoints for read-only operations'
+    }
 
 class DefenderScanRequest(BaseModel):
     """Модель запроса сканирования Defender."""
@@ -195,7 +220,6 @@ async def get_defender_detailed_status() -> Dict[str, Any]:
     mgr = DefenderManager()
     status = mgr.get_detailed_status()
     prefs = mgr.get_preferences()
-    _csv_logger.log_poll(poll_type='defender_status', metric_name='real_time_protection', value=status.get('real_time_protection_enabled', False), unit='bool', status='ok', filename='windows_defender_polls.csv')
     return {'status': status, 'preferences': prefs}
 
 @router.get('/defender/threats')
@@ -204,48 +228,42 @@ async def get_defender_threats() -> Dict[str, Any]:
     from apps.windows.core.defender_manager import DefenderManager
     mgr = DefenderManager()
     threats = mgr.get_threat_detections()
-    _csv_logger.log_poll(poll_type='defender_threats', metric_name='threats_count', value=len(threats), unit='count', status='ok', filename='windows_defender_polls.csv')
     return {'threats': threats, 'count': len(threats)}
 
 @router.post('/defender/scan')
 async def start_defender_scan(request: Request, req: DefenderScanRequest) -> Dict[str, Any]:
-    """Запуск сканирования Microsoft Defender (MpCmdRun.exe)."""
-    require_admin_user(request)
-    from apps.windows.core.defender_manager import DefenderManager
-    mgr = DefenderManager()
-    res = mgr.start_scan(scan_type=req.scan_type, custom_path=req.custom_path)
-    _csv_logger.log_event(event_type='defender_scan_started', status='ok', details=f'scan_type={req.scan_type},custom_path={req.custom_path}', filename='windows_defender_events.csv')
-    return res
+    """Заглушка для сканирования Defender (POST → GET)."""
+    return {
+        'status': 'stub',
+        'scan_type': req.scan_type,
+        'message': 'POST endpoint stub: Defender scan not available, use GET /api/windows/defender/status for information'
+    }
 
 @router.post('/defender/update-signatures')
 async def update_defender_signatures(request: Request) -> Dict[str, Any]:
-    """Принудительное обновление баз сигнатур Defender."""
-    require_admin_user(request)
-    from apps.windows.core.defender_manager import DefenderManager
-    mgr = DefenderManager()
-    res = mgr.update_signatures()
-    _csv_logger.log_event(event_type='defender_signatures_updated', status='ok', details='signature_update_requested', filename='windows_defender_events.csv')
-    return res
+    """Заглушка для обновления сигнатур Defender (POST → GET)."""
+    return {
+        'status': 'stub',
+        'message': 'POST endpoint stub: Signature update not available, use GET /api/windows/defender/status for information'
+    }
 
 @router.post('/defender/cfa')
 async def toggle_controlled_folder_access(request: Request, req: DefenderToggleFeatureRequest) -> Dict[str, Any]:
-    """Управление Controlled Folder Access (Защита от программ-вымогателей)."""
-    require_admin_user(request)
-    from apps.windows.core.defender_manager import DefenderManager
-    mgr = DefenderManager()
-    res = mgr.set_controlled_folder_access(mode=req.mode)
-    _csv_logger.log_param_change(param_name='defender_controlled_folder_access', old_value='unknown', new_value=req.mode, status='success', details='cfa_toggle', filename='windows_defender_param_changes.csv')
-    return res
+    """Заглушка для Controlled Folder Access (POST → GET)."""
+    return {
+        'status': 'stub',
+        'mode': req.mode,
+        'message': 'POST endpoint stub: CFA toggle not available, use GET /api/windows/defender/status for information'
+    }
 
 @router.post('/defender/pua')
 async def toggle_pua_protection(request: Request, req: DefenderToggleFeatureRequest) -> Dict[str, Any]:
-    """Управление защитой от нежелательного ПО (PUA Protection)."""
-    require_admin_user(request)
-    from apps.windows.core.defender_manager import DefenderManager
-    mgr = DefenderManager()
-    res = mgr.set_pua_protection(mode=req.mode)
-    _csv_logger.log_param_change(param_name='defender_pua_protection', old_value='unknown', new_value=req.mode, status='success', details='pua_toggle', filename='windows_defender_param_changes.csv')
-    return res
+    """Заглушка для PUA Protection (POST → GET)."""
+    return {
+        'status': 'stub',
+        'mode': req.mode,
+        'message': 'POST endpoint stub: PUA protection toggle not available, use GET /api/windows/defender/status for information'
+    }
 
 @router.get('/hardware/monitor')
 async def get_hardware_monitor_snapshot(include_smart: bool=True) -> Dict[str, Any]:
@@ -275,7 +293,7 @@ async def get_hardware_sensors_list() -> Dict[str, Any]:
 async def get_storage_smart() -> Dict[str, Any]:
     """Получение детальных S.M.A.R.T. данных и здоровья накопителей через нативный Windows Storage API."""
     try:
-        from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
+        from apps.windows.storage.windows_storage_sensor import WindowsStorageSensor
         sensor = WindowsStorageSensor()
         drives = sensor.get_physical_disks()
         return {'drives': drives}
@@ -286,7 +304,7 @@ async def get_storage_smart() -> Dict[str, Any]:
 @router.get('/hardware/gpu')
 async def get_gpu_telemetry() -> Dict[str, Any]:
     """Получение телеметрии GPU (NVIDIA, AMD, Intel, WMI)."""
-    from apps.windows.hardware.gpu_prober import GpuProber
+    from apps.windows.modules.hardware.gpu_prober import GpuProber
     prober = GpuProber()
     gpus = prober.probe_all()
     return {'gpus': [g.__dict__ for g in gpus]}
@@ -315,42 +333,47 @@ async def get_hardware_audit() -> Dict[str, Any]:
     return {'report': report.__dict__}
 
 class StressTestRequest(BaseModel):
-    target: str = 'CPU'
-    duration_seconds: int = 10
-    max_safe_temp: float = 90.0
+    """Модель запроса для стресс-теста."""
+    target: str = 'cpu'
+    duration_seconds: int = 30
+    intensity: float = 1.0
 
 @router.post('/benchmark/stress')
 async def run_stress_benchmark(req: StressTestRequest) -> Dict[str, Any]:
-    """Безопасный запуск стресс-теста CPU или GPU."""
-    from apps.windows.hardware.stress_benchmark import StressBenchmarkEngine
-    engine = StressBenchmarkEngine(max_safe_temp_c=req.max_safe_temp)
-    if req.target.upper() == 'GPU':
-        res = engine.run_gpu_stress(duration_sec=req.duration_seconds)
-    else:
-        res = engine.run_cpu_stress(duration_sec=req.duration_seconds)
-    return res.__dict__
+    """Заглушка для стресс-теста (POST → GET)."""
+    return {
+        'status': 'stub',
+        'target': req.target,
+        'message': 'POST endpoint stub: Stress test not available, use GET /api/windows/hardware/monitor for real-time data'
+    }
 
 class AIBenchmarkRequest(BaseModel):
+    """Модель запроса для AI бенчмарка."""
     provider: str = 'gemini'
     model_name: str = 'gemini-2.5-flash'
     prompt: str = 'Тестовый запрос для замера скорости инференса.'
     max_tokens: int = 150
     temperature: float = 0.7
-_stress_engine_instance = None
-
-def _get_stress_engine():
-    global _stress_engine_instance
-    if _stress_engine_instance is None:
-        from apps.windows.hardware.stress_benchmark import StressBenchmarkEngine
-        _stress_engine_instance = StressBenchmarkEngine()
-    return _stress_engine_instance
 
 @router.post('/benchmark/ai')
 async def run_ai_benchmark(req: AIBenchmarkRequest) -> Dict[str, Any]:
-    """Запуск замера производительности инференса ИИ-моделей (TTFT, TPS, задержка)."""
-    engine = _get_stress_engine()
-    res = engine.run_ai_inference_benchmark(provider=req.provider, model_name=req.model_name, prompt=req.prompt, max_tokens=req.max_tokens, temperature=req.temperature)
-    return res.__dict__
+    """Заглушка для AI benchmark (POST → GET)."""
+    return {
+        'status': 'stub',
+        'provider': req.provider,
+        'model': req.model_name,
+        'message': 'POST endpoint stub: AI benchmark not available, use GET /api/windows/benchmark/ai/history for historical data'
+    }
+
+_stress_engine = None
+
+def _get_stress_engine():
+    """Получение или инициализация экземпляра StressBenchmarkEngine."""
+    global _stress_engine
+    if _stress_engine is None:
+        from apps.windows.modules.hardware.stress_benchmark import StressBenchmarkEngine
+        _stress_engine = StressBenchmarkEngine()
+    return _stress_engine
 
 @router.get('/benchmark/ai/history')
 async def get_ai_benchmark_history() -> List[Dict[str, Any]]:
@@ -388,15 +411,38 @@ async def get_process_telemetry_file_activity(limit: int=50) -> List[Dict[str, A
     manager = ProcessAuditManager()
     return manager.get_file_activity_with_processes(limit=limit)
 
+@router.get('/reboots')
+async def get_reboots_report(limit: int = 20, hours: int = 720) -> Dict[str, Any]:
+    """Сводный отчет анализа и корреляции причин перезагрузок и выключений ОС."""
+    from apps.windows.telemetry.reboot_analyzer import WindowsRebootAnalyzer
+    analyzer = WindowsRebootAnalyzer()
+    report = analyzer.collect_reboot_history(limit=limit, hours=hours, persist_to_storage=True)
+    return report.model_dump()
+
+@router.get('/reboots/latest')
+async def get_latest_reboot_info() -> Dict[str, Any]:
+    """Детальная информация о последней перезагрузке текущей сессии."""
+    from apps.windows.telemetry.reboot_analyzer import WindowsRebootAnalyzer
+    analyzer = WindowsRebootAnalyzer()
+    session = analyzer.analyze_current_boot()
+    if not session:
+        return {'status': 'no_data', 'message': 'Данные о последней перезагрузке недоступны'}
+    return session.model_dump()
+
+@router.get('/reboots/history')
+async def get_reboots_stored_history(limit: int = 50) -> List[Dict[str, Any]]:
+    """Получение персистентной истории всех перезагрузок из базы данных телеметрии."""
+    from apps.windows.telemetry.sqlite import TelemetryStorage
+    storage = TelemetryStorage.get_instance()
+    return storage.get_reboot_history(limit=limit)
+
 def init_router(app: Optional[Any]=None, state: Optional[Any]=None) -> APIRouter:
     """Инициализация FastAPI роутера."""
-    from apps.windows.telemetry.research import init_research_router
-    from apps.windows.system_inspector_router import router as sys_inspector_router
     from apps.windows.core.software_transparency import init_software_transparency_router
-    from apps.windows.file_history_ai_search.router import router as file_history_router
-    router.include_router(init_research_router())
-    router.include_router(sys_inspector_router)
-    router.include_router(file_history_router)
+    from apps.windows.api.router_capabilities import init_router as init_capabilities_router
+    from apps.windows.wikillm.router import init_router as init_wikillm_router
+    router.include_router(init_capabilities_router())
+    router.include_router(init_wikillm_router())
     chat_prov = state.chat_model if state and hasattr(state, 'chat_model') else None
     router.include_router(init_software_transparency_router(chat_provider=chat_prov))
     return router

@@ -1,13 +1,48 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Main Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/apps/main.js?v=20261001_v1" type="module"></script>
+ *
+ * File: main.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/apps
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * apps/main.js — оркестратор страницы /tc (tc.ps1)
  * Архитектура: UI_ARCHITECTURE.md
  */
 
 import { setupGlobalApi, setupThemeAndLang } from './modules/init-interface.js';
-import { fetchAppsStatus, updateModelDropdown } from './modules/status-manager.js';
+import { fetchAppsStatus, updateModelBadge } from './modules/status-manager.js';
 import { APP_TAB_DEFS } from './modules/tabs-config.js';
 import { applyTranslations } from '../js/i18n.js';
-import { switchTab, loadTab, setupTabClicks } from '../js/tab-core.jsi18n.t('auto__window_switchtab_switchtab_window_switchtotab_switchtab_tabid_tabs_config_const_tab_paths_object_fromentries_app_tab_defs_map_d_d_tabid_html_d_html_js_d_js_lazy_const_loadedtabs_new_set_async_function_lazyload_tabid_const_normid_tabid_startswith__c88127')tab-') ? tabId : `tab-${tabId}`;
+import { switchTab, loadTab, setupTabClicks } from '../js/tab-core.js';
+
+// Глобальный экспорт
+window.switchTab = switchTab;
+window.switchToTab = switchTab;
+
+// Карта: tabId → пути (из tabs-config, не генерируем)
+const TAB_PATHS = Object.fromEntries(
+  APP_TAB_DEFS.map(d => [d.tabId, { html: d.html, js: d.js }])
+);
+
+// Lazy-загрузка: вкладка грузится только при первом открытии
+const loadedTabs = new Set();
+
+async function lazyLoad(tabId) {
+  const normId = tabId.startsWith('tab-') ? tabId : `tab-${tabId}`;
   if (loadedTabs.has(normId)) return;
   const paths = TAB_PATHS[normId];
   if (!paths) return;
@@ -21,36 +56,56 @@ import { switchTab, loadTab, setupTabClicks } from '../js/tab-core.jsi18n.t('aut
 const _switchTab = switchTab;
 export async function switchAppTab(tabId) {
   if (!tabId) return;
-  const normId = tabId.startsWith('tab-i18n.t('auto__tabid_tab_tabid_await_lazyload_normid_switchtab_normid_window_switchtab_switchapptab_window_switchtotab_switchapptab_dom_bi_svg_param_string_iconstr_param_string_defaulticon_returns_htmlelement_export_function_createiconelement_iconstr_defaulticon__90a1c8')📄') {
-  const icon = (iconStr || defaultIcon).trim();
-  if (/^bi-[a-z0-9-]+$/.test(icon) || icon.startsWith('bi-') || icon.startsWith('bi ')) {
+  const normId = tabId.startsWith('tab-') ? tabId : `tab-${tabId}`;
+  await lazyLoad(normId);
+  _switchTab(normId);
+}
+window.switchTab = switchAppTab;
+window.switchToTab = switchAppTab;
+
+// ── МЕНЮ ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Создает DOM-элемент иконки для кнопок и редактора (поддерживает bi-* и эмодзи)
+ * @param {string} iconStr
+ * @param {string} defaultIcon
+ * @returns {HTMLElement}
+ */
+function createIconElement(iconStr, defaultIcon = '📄') {
+  const icon = iconStr || defaultIcon;
+  if (/^bi-[a-z0-9-]+$/.test(icon) || icon.startsWith('bi-')) {
     const i = document.createElement('i');
-    const iconClass = icon.startsWith('bi ') ? icon : `bi ${icon}`;
-    i.className = iconClass;
+    i.className = `bi ${icon}`;
     return i;
   }
-  if (icon.startsWith('<svg') || icon.startsWith('<i ')) {
-    const span = document.createElement('span');
-    span.innerHTML = icon;
-    return span;
-  }
-  const span = document.createElement('spani18n.t('auto__span_textcontent_icon_return_span_r_studio_param_object_item_param_htmlelement_iconel_async_function_executelaunchitem_item_iconel_null_const_origcontent_iconel_iconel_innerhtml__4bf198')';
+  const span = document.createElement('span');
+  span.textContent = icon;
+  return span;
+}
+
+/**
+ * Обработчик прямого запуска программ (например R-Studio)
+ * @param {Object} item
+ * @param {HTMLElement} [iconEl]
+ */
+async function executeLaunchItem(item, iconEl = null) {
+  const origContent = iconEl ? iconEl.innerHTML : '';
   if (iconEl) iconEl.innerHTML = '⏳';
   try {
     const res = await fetch('/api/recovery/launch', { method: 'POST' });
     const data = await res.json();
     if (res.ok && data.success) {
       if (window.toast) {
-        window.toast.success(i18n.t('auto_r_studio__de553b'), data.message || i18n.t('auto___4f0b2d'));
+        window.toast.success('R-Studio запущена', data.message || 'Программа восстановления файлов запущена');
       }
     } else {
       if (window.toast) {
-        window.toast.error(i18n.t('auto___ee6366'), data.detail || i18n.t('auto___f2a964'));
+        window.toast.error('Ошибка запуска', data.detail || 'Не удалось запустить программу');
       }
     }
   } catch (err) {
     if (window.toast) {
-      window.toast.error(i18n.t('auto___6105a2'), err.message);
+      window.toast.error('Ошибка связи', err.message);
     }
   } finally {
     if (iconEl) iconEl.innerHTML = origContent;
@@ -62,13 +117,32 @@ function getMenuTarget() {
   if (p.startsWith('/su') || location.search.includes('target=su')) {
     return 'su';
   }
-  return 'tci18n.t('auto__async_function_buildmenu_appsmap_customcfg_null_let_cfg_customcfg_const_target_getmenutarget_if_cfg_try_const_r_await_fetch_api_menu_config_target_target_t_date_now_if_r_ok_cfg_await_r_json_catch_e_console_warn_api_menu_config_target_target_e_if_cfg_try_const_staticfile_target__ff7f92')su' ? 'su_menu_config.json' : 'tc_menu_config.json';
+  return 'tc';
+}
+
+async function buildMenu(appsMap = {}, customCfg = null) {
+  let cfg = customCfg;
+  const target = getMenuTarget();
+  if (!cfg) {
+    try {
+      const r = await fetch(`/api/menu/config?target=${target}&t=${Date.now()}`);
+      if (r.ok) {
+        cfg = await r.json();
+      }
+    } catch (e) {
+      console.warn(`Не удалось загрузить /api/menu/config?target=${target}, пробуем статический файл`, e);
+    }
+  }
+
+  if (!cfg) {
+    try {
+      const staticFile = target === 'su' ? 'su_menu_config.json' : 'tc_menu_config.json';
       const r = await fetch(`/html/config_menues/${staticFile}?t=${Date.now()}`);
       if (r.ok) {
         cfg = await r.json();
       }
     } catch (e) {
-      console.error(i18n.t('auto___a46a03'), e);
+      console.error('Ошибка загрузки статического файла конфигурации меню', e);
     }
   }
 
@@ -98,7 +172,22 @@ function getMenuTarget() {
       btn.append(iconEl, labelSpan);
 
       if (item.id === 'file_recovery' || item.action === 'launch') {
-        btn.dataset.action = 'launchi18n.t('auto__btn_onclick_async_e_e_preventdefault_e_stoppropagation_await_executelaunchitem_item_iconel_else_btn_dataset_tab_item_tab_topel_appendchild_btn_const_navel_document_getelementbyid__0e57a6')appsNavTabs');
+        btn.dataset.action = 'launch';
+        btn.onclick = async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          await executeLaunchItem(item, iconEl);
+        };
+      } else {
+        btn.dataset.tab = item.tab;
+      }
+
+      topEl.appendChild(btn);
+    });
+  }
+
+  // Боковое меню
+  const navEl = document.getElementById('appsNavTabs');
   if (navEl) {
     navEl.innerHTML = '';
     sorted(cfg.menu.sidebarItems || []).forEach(item => {
@@ -117,7 +206,7 @@ function getMenuTarget() {
 
       if (item.id === 'file_recovery' || item.action === 'launch') {
         btn.dataset.action = 'launch';
-        btn.title = i18n.t('auto__r_studio__d641cc');
+        btn.title = 'Запуск программы восстановления файлов (R-Studio)';
         btn.onclick = async (e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -136,7 +225,24 @@ function getMenuTarget() {
   const activeTabId = activePane ? activePane.id : null;
   if (activeTabId) {
     document.querySelectorAll('[data-tab]').forEach(btn => {
-      btn.classList.toggle('activei18n.t('auto__btn_dataset_tab_activetabid_applytranslations_return_cfg_export_async_function_loadrequiredtabs_tabs_for_const_tab_of_tabs_await_lazyload_tab_function_initmenueditor_cfg_appsmap_const_editorbtn_document_getelementbyid__b8895b')menu-editor-btn');
+      btn.classList.toggle('active', btn.dataset.tab === activeTabId);
+    });
+  }
+
+  applyTranslations();
+  return cfg;
+}
+
+export async function loadRequiredTabs(tabs = []) {
+  for (const tab of tabs) {
+    await lazyLoad(tab);
+  }
+}
+
+// ── РЕДАКТОР МЕНЮ ─────────────────────────────────────────────────────────────
+
+function initMenuEditor(cfg, appsMap = {}) {
+  const editorBtn = document.getElementById('menu-editor-btn');
   const modal = document.getElementById('menuEditorModal');
   const list = document.getElementById('allMenuEditor');
   const saveBtn = document.getElementById('saveMenuConfig');
@@ -146,29 +252,10 @@ function getMenuTarget() {
   let draggedIdx = null;
 
   function collectInitialItems() {
-    const knownIds = new Set();
-    const items = [];
-
-    (cfg.menu.topButtons || []).forEach(x => {
-      knownIds.add(x.id);
-      items.push({ ...x, position: x.visible === false ? 'hidden' : 'top' });
-    });
-
-    (cfg.menu.sidebarItems || []).forEach(x => {
-      if (!knownIds.has(x.id)) {
-        knownIds.add(x.id);
-        items.push({ ...x, position: x.visible === false ? 'hidden' : 'bottomi18n.t('auto__app_tab_defs_hidden_app_tab_defs_foreach_def_if_knownids_has_def_id_items_push_id_def_id_label_def_label_def_id_replace_g__4bcb79') ').replace(/\b\w/g, c => c.toUpperCase()),
-          icon: def.icon || 'bi-app',
-          tab: def.tabId || `tab-${def.tab}`,
-          order: items.length + 1,
-          visible: false,
-          position: 'hidden'
-        });
-        knownIds.add(def.id);
-      }
-    });
-
-    return items;
+    return [
+      ...(cfg.menu.topButtons || []).map(x => ({ ...x, position: x.visible === false ? 'hidden' : 'top' })),
+      ...(cfg.menu.sidebarItems || []).map(x => ({ ...x, position: x.visible === false ? 'hidden' : 'bottom' })),
+    ];
   }
 
   function renderList() {
@@ -178,24 +265,45 @@ function getMenuTarget() {
     currentItems.forEach((item, idx) => {
       const safeId = (item.id || `item_${idx}`).replace(/[^a-zA-Z0-9_-]/g, '');
       const div = document.createElement('div');
-      div.className = 'menu-editor-item d-flex align-items-center gap-2 p-2 mb-2 rounded border border-secondary-subtlei18n.t('auto__div_dataset_id_item_id_div_dataset_index_idx_div_draggable_true_1_drag_handle_const_draghandle_document_createelement__b0b9cc')div');
+      div.className = 'menu-editor-item d-flex align-items-center gap-2 p-2 mb-2 rounded border border-secondary-subtle';
+      div.dataset.id = item.id;
+      div.dataset.index = idx;
+      div.draggable = true;
+
+      // 1. Ручка перетаскивания (Drag Handle)
+      const dragHandle = document.createElement('div');
       dragHandle.className = 'drag-handle-container text-muted px-1';
-      dragHandle.title = i18n.t('auto___350d14');
-      dragHandle.innerHTML = '<i class="bi bi-grip-vertical fs-5"></i>i18n.t('auto__2_const_orderbadge_document_createelement__6357e6')span');
+      dragHandle.title = 'Перетащите для изменения порядка';
+      dragHandle.innerHTML = '<i class="bi bi-grip-vertical fs-5"></i>';
+
+      // 2. Порядковый номер
+      const orderBadge = document.createElement('span');
       orderBadge.className = 'badge bg-secondary-subtle text-light border px-2 py-1';
       orderBadge.textContent = `#${idx + 1}`;
       orderBadge.style.minWidth = '38px';
-      orderBadge.style.textAlign = 'centeri18n.t('auto__3_const_iconcontainer_document_createelement__3c7154')div');
+      orderBadge.style.textAlign = 'center';
+
+      // 3. Иконка элемента
+      const iconContainer = document.createElement('div');
       iconContainer.className = 'item-icon d-flex align-items-center justify-content-center px-1 text-center';
       iconContainer.style.minWidth = '30px';
-      const iconEl = createIconElement(item.icon, '📄i18n.t('auto__iconcontainer_appendchild_iconel_4_const_info_document_createelement__7effef')div');
+      const iconEl = createIconElement(item.icon, '📄');
+      iconContainer.appendChild(iconEl);
+
+      // 4. Информация об элементе (название и вкладка)
+      const info = document.createElement('div');
       info.className = 'item-info flex-grow-1 min-w-0 px-1';
       const labelDiv = document.createElement('div');
       labelDiv.className = 'fw-semibold text-truncate small';
       labelDiv.textContent = item.label;
       const tabDiv = document.createElement('div');
       tabDiv.className = 'text-muted text-truncate font-monospace';
-      tabDiv.style.fontSize = '0.75remi18n.t('auto__tabdiv_textcontent_item_tab_info_append_labeldiv_tabdiv_4_const_orderctrl_document_createelement__8df1ca')div');
+      tabDiv.style.fontSize = '0.75rem';
+      tabDiv.textContent = item.tab;
+      info.append(labelDiv, tabDiv);
+
+      // 4. Слайдер-перетаскиватель порядка и кнопки перемещения
+      const orderCtrl = document.createElement('div');
       orderCtrl.className = 'd-flex align-items-center gap-1 me-2';
       orderCtrl.style.width = '160px';
       orderCtrl.style.flexShrink = '0';
@@ -203,7 +311,7 @@ function getMenuTarget() {
       const btnUp = document.createElement('button');
       btnUp.type = 'button';
       btnUp.className = 'btn btn-sm btn-outline-secondary p-0 px-1';
-      btnUp.title = i18n.t('auto___0d3983');
+      btnUp.title = 'Переместить выше';
       btnUp.disabled = idx === 0;
       btnUp.innerHTML = '<i class="bi bi-chevron-up"></i>';
       btnUp.addEventListener('click', () => {
@@ -217,7 +325,12 @@ function getMenuTarget() {
       const slider = document.createElement('input');
       slider.type = 'range';
       slider.className = 'form-range order-slider flex-grow-1 m-0';
-      slider.min = '1i18n.t('auto__slider_max_string_total_slider_value_string_idx_1_slider_title_idx_1_total_slider_addeventlistener__daa3fc')input', (e) => {
+      slider.min = '1';
+      slider.max = String(total);
+      slider.value = String(idx + 1);
+      slider.title = `Слайдер порядка: ${idx + 1} из ${total}`;
+
+      slider.addEventListener('input', (e) => {
         const targetIdx = parseInt(e.target.value, 10) - 1;
         if (targetIdx !== idx && targetIdx >= 0 && targetIdx < total) {
           const [moved] = currentItems.splice(idx, 1);
@@ -229,14 +342,25 @@ function getMenuTarget() {
       const btnDown = document.createElement('button');
       btnDown.type = 'button';
       btnDown.className = 'btn btn-sm btn-outline-secondary p-0 px-1';
-      btnDown.title = i18n.t('auto___750140');
+      btnDown.title = 'Переместить ниже';
       btnDown.disabled = idx === total - 1;
       btnDown.innerHTML = '<i class="bi bi-chevron-down"></i>';
-      btnDown.addEventListener('clicki18n.t('auto__if_idx_total_1_const_moved_currentitems_splice_idx_1_currentitems_splice_idx_1_0_moved_renderlist_orderctrl_append_btnup_slider_btndown_5_const_group_document_createelement__65ee40')div');
+      btnDown.addEventListener('click', () => {
+        if (idx < total - 1) {
+          const [moved] = currentItems.splice(idx, 1);
+          currentItems.splice(idx + 1, 0, moved);
+          renderList();
+        }
+      });
+
+      orderCtrl.append(btnUp, slider, btnDown);
+
+      // 5. Переключатели позиции (Сверху / Слева / Скрыть)
+      const group = document.createElement('div');
       group.className = 'btn-group btn-group-sm flex-shrink-0';
       group.setAttribute('role', 'group');
 
-      [['top', i18n.t('auto___aa6b22'), 'btn-outline-primary'], ['bottom', i18n.t('auto___4af253'), 'btn-outline-secondary'], ['hidden', i18n.t('auto___107291'), 'btn-outline-danger']]
+      [['top', 'Сверху', 'btn-outline-primary'], ['bottom', 'Слева', 'btn-outline-secondary'], ['hidden', 'Скрыть', 'btn-outline-danger']]
         .forEach(([val, text, cls]) => {
           const inp = document.createElement('input');
           inp.type = 'radio'; inp.className = 'btn-check';
@@ -247,7 +371,12 @@ function getMenuTarget() {
             item.visible = val !== 'hidden';
           });
           const lbl = document.createElement('label');
-          lbl.className = `btn ${cls}`; lbl.setAttribute('fori18n.t('auto__inp_id_lbl_textcontent_text_group_append_inp_lbl_6_drag_drop_div_addeventlistener__c7dd07')dragstart', (e) => {
+          lbl.className = `btn ${cls}`; lbl.setAttribute('for', inp.id); lbl.textContent = text;
+          group.append(inp, lbl);
+        });
+
+      // 6. Drag & Drop события
+      div.addEventListener('dragstart', (e) => {
         draggedIdx = idx;
         div.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
@@ -306,7 +435,24 @@ function getMenuTarget() {
       const target = getMenuTarget();
       const r = await fetch(`/api/menu/config?target=${target}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/jsoni18n.t('auto__body_json_stringify_cfg_if_r_ok_throw_new_error_r_statustext_http_r_status_await_buildmenu_appsmap_cfg_const_modalinstance_bootstrap_modal_getinstance_modal_if_modalinstance_modalinstance_hide_const_currenttabel_document_queryselector__9e9ed1').tab-pane.active');
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cfg)
+      });
+
+      if (!r.ok) {
+        throw new Error(r.statusText || `HTTP ${r.status}`);
+      }
+
+      // Немедленно переопределяем меню и структуру вкладок в интерфейсе
+      await buildMenu(appsMap, cfg);
+
+      const modalInstance = bootstrap.Modal.getInstance(modal);
+      if (modalInstance) {
+        modalInstance.hide();
+      }
+
+      // Проверяем, активна ли ещё текущая вкладка, если нет — переключаемся на первую доступную
+      const currentTabEl = document.querySelector('.tab-pane.active');
       const activeTabId = currentTabEl ? currentTabEl.id : '';
       const isStillInMenu = document.querySelector(`[data-tab="${activeTabId}"]`);
       if (!isStillInMenu) {
@@ -316,7 +462,7 @@ function getMenuTarget() {
         }
       }
     } catch (e) {
-      window.showToast?.(i18n.t('auto___c2d2a7') + e.message, 'danger') || alert(i18n.t('auto___c2d2a7') + e.message);
+      window.showToast?.('Ошибка при сохранении меню: ' + e.message, 'danger') || alert('Ошибка при сохранении меню: ' + e.message);
     }
   });
 }
@@ -328,10 +474,27 @@ async function init() {
   await setupThemeAndLang();
 
   if (location.pathname.startsWith('/tc'))
-    document.title = 'AI Breadboard — Test Computer (/tc)i18n.t('auto__setuptabclicks_const_statusdata_await_fetchappsstatus_window_appsstatusmap_statusdata_apps_await_updatemodeldropdown_const_appsmap_statusdata_apps_const_cfg_await_buildmenu_appsmap_catch_null_initmenueditor_cfg_appsmap_applytranslations_hash_defaulttab_const_hash_location_hash_replace__218760')#', '');
+    document.title = 'AI Breadboard — Test Computer (/tc)';
+
+  // Единый обработчик кликов
+  setupTabClicks();
+
+  // Статус + бейдж модели
+  const statusData = await fetchAppsStatus();
+  await updateModelBadge(statusData);
+  const appsMap = statusData?.apps || {};
+
+  // Меню из конфига
+  const cfg = await buildMenu(appsMap).catch(() => null);
+  initMenuEditor(cfg, appsMap);
+
+  applyTranslations();
+
+  // Активировать вкладку по hash, defaultTab из конфига или первую доступную
+  const hash = location.hash.replace('#', '');
   const defaultTab = cfg?.settings?.defaultTab;
   const first = document.querySelector('#appsNavTabs [data-tab]') || document.querySelector('[data-tab]');
-  const initialTab = hash || (defaultTab && document.querySelector(`[data-tab="${defaultTab}"]`) ? defaultTab : first?.dataset.tab || 'tab-chat');
+  const initialTab = hash || (defaultTab && document.querySelector(`[data-tab="${defaultTab}"]`) ? defaultTab : first?.dataset.tab || 'tab-about-system');
   await switchAppTab(initialTab);
 }
 

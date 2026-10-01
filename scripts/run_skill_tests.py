@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts - Run Skill Tests
+# =============================================================================
+# Description:
+#   Скрипт/модуль системы AI-Breadboard (`run_skill_tests`).
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.run_skill_tests
+#   Python API:
+#     from scripts.run_skill_tests import load_status
+#
+#     res = load_status()
+#
+# File: run_skill_tests.py
+# Project: ai-breadboard
+# Package: scripts
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
+"""Скрипт/модуль системы AI-Breadboard (`run_skill_tests`)."""
+
 import json
 import os
 from pathlib import Path

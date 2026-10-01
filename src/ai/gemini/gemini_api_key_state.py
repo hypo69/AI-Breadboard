@@ -1,11 +1,35 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Gemini Api Key State Module
+# =============================================================================
+# Description:
+#   Ensure that the secrets directory exists on the filesystem.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.gemini.gemini_api_key_state import load_api_keys
+#
+#     res = load_api_keys()
+#     print(res)
+#
+# File: gemini_api_key_state.py
+# Project: ai-breadboard
+# Package: src.ai.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Ensure that the secrets directory exists on the filesystem."""
+
 import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from header import __root__
-from logger.logger import logger
+from logger import logger
 _SECRETS_DIR: Path = __root__ / 'src' / 'secrets'
 _KEYS_FILE: Path = _SECRETS_DIR / 'gemini_keys.json'
 _ENV_FILE: Path = __root__ / '.env'

@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Trading Terminal
+# =============================================================================
+# Description:
+#   Unit tests for TradingDeskEngine and Terminal Manager.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_trading_terminal import TestTradingDeskEngine
+#
+#     service = TestTradingDeskEngine()
+#
+# File: test_trading_terminal.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for TradingDeskEngine and Terminal Manager."""
+
 import pytest
 from scripts.cli.terminal_manager import build_wt_command, get_terminal_profiles, is_windows_terminal_available
 from scripts.dev.trading_terminal import TradingDeskEngine

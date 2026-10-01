@@ -1,3 +1,24 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Launchers
+# =============================================================================
+# Description:
+#   Tests for project launchers (run.ps1 and launchers/Run-*.ps1).
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_launchers import TestLaunchersStructure
+#
+#     service = TestLaunchersStructure()
+#
+# File: test_launchers.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Tests for project launchers (run.ps1 and launchers/Run-*.ps1).
 
 Tests verify that:
@@ -9,8 +30,8 @@ Tests verify that:
 - Do not contain hardcoded paths to other projects
 - run.ps1 correctly invokes child launchers from launchers/ directory
 
-Documentation: .ai_instructions/knowledge/LAUNCHER_GUIDE.md
-"""
+Documentation: .ai_instructions/knowledge/LAUNCHER_GUIDE.md"""
+
 import pytest
 from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent

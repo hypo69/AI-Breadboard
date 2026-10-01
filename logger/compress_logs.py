@@ -1,8 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Logger - Compress Logs
+# =============================================================================
+# Description:
+#   Script for log file compression - combines repeated lines.
+#
+# Usage Examples:
+#   CLI:
+#     python -m logger.compress_logs
+#   Python API:
+#     from logger.compress_logs import compress_lines
+#
+#     res = compress_lines()
+#
+# File: compress_logs.py
+# Project: ai-breadboard
+# Package: logger
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:29:02
+# =============================================================================
+
 """Script for log file compression - combines repeated lines.
 
 Reduces log file size by consolidating identical lines into [Nx] format.
-Usage: python scripts/compress_logs.py
-"""
+Usage: python scripts/compress_logs.py"""
+
 import sys
 from collections import Counter
 from pathlib import Path

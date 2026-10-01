@@ -1,10 +1,32 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test App Registry Viewer
+# =============================================================================
+# Description:
+#   Тесты для приложения Windows Registry Viewer.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_app_registry_viewer import viewer
+#
+#     res = viewer()
+#
+# File: test_app_registry_viewer.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Тесты для приложения Windows Registry Viewer."""
+
 import json
 from pathlib import Path
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from apps.windows.registry import BookmarkItem, RegistryKeyDetailsDTO, RegistryValueDTO, RegistryViewer, RegistryViewerTUI, SearchResponseDTO, init_router
+from apps.windows.modules.registry import BookmarkItem, RegistryKeyDetailsDTO, RegistryValueDTO, RegistryViewer, RegistryViewerTUI, SearchResponseDTO, init_router
 
 @pytest.fixture
 def viewer():
@@ -93,7 +115,7 @@ def test_api_endpoints_standalone(client):
 
 def test_registry_editor_operations_and_backups(tmp_path):
     """Проверка полного цикла создания, редактирования, бэкапа и отката параметров реестра."""
-    from apps.windows.registry import RegistryViewer, SetValueRequestDTO, DeleteValueRequestDTO, CreateKeyRequestDTO, DeleteKeyRequestDTO
+    from apps.windows.modules.registry import RegistryViewer, SetValueRequestDTO, DeleteValueRequestDTO, CreateKeyRequestDTO, DeleteKeyRequestDTO
     viewer = RegistryViewer(backup_dir=tmp_path / 'backups')
     key_res = viewer.create_key(CreateKeyRequestDTO(hive='HKCU', path='Software\\AIBreadboardTestKey'))
     assert key_res.status == 'ok'

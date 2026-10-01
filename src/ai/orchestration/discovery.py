@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Discovery Module
+# =============================================================================
+# Description:
+#   Discovers available backends, models, and hardware capabilities dynamically.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.orchestration.discovery import DiscoveryEngine
+#
+#     service = DiscoveryEngine()
+#     result = service.probe_cloud_credentials()
+#     print(result)
+#
+# File: discovery.py
+# Project: ai-breadboard
+# Package: src.ai.orchestration
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Discovers available backends, models, and hardware capabilities dynamically."""
+
 import os
 import asyncio
 import aiohttp

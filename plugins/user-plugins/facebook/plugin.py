@@ -1,9 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins Facebook - Plugin
+# =============================================================================
+# Description:
+#   Facebook publisher plugin implementation module.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.user-plugins.facebook.plugin import FacebookPlugin
+#
+#     service = FacebookPlugin()
+#
+# File: plugin.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.facebook
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Facebook publisher plugin implementation module.
 
 Extends BasePlugin to provide Facebook Graph API lifecycle management, UI configuration,
-admin actions (test_connection/publish_post/get_page_info), and LLM function calling tools.
-"""
-from __future__ import annotations
+admin actions (test_connection/publish_post/get_page_info), and LLM function calling tools."""
+
 import json
 import os
 from pathlib import Path

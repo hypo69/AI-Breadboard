@@ -1,5 +1,22 @@
-"""
-Модуль утилит для AI-Breadboard.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS -   Init   Module
+# =============================================================================
+# Description:
+#   Модуль утилит для AI-Breadboard.
+#
+# Usage Examples:
+#
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Модуль утилит для AI-Breadboard.
 
 Содержит различные вспомогательные инструменты и функции для работы с:
 - CSV файлами
@@ -12,8 +29,8 @@
 - SMTP
 - URL
 - Видео
-- Excel файлами
-"""
+- Excel файлами"""
+
 from . import csv, date_time, file, ftp, get_free_port, header, image, jjson, printer, smtp, url, versioning, video, xls, archive, docx, pdf_extractor
 try:
     from . import pdf

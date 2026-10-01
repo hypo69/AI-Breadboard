@@ -1,4 +1,24 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - App Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля app.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/helpdesk/app.js?v=20261001_v1" type="module"></script>
+ *
+ * File: app.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/helpdesk
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * AI Breadboard Helpdesk Management Client
  */
 

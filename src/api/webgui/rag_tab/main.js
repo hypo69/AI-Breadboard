@@ -1,16 +1,20 @@
 /**
  * =============================================================================
- * Process Name: RAG Tab Master Coordinator
+ * Process Name: AI-Breadboard UI - Main Script
  * =============================================================================
  * Description:
- *   Entry point and coordinator for the Knowledge Base & RAG interface.
- *   Dispatches events to specialized submodules.
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/rag_tab/main.js?v=20261001_v1" type="module"></script>
  *
  * File: main.js
- * Project: AI Breadboard
- * Module: RAGTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/rag_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

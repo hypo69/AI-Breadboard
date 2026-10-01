@@ -1,6 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Команды безопасного управления системными параметрами Windows (sys-param)."""
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli Commands - Sys Param
+# =============================================================================
+# Description:
+#   Команды безопасного управления системными параметрами Windows (sys-param).
+#
+# Usage Examples:
+#   Python API:
+#     from scripts.cli.commands.sys_param import register_sys_param_parser
+#
+#     res = register_sys_param_parser()
+#
+# File: sys_param.py
+# Project: ai-breadboard
+# Package: scripts.cli.commands
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 from __future__ import annotations
+"""Команды безопасного управления системными параметрами Windows (sys-param)."""
 
 import argparse
 

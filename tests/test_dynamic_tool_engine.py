@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Dynamic Tool Engine
+# =============================================================================
+# Description:
+#   Отключение внешних сетевых/CLI вызовов LLM для детерминированных быстрых тестов.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_dynamic_tool_engine import disable_external_llm
+#
+#     res = disable_external_llm()
+#
+# File: test_dynamic_tool_engine.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Отключение внешних сетевых/CLI вызовов LLM для детерминированных быстрых тестов."""
+
 import pytest
 from apps.windows.core.dynamic_tool_engine import DynamicWindowsToolEngine
 from apps.windows.core.tools.registry import ToolRegistry

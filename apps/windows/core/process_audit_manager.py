@@ -1,11 +1,33 @@
-﻿"""Менеджер аудита процессов и телеметрии Sysmon / Security Audit для Windows."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core - Process Audit Manager
+# =============================================================================
+# Description:
+#   Менеджер аудита процессов и телеметрии Sysmon / Security Audit для Windows.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.process_audit_manager import TelemetrySensorStatus
+#
+#     service = TelemetrySensorStatus()
+#
+# File: process_audit_manager.py
+# Project: ai-breadboard
+# Package: apps.windows.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Менеджер аудита процессов и телеметрии Sysmon / Security Audit для Windows."""
+
 import sys
 import winreg
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Set
-from apps.windows.telemetry.api_bindings.wevtapi import WevtAPI
+from apps.windows.telemetry.win32_ffi.wevtapi import WevtAPI
 from logger import logger
 
 @dataclass

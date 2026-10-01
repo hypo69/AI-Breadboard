@@ -1,4 +1,24 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Toast Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля toast.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/toast.js?v=20261001_v1" type="module"></script>
+ *
+ * File: toast.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * toast.js — Универсальная система всплывающих окон (Toast & Floating Notifications)
  * для веб-интерфейса AI-Breadboard.
  *

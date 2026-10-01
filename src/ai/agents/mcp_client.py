@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Mcp Client Module
+# =============================================================================
+# Description:
+#   Manager for Model Context Protocol (MCP) client lifecycle and tools.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.agents.mcp_client import MCPClientManager
+#
+#     service = MCPClientManager()
+#
+# File: mcp_client.py
+# Project: ai-breadboard
+# Package: src.ai.agents
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Manager for Model Context Protocol (MCP) client lifecycle and tools."""
+
 import asyncio
 import time
 from pathlib import Path
@@ -58,7 +81,7 @@ class MCPClientManager:
                 logger.info(f'[MCPClientManager] Initializing MultiServerMCPClient with servers: {list(connections.keys())}')
                 self._client = MultiServerMCPClient(connections=connections)
             else:
-                logger.info('[MCPClientManager] No enabled MCP server configurations found')
+                logger.warning('[MCPClientManager] No enabled MCP server configurations found')
         except Exception as e:
             logger.error(f'[MCPClientManager] Error initializing MCP servers: {e}')
         return self

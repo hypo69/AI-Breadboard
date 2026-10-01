@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Install-Venv Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Install-Venv).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Install-Venv.ps1
+#
+# File: Install-Venv.ps1
+# Project: ai-breadboard
+# Package: install
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:29
+# =============================================================================
+
 <#
 .SYNOPSIS
     Модуль инициализации Python виртуального окружения (venv).

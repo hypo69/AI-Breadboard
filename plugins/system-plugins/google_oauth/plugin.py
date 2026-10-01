@@ -1,19 +1,24 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Google OAuth System Plugin Main Controller
+# Process Name: AI-Breadboard Plugins System-Plugins Google_Oauth - Plugin
 # =============================================================================
 # Description:
-#   System plugin providing centralized Google OAuth 2.0 / Service Account
-#   token management, account pool discovery, credential refresh, and admin API.
+#   Системный плагин управления авторизацией Google OAuth и пулом аккаунтов.
+#
+# Usage Examples:
+#   Python API:
+#     import plugins.system-plugins.google_oauth.plugin as plugin
 #
 # File: plugin.py
 # Project: ai-breadboard
-# Package: plugins.google_oauth
+# Package: plugins.system-plugins.google_oauth
 # Author: hypo69
 # Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
 # =============================================================================
 
 from __future__ import annotations
+"""Системный плагин управления авторизацией Google OAuth и пулом аккаунтов."""
 
 from typing import Any, AsyncGenerator, Dict, List, Optional
 from fastapi import APIRouter
@@ -59,7 +64,7 @@ class GoogleOAuthPlugin(BasePlugin):
     def get_router(self) -> Optional[APIRouter]:
         """Return the Google Workspace account pool management FastAPI router."""
         try:
-from plugins.system_plugins.google_oauth.routers.router_google_accounts import router
+            from plugins.system_plugins.google_oauth.routers.router_google_accounts import router
             return router
         except Exception as ex:
             logger.warning(f"Could not load Google accounts router for plugin: {ex}")

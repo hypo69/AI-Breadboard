@@ -1,28 +1,26 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Microsoft Defender Antivirus Manager & CLI Interface
+# Process Name: AI-Breadboard Apps Windows Core - Defender Manager
 # =============================================================================
 # Description:
 #   Служба взаимодействия с Microsoft Defender Antivirus через утилиту MpCmdRun.exe
-#   и командлеты PowerShell Defender. Позволяет запускать сканирования (Quick/Full/Custom),
-#   обновлять сигнатуры, управлять Controlled Folder Access (CFA), PUA и ASR правилами.
 #
-# Examples:
-#   >>> from apps.windows.core.defender_manager import DefenderManager
-#   >>> mgr = DefenderManager()
-#   >>> status = mgr.get_detailed_status()
-#   >>> threats = mgr.get_threat_detections()
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.defender_manager import DefenderManager
+#
+#     service = DefenderManager()
 #
 # File: defender_manager.py
 # Project: ai-breadboard
 # Package: apps.windows.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
 # =============================================================================
 
-"""Менеджер управления и телеметрии Microsoft Defender Antivirus."""
-
 from __future__ import annotations
+"""Служба взаимодействия с Microsoft Defender Antivirus через утилиту MpCmdRun.exe"""
 
 import json
 import os

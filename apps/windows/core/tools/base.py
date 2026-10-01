@@ -1,5 +1,27 @@
-"""Базовые интерфейсы и модели данных для умных системных инструментов."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core Tools - Base
+# =============================================================================
+# Description:
+#   Базовые интерфейсы и модели данных для умных системных инструментов.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.tools.base import ToolExecutionResult
+#
+#     service = ToolExecutionResult()
+#
+# File: base.py
+# Project: ai-breadboard
+# Package: apps.windows.core.tools
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Базовые интерфейсы и модели данных для умных системных инструментов."""
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional

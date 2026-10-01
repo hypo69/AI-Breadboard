@@ -51,7 +51,8 @@
             "windows_defender",
             "autolog_manager",
             "software_transparency_scanner",
-            "telemetry_research"
+            "telemetry_research",
+            "windows_system_checkpoints"
         ],
         "disabled": [
             "trading_terminal",

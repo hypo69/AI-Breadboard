@@ -1,0 +1,29 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "app": {
+        "name": "Windows System Checkpoints & Recovery Manager",
+        "version": "1.0.0",
+        "description": "Управление контрольными точками системы, WIM-образами восстановления и средой WinRE"
+    },
+    "storage": {
+        "catalog_path": "data/system_checkpoints/catalog.json",
+        "default_image_dir": "C:\\Recovery\\AI-Breadboard",
+        "max_stored_checkpoints": 10,
+        "auto_prune_periodic": true
+    },
+    "freshness_thresholds": {
+        "high_max_days": 30,
+        "medium_max_days": 90,
+        "low_max_days": 180,
+        "high_max_changes": 10,
+        "medium_max_changes": 30
+    },
+    "dism": {
+        "timeout_seconds": 3600,
+        "compress_level": "fast",
+        "verify_after_capture": true
+    },
+    "winre": {
+        "timeout_seconds": 30
+    }
+}

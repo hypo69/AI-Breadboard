@@ -1,5 +1,27 @@
-"""Authentication manager for GA4 and Search Console APIs."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Website_Monitor Src - Auth
+# =============================================================================
+# Description:
+#   Authentication manager for GA4 and Search Console APIs.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.website_monitor.src.auth import AuthStatus
+#
+#     service = AuthStatus()
+#
+# File: auth.py
+# Project: ai-breadboard
+# Package: apps.website_monitor.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Authentication manager for GA4 and Search Console APIs."""
+
 import json
 import os
 from dataclasses import dataclass
@@ -70,7 +92,7 @@ class WebsiteMonitorAuthManager:
         default_prop = self.property_id_override or os.getenv('GA4_PROPERTY_ID', 'properties/314159265')
         default_site = self.site_url_override or os.getenv('TARGET_SITE_URL', 'https://example.com')
         if not GOOGLE_AUTH_AVAILABLE:
-            logger.info('Google Auth libraries not found. Website Monitor operating in Demo/Mock mode.')
+            logger.warning('Google Auth libraries not found. Website Monitor operating in Demo/Mock mode.')
             self._auth_status = AuthStatus(authenticated=False, auth_type='mock', property_id=default_prop, site_url=default_site, is_mock=True, details='google-auth not installed; running in high-fidelity mock mode')
             return (False, default_prop, default_site)
         candidate_paths = self._get_candidate_paths()

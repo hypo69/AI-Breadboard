@@ -1,16 +1,20 @@
 /**
  * =============================================================================
- * Process Name: PixelRAG Client Module
+ * Process Name: AI-Breadboard UI - Pixelrag Script
  * =============================================================================
  * Description:
- *   Handles status retrieval, image ingestion/indexing, query classification
- *   and hybrid semantic visual search for PixelRAG.
+ *   Клиентский веб-скрипт модуля pixelRag.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/rag_tab/modules/pixelRag.js?v=20261001_v1" type="module"></script>
  *
  * File: pixelRag.js
- * Project: AI Breadboard
- * Module: RAGTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/rag_tab/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

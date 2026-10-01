@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Smtp Module
+# =============================================================================
+# Description:
+#   SMTP email interface utilities for sending email messages via SMTP server.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.smtp import send
+#
+#     res = send()
+#     print(res)
+#
+# File: smtp.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """SMTP email interface utilities for sending email messages via SMTP server."""
+
 " This module provides functionality to send and receive emails using an SMTP or IMAP server.\nIt includes functions to send emails using SMTP and retrieve emails using IMAP.\n\nFunctions:\n    - `send(subject: str = '', body: str = '', to: str = 'one.last.bit@gmail.com') -> bool`\n      Sends an email using the SMTP server specified in the `_connection` dictionary.  Returns `True` on success, `False` on failure.  Includes error logging.\n    \n    - `receive(imap_server: str, user: str, password: str, folder: str = 'inbox') -> Optional[List[Dict[str, str]]]`\n      Retrieves emails from an IMAP server and returns them as a list of dictionaries.  Returns `None` on error. Includes error logging.\n\n** Important Considerations for Security and Robustness **:\n\n    - **_connection Dictionary:** Do *not* hardcode credentials in this file.  Move the `_connection` dictionary to environment variables (e.g., using `os.environ`). This is crucial for security.  Avoid storing passwords directly in source code.\n\n    - **Error Handling:** The code includes robust error handling, logging exceptions with details (subject, body, etc.).  This is very helpful for debugging.\n\n    - **Email Parsing:** The `receive` function handles various email formats gracefully, preventing potential issues.\n\n    - **MIME Handling:**  The code correctly uses `MIMEText` for constructing the email message, crucial for sending basic text emails.\n\n"
 import smtplib
 import imaplib
@@ -6,7 +29,7 @@ import email
 import os
 from email.mime.text import MIMEText
 from typing import List, Dict, Optional
-from logger.logger import logger
+from logger import logger
 _connection = {'server': os.environ.get('SMTP_SERVER', 'smtp.example.com'), 'port': int(os.environ.get('SMTP_PORT', 587)), 'user': os.environ.get('SMTP_USER'), 'password': os.environ.get('SMTP_PASSWORD'), 'receiver': os.environ.get('SMTP_RECEIVER', 'one.last.bit@gmail.com')}
 
 def send(subject: str='', body: str='', to: str='one.last.bit@gmail.com') -> bool:

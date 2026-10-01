@@ -1,3 +1,24 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Invoice Processor
+# =============================================================================
+# Description:
+#   Test extractor behavior with non-existent file path.
+#
+# Usage Examples:
+#   Python API:
+#     import tests.test_invoice_processor as test_invoice_processor
+#
+# File: test_invoice_processor.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Test extractor behavior with non-existent file path."""
+
 import asyncio
 import json
 import pytest

@@ -1,8 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli - Terminal Manager
+# =============================================================================
+# Description:
+#   Terminal manager utility for configuring and launching multi-pane workspaces.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.cli.terminal_manager
+#   Python API:
+#     from scripts.cli.terminal_manager import get_terminal_profiles
+#
+#     res = get_terminal_profiles()
+#
+# File: terminal_manager.py
+# Project: ai-breadboard
+# Package: scripts.cli
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Terminal manager utility for configuring and launching multi-pane workspaces.
 
 This module inspects system terminal capabilities (e.g. Windows Terminal wt.exe)
-and generates launch commands for multi-pane or multi-window layouts.
-"""
+and generates launch commands for multi-pane or multi-window layouts."""
+
 import argparse
 import os
 import shutil

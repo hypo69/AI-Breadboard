@@ -1,19 +1,24 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Google Drive Sync Plugin Main Controller
+# Process Name: AI-Breadboard Plugins System-Plugins Gdrive_Sync - Plugin
 # =============================================================================
 # Description:
-#   Main plugin adapter for Google Drive synchronization, managing scheduled
-#   and manual backups of system databases, RAG indices, configs, and user files.
+#   Modular plugin providing Google Drive cloud synchronization and backup.
+#
+# Usage Examples:
+#   Python API:
+#     import plugins.system-plugins.gdrive_sync.plugin as plugin
 #
 # File: plugin.py
 # Project: ai-breadboard
-# Package: plugins.gdrive_sync
+# Package: plugins.system-plugins.gdrive_sync
 # Author: hypo69
 # Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
 # =============================================================================
 
 from __future__ import annotations
+"""Modular plugin providing Google Drive cloud synchronization and backup."""
 
 from typing import Any, AsyncGenerator, Dict, List, Optional
 from fastapi import APIRouter
@@ -59,7 +64,7 @@ class GDriveSyncPlugin(BasePlugin):
     def get_router(self) -> Optional[APIRouter]:
         """Return the Google Drive Sync FastAPI router."""
         try:
-from plugins.system_plugins.gdrive_sync.routers.router_sync import router
+            from plugins.system_plugins.gdrive_sync.routers.router_sync import router
             return router
         except Exception as ex:
             logger.warning(f"Could not load Sync router for plugin: {ex}")

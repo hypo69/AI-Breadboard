@@ -1,5 +1,27 @@
-"""FastAPI REST endpoints for Website Intelligence Monitor."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Website_Monitor Routers - Router
+# =============================================================================
+# Description:
+#   FastAPI REST endpoints for Website Intelligence Monitor.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.website_monitor.routers.router import init_router
+#
+#     res = init_router()
+#
+# File: router.py
+# Project: ai-breadboard
+# Package: apps.website_monitor.routers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""FastAPI REST endpoints for Website Intelligence Monitor."""
+
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field

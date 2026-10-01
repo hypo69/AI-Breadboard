@@ -1,10 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins Developer-Plugins Telegram_Channel_Rag - Channel Manager
+# =============================================================================
+# Description:
+#   Telegram Channel & User Subscription Manager.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.developer-plugins.telegram_channel_rag.channel_manager import ChannelManager
+#
+#     service = ChannelManager()
+#
+# File: channel_manager.py
+# Project: ai-breadboard
+# Package: plugins.developer-plugins.telegram_channel_rag
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Telegram Channel & User Subscription Manager.
 
 Provides centralized management for the global pool of indexed Telegram channels,
 persists user subscription profiles, attaches existing channel RAGs without duplicate
-scraping, and performs federated search across multiple channels.
-"""
-from __future__ import annotations
+scraping, and performs federated search across multiple channels."""
+
 import json
 import time
 from pathlib import Path

@@ -1,11 +1,32 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Google_User_Desktop Src - Forms
+# =============================================================================
+# Description:
+#   Модуль управления Google Forms внутри приложения `google_user_desktop`.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.google_user_desktop.src.forms import FormItemSummary
+#
+#     service = FormItemSummary()
+#
+# File: forms.py
+# Project: ai-breadboard
+# Package: apps.google_user_desktop.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+from __future__ import annotations
+"""Модуль управления Google Forms внутри приложения `google_user_desktop`."""
+
 # src/forms.py
 """Модуль управления Google Forms внутри приложения `google_user_desktop`.
 
 Предоставляет клиент `GoogleFormsClient` и dataclass `FormItemSummary`.
 """
-
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
@@ -90,4 +111,3 @@ class GoogleFormsClient:
         service = self._init_service()
         resp = service.forms().responses().list(formId=form_id, pageSize=page_size).execute()
         return resp.get('responses', [])
-}

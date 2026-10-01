@@ -1,5 +1,27 @@
-"""Smart News Feed and Personalization Plugin."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins News_Feed - Plugin
+# =============================================================================
+# Description:
+#   Smart News Feed and Personalization Plugin.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.user-plugins.news_feed.plugin import NewsFeedPlugin
+#
+#     service = NewsFeedPlugin()
+#
+# File: plugin.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.news_feed
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
 from __future__ import annotations
+"""Smart News Feed and Personalization Plugin."""
+
 import json
 from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, List, Optional

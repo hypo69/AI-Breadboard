@@ -1,5 +1,27 @@
-"""Модульные тесты для плагина интеграции с WhatsApp."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Whatsapp Plugin
+# =============================================================================
+# Description:
+#   Модульные тесты для плагина интеграции с WhatsApp.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_whatsapp_plugin import test_normalize_phone_number
+#
+#     res = test_normalize_phone_number()
+#
+# File: test_whatsapp_plugin.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Модульные тесты для плагина интеграции с WhatsApp."""
+
 import json
 from io import BytesIO
 from pathlib import Path

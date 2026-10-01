@@ -303,6 +303,9 @@ active_connections = set()
 
 ## 5. Заголовки файлов
 
+> [!IMPORTANT]
+> **Правило фиксации времени модификации**: При любом изменении кода в существующем файле в шапку файла **ОБЯЗАТЕЛЬНО** записывается/обновляется поле `Updated` с актуальной датой и временем изменения (например, `Updated: 2026-10-01 03:22:00`).
+
 ### 5.1 Python (`.py`)
 
 ```python
@@ -325,6 +328,7 @@ active_connections = set()
 # Class: FoundryConnector
 # Author: hypo69
 # Copyright: © 2026 hypo69
+# Updated: 2026-10-01 03:22:00
 # =============================================================================
 ```
 
@@ -349,7 +353,28 @@ active_connections = set()
 # Function: Start-Service
 # Author: hypo69
 # Copyright: © 2026 hypo69
+# Updated: 2026-10-01 03:22:00
 # =============================================================================
+```
+
+### 5.3 JavaScript / TypeScript (`.js`, `.ts`)
+
+```javascript
+/**
+ * =============================================================================
+ * Process Name: Асинхронное взаимодействие с API провайдерами
+ * =============================================================================
+ * Description:
+ *   Абстрактная реализация HTTP-клиента для OpenAI-совместимых API.
+ *
+ * File: api-client.js
+ * Module: Network
+ * Class: ApiClient
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 03:22:00
+ * =============================================================================
+ */
 ```
 
 ---
@@ -469,7 +494,8 @@ class MediaDatabase:
 
 - [ ] Все функции имеют docstrings с 4 секциями (Args, Returns, Exceptions, Examples).
 - [ ] Все классы имеют docstrings с Attributes и Examples.
-- [ ] Файл имеет корректный заголовок (Process Name, Description, File, Module, Author).
+- [ ] Файл имеет корректный заголовок (Process Name, Description, File, Module, Author, Updated).
+- [ ] При модификации кода обновлено поле `Updated` в шапке файла.
 - [ ] Комментарии объясняют "почему", а не "что".
 - [ ] README.md создан для новых модулей.
 - [ ] Нет примеров с `None` в docstrings.

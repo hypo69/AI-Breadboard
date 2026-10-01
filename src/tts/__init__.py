@@ -1,7 +1,24 @@
-"""
-Unified interface for all TTS systems (Microsoft Edge, Google, Silero).
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard TTS -   Init   Module
+# =============================================================================
+# Description:
+#   Unified interface for all TTS systems (Microsoft Edge, Google, Silero).
+#
+# Usage Examples:
+#
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: src.tts
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Unified interface for all TTS systems (Microsoft Edge, Google, Silero)."""
+
 from pathlib import Path
 from logger import logger
 

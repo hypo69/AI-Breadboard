@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Save File
+# =============================================================================
+# Description:
+#   Testing normal expected scenarios of save_file operation.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_save_file import TestSaveFile_HappyPath
+#
+#     service = TestSaveFile_HappyPath()
+#
+# File: test_save_file.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Testing normal expected scenarios of save_file operation."""
+
 import pytest
 import os
 from scripts.dev.save_file import save_file

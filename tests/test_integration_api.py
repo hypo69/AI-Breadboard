@@ -1,6 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Integration Api
+# =============================================================================
+# Description:
+#   Integration tests for API endpoints.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_integration_api import TestChatAPI
+#
+#     service = TestChatAPI()
+#
+# File: test_integration_api.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Integration tests for API endpoints.
 
 Tests for chat, auth, control, TTS, and admin API endpoints."""
+
 import pytest
 from httpx import AsyncClient, ASGITransport
 from unittest.mock import Mock, AsyncMock, patch

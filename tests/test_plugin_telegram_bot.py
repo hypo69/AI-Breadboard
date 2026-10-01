@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Plugin Telegram Bot
+# =============================================================================
+# Description:
+#   Test suite for plugins.base, plugins.__init__, and plugins.telegram_bot.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_plugin_telegram_bot import test_base_plugin_interface
+#
+#     res = test_base_plugin_interface()
+#
+# File: test_plugin_telegram_bot.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Test suite for plugins.base, plugins.__init__, and plugins.telegram_bot."""
+
 from pathlib import Path
 import pytest
 from plugins import BasePlugin, load_plugins

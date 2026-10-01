@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard RAG - User Rag Module
+# =============================================================================
+# Description:
+#   Поиск релевантного контекста из предшествующих обсуждений конкретной RAG базы.
+#
+# Usage Examples:
+#   Python API:
+#     from src.rag.user_rag import save_user_approved_response
+#
+#     res = save_user_approved_response()
+#     print(res)
+#
+# File: user_rag.py
+# Project: ai-breadboard
+# Package: src.rag
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Поиск релевантного контекста из предшествующих обсуждений конкретной RAG базы."""
+
 import asyncio
 from typing import Any, Dict, List
 from logger import logger

@@ -1,8 +1,28 @@
-"""
-Реализация роутера `router_system_logs`.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - Router System Logs Module
+# =============================================================================
+# Description:
+#   Реализация роутера `router_system_logs`.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.routers.core.router_system_logs import ExplainRequest
+#
+#     service = ExplainRequest()
+#
+# File: router_system_logs.py
+# Project: ai-breadboard
+# Package: src.api.routers.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Реализация роутера `router_system_logs`.
 Включает модель `ExplainRequest` и функцию `explain_event`, которые предоставляют
-описания и рекомендации для системных журналов Windows.
-"""
+описания и рекомендации для системных журналов Windows."""
+
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from typing import List, Optional

@@ -1,4 +1,27 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Tab-Core Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля tab-core.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/tab-core.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { normalizeTabId, setupTabClicks } from '/src/api/webgui/js/tab-core.js';
+ *
+ * File: tab-core.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * tab-core.js — Единая система управления вкладками, их жизненным циклом и поллингом.
  * Архитектура: UI_ARCHITECTURE.md
  * 

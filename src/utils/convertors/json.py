@@ -1,12 +1,33 @@
-"""
-JSON data conversion module.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Json Module
+# =============================================================================
+# Description:
+#   JSON data conversion module.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.convertors.json import json2csv
+#
+#     res = json2csv()
+#     print(res)
+#
+# File: json.py
+# Project: ai-breadboard
+# Package: src.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""JSON data conversion module.
 
 Functions:
     - `json2csv`: Convert JSON data to CSV format.
     - `json2ns`: Convert JSON data to SimpleNamespace object.
     - `json2xml`: Convert JSON data to XML format.
-    - `json2xls`: Convert JSON data to XLS format.
-"""
+    - `json2xls`: Convert JSON data to XLS format."""
+
 import json
 import csv
 from types import SimpleNamespace
@@ -16,7 +37,7 @@ from src.utils.csv import save_csv_file
 from src.utils.jjson import j_dumps, j_loads, j_loads_ns
 from src.utils.xls import save_xls_file
 from src.utils.convertors.dict import dict2xml
-from logger.logger import logger
+from logger import logger
 
 def json2csv(json_data: str | list | dict | Path, csv_file_path: str | Path) -> bool:
     """

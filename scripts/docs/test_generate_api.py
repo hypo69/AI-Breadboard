@@ -1,12 +1,34 @@
-"""
-Unit-тесты для скрипта generate_api.py
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Docs - Test Generate Api
+# =============================================================================
+# Description:
+#   Unit-тесты для скрипта generate_api.py
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.docs.test_generate_api
+#   Python API:
+#     from scripts.docs.test_generate_api import TestDocstringParser
+#
+#     service = TestDocstringParser()
+#
+# File: test_generate_api.py
+# Project: ai-breadboard
+# Package: scripts.docs
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
+"""Unit-тесты для скрипта generate_api.py
 
 Тестирует:
 - Парсинг Google-style docstrings
 - Генерацию Markdown из документации
 - Обработку функций и классов
-- Создание индекса API
-"""
+- Создание индекса API"""
+
 import unittest
 import ast
 import tempfile

@@ -1,4 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Client Module
+# =============================================================================
+# Description:
+#   Результат выполнения запроса к Gemini CLI.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.providers.gemini_cli.client import GeminiCliResponse
+#
+#     service = GeminiCliResponse()
+#     result = service.success()
+#     print(result)
+#
+# File: client.py
+# Project: ai-breadboard
+# Package: src.ai.providers.gemini_cli
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Результат выполнения запроса к Gemini CLI."""
+
 import asyncio
 import json
 import os
@@ -12,7 +37,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, AsyncGenerator, Generator, List, Optional, Union
-from logger.logger import logger
+from logger import logger
 
 @dataclass
 class GeminiCliResponse:

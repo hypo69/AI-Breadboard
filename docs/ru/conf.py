@@ -1,12 +1,32 @@
-"""
-Конфигурация Sphinx для документации AI-Breadboard на русском языке.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Docs Ru - Conf
+# =============================================================================
+# Description:
+#   Конфигурация Sphinx для документации AI-Breadboard на русском языке.
+#
+# Usage Examples:
+#   Python API:
+#     from docs.ru.conf import setup
+#
+#     res = setup()
+#
+# File: conf.py
+# Project: ai-breadboard
+# Package: docs.ru
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:29
+# =============================================================================
+
+"""Конфигурация Sphinx для документации AI-Breadboard на русском языке.
 
 Параметры конфигурации для сборки документации с поддержкой:
 - Русского языка локализации
 - Автоматической генерации API-документации
 - Темизации
-- Расширений
-"""
+- Расширений"""
+
 import os
 import sys
 from datetime import datetime

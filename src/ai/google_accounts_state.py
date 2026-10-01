@@ -1,11 +1,35 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Google Accounts State Module
+# =============================================================================
+# Description:
+#   Ensure secrets and tokens directories exist.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.google_accounts_state import list_google_accounts
+#
+#     res = list_google_accounts()
+#     print(res)
+#
+# File: google_accounts_state.py
+# Project: ai-breadboard
+# Package: src.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Ensure secrets and tokens directories exist."""
+
 import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from header import __root__
-from logger.logger import logger
+from logger import logger
 _SECRETS_DIR: Path = __root__ / 'src' / 'secrets'
 _OAUTH_FILES_DIR: Path = _SECRETS_DIR / 'google_ouath_files'
 _TOKENS_DIR: Path = _SECRETS_DIR / 'google_oauth_tokens'

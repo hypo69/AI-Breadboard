@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test File Recovery Router
+# =============================================================================
+# Description:
+#   Тесты роутера и интеграции File Recovery (R-Studio).
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_file_recovery_router import TestRecoveryRouterHappyPath
+#
+#     service = TestRecoveryRouterHappyPath()
+#
+# File: test_file_recovery_router.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Тесты роутера и интеграции File Recovery (R-Studio)."""
+
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch

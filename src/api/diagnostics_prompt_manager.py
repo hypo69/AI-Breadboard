@@ -1,5 +1,29 @@
-"""Менеджер шаблонов промптов для аудита и объяснения таблиц."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - Diagnostics Prompt Manager Module
+# =============================================================================
+# Description:
+#   Менеджер шаблонов промптов для аудита и объяснения таблиц.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.diagnostics_prompt_manager import DiagnosticPromptTemplate
+#
+#     service = DiagnosticPromptTemplate()
+#     result = service.format_prompt()
+#     print(result)
+#
+# File: diagnostics_prompt_manager.py
+# Project: ai-breadboard
+# Package: src.api
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Менеджер шаблонов промптов для аудита и объяснения таблиц."""
+
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional

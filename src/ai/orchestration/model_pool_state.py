@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Model Pool State Module
+# =============================================================================
+# Description:
+#   Ensure that the secrets directory exists on the filesystem.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.orchestration.model_pool_state import load_model_pool
+#
+#     res = load_model_pool()
+#     print(res)
+#
+# File: model_pool_state.py
+# Project: ai-breadboard
+# Package: src.ai.orchestration
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Ensure that the secrets directory exists on the filesystem."""
+
 import json
 import os
 import random
@@ -6,7 +30,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from header import __root__
-from logger.logger import logger
+from logger import logger
 _SECRETS_DIR: Path = __root__ / 'src' / 'secrets'
 _POOLS_FILE: Path = _SECRETS_DIR / 'model_pools.json'
 _DEFAULT_POOLS: Dict[str, List[str]] = {'gemini': ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-pro-latest'], 'gemini_cli': ['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite-preview'], 'agy': ['agy-flash', 'agy-pro'], 'ollama': ['llama3', 'mistral', 'codellama', 'gemma', 'phi3']}

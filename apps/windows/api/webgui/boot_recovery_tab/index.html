@@ -1,0 +1,142 @@
+<!--
+=============================================================================
+Process Name: Windows Web Interface - Index View
+=============================================================================
+Description:
+  Шаблон клиентского веб-интерфейса index.
+
+Usage Examples:
+    Web Route:
+      /windows/api/webgui/boot_recovery_tab/index.html
+
+    Tab Frame Integration:
+      <iframe src="/windows/api/webgui/boot_recovery_tab/index.html" class="w-100 h-100 border-0"></iframe>
+
+File: index.html
+Project: ai-breadboard
+Package: windows/api/webgui/boot_recovery_tab
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-01 13:04:40
+=============================================================================
+-->
+
+<!-- Boot & Recovery Management Tab -->
+<div class="container-fluid py-2 px-3">
+  <!-- Top Stat Cards -->
+  <div class="row g-2 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+        <div class="text-muted small text-uppercase fw-semibold">Среда восстановления WinRE 🛡️</div>
+        <div class="fs-4 fw-bold mt-1 text-success" id="br-winre-status">--</div>
+        <div class="small text-muted mt-1" id="br-winre-sub">reagentc.exe</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+        <div class="text-muted small text-uppercase fw-semibold">Таймаут меню BCD ⏱️</div>
+        <div class="fs-4 fw-bold mt-1 text-info" id="br-bcd-timeout">-- сек</div>
+        <div class="small text-muted mt-1" id="br-bcd-sub">bcdedit /timeout</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+        <div class="text-muted small text-uppercase fw-semibold">Текущий загрузчик 🚀</div>
+        <div class="fs-4 fw-bold mt-1 text-primary" id="br-current-loader">--</div>
+        <div class="small text-muted mt-1" id="br-loader-sub">Windows Boot Manager</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+        <div class="text-muted small text-uppercase fw-semibold">Целостность Boot Sector 🔍</div>
+        <div class="fs-4 fw-bold mt-1 text-warning" id="br-boot-status">OK</div>
+        <div class="small text-muted mt-1" id="br-boot-sub">bootrec / bcdboot</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Bar -->
+  <div class="d-flex align-items-center justify-content-between mb-3 p-2 bg-dark rounded border border-secondary flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" id="br-refresh-btn">
+        <i class="bi bi-arrow-clockwise"></i>
+        <span>Обновить BCD</span>
+      </button>
+      <button class="btn btn-sm btn-outline-success d-flex align-items-center gap-1.5" id="br-winre-enable-btn">
+        <i class="bi bi-shield-check"></i>
+        <span>Включить WinRE</span>
+      </button>
+      <button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1.5" id="br-winre-info-btn">
+        <i class="bi bi-info-circle"></i>
+        <span>Инфо WinRE</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Details & Tools Grid -->
+  <div class="row g-3">
+    <div class="col-12 col-lg-7">
+      <div class="card bg-dark text-white border-secondary shadow-sm">
+        <div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
+          <span class="fw-semibold"><i class="bi bi-list-columns text-primary me-2"></i>Записи хранилища BCD</span>
+          <span class="badge bg-secondary" id="br-entries-badge">0 записей</span>
+        </div>
+        <div class="card-body p-0 table-responsive" style="max-height: 420px; overflow-y: auto;">
+          <table class="table table-dark table-hover table-striped align-middle mb-0 small" id="br-entries-table">
+            <thead>
+              <tr class="text-secondary">
+                <th>Идентификатор (GUID)</th>
+                <th>Описание</th>
+                <th>Устройство</th>
+                <th>Путь</th>
+                <th class="text-end">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="br-entries-tbody">
+              <tr><td colspan="5" class="text-center text-muted py-3">Опрос записей загрузчика BCD...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+      <div class="card bg-dark text-white border-secondary shadow-sm mb-3">
+        <div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
+          <span class="fw-semibold"><i class="bi bi-wrench-adjustable text-warning me-2"></i>Инструменты восстановления</span>
+        </div>
+        <div class="card-body p-3">
+          <div class="mb-3">
+            <label class="form-label small text-muted">Команда восстановления:</label>
+            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="br-action-select">
+              <option value="reagentc_info">Проверить состояние WinRE (reagentc /info)</option>
+              <option value="reagentc_enable">Активировать WinRE (reagentc /enable)</option>
+              <option value="bcdedit_enum">Перечислить все записи (bcdedit /enum all)</option>
+              <option value="bcdboot_repair">Обновить системные файлы загрузки (bcdboot C:\Windows)</option>
+            </select>
+          </div>
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="br-dry-run-switch" checked>
+              <label class="form-check-label small text-muted" for="br-dry-run-switch">Безопасный режим (Dry Run)</label>
+            </div>
+            <button class="btn btn-sm btn-success px-3" id="br-execute-btn">
+              <i class="bi bi-play-fill"></i> Выполнить
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Log Output -->
+      <div class="card bg-dark text-white border-secondary shadow-sm">
+        <div class="card-header border-secondary py-2 px-3 d-flex align-items-center justify-content-between">
+          <span class="small fw-semibold text-muted"><i class="bi bi-terminal me-1"></i>Консольный вывод</span>
+          <button class="btn btn-link btn-sm text-decoration-none text-muted p-0" id="br-clear-log-btn">Очистить</button>
+        </div>
+        <div class="card-body p-2">
+          <pre class="mb-0 small bg-black text-light p-2 rounded" id="br-console-output" style="max-height: 180px; overflow-y: auto; font-family: Consolas, monospace; font-size: 0.78rem;">Среда BCD и WinRE готова к операциям.</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

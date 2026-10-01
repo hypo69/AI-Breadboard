@@ -1,5 +1,27 @@
-"""
-Unit-тесты для скрипта check_links.py
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Docs - Test Check Links
+# =============================================================================
+# Description:
+#   Unit-тесты для скрипта check_links.py
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.docs.test_check_links
+#   Python API:
+#     from scripts.docs.test_check_links import TestLinkCheckerExtractLinks
+#
+#     service = TestLinkCheckerExtractLinks()
+#
+# File: test_check_links.py
+# Project: ai-breadboard
+# Package: scripts.docs
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
+"""Unit-тесты для скрипта check_links.py
 
 Тестирует:
 - Извлечение ссылок из Markdown
@@ -16,8 +38,8 @@ Unit-тесты для скрипта check_links.py
 Покрытие:
     - 38+ unit-тестов
     - 7 классов тестов для разных функциональностей
-    - Интеграционные тесты с реальной структурой документации
-"""
+    - Интеграционные тесты с реальной структурой документации"""
+
 import tempfile
 import unittest
 from pathlib import Path

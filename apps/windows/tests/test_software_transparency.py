@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Tests - Test Software Transparency
+# =============================================================================
+# Description:
+#   Тесты модуля инспекции прозрачности ПО в составе apps/windows.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.tests.test_software_transparency import test_models_creation
+#
+#     res = test_models_creation()
+#
+# File: test_software_transparency.py
+# Project: ai-breadboard
+# Package: apps.windows.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """Тесты модуля инспекции прозрачности ПО в составе apps/windows."""
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient

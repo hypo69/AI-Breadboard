@@ -1,9 +1,32 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Errors Module
+# =============================================================================
+# Description:
+#   Mixin class for centralized error handling in GoogleGenerativeAI.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.gemini.errors import GoogleGenerativeAIErrorMixin
+#
+#     service = GoogleGenerativeAIErrorMixin()
+#
+# File: errors.py
+# Project: ai-breadboard
+# Package: src.ai.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Mixin class for centralized error handling in GoogleGenerativeAI."""
+
 from typing import Any, Optional
 import asyncio
 import re
 import time
 import requests
-from logger.logger import logger
+from logger import logger
 from src.ai.orchestration.model_error_hub import record_model_error
 from src.ai.orchestration.model_pool_state import mark_model_exhausted, switch_model
 from .core import add_unsupported_model

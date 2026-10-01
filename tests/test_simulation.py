@@ -1,4 +1,25 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Simulation
+# =============================================================================
+# Description:
+#   Test extracting counterparty from various natural language queries.
+#
+# Usage Examples:
+#   Python API:
+#     import tests.test_simulation as test_simulation
+#
+# File: test_simulation.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Test extracting counterparty from various natural language queries."""
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from src.ai.simulation import BaseSimulationGenerator, ContractSimulationGenerator, EntityType, GenericSimulationGenerator, SimulationEngine, SimulationRequest, SimulationResult, enrich_simulation_with_llm, get_simulation_engine

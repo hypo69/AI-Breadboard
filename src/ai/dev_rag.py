@@ -1,6 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Dev Rag Module
+# =============================================================================
+# Description:
+#   Development RAG index builder for code and documentation.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.dev_rag import build_dev_rag
+#
+#     res = build_dev_rag()
+#     print(res)
+#
+# File: dev_rag.py
+# Project: ai-breadboard
+# Package: src.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """Development RAG index builder for code and documentation.
 
 Indexes Python and Markdown files from specified directories for semantic search."""
+
 import json
 import os
 from pathlib import Path

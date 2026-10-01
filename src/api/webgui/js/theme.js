@@ -1,4 +1,27 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Theme Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля theme.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/theme.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { getThemeMode, getResolvedTheme, setTheme } from '/src/api/webgui/js/theme.js';
+ *
+ * File: theme.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * theme.js — Theme management module (Light / Dark / System)
  * 
  * Supports 3 modes:

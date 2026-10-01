@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Apps Server Mode
+# =============================================================================
+# Description:
+#   Tests for app server configuration and shared/dedicated mode resolution.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_apps_server_mode import TestAppConfigs
+#
+#     service = TestAppConfigs()
+#
+# File: test_apps_server_mode.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Tests for app server configuration and shared/dedicated mode resolution."""
+
 import json
 from pathlib import Path
 from types import SimpleNamespace

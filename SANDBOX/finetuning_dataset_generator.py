@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Sandbox - Finetuning Dataset Generator
+# =============================================================================
+# Description:
+#   Generate golden reference dataset for instruction fine-tuning.
+#
+# Usage Examples:
+#   CLI:
+#     python -m SANDBOX.finetuning_dataset_generator
+#   Python API:
+#     from SANDBOX.finetuning_dataset_generator import generate_sample_dataset
+#
+#     res = generate_sample_dataset()
+#
+# File: finetuning_dataset_generator.py
+# Project: ai-breadboard
+# Package: SANDBOX
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:04
+# =============================================================================
+
+"""Generate golden reference dataset for instruction fine-tuning."""
+
 import json
 from pathlib import Path
 from typing import Dict, List, Any

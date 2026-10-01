@@ -1,6 +1,26 @@
-"""
-Tests for core/tts module
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Tts
+# =============================================================================
+# Description:
+#   Tests for core/tts module
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_tts import TestTTSEdge
+#
+#     service = TestTTSEdge()
+#
+# File: test_tts.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Tests for core/tts module"""
+
 import pytest
 import asyncio
 from unittest.mock import Mock, patch, AsyncMock

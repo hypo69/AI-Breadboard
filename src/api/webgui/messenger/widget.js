@@ -1,4 +1,24 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Widget Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля widget.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/messenger/widget.js?v=20261001_v1" type="module"></script>
+ *
+ * File: widget.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/messenger
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * AI Breadboard Floating Messenger Widget
  * Zero-dependency embeddable script for any website or WordPress.
  */

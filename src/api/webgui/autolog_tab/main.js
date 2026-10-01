@@ -1,18 +1,21 @@
 /**
- * ===============================================================================
- * Process Name: Auto-Logging and Telemetry Sensors Interface Controller
- * ===============================================================================
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Main Script
+ * =============================================================================
  * Description:
- *   Модульный контроллер вкладки управления автологгированием и телеметрией в /tc.
- *   Обеспечивает опрос REST API (/api/autolog), сохранение объединенной конфигурации,
- *   графическое редактирование сенсоров, метрик, JSON-редактор и выгрузку CSV-файлов.
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/autolog_tab/main.js?v=20261001_v1" type="module"></script>
  *
  * File: main.js
- * Project: AI-Breadboard
- * Module: WebInterface.AutoLogTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/autolog_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * ===============================================================================
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
  */
 
 (function () {
@@ -40,7 +43,6 @@
   const APP_META = {
     system_inspector: { icon: '🖥️', title: i18n.t('auto_system_inspector__53c369') },
     hardware_monitor: { icon: '⚡', title: i18n.t('auto_hardware_sensors__e193a8') },
-    librehardwaremonitor: { icon: '🌡️', title: 'LibreHardwareMonitor API' },
     website_monitor: { icon: '🌐', title: 'Website Intelligence & Heartbeat' },
     gcloud_monitor: { icon: '☁️', title: 'Google Cloud Observability' },
     cloudflared_monitor: { icon: '🛡️', title: 'Cloudflared Tunnel Supervisor' },

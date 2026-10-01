@@ -1,0 +1,134 @@
+<!--
+=============================================================================
+Process Name: AI-Breadboard Web Interface - Index View
+=============================================================================
+Description:
+  Шаблон веб-интерфейса системного модуля (index).
+
+Usage Examples:
+    Web Route:
+      /src/api/webgui/servicing_integrity_tab/index.html
+
+File: index.html
+Project: ai-breadboard
+Package: src/api/webgui/servicing_integrity_tab
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-01 13:13:56
+=============================================================================
+-->
+
+<!-- Servicing & Component Integrity Tab -->
+<div class="container-fluid py-2 px-3">
+  <!-- Top Stat Cards -->
+  <div class="row g-2 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+        <div class="text-muted small text-uppercase fw-semibold">Хранилище компонентов WinSxS 📦</div>
+        <div class="fs-4 fw-bold mt-1 text-info" id="si-winsxs-size">--</div>
+        <div class="small text-muted mt-1" id="si-winsxs-sub">DISM AnalyzeComponentStore</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+        <div class="text-muted small text-uppercase fw-semibold">Рекомендуется очистка 🧹</div>
+        <div class="fs-4 fw-bold mt-1 text-warning" id="si-cleanup-recommended">--</div>
+        <div class="small text-muted mt-1" id="si-cleanup-sub">StartComponentCleanup</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+        <div class="text-muted small text-uppercase fw-semibold">Целостность файлов SFC 🛡️</div>
+        <div class="fs-4 fw-bold mt-1 text-success" id="si-sfc-status">OK</div>
+        <div class="small text-muted mt-1" id="si-sfc-sub">sfc /scannow</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+        <div class="text-muted small text-uppercase fw-semibold">Состояние образа DISM 🩺</div>
+        <div class="fs-4 fw-bold mt-1 text-primary" id="si-dism-status">Healthy</div>
+        <div class="small text-muted mt-1" id="si-dism-sub">CheckHealth / ScanHealth</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Bar -->
+  <div class="d-flex align-items-center justify-content-between mb-3 p-2 bg-dark rounded border border-secondary flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" id="si-refresh-btn">
+        <i class="bi bi-arrow-clockwise"></i>
+        <span>Обновить состояние</span>
+      </button>
+      <button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1.5" id="si-dism-check-btn">
+        <i class="bi bi-heart-pulse"></i>
+        <span>DISM CheckHealth</span>
+      </button>
+      <button class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1.5" id="si-sfc-scan-btn">
+        <i class="bi bi-shield-check"></i>
+        <span>SFC Scannow</span>
+      </button>
+      <button class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1.5" id="si-winsxs-clean-btn">
+        <i class="bi bi-trash"></i>
+        <span>Очистить WinSxS</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="row g-3">
+    <div class="col-12 col-lg-6">
+      <div class="card bg-dark text-white border-secondary shadow-sm mb-3">
+        <div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
+          <span class="fw-semibold"><i class="bi bi-tools text-primary me-2"></i>Параметры обслуживания образа</span>
+        </div>
+        <div class="card-body p-3">
+          <div class="mb-3">
+            <label class="form-label small text-muted">Выберите операцию обслуживания:</label>
+            <select class="form-select form-select-sm bg-dark text-white border-secondary" id="si-action-select">
+              <option value="dism_check_health">DISM: Быстрая проверка повреждений (/CheckHealth)</option>
+              <option value="dism_scan_health">DISM: Полное сканирование целостности (/ScanHealth)</option>
+              <option value="dism_restore_health">DISM: Восстановление поврежденного образа (/RestoreHealth)</option>
+              <option value="dism_analyze_component_store">DISM: Анализ размера хранилища WinSxS (/AnalyzeComponentStore)</option>
+              <option value="dism_start_component_cleanup">DISM: Очистка старых версий компонентов (/StartComponentCleanup)</option>
+              <option value="dism_reset_base">DISM: Фиксация базы обновлений (/ResetBase)</option>
+              <option value="sfc_scannow">SFC: Проверка и восстановление системных файлов (sfc /scannow)</option>
+              <option value="sfc_verifyonly">SFC: Только проверка без восстановления (sfc /verifyonly)</option>
+            </select>
+          </div>
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="si-dry-run-switch" checked>
+              <label class="form-check-label small text-muted" for="si-dry-run-switch">Безопасный режим (Dry Run)</label>
+            </div>
+            <button class="btn btn-sm btn-success px-3" id="si-execute-btn">
+              <i class="bi bi-play-fill"></i> Запустить операцию
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Info Card -->
+      <div class="card bg-dark text-white border-secondary shadow-sm">
+        <div class="card-header border-secondary py-2 px-3">
+          <span class="small fw-semibold text-info"><i class="bi bi-info-circle me-1"></i>Справочная информация</span>
+        </div>
+        <div class="card-body p-3 small text-muted">
+          <p class="mb-2"><strong class="text-light">DISM</strong> (Deployment Image Servicing and Management) обслуживает компоненты Windows и исправит ошибки хранилища манифестов.</p>
+          <p class="mb-0"><strong class="text-light">SFC</strong> (System File Checker) сверяет контрольные суммы системных dll и exe файлов с резервными копиями в WinSxS.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+      <div class="card bg-dark text-white border-secondary shadow-sm h-100">
+        <div class="card-header border-secondary py-2 px-3 d-flex align-items-center justify-content-between">
+          <span class="small fw-semibold text-muted"><i class="bi bi-terminal me-1"></i>Журнал выполнения обслуживания</span>
+          <button class="btn btn-link btn-sm text-decoration-none text-muted p-0" id="si-clear-log-btn">Очистить</button>
+        </div>
+        <div class="card-body p-2 d-flex flex-column">
+          <pre class="mb-0 small bg-black text-light p-2 rounded flex-grow-1" id="si-console-output" style="min-height: 280px; max-height: 480px; overflow-y: auto; font-family: Consolas, monospace; font-size: 0.78rem;">Готов к диагностике компонентов.</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,5 +1,29 @@
-"""Interactive Rich-based terminal dashboard for Website Intelligence Monitor."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Website_Monitor - Tui
+# =============================================================================
+# Description:
+#   Interactive Rich-based terminal dashboard for Website Intelligence Monitor.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.website_monitor.tui
+#   Python API:
+#     from apps.website_monitor.tui import create_header
+#
+#     res = create_header()
+#
+# File: tui.py
+# Project: ai-breadboard
+# Package: apps.website_monitor
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Interactive Rich-based terminal dashboard for Website Intelligence Monitor."""
+
 import time
 from typing import Any
 from rich.console import Console

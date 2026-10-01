@@ -1,5 +1,27 @@
-"""Модуль аудита установленного ПО Windows, истории запусков и анализа назначения приложений."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core - Software Audit
+# =============================================================================
+# Description:
+#   Модуль аудита установленного ПО Windows, истории запусков и анализа назначения приложений.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.software_audit import SoftwareCategorizer
+#
+#     service = SoftwareCategorizer()
+#
+# File: software_audit.py
+# Project: ai-breadboard
+# Package: apps.windows.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Модуль аудита установленного ПО Windows, истории запусков и анализа назначения приложений."""
+
 import codecs
 import csv
 import os

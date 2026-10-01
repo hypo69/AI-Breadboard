@@ -1,5 +1,27 @@
-"""AI-анализатор первопричин системных проблем Windows."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Ai - Root Cause Analyzer
+# =============================================================================
+# Description:
+#   AI-анализатор первопричин системных проблем Windows.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.ai.root_cause_analyzer import WindowsAIRootCauseAnalyzer
+#
+#     service = WindowsAIRootCauseAnalyzer()
+#
+# File: root_cause_analyzer.py
+# Project: ai-breadboard
+# Package: apps.windows.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""AI-анализатор первопричин системных проблем Windows."""
+
 from typing import Any, Optional
 from logger import logger
 from apps.windows.ai.prompt_templates import build_root_cause_prompt, build_system_prompt

@@ -1,139 +1,37 @@
-# Система сбора и агрегации телеметрии Windows
+# Windows Storage Sensor (Нативные сенсоры накопителей Windows)
 
-Система предназначена для непрерывного мониторинга, сбора, агрегации и аналитической диагностики состояния операционной системы и аппаратного обеспечения Windows.
+## Описание
+Модуль нативной диагностики накопителей (NVMe, SATA SSD, HDD, Storage Spaces, USB-накопителей) для Windows без зависимости от внешних утилит (таких как Smartmontools или AIDA64).
 
-Архитектура системы состоит из двух главных компонентов:
-1. **Непрерывный сервис телеметрии (`apps.windows.telemetry`)** — фоновый сборчик быстрых метрик (ЦП, RAM, дисковый I/O, сеть, процессы) и тяжелых сенсоров с инкрементальным сохранением в SQLite БД (`telemetry.db`).
-2. **Аналитический центр аудита и диагностики (`apps.windows`)** — доменный движок разовых и глубоких проверок по 15 направлениям (драйверы, безопасность, производительность, целостность, диски и т. д.) с расчетом индекса здоровья (*Health Score*).
+## Источники данных
+1. **WMI / CIM (`root/cimv2`)**:
+   - `Win32_DiskDrive`: физические устройства, размеры, интерфейсы, базовый статус.
+   - `Win32_DiskPartition` и `Win32_LogicalDisk`: разделы и логические диски.
+   - `Win32_Volume`: файловые тома.
+2. **Microsoft Storage Management (`root/Microsoft/Windows/Storage`)**:
+   - `MSFT_PhysicalDisk`: тип шины (BusType: NVMe, SATA, SAS, USB), тип носителя (MediaType: SSD, HDD), серийные номера, статус здоровья (`HealthStatus`, `OperationalStatus`).
+   - `MSFT_VirtualDisk`, `MSFT_StoragePool`, `MSFT_Partition`: дисковые пулы и виртуальные диски.
+   - `StorageReliabilityCounter`: процент износа (Wear), температура дисков в °C, общее время наработки (PowerOnHours), счетчики ошибок чтения/записи (`ReadErrorsTotal`, `WriteErrorsTotal`), максимальные задержки (`ReadLatencyMax`, `WriteLatencyMax`).
+3. **Счетчики производительности Windows (`PhysicalDisk`)**:
+   - Скорости чтения/записи (Bytes/sec), длина очереди (`Current Disk Queue Length`), среднее время отклика (`Avg. Disk sec/Read`, `Avg. Disk sec/Write`).
+4. **Журнал событий Windows (Event Log)**:
+   - События драйверов Storport, файловых систем NTFS/ReFS и разбиения разделов.
 
----
+## Использование в коде
 
-## 🚀 Быстрый запуск
+```python
+from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
 
-### 1. Быстрая проверка (Quick Check)
-Минимальная нагрузка на систему, быстрый срез основных метрик за секунды:
+sensor = WindowsStorageSensor()
+disks = sensor.get_physical_disks()
 
-* **Экспресс-аудит системы (разовый запуск):**
-  ```bash
-  python cli.py --mode quick
-  ```
-  *Выполняет поверхностный срез ключевых подсистем без глубокого сканирования файловых структур.*
-
-* **Легковесный фоновый сервис телеметрии (Minimal Mode):**
-  ```bash
-  python main.py --mode minimal --interval 5.0
-  ```
-  *Потребляет минимальное время ЦП (~28 мс на замер) и ~120 МБ RAM, фиксируя базовую производительность и топ процессов.*
-
----
-
-### 2. Полная проверка (Full Check)
-Максимально глубокий аудит всех 15 доменов системы и полный опрос всех доступных аппаратных сенсоров:
-
-* **Полный аудит системы с расчетом Health Score (разовый запуск):**
-  ```bash
-  python cli.py --mode full
-  ```
-  *Сканирует процессы, драйверы, диски, реестр, автозагрузку, правила Defender, планировщик задач, службы и журнал событий.*
-
-* **Полный фоновый сервис телеметрии (Full Mode):**
-  ```bash
-  python main.py --mode full --interval 5.0 --top-processes 20
-  ```
-  *Опрашивает полный стек сенсоров (WMI, LHM, SMART, GPU Prober, сетевые сокеты) на каждом тике.*
-
----
-
-## 🛠️ Параметры и ключи командной строки
-
-### 1. Сервис телеметрии (`main.py`)
-
-Запуск фонового сбора метрик и сохранения снимков в SQLite БД.
-
-```bash
-python main.py [Параметры]
+for disk in disks:
+    print(f"Диск: {disk.friendly_name} ({disk.bus_type} {disk.media_type})")
+    print(f"  Здоровье: {disk.health_status}, Износ: {disk.wear_percentage}%")
+    print(f"  Температура: {disk.temperature_c}°C, Наработка: {disk.power_on_hours} ч.")
 ```
 
-| Ключ / Параметр | Тип / Значения | Описание |
-| :--- | :--- | :--- |
-| `--mode` | `minimal`, `hybrid`, `full` | **Режим сбора:**<br>• `minimal`: только базовые метрики хоста (быстро, <0.2с);<br>• `hybrid`: базовые метрики каждые N сек + тяжелые сенсоры периодически (*по умолчанию*);<br>• `full`: полный стек сенсоров на каждом тике. |
-| `--minimal` | *флаг* | Быстрый запуск легковесного режима (эквивалентно `--mode minimal`). |
-| `--interval` | `float` (сек) | Интервал сбора быстрой телеметрии в секундах (по умолчанию: `5.0`). |
-| `--heavy-interval` | `float` (сек) | Интервал сбора тяжелых сенсоров для режима `hybrid` (по умолчанию: `60.0`). |
-| `--top-processes` | `int` | Количество сохраняемых процессов с наибольшей нагрузкой (по умолчанию: `10`). |
-| `--config` | `string` (путь) | Путь к файлу конфигурации `config.json`. |
-| `--log-dir` | `string` (путь) | Директория для хранения логов и базы данных SQLite (`telemetry.db`). |
-| `--verbose`, `-v` | *флаг* | Включение подробного логирования уровня `DEBUG`. |
-
----
-
-### 2. Диагностический центр и аудит (`cli.py` / `apps.windows`)
-
-Выполнение разовых аудитов, расследование инцидентов и запуск GUI/TUI интерфейсов.
-
-```bash
-python cli.py [Параметры]
+## CLI
+```powershell
+python apps/windows/storage_sensors/windows_storage_sensor.py --output storage_snapshot.json
 ```
-
-| Ключ / Параметр | Тип / Значения | Описание |
-| :--- | :--- | :--- |
-| `--mode` | `quick`, `full`, `security`, `performance`, `drivers`, `clean`, `postinstall`, `inspector`, `dashboard`, `server` | **Режим работы аудита:**<br>• `quick`: экспресс-проверка;<br>• `full`: полный аудит по 15 доменам;<br>• `security`: аудит Defender, UAC, IFEO, WMI;<br>• `performance`: нагрузка, RAM, автозагрузка Run;<br>• `drivers`: сбои PnP устройств (Code 10/43);<br>• `clean`: временные файлы, кэш Windows Update;<br>• `postinstall`: готовность ОС к эксплуатации. |
-| `--investigate` | `string` | Автоматическое расследование причины проблемы по описанию симптома (например: `--investigate "высокая нагрузка CPU"`). |
-| `--json` | *флаг* | Вывод результатов аудита в структурированном формате JSON. |
-| `--tui` | *флаг* | Запуск интерактивного консольного дашборда (Rich TUI). |
-| `--hardware`, `--hw-monitor` | *флаг* | Интерактивный TUI монитор оборудования в реальном времени. |
-| `--hw-json` | *флаг* | Вывод мгновенного слепка состояния оборудования в JSON. |
-| `--cross-check` | *флаг* | Запуск перекрестной проверки данных оборудования между провайдерами (Native, WMI, LHM, HWiNFO). |
-| `--server` | *флаг* | Запуск HTTP API сервера FastAPI (по умолчанию порт `8105`). |
-| `--port` | `int` | Порт для FastAPI сервера. |
-
----
-
-### 3. Исследование логов и аналитика (`apps/windows/telemetry/research/cli.py`)
-
-Генерация интерактивных HTML-дашбордов и статистических отчетов по накопленным логам.
-
-```bash
-python apps/windows/telemetry/research/cli.py --source logs/telemetry --output report.html --format html
-```
-
-| Ключ / Параметр | Тип / Значения | Описание |
-| :--- | :--- | :--- |
-| `--source`, `-s` | `string` (путь) | Путь к директории с логами, файлу `.jsonl` или SQLite БД. |
-| `--output`, `-o` | `string` (путь) | Путь для сохранения отчета (по умолчанию: `telemetry_research_report.html`). |
-| `--format`, `-f` | `html`, `json`, `svg`, `summary` | Формат вывода отчета (по умолчанию: `html`). |
-
----
-
-## ⚙️ Конфигурация (`config.json`)
-
-Основные параметры сервиса телеметрии настраиваются в файле `apps/windows/telemetry/config.json`:
-
-```json
-{
-  "mode": "hybrid",
-  "interval_seconds": 5.0,
-  "heavy_interval_seconds": 60.0,
-  "top_processes": 10,
-  "process_mode": "top_n",
-  "low_priority": true,
-  "heavy_collectors": {
-    "hardware_sensors": true,
-    "storage_smart": true,
-    "network_ping": true,
-    "inventory_wmi": false
-  },
-  "watch_directories": [
-    "C:\\Users\\Default\\Documents"
-  ]
-}
-```
-
----
-
-## 📊 Структура сохраняемых данных
-
-Собранная телеметрия и отчеты сохраняются в директорию логов (по умолчанию `%APPDATA%\AI-Breadboard\apps\windows\telemetry\logs\`):
-* **`telemetry.db`** — персистентная база данных SQLite (системные снимки, процессы, события, аудит железа, ротация и 2-минутные/суточные агрегаты).
-* **`telemetry_service.log`** — журнал работы фонового сервиса.
-* **`telemetry_research_report.html`** — интерактивный аналитический отчет с графиками EDA и детекцией аномалий.

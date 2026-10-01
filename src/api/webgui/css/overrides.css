@@ -1,3 +1,23 @@
+/**
+ * =============================================================================
+ * Process Name: AI-Breadboard Styles - Overrides Stylesheet
+ * =============================================================================
+ * Description:
+ *   Таблица стилей оформления компонентов интерфейса (overrides).
+ *
+ * Usage Examples:
+ *   HTML Link Tag:
+ *     <link rel="stylesheet" href="/src/api/webgui/css/overrides.css?v=20261001_v1">
+ *
+ * File: overrides.css
+ * Project: ai-breadboard
+ * Package: src/api/webgui/css
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
 /* ═══════════════════════════════════════════════════════════════════════════
    THEME OVERRIDES & COMPATIBILITY — AI Breadboard WebGUI
    Адаптивные переопределения Bootstrap и специфичных компонентов для тем оформления

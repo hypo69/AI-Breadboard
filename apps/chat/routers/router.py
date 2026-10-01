@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Chat Routers - Router
+# =============================================================================
+# Description:
+#   Модель создания или сохранения диалоговой сессии.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.chat.routers.router import SessionCreateRequest
+#
+#     service = SessionCreateRequest()
+#
+# File: router.py
+# Project: ai-breadboard
+# Package: apps.chat.routers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Модель создания или сохранения диалоговой сессии."""
+
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field

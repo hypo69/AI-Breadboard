@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Webgui Menus And Buttons
+# =============================================================================
+# Description:
+#   Всеобъемлющее тестирование меню, кнопок и навигационной архитектуры веб-интерфейса.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_webgui_menus_and_buttons import TestButtonArchitecturePrinciples
+#
+#     service = TestButtonArchitecturePrinciples()
+#
+# File: test_webgui_menus_and_buttons.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Всеобъемлющее тестирование меню, кнопок и навигационной архитектуры веб-интерфейса."""
+
 import json
 import re
 from pathlib import Path

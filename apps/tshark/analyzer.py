@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Tshark - Analyzer
+# =============================================================================
+# Description:
+#   Network traffic analyzer and statistical aggregator.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.tshark.analyzer import TrafficAnalyzer
+#
+#     service = TrafficAnalyzer()
+#
+# File: analyzer.py
+# Project: ai-breadboard
+# Package: apps.tshark
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """Network traffic analyzer and statistical aggregator."""
+
 from collections import Counter
 from typing import List, Dict, Any
 from .models import PacketSummary, TrafficStats

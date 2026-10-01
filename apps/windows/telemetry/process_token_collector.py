@@ -1,12 +1,31 @@
-"""Process token collector module.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Telemetry - Process Token Collector
+# =============================================================================
+# Description:
+#   Process token collector module.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.telemetry.process_token_collector import TOKEN_ELEVATION
+#
+#     service = TOKEN_ELEVATION()
+#
+# File: process_token_collector.py
+# Project: ai-breadboard
+# Package: apps.windows.telemetry
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
 
-Сбор информации о токенах безопасности процессов, уровне целостности (Integrity Level) и статусе повышения привилегий (UAC elevation).
-"""
+"""Process token collector module."""
+
 import ctypes
 import ctypes.wintypes as wtypes
 import psutil
 from typing import List
-from apps.windows.telemetry.models import ProcessTokenInfo
+from .models import ProcessTokenInfo
 TOKEN_QUERY = 8
 TokenElevation = 20
 TokenIntegrityLevel = 25

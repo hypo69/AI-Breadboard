@@ -1,5 +1,29 @@
-"""CLI entry point for Helpdesk Support Desk application."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Helpdesk -   Main  
+# =============================================================================
+# Description:
+#   CLI entry point for Helpdesk Support Desk application.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.helpdesk.__main__
+#   Python API:
+#     from apps.helpdesk.__main__ import main
+#
+#     res = main()
+#
+# File: __main__.py
+# Project: ai-breadboard
+# Package: apps.helpdesk
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""CLI entry point for Helpdesk Support Desk application."""
+
 import argparse
 import json
 import sys

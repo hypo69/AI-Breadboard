@@ -1,3 +1,23 @@
+<!--
+=============================================================================
+Process Name: AI-Breadboard Web Interface - Index View
+=============================================================================
+Description:
+  Шаблон веб-интерфейса системного модуля (index).
+
+Usage Examples:
+    Web Route:
+      /src/api/webgui/about_system_tab/index.html
+
+File: index.html
+Project: ai-breadboard
+Package: src/api/webgui/about_system_tab
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-01 13:13:56
+=============================================================================
+-->
+
 <!-- About System Application Tab -->
 <style>
   .about-sys-wrapper {
@@ -726,37 +746,9 @@
     </div>
   </div>
 
-  <!-- Dual Panel: LibreHardwareMonitor Sensors + Storage Volumes & Partitions -->
+  <!-- Storage Volumes & Partitions -->
   <div class="row g-2 mb-3">
-    <!-- Left: Sensors LibreHardwareMonitor -->
-    <div class="col-12 col-lg-5">
-      <div class="about-sys-panel h-100">
-        <div class="about-sys-panel-header">
-          <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-activity text-danger"></i>
-            <span class="text-white"><span data-i18n="auto___9fc7e9"></span> LibreHardwareMonitor</span>
-          </div>
-          <span class="badge bg-success-subtle text-success border border-success" id="about-sensors-count-badge">LHM Active</span>
-        </div>
-        <div class="p-2 border-bottom border-secondary-subtle d-flex align-items-center justify-content-between flex-wrap gap-1">
-          <!-- Filter Buttons -->
-          <div class="btn-group btn-group-sm" role="group" id="about-sensor-filter-group">
-            <button type="button" class="btn btn-outline-info active py-0.5 px-2" data-sensor-cat="all" style="font-size: 0.72rem;"><span data-i18n="auto___fd08da"></span></button>
-            <button type="button" class="btn btn-outline-secondary py-0.5 px-2" data-sensor-cat="voltage" style="font-size: 0.72rem;"><span data-i18n="auto___3f84cb"></span></button>
-            <button type="button" class="btn btn-outline-secondary py-0.5 px-2" data-sensor-cat="clock" style="font-size: 0.72rem;"><span data-i18n="auto___60815d"></span></button>
-            <button type="button" class="btn btn-outline-secondary py-0.5 px-2" data-sensor-cat="temperature" style="font-size: 0.72rem;"><span data-i18n="auto___cd416c"></span></button>
-            <button type="button" class="btn btn-outline-secondary py-0.5 px-2" data-sensor-cat="power" style="font-size: 0.72rem;"><span data-i18n="auto___213896"></span></button>
-          </div>
-          <input type="text" class="form-control form-control-sm" id="about-sensor-search" placeholder="<span data-i18n="auto___3a4e34"></span>..." style="max-width: 130px; font-size: 0.72rem; height: 26px;">
-        </div>
-        <div class="p-2" id="about-sensors-container" style="max-height: 400px; overflow-y: auto;">
-          <div class="text-center py-4 text-muted small"><span data-i18n="auto___e515bd"></span>...</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right: Storage Volumes & Partitions -->
-    <div class="col-12 col-lg-7">
+    <div class="col-12">
       <div class="about-sys-panel h-100">
         <div class="about-sys-panel-header">
           <div class="d-flex align-items-center gap-2">
@@ -788,6 +780,7 @@
         </div>
       </div>
     </div>
+  </div>
   <!-- 4. <span data-i18n="auto___68224f"></span> (Storage & Battery Health) -->
   <div class="card shadow-sm border-secondary-subtle mb-3" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 10px;">
     <div class="card-body p-3">

@@ -1,7 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Dev - Scan Headers
+# =============================================================================
+# Description:
+#   Header validation scanner for Python files.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.dev.scan_headers
+#   Python API:
+#     from scripts.dev.scan_headers import count_words
+#
+#     res = count_words()
+#
+# File: scan_headers.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Header validation scanner for Python files.
 
 Scans all Python files to validate header format and documentation compliance
 with project standards."""
+
 import os
 import re
 from pathlib import Path

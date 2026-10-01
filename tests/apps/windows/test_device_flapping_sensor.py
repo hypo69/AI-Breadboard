@@ -1,10 +1,32 @@
-"""Тесты для сенсора телеметрии и детекции дребезга устройств."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests Apps Windows - Test Device Flapping Sensor
+# =============================================================================
+# Description:
+#   Тесты для сенсора телеметрии и детекции дребезга устройств.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.apps.windows.test_device_flapping_sensor import test_device_transition_event_model
+#
+#     res = test_device_transition_event_model()
+#
+# File: test_device_flapping_sensor.py
+# Project: ai-breadboard
+# Package: tests.apps.windows
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Тесты для сенсора телеметрии и детекции дребезга устройств."""
+
 import time
 from pathlib import Path
 from unittest.mock import MagicMock
 import pytest
-from apps.windows.api.setupapi import PnPDeviceInfo
+from apps.windows.telemetry.win32_ffi.setupapi import PnPDeviceInfo
 from apps.windows.telemetry.device_flapping_sensor import DeviceFlappingSensor, DeviceTransitionEvent
 from apps.windows.telemetry.json_logger import TelemetryJsonLogger
 

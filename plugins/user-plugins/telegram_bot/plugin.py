@@ -1,9 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins Telegram_Bot - Plugin
+# =============================================================================
+# Description:
+#   Telegram bot plugin implementation module.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.user-plugins.telegram_bot.plugin import TelegramBotPlugin
+#
+#     service = TelegramBotPlugin()
+#
+# File: plugin.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.telegram_bot
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Telegram bot plugin implementation module.
 
 Extends BasePlugin to provide Telegram bot lifecycle management, UI configuration,
-admin actions (start/stop/status/test_message), and conversational AI streaming.
-"""
-from __future__ import annotations
+admin actions (start/stop/status/test_message), and conversational AI streaming."""
+
 import json
 import os
 from pathlib import Path

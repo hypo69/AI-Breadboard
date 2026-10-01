@@ -1,5 +1,27 @@
-"""Централизованный модуль классификации, агрегации и оповещения об ошибках моделей."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Model Error Hub Module
+# =============================================================================
+# Description:
+#   Централизованный модуль классификации, агрегации и оповещения об ошибках моделей.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.orchestration.model_error_hub import ModelErrorCategory
+#
+#     service = ModelErrorCategory()
+#
+# File: model_error_hub.py
+# Project: ai-breadboard
+# Package: src.ai.orchestration
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Централизованный модуль классификации, агрегации и оповещения об ошибках моделей."""
+
 import collections
 import re
 import threading
@@ -7,7 +29,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from pydantic import BaseModel, Field
-from logger.logger import logger
+from logger import logger
 
 class ModelErrorCategory(str, Enum):
     """Категории типовых ошибок AI-моделей и провайдеров."""

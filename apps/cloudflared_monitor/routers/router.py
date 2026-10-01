@@ -1,5 +1,27 @@
-"""FastAPI router integration for Cloudflared Monitor."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Cloudflared_Monitor Routers - Router
+# =============================================================================
+# Description:
+#   FastAPI router integration for Cloudflared Monitor.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.cloudflared_monitor.routers.router import get_state
+#
+#     res = get_state()
+#
+# File: router.py
+# Project: ai-breadboard
+# Package: apps.cloudflared_monitor.routers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""FastAPI router integration for Cloudflared Monitor."""
+
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import JSONResponse

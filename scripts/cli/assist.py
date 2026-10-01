@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli - Assist
+# =============================================================================
+# Description:
+#   Cross-platform CLI assistant for AI Breadboard project management.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.cli.assist
+#   Python API:
+#     from scripts.cli.assist import AssistCLI
+#
+#     service = AssistCLI()
+#
+# File: assist.py
+# Project: ai-breadboard
+# Package: scripts.cli
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Cross-platform CLI assistant for AI Breadboard project management.
 
 CLI assistant providing cross-platform project management utilities,
@@ -11,8 +34,8 @@ originally ported from PowerShell assist.ps1 for Windows, Linux, macOS.
     assist providers                # List провайдеров ИИ
     assist logs [lines]             # Показать логи
     assist config [show|get|set]    # Работа с config.json
-    assist test                     # Запустить тесты
-"""
+    assist test                     # Запустить тесты"""
+
 import argparse
 import json
 import os

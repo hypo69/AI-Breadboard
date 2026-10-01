@@ -1,4 +1,27 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Cache-Ui Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля cache-ui.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/cache-ui.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { initCacheUI } from '/src/api/webgui/js/cache-ui.js';
+ *
+ * File: cache-ui.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * cache-ui.js - Контроллер пользовательского интерфейса управления браузерным кешем
  * 
  * Отвечает за:

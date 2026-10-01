@@ -1,7 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Dev - Search Code
+# =============================================================================
+# Description:
+#   Command-line utility for searching codebase via RAG index.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.dev.search_code
+#   Python API:
+#     from scripts.dev.search_code import main
+#
+#     res = main()
+#
+# File: search_code.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Command-line utility for searching codebase via RAG index.
 
 Provides console interface for searching technical documentation and code
 using the RAG (Retrieval-Augmented Generation) search system."""
+
 import os
 import sys
 import json

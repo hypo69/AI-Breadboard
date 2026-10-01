@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Run Tests Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (run_tests).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\run_tests.ps1
+#
+# File: run_tests.ps1
+# Project: ai-breadboard
+# Package: launchers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:06
+# =============================================================================
+
 <#
 .SYNOPSIS
     PowerShell script for running ai-breadboard / AI Breadboard tests.

@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins Ifttt Tests - Test Plugin
+# =============================================================================
+# Description:
+#   Test suite for IFTTTPlugin implementation.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.user-plugins.ifttt.tests.test_plugin import TestIFTTTPlugin
+#
+#     service = TestIFTTTPlugin()
+#
+# File: test_plugin.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.ifttt.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
 from __future__ import annotations
+"""Test suite for IFTTTPlugin implementation."""
+
 import pytest
 from unittest.mock import AsyncMock, patch
 from plugins.ifttt import IFTTTPlugin, plugin

@@ -1,6 +1,28 @@
 # -*- coding: utf-8 -*-
-"""Tests for manage_tools.py CLI interface."""
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Manage Tools
+# =============================================================================
+# Description:
+#   Tests for manage_tools.py CLI interface.
+#
+# Usage Examples:
+#   CLI:
+#     python -m tests.test_manage_tools
+#   Python API:
+#     from tests.test_manage_tools import TestManageToolsHelp
+#
+#     service = TestManageToolsHelp()
+#
+# File: test_manage_tools.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Tests for manage_tools.py CLI interface."""
 
 import subprocess
 import sys

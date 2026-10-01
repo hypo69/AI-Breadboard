@@ -1,7 +1,32 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Chat Module
+# =============================================================================
+# Description:
+#   Базовый class для чат-интерфейса с Ollama моделями.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.providers.ollama.chat import OllamaChatBase
+#
+#     service = OllamaChatBase()
+#     result = service.get_available_models()
+#     print(result)
+#
+# File: chat.py
+# Project: ai-breadboard
+# Package: src.ai.providers.ollama
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Базовый class для чат-интерфейса с Ollama моделями."""
+
 import asyncio
 import time
 from typing import Optional, List, Dict, Any
-from logger.logger import logger
+from logger import logger
 
 class OllamaChatBase:
     """

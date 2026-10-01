@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Install-Directory Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Install-Directory).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Install-Directory.ps1
+#
+# File: Install-Directory.ps1
+# Project: ai-breadboard
+# Package: install
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:29
+# =============================================================================
+
 <#
 .SYNOPSIS
     Модуль выбора и подготовки целевой директории установки AI Breadboard.

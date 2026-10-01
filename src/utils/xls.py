@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Xls Module
+# =============================================================================
+# Description:
+#   Excel file conversion utilities for converting between XLS and JSON formats.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.xls import read_xls_as_dict
+#
+#     res = read_xls_as_dict()
+#     print(res)
+#
+# File: xls.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """Excel file conversion utilities for converting between XLS and JSON formats."""
+
 ' This module provides functions to convert Excel files to JSON format, handle multiple sheets, and save JSON data back to Excel files.\n\nFunctions:\n    read_xls_as_dict(xls_file: str, json_file: str = None, sheet_name: Union[str, int] = None) -> Union[Dict, List[Dict], bool]:\n        Reads an Excel file and converts it to JSON.  Optionally, converts a specific sheet and saves the result to a JSON file.  Handles errors gracefully.\n\n    save_xls_file(data: Dict[str, List[Dict]], file_path: str) -> bool:\n        Saves JSON data to an Excel file.  The data should be a dictionary where keys are sheet names and values are lists of dictionaries representing rows. Handles errors gracefully.\n\nExamples:\n    # Reading and optionally saving to JSON\n    data = read_xls_as_dict(\'input.xlsx\', \'output.json\', \'Sheet1\')  # Reads sheet named \'Sheet1\'\n    if data:\n        print(data)  # Output will be {\'Sheet1\': [{...}]}\n\n    # Saving from JSON data\n    data_to_save = {\'Sheet1\': [{\'column1\': \'value1\', \'column2\': \'value2\'}]}\n    success = save_xls_file(data_to_save, \'output.xlsx\')\n    if success:\n        print("Successfully saved to output.xlsx")\n'
 import pandas as pd
 import json

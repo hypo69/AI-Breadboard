@@ -1,5 +1,29 @@
-"""Loads, normalizes, and registers skills for various AI agents."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard SKILLS - Registry Module
+# =============================================================================
+# Description:
+#   Loads, normalizes, and registers skills for various AI agents.
+#
+# Usage Examples:
+#   Python API:
+#     from src.skills.registry import SkillDefinition
+#
+#     service = SkillDefinition()
+#     result = service.get_description()
+#     print(result)
+#
+# File: registry.py
+# Project: ai-breadboard
+# Package: src.skills
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Loads, normalizes, and registers skills for various AI agents."""
+
 import json
 import re
 from dataclasses import dataclass, field

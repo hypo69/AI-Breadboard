@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Utils Convertors Html
+# =============================================================================
+# Description:
+#   Class for testing html.py module functions.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_utils_convertors_html import TestHtmlUtils
+#
+#     service = TestHtmlUtils()
+#
+# File: test_utils_convertors_html.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Class for testing html.py module functions."""
+
 import pytest
 from types import SimpleNamespace
 from src.utils.convertors.html import html2escape, escape2html, html2dict, html2ns

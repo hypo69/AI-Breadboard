@@ -1,6 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Header Module
+# =============================================================================
+# Description:
+#   Gemini AI model interface integration module.
+#
+# Usage Examples:
+#   Python API:
+#     import src.ai.gemini.header as header
+#
+# File: header.py
+# Project: ai-breadboard
+# Package: src.ai.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """Gemini AI model interface integration module.
 
 Provides interface for interacting with Google Generative AI (Gemini) model via generativeai library."""
+
 from header import __root__, set_project_root
 try:
     from src import gs

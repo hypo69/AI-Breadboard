@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps User_Assistant Src - Docs Service
+# =============================================================================
+# Description:
+#   Manages user personal documents, local files, and RAG vector ingestion.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.user_assistant.src.docs_service import DocsService
+#
+#     service = DocsService()
+#
+# File: docs_service.py
+# Project: ai-breadboard
+# Package: apps.user_assistant.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Manages user personal documents, local files, and RAG vector ingestion."""
+
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from logger import logger

@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Gemini Chat
+# =============================================================================
+# Description:
+#   Unit tests for GeminiChatBase streaming and adapter functionality.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_gemini_chat import TestGeminiChat
+#
+#     service = TestGeminiChat()
+#
+# File: test_gemini_chat.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for GeminiChatBase streaming and adapter functionality."""
+
 import os
 import pytest
 import asyncio

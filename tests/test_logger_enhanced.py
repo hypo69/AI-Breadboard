@@ -1,12 +1,34 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Logger Enhanced
+# =============================================================================
+# Description:
+#   Enhanced logger module tests.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_logger_enhanced import temp_logger
+#
+#     res = temp_logger()
+#
+# File: test_logger_enhanced.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Enhanced logger module tests.
 
 Tests for core logger module with temporary file handling and verification."""
+
 import pytest
 import os
 import json
 import logging
 from pathlib import Path
-from logger.logger import Logger
+from logger import Logger
 
 @pytest.fixture
 def temp_logger(tmp_path):
@@ -35,7 +57,7 @@ def temp_logger(tmp_path):
     errors_handler = logging.FileHandler(logger.errors_log_path, encoding='utf-8')
     errors_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
     logger.logger_file_errors.addHandler(errors_handler)
-    from logger.logger import JsonFormatter
+    from logger import JsonFormatter
     json_handler = logging.FileHandler(logger.json_log_path, encoding='utf-8')
     json_handler.setFormatter(JsonFormatter())
     logger.logger_file_json.addHandler(json_handler)

@@ -1,6 +1,26 @@
-"""
-Tests for core/fastapi/router_logs.py module.
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Fastapi Router Logs
+# =============================================================================
+# Description:
+#   Tests for core/fastapi/router_logs.py module.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_fastapi_router_logs import TestRouterLogsSafePaths
+#
+#     service = TestRouterLogsSafePaths()
+#
+# File: test_fastapi_router_logs.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Tests for core/fastapi/router_logs.py module."""
+
 import pytest
 import json
 from pathlib import Path

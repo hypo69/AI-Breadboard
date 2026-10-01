@@ -1,9 +1,30 @@
 # -*- coding: utf-8 -*-
-"""
-Генерирует CSV‑файл с переводами, где английский и иврит имеют те же тексты,
+# =============================================================================
+# Process Name: AI-Breadboard API - Generate Auto Fill Csv Module
+# =============================================================================
+# Description:
+#   Генерирует CSV‑файл с переводами, где английский и иврит имеют те же тексты,
+#
+# Usage Examples:
+#   CLI:
+#     python -m src.api.webgui.generate_auto_fill_csv
+#   Python API:
+#     from src.api.webgui.generate_auto_fill_csv import load_ru
+#
+#     res = load_ru()
+#     print(res)
+#
+# File: generate_auto_fill_csv.py
+# Project: ai-breadboard
+# Package: src.api.webgui
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Генерирует CSV‑файл с переводами, где английский и иврит имеют те же тексты,
 что и русская версия. Это удобно, если нужно быстро заполнить en.json и he.json
-без потери оригинальных строк.
-"""
+без потери оригинальных строк."""
 
 import csv
 import json

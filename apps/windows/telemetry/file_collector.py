@@ -1,5 +1,27 @@
-"""Сбор событий файловой системы через DirectoryWatcher."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Telemetry - File Collector
+# =============================================================================
+# Description:
+#   Сбор событий файловой системы через DirectoryWatcher.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.telemetry.file_collector import FileCollector
+#
+#     service = FileCollector()
+#
+# File: file_collector.py
+# Project: ai-breadboard
+# Package: apps.windows.telemetry
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Сбор событий файловой системы через DirectoryWatcher."""
+
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
@@ -38,7 +60,7 @@ class FileCollector:
             return
         for watch_dir in self.watch_dirs:
             try:
-                watcher = DirectoryWatcher(watch_dir=watch_dir, max_history=self.max_history)
+                watcher = DirectoryWatcher(watch_dirs=[watch_dir], max_history=self.max_history)
                 if watcher.start():
                     self._watchers[watch_dir] = watcher
                     logger.info(f'DirectoryWatcher запущен для: {watch_dir}')

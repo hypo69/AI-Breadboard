@@ -1,3 +1,23 @@
+/**
+ * =============================================================================
+ * Process Name: AI-Breadboard Styles - Styles Stylesheet
+ * =============================================================================
+ * Description:
+ *   Таблица стилей оформления компонентов интерфейса (styles).
+ *
+ * Usage Examples:
+ *   HTML Link Tag:
+ *     <link rel="stylesheet" href="/src/api/webgui/cosmicplayer/styles.css?v=20261001_v1">
+ *
+ * File: styles.css
+ * Project: ai-breadboard
+ * Package: src/api/webgui/cosmicplayer
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
 .cosmic-player-tab {
     --primary: #7928ca;
     --primary-glow: #ff007a;

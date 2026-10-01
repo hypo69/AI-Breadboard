@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Tshark - Ai Detector
+# =============================================================================
+# Description:
+#   AI-assisted network anomaly detection and diagnostics.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.tshark.ai_detector import AIDetector
+#
+#     service = AIDetector()
+#
+# File: ai_detector.py
+# Project: ai-breadboard
+# Package: apps.tshark
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """AI-assisted network anomaly detection and diagnostics."""
+
 import json
 from typing import List, Optional
 from logger import logger

@@ -1,8 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Grouped Diagnostics
+# =============================================================================
+# Description:
+#   Фикстура снимка телеметрии с несколькими выраженными узкими местами.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_grouped_diagnostics import sample_snapshot
+#
+#     res = sample_snapshot()
+#
+# File: test_grouped_diagnostics.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Фикстура снимка телеметрии с несколькими выраженными узкими местами."""
+
 import pytest
 from unittest.mock import AsyncMock
 from apps.windows.telemetry.models import CpuMetrics, DiskPartitionMetrics, GpuMetrics, HardwareSensor, MemoryMetrics, ProcessMetrics, SystemSnapshot
-from apps.windows.observability.grouped_telemetry import GroupDiagnosticResult, GroupedTelemetryBuilder
-from apps.windows.observability.system_engine import SystemDiagnosticEngine
+from apps.windows.telemetry.grouped_telemetry import GroupDiagnosticResult, GroupedTelemetryBuilder
+from apps.windows.telemetry.diagnostic_engine import SystemDiagnosticEngine
 
 @pytest.fixture
 def sample_snapshot() -> SystemSnapshot:

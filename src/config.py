@@ -1,3 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard CORE - Config Module
+# =============================================================================
+# Description:
+#   Модуль основной системы (`config`).
+#
+# Usage Examples:
+#   Python API:
+#     from src.config import is_app_enabled
+#
+#     res = is_app_enabled()
+#     print(res)
+#
+# File: config.py
+# Project: ai-breadboard
+# Package: src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Модуль основной системы (`config`)."""
+
 import os
 from pathlib import Path
 from types import SimpleNamespace

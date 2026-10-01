@@ -1,5 +1,27 @@
-"""Rule-based and statistical anomaly detection engine for website intelligence."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Website_Monitor Src - Anomaly Detector
+# =============================================================================
+# Description:
+#   Rule-based and statistical anomaly detection engine for website intelligence.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.website_monitor.src.anomaly_detector import SiteAlert
+#
+#     service = SiteAlert()
+#
+# File: anomaly_detector.py
+# Project: ai-breadboard
+# Package: apps.website_monitor.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Rule-based and statistical anomaly detection engine for website intelligence."""
+
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional

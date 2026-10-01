@@ -1,5 +1,27 @@
-"""Реестр системных и динамических инструментов подсистемы Windows."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core Tools - Registry
+# =============================================================================
+# Description:
+#   Реестр системных и динамических инструментов подсистемы Windows.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.tools.registry import ToolRegistry
+#
+#     service = ToolRegistry()
+#
+# File: registry.py
+# Project: ai-breadboard
+# Package: apps.windows.core.tools
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Реестр системных и динамических инструментов подсистемы Windows."""
+
 from typing import Any, Dict, List, Optional
 from logger import logger
 from apps.windows.core.tools.base import BaseTool, ToolExecutionResult

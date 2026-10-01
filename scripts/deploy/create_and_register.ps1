@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Create And Register Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (create_and_register).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\create_and_register.ps1
+#
+# File: create_and_register.ps1
+# Project: ai-breadboard
+# Package: scripts.deploy
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 <#
 .SYNOPSIS
   Create GitHub repository (using gh CLI or provided remote) and push current workspace, then attempt to register the project on Read the Docs using API token.

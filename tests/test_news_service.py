@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test News Service
+# =============================================================================
+# Description:
+#   Скрипт/модуль системы AI-Breadboard (`test_news_service`).
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_news_service import temp_learner
+#
+#     res = temp_learner()
+#
+# File: test_news_service.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Скрипт/модуль системы AI-Breadboard (`test_news_service`)."""
+
 import os
 import tempfile
 from pathlib import Path

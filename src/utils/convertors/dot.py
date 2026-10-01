@@ -1,6 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Dot Module
+# =============================================================================
+# Description:
+#   DOT file to PNG image conversion utilities.
+#
+# Usage Examples:
+#   CLI:
+#     python -m src.utils.convertors.dot
+#   Python API:
+#     from src.utils.convertors.dot import dot2png
+#
+#     res = dot2png()
+#     print(res)
+#
+# File: dot.py
+# Project: ai-breadboard
+# Package: src.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """DOT file to PNG image conversion utilities.
 
 Converts DOT format graph description files to PNG images using Graphviz library."""
+
 import sys
 from graphviz import Source
 

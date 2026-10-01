@@ -1,5 +1,27 @@
-"""Rich TUI interactive terminal dashboard for Wikipedia Research Lab."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Wikipedia_Research - Tui
+# =============================================================================
+# Description:
+#   Rich TUI interactive terminal dashboard for Wikipedia Research Lab.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.wikipedia_research.tui import render_language_report_tui
+#
+#     res = render_language_report_tui()
+#
+# File: tui.py
+# Project: ai-breadboard
+# Package: apps.wikipedia_research
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Rich TUI interactive terminal dashboard for Wikipedia Research Lab."""
+
 import asyncio
 from typing import Any, Optional
 try:

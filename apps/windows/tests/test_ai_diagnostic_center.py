@@ -1,7 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Tests - Test Ai Diagnostic Center
+# =============================================================================
+# Description:
+#   Тестовый набор для AI Windows Diagnostic & Administration Center.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.tests.test_ai_diagnostic_center import test_clean_collector
+#
+#     res = test_clean_collector()
+#
+# File: test_ai_diagnostic_center.py
+# Project: ai-breadboard
+# Package: apps.windows.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """Тестовый набор для AI Windows Diagnostic & Administration Center."""
+
 import pytest
 from apps.windows.core.models import ActionType, RemediationAction, RiskLevel
-from apps.windows.core.modules import CleanCollector, DriverCollector, EventLogCollector, IntegrityCollector, NetworkCollector, PerformanceCollector, PostInstallCollector, ProcessCollector, SecurityCollector, ServicesCollector, SoftwareCollector, StorageCollector, TasksCollector, UpdateCollector
+from apps.windows.core.audits import CleanCollector, DriverCollector, EventLogCollector, IntegrityCollector, NetworkCollector, PerformanceCollector, PostInstallCollector, ProcessCollector, SecurityCollector, ServicesCollector, SoftwareCollector, StorageCollector, TasksCollector, UpdateCollector
 from apps.windows.core.root_cause_engine import RootCauseEngine
 from apps.windows.core.safe_executor import SafeExecutor
 from apps.windows.router import init_router

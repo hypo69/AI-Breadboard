@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Scenarios Router
+# =============================================================================
+# Description:
+#   Unit-тесты для FastAPI роутера сценариев (router_scenarios.py).
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_scenarios_router import client
+#
+#     res = client()
+#
+# File: test_scenarios_router.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit-тесты для FastAPI роутера сценариев (router_scenarios.py)."""
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 import pytest
@@ -95,7 +117,7 @@ def test_scenario_execute_fix_endpoint(client, monkeypatch):
 
 def test_services_collector_resolve_binary_and_protection():
     """Проверка корректного разрешения путей и защиты системных служб."""
-    from apps.windows.core.modules.services_collector import _resolve_service_binary, PROTECTED_SYSTEM_SERVICES
+    from apps.windows.core.audits.services_collector import _resolve_service_binary, PROTECTED_SYSTEM_SERVICES
     assert 'appxsvc' in PROTECTED_SYSTEM_SERVICES
     assert 'bfe' in PROTECTED_SYSTEM_SERVICES
     assert 'rpcss' in PROTECTED_SYSTEM_SERVICES

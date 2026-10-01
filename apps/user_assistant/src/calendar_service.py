@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps User_Assistant Src - Calendar Service
+# =============================================================================
+# Description:
+#   Manages user calendar schedule, agenda, and event creation.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.user_assistant.src.calendar_service import CalendarService
+#
+#     service = CalendarService()
+#
+# File: calendar_service.py
+# Project: ai-breadboard
+# Package: apps.user_assistant.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Manages user calendar schedule, agenda, and event creation."""
+
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 from logger import logger

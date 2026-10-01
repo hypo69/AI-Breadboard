@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests Utils - Test Get Free Port
+# =============================================================================
+# Description:
+#   Test retrieving the first available port (without range).
+#
+# Usage Examples:
+#   Python API:
+#     from tests.utils.test_get_free_port import test_get_free_port_first_available
+#
+#     res = test_get_free_port_first_available()
+#
+# File: test_get_free_port.py
+# Project: ai-breadboard
+# Package: tests.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Test retrieving the first available port (without range)."""
+
 import pytest
 from src.utils.get_free_port import get_free_port
 

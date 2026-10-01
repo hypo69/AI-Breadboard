@@ -1,4 +1,27 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Tab-Manager Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля tab-manager.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/admin/modules/tab-manager.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { setupTabManagement, onTabSwitched } from '/src/api/webgui/admin/modules/tab-manager.js';
+ *
+ * File: tab-manager.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/admin/modules
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * Tab Manager Module - Управление вкладками и навигацией
  */
 

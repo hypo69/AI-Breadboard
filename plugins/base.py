@@ -1,10 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins - Base
+# =============================================================================
+# Description:
+#   Base plugin module for modular extension system.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.base import BasePlugin
+#
+#     service = BasePlugin()
+#
+# File: base.py
+# Project: ai-breadboard
+# Package: plugins
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Base plugin module for modular extension system.
 
 Defines the BasePlugin abstract interface that all AI Breadboard plugins must
 inherit from to ensure seamless lifecycle management, configuration, action
-execution, and AI routing.
-"""
-from __future__ import annotations
+execution, and AI routing."""
+
 import abc
 import inspect
 from datetime import datetime

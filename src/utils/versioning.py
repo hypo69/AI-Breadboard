@@ -1,3 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Versioning Module
+# =============================================================================
+# Description:
+#   Parse non-standard version string into list of integers.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.versioning import parse_semver
+#
+#     res = parse_semver()
+#     print(res)
+#
+# File: versioning.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Parse non-standard version string into list of integers."""
+
 import re
 from typing import List, Optional, Tuple
 
@@ -142,7 +166,7 @@ def choose_best_tag(tags: List[str], allow_prerelease: bool=False, debug: bool=F
     stable = [t for t in tags if not _is_prerelease(t)]
     candidates = stable if stable and (not allow_prerelease) else tags
     if debug:
-        from logger.logger import logger
+        from logger import logger
         logger.debug(f'[versioning.choose_best_tag] candidates={candidates} allow_prerelease={allow_prerelease}')
     best = ''
     for t in candidates:

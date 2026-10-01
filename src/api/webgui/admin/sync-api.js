@@ -1,4 +1,24 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Sync-Api Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля sync-api.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/admin/sync-api.js?v=20261001_v1" type="module"></script>
+ *
+ * File: sync-api.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/admin
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * Google Drive Sync API Client
  * Клиент для работы с REST API синхронизации
  */

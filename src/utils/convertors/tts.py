@@ -1,3 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Tts Module
+# =============================================================================
+# Description:
+#   Download an audio file and recognize speech in it.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.convertors.tts import speech_recognizer
+#
+#     res = speech_recognizer()
+#     print(res)
+#
+# File: tts.py
+# Project: ai-breadboard
+# Package: src.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Download an audio file and recognize speech in it."""
+
 from pathlib import Path
 import tempfile
 import asyncio
@@ -6,7 +30,7 @@ import speech_recognition as sr
 from pydub import AudioSegment
 from gtts import gTTS
 from src.utils.jjson import j_loads, j_loads_ns, j_dumps
-from logger.logger import logger
+from logger import logger
 
 def speech_recognizer(audio_url: str=None, audio_file_path: Path=None, language: str='ru-RU') -> str:
     """Download an audio file and recognize speech in it.
@@ -79,7 +103,7 @@ async def text2speech(text: str, lang: str='ru') -> str:
             return wav_file_path
         except Exception as pydub_ex:
             logger.warning(f'pydub conversion failed (probably ffmpeg is not installed): {pydub_ex}')
-            logger.info(f'TTS audio saved as raw MP3 at: {audio_file_path}')
+            logger.warning(f'TTS audio saved as raw MP3 at: {audio_file_path}')
             return audio_file_path
     except Exception as ex:
         logger.error('Error in text2speech:', ex)

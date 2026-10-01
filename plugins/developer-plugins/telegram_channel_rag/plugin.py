@@ -1,9 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins Developer-Plugins Telegram_Channel_Rag - Plugin
+# =============================================================================
+# Description:
+#   Telegram Multi-Channel RAG & Fast Search Plugin Module.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.developer-plugins.telegram_channel_rag.plugin import TelegramChannelRagPlugin
+#
+#     service = TelegramChannelRagPlugin()
+#
+# File: plugin.py
+# Project: ai-breadboard
+# Package: plugins.developer-plugins.telegram_channel_rag
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Telegram Multi-Channel RAG & Fast Search Plugin Module.
 
 Integrates Telegram channel message collection (via web preview or export file),
-channel pool reuse, user subscriptions, and fast search returning exact Telegram message links.
-"""
-from __future__ import annotations
+channel pool reuse, user subscriptions, and fast search returning exact Telegram message links."""
+
 import json
 from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, List, Optional

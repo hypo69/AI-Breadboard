@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests Apps Windows - Test System Inspector Integration
+# =============================================================================
+# Description:
+#   Проверка эндпоинта /api/v1/tc/status.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.apps.windows.test_system_inspector_integration import test_client
+#
+#     res = test_client()
+#
+# File: test_system_inspector_integration.py
+# Project: ai-breadboard
+# Package: tests.apps.windows
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Проверка эндпоинта /api/v1/tc/status."""
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -11,8 +34,8 @@ def test_client():
     return TestClient(app)
 
 def test_system_inspector_status_endpoint(test_client):
-    """Проверка эндпоинта /api/system/status."""
-    response = test_client.get('/api/system/status')
+    """Проверка эндпоинта /api/v1/tc/status."""
+    response = test_client.get('/api/v1/tc/status')
     assert response.status_code == 200
     data = response.json()
     assert 'hostname' in data
@@ -20,16 +43,16 @@ def test_system_inspector_status_endpoint(test_client):
     assert 'memory' in data
 
 def test_system_inspector_processes_endpoint(test_client):
-    """Проверка эндпоинта /api/system/processes."""
-    response = test_client.get('/api/system/processes?limit=5')
+    """Проверка эндпоинта /api/v1/tc/processes."""
+    response = test_client.get('/api/v1/tc/processes?limit=5')
     assert response.status_code == 200
     data = response.json()
     assert 'processes' in data
     assert isinstance(data['processes'], list)
 
 def test_system_inspector_hardware_endpoint(test_client):
-    """Проверка эндпоинта /api/system/hardware."""
-    response = test_client.get('/api/system/hardware')
+    """Проверка эндпоинта /api/v1/tc/hardware."""
+    response = test_client.get('/api/v1/tc/hardware')
     assert response.status_code == 200
     data = response.json()
     assert 'hardware' in data

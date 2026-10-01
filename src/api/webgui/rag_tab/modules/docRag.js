@@ -1,16 +1,20 @@
 /**
  * =============================================================================
- * Process Name: Global Document RAG Management
+ * Process Name: AI-Breadboard UI - Docrag Script
  * =============================================================================
  * Description:
- *   Handles file/folder uploading, document indexing, RAG status retrieval,
- *   document deletion, and semantic query execution for global document RAG.
+ *   Клиентский веб-скрипт модуля docRag.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/rag_tab/modules/docRag.js?v=20261001_v1" type="module"></script>
  *
  * File: docRag.js
- * Project: AI Breadboard
- * Module: RAGTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/rag_tab/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

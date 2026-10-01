@@ -1,6 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Модули команд для CLI и диспетчера manage_tools."""
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli Commands -   Init  
+# =============================================================================
+# Description:
+#   Модули команд для CLI и диспетчера manage_tools.
+#
+# Usage Examples:
+#   Python API:
+#     from scripts.cli.commands.__init__ import register_all_parsers
+#
+#     res = register_all_parsers()
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: scripts.cli.commands
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 from __future__ import annotations
+"""Модули команд для CLI и диспетчера manage_tools."""
 
 import argparse
 from typing import Callable, Dict

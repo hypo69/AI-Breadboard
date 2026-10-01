@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Skill Log Analyzer
+# =============================================================================
+# Description:
+#   Unit tests for log-analyzer skill.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_skill_log_analyzer import test_parse_text_logs
+#
+#     res = test_parse_text_logs()
+#
+# File: test_skill_log_analyzer.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for log-analyzer skill."""
+
 import sys
 from pathlib import Path
 import pytest

@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Base Module
+# =============================================================================
+# Description:
+#   Abstract base class for all AI model and capability providers.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.providers.base import BaseChatProvider
+#
+#     service = BaseChatProvider()
+#     result = service.get_available_models()
+#     print(result)
+#
+# File: base.py
+# Project: ai-breadboard
+# Package: src.ai.providers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Abstract base class for all AI model and capability providers."""
+
 from abc import ABC, abstractmethod
 from typing import Any, AsyncIterator, Dict, List, Optional, Set
 

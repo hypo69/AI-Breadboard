@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test System Logs Agent
+# =============================================================================
+# Description:
+#   Модуль реализации компонента `MockLLM`.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_system_logs_agent import MockLLM
+#
+#     service = MockLLM()
+#
+# File: test_system_logs_agent.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Модуль реализации компонента `MockLLM`."""
+
 import pytest
 import json
 from src.ai.agents.system_logs_agent import SystemLogsAgent

@@ -1,5 +1,29 @@
-"""CLI entry point for Google Cloud Console & Observability Monitor."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Gcloud_Monitor -   Main  
+# =============================================================================
+# Description:
+#   CLI entry point for Google Cloud Console & Observability Monitor.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.gcloud_monitor.__main__
+#   Python API:
+#     from apps.gcloud_monitor.__main__ import main
+#
+#     res = main()
+#
+# File: __main__.py
+# Project: ai-breadboard
+# Package: apps.gcloud_monitor
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""CLI entry point for Google Cloud Console & Observability Monitor."""
+
 import argparse
 import json
 import sys

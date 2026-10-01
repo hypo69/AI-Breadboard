@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Ai_Breadboard_Admin Tests - Test Admin Instructions
+# =============================================================================
+# Description:
+#   Фикстура создания структуры каталогов с промптами.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.ai_breadboard_admin.tests.test_admin_instructions import temp_prompts_root
+#
+#     res = temp_prompts_root()
+#
+# File: test_admin_instructions.py
+# Project: ai-breadboard
+# Package: apps.ai_breadboard_admin.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""Фикстура создания структуры каталогов с промптами."""
+
 from pathlib import Path
 import pytest
 from apps.ai_breadboard_admin.src.instructions_manager import InstructionsManager

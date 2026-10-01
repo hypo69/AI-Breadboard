@@ -1,0 +1,10 @@
+{
+  "database_path": "data/windows_wikillm/knowledge.db",
+  "min_confidence_threshold": 0.70,
+  "max_queue_size": 1000,
+  "async_workers": 2,
+  "gemini_model_id": "gemini-flash-latest",
+  "enable_code_indexer": true,
+  "enable_semantic_search": true,
+  "cache_exact_hits": true
+}

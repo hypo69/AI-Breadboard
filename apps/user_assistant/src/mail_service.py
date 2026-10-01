@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps User_Assistant Src - Mail Service
+# =============================================================================
+# Description:
+#   Manages user email accounts, inbox triage, and draft generation.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.user_assistant.src.mail_service import MailService
+#
+#     service = MailService()
+#
+# File: mail_service.py
+# Project: ai-breadboard
+# Package: apps.user_assistant.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Manages user email accounts, inbox triage, and draft generation."""
+
 from typing import Any, Dict, List, Optional
 from logger import logger
 

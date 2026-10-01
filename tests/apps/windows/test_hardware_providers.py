@@ -1,5 +1,27 @@
-"""Тесты для аппаратных провайдеров и движка валидации."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests Apps Windows - Test Hardware Providers
+# =============================================================================
+# Description:
+#   Тесты для аппаратных провайдеров и движка валидации.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.apps.windows.test_hardware_providers import test_native_win_provider
+#
+#     res = test_native_win_provider()
+#
+# File: test_hardware_providers.py
+# Project: ai-breadboard
+# Package: tests.apps.windows
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Тесты для аппаратных провайдеров и движка валидации."""
+
 import pytest
 from pathlib import Path
 from apps.windows.hardware.base import ProviderStatus, ProviderTier
@@ -8,7 +30,6 @@ from apps.windows.hardware.models import CpuInventory, GpuInventory, SensorReadi
 from apps.windows.hardware.providers.aida64_provider import Aida64Provider
 from apps.windows.hardware.providers.cpuz_provider import CpuzProvider
 from apps.windows.hardware.providers.hwinfo_provider import HwinfoProvider
-from apps.windows.hardware.providers.lhm_provider import LhmProvider
 from apps.windows.hardware.providers.native_win_provider import NativeWinProvider
 from apps.windows.hardware.registry import HardwareProviderRegistry
 from apps.windows.hardware.cross_validator import CrossValidator

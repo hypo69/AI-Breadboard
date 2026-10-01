@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router Rag
+# =============================================================================
+# Description:
+#   Provide an isolated DocumentRAGManager instance for each test.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_router_rag import TestRouterRAG
+#
+#     service = TestRouterRAG()
+#
+# File: test_router_rag.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Provide an isolated DocumentRAGManager instance for each test."""
+
 import io
 import shutil
 import tempfile

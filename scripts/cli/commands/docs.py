@@ -1,6 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Команды управления документацией (docs)."""
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli Commands - Docs
+# =============================================================================
+# Description:
+#   Команды управления документацией (docs).
+#
+# Usage Examples:
+#   Python API:
+#     from scripts.cli.commands.docs import register_docs_parser
+#
+#     res = register_docs_parser()
+#
+# File: docs.py
+# Project: ai-breadboard
+# Package: scripts.cli.commands
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 from __future__ import annotations
+"""Команды управления документацией (docs)."""
 
 import argparse
 from .common import run_script

@@ -1,12 +1,33 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Printer
+# =============================================================================
+# Description:
+#   Unit tests for the printer and pretty formatting module.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_printer import TestPrinterFormatting
+#
+#     service = TestPrinterFormatting()
+#
+# File: test_printer.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for the printer and pretty formatting module.
 
 Tests format detection for dicts, lists, JSON strings, arbitrary embedded JSON
-blocks (<text> <JSON> <text>), and verifies integration with logger methods.
-"""
+blocks (<text> <JSON> <text>), and verifies integration with logger methods."""
+
 import json
 import pytest
 from src.utils.printer import pformat, pprint, _color_text, TEXT_COLORS
-from logger.logger import logger
+from logger import logger
 
 class TestPrinterFormatting:
     """Tests for pformat function and JSON parsing."""

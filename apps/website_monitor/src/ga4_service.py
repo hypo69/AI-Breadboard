@@ -1,5 +1,27 @@
-"""Google Analytics 4 Data & Admin service implementation."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Website_Monitor Src - Ga4 Service
+# =============================================================================
+# Description:
+#   Google Analytics 4 Data & Admin service implementation.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.website_monitor.src.ga4_service import RealtimePage
+#
+#     service = RealtimePage()
+#
+# File: ga4_service.py
+# Project: ai-breadboard
+# Package: apps.website_monitor.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Google Analytics 4 Data & Admin service implementation."""
+
 import random
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta

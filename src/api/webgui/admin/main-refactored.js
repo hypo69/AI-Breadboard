@@ -1,4 +1,24 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Main-Refactored Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля main-refactored.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/admin/main-refactored.js?v=20261001_v1" type="module"></script>
+ *
+ * File: main-refactored.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/admin
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * Admin Interface Main - Оркестратор
  * 
  * Главный модуль для инициализации административного интерфейса.

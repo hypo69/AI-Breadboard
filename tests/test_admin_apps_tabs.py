@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Admin Apps Tabs
+# =============================================================================
+# Description:
+#   Unit tests for /apps tabs in Admin Panel.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_admin_apps_tabs import TestAdminAppsTabs
+#
+#     service = TestAdminAppsTabs()
+#
+# File: test_admin_apps_tabs.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for /apps tabs in Admin Panel."""
+
 import json
 from pathlib import Path
 from fastapi.testclient import TestClient

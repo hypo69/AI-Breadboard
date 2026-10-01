@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Run-Cloudflaredmonitor Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Run-CloudflaredMonitor).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Run-CloudflaredMonitor.ps1
+#
+# File: Run-CloudflaredMonitor.ps1
+# Project: ai-breadboard
+# Package: launchers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:06
+# =============================================================================
+
 <#
 .SYNOPSIS
     Standalone launcher for Cloudflared Monitor microservice / dashboard.

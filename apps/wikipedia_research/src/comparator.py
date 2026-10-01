@@ -1,5 +1,27 @@
-"""Comparison engine for language editions (Exp A) and AI model benchmark (Exp B)."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Wikipedia_Research Src - Comparator
+# =============================================================================
+# Description:
+#   Comparison engine for language editions (Exp A) and AI model benchmark (Exp B).
+#
+# Usage Examples:
+#   Python API:
+#     from apps.wikipedia_research.src.comparator import ResearchComparator
+#
+#     service = ResearchComparator()
+#
+# File: comparator.py
+# Project: ai-breadboard
+# Package: apps.wikipedia_research.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Comparison engine for language editions (Exp A) and AI model benchmark (Exp B)."""
+
 import statistics
 import uuid
 from typing import Any, Dict, List

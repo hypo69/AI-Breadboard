@@ -1,8 +1,32 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Docx Module
+# =============================================================================
+# Description:
+#   Модуль основной системы (`docx`).
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.docx import extract_docx_text
+#
+#     res = extract_docx_text()
+#     print(res)
+#
+# File: docx.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Модуль основной системы (`docx`)."""
+
 import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional, Union, List
-from logger.logger import logger
+from logger import logger
 W_NS = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
 
 def extract_docx_text(file_path: Union[str, Path], as_markdown: bool=True) -> Optional[str]:

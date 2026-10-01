@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Utils Convertors Dict
+# =============================================================================
+# Description:
+#   Class for testing dict.py module functions.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_utils_convertors_dict import TestDictUtils
+#
+#     service = TestDictUtils()
+#
+# File: test_utils_convertors_dict.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Class for testing dict.py module functions."""
+
 import pytest
 from types import SimpleNamespace
 from src.utils.convertors.dict import dict2ns, replace_key_in_dict

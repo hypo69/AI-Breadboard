@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test User Workspace Rag
+# =============================================================================
+# Description:
+#   Unit tests for UserWorkspaceRAGManager.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_user_workspace_rag import TestUserWorkspaceRAGManager
+#
+#     service = TestUserWorkspaceRAGManager()
+#
+# File: test_user_workspace_rag.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Unit tests for UserWorkspaceRAGManager."""
+
 import io
 import json
 import zipfile

@@ -1,5 +1,27 @@
-"""Модульные тесты для навыка и агента мониторинга почты от заданного отправителя."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Mail Watcher
+# =============================================================================
+# Description:
+#   Модульные тесты для навыка и агента мониторинга почты от заданного отправителя.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_mail_watcher import mock_secrets_file
+#
+#     res = mock_secrets_file()
+#
+# File: test_mail_watcher.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Модульные тесты для навыка и агента мониторинга почты от заданного отправителя."""
+
 import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText

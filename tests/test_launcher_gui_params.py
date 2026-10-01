@@ -1,3 +1,24 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Launcher Gui Params
+# =============================================================================
+# Description:
+#   Тесты графического лончера (launcher.ps1 и launchers.ps1) и извлечения параметров.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_launcher_gui_params import TestLauncherGuiParams
+#
+#     service = TestLauncherGuiParams()
+#
+# File: test_launcher_gui_params.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Тесты графического лончера (launcher.ps1 и launchers.ps1) и извлечения параметров."""
 
 from pathlib import Path

@@ -1,6 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Команды управления RAG-индексацией (rag)."""
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli Commands - Rag
+# =============================================================================
+# Description:
+#   Команды управления RAG-индексацией (rag).
+#
+# Usage Examples:
+#   Python API:
+#     from scripts.cli.commands.rag import register_rag_parser
+#
+#     res = register_rag_parser()
+#
+# File: rag.py
+# Project: ai-breadboard
+# Package: scripts.cli.commands
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 from __future__ import annotations
+"""Команды управления RAG-индексацией (rag)."""
 
 import argparse
 from header import __root__

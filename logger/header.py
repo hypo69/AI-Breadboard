@@ -1,8 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Logger - Header
+# =============================================================================
+# Description:
+#   Module for project root path determination and meta information initialization.
+#
+# Usage Examples:
+#   Python API:
+#     import logger.header as header
+#
+# File: header.py
+# Project: ai-breadboard
+# Package: logger
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:29:02
+# =============================================================================
+
 """Module for project root path determination and meta information initialization.
 
 Solves two primary tasks:
 1. Determines project root directory by searching for marker files
 2. Loads and initializes project meta information from configuration files"""
+
 import sys
 import json
 import logging

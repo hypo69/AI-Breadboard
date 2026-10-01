@@ -17,11 +17,12 @@
 - `run_tests.ps1` — Скрипт полного прогона тестового набора (`pytest`).
 
 ### Служба системной телеметрии Windows:
-- [`Run-Telemetry.ps1`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/launchers/Run-Telemetry.ps1) — Универсальный PowerShell-лончер управления автономной службой телеметрии **`ai-telemetry.exe`** (CPU, RAM, GPU, диски, сеть, процессы).
-  - Поддерживаемые команды: `start`, `stop`, `restart`, `status`, `install-task`, `uninstall-task`, `status-task`.
+- `tlm.ps1` — Главный корневой PowerShell-лончер управления автономной службой телеметрии **`ai-telemetry.exe`** (CPU, RAM, GPU, диски, сеть, процессы).
+- [`Run-Telemetry.ps1`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/windows/telemetry/launchers/Run-Telemetry.ps1) — Внутренний лончер телеметрии (`apps/windows/telemetry/launchers/Run-Telemetry.ps1`).
+  - Поддерживаемые команды: `tui`, `start`, `stop`, `restart`, `status`, `install-task`, `uninstall-task`, `status-task`, `get-errors`, `get-stdout`.
   - Режимы сбора: `minimal` (ультралегкий, 28 мс/замер), `hybrid` (быстрый легкий цикл 5с + периодический тяжелый LHM/SMART 60с), `full`.
   - Запуск через WMI (`Win32_Process.Create`) в приоритете `BelowNormal` — процесс отвязан от родительской консоли и работает непрерывно.
-- [`Install-TelemetryTask.ps1`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/launchers/Install-TelemetryTask.ps1) — Автоматическая регистрация службы `ai-telemetry.exe` в **Windows Task Scheduler** с флагом `WakeToRun = $true` (пробуждение при сне, питание от батареи, бесконечный цикл работы, приоритет `BelowNormal`, автоперезапуск при сбоях).
+- [`Install-TelemetryTask.ps1`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/windows/telemetry/launchers/Install-TelemetryTask.ps1) — Автоматическая регистрация службы `ai-telemetry.exe` в **Windows Task Scheduler** с флагом `WakeToRun = $true` (пробуждение при сне, питание от батареи, бесконечный цикл работы, приоритет `BelowNormal`, автоперезапуск при сбоях).
 
 ### Провайдеры ИИ и микросервисы:
 - `Run-Agy.ps1` — Запуск провайдера AGY (Antigravity).
@@ -42,14 +43,14 @@
 ## 🚀 Примеры использования
 
 ```powershell
-# Запуск службы телеметрии в фоне (режим hybrid)
-.\launchers\Run-Telemetry.ps1
+# Запуск TUI интерфейса службы телеметрии
+.\tlm.ps1
 
 # Проверка статуса службы телеметрии (PID, имя ai-telemetry, Working Set RAM)
-.\launchers\Run-Telemetry.ps1 -Action status
+.\tlm.ps1 -Action status
 
 # Регистрация службы телеметрии в планировщике задач Windows (с WakeToRun)
-.\launchers\Run-Telemetry.ps1 -Action install-task
+.\tlm.ps1 -Action install-task
 
 # Запуск основного интерфейса AI Breadboard
 .\Run-TC.ps1

@@ -1,9 +1,40 @@
-"""CLI интерфейс для Windows AI Diagnostic & Administration Center."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows - Cli
+# =============================================================================
+# Description:
+#   CLI интерфейс для Windows AI Diagnostic & Administration Center.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.windows.cli
+#   Python API:
+#     from apps.windows.cli import print_banner
+#
+#     res = print_banner()
+#
+# File: cli.py
+# Project: ai-breadboard
+# Package: apps.windows
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""CLI интерфейс для Windows AI Diagnostic & Administration Center."""
+
 import argparse
 import asyncio
 import json
+import os
 import sys
+from pathlib import Path
+
+_project_root = str(Path(__file__).resolve().parents[2])
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+
 from apps.windows.ai.diagnostician import WindowsAIDiagnostician
 from apps.windows.ai.root_cause_analyzer import WindowsAIRootCauseAnalyzer
 from apps.windows.core.root_cause_engine import RootCauseEngine
@@ -47,9 +78,39 @@ def main() -> None:
     parser.add_argument('--channel', type=str, default='System', help='Канал логов для монитора (по умолчанию: System)')
     parser.add_argument('--hardware', '--hw-monitor', action='store_true', dest='hardware_monitor', help='Запустить интерактивный TUI монитор оборудования (Hardware Monitor)')
     parser.add_argument('--hw-json', action='store_true', help='Вывести текущий слепок состояния оборудования в формате JSON')
+    parser.add_argument('--reboots', action='store_true', help='Анализ причин перезагрузок и выключений ОС (Reboot Analyzer)')
+    parser.add_argument('--reboot-limit', type=int, default=10, help='Количество сессий перезагрузки для анализа (по умолчанию: 10)')
     parser.add_argument('--providers', action='store_true', help='Отобразить статус всех аппаратных провайдеров и утилит в /bin')
     parser.add_argument('--cross-check', action='store_true', help='Запустить перекрестную проверку (cross-check) данных оборудования')
     args = parser.parse_args()
+    if args.reboots:
+        from apps.windows.telemetry.reboot_analyzer import WindowsRebootAnalyzer
+        analyzer = WindowsRebootAnalyzer()
+        report = analyzer.collect_reboot_history(limit=args.reboot_limit, persist_to_storage=True)
+        if args.json:
+            print(json.dumps(report.model_dump(), ensure_ascii=False, indent=2))
+            return
+        print('\n=== АНАЛИЗАТОР ПЕРЕЗАГРУЗОК И ВЫКЛЮЧЕНИЙ WINDOWS ===')
+        print(f"Хост: {report.hostname} | Текущий запуск: {report.current_boot_time} (Аптайм: {report.current_uptime_human})")
+        print(f"Статистика: {report.total_reboots_analyzed} перезапусков | Плановых: {report.planned_count} | Обновлений: {report.update_reboot_count} | Аварийных: {report.unexpected_count} | BSOD: {report.bsod_count}")
+        print(f"Индекс надежности: {report.stability_score}%/100%\n")
+        print('─' * 70)
+        for s in report.sessions:
+            print(f"[{s.shutdown_type.value}] Сессия: {s.boot_id}")
+            print(f"  Запуск: {s.boot_time} | Предыдущий: {s.previous_boot_time or 'N/A'} | Аптайм сессии: {s.uptime_human or 'N/A'}")
+            print(f"  Заключение: {s.conclusion}")
+            if s.initiating_process:
+                print(f"  Инициатор (1074): {s.initiating_process} (пользователь: {s.initiating_user or 'N/A'})")
+            if s.reason_text:
+                print(f"  Причина: {s.reason_text} (код: {s.reason_code or 'N/A'})")
+            if s.bugcheck_code:
+                print(f"  BSOD StopCode: {s.bugcheck_code}")
+            if s.windows_update_kb:
+                print(f"  Обновление: {s.windows_update_kb}")
+            if s.evidence:
+                print(f"  Улики: {' | '.join(s.evidence[:3])}")
+            print('─' * 70)
+        return
     if args.providers:
         from apps.windows.hardware.registry import HardwareProviderRegistry
         reg = HardwareProviderRegistry()

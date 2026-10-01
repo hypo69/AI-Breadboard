@@ -1,9 +1,26 @@
-"""
-Минимальная реализация роутера router_ninite.
-"""
-"""
-Router для управления расписанием Ninite.
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - Router Ninite Module
+# =============================================================================
+# Description:
+#   Минимальная реализация роутера router_ninite.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.routers.core.router_ninite import NiniteScheduleRequest
+#
+#     service = NiniteScheduleRequest()
+#
+# File: router_ninite.py
+# Project: ai-breadboard
+# Package: src.api.routers.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Минимальная реализация роутера router_ninite."""
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import Literal
@@ -39,4 +56,4 @@ def init_router() -> APIRouter:
     """Инициализация и возврат роутера для FastAPI приложения."""
     return router
 
-__all__ = ["init_router", "router", "TASK_NAME", "NiniteScheduleRequest"]
+__all__ = ["init_router", "router", "TASK_NAME", "NiniteScheduleRequest"]

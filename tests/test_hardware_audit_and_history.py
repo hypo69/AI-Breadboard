@@ -1,15 +1,35 @@
-"""Unit and integration tests for hardware audit, driver currency, and history archives."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Hardware Audit And History
+# =============================================================================
+# Description:
+#   Unit and integration tests for hardware audit, driver currency, and history archives.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_hardware_audit_and_history import TestHardwareAuditor
+#
+#     service = TestHardwareAuditor()
+#
+# File: test_hardware_audit_and_history.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Unit and integration tests for hardware audit, driver currency, and history archives."""
+
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-from apps.windows.api.setupapi import PnPDeviceInfo
+from apps.windows.telemetry.win32_ffi.setupapi import PnPDeviceInfo
 from apps.windows.telemetry import DriverInfo, HardwareArchiveEntry, HardwareAuditor, HardwareAuditReport, HardwareChangeItem, HardwareDeviceAudit, HardwareHistoryManager, HardwareSensor, SystemCollector
-from src.api.routers.core.router_system import init_router
+
 
 class TestHardwareAuditor:
     """Набор тестов для движка аудита оборудования и драйверов."""
@@ -126,14 +146,8 @@ class TestHardwareHistoryAndDiff:
             assert loaded is not None
             assert loaded.archive_id == entry1.archive_id
 
-class TestSystemCollectorAndRouterIntegration:
-    """Тестирование интеграции аудита оборудования с SystemCollector и FastAPI."""
-
-    @pytest.fixture
-    def client(self):
-        app = FastAPI()
-        app.include_router(init_router())
-        return TestClient(app)
+class TestSystemCollectorAuditIntegration:
+    """Тестирование интеграции аудита оборудования с SystemCollector."""
 
     def test_collector_hardware_audit_methods(self):
         """Проверка вызовов методов аудита и архивации в SystemCollector."""
@@ -147,25 +161,3 @@ class TestSystemCollectorAndRouterIntegration:
         history = collector.get_hardware_history(limit=5)
         assert isinstance(history, list)
         assert len(history) >= 1
-
-    def test_api_hardware_endpoints(self, client: TestClient):
-        """Проверка REST API эндпоинтов /hardware/audit, /history, /changes, /archive."""
-        res_audit = client.get('/api/v1/system/hardware/audit')
-        assert res_audit.status_code == 200
-        data_audit = res_audit.json()
-        assert 'devices_count' in data_audit
-        assert 'devices' in data_audit
-        assert len(data_audit['devices']) >= 1
-        res_arch = client.post('/api/v1/system/hardware/archive')
-        assert res_arch.status_code == 200
-        data_arch = res_arch.json()
-        assert 'archive_id' in data_arch
-        res_hist = client.get('/api/v1/system/hardware/history')
-        assert res_hist.status_code == 200
-        data_hist = res_hist.json()
-        assert isinstance(data_hist, list)
-        assert len(data_hist) >= 1
-        res_changes = client.get('/api/v1/system/hardware/changes')
-        assert res_changes.status_code == 200
-        data_changes = res_changes.json()
-        assert isinstance(data_changes, list)

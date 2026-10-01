@@ -49,6 +49,7 @@ apps/
 | **Microsoft Defender Security Center** | `python -m apps.windows_defender` | `8113` | `/api/v1/defender/*` | Мониторинг и управление Microsoft Defender Antivirus, правила ASR, Controlled Folder Access (Ransomware), аудит исключений, детекция Fileless и корреляция событий. |
 | **Windows Startup Auditor** | `python -m apps.windows_startup_auditor` | `8112` | `/api/v1/startup-auditor/*` | Полный поиск всех точек автозагрузки и персистентности Windows (реестр Run/RunOnce, папки Startup, Winlogon, IFEO, службы, задачи), аудит безопасности и оптимизация старта. |
 | **Windows Backup Manager** | `python -m apps.windows_backup_manager` | `8114` | `/api/v1/backup-manager/*` | Управление библиотеками Windows, File History, теневыми копиями VSS и RAG-поиском по резервным копиям. |
+| **Windows System Checkpoints** | `python -m apps.windows.system_checkpoints` | `8000` | `/api/v1/windows-checkpoints/*` | Управление контрольными точками системы, базовыми и периодическими WIM-образами (DISM), средой WinRE и аудитом актуальности (System Drift). |
 | **Network Terminal** | `python -m apps.network_terminal` | `8101` | `/api/v1/network/*` | Live packet capture, protocol distribution, and traffic anomaly detection. |
 | **Trading Terminal** | `python -m apps.trading_terminal` | `8103` | `/api/v1/trading/*` | Interactive exchange desk with real-time tickers, orderbook, position & PnL tracking. |
 | **Google Cloud Monitor** | `python -m apps.gcloud_monitor` | `8104` | `/api/gcloud/*` | Cloud Logging, metrics, IAM security audit, and AI diagnostics. |

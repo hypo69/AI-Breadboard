@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Provider Remember Config
+# =============================================================================
+# Description:
+#   Test provider toggle switch and remember config functionality.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_provider_remember_config import client
+#
+#     res = client()
+#
+# File: test_provider_remember_config.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Test provider toggle switch and remember config functionality."""
+
 import json
 from unittest.mock import patch
 import pytest

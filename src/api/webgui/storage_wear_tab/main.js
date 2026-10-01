@@ -1,16 +1,20 @@
 /**
  * =============================================================================
- * Process Name: Windows Storage & Battery Wear Logic
+ * Process Name: AI-Breadboard UI - Main Script
  * =============================================================================
  * Description:
- *   Клиентский контроллер вкладки износа накопителей и батареи:
- *   SMART состояние дисков, остаточный ресурс SSD и деградация аккумулятора.
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/storage_wear_tab/main.js?v=20261001_v1" type="module"></script>
  *
  * File: main.js
- * Project: AI-Breadboard
- * Module: WebInterface.StorageWearTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/storage_wear_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

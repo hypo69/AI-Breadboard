@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Chat Module
+# =============================================================================
+# Description:
+#   Универсальный чат-клиент для любого OpenAI-совместимого эндпоинта.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.providers.openai.chat import OpenAICompatChat
+#
+#     service = OpenAICompatChat()
+#     result = service.create_for_provider()
+#     print(result)
+#
+# File: chat.py
+# Project: ai-breadboard
+# Package: src.ai.providers.openai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Универсальный чат-клиент для любого OpenAI-совместимого эндпоинта."""
+
 import asyncio
 import json
 import os
@@ -5,7 +30,7 @@ import time
 from typing import Any, AsyncIterator, Dict, List, Optional
 import aiohttp
 from header import __root__
-from logger.logger import logger
+from logger import logger
 from src.utils.jjson import j_loads
 _GLOBAL_CONFIG_PATH = __root__ / 'config.json'
 _KNOWN_PROVIDERS: Dict[str, Dict[str, str]] = {'openai': {'base_url': 'https://api.openai.com/v1', 'env_key': 'OPENAI_API_KEY'}, 'deepseek': {'base_url': 'https://api.deepseek.com/v1', 'env_key': 'DEEPSEEK_API_KEY'}, 'groq': {'base_url': 'https://api.groq.com/openai/v1', 'env_key': 'GROQ_API_KEY'}, 'openrouter': {'base_url': 'https://openrouter.ai/api/v1', 'env_key': 'OPENROUTER_API_KEY'}, 'lmstudio': {'base_url': 'http://localhost:1234/v1', 'env_key': 'LMSTUDIO_API_KEY'}, 'local': {'base_url': 'http://localhost:1234/v1', 'env_key': ''}}

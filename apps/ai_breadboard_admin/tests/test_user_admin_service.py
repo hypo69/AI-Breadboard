@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Ai_Breadboard_Admin Tests - Test User Admin Service
+# =============================================================================
+# Description:
+#   Фикстура мока UserManager.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.ai_breadboard_admin.tests.test_user_admin_service import mock_user_mgr
+#
+#     res = mock_user_mgr()
+#
+# File: test_user_admin_service.py
+# Project: ai-breadboard
+# Package: apps.ai_breadboard_admin.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""Фикстура мока UserManager."""
+
 from unittest.mock import MagicMock, patch
 import pytest
 from apps.ai_breadboard_admin.src.user_admin_service import UserAdminService

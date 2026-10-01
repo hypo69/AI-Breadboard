@@ -1,5 +1,27 @@
-"""Встроенные умные системные инструменты для подсистемы Windows."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core Tools - System Tools
+# =============================================================================
+# Description:
+#   Встроенные умные системные инструменты для подсистемы Windows.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.tools.system_tools import WindowsCollectorTool
+#
+#     service = WindowsCollectorTool()
+#
+# File: system_tools.py
+# Project: ai-breadboard
+# Package: apps.windows.core.tools
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Встроенные умные системные инструменты для подсистемы Windows."""
+
 import asyncio
 import json
 import platform
@@ -20,7 +42,7 @@ class WindowsCollectorTool(BaseTool):
 
     def __init__(self) -> None:
         """Инициализация коллекторов."""
-        from apps.windows.core.modules import CleanCollector, DriverCollector, EventLogCollector, IntegrityCollector, NetworkCollector, PerformanceCollector, ProcessCollector, SecurityCollector, ServicesCollector, SoftwareCollector, StorageCollector, TasksCollector, UpdateCollector
+        from apps.windows.core.audits import CleanCollector, DriverCollector, EventLogCollector, IntegrityCollector, NetworkCollector, PerformanceCollector, ProcessCollector, SecurityCollector, ServicesCollector, SoftwareCollector, StorageCollector, TasksCollector, UpdateCollector
         self.collectors: Dict[str, Any] = {'driver': DriverCollector(), 'storage': StorageCollector(), 'network': NetworkCollector(), 'process': ProcessCollector(), 'services': ServicesCollector(), 'tasks': TasksCollector(), 'security': SecurityCollector(), 'eventlog': EventLogCollector(), 'performance': PerformanceCollector(), 'software': SoftwareCollector(), 'clean': CleanCollector(), 'update': UpdateCollector(), 'integrity': IntegrityCollector()}
 
     async def execute(self, collector_name: str, **kwargs: Any) -> ToolExecutionResult:

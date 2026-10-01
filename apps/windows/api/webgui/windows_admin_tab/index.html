@@ -1,0 +1,189 @@
+<!--
+=============================================================================
+Process Name: Windows Web Interface - Index View
+=============================================================================
+Description:
+  Шаблон клиентского веб-интерфейса index.
+
+Usage Examples:
+    Web Route:
+      /windows/api/webgui/windows_admin_tab/index.html
+
+    Tab Frame Integration:
+      <iframe src="/windows/api/webgui/windows_admin_tab/index.html" class="w-100 h-100 border-0"></iframe>
+
+File: index.html
+Project: ai-breadboard
+Package: windows/api/webgui/windows_admin_tab
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-01 13:04:40
+=============================================================================
+-->
+
+<!-- Windows System Administrator Application Tab -->
+<style>
+  .winadmin-container {
+    padding: 0.5rem 0.75rem;
+  }
+  .winadmin-table {
+    width: 100%;
+    font-size: 0.78rem;
+    font-family: var(--font-mono, monospace);
+    border-collapse: collapse;
+  }
+  .winadmin-table th {
+    background: var(--surface-2);
+    padding: 5px 8px;
+    color: var(--text-muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .winadmin-table td {
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--border-subtle, rgba(51, 65, 85, 0.4));
+  }
+  .winadmin-filter-btn.active {
+    background-color: #3b82f6 !important;
+    color: #fff !important;
+    border-color: #3b82f6 !important;
+  }
+  .badge-hidden {
+    background-color: #6b21a8;
+    color: #e9d5ff;
+    border: 1px solid #9333ea;
+  }
+  .badge-admin {
+    background-color: #9a3412;
+    color: #ffedd5;
+    border: 1px solid #ea580c;
+  }
+  .badge-disabled {
+    background-color: #374151;
+    color: #9ca3af;
+  }
+</style>
+
+<div class="winadmin-container theme-sysadmin">
+  <!-- Header Alert & Status (Compact Strip) -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 py-1.5 px-3 rounded-2 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="fs-5">🛡️</span>
+      <span class="fw-bold text-white small" style="font-size: 0.92rem;">Windows System Administrator</span>
+      <span class="badge bg-dark border border-secondary text-info fw-normal" style="font-size: 0.7rem;">AD & Security Auditing</span>
+      <span class="text-secondary small d-none d-lg-inline" style="font-size: 0.76rem;">| Учетные записи, Скрытые пользователи & Телеметрия</span>
+    </div>
+    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-2 py-1" style="font-size: 0.72rem;" id="winadmin-status-badge">
+        ● Готов
+      </span>
+      <button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1" style="font-size: 0.75rem;" id="btn-winadmin-refresh">
+        <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+      </button>
+      <button class="btn btn-xs btn-outline-warning rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="btn-winadmin-config">
+        <i class="bi bi-gear-fill me-1"></i> Настройки
+      </button>
+    </div>
+  </div>
+
+  <!-- Top Metrics Bar (Compact Density Grid) -->
+  <div class="row g-2 mb-2">
+    <div class="col-6 col-md-3">
+      <div class="winadmin-card">
+        <span class="winadmin-label">Хост / Домен</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="winadmin-value text-truncate" id="winadmin-hostname" style="font-size: 0.95rem;">-</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="winadmin-card">
+        <span class="winadmin-label">Active Directory</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="winadmin-value text-info text-truncate" id="winadmin-ad-status" style="font-size: 0.9rem;">Локальный хост</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="winadmin-card">
+        <span class="winadmin-label">Пользователи (Все / Онлайн)</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="winadmin-value text-success" id="winadmin-user-count">0</span>
+          <span class="badge bg-dark border border-secondary text-muted small" id="winadmin-user-breakdown" style="font-size: 0.7rem;">0 скрытых</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="winadmin-card">
+        <span class="winadmin-label">События безопасности</span>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <span class="winadmin-value text-warning" id="winadmin-events-count">0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Panels Row 1: Users & Security Log -->
+  <div class="row g-3 mb-3">
+    <!-- User Accounts & Sessions Panel -->
+    <div class="col-lg-7">
+      <div class="winadmin-panel h-100">
+        <div class="winadmin-panel-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <span><i class="bi bi-people-fill me-1"></i> Учетные записи и сессии Windows</span>
+            <span class="badge bg-secondary" id="winadmin-users-badge">0 аккаунтов</span>
+          </div>
+          <!-- Filter Buttons Toolbar -->
+          <div class="btn-group btn-group-sm" role="group" id="winadmin-user-filters">
+            <button type="button" class="btn btn-outline-secondary py-0 px-2 winadmin-filter-btn active" data-filter="all">Все</button>
+            <button type="button" class="btn btn-outline-secondary py-0 px-2 winadmin-filter-btn" data-filter="active">В сети</button>
+            <button type="button" class="btn btn-outline-secondary py-0 px-2 winadmin-filter-btn" data-filter="hidden">Скрытые</button>
+            <button type="button" class="btn btn-outline-secondary py-0 px-2 winadmin-filter-btn" data-filter="admins">Админы</button>
+          </div>
+        </div>
+        <div class="p-0 table-responsive" style="max-height: 380px; overflow-y: auto;">
+          <table class="winadmin-table">
+            <thead>
+              <tr>
+                <th>Учетная запись</th>
+                <th>Группы / SID</th>
+                <th>Профиль / Диск</th>
+                <th>Ресурсы</th>
+                <th>Статус</th>
+                <th style="text-align: right;">Действие</th>
+              </tr>
+            </thead>
+            <tbody id="winadmin-users-tbody">
+              <tr><td colspan="6" class="text-center text-muted p-3">Загрузка пользователей и метрик...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Events Audit Log Panel -->
+    <div class="col-lg-5">
+      <div class="winadmin-panel h-100">
+        <div class="winadmin-panel-header">
+          <span><i class="bi bi-shield-exclamation me-1"></i> Общий журнал безопасности</span>
+          <span class="badge bg-secondary" id="winadmin-events-badge">0 записей</span>
+        </div>
+        <div class="p-0 table-responsive" style="max-height: 380px; overflow-y: auto;">
+          <table class="winadmin-table">
+            <thead>
+              <tr>
+                <th>Время</th>
+                <th>Event ID</th>
+                <th>Уровень</th>
+                <th>Источник / Описание</th>
+              </tr>
+            </thead>
+            <tbody id="winadmin-events-tbody">
+              <tr><td colspan="4" class="text-center text-muted p-3">Загрузка журнала событий...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

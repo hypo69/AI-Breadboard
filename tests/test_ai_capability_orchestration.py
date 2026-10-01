@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Ai Capability Orchestration
+# =============================================================================
+# Description:
+#   Verify hardware profile structure and fallback values.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_ai_capability_orchestration import test_hardware_probe
+#
+#     res = test_hardware_probe()
+#
+# File: test_ai_capability_orchestration.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Verify hardware profile structure and fallback values."""
+
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from src.ai.orchestration import HardwareProfile, probe_hardware, AICapability, CapabilityRegistry, ModelDescriptor, Locality, PolicyEngine, RoutingPolicy, PrivacyLevel, LocalityPreference, DiscoveryEngine, AIRouter, AIRequest

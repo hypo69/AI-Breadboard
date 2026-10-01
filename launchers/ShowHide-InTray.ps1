@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Showhide-Intray Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (ShowHide-InTray).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\ShowHide-InTray.ps1
+#
+# File: ShowHide-InTray.ps1
+# Project: ai-breadboard
+# Package: launchers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:06
+# =============================================================================
+
 <#
 .SYNOPSIS
     System tray companion and window visibility manager for AI Breadboard.

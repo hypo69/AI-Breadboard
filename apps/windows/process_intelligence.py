@@ -1,13 +1,26 @@
-"""
-Process Intelligence Module - Unified interface for process analysis.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows - Process Intelligence
+# =============================================================================
+# Description:
+#   Process Intelligence Module - Unified interface for process analysis.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.process_intelligence import ProcessSnapshot
+#
+#     service = ProcessSnapshot()
+#
+# File: process_intelligence.py
+# Project: ai-breadboard
+# Package: apps.windows
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
 
-Combines kernel32, psapi, ntdll, and ETW APIs to provide:
-- Process enumeration with memory and thread details
-- Module dependency analysis
-- Thread and handle information
-- Real-time event monitoring
-- Correlation with services, drivers, and network connections
-"""
+"""Process Intelligence Module - Unified interface for process analysis."""
+
 import threading
 import time
 from typing import List, Optional, Dict, Set, Tuple

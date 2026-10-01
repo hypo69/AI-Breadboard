@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Api Key State
+# =============================================================================
+# Description:
+#   Test saving an API key to gemini_keys.json and dynamic env substitution.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_api_key_state import test_save_and_load_api_key
+#
+#     res = test_save_and_load_api_key()
+#
+# File: test_api_key_state.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Test saving an API key to gemini_keys.json and dynamic env substitution."""
+
 import os
 from unittest.mock import patch
 from src.ai.gemini.gemini_api_key_state import delete_api_key, get_status, load_api_keys, mark_exhausted, next_available_in, reset_all_quotas, reset_quota, save_api_key, update_last_run

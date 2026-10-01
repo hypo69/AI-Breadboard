@@ -1,10 +1,35 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Pdf Module
+# =============================================================================
+# Description:
+#   Extract text content from a PDF file using pypdf -> pdfminer -> regex stream fallback.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.pdf import PDFUtils
+#
+#     service = PDFUtils()
+#     result = service.save_pdf_pdfkit()
+#     print(result)
+#
+# File: pdf.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Extract text content from a PDF file using pypdf -> pdfminer -> regex stream fallback."""
+
 import sys
 import os
 import json
 from pathlib import Path
 from typing import Union, Optional
-from logger.logger import logger
+from logger import logger
 from header import __root__
 wkhtmltopdf_exe: Path = Path('C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe')
 

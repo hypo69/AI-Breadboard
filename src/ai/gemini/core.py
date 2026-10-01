@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Core Module
+# =============================================================================
+# Description:
+#   Модуль реализации компонента `GoogleGenerativeAICore` системы AI-Breadboard.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.gemini.core import GoogleGenerativeAICore
+#
+#     service = GoogleGenerativeAICore()
+#     result = service.get_available_models()
+#     print(result)
+#
+# File: core.py
+# Project: ai-breadboard
+# Package: src.ai.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Модуль реализации компонента `GoogleGenerativeAICore` системы AI-Breadboard."""
+
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -5,7 +30,7 @@ from typing import Any
 from google import genai
 from src.ai.orchestration.model_manager import add_unsupported_model as _mgr_add_unsupported_model, get_available_models as _mgr_get_available_models, load_unsupported_models as _mgr_load_unsupported_models
 from src.config import server_cfg, ai_cfg
-from logger.logger import logger
+from logger import logger
 from src.ai.gemini.gemini_api_key_state import get_status, load_api_keys, mark_exhausted, next_available_in, update_last_run
 from src.utils.jjson import j_loads
 _config_path: Path = Path(__file__).parent / 'config.json'

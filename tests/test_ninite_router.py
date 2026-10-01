@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Ninite Router
+# =============================================================================
+# Description:
+#   Тесты роутера и интеграции Ninite Auto-Updater.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_ninite_router import TestNiniteRouterHappyPath
+#
+#     service = TestNiniteRouterHappyPath()
+#
+# File: test_ninite_router.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Тесты роутера и интеграции Ninite Auto-Updater."""
+
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch

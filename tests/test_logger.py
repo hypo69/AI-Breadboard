@@ -1,6 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Logger
+# =============================================================================
+# Description:
+#   Tests for core/logger module.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_logger import TestJsonFormatter
+#
+#     service = TestJsonFormatter()
+#
+# File: test_logger.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Tests for core/logger module.
 
 Comprehensive testing of JSON formatter and logger functionality."""
+
 import pytest
 import json
 from unittest.mock import Mock
@@ -14,7 +36,7 @@ class TestJsonFormatter:
         
         Verifies that JsonFormatter correctly formats log records as JSON.
         """
-        from logger.logger import JsonFormatter
+        from logger import JsonFormatter
         formatter = JsonFormatter()
         record = Mock()
         record.levelname = 'INFO'
@@ -39,7 +61,7 @@ class TestLogger:
         
         Verifies that logger instances are singletons.
         """
-        from logger.logger import Logger
+        from logger import Logger
         logger1 = Logger()
         logger2 = Logger()
         assert logger1 is logger2
@@ -49,7 +71,7 @@ class TestLogger:
         
         Verifies that all standard logging methods are available.
         """
-        from logger.logger import Logger
+        from logger import Logger
         logger = Logger()
         assert hasattr(logger, 'info')
         assert hasattr(logger, 'error')
@@ -62,7 +84,7 @@ class TestLogger:
         
         Verifies that global logger instance is accessible.
         """
-        from logger.logger import logger
+        from logger import logger
         assert logger is not None
         assert hasattr(logger, 'info')
 

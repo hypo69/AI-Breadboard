@@ -1,16 +1,23 @@
 /**
  * =============================================================================
- * Process Name: Workspace Multi-RAG Collections Management
+ * Process Name: AI-Breadboard UI - Userragcollections Script
  * =============================================================================
  * Description:
- *   Manages user workspace RAG collections listing, selection, modal creation,
- *   and collection deletion.
+ *   Клиентский веб-скрипт модуля userRagCollections.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/rag_tab/modules/userRagCollections.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { getActiveUserRagId, setActiveUserRagId, renderUserRagsList } from '/src/api/webgui/rag_tab/modules/userRagCollections.js';
  *
  * File: userRagCollections.js
- * Project: AI Breadboard
- * Module: RAGTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/rag_tab/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

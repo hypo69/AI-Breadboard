@@ -1,8 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Query Router
+# =============================================================================
+# Description:
+#   Tests for QueryRouter - smart query analysis and routing.
+#
+# Usage Examples:
+#   CLI:
+#     python -m tests.test_query_router
+#   Python API:
+#     from tests.test_query_router import TestQueryRouter
+#
+#     service = TestQueryRouter()
+#
+# File: test_query_router.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Tests for QueryRouter - smart query analysis and routing.
 
 Tests query analysis, language detection, keyword extraction,
-pattern matching, and routing decisions.
-"""
+pattern matching, and routing decisions."""
+
 import pytest
 from src.rag.query_router import QueryRouter, RoutingType, QueryLanguage, get_query_router
 

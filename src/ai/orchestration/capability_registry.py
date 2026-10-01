@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Capability Registry Module
+# =============================================================================
+# Description:
+#   Standard capability identifiers for AI workloads.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.orchestration.capability_registry import AICapability
+#
+#     service = AICapability()
+#
+# File: capability_registry.py
+# Project: ai-breadboard
+# Package: src.ai.orchestration
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Standard capability identifiers for AI workloads."""
+
 from enum import StrEnum
 from typing import Any, Dict, List, Optional, Set
 from dataclasses import dataclass, field

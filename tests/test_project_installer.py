@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Project Installer
+# =============================================================================
+# Description:
+#   Test the structure and completeness of the project-installer skill.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_project_installer import TestProjectInstallerSkillStructure
+#
+#     service = TestProjectInstallerSkillStructure()
+#
+# File: test_project_installer.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Test the structure and completeness of the project-installer skill."""
+
 import json
 import subprocess
 import sys

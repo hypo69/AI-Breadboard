@@ -1,13 +1,42 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Api Single Module
+# =============================================================================
+# Description:
+#   Класс для выполнения одиночных запросов к API Gemini (ask).
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.gemini.api_single import GoogleGenerativeAISingleRequest
+#
+#     service = GoogleGenerativeAISingleRequest()
+#
+# File: api_single.py
+# Project: ai-breadboard
+# Package: src.ai.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Класс для выполнения одиночных запросов к API Gemini (ask)."""
+
 import asyncio
-from logger.logger import logger
+from logger import logger
 from src.ai.gemini.gemini_api_key_state import update_last_run
 from .core import GoogleGenerativeAICore
 from .errors import GoogleGenerativeAIErrorMixin
 from .history import GoogleGenerativeAIHistoryMixin
 from .config import GoogleGenerativeAIConfigMixin
 
-class GoogleGenerativeAISingleRequest(GoogleGenerativeAICore, GoogleGenerativeAIErrorMixin, GoogleGenerativeAIHistoryMixin, GoogleGenerativeAIConfigMixin):
-    """Class for single request API methods."""
+
+class GoogleGenerativeAISingleRequest(
+    GoogleGenerativeAICore,
+    GoogleGenerativeAIErrorMixin,
+    GoogleGenerativeAIHistoryMixin,
+    GoogleGenerativeAIConfigMixin,
+):
+    """Класс для выполнения одиночных запросов к API Gemini (ask)."""
 
     async def ask(self, q: str, attempts: int=15, generation_config: dict={}) -> str:
         """Send single text request to model.

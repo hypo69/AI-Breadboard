@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router Autolog
+# =============================================================================
+# Description:
+#   Тесты FastAPI роутера управления автологгированием.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_router_autolog import test_app
+#
+#     res = test_app()
+#
+# File: test_router_autolog.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Тесты FastAPI роутера управления автологгированием."""
+
 import csv
 import json
 from pathlib import Path

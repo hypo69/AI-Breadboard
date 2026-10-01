@@ -1,7 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Dev - Analyze Dependencies
+# =============================================================================
+# Description:
+#   Script dependency analysis utility.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.dev.analyze_dependencies
+#   Python API:
+#     from scripts.dev.analyze_dependencies import ScriptAnalyzer
+#
+#     service = ScriptAnalyzer()
+#
+# File: analyze_dependencies.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Script dependency analysis utility.
 
 Analyzes dependencies between project scripts to identify usage patterns
 and help determine which scripts can be safely removed."""
+
 import ast
 import re
 from pathlib import Path

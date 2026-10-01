@@ -1,6 +1,26 @@
-"""
-Tests for core/utils/url.py module
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Utils Url
+# =============================================================================
+# Description:
+#   Tests for core/utils/url.py module
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_utils_url import TestExtractUrlParams
+#
+#     service = TestExtractUrlParams()
+#
+# File: test_utils_url.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Tests for core/utils/url.py module"""
+
 import pytest
 from unittest.mock import patch, Mock
 from src.utils.url import extract_url_params, is_url, url_shortener

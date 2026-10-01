@@ -1,7 +1,29 @@
-﻿"""Тесты для модуля многоуровневой сетевой телеметрии и использования сети."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Tests - Test Network Usage
+# =============================================================================
+# Description:
+#   Тесты для модуля многоуровневой сетевой телеметрии и использования сети.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.tests.test_network_usage import test_iphelper_adapter_statistics
+#
+#     res = test_iphelper_adapter_statistics()
+#
+# File: test_network_usage.py
+# Project: ai-breadboard
+# Package: apps.windows.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Тесты для модуля многоуровневой сетевой телеметрии и использования сети."""
+
 import pytest
-from apps.windows.telemetry.api_bindings.nethelper import IPHelperAPI
+from apps.windows.telemetry.win32_ffi.nethelper import IPHelperAPI
 from apps.windows.network.network_usage import WindowsNetworkUsageCollector
 from apps.windows.telemetry.collector import SystemCollector
 from apps.windows.telemetry.models import (

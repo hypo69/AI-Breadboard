@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Core Rag
+# =============================================================================
+# Description:
+#   Тесты моделей данных RAG.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_core_rag import TestCoreRagModels
+#
+#     service = TestCoreRagModels()
+#
+# File: test_core_rag.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Тесты моделей данных RAG."""
+
 import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock, AsyncMock

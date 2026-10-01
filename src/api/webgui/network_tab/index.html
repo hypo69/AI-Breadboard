@@ -1,3 +1,23 @@
+<!--
+=============================================================================
+Process Name: AI-Breadboard Web Interface - Index View
+=============================================================================
+Description:
+  Шаблон веб-интерфейса системного модуля (index).
+
+Usage Examples:
+    Web Route:
+      /src/api/webgui/network_tab/index.html
+
+File: index.html
+Project: ai-breadboard
+Package: src/api/webgui/network_tab
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-01 13:13:56
+=============================================================================
+-->
+
 <!-- Windows Network Terminal Tab (/apps/windows/network) -->
 <style>
   .net-container {
@@ -198,6 +218,11 @@
       </button>
     </li>
     <li class="nav-item">
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-net-devices">
+        <i class="bi bi-hdd-stack me-1 text-success"></i> Устройства в сети (<span id="badge-devices-count">0</span>)
+      </button>
+    </li>
+    <li class="nav-item">
       <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-net-capture">
         <i class="bi bi-broadcast-pin me-1"></i> <span data-i18n="auto___9c87ea"></span> (Live DPI)
       </button>
@@ -334,7 +359,7 @@
             </div>
           </div>
           <div class="d-flex align-items-center gap-2">
-            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="net-conns-filter" placeholder="<span data-i18n="auto__ip__8e4239"></span>, PID)..." style="max-width: 250px;">
+            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="net-conns-filter" placeholder="Поиск (IP, PID)..." style="max-width: 250px;">
             <button class="btn btn-xs btn-outline-info rounded-pill px-2 py-0" id="btn-refresh-conns"><span data-i18n="auto___c2f668"></span></button>
           </div>
         </div>
@@ -397,7 +422,7 @@
             <span class="badge bg-secondary" id="net-captured-badge">0 <span data-i18n="auto___d62535"></span></span>
           </div>
           <div class="d-flex align-items-center gap-2">
-            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="net-table-filter" placeholder="<span data-i18n="auto__ip__27cc54"></span>..." style="max-width: 220px;">
+            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="net-table-filter" placeholder="Фильтр..." style="max-width: 220px;">
             <button class="btn btn-xs btn-outline-secondary rounded-pill px-2 py-0" id="btn-clear-packets"><span data-i18n="auto___98b207"></span></button>
           </div>
         </div>
@@ -415,7 +440,7 @@
               </tr>
             </thead>
             <tbody id="net-packets-tbody">
-              <tr><td colspan="7" class="text-center py-4 text-muted"><span data-i18n="auto___223b6b"></span>".</td></tr>
+              <tr><td colspan="7" class="text-center py-4 text-muted">Пакеты не захвачены. Выберите адаптер и нажмите "Старт захвата".</td></tr>
             </tbody>
           </table>
         </div>
@@ -432,7 +457,7 @@
             </div>
             <div class="p-3">
               <div class="mb-3">
-                <label class="form-label small fw-semibold text-light"><span data-i18n="auto__pcap_pcapng_cap__7df709"></span>:</label>
+                <label class="form-label small fw-semibold text-light">Файл захвата (.pcap, .pcapng, .cap):</label>
                 <input type="file" class="form-control form-control-sm bg-dark text-white border-secondary" id="net-pcap-file" accept=".pcap,.pcapng,.cap">
               </div>
               <div class="d-flex justify-content-between align-items-center mb-3">
@@ -442,7 +467,7 @@
                 </button>
               </div>
               <div class="p-2.5 rounded bg-dark border border-secondary small text-muted" style="font-size: 0.75rem;">
-                <i class="bi bi-info-circle text-info me-1"></i> PCAP-<span data-i18n="auto__ai__df2763"></span>.
+                <i class="bi bi-info-circle text-info me-1"></i> PCAP-дамп анализируется локальным TShark и модулем AIDetector на наличие сетевых аномалий.
               </div>
             </div>
           </div>
@@ -480,6 +505,57 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION: LAN Devices & Network Neighborhood -->
+    <div class="tab-pane fade" id="tab-net-devices">
+      <div class="net-panel mb-3">
+        <div class="net-panel-header">
+          <div class="d-flex align-items-center gap-2">
+            <span><i class="bi bi-hdd-stack text-success me-1"></i> Устройства в локальной сети (LAN & Neighbors)</span>
+            <span class="badge bg-dark border border-secondary text-secondary small" id="net-devices-status-badge">Кеш Windows</span>
+          </div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <select class="form-select form-select-sm bg-dark text-light border-secondary" id="select-net-subnet" style="font-size: 0.75rem; width: auto; min-width: 150px;">
+              <option value="">Все локальные подсети</option>
+            </select>
+            <button class="btn btn-sm btn-success rounded-pill px-3 fw-bold" id="btn-scan-lan-devices">
+              <i class="bi bi-radar me-1"></i> Сканировать сеть
+            </button>
+            <button class="btn btn-sm btn-outline-info rounded-pill px-2.5" id="btn-refresh-lan-devices" title="Обновить кеш соседей">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
+        </div>
+        <div class="p-2 border-bottom border-secondary d-flex gap-2 align-items-center bg-dark">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-dark text-secondary border-secondary"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control bg-dark text-light border-secondary" id="search-net-devices" placeholder="Фильтр по IP, MAC, имени хоста или производителю..." style="font-size: 0.78rem;">
+          </div>
+        </div>
+        <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
+          <table class="net-table table-hover">
+            <thead>
+              <tr>
+                <th style="width: 170px;">IP-адрес</th>
+                <th style="width: 200px;">Имя хоста</th>
+                <th style="width: 170px;">MAC-адрес</th>
+                <th>Производитель / Вендор</th>
+                <th style="width: 130px;">Статус / Роль</th>
+                <th style="width: 130px;">Метод</th>
+                <th style="width: 90px; text-align: right;">Задержка</th>
+              </tr>
+            </thead>
+            <tbody id="table-net-devices-body">
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                  <div class="spinner-border spinner-border-sm text-info me-2"></div> Загрузка устройств...
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

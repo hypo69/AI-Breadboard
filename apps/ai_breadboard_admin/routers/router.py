@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Ai_Breadboard_Admin Routers - Router
+# =============================================================================
+# Description:
+#   Проверка прав доступа администратора к эндпоинтам управления.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.ai_breadboard_admin.routers.router import RagModeRequest
+#
+#     service = RagModeRequest()
+#
+# File: router.py
+# Project: ai-breadboard
+# Package: apps.ai_breadboard_admin.routers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Проверка прав доступа администратора к эндпоинтам управления."""
+
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field

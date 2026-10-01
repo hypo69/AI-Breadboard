@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins Developer-Plugins Rag_Cleaner - Plugin
+# =============================================================================
+# Description:
+#   Модуль реализации компонента `RAGCleanerPlugin`.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.developer-plugins.rag_cleaner.plugin import RAGCleanerPlugin
+#
+#     service = RAGCleanerPlugin()
+#
+# File: plugin.py
+# Project: ai-breadboard
+# Package: plugins.developer-plugins.rag_cleaner
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
 from __future__ import annotations
+"""Модуль реализации компонента `RAGCleanerPlugin`."""
+
 import json
 from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple

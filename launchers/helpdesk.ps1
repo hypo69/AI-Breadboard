@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Helpdesk Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (helpdesk).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\helpdesk.ps1
+#
+# File: helpdesk.ps1
+# Project: ai-breadboard
+# Package: launchers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:06
+# =============================================================================
+
 <#
 .SYNOPSIS
     Сценарий запуска и управления приложением Helpdesk (Служба поддержки).

@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Plugin Application Log Analyzer
+# =============================================================================
+# Description:
+#   Unit tests for plugins.application_log_analyzer.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_plugin_application_log_analyzer import test_application_log_analyzer_manifest
+#
+#     res = test_application_log_analyzer_manifest()
+#
+# File: test_plugin_application_log_analyzer.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for plugins.application_log_analyzer."""
+
 import pytest
 from plugins.application_log_analyzer import plugin, ApplicationLogAnalyzerPlugin
 

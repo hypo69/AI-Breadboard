@@ -1,5 +1,27 @@
-"""AI-диагност для комплексного анализа состояния Windows."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Ai - Diagnostician
+# =============================================================================
+# Description:
+#   Диагностический AI-сервис Windows.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.ai.diagnostician import WindowsAIDiagnostician
+#
+#     service = WindowsAIDiagnostician()
+#
+# File: diagnostician.py
+# Project: ai-breadboard
+# Package: apps.windows.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Диагностический AI-сервис Windows."""
+
 from typing import Any, Dict, Optional
 from logger import logger
 from apps.windows.ai.prompt_templates import build_audit_prompt, build_system_prompt

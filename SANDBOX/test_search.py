@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Sandbox - Test Search
+# =============================================================================
+# Description:
+#   Скрипт/модуль системы AI-Breadboard (`test_search`).
+#
+# Usage Examples:
+#   CLI:
+#     python -m SANDBOX.test_search
+#   Python API:
+#     import SANDBOX.test_search as test_search
+#
+# File: test_search.py
+# Project: ai-breadboard
+# Package: SANDBOX
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:04
+# =============================================================================
+
+"""Скрипт/модуль системы AI-Breadboard (`test_search`)."""
+
 import asyncio
 import urllib.parse
 from bs4 import BeautifulSoup

@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Chat Sessions
+# =============================================================================
+# Description:
+#   Fixture ensuring chat sessions db uses an isolated temporary path during tests.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_chat_sessions import TestChatSessionsDB
+#
+#     service = TestChatSessionsDB()
+#
+# File: test_chat_sessions.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Fixture ensuring chat sessions db uses an isolated temporary path during tests."""
+
 import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch

@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Log_Intelligence Src - Models
+# =============================================================================
+# Description:
+#   Enumeration of standard log severity levels.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.log_intelligence.src.models import LogSeverity
+#
+#     service = LogSeverity()
+#
+# File: models.py
+# Project: ai-breadboard
+# Package: apps.windows.log_intelligence.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Enumeration of standard log severity levels."""
+
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any, Dict, List, Optional

@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Launcher Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (launcher).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\launcher.ps1
+#
+# File: launcher.ps1
+# Project: ai-breadboard
+# Package: root
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:20:26
+# =============================================================================
+
 <#
 .SYNOPSIS
     AI Breadboard — графический лончер сценариев и сервисов.

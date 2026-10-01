@@ -1,3 +1,25 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard RAG - Query Router Module
+# =============================================================================
+# Description:
+#   Модуль роутера запросов для интеллектуального поиска.
+#
+# Usage Examples:
+#   Python API:
+#     from src.rag.query_router import RoutingType
+#
+#     service = RoutingType()
+#
+# File: query_router.py
+# Project: ai-breadboard
+# Package: src.rag
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+from __future__ import annotations
 """Модуль роутера запросов для интеллектуального поиска.
 
 Process Name: Query Router for Smart Document Search Routing
@@ -8,9 +30,7 @@ Description:
   - pixel: поиск только по изображениям (CLIP → FAISS)
   - hybrid: комбинированный поиск по тексту и изображениям
 
-Использует ключевые слова, шаблоны и эвристики для маршрутизации запросов.
-"""
-from __future__ import annotations
+Использует ключевые слова, шаблоны и эвристики для маршрутизации запросов."""
 
 import re
 from dataclasses import dataclass

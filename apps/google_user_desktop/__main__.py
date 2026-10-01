@@ -1,5 +1,28 @@
-"""Точка входа CLI для Google User Desktop."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Google_User_Desktop -   Main  
+# =============================================================================
+# Description:
+#   Точка входа CLI для Google User Desktop.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.google_user_desktop.__main__
+#   Python API:
+#     from apps.google_user_desktop.__main__ import main
+#
+#     res = main()
+#
+# File: __main__.py
+# Project: ai-breadboard
+# Package: apps.google_user_desktop
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Точка входа CLI для Google User Desktop."""
 
 import argparse
 import asyncio

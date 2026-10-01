@@ -1,5 +1,27 @@
-"""Сервис интеграции с HWiNFO."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps ~Hwinfo Core - Hwinfo Service
+# =============================================================================
+# Description:
+#   Сервис интеграции с HWiNFO.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.~hwinfo.core.hwinfo_service import HwinfoService
+#
+#     service = HwinfoService()
+#
+# File: hwinfo_service.py
+# Project: ai-breadboard
+# Package: apps.~hwinfo.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Сервис интеграции с HWiNFO."""
+
 import ctypes
 import json
 import os

@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Chat Module
+# =============================================================================
+# Description:
+#   Google Gemini provider adapter for streaming and non-streaming chat.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.providers.gemini.chat import GeminiChatBase
+#
+#     service = GeminiChatBase()
+#     result = service.get_available_models()
+#     print(result)
+#
+# File: chat.py
+# Project: ai-breadboard
+# Package: src.ai.providers.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """Google Gemini provider adapter for streaming and non-streaming chat."""
+
 import os
 from typing import Any, AsyncGenerator, AsyncIterator, Dict, List, Optional, Set
 from src.ai.providers.base import BaseChatProvider

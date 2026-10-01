@@ -1,10 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins Developer-Plugins Telegram_Channel_Rag - Collector
+# =============================================================================
+# Description:
+#   Telegram message collection and parsing module.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.developer-plugins.telegram_channel_rag.collector import TelegramMessageCollector
+#
+#     service = TelegramMessageCollector()
+#
+# File: collector.py
+# Project: ai-breadboard
+# Package: plugins.developer-plugins.telegram_channel_rag
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Telegram message collection and parsing module.
 
 Provides web scrapers for public Telegram channels and parsers for exported JSON
 chat logs, extracting message IDs, sender names, text content, media captions,
-and formatted Telegram URLs.
-"""
-from __future__ import annotations
+and formatted Telegram URLs."""
+
 import json
 import re
 from datetime import datetime

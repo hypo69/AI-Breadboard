@@ -1,4 +1,27 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Activitytracker Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля activityTracker.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/js/activityTracker.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { isUserAuthenticated, trackEvent, trackTabSwitch } from '/src/api/webgui/js/activityTracker.js';
+ *
+ * File: activityTracker.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/js
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * activityTracker.js — Client-side Telemetry & User Activity Tracker
  *
  * Tracks tab views, dwell durations, and UI button/action clicks strictly

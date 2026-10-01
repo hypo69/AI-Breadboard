@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Tests - Test Hardware Monitor
+# =============================================================================
+# Description:
+#   Unit-тесты для модуля HardwareMonitor.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.windows.tests.test_hardware_monitor
+#   Python API:
+#     from apps.windows.tests.test_hardware_monitor import TestHardwareMonitor
+#
+#     service = TestHardwareMonitor()
+#
+# File: test_hardware_monitor.py
+# Project: ai-breadboard
+# Package: apps.windows.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """Unit-тесты для модуля HardwareMonitor."""
+
 import unittest
 from apps.windows.hardware.hardware_monitor import BatteryMetrics, CpuMetrics, DiskIoMetrics, DiskPartitionMetrics, GpuMetrics, HardwareMonitor, HardwareSnapshot, MemoryMetrics, NetworkMetrics, SensorMetrics, StorageMetrics
 

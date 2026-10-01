@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router Registry Viewer
+# =============================================================================
+# Description:
+#   Тесты для роутера Registry Viewer.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_router_registry_viewer import client
+#
+#     res = client()
+#
+# File: test_router_registry_viewer.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Тесты для роутера Registry Viewer."""
+
 import pytest
 from fastapi.testclient import TestClient
 from src.app import create_app, register_routers, AppState

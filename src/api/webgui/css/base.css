@@ -1,3 +1,23 @@
+/**
+ * =============================================================================
+ * Process Name: AI-Breadboard Styles - Base Stylesheet
+ * =============================================================================
+ * Description:
+ *   Таблица стилей оформления компонентов интерфейса (base).
+ *
+ * Usage Examples:
+ *   HTML Link Tag:
+ *     <link rel="stylesheet" href="/src/api/webgui/css/base.css?v=20261001_v1">
+ *
+ * File: base.css
+ * Project: ai-breadboard
+ * Package: src/api/webgui/css
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
 /* ═══════════════════════════════════════════════════════════════════════════
    BASE STYLES & SCROLLBARS — AI Breadboard WebGUI
    Базовые стили страницы, скроллбары и контейнеры вкладок

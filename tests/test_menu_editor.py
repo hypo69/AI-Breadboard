@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Menu Editor
+# =============================================================================
+# Description:
+#   Тесты редактора меню (/tc) и эндпоинтов управления конфигурацией меню.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_menu_editor import TestMenuConfig
+#
+#     service = TestMenuConfig()
+#
+# File: test_menu_editor.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Тесты редактора меню (/tc) и эндпоинтов управления конфигурацией меню."""
+
 import json
 import re
 from pathlib import Path

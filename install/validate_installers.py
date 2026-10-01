@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Install - Validate Installers
+# =============================================================================
+# Description:
+#   Валидатор логики установщиков.
+#
+# Usage Examples:
+#   CLI:
+#     python -m install.validate_installers
+#   Python API:
+#     from install.validate_installers import InstallerValidator
+#
+#     service = InstallerValidator()
+#
+# File: validate_installers.py
+# Project: ai-breadboard
+# Package: install
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:29
+# =============================================================================
+
+"""Валидатор логики установщиков."""
+
 import json
 import re
 import sys

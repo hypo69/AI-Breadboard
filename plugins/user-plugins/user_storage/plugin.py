@@ -1,19 +1,24 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: User Storage Plugin Main Controller
+# Process Name: AI-Breadboard Plugins User-Plugins User_Storage - Plugin
 # =============================================================================
 # Description:
-#   Main plugin adapter for User Personal Storage, managing sandboxed documents,
-#   user uploads, RAG document preprocessing, and storage metrics.
+#   Modular plugin managing user personal document files, quotas, and RAG ingestion.
+#
+# Usage Examples:
+#   Python API:
+#     import plugins.user-plugins.user_storage.plugin as plugin
 #
 # File: plugin.py
 # Project: ai-breadboard
-# Package: plugins.user_storage
+# Package: plugins.user-plugins.user_storage
 # Author: hypo69
 # Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
 # =============================================================================
 
 from __future__ import annotations
+"""Modular plugin managing user personal document files, quotas, and RAG ingestion."""
 
 from typing import Any, AsyncGenerator, Dict, List, Optional
 from fastapi import APIRouter
@@ -59,7 +64,7 @@ class UserStoragePlugin(BasePlugin):
     def get_router(self) -> Optional[APIRouter]:
         """Return the user personal storage API router."""
         try:
-from plugins.user_plugins.user_storage.routers.router_user_storage import router
+            from plugins.user_plugins.user_storage.routers.router_user_storage import router
             return router
         except Exception as ex:
             logger.warning(f"Could not load User Storage router for plugin: {ex}")

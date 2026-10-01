@@ -1,17 +1,20 @@
 /**
  * =============================================================================
- * Process Name: Windows System Control Center Web Controller
+ * Process Name: AI-Breadboard UI - Main Script
  * =============================================================================
  * Description:
- *   Client-side JavaScript controller for the System Control Center tab in
- *   the administrative web interface. Includes monitoring, post-install wizard,
- *   maintenance & recovery, and the unified Windows OS System Log Center.
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/system_control_tab/main.js?v=20261001_v1" type="module"></script>
  *
  * File: main.js
  * Project: ai-breadboard
- * Package: src.api.webinterface.system_control_tab
+ * Package: src/api/webgui/system_control_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

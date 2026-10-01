@@ -1,11 +1,34 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Pixel Rag Integration
+# =============================================================================
+# Description:
+#   Tests for PixelRAG integration into DocumentRAGManager.
+#
+# Usage Examples:
+#   CLI:
+#     python -m tests.test_pixel_rag_integration
+#   Python API:
+#     from tests.test_pixel_rag_integration import TestPixelRAGIntegration
+#
+#     service = TestPixelRAGIntegration()
+#
+# File: test_pixel_rag_integration.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Tests for PixelRAG integration into DocumentRAGManager.
 
 Tests:
 - Image file detection and routing
 - Hybrid search (text + pixel results)
 - Metadata tracking with indexed_via field
-- Error handling and graceful degradation
-"""
+- Error handling and graceful degradation"""
+
 import json
 import shutil
 from pathlib import Path

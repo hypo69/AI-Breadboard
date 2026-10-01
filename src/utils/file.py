@@ -1,14 +1,37 @@
-"""
-File system operations and text file utilities.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - File Module
+# =============================================================================
+# Description:
+#   File system operations and text file utilities.
+#
+# Usage Examples:
+#   CLI:
+#     python -m src.utils.file
+#   Python API:
+#     from src.utils.file import save_text_file
+#
+#     res = save_text_file()
+#     print(res)
+#
+# File: file.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
 
-Provides functions for file manipulation, reading, writing, and searching.
-"""
+"""File system operations and text file utilities.
+
+Provides functions for file manipulation, reading, writing, and searching."""
+
 import os
 import json
 import fnmatch
 from pathlib import Path
 from typing import List, Optional, Union, Generator
-from logger.logger import logger
+from logger import logger
 from src.utils.printer import pprint as print
 
 def save_text_file(data: str | list[str] | dict, file_path: Union[str, Path], mode: str='w', exc_info: bool=True) -> bool:

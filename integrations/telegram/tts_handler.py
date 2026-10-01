@@ -1,8 +1,26 @@
-"""
-Module for integrating adaptive TTS pipeline into Telegram bot.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Integrations Telegram - Tts Handler
+# =============================================================================
+# Description:
+#   Module for integrating adaptive TTS pipeline into Telegram bot.
+#
+# Usage Examples:
+#   Python API:
+#     import integrations.telegram.tts_handler as tts_handler
+#
+# File: tts_handler.py
+# Project: ai-breadboard
+# Package: integrations.telegram
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:29:29
+# =============================================================================
+
+"""Module for integrating adaptive TTS pipeline into Telegram bot.
 Uses python-telegram-bot or any compatible framework.
-Implements streaming audio generation and instant delivery to users.
-"""
+Implements streaming audio generation and instant delivery to users."""
+
 import io
 import httpx
 import asyncio

@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Chat Rag Toggle
+# =============================================================================
+# Description:
+#   Test suite for RAG toggle persistence and chat integration.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_chat_rag_toggle import TestChatRagToggle
+#
+#     service = TestChatRagToggle()
+#
+# File: test_chat_rag_toggle.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Test suite for RAG toggle persistence and chat integration."""
+
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import FastAPI

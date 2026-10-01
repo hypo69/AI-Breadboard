@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Run-Apps Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Run-Apps).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Run-Apps.ps1
+#
+# File: Run-Apps.ps1
+# Project: ai-breadboard
+# Package: launchers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:06
+# =============================================================================
+
 <#
 .SYNOPSIS
     Universal multi-app orchestrator launcher for all /apps microservices.
@@ -197,7 +215,6 @@ $appScripts = @(
     @{ Name = "Windows Defender Center";      Folder = "windows_defender";    File = "Run-Defender.ps1";           Port = 8113; Key = "windows_defender" },
     @{ Name = "Windows Backup Manager";       Folder = "windows_backup_manager"; File = "Run-BackupManager.ps1";   Port = 8115; Key = "windows_backup_manager" },
     @{ Name = "Hardware & Sensors Monitor";   Folder = "windows";             File = "Run-HardwareMonitor.ps1";    Port = 8116; Key = "hardware_monitor" },
-    @{ Name = "LibreHardwareMonitor App";     Folder = "librehardwaremonitor"; File = "Run-LHM.ps1";               Port = 8126; Key = "librehardwaremonitor" },
     @{ Name = "AI Chat Assistant";            Folder = "chat";                File = "Run-Chat.ps1";               Port = 8128; Key = "chat" },
     @{ Name = "Enterprise Knowledge Platform"; Folder = "enterprise_knowledge"; File = "Run-EnterpriseKnowledge.ps1"; Port = 8181; Key = "enterprise_knowledge" }
 )

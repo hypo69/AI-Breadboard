@@ -1,3 +1,22 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Google_User_Desktop Routers - Forms Router
+# =============================================================================
+# Description:
+#   FastAPI router для работы с Google Forms внутри приложения google_user_desktop.
+#
+# Usage Examples:
+#   Python API:
+#     import apps.google_user_desktop.routers.forms_router as forms_router
+#
+# File: forms_router.py
+# Project: ai-breadboard
+# Package: apps.google_user_desktop.routers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """FastAPI router для работы с Google Forms внутри приложения google_user_desktop.
 
 Эндпоинты:
@@ -5,8 +24,7 @@
 - POST /update               → batchUpdate (form_id, requests)
 - POST /publish              → опубликовать форму (form_id)
 - POST /close                → закрыть форму (form_id)
-- GET  /{form_id}/responses  → получить ответы формы (limit)
-"""
+- GET  /{form_id}/responses  → получить ответы формы (limit)"""
 
 from fastapi import APIRouter, HTTPException, Query
 from typing import Any, Dict, List, Optional

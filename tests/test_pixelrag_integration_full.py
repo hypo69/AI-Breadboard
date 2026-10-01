@@ -1,13 +1,35 @@
-"""
-Integration tests for complete PixelRAG pipeline.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Pixelrag Integration Full
+# =============================================================================
+# Description:
+#   Integration tests for complete PixelRAG pipeline.
+#
+# Usage Examples:
+#   CLI:
+#     python -m tests.test_pixelrag_integration_full
+#   Python API:
+#     from tests.test_pixelrag_integration_full import TestPixelRAGIntegrationFull
+#
+#     service = TestPixelRAGIntegrationFull()
+#
+# File: test_pixelrag_integration_full.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Integration tests for complete PixelRAG pipeline.
 
 Tests:
 - End-to-end workflow: index → query → results
 - Hybrid text + image search
 - Query routing with QueryRouter
 - RAGEngine integration
-- Metadata tracking
-"""
+- Metadata tracking"""
+
 import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory

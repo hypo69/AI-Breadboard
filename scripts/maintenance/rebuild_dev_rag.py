@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Maintenance - Rebuild Dev Rag
+# =============================================================================
+# Description:
+#   Скрипт/модуль системы AI-Breadboard (`rebuild_dev_rag`).
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.maintenance.rebuild_dev_rag
+#   Python API:
+#     from scripts.maintenance.rebuild_dev_rag import main
+#
+#     res = main()
+#
+# File: rebuild_dev_rag.py
+# Project: ai-breadboard
+# Package: scripts.maintenance
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
+"""Скрипт/модуль системы AI-Breadboard (`rebuild_dev_rag`)."""
+
 import os
 from src.ai.dev_rag import build_dev_rag
 from logger import logger

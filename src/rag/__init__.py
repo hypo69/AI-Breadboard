@@ -1,4 +1,24 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard RAG -   Init   Module
+# =============================================================================
+# Description:
+#   Модуль основной системы (`__init__`).
+#
+# Usage Examples:
+#
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: src.rag
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Модуль основной системы (`__init__`)."""
+
 from src.rag.models import RAGDecisionType, RAGRouteDecision, RAGSearchResult
 from src.rag.engine import RAGEngine, get_rag_engine
 from src.rag.rules_rag import RulesRAG, build_rules_index

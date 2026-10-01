@@ -1,4 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Scheduler Module
+# =============================================================================
+# Description:
+#   Async background periodic job scheduler.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.scheduler import BackgroundScheduler
+#
+#     service = BackgroundScheduler()
+#     result = service.load_from_config()
+#     print(result)
+#
+# File: scheduler.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Async background periodic job scheduler."""
+
 import asyncio
 from datetime import datetime, timezone
 from pathlib import Path

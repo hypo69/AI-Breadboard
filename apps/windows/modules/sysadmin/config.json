@@ -1,0 +1,56 @@
+{
+  "launcher": "Run-WindowsAdmin.ps1",
+  "server": {
+    "port": 8100,
+    "dedicated": false,
+    "use_ssl": false,
+    "workers": 1
+  },
+  "server_cors_origins": [],
+  "server_cors_allow_credentials": true,
+  "cors": {
+    "allow_origins": [],
+    "allow_origin_regex": null,
+    "allow_credentials": true,
+    "allow_methods": [
+      "*"
+    ],
+    "allow_headers": [
+      "*"
+    ]
+  },
+  "watch_directory": "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard",
+  "watch_directories": [
+    "C:\\Users\\onela\\AppData\\Local\\AI-Breadboard",
+    "C:\\Program Files",
+    "C:\\"
+  ],
+  "exclusions": {
+    "enabled": true,
+    "paths": [
+      "AppData\\Roaming\\AI-Breadboard\\apps\\windows\\telemetry\\logs",
+      "AppData\\Local\\Temp",
+      "$Recycle.Bin",
+      "System Volume Information",
+      ".git",
+      "__pycache__",
+      "node_modules",
+      "c:\\Users\\onela\\AppData\\*.*",
+      ".pytest_cache"
+    ],
+    "extensions": [
+      ".tmp",
+      ".log",
+      ".db-wal",
+      ".db-shm",
+      ".csv"
+    ],
+    "patterns": [
+      "*Windows.db*",
+      "~$*"
+    ],
+    "processes": [
+      "SearchIndexer.exe"
+    ]
+  }
+}

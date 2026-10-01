@@ -1,3 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Get Free Port Module
+# =============================================================================
+# Description:
+#   Check port availability on host.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.get_free_port import get_free_port
+#
+#     res = get_free_port()
+#     print(res)
+#
+# File: get_free_port.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Check port availability on host."""
+
 import socket
 from typing import List, Tuple, Union
 from logger import logger

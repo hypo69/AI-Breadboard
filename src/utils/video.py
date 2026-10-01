@@ -1,11 +1,36 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Video Module
+# =============================================================================
+# Description:
+#   Video saving utilities for generating and saving video files.
+#
+# Usage Examples:
+#   CLI:
+#     python -m src.utils.video
+#   Python API:
+#     from src.utils.video import get_video_data
+#
+#     res = get_video_data()
+#     print(res)
+#
+# File: video.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """Video saving utilities for generating and saving video files."""
+
 ' This module provides asynchronous functions for downloading and saving video files, as well as retrieving video data.  It includes error handling and logging for robust operation.\n\nFunctions:\n    save_video_from_url(url: str, save_path: str) -> Optional[Path]:\n        Download a video from a URL and save it locally asynchronously.  Handles potential network issues and file saving errors.\n\n    get_video_data(file_name: str) -> Optional[bytes]:\n        Retrieve binary data of a video file if it exists.  Handles file not found and read errors.\n\nExamples:\n    >>> import asyncio\n    >>> asyncio.run(save_video_from_url("https://example.com/video.mp4", "local_video.mp4"))\n    PosixPath(\'local_video.mp4\')  # or None if failed\n\n    >>> data = get_video_data("local_video.mp4")\n    >>> if data:\n    ...     print(data[:10])  # Print first 10 bytes to check\n    b\'\x00\x00\x00...\'\n    '
 import aiohttp
 import aiofiles
 from pathlib import Path
 from typing import Optional
 import asyncio
-from logger.logger import logger
+from logger import logger
 from src.utils.printer import pprint as print
 
 async def save_video_from_url(url: str, save_path: str) -> Optional[Path]:

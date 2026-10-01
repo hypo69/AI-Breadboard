@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard USER_MANAGER -   Init   Module
+# =============================================================================
+# Description:
+#   User management and authorization system.
+#
+# Usage Examples:
+#   Python API:
+#     from src.user_manager.__init__ import UserManager
+#
+#     service = UserManager()
+#     result = service.sanitize_user_id()
+#     print(result)
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: src.user_manager
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""User management and authorization system."""
+
 import os
 import shutil
 import sqlite3

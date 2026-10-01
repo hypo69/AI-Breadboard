@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Agent Module
+# =============================================================================
+# Description:
+#   Агент для автономной работы и рассуждений через LangChain + ReAct.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.agents.agent import MediaSearchAgent
+#
+#     service = MediaSearchAgent()
+#
+# File: agent.py
+# Project: ai-breadboard
+# Package: src.ai.agents
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Агент для автономной работы и рассуждений через LangChain + ReAct."""
+
 import os
 import json
 import asyncio

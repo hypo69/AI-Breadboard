@@ -1,5 +1,27 @@
-"""Central research engine coordinating collection, multi-model execution, and reports."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Wikipedia_Research - Engine
+# =============================================================================
+# Description:
+#   Central research engine coordinating collection, multi-model execution, and reports.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.wikipedia_research.engine import WikipediaResearchEngine
+#
+#     service = WikipediaResearchEngine()
+#
+# File: engine.py
+# Project: ai-breadboard
+# Package: apps.wikipedia_research
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Central research engine coordinating collection, multi-model execution, and reports."""
+
 import asyncio
 from typing import Any, Dict, List, Optional
 from logger import logger

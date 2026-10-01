@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Utils Ftp
+# =============================================================================
+# Description:
+#   Testing normal expected scenarios of FTP module operation.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_utils_ftp import TestFtp_HappyPath
+#
+#     service = TestFtp_HappyPath()
+#
+# File: test_utils_ftp.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Testing normal expected scenarios of FTP module operation."""
+
 import pytest
 from unittest.mock import Mock, patch, mock_open
 from src.utils.ftp import write, read, delete

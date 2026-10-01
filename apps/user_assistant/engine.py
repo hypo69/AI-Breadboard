@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps User_Assistant - Engine
+# =============================================================================
+# Description:
+#   Core domain engine coordinating mail, calendar, and documents for a user.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.user_assistant.engine import UserAssistantEngine
+#
+#     service = UserAssistantEngine()
+#
+# File: engine.py
+# Project: ai-breadboard
+# Package: apps.user_assistant
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Core domain engine coordinating mail, calendar, and documents for a user."""
+
 from typing import Any, Dict, List, Optional
 from apps.user_assistant.src.mail_service import MailService
 from apps.user_assistant.src.calendar_service import CalendarService

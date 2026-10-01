@@ -1,5 +1,27 @@
-"""Тесты для менеджера точек восстановления Windows."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test System Restore
+# =============================================================================
+# Description:
+#   Тесты для менеджера точек восстановления Windows.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_system_restore import TestWindowsSystemRestoreManager
+#
+#     service = TestWindowsSystemRestoreManager()
+#
+# File: test_system_restore.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Тесты для менеджера точек восстановления Windows."""
+
 import json
 import subprocess
 from pathlib import Path

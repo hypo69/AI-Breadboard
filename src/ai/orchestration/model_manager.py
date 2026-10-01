@@ -1,3 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Model Manager Module
+# =============================================================================
+# Description:
+#   Normalize model identifier for consistent comparison.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.orchestration.model_manager import load_unsupported_models
+#
+#     res = load_unsupported_models()
+#     print(res)
+#
+# File: model_manager.py
+# Project: ai-breadboard
+# Package: src.ai.orchestration
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Normalize model identifier for consistent comparison."""
+
 import asyncio
 import os
 from pathlib import Path
@@ -5,7 +29,7 @@ from typing import Any, Dict, List, Set
 import aiohttp
 from google import genai
 from header import __root__
-from logger.logger import logger
+from logger import logger
 from src.utils.jjson import j_dumps, j_loads
 _GLOBAL_CONFIG_PATH: Path = __root__ / 'config.json'
 _GEMINI_CONFIG_PATH: Path = __root__ / 'src' / 'ai' / 'gemini' / 'config.json'
@@ -202,7 +226,7 @@ def _fetch_foundry_models_sync(base_url: str='', include_unsupported: bool=False
             if models:
                 return models
     except Exception as e:
-        logger.info(f'[ModelManager] Foundry сервер ({base_url}) недоступен или вернул ошибку: {e}')
+        logger.warning(f'[ModelManager] Foundry сервер ({base_url}) недоступен или вернул ошибку: {e}')
     if include_unsupported or _normalize_model_name(fallback_id) not in unsupported:
         return [fallback_id]
     return []
@@ -230,7 +254,7 @@ def _fetch_ollama_models_sync(base_url: str='', include_unsupported: bool=False)
             if models:
                 return models
     except Exception as e:
-        logger.info(f'[ModelManager] Ollama сервер ({base_url}) недоступен или вернул ошибку: {e}')
+        logger.warning(f'[ModelManager] Ollama сервер ({base_url}) недоступен или вернул ошибку: {e}')
     if include_unsupported or _normalize_model_name(fallback_id) not in unsupported:
         return [fallback_id]
     return []
@@ -265,7 +289,7 @@ def _fetch_hf_models_sync(include_unsupported: bool=False) -> List[str]:
         if models:
             return models
     except Exception as e:
-        logger.info(f'[ModelManager] HuggingFace list моделей недоступен: {e}')
+        logger.warning(f'[ModelManager] HuggingFace list моделей недоступен: {e}')
     fallback: List[str] = ['Qwen/Qwen2.5-0.5B-Instruct', 'google/gemma-2-2b-it']
     if include_unsupported:
         return fallback + [u for u in unsupported if u not in fallback]
@@ -305,7 +329,7 @@ def _fetch_onnx_models_sync(include_unsupported: bool=False) -> List[str]:
             if include_unsupported or norm_def not in unsupported:
                 discovered_models.add(def_model)
     except Exception as e:
-        logger.info(f'[ModelManager] ONNX local directory scan: {e}')
+        logger.warning(f'[ModelManager] ONNX local directory scan: {e}')
     if not discovered_models:
         discovered_models = {'phi-3.5-mini-instruct-onnx', 'qwen2.5-0.5b-instruct-onnx'}
     if include_unsupported:

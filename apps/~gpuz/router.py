@@ -1,5 +1,27 @@
-"""FastAPI REST API роутер для GPU-Z."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps ~Gpuz - Router
+# =============================================================================
+# Description:
+#   FastAPI REST API роутер для GPU-Z.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.~gpuz.router import init_router
+#
+#     res = init_router()
+#
+# File: router.py
+# Project: ai-breadboard
+# Package: apps.~gpuz
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""FastAPI REST API роутер для GPU-Z."""
+
 from typing import Any, Dict
 from fastapi import APIRouter
 from apps.gpuz.core.gpuz_service import GpuzService

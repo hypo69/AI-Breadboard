@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Ai_Breadboard_Admin Src - Windows User Manager
+# =============================================================================
+# Description:
+#   Менеджер управления пользователями операционной системы Windows.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.ai_breadboard_admin.src.windows_user_manager import WindowsUserManager
+#
+#     service = WindowsUserManager()
+#
+# File: windows_user_manager.py
+# Project: ai-breadboard
+# Package: apps.ai_breadboard_admin.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Менеджер управления пользователями операционной системы Windows."""
+
 import subprocess
 import json
 from typing import Any, Dict, List, Optional

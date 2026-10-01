@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Audio Diarization
+# =============================================================================
+# Description:
+#   Test suite for AudioDiarizationService.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_audio_diarization import TestAudioDiarizationService
+#
+#     service = TestAudioDiarizationService()
+#
+# File: test_audio_diarization.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Test suite for AudioDiarizationService."""
+
 import json
 from unittest.mock import MagicMock, patch
 import pytest

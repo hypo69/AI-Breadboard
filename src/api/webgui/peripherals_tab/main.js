@@ -1,16 +1,20 @@
 /**
  * =============================================================================
- * Process Name: Windows Peripherals & Network Logic
+ * Process Name: AI-Breadboard UI - Main Script
  * =============================================================================
  * Description:
- *   Клиентский контроллер вкладки сети и периферии:
- *   Wi-Fi RF метрики (RSSI, BSSID), аудио устройства и USB PnP дерево.
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/peripherals_tab/main.js?v=20261001_v1" type="module"></script>
  *
  * File: main.js
- * Project: AI-Breadboard
- * Module: WebInterface.PeripheralsTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/peripherals_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

@@ -1,0 +1,99 @@
+<!--
+=============================================================================
+Process Name: Windows Web Interface - Index View
+=============================================================================
+Description:
+  Шаблон клиентского веб-интерфейса index.
+
+Usage Examples:
+    Web Route:
+      /windows/api/webgui/event_logs_tab/index.html
+
+    Tab Frame Integration:
+      <iframe src="/windows/api/webgui/event_logs_tab/index.html" class="w-100 h-100 border-0"></iframe>
+
+File: index.html
+Project: ai-breadboard
+Package: windows/api/webgui/event_logs_tab
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-01 13:04:40
+=============================================================================
+-->
+
+<!-- Windows Event Logs Tab -->
+<div class="container-fluid py-2 px-3">
+  <!-- Top Stat Cards -->
+  <div class="row g-2 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+        <div class="text-muted small text-uppercase fw-semibold">Критические ошибки (Critical) 🚨</div>
+        <div class="fs-4 fw-bold mt-1 text-danger" id="el-critical-count">--</div>
+        <div class="small text-muted mt-1" id="el-critical-sub">wevtutil Level 1</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+        <div class="text-muted small text-uppercase fw-semibold">Ошибки (Errors) ⚠️</div>
+        <div class="fs-4 fw-bold mt-1 text-warning" id="el-error-count">--</div>
+        <div class="small text-muted mt-1" id="el-error-sub">wevtutil Level 2</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+        <div class="text-muted small text-uppercase fw-semibold">Предупреждения (Warning) ⚡</div>
+        <div class="fs-4 fw-bold mt-1 text-info" id="el-warn-count">--</div>
+        <div class="small text-muted mt-1" id="el-warn-sub">wevtutil Level 3</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card bg-dark text-white border-secondary h-100 shadow-sm p-3">
+        <div class="text-muted small text-uppercase fw-semibold">Журналы событий 📁</div>
+        <div class="fs-4 fw-bold mt-1 text-primary" id="el-logs-count">--</div>
+        <div class="small text-muted mt-1" id="el-logs-sub">System / App / Security</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Bar -->
+  <div class="d-flex align-items-center justify-content-between mb-3 p-2 bg-dark rounded border border-secondary flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" id="el-refresh-btn">
+        <i class="bi bi-arrow-clockwise"></i>
+        <span>Обновить журнал</span>
+      </button>
+      <select class="form-select form-select-sm bg-dark text-white border-secondary" id="el-channel-select" style="width: 180px;">
+        <option value="System">Журнал System</option>
+        <option value="Application">Журнал Application</option>
+        <option value="Security">Журнал Security</option>
+      </select>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="el-search-input" placeholder="Поиск по тексту или EventID..." style="width: 260px;">
+    </div>
+  </div>
+
+  <!-- Event Logs Table -->
+  <div class="card bg-dark text-white border-secondary shadow-sm">
+    <div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
+      <span class="fw-semibold"><i class="bi bi-journal-text text-primary me-2"></i>Записи системного журнала (Event Viewer)</span>
+      <span class="badge bg-secondary" id="el-table-badge">0 событий</span>
+    </div>
+    <div class="card-body p-0 table-responsive" style="max-height: 520px; overflow-y: auto;">
+      <table class="table table-dark table-hover table-striped align-middle mb-0 small" id="el-table">
+        <thead class="sticky-top bg-dark">
+          <tr class="text-secondary">
+            <th>Уровень</th>
+            <th>Время</th>
+            <th>Источник (Provider)</th>
+            <th>Event ID</th>
+            <th>Описание события</th>
+          </tr>
+        </thead>
+        <tbody id="el-tbody">
+          <tr><td colspan="5" class="text-center text-muted py-4">Чтение журнала событий через wevtutil...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

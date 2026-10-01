@@ -1,5 +1,27 @@
-"""Модульные тесты глубокой системной диагностики."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Deep Diagnostics
+# =============================================================================
+# Description:
+#   Модульные тесты глубокой системной диагностики.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_deep_diagnostics import test_deep_diagnostics_engine_init
+#
+#     res = test_deep_diagnostics_engine_init()
+#
+# File: test_deep_diagnostics.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Модульные тесты глубокой системной диагностики."""
+
 import pytest
 from apps.windows.telemetry import DeepDiagnosticsEngine, ForensicsActivityReport, KernelThrottlingReport, PeripheralsNetworkReport, ProcessLeakDiagnosticsReport, StorageBatteryWearReport
 

@@ -1,0 +1,102 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8001,
+    "title": "AI-Breadboard Windows Internal API",
+    "description": "Сервис TC/Windows: телеметрия, дашборды, диагностика."
+  },
+  "routers": [
+    {
+      "module": "apps.windows.api.routers.router_menu",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Конфигурация меню (/api/menu/*)"
+    },
+    {
+      "module": "apps.windows.router",
+      "factory": "init_router",
+      "enabled": true,
+      "inject_app": true,
+      "description": "Windows diagnostics & hardware (/api/windows/*)"
+    },
+    {
+      "module": "apps.windows.api.routers.router_tc",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "TC (/api/v1/tc/*, /tc/*)"
+    },
+    {
+      "module": "apps.windows.api.routers.router_chat",
+      "factory": "init_router",
+      "enabled": true,
+      "inject_models": true,
+      "description": "Чат и речевой ассистент (/api/chat/*)"
+    },
+    {
+      "module": "apps.windows.sysadmin.router",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Windows Sysadmin (/api/sysadmin/*)"
+    },
+    {
+      "module": "apps.windows.network.router",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Сетевой терминал (/api/network/*)"
+    },
+    {
+      "module": "apps.windows.startup.router",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Аудит автозагрузки (/api/v1/startup-auditor/*)"
+    },
+    {
+      "module": "apps.windows.backup_manager.router",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Резервное копирование (/api/v1/windows-backup/*)"
+    },
+    {
+      "module": "apps.windows.defender.router",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Управление Defender (/api/v1/defender/*)"
+    },
+    {
+      "module": "apps.windows.system_control_center.router",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Центр управления системой (/api/system-control/*)"
+    },
+    {
+      "module": "apps.windows.registry.router",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Реестр Windows (/api/registry/*)"
+    },
+    {
+      "module": "apps.windows.api.routers.router_scenarios",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Сценарии автоматизации (/api/scenarios/*)"
+    },
+    {
+      "module": "apps.windows.api.routers.router_autolog",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Автологирование (/api/autolog/*)"
+    },
+    {
+      "module": "apps.windows.api.routers.router_diagnostics",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Диагностические сервисы (/api/diagnostics/*)"
+    },
+    {
+      "module": "apps.windows.api.routers.router_panel",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "KPI панели (/api/v1/panel/*)"
+    }
+  ]
+}

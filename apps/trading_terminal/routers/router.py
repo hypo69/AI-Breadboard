@@ -1,5 +1,27 @@
-"""FastAPI router and WebSocket endpoints for trading terminal."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Trading_Terminal Routers - Router
+# =============================================================================
+# Description:
+#   FastAPI router and WebSocket endpoints for trading terminal.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.trading_terminal.routers.router import get_engine
+#
+#     res = get_engine()
+#
+# File: router.py
+# Project: ai-breadboard
+# Package: apps.trading_terminal.routers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""FastAPI router and WebSocket endpoints for trading terminal."""
+
 import asyncio
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect

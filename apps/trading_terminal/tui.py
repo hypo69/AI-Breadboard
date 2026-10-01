@@ -1,5 +1,27 @@
-"""Rich TUI dashboard renderer and event loop for trading desk."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Trading_Terminal - Tui
+# =============================================================================
+# Description:
+#   Rich TUI dashboard renderer and event loop for trading desk.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.trading_terminal.tui import render_ui
+#
+#     res = render_ui()
+#
+# File: tui.py
+# Project: ai-breadboard
+# Package: apps.trading_terminal
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Rich TUI dashboard renderer and event loop for trading desk."""
+
 import asyncio
 import random
 import time

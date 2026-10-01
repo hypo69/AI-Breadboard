@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Tshark - Models
+# =============================================================================
+# Description:
+#   Data models for network capture, traffic summary, and security analytics.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.tshark.models import NetworkInterface
+#
+#     service = NetworkInterface()
+#
+# File: models.py
+# Project: ai-breadboard
+# Package: apps.tshark
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """Data models for network capture, traffic summary, and security analytics."""
+
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 

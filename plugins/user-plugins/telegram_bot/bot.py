@@ -1,9 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins Telegram_Bot - Bot
+# =============================================================================
+# Description:
+#   Telegram bot engine and command router.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.user-plugins.telegram_bot.bot import TelegramBotEngine
+#
+#     service = TelegramBotEngine()
+#
+# File: bot.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.telegram_bot
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Telegram bot engine and command router.
 
 Manages the python-telegram-bot Application lifecycle, polling loop,
-user authentication, account linking, remote control web app, and AI chat.
-"""
-from __future__ import annotations
+user authentication, account linking, remote control web app, and AI chat."""
+
 import asyncio
 from typing import Any, Dict, List, Optional
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, WebAppInfo
@@ -89,7 +110,7 @@ class TelegramBotEngine:
             RuntimeError: If initialization fails or token is missing.
         """
         if self.is_running:
-            logger.info('TelegramBotEngine is already running.')
+            logger.warning('TelegramBotEngine is already running.')
             return
         if not self.app:
             ok = await self.initialize()
@@ -327,7 +348,7 @@ class TelegramBotEngine:
                 if diar_res and diar_res.summary:
                     diarization_summary = diar_res.markdown_report or diar_res.summary
             except Exception as diar_err:
-                logger.info(f'Diarization status: {diar_err}')
+                logger.warning(f'Diarization status: {diar_err}')
             user_dialogs_dir = user_manager.get_user_directory(user_id, subfolder='dialogs', create=True)
             transcript_md_path = user_dialogs_dir / f'{timestamp_str}_transcript.md'
             md_lines = [f'# Аудиозапись: {saved_filename}', f"- **Дата загрузки:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", f'- **Размер файла:** {file_size_str}', f'- **Путь к файлу:** `data/users/{user_id}/audio/{saved_filename}`', '']

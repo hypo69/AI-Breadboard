@@ -1,5 +1,27 @@
-"""Unit test suite for apps.website_monitor."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Website_Monitor Tests - Test Website Monitor
+# =============================================================================
+# Description:
+#   Unit test suite for apps.website_monitor.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.website_monitor.tests.test_website_monitor import auth_mgr
+#
+#     res = auth_mgr()
+#
+# File: test_website_monitor.py
+# Project: ai-breadboard
+# Package: apps.website_monitor.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Unit test suite for apps.website_monitor."""
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient

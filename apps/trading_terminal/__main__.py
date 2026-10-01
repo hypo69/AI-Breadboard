@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Trading_Terminal -   Main  
+# =============================================================================
+# Description:
+#   CLI entry point for the trading terminal dashboard.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.trading_terminal.__main__
+#   Python API:
+#     from apps.trading_terminal.__main__ import main
+#
+#     res = main()
+#
+# File: __main__.py
+# Project: ai-breadboard
+# Package: apps.trading_terminal
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """CLI entry point for the trading terminal dashboard."""
+
 import argparse
 import asyncio
 import sys

@@ -1,6 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Команды управления и запуска AI-агентов (agents)."""
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli Commands - Agents
+# =============================================================================
+# Description:
+#   Команды управления и запуска AI-агентов (agents).
+#
+# Usage Examples:
+#   Python API:
+#     from scripts.cli.commands.agents import register_agents_parser
+#
+#     res = register_agents_parser()
+#
+# File: agents.py
+# Project: ai-breadboard
+# Package: scripts.cli.commands
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 from __future__ import annotations
+"""Команды управления и запуска AI-агентов (agents)."""
 
 import argparse
 import json

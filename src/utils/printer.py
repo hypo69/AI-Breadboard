@@ -1,11 +1,34 @@
-"""
-Pretty printing and text formatting module.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Printer Module
+# =============================================================================
+# Description:
+#   Pretty printing and text formatting module.
+#
+# Usage Examples:
+#   CLI:
+#     python -m src.utils.printer
+#   Python API:
+#     from src.utils.printer import pformat
+#
+#     res = pformat()
+#     print(res)
+#
+# File: printer.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Pretty printing and text formatting module.
 
 Functions:
     - `_color_text`: Apply color and style to text
     - `pformat`: Format data into a pretty string with optional styling
-    - `pprint`: Pretty print data in human-readable format to console
-"""
+    - `pprint`: Pretty print data in human-readable format to console"""
+
 import json
 import csv
 from pathlib import Path

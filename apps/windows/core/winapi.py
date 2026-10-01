@@ -1,6 +1,26 @@
-"""
-Main WinAPI wrapper with capability levels
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core - Winapi
+# =============================================================================
+# Description:
+#   Main WinAPI wrapper with capability levels
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.winapi import CapabilityLevel
+#
+#     service = CapabilityLevel()
+#
+# File: winapi.py
+# Project: ai-breadboard
+# Package: apps.windows.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""Main WinAPI wrapper with capability levels"""
+
 import ctypes
 import os
 import sys

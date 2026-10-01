@@ -1,5 +1,28 @@
-"""UI page handlers for the AI-Breadboard application."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard APP -   Init   Module
+# =============================================================================
+# Description:
+#   UI page handlers for the AI-Breadboard application.
+#
+# Usage Examples:
+#   Python API:
+#     from src.app.pages.__init__ import register_pages
+#
+#     res = register_pages()
+#     print(res)
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: src.app.pages
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""UI page handlers for the AI-Breadboard application."""
+
 import os
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request

@@ -1,0 +1,119 @@
+/**
+ * =============================================================================
+ * Process Name: Windows Web Styles - Base Stylesheet
+ * =============================================================================
+ * Description:
+ *   Таблица стилей стиля и оформления интерфейса (base).
+ *
+ * Usage Examples:
+ *   HTML Link Tag:
+ *     <link rel="stylesheet" href="/windows/api/~webgui/css/base.css?v=20261001_v1">
+ *
+ * File: base.css
+ * Project: ai-breadboard
+ * Package: windows/api/~webgui/css
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:04:40
+ * =============================================================================
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE STYLES & SCROLLBARS — AI Breadboard WebGUI
+   Базовые стили страницы, скроллбары и контейнеры вкладок
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Базовый шрифт — 14px для компактного вида */
+html {
+  font-size: 14px;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100vh;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-size: 0.9375rem; /* ≈ 13.125px */
+  line-height: 1.5;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   СКРОЛЛБАРЫ
+   ═══════════════════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: var(--scrollbar-track); border-radius: 3px; }
+::-webkit-scrollbar-thumb  { background: var(--scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { opacity: 0.8; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ВКЛАДКИ (TAB PANES)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.tab-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-pane {
+  min-height: auto;
+  padding-bottom: 16px;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   АДМИН-ИНТЕРФЕЙС
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* Стили для #admin-interface внутри .container-fluid (как в index.html) */
+#admin-interface,
+.container-fluid#admin-interface {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100%;
+  overflow-y: auto;
+}
+
+#admin-interface .tab-content,
+.container-fluid#admin-interface .tab-content {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+#admin-interface .tab-pane,
+.container-fluid#admin-interface .tab-pane {
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#admin-interface .tab-pane.active,
+.container-fluid#admin-interface .tab-pane.active {
+  display: block;
+}
+
+/* Скроллбары для админки */
+#admin-interface ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+#admin-interface ::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
+
+#admin-interface ::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+#admin-interface ::-webkit-scrollbar-thumb:hover {
+  opacity: 0.85;
+}

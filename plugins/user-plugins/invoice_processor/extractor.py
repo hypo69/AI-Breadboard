@@ -1,9 +1,32 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins Invoice_Processor - Extractor
+# =============================================================================
+# Description:
+#   Extract structured invoice data from an invoice file.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.user-plugins.invoice_processor.extractor import invoice_dict_to_row
+#
+#     res = invoice_dict_to_row()
+#
+# File: extractor.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.invoice_processor
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
 from __future__ import annotations
+"""Extract structured invoice data from an invoice file."""
+
 import json
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
-from logger.logger import logger
+from logger import logger
 from src.utils.pdf_extractor import extract_document_text
 INVOICE_FIELDS = ['file_name', 'invoice_number', 'invoice_date', 'due_date', 'vendor_name', 'vendor_tax_id', 'customer_name', 'total_amount', 'currency', 'tax_amount', 'line_items_summary', 'notes']
 INVOICE_HEADER_ROW = ['File Name', 'Invoice Number', 'Invoice Date', 'Due Date', 'Vendor / Company', 'Vendor Tax / VAT ID', 'Customer Name', 'Total Amount', 'Currency', 'Tax / VAT Amount', 'Items Summary', 'Notes / Remarks']

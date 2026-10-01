@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard APP - Cors Module
+# =============================================================================
+# Description:
+#   CORS configuration builder.
+#
+# Usage Examples:
+#   Python API:
+#     from src.app.cors import build_cors_config
+#
+#     res = build_cors_config()
+#     print(res)
+#
+# File: cors.py
+# Project: ai-breadboard
+# Package: src.app
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+from __future__ import annotations
 """CORS configuration builder.
 
 Reads settings from config.json (server.cors) and produces a dict
@@ -5,9 +28,8 @@ suitable for FastAPI's CORSMiddleware.
 
 Usage:
     from src.app.cors import build_cors_config
-    app.add_middleware(CORSMiddleware, **build_cors_config(server_cfg))
-"""
-from __future__ import annotations
+    app.add_middleware(CORSMiddleware, **build_cors_config(server_cfg))"""
+
 import re
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional

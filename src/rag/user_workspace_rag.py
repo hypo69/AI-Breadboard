@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard RAG - User Workspace Rag Module
+# =============================================================================
+# Description:
+#   Represents a sanitized document chunk within a user RAG collection.
+#
+# Usage Examples:
+#   Python API:
+#     from src.rag.user_workspace_rag import UserRAGChunk
+#
+#     service = UserRAGChunk()
+#
+# File: user_workspace_rag.py
+# Project: ai-breadboard
+# Package: src.rag
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Represents a sanitized document chunk within a user RAG collection."""
+
 import json
 import re
 import shutil

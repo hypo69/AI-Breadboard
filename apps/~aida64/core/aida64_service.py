@@ -1,5 +1,27 @@
-"""Сервис интеграции с AIDA64."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps ~Aida64 Core - Aida64 Service
+# =============================================================================
+# Description:
+#   Сервис интеграции с AIDA64.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.~aida64.core.aida64_service import Aida64Service
+#
+#     service = Aida64Service()
+#
+# File: aida64_service.py
+# Project: ai-breadboard
+# Package: apps.~aida64.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Сервис интеграции с AIDA64."""
+
 import ctypes
 import os
 import subprocess

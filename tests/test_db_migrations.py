@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Db Migrations
+# =============================================================================
+# Description:
+#   Fixture to create temporary repository structure for migration testing.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_db_migrations import temp_repo_dir
+#
+#     res = temp_repo_dir()
+#
+# File: test_db_migrations.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Fixture to create temporary repository structure for migration testing."""
+
 import sqlite3
 import tempfile
 from pathlib import Path

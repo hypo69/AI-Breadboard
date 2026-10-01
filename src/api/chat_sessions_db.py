@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - Chat Sessions Db Module
+# =============================================================================
+# Description:
+#   Acquire a SQLite database connection configured with Row factory and WAL mode.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.chat_sessions_db import get_db_connection
+#
+#     res = get_db_connection()
+#     print(res)
+#
+# File: chat_sessions_db.py
+# Project: ai-breadboard
+# Package: src.api
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Acquire a SQLite database connection configured with Row factory and WAL mode."""
+
 import json
 import sqlite3
 import time

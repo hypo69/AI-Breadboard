@@ -1,26 +1,23 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Convert SimpleNamespace to various formats
+# Process Name: AI-Breadboard UTILS - Ns Module
 # =============================================================================
 # Description:
-#   Module for AI Breadboard project.
+#   Convert SimpleNamespace objects to various formats: dict, JSON, CSV, XML, XLS.
+#
+# Usage Examples:
+#   Python API:
+#     import src.utils.convertors.ns as ns
 #
 # File: ns.py
 # Project: ai-breadboard
 # Package: src.utils.convertors
 # Author: hypo69
 # Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
 # =============================================================================
 
-"""Convert SimpleNamespace objects to various formats: dict, JSON, CSV, XML, XLS.
-
-Functions:
-    - ns2dict: Convert SimpleNamespace object to dictionary.
-    - ns2json: Convert SimpleNamespace object to JSON format.
-    - ns2csv: Convert SimpleNamespace object to CSV format.
-    - ns2xml: Convert SimpleNamespace object to XML format.
-    - ns2xls: Convert SimpleNamespace object to XLS format."""
-"""
+"""Convert SimpleNamespace objects to various formats: dict, JSON, CSV, XML, XLS."""
 
 import json
 import csv

@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard RAG - Models Module
+# =============================================================================
+# Description:
+#   RAG router decision type.
+#
+# Usage Examples:
+#   Python API:
+#     from src.rag.models import RAGDecisionType
+#
+#     service = RAGDecisionType()
+#
+# File: models.py
+# Project: ai-breadboard
+# Package: src.rag
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""RAG router decision type."""
+
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List

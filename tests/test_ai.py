@@ -1,6 +1,26 @@
-"""
-Тесты модуля core/ai
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Ai
+# =============================================================================
+# Description:
+#   Тесты модуля core/ai
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_ai import TestGoogleGenerativeAI
+#
+#     service = TestGoogleGenerativeAI()
+#
+# File: test_ai.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Тесты модуля core/ai"""
+
 import pytest
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from pathlib import Path

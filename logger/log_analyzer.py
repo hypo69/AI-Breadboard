@@ -1,3 +1,24 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Logger - Log Analyzer
+# =============================================================================
+# Description:
+#   Intelligent log analyzer with Gemini AI integration.
+#
+# Usage Examples:
+#   Python API:
+#     from logger.log_analyzer import get_max_size_bytes
+#
+#     res = get_max_size_bytes()
+#
+# File: log_analyzer.py
+# Project: ai-breadboard
+# Package: logger
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:29:02
+# =============================================================================
+
 """Intelligent log analyzer with Gemini AI integration.
 
 Provides functionality for analyzing application logs using Google Generative AI (Gemini),
@@ -9,8 +30,8 @@ Functions:
     - Master Journal creation and maintenance
     - Detailed error report creation
     - System state tracking
-    - Intelligent log rotation and cleanup
-"""
+    - Intelligent log rotation and cleanup"""
+
 import os
 import asyncio
 import datetime
@@ -186,7 +207,7 @@ async def log_analyzer_loop() -> None:
     try:
         from src.config import logging_cfg
         if not logging_cfg or not getattr(logging_cfg, 'enable_log_analyzer', False):
-            logger.info('Анализ логов отключён в config.json')
+            logger.warning('Анализ логов отключён в config.json')
             return
     except Exception as ex:
         logger.warning(f'Не удалось прочитать конфиг анализатора: {ex}')
@@ -201,7 +222,7 @@ async def log_analyzer_loop() -> None:
     except Exception as ex:
         logger.error(f'Error при инициализации AI модели: {ex}')
         return
-    logger.info('Анализатор логов successfully инициализирован')
+    logger.info('Анализатор логов успешно инициализирован')
     while True:
         try:
             if not LOG_DIR.exists():
@@ -245,7 +266,7 @@ def start_log_analyzer() -> None:
                 try:
                     import psutil
                     if psutil.pid_exists(pid):
-                        logger.info(f'Анализатор логов уже запущен (PID: {pid})')
+                        logger.warning(f'Анализатор логов уже запущен (PID: {pid})')
                         return
                 except ImportError:
                     logger.debug('psutil не установлен, пропуск проверки процесса')

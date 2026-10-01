@@ -1,5 +1,27 @@
-"""Тесты для менеджера безопасного изменения параметров системы."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test System Param Manager
+# =============================================================================
+# Description:
+#   Тесты для менеджера безопасного изменения параметров системы.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_system_param_manager import TestSafeSystemParamManager
+#
+#     service = TestSafeSystemParamManager()
+#
+# File: test_system_param_manager.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Тесты для менеджера безопасного изменения параметров системы."""
+
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch

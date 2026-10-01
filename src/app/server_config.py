@@ -1,5 +1,28 @@
-"""Server configuration and startup utilities."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard APP - Server Config Module
+# =============================================================================
+# Description:
+#   Server configuration and startup utilities.
+#
+# Usage Examples:
+#   Python API:
+#     from src.app.server_config import get_server_config
+#
+#     res = get_server_config()
+#     print(res)
+#
+# File: server_config.py
+# Project: ai-breadboard
+# Package: src.app
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Server configuration and startup utilities."""
+
 import os
 import sys
 from pathlib import Path
@@ -36,7 +59,7 @@ def get_server_config():
         if use_ssl:
             logger.warning('Starting without HTTPS (SSL enabled but certificates not found)')
         else:
-            logger.info('Starting HTTP server (SSL disabled)')
+            logger.warning('Starting HTTP server (SSL disabled)')
         logger.info(f'Server starting http://{host}:{port}')
     logger.info(f"Uvicorn autoreload: {('ON' if reload else 'OFF')}")
     return {'host': host, 'port': port, 'protocol': 'https' if ssl_kwargs else 'http', 'reload': reload, 'ssl_kwargs': ssl_kwargs, 'branch': str(os.getenv('GIT_BRANCH', 'main'))}

@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Tools Module
+# =============================================================================
+# Description:
+#   Поиск актуальной информации в интернете через поисковые адаптеры.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.agents.tools import python_eval
+#
+#     res = python_eval()
+#     print(res)
+#
+# File: tools.py
+# Project: ai-breadboard
+# Package: src.ai.agents
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Поиск актуальной информации в интернете через поисковые адаптеры."""
+
 import os
 import json
 from pathlib import Path

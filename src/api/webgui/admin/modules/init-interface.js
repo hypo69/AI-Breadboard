@@ -1,4 +1,27 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Init-Interface Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля init-interface.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/admin/modules/init-interface.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { setupGlobalFunctions, setupLanguageSelector, setupThemeSelector } from '/src/api/webgui/admin/modules/init-interface.js';
+ *
+ * File: init-interface.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/admin/modules
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * Interface Initialization Module - Инициализация компонентов интерфейса
  */
 

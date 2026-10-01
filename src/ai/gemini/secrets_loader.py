@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Secrets Loader Module
+# =============================================================================
+# Description:
+#   Load API keys mapping from environment storage.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.gemini.secrets_loader import load_secrets
+#
+#     res = load_secrets()
+#     print(res)
+#
+# File: secrets_loader.py
+# Project: ai-breadboard
+# Package: src.ai.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Load API keys mapping from environment storage."""
+
 from typing import Any, Dict, List, Optional, Tuple
 from src.ai.gemini.gemini_api_key_state import _get_merged_keys_data, _read_env_keys, load_api_keys as state_load_api_keys
 

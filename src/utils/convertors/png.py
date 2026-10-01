@@ -1,22 +1,23 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Convert text to PNG images
+# Process Name: AI-Breadboard UTILS - Png Module
 # =============================================================================
 # Description:
-#   Module for AI Breadboard project.
+#   Text to PNG image conversion utilities.
+#
+# Usage Examples:
+#   Python API:
+#     import src.utils.convertors.png as png
 #
 # File: png.py
 # Project: ai-breadboard
 # Package: src.utils.convertors
 # Author: hypo69
 # Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
 # =============================================================================
 
-"""Text to PNG image conversion utilities.
-
-Reads text from files, generates PNG images for each line using Pillow,
-and saves them to output directory with customizable appearance options."""
-"""
+"""Text to PNG image conversion utilities."""
 
 from pathlib import Path
 from typing import List, Tuple

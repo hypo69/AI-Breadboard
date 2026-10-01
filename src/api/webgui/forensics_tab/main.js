@@ -1,16 +1,20 @@
 /**
  * =============================================================================
- * Process Name: Windows Behavioral Forensics Logic
+ * Process Name: AI-Breadboard UI - Main Script
  * =============================================================================
  * Description:
- *   Клиентский контроллер вкладки форензики активности:
- *   активное окно, время бездействия пользователя, Privacy Radar и UserAssist.
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/forensics_tab/main.js?v=20261001_v1" type="module"></script>
  *
  * File: main.js
- * Project: AI-Breadboard
- * Module: WebInterface.ForensicsTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/forensics_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

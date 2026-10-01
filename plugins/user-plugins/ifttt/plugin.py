@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins Ifttt - Plugin
+# =============================================================================
+# Description:
+#   Modular plugin providing IFTTT Maker Webhooks and Smart Home automation.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.user-plugins.ifttt.plugin import IFTTTPlugin
+#
+#     service = IFTTTPlugin()
+#
+# File: plugin.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.ifttt
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
 from __future__ import annotations
+"""Modular plugin providing IFTTT Maker Webhooks and Smart Home automation."""
+
 import json
 import os
 from pathlib import Path

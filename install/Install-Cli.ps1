@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Install-Cli Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Install-Cli).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Install-Cli.ps1
+#
+# File: Install-Cli.ps1
+# Project: ai-breadboard
+# Package: install
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:29
+# =============================================================================
+
 <#
 .SYNOPSIS
     Модуль привязки путей проекта и генерации глобальных команд assist.

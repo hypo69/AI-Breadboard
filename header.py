@@ -1,6 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Root - Header
+# =============================================================================
+# Description:
+#   Module defining root path to the project.
+#
+# Usage Examples:
+#   Python API:
+#     from header import set_project_root
+#
+#     res = set_project_root()
+#
+# File: header.py
+# Project: ai-breadboard
+# Package: root
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:20:26
+# =============================================================================
+
 """Module defining root path to the project.
 
 All imports are built relative to the project root path determined by this module."""
+
 import os
 import sys
 from pathlib import Path

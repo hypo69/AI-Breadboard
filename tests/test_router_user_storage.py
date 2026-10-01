@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router User Storage
+# =============================================================================
+# Description:
+#   Test user personal storage endpoints.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_router_user_storage import TestUserStorageAPI
+#
+#     service = TestUserStorageAPI()
+#
+# File: test_router_user_storage.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Test user personal storage endpoints."""
+
 import io
 import pytest
 from fastapi.testclient import TestClient

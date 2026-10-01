@@ -1,9 +1,34 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Chat Module
+# =============================================================================
+# Description:
+#   Высокоуровневый адаптер взаимодействия с Google Gemini CLI.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.providers.gemini_cli.chat import GeminiCliChatBase
+#
+#     service = GeminiCliChatBase()
+#     result = service.get_available_models()
+#     print(result)
+#
+# File: chat.py
+# Project: ai-breadboard
+# Package: src.ai.providers.gemini_cli
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Высокоуровневый адаптер взаимодействия с Google Gemini CLI."""
+
 import os
 import sys
 from pathlib import Path
 from typing import Any, AsyncGenerator, AsyncIterator, Dict, List, Optional, Set, Union
-from logger.logger import logger
+from logger import logger
 from src.ai.providers.base import BaseChatProvider
 from .client import GeminiCliProvider, GeminiCliResponse
 

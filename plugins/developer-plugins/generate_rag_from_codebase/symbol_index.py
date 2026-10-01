@@ -1,9 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins Developer-Plugins Generate_Rag_From_Codebase - Symbol Index
+# =============================================================================
+# Description:
+#   Code symbol table index for fast symbol resolution.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.developer-plugins.generate_rag_from_codebase.symbol_index import CodeSymbolIndex
+#
+#     service = CodeSymbolIndex()
+#
+# File: symbol_index.py
+# Project: ai-breadboard
+# Package: plugins.developer-plugins.generate_rag_from_codebase
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Code symbol table index for fast symbol resolution.
 
 Indexes classes, functions, and methods to support direct lookup of code symbols,
-their enclosing modules, signatures, and file locations.
-"""
-from __future__ import annotations
+their enclosing modules, signatures, and file locations."""
+
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional

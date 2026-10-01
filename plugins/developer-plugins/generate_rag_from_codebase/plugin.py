@@ -1,9 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins Developer-Plugins Generate_Rag_From_Codebase - Plugin
+# =============================================================================
+# Description:
+#   Codebase RAG generator plugin module.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.developer-plugins.generate_rag_from_codebase.plugin import GenerateRagCodebasePlugin
+#
+#     service = GenerateRagCodebasePlugin()
+#
+# File: plugin.py
+# Project: ai-breadboard
+# Package: plugins.developer-plugins.generate_rag_from_codebase
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Codebase RAG generator plugin module.
 
 Integrates AST Python code analysis, hierarchical Markdown sectioning, secret filtering,
-multi-index naming, user directory isolation, and dual (Symbol + Vector) indexing.
-"""
-from __future__ import annotations
+multi-index naming, user directory isolation, and dual (Symbol + Vector) indexing."""
+
 import json
 import os
 from pathlib import Path

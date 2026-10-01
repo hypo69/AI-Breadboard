@@ -1,5 +1,27 @@
-"""
-Скрипт для валидации структуры документации.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Docs - Validate Structure
+# =============================================================================
+# Description:
+#   Скрипт для валидации структуры документации.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.docs.validate_structure
+#   Python API:
+#     from scripts.docs.validate_structure import DocumentationValidator
+#
+#     service = DocumentationValidator()
+#
+# File: validate_structure.py
+# Project: ai-breadboard
+# Package: scripts.docs
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
+"""Скрипт для валидации структуры документации.
 
 Проверяет:
 1. Наличие обязательных файлов и директорий
@@ -8,8 +30,8 @@
 
 Exit codes:
   0 - ошибок нет
-  1 - найдены ошибки
-"""
+  1 - найдены ошибки"""
+
 import sys
 import os
 import re

@@ -1,3 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Url Module
+# =============================================================================
+# Description:
+#   Extraction of query parameters from URL string.
+#
+# Usage Examples:
+#   CLI:
+#     python -m src.utils.url
+#   Python API:
+#     from src.utils.url import extract_url_params
+#
+#     res = extract_url_params()
+#     print(res)
+#
+# File: url.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Extraction of query parameters from URL string."""
+
 from urllib.parse import urlparse, parse_qs
 try:
     import validators

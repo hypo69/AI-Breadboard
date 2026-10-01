@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Network
+# =============================================================================
+# Description:
+#   Unit tests for src.network module.
+#
+# Usage Examples:
+#   CLI:
+#     python -m tests.test_network
+#   Python API:
+#     from tests.test_network import TestNetworkModule
+#
+#     service = TestNetworkModule()
+#
+# File: test_network.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for src.network module."""
+
 import unittest
 from unittest.mock import MagicMock, patch
 from apps.tshark.models import NetworkInterface, PacketSummary, CaptureFilter, TrafficStats, AnomalyReport

@@ -1,9 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API -   Init   Module
+# =============================================================================
+# Description:
+#   Модуль инициализации API‑роутеров.
+#
+# Usage Examples:
+#
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: src.api
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """Модуль инициализации API‑роутеров.
 
 Содержит импорт глобальных роутеров, которые относятся ко всей системе.
 Остальные роутеры находятся в соответствующих приложениях (`apps/*`) или плагинах
-и автоматически обнаруживаются через `src.api.router_loader.discover_routers`.
-"""
+и автоматически обнаруживаются через `src.api.router_loader.discover_routers`."""
 
 from .routers.core.router_auth import init_router as init_auth_router, is_local_request, get_current_user_data, get_current_user_optional, require_admin_user
 from .routers.core.router_chat import init_router as init_chat_router

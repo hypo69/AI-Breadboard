@@ -1,5 +1,27 @@
-"""Модульные тесты для навыка сбора счетов-фактур из входящей почты в CSV."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Mail Invoice Collector
+# =============================================================================
+# Description:
+#   Модульные тесты для навыка сбора счетов-фактур из входящей почты в CSV.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_mail_invoice_collector import mock_secrets_file
+#
+#     res = mock_secrets_file()
+#
+# File: test_mail_invoice_collector.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Модульные тесты для навыка сбора счетов-фактур из входящей почты в CSV."""
+
 import csv
 import email
 from email.mime.multipart import MIMEMultipart

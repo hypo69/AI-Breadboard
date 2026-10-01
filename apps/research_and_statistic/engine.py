@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Research_And_Statistic - Engine
+# =============================================================================
+# Description:
+#   Движок для проведения статистического анализа данных и генерации отчетов с ИИ-интерпретацией и RAG-памятью.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.research_and_statistic.engine import DataResearchEngine
+#
+#     service = DataResearchEngine()
+#
+# File: engine.py
+# Project: ai-breadboard
+# Package: apps.research_and_statistic
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""Движок для проведения статистического анализа данных и генерации отчетов с ИИ-интерпретацией и RAG-памятью."""
+
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -6,7 +29,7 @@ import json
 from datetime import datetime
 from typing import Any, List, Tuple, Optional
 from logger import logger
-from apps.windows.observability.engine import DiagnosticEngine
+from apps.windows.telemetry.diagnostic_engine import DiagnosticEngine
 from apps.windows.telemetry.models import AnomalyItem
 from src.rag.user_workspace_rag import user_workspace_rag_manager
 

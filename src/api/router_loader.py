@@ -1,3 +1,25 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - Router Loader Module
+# =============================================================================
+# Description:
+#   Модуль авто‑обнаружения FastAPI‑роутеров.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.router_loader import discover_routers
+#
+#     res = discover_routers()
+#     print(res)
+#
+# File: router_loader.py
+# Project: ai-breadboard
+# Package: src.api
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """Модуль авто‑обнаружения FastAPI‑роутеров.
 
 Содержит функцию :func:`discover_routers`, которая ищет и импортирует все роутеры,
@@ -9,8 +31,7 @@
 в вызывающем коде.
 
 Все обнаруженные роутеры возвращаются в виде списка, который можно передать в
-``app.include_router``.
-"""
+``app.include_router``."""
 
 import importlib
 import logging

@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Autolog Sensors Config
+# =============================================================================
+# Description:
+#   Тесты для load_autolog_config — чтение из autolog_sensors.json.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_autolog_sensors_config import TestLoadAutologConfig
+#
+#     service = TestLoadAutologConfig()
+#
+# File: test_autolog_sensors_config.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Тесты для load_autolog_config — чтение из autolog_sensors.json."""
+
 import json
 import tempfile
 import pytest

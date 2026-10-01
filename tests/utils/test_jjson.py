@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests Utils - Test Jjson
+# =============================================================================
+# Description:
+#   Test saving JSON to file (successful scenario).
+#
+# Usage Examples:
+#   Python API:
+#     from tests.utils.test_jjson import test_j_dumps_happy_path
+#
+#     res = test_j_dumps_happy_path()
+#
+# File: test_jjson.py
+# Project: ai-breadboard
+# Package: tests.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Test saving JSON to file (successful scenario)."""
+
 import pytest
 import json
 from pathlib import Path

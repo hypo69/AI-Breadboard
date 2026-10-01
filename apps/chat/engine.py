@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Chat - Engine
+# =============================================================================
+# Description:
+#   Движок выполнения диалогов и управления состоянием чата.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.chat.engine import ChatEngine
+#
+#     service = ChatEngine()
+#
+# File: engine.py
+# Project: ai-breadboard
+# Package: apps.chat
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Движок выполнения диалогов и управления состоянием чата."""
+
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional

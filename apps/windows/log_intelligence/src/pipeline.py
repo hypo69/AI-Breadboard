@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Log_Intelligence Src - Pipeline
+# =============================================================================
+# Description:
+#   Единый фасад пайплайна: Data Researcher -> Decision Gate -> Adaptive RAG.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.log_intelligence.src.pipeline import LogIntelligencePipeline
+#
+#     service = LogIntelligencePipeline()
+#
+# File: pipeline.py
+# Project: ai-breadboard
+# Package: apps.windows.log_intelligence.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Единый фасад пайплайна: Data Researcher -> Decision Gate -> Adaptive RAG."""
+
 from typing import Any, Dict, List, Optional
 from .adaptive_rag import AdaptiveLogRAG
 from .data_researcher import LogDataResearcher

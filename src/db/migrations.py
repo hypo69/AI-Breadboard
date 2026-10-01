@@ -1,5 +1,28 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard DB - Migrations Module
+# =============================================================================
+# Description:
+#   Модуль управления миграциями SQLite баз данных.
+#
+# Usage Examples:
+#   Python API:
+#     from src.db.migrations import MigrationManager
+#
+#     service = MigrationManager()
+#     result = service.register_db()
+#     print(result)
+#
+# File: migrations.py
+# Project: ai-breadboard
+# Package: src.db
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """Модуль управления миграциями SQLite баз данных."""
+
 import hashlib
 import importlib.util
 from pathlib import Path

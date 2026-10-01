@@ -1,16 +1,20 @@
 /**
  * =============================================================================
- * Process Name: AI Agents Management and Builder Interface
+ * Process Name: AI-Breadboard UI - Main Script
  * =============================================================================
  * Description:
- *   Client-side controller for managing AI agent registry, model pool binding,
- *   automated specification generation, and execution sandbox testing.
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/agents_tab/main.js?v=20261001_v1" type="module"></script>
  *
  * File: main.js
- * Project: Mediteka
- * Module: AgentsTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/agents_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

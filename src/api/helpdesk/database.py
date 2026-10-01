@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: Core Database Manager
+# =============================================================================
+# Description:
+#   Менеджер подключения и работы с основной базой данных SQLite/PostgreSQL.
+#
+# Usage Examples:
+#   Python API:
+#     from src.core.database import DatabaseManager
+#
+#     db = DatabaseManager.get_instance()
+#     conn = db.get_connection()
+#
+# File: database.py
+# Project: ai-breadboard
+# Package: src.api.helpdesk
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Менеджер подключения и работы с основной базой данных SQLite/PostgreSQL."""
+
 import sqlite3
 from pathlib import Path
 from typing import Generator

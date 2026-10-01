@@ -1,12 +1,26 @@
-"""Экспорт низкоуровневых оберток Windows Native и COM API."""
-from .kernel32 import Kernel32API
-from .psapi import PsapiAPI
-from .advapi32 import Advapi32API
-from .ntdll import NtdllAPI
-from .etw import EtwAPI
-from .wevtapi import WevtAPI
-from .scm import ServiceControlManager, ServiceInfo
-from .tasksched import TaskSchedulerAPI
-from .nethelper import IPHelperAPI, NetworkSocketInfo
-from .setupapi import SetupAPI, PnPDeviceInfo
-__all__ = ['Kernel32API', 'PsapiAPI', 'Advapi32API', 'NtdllAPI', 'EtwAPI', 'WevtAPI', 'ServiceControlManager', 'ServiceInfo', 'TaskSchedulerAPI', 'IPHelperAPI', 'NetworkSocketInfo', 'SetupAPI', 'PnPDeviceInfo']
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Api -   Init  
+# =============================================================================
+# Description:
+#   Внутренний FastAPI-сервис подсистемы Windows.
+#
+# Usage Examples:
+#
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: apps.windows.api
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""Внутренний FastAPI-сервис подсистемы Windows."""
+
+from .internal_app import create_internal_app, load_config
+
+__all__ = [
+    'create_internal_app',
+    'load_config',
+]

@@ -1,7 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Performance Collector
+# =============================================================================
+# Description:
+#   Тест регистрации сенсоров производительности.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_performance_collector import test_performance_collector_sensors
+#
+#     res = test_performance_collector_sensors()
+#
+# File: test_performance_collector.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Тест регистрации сенсоров производительности."""
+
 import pytest
 from unittest.mock import patch
 from apps.windows.core.models import DomainAuditResult
-from apps.windows.core.modules.performance_collector import PerformanceCollector
+from apps.windows.core.audits.performance_collector import PerformanceCollector
 
 def test_performance_collector_sensors():
     """Тест регистрации сенсоров производительности."""

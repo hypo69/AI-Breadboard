@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Utils Jjson
+# =============================================================================
+# Description:
+#   Class for testing jjson module functions.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_utils_jjson import TestJJson
+#
+#     service = TestJJson()
+#
+# File: test_utils_jjson.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Class for testing jjson module functions."""
+
 import pytest
 import json
 from pathlib import Path

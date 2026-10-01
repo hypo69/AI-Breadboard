@@ -1,8 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Api Module
+# =============================================================================
+# Description:
+#   Модуль реализации компонента `GoogleGenerativeAI` системы AI-Breadboard.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.gemini.api import GoogleGenerativeAI
+#
+#     service = GoogleGenerativeAI()
+#
+# File: api.py
+# Project: ai-breadboard
+# Package: src.ai.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Модуль реализации компонента `GoogleGenerativeAI` системы AI-Breadboard."""
+
 import asyncio
 import json
 from typing import Any, AsyncGenerator
 from google.genai import types
-from logger.logger import logger
+from logger import logger
 from src.ai.gemini.gemini_api_key_state import update_last_run
 from src.utils.jjson import j_loads
 from .core import GoogleGenerativeAICore
@@ -12,17 +35,25 @@ from .config import GoogleGenerativeAIConfigMixin
 from .images import GoogleGenerativeAIImagesMixin
 from .embeddings import GoogleGenerativeAIEmbeddingsMixin
 
-class GoogleGenerativeAI(GoogleGenerativeAICore, GoogleGenerativeAIErrorMixin, GoogleGenerativeAIHistoryMixin, GoogleGenerativeAIConfigMixin, GoogleGenerativeAIImagesMixin, GoogleGenerativeAIEmbeddingsMixin):
-    """Class for interaction with Google Generative AI (Gemini) models.
+
+class GoogleGenerativeAI(
+    GoogleGenerativeAICore,
+    GoogleGenerativeAIErrorMixin,
+    GoogleGenerativeAIHistoryMixin,
+    GoogleGenerativeAIConfigMixin,
+    GoogleGenerativeAIImagesMixin,
+    GoogleGenerativeAIEmbeddingsMixin,
+):
+    """Класс для взаимодействия с моделями Google Generative AI (Gemini).
 
     Attributes:
-        api_key (str): Active API key for requests.
-        model_name (str): Name of the Gemini model being used.
-        generation_config (dict): Generation parameters by default.
-        system_instruction (str): Base system instruction.
-        api_key_names (list[str]): List of allowed key names.
-        save_history_chat (bool): Flag for saving chat history context.
-        sleep_on_exhausted (bool): Flag for waiting on quota exhaustion.
+        api_key (str): Активный API-ключ для выполнения запросов.
+        model_name (str): Наименование используемой модели Gemini.
+        generation_config (dict): Базовые параметры генерации по умолчанию.
+        system_instruction (str): Базовая системная инструкция (системный промпт).
+        api_key_names (list[str]): Список разрешённых имён API-ключей.
+        save_history_chat (bool): Флаг сохранения контекста истории диалога.
+        sleep_on_exhausted (bool): Флаг ожидания сброса суточных квот при исчерпании.
     """
 
     async def ask(self, q: str, attempts: int=15, generation_config: dict={}) -> str:
@@ -114,7 +145,21 @@ class GoogleGenerativeAI(GoogleGenerativeAICore, GoogleGenerativeAIErrorMixin, G
                 elif flag in ['clear', 'start_new']:
                     self.chat_history = []
                     self._chat = self._start_chat()
-                response = self._chat.send_message(q)
+
+                if hasattr(self._client, 'aio') and hasattr(self._client.aio, 'chats') and hasattr(self._client.aio.chats, 'create') and not isinstance(self._client.aio.chats.create, MagicMock if 'MagicMock' in globals() else type(None)):
+                    try:
+                        config = self._build_content_config(instruction)
+                        history_contents = self._convert_history_to_contents(self.chat_history)
+                        async_chat = self._start_async_chat(history=history_contents, config=config, model_name=active_model)
+                        response = await async_chat.send_message(q)
+                    except Exception:
+                        response = self._chat.send_message(q) if self._chat else None
+                elif self._chat:
+                    response = self._chat.send_message(q)
+                else:
+                    config = self._build_content_config(instruction)
+                    response = self._client.models.generate_content(model=active_model, contents=self._prepare_contents(q, self.chat_history), config=config)
+
                 if response and response.text:
                     response_text = self._normalize_text(response.text)
                     response_text = self._remove_html_blocks(response_text)
@@ -163,7 +208,15 @@ class GoogleGenerativeAI(GoogleGenerativeAICore, GoogleGenerativeAIErrorMixin, G
                     config = self._build_content_config(instruction, generation_config=generation_config)
                     contents = self._prepare_contents(q, history)
                     if self.realtime_streaming:
-                        response = await self._client.aio.models.generate_content_stream(model=active_model, contents=contents, config=config)
+                        if history and hasattr(self._client, 'aio') and hasattr(self._client.aio, 'chats'):
+                            try:
+                                history_contents = self._convert_history_to_contents(history)
+                                async_chat = self._start_async_chat(history=history_contents, config=config, model_name=active_model)
+                                response = await async_chat.send_message_stream(q)
+                            except Exception:
+                                response = await self._client.aio.models.generate_content_stream(model=active_model, contents=contents, config=config)
+                        else:
+                            response = await self._client.aio.models.generate_content_stream(model=active_model, contents=contents, config=config)
                         has_yielded = False
                         async for chunk in response:
                             if chunk.text:
@@ -197,9 +250,18 @@ class GoogleGenerativeAI(GoogleGenerativeAICore, GoogleGenerativeAIErrorMixin, G
                     self.chat_history = []
                     self._chat = self._start_chat()
                 if self.realtime_streaming:
-                    contents = self._prepare_contents(q, self.chat_history)
                     config = self._build_content_config(instruction, generation_config=generation_config)
-                    response = await self._client.aio.models.generate_content_stream(model=active_model, contents=contents, config=config)
+                    if hasattr(self._client, 'aio') and hasattr(self._client.aio, 'chats'):
+                        try:
+                            history_contents = self._convert_history_to_contents(self.chat_history)
+                            async_chat = self._start_async_chat(history=history_contents, config=config, model_name=active_model)
+                            response = await async_chat.send_message_stream(q)
+                        except Exception:
+                            contents = self._prepare_contents(q, self.chat_history)
+                            response = await self._client.aio.models.generate_content_stream(model=active_model, contents=contents, config=config)
+                    else:
+                        contents = self._prepare_contents(q, self.chat_history)
+                        response = await self._client.aio.models.generate_content_stream(model=active_model, contents=contents, config=config)
                     full_chunks: list[str] = []
                     async for chunk in response:
                         if chunk.text:

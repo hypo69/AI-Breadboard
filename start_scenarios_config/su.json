@@ -71,7 +71,6 @@
         "windows_defender",
         "windows_backup_manager",
         "hardware_monitor",
-        "librehardwaremonitor",
         "autolog_manager",
         "ai_benchmark",
         "ninite_updater",

@@ -1,3 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Probe Module
+# =============================================================================
+# Description:
+#   Check if current operating system is Windows.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.providers.windows_ai.probe import is_windows_os
+#
+#     res = is_windows_os()
+#     print(res)
+#
+# File: probe.py
+# Project: ai-breadboard
+# Package: src.ai.providers.windows_ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Check if current operating system is Windows."""
+
 import os
 import platform
 import subprocess

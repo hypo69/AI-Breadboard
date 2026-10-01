@@ -1,4 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Chat Tests - Test Chat App
+# =============================================================================
+# Description:
+#   Набор тестов для приложения AI Chat.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.chat.tests.test_chat_app
+#   Python API:
+#     from apps.chat.tests.test_chat_app import TestChatApp
+#
+#     service = TestChatApp()
+#
+# File: test_chat_app.py
+# Project: ai-breadboard
+# Package: apps.chat.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Набор тестов для приложения AI Chat."""
+
 import unittest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient

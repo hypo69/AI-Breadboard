@@ -1,5 +1,27 @@
-"""Фабрика динамических инструментов и мета-инструмент create_custom_tool."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core Tools - Dynamic Factory
+# =============================================================================
+# Description:
+#   Фабрика динамических инструментов и мета-инструмент create_custom_tool.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.tools.dynamic_factory import DynamicSynthesizedTool
+#
+#     service = DynamicSynthesizedTool()
+#
+# File: dynamic_factory.py
+# Project: ai-breadboard
+# Package: apps.windows.core.tools
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Фабрика динамических инструментов и мета-инструмент create_custom_tool."""
+
 import asyncio
 import json
 import platform

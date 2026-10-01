@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Client Module
+# =============================================================================
+# Description:
+#   Client for working with Microsoft AI Foundry.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.providers.foundry.client import FoundryClient
+#
+#     service = FoundryClient()
+#
+# File: client.py
+# Project: ai-breadboard
+# Package: src.ai.providers.foundry
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Client for working with Microsoft AI Foundry."""
+
 import os
 import aiohttp
 from typing import Optional, Dict, Any, List

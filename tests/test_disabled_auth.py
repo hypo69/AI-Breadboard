@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Disabled Auth
+# =============================================================================
+# Description:
+#   Verifies is_auth_disabled and is_oauth_enabled under DISABLE_AUTH=true.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_disabled_auth import test_auth_disabled_helpers
+#
+#     res = test_auth_disabled_helpers()
+#
+# File: test_disabled_auth.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Verifies is_auth_disabled and is_oauth_enabled under DISABLE_AUTH=true."""
+
 import os
 import pytest
 from fastapi import FastAPI, Request

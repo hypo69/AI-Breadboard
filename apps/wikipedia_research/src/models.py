@@ -1,5 +1,27 @@
-"""Pydantic schemas and data models for Wikipedia Research Laboratory."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Wikipedia_Research Src - Models
+# =============================================================================
+# Description:
+#   Pydantic schemas and data models for Wikipedia Research Laboratory.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.wikipedia_research.src.models import WikipediaArticleMeta
+#
+#     service = WikipediaArticleMeta()
+#
+# File: models.py
+# Project: ai-breadboard
+# Package: apps.wikipedia_research.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Pydantic schemas and data models for Wikipedia Research Laboratory."""
+
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field

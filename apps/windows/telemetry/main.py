@@ -1,5 +1,29 @@
-"""Главная точка входа для сервиса сбора телеметрии Windows."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Telemetry - Main
+# =============================================================================
+# Description:
+#   Главная точка входа для сервиса сбора телеметрии Windows.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.windows.telemetry.main
+#   Python API:
+#     from apps.windows.telemetry.main import parse_arguments
+#
+#     res = parse_arguments()
+#
+# File: main.py
+# Project: ai-breadboard
+# Package: apps.windows.telemetry
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Главная точка входа для сервиса сбора телеметрии Windows."""
+
 import argparse
 import os
 import signal
@@ -12,6 +36,8 @@ from typing import Any, Dict, List, Optional
 _project_root = str(Path(__file__).resolve().parents[3])
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
+if __package__ in (None, ''):
+    __package__ = 'apps.windows.telemetry'
 if sys.stdout is None or sys.stderr is None:
     _early_log_dir = Path(os.environ.get('APPDATA', os.path.expanduser('~\\AppData\\Roaming'))) / 'AI-Breadboard' / 'apps' / 'windows' / 'telemetry' / 'logs'
     _early_log_dir.mkdir(parents=True, exist_ok=True)
@@ -83,9 +109,9 @@ def run_telemetry_service(mode: str='hybrid', interval: float=5.0, heavy_interva
         int: Код завершения.
     """
     import psutil
-    from apps.windows.hardware.gpu_prober import GpuProber
-    from apps.windows.telemetry.models import CpuMetrics, DiskIoMetrics, DiskPartitionMetrics, GpuMetrics, MemoryMetrics, NetworkInterfaceMetrics, ProcessMetrics, SystemSnapshot
-    from apps.windows.telemetry.storage import TelemetryStorage
+    from apps.windows.modules.hardware.gpu_prober import GpuProber
+    from .models import CpuMetrics, DiskIoMetrics, DiskPartitionMetrics, GpuMetrics, MemoryMetrics, NetworkInterfaceMetrics, ProcessMetrics, SystemSnapshot
+    from .sqlite import TelemetryStorage
     _set_low_priority()
     resolved_log_dir = log_dir or os.path.join(os.environ.get('APPDATA', os.path.expanduser('~\\AppData\\Roaming')), 'AI-Breadboard', 'apps', 'windows', 'telemetry', 'logs')
     os.makedirs(resolved_log_dir, exist_ok=True)
@@ -115,7 +141,7 @@ def run_telemetry_service(mode: str='hybrid', interval: float=5.0, heavy_interva
     hostname = os.environ.get('COMPUTERNAME', 'localhost')
     boot_time = psutil.boot_time()
     psutil.cpu_percent(interval=None)
-    from apps.windows.telemetry.telemetry_config import TelemetryConfigManager
+    from .telemetry_config import TelemetryConfigManager
     cfg_mgr = TelemetryConfigManager(config_path=config_path)
     heavy_disk_interval_sec = cfg_mgr.get_heavy_disk_scan_interval()
     max_heavy_duration_sec = cfg_mgr.get_heavy_mode_max_duration_days() * 24.0 * 3600.0
@@ -125,7 +151,7 @@ def run_telemetry_service(mode: str='hybrid', interval: float=5.0, heavy_interva
     sensor_collector = None
     if mode in ('hybrid', 'full') and h_collectors.get('hardware_sensors', True):
         try:
-            from apps.windows.telemetry.sensor_collector import SensorCollector
+            from .sensor_collector import SensorCollector
             sensor_collector = SensorCollector(config_manager=cfg_mgr)
             logger.info('SensorCollector (LHM/Hardware) инициализирован для тяжелых опросов')
         except Exception as sc_err:
@@ -133,8 +159,8 @@ def run_telemetry_service(mode: str='hybrid', interval: float=5.0, heavy_interva
     system_collector = None
     deep_diag = None
     try:
-        from apps.windows.telemetry.collector import SystemCollector
-        from apps.windows.telemetry.deep_diagnostics import DeepDiagnosticsEngine
+        from .collector import SystemCollector
+        from apps.windows.telemetry_research.deep_diagnostics import DeepDiagnosticsEngine
         system_collector = SystemCollector(storage=storage)
         deep_diag = DeepDiagnosticsEngine()
         identity = system_collector.get_system_identity()
@@ -150,6 +176,61 @@ def run_telemetry_service(mode: str='hybrid', interval: float=5.0, heavy_interva
             logger.info(f"🖥️ [АППАРАТНАЯ КОНФИГУРАЦИЯ] Спецификация всего железа ПК определена при старте процесса ({len(hw_tree)} компонентов)")
     except Exception as init_err:
         logger.debug(f"Инициализация системного коллектора: {init_err}")
+
+    # Проверка критических аудитов при запуске
+    try:
+        from apps.windows.telemetry_research.audit_startup_checker import run_startup_audit
+        startup_audit = run_startup_audit(
+            check_integrity=True,
+            check_performance=True,
+            check_drivers=False,
+            check_eventlog=False
+        )
+        if not startup_audit.is_healthy:
+            logger.error(
+                f"🚨 STARTUP AUDIT: Обнаружены критические проблемы! "
+                f"Critical: {startup_audit.critical_count}, Warnings: {startup_audit.warning_count}"
+            )
+            for finding in startup_audit.findings:
+                logger.warning(f"  - [{finding['severity'].upper()}] {finding['domain']}: {finding['title']}")
+        elif startup_audit.warning_count > 0:
+            logger.warning(
+                f"⚠️ STARTUP AUDIT: Предупреждения: {startup_audit.warning_count} "
+                f"({startup_audit.duration_ms}ms)"
+            )
+        else:
+            logger.info(f"✅ STARTUP AUDIT: Все проверки пройдены ({startup_audit.duration_ms}ms)")
+    except Exception as audit_err:
+        logger.debug(f"Проверка аудитов при запуске: {audit_err}")
+
+    # Инициализация W64/ETW сборщиков системных событий
+    w64_collector = None
+    w64_etw_collector = None
+    w64_cfg = cfg_mgr.get_config().get('w64_collector', {}) if cfg_mgr else {}
+    if w64_cfg.get('enabled', True):
+        try:
+            from .w64_collector import AIW64Collector
+            from .w64_etw_collector import AIW64ETWCollector
+            w64_collector = AIW64Collector(
+                storage=storage,
+                enable_file_monitoring=w64_cfg.get('enable_file_monitoring', True),
+                enable_process_monitoring=w64_cfg.get('enable_process_monitoring', True),
+                enable_registry_monitoring=w64_cfg.get('enable_registry_monitoring', True),
+                enable_network_monitoring=w64_cfg.get('enable_network_monitoring', True),
+                enable_event_log_monitoring=w64_cfg.get('enable_event_log_monitoring', True),
+            )
+            w64_collector.start()
+            w64_etw_collector = AIW64ETWCollector(
+                storage=storage,
+                enable_process_trace=w64_cfg.get('enable_process_trace', True),
+                enable_disk_trace=w64_cfg.get('enable_disk_trace', True),
+                enable_network_trace=w64_cfg.get('enable_network_trace', True),
+                enable_registry_trace=w64_cfg.get('enable_registry_trace', True),
+            )
+            w64_etw_collector.start()
+            logger.info('🛰️ Сборщики событий W64 и ETW запущены в составе телеметрии')
+        except Exception as w64_err:
+            logger.debug(f'Не удалось запустить W64 сборщики: {w64_err}')
 
     logger.info('=' * 60)
     logger.info(f'Запущен сервис телеметрии Windows [Режим: {mode.upper()}]')
@@ -169,6 +250,8 @@ def run_telemetry_service(mode: str='hybrid', interval: float=5.0, heavy_interva
     last_heavy_time = time.time()
     last_heavy_disk_scan_time = time.time()
     heavy_mode_start_time: Optional[float] = time.time() if mode.lower() in ('full', 'heavy') else None
+    db_cleanup_interval_sec = cfg_mgr.get_db_cleanup_interval_seconds()
+    last_db_cleanup_time = time.time()
     known_pids: Dict[int, str] = {}
     flashing_log_path = Path(resolved_log_dir) / 'flashing_processes.log'
 
@@ -291,7 +374,9 @@ def run_telemetry_service(mode: str='hybrid', interval: float=5.0, heavy_interva
                 except Exception:
                     pass
                 mem_mb = round(mem_rss / (1024 * 1024), 1)
-                top_procs.append(ProcessMetrics(pid=info.get('pid', 0), name=info.get('name') or 'unknown', cpu_percent=proc_cpu, memory_mb=mem_mb, threads_count=1, status='running', username=info.get('username') or ''))
+                raw_user = info.get('username')
+                clean_user = raw_user if isinstance(raw_user, str) else ''
+                top_procs.append(ProcessMetrics(pid=info.get('pid', 0), name=info.get('name') or 'unknown', cpu_percent=proc_cpu, memory_mb=mem_mb, threads_count=1, status='running', username=clean_user))
             snapshot = SystemSnapshot(timestamp=now_iso, hostname=hostname, uptime_seconds=round(time.time() - boot_time, 1), cpu=cpu_metrics, memory=mem_metrics, gpus=gpu_metrics_list, disks=disk_partitions, network=net_metrics_list, top_processes=top_procs)
             try:
                 storage.save_snapshot(snapshot, top_n=top_processes)
@@ -387,6 +472,20 @@ def run_telemetry_service(mode: str='hybrid', interval: float=5.0, heavy_interva
                 except Exception as h_err:
                     logger.debug(f'Ошибка периодического тяжелого опроса: {h_err}')
 
+            # Фоновый периодический контроль размера SQLite базы данных telemetry.db
+            if now_sec - last_db_cleanup_time >= db_cleanup_interval_sec:
+                try:
+                    prune_res = storage.enforce_size_limit()
+                    if prune_res.get('pruned'):
+                        logger.warning(
+                            f"🗄️ [КОНТРОЛЬ РАЗМЕРА БД] Усечение базы данных telemetry.db: "
+                            f"{prune_res.get('initial_size_mb')} МБ -> {prune_res.get('final_size_mb')} МБ "
+                            f"(удалено снимков: {prune_res.get('deleted_snapshots')})"
+                        )
+                    last_db_cleanup_time = now_sec
+                except Exception as db_clean_err:
+                    logger.debug(f"Ошибка периодического контроля размера БД: {db_clean_err}")
+
             active_win_str = ""
             if deep_diag:
                 try:
@@ -428,11 +527,17 @@ def run_telemetry_service(mode: str='hybrid', interval: float=5.0, heavy_interva
             if top_procs:
                 logger.info(f"   • 📋 Процессы (Топ-{len(top_procs)} по RAM & CPU):")
                 for idx, p in enumerate(top_procs[:top_processes], 1):
-                    user_info = f" ({p.username})" if p.username else ""
-                    logger.info(f"      {idx:2d}. [PID {p.pid:6d}] {p.name:<24s} | RAM: {p.memory_mb:7.1f} МБ | CPU: {p.cpu_percent:5.1f}%{user_info}")
+                    try:
+                        u_str = p.username if isinstance(p.username, str) and p.username else ""
+                        user_info = f" ({u_str})" if u_str else ""
+                        logger.info(f"      {idx:2d}. [PID {p.pid:6d}] {p.name:<24s} | RAM: {p.memory_mb:7.1f} МБ | CPU: {p.cpu_percent:5.1f}%{user_info}")
+                    except Exception as p_err:
+                        logger.debug(f"Ошибка вывода процесса #{idx}: {p_err}")
 
             logger.info("══════════════════════════════════════════════════════════════════════════════")
 
+            elapsed = time.time() - loop_start
+            sleep_time = max(0.05, interval - elapsed)
             if _stop_event.wait(timeout=sleep_time):
                 logger.info('Получен сигнал остановки (_stop_event установлен)')
                 break
@@ -441,6 +546,16 @@ def run_telemetry_service(mode: str='hybrid', interval: float=5.0, heavy_interva
     except Exception as ex:
         logger.error(f'Критическая ошибка в цикле телеметрии: {ex}', exc_info=True)
     finally:
+        if w64_collector:
+            try:
+                w64_collector.stop()
+            except Exception:
+                pass
+        if w64_etw_collector:
+            try:
+                w64_etw_collector.stop()
+            except Exception:
+                pass
         logger.info('Процесс телеметрии успешно завершен')
     return 0
 
@@ -459,7 +574,7 @@ def main() -> int:
         logger.setLevel('DEBUG')
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
-    from apps.windows.telemetry.telemetry_config import TelemetryConfigManager
+    from .telemetry_config import TelemetryConfigManager
     try:
         config_manager = TelemetryConfigManager(config_path=args.config)
     except Exception as e:

@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Approved Responses Store Module
+# =============================================================================
+# Description:
+#   Возвращает текущую директорию хранения одобренных ответов.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.gemini.approved_responses_store import get_store_dir
+#
+#     res = get_store_dir()
+#     print(res)
+#
+# File: approved_responses_store.py
+# Project: ai-breadboard
+# Package: src.ai.gemini
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Возвращает текущую директорию хранения одобренных ответов."""
+
 import json
 import uuid
 from datetime import datetime, timezone

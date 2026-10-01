@@ -1,3 +1,23 @@
+/**
+ * =============================================================================
+ * Process Name: AI-Breadboard Styles - Main Stylesheet
+ * =============================================================================
+ * Description:
+ *   Таблица стилей оформления компонентов интерфейса (main).
+ *
+ * Usage Examples:
+ *   HTML Link Tag:
+ *     <link rel="stylesheet" href="/src/api/webgui/css/main.css?v=20261001_v1">
+ *
+ * File: main.css
+ * Project: ai-breadboard
+ * Package: src/api/webgui/css
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
 /* ═══════════════════════════════════════════════════════════════════════════
    MAIN STYLESHEET MANIFEST — AI Breadboard WebGUI
    Модульная точка входа стилей веб-интерфейса

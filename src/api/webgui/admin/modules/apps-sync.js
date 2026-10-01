@@ -1,4 +1,27 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Apps-Sync Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля apps-sync.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/admin/modules/apps-sync.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { syncAppsTabsVisibility, getAppsMap } from '/src/api/webgui/admin/modules/apps-sync.js';
+ *
+ * File: apps-sync.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/admin/modules
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * Apps Sync Module - Синхронизация видимости приложений
  */
 

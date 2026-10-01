@@ -2,6 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Единая конфигурация телеметрии: сенсоры, логгеры приложений и опции сбора данных",
   "mode": "hybrid",
+  "buffer_mode": "memory",
+  "buffer_size": 50,
+  "flush_interval_seconds": 30.0,
+  "buffer_file": "telemetry_buffer.jsonl",
+  "max_db_size_mb": 50.0,
+  "retention_days": 7,
+  "db_cleanup_interval_seconds": 300.0,
+  "auto_vacuum_enabled": true,
   "interval_seconds": 6.0,
   "heavy_interval_seconds": 90.0,
   "process_mode": "top_n",
@@ -36,10 +44,6 @@
       "enabled": true
     },
     "hardware_monitor": {
-      "interval": "5 seconds",
-      "enabled": true
-    },
-    "librehardwaremonitor": {
       "interval": "5 seconds",
       "enabled": true
     },
@@ -182,5 +186,17 @@
     "watch_directories": [
       "C:\\Users\\"
     ]
+  },
+  "w64_collector": {
+    "enabled": true,
+    "enable_file_monitoring": true,
+    "enable_process_monitoring": true,
+    "enable_registry_monitoring": true,
+    "enable_network_monitoring": true,
+    "enable_event_log_monitoring": true,
+    "enable_process_trace": true,
+    "enable_disk_trace": true,
+    "enable_network_trace": true,
+    "enable_registry_trace": true
   }
 }

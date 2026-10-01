@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Gemini Generative Ai
+# =============================================================================
+# Description:
+#   Tests for GoogleGenerativeAI class and Gemini module utilities.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_gemini_generative_ai import TestGoogleGenerativeAI_HappyPath
+#
+#     service = TestGoogleGenerativeAI_HappyPath()
+#
+# File: test_gemini_generative_ai.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Tests for GoogleGenerativeAI class and Gemini module utilities."""
+
 import asyncio
 from io import BytesIO
 from pathlib import Path
@@ -76,6 +98,38 @@ class TestGoogleGenerativeAI_HappyPath:
                 chunks.append(chunk)
             assert len(chunks) == 2, f'chat_stream() must return 2 chunks, got: {len(chunks)}'
             assert ''.join(chunks) == 'A bear walks...', f"Chunk content must merge correctly, got: {''.join(chunks)!r}"
+
+    @pytest.mark.asyncio
+    async def test_chat_stream_native_async_chat_with_history(self):
+        """Test streaming model response generation with native AsyncChat.
+
+        Validates: chat_stream uses client.aio.chats.create and sends message stream.
+        """
+        user_prompt: str = 'Tell me a story'
+        chunk1: MagicMock = MagicMock()
+        chunk1.text = 'Once upon '
+        chunk2: MagicMock = MagicMock()
+        chunk2.text = 'a time.'
+
+        async def _async_gen():
+            for c in [chunk1, chunk2]:
+                yield c
+
+        mock_async_chat: MagicMock = MagicMock()
+        mock_async_chat.send_message_stream = AsyncMock(return_value=_async_gen())
+        mock_client: MagicMock = MagicMock()
+        mock_client.aio.chats.create.return_value = mock_async_chat
+        mock_client.chats.create.return_value = MagicMock()
+
+        with patch('src.ai.gemini.core.genai.Client', return_value=mock_client), patch('src.ai.gemini.core.load_api_keys', return_value=(['fake_key'], ['key_dev'], ['key_dev'])), patch('src.ai.gemini.core.get_status'):
+            ai_instance: GoogleGenerativeAI = GoogleGenerativeAI(save_history_chat=True, realtime_streaming=True)
+            chunks: list[str] = []
+            async for chunk in ai_instance.chat_stream(user_prompt):
+                chunks.append(chunk)
+            assert len(chunks) == 2, f'chat_stream() with AsyncChat must return 2 chunks, got: {len(chunks)}'
+            assert ''.join(chunks) == 'Once upon a time.'
+            assert len(ai_instance.chat_history) == 2
+            mock_client.aio.chats.create.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_chat_stream_buffered_happy_path(self):

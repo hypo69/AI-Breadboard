@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Ai_Breadboard_Admin Tests - Test Admin Router
+# =============================================================================
+# Description:
+#   Фикстура TestClient для роутера администратора с отключенной авторизацией.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.ai_breadboard_admin.tests.test_admin_router import client
+#
+#     res = client()
+#
+# File: test_admin_router.py
+# Project: ai-breadboard
+# Package: apps.ai_breadboard_admin.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""Фикстура TestClient для роутера администратора с отключенной авторизацией."""
+
 from unittest.mock import patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient

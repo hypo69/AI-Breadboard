@@ -1,4 +1,24 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Status-Manager Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля status-manager.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/apps/modules/status-manager.js?v=20261001_v1" type="module"></script>
+ *
+ * File: status-manager.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/apps/modules
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * apps/modules/status-manager.js — Управление состоянием приложений и бейджем/дропдауном модели
  */
 

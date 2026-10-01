@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Launchers - Run Foundry
+# =============================================================================
+# Description:
+#   Launcher for running AI Foundry
+#
+# Usage Examples:
+#   CLI:
+#     python -m launchers.run_foundry
+#   Python API:
+#     from launchers.run_foundry import FoundryLauncher
+#
+#     service = FoundryLauncher()
+#
+# File: run_foundry.py
+# Project: ai-breadboard
+# Package: launchers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:06
+# =============================================================================
+
+"""Launcher for running AI Foundry"""
+
 import argparse
 import sys
 import subprocess

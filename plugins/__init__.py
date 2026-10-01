@@ -1,9 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins -   Init  
+# =============================================================================
+# Description:
+#   Dynamic plugin loader and registry package.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.__init__ import load_plugins
+#
+#     res = load_plugins()
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: plugins
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Dynamic plugin loader and registry package.
 
 Provides automated discovery and loading of BasePlugin instances from subdirectories
-under plugins/, checking configuration toggles and environment variables.
-"""
-from __future__ import annotations
+under plugins/, checking configuration toggles and environment variables."""
+
 import importlib
 import json
 import os

@@ -1,24 +1,165 @@
-"""System and Hardware telemetry engine exports."""
-from .models import AnomalyItem, AppNetworkUsageItem, BatteryMetrics, CpuMetrics, DiskIoMetrics, DiskPartitionMetrics, DriverInfo, ForensicsActivityReport, GpuMetrics, HardwareArchiveEntry, HardwareAuditReport, HardwareChangeItem, HardwareDeviceAudit, HardwareNode, HardwareSensor, KernelThrottlingReport, MemoryMetrics, NetworkAdapterStatistics, NetworkInterfaceMetrics, NetworkPerformanceCounter, NetworkPortMetrics, NetworkUsagePeriodReport, PeripheralsNetworkReport, PhysicalDiskHealth, ProcessLeakDiagnosticsReport, ProcessLeakItem, ProcessMetrics, ProcessNetworkActivity, RamStickInfo, StorageBatteryWearReport, SystemCoreMetrics, SystemDiagnosticReport, SystemHardwareQuick, SystemHealthAlerts, SystemSnapshot
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Telemetry -   Init  
+# =============================================================================
+# Description:
+#   Exports core system metrics models, sensor probers, and telemetry collectors.
+#
+# Usage Examples:
+#
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: apps.windows.telemetry
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""Exports core system metrics models, sensor probers, and telemetry collectors."""
+
+from .models import (
+    AnomalyItem,
+    BatteryMetrics,
+    CpuMetrics,
+    DiskIoMetrics,
+    DiskPartitionMetrics,
+    DriverInfo,
+    ForensicsActivityReport,
+    GpuMetrics,
+    HardwareArchiveEntry,
+    HardwareAuditReport,
+    HardwareChangeItem,
+    HardwareDeviceAudit,
+    HardwareNode,
+    HardwareSensor,
+    KernelThrottlingReport,
+    MemoryMetrics,
+    NetworkInterfaceMetrics,
+    NetworkPortMetrics,
+    PeripheralsNetworkReport,
+    PhysicalDiskHealth,
+    ProcessLeakDiagnosticsReport,
+    ProcessLeakItem,
+    ProcessMetrics,
+    ProcessNetworkActivity,
+    RamStickInfo,
+    StorageBatteryWearReport,
+    SystemDiagnosticReport,
+    SystemHealthAlerts,
+    SystemSnapshot,
+    W64CollectorStatus,
+    W64SystemEvent,
+    ETWTraceEvent,
+)
 from .sensors import get_hardware_sensors
-from .hardware_auditor import HardwareAuditor
-from .history_manager import HardwareHistoryManager
-from .storage import TelemetryStorage
+from .sqlite import TelemetryStorage
 from .collector import SystemCollector
 from .service import TelemetryLoggerService
 from .telemetry_config import TelemetryConfigManager
+from .json_logger import TelemetryJsonLogger
 from .file_collector import FileCollector
 from .sensor_collector import SensorCollector
-from .aggregator import TelemetryAggregator
-__all__ = ['CpuMetrics', 'MemoryMetrics', 'RamStickInfo', 'GpuMetrics', 'DiskPartitionMetrics', 'PhysicalDiskHealth', 'DiskIoMetrics', 'NetworkInterfaceMetrics', 'NetworkAdapterStatistics', 'NetworkPerformanceCounter', 'AppNetworkUsageItem', 'NetworkUsagePeriodReport', 'NetworkPortMetrics', 'BatteryMetrics', 'SystemHealthAlerts', 'ProcessMetrics', 'ProcessLeakItem', 'ProcessLeakDiagnosticsReport', 'ForensicsActivityReport', 'KernelThrottlingReport', 'StorageBatteryWearReport', 'PeripheralsNetworkReport', 'HardwareSensor', 'HardwareNode', 'SystemSnapshot', 'SystemCoreMetrics', 'SystemHardwareQuick', 'AnomalyItem', 'SystemDiagnosticReport', 'DriverInfo', 'HardwareDeviceAudit', 'HardwareChangeItem', 'HardwareAuditReport', 'HardwareArchiveEntry', 'get_hardware_sensors', 'HardwareAuditor', 'HardwareHistoryManager', 'TelemetryStorage', 'SystemCollector', 'TelemetryLoggerService', 'TelemetryConfigManager', 'FileCollector', 'SensorCollector', 'TelemetryAggregator', 'DeviceFlappingSensor', 'DeviceTransitionEvent', 'DeepDiagnosticsEngine', 'SystemDiagnosticEngine', 'TelemetryResearcher', 'TelemetryChartGenerator', 'TelemetryDataExtractor', 'TelemetryResearchReport', 'ChartConfig', 'MetricPoint', 'MetricStats', 'TimeSeriesDataset', 'init_research_router']
-_LAZY_TELEMETRY_EXPORTS = {'SystemDiagnosticEngine': ('apps.windows.observability.system_engine', 'SystemDiagnosticEngine')}
+from .device_flapping_sensor import DeviceFlappingSensor, DeviceTransitionEvent
+from .windows_storage_sensor import (
+    StorageDiskHealthInfo,
+    WindowsStorageSensor,
+    collect_storage_snapshot,
+    save_snapshot,
+)
+from .storage_usage import WindowsStorageUsageCollector
+from .w64_collector import (
+    AIW64Collector,
+    get_w64_collector,
+    start_w64_collector,
+    stop_w64_collector,
+)
+from .w64_etw_collector import AIW64ETWCollector
+from .init_db import get_default_telemetry_db_path, init_telemetry_database
+
+# Реэкспорт компонентов аналитики из telemetry_research для обеспечения обратной совместимости
+# Прямые импорты из подмодулей избегают циклических зависимостей __init__.py
+from apps.windows.telemetry_research.hardware_auditor import HardwareAuditor
+from apps.windows.telemetry_research.hardware_history_manager import HardwareHistoryManager
+from apps.windows.telemetry_research.aggregator import TelemetryAggregator
+from apps.windows.telemetry_research.deep_diagnostics import DeepDiagnosticsEngine
+from apps.windows.telemetry_research.incident_detector import IncidentDetector
+from apps.windows.telemetry_research.reboot_analyzer import WindowsRebootAnalyzer
+from apps.windows.telemetry_research.grouped_telemetry import GroupedTelemetryBuilder
+from apps.windows.telemetry_research.compactor import TelemetryCompactor
+from apps.windows.telemetry_research.audit_startup_checker import AuditStartupChecker
+
+__all__ = [
+    "AIW64Collector",
+    "AIW64ETWCollector",
+    "get_w64_collector",
+    "start_w64_collector",
+    "stop_w64_collector",
+    "CpuMetrics",
+    "MemoryMetrics",
+    "RamStickInfo",
+    "GpuMetrics",
+    "DiskPartitionMetrics",
+    "PhysicalDiskHealth",
+    "DiskIoMetrics",
+    "NetworkInterfaceMetrics",
+    "NetworkPortMetrics",
+    "BatteryMetrics",
+    "SystemHealthAlerts",
+    "ProcessMetrics",
+    "ProcessLeakItem",
+    "ProcessLeakDiagnosticsReport",
+    "ForensicsActivityReport",
+    "KernelThrottlingReport",
+    "StorageBatteryWearReport",
+    "PeripheralsNetworkReport",
+    "HardwareSensor",
+    "HardwareNode",
+    "SystemSnapshot",
+    "AnomalyItem",
+    "SystemDiagnosticReport",
+    "DriverInfo",
+    "HardwareDeviceAudit",
+    "HardwareChangeItem",
+    "HardwareAuditReport",
+    "HardwareArchiveEntry",
+    "get_hardware_sensors",
+    "HardwareAuditor",
+    "HardwareHistoryManager",
+    "TelemetryStorage",
+    "SystemCollector",
+    "TelemetryLoggerService",
+    "TelemetryConfigManager",
+    "TelemetryJsonLogger",
+    "FileCollector",
+    "SensorCollector",
+    "TelemetryAggregator",
+    "DeviceFlappingSensor",
+    "DeviceTransitionEvent",
+    "DeepDiagnosticsEngine",
+    "IncidentDetector",
+    "WindowsRebootAnalyzer",
+    "GroupedTelemetryBuilder",
+    "TelemetryCompactor",
+    "AuditStartupChecker",
+    "StorageDiskHealthInfo",
+    "WindowsStorageSensor",
+    "WindowsStorageUsageCollector",
+    "collect_storage_snapshot",
+    "save_snapshot",
+    "W64CollectorStatus",
+    "W64SystemEvent",
+    "ETWTraceEvent",
+    "init_telemetry_database",
+    "get_default_telemetry_db_path",
+]
+
 
 def __getattr__(name: str):
-    """Ленивая загрузка для экономии памяти и предотвращения циклических зависимостей."""
-    if name in _LAZY_TELEMETRY_EXPORTS:
-        module_path, attr_name = _LAZY_TELEMETRY_EXPORTS[name]
-        module = __import__(module_path, fromlist=[attr_name])
-        attr = getattr(module, attr_name)
-        globals()[name] = attr
-        return attr
+    """Lazy import to prevent circular dependency cycles and maintain backward compatibility."""
+    if name in ("DiagnosticEngine", "SystemDiagnosticEngine"):
+        from apps.windows.telemetry_research.diagnostic_engine import DiagnosticEngine, SystemDiagnosticEngine
+        if name == "DiagnosticEngine":
+            return DiagnosticEngine
+        return SystemDiagnosticEngine
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")

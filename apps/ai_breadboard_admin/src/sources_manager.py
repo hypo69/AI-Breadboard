@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Ai_Breadboard_Admin Src - Sources Manager
+# =============================================================================
+# Description:
+#   Менеджер управления сырыми файлами источников данных.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.ai_breadboard_admin.src.sources_manager import SourcesManager
+#
+#     service = SourcesManager()
+#
+# File: sources_manager.py
+# Project: ai-breadboard
+# Package: apps.ai_breadboard_admin.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Менеджер управления сырыми файлами источников данных."""
+
 import json
 from pathlib import Path
 from typing import Optional

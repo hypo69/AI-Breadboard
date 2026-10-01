@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Skill Registry
+# =============================================================================
+# Description:
+#   Tests for universal skill registry.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_skill_registry import test_registry_discovers_gemini_and_agent_skill_roots
+#
+#     res = test_registry_discovers_gemini_and_agent_skill_roots()
+#
+# File: test_skill_registry.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Tests for universal skill registry."""
+
 from pathlib import Path
 from src.skills import SkillRegistry
 

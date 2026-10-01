@@ -1,6 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Openai Hf Onnx Providers
+# =============================================================================
+# Description:
+#   Test OpenAI-compatible, HuggingFace, and ONNX provider integration.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_openai_hf_onnx_providers import test_openai_id_mapping
+#
+#     res = test_openai_id_mapping()
+#
+# File: test_openai_hf_onnx_providers.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Test OpenAI-compatible, HuggingFace, and ONNX provider integration.
 
 Tests model ID mapping, provider routing, and chat completion endpoints."""
+
 import pytest
 from unittest.mock import AsyncMock, patch
 from starlette.testclient import TestClient

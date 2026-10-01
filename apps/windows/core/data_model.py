@@ -1,6 +1,26 @@
-"""
-Normalized data models for Windows system information
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core - Data Model
+# =============================================================================
+# Description:
+#   Normalized data models for Windows system information
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.data_model import ProcessState
+#
+#     service = ProcessState()
+#
+# File: data_model.py
+# Project: ai-breadboard
+# Package: apps.windows.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""Normalized data models for Windows system information"""
+
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 from datetime import datetime

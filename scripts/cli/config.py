@@ -1,7 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli - Config
+# =============================================================================
+# Description:
+#   Cross-platform configuration management utilities.
+#
+# Usage Examples:
+#   Python API:
+#     from scripts.cli.config import ConfigManager
+#
+#     service = ConfigManager()
+#
+# File: config.py
+# Project: ai-breadboard
+# Package: scripts.cli
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Cross-platform configuration management utilities.
 
 Provides utilities for managing configuration files, JSON operations,
 and environment variable handling."""
+
 import json
 import os
 from pathlib import Path

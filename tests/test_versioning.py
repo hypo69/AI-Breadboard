@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Versioning
+# =============================================================================
+# Description:
+#   Скрипт/модуль системы AI-Breadboard (`test_versioning`).
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_versioning import test_compare_versions_basic
+#
+#     res = test_compare_versions_basic()
+#
+# File: test_versioning.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Скрипт/модуль системы AI-Breadboard (`test_versioning`)."""
+
 import pytest
 from src.utils.versioning import compare_versions, choose_best_tag
 

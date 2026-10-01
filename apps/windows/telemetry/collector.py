@@ -1,5 +1,27 @@
-"""System metrics and hardware hierarchy collector engine."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Telemetry - Collector
+# =============================================================================
+# Description:
+#   Движок сбора системных метрик, аппаратной структуры и показателей производительности.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.telemetry.collector import SystemCollector
+#
+#     service = SystemCollector()
+#
+# File: collector.py
+# Project: ai-breadboard
+# Package: apps.windows.telemetry
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Движок сбора системных метрик, аппаратной структуры и показателей производительности."""
+
 import asyncio
 import ctypes
 import getpass
@@ -17,12 +39,13 @@ except ImportError:
     psutil = None
     PSUTIL_AVAILABLE = False
 from logger import logger
-from apps.windows.telemetry.models import AnomalyItem, BatteryMetrics, CloudStorageInfo, CpuMetrics, DiskIoMetrics, DiskPartitionMetrics, DriverInfo, GpuMetrics, HardwareArchiveEntry, HardwareAuditReport, HardwareChangeItem, HardwareDeviceAudit, HardwareNode, HardwareSensor, MemoryMetrics, MonitorInfo, NetworkInterfaceMetrics, NetworkPortMetrics, OfficeSuiteInfo, PhysicalDiskHealth, ProcessMetrics, ProcessNetworkActivity, RamStickInfo, SystemCoreMetrics, SystemHardwareQuick, SystemHealthAlerts, SystemSnapshot, WindowsUpdateInfo
-from apps.windows.telemetry.sensors import get_hardware_sensors
-from apps.windows.telemetry.hardware_auditor import HardwareAuditor
-from apps.windows.telemetry.history_manager import HardwareHistoryManager
-from apps.windows.telemetry.process_token_collector import ProcessTokenCollector
-from apps.windows.telemetry.storage import TelemetryStorage
+# Updated: 2026-10-01 11:30:00
+from .models import AnomalyItem, BatteryMetrics, CloudStorageInfo, CpuMetrics, DiskIoMetrics, DiskPartitionMetrics, DriverInfo, GpuMetrics, HardwareArchiveEntry, HardwareAuditReport, HardwareChangeItem, HardwareDeviceAudit, HardwareNode, HardwareSensor, MemoryMetrics, MonitorInfo, NetworkInterfaceMetrics, NetworkPortMetrics, OfficeSuiteInfo, PhysicalDiskHealth, ProcessMetrics, ProcessNetworkActivity, RamStickInfo, SystemCoreMetrics, SystemHardwareQuick, SystemHealthAlerts, SystemSnapshot, WindowsUpdateInfo
+from .sensors import get_hardware_sensors
+from apps.windows.telemetry_research.hardware_auditor import HardwareAuditor
+from apps.windows.telemetry_research.hardware_history_manager import HardwareHistoryManager
+from .process_token_collector import ProcessTokenCollector
+from .sqlite import TelemetryStorage
 
 class SystemCollector:
     """Telemetry collector for system load, hardware devices, and processes."""
@@ -205,20 +228,21 @@ class SystemCollector:
         """
         gpus: List[GpuMetrics] = []
         try:
-            from apps.windows.hardware.gpu_prober import GpuProber
+            from apps.windows.modules.hardware.gpu_prober import GpuProber
             prober = GpuProber()
             gpu_list = prober.probe_all()
             for g in gpu_list:
-                gpus.append(GpuMetrics(name=g.name, memory_total_gb=round((g.memory_total_mb or 0.0) / 1024.0, 2), memory_used_gb=round((g.memory_used_mb or 0.0) / 1024.0, 2), load_percent=g.utilization_gpu_pct, temperature_celsius=g.temperature_gpu_c, has_cuda=g.vendor.lower() == 'nvidia', has_directml=True))
+                gpus.append(GpuMetrics(
+                    name=g.name,
+                    memory_total_gb=round((g.memory_total_mb or 0.0) / 1024.0, 2),
+                    memory_used_gb=round((g.memory_used_mb or 0.0) / 1024.0, 2),
+                    load_percent=g.utilization_gpu_pct,
+                    temperature_celsius=g.temperature_gpu_c,
+                    has_cuda=g.vendor.lower() == 'nvidia',
+                    has_directml=True
+                ))
         except Exception as ex:
-            logger.debug(f'Failed to probe GPUs via GpuProber: {ex}')
-            try:
-                from src.ai.orchestration.hardware import probe_hardware
-                hw = probe_hardware()
-                for g in hw.gpus:
-                    gpus.append(GpuMetrics(name=g.get('name', 'NVIDIA GPU'), memory_total_gb=round(g.get('vram_mb', 0) / 1024.0, 2), has_cuda=hw.has_cuda, has_directml=hw.has_directml))
-            except Exception as inner_ex:
-                logger.debug(f'Failed to probe GPUs via fallback: {inner_ex}')
+            logger.debug(f'Ошибка сбора метрик GPU через GpuProber: {ex}')
         if not gpus:
             gpus.append(GpuMetrics(name='Integrated Display Controller', memory_total_gb=0.0, has_cuda=False, has_directml=False))
         return gpus
@@ -335,6 +359,20 @@ class SystemCollector:
         collector = WindowsNetworkUsageCollector()
         return collector.get_traffic_period_summary(period_minutes=period_minutes)
 
+    def get_disk_usage_report(self, period_minutes: int = 1440, force_refresh_smart: bool = False):
+        """Получить глубокий отчет использования дискового I/O и SMART за период для AI диагностики.
+
+        Args:
+            period_minutes: Интервал отчета в минутах (по умолчанию 1440 = 24 часа).
+            force_refresh_smart: Принудительно опросить физические диски.
+
+        Returns:
+            DiskUsagePeriodReport: Полная сводка дискового I/O и SMART-показателей за период.
+        """
+        from apps.windows.storage.storage_usage import WindowsStorageUsageCollector
+        collector = WindowsStorageUsageCollector()
+        return collector.get_disk_usage_period_report(period_minutes=period_minutes, force_refresh_smart=force_refresh_smart)
+
 
 
     def get_top_processes(self, limit: int = 25, sort_by: str = 'cpu') -> List[ProcessMetrics]:
@@ -443,15 +481,38 @@ class SystemCollector:
         disks: List[PhysicalDiskHealth] = []
         if os.name == 'nt':
             try:
-                from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
+                from apps.windows.storage.windows_storage_sensor import WindowsStorageSensor
                 sensor = WindowsStorageSensor(ttl_sec=43200.0)
                 phys_disks = sensor.get_physical_disks(force_refresh=force)
                 for d in phys_disks:
-                    disks.append(PhysicalDiskHealth(device_id=d.device_id, model=d.model or d.friendly_name or 'Physical Drive', media_type=d.media_type or 'SSD', size_gb=round(d.size_gb, 1) if d.size_gb else 0.0, health_status=d.health_status or 'Healthy', operational_status=d.operational_status or 'OK', temperature_celsius=d.temperature_c, interface_type=d.bus_type or 'NVMe'))
+                    disks.append(PhysicalDiskHealth(
+                        device_id=d.device_id,
+                        model=d.model or d.friendly_name or 'Physical Drive',
+                        media_type=d.media_type or 'SSD',
+                        size_gb=round(d.size_gb, 1) if d.size_gb else 0.0,
+                        health_status=d.health_status or 'Healthy',
+                        operational_status=d.operational_status or 'OK',
+                        temperature_celsius=d.temperature_c,
+                        interface_type=d.bus_type or 'NVMe',
+                        lifetime_read_bytes=d.lifetime_read_bytes,
+                        lifetime_write_bytes=d.lifetime_write_bytes,
+                        lifetime_read_tb=d.lifetime_read_tb,
+                        lifetime_write_tb=d.lifetime_write_tb,
+                        power_on_hours=d.power_on_hours,
+                        wear_percentage=d.wear_percentage,
+                    ))
             except Exception as ex:
                 logger.debug(f'Ошибка сбора физических дисков через WindowsStorageSensor: {ex}')
         if not disks:
-            disks.append(PhysicalDiskHealth(device_id='Disk 0', model='System Drive (NVMe/SSD)', media_type='SSD', size_gb=512.0, health_status='Healthy', operational_status='OK', interface_type='NVMe'))
+            disks.append(PhysicalDiskHealth(
+                device_id='Disk 0',
+                model='System Drive (NVMe/SSD)',
+                media_type='SSD',
+                size_gb=512.0,
+                health_status='Healthy',
+                operational_status='OK',
+                interface_type='NVMe',
+            ))
         self._physical_disks_cached = disks
         self._physical_disks_cache_time = now
         return disks
@@ -1482,3 +1543,51 @@ class SystemCollector:
             List[Dict[str, Any]]: History of process metrics.
         """
         return self.storage.get_process_history(name=name, pid=pid, limit=limit)
+
+    def get_reboot_report(self, limit: int = 20, hours: int = 720) -> Any:
+        """Сбор сводного отчета анализа перезагрузок и выключений ОС.
+
+        Args:
+            limit: Максимальное количество сессий.
+            hours: Глубина выборки журналов в часах.
+
+        Returns:
+            RebootAnalysisReport: Сводный аналитический отчет.
+        """
+        from apps.windows.telemetry_research.reboot_analyzer import WindowsRebootAnalyzer
+        analyzer = WindowsRebootAnalyzer(storage=self.storage)
+        return analyzer.collect_reboot_history(limit=limit, hours=hours)
+
+    def get_latest_reboot(self) -> Optional[Any]:
+        """Получение данных о последней перезагрузке системы.
+
+        Returns:
+            Optional[RebootSession]: Информация о последнем перезапуске.
+        """
+        from apps.windows.telemetry_research.reboot_analyzer import WindowsRebootAnalyzer
+        analyzer = WindowsRebootAnalyzer(storage=self.storage)
+        return analyzer.analyze_current_boot()
+
+    def get_extended_system_audit(self) -> Any:
+        """Сбор расширенного аудита безопасности (Defender), автозагрузки (Startup), VSS и пользователей.
+
+        Returns:
+            ExtendedSystemAuditReport: Сводный отчет расширенного аудита.
+        """
+        from apps.windows.telemetry_research.deep_diagnostics import DeepDiagnosticsEngine
+        engine = DeepDiagnosticsEngine()
+        report = engine.collect_extended_system_audit()
+        try:
+            self.storage.save_extended_audit(report)
+        except Exception as ex:
+            logger.debug(f'Не удалось сохранить расширенный аудит в БД: {ex}')
+        return report
+
+    def get_latest_extended_audit(self) -> Optional[Dict[str, Any]]:
+        """Получение последнего сохраненного среза расширенного системного аудита.
+
+        Returns:
+            Optional[Dict[str, Any]]: Словарь аудита или None.
+        """
+        return self.storage.get_latest_extended_audit()
+

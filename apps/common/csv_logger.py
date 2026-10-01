@@ -1,5 +1,30 @@
-"""Модуль централизованного логирования приложений и телеметрии в SQLite с On-Demand CSV."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Common - Csv Logger
+# =============================================================================
+# Description:
+#   Модуль централизованного логирования приложений и телеметрии в SQLite с On-Demand CSV.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.common.csv_logger import AppCsvLogger
+#
+#     service = AppCsvLogger()
+#
+# File: csv_logger.py
+# Project: ai-breadboard
+# Package: apps.common
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Модуль централизованного логирования приложений и телеметрии в SQLite с On-Demand CSV."""
+
+# -*- coding: utf-8 -*-
+# Updated: 2026-10-01 10:00:00
+"""Модуль централизованного логирования приложений и телеметрии в SQLite с On-Demand CSV."""
 import csv
 import json
 import os
@@ -130,7 +155,7 @@ def _format_cell(val: Any) -> str:
 def _get_storage() -> Optional[Any]:
     """Возвращает экземпляр SQLite хранилища телеметрии (ленивый импорт для исключения циклических зависимостей)."""
     try:
-        from apps.windows.telemetry.storage import TelemetryStorage
+        from apps.windows.telemetry.sqlite import TelemetryStorage
         if _LOG_DIR_OVERRIDE is not None:
             db_file = _LOG_DIR_OVERRIDE / 'telemetry.db'
             return TelemetryStorage.get_instance(db_path=db_file)
@@ -194,6 +219,10 @@ class _MemoryBatcher:
                 storage.save_app_param_changes_batch(batch)
             except Exception as ex:
                 logger.debug(f'Ошибка сброса пачки app_param_changes: {ex}')
+        try:
+            storage.flush()
+        except Exception as ex:
+            logger.debug(f'Ошибка сброса буфера хранилища: {ex}')
         self._last_flush = time.time()
 
     def flush(self) -> None:

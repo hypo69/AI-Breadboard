@@ -1,4 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - Ws Manager Module
+# =============================================================================
+# Description:
+#   Manages active WebSocket connections and message routing for Helpdesk.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.helpdesk.ws_manager import HelpdeskConnectionHub
+#
+#     service = HelpdeskConnectionHub()
+#     result = service.subscribe_ticket()
+#     print(result)
+#
+# File: ws_manager.py
+# Project: ai-breadboard
+# Package: src.api.helpdesk
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Manages active WebSocket connections and message routing for Helpdesk."""
+
 import json
 import asyncio
 from typing import Dict, Set, Optional, Any

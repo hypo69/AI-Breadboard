@@ -1,3 +1,23 @@
+/**
+ * =============================================================================
+ * Process Name: AI-Breadboard Styles - Chat Stylesheet
+ * =============================================================================
+ * Description:
+ *   Таблица стилей оформления компонентов интерфейса (chat).
+ *
+ * Usage Examples:
+ *   HTML Link Tag:
+ *     <link rel="stylesheet" href="/src/api/webgui/css/chat.css?v=20261001_v1">
+ *
+ * File: chat.css
+ * Project: ai-breadboard
+ * Package: src/api/webgui/css
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
 /* ═══════════════════════════════════════════════════════════════════════════
    CHAT — AI Breadboard WebGUI
    Стили диалогового окна, сайдбара сессий, сообщений и дебаггера

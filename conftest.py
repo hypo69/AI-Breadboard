@@ -1,7 +1,27 @@
-"""
-Test configuration for ai-breadboard.
-Provides fixtures and settings for all tests.
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Root - Conftest
+# =============================================================================
+# Description:
+#   Test configuration for ai-breadboard.
+#
+# Usage Examples:
+#   Python API:
+#     from conftest import test_data_dir
+#
+#     res = test_data_dir()
+#
+# File: conftest.py
+# Project: ai-breadboard
+# Package: root
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:20:26
+# =============================================================================
+
+"""Test configuration for ai-breadboard.
+Provides fixtures and settings for all tests."""
+
 import asyncio
 import os
 import sys

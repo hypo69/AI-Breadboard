@@ -1,6 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Команды управления плагинами (plugins)."""
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli Commands - Plugins
+# =============================================================================
+# Description:
+#   Команды управления плагинами (plugins).
+#
+# Usage Examples:
+#   Python API:
+#     from scripts.cli.commands.plugins import register_plugins_parser
+#
+#     res = register_plugins_parser()
+#
+# File: plugins.py
+# Project: ai-breadboard
+# Package: scripts.cli.commands
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 from __future__ import annotations
+"""Команды управления плагинами (plugins)."""
 
 import argparse
 

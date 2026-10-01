@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Gdrive Organizer
+# =============================================================================
+# Description:
+#   Create a sample fixture of drive items with various disorganization patterns.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_gdrive_organizer import TestGDriveScanner
+#
+#     service = TestGDriveScanner()
+#
+# File: test_gdrive_organizer.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Create a sample fixture of drive items with various disorganization patterns."""
+
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock

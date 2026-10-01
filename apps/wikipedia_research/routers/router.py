@@ -1,5 +1,27 @@
-"""FastAPI router for Wikipedia Research & Model Benchmark application."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Wikipedia_Research Routers - Router
+# =============================================================================
+# Description:
+#   FastAPI router for Wikipedia Research & Model Benchmark application.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.wikipedia_research.routers.router import get_engine
+#
+#     res = get_engine()
+#
+# File: router.py
+# Project: ai-breadboard
+# Package: apps.wikipedia_research.routers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""FastAPI router for Wikipedia Research & Model Benchmark application."""
+
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from logger import logger

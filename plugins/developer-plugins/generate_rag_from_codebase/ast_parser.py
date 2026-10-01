@@ -1,9 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins Developer-Plugins Generate_Rag_From_Codebase - Ast Parser
+# =============================================================================
+# Description:
+#   AST-based Python source code parser and chunker for codebase RAG.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.developer-plugins.generate_rag_from_codebase.ast_parser import PythonAstParser
+#
+#     service = PythonAstParser()
+#
+# File: ast_parser.py
+# Project: ai-breadboard
+# Package: plugins.developer-plugins.generate_rag_from_codebase
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """AST-based Python source code parser and chunker for codebase RAG.
 
 Decomposes Python modules into rich semantic chunks rather than blind character slices,
-retaining parent class context, sibling methods, signatures, and docstrings.
-"""
-from __future__ import annotations
+retaining parent class context, sibling methods, signatures, and docstrings."""
+
 import ast
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple

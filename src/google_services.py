@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard CORE - Google Services Module
+# =============================================================================
+# Description:
+#   Update access_token с использованием refresh_token.
+#
+# Usage Examples:
+#   Python API:
+#     from src.google_services import refresh_google_access_token
+#
+#     res = refresh_google_access_token()
+#     print(res)
+#
+# File: google_services.py
+# Project: ai-breadboard
+# Package: src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Update access_token с использованием refresh_token."""
+
 import os
 from datetime import datetime
 from typing import Any, Dict, List

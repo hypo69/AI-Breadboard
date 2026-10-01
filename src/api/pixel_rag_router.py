@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - Pixel Rag Router Module
+# =============================================================================
+# Description:
+#   Search request model.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.pixel_rag_router import SearchRequest
+#
+#     service = SearchRequest()
+#
+# File: pixel_rag_router.py
+# Project: ai-breadboard
+# Package: src.api
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Search request model."""
+
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 from pydantic import BaseModel, Field

@@ -1,0 +1,475 @@
+<!--
+=============================================================================
+Process Name: Windows Web Interface - Index View
+=============================================================================
+Description:
+  Шаблон клиентского веб-интерфейса index.
+
+Usage Examples:
+    Web Route:
+      /windows/api/~webgui/startup_auditor_tab/index.html
+
+    Tab Frame Integration:
+      <iframe src="/windows/api/~webgui/startup_auditor_tab/index.html" class="w-100 h-100 border-0"></iframe>
+
+File: index.html
+Project: ai-breadboard
+Package: windows/api/~webgui/startup_auditor_tab
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-01 13:04:40
+=============================================================================
+-->
+
+<!-- Startup Auditor Tab Content -->
+<style>
+  .sa-container {
+    padding: 0.5rem 0.75rem;
+  }
+  .sa-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+    padding: 0.45rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    min-height: 58px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .sa-card:hover {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  .sa-card-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    line-height: 1.1;
+  }
+  .sa-card-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    line-height: 1.15;
+  }
+  .sa-card-sub {
+    font-size: 0.7rem;
+    color: #64748b;
+    line-height: 1.1;
+  }
+
+  .sa-panel {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  .sa-panel-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    padding: 0.45rem 0.85rem;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .sa-table {
+    width: 100%;
+    font-size: 0.78rem;
+    border-collapse: collapse;
+    color: #e2e8f0;
+    background: #0f172a;
+  }
+  .sa-table thead th {
+    background: #1e293b !important;
+    padding: 6px 10px;
+    color: #94a3b8;
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid #334155;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  .sa-table tbody tr {
+    background: #0f172a !important;
+    transition: background-color 0.1s ease;
+  }
+  .sa-table tbody tr:nth-child(even) {
+    background: #131d31 !important;
+  }
+  .sa-table tbody tr:hover {
+    background: #1e2e4a !important;
+  }
+  .sa-table td {
+    padding: 6px 10px;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+    vertical-align: middle;
+    color: #cbd5e1;
+  }
+
+  /* Badge styles */
+  .sa-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  .sa-badge-enabled {
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.45);
+    color: #4ade80;
+  }
+  .sa-badge-disabled {
+    background: rgba(100, 116, 139, 0.18);
+    border: 1px solid rgba(100, 116, 139, 0.35);
+    color: #94a3b8;
+  }
+  .sa-badge-loc {
+    background: #1e293b;
+    border: 1px solid #475569;
+    color: #38bdf8;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .sa-badge-cat {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+  }
+
+  /* Risk Badges */
+  .sa-risk-critical {
+    background: rgba(239, 68, 68, 0.22);
+    border: 1px solid rgba(239, 68, 68, 0.6);
+    color: #fca5a5;
+  }
+  .sa-risk-suspicious {
+    background: rgba(249, 115, 22, 0.22);
+    border: 1px solid rgba(249, 115, 22, 0.6);
+    color: #fdba74;
+  }
+  .sa-risk-warning {
+    background: rgba(234, 179, 8, 0.22);
+    border: 1px solid rgba(234, 179, 8, 0.6);
+    color: #fde047;
+  }
+  .sa-risk-notice {
+    background: rgba(56, 189, 248, 0.18);
+    border: 1px solid rgba(56, 189, 248, 0.5);
+    color: #7dd3fc;
+  }
+  .sa-risk-clean {
+    background: rgba(34, 197, 94, 0.16);
+    border: 1px solid rgba(34, 197, 94, 0.45);
+    color: #86efac;
+  }
+
+  /* Toggle Switch button */
+  .sa-toggle-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-size: 1.15rem;
+    line-height: 1;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sa-toggle-btn:hover {
+    transform: scale(1.15);
+  }
+  .sa-toggle-btn:active {
+    transform: scale(0.95);
+  }
+
+  .sa-input {
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+    color: #f8fafc !important;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+  }
+  .sa-input:focus {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25) !important;
+  }
+  .sa-input option {
+    background: #0f172a;
+    color: #f8fafc;
+  }
+</style>
+
+<div class="sa-container" id="startup-auditor-container">
+  
+  <!-- Header Alert Banner (Compact Strip) -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 py-1.5 px-3 rounded-2 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="fs-5">🚀</span>
+      <span class="fw-bold text-white small" style="font-size: 0.92rem;"><span data-i18n="auto___0acef6"></span> Windows</span>
+      <span class="badge bg-dark border border-secondary text-info fw-normal" style="font-size: 0.7rem;">Startup Auditor</span>
+      <span class="text-secondary small d-none d-lg-inline" style="font-size: 0.76rem;">| Run/RunOnce, <span data-i18n="auto__ifeo__881341"></span></span>
+    </div>
+    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+      <button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1 d-flex align-items-center gap-1" style="font-size: 0.75rem;" id="sa-btn-refresh">
+        <i class="bi bi-arrow-repeat"></i> <span data-i18n="auto___7946b0"></span>
+      </button>
+      <button class="btn btn-xs btn-outline-secondary rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="sa-btn-export-json" title="<span data-i18n="auto___683472"></span> JSON">
+        <i class="bi bi-file-earmark-code me-1"></i> JSON
+      </button>
+      <button class="btn btn-xs btn-outline-secondary rounded-pill px-2 py-1" style="font-size: 0.75rem;" id="sa-btn-export-csv" title="<span data-i18n="auto___683472"></span> CSV">
+        <i class="bi bi-file-earmark-spreadsheet me-1"></i> CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Top Metric & Health Score Cards (Compact Density Grid) -->
+  <div class="row g-2 mb-2">
+    <!-- Health Score Card -->
+    <div class="col-6 col-md-3">
+      <div class="sa-card">
+        <div class="sa-card-label">
+          <span><span data-i18n="auto___317840"></span></span>
+          <i class="bi bi-shield-check text-success"></i>
+        </div>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <div class="d-flex align-items-baseline gap-1">
+            <div class="sa-card-value text-success" id="sa-health-score">--</div>
+            <span style="color: #64748b; font-size: 0.75rem;">/ 100</span>
+          </div>
+          <div class="sa-card-sub text-end" id="sa-health-status"><span data-i18n="auto___e4436a"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active & Total Items -->
+    <div class="col-6 col-md-3">
+      <div class="sa-card">
+        <div class="sa-card-label">
+          <span><span data-i18n="auto___c0694e"></span></span>
+          <i class="bi bi-play-circle text-info"></i>
+        </div>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <div class="d-flex align-items-baseline gap-1">
+            <div class="sa-card-value text-info" id="sa-active-count">--</div>
+            <span style="color: #64748b; font-size: 0.75rem;"><span data-i18n="auto___beed16"></span> <span id="sa-total-count" class="text-white">--</span></span>
+          </div>
+          <div class="sa-card-sub text-end"><span data-i18n="auto___23c590"></span>: <span id="sa-disabled-count" class="text-info fw-semibold">--</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Broken Entries Card -->
+    <div class="col-6 col-md-3">
+      <div class="sa-card">
+        <div class="sa-card-label">
+          <span><span data-i18n="auto___1fb96e"></span></span>
+          <i class="bi bi-exclamation-triangle text-warning"></i>
+        </div>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <div class="d-flex align-items-baseline gap-1">
+            <div class="sa-card-value text-warning" id="sa-broken-count">--</div>
+            <span style="color: #64748b; font-size: 0.75rem;"><span data-i18n="auto___04ad7c"></span></span>
+          </div>
+          <div class="sa-card-sub text-end"><span data-i18n="auto___bc014d"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Threats & Critical Alerts -->
+    <div class="col-6 col-md-3">
+      <div class="sa-card">
+        <div class="sa-card-label">
+          <span><span data-i18n="auto___de98fc"></span></span>
+          <i class="bi bi-shield-slash text-danger"></i>
+        </div>
+        <div class="d-flex align-items-baseline justify-content-between mt-1">
+          <div class="d-flex align-items-baseline gap-1">
+            <div class="sa-card-value text-danger" id="sa-threats-count">--</div>
+            <span style="color: #64748b; font-size: 0.75rem;"><span data-i18n="auto___640f9a"></span></span>
+          </div>
+          <div class="sa-card-sub text-end">IFEO <span data-i18n="auto___78303b"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recommendations Alert Banner (Compact Sleek Strip) -->
+  <div class="py-1.5 px-3 mb-2 rounded-2 d-flex align-items-center justify-content-between" id="sa-recommendations-box" style="background: #0f172a; border: 1px solid #334155; font-size: 0.78rem;">
+    <div class="d-flex align-items-center gap-2">
+      <span class="text-warning">💡</span>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="fw-semibold text-white" id="sa-rec-title"><span data-i18n="auto___f0c1c5"></span>:</span>
+        <span style="color: #94a3b8;" id="sa-rec-desc"><span data-i18n="auto___edd78b"></span>...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls (Compact Toolbar) -->
+  <div class="card p-2 mb-2" style="background: #0f172a; border: 1px solid #334155; border-radius: 8px;">
+    <div class="row g-2 align-items-center">
+      <!-- Search Input -->
+      <div class="col-12 col-md-4">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text sa-input border-secondary text-secondary py-1" style="border-right: none;"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control form-control-sm sa-input" id="sa-search-input" placeholder="<span data-i18n="auto___927a1b"></span>...">
+        </div>
+      </div>
+
+      <!-- Risk Filter -->
+      <div class="col-6 col-md-3">
+        <select class="form-select form-select-sm sa-input" id="sa-filter-risk">
+          <option value=""><span data-i18n="auto___afc161"></span></option>
+          <option value="critical">🚨 Critical (<span data-i18n="auto___f1000f"></span>)</option>
+          <option value="suspicious">⚠️ Suspicious (<span data-i18n="auto___8a6d28"></span>)</option>
+          <option value="warning">⚡ Warning (<span data-i18n="auto___4cbde6"></span>)</option>
+          <option value="notice">ℹ️ Notice (<span data-i18n="auto___778b60"></span>)</option>
+          <option value="clean">✅ Clean (<span data-i18n="auto___dbed63"></span>)</option>
+        </select>
+      </div>
+
+      <!-- Location Filter -->
+      <div class="col-6 col-md-3">
+        <select class="form-select form-select-sm sa-input" id="sa-filter-location">
+          <option value=""><span data-i18n="auto___82a516"></span></option>
+          <option value="registry_run"><span data-i18n="auto___b543bd"></span>: Run</option>
+          <option value="registry_runonce"><span data-i18n="auto___b543bd"></span>: RunOnce</option>
+          <option value="startup_folder_user"><span data-i18n="auto___38f590"></span> (User)</option>
+          <option value="startup_folder_common"><span data-i18n="auto___38f590"></span> (Common)</option>
+          <option value="winlogon">Winlogon</option>
+          <option value="ifeo">IFEO <span data-i18n="auto___175ae4"></span></option>
+          <option value="scheduled_task"><span data-i18n="auto___7bcab1"></span></option>
+          <option value="windows_service"><span data-i18n="auto___578702"></span> Windows</option>
+        </select>
+      </div>
+
+      <!-- State Filter -->
+      <div class="col-12 col-md-2">
+        <select class="form-select form-select-sm sa-input" id="sa-filter-state">
+          <option value=""><span data-i18n="auto___dad15a"></span></option>
+          <option value="enabled"><span data-i18n="auto___0cd2eb"></span></option>
+          <option value="disabled"><span data-i18n="auto___d16d00"></span></option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Entries Data Table Panel -->
+  <div class="sa-panel">
+    <div class="sa-panel-header">
+      <span><i class="bi bi-table me-1"></i> <span data-i18n="auto___b327f9"></span></span>
+      <span class="small" style="color: #94a3b8;" id="sa-table-count"><span data-i18n="auto___c98fa8"></span>...</span>
+    </div>
+    <div class="table-responsive" style="max-height: calc(100vh - 245px); overflow-y: auto;">
+      <table class="sa-table" id="sa-entries-table">
+        <thead>
+          <tr>
+            <th style="width: 80px;" class="text-center"><span data-i18n="auto___f7f293"></span></th>
+            <th style="width: 230px;"><span data-i18n="auto___858b3b"></span></th>
+            <th style="width: 170px;"><span data-i18n="auto___1b1b2c"></span></th>
+            <th style="width: 140px;"><span data-i18n="auto___19c858"></span></th>
+            <th style="width: 110px;" class="text-center"><span data-i18n="auto___83ba37"></span></th>
+            <th><span data-i18n="auto___804727"></span></th>
+            <th style="width: 110px;" class="text-center"><span data-i18n="auto___b0151b"></span></th>
+            <th style="width: 80px;" class="text-center"><span data-i18n="auto___4fe9c0"></span></th>
+          </tr>
+        </thead>
+        <tbody id="sa-table-body">
+          <tr>
+            <td colspan="8" class="text-center py-4" style="color: #94a3b8;">
+              <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>
+              <span data-i18n="auto___1a2835"></span> Windows...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Program Details & AI Context Modal -->
+  <div class="modal fade" id="sa-entry-detail-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content bg-dark text-light border-secondary shadow-lg">
+        <div class="modal-header border-secondary py-2 px-3">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fs-5 text-info">🔍</span>
+            <h5 class="modal-title fw-bold text-info mb-0" id="sa-modal-title"><span data-i18n="auto___a39392"></span></h5>
+            <span id="sa-modal-status-badge"></span>
+            <span id="sa-modal-risk-badge"></span>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-3 px-3">
+          <!-- Metadata Grid -->
+          <div class="row g-2 mb-3 small">
+            <div class="col-sm-6"><strong class="text-secondary"><span data-i18n="auto___858b3b"></span>:</strong> <span id="sa-modal-name" class="fw-semibold text-white"></span></div>
+            <div class="col-sm-6"><strong class="text-secondary"><span data-i18n="auto___cbd626"></span>:</strong> <span id="sa-modal-publisher" class="text-light"></span></div>
+            <div class="col-sm-6"><strong class="text-secondary"><span data-i18n="auto___1b1b2c"></span>:</strong> <span id="sa-modal-location-type" class="sa-badge sa-badge-loc"></span></div>
+            <div class="col-sm-6"><strong class="text-secondary"><span data-i18n="auto___19c858"></span>:</strong> <span id="sa-modal-category" class="sa-badge sa-badge-cat"></span></div>
+            <div class="col-sm-6"><strong class="text-secondary"><span data-i18n="auto___953f77"></span>:</strong> <span id="sa-modal-boot-impact"></span></div>
+            <div class="col-sm-6"><strong class="text-secondary"><span data-i18n="auto___1c92c3"></span>:</strong> <span id="sa-modal-is-signed"></span></div>
+            <div class="col-sm-6"><strong class="text-secondary"><span data-i18n="auto___479cb6"></span>:</strong> <span id="sa-modal-file-exists"></span></div>
+            <div class="col-sm-6"><strong class="text-secondary"><span data-i18n="auto___b2683b"></span>:</strong> <span id="sa-modal-file-size"></span></div>
+            <div class="col-sm-12"><strong class="text-secondary"><span data-i18n="auto___5f73dd"></span>:</strong> <span id="sa-modal-location-path" class="font-monospace text-muted small" style="word-break: break-all;"></span></div>
+          </div>
+
+          <!-- Command & Path Section -->
+          <div class="card bg-black border-secondary p-3 mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <h6 class="small text-uppercase text-muted fw-bold mb-0"><span data-i18n="auto___07911c"></span></h6>
+            </div>
+            <div class="small font-monospace mb-2 text-info" id="sa-modal-executable-path" style="word-break: break-all;"></div>
+            <div class="small font-monospace text-muted" id="sa-modal-command" style="white-space: pre-wrap; word-break: break-all;"></div>
+          </div>
+
+          <!-- AI Diagnostic & Explanation Section -->
+          <div class="card border-info bg-dark p-3" id="sa-modal-ai-section">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="fw-bold text-info mb-0"><i class="bi bi-robot me-1"></i> AI Contextual Explanation</h6>
+              <button class="btn btn-sm btn-outline-info py-0 px-2 rounded-pill" id="btn-sa-modal-diagnose">
+                <i class="bi bi-magic me-1"></i><span data-i18n="auto___ec5ee0"></span>
+              </button>
+            </div>
+            <div class="small" id="sa-modal-ai-explanation">
+              <span data-i18n="auto___eb63e1"></span>.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-secondary py-2 px-3 d-flex justify-content-between">
+          <div>
+            <button type="button" class="btn btn-sm btn-outline-warning me-1" id="btn-sa-modal-toggle">
+              <i class="bi bi-toggle2-on me-1"></i><span data-i18n="auto___59c945"></span>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-sa-modal-copy">
+              <i class="bi bi-clipboard me-1"></i><span data-i18n="auto___8a5b6a"></span>
+            </button>
+          </div>
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal"><span data-i18n="auto___4ae50d"></span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

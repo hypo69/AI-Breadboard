@@ -1,7 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Dev - Update Scripts Documentation
+# =============================================================================
+# Description:
+#   Automatic scripts documentation generation and update script.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.dev.update_scripts_documentation
+#   Python API:
+#     from scripts.dev.update_scripts_documentation import get_script_info
+#
+#     res = get_script_info()
+#
+# File: update_scripts_documentation.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Automatic scripts documentation generation and update script.
 
 Scans all project scripts, categorizes them, extracts metadata and
 generates comprehensive markdown documentation."""
+
 import os
 import sys
 import re

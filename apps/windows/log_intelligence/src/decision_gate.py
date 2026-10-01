@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Log_Intelligence Src - Decision Gate
+# =============================================================================
+# Description:
+#   Интеллектуальный шлюз принятия решений перед созданием RAG.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.log_intelligence.src.decision_gate import DecisionGate
+#
+#     service = DecisionGate()
+#
+# File: decision_gate.py
+# Project: ai-breadboard
+# Package: apps.windows.log_intelligence.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Интеллектуальный шлюз принятия решений перед созданием RAG."""
+
 from typing import List
 from .models import DataProfileReport, IngestionDecision, IngestionStrategy
 

@@ -1,6 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Logger - Conftest
+# =============================================================================
+# Description:
+#   pytest configuration for logger module testing.
+#
+# Usage Examples:
+#   Python API:
+#     from logger.conftest import project_root
+#
+#     res = project_root()
+#
+# File: conftest.py
+# Project: ai-breadboard
+# Package: logger
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:29:02
+# =============================================================================
+
 """pytest configuration for logger module testing.
 
 Provides fixtures and configuration for unit tests of src.logger module."""
+
 import pytest
 import sys
 from pathlib import Path

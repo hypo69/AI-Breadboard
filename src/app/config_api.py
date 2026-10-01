@@ -1,5 +1,26 @@
-"""
-Модуль конфигурационных API‑эндпоинтов AI‑провайдеров
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard APP - Config Api Module
+# =============================================================================
+# Description:
+#   Модуль реализации компонента `FoundryConfigRequest` системы AI-Breadboard.
+#
+# Usage Examples:
+#   Python API:
+#     from src.app.config_api import FoundryConfigRequest
+#
+#     service = FoundryConfigRequest()
+#
+# File: config_api.py
+# Project: ai-breadboard
+# Package: src.app
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+from __future__ import annotations
+"""Модуль конфигурационных API‑эндпоинтов AI‑провайдеров
 
 Этот файл реализует набор HTTP‑эндпоинтов FastAPI, позволяющих
 получать и сохранять настройки различных AI‑провайдеров,
@@ -25,9 +46,8 @@
 окружения, а не хардкодятся в коде.
 
 Функции `setup_config_endpoints(app)` регистрируют все
-эти эндпоинты в переданном экземпляре FastAPI.
-"""
-from __future__ import annotations
+эти эндпоинты в переданном экземпляре FastAPI."""
+
 import json
 import os
 from pathlib import Path

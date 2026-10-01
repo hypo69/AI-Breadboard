@@ -1,6 +1,26 @@
-"""
-Diagnostics Engine - 80+ built-in checks for system health
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core - Diagnostics
+# =============================================================================
+# Description:
+#   Модуль комплексной диагностики состояния служб, процессов и аппаратных ресурсов.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.diagnostics import Severity
+#
+#     service = Severity()
+#
+# File: diagnostics.py
+# Project: ai-breadboard
+# Package: apps.windows.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""Модуль комплексной диагностики состояния служб, процессов и аппаратных ресурсов."""
+
 from typing import List, Dict, Any, Callable
 from dataclasses import dataclass
 from enum import Enum

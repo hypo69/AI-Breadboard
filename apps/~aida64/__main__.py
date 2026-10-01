@@ -1,5 +1,29 @@
-"""Точка входа CLI для запуска приложения AIDA64."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps ~Aida64 -   Main  
+# =============================================================================
+# Description:
+#   Точка входа CLI для запуска приложения AIDA64.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.~aida64.__main__
+#   Python API:
+#     from apps.~aida64.__main__ import main
+#
+#     res = main()
+#
+# File: __main__.py
+# Project: ai-breadboard
+# Package: apps.~aida64
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Точка входа CLI для запуска приложения AIDA64."""
+
 import argparse
 import json
 import sys

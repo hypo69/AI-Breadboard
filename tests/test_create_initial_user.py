@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Create Initial User
+# =============================================================================
+# Description:
+#   Test suite for InitialUserManager class.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_create_initial_user import TestInitialUserManager
+#
+#     service = TestInitialUserManager()
+#
+# File: test_create_initial_user.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Test suite for InitialUserManager class."""
+
 import sqlite3
 import subprocess
 import sys

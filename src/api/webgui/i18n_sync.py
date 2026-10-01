@@ -1,3 +1,29 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard API - I18N Sync Module
+# =============================================================================
+# Description:
+#   Utility to auto‑extract hardcoded Russian strings from the web GUI
+#
+# Usage Examples:
+#   CLI:
+#     python -m src.api.webgui.i18n_sync
+#   Python API:
+#     from src.api.webgui.i18n_sync import load_locale
+#
+#     res = load_locale()
+#     print(res)
+#
+# File: i18n_sync.py
+# Project: ai-breadboard
+# Package: src.api.webgui
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Utility to auto‑extract hardcoded Russian strings from the web GUI"""
+
 #!/usr/bin/env python3
 """Utility to auto‑extract hardcoded Russian strings from the web GUI
 and inject them into locale JSON files (ru.json, en.json, he.json).

@@ -1,5 +1,27 @@
-"""FastAPI REST API роутер для AIDA64."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps ~Aida64 - Router
+# =============================================================================
+# Description:
+#   FastAPI REST API роутер для AIDA64.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.~aida64.router import init_router
+#
+#     res = init_router()
+#
+# File: router.py
+# Project: ai-breadboard
+# Package: apps.~aida64
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""FastAPI REST API роутер для AIDA64."""
+
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter
 from apps.aida64.core.aida64_service import Aida64Service

@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router Admin Skills
+# =============================================================================
+# Description:
+#   Testing skill management endpoints in admin panel.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_router_admin_skills import TestAdminSkillsAPI
+#
+#     service = TestAdminSkillsAPI()
+#
+# File: test_router_admin_skills.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Testing skill management endpoints in admin panel."""
+
 import pytest
 from fastapi.testclient import TestClient
 from header import __root__

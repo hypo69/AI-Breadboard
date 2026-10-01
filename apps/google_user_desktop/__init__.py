@@ -1,4 +1,23 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Google_User_Desktop -   Init  
+# =============================================================================
+# Description:
+#   Приложение Google User Desktop — единый центр управления Google Workspace и синхронизации.
+#
+# Usage Examples:
+#
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: apps.google_user_desktop
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 """Приложение Google User Desktop — единый центр управления Google Workspace и синхронизации."""
+
 from .routers.router import get_state, init_router, router
 from .routers.sync_router import include_sync_routes
 from .routers.sync_router import router as sync_router

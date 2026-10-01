@@ -1,12 +1,33 @@
 # -*- coding: utf-8 -*-
-"""
-Синхронізує файли локалей: `en.json` і `he.json` отримують значення з `ru.json`,
+# =============================================================================
+# Process Name: AI-Breadboard API - Sync Translations Module
+# =============================================================================
+# Description:
+#   Синхронізує файли локалей: `en.json` і `he.json` отримують значення з `ru.json`,
+#
+# Usage Examples:
+#   CLI:
+#     python -m src.api.webgui.sync_translations
+#   Python API:
+#     from src.api.webgui.sync_translations import load
+#
+#     res = load()
+#     print(res)
+#
+# File: sync_translations.py
+# Project: ai-breadboard
+# Package: src.api.webgui
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Синхронізує файли локалей: `en.json` і `he.json` отримують значення з `ru.json`,
 якщо у них порожні рядки або відсутні ключі.
 
 Тільки ті ключі, які вже існують у `ru.json`, будуть скопійовані.
 Це гарантує, що переклади не будуть втрачені і в інших файлах буде
-хоча б оригінальний російський текст (потім його можна замінити).
-"""
+хоча б оригінальний російський текст (потім його можна замінити)."""
 
 import json
 import pathlib

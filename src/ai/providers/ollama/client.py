@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Client Module
+# =============================================================================
+# Description:
+#   Клиент для работы с Ollama.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.providers.ollama.client import OllamaClient
+#
+#     service = OllamaClient()
+#
+# File: client.py
+# Project: ai-breadboard
+# Package: src.ai.providers.ollama
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Клиент для работы с Ollama."""
+
 import os
 import aiohttp
 from typing import Optional, Dict, Any, List

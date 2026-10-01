@@ -1,20 +1,26 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Google Workspace Accounts Pool Management Router
+# Process Name: AI-Breadboard API - Router Google Accounts Module
 # =============================================================================
 # Description:
-#   Provides FastAPI endpoints for managing the Google Workspace account pool,
-#   OAuth 2.0 / Service Account credentials, setting defaults, quota reset,
-#   and testing connectivity for Gmail, Google Drive, Sheets, and Docs.
+#   Модуль реализации компонента `GoogleAccountCreateRequest` системы AI-Breadboard.
+#
+# Usage Examples:
+#   Python API:
+#     from src.api.routers.core.router_google_accounts import GoogleAccountCreateRequest
+#
+#     service = GoogleAccountCreateRequest()
 #
 # File: router_google_accounts.py
 # Project: ai-breadboard
-# Package: src.api
+# Package: src.api.routers.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
 # =============================================================================
 
 from __future__ import annotations
+"""Модуль реализации компонента `GoogleAccountCreateRequest` системы AI-Breadboard."""
 
 import json
 from pathlib import Path

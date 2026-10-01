@@ -1,16 +1,20 @@
 /**
  * =============================================================================
- * Process Name: Windows Process Leak Hunter Logic
+ * Process Name: AI-Breadboard UI - Main Script
  * =============================================================================
  * Description:
- *   Клиентский контроллер вкладки глубокой диагностики процессов:
- *   утечки дескрипторов Handles, GDI/USER объектов, Page Faults и фильтрация.
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/process_leaks_tab/main.js?v=20261001_v1" type="module"></script>
  *
  * File: main.js
- * Project: AI-Breadboard
- * Module: WebInterface.ProcessLeaksTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/process_leaks_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

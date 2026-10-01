@@ -1,14 +1,34 @@
+<!--
+=============================================================================
+Process Name: AI-Breadboard Web Interface - Index View
+=============================================================================
+Description:
+  Шаблон веб-интерфейса системного модуля (index).
+
+Usage Examples:
+    Web Route:
+      /src/api/webgui/apps/index.html
+
+File: index.html
+Project: ai-breadboard
+Package: src/api/webgui/apps
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-01 13:13:56
+=============================================================================
+-->
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Breadboard — <span data-i18n="auto___924961"></span> (/apps)</title>
+  <title>AI Breadboard — Приложения (/apps)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/html/css/main.css?v=20260926_v4" rel="stylesheet">
+  <link href="/html/css/main.css?v=20260924_v1" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="/html/js/toast.js?v=20260926_v4"></script>
+  <script src="/html/js/toast.js?v=20260924_v1"></script>
   <script src="https://cdn.jsdelivr.net/npm/i18next@23.11.5/i18next.min.js"></script>
 </head>
 <body>
@@ -17,106 +37,96 @@
 
   <!-- Navigation Bar (/tc, /apps) -->
   <div class="d-flex align-items-center justify-content-between mb-2 main-nav-container rounded px-2 py-1 flex-wrap gap-2">
-    <!-- <span data-i18n="auto___807796"></span> -->
+    <!-- Левая часть: кнопка меню, брендинг и индикатор активного раздела -->
     <div class="d-flex align-items-center gap-2">
-      <!-- <span data-i18n="auto___0ad5b5"></span> -->
+      <!-- Кнопка открытия левого выдвижного меню -->
       <button class="btn btn-sm btn-primary d-flex align-items-center gap-1.5 px-2 py-1 rounded shadow-sm"
               id="apps-drawer-toggle-btn"
               type="button"
               data-bs-toggle="offcanvas"
               data-bs-target="#appsSideNavOffcanvas"
               aria-controls="appsSideNavOffcanvas"
-              title="<span data-i18n="auto___f1660b"></span>"
+              title="Открыть меню разделов"
               style="font-size: 0.82rem; font-weight: 500;">
         <i class="bi bi-list fs-6"></i>
-        <span class="d-none d-md-inline"><span data-i18n="auto___dd904b"></span></span>
+        <span class="d-none d-md-inline">Меню</span>
       </button>
 
-      <!-- <span data-i18n="auto___c1cedc"></span> -->
+      <!-- Брендинг -->
       <span class="fw-bold d-flex align-items-center gap-1.5 text-primary fs-6 user-select-none" style="letter-spacing: 0.3px;">
         <i class="bi bi-cpu-fill fs-5"></i>
         <span class="d-none d-sm-inline">Test Computer</span>
       </span>
-      <span id="active-tab-title-badge" class="badge bg-body-secondary text-secondary-emphasis border rounded-pill px-2 py-1 small fw-normal d-flex align-items-center gap-1" title="<span data-i18n="auto___35612c"></span>">
-        ℹ️ <span data-i18n="auto___d32ca0"></span>
+      <span id="active-tab-title-badge" class="badge bg-body-secondary text-secondary-emphasis border rounded-pill px-2 py-1 small fw-normal d-flex align-items-center gap-1" title="Текущий активный раздел">
+        ℹ️ О Системе
       </span>
     </div>
 
-    <!-- Top Menu Buttons — <span data-i18n="auto___0b9551"></span> tc_menu_config.json -->
+    <!-- Top Menu Buttons — генерируются из tc_menu_config.json -->
     <div class="d-flex align-items-center gap-1 flex-wrap"></div>
 
-    <!-- Controls (Model Dropdown, Language, Theme, Switcher) -->
+    <!-- Controls (Model Badge, Language, Theme, Switcher) -->
     <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-auto">
-      <!-- Active AI Model Dropdown -->
-      <div class="dropdown">
-        <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 py-1 px-2 rounded dropdown-toggle" 
-                type="button" 
-                id="apps-model-dropdown-btn" 
-                data-bs-toggle="dropdown" 
-                aria-expanded="false"
-                title="<span data-i18n="auto__ai__9136bc"></span>">
-          <i class="bi bi-cpu-fill text-info"></i>
-          <span class="text-white fw-semibold" id="apps-model-text">AI: <span data-i18n="auto___c98fa8"></span>...</span>
-        </button>
-        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="apps-model-dropdown-btn" id="apps-model-dropdown-menu">
-          <li><span class="dropdown-item-text text-muted small px-2"><span data-i18n="auto___3401fe"></span>...</span></li>
-        </ul>
-      </div>
+      <!-- Active AI Model Badge -->
+      <span id="apps-model-badge" class="badge rounded-pill align-items-center gap-1.5 px-3 py-1.5 shadow-sm border" style="font-size: 0.8rem; background: rgba(255, 255, 255, 0.05); cursor: default;" title="Инициализация модели ИИ...">
+        <i class="bi bi-cpu-fill text-info"></i>
+        <span class="text-white fw-semibold" id="apps-model-text">AI: Загрузка...</span>
+      </span>
 
       <!-- Language Selector -->
       <select class="form-select form-select-sm bg-dark text-white border-secondary lang-selector" id="apps-lang-selector" style="width: 100px;">
-        <option value="ru"><span data-i18n="auto___5537fc"></span></option>
+        <option value="ru">Русский</option>
         <option value="en">English</option>
         <option value="he">עברית</option>
       </select>
 
       <!-- Theme Selector -->
       <select class="form-select form-select-sm bg-dark text-white border-secondary theme-selector" id="apps-theme-selector" style="width: 105px;">
-        <option value="dark">🌙 <span data-i18n="auto___bd16b2"></span></option>
-        <option value="light">☀️ <span data-i18n="auto___808001"></span></option>
-        <option value="system">🌓 <span data-i18n="auto___3ac98f"></span></option>
+        <option value="dark">🌙 Тёмная</option>
+        <option value="light">☀️ Светлая</option>
+        <option value="system">🌓 Система</option>
       </select>
 
       <!-- Mode Switcher (Test Computer / Admin Panel) -->
-      <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="<span data-i18n="auto___f23fe5"></span>">
-        <a href="/tc" class="btn btn-primary active d-flex align-items-center gap-1 py-1 px-2.5" title="<span data-i18n="auto___ff0fbd"></span> Test Computer (/tc)">
+      <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="Режим работы">
+        <a href="/tc" class="btn btn-primary active d-flex align-items-center gap-1 py-1 px-2.5" title="Режим Test Computer (/tc)">
           <i class="bi bi-display"></i>
           <span class="small fw-semibold">Test Computer</span>
         </a>
-        <a href="/admin" class="btn btn-outline-secondary d-flex align-items-center gap-1 py-1 px-2.5" title="<span data-i18n="auto___edf80b"></span>">
+        <a href="/admin" class="btn btn-outline-secondary d-flex align-items-center gap-1 py-1 px-2.5" title="Открыть полную панель управления">
           <i class="bi bi-shield-lock-fill"></i>
-          <span class="small d-none d-md-inline"><span data-i18n="auto___607db0"></span></span>
+          <span class="small d-none d-md-inline">Админка</span>
         </a>
       </div>
     </div>
   </div>
 
-  <!-- <span data-i18n="auto___d386ad"></span> -->
+  <!-- Плавающий боковой ярлычок (вкладка) слева -->
   <button class="left-drawer-tab-trigger btn shadow" 
           type="button" 
           data-bs-toggle="offcanvas" 
           data-bs-target="#appsSideNavOffcanvas" 
           aria-controls="appsSideNavOffcanvas" 
-          title="<span data-i18n="auto___08bccf"></span>">
+          title="Открыть меню навигации">
     <i class="bi bi-list fs-6"></i>
-    <span class="left-drawer-tab-text"><span data-i18n="auto___27f62b"></span></span>
+    <span class="left-drawer-tab-text">МЕНЮ</span>
   </button>
 
-  <!-- <span data-i18n="auto___f4b313"></span> (Offcanvas) -->
+  <!-- Левая выдвижная вкладка / панель навигации (Offcanvas) -->
   <div class="offcanvas offcanvas-start left-drawer-nav" tabindex="-1" id="appsSideNavOffcanvas" aria-labelledby="appsSideNavOffcanvasLabel">
     <div class="offcanvas-header border-bottom py-2 px-3">
       <h5 class="offcanvas-title d-flex align-items-center gap-2 fs-6 fw-bold" id="appsSideNavOffcanvasLabel">
         <i class="bi bi-grid-fill text-primary"></i>
-        <span><span data-i18n="auto___924961"></span> (/apps)</span>
+        <span>Приложения (/apps)</span>
       </h5>
-      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="<span data-i18n="auto___4ae50d"></span>"></button>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Закрыть"></button>
     </div>
     <div class="offcanvas-body p-3 d-flex flex-column justify-content-between" style="overflow-y: auto;">
       <div class="drawer-sections-wrapper">
         <div class="nav-drawer-group mb-3">
           <div class="nav-drawer-group-title d-flex align-items-center gap-1 mb-2">
             <i class="bi bi-grid-fill text-primary"></i>
-            <span><span data-i18n="auto___946ee0"></span> Test Computer</span>
+            <span>Разделы Test Computer</span>
           </div>
           <div class="list-group list-group-flush rounded border" id="appsNavTabs"></div>
         </div>
@@ -126,7 +136,7 @@
       <div class="nav-drawer-footer border-top pt-2 mt-auto">
         <button class="btn btn-sm btn-outline-secondary w-100 d-flex align-items-center gap-2 py-2 rounded" id="menu-editor-btn" type="button">
           <i class="bi bi-gear-fill"></i>
-          <span class="fw-medium"><span data-i18n="auto___33433c"></span></span>
+          <span class="fw-medium">Редактор меню</span>
         </button>
       </div>
     </div>
@@ -138,28 +148,28 @@
       <div class="modal-content bg-dark text-white">
         <div class="modal-header border-secondary">
           <h5 class="modal-title fw-bold" id="menuEditorModalLabel">
-            <i class="bi bi-gear-fill text-primary"></i> <span data-i18n="auto___33433c"></span>
+            <i class="bi bi-gear-fill text-primary"></i> Редактор меню
           </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="<span data-i18n="auto___4ae50d"></span>"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
         </div>
         <div class="modal-body">
           <div class="alert alert-info small mb-3">
-            <i class="bi bi-info-circle"></i> <span data-i18n="auto___43e5bb"></span>.
+            <i class="bi bi-info-circle"></i> Настройте видимость и порядок элементов меню. Используйте переключатели для выбора позиции (сверху/снизу/скрыть) и слайдеры для изменения порядка элементов.
           </div>
           
           <div class="menu-editor-section">
             <h6 class="text-primary fw-bold mb-3">
-              <i class="bi bi-list-ul"></i> <span data-i18n="auto___d4934e"></span>
+              <i class="bi bi-list-ul"></i> Все элементы меню
             </h6>
             <div class="list-group list-group-flush" id="allMenuEditor">
-              <div class="text-muted small p-3 text-center"><span data-i18n="auto___c98fa8"></span>...</div>
+              <div class="text-muted small p-3 text-center">Загрузка...</div>
             </div>
           </div>
         </div>
         <div class="modal-footer border-secondary">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><span data-i18n="auto___0ec753"></span></button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
           <button type="button" class="btn btn-primary" id="saveMenuConfig">
-            <i class="bi bi-save"></i> <span data-i18n="auto___486405"></span>
+            <i class="bi bi-save"></i> Сохранить
           </button>
         </div>
       </div>
@@ -213,9 +223,6 @@
     <!-- Cloudflared Monitor Tab -->
     <div id="tab-cloudflared" class="tab-pane fade"></div>
 
-    <!-- Google User Desktop Tab -->
-    <div id="tab-google-desktop" class="tab-pane fade"></div>
-
     <!-- Google Cloud Monitor Tab -->
     <div id="tab-gcloud" class="tab-pane fade"></div>
 
@@ -248,9 +255,6 @@
 
     <!-- File Recovery (R-Studio) Tab -->
     <div id="tab-file-recovery" class="tab-pane fade"></div>
-
-    <!-- File History AI Search Tab -->
-    <div id="tab-file-history-search" class="tab-pane fade"></div>
 
     <!-- Telemetry History & Visualization Tab -->
     <div id="tab-telemetry-history" class="tab-pane fade"></div>
@@ -291,15 +295,34 @@
     <!-- MCP Servers Tab -->
     <div id="tab-mcp" class="tab-pane fade"></div>
 
-    <!-- AI Inference Benchmark Tab -->
+    <!-- Google User Desktop Tab -->
+    <div id="tab-google-desktop" class="tab-pane fade"></div>
+
+    <!-- File History Search Tab -->
+    <div id="tab-file-history-search" class="tab-pane fade"></div>
+
+    <!-- AI Benchmark Tab -->
     <div id="tab-ai-benchmark" class="tab-pane fade"></div>
+
+    <!-- Windows CLI Modular Applications Tabs -->
+    <div id="tab-storage-manager" class="tab-pane fade"></div>
+    <div id="tab-boot-recovery" class="tab-pane fade"></div>
+    <div id="tab-servicing-integrity" class="tab-pane fade"></div>
+    <div id="tab-services-manager" class="tab-pane fade"></div>
+    <div id="tab-task-scheduler" class="tab-pane fade"></div>
+    <div id="tab-process-manager" class="tab-pane fade"></div>
+    <div id="tab-firewall-manager" class="tab-pane fade"></div>
+    <div id="tab-security-acl" class="tab-pane fade"></div>
+    <div id="tab-performance-tracing" class="tab-pane fade"></div>
+    <div id="tab-event-logs" class="tab-pane fade"></div>
+    <div id="tab-software-manager" class="tab-pane fade"></div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/html/js/chatService.js?v=20260926_v4"></script>
-<script src="/html/js/appConfigEditor.js?v=20260926_v4"></script>
-<script type="module" src="/html/apps/main.js?v=20260926_v4"></script>
+<script src="/html/js/chatService.js?v=20260925_v1"></script>
+<script src="/html/js/appConfigEditor.js"></script>
+<script type="module" src="/html/apps/main.js?v=20260925_v1"></script>
 
 </body>
 </html>

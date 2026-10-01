@@ -1,19 +1,28 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
-# Process Name: Universal CLI Entry Point
+# Process Name: AI-Breadboard Root - Manage Tools
 # =============================================================================
 # Description:
-#   Single entry point for all utility scripts, plugins, and services.
-#   Modularly delegates commands to scripts.cli.commands.*
+#   Скрипт/модуль системы AI-Breadboard (`manage_tools`).
+#
+# Usage Examples:
+#   CLI:
+#     python manage_tools.py
+#   Python API:
+#     from manage_tools import main
+#
+#     res = main()
 #
 # File: manage_tools.py
 # Project: ai-breadboard
 # Package: root
 # Author: hypo69
 # Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:20:26
 # =============================================================================
 
 from __future__ import annotations
+"""Скрипт/модуль системы AI-Breadboard (`manage_tools`)."""
 
 import argparse
 import sys

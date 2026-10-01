@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts - Check System Health
+# =============================================================================
+# Description:
+#   Скрипт/модуль системы AI-Breadboard (`check_system_health`).
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.check_system_health
+#   Python API:
+#     from scripts.check_system_health import check_health
+#
+#     res = check_health()
+#
+# File: check_system_health.py
+# Project: ai-breadboard
+# Package: scripts
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
+"""Скрипт/модуль системы AI-Breadboard (`check_system_health`)."""
+
 import requests
 import json
 import datetime

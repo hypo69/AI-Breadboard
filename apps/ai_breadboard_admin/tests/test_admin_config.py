@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Ai_Breadboard_Admin Tests - Test Admin Config
+# =============================================================================
+# Description:
+#   Фикстура создания временной структуры каталогов проекта.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.ai_breadboard_admin.tests.test_admin_config import temp_root
+#
+#     res = temp_root()
+#
+# File: test_admin_config.py
+# Project: ai-breadboard
+# Package: apps.ai_breadboard_admin.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
+"""Фикстура создания временной структуры каталогов проекта."""
+
 import json
 from pathlib import Path
 import pytest

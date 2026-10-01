@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests Utils - Test File
+# =============================================================================
+# Description:
+#   Test saving text to file (successful scenario).
+#
+# Usage Examples:
+#   Python API:
+#     from tests.utils.test_file import test_save_text_file_happy_path
+#
+#     res = test_save_text_file_happy_path()
+#
+# File: test_file.py
+# Project: ai-breadboard
+# Package: tests.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Test saving text to file (successful scenario)."""
+
 import pytest
 from pathlib import Path
 import os

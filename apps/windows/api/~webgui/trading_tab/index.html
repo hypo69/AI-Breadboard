@@ -1,0 +1,273 @@
+<!--
+=============================================================================
+Process Name: Windows Web Interface - Index View
+=============================================================================
+Description:
+  Шаблон клиентского веб-интерфейса index.
+
+Usage Examples:
+    Web Route:
+      /windows/api/~webgui/trading_tab/index.html
+
+    Tab Frame Integration:
+      <iframe src="/windows/api/~webgui/trading_tab/index.html" class="w-100 h-100 border-0"></iframe>
+
+File: index.html
+Project: ai-breadboard
+Package: windows/api/~webgui/trading_tab
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-01 13:04:40
+=============================================================================
+-->
+
+<!-- Trading Terminal Application Tab -->
+<style>
+  .trading-container {
+    padding: 1rem;
+  }
+  .trading-metric-card {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .trading-metric-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+  }
+  .trading-metric-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #f8fafc;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .trading-panel {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .trading-panel-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .trading-orderbook-table {
+    width: 100%;
+    font-size: 0.8rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    border-collapse: collapse;
+  }
+  .trading-orderbook-table th {
+    background: #1e293b;
+    padding: 6px 12px;
+    color: #94a3b8;
+    font-weight: 600;
+    border-bottom: 1px solid #334155;
+  }
+  .trading-orderbook-table td {
+    padding: 5px 12px;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+  }
+  .trading-ask-row {
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.05);
+  }
+  .trading-bid-row {
+    color: #4ade80;
+    background: rgba(34, 197, 94, 0.05);
+  }
+  .btn-kill-switch {
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
+    border: 1px solid #f87171 !important;
+    color: #ffffff !important;
+    font-weight: 700;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+  }
+  .btn-kill-switch:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
+    box-shadow: 0 0 18px rgba(239, 68, 68, 0.7);
+  }
+</style>
+
+<div class="trading-container">
+  <!-- Header Alert & Status -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155;">
+    <div>
+      <h5 class="mb-1 fw-bold text-white d-flex align-items-center gap-2">
+        <span class="fs-4">📈</span> <span data-i18n="auto___fac44e"></span> (Exchange Trading Desk)
+      </h5>
+      <p class="mb-0 small text-light" style="color: #cbd5e1 !important;">
+        <span data-i18n="auto__l2_pnl__998796"></span> (Kill-Switch).
+      </p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge rounded-pill bg-success-subtle text-success border border-success px-3 py-2" id="trading-stream-status">
+        ● <span data-i18n="auto___c4d3aa"></span>
+      </span>
+      <button class="btn btn-sm btn-outline-info rounded-pill px-3" id="btn-refresh-trading">
+        <i class="bi bi-arrow-clockwise me-1"></i> <span data-i18n="auto___c2f668"></span>
+      </button>
+      <button class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-trading-config">
+        <i class="bi bi-gear-fill me-1"></i> <span data-i18n="auto___7f17c7"></span> (config.json)
+      </button>
+      <button class="btn btn-sm btn-kill-switch rounded-pill px-3" id="btn-trigger-kill-switch">
+        ⚠️ Kill-Switch (<span data-i18n="auto___49184b"></span>)
+      </button>
+    </div>
+  </div>
+
+  <!-- Top Metrics Bar -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-3 col-sm-6">
+      <div class="trading-metric-card">
+        <span class="trading-metric-label"><span data-i18n="auto___4d3476"></span></span>
+        <span class="trading-metric-value" style="color: #38bdf8;" id="trading-symbol">BTC/USDT</span>
+        <span class="small text-muted" id="trading-spread-info"><span data-i18n="auto___aa0c9c"></span>: --</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="trading-metric-card">
+        <span class="trading-metric-label"><span data-i18n="auto___b3ad5d"></span></span>
+        <span class="trading-metric-value" id="trading-current-price">$0.00</span>
+        <span class="small" id="trading-price-delta" style="color: #4ade80;">Bid: $0 | Ask: $0</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="trading-metric-card">
+        <span class="trading-metric-label"><span data-i18n="auto__usdt__e308ab"></span></span>
+        <span class="trading-metric-value" id="trading-total-equity">$0.00</span>
+        <span class="small text-muted" id="trading-cash-balance"><span data-i18n="auto___f925ca"></span>: $0.00</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="trading-metric-card">
+        <span class="trading-metric-label"><span data-i18n="auto___c139a7"></span> / PnL</span>
+        <span class="trading-metric-value" id="trading-pnl-val" style="color: #4ade80;">+$0.00</span>
+        <span class="small text-muted" id="trading-pos-size"><span data-i18n="auto___1ebefa"></span>: 0.0 BTC</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Trading Desk Grid -->
+  <div class="row g-3">
+    <!-- Left Column: Orderbook (L2 Depth) -->
+    <div class="col-lg-5">
+      <div class="trading-panel h-100">
+        <div class="trading-panel-header">
+          <span><i class="bi bi-bar-chart-fill me-1"></i> <span data-i18n="auto___b7b249"></span> (L2 Orderbook)</span>
+          <span class="badge bg-secondary" id="trading-orderbook-depth"><span data-i18n="auto___51ec63"></span>: 6</span>
+        </div>
+        <div class="p-0">
+          <table class="trading-orderbook-table">
+            <thead>
+              <tr>
+                <th><span data-i18n="auto___367e27"></span> (USDT)</th>
+                <th style="text-align: right;"><span data-i18n="auto___5e5c2e"></span></th>
+                <th style="text-align: right;"><span data-i18n="auto___99d740"></span></th>
+              </tr>
+            </thead>
+            <tbody id="trading-asks-tbody">
+              <tr><td colspan="3" class="text-center py-2 text-muted"><span data-i18n="auto___5f101c"></span>...</td></tr>
+            </tbody>
+            <tbody style="border-top: 2px solid #334155; border-bottom: 2px solid #334155;">
+              <tr style="background: #020617;">
+                <td colspan="3" class="text-center py-2 fw-bold" id="trading-orderbook-midprice" style="font-size: 0.95rem; color: #f8fafc;">
+                  $0.00
+                </td>
+              </tr>
+            </tbody>
+            <tbody id="trading-bids-tbody">
+              <tr><td colspan="3" class="text-center py-2 text-muted"><span data-i18n="auto___da8291"></span>...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Order Placement & Recent Orders -->
+    <div class="col-lg-7 d-flex flex-column gap-3">
+      <!-- Order Form -->
+      <div class="trading-panel">
+        <div class="trading-panel-header">
+          <span><i class="bi bi-lightning-charge-fill me-1"></i> <span data-i18n="auto___9e4ea1"></span></span>
+          <span class="badge bg-primary" id="trading-mode-badge">Direct Execution</span>
+        </div>
+        <div class="p-3">
+          <form id="trading-order-form">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold text-light"><span data-i18n="auto___dbc454"></span>:</label>
+                <select class="form-select form-select-sm bg-dark text-white border-secondary" id="trading-order-type">
+                  <option value="MARKET"><span data-i18n="auto___670856"></span> (Market)</option>
+                  <option value="LIMIT"><span data-i18n="auto___fa3dd0"></span> (Limit)</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold text-light"><span data-i18n="auto___576698"></span>:</label>
+                <div class="input-group input-group-sm">
+                  <input type="number" step="0.01" min="0.001" class="form-control bg-dark text-white border-secondary" id="trading-order-amount" value="0.1" required>
+                  <span class="input-group-text bg-secondary text-white border-secondary">BTC</span>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold text-light"><span data-i18n="auto___1ebaae"></span> Limit):</label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-secondary text-white border-secondary">$</span>
+                  <input type="number" step="1" class="form-control bg-dark text-white border-secondary" id="trading-order-price" placeholder="<span data-i18n="auto___e35a54"></span>">
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-3 mt-3">
+              <button type="button" class="btn btn-success fw-bold px-4 rounded-pill" id="btn-order-buy">
+                <i class="bi bi-arrow-up-circle me-1"></i> <span data-i18n="auto___fedaa2"></span> (BUY)
+              </button>
+              <button type="button" class="btn btn-danger fw-bold px-4 rounded-pill" id="btn-order-sell">
+                <i class="bi bi-arrow-down-circle me-1"></i> <span data-i18n="auto___cfe1e9"></span> (SELL)
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Recent Orders Table -->
+      <div class="trading-panel flex-grow-1">
+        <div class="trading-panel-header">
+          <span><i class="bi bi-clock-history me-1"></i> <span data-i18n="auto___59a827"></span></span>
+          <span class="badge bg-secondary" id="trading-orders-count">0 <span data-i18n="auto___45f93b"></span></span>
+        </div>
+        <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
+          <table class="table table-dark table-hover table-sm mb-0 small font-monospace">
+            <thead>
+              <tr class="table-secondary text-dark">
+                <th><span data-i18n="auto___c80d7e"></span></th>
+                <th>ID</th>
+                <th><span data-i18n="auto___7af7cb"></span></th>
+                <th><span data-i18n="auto___d25691"></span></th>
+                <th style="text-align: right;"><span data-i18n="auto___5e5c2e"></span></th>
+                <th style="text-align: right;"><span data-i18n="auto___2270aa"></span></th>
+                <th style="text-align: right;"><span data-i18n="auto___f7f293"></span></th>
+              </tr>
+            </thead>
+            <tbody id="trading-orders-tbody">
+              <tr><td colspan="7" class="text-center py-3 text-muted"><span data-i18n="auto___2911fb"></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

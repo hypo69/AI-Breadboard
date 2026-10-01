@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard RAG - Document Rag Module
+# =============================================================================
+# Description:
+#   Compute SHA-256 hash of binary content.
+#
+# Usage Examples:
+#   Python API:
+#     from src.rag.document_rag import DocumentChunk
+#
+#     service = DocumentChunk()
+#
+# File: document_rag.py
+# Project: ai-breadboard
+# Package: src.rag
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Compute SHA-256 hash of binary content."""
+
 import csv
 import hashlib
 import io

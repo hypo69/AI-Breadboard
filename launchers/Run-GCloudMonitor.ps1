@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Run-Gcloudmonitor Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Run-GCloudMonitor).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Run-GCloudMonitor.ps1
+#
+# File: Run-GCloudMonitor.ps1
+# Project: ai-breadboard
+# Package: launchers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:06
+# =============================================================================
+
 <#
 .SYNOPSIS
     Standalone launcher for Google Cloud Observability Monitor microservice.

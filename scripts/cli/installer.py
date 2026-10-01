@@ -1,13 +1,35 @@
-"""
-Cross-platform installation system for AI Breadboard.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli - Installer
+# =============================================================================
+# Description:
+#   Cross-platform installation system for AI Breadboard.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.cli.installer
+#   Python API:
+#     from scripts.cli.installer import Language
+#
+#     service = Language()
+#
+# File: installer.py
+# Project: ai-breadboard
+# Package: scripts.cli
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
+"""Cross-platform installation system for AI Breadboard.
 
 Ported from legacy install.ps1 to work on Windows, Linux, and macOS.
 
 Usage:
     python scripts/cli/installer.py
     python scripts/cli/installer.py --lang en
-    python scripts/cli/installer.py --skip-models
-"""
+    python scripts/cli/installer.py --skip-models"""
+
 import argparse
 import json
 import os

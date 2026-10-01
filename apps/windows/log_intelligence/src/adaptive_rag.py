@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Log_Intelligence Src - Adaptive Rag
+# =============================================================================
+# Description:
+#   Получить стандартный путь к локальному хранилищу в %APPDATA%.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.log_intelligence.src.adaptive_rag import AdaptiveLogRAG
+#
+#     service = AdaptiveLogRAG()
+#
+# File: adaptive_rag.py
+# Project: ai-breadboard
+# Package: apps.windows.log_intelligence.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Получить стандартный путь к локальному хранилищу в %APPDATA%."""
+
 import collections
 import datetime
 import hashlib

@@ -1,10 +1,33 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins Invoice_Processor - Plugin
+# =============================================================================
+# Description:
+#   Modular plugin providing automated invoice OCR, extraction, and Google Sheets sync.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.user-plugins.invoice_processor.plugin import InvoiceProcessorPlugin
+#
+#     service = InvoiceProcessorPlugin()
+#
+# File: plugin.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.invoice_processor
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
 from __future__ import annotations
+"""Modular plugin providing automated invoice OCR, extraction, and Google Sheets sync."""
+
 import csv
 import json
 import os
 from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, List, Optional, Union
-from logger.logger import logger
+from logger import logger
 from plugins.base import BasePlugin
 from plugins.invoice_processor.extractor import INVOICE_HEADER_ROW, extract_structured_invoice_data, invoice_dict_to_row
 

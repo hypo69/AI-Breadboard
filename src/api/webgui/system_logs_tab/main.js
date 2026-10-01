@@ -1,17 +1,20 @@
 /**
  * =============================================================================
- * Process Name: Windows System Log Center Controller
+ * Process Name: AI-Breadboard UI - Main Script
  * =============================================================================
  * Description:
- *   Frontend controller managing dynamic channel tree discovery, multi-mode
- *   view rendering (Live, Errors, Incidents, Timeline, Raw), contextual AI
- *   explanation, and multi-source log export.
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/system_logs_tab/main.js?v=20261001_v1" type="module"></script>
  *
  * File: main.js
- * Project: AI-Breadboard
- * Module: WebInterface.SystemLogsTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/system_logs_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

@@ -1,5 +1,27 @@
-"""Динамический генератор и исполнитель системных инструментов Windows."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core - Dynamic Tool Engine
+# =============================================================================
+# Description:
+#   Динамический генератор и исполнитель системных инструментов Windows.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.dynamic_tool_engine import DynamicToolPlan
+#
+#     service = DynamicToolPlan()
+#
+# File: dynamic_tool_engine.py
+# Project: ai-breadboard
+# Package: apps.windows.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Динамический генератор и исполнитель системных инструментов Windows."""
+
 import asyncio
 import json
 import os

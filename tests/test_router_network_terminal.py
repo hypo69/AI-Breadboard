@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router Network Terminal
+# =============================================================================
+# Description:
+#   Unit tests for Network Terminal FastAPI router.
+#
+# Usage Examples:
+#   CLI:
+#     python -m tests.test_router_network_terminal
+#   Python API:
+#     from tests.test_router_network_terminal import TestNetworkTerminalRouter
+#
+#     service = TestNetworkTerminalRouter()
+#
+# File: test_router_network_terminal.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for Network Terminal FastAPI router."""
+
 import unittest
 from io import BytesIO
 from unittest.mock import patch
@@ -119,10 +143,42 @@ class TestNetworkTerminalRouter(unittest.TestCase):
         self.assertIn('servers', data)
         self.assertIsInstance(data['servers'], list)
 
+    def test_get_subnets(self):
+        """Test /api/network/subnets endpoint."""
+        response = self.client.get('/api/network/subnets')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('subnets', data)
+        self.assertIn('gateways', data)
+        self.assertIsInstance(data['subnets'], list)
+        self.assertIsInstance(data['gateways'], list)
+
+    def test_get_lan_devices(self):
+        """Test /api/network/devices endpoint."""
+        response = self.client.get('/api/network/devices?scan=false')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('devices', data)
+        self.assertIn('total', data)
+        self.assertIn('scan_type', data)
+        self.assertEqual(data['scan_type'], 'cache')
+        self.assertIsInstance(data['devices'], list)
+
+    def test_trigger_lan_scan(self):
+        """Test POST /api/network/devices/scan endpoint."""
+        response = self.client.post('/api/network/devices/scan')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('devices', data)
+        self.assertIn('total', data)
+        self.assertEqual(data['status'], 'SUCCESS')
+
     def test_init_router(self):
         """Test init_router function returns valid router."""
         router = init_router()
         self.assertIsNotNone(router)
         self.assertEqual(router.prefix, '/api/network')
+
+
 if __name__ == '__main__':
     unittest.main()

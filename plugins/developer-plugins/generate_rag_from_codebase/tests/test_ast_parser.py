@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins Developer-Plugins Generate_Rag_From_Codebase Tests - Test Ast Parser
+# =============================================================================
+# Description:
+#   Sample module docstring.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.developer-plugins.generate_rag_from_codebase.tests.test_ast_parser import test_ast_parser_extracts_chunks
+#
+#     res = test_ast_parser_extracts_chunks()
+#
+# File: test_ast_parser.py
+# Project: ai-breadboard
+# Package: plugins.developer-plugins.generate_rag_from_codebase.tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+"""Sample module docstring."""
+
 from pathlib import Path
 import pytest
 from plugins.generate_rag_from_codebase.ast_parser import PythonAstParser

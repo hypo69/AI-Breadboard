@@ -1,5 +1,27 @@
-"""Adaptive learning engine for personalizing user news feeds."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins News_Feed - User Learner
+# =============================================================================
+# Description:
+#   Adaptive learning engine for personalizing user news feeds.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.user-plugins.news_feed.user_learner import UserNewsLearner
+#
+#     service = UserNewsLearner()
+#
+# File: user_learner.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.news_feed
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
 from __future__ import annotations
+"""Adaptive learning engine for personalizing user news feeds."""
+
 import json
 import math
 import re

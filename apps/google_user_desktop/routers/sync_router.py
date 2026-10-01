@@ -1,9 +1,28 @@
-"""FastAPI REST API роутер для синхронизации Google Drive.
-
-Включает эндпоинты управления состоянием и запуск планировщика.
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Google_User_Desktop Routers - Sync Router
+# =============================================================================
+# Description:
+#   FastAPI REST API роутер для синхронизации Google Drive.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.google_user_desktop.routers.sync_router import SyncRequest
+#
+#     service = SyncRequest()
+#
+# File: sync_router.py
+# Project: ai-breadboard
+# Package: apps.google_user_desktop.routers
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
 
 from __future__ import annotations
+"""FastAPI REST API роутер для синхронизации Google Drive.
+
+Включает эндпоинты управления состоянием и запуск планировщика."""
 
 from typing import Dict, List, Optional
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query

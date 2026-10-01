@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Policy Module
+# =============================================================================
+# Description:
+#   Data privacy constraints for AI requests.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.orchestration.policy import PrivacyLevel
+#
+#     service = PrivacyLevel()
+#
+# File: policy.py
+# Project: ai-breadboard
+# Package: src.ai.orchestration
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Data privacy constraints for AI requests."""
+
 from enum import StrEnum
 from dataclasses import dataclass
 from typing import Optional

@@ -1,5 +1,27 @@
-"""Слой безопасного выполнения и симуляции действий (SafeOps)."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Windows Core - Safe Executor
+# =============================================================================
+# Description:
+#   Слой безопасного выполнения и симуляции действий (SafeOps).
+#
+# Usage Examples:
+#   Python API:
+#     from apps.windows.core.safe_executor import SafeExecutor
+#
+#     service = SafeExecutor()
+#
+# File: safe_executor.py
+# Project: ai-breadboard
+# Package: apps.windows.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Слой безопасного выполнения и симуляции действий (SafeOps)."""
+
 import os
 import shutil
 import subprocess

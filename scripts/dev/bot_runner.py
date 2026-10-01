@@ -1,8 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Dev - Bot Runner
+# =============================================================================
+# Description:
+#   Telegram bot runner script.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.dev.bot_runner
+#   Python API:
+#     import scripts.dev.bot_runner as bot_runner
+#
+# File: bot_runner.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
+from __future__ import annotations
 """Telegram bot runner script.
 
 Launches Telegram bot in separate process with full plugin suite and
 AI model integration for chat functionality."""
-from __future__ import annotations
+
 import asyncio
 import os
 import signal
@@ -41,7 +63,7 @@ async def _run_bot() -> None:
         elif _api_key_names:
             model = GoogleGenerativeAI(api_key_names=_api_key_names, system_instruction=_system_instruction)
     except Exception as model_err:
-        logger.info(f'AI model optional initialization note: {model_err}')
+        logger.warning(f'AI model optional initialization note: {model_err}')
     plugins = load_plugins(model)
     tg_plugin = plugins.get('telegram_bot')
     if not tg_plugin:

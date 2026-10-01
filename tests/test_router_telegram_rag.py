@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Router Telegram Rag
+# =============================================================================
+# Description:
+#   Unit tests for /api/telegram_rag router.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_router_telegram_rag import TestRouterTelegramRAG
+#
+#     service = TestRouterTelegramRAG()
+#
+# File: test_router_telegram_rag.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for /api/telegram_rag router."""
+
 import shutil
 import tempfile
 from pathlib import Path

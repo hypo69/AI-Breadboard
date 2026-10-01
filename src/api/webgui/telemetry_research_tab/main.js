@@ -1,17 +1,20 @@
 /**
  * =============================================================================
- * Process Name: Telemetry Research Web GUI Controller
+ * Process Name: AI-Breadboard UI - Main Script
  * =============================================================================
  * Description:
- *   Клиентский JavaScript контроллер для вкладки глубокого исследования телеметрии:
- *   запуск исследовательских сценариев, проверка системных гипотез, рендеринг
- *   матрицы корреляций, графиков Chart.js, детекции аномалий и записей.
+ *   Клиентский веб-скрипт модуля main.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/telemetry_research_tab/main.js?v=20261001_v1" type="module"></script>
  *
  * File: main.js
- * Project: AI-Breadboard
- * Module: WebInterface.TelemetryResearchTab
+ * Project: ai-breadboard
+ * Package: src/api/webgui/telemetry_research_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
  * =============================================================================
  */
 

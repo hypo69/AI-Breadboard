@@ -1,5 +1,27 @@
-"""Гибридный поиск."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Enterprise_Knowledge Retrieval - Hybrid
+# =============================================================================
+# Description:
+#   Гибридный поиск.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.enterprise_knowledge.retrieval.hybrid import HybridSearch
+#
+#     service = HybridSearch()
+#
+# File: hybrid.py
+# Project: ai-breadboard
+# Package: apps.enterprise_knowledge.retrieval
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Гибридный поиск."""
+
 from typing import Any
 from apps.enterprise_knowledge.storage import KnowledgeStore
 from apps.enterprise_knowledge.retrieval.structured import StructuredSearch

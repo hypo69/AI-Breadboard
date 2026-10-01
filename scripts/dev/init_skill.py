@@ -1,10 +1,35 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Dev - Init Skill
+# =============================================================================
+# Description:
+#   Инициализирует директорию и файлы для нового навыка.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.dev.init_skill
+#   Python API:
+#     from scripts.dev.init_skill import init_skill
+#
+#     res = init_skill()
+#
+# File: init_skill.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
+"""Инициализирует директорию и файлы для нового навыка."""
+
 import argparse
 import sys
 import os
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 try:
-    from logger.logger import logger
+    from logger import logger
 except ImportError:
     import logging
     logging.basicConfig(level=logging.INFO)

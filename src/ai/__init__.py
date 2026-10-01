@@ -1,4 +1,24 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI -   Init   Module
+# =============================================================================
+# Description:
+#   Модуль основной системы (`__init__`).
+#
+# Usage Examples:
+#
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: src.ai
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 from __future__ import annotations
+"""Модуль основной системы (`__init__`)."""
+
 from .chat.agy import AgyChatBase
 from .chat.foundry import FoundryChatBase, FoundryClient, FoundrySimpleChat, get_foundry_chat, set_foundry_chat
 from .chat.gemini_cli import GeminiCliChatBase, GeminiCliProvider, GeminiCliResponse

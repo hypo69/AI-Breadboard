@@ -1,5 +1,29 @@
-"""Точка входа CLI для GPU-Z."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps ~Gpuz -   Main  
+# =============================================================================
+# Description:
+#   Точка входа CLI для GPU-Z.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.~gpuz.__main__
+#   Python API:
+#     from apps.~gpuz.__main__ import main
+#
+#     res = main()
+#
+# File: __main__.py
+# Project: ai-breadboard
+# Package: apps.~gpuz
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Точка входа CLI для GPU-Z."""
+
 import argparse
 import json
 from apps.gpuz.core.gpuz_service import GpuzService

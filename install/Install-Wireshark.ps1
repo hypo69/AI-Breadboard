@@ -1,3 +1,21 @@
+# =============================================================================
+# Process Name: AI-Breadboard Automation - Install-Wireshark Script
+# =============================================================================
+# Description:
+#   PowerShell-сценарий системного обслуживания и запуска (Install-Wireshark).
+#
+# Usage Examples:
+#   PowerShell Execution:
+#     .\Install-Wireshark.ps1
+#
+# File: Install-Wireshark.ps1
+# Project: ai-breadboard
+# Package: install
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:29
+# =============================================================================
+
 <#
 .SYNOPSIS
     Wireshark and TShark installation and verification module for AI Breadboard.

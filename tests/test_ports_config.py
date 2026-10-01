@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Ports Config
+# =============================================================================
+# Description:
+#   Тесты для проверки централизованного файла ports.json и синхронизации портов.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_ports_config import TestPortsJsonStructure
+#
+#     service = TestPortsJsonStructure()
+#
+# File: test_ports_config.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Тесты для проверки централизованного файла ports.json и синхронизации портов."""
+
 import json
 from pathlib import Path
 import pytest
@@ -69,9 +91,9 @@ class TestPortsUtility:
 
 class TestAppsConfigSyncWithPortsJson:
     """Проверка полного соответствия портов в apps/*/config.json и ports.json."""
-    APP_PATHS: dict[str, str] = {'windows_sysadmin': 'windows/sysadmin', 'network_terminal': 'windows/network', 'system_inspector': 'system_inspector', 'trading_terminal': 'trading_terminal', 'cloudflared_monitor': 'cloudflared_monitor', 'user_assistant': 'user_assistant', 'gcloud_monitor': 'gcloud_monitor', 'website_monitor': 'website_monitor', 'windows': 'windows', 'system_control_center': 'system_control_center', 'ai_breadboard_admin': 'ai_breadboard_admin', 'research_and_statistic': 'research_and_statistic', 'windows_startup_auditor': 'windows/startup', 'windows_defender': 'windows/defender', 'windows_backup_manager': 'windows/registry', 'software_transparency_scanner': 'software_transparency_scanner', 'helpdesk': 'helpdesk', 'librehardwaremonitor': 'librehardwaremonitor', 'chat': 'chat', 'telemetry_research': 'telemetry_research', 'enterprise_knowledge': 'enterprise_knowledge'}
+    APP_PATHS: dict[str, str] = {'windows_sysadmin': 'windows/sysadmin', 'network_terminal': 'windows/network', 'system_inspector': 'system_inspector', 'trading_terminal': 'trading_terminal', 'cloudflared_monitor': 'cloudflared_monitor', 'user_assistant': 'user_assistant', 'gcloud_monitor': 'gcloud_monitor', 'website_monitor': 'website_monitor', 'windows': 'windows', 'system_control_center': 'system_control_center', 'ai_breadboard_admin': 'ai_breadboard_admin', 'research_and_statistic': 'research_and_statistic', 'windows_startup_auditor': 'windows/startup', 'windows_defender': 'windows/defender', 'windows_backup_manager': 'windows/registry', 'software_transparency_scanner': 'software_transparency_scanner', 'helpdesk': 'helpdesk', 'chat': 'chat', 'telemetry_research': 'telemetry_research', 'enterprise_knowledge': 'enterprise_knowledge'}
 
-    @pytest.mark.parametrize('app_name, expected_port', [('windows_sysadmin', 8100), ('network_terminal', 8101), ('system_inspector', 8102), ('trading_terminal', 8103), ('cloudflared_monitor', 8104), ('user_assistant', 8105), ('gcloud_monitor', 8106), ('website_monitor', 8107), ('windows', 8108), ('system_control_center', 8109), ('ai_breadboard_admin', 8110), ('research_and_statistic', 8111), ('windows_startup_auditor', 8112), ('windows_defender', 8113), ('windows_backup_manager', 8114), ('software_transparency_scanner', 8115), ('helpdesk', 8116), ('librehardwaremonitor', 8126), ('chat', 8128), ('telemetry_research', 8129), ('enterprise_knowledge', 8181)])
+    @pytest.mark.parametrize('app_name, expected_port', [('windows_sysadmin', 8100), ('network_terminal', 8101), ('system_inspector', 8102), ('trading_terminal', 8103), ('cloudflared_monitor', 8104), ('user_assistant', 8105), ('gcloud_monitor', 8106), ('website_monitor', 8107), ('windows', 8108), ('system_control_center', 8109), ('ai_breadboard_admin', 8110), ('research_and_statistic', 8111), ('windows_startup_auditor', 8112), ('windows_defender', 8113), ('windows_backup_manager', 8114), ('software_transparency_scanner', 8115), ('helpdesk', 8116), ('chat', 8128), ('telemetry_research', 8129), ('enterprise_knowledge', 8181)])
     def test_app_config_matches_ports_json(self, app_name: str, expected_port: int) -> None:
         """Порт в config.json приложения должен в точности совпадать с ports.json."""
         assert get_port(app_name) == expected_port, f'В ports.json для {app_name} ожидался {expected_port}'

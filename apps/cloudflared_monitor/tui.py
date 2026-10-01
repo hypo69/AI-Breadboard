@@ -1,5 +1,27 @@
-"""Rich TUI dashboard renderer for Cloudflared Tunnel Monitor."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Cloudflared_Monitor - Tui
+# =============================================================================
+# Description:
+#   Rich TUI dashboard renderer for Cloudflared Tunnel Monitor.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.cloudflared_monitor.tui import render_ui
+#
+#     res = render_ui()
+#
+# File: tui.py
+# Project: ai-breadboard
+# Package: apps.cloudflared_monitor
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Rich TUI dashboard renderer for Cloudflared Tunnel Monitor."""
+
 import asyncio
 from typing import Any, List, Optional
 from logger import logger

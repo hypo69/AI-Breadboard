@@ -1,10 +1,30 @@
-"""
-tests/test_status_highlighter_gui.py — Тестирование системы программной подсветки статусов
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Status Highlighter Gui
+# =============================================================================
+# Description:
+#   tests/test_status_highlighter_gui.py — Тестирование системы программной подсветки статусов
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_status_highlighter_gui import test_status_highlighter_js_exists
+#
+#     res = test_status_highlighter_js_exists()
+#
+# File: test_status_highlighter_gui.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""tests/test_status_highlighter_gui.py — Тестирование системы программной подсветки статусов
 
 Данный модуль проверяет корректность файлов CSS и JS модуля status-highlighter.js,
 отвечающих за программное выделение включенных/активных состояний зеленым цветом,
-а выключенных/неактивных — красным.
-"""
+а выключенных/неактивных — красным."""
+
 import os
 import pytest
 

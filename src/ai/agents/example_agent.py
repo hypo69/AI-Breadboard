@@ -1,4 +1,25 @@
 # -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Example Agent Module
+# =============================================================================
+# Description:
+#   Примерный агент, демонстрирующий базовый шаблон создания агента.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.agents.example_agent import ExampleAgent
+#
+#     service = ExampleAgent()
+#
+# File: example_agent.py
+# Project: ai-breadboard
+# Package: src.ai.agents
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+from __future__ import annotations
 """Примерный агент, демонстрирующий базовый шаблон создания агента.
 
 Этот агент показывает, как:
@@ -6,10 +27,7 @@
 - лениво инициализировать LLM;
 - формировать системный промпт;
 - запускать ReAct‑агент;
-- возвращать структурированный JSON‑результат.
-"""
-
-from __future__ import annotations
+- возвращать структурированный JSON‑результат."""
 
 import asyncio
 import json

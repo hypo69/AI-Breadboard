@@ -1,7 +1,31 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Dev - Generate Coverage Report
+# =============================================================================
+# Description:
+#   Code coverage report generation utility.
+#
+# Usage Examples:
+#   CLI:
+#     python -m scripts.dev.generate_coverage_report
+#   Python API:
+#     from scripts.dev.generate_coverage_report import generate_coverage_report
+#
+#     res = generate_coverage_report()
+#
+# File: generate_coverage_report.py
+# Project: ai-breadboard
+# Package: scripts.dev
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Code coverage report generation utility.
 
 Generates comprehensive coverage analysis reports including terminal output,
 HTML report, and XML format. Supports threshold checking."""
+
 import os
 import sys
 from pathlib import Path

@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Install - Install
+# =============================================================================
+# Description:
+#   Поддерживаемые языки установщика.
+#
+# Usage Examples:
+#   CLI:
+#     python -m install.install
+#   Python API:
+#     from install.install import Language
+#
+#     service = Language()
+#
+# File: install.py
+# Project: ai-breadboard
+# Package: install
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:21:29
+# =============================================================================
+
+"""Поддерживаемые языки установщика."""
+
 import os
 import sys
 import json

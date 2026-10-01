@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard AI - Hardware Module
+# =============================================================================
+# Description:
+#   Represents the host computational profile and hardware accelerators.
+#
+# Usage Examples:
+#   Python API:
+#     from src.ai.orchestration.hardware import HardwareProfile
+#
+#     service = HardwareProfile()
+#     result = service.to_dict()
+#     print(result)
+#
+# File: hardware.py
+# Project: ai-breadboard
+# Package: src.ai.orchestration
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Represents the host computational profile and hardware accelerators."""
+
 import os
 import platform
 import subprocess

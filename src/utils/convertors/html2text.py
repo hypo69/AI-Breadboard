@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Html2Text Module
+# =============================================================================
+# Description:
+#   HTML to Markdown conversion utilities.
+#
+# Usage Examples:
+#   CLI:
+#     python -m src.utils.convertors.html2text
+#   Python API:
+#     from src.utils.convertors.html2text import Storage
+#
+#     service = Storage()
+#
+# File: html2text.py
+# Project: ai-breadboard
+# Package: src.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
 """HTML to Markdown conversion utilities."""
+
 'html2text: Turn HTML into equivalent Markdown-structured text.'
 __version__ = '3.1'
 __author__ = 'Aaron Swartz (me@aaronsw.com)'

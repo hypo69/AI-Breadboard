@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Fastapi Router Keys
+# =============================================================================
+# Description:
+#   Tests for internal helper functions in router_keys.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_fastapi_router_keys import TestRouterKeysHelpers
+#
+#     service = TestRouterKeysHelpers()
+#
+# File: test_fastapi_router_keys.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Tests for internal helper functions in router_keys."""
+
 from datetime import datetime, timezone
 from unittest.mock import patch
 from fastapi import FastAPI

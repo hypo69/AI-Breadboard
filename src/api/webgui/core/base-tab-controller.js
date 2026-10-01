@@ -1,4 +1,27 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Base-Tab-Controller Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля base-tab-controller.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/core/base-tab-controller.js?v=20261001_v1" type="module"></script>
+ *
+ *   JavaScript Import:
+ *     import { BaseTabController } from '/src/api/webgui/core/base-tab-controller.js';
+ *
+ * File: base-tab-controller.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/core
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * BaseTabController – базовый класс для всех контроллеров вкладок WebGUI.
  * Предоставляет жизненный цикл и вспомогательные методы (mount, unmount, событие, поллеры, API).
  */

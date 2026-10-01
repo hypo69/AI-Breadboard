@@ -1,9 +1,30 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Plugins User-Plugins Facebook -   Init  
+# =============================================================================
+# Description:
+#   Facebook Publisher plugin package.
+#
+# Usage Examples:
+#   Python API:
+#     from plugins.user-plugins.facebook.__init__ import plugin
+#
+#     res = plugin()
+#
+# File: __init__.py
+# Project: ai-breadboard
+# Package: plugins.user-plugins.facebook
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:23:11
+# =============================================================================
+
+from __future__ import annotations
 """Facebook Publisher plugin package.
 
 Provides Facebook Graph API integration for publishing posts, links, photos,
-inspecting pages, and conversational AI routing.
-"""
-from __future__ import annotations
+inspecting pages, and conversational AI routing."""
+
 from typing import Any, Optional
 from plugins.facebook.plugin import FacebookPlugin
 from plugins.facebook.client import FacebookGraphClient

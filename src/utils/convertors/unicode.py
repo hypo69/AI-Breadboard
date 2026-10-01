@@ -1,3 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Unicode Module
+# =============================================================================
+# Description:
+#   Decoding of unicode escape sequences in dictionaries, lists, or strings to readable text.
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.convertors.unicode import decode_unicode_escape
+#
+#     res = decode_unicode_escape()
+#     print(res)
+#
+# File: unicode.py
+# Project: ai-breadboard
+# Package: src.utils.convertors
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Decoding of unicode escape sequences in dictionaries, lists, or strings to readable text."""
+
 import re
 from typing import Dict, Any
 

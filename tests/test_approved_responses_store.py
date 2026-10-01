@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Approved Responses Store
+# =============================================================================
+# Description:
+#   Проверка сохранения и чтения одобренных ответов с системным контекстом и тегами.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_approved_responses_store import test_save_and_list_responses
+#
+#     res = test_save_and_list_responses()
+#
+# File: test_approved_responses_store.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Проверка сохранения и чтения одобренных ответов с системным контекстом и тегами."""
+
 import json
 from pathlib import Path
 from unittest.mock import patch

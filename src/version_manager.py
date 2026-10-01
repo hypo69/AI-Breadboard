@@ -1,5 +1,25 @@
-"""
-Version manager and automatic update handler.
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard CORE - Version Manager Module
+# =============================================================================
+# Description:
+#   Version manager and automatic update handler.
+#
+# Usage Examples:
+#   Python API:
+#     from src.version_manager import UpdateStatus
+#
+#     service = UpdateStatus()
+#
+# File: version_manager.py
+# Project: ai-breadboard
+# Package: src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Version manager and automatic update handler.
 Platform: Windows, Unix
 Synopsis: Version manager and automatic updates
 
@@ -7,8 +27,8 @@ Key functions:
 - Check version in Git repository
 - Download updated files
 - Create backups before updating
-- Cross-platform support (Windows, Linux, macOS)
-"""
+- Cross-platform support (Windows, Linux, macOS)"""
+
 import os
 import subprocess
 import shutil

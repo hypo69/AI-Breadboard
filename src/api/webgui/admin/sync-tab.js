@@ -1,4 +1,24 @@
 /**
+ * =============================================================================
+ * Process Name: AI-Breadboard UI - Sync-Tab Script
+ * =============================================================================
+ * Description:
+ *   Клиентский веб-скрипт модуля sync-tab.
+ *
+ * Usage Examples:
+ *   HTML Integration:
+ *     <script src="/src/api/webgui/admin/sync-tab.js?v=20261001_v1" type="module"></script>
+ *
+ * File: sync-tab.js
+ * Project: ai-breadboard
+ * Package: src/api/webgui/admin
+ * Author: hypo69
+ * Copyright: © 2026 hypo69
+ * Updated: 2026-10-01 13:13:56
+ * =============================================================================
+ */
+
+/**
  * Google Drive Sync Management Tab
  * Управление синхронизацией Google Drive через админ-панель
  */

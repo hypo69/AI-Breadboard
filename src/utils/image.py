@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Image Module
+# =============================================================================
+# Description:
+#   Custom exception for image-related errors.
+#
+# Usage Examples:
+#   CLI:
+#     python -m src.utils.image
+#   Python API:
+#     from src.utils.image import ImageError
+#
+#     service = ImageError()
+#
+# File: image.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Custom exception for image-related errors."""
+
 import aiohttp
 import aiofiles
 import asyncio
@@ -6,7 +31,7 @@ from pathlib import Path
 from typing import Optional, Union, Tuple
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
-from logger.logger import logger
+from logger import logger
 
 class ImageError(Exception):
     """Custom exception for image-related errors."""

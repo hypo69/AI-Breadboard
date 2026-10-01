@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test App Config Api
+# =============================================================================
+# Description:
+#   Скрипт/модуль системы AI-Breadboard (`test_app_config_api`).
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_app_config_api import client
+#
+#     res = client()
+#
+# File: test_app_config_api.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Скрипт/модуль системы AI-Breadboard (`test_app_config_api`)."""
+
 import json
 import pytest
 from fastapi import FastAPI

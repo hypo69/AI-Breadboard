@@ -1,5 +1,27 @@
-"""Сервис интеграции с CPU-Z."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps ~Cpuz Core - Cpuz Service
+# =============================================================================
+# Description:
+#   Сервис интеграции с CPU-Z.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.~cpuz.core.cpuz_service import CpuzService
+#
+#     service = CpuzService()
+#
+# File: cpuz_service.py
+# Project: ai-breadboard
+# Package: apps.~cpuz.core
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Сервис интеграции с CPU-Z."""
+
 import os
 import subprocess
 import tempfile

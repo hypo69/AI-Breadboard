@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test File Auditor
+# =============================================================================
+# Description:
+#   Тесты модуля аудита файловой системы и регистрации удаления файлов.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_file_auditor import auditor
+#
+#     res = auditor()
+#
+# File: test_file_auditor.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Тесты модуля аудита файловой системы и регистрации удаления файлов."""
+
 import pytest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient

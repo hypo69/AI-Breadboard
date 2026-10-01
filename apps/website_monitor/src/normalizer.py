@@ -1,5 +1,27 @@
-"""Data normalization and period comparison calculation engine."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Website_Monitor Src - Normalizer
+# =============================================================================
+# Description:
+#   Data normalization and period comparison calculation engine.
+#
+# Usage Examples:
+#   Python API:
+#     from apps.website_monitor.src.normalizer import MetricDelta
+#
+#     service = MetricDelta()
+#
+# File: normalizer.py
+# Project: ai-breadboard
+# Package: apps.website_monitor.src
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""Data normalization and period comparison calculation engine."""
+
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional

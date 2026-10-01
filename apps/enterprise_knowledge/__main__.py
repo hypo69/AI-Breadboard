@@ -1,5 +1,29 @@
-"""CLI-запуск Enterprise Knowledge Platform."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Apps Enterprise_Knowledge -   Main  
+# =============================================================================
+# Description:
+#   CLI-запуск Enterprise Knowledge Platform.
+#
+# Usage Examples:
+#   CLI:
+#     python -m apps.enterprise_knowledge.__main__
+#   Python API:
+#     from apps.enterprise_knowledge.__main__ import main
+#
+#     res = main()
+#
+# File: __main__.py
+# Project: ai-breadboard
+# Package: apps.enterprise_knowledge
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:28:28
+# =============================================================================
+
 from __future__ import annotations
+"""CLI-запуск Enterprise Knowledge Platform."""
+
 import argparse
 import asyncio
 import json

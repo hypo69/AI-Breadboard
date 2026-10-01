@@ -1,6 +1,26 @@
-"""
-Тесты модуля core/fastapi
-"""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Fastapi
+# =============================================================================
+# Description:
+#   Тесты модуля core/fastapi
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_fastapi import TestRouterAuth
+#
+#     service = TestRouterAuth()
+#
+# File: test_fastapi.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
+"""Тесты модуля core/fastapi"""
+
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from fastapi.testclient import TestClient

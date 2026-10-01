@@ -12,7 +12,7 @@ admin/
 ├── main-refactored.js                  # 🎯 Оркестратор (ИСПОЛЬЗУЕТСЯ)
 ├── main.js                             # Старый монолит (совместимость)
 ├── optimization-init.js                # Инициализация оптимизаций
-├── lazy-init-patch.js                  # Патч для ленивой загрузки
+
 ├── modules/                            # 📦 Модули
 │   ├── auth-handler.js                 # Аутентификация
 │   ├── tab-manager.js                  # Управление вкладками

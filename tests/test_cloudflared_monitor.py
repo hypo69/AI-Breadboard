@@ -1,4 +1,28 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Cloudflared Monitor
+# =============================================================================
+# Description:
+#   Unit tests for Cloudflared Monitor state engine and diagnostics.
+#
+# Usage Examples:
+#   CLI:
+#     python -m tests.test_cloudflared_monitor
+#   Python API:
+#     from tests.test_cloudflared_monitor import TestCloudflaredState
+#
+#     service = TestCloudflaredState()
+#
+# File: test_cloudflared_monitor.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 """Unit tests for Cloudflared Monitor state engine and diagnostics."""
+
 import os
 import tempfile
 import unittest

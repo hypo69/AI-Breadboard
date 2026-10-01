@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Ifttt Integration
+# =============================================================================
+# Description:
+#   Fixture providing a mocked aiohttp.ClientSession with successful response.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_ifttt_integration import TestIFTTTClient
+#
+#     service = TestIFTTTClient()
+#
+# File: test_ifttt_integration.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Fixture providing a mocked aiohttp.ClientSession with successful response."""
+
 import json
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock

@@ -1,4 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Scripts Cli - Utils
+# =============================================================================
+# Description:
+#   Cross-platform utility functions for system operations.
+#
+# Usage Examples:
+#   Python API:
+#     from scripts.cli.utils import find_available_port
+#
+#     res = find_available_port()
+#
+# File: utils.py
+# Project: ai-breadboard
+# Package: scripts.cli
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:27:07
+# =============================================================================
+
 """Cross-platform utility functions for system operations."""
+
 import os
 import sys
 import socket

@@ -1,5 +1,27 @@
-"""Тестирование SMTP-агента и модулей работы с почтой."""
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Tests - Test Smtp Mail Agent
+# =============================================================================
+# Description:
+#   Тестирование SMTP-агента и модулей работы с почтой.
+#
+# Usage Examples:
+#   Python API:
+#     from tests.test_smtp_mail_agent import mock_secrets_file
+#
+#     res = mock_secrets_file()
+#
+# File: test_smtp_mail_agent.py
+# Project: ai-breadboard
+# Package: tests
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:43
+# =============================================================================
+
 from __future__ import annotations
+"""Тестирование SMTP-агента и модулей работы с почтой."""
+
 import json
 import os
 import sys

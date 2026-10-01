@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard Sandbox - Test Bing
+# =============================================================================
+# Description:
+#   Скрипт/модуль системы AI-Breadboard (`test_bing`).
+#
+# Usage Examples:
+#   CLI:
+#     python -m SANDBOX.test_bing
+#   Python API:
+#     import SANDBOX.test_bing as test_bing
+#
+# File: test_bing.py
+# Project: ai-breadboard
+# Package: SANDBOX
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:30:04
+# =============================================================================
+
+"""Скрипт/модуль системы AI-Breadboard (`test_bing`)."""
+
 import asyncio
 import urllib.parse
 from bs4 import BeautifulSoup

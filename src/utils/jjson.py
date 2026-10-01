@@ -1,3 +1,27 @@
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Process Name: AI-Breadboard UTILS - Jjson Module
+# =============================================================================
+# Description:
+#   Модуль основной системы (`jjson`).
+#
+# Usage Examples:
+#   Python API:
+#     from src.utils.jjson import j_dumps
+#
+#     res = j_dumps()
+#     print(res)
+#
+# File: jjson.py
+# Project: ai-breadboard
+# Package: src.utils
+# Author: hypo69
+# Copyright: © 2026 hypo69
+# Updated: 2026-10-01 13:13:56
+# =============================================================================
+
+"""Модуль основной системы (`jjson`)."""
+
 from datetime import datetime
 import copy
 from math import log
@@ -16,7 +40,7 @@ import json
 import pandas as pd
 from types import SimpleNamespace
 from collections import OrderedDict
-from logger.logger import logger
+from logger import logger
 from .convertors.dict import dict2ns
 from .printer import pprint
 
