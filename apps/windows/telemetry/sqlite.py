@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-03 23:16:00
+# Updated: 2026-10-04 00:16:00
 # =============================================================================
 
 from __future__ import annotations
@@ -1317,7 +1317,7 @@ class TelemetryStorage:
                 cpu_total_percent, cpu_frequency_mhz, memory_total_gb, memory_used_gb,
                 memory_percent, swap_percent, gpu_load_percent, gpu_temp_c,
                 disk_read_bytes_sec, disk_write_bytes_sec, disk_read_count_sec,
-                disk_write_count_sec, network_sent_bytes_sec, network_recv_bytes_sec, hardware_audit
+                disk_write_count_sec, network_sent_bytes_sec, network_recv_bytes_sec
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             ts_str, now_epoch, hostname, uptime, os_name, os_build, os_install_date, disks_json,
@@ -1965,6 +1965,54 @@ class TelemetryStorage:
                     SELECT * FROM system_snapshots
                     ORDER BY id DESC
                     LIMIT ?
+                ''', (limit,))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_latest_cpu(self) -> Optional[Dict[str, Any]]:
+        """Извлекает последние метрики процессора из таблицы system_snapshots в SQLite.
+
+        Returns:
+            Optional[Dict[str, Any]]: Словарь с полями cpu_total_percent, cpu_frequency_mhz, timestamp или None.
+        """
+        self.flush()
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT id, timestamp, created_at, hostname, cpu_total_percent, cpu_frequency_mhz
+                FROM system_snapshots
+                ORDER BY id DESC
+                LIMIT 1;
+            ''')
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def get_cpu_history(self, limit: int = 60, since_epoch: Optional[float] = None) -> List[Dict[str, Any]]:
+        """Извлекает историю нагрузки процессора из таблицы system_snapshots в SQLite.
+
+        Args:
+            limit: Максимальное количество записей (по умолчанию 60).
+            since_epoch: Начальная временная метка UNIX epoch.
+
+        Returns:
+            List[Dict[str, Any]]: Список исторических срезов нагрузки CPU.
+        """
+        self.flush()
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+            if since_epoch is not None:
+                cursor.execute('''
+                    SELECT id, timestamp, created_at, cpu_total_percent, cpu_frequency_mhz
+                    FROM system_snapshots
+                    WHERE created_at >= ?
+                    ORDER BY id DESC
+                    LIMIT ?;
+                ''', (since_epoch, limit))
+            else:
+                cursor.execute('''
+                    SELECT id, timestamp, created_at, cpu_total_percent, cpu_frequency_mhz
+                    FROM system_snapshots
+                    ORDER BY id DESC
+                    LIMIT ?;
                 ''', (limit,))
             return [dict(row) for row in cursor.fetchall()]
 

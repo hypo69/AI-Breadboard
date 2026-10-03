@@ -17,7 +17,7 @@
  * Package: src/api/webgui/core
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:13:56
+ * Updated: 2026-10-04 00:27:00
  * =============================================================================
  */
 
@@ -26,11 +26,11 @@
  * Экспортирует методы getAll(), getById(id), getFiltered(appsStatusMap, role).
  */
 export const TAB_DEFINITIONS = [
-  { id: 'about_system', label: 'О системе', i18nKey: 'auto___d32ca0', icon: 'ℹ️', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261001_v1', js: '/html/about_system_tab/main.js?v=20261001_v1' },
+  { id: 'about_system', label: 'О системе', i18nKey: 'auto___d32ca0', icon: 'ℹ️', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261004_v4', js: '/html/about_system_tab/main.js?v=20261004_v4' },
   { id: 'scenarios', label: 'Сценарии', i18nKey: 'auto___ddaf0e', icon: '💬', tab: 'scenarios', tabId: 'tab-scenarios', html: '/html/scenarios_tab/index.html?v=20260925_v2', js: '/html/scenarios_tab/main.js?v=20260925_v2' },
   { id: 'chat', label: 'Чат', i18nKey: 'auto___8c77e4', icon: '💬', tab: 'chat', tabId: 'tab-chat', html: '/html/chat/index.html?v=20260923_v5', js: '/html/chat/main.js?v=20260923_v5' },
   { id: 'network_terminal', label: 'Сеть', i18nKey: 'auto___f6df40', icon: '🌐', tab: 'network', tabId: 'tab-network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
-  { id: 'system_inspector', label: 'Инспектор системы', i18nKey: 'auto___4324be', icon: 'bi-graph-up-arrow', tab: 'system-inspector', tabId: 'tab-system-inspector', html: '/html/system_inspector_tab/index.html?v=20260926_v1', js: '/html/system_inspector_tab/main.js?v=20260926_v1' },
+  { id: 'system_inspector', label: 'Инспектор системы', i18nKey: 'auto___4324be', icon: 'bi-graph-up-arrow', tab: 'system-load-inspector', tabId: 'tab-system-load-inspector', html: '/html/system_inspector_tab/index.html?v=20260926_v1', js: '/html/system_inspector_tab/main.js?v=20260926_v1' },
   { id: 'windows_sysadmin', label: 'Windows Sysadmin', icon: 'bi-server', tab: 'windows-admin', tabId: 'tab-windows-admin', html: '/html/windows_admin_tab/index.html', js: '/html/windows_admin_tab/main.js' },
   { id: 'system_control_center', label: 'System Control', icon: 'bi-tools', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html?v=20260925_v1', js: '/html/system_control_tab/main.js?v=20260925_v1' },
   { id: 'system_log_viewer', label: 'Логи системы', i18nKey: 'auto___6e28ee', icon: '📋', tab: 'system-logs', tabId: 'tab-system-logs', html: '/html/system_logs_tab/index.html', js: '/html/system_logs_tab/main.js' },

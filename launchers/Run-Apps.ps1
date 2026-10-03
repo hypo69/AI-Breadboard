@@ -239,7 +239,7 @@ foreach ($app in $appScripts) {
     if ($app.Folder -eq "system_control_center") { $aliases += @("system_control", "control_center", "tab-system-control") }
     if ($app.Folder -eq "trading_terminal") { $aliases += @("trading", "tab-trading") }
     if ($app.Folder -eq "network_terminal") { $aliases += @("network", "tab-network-terminal") }
-    if ($app.Folder -eq "system_inspector") { $aliases += @("inspector", "tab-system-inspector") }
+    if ($app.Folder -eq "system_inspector") { $aliases += @("inspector", "tab-system-inspector", "tab-system-load-inspector", "system_load_inspector") }
     if ($app.Folder -eq "cloudflared_monitor") { $aliases += @("cloudflared", "tab-cloudflared") }
     if ($app.Folder -eq "gcloud_monitor") { $aliases += @("gcloud", "google_cloud", "tab-gcloud") }
     if ($app.Folder -eq "website_monitor") { $aliases += @("website", "website_intelligence", "tab-website-monitor") }

@@ -512,7 +512,7 @@ class DeepDiagnosticsEngine:
                         'temperature_c': d.temperature_c,
                         'status': status_str,
                     })
-                disks.sort(key=lambda x: int(''.join(filter(str.isdigit, str(x.get('device_id', '0')))) or 0)
+                disks.sort(key=lambda x: int(''.join(filter(str.isdigit, str(x.get('device_id', '0')))) or 0))
         except Exception as ex:
             logger.debug(f'Ошибка сбора физических дисков через WindowsStorageSensor: {ex}')
         if not disks and PSUTIL_AVAILABLE:
@@ -795,4 +795,4 @@ class DeepDiagnosticsEngine:
             vss=self.collect_vss_telemetry(),
             users=self.collect_users_telemetry(),
         )
-"
+

@@ -40,11 +40,11 @@ class TestAdminAppsTabs:
         assert 'id="appsTabsDropdown"' in content
         assert 'data-tab="tab-trading"' in content
         assert 'data-tab="tab-network"' in content
-        assert 'data-tab="tab-system-inspector"' in content
+        assert 'data-tab="tab-system-load-inspector"' in content
         assert 'data-tab="tab-about-system"' in content
         assert 'id="tab-trading"' in content
         assert 'id="tab-network"' in content
-        assert 'id="tab-system-inspector"' in content
+        assert 'id="tab-system-load-inspector"' in content
         assert 'id="tab-about-system"' in content
 
     def test_admin_main_js_loads_apps_tabs(self):

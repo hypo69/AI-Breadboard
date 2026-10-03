@@ -18,7 +18,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 00:23:00
 # =============================================================================
 
 from __future__ import annotations
@@ -553,9 +553,9 @@ APPS_REGISTRY: List[Dict[str, Any]] = [
     {
         "id": "system_inspector",
         "key": "system_inspector",
-        "tab": "tab-system-inspector",
+        "tab": "tab-system-load-inspector",
         "folder": "system_inspector",
-        "aliases": ["system_inspector", "inspector", "tab-system-inspector"],
+        "aliases": ["system_inspector", "inspector", "tab-system-load-inspector", "tab-system-inspector", "system_load_inspector"],
         "name": "System Inspector",
         "ru_name": "Потребление ресурсов",
         "icon": "🖥️",

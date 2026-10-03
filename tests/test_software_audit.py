@@ -16,13 +16,15 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-03 23:57:00
 # =============================================================================
 
-"""Тест успешной инициализации движка аудита."""
+"""Тесты движка аудита программного обеспечения и коллектора ПО."""
 
 import pytest
 from unittest.mock import MagicMock, patch
+from apps.windows.core.audits.software_collector import SoftwareCollector
+from apps.windows.core.models import FullAuditReport
 from apps.windows.core.software_audit import SoftwareAuditEngine
 
 @pytest.fixture
@@ -44,3 +46,24 @@ def test_generate_audit_report_structure(mock_winreg):
         assert report is not None
         assert report.total_apps == 0
         assert report.timestamp is not None
+
+def test_software_collector_collect_and_to_dict():
+    """Тест работы SoftwareCollector и сериализации to_dict без ошибок AttributeError."""
+    collector = SoftwareCollector()
+    result = collector.collect()
+    assert result is not None
+    result_dict = result.to_dict()
+    assert isinstance(result_dict, dict)
+    assert 'findings' in result_dict
+    assert isinstance(result_dict['findings'], list)
+    for finding in result_dict['findings']:
+        assert isinstance(finding['actions'], list)
+        for act in finding['actions']:
+            assert isinstance(act, dict)
+            assert 'action_id' in act
+
+    report = FullAuditReport(domains={'software': result})
+    report_dict = report.to_dict()
+    assert isinstance(report_dict, dict)
+    assert 'domains' in report_dict
+    assert 'software' in report_dict['domains']

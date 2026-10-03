@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-03 23:20:00
+# Updated: 2026-10-04 00:16:00
 # =============================================================================
 
 from __future__ import annotations
@@ -129,10 +129,27 @@ class SystemCollector:
         if os.name == 'nt':
             try:
                 import winreg
-                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, 'SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion') as key:
-                    val, _ = winreg.QueryValueEx(key, 'InstallDate')
-                    if val:
-                        os_install_date = datetime.fromtimestamp(val).strftime('%d.%m.%Y %H:%M')
+                for access in (winreg.KEY_READ | winreg.KEY_WOW64_64KEY, winreg.KEY_READ):
+                    try:
+                        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\Microsoft\Windows NT\CurrentVersion', 0, access) as key:
+                            try:
+                                val, _ = winreg.QueryValueEx(key, 'InstallDate')
+                                if val and int(val) > 0:
+                                    os_install_date = datetime.fromtimestamp(int(val)).strftime('%d.%m.%Y %H:%M')
+                                    break
+                            except Exception:
+                                pass
+                            try:
+                                val, _ = winreg.QueryValueEx(key, 'InstallTime')
+                                if val and int(val) > 0:
+                                    epoch_sec = (int(val) / 10000000.0) - 11644473600.0
+                                    if epoch_sec > 0:
+                                        os_install_date = datetime.fromtimestamp(epoch_sec).strftime('%d.%m.%Y %H:%M')
+                                        break
+                            except Exception:
+                                pass
+                    except Exception:
+                        continue
             except Exception as ex:
                 logger.debug(f'Failed to query Windows InstallDate from registry: {ex}')
         self._identity_cached = {'hostname': hostname, 'username': full_username, 'os_build': os_build, 'os_install_date': os_install_date, 'system_language': sys_lang_display, 'user_locale': user_locale, 'system_locale': system_locale, 'timezone': timezone_str, 'codepage': codepage, 'input_languages': input_languages}
@@ -1530,6 +1547,26 @@ class SystemCollector:
             List[Dict[str, Any]]: List of system snapshots from database.
         """
         return self.storage.get_snapshots(limit=limit, since_epoch=since_epoch)
+
+    def get_latest_cpu_from_db(self) -> Optional[Dict[str, Any]]:
+        """Извлекает последние метрики процессора из базы данных SQLite.
+
+        Returns:
+            Optional[Dict[str, Any]]: Метрики процессора из SQLite.
+        """
+        return self.storage.get_latest_cpu()
+
+    def get_cpu_history_from_db(self, limit: int = 60, since_epoch: Optional[float] = None) -> List[Dict[str, Any]]:
+        """Извлекает историю нагрузки процессора из базы данных SQLite.
+
+        Args:
+            limit: Количество записей.
+            since_epoch: Начальное время UNIX epoch.
+
+        Returns:
+            List[Dict[str, Any]]: Исторические срезы нагрузки CPU.
+        """
+        return self.storage.get_cpu_history(limit=limit, since_epoch=since_epoch)
 
     def get_process_history(self, name: Optional[str]=None, pid: Optional[int]=None, limit: int=100) -> List[Dict[str, Any]]:
         """Retrieve historical process metrics from SQLite database.

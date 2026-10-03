@@ -16,7 +16,7 @@
 # Package: apps.windows.core.audits
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-03 23:56:00
 # =============================================================================
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ import time
 import winreg
 from typing import Any, Dict, List
 from logger import logger
-from apps.windows.core.models import AuditFinding, DomainAuditResult, RiskLevel
+from apps.windows.core.models import ActionType, AuditFinding, DomainAuditResult, RemediationAction, RiskLevel
 
 class SoftwareCollector:
     """Коллектор инвентаря установленного ПО и связанных системных сущностей."""
@@ -62,7 +62,17 @@ class SoftwareCollector:
             status_text = f'Последний запуск: {last_run}' if last_run else 'Ни разу не запускалась (нет записей UserAssist/Prefetch)'
             actions = []
             if uninstall_str:
-                actions.append({'action_id': f"uninstall_{name[:20].lower().replace(' ', '_')}", 'action_type': 'custom_command', 'title': f"Удалить неиспользуемое ПО '{name}'", 'description': f'Команда деинсталляции: {uninstall_str}', 'target': name, 'risk': 'caution', 'execution_command': uninstall_str})
+                actions.append(
+                    RemediationAction(
+                        action_id=f"uninstall_{name[:20].lower().replace(' ', '_')}",
+                        action_type=ActionType.CUSTOM_COMMAND,
+                        title=f"Удалить неиспользуемое ПО '{name}'",
+                        description=f'Команда деинсталляции: {uninstall_str}',
+                        target=name,
+                        risk=RiskLevel.CAUTION,
+                        execution_command=uninstall_str,
+                    )
+                )
             findings.append(AuditFinding(domain='software', category='dormant_software', title=f'Неиспользуемое / давно не запускавшееся ПО: {name}', description=f"Приложение '{name}' ({purpose or 'прикладное ПО'}). {status_text} (всего запусков: {run_count}).", severity=RiskLevel.INFO, evidence=app, actions=actions))
         for app in apps:
             name = app.get('display_name') or app.get('name') or ''

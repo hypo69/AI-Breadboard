@@ -368,8 +368,8 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-network' && typeof window.initNetworkTab === 'function') {
     console.log('[AdminInterface] Switching to network tab...');
     window.initNetworkTab();
-  } else if (cleanId === 'tab-system-inspector' && typeof window.initSystemInspectorTab === 'function') {
-    console.log('[AdminInterface] Switching to system inspector tab...');
+  } else if ((cleanId === 'tab-system-load-inspector' || cleanId === 'tab-system-inspector') && typeof window.initSystemInspectorTab === 'function') {
+    console.log('[AdminInterface] Switching to system load inspector tab...');
     window.initSystemInspectorTab();
   } else if (cleanId === 'tab-about-system' && typeof window.initAboutSystemTab === 'function') {
     console.log('[AdminInterface] Switching to about system tab...');
@@ -411,8 +411,8 @@ function onTabSwitched(targetId) {
 function switchTab(targetId) {
   if (!targetId) return;
   let cleanId = targetId.startsWith('#') ? targetId.slice(1) : targetId;
-  if (cleanId === 'observability' || cleanId === 'tab-observability') {
-    cleanId = 'tab-system-inspector';
+  if (cleanId === 'observability' || cleanId === 'tab-observability' || cleanId === 'system_inspector' || cleanId === 'tab-system-inspector') {
+    cleanId = 'tab-system-load-inspector';
   }
   const tabDef = TabRegistry.getById(cleanId);
   if (!tabDef) {
@@ -613,7 +613,7 @@ async function initInterface() {
     loadTabContent('helpi18n.t('auto__html_help_index_html_v_cb_html_help_main_js_v_cb_apps_const_apptabdefs_id__b8fc43')about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20260926_v2', js: '/html/about_system_tab/main.js?v=20260926_v2' },
     { id: 'trading_terminal', tab: 'trading', html: '/html/trading_tab/index.html', js: '/html/trading_tab/main.js' },
     { id: 'network_terminal', tab: 'network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
-    { id: 'system_inspector', tab: 'system-inspector', html: '/html/system_inspector_tab/index.html?v=20260926_v2', js: '/html/system_inspector_tab/main.js?v=20260926_v2' },
+    { id: 'system_inspector', tab: 'system-load-inspector', html: '/html/system_inspector_tab/index.html?v=20260926_v2', js: '/html/system_inspector_tab/main.js?v=20260926_v2' },
     { id: 'chat', tab: 'chat', html: '/html/chat/index.html', js: '/html/chat/main.js' },
     { id: 'scenarios', tab: 'scenarios', html: '/html/scenarios_tab/index.html', js: '/html/scenarios_tab/main.js' },
     { id: 'user_assistant', tab: 'user-assistant', html: '/html/user_assistant_tab/index.html', js: '/html/user_assistant_tab/main.js' },

@@ -16,7 +16,7 @@
 # Package: apps.windows.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-03 23:56:00
 # =============================================================================
 
 from __future__ import annotations
@@ -175,8 +175,6 @@ class UserAssistParser:
                 return AppExecutionInfo(last_run_time=last_run, run_count=actual_count, focus_time_seconds=0, source_artifact='UserAssist', raw_path=raw_path)
         except struct.error:
             return None
-        '# TODO: вернуть корректное значение'
-        logger.error('Функция _parse_userassist_entry вернула пустой результат')
         return None
 
 class PrefetchScanner:
@@ -343,8 +341,6 @@ class SoftwareAuditEngine:
                 continue
             if cand in prefetch_history:
                 return AppExecutionInfo(last_run_time=prefetch_history[cand], run_count=1, focus_time_seconds=0, source_artifact='Prefetch', raw_path=cand)
-        '# TODO: вернуть корректное значение'
-        logger.error('Функция _find_execution_info вернула пустой результат')
         return None
 
     def generate_audit_report(self) -> SoftwareAuditReport:

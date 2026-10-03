@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 00:16:00
 # =============================================================================
 
 from __future__ import annotations
@@ -114,6 +114,20 @@ class TcSetProviderPayload(BaseModel):
         default=True,
         description="Флаг сохранения изменений в конфигурационный файл tc.json.",
     )
+
+
+class TcCpuResponse(BaseModel):
+    """Модель ответа метрик процессора из базы данных телеметрии."""
+    total_percent: float = Field(default=0.0, description="Загрузка CPU в процентах")
+    frequency_mhz: float = Field(default=0.0, description="Текущая частота CPU в МГц")
+    physical_cores: int = Field(default=6, description="Количество физических ядер")
+    logical_cores: int = Field(default=12, description="Количество логических потоков")
+    model: str = Field(default="CPU", description="Модель процессора")
+    display_val: str = Field(default="0.0%", description="Отображаемое значение загрузки")
+    display_cores: str = Field(default="6 Физических / 12 Потоков", description="Строка с ядрами и потоками")
+    display_freq: str = Field(default="", description="Строка с частотой")
+    timestamp: str = Field(default="", description="Временная метка снимка из базы данных")
+    source: str = Field(default="telemetry.db", description="Источник данных")
 
 
 # -----------------------------------------------------------------------------
@@ -628,6 +642,69 @@ def init_router() -> APIRouter:
         collector = get_collector()
         sensors = collector.get_hardware_sensors()
         return {"sensors": [{"name": s.name, "value": s.value, "unit": s.unit} for s in sensors]}
+
+    @router.get("/cpu", response_model=TcCpuResponse)
+    @router.get("/cpu/load", response_model=TcCpuResponse)
+    async def get_tc_cpu(request: Request) -> TcCpuResponse:
+        """Получение текущей загрузки CPU из базы данных SQLite (telemetry.db)."""
+        collector = get_collector()
+        latest_cpu = collector.get_latest_cpu_from_db()
+
+        phys_cores = os.cpu_count() or 6
+        log_cores = os.cpu_count() or 12
+        try:
+            import psutil
+            phys_cores = psutil.cpu_count(logical=False) or phys_cores
+            log_cores = psutil.cpu_count(logical=True) or log_cores
+        except Exception:
+            pass
+
+        cpu_model = "CPU"
+        try:
+            import platform
+            cpu_model = platform.processor() or f"{phys_cores}-Core Processor"
+        except Exception:
+            pass
+
+        if latest_cpu and latest_cpu.get("cpu_total_percent") is not None:
+            pct = float(latest_cpu["cpu_total_percent"])
+            freq = float(latest_cpu.get("cpu_frequency_mhz") or 0.0)
+            ts = str(latest_cpu.get("timestamp") or "")
+            src = "telemetry.db"
+        else:
+            # Fallback: прямой запрос через collector
+            cpu_m = await collector.get_cpu_metrics()
+            pct = float(cpu_m.total_percent or 0.0)
+            freq = float(cpu_m.frequency_mhz or 0.0)
+            cpu_model = cpu_m.model or cpu_model
+            ts = ""
+            src = "live_collector"
+
+        freq_txt = f"{int(freq)} MHz" if freq > 0 else ""
+        return TcCpuResponse(
+            total_percent=round(pct, 1),
+            frequency_mhz=round(freq, 0),
+            physical_cores=phys_cores,
+            logical_cores=log_cores,
+            model=cpu_model,
+            display_val=f"{pct:.1f}%",
+            display_cores=f"{phys_cores} Физических / {log_cores} Потоков",
+            display_freq=freq_txt,
+            timestamp=ts,
+            source=src,
+        )
+
+    @router.get("/cpu/history")
+    async def get_tc_cpu_history(request: Request, limit: int = 60) -> Dict[str, Any]:
+        """Получение истории загрузки CPU из базы данных SQLite (telemetry.db)."""
+        collector = get_collector()
+        history = collector.get_cpu_history_from_db(limit=limit)
+        return {
+            "status": "ok",
+            "count": len(history),
+            "history": history,
+            "source": "telemetry.db",
+        }
 
     @router.post("/trigger-diagnostic")
     async def trigger_diagnostic(request: Request, process_limit: int = 20) -> Dict[str, Any]:

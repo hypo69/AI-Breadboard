@@ -18,7 +18,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-04 00:16:00
 # =============================================================================
 
 """Unit tests for TC System Inspector FastAPI router endpoints."""
@@ -27,6 +27,7 @@ import unittest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from apps.windows.api.routers.router_tc import init_router
+from apps.windows.api.routers.router_system import init_router as init_system_router
 
 
 class TestSystemInspectorRouter(unittest.TestCase):
@@ -42,6 +43,49 @@ class TestSystemInspectorRouter(unittest.TestCase):
         data = response.json()
         self.assertIn('hostname', data)
         self.assertIn('process_count', data)
+
+    def test_get_cpu(self):
+        """Тест эндпоинтов /api/v1/tc/cpu и /api/v1/tc/cpu/load."""
+        app = FastAPI()
+        app.include_router(init_router())
+        test_client = TestClient(app)
+        response = test_client.get('/api/v1/tc/cpu')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('total_percent', data)
+        self.assertIn('physical_cores', data)
+        self.assertIn('logical_cores', data)
+        self.assertIn('display_val', data)
+        self.assertIn('display_cores', data)
+        self.assertIn('source', data)
+
+        res_load = test_client.get('/api/v1/tc/cpu/load')
+        self.assertEqual(res_load.status_code, 200)
+        self.assertEqual(res_load.json()['display_val'], data['display_val'])
+
+    def test_get_cpu_history(self):
+        """Тест эндпоинта /api/v1/tc/cpu/history."""
+        app = FastAPI()
+        app.include_router(init_router())
+        test_client = TestClient(app)
+        response = test_client.get('/api/v1/tc/cpu/history?limit=10')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data.get('status'), 'ok')
+        self.assertIn('history', data)
+        self.assertIsInstance(data['history'], list)
+
+    def test_get_system_cpu(self):
+        """Тест эндпоинта /api/v1/system/cpu."""
+        app = FastAPI()
+        app.include_router(init_system_router())
+        test_client = TestClient(app)
+        response = test_client.get('/api/v1/system/cpu')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('total_percent', data)
+        self.assertIn('display_val', data)
+        self.assertIn('display_cores', data)
 
     def test_get_processes(self):
         """Тест эндпоинта /api/v1/tc/processes."""

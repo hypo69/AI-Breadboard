@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/system_inspector_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 00:16:00
  * =============================================================================
  */
 
@@ -522,6 +522,30 @@
       `\n======================================================`;
   }
 
+  async function fetchCpuLoadFromApi() {
+    try {
+      let res = await fetch('/api/v1/tc/cpu');
+      if (!res.ok) {
+        res = await fetch('/api/v1/system/cpu');
+      }
+      if (res.ok) {
+        const cpuData = await res.json();
+        const cpuVal = document.getElementById('sys-metric-cpu-val');
+        const cpuFill = document.getElementById('sys-metric-cpu-fill');
+        const cpuSub = document.getElementById('sys-metric-cpu-sub');
+
+        const pct = Number(cpuData.total_percent || 0);
+        if (cpuVal) cpuVal.innerText = cpuData.display_val || `${pct.toFixed(1)}%`;
+        if (cpuFill) cpuFill.style.width = `${Math.min(100, pct)}%`;
+        if (cpuSub) {
+          cpuSub.innerText = cpuData.display_cores || `${cpuData.physical_cores || '--'} Физических / ${cpuData.logical_cores || '--'} Потоков`;
+        }
+      }
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Ошибка получения загрузки CPU из API:', e);
+    }
+  }
+
   function updateTelemetryDashboard(snap) {
     if (!snap) return;
 
@@ -1007,7 +1031,7 @@
       sysWs = null;
     }
 
-    if (window.isTabActive && !window.isTabActive('tab-system-inspector')) {
+    if (window.isTabActive && !window.isTabActive('tab-system-load-inspector') && !window.isTabActive('tab-system-inspector')) {
       const statusBadge = document.getElementById('sys-conn-status');
       if (statusBadge) {
         statusBadge.className = 'badge rounded-pill bg-secondary text-light px-3 py-2';
@@ -1043,7 +1067,7 @@
 
       const scheduleReconnect = (reason) => {
         if (sysWsReconnectTimer) return;
-        if (window.isTabActive && !window.isTabActive('tab-system-inspector')) return;
+        if (window.isTabActive && !window.isTabActive('tab-system-load-inspector') && !window.isTabActive('tab-system-inspector')) return;
         console.warn(`[SystemInspectorTab] WebSocket отключен (${reason}). Автопереподключение через 3 сек...`);
         if (statusBadge) {
           statusBadge.className = 'badge rounded-pill bg-warning-subtle text-warning border border-warning px-3 py-2';
@@ -1051,7 +1075,7 @@
         }
         sysWsReconnectTimer = setTimeout(() => {
           sysWsReconnectTimer = null;
-          if (!window.isTabActive || window.isTabActive('tab-system-inspector')) {
+          if (!window.isTabActive || window.isTabActive('tab-system-load-inspector') || window.isTabActive('tab-system-inspector')) {
             connectSystemWebSocket();
           }
         }, 3000);
@@ -1069,7 +1093,7 @@
       console.error('[SystemInspectorTab] Ошибка инициализации WebSocket:', err);
       sysWsReconnectTimer = setTimeout(() => {
         sysWsReconnectTimer = null;
-        if (!window.isTabActive || window.isTabActive('tab-system-inspector')) {
+        if (!window.isTabActive || window.isTabActive('tab-system-load-inspector') || window.isTabActive('tab-system-inspector')) {
           connectSystemWebSocket();
         }
       }, 5000);
@@ -2651,18 +2675,19 @@
   function setupSysSensorInterval(seconds) {
     _currentUiRefreshSeconds = seconds;
     const pollHandler = async () => {
+      await fetchCpuLoadFromApi();
       await fetchLhmSensors();
       await fetchLiveFileEvents();
     };
     if (window.registerTabPoller) {
-      window.registerTabPoller('tab-system-inspector', pollHandler, seconds * 1000, { immediate: false });
+      window.registerTabPoller('tab-system-load-inspector', pollHandler, seconds * 1000, { immediate: false });
     } else {
       if (window._sysSensorInterval) {
         clearInterval(window._sysSensorInterval);
         window._sysSensorInterval = null;
       }
       window._sysSensorInterval = setInterval(() => {
-        if (window.isTabActive ? window.isTabActive('tab-system-inspector') : true) {
+        if (window.isTabActive ? (window.isTabActive('tab-system-load-inspector') || window.isTabActive('tab-system-inspector')) : true) {
           pollHandler();
         }
       }, seconds * 1000);
@@ -2711,6 +2736,7 @@
   async function initSystemInspectorTab() {
     console.log('[SystemInspectorTab] Initializing...');
     bindTabEvents();
+    await fetchCpuLoadFromApi();
     await fetchLhmSensors();
     await fetchLiveFileEvents();
     await fetchNetworkActivity();
@@ -2734,7 +2760,7 @@
   }
 
   function activateSystemInspectorTab() {
-    if (window.isTabActive && !window.isTabActive('tab-system-inspector')) return;
+    if (window.isTabActive && !window.isTabActive('tab-system-load-inspector') && !window.isTabActive('tab-system-inspector')) return;
     console.log('[SystemInspectorTab] Tab activated, resuming telemetry stream...');
     connectSystemWebSocket();
   }

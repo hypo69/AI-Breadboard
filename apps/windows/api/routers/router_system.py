@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-03 23:06:00
+# Updated: 2026-10-04 00:16:00
 # =============================================================================
 
 from __future__ import annotations
@@ -80,6 +80,69 @@ def init_router(chat_model: Optional[Any] = None, **kwargs: Any) -> APIRouter:
     ) -> SystemSnapshot:
         """Retrieve live system load, hardware telemetry, and top processes snapshot."""
         return await collector.get_snapshot(process_limit=process_limit)
+
+    @router.get("/cpu")
+    @router.get("/cpu/load")
+    async def get_system_cpu() -> Dict[str, Any]:
+        """Получение текущей загрузки CPU из базы данных SQLite (telemetry.db)."""
+        import os
+        latest_cpu = collector.get_latest_cpu_from_db()
+
+        phys_cores = os.cpu_count() or 6
+        log_cores = os.cpu_count() or 12
+        try:
+            import psutil
+            phys_cores = psutil.cpu_count(logical=False) or phys_cores
+            log_cores = psutil.cpu_count(logical=True) or log_cores
+        except Exception:
+            pass
+
+        cpu_model = "CPU"
+        try:
+            import platform
+            cpu_model = platform.processor() or f"{phys_cores}-Core Processor"
+        except Exception:
+            pass
+
+        if latest_cpu and latest_cpu.get("cpu_total_percent") is not None:
+            pct = float(latest_cpu["cpu_total_percent"])
+            freq = float(latest_cpu.get("cpu_frequency_mhz") or 0.0)
+            ts = str(latest_cpu.get("timestamp") or "")
+            src = "telemetry.db"
+        else:
+            cpu_m = await collector.get_cpu_metrics()
+            pct = float(cpu_m.total_percent or 0.0)
+            freq = float(cpu_m.frequency_mhz or 0.0)
+            cpu_model = cpu_m.model or cpu_model
+            ts = ""
+            src = "live_collector"
+
+        freq_txt = f"{int(freq)} MHz" if freq > 0 else ""
+        return {
+            "total_percent": round(pct, 1),
+            "frequency_mhz": round(freq, 0),
+            "physical_cores": phys_cores,
+            "logical_cores": log_cores,
+            "model": cpu_model,
+            "display_val": f"{pct:.1f}%",
+            "display_cores": f"{phys_cores} Физических / {log_cores} Потоков",
+            "display_freq": freq_txt,
+            "timestamp": ts,
+            "source": src,
+        }
+
+    @router.get("/cpu/history")
+    async def get_system_cpu_history(
+        limit: int = Query(default=60, ge=1, le=500, description="Max history count")
+    ) -> Dict[str, Any]:
+        """Получение истории загрузки CPU из базы данных SQLite (telemetry.db)."""
+        history = collector.get_cpu_history_from_db(limit=limit)
+        return {
+            "status": "ok",
+            "count": len(history),
+            "history": history,
+            "source": "telemetry.db",
+        }
 
     @router.get("/processes", response_model=List[ProcessMetrics])
     async def list_processes(

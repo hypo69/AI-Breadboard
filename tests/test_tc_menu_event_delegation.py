@@ -112,7 +112,7 @@ class TestEventDelegationErrorScenarios:
     def test_apps_index_html_has_top_buttons_panes(self):
         """index.html должен содержать контейнеры tab-pane для всех верхних кнопок."""
         content = APPS_INDEX_HTML.read_text(encoding='utf-8')
-        assert 'id="tab-system-inspector"' in content
+        assert 'id="tab-system-load-inspector"' in content
         assert 'id="tab-system-control"' in content
         assert 'id="tab-defender"' in content
         assert 'id="tab-windows-admin"' in content

@@ -441,8 +441,10 @@ def init_router(app: Optional[Any]=None, state: Optional[Any]=None) -> APIRouter
     from apps.windows.core.software_transparency import init_software_transparency_router
     from apps.windows.api.router_capabilities import init_router as init_capabilities_router
     from apps.windows.wikillm.router import init_router as init_wikillm_router
+    from apps.windows.modules.programms_history_deep_researh.router import router as prog_history_router
     router.include_router(init_capabilities_router())
     router.include_router(init_wikillm_router())
+    router.include_router(prog_history_router)
     chat_prov = state.chat_model if state and hasattr(state, 'chat_model') else None
     router.include_router(init_software_transparency_router(chat_provider=chat_prov))
     return router

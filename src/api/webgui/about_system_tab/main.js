@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-03 22:36:00
+ * Updated: 2026-10-04 00:22:00
  * =============================================================================
  */
 
@@ -36,7 +36,7 @@
 // Package: src.api.webgui.about_system_tab
 // Author: hypo69
 // Copyright: © 2026 hypo69
-// Updated: 2026-10-03 22:36:00
+// Updated: 2026-10-04 00:22:00
 // =============================================================================
 
 (function () {
@@ -638,22 +638,18 @@
   }
 
   /**
-   * Загрузка сводных KPI-карточек и панели (8 индивидуальных API) из /api/v1/dashboard/*
+   * Загрузка 4 сводных KPI-карточек из /api/v1/dashboard/*
    */
   async function fetchKpiPanels(forceNetwork = false) {
     try {
       const config = CACHE_STRATEGY.PANEL_KPI || { ttl: 5000, strategy: 'stale-while-revalidate' };
       const opts = { ttl: config.ttl, strategy: config.strategy, forceNetwork };
 
-      const [osRes, secRes, chkRes, storRes, cpuRes, ramRes, gpuRes, ioRes] = await Promise.allSettled([
+      const [osRes, secRes, chkRes, storRes] = await Promise.allSettled([
         cachedFetch('/api/v1/dashboard/os', 'dash_os', opts),
         cachedFetch('/api/v1/dashboard/security', 'dash_sec', opts),
         cachedFetch('/api/v1/dashboard/checkpoints', 'dash_chk', opts),
-        cachedFetch('/api/v1/dashboard/storage', 'dash_stor', opts),
-        cachedFetch('/api/v1/dashboard/cpu', 'dash_cpu', opts),
-        cachedFetch('/api/v1/dashboard/ram', 'dash_ram', opts),
-        cachedFetch('/api/v1/dashboard/gpu', 'dash_gpu', opts),
-        cachedFetch('/api/v1/dashboard/disk_io', 'dash_io', opts)
+        cachedFetch('/api/v1/dashboard/storage', 'dash_stor', opts)
       ]);
 
       // 1. Платформа & ОС
@@ -684,51 +680,6 @@
         const data = storRes.value;
         if (data.display_title) setText('about-kpi-stor-title', data.display_title);
         if (data.display_subtitle) setText('about-kpi-stor-clean', data.display_subtitle);
-      }
-
-      // 5. Загрузка CPU
-      if (cpuRes.status === 'fulfilled' && cpuRes.value) {
-        const data = cpuRes.value;
-        if (data.display_val) setText('about-telemetry-cpu-val', data.display_val);
-        if (data.display_cores) setText('about-telemetry-cpu-cores', data.display_cores);
-        if (data.display_freq) setText('about-telemetry-cpu-freq', data.display_freq);
-        const cpuBar = document.getElementById('about-telemetry-cpu-bar');
-        if (cpuBar) {
-          const cpuPct = data.total_percent || 0;
-          cpuBar.style.width = `${Math.min(100, Math.max(0, cpuPct))}%`;
-          cpuBar.className = cpuPct > 85 ? 'about-sys-progress-bar bg-danger' : (cpuPct > 60 ? 'about-sys-progress-bar bg-warning' : 'about-sys-progress-bar bg-info');
-        }
-      }
-
-      // 6. Память (RAM)
-      if (ramRes.status === 'fulfilled' && ramRes.value) {
-        const data = ramRes.value;
-        if (data.display_val) setText('about-telemetry-ram-val', data.display_val);
-        if (data.display_sub) setText('about-telemetry-ram-sub', data.display_sub);
-        const ramBar = document.getElementById('about-telemetry-ram-bar');
-        if (ramBar) {
-          const ramPct = data.percent || 0;
-          ramBar.style.width = `${Math.min(100, Math.max(0, ramPct))}%`;
-          ramBar.className = ramPct > 85 ? 'about-sys-progress-bar bg-danger' : (ramPct > 65 ? 'about-sys-progress-bar bg-warning' : 'about-sys-progress-bar bg-info');
-        }
-      }
-
-      // 7. GPU Ускоритель
-      if (gpuRes.status === 'fulfilled' && gpuRes.value) {
-        const data = gpuRes.value;
-        if (data.display_name) setText('about-telemetry-gpu-name', data.display_name);
-        if (data.display_vram) setText('about-telemetry-gpu-vram', data.display_vram);
-        const badgeGpu = document.getElementById('about-telemetry-gpu-badge');
-        if (badgeGpu && data.badge) {
-          badgeGpu.textContent = data.badge;
-        }
-      }
-
-      // 8. Диск (C:) I/O
-      if (ioRes.status === 'fulfilled' && ioRes.value) {
-        const data = ioRes.value;
-        if (data.display_val) setText('about-telemetry-disk-val', data.display_val);
-        if (data.display_rates) setText('about-telemetry-disk-rates', data.display_rates);
       }
     } catch (err) {
       console.warn('[AboutSystemTab] fetchKpiPanels error:', err);
@@ -785,21 +736,9 @@
       setText('about-kpi-os-title', `${snap.os_name || 'Windows 11'} (${snap.cpu?.architecture || 'AMD64'})`);
       setText('about-kpi-os-host', `Host: ${host}`);
 
-      // 2. Telemetry Live Bar
+      // 2. Telemetry Live & Spec Table
       if (snap.cpu) {
-        const cpuPct = snap.cpu.total_percent || 0;
-        setText('about-telemetry-cpu-val', `${cpuPct.toFixed(1)}%`);
-        const cpuBar = document.getElementById('about-telemetry-cpu-bar');
-        if (cpuBar) {
-          cpuBar.style.width = `${Math.min(100, Math.max(0, cpuPct))}%`;
-          cpuBar.className = cpuPct > 85 ? 'about-sys-progress-bar bg-danger' : (cpuPct > 60 ? 'about-sys-progress-bar bg-warning' : 'about-sys-progress-bar bg-info');
-        }
-        const freqTxt = snap.cpu.frequency_mhz ? `${snap.cpu.frequency_mhz} MHz` : '';
-        setText('about-telemetry-cpu-freq', freqTxt);
-        const cores = snap.cpu.physical_cores || 6;
         const threads = snap.cpu.logical_cores || 12;
-        setText('about-telemetry-cpu-cores', `${cores} физ. / ${threads} Потоков`);
-
         // Specification Table CPU
         setText('about-spec-cpu', `${snap.cpu.model || 'Intel Processor'} (${threads} logical cores)`);
       }

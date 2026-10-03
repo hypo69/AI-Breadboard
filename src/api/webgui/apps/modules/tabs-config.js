@@ -17,21 +17,21 @@
  * Package: src/api/webgui/apps/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-03 22:58:00
+ * Updated: 2026-10-04 00:27:00
  * =============================================================================
  */
 
 /**
  * apps/modules/tabs-config.js — Реестр определений вкладок для интерфейса /apps
- * Updated: 2026-10-03 22:58:00
+ * Updated: 2026-10-04 00:27:00
  */
 
 export const APP_TAB_DEFS = [
-  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261003_v2', js: '/html/about_system_tab/main.js?v=20261003_v2' },
+  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261004_v4', js: '/html/about_system_tab/main.js?v=20261004_v4' },
   { id: 'scenarios', tab: 'scenarios', tabId: 'tab-scenarios', html: '/html/scenarios_tab/index.html?v=20260925_v2', js: '/html/scenarios_tab/main.js?v=20260925_v2' },
   { id: 'chat', tab: 'chat', tabId: 'tab-chat', html: '/html/chat/index.html?v=20260923_v5', js: '/html/chat/main.js?v=20260923_v5' },
   { id: 'network_terminal', tab: 'network', tabId: 'tab-network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
-  { id: 'system_inspector', tab: 'system-inspector', tabId: 'tab-system-inspector', html: '/html/system_inspector_tab/index.html?v=20260924_v5', js: '/html/system_inspector_tab/main.js?v=20260924_v5' },
+  { id: 'system_inspector', tab: 'system-load-inspector', tabId: 'tab-system-load-inspector', html: '/html/system_inspector_tab/index.html?v=20260924_v5', js: '/html/system_inspector_tab/main.js?v=20260924_v5' },
   { id: 'windows_sysadmin', tab: 'windows-admin', tabId: 'tab-windows-admin', html: '/html/windows_admin_tab/index.html', js: '/html/windows_admin_tab/main.js' },
   { id: 'system_control_center', tab: 'system-control', tabId: 'tab-system-control', html: '/html/system_control_tab/index.html?v=20260925_v1', js: '/html/system_control_tab/main.js?v=20260925_v1' },
   { id: 'system_log_viewer', tab: 'system-logs', tabId: 'tab-system-logs', html: '/html/system_logs_tab/index.html', js: '/html/system_logs_tab/main.js' },

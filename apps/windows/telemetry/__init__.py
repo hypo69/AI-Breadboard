@@ -75,7 +75,13 @@ from .w64_collector import (
     stop_w64_collector,
 )
 from .w64_etw_collector import AIW64ETWCollector
-from .init_db import get_default_telemetry_db_path, init_telemetry_database
+from apps.windows.telemetry_research.aggregator import TelemetryAggregator
+from apps.windows.telemetry_research.grouped_telemetry import GroupedTelemetryBuilder
+from apps.windows.telemetry_research.incident_detector import IncidentDetector
+from apps.windows.telemetry_research.reboot_analyzer import WindowsRebootAnalyzer
+from apps.windows.telemetry_research.hardware_auditor import HardwareAuditor
+from apps.windows.telemetry_research.deep_diagnostics import DeepDiagnosticsEngine
+from apps.windows.telemetry_research.hardware_history_manager import HardwareHistoryManager
 
 
 

@@ -16,7 +16,7 @@
 # Package: apps.windows.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-03 23:56:00
 # =============================================================================
 
 from __future__ import annotations
@@ -83,7 +83,15 @@ class AuditFinding:
 
     def to_dict(self) -> Dict[str, Any]:
         """Преобразование в словарь."""
-        return {'domain': self.domain, 'category': self.category, 'title': self.title, 'description': self.description, 'severity': self.severity.value, 'evidence': self.evidence, 'actions': [a.to_dict() for a in self.actions]}
+        return {
+            'domain': self.domain,
+            'category': self.category,
+            'title': self.title,
+            'description': self.description,
+            'severity': self.severity.value if hasattr(self.severity, 'value') else str(self.severity),
+            'evidence': self.evidence,
+            'actions': [a.to_dict() if hasattr(a, 'to_dict') else a for a in self.actions]
+        }
 
 @dataclass
 class DomainAuditResult:
@@ -128,7 +136,15 @@ class FullAuditReport:
 
     def to_dict(self) -> Dict[str, Any]:
         """Преобразование в словарь."""
-        return {'timestamp': self.timestamp.isoformat(), 'mode': self.mode, 'health_score': self.health_score.to_dict(), 'domains': {k: v.to_dict() for k, v in self.domains.items()}, 'ai_summary': self.ai_summary, 'ai_hypotheses': self.ai_hypotheses, 'proposed_actions': [a.to_dict() for a in self.proposed_actions]}
+        return {
+            'timestamp': self.timestamp.isoformat(),
+            'mode': self.mode,
+            'health_score': self.health_score.to_dict(),
+            'domains': {k: v.to_dict() for k, v in self.domains.items()},
+            'ai_summary': self.ai_summary,
+            'ai_hypotheses': self.ai_hypotheses,
+            'proposed_actions': [a.to_dict() if hasattr(a, 'to_dict') else a for a in self.proposed_actions]
+        }
 
 @dataclass
 class InvestigationReport:

@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui/about_system_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-# Updated: 2026-10-03 22:35:00
+Updated: 2026-10-04 00:27:00
 =============================================================================
 -->
 
@@ -643,6 +643,11 @@ Copyright: © 2026 hypo69
           <span id="about-kpi-os-host">Host: DELL-VOSTRO</span>
           <span class="badge bg-dark border border-secondary text-info py-0 px-1" id="about-spec-uptime">Uptime: --</span>
         </div>
+        <div class="about-sys-sub text-truncate text-muted d-flex align-items-center gap-1 mt-1" style="font-size: 0.72rem;">
+          <i class="bi bi-calendar-check text-info"></i>
+          <span>Установка:</span>
+          <span class="text-white-50" id="about-kpi-os-install">--</span>
+        </div>
       </div>
     </div>
 
@@ -698,86 +703,6 @@ Copyright: © 2026 hypo69
     </div>
   </div>
 
-  <!-- Live Resource Telemetry Bar -->
-  <div class="row g-2 mb-3">
-    <!-- CPU Utilization -->
-    <div class="col-12 col-sm-6 col-lg-3">
-      <div class="about-sys-card">
-        <div class="about-sys-label d-flex justify-content-between align-items-center">
-          <div class="d-flex align-items-center gap-1.5">
-            <i class="bi bi-cpu text-info"></i>
-            <span>Загрузка CPU</span>
-            <span id="about-telemetry-cpu-cores" class="small text-muted ms-1">6 физ. / 12 Потоков</span>
-          </div>
-          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="cpu" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История CPU из базы данных">
-            <i class="bi bi-clock-history"></i>
-          </button>
-        </div>
-        <div class="d-flex align-items-baseline justify-content-between mt-1">
-          <div class="about-sys-value text-info" id="about-telemetry-cpu-val">22.2%</div>
-          <span class="small text-muted" id="about-telemetry-cpu-freq">2900 MHz</span>
-        </div>
-        <div class="about-sys-progress-track mt-1.5">
-          <div class="about-sys-progress-bar bg-info" id="about-telemetry-cpu-bar" style="width: 22%;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Memory RAM -->
-    <div class="col-12 col-sm-6 col-lg-3">
-      <div class="about-sys-card">
-        <div class="about-sys-label d-flex justify-content-between align-items-center">
-          <div class="d-flex align-items-center gap-1.5">
-            <i class="bi bi-memory text-warning"></i>
-            <span>Память (RAM)</span>
-          </div>
-          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="memory" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История памяти RAM из базы данных">
-            <i class="bi bi-clock-history"></i>
-          </button>
-        </div>
-        <div class="about-sys-value text-warning text-truncate mt-1" id="about-telemetry-ram-val">18.7 / 31.8 GB</div>
-        <div class="about-sys-sub text-truncate" id="about-telemetry-ram-sub">58.0% занято (13.1 GB свободно)</div>
-        <div class="about-sys-progress-track mt-1.5">
-          <div class="about-sys-progress-bar bg-warning" id="about-telemetry-ram-bar" style="width: 58%;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- GPU Accelerator -->
-    <div class="col-12 col-sm-6 col-lg-3">
-      <div class="about-sys-card">
-        <div class="about-sys-label d-flex justify-content-between align-items-center">
-          <div class="d-flex align-items-center gap-1.5">
-            <i class="bi bi-gpu-card text-danger"></i>
-            <span>GPU Ускоритель</span>
-            <span id="about-telemetry-gpu-badge" class="badge bg-success-subtle text-success border border-success ms-1" style="font-size: 0.68rem;">CUDA + DirectML</span>
-          </div>
-          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="gpu" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История GPU из базы данных">
-            <i class="bi bi-clock-history"></i>
-          </button>
-        </div>
-        <div class="about-sys-value text-danger text-truncate mt-1" id="about-telemetry-gpu-name">GeForce GT 710</div>
-        <div class="about-sys-sub text-truncate" id="about-telemetry-gpu-vram">VRAM: 2.0 GB | Нагрузка: 0%</div>
-      </div>
-    </div>
-
-    <!-- Disk I/O Rate -->
-    <div class="col-12 col-sm-6 col-lg-3">
-      <div class="about-sys-card">
-        <div class="about-sys-label d-flex justify-content-between align-items-center">
-          <div class="d-flex align-items-center gap-1.5">
-            <i class="bi bi-speedometer2 text-info"></i>
-            <span>Диск (C:) I/O</span>
-          </div>
-          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="disk_io" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История Диск I/O из базы данных">
-            <i class="bi bi-clock-history"></i>
-          </button>
-        </div>
-        <div class="about-sys-value text-white text-truncate mt-1" id="about-telemetry-disk-val">0.00 MB/s</div>
-        <div class="about-sys-sub text-truncate" id="about-telemetry-disk-rates">Чтение: 0 КБ/с | Запись: 0 КБ/с</div>
-      </div>
-    </div>
-  </div>
 
 
   <!-- Reorganized Dual Master Panels: Hardware & Platform Specs vs User Environment & Security -->
@@ -900,7 +825,7 @@ Copyright: © 2026 hypo69
           </div>
           <span class="badge bg-secondary" id="about-disks-count">-- Drives</span>
         </div>
-        <div class="table-responsive" style="max-height: 440px; overflow-y: auto;">
+        <div class="table-responsive">
           <table class="table table-dark table-hover table-sm mb-0" style="font-size: 0.8rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
             <thead>
               <tr class="text-secondary border-secondary">
@@ -960,7 +885,7 @@ Copyright: © 2026 hypo69
           </div>
           <span class="badge bg-secondary" id="diag-wear-disks-count">0 дисков</span>
         </div>
-        <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
+        <div class="table-responsive">
           <table class="table table-dark table-hover table-sm mb-0" style="font-size: 0.82rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
             <thead>
               <tr class="text-secondary border-secondary">
@@ -1022,7 +947,7 @@ Copyright: © 2026 hypo69
                placeholder="Поиск компонентов..." style="max-width: 220px; font-size: 0.76rem; height: 26px;">
       </div>
     </div>
-    <div class="p-3" id="about-sys-tree-container" style="max-height: 500px; overflow-y: auto;">
+    <div class="p-3" id="about-sys-tree-container">
       <div class="text-center py-4 small text-muted">
         <div class="spinner-border spinner-border-sm text-info mb-2" role="status"></div>
         <div>Загрузка спецификации оборудования...</div>
