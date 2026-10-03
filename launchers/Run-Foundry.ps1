@@ -1,41 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run-Foundry Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Run-Foundry).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-Foundry.ps1
-#
-# File: Run-Foundry.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
-.SYNOPSIS
-    Microsoft Foundry local server launcher and management.
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Foundry
+=============================================================================
+Description:
+  Microsoft Foundry local server launcher and management
 
-.DESCRIPTION
-    Script for checking, running and managing local Microsoft AI Foundry service.
-    Uses CLI command 'foundry server start' and detects active port.
-    Supports cross-platform execution with automatic environment configuration.
-
-.PARAMETER Action
-    start | stop | restart | status
-
-.EXAMPLE
+Usage Examples:
+  PowerShell Execution:
     .\Run-Foundry.ps1
-    .\Run-Foundry.ps1 -Action restart
-    .\Run-Foundry.ps1 -Action stop
 
-.NOTES
-    Ported from legacy batch scripts for Windows PowerShell execution.
-    Automatically updates foundry_base_url in config.json on startup.
+File: Run-Foundry.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Microsoft Foundry local server launcher and management
+.DESCRIPTION
+    Script for checking, running and managing local Microsoft AI Foundry service
 #>
 
 [CmdletBinding()]

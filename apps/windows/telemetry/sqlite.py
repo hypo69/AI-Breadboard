@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-03 23:16:00
 # =============================================================================
 
 from __future__ import annotations
@@ -204,6 +204,7 @@ class TelemetryStorage:
                     uptime_seconds REAL,
                     os_name TEXT,
                     os_build TEXT,
+                    os_install_date TEXT,
                     disks_json TEXT,
                     cpu_total_percent REAL,
                     cpu_frequency_mhz REAL,
@@ -664,7 +665,7 @@ class TelemetryStorage:
             except Exception as migration_err:
                 logger.warning(f'Миграция telemetry_events: {migration_err}')
 
-            # Миграция: добавляем os_name, os_build, disks_json в system_snapshots
+            # Миграция: добавляем os_name, os_build, os_install_date, disks_json в system_snapshots
             try:
                 cursor.execute("PRAGMA table_info(system_snapshots)")
                 columns = [row[1] for row in cursor.fetchall()]
@@ -672,8 +673,10 @@ class TelemetryStorage:
                     cursor.execute("ALTER TABLE system_snapshots ADD COLUMN os_name TEXT")
                 if 'os_build' not in columns:
                     cursor.execute("ALTER TABLE system_snapshots ADD COLUMN os_build TEXT")
-                if 'disks_json' not in columns:
-                    cursor.execute("ALTER TABLE system_snapshots ADD COLUMN disks_json TEXT")
+                if 'os_install_date' not in columns:
+                    cursor.execute("ALTER TABLE system_snapshots ADD COLUMN os_install_date TEXT")
+                if 'hardware_audit' not in columns:
+                    cursor.execute("ALTER TABLE system_snapshots ADD COLUMN hardware_audit TEXT")
             except Exception as migration_err:
                 logger.warning(f'Миграция system_snapshots: {migration_err}')
 
@@ -706,6 +709,7 @@ class TelemetryStorage:
                 snap_cols = {row[1] for row in cursor.fetchall()}
                 if snap_cols:
                     expected_snap_cols = {
+                        'os_install_date': 'TEXT',
                         'uptime_seconds': 'REAL',
                         'cpu_frequency_mhz': 'REAL',
                         'swap_percent': 'REAL',
@@ -1261,6 +1265,7 @@ class TelemetryStorage:
             raw_procs = snapshot.top_processes or []
             os_name = snapshot.os_name or 'Windows'
             os_build = str(snapshot.os_build or '')
+            os_install_date = str(snapshot.os_install_date or '')
             disks_list = [d.model_dump() if hasattr(d, 'model_dump') else (vars(d) if not isinstance(d, dict) else d) for d in (snapshot.disks or [])]
             disks_json = json.dumps(disks_list, ensure_ascii=False, default=str) if disks_list else None
             ts_str = snapshot.timestamp
@@ -1269,6 +1274,7 @@ class TelemetryStorage:
             uptime = snap_data.get('uptime_seconds')
             os_name = snap_data.get('os_name') or 'Windows'
             os_build = str(snap_data.get('os_build') or '')
+            os_install_date = str(snap_data.get('os_install_date') or '')
             disks_val = snap_data.get('disks', [])
             disks_list = [d.model_dump() if hasattr(d, 'model_dump') else (vars(d) if not isinstance(d, dict) else d) for d in disks_val] if isinstance(disks_val, list) else []
             disks_json = json.dumps(disks_list, ensure_ascii=False, default=str) if disks_list else None
@@ -1307,14 +1313,14 @@ class TelemetryStorage:
 
         cursor.execute('''
             INSERT INTO system_snapshots (
-                timestamp, created_at, hostname, uptime_seconds, os_name, os_build, disks_json,
+                timestamp, created_at, hostname, uptime_seconds, os_name, os_build, os_install_date, disks_json,
                 cpu_total_percent, cpu_frequency_mhz, memory_total_gb, memory_used_gb,
                 memory_percent, swap_percent, gpu_load_percent, gpu_temp_c,
                 disk_read_bytes_sec, disk_write_bytes_sec, disk_read_count_sec,
-                disk_write_count_sec, network_sent_bytes_sec, network_recv_bytes_sec
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                disk_write_count_sec, network_sent_bytes_sec, network_recv_bytes_sec, hardware_audit
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
-            ts_str, now_epoch, hostname, uptime, os_name, os_build, disks_json,
+            ts_str, now_epoch, hostname, uptime, os_name, os_build, os_install_date, disks_json,
             cpu_pct, cpu_freq, mem_tot, mem_used,
             mem_pct, swap_pct, gpu_load, gpu_temp,
             disk_rb, disk_wb, disk_rc,

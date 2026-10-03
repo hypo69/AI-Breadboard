@@ -1,3 +1,4 @@
+<!-- Updated: 2026-10-01 20:58:00 -->
 # AI-Breadboard
 
 [![Documentation Status](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://hypo69.github.io/aibreadboard/)
@@ -6,7 +7,11 @@
 
 **AI-Breadboard** — модульная платформа для исследования, прототипирования и сравнения языковых моделей искусственного интеллекта. Название отсылает к «макетной плате» (breadboard) в электронике: разные модели подключаются как сменные компоненты через единую шину, без переписывания кода.
 
-Сделана для разработчиков, которые хотят экспериментировать с современными AI-моделями, строить агентов, автоматизировать задачи и создавать собственные инструменты — без глубокого погружения во внутреннее устройство каждого провайдера.
+> [!IMPORTANT]
+> **Философия и главная идея платформы:**  
+> *«Если рабочий процесс начинает состоять из слишком большого количества отдельных инструментов, это рано или поздно начинает бесить.»*
+
+Сделана для разработчиков, которые хотят экспериментировать с современными AI-моделями, строить агентов, автоматизировать задачи и создавать собственные инструменты — без глубокого погружения во внутреннее устройство каждого провайдера и без переключения между десятками разрозненных утилит.
 
 ---
 
@@ -15,6 +20,7 @@
 - [Назначение](#назначение)
 - [Возможности](#возможности)
 - [Архитектура](#архитектура)
+- [Технологический стек](#технологический-стек)
 - [Требования к системе](#требования-к-системе)
 - [Установка](#установка)
 - [Настройка](#настройка)
@@ -30,11 +36,11 @@
 
 Платформа решает несколько задач одновременно:
 
-- **Исследование моделей** — сравнивайте ответы Gemini, GPT-4, Ollama, DeepSeek и других в одном интерфейсе
-- **Прототипирование агентов** — создавайте ReAct-агентов с инструментами без написания инфраструктурного кода
-- **Автоматизация** — подключайте навыки (Skills) и плагины (Plugins) для автоматизации рутинных задач
-- **Личная база знаний** — индексируйте документы, почту, Telegram-каналы и ищите по ним через RAG
-- **Интеграция с внешними сервисами** — Google Workspace, Telegram, IFTTT, qBittorrent и другие
+- **Исследование моделей** — сравнивайте ответы Gemini, GPT-4, Ollama, DeepSeek, ONNX и других в одном интерфейсе.
+- **Прототипирование агентов** — создавайте ReAct-агентов с инструментами без написания инфраструктурного кода.
+- **Автоматизация** — подключайте навыки (Skills) и плагины (Plugins) для автоматизации рутинных задач.
+- **Личная база знаний** — индексируйте документы, почту, Telegram-каналы и ищите по ним через RAG.
+- **Интеграция с внешними сервисами** — Google Workspace, Telegram, IFTTT, qBittorrent и другие.
 
 ---
 
@@ -44,20 +50,19 @@
 
 Все модели доступны через единый интерфейс `UnifiedChatModel` с маршрутизацией по префиксу:
 
-| Провайдер | Префикс | Тип |
-|---|---|---|
-| Google Gemini SDK | `gemini-*` | ☁️ Облако |
-| Gemini CLI | `gemini_cli:<model>` | ☁️ Облако / CLI |
-| Antigravity AGY | `agy-<model>` | ☁️ Облако |
-| OpenAI / GPT-4 | `openai:<model>` | ☁️ Облако |
-| DeepSeek | `deepseek:<model>` | ☁️ Облако |
-| Groq | `groq:<model>` | ☁️ Облако |
-| Microsoft AI Foundry | `foundry:<model>` | 🌐 Локальный сервер |
-| Ollama | `ollama:<model>` | 🌐 Локальный сервер |
-| LM Studio | `lmstudio:<model>` | 🌐 Локальный сервер |
-| Windows AI (NPU/DirectML) | `windows_ai:<model>` | 💾 Локальный инференс |
-| ONNX / Olive | `onnx:<model>` | 💾 Локальный инференс |
-| Hugging Face Transformers | `hf:<model>` | 💾 Локальный инференс |
+| Провайдер | Префикс | Адаптер | Тип | Описание |
+|---|---|---|---|---|
+| Google Gemini SDK | `gemini:<model>` | `core/ai/gemini/` | ☁️ Облако | Direct Google GenAI SDK с пулингом ключей |
+| Gemini CLI | `gemini_cli:<model>` | `gemini_cli_chat.py` | ☁️ Облако / CLI | Локальный CLI-агент для Google Gemini |
+| Antigravity AGY | `agy:<model>` | `agy_chat.py` | ☁️ Облако | AGY SDK поверх моделей Gemini |
+| OpenAI | `openai:<model>` | `openai_compat_chat.py` | ☁️ Облако | OpenAI Cloud API (gpt-4o, gpt-4-turbo и др.) |
+| DeepSeek | `deepseek:<model>` | `openai_compat_chat.py` | ☁️ Облако | DeepSeek Cloud API (deepseek-chat, deepseek-reasoner) |
+| Groq | `groq:<model>` | `openai_compat_chat.py` | ☁️ Облако | Высокоскоростной облачный инференс |
+| Microsoft AI Foundry | `foundry:<model>` | `foundry_chat.py` | 🌐 Локальный сервер | OpenAI-совместимый сервер на порту 54837 |
+| Ollama | `ollama:<model>` | `ollama_chat.py` | 🌐 Локальный сервер | Инференс-сервер на http://localhost:11434 |
+| LM Studio | `lmstudio:<model>` | `openai_compat_chat.py` | 🌐 Локальный сервер | OpenAI-совместимый локальный сервер (http://localhost:1234) |
+| Windows AI / ONNX | `onnx:<model>` | `onnx_chat.py` | 💾 Локальный инференс | Модели на диске, ускорение DirectML/CPU/CUDA |
+| Hugging Face | `hf:<model>` | `hf_chat.py` | 💾 Локальный инференс | Модели на диске через HuggingFace Transformers |
 
 ### 🧩 Плагины (Plugins)
 
@@ -83,15 +88,11 @@
 
 27 инструментов для AI-агентов, регистрируемых в `SkillRegistry`:
 
-**Инфраструктура и разработка:** `project-installer`, `cert-installer`, `system-updater`, `file-saver`, `pdf-exporter`, `tdd-doc-gen`, `doc-generator`, `skill-factory`
-
-**Данные и хранилища:** `rag-search-manager`, `rag-cleaner`, `db-inspector`, `storage-controller`, `storage-tool`, `smart-deletion-duplicates`
-
-**Интеграции:** `google-workspace`, `gdrive-organizer`, `invoice-extractor`, `ifttt-controller`, `torrent-controller`
-
-**Медиа и контент:** `media-card-builder`, `media-data-collector`, `media-manager`
-
-**Бизнес и информация:** `employee-offboarding-monitor`, `news-reader`, `travel-agent`, `log-analyzer`, `web-chat-cli`
+- **Инфраструктура и разработка:** `project-installer`, `cert-installer`, `system-updater`, `file-saver`, `pdf-exporter`, `tdd-doc-gen`, `doc-generator`, `skill-factory`
+- **Данные и хранилища:** `rag-search-manager`, `rag-cleaner`, `db-inspector`, `storage-controller`, `storage-tool`, `smart-deletion-duplicates`
+- **Интеграции:** `google-workspace`, `gdrive-organizer`, `invoice-extractor`, `ifttt-controller`, `torrent-controller`
+- **Медиа и контент:** `media-card-builder`, `media-data-collector`, `media-manager`
+- **Бизнес и информация:** `employee-offboarding-monitor`, `news-reader`, `travel-agent`, `log-analyzer`, `web-chat-cli`
 
 ### 🔌 MCP Серверы
 
@@ -106,19 +107,26 @@
 - `agy_search_mcp_server` — интеграция с Antigravity
 - `gemini_cli_search_mcp_server` — компактный CLI-поиск по RAG
 
-### 📱 Микро-приложения (Apps)
+### 🖥️ Полноценные приложения и терминальные пространства (`/apps`)
 
-Автономные веб-сервисы на отдельных портах:
+В директории [`/apps`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps) размещены автономные доменные приложения, терминалы и мониторы, работающие на хосте и интегрированные с платформой:
 
-| Приложение | Порт | Назначение |
+| Приложение | Терминал / Путь | Описание |
 |---|---|---|
-| `windows_sysadmin` | 8100 | Управление службами Windows, Event Log, PowerShell |
-| `network_terminal` | 8101 | Диагностика сети, порты, SSL, трафик |
-| `system_inspector` | 8102 | GPU/NPU/CPU телеметрия, AI-ускорители |
-| `trading_terminal` | 8103 | Финансовые данные, графики, технический анализ |
-| `cloudflared_monitor` | 8104 | Мониторинг Cloudflare туннелей |
-| `user_assistant` | 8105 | Персональный ассистент, доступ к навыкам и плагинам |
-| `gcloud_monitor` | 8106 | GCP логи, метрики, AI-диагностика первопричин сбоев |
+| **AI Windows Diagnostic Center** | [`apps/windows`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/windows) | Центр диагностики и администрирования Windows (15 доменных коллекторов OS, железо, драйверы, SafeOps симуляция, WikiLLM база знаний) |
+| **Trading Terminal** | [`apps/trading_terminal`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/trading_terminal) | Биржевой терминал (тикеры в реальном времени, стакан цен, позиция, PnL и технический анализ) |
+| **Network Terminal** | [`apps/network_terminal`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/network_terminal) | Сетевой терминал (захват пакетов, протокольный анализ, сокеты и детекция аномалий трафика) |
+| **Google Cloud Monitor** | [`apps/gcloud_monitor`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/gcloud_monitor) | Монитор наблюдаемости GCP (Cloud Logging, метрики, IAM аудит, AI-диагностика сбоев) |
+| **Website Monitor** | [`apps/website_monitor`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/website_monitor) | Мониторинг веб-сайтов (GA4 Data API, Google Search Console, задержки и доступность) |
+| **Cloudflare Monitor** | [`apps/cloudflared_monitor`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/cloudflared_monitor) | Мониторинг и диагностика состояния Cloudflare туннелей |
+| **User Assistant** | [`apps/user_assistant`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/user_assistant) | Персональный ассистент (интеграция с Gmail, Google Календарем, файлами и агендой) |
+| **IT Support & Helpdesk** | [`apps/helpdesk`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/helpdesk) | Система обработки тикетов и поддержке IT-инфраструктуры |
+| **Wikipedia Research** | [`apps/wikipedia_research`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/wikipedia_research) | Исследовательский движок факт-чекинга по Wikipedia |
+| **Research & Statistics** | [`apps/research_and_statistic`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/research_and_statistic) | Терминал статистических исследований и анализа данных |
+| **AI Breadboard Admin** | [`apps/ai_breadboard_admin`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/ai_breadboard_admin) | Центральная панель администрирования платформы |
+
+> [!NOTE]
+> Внутри подсистемы [`apps/windows`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/windows) выстроена глубокая ИТ-архитектура: 15 коллекторов фактов (Clean, Performance, Drivers, Software, Integrity, Storage, Security, EventLog, Processes, Services, Tasks, Network, Update, Baseline, Postinstall), протокол безопасного исполнения SafeOps (Dry-run), подсистема самообучения WikiLLM и аппаратно-системный мониторинг. Подробнее см. в [apps/windows/README.md](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/windows/README.md).
 
 ### 🎙️ Обработка звука
 
@@ -141,41 +149,82 @@
 
 ## Архитектура
 
+```text
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                              ИНТЕРФЕЙСЫ ДОСТУПА                                  │
+├──────────────────────────────────────┬───────────────────────────────────────────┤
+│        Веб-интерфейс                 │           CLI-интерфейс                   │
+│   ┌─────────────────────────┐        │   ┌──────────────────────────────┐        │
+│   │   Веб-UI (/)            │        │   │  assist model ask "msg"      │        │
+│   │   • Чат                 │        │   │  • Запросы к моделям         │        │
+│   │   • RAG Поиск           │        │   │  • Управление провайдерами   │        │
+│   │   • Агенты              │        │   │  • Системные промпты         │        │
+│   └────────────┬────────────┘        │   └──────────────┬───────────────┘        │
+│                │                     │                  │                        │
+│         ┌──────▼──────┐              │           ┌──────▼─────┐                  │
+│         │ FastAPI     │              │           │  Python    │                  │
+│         │ Server      │              │           │  Scripts   │                  │
+│         └──────┬──────┘              │           │ (assist)   │                  │
+│                │                     │           └─────┬──────┘                  │
+└────────────────┼─────────────────────┴─────────────────┼─────────────────────────┘
+                 │                                       │
+                 └───────────────────┬───────────────────┘
+                                     │
+                        ┌────────────▼──────────────────┐
+                        │   RAG И ХРАНИЛИЩЕ             │
+                        │ • RAG Поиск                   │
+                        │ • Векторный индекс            │
+                        │ • База знаний (media.db)      │
+                        └────────────┬──────────────────┘
+                                     │  
+                        ┌────────────▼──────────────────┐
+                        │       AI ОРКЕСТРАТОР          │
+                        │       unified_chat.py         │
+                        │       model_manager.py        │
+                        └────────────┬──────────────────┘
+                                     │
+             ┌───────────────────────┼──────────────────────────┐
+             │                       │                          │
+        ┌────▼──────────┐    ┌───────▼────────┐     ┌───────────▼──────┐
+        │ 💾 ЛОКАЛЬНЫЕ  │    │ 🌐 ЛОКАЛЬНЫЕ   │     │ ☁️ ОБЛАЧНЫЕ      │
+        │   МОДЕЛИ      │    │  СЕРВЕРЫ        │     │     API         │
+        │ • ONNX        │    │ • Foundry       │     │ • Gemini SDK    │
+        │ • HuggingFace │    │ • Ollama        │     │ • Gemini CLI    │
+        │ • Transformers│    │ • LM Studio     │     │ • OpenAI        │
+        │ На диске      │    │ Локально        │     │ • DeepSeek      │
+        │ (RAM/VRAM)    │    │ запущенные      │     │ • Groq / AGY    │
+        └───────────────┘    └────────────────┘     └──────────────────┘
 ```
-┌─────────────────────────────────────────────────────┐
-│              ИНТЕРФЕЙСЫ ДОСТУПА                     │
-│  Веб-UI  │  CLI (assist)  │  REST API  │  WebSocket │
-└─────────────────────┬───────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────┐
-│           УРОВЕНЬ ПРИЛОЖЕНИЯ                        │
-│  UnifiedChatModel  │  ModelManager  │  Маршрутизация│
-└─────────────────────┬───────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────┐
-│           УРОВЕНЬ СЕРВИСОВ                          │
-│  RAG  │  Skills  │  Plugins  │  TTS  │  UserManager │
-└─────────────────────┬───────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────┐
-│           ПРОВАЙДЕРЫ                                │
-│  Gemini  │  OpenAI  │  Ollama  │  Foundry  │  ONNX  │
-└─────────────────────────────────────────────────────┘
+
+### Конвейер маршрутизации запросов
+
+```text
+Запрос пользователя → UnifiedChatModel._get_active_model(model_name)
+    ├── "foundry:qwen2.5-..."   → FoundryChatBase       → http://localhost:54837/v1
+    ├── "onnx:qwen2.5-..."      → ONNXChatBase          → Microsoft ONNX Runtime / Olive (DirectML)
+    ├── "hf:Qwen/..."           → HFChatBase            → Hugging Face Transformers
+    ├── "openai:gpt-4o"         → OpenAICompatChat      → OpenAI / DeepSeek / LM Studio API
+    ├── "gemini_cli:gemini-..." → GeminiCliChatBase     → подпроцесс gemini CLI
+    ├── "agy:gemini-..."        → AgyChatBase           → google.antigravity SDK
+    ├── "ollama:llama3.1"       → OllamaChatBase        → http://localhost:11434
+    └── "gemini:gemini-..."     → GoogleGenerativeAI    → Google GenAI SDK
 ```
 
 ### Ключевые системные сервисы
 
-Для обеспечения работы в реальном времени и контроля состояния в ядре системы (`main.py`) инициализируются два критически важных сервиса:
+1. **Оркестратор моделей (`ModelManager`)** — управляет жизненным циклом моделей: опрашивает провайдеры при запуске, кэширует их в памяти и автоматически исключает из ротации недоступные модели.
+2. **WebSocket-хаб (`WSHub`)** — центральный диспетчер real-time соединений. Позволяет серверу мгновенно транслировать потоковые ответы и системные уведомления.
+3. **Сборщик метрик (`MetricsCollector`)** — система мониторинга «здоровья» платформы. Предоставляет данные в формате Prometheus (`/health/metrics`).
 
-1.  **WebSocket-хаб (`WSHub`)** — центральный диспетчер real-time соединений.
-    *   **Зачем:** Позволяет серверу мгновенно отправлять данные в браузер (например, когда ИИ генерирует текст по одному слову).
-    *   **Каналы:** Поддерживает раздельные каналы для чата, потоковой передачи, голосовых команд и системных уведомлений.
-    *   **Управление:** Автоматически следит за активностью подключений (heartbeat) и делает рассылки (broadcast) сразу всем пользователям.
+---
 
-2.  **Сборщик метрик (`MetricsCollector`)** — система мониторинга «здоровья» платформы.
-    *   **Зачем:** Отслеживает производительность и стабильность без внешних баз данных.
-    *   **Что считает:** Количество успешных и ошибочных запросов по каждому API, время ответа сервера (latency), количество активных WebSocket-сессий и общее время работы (uptime).
-    *   **Интеграция:** Предоставляет данные в формате Prometheus (`/health/metrics`) для профессионального мониторинга.
+## Технологический стек
+
+- **Backend:** Python 3.10+, FastAPI, Uvicorn, AsyncIO, WebSockets, Server-Sent Events (SSE).
+- **AI Оркестратор:** `model_manager.py` + `unified_chat.py` — единая маршрутизация провайдеров (Foundry, Gemini CLI, AGY, Gemini SDK, Ollama, ONNX, Hugging Face).
+- **Поиск и RAG:** SQLite (`media.db`), FAISS, Sentence-Transformers, AST-индексатор.
+- **Frontend:** HTML5, CSS3, Vanilla JavaScript (ES Modules, i18next).
+- **Безопасность и сеть:** JWT-аутентификация, SSL через mkcert.
 
 ---
 
@@ -189,11 +238,11 @@
 - **Диск:** 2 ГБ свободного места
 - **Python:** 3.10, 3.11, 3.12 или 3.13
 - **Интернет:** требуется для облачных провайдеров
-- **API-ключ:** [Google Gemini API Key](https://aistudio.google.com/api-keys) (бесплатный лимит доступен)
+- **API-ключ:** [Google Gemini API Key](https://aistudio.google.com/api-keys) (доступен бесплатный лимит)
 
 ### Рекомендуемые (с локальными моделями)
 
-- **RAM:** 16 ГБ+ (для Ollama с большими моделями)
+- **RAM:** 16 ГБ+ (для Ollama и ONNX с большими моделями)
 - **Диск:** 50+ ГБ (5–30 ГБ на каждую локальную модель)
 - **GPU:** опционально (ускорение через DirectML/CUDA/NPU)
 
@@ -203,8 +252,8 @@
 |---|---|
 | Python | 3.10+ |
 | PowerShell | 5.1+ (Windows) или 7+ (рекомендуется) |
-| Git | любая актуальная |
-| mkcert | для SSL-сертификатов (устанавливается автоматически) |
+| Git | Любая актуальная |
+| mkcert | Для SSL-сертификатов (устанавливается автоматически) |
 
 ---
 
@@ -218,50 +267,33 @@
 irm https://raw.githubusercontent.com/hypo69/AI-Breadboard/master/install.ps1 | iex
 ```
 
-Скрипт автоматически выполнит все шаги установки.
-
-### Windows — клонирование репозитория
+### Клонирование репозитория
 
 ```powershell
+# Windows:
 git clone https://github.com/hypo69/AI-Breadboard.git
 cd AI-Breadboard
 .\install.ps1
-```
 
-### Linux / macOS
-
-```bash
+# Linux / macOS:
 git clone https://github.com/hypo69/AI-Breadboard.git
 cd AI-Breadboard
 bash install.sh
 ```
 
-### Что делает установщик
+### Модульная архитуктура установщика
 
-Установка состоит из 8 шагов:
+Процесс установки управляется главным скриптом и узкоспециализированными модулями:
 
-1. **Разблокировка файлов** — снятие метки веба (MOTW) с файлов Windows
-2. **Виртуальная среда** — создание `venv` с Python 3.10+
-3. **Обновление pip** — `pip`, `setuptools`, `wheel` до актуальных версий
-4. **Зависимости** — интерактивный выбор набора пакетов:
-   ```
-   [1] Полная установка (Core + AI + Utils) — РЕКОМЕНДУЕТСЯ
-   [2] Только основной сервер
-   [3] Core + AI модули
-   [4] Полная установка + Тесты и Документация (Dev)
-   [5] Пропустить
-   ```
-5. **SSL-сертификаты** — генерация локальных HTTPS-сертификатов через mkcert
-6. **Команда `assist`** — регистрация глобальной CLI-команды в PATH и профиле PowerShell
-7. **Проверка** — тест импортов ключевых модулей
-8. **Модели** — интерактивный выбор и загрузка локальных моделей (Ollama, Foundry, ONNX)
-
-По умолчанию платформа устанавливается в:
-```
-%LOCALAPPDATA%\AI Breadboard
-```
-
-При запуске установщика можно выбрать другой путь. Выбор сохраняется в переменную окружения `AIBREADBOARD_DIR`.
+- `install.ps1` / `install.sh` / `install.py` — главные оркестраторы
+- `install/Install-I18n.ps1` — мультиязычный интерфейс (RU, EN, ES, HE)
+- `install/Install-Directory.ps1` — выбор директории установки (по умолчанию `%LOCALAPPDATA%\AI Breadboard`)
+- `install/Install-Venv.ps1` — подготовка виртуальной среды Python
+- `install/Install-Deps.ps1` — установка зависимостей
+- `install/Install-Certs.ps1` — генерация локальных SSL-сертификатов
+- `install/Install-Cli.ps1` — регистрация глобальной команды `assist` в `%USERPROFILE%\.local\bin\`
+- `install/Install-Verify.ps1` — проверка целостности и импорта модулей
+- `install/Install-Models.ps1` — выбор и загрузка локальных моделей (Ollama, Foundry, ONNX)
 
 ### Ручная установка
 
@@ -286,7 +318,6 @@ pip install -r requirements.txt
 
 # 5. Конфигурация
 cp .env.example .env
-# Отредактируйте .env — добавьте API-ключи
 ```
 
 ### Структура пакетов зависимостей
@@ -299,7 +330,7 @@ cp .env.example .env
 | `requirements-utils.txt` | Pandas, Pillow, BeautifulSoup4 |
 | `requirements-test.txt` | pytest, pytest-asyncio, coverage |
 | `requirements-docs.txt` | MkDocs, Material theme |
-| `requirements.txt` | Все объединённые |
+| `requirements.txt` | Все объединённые зависимости |
 
 ---
 
@@ -307,7 +338,7 @@ cp .env.example .env
 
 ### Секреты и API-ключи — файл `.env`
 
-Скопируйте шаблон и заполните нужные значения:
+Скопируйте шаблон и заполните необходимые значения:
 
 ```bash
 cp .env.example .env
@@ -326,69 +357,7 @@ JWT_SECRET=сгенерируйте_случайную_строку
 ADMIN_PASSWORD=ваш_пароль
 ```
 
-Полный список переменных:
-
-```ini
-# --- Google ---
-GEMINI_API_KEY=
-GEMINI_API_KEY_1=          # дополнительные ключи для пула ротации
-GEMINI_API_KEY_2=
-AGY_API_KEY=               # Antigravity (опционально)
-
-# --- Облачные провайдеры ---
-OPENAI_API_KEY=
-HF_TOKEN=                  # Hugging Face (для закрытых моделей)
-
-# --- Локальные провайдеры ---
-FOUNDRY_API_KEY=           # только если Foundry требует авторизацию
-
-# --- Безопасность ---
-JWT_SECRET=
-ADMIN_PASSWORD=
-
-# --- Google OAuth (опционально) ---
-ENABLE_OAUTH=false
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
-
-# --- Telegram (опционально) ---
-TELEGRAM_BOT_TOKEN=
-
-# --- SMTP (опционально) ---
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=
-SMTP_PASSWORD=
-
-# --- Умный дом (опционально) ---
-IFTTT_WEBHOOK_KEY=
-
-# --- TTS голос по умолчанию ---
-TTS_VOICE=ru-RU-DmitryNeural
-
-# --- Туннели (опционально) ---
-CLOUDFLARE_TUNNEL_TOKEN=
-NGROCK_AUTOTOKEN=
-
-# --- SSL (опционально, переопределяет config.json) ---
-SSL_CERT_FILE=
-SSL_KEY_FILE=
-```
-
-> Файл `.env` никогда не коммитится в Git. Все публичные настройки (порты, модели, URL) хранятся в `config.json`.
-
-### Публичная конфигурация — файл `config.json`
-
-Содержит несекретные параметры:
-
-- `server` — хост, порт, настройки SSL
-- `ai` — провайдеры по умолчанию, списки моделей, параметры Foundry/AGY/Gemini CLI
-- `langchain`, `agents` — конфигурация ReAct-агентов и MCP-инструментов
-
-### Пул ключей Gemini
-
-Для обхода лимитов API поддерживается автоматическая ротация ключей. Добавьте несколько ключей в `.env`:
+Пул ключей Gemini поддерживается из коробки для авто-ротации при превышении лимитов:
 
 ```ini
 GEMINI_API_KEY_1=ключ_1
@@ -396,22 +365,13 @@ GEMINI_API_KEY_2=ключ_2
 GEMINI_API_KEY_3=ключ_3
 ```
 
-При достижении лимита одного ключа система автоматически переключается на следующий.
+### Публичная конфигурация — файл `config.json`
 
-### Настройка плагинов
+Содержит несекретные системные параметры:
 
-Каждый плагин имеет собственный `config.json` в своей директории и настраивается через Admin UI (`/admin` → вкладка Plugins) без перезапуска сервера.
-
-Пример настройки Telegram-бота:
-
-```json
-{
-  "token": "ваш_токен_от_BotFather",
-  "admin_ids": ["ваш_telegram_id"],
-  "notifications_enabled": true,
-  "api_base_url": "http://127.0.0.1:8000"
-}
-```
+- `server` — хост, порт, настройки SSL
+- `ai` — провайдеры по умолчанию, списки моделей, параметры Foundry/AGY/Gemini CLI
+- `langchain`, `agents` — конфигурация ReAct-агентов и MCP-инструментов
 
 ---
 
@@ -426,8 +386,6 @@ GEMINI_API_KEY_3=ключ_3
 # Прямой запуск Python
 .\venv\Scripts\python.exe main.py
 ```
-
-`run.ps1` автоматически проверяет доступность порта, запускает Foundry при необходимости и стартует FastAPI с SSL и авто-перезагрузкой.
 
 ### CLI-команда `assist`
 
@@ -448,21 +406,11 @@ assist config show    # показать config.json
 assist help           # полный справочник команд
 ```
 
-### Запуск микро-приложений
+### Запуск микро-приложений и бота
 
 ```powershell
-.\launchers\Run-Apps.ps1              # все приложения
-.\launchers\Run-WindowsAdmin.ps1      # windows_sysadmin (8100)
-.\launchers\Run-NetworkTerminal.ps1   # network_terminal (8101)
-.\launchers\Run-SystemInspector.ps1   # system_inspector (8102)
-.\launchers\Run-TradingTerminal.ps1   # trading_terminal (8103)
-.\launchers\Run-CloudflaredMonitor.ps1 # cloudflared_monitor (8104)
-```
-
-### Запуск Telegram-бота
-
-```powershell
-.\launchers\Run-TelegramBot.ps1 -Action start
+.\launchers\Run-Apps.ps1              # Все микро-приложения
+.\launchers\Run-TelegramBot.ps1 -Action start  # Telegram-бот
 ```
 
 ---
@@ -482,7 +430,7 @@ assist help           # полный справочник команд
 
 ## Устранение неполадок
 
-### PowerShell: «выполнение скриптов отключено»
+### Ошибка политики выполнения PowerShell
 
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
@@ -491,44 +439,27 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
 ### Порт 8000 занят
 
 ```powershell
+assist stop
+# Или вручную:
 netstat -ano | findstr :8000
 taskkill /PID <PID> /F
-# или
-assist stop
 ```
 
 ### Python не найден
 
-Установите Python 3.10+ с [python.org](https://www.python.org/downloads/), отметив **«Add python.exe to PATH»** при установке.
+Установите Python 3.10+ с [python.org](https://www.python.org/downloads/), отметив **«Add python.exe to PATH»**.
 
 ### Предупреждение SSL в браузере
 
 ```powershell
-# Добавить сертификат в доверенные корневые центры Windows
 certutil -addstore -f "Root" $env:USERPROFILE\.certs\localhost+2.pem
-```
-
-Или нажмите «Дополнительно» → «Перейти на localhost (небезопасно)».
-
-### Файлы логов
-
-| Файл | Содержимое |
-|---|---|
-| `logs/uvicorn_*.log` | Консольный вывод сервера |
-| `ai-breadboard/logs/fastapi.log` | Маршрутизация запросов FastAPI |
-| `ai-breadboard/logs/info.log` | Системные события |
-| `ai-breadboard/logs/errors.log` | Ошибки |
-| `ai-breadboard/logs/gemini.log` | Запросы к Gemini API |
-
-```powershell
-assist logs 100   # последние 100 строк через CLI
 ```
 
 ---
 
 ## Документация
 
-Полная документация на русском языке доступна в `docs/ru/`:
+Полная документация на русском языке доступна в директории `docs/ru/`:
 
 - [Начало работы](docs/ru/manual/getting-started.md)
 - [Установка](docs/ru/manual/installation.md)
@@ -537,11 +468,8 @@ assist logs 100   # последние 100 строк через CLI
 - [Каталог плагинов](docs/ru/plugins/catalog.md)
 - [Каталог MCP серверов](docs/ru/mcp/catalog.md)
 - [Каталог приложений](docs/ru/apps/catalog.md)
-- [Создание агентов](docs/ru/guides/creating-agents.md)
-- [Разработка плагинов](docs/ru/plugins/development.md)
-- [Разработка навыков](docs/ru/skills/development.md)
 
-Онлайн-документация: [Read the Docs](https://hypo69.github.io/aibreadboard/ru/) · [Локально](http://localhost:8000/docs) (после запуска `mkdocs serve`)
+ Онлайн-документация: [GitHub Pages](https://hypo69.github.io/aibreadboard/)
 
 ---
 

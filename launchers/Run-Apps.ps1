@@ -1,54 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run-Apps Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Run-Apps).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-Apps.ps1
-#
-# File: Run-Apps.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
-.SYNOPSIS
-    Universal multi-app orchestrator launcher for all /apps microservices.
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Apps
+=============================================================================
+Description:
+  Universal multi-app orchestrator launcher for all /apps microservices
 
+Usage Examples:
+  PowerShell Execution:
+    .\Run-Apps.ps1
+
+File: Run-Apps.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Universal multi-app orchestrator launcher for all /apps microservices
 .DESCRIPTION
     Starts, stops, restarts, or queries the status of all standalone microservices in /apps
-    according to configuration in config_tc.json or config.json:
-    - Windows System Administrator (Port 8100)
-    - Network Analyzer Terminal (Port 8101)
-    - System Inspector (Port 8102)
-    - Exchange Trading Desk (Port 8103)
-    - Cloudflare Tunnel Monitor (Port 8104)
-    - Google Cloud Monitor (Port 8106)
-    - Website Intelligence Monitor (Port 8107)
-
-.PARAMETER Action
-    Action to perform across all apps: 'start' (default), 'stop', 'restart', 'status'.
-
-.PARAMETER NewWindow
-    Launch all apps in visible standalone console windows.
-
-.PARAMETER ConfigFile
-    Configuration file to load app enablement from (default: config_tc.json or config.json).
-
-.PARAMETER Help
-    Display usage help for script (-Help, -h, --help).
-
-.EXAMPLE
-    .\launchers\Run-Apps.ps1
-    .\launchers\Run-Apps.ps1 -NewWindow
-    .\launchers\Run-Apps.ps1 -ConfigFile config_tc.json
-    .\launchers\Run-Apps.ps1 -Action status
-    .\launchers\Run-Apps.ps1 -Action stop
+    according to configuration in config_tc
 #>
 
 [CmdletBinding()]

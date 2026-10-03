@@ -1,95 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run-Telemetry Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Run-Telemetry).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-Telemetry.ps1
-#
-# File: Run-Telemetry.ps1
-# Project: ai-breadboard
-# Package: apps.windows.telemetry.launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
-# =============================================================================
-
-# Description:
-#   PowerShell-сценарий администрирования и автоматизации (Run-Telemetry).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-Telemetry.ps1
-#
-# File: Run-Telemetry.ps1
-# Project: ai-breadboard
-# Package: windows/telemetry/launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:04:40
-# =============================================================================
-
-# Description:
-#   PowerShell-сценарий системных операций и автоматизации (Run-Telemetry).
-#
-# Usage Examples:
-#   PowerShell:
-#     .\Run-Telemetry.ps1
-#
-# File: Run-Telemetry.ps1
-# Project: ai-breadboard
-# Package: windows/telemetry/launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 12:54:56
-# =============================================================================
-
 <#
-# Updated: 2026-10-01 09:28:00
-.SYNOPSIS
-    Лончер для управления фоновой службой системной телеметрии AI-Breadboard (ai-telemetry.exe).
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Telemetry
+=============================================================================
+Description:
+  Лончер для управления фоновой службой системной телеметрии AI-Breadboard (ai-telemetry
 
+Usage Examples:
+  PowerShell Execution:
+    .\Run-Telemetry.ps1
+
+File: Run-Telemetry.ps1
+Project: ai-breadboard
+Package: apps/windows/telemetry/launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Лончер для управления фоновой службой системной телеметрии AI-Breadboard (ai-telemetry
 .DESCRIPTION
     Запускает автономный процесс сбора телеметрии Windows под собственным системным
-    именем 'ai-telemetry.exe' (CPU, RAM, GPU, диски, сеть, топ процессов) в режимах:
-      - minimal: ультралегковесный быстрый цикл (28 мс замер, 120 МБ RAM, 0% CPU);
-      - hybrid:  быстрый минимал (5с) + периодический опрос тяжелых сенсоров (60с);
-      - full:    полный опрос всех сенсоров на каждом тике.
-    Поддерживает интеграцию с Windows Task Scheduler (WakeToRun) и автоинициализацию telemetry.db.
-
-.PARAMETER Action
-    Действие: 'tui' (по умолчанию), 'start', 'stop', 'restart', 'status', 'init-db',
-              'install-task', 'uninstall-task', 'status-task', 'get-errors', 'get-stdout'.
-
-.PARAMETER Interval
-    Интервал сбора быстрой телеметрии в секундах (по умолчанию 5.0).
-
-.PARAMETER HeavyInterval
-    Интервал сбора тяжелых сенсоров в секундах для hybrid режима (по умолчанию 60.0).
-
-.PARAMETER TopProcesses
-    Количество сохраняемых процессов с наибольшей нагрузкой (по умолчанию 10).
-
-.PARAMETER Mode
-    Режим работы: 'hybrid' (по умолчанию), 'minimal', 'full'.
-
-.PARAMETER Foreground
-    Запуск интерактивно в текущей консоли без фонового режима.
-
-.PARAMETER NewWindow
-    Запуск в отдельном окне терминала.
-
-.PARAMETER Help
-    Показать справочную информацию.
-
-.EXAMPLE
-    .\tlm.ps1                                            # Интерактивный TUI интерфейс
-    .\apps\windows\telemetry\Run-Telemetry.ps1           # Фоновый запуск (hybrid)
-    .\apps\windows\telemetry\Run-Telemetry.ps1 -Action status # Проверка статуса, PID и RAM
-    .\apps\windows\telemetry\Run-Telemetry.ps1 -Action init-db # Проверка и инициализация telemetry.db
-    .\apps\windows\telemetry\Run-Telemetry.ps1 -Action stop   # Остановка сервиса
+    именем 'ai-telemetry
 #>
 
 [CmdletBinding()]

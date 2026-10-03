@@ -13,7 +13,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-03 23:20:00
 # =============================================================================
 
 """Exports core system metrics models, sensor probers, and telemetry collectors."""
@@ -77,17 +77,7 @@ from .w64_collector import (
 from .w64_etw_collector import AIW64ETWCollector
 from .init_db import get_default_telemetry_db_path, init_telemetry_database
 
-# Реэкспорт компонентов аналитики из telemetry_research для обеспечения обратной совместимости
-# Прямые импорты из подмодулей избегают циклических зависимостей __init__.py
-from apps.windows.telemetry_research.hardware_auditor import HardwareAuditor
-from apps.windows.telemetry_research.hardware_history_manager import HardwareHistoryManager
-from apps.windows.telemetry_research.aggregator import TelemetryAggregator
-from apps.windows.telemetry_research.deep_diagnostics import DeepDiagnosticsEngine
-from apps.windows.telemetry_research.incident_detector import IncidentDetector
-from apps.windows.telemetry_research.reboot_analyzer import WindowsRebootAnalyzer
-from apps.windows.telemetry_research.grouped_telemetry import GroupedTelemetryBuilder
-from apps.windows.telemetry_research.compactor import TelemetryCompactor
-from apps.windows.telemetry_research.audit_startup_checker import AuditStartupChecker
+
 
 __all__ = [
     "AIW64Collector",
@@ -156,10 +146,10 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    """Lazy import to prevent circular dependency cycles and maintain backward compatibility."""
+    """Ленивый импорт диагностического движка для предотвращения циклических зависимостей."""
     if name in ("DiagnosticEngine", "SystemDiagnosticEngine"):
         from apps.windows.telemetry_research.diagnostic_engine import DiagnosticEngine, SystemDiagnosticEngine
         if name == "DiagnosticEngine":
             return DiagnosticEngine
         return SystemDiagnosticEngine
-    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")

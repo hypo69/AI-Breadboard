@@ -1,26 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Install-I18N Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Install-I18n).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Install-I18n.ps1
-#
-# File: Install-I18n.ps1
-# Project: ai-breadboard
-# Package: install
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:29
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Install I18N
+=============================================================================
+Description:
+  Модуль интернационализации (I18N) мастера установки AI Breadboard
+
+Usage Examples:
+  PowerShell Execution:
+    .\Install-I18n.ps1
+
+File: Install-I18n.ps1
+Project: ai-breadboard
+Package: install
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    Модуль интернационализации (I18N) мастера установки AI Breadboard.
+    Модуль интернационализации (I18N) мастера установки AI Breadboard
 .DESCRIPTION
-    Содержит словари локализации (RU, EN, ES, HE) и функции форматирования сообщений и выбора языка.
+    Содержит словари локализации (RU, EN, ES, HE) и функции форматирования сообщений и выбора языка
 #>
 
 $Global:I18N = @{

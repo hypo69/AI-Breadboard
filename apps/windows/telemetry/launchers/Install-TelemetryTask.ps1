@@ -1,78 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Install-Telemetrytask Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Install-TelemetryTask).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Install-TelemetryTask.ps1
-#
-# File: Install-TelemetryTask.ps1
-# Project: ai-breadboard
-# Package: apps.windows.telemetry.launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
-# =============================================================================
-
-# Description:
-#   PowerShell-сценарий администрирования и автоматизации (Install-TelemetryTask).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Install-TelemetryTask.ps1
-#
-# File: Install-TelemetryTask.ps1
-# Project: ai-breadboard
-# Package: windows/telemetry/launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:04:40
-# =============================================================================
-
-# Description:
-#   PowerShell-сценарий системных операций и автоматизации (Install-TelemetryTask).
-#
-# Usage Examples:
-#   PowerShell:
-#     .\Install-TelemetryTask.ps1
-#
-# File: Install-TelemetryTask.ps1
-# Project: ai-breadboard
-# Package: windows/telemetry/launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 12:54:56
-# =============================================================================
-
 <#
-# Updated: 2026-10-01 09:28:00
-.SYNOPSIS
-    Регистрация фоновой службы телеметрии AI-Breadboard в Windows Task Scheduler.
+=============================================================================
+Process Name: AI-Breadboard Automation - Install Telemetrytask
+=============================================================================
+Description:
+  Регистрация фоновой службы телеметрии AI-Breadboard в Windows Task Scheduler
 
+Usage Examples:
+  PowerShell Execution:
+    .\Install-TelemetryTask.ps1
+
+File: Install-TelemetryTask.ps1
+Project: ai-breadboard
+Package: apps/windows/telemetry/launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Регистрация фоновой службы телеметрии AI-Breadboard в Windows Task Scheduler
 .DESCRIPTION
     Создает задание в Планировщике заданий Windows (Task Scheduler) с именем
-    'AI-Breadboard-Telemetry'.
-    Запускает ai-telemetry.exe в фоновом режиме с флагом WakeToRun (продолжает
-    работать и будит систему для выполнения замеров, не прекращает работу при сне
-    или питании от батареи, перезапускается при сбоях).
-    Автоматически проверяет и инициализирует базу данных telemetry.db.
-
-.PARAMETER Mode
-    Режим сбора: 'hybrid' (по умолчанию), 'minimal', 'full'.
-
-.PARAMETER Interval
-    Интервал быстрого сбора в секундах (по умолчанию 5.0).
-
-.PARAMETER HeavyInterval
-    Интервал сбора тяжелых сенсоров в секундах (по умолчанию 60.0).
-
-.PARAMETER Uninstall
-    Удалить задание из Планировщика заданий.
-
-.PARAMETER Status
-    Проверить статус задания в Планировщике заданий.
+    'AI-Breadboard-Telemetry'
 #>
 
 [CmdletBinding()]

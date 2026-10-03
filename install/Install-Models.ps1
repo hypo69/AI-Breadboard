@@ -1,27 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Install-Models Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Install-Models).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Install-Models.ps1
-#
-# File: Install-Models.ps1
-# Project: ai-breadboard
-# Package: install
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:29
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Install Models
+=============================================================================
+Description:
+  Модуль выбора и скачивания моделей для локальных AI провайдеров
+
+Usage Examples:
+  PowerShell Execution:
+    .\Install-Models.ps1
+
+File: Install-Models.ps1
+Project: ai-breadboard
+Package: install
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    Модуль выбора и скачивания моделей для локальных AI провайдеров.
+    Модуль выбора и скачивания моделей для локальных AI провайдеров
 .DESCRIPTION
     Получает список доступных моделей от Ollama, Foundry и других локальных провайдеров,
-    предлагает пользователю выбрать модели для скачивания и загружает их.
+    предлагает пользователю выбрать модели для скачивания и загружает их
 #>
 
 param (

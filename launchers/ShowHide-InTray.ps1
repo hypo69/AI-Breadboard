@@ -1,63 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Showhide-Intray Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (ShowHide-InTray).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\ShowHide-InTray.ps1
-#
-# File: ShowHide-InTray.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Showhide Intray
+=============================================================================
+Description:
+  System tray companion and window visibility manager for AI Breadboard
+
+Usage Examples:
+  PowerShell Execution:
+    .\ShowHide-InTray.ps1
+
+File: ShowHide-InTray.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    System tray companion and window visibility manager for AI Breadboard.
-
+    System tray companion and window visibility manager for AI Breadboard
 .DESCRIPTION
-    Provides Windows System Tray integration for console and application windows.
-    Enables minimizing or hiding active console windows into the system tray,
-    intercepting accidental window closure, and controlling application lifecycle
-    via an interactive tray icon and context menu. Automatically loads brand
-    icons from webinterface assets (favicon.ico / icon48.png / icon256.png).
-
-.PARAMETER Action
-    Operation to perform: 'start' (init tray icon and hooks), 'hide', 'show', 'toggle', 'stop', 'status'.
-    Default: 'start'.
-
-.PARAMETER WebUrl
-    Target URL opened when selecting 'Open Web UI' from tray menu.
-    Default: 'http://localhost:8000/admin'.
-
-.PARAMETER Title
-    Tooltip and notification title for system tray icon.
-    Default: 'AI Breadboard'.
-
-.PARAMETER IconPath
-    Optional path to custom icon (.ico or .png). If not specified, automatically
-    discovered from webinterface assets.
-
-.PARAMETER HideNow
-    Immediately hide the console window upon initialization.
-
-.PARAMETER DisableCloseButton
-    Disable the console system menu close button ([X]) to prevent accidental process termination.
-
-.PARAMETER Help
-    Display usage help for script (-Help, -h, --help).
-
-.EXAMPLE
-    .\launchers\ShowHide-InTray.ps1
-    .\launchers\ShowHide-InTray.ps1 -Action hide
-    .\launchers\ShowHide-InTray.ps1 -Action show
-    .\launchers\ShowHide-InTray.ps1 -WebUrl "http://localhost:8000/admin" -DisableCloseButton
-    .\ShowHide-InTray.ps1 --help
+    Provides Windows System Tray integration for console and application windows
 #>
 
 [CmdletBinding()]

@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-03 22:12:00
 # =============================================================================
 
 from __future__ import annotations
@@ -30,7 +30,6 @@ try:
     from logger import logger
 except ImportError:
     from logger import logger
-# Updated: 2026-10-01 11:30:00
 from .collector import SystemCollector
 from apps.windows.telemetry_research.hardware_history_manager import HardwareHistoryManager
 from .sqlite import TelemetryStorage
@@ -67,15 +66,16 @@ class TelemetryLoggerService:
             config_manager: Менеджер конфигурации.
             db_cleanup_interval_sec: Интервал фонового контроля размера базы данных (сек).
         """
-        self.interval_sec = max(0.2, interval_sec)
-        self.top_processes = max(1, top_processes)
-        self.hardware_audit_interval_sec = max(5.0, hardware_audit_interval_sec)
-        self.rollup_interval_sec = max(5.0, rollup_interval_sec)
         self.config_manager = config_manager or TelemetryConfigManager()
+        self._custom_interval_set = (interval_sec != 5.0)
+        self.interval_sec = max(0.1, interval_sec if self._custom_interval_set else self.config_manager.get_interval_seconds())
+        self.top_processes = max(1, top_processes if top_processes != 20 else self.config_manager.get_effective_process_limit())
+        self.hardware_audit_interval_sec = max(1.0, hardware_audit_interval_sec if hardware_audit_interval_sec != 60.0 else self.config_manager.get_heavy_interval_seconds())
+        self.rollup_interval_sec = max(1.0, rollup_interval_sec if rollup_interval_sec != 30.0 else self.config_manager.get_aggregation_interval())
         self.collector = collector or SystemCollector()
         self.storage = storage or TelemetryStorage.get_instance()
         self.db_cleanup_interval_sec = max(
-            10.0,
+            5.0,
             db_cleanup_interval_sec if db_cleanup_interval_sec is not None else self.config_manager.get_db_cleanup_interval_seconds()
         )
 
@@ -192,11 +192,35 @@ class TelemetryLoggerService:
         logger.info(f'Фоновый сервис телеметрии остановлен. Всего тиков: {self._ticks_count}')
         return True
 
+    def sync_config_from_manager(self) -> bool:
+        """Синхронизирует интервалы и настройки сервиса из менеджера конфигурации при их изменении.
+
+        Returns:
+            bool: True если конфигурация изменилась и была применена, иначе False.
+        """
+        if self.config_manager.check_and_reload():
+            if not self._custom_interval_set:
+                self.interval_sec = max(0.1, self.config_manager.get_interval_seconds())
+            self.top_processes = max(1, self.config_manager.get_effective_process_limit())
+            self.hardware_audit_interval_sec = max(1.0, self.config_manager.get_heavy_interval_seconds())
+            self.db_cleanup_interval_sec = max(5.0, self.config_manager.get_db_cleanup_interval_seconds())
+            self.rollup_interval_sec = max(1.0, self.config_manager.get_aggregation_interval())
+            logger.info(
+                f"🔄 [Сервис телеметрии] Конфигурация config.json обновлена 'на лету': "
+                f"базовый={self.interval_sec}с, аудит железа={self.hardware_audit_interval_sec}с, "
+                f"очистка БД={self.db_cleanup_interval_sec}с, топ процессов={self.top_processes}"
+            )
+            return True
+        return False
+
     def _worker_loop(self) -> None:
         """Основной рабочий цикл фонового сбора метрик, записи в БД и аудита изменений."""
         while not self._stop_event.is_set():
             loop_start = time.time()
             try:
+                # Проверка изменения config.json 'на лету'
+                self.sync_config_from_manager()
+
                 loop = None
                 try:
                     loop = asyncio.get_event_loop()

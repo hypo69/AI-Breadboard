@@ -1,48 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Show-Tlm Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (show-tlm).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\show-tlm.ps1
-#
-# File: show-tlm.ps1
-# Project: ai-breadboard
-# Package: root
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:20:26
-# =============================================================================
-
 <#
-.SYNOPSIS
-    Лончер для запуска Web GUI исследования системной телеметрии (show-tlm.ps1).
+=============================================================================
+Process Name: AI-Breadboard Automation - Show Tlm
+=============================================================================
+Description:
+  Лончер для запуска Web GUI исследования системной телеметрии (show-tlm
 
+Usage Examples:
+  PowerShell Execution:
+    .\show-tlm.ps1
+
+File: show-tlm.ps1
+Project: ai-breadboard
+Package: root
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Лончер для запуска Web GUI исследования системной телеметрии (show-tlm
 .DESCRIPTION
     Запускает автономный FastAPI веб-сервер исследования телеметрии
-    (apps\windows\telemetry_research\main.py) и открывает интерактивный
-    дашборд с графиками, анализом аномалий, проверкой гипотез и журналом записей
-    в браузере по умолчанию.
-
-.PARAMETER Port
-    Порт для веб-сервера (по умолчанию 8090).
-
-.PARAMETER HostAddress
-    Хост/IP-адрес для привязки сервера (по умолчанию 127.0.0.1).
-
-.PARAMETER NoBrowser
-    Не открывать веб-браузер автоматически после запуска.
-
-.PARAMETER Reload
-    Включить режим автоперезагрузки FastAPI (Hot Reload для разработки).
-
-.EXAMPLE
-    .\show-tlm.ps1
-    .\show-tlm.ps1 -Port 8095
-    .\show-tlm.ps1 -NoBrowser
-    .\show-tlm.ps1 -Reload
+    (apps\windows\telemetry_research\main
 #>
 
 [CmdletBinding()]

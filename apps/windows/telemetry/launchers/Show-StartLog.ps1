@@ -1,85 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Show-Startlog Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Show-StartLog).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Show-StartLog.ps1
-#
-# File: Show-StartLog.ps1
-# Project: ai-breadboard
-# Package: apps.windows.telemetry.launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
-# =============================================================================
-
-# Description:
-#   PowerShell-сценарий администрирования и автоматизации (Show-StartLog).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Show-StartLog.ps1
-#
-# File: Show-StartLog.ps1
-# Project: ai-breadboard
-# Package: windows/telemetry/launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:04:40
-# =============================================================================
-
-# Description:
-#   PowerShell-сценарий системных операций и автоматизации (Show-StartLog).
-#
-# Usage Examples:
-#   PowerShell:
-#     .\Show-StartLog.ps1
-#
-# File: Show-StartLog.ps1
-# Project: ai-breadboard
-# Package: windows/telemetry/launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 12:54:56
-# =============================================================================
-
 <#
-.SYNOPSIS
-    Отображение подробного стартового лога, конфигурации, статуса базы данных и ошибок телеметрии AI-Breadboard.
+=============================================================================
+Process Name: AI-Breadboard Automation - Show Startlog
+=============================================================================
+Description:
+  Отображение подробного стартового лога, конфигурации, статуса базы данных и ошибок телеметрии AI-Breadboard
 
+Usage Examples:
+  PowerShell Execution:
+    .\Show-StartLog.ps1
+
+File: Show-StartLog.ps1
+Project: ai-breadboard
+Package: apps/windows/telemetry/launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Отображение подробного стартового лога, конфигурации, статуса базы данных и ошибок телеметрии AI-Breadboard
 .DESCRIPTION
     Открывает консольное окно / информационную панель системной телеметрии Windows:
-      1. Время и статус запуска (StartTime, Uptime, PID, RAM, CPU).
-      2. Что собирается (режим работы, активные сенсоры, интервалы, топ процессов).
-      3. Куда сохраняются данные (путь к SQLite БД, размер файла, количество записей по таблицам, JSON/CSV).
-      4. Анализ ошибок в логах (количество ERROR/CRITICAL/WARNING/Exception, вывод последних инцидентов).
-
-.PARAMETER NewWindow
-    Принудительно открыть лог в новом отдельном окне терминала.
-
-.PARAMETER Tail
-    Количество последних строк ошибок для подробного отображения (по умолчанию 15).
-
-.PARAMETER Watch
-    Режим постоянного обновления статуса в реальном времени каждые N секунд (по умолчанию 5 сек при включении).
-
-.PARAMETER RefreshInterval
-    Интервал обновления в секундах для режима Watch (по умолчанию 5).
-
-.PARAMETER NoPause
-    Не ожидать нажатия клавиши перед выходом (удобно для вызова из других скриптов).
-
-.PARAMETER Help
-    Показать справочную информацию.
-
-.EXAMPLE
-    .\Show-StartLog.ps1                                  # Показать лог запуска и статус
-    .\Show-StartLog.ps1 -NewWindow                       # Открыть в отдельном окне PowerShell
-    .\Show-StartLog.ps1 -Watch                           # Живое обновление экрана
-    .\Show-StartLog.ps1 -Tail 30                         # Показать до 30 последних ошибок
+      1
 #>
 
 [CmdletBinding()]

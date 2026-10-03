@@ -1,70 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Helpdesk Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (helpdesk).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\helpdesk.ps1
-#
-# File: helpdesk.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
-.SYNOPSIS
-    Сценарий запуска и управления приложением Helpdesk (Служба поддержки).
+=============================================================================
+Process Name: AI-Breadboard Automation - Helpdesk
+=============================================================================
+Description:
+  Сценарий запуска и управления приложением Helpdesk (Служба поддержки)
 
+Usage Examples:
+  PowerShell Execution:
+    .\helpdesk.ps1
+
+File: helpdesk.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Сценарий запуска и управления приложением Helpdesk (Служба поддержки)
 .DESCRIPTION
     Запуск интерфейса, TUI консоли и FastAPI микросервиса Helpdesk (/apps/helpdesk, /helpdesk)
-    для AI Breadboard в соответствии со стандартом приложений /apps.
-    Поддерживает режимы start, stop, restart, status, dedicated микросервис (порт 8110)
-    или запуск основного сервера с открытием веб-интерфейса /helpdesk.
-
-.PARAMETER Action
-    Действие: 'start' (по умолчанию), 'stop', 'restart', 'status'.
-
-.PARAMETER Mode
-    Режим работы: 'web' (веб-интерфейс в браузере, по умолчанию), 'server' (микросервис FastAPI 8110), 'tui' (консольный TUI).
-
-.PARAMETER NewWindow
-    Запуск в отдельном окне/процессе.
-
-.PARAMETER Background
-    Фоновый запуск без открытия окон.
-
-.PARAMETER ConfigFile
-    Файл конфигурации (по умолчанию: config.json).
-
-.PARAMETER Port
-    Переопределение порта привязки сервера.
-
-.PARAMETER HostAddress
-    Переопределение адреса сервера.
-
-.PARAMETER NoBrowser
-    Не открывать веб-браузер автоматически.
-
-.PARAMETER Interactive
-    Запуск в интерактивном режиме с выбором действий (-i).
-
-.PARAMETER Help
-    Отображение справки по использованию (-Help, -h, --help).
-
-.EXAMPLE
-    .\helpdesk.ps1
-    .\helpdesk.ps1 -Mode tui
-    .\helpdesk.ps1 -Mode server
-    .\helpdesk.ps1 -Action status
-    .\helpdesk.ps1 -Action stop
-    .\helpdesk.ps1 -Action restart
-    .\helpdesk.ps1 -Interactive
-    .\helpdesk.ps1 --help
+    для AI Breadboard в соответствии со стандартом приложений /apps
 #>
 
 [CmdletBinding()]

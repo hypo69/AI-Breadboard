@@ -1,47 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run-Telegrambot Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Run-TelegramBot).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-TelegramBot.ps1
-#
-# File: Run-TelegramBot.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Telegrambot
+=============================================================================
+Description:
+  Standalone Telegram bot launcher for ai-breadboard
+
+Usage Examples:
+  PowerShell Execution:
+    .\Run-TelegramBot.ps1
+
+File: Run-TelegramBot.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    Standalone Telegram bot launcher for ai-breadboard.
-
+    Standalone Telegram bot launcher for ai-breadboard
 .DESCRIPTION
-    Launches scripts/dev/bot_runner.py in background.
-    Reads TELEGRAM_BOT_TOKEN from .env, validates environment and
-    manages the bot process lifecycle.
-
-.PARAMETER Foreground
-    Run the Telegram bot directly in current console/terminal without detaching.
-    Aliases: -f, -Interactive, -Console.
-
-.PARAMETER NewWindow
-    Launch bot in a visible standalone console/terminal window with -NoExit.
-    Aliases: -Window, -SeparateWindow.
-
-.PARAMETER Help
-    Display usage help for script (-Help, -h, --help).
-
-.EXAMPLE
-    .\launchers\Run-TelegramBot.ps1 -Action start
-    .\launchers\Run-TelegramBot.ps1 -NewWindow
-    .\launchers\Run-TelegramBot.ps1 -Foreground
-    .\launchers\Run-TelegramBot.ps1 -Action stop
-    .\launchers\Run-TelegramBot.ps1 -Action status
+    Launches scripts/dev/bot_runner
 #>
 
 [CmdletBinding()]

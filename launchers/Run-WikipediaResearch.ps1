@@ -1,55 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run-Wikipediaresearch Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Run-WikipediaResearch).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-WikipediaResearch.ps1
-#
-# File: Run-WikipediaResearch.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Wikipediaresearch
+=============================================================================
+Description:
+  Standalone launcher for Wikipedia Research Lab microservice
+
+Usage Examples:
+  PowerShell Execution:
+    .\Run-WikipediaResearch.ps1
+
+File: Run-WikipediaResearch.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    Standalone launcher for Wikipedia Research Lab microservice.
-
+    Standalone launcher for Wikipedia Research Lab microservice
 .DESCRIPTION
-    Launches apps.wikipedia_research in background or standalone window with Uvicorn.
-    Listens on port 8110 by default.
-
-.PARAMETER Action
-    Action to perform: 'start' (default), 'stop', 'restart', 'status'.
-
-.PARAMETER Mode
-    Operation mode: 'server' (FastAPI microservice, default) or 'dashboard' (TUI).
-
-.PARAMETER Port
-    Server bind port (default: 8110).
-
-.PARAMETER HostAddress
-    Server bind address (default: 127.0.0.1).
-
-.PARAMETER Foreground
-    Run directly in current console/terminal without detaching.
-
-.PARAMETER NewWindow
-    Launch in a visible standalone console/terminal window with -NoExit.
-
-.PARAMETER Help
-    Display usage help for script (-Help, -h, --help).
-
-.EXAMPLE
-    .\launchers\Run-WikipediaResearch.ps1
-    .\launchers\Run-WikipediaResearch.ps1 -NewWindow
-    .\launchers\Run-WikipediaResearch.ps1 -Action status
-    .\launchers\Run-WikipediaResearch.ps1 -Action stop
+    Launches apps
 #>
 
 [CmdletBinding()]

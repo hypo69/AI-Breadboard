@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-03 23:06:40
 # =============================================================================
 
 from __future__ import annotations
@@ -30,12 +30,21 @@ try:
     from logger import logger
 except ImportError:
     from logger import logger
-try:
-    from apps.windows.sysadmin.src.directory_watcher import DirectoryWatcher, LiveFileEvent
-except ImportError as e:
-    logger.warning(f'Не удалось импортировать DirectoryWatcher: {e}')
-    DirectoryWatcher = None
-    LiveFileEvent = None
+
+
+def _get_directory_watcher_classes():
+    """Ленивый импорт DirectoryWatcher для избежания циклических зависимостей."""
+    try:
+        from apps.windows.modules.sysadmin.src.directory_watcher import DirectoryWatcher, LiveFileEvent
+        return DirectoryWatcher, LiveFileEvent
+    except ImportError:
+        try:
+            from apps.windows.sysadmin.src.directory_watcher import DirectoryWatcher, LiveFileEvent
+            return DirectoryWatcher, LiveFileEvent
+        except ImportError as e:
+            logger.warning(f'Не удалось импортировать DirectoryWatcher: {e}')
+            return None, None
+
 
 class FileCollector:
     """Коллектор событий файловой системы."""
@@ -49,12 +58,13 @@ class FileCollector:
         """
         self.watch_dirs = watch_dirs or [str(Path.home() / 'Documents')]
         self.max_history = max_history
-        self._watchers: Dict[str, DirectoryWatcher] = {}
+        self._watchers: Dict[str, Any] = {}
         self._lock = threading.Lock()
         self._init_watchers()
 
     def _init_watchers(self) -> None:
         """Инициализирует DirectoryWatcher для каждой директории."""
+        DirectoryWatcher, _ = _get_directory_watcher_classes()
         if DirectoryWatcher is None:
             logger.warning('DirectoryWatcher недоступен')
             return
@@ -157,6 +167,7 @@ class FileCollector:
         Returns:
             bool: True если директория успешно добавлена.
         """
+        DirectoryWatcher, _ = _get_directory_watcher_classes()
         if DirectoryWatcher is None:
             logger.warning('DirectoryWatcher недоступен')
             return False
@@ -164,7 +175,7 @@ class FileCollector:
             logger.warning(f'Директория уже отслеживается: {watch_dir}')
             return False
         try:
-            watcher = DirectoryWatcher(watch_dir=watch_dir, max_history=self.max_history)
+            watcher = DirectoryWatcher(watch_dirs=[watch_dir], max_history=self.max_history)
             if watcher.start():
                 self._watchers[watch_dir] = watcher
                 logger.info(f'Добавлена директория для мониторинга: {watch_dir}')

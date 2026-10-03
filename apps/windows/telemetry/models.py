@@ -359,6 +359,7 @@ class SystemSnapshot(BaseModel):
     alerts: SystemHealthAlerts = Field(default_factory=SystemHealthAlerts, description='System health and reliability alerts')
     sensors: List[HardwareSensor] = Field(default_factory=list, description='Hardware sensor readings')
     top_processes: List[ProcessMetrics] = Field(default_factory=list, description='Top active processes')
+    hardware_audit: Dict[str, Any] = Field(default_factory=dict, description='Full hardware audit data (manufacturer, serial, etc.)')
 
 class AnomalyItem(BaseModel):
     """Specific detected anomaly or performance bottleneck."""

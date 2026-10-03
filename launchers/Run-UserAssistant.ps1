@@ -1,41 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run-Userassistant Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Run-UserAssistant).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-UserAssistant.ps1
-#
-# File: Run-UserAssistant.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Userassistant
+=============================================================================
+Description:
+  User Assistant launcher for AI-Breadboard
+
+Usage Examples:
+  PowerShell Execution:
+    .\Run-UserAssistant.ps1
+
+File: Run-UserAssistant.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    User Assistant launcher for AI-Breadboard.
-
+    User Assistant launcher for AI-Breadboard
 .DESCRIPTION
-    Launches the User Assistant microservice on port 8105.
-
-.PARAMETER Action
-    Action to perform: 'start' (default), 'stop', 'restart', 'status'.
-
-.PARAMETER NewWindow
-    Launch assistant in visible standalone console window.
-
-.PARAMETER Help
-    Display usage help for script (-Help, -h, --help).
-
-.EXAMPLE
-    .\launchers\Run-UserAssistant.ps1
-    .\launchers\Run-UserAssistant.ps1 -NewWindow
-    .\launchers\Run-UserAssistant.ps1 -Action status
+    Launches the User Assistant microservice on port 8105
 #>
 
 [CmdletBinding()]

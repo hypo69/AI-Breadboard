@@ -1,28 +1,27 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Launcher Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (launcher).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\launcher.ps1
-#
-# File: launcher.ps1
-# Project: ai-breadboard
-# Package: root
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:20:26
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Launcher
+=============================================================================
+Description:
+  AI Breadboard — графический лончер сценариев и сервисов
+
+Usage Examples:
+  PowerShell Execution:
+    .\launcher.ps1
+
+File: launcher.ps1
+Project: ai-breadboard
+Package: root
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    AI Breadboard — графический лончер сценариев и сервисов.
+    AI Breadboard — графический лончер сценариев и сервисов
 .DESCRIPTION
     WinForms-окно с панелью быстрого запуска основных сценариев
     и динамическим каталогом всех лончеров из директории launchers/
-    с поддержкой выбора ключей и параметров.
+    с поддержкой выбора ключей и параметров
 #>
 
 Add-Type -AssemblyName System.Windows.Forms

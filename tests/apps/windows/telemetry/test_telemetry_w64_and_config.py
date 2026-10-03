@@ -16,12 +16,12 @@
 # Package: tests.apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-03 22:12:00
 # =============================================================================
 
 """Тесты W64 Collector, ETW Collector, ConfigManager, JsonLogger, init_db и Win32 FFI функций на 100% реальных вызовах.
 
-Updated: 2026-10-01 11:08:00"""
+Updated: 2026-10-03 22:12:00"""
 
 import os
 import time
@@ -140,6 +140,69 @@ class TestTelemetryConfigManagerReal:
         assert cm.get_top_processes() >= 1
         assert cm.get_mode() in ("minimal", "hybrid", "full")
         assert cm.get_fast_interval() > 0.0
+
+    def test_parse_interval_to_seconds(self):
+        from apps.windows.telemetry.telemetry_config import parse_interval_to_seconds
+        assert parse_interval_to_seconds(5) == 5.0
+        assert parse_interval_to_seconds(1.5) == 1.5
+        assert parse_interval_to_seconds("10") == 10.0
+        assert parse_interval_to_seconds("5s") == 5.0
+        assert parse_interval_to_seconds("5 seconds") == 5.0
+        assert parse_interval_to_seconds("5 сек") == 5.0
+        assert parse_interval_to_seconds("1m") == 60.0
+        assert parse_interval_to_seconds("2 minutes") == 120.0
+        assert parse_interval_to_seconds("1h") == 3600.0
+        assert parse_interval_to_seconds("1 day") == 86400.0
+        assert parse_interval_to_seconds(None, default=7.0) == 7.0
+        assert parse_interval_to_seconds("invalid", default=9.0) == 9.0
+
+    def test_dynamic_config_reload_on_the_fly(self, tmp_path):
+        import json
+        cfg_file = tmp_path / "dynamic_config.json"
+        initial_data = {
+            "interval_seconds": 6.0,
+            "heavy_interval_seconds": 90.0,
+            "top_processes": 10,
+            "loggers": {
+                "system_inspector": {"interval": "5 seconds", "enabled": True}
+            }
+        }
+        cfg_file.write_text(json.dumps(initial_data), encoding="utf-8")
+        
+        cm = TelemetryConfigManager(config_path=str(cfg_file))
+        assert cm.get_interval_seconds() == 6.0
+        assert cm.get_heavy_interval_seconds() == 90.0
+        assert cm.get_top_processes() == 10
+        assert cm.get_logger_interval("system_inspector") == 5.0
+        assert cm.is_logger_enabled("system_inspector") is True
+
+        # Проверяем, что повторный вызов без изменений возвращает False
+        assert cm.check_and_reload() is False
+
+        # Изменяем файл на лету
+        time.sleep(0.05)
+        updated_data = {
+            "interval_seconds": "2s",
+            "heavy_interval_seconds": "15 seconds",
+            "top_processes": 25,
+            "loggers": {
+                "system_inspector": {"interval": "1 minute", "enabled": False}
+            }
+        }
+        cfg_file.write_text(json.dumps(updated_data), encoding="utf-8")
+
+        # check_and_reload должен обнаружить изменение
+        reloaded = cm.check_and_reload()
+        assert reloaded is True
+        assert cm.get_interval_seconds() == 2.0
+        assert cm.get_heavy_interval_seconds() == 15.0
+        assert cm.get_top_processes() == 25
+        assert cm.get_logger_interval("system_inspector") == 60.0
+        assert cm.is_logger_enabled("system_inspector") is False
+
+        all_intervals = cm.get_all_intervals()
+        assert all_intervals["default_interval_seconds"] == 2.0
+        assert all_intervals["heavy_interval_seconds"] == 15.0
 
 
 class TestTelemetryJsonLoggerReal:

@@ -1,12 +1,25 @@
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Manage Certs
+=============================================================================
+Description:
+  Проверка, генерация и установка локальных SSL-сертификатов для ai-breadboard
+
+Usage Examples:
+  PowerShell Execution:
+    .\manage_certs.ps1
+
+File: manage_certs.ps1
+Project: ai-breadboard
+Package: .skills/cert-installer/scripts
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    Проверка, генерация и установка локальных SSL-сертификатов для ai-breadboard.
+    Проверка, генерация и установка локальных SSL-сертификатов для ai-breadboard
 .DESCRIPTION
-    1. Проверяет наличие сертификатов в $env:USERPROFILE\.certs (localhost+2.pem, localhost+2-key.pem).
-    2. Если -Force, удаляет старые и генерирует новые.
-    3. Генерирует их через mkcert (если установлен) или встроенным генератором (Python cryptography).
-    4. Автоматически включает в сертификат: localhost, 127.0.0.1, ::1, имя компьютера и все текущие IP-адреса сети.
-    5. Импортирует сертификат в хранилища Windows (CurrentUser\My и CurrentUser\Root).
+    1
 #>
 
 param (

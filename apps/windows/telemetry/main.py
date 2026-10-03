@@ -18,7 +18,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-03 22:12:00
 # =============================================================================
 
 from __future__ import annotations
@@ -143,6 +143,21 @@ def run_telemetry_service(mode: str='hybrid', interval: float=5.0, heavy_interva
     psutil.cpu_percent(interval=None)
     from .telemetry_config import TelemetryConfigManager
     cfg_mgr = TelemetryConfigManager(config_path=config_path)
+
+    custom_mode_set = mode is not None and ('--mode' in sys.argv or '--minimal' in sys.argv)
+    custom_interval_set = interval is not None and ('--interval' in sys.argv or '-i' in sys.argv)
+    custom_heavy_interval_set = heavy_interval is not None and '--heavy-interval' in sys.argv
+    custom_top_processes_set = top_processes is not None and '--top-processes' in sys.argv
+
+    if not custom_mode_set and cfg_mgr:
+        mode = cfg_mgr.get_mode()
+    if not custom_interval_set and cfg_mgr:
+        interval = cfg_mgr.get_interval_seconds()
+    if not custom_heavy_interval_set and cfg_mgr:
+        heavy_interval = cfg_mgr.get_heavy_interval_seconds()
+    if not custom_top_processes_set and cfg_mgr:
+        top_processes = cfg_mgr.get_effective_process_limit()
+
     heavy_disk_interval_sec = cfg_mgr.get_heavy_disk_scan_interval()
     max_heavy_duration_sec = cfg_mgr.get_heavy_mode_max_duration_days() * 24.0 * 3600.0
     auto_switch_enabled = cfg_mgr.is_heavy_auto_switch_enabled()
@@ -258,6 +273,27 @@ def run_telemetry_service(mode: str='hybrid', interval: float=5.0, heavy_interva
     try:
         while not _stop_event.is_set():
             loop_start = time.time()
+
+            # Динамическая перезагрузка параметров из config.json 'на лету'
+            if cfg_mgr.check_and_reload():
+                if not custom_interval_set:
+                    interval = cfg_mgr.get_interval_seconds()
+                if not custom_heavy_interval_set:
+                    heavy_interval = cfg_mgr.get_heavy_interval_seconds()
+                if not custom_top_processes_set:
+                    top_processes = cfg_mgr.get_effective_process_limit()
+                if not custom_mode_set:
+                    mode = cfg_mgr.get_mode()
+                heavy_disk_interval_sec = cfg_mgr.get_heavy_disk_scan_interval()
+                db_cleanup_interval_sec = cfg_mgr.get_db_cleanup_interval_seconds()
+                max_heavy_duration_sec = cfg_mgr.get_heavy_mode_max_duration_days() * 24.0 * 3600.0
+                auto_switch_enabled = cfg_mgr.is_heavy_auto_switch_enabled()
+                h_collectors = cfg_mgr.get_heavy_collectors()
+                logger.info(
+                    f"🔄 [Телеметрия CLI] Конфигурация config.json обновлена 'на лету': "
+                    f"интервал={interval}с, тяжелый={heavy_interval}с, топ={top_processes}, режим={mode}"
+                )
+
             now_dt = datetime.now(timezone.utc)
             now_iso = now_dt.isoformat()
             tick += 1

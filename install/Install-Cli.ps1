@@ -1,29 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Install-Cli Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Install-Cli).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Install-Cli.ps1
-#
-# File: Install-Cli.ps1
-# Project: ai-breadboard
-# Package: install
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:29
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Install Cli
+=============================================================================
+Description:
+  Модуль привязки путей проекта и генерации глобальных команд assist
+
+Usage Examples:
+  PowerShell Execution:
+    .\Install-Cli.ps1
+
+File: Install-Cli.ps1
+Project: ai-breadboard
+Package: install
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    Модуль привязки путей проекта и генерации глобальных команд assist.
+    Модуль привязки путей проекта и генерации глобальных команд assist
 .DESCRIPTION
     Устанавливает постоянную системную переменную AIBREADBOARD_DIR (и ASSIST_DIR),
-    генерирует assist.ps1, assist.cmd и bash-скрипт assist с жесткой привязкой каталога,
-    копирует их в %USERPROFILE%\.local\bin, добавляет пути в PATH и регистрирует
-    функцию assist в профилях PowerShell.
+    генерирует assist
 #>
 
 param (
@@ -43,18 +40,6 @@ try {
 } catch {}
 
 $assistPs1Content = @"
-<#
-.SYNOPSIS
-    CLI ассистент для управления проектом AI Breadboard.
-.DESCRIPTION
-    Передает команды в scripts.dev.assist_cli с жесткой фиксацией путей проекта.
-.EXAMPLE
-    assist start
-    assist status
-    assist providers
-    assist stop
-#>
-
 `$projectDir = "$InstallDir"
 if (-not (Test-Path `$projectDir) -and `$env:AIBREADBOARD_DIR) {
     `$projectDir = `$env:AIBREADBOARD_DIR

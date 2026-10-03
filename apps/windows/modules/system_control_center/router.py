@@ -98,7 +98,7 @@ def _collect_status_sync() -> Dict[str, Any]:
     protection_status = _restore_mgr.check_protection_status()
     restore_info = {'restore_points_count': len(rp_list), 'system_protection_enabled': protection_status.get('system_protection_enabled', True)}
     res = {'is_elevated': is_elevated, 'system': system_info, 'security': security_info, 'restore': restore_info, 'disk': disk_info, 'power': power_info, 'update': update_info, 'timestamp': datetime.now().isoformat()}
-    _csv_logger.log_poll(poll_type='system_status', metric_name='ram_percent', value=mem.percent, unit='%', status='OK', details={'uptime_sec': uptime_seconds, 'security': security_info.get('overall_status'), 'is_elevated': is_elevated}, filename='system_control_status_polls.csv')
+    #_csv_logger.log_poll(poll_type='system_status', metric_name='ram_percent', value=mem.percent, unit='%', status='OK', details={'uptime_sec': uptime_seconds, 'security': security_info.get('overall_status'), 'is_elevated': is_elevated}, filename='system_control_status_polls.csv')
     return res
 
 class ProfileApplyRequest(BaseModel):

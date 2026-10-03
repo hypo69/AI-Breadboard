@@ -44,13 +44,19 @@
 
 ## 2. Режимы сбора и интервалы
 
+> [!TIP]
+> **Динамическая регулировка "на лету"**:
+> Все сервисы телеметрии ([`service.py`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/windows/telemetry/service.py), [`main.py`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/windows/telemetry/main.py), [`TelemetryConfigManager`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/windows/telemetry/telemetry_config.py)) отслеживают время изменения `config.json`. При сохранении файла новые интервалы и настройки подхватываются автоматически **без перезапуска сервиса**.
+> 
+> Поддерживаются как числовые значения в секундах (`5`, `6.0`), так и строковые интервалы (`"5 seconds"`, `"10s"`, `"1 minute"`, `"2 мин"`, `"1 hour"`, `"6 hours"`).
+
 | Параметр | Тип | По умолчанию | Описание |
 |---|---|---|---|
-| `interval_seconds` | `float` | `6.0` | Базовый интервал опроса легковесных метрик (CPU, RAM, сеть, быстрые датчики). |
-| `heavy_interval_seconds` | `float` | `90.0` | Интервал опроса тяжелых датчиков (WMI, SMART дисков, LibreHardwareMonitor). |
-| `fast_interval_seconds` | `float` | `30.0` | Интервал быстрого режима при детальной диагностике. |
+| `interval_seconds` | `float / string` | `6.0` | Базовый интервал опроса легковесных метрик (CPU, RAM, сеть, быстрые датчики). |
+| `heavy_interval_seconds` | `float / string` | `90.0` | Интервал опроса тяжелых датчиков (WMI, SMART дисков, LibreHardwareMonitor). |
+| `fast_interval_seconds` | `float / string` | `30.0` | Интервал быстрого режима при детальной диагностике. |
 | `fast_duration_days` | `integer` | `2` | Максимальная длительность быстрого режима (в днях). |
-| `aggregation_interval_seconds` | `float` | `3600` | Интервал почасовой агрегации показаний сенсоров в БД (1 час). |
+| `aggregation_interval_seconds` | `float / string` | `3600` | Интервал почасовой агрегации показаний сенсоров в БД (1 час). |
 | `max_file_size_mb` | `float` | `50` | Максимальный размер лог-файлов до ротации (в МБ). |
 | `enable_autolog` | `boolean` | `true` | Флаг автоматической фоновой записи метрик. |
 | `default_interval` | `string` | `"1 minute"` | Интервал по умолчанию для логгеров приложений. |

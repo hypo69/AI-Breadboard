@@ -35,6 +35,31 @@ from .sys_param import register_sys_param_parser, run_sys_param_command
 from .telemetry import register_telemetry_parser, run_telemetry_command
 from .network import register_network_parser, run_network_command
 
+# Utility for launching external commands
+from ..utils import run_command
+
+def register_headers_parser(subparsers: argparse._SubParsersAction) -> None:
+    """Регистрирует парсер для команды `headers`.
+    Подкоманда `update` запускает скрипт `tools/update_file_headers.py`.
+    """
+    headers_parser = subparsers.add_parser('headers', help='Управление заголовками файлов')
+    headers_sub = headers_parser.add_subparsers(dest='subcommand', help='Подкоманды headers')
+    headers_sub.add_parser('update', help='Обновить заголовки во всех поддерживаемых файлах')
+
+def run_headers_command(args: argparse.Namespace) -> int:
+    """Обработчик команды `headers`.
+    Поддерживаемая подкоманда: `update`.
+    """
+    if getattr(args, 'subcommand', None) == 'update':
+        return run_command(
+            ['python', 'tools/update_file_headers.py'],
+            cwd=__root__,
+            WaitMsBeforeAsync=5000,
+            toolAction='Обновление заголовков файлов',
+            toolSummary='Запуск скрипта update_file_headers'
+        )
+    return 1
+
 COMMAND_HANDLERS: Dict[str, Callable[[argparse.Namespace], int]] = {
     'skills': run_skills_command,
     'rag': run_rag_command,
@@ -59,6 +84,7 @@ def register_all_parsers(subparsers: argparse._SubParsersAction) -> None:
     register_sys_param_parser(subparsers)
     register_telemetry_parser(subparsers)
     register_network_parser(subparsers)
+    register_headers_parser(subparsers)  # регистрация новой команды
 
     # Assist CLI Gateway
     assist_parser = subparsers.add_parser('assist', help='Assistant management (start, stop, status, providers, etc.)')

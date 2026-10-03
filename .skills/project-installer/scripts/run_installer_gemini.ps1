@@ -1,11 +1,25 @@
 <#
-.SYNOPSIS
-    Launch interactive AI Breadboard Project Installer using Gemini CLI with gemini-3.1-flash-lite.
-.DESCRIPTION
-    Runs the official Gemini CLI with model "gemini-3.1-flash-lite", loading
-    the installer skill context and INSTALL-INSTRUCTION.md.
-.EXAMPLE
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Installer Gemini
+=============================================================================
+Description:
+  Launch interactive AI Breadboard Project Installer using Gemini CLI with gemini-3
+
+Usage Examples:
+  PowerShell Execution:
     .\run_installer_gemini.ps1
+
+File: run_installer_gemini.ps1
+Project: ai-breadboard
+Package: .skills/project-installer/scripts
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Launch interactive AI Breadboard Project Installer using Gemini CLI with gemini-3
+.DESCRIPTION
+    Runs the official Gemini CLI with model "gemini-3
 #>
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8

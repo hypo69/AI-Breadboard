@@ -1,32 +1,22 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Install-Gemini-Cli Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Install-Gemini-cli).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Install-Gemini-cli.ps1
-#
-# File: Install-Gemini-cli.ps1
-# Project: ai-breadboard
-# Package: install
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:29
-# =============================================================================
+<#
+=============================================================================
+Process Name: AI-Breadboard Automation - Install Gemini Cli
+=============================================================================
+Description:
+  PowerShell-сценарий автоматизации и системного обслуживания (Install-Gemini-cli).
 
-# Description:
-#   Проверяется наличие Node.js, npm и Gemini CLI.
-#   Отсутствующие компоненты устанавливаются автоматически.
-#
-# Requirements:
-#   Windows 10/11
-#   PowerShell 5.1+
-#
-# Example:
-#   .\Install-Gemini-cli.ps1
-# =============================================================================
+Usage Examples:
+  PowerShell Execution:
+    .\Install-Gemini-cli.ps1
+
+File: Install-Gemini-cli.ps1
+Project: ai-breadboard
+Package: install
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+#>
 
 param (
     [string]$InstallDir = '',

@@ -17,7 +17,7 @@
 # Package: src.api.routers.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-01 16:31:00
 # =============================================================================
 
 from __future__ import annotations
@@ -26,8 +26,8 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter
 from apps.windows.telemetry import SystemCollector
-from apps.windows.telemetry.diagnostic_engine import SystemDiagnosticEngine
-from apps.windows.telemetry.grouped_telemetry import (
+from apps.windows.telemetry_research.diagnostic_engine import SystemDiagnosticEngine
+from apps.windows.telemetry_research.grouped_telemetry import (
     GroupDiagnoseRequest,
     GroupDiagnosticResult,
     GroupedTelemetryBuilder,

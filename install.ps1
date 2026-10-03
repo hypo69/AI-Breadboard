@@ -1,31 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Install Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (install).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\install.ps1
-#
-# File: install.ps1
-# Project: ai-breadboard
-# Package: root
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:20:26
-# =============================================================================
-
 <#
-.SYNOPSIS
-    Главный оркестратор установки AI Breadboard с модульной архитектурой и поддержкой i18n (RU, EN, ES, HE).
-.DESCRIPTION
-    Загружает конфигурацию из install/install.json, подключает модули интернационализации,
-    выбора директории (%LOCALAPPDATA%\AI Breadboard или пользовательский путь),
-    создания venv, установки зависимостей, генерации SSL и регистрации AIBREADBOARD_DIR.
-.EXAMPLE
-    irm https://raw.githubusercontent.com/hypo69/AI-Breadboard/master/install.ps1 | iex
+=============================================================================
+Process Name: AI-Breadboard Automation - Install
+=============================================================================
+Description:
+  Главный оркестратор установки AI Breadboard с модульной архитектурой и поддержкой i18n (RU, EN, ES, HE)
+
+Usage Examples:
+  PowerShell Execution:
     .\install.ps1
+
+File: install.ps1
+Project: ai-breadboard
+Package: root
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Главный оркестратор установки AI Breadboard с модульной архитектурой и поддержкой i18n (RU, EN, ES, HE)
+.DESCRIPTION
+    Загружает конфигурацию из install/install
 #>
 
 param (

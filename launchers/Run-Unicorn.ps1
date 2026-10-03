@@ -1,43 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run-Unicorn Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Run-Unicorn).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-Unicorn.ps1
-#
-# File: Run-Unicorn.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
-.SYNOPSIS
-    Launch FastAPI server via uvicorn (Unicorn) for ai-breadboard project.
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Unicorn
+=============================================================================
+Description:
+  Launch FastAPI server via uvicorn (Unicorn) for ai-breadboard project
 
-.DESCRIPTION
-    Activates virtual environment, loads parameters from config.json and .env,
-    frees port, applies SSL if needed and runs FastAPI server in current
-    PowerShell window.
-
-.PARAMETER HostAddress
-    IP address for binding (e.g.: 0.0.0.0 or 127.0.0.1).
-    Aliases: -Host, -Address, -IP, -Host_.
-
-.PARAMETER Port
-    TCP port for server (e.g.: 8000).
-
-.PARAMETER Help
-    Display usage help for script (-Help, -h, --help).
-
-.EXAMPLE
+Usage Examples:
+  PowerShell Execution:
     .\Run-Unicorn.ps1
-    .\Run-Unicorn.ps1 -Host 127.0.0.1 -Port 8000
+
+File: Run-Unicorn.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Launch FastAPI server via uvicorn (Unicorn) for ai-breadboard project
+.DESCRIPTION
+    Activates virtual environment, loads parameters from config
 #>
 
 [CmdletBinding()]

@@ -1,75 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Su Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (su).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\su.ps1
-#
-# File: su.ps1
-# Project: ai-breadboard
-# Package: root
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:20:26
-# =============================================================================
-
 <#
-.SYNOPSIS
-    Standalone applications launcher for AI Breadboard SU console (su.ps1).
+=============================================================================
+Process Name: AI-Breadboard Automation - Su
+=============================================================================
+Description:
+  Standalone applications launcher for AI Breadboard SU console (su
 
-.DESCRIPTION
-    Launches only the SU console applications block configured in su.json:
-    - Dedicated SU web interface
-    - Configured SU microservices (Chat, Admin Panel, User Assistant)
-
-.PARAMETER Action
-    Action to perform: 'start' (default), 'stop', 'restart', 'status'.
-
-.PARAMETER NewWindow
-    Launch microservices in visible standalone console windows (default: $true).
-
-.PARAMETER Background
-    Launch microservices in background processes without opening visible windows.
-
-.PARAMETER ConfigFile
-    Custom configuration JSON file name (default: su.json).
-
-.PARAMETER Port
-    Override server bind port (default: from su.json or 8080).
-
-.PARAMETER HostAddress
-    Override server bind address (default: from su.json or 127.0.0.1).
-
-.PARAMETER NoBrowser
-    Do not automatically open the web browser.
-
-.PARAMETER EnableTray
-    Включить интеграцию с системным треем Windows (по умолчанию: $true).
-    Алиасы: -Tray, -SystemTray, -tray_mode.
-
-.PARAMETER DisableCloseButton
-    Отключить кнопку закрытия консоли ([X]) для предотвращения случайного завершения процесса.
-    Алиасы: -ProtectClose, -NoClose.
-
-.PARAMETER Interactive
-    Run in interactive menu selection mode (-i).
-
-.PARAMETER Help
-    Display usage help for the launcher (-Help, -h, --help).
-
-.EXAMPLE
+Usage Examples:
+  PowerShell Execution:
     .\su.ps1
-    .\su.ps1 -Action status
-    .\su.ps1 -Action stop
-    .\su.ps1 -Action restart
-    .\su.ps1 -ConfigFile su.json
-    .\su.ps1 -Background
-    .\su.ps1 -Interactive
-    .\su.ps1 -DisableCloseButton
-    .\su.ps1 --help
+
+File: su.ps1
+Project: ai-breadboard
+Package: root
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Standalone applications launcher for AI Breadboard SU console (su
+.DESCRIPTION
+    Launches only the SU console applications block configured in su
 #>
 
 [CmdletBinding()]

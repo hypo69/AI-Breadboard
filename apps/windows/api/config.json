@@ -93,10 +93,17 @@
       "description": "Диагностические сервисы (/api/diagnostics/*)"
     },
     {
-      "module": "apps.windows.api.routers.router_panel",
+      "module": "apps.windows.api.routers.router_about_system",
       "factory": "init_router",
       "enabled": true,
-      "description": "KPI панели (/api/v1/panel/*)"
+      "description": "Панель 'О Системе' (/api/v1/about-system/*)"
+    },
+    {
+      "module": "apps.windows.api.routers.router_system",
+      "factory": "init_router",
+      "enabled": true,
+      "inject_models": true,
+      "description": "Системный инспектор и телеметрия (/api/v1/system/*)"
     }
   ]
 }

@@ -18,7 +18,7 @@
 # Package: src.ai.providers.agy
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-01 16:35:00
 # =============================================================================
 
 """Antigravity SDK chat connection and request routing adapter.
@@ -67,6 +67,8 @@ class AgyChatBase:
         Returns:
             str: Normalized model identifier."""
         actual = (model_id or '').strip()
+        if actual.startswith('agy:'):
+            actual = actual[4:]
         while actual.startswith('agy-'):
             actual = actual[4:]
         if actual in ('flash', 'flash-latest', 'agy-flash', ''):

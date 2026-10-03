@@ -16,7 +16,7 @@
 # Package: logger
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:29:02
+# Updated: 2026-10-03 22:27:40
 # =============================================================================
 
 from __future__ import annotations
@@ -35,6 +35,7 @@ import atexit
 import tempfile
 from pathlib import Path
 from typing import Optional, Tuple, Dict, Any
+from src.utils.printer import pformat
 from types import SimpleNamespace
 from collections import Counter
 import header

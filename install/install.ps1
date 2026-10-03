@@ -1,30 +1,27 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Install Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (install).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\install.ps1
-#
-# File: install.ps1
-# Project: ai-breadboard
-# Package: install
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:29
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Install
+=============================================================================
+Description:
+  Установщик проекта ai-breadboard с поддержкой мультиязычности (i18n)
+
+Usage Examples:
+  PowerShell Execution:
+    .\install.ps1
+
+File: install.ps1
+Project: ai-breadboard
+Package: install
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    Установщик проекта ai-breadboard с поддержкой мультиязычности (i18n).
+    Установщик проекта ai-breadboard с поддержкой мультиязычности (i18n)
 .DESCRIPTION
     Инициализирует кодировку UTF-8, запрашивает язык установки (RU/EN/HE),
     разблокирует файлы, создает виртуальное окружение, обновляет pip,
-    устанавливает зависимости, настраивает SSL и проверяет готовность окружения.
-.EXAMPLE
-    .\install.ps1
+    устанавливает зависимости, настраивает SSL и проверяет готовность окружения
 #>
 
 param (

@@ -1,3 +1,23 @@
+<#
+=============================================================================
+Process Name: AI-Breadboard Automation - Warn On Save
+=============================================================================
+Description:
+  PowerShell-сценарий автоматизации и системного обслуживания (warn-on-save).
+
+Usage Examples:
+  PowerShell Execution:
+    .\warn-on-save.ps1
+
+File: warn-on-save.ps1
+Project: ai-breadboard
+Package: .kiro/hooks
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+#>
+
 # PostFileSave hook: Warn when saving files that might contain tokens
 # Trigger: PostFileSave
 # Matcher: \.env$ or \.(py|js|ts|txt|md)$

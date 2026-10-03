@@ -1,31 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run-Ngrok Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Run-Ngrok).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-Ngrok.ps1
-#
-# File: Run-Ngrok.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
-.SYNOPSIS
-    Starts Ngrok Tunnel for AI-Breadboard server and telemetry forwarding.
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Ngrok
+=============================================================================
+Description:
+  Starts Ngrok Tunnel for AI-Breadboard server and telemetry forwarding
 
+Usage Examples:
+  PowerShell Execution:
+    .\Run-Ngrok.ps1
+
+File: Run-Ngrok.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Starts Ngrok Tunnel for AI-Breadboard server and telemetry forwarding
 .DESCRIPTION
     Launches ngrok HTTP tunnel forwarding port 8000 using NGROK_AUTHTOKEN / NGROCK_AUTOTOKEN
-    from .env file. Logs status and provides active public HTTPS URL.
-
-.EXAMPLE
-    .\launchers\Run-Ngrok.ps1
+    from
 #>
 
 [CmdletBinding()]

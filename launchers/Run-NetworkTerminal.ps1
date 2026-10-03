@@ -1,56 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run-Networkterminal Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Run-NetworkTerminal).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-NetworkTerminal.ps1
-#
-# File: Run-NetworkTerminal.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Networkterminal
+=============================================================================
+Description:
+  Standalone launcher for Network Analyzer Terminal microservice
+
+Usage Examples:
+  PowerShell Execution:
+    .\Run-NetworkTerminal.ps1
+
+File: Run-NetworkTerminal.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    Standalone launcher for Network Analyzer Terminal microservice.
-
+    Standalone launcher for Network Analyzer Terminal microservice
 .DESCRIPTION
-    Launches apps.network_terminal in background or standalone window with Uvicorn.
-    Listens on port 8101 by default.
-
-.PARAMETER Action
-    Action to perform: 'start' (default), 'stop', 'restart', 'status'.
-
-.PARAMETER Mode
-    Operation mode: 'server' (FastAPI microservice, default) or 'dashboard' (TUI).
-
-.PARAMETER Port
-    Server bind port (default: 8101).
-
-.PARAMETER HostAddress
-    Server bind address (default: 127.0.0.1).
-
-.PARAMETER Foreground
-    Run directly in current console/terminal without detaching.
-
-.PARAMETER NewWindow
-    Launch in a visible standalone console/terminal window with -NoExit.
-
-.PARAMETER Help
-    Display usage help for script (-Help, -h, --help).
-
-.EXAMPLE
-    .\launchers\Run-NetworkTerminal.ps1
-    .\launchers\Run-NetworkTerminal.ps1 -NewWindow
-    .\launchers\Run-NetworkTerminal.ps1 -Mode dashboard -NewWindow
-    .\launchers\Run-NetworkTerminal.ps1 -Action status
-    .\launchers\Run-NetworkTerminal.ps1 -Action stop
+    Launches apps
 #>
 
 [CmdletBinding()]

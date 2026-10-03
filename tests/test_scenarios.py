@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-01 16:36:00
 # =============================================================================
 
 """Unit tests for Scenarios, Smoke Tests, and AI Skills Assistant Mini-Chat."""
@@ -76,6 +76,15 @@ class TestScenariosSuite:
         assert data['status'] in ('ok', 'warn', 'error')
         assert len(data['steps']) >= 2
         assert any(('Инвентаризация' in s['name'] for s in data['steps']))
+
+    def test_run_safe_update_guard_scenario(self):
+        """Проверка запуска сценария безопасной подготовки к обновлению Windows (safe_update_guard)."""
+        res = client.post('/api/v1/scenarios/run', json={'scenario_id': 'safe_update_guard'})
+        assert res.status_code == 200
+        data = res.json()
+        assert data['scenario_id'] == 'safe_update_guard'
+        assert data['status'] in ('ok', 'warn', 'error')
+        assert len(data['steps']) >= 4
 
     def test_run_unknown_scenario_returns_400(self):
         """Несуществующий сценарий должен возвращать HTTP 400."""

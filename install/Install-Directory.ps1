@@ -1,29 +1,28 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Install-Directory Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Install-Directory).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Install-Directory.ps1
-#
-# File: Install-Directory.ps1
-# Project: ai-breadboard
-# Package: install
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:29
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Install Directory
+=============================================================================
+Description:
+  Модуль выбора и подготовки целевой директории установки AI Breadboard
+
+Usage Examples:
+  PowerShell Execution:
+    .\Install-Directory.ps1
+
+File: Install-Directory.ps1
+Project: ai-breadboard
+Package: install
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    Модуль выбора и подготовки целевой директории установки AI Breadboard.
+    Модуль выбора и подготовки целевой директории установки AI Breadboard
 .DESCRIPTION
     Определяет стандартное предпочтительное расположение (%LOCALAPPDATA%\AI Breadboard),
     выводит мультиязычное разъяснение о стабильности стандартного пути при активной разработке,
     запрашивает подтверждение/путь у пользователя, создает директорию и при необходимости
-    развертывает файлы репозитория через Git или скачивание архива ZIP.
+    развертывает файлы репозитория через Git или скачивание архива ZIP
 #>
 
 param (

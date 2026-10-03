@@ -1,55 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run-Enterpriseknowledge Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Run-EnterpriseKnowledge).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-EnterpriseKnowledge.ps1
-#
-# File: Run-EnterpriseKnowledge.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Enterpriseknowledge
+=============================================================================
+Description:
+  Standalone launcher for Enterprise Knowledge Platform microservice
+
+Usage Examples:
+  PowerShell Execution:
+    .\Run-EnterpriseKnowledge.ps1
+
+File: Run-EnterpriseKnowledge.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    Standalone launcher for Enterprise Knowledge Platform microservice.
-
+    Standalone launcher for Enterprise Knowledge Platform microservice
 .DESCRIPTION
-    Launches apps.enterprise_knowledge in standalone window with Uvicorn.
-    Listens on port 8181 by default.
-
-.PARAMETER Action
-    Action to perform: 'start' (default), 'stop', 'restart', 'status'.
-
-.PARAMETER Mode
-    Operation mode: 'server' (FastAPI microservice, default) or 'tui' (interactive console).
-
-.PARAMETER Port
-    Server bind port (default: 8181).
-
-.PARAMETER HostAddress
-    Server bind address (default: 0.0.0.0).
-
-.PARAMETER Foreground
-    Run directly in current console/terminal without detaching.
-
-.PARAMETER NewWindow
-    Launch in a visible standalone console/terminal window with -NoExit.
-
-.PARAMETER Help
-    Display usage help for script (-Help, -h, --help).
-
-.EXAMPLE
-    .\launchers\Run-EnterpriseKnowledge.ps1
-    .\launchers\Run-EnterpriseKnowledge.ps1 -NewWindow
-    .\launchers\Run-EnterpriseKnowledge.ps1 -Action status
-    .\launchers\Run-EnterpriseKnowledge.ps1 -Action stop
+    Launches apps
 #>
 
 [CmdletBinding()]

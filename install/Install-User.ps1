@@ -1,30 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Install-User Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Install-User).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Install-User.ps1
-#
-# File: Install-User.ps1
-# Project: ai-breadboard
-# Package: install
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:29
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Install User
+=============================================================================
+Description:
+  Модуль инициализации и настройки учетной записи администратора по умолчанию
+
+Usage Examples:
+  PowerShell Execution:
+    .\Install-User.ps1
+
+File: Install-User.ps1
+Project: ai-breadboard
+Package: install
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    Модуль инициализации и настройки учетной записи администратора по умолчанию.
+    Модуль инициализации и настройки учетной записи администратора по умолчанию
 .DESCRIPTION
     Запрашивает у пользователя email, имя и пароль для системного администратора
-    или использует безопасные значения по умолчанию (admin@localhost / Admin / onela).
-    Запускает скрипт scripts/create_initial_user.py в созданном виртуальном окружении.
-.EXAMPLE
-    .\Install-User.ps1 -InstallDir $InstallDir -PythonPath $PythonPath -Config $Config
+    или использует безопасные значения по умолчанию (admin@localhost / Admin / onela)
 #>
 
 param (

@@ -16,7 +16,7 @@
 # Package: plugins.developer-plugins.generate_rag_from_codebase
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:23:11
+# Updated: 2026-10-01 15:20:00
 # =============================================================================
 
 from __future__ import annotations
@@ -94,7 +94,7 @@ class GenerateRagCodebasePlugin(BasePlugin):
                 return json.loads(cfg_file.read_text(encoding='utf-8'))
             except Exception as exc:
                 logger.error(f'Error reading plugin config.json: {exc}')
-        return {'project_root': '.', 'index_name': 'codebase', 'include_dirs': ['src', 'plugins', 'integrations', 'launchers', 'scripts', 'install', 'docs', 'prompts'], 'include_files': ['README.md', 'README.ru.md', 'CHANGELOG.md', 'pyproject.toml'], 'ignore_patterns': ['.git/**', '.venv/**', 'venv/**', 'logs/**', 'site/**', 'SANDBOX/**']}
+        return {'project_root': '.', 'index_name': 'codebase', 'include_dirs': ['src', 'plugins', 'integrations', 'launchers', 'scripts', 'install', 'docs', 'prompts'], 'include_files': ['README.md', 'CHANGELOG.md', 'pyproject.toml'], 'ignore_patterns': ['.git/**', '.venv/**', 'venv/**', 'logs/**', 'site/**', 'SANDBOX/**']}
 
     def _sanitize_index_name(self, name: str) -> str:
         """Sanitize index name string for safe filesystem usage."""
@@ -153,7 +153,7 @@ class GenerateRagCodebasePlugin(BasePlugin):
 
     def get_config_fields(self) -> List[Dict[str, Any]]:
         """Return schema of settings for Admin Web Interface."""
-        return [{'id': 'project_root', 'label': 'Project Root Path / Директория проекта', 'type': 'string', 'default': '.', 'description': "Absolute or relative path to project root directory to index (e.g., '.' or 'D:/Projects/app')."}, {'id': 'index_name', 'label': 'Index Name / Имя RAG индекса', 'type': 'string', 'default': 'codebase', 'description': "Unique identifier for this RAG index (e.g., 'codebase', 'client_app_v1')."}, {'id': 'include_dirs', 'label': 'Include Subdirectories / Подкаталоги', 'type': 'list_string', 'default': ['src', 'plugins', 'integrations', 'launchers', 'scripts', 'install', 'docs', 'prompts'], 'description': 'Subdirectories relative to project root to scan and index.'}, {'id': 'include_files', 'label': 'Include Root Files / Файлы в корне', 'type': 'list_string', 'default': ['README.md', 'README.ru.md', 'CHANGELOG.md', 'pyproject.toml'], 'description': 'Individual files in project root to index.'}]
+        return [{'id': 'project_root', 'label': 'Project Root Path / Директория проекта', 'type': 'string', 'default': '.', 'description': "Absolute or relative path to project root directory to index (e.g., '.' or 'D:/Projects/app')."}, {'id': 'index_name', 'label': 'Index Name / Имя RAG индекса', 'type': 'string', 'default': 'codebase', 'description': "Unique identifier for this RAG index (e.g., 'codebase', 'client_app_v1')."}, {'id': 'include_dirs', 'label': 'Include Subdirectories / Подкаталоги', 'type': 'list_string', 'default': ['src', 'plugins', 'integrations', 'launchers', 'scripts', 'install', 'docs', 'prompts'], 'description': 'Subdirectories relative to project root to scan and index.'}, {'id': 'include_files', 'label': 'Include Root Files / Файлы в корне', 'type': 'list_string', 'default': ['README.md', 'CHANGELOG.md', 'pyproject.toml'], 'description': 'Individual files in project root to index.'}]
 
     def list_available_indexes(self, user_id: Optional[int | str]=None) -> List[Dict[str, Any]]:
         """List all saved codebase indexes for the user or system."""

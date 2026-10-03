@@ -1,32 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run-Cloudflared Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Run-Cloudflared).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-Cloudflared.ps1
-#
-# File: Run-Cloudflared.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
-.SYNOPSIS
-    Перезапускает туннель Cloudflare Tunnel (cloudflared).
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Cloudflared
+=============================================================================
+Description:
+  Перезапускает туннель Cloudflare Tunnel (cloudflared)
 
+Usage Examples:
+  PowerShell Execution:
+    .\Run-Cloudflared.ps1
+
+File: Run-Cloudflared.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Перезапускает туннель Cloudflare Tunnel (cloudflared)
 .DESCRIPTION
     Завершает существующие процессы cloudflared, находит исполняемый файл
-    (включая C:\Users\onela\AppData\Local\bin\cloudflared.exe или PATH),
-    и запускает туннель с использованием CLOUDFLARE_TUNNEL_TOKEN из .env.
-
-.EXAMPLE
-    .\launchers\Run-Cloudflared.ps1
+    (включая C:\Users\onela\AppData\Local\bin\cloudflared
 #>
 
 [CmdletBinding()]

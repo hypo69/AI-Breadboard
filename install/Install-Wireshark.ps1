@@ -1,30 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Install-Wireshark Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Install-Wireshark).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Install-Wireshark.ps1
-#
-# File: Install-Wireshark.ps1
-# Project: ai-breadboard
-# Package: install
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:29
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Install Wireshark
+=============================================================================
+Description:
+  Wireshark and TShark installation and verification module for AI Breadboard
+
+Usage Examples:
+  PowerShell Execution:
+    .\Install-Wireshark.ps1
+
+File: Install-Wireshark.ps1
+Project: ai-breadboard
+Package: install
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    Wireshark and TShark installation and verification module for AI Breadboard.
+    Wireshark and TShark installation and verification module for AI Breadboard
 .DESCRIPTION
-    Checks whether tshark (part of Wireshark) is installed on the system.
-    If absent, prompts user to install Wireshark via winget or provides download link.
-    Also checks system PATH and verifies tshark version.
-.EXAMPLE
-    .\Install-Wireshark.ps1 -InstallDir $InstallDir -Config $Config
+    Checks whether tshark (part of Wireshark) is installed on the system
 #>
 
 param (

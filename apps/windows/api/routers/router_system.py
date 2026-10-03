@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-03 23:06:00
 # =============================================================================
 
 from __future__ import annotations
@@ -25,11 +25,12 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
 from logger import logger
 from apps.windows.telemetry import (
+    DeepDiagnosticsEngine,
     ForensicsActivityReport,
     HardwareArchiveEntry,
     HardwareAuditReport,
@@ -49,8 +50,7 @@ from apps.windows.telemetry import (
     SystemSnapshot,
     TelemetryLoggerService,
 )
-from apps.windows.telemetry.deep_diagnostics import DeepDiagnosticsEngine
-from src.ai.observability.grouped_telemetry import (
+from apps.windows.telemetry_research.grouped_telemetry import (
     GroupDiagnoseRequest,
     GroupDiagnosticResult,
     SynthesisDiagnosticResult,
@@ -59,11 +59,12 @@ from src.ai.observability.grouped_telemetry import (
 )
 
 
-def init_router(chat_model: Optional[Any] = None) -> APIRouter:
+def init_router(chat_model: Optional[Any] = None, **kwargs: Any) -> APIRouter:
     """Initialize and configure System and Hardware Inspector router.
 
     Args:
         chat_model: Optional UnifiedChatModel instance for AI telemetry diagnosis.
+        **kwargs: Extra injected dependencies from internal_app.
 
     Returns:
         APIRouter: Configured FastAPI router instance.

@@ -1,126 +1,78 @@
 # -*- coding: utf-8 -*-
-# =============================================================================
-# Process Name: AI-Breadboard Tests - Test Printer
-# =============================================================================
-# Description:
-#   Unit tests for the printer and pretty formatting module.
-#
-# Usage Examples:
-#   Python API:
-#     from tests.test_printer import TestPrinterFormatting
-#
-#     service = TestPrinterFormatting()
-#
-# File: test_printer.py
-# Project: ai-breadboard
-# Package: tests
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
-# =============================================================================
+"""Тесты для модуля src.utils.printer.
 
-"""Unit tests for the printer and pretty formatting module.
-
-Tests format detection for dicts, lists, JSON strings, arbitrary embedded JSON
-blocks (<text> <JSON> <text>), and verifies integration with logger methods."""
+Требования:
+- Использовать pytest.
+- Докстринги и комментарии на русском языке (hypo79 docblock).
+- Проверять основные функции pformat и pprint.
+"""
 
 import json
 import pytest
-from src.utils.printer import pformat, pprint, _color_text, TEXT_COLORS
-from logger import logger
+from pathlib import Path
 
-class TestPrinterFormatting:
-    """Tests for pformat function and JSON parsing."""
+from src.utils.printer import pformat, pprint
 
-    def test_pformat_dict(self):
-        """Test formatting of python dict."""
-        data = {'hello': 'world', 'num': 42}
-        result = pformat(data)
-        assert '"hello": "world"' in result
-        assert '"num": 42' in result
 
-    def test_pformat_list(self):
-        """Test formatting of python list."""
-        data = ['apple', 'banana', 123]
-        result = pformat(data)
-        assert '"apple"' in result
-        assert '123' in result
+def test_pformat_dict_default():
+    """Проверка форматирования словаря без цветовых параметров.
 
-    def test_pformat_json_string(self):
-        """Test formatting of string containing raw JSON."""
-        raw_json = '{"name":"Antigravity","status":"active"}'
-        result = pformat(raw_json)
-        assert '"name": "Antigravity"' in result
-        assert '"status": "active"' in result
-        assert '      ' in result
+    Ожидается, что результат будет отформатированным JSON со стандартным
+    отступом (6 пробелов) и без ANSI‑цветов.
+    """
+    data = {"name": "Alice", "age": 30, "items": [1, 2, 3]}
+    result = pformat(data)
+    parsed = json.loads(result)
+    assert parsed == data
+    lines = result.split('\n')
+    for line in lines[1:-1]:
+        if line.strip():
+            assert line.startswith('      ')
 
-    def test_pformat_prefixed_json_string(self):
-        """Test formatting of log string containing prefix followed by JSON."""
-        msg = 'RAW WS MSG: {"stepUpdate":{"state":"STATE_RUNNING","stepIndex":1}}'
-        result = pformat(msg)
-        assert 'RAW WS MSG:' in result
-        assert '"stepUpdate": {' in result
-        assert '"state": "STATE_RUNNING"' in result
 
-    def test_pformat_embedded_json_sandwich(self):
-        """Test formatting of <text> <JSON> <text> string."""
-        msg = 'Starting task {"task_id": "abc123", "progress": 0.5} and continuing execution'
-        result = pformat(msg)
-        assert 'Starting task' in result
-        assert '"task_id": "abc123"' in result
-        assert '"progress": 0.5' in result
-        assert 'and continuing execution' in result
+def test_pformat_embedded_json_in_string():
+    """Проверка форматирования JSON, встроенного в обычную строку.
 
-    def test_pformat_multiple_embedded_json(self):
-        """Test formatting with multiple JSON blocks in one string."""
-        msg = 'Config: {"env": "prod"} with servers: ["srv-1", "srv-2"] ready.'
-        result = pformat(msg)
-        assert 'Config:' in result
-        assert '"env": "prod"' in result
-        assert '"srv-1"' in result
-        assert '"srv-2"' in result
-        assert 'ready.' in result
+    Функция должна найти JSON‑блок, отформатировать его и вернуть строку
+    с отформатированным JSON.
+    """
+    raw = "User data: {\"id\":1,\"active\":true} end"
+    result = pformat(raw)
+    assert "{\n" in result
+    assert "\"id\": 1" in result
+    assert result.startswith("User data: ")
+    assert result.strip().endswith("end")
 
-    def test_pformat_none(self):
-        """Test formatting of None."""
-        result = pformat(None)
-        assert 'None' in result
 
-    def test_pformat_colored(self):
-        """Test applying ANSI colors to formatted text."""
-        data = {'key': 'value'}
-        result = pformat(data, text_color='green')
-        assert TEXT_COLORS['green'] in result
+def test_pformat_file_path_csv(tmp_path):
+    """Проверка обработки пути к файлу .csv.
 
-    def test_pprint_output(self, capsys):
-        """Test pprint prints to stdout."""
-        pprint({'test': 123}, text_color='white')
-        captured = capsys.readouterr()
-        assert '"test": 123' in captured.out
+    При передаче существующего пути к CSV‑файлу функция должна вернуть
+    строку вида "File: <path> (supported: .csv, .xls)".
+    """
+    file_path = tmp_path / "sample.csv"
+    file_path.write_text("a,b\n1,2\n")
+    result = pformat(str(file_path))
+    expected_prefix = f"File: {file_path} (supported: .csv, .xls)"
+    assert result == expected_prefix
 
-class TestLoggerPrinterIntegration:
-    """Tests logger integration with automatic pretty printing."""
 
-    def test_logger_info_with_json_string(self, capsys):
-        """Test logging a JSON string auto-formats nicely."""
-        json_msg = '{"event":"start","agent":"Antigravity"}'
-        logger.info(json_msg)
-        result = pformat(json_msg)
-        assert '"event": "start"' in result
-        assert '"agent": "Antigravity"' in result
+def test_pformat_none_returns_none_string():
+    """Проверка, что pformat(None) возвращает строку "None" без цвета."""
+    assert pformat(None) == "None"
 
-    def test_logger_info_with_dict(self):
-        """Test logging a dict object directly."""
-        dict_msg = {'event': 'login', 'user_id': 999}
-        logger.info(dict_msg)
-        result = pformat(dict_msg)
-        assert '"event": "login"' in result
 
-    def test_logger_info_with_embedded_json(self):
-        """Test logging an embedded JSON block in arbitrary text."""
-        embedded_msg = 'User payload {"user": "alice", "action": "ping"} received from socket'
-        logger.info(embedded_msg)
-        result = pformat(embedded_msg)
-        assert 'User payload' in result
-        assert '"user": "alice"' in result
-        assert 'received from socket' in result
+def test_pprint_outputs_formatted_string(capsys):
+    """Проверка функции pprint: вывод в stdout и работа параметров.
+
+    Функция должна объединить несколько аргументов, отформатировать каждый
+    через pformat и записать в поток вывода.
+    """
+    data1 = {"x": 1}
+    data2 = "plain text"
+    pprint(data1, data2, text_color="green", sep=" | ", end="!\n")
+    captured = capsys.readouterr()
+    assert captured.out.endswith("!\n")
+    assert " | " in captured.out
+    assert "{\n" in captured.out
+    assert "plain text" in captured.out

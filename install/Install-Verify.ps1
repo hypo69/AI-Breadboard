@@ -1,27 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Install-Verify Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Install-Verify).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Install-Verify.ps1
-#
-# File: Install-Verify.ps1
-# Project: ai-breadboard
-# Package: install
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:29
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Install Verify
+=============================================================================
+Description:
+  Модуль верификации и финализации установки AI Breadboard
+
+Usage Examples:
+  PowerShell Execution:
+    .\Install-Verify.ps1
+
+File: Install-Verify.ps1
+Project: ai-breadboard
+Package: install
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    Модуль верификации и финализации установки AI Breadboard.
+    Модуль верификации и финализации установки AI Breadboard
 .DESCRIPTION
-    Проверяет импорт ключевых модулей Python, сохраняет выбранный язык в config.json
-    и отображает финальный баннер завершения.
+    Проверяет импорт ключевых модулей Python, сохраняет выбранный язык в config
 #>
 
 param (

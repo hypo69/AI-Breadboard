@@ -1,27 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Install-Certs Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Install-Certs).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Install-Certs.ps1
-#
-# File: Install-Certs.ps1
-# Project: ai-breadboard
-# Package: install
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:29
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Install Certs
+=============================================================================
+Description:
+  Модуль проверки и генерации SSL-сертификатов
+
+Usage Examples:
+  PowerShell Execution:
+    .\Install-Certs.ps1
+
+File: Install-Certs.ps1
+Project: ai-breadboard
+Package: install
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    Модуль проверки и генерации SSL-сертификатов.
+    Модуль проверки и генерации SSL-сертификатов
 .DESCRIPTION
-    Проверяет наличие локальных сертификатов для безопасного HTTPS (localhost+2.pem)
-    или запускает генератор install_ssl_cert.ps1.
+    Проверяет наличие локальных сертификатов для безопасного HTTPS (localhost+2
 #>
 
 param (

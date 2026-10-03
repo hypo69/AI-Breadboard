@@ -70,7 +70,7 @@ The plugin registers the following tools for function calling:
 ```json
 {
   "include_dirs": ["src", "plugins", "integrations", "launchers", "scripts", "install", "docs", "prompts"],
-  "include_files": ["README.md", "README.ru.md", "CHANGELOG.md", "pyproject.toml"],
+  "include_files": ["README.md", "CHANGELOG.md", "pyproject.toml"],
   "ignore_patterns": [
     ".git/**",
     ".venv/**",

@@ -1,48 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Create And Register Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (create_and_register).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\create_and_register.ps1
-#
-# File: create_and_register.ps1
-# Project: ai-breadboard
-# Package: scripts.deploy
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:27:07
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Create And Register
+=============================================================================
+Description:
+  Create GitHub repository (using gh CLI or provided remote) and push current workspace, then attempt to register the project on Read the Docs using API token
+
+Usage Examples:
+  PowerShell Execution:
+    .\create_and_register.ps1
+
+File: create_and_register.ps1
+Project: ai-breadboard
+Package: scripts/deploy
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-  Create GitHub repository (using gh CLI or provided remote) and push current workspace, then attempt to register the project on Read the Docs using API token.
-
+    Create GitHub repository (using gh CLI or provided remote) and push current workspace, then attempt to register the project on Read the Docs using API token
 .DESCRIPTION
-  This script automates two actions that require your credentials/tools:
-  1) Create and push a GitHub repository named by -RepoName using gh CLI (or push to provided remote URL).
-  2) Register a project on Read the Docs using READTHEDOCS_API_TOKEN (or -RtdToken parameter) via API.
-
-  The script does NOT store any tokens. You must provide them via environment variables or parameters.
-
-.PARAMETER RepoName
-  Repository name to create on GitHub and RTD (default: AI-Breadboard).
-
-.PARAMETER Branch
-  Branch to push (default: main).
-
-.PARAMETER RemoteUrl
-  Optional explicit remote URL (ssh or https). If provided and gh CLI is not available, the script will set this remote and push.
-
-.PARAMETER RtdToken
-  Read the Docs API token. If omitted, the script will use environment variable READTHEDOCS_API_TOKEN.
-
-.EXAMPLE
-  ./create_and_register.ps1 -RepoName AI-Breadboard
-
-  Requires: gh CLI (recommended) and git. For RTD registration requires a Read the Docs API token in env READTHEDOCS_API_TOKEN.
+    This script automates two actions that require your credentials/tools:
+  1) Create and push a GitHub repository named by -RepoName using gh CLI (or push to provided remote URL)
 #>
 
 param(

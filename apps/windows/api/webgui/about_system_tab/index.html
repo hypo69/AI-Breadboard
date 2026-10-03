@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui/about_system_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:04:40
+# Updated: 2026-10-03 22:35:00
 =============================================================================
 -->
 
@@ -295,6 +295,16 @@ Updated: 2026-10-01 13:04:40
       </span>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
+      <!-- Button to Open History Modal -->
+      <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 d-flex align-items-center gap-1.5"
+              id="btn-open-about-history-modal"
+              type="button"
+              data-bs-toggle="modal"
+              data-bs-target="#aboutSystemHistoryModal"
+              title="Открыть историю значений из базы данных telemetry.db">
+        <i class="bi bi-clock-history"></i>
+        <span>История (DB)</span>
+      </button>
       <!-- Button to Open AI Diagnostics Modal -->
       <button class="btn btn-sm btn-info text-dark fw-bold rounded-pill px-3 py-1 shadow-sm d-flex align-items-center gap-1.5"
               id="btn-open-about-ai-modal"
@@ -315,6 +325,99 @@ Updated: 2026-10-01 13:04:40
       <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1" id="btn-about-sys-live-toggle" title="Приостановить или возобновить поток">
         <i class="bi bi-pause-fill me-1" id="icon-about-sys-live"></i> <span id="txt-about-sys-live">Пауза</span>
       </button>
+    </div>
+  </div>
+
+  <!-- History Telemetry Modal Dialog -->
+  <div class="modal fade" id="aboutSystemHistoryModal" tabindex="-1" aria-labelledby="aboutSystemHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" style="max-width: 95vw; width: 95vw; height: 90vh; margin: 2vh auto;">
+      <div class="modal-content bg-dark text-white border border-info border-opacity-40 shadow-lg" style="height: 100%; background: linear-gradient(135deg, rgba(13, 20, 36, 0.98) 0%, rgba(18, 30, 52, 0.98) 100%);">
+        
+        <div class="modal-header border-secondary border-opacity-25 pb-2 px-3">
+          <div class="d-flex align-items-center justify-content-between w-100 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="fs-5">📜</span>
+              <div>
+                <h6 class="modal-title fw-bold text-white mb-0" id="aboutSystemHistoryModalLabel">
+                  История телеметрии системы (telemetry.db)
+                </h6>
+                <div class="small text-muted" style="font-size: 0.72rem;">Хронология предыдущих снимков производительности и состояния хоста</div>
+              </div>
+            </div>
+            
+            <div class="d-flex align-items-center gap-2">
+              <div class="d-flex align-items-center gap-1">
+                <span class="small text-muted font-monospace" style="font-size: 0.72rem;">Лимит:</span>
+                <select class="form-select form-select-sm bg-dark text-light border-secondary" id="about-history-limit-select" style="width: 75px; font-size: 0.75rem; height: 28px;">
+                  <option value="15">15</option>
+                  <option value="30" selected>30</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+              <button class="btn btn-sm btn-outline-info rounded-pill px-2.5 py-1" id="btn-about-history-refresh" title="Обновить историю из БД">
+                <i class="bi bi-arrow-clockwise me-1"></i> Обновить
+              </button>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-body p-3" style="overflow-y: auto;">
+          <!-- Filter Buttons -->
+          <div class="d-flex align-items-center gap-1.5 flex-wrap mb-3" id="about-history-filter-group">
+            <button class="btn btn-sm btn-info text-dark fw-bold rounded-pill px-2.5 py-0.5 btn-history-filter active" data-metric="all">Все метрики</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5 btn-history-filter" data-metric="cpu">CPU</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5 btn-history-filter" data-metric="memory">Память (RAM)</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5 btn-history-filter" data-metric="gpu">GPU</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5 btn-history-filter" data-metric="storage">Диск C:</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5 btn-history-filter" data-metric="disk_io">Диск I/O</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5 btn-history-filter" data-metric="os">ОС & Хост</button>
+          </div>
+
+          <!-- History Table Container -->
+          <div class="table-responsive rounded border border-secondary border-opacity-30">
+            <table class="table table-dark table-hover table-sm mb-0 align-middle" style="font-size: 0.78rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+              <thead class="table-dark text-secondary border-secondary">
+                <tr id="about-history-thead-tr">
+                  <th style="width: 50px;">#ID</th>
+                  <th style="min-width: 140px;">Время</th>
+                  <th>Хост / ОС</th>
+                  <th style="text-align: right;">CPU % / МГц</th>
+                  <th style="text-align: right;">RAM (Использовано / Всего)</th>
+                  <th style="text-align: right;">GPU % / °C</th>
+                  <th style="text-align: right;">Диск C: Свободно</th>
+                  <th style="text-align: right;">Диск I/O (MB/s)</th>
+                  <th style="text-align: right;">Аптайм</th>
+                </tr>
+              </thead>
+              <tbody id="about-history-tbody">
+                <tr>
+                  <td colspan="9" class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm text-info mb-1" role="status"></div>
+                    <div>Загрузка истории из базы данных...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mt-2.5 small text-muted d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span id="about-history-count-badge">Записей в базе: 0</span>
+            <span class="font-monospace" id="about-history-db-meta" style="font-size: 0.70rem;">Источник: telemetry.db</span>
+          </div>
+        </div>
+
+        <div class="modal-footer border-secondary border-opacity-25 py-2 px-3 d-flex justify-content-between align-items-center">
+          <div class="small text-muted" style="font-size: 0.72rem;">
+            <i class="bi bi-database text-info me-1"></i>Таблица: system_snapshots
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">
+            Закрыть
+          </button>
+        </div>
+
+      </div>
     </div>
   </div>
 
@@ -526,9 +629,14 @@ Updated: 2026-10-01 13:04:40
     <!-- Card 1: Operating System & Host -->
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="about-sys-card">
-        <div class="about-sys-label">
-          <span>Платформа & ОС</span>
-          <i class="bi bi-windows text-info"></i>
+        <div class="about-sys-label d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-1.5">
+            <i class="bi bi-windows text-info"></i>
+            <span>Платформа & ОС</span>
+          </div>
+          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="os" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История ОС / Host из базы данных">
+            <i class="bi bi-clock-history"></i>
+          </button>
         </div>
         <div class="about-sys-value text-info text-truncate mt-1" id="about-kpi-os-title">Windows 11 (AMD64)</div>
         <div class="about-sys-sub text-truncate d-flex align-items-center justify-content-between">
@@ -541,9 +649,14 @@ Updated: 2026-10-01 13:04:40
     <!-- Card 2: Security & Defender -->
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="about-sys-card">
-        <div class="about-sys-label">
-          <span>Безопасность системы</span>
-          <i class="bi bi-shield-check text-success"></i>
+        <div class="about-sys-label d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-1.5">
+            <i class="bi bi-shield-check text-success"></i>
+            <span>Безопасность системы</span>
+          </div>
+          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="security" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История безопасности из базы данных">
+            <i class="bi bi-clock-history"></i>
+          </button>
         </div>
         <div class="about-sys-value text-success text-truncate mt-1" id="about-kpi-sec-title">Active & Protected</div>
         <div class="about-sys-sub text-truncate" id="about-kpi-sec-sub">Firewall: ON | UAC: ON</div>
@@ -553,9 +666,14 @@ Updated: 2026-10-01 13:04:40
     <!-- Card 3: System Protection & Restore -->
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="about-sys-card">
-        <div class="about-sys-label">
-          <span>Точки восстановления</span>
-          <i class="bi bi-shield-lock text-warning"></i>
+        <div class="about-sys-label d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-1.5">
+            <i class="bi bi-shield-lock text-warning"></i>
+            <span>Точки восстановления</span>
+          </div>
+          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="restore_points" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История точек восстановления из базы данных">
+            <i class="bi bi-clock-history"></i>
+          </button>
         </div>
         <div class="about-sys-value text-warning text-truncate mt-1" id="about-kpi-prot-title">3 Checkpoints</div>
         <div class="about-sys-sub text-truncate" id="about-kpi-prot-sub">Protection: Active</div>
@@ -565,9 +683,14 @@ Updated: 2026-10-01 13:04:40
     <!-- Card 4: System Storage (C:) -->
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="about-sys-card">
-        <div class="about-sys-label">
-          <span>Системный накопитель (C:)</span>
-          <i class="bi bi-hdd-fill text-primary"></i>
+        <div class="about-sys-label d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-1.5">
+            <i class="bi bi-hdd-fill text-primary"></i>
+            <span>Системный накопитель (C:)</span>
+          </div>
+          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="storage" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История накопителя C: из базы данных">
+            <i class="bi bi-clock-history"></i>
+          </button>
         </div>
         <div class="about-sys-value text-white text-truncate mt-1" id="about-kpi-stor-title">1014.8 GB Free</div>
         <div class="about-sys-sub text-info text-truncate" id="about-kpi-stor-clean">Cleanable: ~190 MB</div>
@@ -580,9 +703,15 @@ Updated: 2026-10-01 13:04:40
     <!-- CPU Utilization -->
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="about-sys-card">
-        <div class="about-sys-label">
-          <span>Загрузка CPU</span>
-          <span id="about-telemetry-cpu-cores" class="small text-muted">6 физ. / 12 Потоков</span>
+        <div class="about-sys-label d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-1.5">
+            <i class="bi bi-cpu text-info"></i>
+            <span>Загрузка CPU</span>
+            <span id="about-telemetry-cpu-cores" class="small text-muted ms-1">6 физ. / 12 Потоков</span>
+          </div>
+          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="cpu" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История CPU из базы данных">
+            <i class="bi bi-clock-history"></i>
+          </button>
         </div>
         <div class="d-flex align-items-baseline justify-content-between mt-1">
           <div class="about-sys-value text-info" id="about-telemetry-cpu-val">22.2%</div>
@@ -597,11 +726,17 @@ Updated: 2026-10-01 13:04:40
     <!-- Memory RAM -->
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="about-sys-card">
-        <div class="about-sys-label">
-          <span>Память (RAM)</span>
-          <span id="about-telemetry-ram-sub" class="small text-muted">58.0% занято (13.1 GB свободно)</span>
+        <div class="about-sys-label d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-1.5">
+            <i class="bi bi-memory text-warning"></i>
+            <span>Память (RAM)</span>
+          </div>
+          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="memory" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История памяти RAM из базы данных">
+            <i class="bi bi-clock-history"></i>
+          </button>
         </div>
         <div class="about-sys-value text-warning text-truncate mt-1" id="about-telemetry-ram-val">18.7 / 31.8 GB</div>
+        <div class="about-sys-sub text-truncate" id="about-telemetry-ram-sub">58.0% занято (13.1 GB свободно)</div>
         <div class="about-sys-progress-track mt-1.5">
           <div class="about-sys-progress-bar bg-warning" id="about-telemetry-ram-bar" style="width: 58%;"></div>
         </div>
@@ -611,9 +746,15 @@ Updated: 2026-10-01 13:04:40
     <!-- GPU Accelerator -->
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="about-sys-card">
-        <div class="about-sys-label">
-          <span>GPU Ускоритель</span>
-          <span id="about-telemetry-gpu-badge" class="badge bg-success-subtle text-success border border-success" style="font-size: 0.68rem;">CUDA + DirectML</span>
+        <div class="about-sys-label d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-1.5">
+            <i class="bi bi-gpu-card text-danger"></i>
+            <span>GPU Ускоритель</span>
+            <span id="about-telemetry-gpu-badge" class="badge bg-success-subtle text-success border border-success ms-1" style="font-size: 0.68rem;">CUDA + DirectML</span>
+          </div>
+          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="gpu" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История GPU из базы данных">
+            <i class="bi bi-clock-history"></i>
+          </button>
         </div>
         <div class="about-sys-value text-danger text-truncate mt-1" id="about-telemetry-gpu-name">GeForce GT 710</div>
         <div class="about-sys-sub text-truncate" id="about-telemetry-gpu-vram">VRAM: 2.0 GB | Нагрузка: 0%</div>
@@ -623,9 +764,14 @@ Updated: 2026-10-01 13:04:40
     <!-- Disk I/O Rate -->
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="about-sys-card">
-        <div class="about-sys-label">
-          <span>Диск (C:) I/O</span>
-          <i class="bi bi-speedometer2 text-info"></i>
+        <div class="about-sys-label d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-1.5">
+            <i class="bi bi-speedometer2 text-info"></i>
+            <span>Диск (C:) I/O</span>
+          </div>
+          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="disk_io" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История Диск I/O из базы данных">
+            <i class="bi bi-clock-history"></i>
+          </button>
         </div>
         <div class="about-sys-value text-white text-truncate mt-1" id="about-telemetry-disk-val">0.00 MB/s</div>
         <div class="about-sys-sub text-truncate" id="about-telemetry-disk-rates">Чтение: 0 КБ/с | Запись: 0 КБ/с</div>

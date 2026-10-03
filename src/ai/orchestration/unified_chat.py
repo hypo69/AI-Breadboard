@@ -18,7 +18,7 @@
 # Package: src.ai.orchestration
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-01 20:50:00
 # =============================================================================
 
 """Transparent routing wrapper across all configured AI providers."""
@@ -36,14 +36,14 @@ class UnifiedChatModel:
     ============  ====================
     Prefix        Provider
     ============  ====================
-    ``gemini_cli:`` / ``gemini-cli-``  GeminiCliChatBase
-    ``ollama:``   OllamaChatBase
-    ``agy-`` / contains ``agy``  AgyChatBase
-    ``foundry:``  FoundryChatBase
-    ``hf:``       HFChatBase
-    ``onnx:``     ONNXChatBase
+    ``gemini_cli:`` GeminiCliChatBase
+    ``ollama:``     OllamaChatBase
+    ``agy:`` / ``agy-``  AgyChatBase
+    ``foundry:``    FoundryChatBase
+    ``hf:``         HFChatBase
+    ``onnx:``       ONNXChatBase
     ``openai:`` / ``deepseek:`` / ``groq:`` etc.  OpenAICompatChat
-    *(default)*   GoogleGenerativeAI
+    ``gemini:`` / *(default)*   GoogleGenerativeAI
     ============  ====================
     """
 
@@ -209,7 +209,7 @@ class UnifiedChatModel:
             else:
                 self.ollama_model.model_id = active_name.replace('ollama:', '')
             return (self.ollama_model, active_name)
-        if active_name.startswith('agy-') or 'agy' in active_name.lower():
+        if active_name.startswith('agy:') or active_name.startswith('agy-') or 'agy' in active_name.lower():
             if not self.agy_model:
                 from src.ai.providers.agy import AgyChatBase
                 self.agy_model = AgyChatBase(model_id=active_name, system_prompt=self.system_instruction or '')

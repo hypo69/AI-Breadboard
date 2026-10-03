@@ -13,7 +13,7 @@
 # Package: src.api
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-01 16:33:00
 # =============================================================================
 
 """Модуль инициализации API‑роутеров.
@@ -52,7 +52,7 @@ from .routers.tc.telemetry.router_telemetry import init_router as init_telemetry
 from .routers.core.router_system_logs import init_router as init_system_logs_router
 from .routers.core.router_registry_viewer import init_router as init_registry_viewer_router
 from .routers.core.router_diagnostics import init_router as init_diagnostics_router
-from .routers.core.router_scenarios import init_router as init_scenarios_router
+from apps.windows.api.routers.router_scenarios import init_router as init_scenarios_router
 from .routers.core.router_autolog import init_router as init_autolog_router
 from .routers.core.router_sysautologging import init_router as init_sysautolog_router
 from .routers.core.router_user_directories import init_router as init_user_directories_router

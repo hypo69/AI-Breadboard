@@ -1,54 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run-Agy Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Run-Agy).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-Agy.ps1
-#
-# File: Run-Agy.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
-.SYNOPSIS
-    Check, install and run Google Antigravity CLI (agy).
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Agy
+=============================================================================
+Description:
+  Check, install and run Google Antigravity CLI (agy)
 
+Usage Examples:
+  PowerShell Execution:
+    .\Run-Agy.ps1
+
+File: Run-Agy.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Check, install and run Google Antigravity CLI (agy)
 .DESCRIPTION
     Script for checking Antigravity CLI (agy) presence in system, offering
-    installation/update if missing, configuring API keys from .env and running
-    interactive session or one-off requests to agent.
-
-.PARAMETER Action
-    Action to perform:
-    - 'check': Check presence and status of agy CLI (default)
-    - 'chat': Run interactive console session agy
-    - 'models': Show list of available models (agy models)
-    - 'update': Update agy utility to latest version (agy update)
-    - 'version': Show utility version (agy --version)
-    - 'status': Show current environment status
-
-.PARAMETER Prompt
-    Optional one-off text request to execute through agy --print.
-
-.PARAMETER Model
-    Model for request (default from config.json or agy-flash).
-
-.PARAMETER Help
-    Display usage help for script (-Help, -h, --help).
-
-.EXAMPLE
-    .\Run-Agy.ps1
-    .\Run-Agy.ps1 -Action chat
-    .\Run-Agy.ps1 -Action models
-    .\Run-Agy.ps1 -Prompt "Explain Antigravity architecture"
-    .\Run-Agy.ps1 --help
+    installation/update if missing, configuring API keys from
 #>
 
 [CmdletBinding()]

@@ -1,41 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run-Chat Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Run-Chat).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-Chat.ps1
-#
-# File: Run-Chat.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Chat
+=============================================================================
+Description:
+  AI Chat Application Launcher for AI-Breadboard
+
+Usage Examples:
+  PowerShell Execution:
+    .\Run-Chat.ps1
+
+File: Run-Chat.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
 .SYNOPSIS
-    AI Chat Application Launcher for AI-Breadboard.
-
+    AI Chat Application Launcher for AI-Breadboard
 .DESCRIPTION
-    Launches the standalone AI Chat application microservice on port 8128.
-
-.PARAMETER Action
-    Action to perform: 'start' (default), 'stop', 'restart', 'status'.
-
-.PARAMETER NewWindow
-    Launch microservice in visible standalone console window.
-
-.PARAMETER Help
-    Display usage help for script (-Help, -h, --help).
-
-.EXAMPLE
-    .\launchers\Run-Chat.ps1
-    .\launchers\Run-Chat.ps1 -NewWindow
-    .\launchers\Run-Chat.ps1 -Action status
+    Launches the standalone AI Chat application microservice on port 8128
 #>
 
 [CmdletBinding()]

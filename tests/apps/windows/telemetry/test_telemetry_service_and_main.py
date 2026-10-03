@@ -16,12 +16,12 @@
 # Package: tests.apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-03 22:12:00
 # =============================================================================
 
 """Тесты для фонового сервиса TelemetryLoggerService и командного интерфейса main.py на реальных вызовах.
 
-Updated: 2026-10-01 11:07:00"""
+Updated: 2026-10-03 22:12:00"""
 
 import sys
 import time
@@ -63,6 +63,52 @@ class TestTelemetryLoggerService:
         time.sleep(0.3)
         real_telemetry_service.stop()
         assert real_telemetry_service.is_running is False
+
+    def test_service_dynamic_interval_reload(self, tmp_path):
+        import json
+        cfg_path = tmp_path / "dynamic_srv_cfg.json"
+        cfg_path.write_text(json.dumps({
+            "interval_seconds": 0.2,
+            "top_processes": 3,
+            "heavy_interval_seconds": 10.0,
+            "db_cleanup_interval_seconds": 50.0
+        }), encoding="utf-8")
+
+        from apps.windows.telemetry.telemetry_config import TelemetryConfigManager
+        cm = TelemetryConfigManager(config_path=str(cfg_path))
+        db_path = str(tmp_path / "dyn_telemetry.db")
+        storage = TelemetryStorage(db_path=db_path)
+        collector = SystemCollector()
+
+        service = TelemetryLoggerService(
+            interval_sec=5.0,  # default, will use cm
+            collector=collector,
+            storage=storage,
+            enable_w64=False,
+            config_manager=cm
+        )
+
+        assert service.interval_sec == 0.2
+        assert service.top_processes == 3
+        assert service.sync_config_from_manager() is False
+
+        # Модифицируем файл конфигурации
+        time.sleep(0.05)
+        cfg_path.write_text(json.dumps({
+            "interval_seconds": "0.1s",
+            "top_processes": 8,
+            "heavy_interval_seconds": "5 seconds",
+            "db_cleanup_interval_seconds": 25.0
+        }), encoding="utf-8")
+
+        # Синхронизация должна применить новые значения
+        res = service.sync_config_from_manager()
+        assert res is True
+        assert service.interval_sec == 0.1
+        assert service.top_processes == 8
+        assert service.hardware_audit_interval_sec == 5.0
+        assert service.db_cleanup_interval_sec == 25.0
+
 
 
 class TestTelemetryMainCLI:

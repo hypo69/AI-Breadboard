@@ -1,50 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run-Tcinternal Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Run-TCInternal).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-TCInternal.ps1
-#
-# File: Run-TCInternal.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
-.SYNOPSIS
-    Запускает/останавливает внутренний FastAPI-сервис Windows TC (apps/windows/api).
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Tcinternal
+=============================================================================
+Description:
+  Запускает/останавливает внутренний FastAPI-сервис Windows TC (apps/windows/api)
 
+Usage Examples:
+  PowerShell Execution:
+    .\Run-TCInternal.ps1
+
+File: Run-TCInternal.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Запускает/останавливает внутренний FastAPI-сервис Windows TC (apps/windows/api)
 .DESCRIPTION
     Управляет жизненным циклом AI-Breadboard Windows Internal API:
-    - Слушает исключительно на 127.0.0.1 (localhost)
-    - Порт задаётся параметром -Port (по умолчанию 8001)
-    - Записывает PID в файл для последующей остановки
-
-.PARAMETER Action
-    start  — запустить сервис (по умолчанию)
-    stop   — остановить сервис
-    restart — перезапустить сервис
-    status — показать статус
-
-.PARAMETER Port
-    Порт прослушивания (по умолчанию: 8001)
-
-.PARAMETER Host_
-    IP-адрес (по умолчанию: 127.0.0.1, принудительно)
-
-.PARAMETER LogLevel
-    Уровень логирования uvicorn (по умолчанию: info)
-
-.EXAMPLE
-    .\Run-TCInternal.ps1
-    .\Run-TCInternal.ps1 -Action start -Port 8001
-    .\Run-TCInternal.ps1 -Action stop
+    - Слушает исключительно на 127
 #>
 
 [CmdletBinding()]

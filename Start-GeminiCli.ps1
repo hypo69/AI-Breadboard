@@ -1,20 +1,22 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Start-Geminicli Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Start-GeminiCli).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Start-GeminiCli.ps1
-#
-# File: Start-GeminiCli.ps1
-# Project: ai-breadboard
-# Package: root
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:20:26
-# =============================================================================
+<#
+=============================================================================
+Process Name: AI-Breadboard Automation - Start Geminicli
+=============================================================================
+Description:
+  PowerShell-сценарий автоматизации и системного обслуживания (Start-GeminiCli).
+
+Usage Examples:
+  PowerShell Execution:
+    .\Start-GeminiCli.ps1
+
+File: Start-GeminiCli.ps1
+Project: ai-breadboard
+Package: root
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+#>
 
 # -----------------------------------------------------------------------------
 # Файл: Start-GeminiCli.ps1

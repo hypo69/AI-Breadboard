@@ -1,47 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run Tests Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (run_tests).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\run_tests.ps1
-#
-# File: run_tests.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
-.SYNOPSIS
-    PowerShell script for running ai-breadboard / AI Breadboard tests.
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Tests
+=============================================================================
+Description:
+  PowerShell script for running ai-breadboard / AI Breadboard tests
 
+Usage Examples:
+  PowerShell Execution:
+    .\run_tests.ps1
+
+File: run_tests.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    PowerShell script for running ai-breadboard / AI Breadboard tests
 .DESCRIPTION
     Test runner script for executing pytest with optional coverage reporting,
-    verbose output, marker filtering, and automatic HTML coverage report opening.
-    Supports virtual environment activation and cross-platform execution.
-
-.PARAMETER Coverage
-    Enable code coverage reporting (generates HTML and XML reports).
-
-.PARAMETER Verbose
-    Display verbose test output (-v flag).
-
-.PARAMETER Markers
-    Run only tests matching specified pytest markers.
-
-.PARAMETER OpenCoverage
-    Automatically open HTML coverage report in browser after tests complete.
-
-.EXAMPLE
-    .\run_tests.ps1
-    .\run_tests.ps1 -Coverage -OpenCoverage
-    .\run_tests.ps1 -Verbose -Markers "unit"
-    .\run_tests.ps1 -Coverage -Verbose
+    verbose output, marker filtering, and automatic HTML coverage report opening
 #>
 
 param(

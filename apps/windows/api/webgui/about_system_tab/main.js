@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-03 22:36:00
  * =============================================================================
  */
 
@@ -36,7 +36,7 @@
 // Package: src.api.webgui.about_system_tab
 // Author: hypo69
 // Copyright: © 2026 hypo69
-// Updated: 2026-10-01 06:10:00
+// Updated: 2026-10-03 22:36:00
 // =============================================================================
 
 (function () {
@@ -48,6 +48,7 @@
   let wearAutoRefreshTimer = null;
   let isUpdating = false;
   let isAiRunning = false;
+  let activeHistoryMetric = 'all';
   
   // Кеш-стратегия и TTL
   const CACHE_STRATEGY = {
@@ -165,6 +166,7 @@
     console.log('[AboutSystemTab] Initializing tab controller...');
     bindEvents();
     bindAIEvents();
+    bindHistoryEvents();
     updateLocalClock();
     
     // Проверка доступности кеша
@@ -636,83 +638,100 @@
   }
 
   /**
-   * Загрузка сводных KPI-карточек из персистентной БД telemetry.db
+   * Загрузка сводных KPI-карточек и панели (8 индивидуальных API) из /api/v1/dashboard/*
    */
   async function fetchKpiPanels(forceNetwork = false) {
-    return Promise.allSettled([
-      fetchPanelOs(forceNetwork),
-      fetchPanelSecurity(forceNetwork),
-      fetchPanelRestorePoints(forceNetwork),
-      fetchPanelStorage(forceNetwork)
-    ]);
-  }
-
-  async function fetchPanelOs(forceNetwork = false) {
     try {
       const config = CACHE_STRATEGY.PANEL_KPI || { ttl: 5000, strategy: 'stale-while-revalidate' };
-      const data = await cachedFetch(
-        '/api/v1/panel/os',
-        'panel_os',
-        { ttl: config.ttl, strategy: config.strategy, forceNetwork }
-      );
-      if (data) {
+      const opts = { ttl: config.ttl, strategy: config.strategy, forceNetwork };
+
+      const [osRes, secRes, chkRes, storRes, cpuRes, ramRes, gpuRes, ioRes] = await Promise.allSettled([
+        cachedFetch('/api/v1/dashboard/os', 'dash_os', opts),
+        cachedFetch('/api/v1/dashboard/security', 'dash_sec', opts),
+        cachedFetch('/api/v1/dashboard/checkpoints', 'dash_chk', opts),
+        cachedFetch('/api/v1/dashboard/storage', 'dash_stor', opts),
+        cachedFetch('/api/v1/dashboard/cpu', 'dash_cpu', opts),
+        cachedFetch('/api/v1/dashboard/ram', 'dash_ram', opts),
+        cachedFetch('/api/v1/dashboard/gpu', 'dash_gpu', opts),
+        cachedFetch('/api/v1/dashboard/disk_io', 'dash_io', opts)
+      ]);
+
+      // 1. Платформа & ОС
+      if (osRes.status === 'fulfilled' && osRes.value) {
+        const data = osRes.value;
         if (data.display_title) setText('about-kpi-os-title', data.display_title);
         if (data.display_host) setText('about-kpi-os-host', data.display_host);
         if (data.uptime_human) setText('about-spec-uptime', `Uptime: ${data.uptime_human}`);
+        if (data.os_install_date) setText('about-ident-install-date', data.os_install_date);
       }
-    } catch (err) {
-      console.warn('[AboutSystemTab] fetchPanelOs error:', err);
-    }
-  }
 
-  async function fetchPanelSecurity(forceNetwork = false) {
-    try {
-      const config = CACHE_STRATEGY.PANEL_KPI || { ttl: 5000, strategy: 'stale-while-revalidate' };
-      const data = await cachedFetch(
-        '/api/v1/panel/security',
-        'panel_security',
-        { ttl: config.ttl, strategy: config.strategy, forceNetwork }
-      );
-      if (data) {
+      // 2. Безопасность системы
+      if (secRes.status === 'fulfilled' && secRes.value) {
+        const data = secRes.value;
         if (data.display_title) setText('about-kpi-sec-title', data.display_title);
         if (data.display_subtitle) setText('about-kpi-sec-sub', data.display_subtitle);
       }
-    } catch (err) {
-      console.warn('[AboutSystemTab] fetchPanelSecurity error:', err);
-    }
-  }
 
-  async function fetchPanelRestorePoints(forceNetwork = false) {
-    try {
-      const config = CACHE_STRATEGY.PANEL_KPI || { ttl: 5000, strategy: 'stale-while-revalidate' };
-      const data = await cachedFetch(
-        '/api/v1/panel/restore-points',
-        'panel_restore_points',
-        { ttl: config.ttl, strategy: config.strategy, forceNetwork }
-      );
-      if (data) {
+      // 3. Точки восстановления
+      if (chkRes.status === 'fulfilled' && chkRes.value) {
+        const data = chkRes.value;
         if (data.display_title) setText('about-kpi-prot-title', data.display_title);
         if (data.display_subtitle) setText('about-kpi-prot-sub', data.display_subtitle);
       }
-    } catch (err) {
-      console.warn('[AboutSystemTab] fetchPanelRestorePoints error:', err);
-    }
-  }
 
-  async function fetchPanelStorage(forceNetwork = false) {
-    try {
-      const config = CACHE_STRATEGY.PANEL_KPI || { ttl: 5000, strategy: 'stale-while-revalidate' };
-      const data = await cachedFetch(
-        '/api/v1/panel/storage',
-        'panel_storage',
-        { ttl: config.ttl, strategy: config.strategy, forceNetwork }
-      );
-      if (data) {
+      // 4. Системный накопитель (C:)
+      if (storRes.status === 'fulfilled' && storRes.value) {
+        const data = storRes.value;
         if (data.display_title) setText('about-kpi-stor-title', data.display_title);
         if (data.display_subtitle) setText('about-kpi-stor-clean', data.display_subtitle);
       }
+
+      // 5. Загрузка CPU
+      if (cpuRes.status === 'fulfilled' && cpuRes.value) {
+        const data = cpuRes.value;
+        if (data.display_val) setText('about-telemetry-cpu-val', data.display_val);
+        if (data.display_cores) setText('about-telemetry-cpu-cores', data.display_cores);
+        if (data.display_freq) setText('about-telemetry-cpu-freq', data.display_freq);
+        const cpuBar = document.getElementById('about-telemetry-cpu-bar');
+        if (cpuBar) {
+          const cpuPct = data.total_percent || 0;
+          cpuBar.style.width = `${Math.min(100, Math.max(0, cpuPct))}%`;
+          cpuBar.className = cpuPct > 85 ? 'about-sys-progress-bar bg-danger' : (cpuPct > 60 ? 'about-sys-progress-bar bg-warning' : 'about-sys-progress-bar bg-info');
+        }
+      }
+
+      // 6. Память (RAM)
+      if (ramRes.status === 'fulfilled' && ramRes.value) {
+        const data = ramRes.value;
+        if (data.display_val) setText('about-telemetry-ram-val', data.display_val);
+        if (data.display_sub) setText('about-telemetry-ram-sub', data.display_sub);
+        const ramBar = document.getElementById('about-telemetry-ram-bar');
+        if (ramBar) {
+          const ramPct = data.percent || 0;
+          ramBar.style.width = `${Math.min(100, Math.max(0, ramPct))}%`;
+          ramBar.className = ramPct > 85 ? 'about-sys-progress-bar bg-danger' : (ramPct > 65 ? 'about-sys-progress-bar bg-warning' : 'about-sys-progress-bar bg-info');
+        }
+      }
+
+      // 7. GPU Ускоритель
+      if (gpuRes.status === 'fulfilled' && gpuRes.value) {
+        const data = gpuRes.value;
+        if (data.display_name) setText('about-telemetry-gpu-name', data.display_name);
+        if (data.display_vram) setText('about-telemetry-gpu-vram', data.display_vram);
+        const badgeGpu = document.getElementById('about-telemetry-gpu-badge');
+        if (badgeGpu && data.badge) {
+          badgeGpu.textContent = data.badge;
+        }
+      }
+
+      // 8. Диск (C:) I/O
+      if (ioRes.status === 'fulfilled' && ioRes.value) {
+        const data = ioRes.value;
+        if (data.display_val) setText('about-telemetry-disk-val', data.display_val);
+        if (data.display_rates) setText('about-telemetry-disk-rates', data.display_rates);
+      }
     } catch (err) {
-      console.warn('[AboutSystemTab] fetchPanelStorage error:', err);
+      console.warn('[AboutSystemTab] fetchKpiPanels error:', err);
     }
   }
 
@@ -1751,6 +1770,205 @@
     if (cat.includes('usb') || cat.includes('контроллер')) return 'bi bi-usb-symbol';
     if (cat.includes('update') || cat.includes('servicing')) return 'bi bi-arrow-repeat';
     return 'bi bi-gear-fill';
+  }
+
+  /**
+   * Привязка событий для модального окна истории телеметрии из базы данных
+   */
+  function bindHistoryEvents() {
+    const btnOpenHistory = document.getElementById('btn-open-about-history-modal');
+    if (btnOpenHistory) {
+      btnOpenHistory.onclick = () => {
+        activeHistoryMetric = 'all';
+        updateHistoryFilterButtons();
+        fetchAboutSystemHistory(activeHistoryMetric);
+      };
+    }
+
+    // Обработчик кнопок истории на каждой карточке
+    document.querySelectorAll('.btn-card-history').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const metric = btn.getAttribute('data-metric') || 'all';
+        activeHistoryMetric = metric;
+        updateHistoryFilterButtons();
+        fetchAboutSystemHistory(activeHistoryMetric);
+      };
+    });
+
+    const btnRefreshHistory = document.getElementById('btn-about-history-refresh');
+    if (btnRefreshHistory) {
+      btnRefreshHistory.onclick = () => {
+        fetchAboutSystemHistory(activeHistoryMetric);
+      };
+    }
+
+    const limitSelect = document.getElementById('about-history-limit-select');
+    if (limitSelect) {
+      limitSelect.onchange = () => {
+        fetchAboutSystemHistory(activeHistoryMetric);
+      };
+    }
+
+    // Фильтры метрик
+    document.querySelectorAll('.btn-history-filter').forEach(btn => {
+      btn.onclick = () => {
+        const metric = btn.getAttribute('data-metric') || 'all';
+        activeHistoryMetric = metric;
+        updateHistoryFilterButtons();
+        fetchAboutSystemHistory(activeHistoryMetric);
+      };
+    });
+  }
+
+  function updateHistoryFilterButtons() {
+    document.querySelectorAll('.btn-history-filter').forEach(btn => {
+      const m = btn.getAttribute('data-metric') || 'all';
+      if (m === activeHistoryMetric) {
+        btn.className = 'btn btn-sm btn-info text-dark fw-bold rounded-pill px-2.5 py-0.5 btn-history-filter active';
+      } else {
+        btn.className = 'btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5 btn-history-filter';
+      }
+    });
+  }
+
+  /**
+   * Загрузка исторических записей телеметрии из базы данных telemetry.db
+   */
+  async function fetchAboutSystemHistory(metric = 'all') {
+    const tbody = document.getElementById('about-history-tbody');
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" class="text-center py-4 text-muted">
+            <div class="spinner-border spinner-border-sm text-info mb-1" role="status"></div>
+            <div>Запрос истории из базы данных telemetry.db...</div>
+          </td>
+        </tr>
+      `;
+    }
+
+    const limitSelect = document.getElementById('about-history-limit-select');
+    const limit = limitSelect ? parseInt(limitSelect.value, 10) || 30 : 30;
+
+    try {
+      const url = `/api/v1/about-system/history?limit=${limit}&metric=${encodeURIComponent(metric)}`;
+      const data = await apiFetch(url);
+      renderAboutSystemHistory(data, metric);
+    } catch (err) {
+      console.error('[AboutSystemTab] fetchAboutSystemHistory error:', err);
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="text-center py-4 text-danger">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i>
+              Ошибка при получении истории из БД: ${escapeHtml(err.message || String(err))}
+            </td>
+          </tr>
+        `;
+      }
+    }
+  }
+
+  /**
+   * Отрисовка таблицы с предыдущими значениями из telemetry.db
+   */
+  function renderAboutSystemHistory(resData, metric) {
+    const tbody = document.getElementById('about-history-tbody');
+    const countBadge = document.getElementById('about-history-count-badge');
+    const metaEl = document.getElementById('about-history-db-meta');
+
+    if (!resData || !Array.isArray(resData.history) || resData.history.length === 0) {
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="text-center py-4 text-muted">
+              <i class="bi bi-database-slash fs-4 d-block mb-1 text-secondary"></i>
+              В базе данных telemetry.db пока нет сохраненных срезов телеметрии.
+            </td>
+          </tr>
+        `;
+      }
+      if (countBadge) countBadge.textContent = 'Записей в базе: 0';
+      return;
+    }
+
+    const history = resData.history;
+    if (countBadge) countBadge.textContent = `Записей в выборке: ${history.length}`;
+    if (metaEl && resData.meta && resData.meta.source) {
+      metaEl.textContent = `Источник: ${resData.meta.source} (${resData.meta.table || 'system_snapshots'})`;
+    }
+
+    if (!tbody) return;
+
+    let rowsHtml = '';
+    history.forEach(item => {
+      const id = item.id || 0;
+      let dateFormatted = '--:--:--';
+      if (item.timestamp) {
+        try {
+          const d = new Date(item.timestamp);
+          dateFormatted = `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+        } catch (_) {
+          dateFormatted = item.timestamp;
+        }
+      }
+
+      const host = escapeHtml(item.hostname || '--');
+      const os = escapeHtml(item.os_name || 'Windows');
+
+      // CPU
+      const cpuVal = item.cpu_total_percent !== null && item.cpu_total_percent !== undefined ? Number(item.cpu_total_percent) : 0;
+      const cpuColor = cpuVal > 85 ? 'text-danger fw-bold' : (cpuVal > 60 ? 'text-warning' : 'text-info');
+      const cpuFreq = item.cpu_frequency_mhz ? `${item.cpu_frequency_mhz} MHz` : '';
+
+      // RAM
+      const ramUsed = item.memory_used_gb !== null && item.memory_used_gb !== undefined ? Number(item.memory_used_gb).toFixed(1) : '0.0';
+      const ramTot = item.memory_total_gb !== null && item.memory_total_gb !== undefined ? Number(item.memory_total_gb).toFixed(1) : '0.0';
+      const ramPct = item.memory_percent !== null && item.memory_percent !== undefined ? Number(item.memory_percent).toFixed(1) : '0.0';
+      const ramColor = Number(ramPct) > 85 ? 'text-danger' : (Number(ramPct) > 65 ? 'text-warning' : 'text-success');
+
+      // GPU
+      const gpuLoad = item.gpu_load_percent !== null && item.gpu_load_percent !== undefined ? `${item.gpu_load_percent}%` : '--';
+      const gpuTemp = item.gpu_temp_c !== null && item.gpu_temp_c !== undefined ? ` / ${item.gpu_temp_c}°C` : '';
+
+      // Storage C:
+      const cFree = item.storage_c_free_gb !== null && item.storage_c_free_gb !== undefined ? `${item.storage_c_free_gb} GB` : '--';
+
+      // Disk I/O
+      const diskIo = item.disk_io_total_mb_s !== null && item.disk_io_total_mb_s !== undefined ? `${Number(item.disk_io_total_mb_s).toFixed(2)} MB/s` : '0.00 MB/s';
+
+      // Uptime
+      const uptime = escapeHtml(item.uptime_human || '--');
+
+      rowsHtml += `
+        <tr>
+          <td class="text-muted">#${id}</td>
+          <td class="text-nowrap text-light">${escapeHtml(dateFormatted)}</td>
+          <td class="text-truncate" style="max-width: 140px;" title="${host} (${os})">
+            <span class="text-white">${host}</span>
+            <small class="text-muted d-block" style="font-size: 0.70rem;">${os}</small>
+          </td>
+          <td style="text-align: right;">
+            <span class="${cpuColor}">${cpuVal.toFixed(1)}%</span>
+            <small class="text-muted d-block" style="font-size: 0.70rem;">${cpuFreq}</small>
+          </td>
+          <td style="text-align: right;">
+            <span class="${ramColor}">${ramUsed} / ${ramTot} GB</span>
+            <small class="text-muted d-block" style="font-size: 0.70rem;">${ramPct}%</small>
+          </td>
+          <td style="text-align: right;">
+            <span class="text-light">${gpuLoad}</span>
+            <small class="text-danger" style="font-size: 0.70rem;">${gpuTemp}</small>
+          </td>
+          <td style="text-align: right;" class="text-info">${cFree}</td>
+          <td style="text-align: right;" class="text-white">${diskIo}</td>
+          <td style="text-align: right;" class="text-muted">${uptime}</td>
+        </tr>
+      `;
+    });
+
+    tbody.innerHTML = rowsHtml;
   }
 
   function escapeHtml(str) {

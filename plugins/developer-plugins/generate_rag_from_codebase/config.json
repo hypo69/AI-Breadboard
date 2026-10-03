@@ -13,7 +13,6 @@
   ],
   "include_files": [
     "README.md",
-    "README.ru.md",
     "CHANGELOG.md",
     "pyproject.toml"
   ],

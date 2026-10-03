@@ -1,32 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Tc Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (tc).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\tc.ps1
-#
-# File: tc.ps1
-# Project: ai-breadboard
-# Package: root
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:20:26
-# =============================================================================
-
 <#
-.SYNOPSIS
-    Запускает сервер Windows API (AI Breadboard /tc).
+=============================================================================
+Process Name: AI-Breadboard Automation - Tc
+=============================================================================
+Description:
+  Запускает сервер Windows API (AI Breadboard /tc)
 
-.DESCRIPTION
-    Запускает FastAPI сервер для модуля apps/windows/api на порту 8001.
-    Доступен по адресу http://localhost:8001/tc
-
-.EXAMPLE
+Usage Examples:
+  PowerShell Execution:
     .\tc.ps1
-    .\tc.ps1 -Port 8080
+
+File: tc.ps1
+Project: ai-breadboard
+Package: root
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Запускает сервер Windows API (AI Breadboard /tc)
+.DESCRIPTION
+    Запускает FastAPI сервер для модуля apps/windows/api на порту 8001
 #>
 
 [CmdletBinding()]

@@ -1,30 +1,25 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Install-Sslcertificate Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Install-SslCertificate).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Install-SslCertificate.ps1
-#
-# File: Install-SslCertificate.ps1
-# Project: ai-breadboard
-# Package: install
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:29
-# =============================================================================
-
 <#
-.SYNOPSIS
-    Проверка, генерация и установка локальных SSL-сертификатов для ai-breadboard.
+=============================================================================
+Process Name: AI-Breadboard Automation - Install Sslcertificate
+=============================================================================
+Description:
+  Проверка, генерация и установка локальных SSL-сертификатов для ai-breadboard
 
+Usage Examples:
+  PowerShell Execution:
+    .\Install-SslCertificate.ps1
+
+File: Install-SslCertificate.ps1
+Project: ai-breadboard
+Package: install
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Проверка, генерация и установка локальных SSL-сертификатов для ai-breadboard
 .DESCRIPTION
-    1. Проверяет наличие сертификатов в $env:USERPROFILE\.certs (localhost+2.pem, localhost+2-key.pem).
-    2. Генерирует их через mkcert (если установлен) или встроенным генератором (Python cryptography).
-    3. Автоматически включает в сертификат: localhost, 127.0.0.1, ::1, имя компьютера и все текущие IP-адреса сети.
-    4. Импортирует сертификат в хранилища Windows (CurrentUser\My и CurrentUser\Root).
+    1
 #>
 
 $ErrorActionPreference = 'Stop'

@@ -7,9 +7,9 @@
 - **`internal_app.py`** — фабрика создания приложения FastAPI (`create_internal_app`), конфигурация middleware и подключение роутеров.
 - **`__main__.py`** — точка входа для запуска выделенного Uvicorn-сервера на localhost: `py -m apps.windows.api --port 8001`.
 - **`router_capabilities.py`** — роутер атомарных возможностей и действий Windows.
-- **`routers/`** — модульные FastAPI-роутеры:
+- **`routers/`** — модульные FastAPI-роутеры по панелям интерфейса:
   - `router_tc.py` — интеграция с Total Commander и панелями.
-  - `router_panel.py` — API телеметрии и дашборда.
+  - `router_about_system.py` — REST API панели «О Системе» (`/api/v1/about-system/*`) на базе `telemetry.db`.
   - `router_diagnostics.py` — эндпоинты запуска диагностик и проверки состояния.
   - `router_admin.py`, `router_control.py`, `router_scenarios.py` и др.
 - **`webgui/`** — статические ассеты веб-интерфейса (HTML/CSS/JS).

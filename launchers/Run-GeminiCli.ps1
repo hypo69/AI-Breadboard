@@ -1,53 +1,26 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Run-Geminicli Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (Run-GeminiCli).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\Run-GeminiCli.ps1
-#
-# File: Run-GeminiCli.ps1
-# Project: ai-breadboard
-# Package: launchers
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:21:06
-# =============================================================================
-
 <#
-.SYNOPSIS
-    Check, install and run Google Gemini CLI (@google/gemini-cli).
+=============================================================================
+Process Name: AI-Breadboard Automation - Run Geminicli
+=============================================================================
+Description:
+  Check, install and run Google Gemini CLI (@google/gemini-cli)
 
+Usage Examples:
+  PowerShell Execution:
+    .\Run-GeminiCli.ps1
+
+File: Run-GeminiCli.ps1
+Project: ai-breadboard
+Package: launchers
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+.SYNOPSIS
+    Check, install and run Google Gemini CLI (@google/gemini-cli)
 .DESCRIPTION
     Script for checking Gemini CLI presence in system, automatic offer to install
-    via npm if missing, configuring API keys from .env and running interactive
-    session or single requests.
-
-.PARAMETER Action
-    Action to perform:
-    - 'check': Check presence and status of Gemini CLI
-    - 'install': Install/update Gemini CLI via npm
-    - 'chat': Run interactive console session
-    - 'version': Show utility version
-    Default: 'check'.
-
-.PARAMETER Prompt
-    Optional one-off text request to execute through Gemini CLI.
-
-.PARAMETER Model
-    Gemini model for request (default from config.json or gemini-2.5-flash).
-
-.PARAMETER Help
-    Display usage help for script (-Help, -h, --help).
-
-.EXAMPLE
-    .\Run-GeminiCli.ps1
-    .\Run-GeminiCli.ps1 -Action install
-    .\Run-GeminiCli.ps1 -Action chat
-    .\Run-GeminiCli.ps1 -Prompt "Hello, tell me about the project"
-    .\Run-GeminiCli.ps1 --help
+    via npm if missing, configuring API keys from
 #>
 
 [CmdletBinding()]

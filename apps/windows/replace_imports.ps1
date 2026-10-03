@@ -1,50 +1,22 @@
-# =============================================================================
-# Process Name: AI-Breadboard Automation - Replace Imports Script
-# =============================================================================
-# Description:
-#   PowerShell-сценарий системного обслуживания и запуска (replace_imports).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\replace_imports.ps1
-#
-# File: replace_imports.ps1
-# Project: ai-breadboard
-# Package: apps.windows
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
-# =============================================================================
+<#
+=============================================================================
+Process Name: AI-Breadboard Automation - Replace Imports
+=============================================================================
+Description:
+  PowerShell-сценарий автоматизации и системного обслуживания (replace_imports).
 
-# Description:
-#   PowerShell-сценарий администрирования и автоматизации (replace_imports).
-#
-# Usage Examples:
-#   PowerShell Execution:
-#     .\replace_imports.ps1
-#
-# File: replace_imports.ps1
-# Project: ai-breadboard
-# Package: windows
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:04:40
-# =============================================================================
+Usage Examples:
+  PowerShell Execution:
+    .\replace_imports.ps1
 
-# Description:
-#   PowerShell-сценарий системных операций и автоматизации (replace_imports).
-#
-# Usage Examples:
-#   PowerShell:
-#     .\replace_imports.ps1
-#
-# File: replace_imports.ps1
-# Project: ai-breadboard
-# Package: windows
-# Author: hypo69
-# Copyright: © 2026 hypo69
-# Updated: 2026-10-01 12:54:56
-# =============================================================================
+File: replace_imports.ps1
+Project: ai-breadboard
+Package: apps/windows
+Author: hypo69
+Copyright: © 2026 hypo69
+Updated: 2026-10-02 21:57:05
+=============================================================================
+#>
 
 Get-ChildItem -Path 'C:/Users/onela/AppData/Local/AI-Breadboard/apps/windows' -Recurse -Filter *.py |
     ForEach-Object {
