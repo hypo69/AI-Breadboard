@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui/about_system_tab
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-04 00:27:00
+Updated: 2026-10-04 00:43:00
 =============================================================================
 -->
 
@@ -634,9 +634,21 @@ Updated: 2026-10-04 00:27:00
             <i class="bi bi-windows text-info"></i>
             <span>Платформа & ОС</span>
           </div>
-          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="os" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История ОС / Host из базы данных">
-            <i class="bi bi-clock-history"></i>
-          </button>
+          <div class="d-flex align-items-center gap-1">
+            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_kpi_os" title="Частота опроса: Платформа & ОС">
+              <option value="start">Только при старте</option>
+              <option value="manual">По запросу</option>
+              <option value="3">Каждые 3 сек</option>
+              <option value="5" selected>Каждые 5 сек</option>
+              <option value="10">Каждые 10 сек</option>
+              <option value="30">Каждые 30 сек</option>
+              <option value="60">Каждые 60 сек</option>
+              <option value="120">Каждые 120 сек</option>
+            </select>
+            <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="os" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История ОС / Host из базы данных">
+              <i class="bi bi-clock-history"></i>
+            </button>
+          </div>
         </div>
         <div class="about-sys-value text-info text-truncate mt-1" id="about-kpi-os-title">Windows 11 (AMD64)</div>
         <div class="about-sys-sub text-truncate d-flex align-items-center justify-content-between">
@@ -654,9 +666,21 @@ Updated: 2026-10-04 00:27:00
             <i class="bi bi-shield-check text-success"></i>
             <span>Безопасность системы</span>
           </div>
-          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="security" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История безопасности из базы данных">
-            <i class="bi bi-clock-history"></i>
-          </button>
+          <div class="d-flex align-items-center gap-1">
+            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_kpi_sec" title="Частота опроса: Безопасность">
+              <option value="start">Только при старте</option>
+              <option value="manual">По запросу</option>
+              <option value="3">Каждые 3 сек</option>
+              <option value="5" selected>Каждые 5 сек</option>
+              <option value="10">Каждые 10 сек</option>
+              <option value="30">Каждые 30 сек</option>
+              <option value="60">Каждые 60 сек</option>
+              <option value="120">Каждые 120 сек</option>
+            </select>
+            <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="security" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История безопасности из базы данных">
+              <i class="bi bi-clock-history"></i>
+            </button>
+          </div>
         </div>
         <div class="about-sys-value text-success text-truncate mt-1" id="about-kpi-sec-title">Active & Protected</div>
         <div class="about-sys-sub text-truncate" id="about-kpi-sec-sub">Firewall: ON | UAC: ON</div>
@@ -671,9 +695,21 @@ Updated: 2026-10-04 00:27:00
             <i class="bi bi-shield-lock text-warning"></i>
             <span>Точки восстановления</span>
           </div>
-          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="restore_points" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История точек восстановления из базы данных">
-            <i class="bi bi-clock-history"></i>
-          </button>
+          <div class="d-flex align-items-center gap-1">
+            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_kpi_prot" title="Частота опроса: Точки восстановления">
+              <option value="start">Только при старте</option>
+              <option value="manual">По запросу</option>
+              <option value="3">Каждые 3 сек</option>
+              <option value="5" selected>Каждые 5 сек</option>
+              <option value="10">Каждые 10 сек</option>
+              <option value="30">Каждые 30 сек</option>
+              <option value="60">Каждые 60 сек</option>
+              <option value="120">Каждые 120 сек</option>
+            </select>
+            <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="restore_points" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История точек восстановления из базы данных">
+              <i class="bi bi-clock-history"></i>
+            </button>
+          </div>
         </div>
         <div class="about-sys-value text-warning text-truncate mt-1" id="about-kpi-prot-title">3 Checkpoints</div>
         <div class="about-sys-sub text-truncate" id="about-kpi-prot-sub">Protection: Active</div>
@@ -688,9 +724,21 @@ Updated: 2026-10-04 00:27:00
             <i class="bi bi-hdd-fill text-primary"></i>
             <span>Системный накопитель (C:)</span>
           </div>
-          <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="storage" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История накопителя C: из базы данных">
-            <i class="bi bi-clock-history"></i>
-          </button>
+          <div class="d-flex align-items-center gap-1">
+            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_kpi_stor" title="Частота опроса: Системный накопитель C:">
+              <option value="start">Только при старте</option>
+              <option value="manual">По запросу</option>
+              <option value="3">Каждые 3 сек</option>
+              <option value="5" selected>Каждые 5 сек</option>
+              <option value="10">Каждые 10 сек</option>
+              <option value="30">Каждые 30 сек</option>
+              <option value="60">Каждые 60 сек</option>
+              <option value="120">Каждые 120 сек</option>
+            </select>
+            <button class="btn btn-sm btn-link p-0 text-muted text-decoration-none btn-card-history" data-metric="storage" data-bs-toggle="modal" data-bs-target="#aboutSystemHistoryModal" title="История накопителя C: из базы данных">
+              <i class="bi bi-clock-history"></i>
+            </button>
+          </div>
         </div>
         <div class="about-sys-value text-white text-truncate mt-1" id="about-kpi-stor-title">1014.8 GB Free</div>
         <div class="about-sys-sub text-info text-truncate" id="about-kpi-stor-clean">Cleanable: ~190 MB</div>
@@ -709,7 +757,19 @@ Updated: 2026-10-04 00:27:00
             <i class="bi bi-cpu-fill text-info"></i>
             <span class="text-white">Конфигурация оборудования и ОС</span>
           </div>
-          <span class="badge bg-dark border border-secondary text-info" id="about-ident-os-build">Windows 11</span>
+          <div class="d-flex align-items-center gap-2">
+            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_hw_specs" title="Частота опроса: Оборудование и ОС">
+              <option value="start" selected>Только при старте</option>
+              <option value="manual">По запросу</option>
+              <option value="3">Каждые 3 сек</option>
+              <option value="5">Каждые 5 сек</option>
+              <option value="10">Каждые 10 сек</option>
+              <option value="30">Каждые 30 сек</option>
+              <option value="60">Каждые 60 сек</option>
+              <option value="120">Каждые 120 сек</option>
+            </select>
+            <span class="badge bg-dark border border-secondary text-info" id="about-ident-os-build">Windows 11</span>
+          </div>
         </div>
         <table class="about-sys-spec-table">
           <tbody>
@@ -750,7 +810,19 @@ Updated: 2026-10-04 00:27:00
             <i class="bi bi-person-badge-fill text-success"></i>
             <span class="text-white">Окружение пользователя и безопасность</span>
           </div>
-          <span class="small text-muted font-monospace" id="about-ident-time-badge">Локальное время: --:--:--</span>
+          <div class="d-flex align-items-center gap-2">
+            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_user_env" title="Частота опроса: Окружение пользователя">
+              <option value="start">Только при старте</option>
+              <option value="manual">По запросу</option>
+              <option value="3">Каждые 3 сек</option>
+              <option value="5" selected>Каждые 5 сек</option>
+              <option value="10">Каждые 10 сек</option>
+              <option value="30">Каждые 30 сек</option>
+              <option value="60">Каждые 60 сек</option>
+              <option value="120">Каждые 120 сек</option>
+            </select>
+            <span class="small text-muted font-monospace" id="about-ident-time-badge">Локальное время: --:--:--</span>
+          </div>
         </div>
         <table class="about-sys-spec-table">
           <tbody>
@@ -817,7 +889,19 @@ Updated: 2026-10-04 00:27:00
             <i class="bi bi-hdd-stack-fill text-primary"></i>
             <span class="text-white">Storage Volumes & Partitions</span>
           </div>
-          <span class="badge bg-secondary" id="about-disks-count">-- Drives</span>
+          <div class="d-flex align-items-center gap-2">
+            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_disks" title="Частота опроса: Разделы накопителей">
+              <option value="start">Только при старте</option>
+              <option value="manual">По запросу</option>
+              <option value="3">Каждые 3 сек</option>
+              <option value="5">Каждые 5 сек</option>
+              <option value="10" selected>Каждые 10 сек</option>
+              <option value="30">Каждые 30 сек</option>
+              <option value="60">Каждые 60 сек</option>
+              <option value="120">Каждые 120 сек</option>
+            </select>
+            <span class="badge bg-secondary" id="about-disks-count">-- Drives</span>
+          </div>
         </div>
         <div class="table-responsive">
           <table class="table table-dark table-hover table-sm mb-0" style="font-size: 0.8rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
@@ -856,10 +940,6 @@ Updated: 2026-10-04 00:27:00
         </div>
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
-          <div class="form-check form-switch mb-0 small text-muted d-flex align-items-center gap-1">
-            <input class="form-check-input" type="checkbox" id="diag-wear-auto-refresh">
-            <label class="form-check-label small text-nowrap" for="diag-wear-auto-refresh">Авто (10с)</label>
-          </div>
           <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-semibold d-flex align-items-center gap-1" id="btn-diag-wear-refresh">
             <i class="bi bi-arrow-clockwise"></i> Обновить
           </button>
@@ -877,7 +957,19 @@ Updated: 2026-10-04 00:27:00
             <i class="bi bi-hdd-fill text-primary"></i>
             <span class="text-white">Здоровье накопителей SSD/NVMe и износ (Wear & SMART)</span>
           </div>
-          <span class="badge bg-secondary" id="diag-wear-disks-count">0 дисков</span>
+          <div class="d-flex align-items-center gap-2">
+            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_wear" title="Частота опроса: Износ накопителей">
+              <option value="start">Только при старте</option>
+              <option value="manual">По запросу</option>
+              <option value="3">Каждые 3 сек</option>
+              <option value="5">Каждые 5 сек</option>
+              <option value="10" selected>Каждые 10 сек</option>
+              <option value="30">Каждые 30 сек</option>
+              <option value="60">Каждые 60 сек</option>
+              <option value="120">Каждые 120 сек</option>
+            </select>
+            <span class="badge bg-secondary" id="diag-wear-disks-count">0 дисков</span>
+          </div>
         </div>
         <div class="table-responsive">
           <table class="table table-dark table-hover table-sm mb-0" style="font-size: 0.82rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
@@ -910,7 +1002,19 @@ Updated: 2026-10-04 00:27:00
             <i class="bi bi-battery-charging text-warning"></i>
             <span class="text-white">Деградация и состояние батареи (Battery Degradation)</span>
           </div>
-          <span class="badge bg-dark border border-secondary text-info" id="diag-battery-source-badge">AC Mains</span>
+          <div class="d-flex align-items-center gap-2">
+            <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_battery" title="Частота опроса: Состояние батареи">
+              <option value="start">Только при старте</option>
+              <option value="manual">По запросу</option>
+              <option value="3">Каждые 3 сек</option>
+              <option value="5">Каждые 5 сек</option>
+              <option value="10" selected>Каждые 10 сек</option>
+              <option value="30">Каждые 30 сек</option>
+              <option value="60">Каждые 60 сек</option>
+              <option value="120">Каждые 120 сек</option>
+            </select>
+            <span class="badge bg-dark border border-secondary text-info" id="diag-battery-source-badge">AC Mains</span>
+          </div>
         </div>
         <div class="p-3" id="diag-battery-details-container">
           <div class="text-center py-4 text-muted small">
@@ -931,6 +1035,16 @@ Updated: 2026-10-04 00:27:00
         <span class="badge bg-secondary" id="about-sys-node-count">Hardware Tree</span>
       </div>
       <div class="d-flex align-items-center gap-2">
+        <select class="form-select form-select-sm poll-freq-select" data-poll-id="about_hw_tree" title="Частота опроса: Дерево оборудования">
+          <option value="start" selected>Только при старте</option>
+          <option value="manual">По запросу</option>
+          <option value="3">Каждые 3 сек</option>
+          <option value="5">Каждые 5 сек</option>
+          <option value="10">Каждые 10 сек</option>
+          <option value="30">Каждые 30 сек</option>
+          <option value="60">Каждые 60 сек</option>
+          <option value="120">Каждые 120 сек</option>
+        </select>
         <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5" style="font-size: 0.72rem;" id="btn-about-sys-expand-all">
           <i class="bi bi-arrows-expand me-1"></i> Развернуть все
         </button>

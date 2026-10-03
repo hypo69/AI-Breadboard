@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 01:10:00
 # =============================================================================
 
 """Handles AI conversational endpoints, streaming responses across multiple providers,"""
@@ -610,6 +610,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
         }
 
     @router.get('/model')
+    @router.get('/active-model')
     async def get_model_endpoint(fastapi_req: Request, profile: str = "") -> dict:
         """Получение текущей активной AI-модели."""
         provider, model_name, config_file = await _get_effective_model_and_provider(fastapi_req, profile=profile)

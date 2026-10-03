@@ -16,7 +16,7 @@
 # Package: src.api.routers.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-04 01:10:00
 # =============================================================================
 
 """Минимальный роутер для чата с необходимыми эндпоинтами, используемый в тестах.
@@ -121,6 +121,7 @@ async def set_model_instruction(request: Request, payload: dict) -> dict:
 
 
 @router.get('/model')
+@router.get('/active-model')
 async def get_active_model(request: Request) -> dict:
     """Возвращает активную модель и провайдера."""
     chat = getattr(request.app.state, 'chat_model', None)

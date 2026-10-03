@@ -14,7 +14,7 @@
  * Package: src/api/webgui/admin
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:13:56
+ * Updated: 2026-10-04 01:12:00
  * =============================================================================
  */
 
@@ -574,17 +574,30 @@ async function initInterface() {
   // Setup language selector
   document.querySelectorAll('.lang-selector').forEach((sel) => {
     sel.value = savedLang;
-    sel.addEventListener('changei18n.t('auto__e_switchlang_e_target_value_initialize_user_settings_google_oauth_await_initusersettings_initialize_help_content_inithelpcontent_const_cb_date_now_apps_let_appsmap_try_let_appsdata_null_try_appsdata_await_window_api_fetch__f48446')/api/apps/status');
-    } catch {
-      appsData = await window.api.fetch('/api/admin/apps/status');
-    }
+    sel.addEventListener('change', (e) => {
+      switchLang(e.target.value);
+    });
+  });
+
+  // Initialize User Settings & Google OAuth
+  await initUserSettings();
+
+  // Initialize HELP content
+  initHelpContent();
+  
+  const cb = Date.now();
+  
+  // Синхронизация видимости приложений (/apps) перед загрузкой вкладок
+  let appsMap = {};
+  try {
+    const appsData = await (window.api ? window.api.fetch('/api/v1/apps/status') : fetch('/api/v1/apps/status').then(r => r.json()));
     if (appsData && appsData.apps) {
       appsMap = appsData.apps;
       window.appsStatusMap = appsData.apps;
       syncAppsTabsVisibility(appsData.apps);
     }
   } catch (err) {
-    console.warn(i18n.t('auto__apps__9579e4'), err);
+    console.warn('Ошибка синхронизации видимости приложений (/apps):', err);
   }
 
   // Загрузка базовых вкладок администратора

@@ -1231,5 +1231,42 @@
   gap: 0.5rem;
 }
 
+/* ── 9. Селектор частоты опроса панели (Panel Polling Frequency Selector) ──── */
+.poll-freq-select {
+  font-size: 0.68rem !important;
+  padding: 1px 18px 1px 6px !important;
+  height: 22px !important;
+  min-height: 22px !important;
+  line-height: 1.2 !important;
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #94a3b8 !important;
+  border-radius: 4px !important;
+  cursor: pointer;
+  width: auto !important;
+  max-width: 145px;
+  display: inline-block;
+  vertical-align: middle;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.poll-freq-select:hover {
+  border-color: rgba(56, 189, 248, 0.5) !important;
+  color: #cbd5e1 !important;
+}
+
+.poll-freq-select:focus {
+  border-color: #38bdf8 !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.35) !important;
+  outline: none;
+}
+
+.poll-freq-select option {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+}
+
+
 
 

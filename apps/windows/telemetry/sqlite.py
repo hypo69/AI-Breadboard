@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 00:16:00
+# Updated: 2026-10-04 01:45:00
 # =============================================================================
 
 from __future__ import annotations
@@ -37,7 +37,14 @@ except ImportError:
     import logging
     logger = logging.getLogger(__name__)
 
-from .models import HardwareArchiveEntry, SystemMetricRollup, SystemSnapshot, TelemetryIncident
+from .models import (
+    HardwareArchiveEntry,
+    ProcessLifecycleEvent,
+    ProcessProvenanceInfo,
+    SystemMetricRollup,
+    SystemSnapshot,
+    TelemetryIncident,
+)
 from .telemetry_config import TelemetryConfigManager
 
 
@@ -243,7 +250,7 @@ class TelemetryStorage:
                 );
             ''')
             
-            # 3. Процессы (снимки процессов)
+            # 3. Процессы (снимки процессов с Process Provenance)
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS process_snapshots (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -262,7 +269,46 @@ class TelemetryStorage:
                     write_bytes_sec REAL,
                     integrity_level TEXT,
                     elevation INTEGER DEFAULT 0,
+                    ppid INTEGER,
+                    parent_name TEXT,
+                    executable TEXT,
+                    cmdline TEXT,
+                    sid TEXT,
+                    session_id INTEGER,
+                    creation_time TEXT,
+                    process_guid TEXT,
+                    ancestor_chain TEXT,
+                    launch_reason TEXT,
                     FOREIGN KEY (snapshot_id) REFERENCES system_snapshots(id) ON DELETE CASCADE
+                );
+            ''')
+
+            # 3b. События происхождения и жизненного цикла процессов (Process Provenance Events)
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS process_provenance_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    event_id TEXT,
+                    timestamp TEXT NOT NULL,
+                    created_at REAL NOT NULL,
+                    event_type TEXT NOT NULL,
+                    process_guid TEXT NOT NULL,
+                    parent_guid TEXT,
+                    pid INTEGER NOT NULL,
+                    ppid INTEGER,
+                    name TEXT NOT NULL,
+                    executable TEXT,
+                    command_line TEXT,
+                    user TEXT,
+                    sid TEXT,
+                    session_id INTEGER,
+                    integrity_level TEXT,
+                    elevation INTEGER DEFAULT 0,
+                    parent_name TEXT,
+                    parent_cmdline TEXT,
+                    ancestor_chain TEXT,
+                    launch_reason TEXT,
+                    source TEXT DEFAULT 'system',
+                    raw_json TEXT
                 );
             ''')
             
@@ -587,6 +633,13 @@ class TelemetryStorage:
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_incidents_created_at ON incidents(created_at);')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_incidents_trigger ON incidents(trigger_type);')
 
+            # Происхождение и жизненный цикл процессов (Process Provenance)
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_prov_guid ON process_provenance_events(process_guid);')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_prov_created_at ON process_provenance_events(created_at);')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_prov_name_pid ON process_provenance_events(name, pid);')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_prov_user ON process_provenance_events(user);')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_proc_prov_event_type ON process_provenance_events(event_type);')
+
             # Устройства, W64, Аномалии и Аудит
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_device_events_created_at ON device_events(created_at);')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_w64_events_created_at ON w64_events(created_at);')
@@ -665,53 +718,23 @@ class TelemetryStorage:
             except Exception as migration_err:
                 logger.warning(f'Миграция telemetry_events: {migration_err}')
 
-            # Миграция: добавляем os_name, os_build, os_install_date, disks_json в system_snapshots
-            try:
-                cursor.execute("PRAGMA table_info(system_snapshots)")
-                columns = [row[1] for row in cursor.fetchall()]
-                if 'os_name' not in columns:
-                    cursor.execute("ALTER TABLE system_snapshots ADD COLUMN os_name TEXT")
-                if 'os_build' not in columns:
-                    cursor.execute("ALTER TABLE system_snapshots ADD COLUMN os_build TEXT")
-                if 'os_install_date' not in columns:
-                    cursor.execute("ALTER TABLE system_snapshots ADD COLUMN os_install_date TEXT")
-                if 'hardware_audit' not in columns:
-                    cursor.execute("ALTER TABLE system_snapshots ADD COLUMN hardware_audit TEXT")
-            except Exception as migration_err:
-                logger.warning(f'Миграция system_snapshots: {migration_err}')
-
-            # Миграция: добавляем недостающие колонки в process_snapshots
-            try:
-                cursor.execute("PRAGMA table_info(process_snapshots)")
-                proc_cols = {row[1] for row in cursor.fetchall()}
-                if proc_cols:
-                    if 'num_handles' not in proc_cols:
-                        logger.info('Миграция: добавление num_handles в process_snapshots')
-                        cursor.execute("ALTER TABLE process_snapshots ADD COLUMN num_handles INTEGER DEFAULT 0")
-                    if 'read_bytes_sec' not in proc_cols:
-                        logger.info('Миграция: добавление read_bytes_sec в process_snapshots')
-                        cursor.execute("ALTER TABLE process_snapshots ADD COLUMN read_bytes_sec REAL")
-                    if 'write_bytes_sec' not in proc_cols:
-                        logger.info('Миграция: добавление write_bytes_sec в process_snapshots')
-                        cursor.execute("ALTER TABLE process_snapshots ADD COLUMN write_bytes_sec REAL")
-                    if 'integrity_level' not in proc_cols:
-                        logger.info('Миграция: добавление integrity_level в process_snapshots')
-                        cursor.execute("ALTER TABLE process_snapshots ADD COLUMN integrity_level TEXT")
-                    if 'elevation' not in proc_cols:
-                        logger.info('Миграция: добавление elevation в process_snapshots')
-                        cursor.execute("ALTER TABLE process_snapshots ADD COLUMN elevation INTEGER DEFAULT 0")
-            except Exception as migration_err:
-                logger.warning(f'Миграция process_snapshots: {migration_err}')
-
             # Миграция: добавляем недостающие колонки в system_snapshots
             try:
                 cursor.execute("PRAGMA table_info(system_snapshots)")
                 snap_cols = {row[1] for row in cursor.fetchall()}
                 if snap_cols:
                     expected_snap_cols = {
-                        'os_install_date': 'TEXT',
+                        'hostname': 'TEXT',
                         'uptime_seconds': 'REAL',
+                        'os_name': 'TEXT',
+                        'os_build': 'TEXT',
+                        'os_install_date': 'TEXT',
+                        'disks_json': 'TEXT',
+                        'cpu_total_percent': 'REAL',
                         'cpu_frequency_mhz': 'REAL',
+                        'memory_total_gb': 'REAL',
+                        'memory_used_gb': 'REAL',
+                        'memory_percent': 'REAL',
                         'swap_percent': 'REAL',
                         'gpu_load_percent': 'REAL',
                         'gpu_temp_c': 'REAL',
@@ -721,6 +744,7 @@ class TelemetryStorage:
                         'disk_write_count_sec': 'REAL',
                         'network_sent_bytes_sec': 'REAL',
                         'network_recv_bytes_sec': 'REAL',
+                        'hardware_audit': 'TEXT',
                     }
                     for col_name, col_type in expected_snap_cols.items():
                         if col_name not in snap_cols:
@@ -728,6 +752,35 @@ class TelemetryStorage:
                             cursor.execute(f"ALTER TABLE system_snapshots ADD COLUMN {col_name} {col_type}")
             except Exception as migration_err:
                 logger.warning(f'Миграция system_snapshots: {migration_err}')
+
+            # Миграция: добавляем недостающие колонки в process_snapshots
+            try:
+                cursor.execute("PRAGMA table_info(process_snapshots)")
+                proc_cols = {row[1] for row in cursor.fetchall()}
+                if proc_cols:
+                    new_proc_columns = {
+                        'num_handles': 'INTEGER DEFAULT 0',
+                        'read_bytes_sec': 'REAL',
+                        'write_bytes_sec': 'REAL',
+                        'integrity_level': 'TEXT',
+                        'elevation': 'INTEGER DEFAULT 0',
+                        'ppid': 'INTEGER',
+                        'parent_name': 'TEXT',
+                        'executable': 'TEXT',
+                        'cmdline': 'TEXT',
+                        'sid': 'TEXT',
+                        'session_id': 'INTEGER',
+                        'creation_time': 'TEXT',
+                        'process_guid': 'TEXT',
+                        'ancestor_chain': 'TEXT',
+                        'launch_reason': 'TEXT',
+                    }
+                    for col_name, col_def in new_proc_columns.items():
+                        if col_name not in proc_cols:
+                            logger.info(f'Миграция: добавление {col_name} в process_snapshots')
+                            cursor.execute(f"ALTER TABLE process_snapshots ADD COLUMN {col_name} {col_def}")
+            except Exception as migration_err:
+                logger.warning(f'Миграция process_snapshots: {migration_err}')
 
             # Миграция: добавляем raw_json в sensor_polls
             try:
@@ -1048,6 +1101,31 @@ class TelemetryStorage:
                     ''', row)
                     saved_total += 1
 
+                elif rec_type == 'process_provenance_event':
+                    row = self._prepare_process_provenance_row(item.get('data', {}))
+                    cursor.execute('''
+                        INSERT INTO process_provenance_events (
+                            event_id, timestamp, created_at, event_type, process_guid, parent_guid,
+                            pid, ppid, name, executable, command_line, user, sid, session_id,
+                            integrity_level, elevation, parent_name, parent_cmdline,
+                            ancestor_chain, launch_reason, source, raw_json
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', row)
+                    saved_total += 1
+
+                elif rec_type == 'process_provenance_events_batch':
+                    rows = [self._prepare_process_provenance_row(ev) for ev in item.get('data', [])]
+                    if rows:
+                        cursor.executemany('''
+                            INSERT INTO process_provenance_events (
+                                event_id, timestamp, created_at, event_type, process_guid, parent_guid,
+                                pid, ppid, name, executable, command_line, user, sid, session_id,
+                                integrity_level, elevation, parent_name, parent_cmdline,
+                                ancestor_chain, launch_reason, source, raw_json
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ''', rows)
+                        saved_total += len(rows)
+
             # Выполнение групповых вставок с UPSERT для защиты от дублей
             if sensor_poll_rows:
                 # UPSERT: при конфликте (sensor_id, timestamp) обновляем только если новый провайдер имеет выше приоритет
@@ -1236,9 +1314,53 @@ class TelemetryStorage:
         raw_json = json.dumps(event_data, ensure_ascii=False, default=str)
         return (event_id, ts_str, now_epoch, event_type, path_val, pid_val, name_val, provider, raw_json)
 
+    def _prepare_process_provenance_row(self, p: Dict[str, Any]) -> tuple:
+        """Подготавливает кортеж для вставки в process_provenance_events."""
+        p_dict = p.model_dump() if hasattr(p, 'model_dump') else (vars(p) if not isinstance(p, dict) else p)
+        now_dt = datetime.now(timezone.utc)
+        ts_str = p_dict.get('timestamp') or now_dt.isoformat()
+        try:
+            now_epoch = datetime.fromisoformat(ts_str).timestamp()
+        except Exception:
+            now_epoch = now_dt.timestamp()
+
+        event_id = p_dict.get('event_id') or f"pp_{int(now_epoch * 1000)}_{p_dict.get('pid', 0)}"
+        event_type = p_dict.get('event_type') or 'ProcessCreated'
+        pid = int(p_dict.get('pid') or 0)
+        ppid = p_dict.get('ppid')
+        ppid = int(ppid) if ppid is not None else None
+        name = p_dict.get('name') or 'unknown'
+        exe_path = p_dict.get('executable_path') or p_dict.get('executable')
+        cmdline = p_dict.get('command_line') or p_dict.get('cmdline')
+        user = p_dict.get('user') or p_dict.get('username')
+        sid = p_dict.get('sid')
+        session_id = p_dict.get('session_id')
+        session_id = int(session_id) if session_id is not None else None
+        integrity = p_dict.get('integrity_level')
+        elevation = int(bool(p_dict.get('elevation', False)))
+        parent_name = p_dict.get('parent_name')
+        parent_cmdline = p_dict.get('parent_cmdline')
+        ancestor_chain = p_dict.get('ancestor_chain') or p_dict.get('ancestor_chain_str')
+        if isinstance(ancestor_chain, list):
+            ancestor_chain = ' -> '.join(ancestor_chain)
+        launch_reason = p_dict.get('launch_reason') or p_dict.get('why_was_it_created')
+        source = p_dict.get('source') or 'system'
+        creation_time = p_dict.get('creation_time') or ts_str
+        process_guid = p_dict.get('process_guid') or f"proc_{pid}_{creation_time}"
+        parent_guid = p_dict.get('parent_guid')
+        raw_json = json.dumps(p_dict, ensure_ascii=False, default=str)
+
+        return (
+            event_id, ts_str, now_epoch, event_type, process_guid, parent_guid,
+            pid, ppid, name, exe_path, cmdline, user, sid, session_id,
+            integrity, elevation, parent_name, parent_cmdline,
+            ancestor_chain, launch_reason, source, raw_json
+        )
+
     def _insert_snapshot_row(self, cursor: sqlite3.Cursor, item: Dict[str, Any]) -> int:
         snap_data = item.get('data', {})
         top_n = item.get('top_n', 20)
+        snapshot = None
 
         if isinstance(snap_data, SystemSnapshot):
             snapshot = snap_data
@@ -1311,20 +1433,24 @@ class TelemetryStorage:
         except Exception:
             now_epoch = now_dt.timestamp()
 
+        # Сериализуем hardware_audit в JSON
+        hardware_audit_val = getattr(snapshot, 'hardware_audit', None) if snapshot is not None else snap_data.get('hardware_audit')
+        hardware_audit_json = json.dumps(hardware_audit_val or {}, ensure_ascii=False, default=str)
+
         cursor.execute('''
             INSERT INTO system_snapshots (
                 timestamp, created_at, hostname, uptime_seconds, os_name, os_build, os_install_date, disks_json,
                 cpu_total_percent, cpu_frequency_mhz, memory_total_gb, memory_used_gb,
                 memory_percent, swap_percent, gpu_load_percent, gpu_temp_c,
                 disk_read_bytes_sec, disk_write_bytes_sec, disk_read_count_sec,
-                disk_write_count_sec, network_sent_bytes_sec, network_recv_bytes_sec
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                disk_write_count_sec, network_sent_bytes_sec, network_recv_bytes_sec, hardware_audit
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             ts_str, now_epoch, hostname, uptime, os_name, os_build, os_install_date, disks_json,
             cpu_pct, cpu_freq, mem_tot, mem_used,
             mem_pct, swap_pct, gpu_load, gpu_temp,
             disk_rb, disk_wb, disk_rc,
-            disk_wc, net_sent, net_recv,
+            disk_wc, net_sent, net_recv, hardware_audit_json
         ))
         snapshot_id = cursor.lastrowid or 0
 
@@ -1348,14 +1474,26 @@ class TelemetryStorage:
                 float(p_dict.get('write_bytes_sec', 0.0) or 0.0),
                 p_dict.get('integrity_level', None),
                 int(bool(p_dict.get('elevation', False))),
+                p_dict.get('ppid', None),
+                p_dict.get('parent_name', None),
+                p_dict.get('executable_path', p_dict.get('executable', None)),
+                p_dict.get('cmdline', p_dict.get('command_line', None)),
+                p_dict.get('sid', None),
+                p_dict.get('session_id', None),
+                p_dict.get('creation_time', None),
+                p_dict.get('process_guid', None),
+                p_dict.get('ancestor_chain', None),
+                p_dict.get('launch_reason', None),
             ))
         if proc_rows:
             cursor.executemany('''
                 INSERT INTO process_snapshots (
                     snapshot_id, timestamp, pid, name, status, cpu_percent,
                     memory_mb, memory_percent, num_threads, num_handles,
-                    username, read_bytes_sec, write_bytes_sec, integrity_level, elevation
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    username, read_bytes_sec, write_bytes_sec, integrity_level, elevation,
+                    ppid, parent_name, executable, cmdline, sid, session_id,
+                    creation_time, process_guid, ancestor_chain, launch_reason
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', proc_rows)
 
         return snapshot_id
@@ -2062,6 +2200,158 @@ class TelemetryStorage:
                     ORDER BY id DESC LIMIT ?
                 ''', (limit,))
             return [dict(row) for row in cursor.fetchall()]
+
+    def save_process_provenance_event(self, event: Union[ProcessLifecycleEvent, ProcessProvenanceInfo, Dict[str, Any]]) -> int:
+        """Сохранить событие или паспорт происхождения процесса в таблицу process_provenance_events.
+
+        Args:
+            event: Экземпляр ProcessLifecycleEvent, ProcessProvenanceInfo или словарь.
+
+        Returns:
+            int: ID созданной записи или 1 при буферизации.
+        """
+        ev_dict = event.model_dump() if hasattr(event, 'model_dump') else (vars(event) if not isinstance(event, dict) else event)
+        if self._buffer_mode == 'direct':
+            with self._lock, self._get_connection() as conn:
+                cursor = conn.cursor()
+                row = self._prepare_process_provenance_row(ev_dict)
+                cursor.execute('''
+                    INSERT INTO process_provenance_events (
+                        event_id, timestamp, created_at, event_type, process_guid, parent_guid,
+                        pid, ppid, name, executable, command_line, user, sid, session_id,
+                        integrity_level, elevation, parent_name, parent_cmdline,
+                        ancestor_chain, launch_reason, source, raw_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', row)
+                conn.commit()
+                return cursor.lastrowid or 0
+
+        self._enqueue_record({'type': 'process_provenance_event', 'data': ev_dict})
+        return 1
+
+    def save_process_provenance_batch(self, events: List[Union[ProcessLifecycleEvent, ProcessProvenanceInfo, Dict[str, Any]]]) -> int:
+        """Сохранить пачку событий происхождения процессов.
+
+        Args:
+            events: Список событий или паспортов процессов.
+
+        Returns:
+            int: Количество сохраненных записей.
+        """
+        if not events:
+            return 0
+        ev_dicts = [e.model_dump() if hasattr(e, 'model_dump') else (vars(e) if not isinstance(e, dict) else e) for e in events]
+        if self._buffer_mode == 'direct':
+            with self._lock, self._get_connection() as conn:
+                cursor = conn.cursor()
+                rows = [self._prepare_process_provenance_row(ed) for ed in ev_dicts]
+                cursor.executemany('''
+                    INSERT INTO process_provenance_events (
+                        event_id, timestamp, created_at, event_type, process_guid, parent_guid,
+                        pid, ppid, name, executable, command_line, user, sid, session_id,
+                        integrity_level, elevation, parent_name, parent_cmdline,
+                        ancestor_chain, launch_reason, source, raw_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', rows)
+                conn.commit()
+                return len(rows)
+
+        self._enqueue_record({'type': 'process_provenance_events_batch', 'data': ev_dicts})
+        return len(events)
+
+    def get_process_provenance_history(
+        self,
+        name: Optional[str] = None,
+        pid: Optional[int] = None,
+        user: Optional[str] = None,
+        hours: int = 24,
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """Извлечь исторические события происхождения процессов за указанный интервал часов.
+
+        Args:
+            name: Фильтр по имени процесса (подстрока, регистронезависимо).
+            pid: Фильтр по Process ID.
+            user: Фильтр по пользователю (подстрока).
+            hours: Глубина выборки в часах (по умолчанию 24).
+            limit: Максимальное количество записей.
+
+        Returns:
+            List[Dict[str, Any]]: Хронологический список событий происхождения.
+        """
+        self.flush()
+        cutoff_epoch = time.time() - (hours * 3600)
+        query = 'SELECT * FROM process_provenance_events WHERE created_at >= ?'
+        params: List[Any] = [cutoff_epoch]
+
+        if pid is not None:
+            query += ' AND pid = ?'
+            params.append(pid)
+        if name:
+            query += ' AND name LIKE ?'
+            params.append(f'%{name}%')
+        if user:
+            query += ' AND user LIKE ?'
+            params.append(f'%{user}%')
+
+        query += ' ORDER BY created_at DESC LIMIT ?'
+        params.append(limit)
+
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_process_lineage(
+        self,
+        pid: Optional[int] = None,
+        process_guid: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Восстановить цепочку происхождения (Lineage / Ancestry) конкретного процесса.
+
+        Args:
+            pid: Идентификатор процесса.
+            process_guid: GUID экземпляра процесса.
+
+        Returns:
+            Dict[str, Any]: Словарь с узлом процесса и цепочкой предков.
+        """
+        self.flush()
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+            if process_guid:
+                cursor.execute('SELECT * FROM process_provenance_events WHERE process_guid = ? ORDER BY created_at DESC LIMIT 1', (process_guid,))
+            elif pid is not None:
+                cursor.execute('SELECT * FROM process_provenance_events WHERE pid = ? ORDER BY created_at DESC LIMIT 1', (pid,))
+            else:
+                return {}
+
+            row = cursor.fetchone()
+            if row:
+                root = dict(row)
+                ancestors = []
+                curr_ppid = root.get('ppid')
+                depth = 0
+                while curr_ppid and curr_ppid > 0 and depth < 10:
+                    cursor.execute('SELECT * FROM process_provenance_events WHERE pid = ? AND created_at <= ? ORDER BY created_at DESC LIMIT 1', (curr_ppid, root['created_at']))
+                    p_row = cursor.fetchone()
+                    if p_row:
+                        p_dict = dict(p_row)
+                        ancestors.append(p_dict)
+                        curr_ppid = p_dict.get('ppid')
+                    else:
+                        break
+                    depth += 1
+                return {'process': root, 'ancestors': ancestors, 'ancestor_chain': root.get('ancestor_chain')}
+
+            if pid is not None:
+                cursor.execute('SELECT * FROM process_snapshots WHERE pid = ? ORDER BY id DESC LIMIT 1', (pid,))
+                s_row = cursor.fetchone()
+                if s_row:
+                    s_dict = dict(s_row)
+                    return {'process': s_dict, 'ancestors': [], 'ancestor_chain': s_dict.get('ancestor_chain')}
+
+            return {}
 
     def get_latest_processes(self, limit: int = 50, sort_by: str = 'cpu') -> List[Dict[str, Any]]:
         """Извлекает процессы из самого последнего зафиксированного снимка в базе данных SQLite."""

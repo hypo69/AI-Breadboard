@@ -13,7 +13,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-03 23:20:00
+# Updated: 2026-10-04 01:45:00
 # =============================================================================
 
 """Exports core system metrics models, sensor probers, and telemetry collectors."""
@@ -41,8 +41,12 @@ from .models import (
     PhysicalDiskHealth,
     ProcessLeakDiagnosticsReport,
     ProcessLeakItem,
+    ProcessLifecycleEvent,
     ProcessMetrics,
     ProcessNetworkActivity,
+    ProcessProvenanceInfo,
+    ProcessProvenanceReport,
+    ProcessTokenInfo,
     RamStickInfo,
     StorageBatteryWearReport,
     SystemDiagnosticReport,
@@ -103,6 +107,10 @@ __all__ = [
     "BatteryMetrics",
     "SystemHealthAlerts",
     "ProcessMetrics",
+    "ProcessProvenanceInfo",
+    "ProcessLifecycleEvent",
+    "ProcessProvenanceReport",
+    "ProcessTokenInfo",
     "ProcessLeakItem",
     "ProcessLeakDiagnosticsReport",
     "ForensicsActivityReport",

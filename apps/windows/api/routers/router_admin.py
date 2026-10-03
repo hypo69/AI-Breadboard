@@ -18,7 +18,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 00:23:00
+# Updated: 2026-10-04 01:10:00
 # =============================================================================
 
 from __future__ import annotations
@@ -507,7 +507,7 @@ async def update_plugin_status(plugin_name: str, data: PluginStateUpdate, reques
 # /apps Configuration & Status Endpoints
 # ============================================================================
 
-router_apps = APIRouter(prefix='/api/apps', tags=['apps'])
+router_apps = APIRouter(prefix='/api/v1/apps', tags=['apps'])
 
 APPS_REGISTRY: List[Dict[str, Any]] = [
     {
@@ -881,19 +881,13 @@ class AppConfigUpdateRequest(BaseModel):
     config: Dict[str, Any]
 
 
-@router.get('/apps/status')
-async def get_admin_apps_status_endpoint(profile: Optional[str] = None) -> Dict[str, Any]:
+@router_apps.get('/status')
+async def get_public_apps_status_endpoint(profile: Optional[str] = None) -> Dict[str, Any]:
     """Get enabled/disabled status for all /apps applications."""
     return get_apps_status(profile=profile)
 
 
-@router_apps.get('/status')
-async def get_public_apps_status_endpoint(profile: Optional[str] = None) -> Dict[str, Any]:
-    """Get enabled/disabled status for all /apps applications (public endpoint)."""
-    return get_apps_status(profile=profile)
-
-
-@router.get('/apps/{app_name}/config')
+@router_apps.get('/{app_name}/config')
 async def get_app_config(app_name: str, request: Request) -> Dict[str, Any]:
     """Get configuration for specified application under /apps."""
     require_admin_user(request)
@@ -919,7 +913,7 @@ async def get_app_config(app_name: str, request: Request) -> Dict[str, Any]:
     raise HTTPException(status_code=404, detail=f"Application config for '{safe_name}' not found")
 
 
-@router.post('/apps/{app_name}/config')
+@router_apps.post('/{app_name}/config')
 async def set_app_config(app_name: str, data: AppConfigUpdateRequest, request: Request) -> Dict[str, Any]:
     """Update configuration for specified application under /apps."""
     require_admin_user(request)

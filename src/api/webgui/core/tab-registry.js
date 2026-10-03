@@ -26,7 +26,7 @@
  * Экспортирует методы getAll(), getById(id), getFiltered(appsStatusMap, role).
  */
 export const TAB_DEFINITIONS = [
-  { id: 'about_system', label: 'О системе', i18nKey: 'auto___d32ca0', icon: 'ℹ️', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261004_v4', js: '/html/about_system_tab/main.js?v=20261004_v4' },
+  { id: 'about_system', label: 'О системе', i18nKey: 'auto___d32ca0', icon: 'ℹ️', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261004_v5', js: '/html/about_system_tab/main.js?v=20261004_v5' },
   { id: 'scenarios', label: 'Сценарии', i18nKey: 'auto___ddaf0e', icon: '💬', tab: 'scenarios', tabId: 'tab-scenarios', html: '/html/scenarios_tab/index.html?v=20260925_v2', js: '/html/scenarios_tab/main.js?v=20260925_v2' },
   { id: 'chat', label: 'Чат', i18nKey: 'auto___8c77e4', icon: '💬', tab: 'chat', tabId: 'tab-chat', html: '/html/chat/index.html?v=20260923_v5', js: '/html/chat/main.js?v=20260923_v5' },
   { id: 'network_terminal', label: 'Сеть', i18nKey: 'auto___f6df40', icon: '🌐', tab: 'network', tabId: 'tab-network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },

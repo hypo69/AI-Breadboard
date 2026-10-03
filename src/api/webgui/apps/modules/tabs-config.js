@@ -17,17 +17,17 @@
  * Package: src/api/webgui/apps/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 00:27:00
+ * Updated: 2026-10-04 00:43:00
  * =============================================================================
  */
 
 /**
  * apps/modules/tabs-config.js — Реестр определений вкладок для интерфейса /apps
- * Updated: 2026-10-04 00:27:00
+ * Updated: 2026-10-04 00:43:00
  */
 
 export const APP_TAB_DEFS = [
-  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261004_v4', js: '/html/about_system_tab/main.js?v=20261004_v4' },
+  { id: 'about_system', tab: 'about-system', tabId: 'tab-about-system', html: '/html/about_system_tab/index.html?v=20261004_v5', js: '/html/about_system_tab/main.js?v=20261004_v5' },
   { id: 'scenarios', tab: 'scenarios', tabId: 'tab-scenarios', html: '/html/scenarios_tab/index.html?v=20260925_v2', js: '/html/scenarios_tab/main.js?v=20260925_v2' },
   { id: 'chat', tab: 'chat', tabId: 'tab-chat', html: '/html/chat/index.html?v=20260923_v5', js: '/html/chat/main.js?v=20260923_v5' },
   { id: 'network_terminal', tab: 'network', tabId: 'tab-network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },

@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/admin/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 01:12:00
  * =============================================================================
  */
 
@@ -31,12 +31,7 @@ export async function syncApplicationsVisibility() {
   let appsMap = {};
   
   try {
-    let appsData = null;
-    try {
-      appsData = await window.api.fetch('/api/apps/status');
-    } catch {
-      appsData = await window.api.fetch('/api/admin/apps/status');
-    }
+    const appsData = await (window.api ? window.api.fetch('/api/v1/apps/status') : fetch('/api/v1/apps/status').then(r => r.json()));
     
     if (appsData && appsData.apps) {
       appsMap = appsData.apps;

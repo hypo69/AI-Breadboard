@@ -522,25 +522,44 @@
       `\n======================================================`;
   }
 
+  function renderCpuCores(cores) {
+    const box = document.getElementById('sys-metric-cpu-cores');
+    if (!box) return;
+    box.replaceChildren();
+    cores.forEach((c) => {
+      const load = c.load_percent == null ? null : Number(c.load_percent);
+      const temp = c.temperature_c == null ? null : Number(c.temperature_c);
+      const cell = document.createElement('div');
+      cell.title = `Ядро #${c.index}`;
+      cell.style.cssText = 'background: var(--border-color); border-radius: 3px; padding: 2px 4px; position: relative; overflow: hidden;';
+      const bar = document.createElement('div');
+      bar.style.cssText = `position:absolute;left:0;top:0;bottom:0;width:${Math.min(100, load || 0)}%;background:rgba(13,202,240,.28);`;
+      const txt = document.createElement('span');
+      txt.style.cssText = 'position:relative;white-space:nowrap;';
+      txt.textContent = `#${c.index} ${load == null ? '--' : load.toFixed(0) + '%'} · ${temp == null ? '-- °C' : temp.toFixed(0) + ' °C'}`;
+      cell.append(bar, txt);
+      box.appendChild(cell);
+    });
+  }
+
   async function fetchCpuLoadFromApi() {
     try {
-      let res = await fetch('/api/v1/tc/cpu');
-      if (!res.ok) {
-        res = await fetch('/api/v1/system/cpu');
-      }
-      if (res.ok) {
-        const cpuData = await res.json();
-        const cpuVal = document.getElementById('sys-metric-cpu-val');
-        const cpuFill = document.getElementById('sys-metric-cpu-fill');
-        const cpuSub = document.getElementById('sys-metric-cpu-sub');
+      const res = await fetch('/api/v1/panel/cpu-load');
+      if (!res.ok) return;
+      const data = await res.json();
+      const cpuVal = document.getElementById('sys-metric-cpu-val');
+      const cpuFill = document.getElementById('sys-metric-cpu-fill');
+      const cpuSub = document.getElementById('sys-metric-cpu-sub');
 
-        const pct = Number(cpuData.total_percent || 0);
-        if (cpuVal) cpuVal.innerText = cpuData.display_val || `${pct.toFixed(1)}%`;
-        if (cpuFill) cpuFill.style.width = `${Math.min(100, pct)}%`;
-        if (cpuSub) {
-          cpuSub.innerText = cpuData.display_cores || `${cpuData.physical_cores || '--'} Физических / ${cpuData.logical_cores || '--'} Потоков`;
-        }
+      const pct = Number(data.total_percent || 0);
+      const cores = Array.isArray(data.cores) ? data.cores : [];
+      if (cpuVal) cpuVal.innerText = `${pct.toFixed(1)}%`;
+      if (cpuFill) cpuFill.style.width = `${Math.min(100, pct)}%`;
+      if (cpuSub) {
+        const t = data.package_temperature_c == null ? '' : ` · ${Number(data.package_temperature_c).toFixed(0)} °C`;
+        cpuSub.innerText = cores.length ? `${cores.length} Ядер${t}` : '-- Ядер';
       }
+      renderCpuCores(cores);
     } catch (e) {
       console.warn('[SystemInspectorTab] Ошибка получения загрузки CPU из API:', e);
     }

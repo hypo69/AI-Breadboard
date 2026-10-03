@@ -18,7 +18,7 @@
 # Package: apps.windows
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 01:10:00
 # =============================================================================
 
 from __future__ import annotations
@@ -489,11 +489,9 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
         pass
 
     # -------------------------------------------------------------------------
-    # Эндпоинты совместимости со статусами и настройками для JS-клиента
+    # Эндпоинты статусов приложений и настроек ИИ по стандарту /api/v1/*
     # -------------------------------------------------------------------------
-    @app.get('/api/apps/status')
-    @app.get('/apps/status')
-    @app.get('/api/admin/apps/status')
+    @app.get('/api/v1/apps/status')
     async def get_apps_status() -> Dict[str, Any]:
         """Возвращает статус доступности приложений для формирования меню."""
         cfg = load_tc_config()
@@ -531,7 +529,7 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
         except Exception:
             return {'status': 'ok'}
 
-    @app.get('/api/chat/active-model')
+    @app.get('/api/v1/chat/active-model')
     async def get_chat_active_model() -> Dict[str, Any]:
         """Возвращает активную модель ИИ."""
         cfg = load_tc_config()
@@ -540,7 +538,7 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
         model = ai_sec.get(prov, {}).get('model', '')
         return {'status': 'ok', 'provider': prov, 'model': model, 'config_file': 'tc.json'}
 
-    @app.get('/api/chat/models')
+    @app.get('/api/v1/chat/models')
     async def get_available_chat_models() -> Dict[str, Any]:
         """Список доступных моделей ИИ для дропдауна."""
         return {

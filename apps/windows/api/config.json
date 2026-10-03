@@ -99,6 +99,12 @@
       "description": "Панель 'О Системе' (/api/v1/about-system/*)"
     },
     {
+      "module": "apps.windows.api.routers.router_cpu_load",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Загрузка и температура ядер CPU (/api/v1/panel/cpu-load)"
+    },
+    {
       "module": "apps.windows.api.routers.router_system",
       "factory": "init_router",
       "enabled": true,

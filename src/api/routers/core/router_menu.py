@@ -16,7 +16,7 @@
 # Package: src.api.routers.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-04 01:10:00
 # =============================================================================
 
 from __future__ import annotations
@@ -91,9 +91,9 @@ def init_router() -> APIRouter:
     """Инициализирует FastAPI роутер для управления конфигурацией меню.
 
     Returns:
-        APIRouter: Настроенный роутер с маршрутами /api/menu/*.
+        APIRouter: Настроенный роутер с маршрутами /api/v1/menu/*.
     """
-    router = APIRouter(prefix='/api/menu', tags=['menu'])
+    router = APIRouter(prefix='/api/v1/menu', tags=['menu'])
 
     @router.get('/config')
     async def get_menu_config(target: Optional[str] = None) -> Dict[str, Any]:

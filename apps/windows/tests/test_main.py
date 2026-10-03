@@ -16,7 +16,7 @@
 # Package: apps.windows.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 01:12:00
 # =============================================================================
 
 """Тесты для точки входа apps.windows.main."""
@@ -50,7 +50,7 @@ def test_tc_index_page(client: TestClient):
 
 def test_apps_status_endpoint(client: TestClient):
     """Проверка эндпоинта статуса приложений для формирования динамического меню."""
-    resp = client.get('/api/apps/status')
+    resp = client.get('/api/v1/apps/status')
     assert resp.status_code == 200
     data = resp.json()
     assert data.get('status') == 'ok'
@@ -67,7 +67,7 @@ def test_windows_health_endpoint(client: TestClient):
 
 def test_chat_active_model_endpoint(client: TestClient):
     """Проверка эндпоинта активной модели ИИ."""
-    resp = client.get('/api/chat/active-model')
+    resp = client.get('/api/v1/chat/active-model')
     assert resp.status_code == 200
     data = resp.json()
     assert data.get('status') == 'ok'

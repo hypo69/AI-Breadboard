@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-04 01:12:00
 # =============================================================================
 
 """Тесты редактора меню (/tc) и эндпоинтов управления конфигурацией меню."""
@@ -130,19 +130,19 @@ class TestJavaScriptLogic:
         assert 'loadRequiredTabs' in content, 'Отсутствует функция loadRequiredTabs'
 
     def test_menu_editor_endpoint_and_instant_apply(self):
-        """Проверка вызова эндпоинта /api/menu/config и мгновенного обновления интерфейса"""
+        """Проверка вызова эндпоинта /api/v1/menu/config и мгновенного обновления интерфейса"""
         content = APPS_MAIN_JS.read_text(encoding='utf-8')
-        assert '/api/menu/config' in content, 'Отсутствует обращение к /api/menu/config'
+        assert '/api/v1/menu/config' in content, 'Отсутствует обращение к /api/v1/menu/config'
         assert 'buildMenu(appsMap, cfg)' in content or 'buildMenu(' in content, 'Отсутствует вызов buildMenu для мгновенного переопределения'
 
     def test_status_manager_fetches_apps_status(self):
         """Проверка получения статуса приложений в status-manager.js"""
         assert STATUS_MANAGER_JS.exists(), 'status-manager.js не найден'
         content = STATUS_MANAGER_JS.read_text(encoding='utf-8')
-        assert 'apps/status' in content or 'fetchAppsStatus' in content
+        assert '/api/v1/apps/status' in content or 'fetchAppsStatus' in content
 
 class TestMenuAPI:
-    """Тесты FastAPI роутера /api/menu/config"""
+    """Тесты FastAPI роутера /api/v1/menu/config"""
 
     @pytest.fixture
     def client(self):
@@ -152,8 +152,8 @@ class TestMenuAPI:
         return TestClient(app)
 
     def test_get_menu_config(self, client):
-        """GET /api/menu/config должен возвращать валидную конфигурацию."""
-        response = client.get('/api/menu/config')
+        """GET /api/v1/menu/config должен возвращать валидную конфигурацию."""
+        response = client.get('/api/v1/menu/config')
         assert response.status_code == 200
         data = response.json()
         assert 'menu' in data
@@ -161,18 +161,18 @@ class TestMenuAPI:
         assert 'sidebarItems' in data['menu']
 
     def test_post_menu_config_invalid(self, client):
-        """POST /api/menu/config с невалидным телом должен возвращать ошибку 400."""
-        response = client.post('/api/menu/config', json={'invalid': 123})
+        """POST /api/v1/menu/config с невалидным телом должен возвращать ошибку 400."""
+        response = client.post('/api/v1/menu/config', json={'invalid': 123})
         assert response.status_code == 400
 
     def test_post_menu_config_success(self, client, monkeypatch, tmp_path):
-        """POST /api/menu/config должен успешно сохранять конфигурацию."""
+        """POST /api/v1/menu/config должен успешно сохранять конфигурацию."""
         fake_config_file = tmp_path / 'tc_menu_config.json'
         fake_config_file.write_text(json.dumps({'version': 'test', 'menu': {'topButtons': [], 'sidebarItems': []}}), encoding='utf-8')
         import src.api.routers.core.router_menu as router_menu_module
         monkeypatch.setattr(router_menu_module, 'TC_MENU_CONFIG_PATH', fake_config_file)
         payload = {'version': 'test_v2', 'menu': {'topButtons': [{'id': 'system_inspector', 'label': 'Потребление', 'tab': 'tab-system-load-inspector', 'order': 1, 'visible': True}], 'sidebarItems': [{'id': 'about_system', 'label': 'О Системе', 'tab': 'tab-about-system', 'order': 1, 'visible': True}]}}
-        response = client.post('/api/menu/config', json=payload)
+        response = client.post('/api/v1/menu/config', json=payload)
         assert response.status_code == 200
         assert response.json().get('status') == 'ok'
         saved_data = json.loads(fake_config_file.read_text(encoding='utf-8'))
@@ -180,8 +180,8 @@ class TestMenuAPI:
         assert len(saved_data['menu']['topButtons']) == 1
 
     def test_get_menu_config_su_target(self, client):
-        """GET /api/menu/config?target=su должен возвращать конфигурацию для su без 'О системе'."""
-        response = client.get('/api/menu/config?target=su')
+        """GET /api/v1/menu/config?target=su должен возвращать конфигурацию для su без 'О системе'."""
+        response = client.get('/api/v1/menu/config?target=su')
         assert response.status_code == 200
         data = response.json()
         assert 'menu' in data

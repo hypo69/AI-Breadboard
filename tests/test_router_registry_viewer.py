@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-04 01:20:00
 # =============================================================================
 
 """Тесты для роутера Registry Viewer."""
@@ -30,7 +30,10 @@ def client():
     app = create_app()
     state = AppState()
     app.state.app_state = state
-    register_routers(app, state)
+    from apps.windows.modules.registry import init_router as init_reg_router
+    from src.api.routers.core.router_admin import init_router as init_admin_router
+    app.include_router(init_reg_router())
+    app.include_router(init_admin_router())
     return TestClient(app)
 
 def test_registry_bookmarks(client):
@@ -76,7 +79,7 @@ def test_registry_search(client):
 
 def test_apps_status_contains_new_apps(client):
     """Проверка наличия software_audit и registry_viewer в реестре приложений."""
-    response = client.get('/api/apps/status')
+    response = client.get('/api/v1/apps/status')
     assert response.status_code == 200
     data = response.json()
     assert 'apps' in data

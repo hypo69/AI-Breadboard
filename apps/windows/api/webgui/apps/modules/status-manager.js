@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/apps/modules
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 01:12:00
  * =============================================================================
  */
 
@@ -26,34 +26,25 @@ export async function fetchAppsStatus() {
   const isTcRoute = window.location.pathname.startsWith('/tc');
   const query = isTcRoute ? '?profile=tc' : '';
   
-  // 1. Пытаемся получить полный статус приложений и AI-конфига
+  // 1. Получаем статус приложений и AI-конфига по стандарту /api/v1/apps/status
   let statusData = null;
-  const urls = [
-    `/api/apps/status${query}`,
-    `/api/admin/apps/status${query}`,
-    `/apps/status${query}`
-  ];
-
-  for (const url of urls) {
-    try {
-      const resp = await fetch(url);
-      if (resp.ok) {
-        statusData = await resp.json();
-        if (statusData && (statusData.apps || statusData.ai)) {
-          break;
-        }
-      }
-    } catch {}
+  try {
+    const resp = await fetch(`/api/v1/apps/status${query}`);
+    if (resp.ok) {
+      statusData = await resp.json();
+    }
+  } catch (err) {
+    console.warn('[AppsHub] Failed to fetch /api/v1/apps/status:', err);
   }
 
   if (statusData && statusData.apps) {
     window.appsStatusMap = statusData.apps;
   }
 
-  // 2. Если в ответе нет секции ai, явно запрашиваем активную модель через /api/chat/active-model
+  // 2. Если в ответе нет секции ai, явно запрашиваем активную модель через /api/v1/chat/active-model
   if (!statusData?.ai) {
     try {
-      const modelResp = await fetch(`/api/chat/active-model${query}`);
+      const modelResp = await fetch(`/api/v1/chat/active-model${query}`);
       if (modelResp.ok) {
         const modelData = await modelResp.json();
         if (modelData && modelData.model) {
@@ -66,7 +57,7 @@ export async function fetchAppsStatus() {
         }
       }
     } catch (err) {
-      console.warn('[AppsHub] Could not fetch active model from /api/chat/active-model:', err);
+      console.warn('[AppsHub] Could not fetch active model from /api/v1/chat/active-model:', err);
     }
   }
 
@@ -82,11 +73,11 @@ export async function updateModelBadge(statusData) {
   let mod = '';
   let cfgFile = statusData?.config_file || '';
 
-  // 1. Приоритет: запрос актуальной активной модели с сервера (учитывает профиль и настройки пользователя)
+  // 1. Приоритет: запрос актуальной активной модели с сервера (/api/v1/chat/active-model)
   try {
     const isTcRoute = window.location.pathname.startsWith('/tc');
     const query = isTcRoute ? '?profile=tc' : '';
-    const resp = await fetch(`/api/chat/active-model${query}`);
+    const resp = await fetch(`/api/v1/chat/active-model${query}`);
     if (resp.ok) {
       const data = await resp.json();
       if (data && data.model) {
@@ -96,7 +87,7 @@ export async function updateModelBadge(statusData) {
       }
     }
   } catch (err) {
-    console.warn('[AppsHub] Failed to fetch active model from /api/chat/active-model:', err);
+    console.warn('[AppsHub] Failed to fetch active model from /api/v1/chat/active-model:', err);
   }
 
   // 2. Резервный парсинг конфигурации statusData.ai, если эндпоинт не вернул модель

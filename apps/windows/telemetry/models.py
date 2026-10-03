@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 01:45:00
 # =============================================================================
 
 from __future__ import annotations
@@ -142,7 +142,7 @@ class NetworkInterfaceMetrics(BaseModel):
     statistics: Optional[NetworkAdapterStatistics] = Field(default=None, description='Накопительная статистика адаптера')
 
 class ProcessMetrics(BaseModel):
-    """Per-process telemetry item (Wireshark-style stream row)."""
+    """Метрики процесса с данными об идентичности и происхождении (Process Identity & Provenance)."""
     pid: int = Field(..., description='Process identifier')
     name: str = Field(..., description='Process binary name')
     status: str = Field(default='running', description='Process execution status')
@@ -155,10 +155,19 @@ class ProcessMetrics(BaseModel):
     cmdline: Optional[str] = Field(default=None, description='Command line invocation')
     read_bytes_sec: float = Field(default=0.0, description='Disk read rate in bytes/sec')
     write_bytes_sec: float = Field(default=0.0, description='Disk write rate in bytes/sec')
-    # Новые поля токена процесса
-    integrity_level: Optional[str] = Field(default=None, description='Уровень целостности процесса')
+    # Поля безопасности и токена
+    integrity_level: Optional[str] = Field(default=None, description='Уровень целостности процесса (Low, Medium, High, System)')
     elevation: Optional[bool] = Field(default=None, description='Статус повышения привилегий UAC')
-
+    sid: Optional[str] = Field(default=None, description='Идентификатор безопасности пользователя (User SID)')
+    session_id: Optional[int] = Field(default=None, description='Идентификатор сессии Windows (0=Службы, 1=Интерактивная)')
+    # Поля происхождения и родословной (Process Provenance)
+    ppid: Optional[int] = Field(default=None, description='Идентификатор родительского процесса (Parent PID)')
+    parent_name: Optional[str] = Field(default=None, description='Имя родительского процесса')
+    executable_path: Optional[str] = Field(default=None, description='Полный путь к исполняемому файлу процесса')
+    creation_time: Optional[str] = Field(default=None, description='Время создания процесса (ISO 8601 UTC)')
+    process_guid: Optional[str] = Field(default=None, description='Уникальный GUID экземпляра процесса (PID + CreationTime)')
+    ancestor_chain: Optional[str] = Field(default=None, description='Цепочка предков запуска (напр. explorer -> pwsh -> python)')
+    launch_reason: Optional[str] = Field(default=None, description='Определенный вектор/причина запуска (Служба, Задача, Терминал, Проводник)')
 
 
 class ProcessTokenInfo(BaseModel):
@@ -168,6 +177,67 @@ class ProcessTokenInfo(BaseModel):
     elevation: Optional[bool] = Field(default=None, description='Признак повышения привилегий (UAC)')
     integrity_level: Optional[str] = Field(default=None, description='Уровень целостности процесса')
     privileges: List[str] = Field(default_factory=list, description='Список привилегий токена')
+    sid: Optional[str] = Field(default=None, description='Идентификатор безопасности (SID)')
+    session_id: Optional[int] = Field(default=None, description='Идентификатор сессии Windows')
+
+
+class ProcessProvenanceInfo(BaseModel):
+    """Детальный паспорт идентичности, происхождения и цепочки вызовов процесса (Process Provenance)."""
+    pid: int = Field(..., description='Идентификатор процесса (PID)')
+    ppid: Optional[int] = Field(default=None, description='Идентификатор родительского процесса (PPID)')
+    name: str = Field(..., description='Имя процесса (например, python.exe)')
+    executable_path: Optional[str] = Field(default=None, description='Полный путь к бинарному исполняемому файлу')
+    command_line: Optional[str] = Field(default=None, description='Полная командная строка запуска с аргументами')
+    user: Optional[str] = Field(default=None, description='Имя учетной записи (DOMAIN\\User)')
+    sid: Optional[str] = Field(default=None, description='Идентификатор безопасности пользователя (SID)')
+    session_id: Optional[int] = Field(default=None, description='Идентификатор сессии Windows (Session 0=Службы, Session 1+=Пользователь)')
+    integrity_level: Optional[str] = Field(default=None, description='Уровень целостности токена (Untrusted, Low, Medium, High, System)')
+    elevation: Optional[bool] = Field(default=None, description='Признак повышенных привилегий администратора (Elevated)')
+    creation_time: Optional[str] = Field(default=None, description='Время создания процесса в формате ISO 8601 UTC')
+    parent_start_time: Optional[str] = Field(default=None, description='Время создания родительского процесса')
+    process_guid: str = Field(default='', description='Уникальный GUID экземпляра процесса (исключает коллизии PID reuse)')
+    parent_guid: Optional[str] = Field(default=None, description='GUID родительского экземпляра процесса')
+    parent_name: Optional[str] = Field(default=None, description='Имя родительского процесса (например, WindowsTerminal.exe)')
+    parent_cmdline: Optional[str] = Field(default=None, description='Командная строка родителя')
+    ancestor_chain: List[str] = Field(default_factory=list, description='Список узлов в цепочке предков (от корня к процессу)')
+    ancestor_chain_str: str = Field(default='', description='Строковое представление цепочки предков (explorer → pwsh → python)')
+    who_runs_it: str = Field(default='', description='Кем исполняется (User / SID / Token / Session)')
+    who_created_it: str = Field(default='', description='Кто создал (Родительский процесс / Дерево предков)')
+    why_was_it_created: str = Field(default='', description='Причина/вектор создания (Служба, Задача, Интерактивно, IDE, CLI, Автозапуск)')
+
+
+class ProcessLifecycleEvent(BaseModel):
+    """Событие жизненного цикла процесса (создание, завершение, форензика)."""
+    event_id: str = Field(default='', description='Уникальный идентификатор события')
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='Время события UTC')
+    event_type: str = Field(..., description='Тип события: ProcessCreated, ProcessTerminated, Snapshot')
+    pid: int = Field(..., description='Идентификатор процесса')
+    ppid: Optional[int] = Field(default=None, description='Идентификатор родительского процесса')
+    process_guid: str = Field(default='', description='Уникальный GUID процесса')
+    parent_guid: Optional[str] = Field(default=None, description='GUID родительского процесса')
+    name: str = Field(..., description='Имя процесса')
+    executable_path: Optional[str] = Field(default=None, description='Путь к исполняемому файлу')
+    command_line: Optional[str] = Field(default=None, description='Аргументы командной строки')
+    user: Optional[str] = Field(default=None, description='Учетная запись пользователя')
+    sid: Optional[str] = Field(default=None, description='Идентификатор безопасности (SID)')
+    session_id: Optional[int] = Field(default=None, description='Идентификатор сессии')
+    integrity_level: Optional[str] = Field(default=None, description='Уровень целостности токена')
+    elevation: Optional[bool] = Field(default=None, description='Статус повышения привилегий')
+    parent_name: Optional[str] = Field(default=None, description='Имя родительского процесса')
+    parent_cmdline: Optional[str] = Field(default=None, description='Командная строка родителя')
+    ancestor_chain: Optional[str] = Field(default=None, description='Строка цепочки предков')
+    launch_reason: Optional[str] = Field(default=None, description='Определенный вектор запуска')
+    source: str = Field(default='system', description='Источник события: w64, etw, psutil, wevtapi')
+    raw_json: Optional[str] = Field(default=None, description='Сырые данные события в формате JSON')
+
+
+class ProcessProvenanceReport(BaseModel):
+    """Сводный аналитический отчет Process Provenance для AI Diagnostics."""
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description='Время формирования отчета')
+    total_processes: int = Field(default=0, description='Общее число активных процессов')
+    active_provenance: List[ProcessProvenanceInfo] = Field(default_factory=list, description='Список паспортов происхождения процессов')
+    recent_events: List[ProcessLifecycleEvent] = Field(default_factory=list, description='Недавние события создания/завершения процессов')
+    summary: str = Field(default='', description='Аналитическая сводка для LLM/ai-diagnostics')
 class BatteryMetrics(BaseModel):
     """Battery and power state telemetry."""
     has_battery: bool = Field(default=False, description='Whether host has battery power')

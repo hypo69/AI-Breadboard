@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-04 01:12:00
 # =============================================================================
 
 """Unit tests for /apps status and visibility filtering based on configuration."""
@@ -62,18 +62,12 @@ class TestAppsStatusVisibility:
             assert app_info['key'] == app_id
 
     def test_apps_status_endpoint_public_and_admin(self):
-        """Both /api/apps/status and /api/admin/apps/status should be accessible and return valid json."""
-        res_public = client.get('/api/apps/status')
+        """Endpoint /api/v1/apps/status should be accessible and return valid json."""
+        res_public = client.get('/api/v1/apps/status')
         assert res_public.status_code == 200
         data_public = res_public.json()
         assert data_public['status'] == 'ok'
         assert 'apps' in data_public
-        res_admin = client.get('/api/admin/apps/status')
-        assert res_admin.status_code == 200
-        data_admin = res_admin.json()
-        assert data_admin['status'] == 'ok'
-        assert 'apps' in data_admin
-        assert data_public['apps'] == data_admin['apps']
 
     def test_config_tc_behavior(self, monkeypatch, tmp_path):
         """Simulate running with config_tc.json where cloudflared is disabled and enable_all is false."""
@@ -111,7 +105,7 @@ class TestAppsStatusVisibility:
             for mod_file in modules_dir.glob('*.js'):
                 content += '\n' + mod_file.read_text(encoding='utf-8')
         assert 'fetchAppsStatus' in content
-        assert '/api/apps/status' in content
+        assert '/api/v1/apps/status' in content
         assert 'appsMap' in content
         assert 'd-none' in content
         assert 'tab-network' in content
@@ -129,7 +123,7 @@ class TestAppsStatusVisibility:
             for mod_file in modules_dir.glob('*.js'):
                 content += '\n' + mod_file.read_text(encoding='utf-8')
         assert 'syncAppsTabsVisibility' in content
-        assert '/api/apps/status' in content
+        assert '/api/v1/apps/status' in content
         assert 'appsTabsDropdown' in content
 
     def test_config_tc_array_format_behavior(self, monkeypatch, tmp_path):
@@ -226,8 +220,8 @@ class TestAppsStatusVisibility:
         assert status['apps']['wikipedia_research']['enabled'] is False
 
     def test_api_status_endpoint_with_profile_param(self):
-        """Querying /api/apps/status?profile=tc must return tc.json / config_tc.json status."""
-        res = client.get('/api/apps/status?profile=tc')
+        """Querying /api/v1/apps/status?profile=tc must return tc.json / config_tc.json status."""
+        res = client.get('/api/v1/apps/status?profile=tc')
         assert res.status_code == 200
         data = res.json()
         assert data['status'] == 'ok'

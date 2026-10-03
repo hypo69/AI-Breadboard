@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/apps
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 01:12:00
  * =============================================================================
  */
 
@@ -125,12 +125,12 @@ async function buildMenu(appsMap = {}, customCfg = null) {
   const target = getMenuTarget();
   if (!cfg) {
     try {
-      const r = await fetch(`/api/menu/config?target=${target}&t=${Date.now()}`);
+      const r = await fetch(`/api/v1/menu/config?target=${target}&t=${Date.now()}`);
       if (r.ok) {
         cfg = await r.json();
       }
     } catch (e) {
-      console.warn(`Не удалось загрузить /api/menu/config?target=${target}, пробуем статический файл`, e);
+      console.warn(`Не удалось загрузить /api/v1/menu/config?target=${target}, пробуем статический файл`, e);
     }
   }
 
@@ -433,7 +433,7 @@ function initMenuEditor(cfg, appsMap = {}) {
 
     try {
       const target = getMenuTarget();
-      const r = await fetch(`/api/menu/config?target=${target}`, {
+      const r = await fetch(`/api/v1/menu/config?target=${target}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cfg)

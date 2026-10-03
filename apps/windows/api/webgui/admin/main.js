@@ -573,12 +573,7 @@ async function initInterface() {
   // Синхронизация видимости приложений (/apps) перед загрузкой вкладок
   let appsMap = {};
   try {
-    let appsData = null;
-    try {
-      appsData = await window.api.fetch('/api/apps/status');
-    } catch {
-      appsData = await window.api.fetch('/api/admin/apps/status');
-    }
+    const appsData = await (window.api ? window.api.fetch('/api/v1/apps/status') : fetch('/api/v1/apps/status').then(r => r.json()));
     if (appsData && appsData.apps) {
       appsMap = appsData.apps;
       window.appsStatusMap = appsData.apps;
@@ -617,7 +612,7 @@ async function initInterface() {
 
   // Определение и фильтрация вкладок микроприложений (/apps)
   const appTabDefs = [
-    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20261004_v1', js: '/html/about_system_tab/main.js?v=20261004_v1' },
+    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20261004_v5', js: '/html/about_system_tab/main.js?v=20261004_v5' },
     { id: 'trading_terminal', tab: 'trading', html: '/html/trading_tab/index.html', js: '/html/trading_tab/main.js' },
     { id: 'network_terminal', tab: 'network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
     { id: 'system_inspector', tab: 'system-load-inspector', html: '/html/system_inspector_tab/index.html', js: '/html/system_inspector_tab/main.js' },

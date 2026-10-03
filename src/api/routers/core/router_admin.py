@@ -17,7 +17,7 @@
 # Package: src.api.routers.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-04 01:20:00
 # =============================================================================
 
 """Минимальная реализация роутера router_admin с поддержкой статуса приложений."""
@@ -53,6 +53,9 @@ APPS_REGISTRY = {
     "enterprise_knowledge": {}
 }
 
+from header import __root__
+
+
 def _load_config(profile: str | None = None) -> dict:
     """Загружает конфигурационный файл.
 
@@ -61,28 +64,59 @@ def _load_config(profile: str | None = None) -> dict:
     Иначе ищутся типовые файлы в корневой директории.
     Возвращает словарь вида {"config_file": <имя>, "data": <содержимое>}
     """
-    # Корень проекта (директория, где находится main.py)
-    project_root = Path(__file__).parents[3]
-    if profile == "tc":
-        for name in ("tc.json", "config_tc.json"):
-            p = project_root / name
-            if p.exists():
-                return {"config_file": p.name, "data": json.loads(p.read_text(encoding="utf-8"))}
+    if profile in ("tc", "test-computer", "test_computer", "apps_tc"):
+        for candidate in [
+            __root__ / "start_scenarios_config" / "tc.json",
+            __root__ / "config" / "tc.json",
+            __root__ / "config_tc.json",
+            __root__ / "tc.json",
+        ]:
+            if candidate.exists():
+                return {"config_file": candidate.name, "data": json.loads(candidate.read_text(encoding="utf-8"))}
     env_path = os.getenv("CONFIG_FILE")
     if env_path:
         p = Path(env_path)
         if not p.is_absolute():
-            p = project_root / p
+            p = __root__ / p
         if p.exists():
             return {"config_file": p.name, "data": json.loads(p.read_text(encoding="utf-8"))}
     # Поиск типовых файлов
-    for name in ("config_tc.json", "tc.json", "config.json"):
-        p = project_root / name
-        if p.exists():
-            return {"config_file": p.name, "data": json.loads(p.read_text(encoding="utf-8"))}
+    for candidate in [
+        __root__ / "start_scenarios_config" / "tc.json",
+        __root__ / "config" / "tc.json",
+        __root__ / "config_tc.json",
+        __root__ / "tc.json",
+        __root__ / "config.json",
+    ]:
+        if candidate.exists():
+            return {"config_file": candidate.name, "data": json.loads(candidate.read_text(encoding="utf-8"))}
     return {"config_file": None, "data": {}}
 
-def _build_apps_status(cfg: dict) -> dict:
+ALIASES_MAP = {
+    "windows_sysadmin": {"windows_sysadmin", "windows_admin", "sysadmin", "admin", "windows-sysadmin", "windows-admin", "tab-windows-sysadmin", "tab-windows-admin"},
+    "system_control_center": {"system_control_center", "system_control", "control_center", "system-control-center"},
+    "system_log_viewer": {"system_log_viewer", "log_viewer", "system_logs", "system-log-viewer"},
+    "system_inspector": {"system_inspector", "inspector", "system-inspector"},
+    "network_terminal": {"network_terminal", "network", "terminal", "network-terminal"},
+    "windows_startup_auditor": {"windows_startup_auditor", "startup_auditor", "startup", "windows-startup-auditor"},
+    "software_audit": {"software_audit", "software-audit", "software_transparency_scanner", "transparency_scanner"},
+    "registry_viewer": {"registry_viewer", "registry-viewer", "registry"},
+    "cloudflared_monitor": {"cloudflared_monitor", "cloudflared", "cloudflared-monitor", "tunnel_monitor"},
+    "gcloud_monitor": {"gcloud_monitor", "gcloud", "gcloud-monitor"},
+    "website_monitor": {"website_monitor", "website", "web_monitor", "website-monitor"},
+    "user_assistant": {"user_assistant", "assistant", "user-assistant"},
+    "trading_terminal": {"trading_terminal", "trading", "trading-terminal"},
+    "scenarios": {"scenarios", "start_scenarios"},
+    "chat": {"chat", "ai_chat"},
+}
+
+def _matches_app(name: str, app_id: str) -> bool:
+    norm_name = str(name).strip().lower()
+    if norm_name in ALIASES_MAP.get(app_id, set()):
+        return True
+    return norm_name in (app_id, app_id.replace('_', '-'), app_id.replace('windows_', ''), f"tab-{app_id.replace('_', '-')}")
+
+def _build_apps_status(cfg: dict) -> tuple[dict, bool]:
     """Строит статус всех приложений на основе конфигурации.
 
     Поддерживаемые форматы:
@@ -91,10 +125,21 @@ def _build_apps_status(cfg: dict) -> dict:
     - список имён приложений (включаются только они).
     """
     apps_cfg = cfg.get("apps", {})
-    enable_all = apps_cfg.get("enable_all", True)
+    if isinstance(apps_cfg, list):
+        enable_all = False
+    elif isinstance(apps_cfg, dict):
+        if "enabled" in apps_cfg and isinstance(apps_cfg["enabled"], list):
+            enable_all = False
+        elif "enable_all" in apps_cfg and isinstance(apps_cfg["enable_all"], bool):
+            enable_all = apps_cfg["enable_all"]
+        else:
+            enable_all = True
+    else:
+        enable_all = True
+
     # Базовый статус: включено/выключено в зависимости от enable_all
     status = {
-        app_id: {"key": app_id, "tab": f"tab-{app_id}", "enabled": enable_all}
+        app_id: {"key": app_id, "tab": f"tab-{app_id.replace('_', '-')}", "enabled": enable_all}
         for app_id in APPS_REGISTRY
     }
     # Если apps_cfg - список имен
@@ -102,53 +147,56 @@ def _build_apps_status(cfg: dict) -> dict:
         for app_id in status:
             status[app_id]["enabled"] = False
         for name in apps_cfg:
-            if name in status:
-                status[name]["enabled"] = True
-        return status
+            for app_id in status:
+                if _matches_app(name, app_id):
+                    status[app_id]["enabled"] = True
+        return status, enable_all
+
     # Если dict
     if isinstance(apps_cfg, dict):
         # Явные списки enabled/disabled
-        enabled_set = set(apps_cfg.get("enabled", []))
-        disabled_set = set(apps_cfg.get("disabled", []))
-        if enabled_set:
+        enabled_set = {str(item).strip().lower() for item in apps_cfg.get("enabled", []) if item}
+        disabled_set = {str(item).strip().lower() for item in apps_cfg.get("disabled", []) if item}
+        if "enabled" in apps_cfg and isinstance(apps_cfg["enabled"], list):
             # Переопределяем: всё выключено, затем включаем указанные
             for app_id in status:
                 status[app_id]["enabled"] = False
             for name in enabled_set:
-                if name in status:
-                    status[name]["enabled"] = True
+                for app_id in status:
+                    if _matches_app(name, app_id):
+                        status[app_id]["enabled"] = True
         # Применяем disabled (приоритет выше)
         for name in disabled_set:
-            if name in status:
-                status[name]["enabled"] = False
+            for app_id in status:
+                if _matches_app(name, app_id):
+                    status[app_id]["enabled"] = False
         # Прямые булевы флаги для отдельных приложений
         for name, flag in apps_cfg.items():
             if name in ("enable_all", "enabled", "disabled"):
                 continue
-            if isinstance(flag, bool) and name in status:
-                status[name]["enabled"] = flag
-    return status
+            if isinstance(flag, bool):
+                for app_id in status:
+                    if _matches_app(name, app_id):
+                        status[app_id]["enabled"] = flag
+    return status, enable_all
 
 def get_apps_status(profile: str | None = None) -> dict:
-    """Возвращает статус всех приложений и информацию о конфиге.
-
-    Структура возвращаемого словаря:
-    {
-        "status": "ok",
-        "config_file": <имя файла> | None,
-        "enable_all": <bool>,
-        "apps": {<app_id>: {"key": ..., "tab": ..., "enabled": <bool>}, ...}
-    }
-    """
+    """Возвращает статус всех приложений и информацию о конфиге."""
     cfg_wrap = _load_config(profile)
     cfg_data = cfg_wrap.get("data", {})
-    apps_status = _build_apps_status(cfg_data)
+    apps_status, enable_all = _build_apps_status(cfg_data)
     return {
         "status": "ok",
         "config_file": cfg_wrap.get("config_file"),
-        "enable_all": cfg_data.get("apps", {}).get("enable_all", True),
+        "enable_all": enable_all,
         "apps": apps_status,
     }
+
+@router.get('/api/v1/apps/status', tags=["apps"])
+async def get_apps_status_endpoint(profile: str | None = None) -> dict:
+    """Получение статуса всех приложений по стандарту /api/v1/apps/status."""
+    return get_apps_status(profile=profile)
+
 
 @router.get('/router_admin/ping', tags=["router_admin"])
 async def ping() -> dict:

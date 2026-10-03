@@ -107,7 +107,7 @@ window.addEventListener('load', async () => {
     { tabName: 'trading', appId: 'trading_terminal', htmlUrl: `/html/trading_tab/index.html`, jsUrl: `/html/trading_tab/main.js` },
     { tabName: 'network', appId: 'network_terminal', htmlUrl: `/html/network_tab/index.html`, jsUrl: `/html/network_tab/main.js` },
     { tabName: 'system-inspector', appId: 'system_inspector', htmlUrl: `/html/system_inspector_tab/index.html`, jsUrl: `/html/system_inspector_tab/main.js` },
-    { tabName: 'about-system', appId: 'about_system', htmlUrl: `/html/about_system_tab/index.html?v=20261004_v1`, jsUrl: `/html/about_system_tab/main.js?v=20261004_v1` },
+    { tabName: 'about-system', appId: 'about_system', htmlUrl: `/html/about_system_tab/index.html?v=20261004_v5`, jsUrl: `/html/about_system_tab/main.js?v=20261004_v5` },
     { tabName: 'windows-admin', appId: 'windows_sysadmin', htmlUrl: `/html/windows_admin_tab/index.html`, jsUrl: `/html/windows_admin_tab/main.js` },
     { tabName: 'cloudflared', appId: 'cloudflared_monitor', htmlUrl: `/html/cloudflared_tab/index.html`, jsUrl: `/html/cloudflared_tab/main.js` },
     { tabName: 'user-assistant', appId: 'user_assistant', htmlUrl: `/html/user_assistant_tab/index.html`, jsUrl: `/html/user_assistant_tab/main.js` },
@@ -132,7 +132,7 @@ window.addEventListener('load', async () => {
     let appsStatus = window.appsStatusMap || null;
     if (!appsStatus) {
       try {
-        const res = await (window.api ? window.api.fetch('/api/apps/status') : fetch('/api/apps/status').then(r => r.json()));
+        const res = await (window.api ? window.api.fetch('/api/v1/apps/status') : fetch('/api/v1/apps/status').then(r => r.json()));
         appsStatus = res?.apps || null;
       } catch (err) {
         console.warn('[LazyInitPatch] Could not fetch apps status for profile filtering:', err);

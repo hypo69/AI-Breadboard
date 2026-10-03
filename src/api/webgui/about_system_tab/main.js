@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 00:22:00
+ * Updated: 2026-10-04 00:43:00
  * =============================================================================
  */
 
@@ -36,7 +36,7 @@
 // Package: src.api.webgui.about_system_tab
 // Author: hypo69
 // Copyright: © 2026 hypo69
-// Updated: 2026-10-04 00:22:00
+// Updated: 2026-10-04 00:43:00
 // =============================================================================
 
 (function () {
@@ -172,23 +172,10 @@
     // Проверка доступности кеша
     await updateCacheStatus();
 
-    // Prefetch: предзагрузка критичных данных для мгновенного отображения
-    const prefetchPromises = [
-      fetchSystemSummary().catch(err => console.warn('[AboutSystemTab] Quick summary error:', err)),
-      fetchHardwareSpec().catch(err => console.warn('[AboutSystemTab] Hardware spec error:', err)),
-      fetchKpiPanels().catch(err => console.warn('[AboutSystemTab] KPI panels error:', err))
-    ];
-    
-    // Ждем критичные данные перед отображением
-    await Promise.allSettled(prefetchPromises);
-    
-    // Фоновая загрузка менее критичных данных
-    fetchBackupStatus().catch(err => console.warn('[AboutSystemTab] Backup status error:', err));
-    fetchSystemControlStatus().catch(err => console.warn('[AboutSystemTab] Control status error:', err));
-    fetchStorageBatteryWear().catch(err => console.warn('[AboutSystemTab] Storage & Battery wear error:', err));
+    // Инициализация индивидуальных опросников и выпадающих списков частоты для всех панелей
+    initPanelPollers();
 
-    // AI-диагностика запускается только пользователем по кнопке Rescan / Запуск
-    // Start live telemetry ticker
+    // Запуск таймера часов и статуса кеша
     startLiveStream();
   }
   window.initAboutSystemTab = initAboutSystemTab;
@@ -238,20 +225,17 @@
       window.registerTabPoller('tab-about-system', async () => {
         updateLocalClock();
         if (isLiveActive && !isUpdating) {
-          await pollLiveTelemetry();
           if (activeSubtab !== 'subtab-overview') {
             await refreshActiveSubtab();
           }
         }
-        // Обновляем статус кеша каждые 3 секунды
         await updateCacheStatus();
-      }, 3000, { immediate: true });
+      }, 3000, { pollerId: 'tab-about-system_clock', immediate: true });
     } else {
       if (liveIntervalId) clearInterval(liveIntervalId);
       liveIntervalId = setInterval(async () => {
         updateLocalClock();
         if (isLiveActive && !isUpdating) {
-          await pollLiveTelemetry();
           if (activeSubtab !== 'subtab-overview') {
             await refreshActiveSubtab();
           }
@@ -301,7 +285,10 @@
       btnLiveToggle.onclick = () => {
         isLiveActive = !isLiveActive;
         if (window.setTabPollerEnabled) {
-          window.setTabPollerEnabled('tab-about-system_default', isLiveActive);
+          window.setTabPollerEnabled('tab-about-system_clock', isLiveActive);
+          Object.keys(panelPollingRegistry).forEach(pollId => {
+            window.setTabPollerEnabled(`tab-about-system_${pollId}`, isLiveActive);
+          });
         }
         const icon = document.getElementById('icon-about-sys-live');
         const txt = document.getElementById('txt-about-sys-live');
@@ -638,65 +625,225 @@
   }
 
   /**
-   * Загрузка 4 сводных KPI-карточек из /api/v1/dashboard/*
+   * Гранулярные функции получения данных для каждой карточки KPI
    */
-  async function fetchKpiPanels(forceNetwork = false) {
+  async function fetchKpiOs(forceNetwork = false) {
     try {
       const config = CACHE_STRATEGY.PANEL_KPI || { ttl: 5000, strategy: 'stale-while-revalidate' };
       const opts = { ttl: config.ttl, strategy: config.strategy, forceNetwork };
-
-      const [osRes, secRes, chkRes, storRes] = await Promise.allSettled([
-        cachedFetch('/api/v1/dashboard/os', 'dash_os', opts),
-        cachedFetch('/api/v1/dashboard/security', 'dash_sec', opts),
-        cachedFetch('/api/v1/dashboard/checkpoints', 'dash_chk', opts),
-        cachedFetch('/api/v1/dashboard/storage', 'dash_stor', opts)
-      ]);
-
-      // 1. Платформа & ОС
-      if (osRes.status === 'fulfilled' && osRes.value) {
-        const data = osRes.value;
+      const data = await cachedFetch('/api/v1/dashboard/os', 'dash_os', opts);
+      if (data) {
         if (data.display_title) setText('about-kpi-os-title', data.display_title);
         if (data.display_host) setText('about-kpi-os-host', data.display_host);
         if (data.uptime_human) setText('about-spec-uptime', `Uptime: ${data.uptime_human}`);
         if (data.os_install_date) setText('about-ident-install-date', data.os_install_date);
       }
+    } catch (e) {
+      console.warn('[AboutSystemTab] fetchKpiOs error:', e);
+    }
+  }
 
-      // 2. Безопасность системы
-      if (secRes.status === 'fulfilled' && secRes.value) {
-        const data = secRes.value;
+  async function fetchKpiSecurity(forceNetwork = false) {
+    try {
+      const config = CACHE_STRATEGY.PANEL_KPI || { ttl: 5000, strategy: 'stale-while-revalidate' };
+      const opts = { ttl: config.ttl, strategy: config.strategy, forceNetwork };
+      const data = await cachedFetch('/api/v1/dashboard/security', 'dash_sec', opts);
+      if (data) {
         if (data.display_title) setText('about-kpi-sec-title', data.display_title);
         if (data.display_subtitle) setText('about-kpi-sec-sub', data.display_subtitle);
       }
+    } catch (e) {
+      console.warn('[AboutSystemTab] fetchKpiSecurity error:', e);
+    }
+  }
 
-      // 3. Точки восстановления
-      if (chkRes.status === 'fulfilled' && chkRes.value) {
-        const data = chkRes.value;
+  async function fetchKpiCheckpoints(forceNetwork = false) {
+    try {
+      const config = CACHE_STRATEGY.PANEL_KPI || { ttl: 5000, strategy: 'stale-while-revalidate' };
+      const opts = { ttl: config.ttl, strategy: config.strategy, forceNetwork };
+      const data = await cachedFetch('/api/v1/dashboard/checkpoints', 'dash_chk', opts);
+      if (data) {
         if (data.display_title) setText('about-kpi-prot-title', data.display_title);
         if (data.display_subtitle) setText('about-kpi-prot-sub', data.display_subtitle);
       }
+    } catch (e) {
+      console.warn('[AboutSystemTab] fetchKpiCheckpoints error:', e);
+    }
+  }
 
-      // 4. Системный накопитель (C:)
-      if (storRes.status === 'fulfilled' && storRes.value) {
-        const data = storRes.value;
+  async function fetchKpiStorage(forceNetwork = false) {
+    try {
+      const config = CACHE_STRATEGY.PANEL_KPI || { ttl: 5000, strategy: 'stale-while-revalidate' };
+      const opts = { ttl: config.ttl, strategy: config.strategy, forceNetwork };
+      const data = await cachedFetch('/api/v1/dashboard/storage', 'dash_stor', opts);
+      if (data) {
         if (data.display_title) setText('about-kpi-stor-title', data.display_title);
         if (data.display_subtitle) setText('about-kpi-stor-clean', data.display_subtitle);
       }
-    } catch (err) {
-      console.warn('[AboutSystemTab] fetchKpiPanels error:', err);
+    } catch (e) {
+      console.warn('[AboutSystemTab] fetchKpiStorage error:', e);
     }
+  }
+
+  async function fetchHardwareSpecs(forceNetwork = false) {
+    await fetchHardwareSpec(forceNetwork);
+  }
+
+  async function fetchUserEnvSecurity(forceNetwork = false) {
+    await Promise.allSettled([
+      fetchSystemSummary(forceNetwork ? false : true),
+      fetchSystemControlStatus(forceNetwork),
+      fetchBackupStatus(forceNetwork)
+    ]);
+  }
+
+  async function fetchDisksVolumes(forceNetwork = false) {
+    await fetchSystemSummary(forceNetwork ? false : true);
+  }
+
+  async function fetchWearPanel(forceNetwork = false) {
+    await fetchStorageBatteryWear(forceNetwork);
+  }
+
+  async function fetchBatteryPanel(forceNetwork = false) {
+    await fetchStorageBatteryWear(forceNetwork);
+  }
+
+  async function fetchHwTreePanel(forceNetwork = false) {
+    await fetchHardwareSpec(forceNetwork);
+  }
+
+  /**
+   * Загрузка всех 4 сводных KPI-карточек
+   */
+  async function fetchKpiPanels(forceNetwork = false) {
+    await Promise.allSettled([
+      fetchKpiOs(forceNetwork),
+      fetchKpiSecurity(forceNetwork),
+      fetchKpiCheckpoints(forceNetwork),
+      fetchKpiStorage(forceNetwork)
+    ]);
+  }
+
+  /**
+   * Реестр панелей и частоты их опроса
+   */
+  const panelPollingRegistry = {
+    'about_kpi_os': { fn: fetchKpiOs, defaultFreq: '5' },
+    'about_kpi_sec': { fn: fetchKpiSecurity, defaultFreq: '5' },
+    'about_kpi_prot': { fn: fetchKpiCheckpoints, defaultFreq: '5' },
+    'about_kpi_stor': { fn: fetchKpiStorage, defaultFreq: '5' },
+    'about_hw_specs': { fn: fetchHardwareSpecs, defaultFreq: 'start' },
+    'about_user_env': { fn: fetchUserEnvSecurity, defaultFreq: '5' },
+    'about_disks': { fn: fetchDisksVolumes, defaultFreq: '10' },
+    'about_wear': { fn: fetchWearPanel, defaultFreq: '10' },
+    'about_battery': { fn: fetchBatteryPanel, defaultFreq: '10' },
+    'about_hw_tree': { fn: fetchHwTreePanel, defaultFreq: 'start' }
+  };
+
+  const panelTimers = new Map();
+
+  function getPanelFrequency(pollId) {
+    try {
+      const saved = localStorage.getItem(`poll_freq_${pollId}`);
+      if (saved !== null && saved !== undefined && saved !== '') return saved;
+    } catch (_) {}
+    return panelPollingRegistry[pollId]?.defaultFreq || 'start';
+  }
+
+  function setPanelFrequency(pollId, freq) {
+    try {
+      localStorage.setItem(`poll_freq_${pollId}`, freq);
+    } catch (_) {}
+    applyPanelPoller(pollId, freq, false);
+  }
+
+  function stopPanelPoller(pollId) {
+    const pollerId = `tab-about-system_${pollId}`;
+    if (window.unregisterTabPoller) {
+      window.unregisterTabPoller(pollerId);
+    }
+    if (panelTimers.has(pollId)) {
+      clearInterval(panelTimers.get(pollId));
+      panelTimers.delete(pollId);
+    }
+  }
+
+  function applyPanelPoller(pollId, freq, runInitial = false) {
+    stopPanelPoller(pollId);
+    const config = panelPollingRegistry[pollId];
+    if (!config) return;
+
+    if (freq === 'start') {
+      if (runInitial) {
+        config.fn();
+      }
+      return;
+    }
+
+    if (freq === 'manual') {
+      if (runInitial) {
+        config.fn();
+      }
+      return;
+    }
+
+    const intervalSec = parseInt(freq, 10);
+    if (isNaN(intervalSec) || intervalSec <= 0) return;
+
+    const intervalMs = intervalSec * 1000;
+    const pollerId = `tab-about-system_${pollId}`;
+
+    if (window.registerTabPoller) {
+      window.registerTabPoller('tab-about-system', async () => {
+        if (isLiveActive && !isUpdating) {
+          await config.fn();
+        }
+      }, intervalMs, { pollerId, immediate: runInitial });
+    } else {
+      if (runInitial) config.fn();
+      const timer = setInterval(async () => {
+        if (isLiveActive && !isUpdating) {
+          await config.fn();
+        }
+      }, intervalMs);
+      panelTimers.set(pollId, timer);
+    }
+  }
+
+  function initPanelPollers() {
+    document.querySelectorAll('.poll-freq-select').forEach(select => {
+      const pollId = select.dataset.pollId;
+      if (!pollId) return;
+
+      const currentFreq = getPanelFrequency(pollId);
+      select.value = currentFreq;
+
+      select.onchange = (e) => {
+        const newFreq = e.target.value;
+        setPanelFrequency(pollId, newFreq);
+        if (newFreq !== 'manual' && newFreq !== 'start') {
+          panelPollingRegistry[pollId]?.fn(true);
+        }
+        if (window.showToast) {
+          const label = select.options[select.selectedIndex]?.text || newFreq;
+          window.showToast(`Частота опроса обновлена: ${label}`, 'info');
+        }
+      };
+
+      applyPanelPoller(pollId, currentFreq, true);
+    });
   }
 
   async function pollLiveTelemetry() {
     isUpdating = true;
     try {
-      await Promise.allSettled([
-        fetchSystemSummary(true),
-        fetchKpiPanels(false)
-      ]);
+      await fetchSystemSummary(true);
     } finally {
       isUpdating = false;
     }
   }
+
 
   async function fetchSystemSummary(isLightPoll = false) {
     try {

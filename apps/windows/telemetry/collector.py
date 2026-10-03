@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 00:16:00
+# Updated: 2026-10-04 01:50:00
 # =============================================================================
 
 from __future__ import annotations
@@ -39,8 +39,40 @@ except ImportError:
     psutil = None
     PSUTIL_AVAILABLE = False
 from logger import logger
-# Updated: 2026-10-01 11:30:00
-from .models import AnomalyItem, BatteryMetrics, CloudStorageInfo, CpuMetrics, DiskIoMetrics, DiskPartitionMetrics, DriverInfo, GpuMetrics, HardwareArchiveEntry, HardwareAuditReport, HardwareChangeItem, HardwareDeviceAudit, HardwareNode, HardwareSensor, MemoryMetrics, MonitorInfo, NetworkInterfaceMetrics, NetworkPortMetrics, OfficeSuiteInfo, PhysicalDiskHealth, ProcessMetrics, ProcessNetworkActivity, RamStickInfo, SystemCoreMetrics, SystemHardwareQuick, SystemHealthAlerts, SystemSnapshot, WindowsUpdateInfo
+# Updated: 2026-10-04 01:50:00
+from .models import (
+    AnomalyItem,
+    BatteryMetrics,
+    CloudStorageInfo,
+    CpuMetrics,
+    DiskIoMetrics,
+    DiskPartitionMetrics,
+    DriverInfo,
+    GpuMetrics,
+    HardwareArchiveEntry,
+    HardwareAuditReport,
+    HardwareChangeItem,
+    HardwareDeviceAudit,
+    HardwareNode,
+    HardwareSensor,
+    MemoryMetrics,
+    MonitorInfo,
+    NetworkInterfaceMetrics,
+    NetworkPortMetrics,
+    OfficeSuiteInfo,
+    PhysicalDiskHealth,
+    ProcessLifecycleEvent,
+    ProcessMetrics,
+    ProcessNetworkActivity,
+    ProcessProvenanceInfo,
+    ProcessProvenanceReport,
+    RamStickInfo,
+    SystemCoreMetrics,
+    SystemHardwareQuick,
+    SystemHealthAlerts,
+    SystemSnapshot,
+    WindowsUpdateInfo,
+)
 from .sensors import get_hardware_sensors
 from apps.windows.telemetry_research.hardware_auditor import HardwareAuditor
 from apps.windows.telemetry_research.hardware_history_manager import HardwareHistoryManager
@@ -1047,7 +1079,10 @@ class SystemCollector:
         sync_task = asyncio.create_task(asyncio.to_thread(_collect_sync_telemetry))
         cpu_metrics, ram_sticks, sync_data = await asyncio.gather(cpu_task, ram_task, sync_task)
         ident = sync_data['ident']
-        return SystemSnapshot(hostname=ident.get('hostname') or socket.gethostname(), username=ident.get('username') or '', os_name=f'{platform.system()} {platform.release()}', os_build=ident.get('os_build') or platform.version(), system_language=ident.get('system_language') or '', user_locale=ident.get('user_locale') or '', system_locale=ident.get('system_locale') or '', timezone=ident.get('timezone') or '', codepage=ident.get('codepage') or '', input_languages=ident.get('input_languages') or [], os_install_date=ident.get('os_install_date') or '', uptime_seconds=sync_data['uptime'], cpu=cpu_metrics, memory=sync_data['memory'], ram_sticks=ram_sticks, gpus=sync_data['gpus'], monitors=sync_data['monitors'], updates=sync_data['updates'], office=sync_data['office'], onedrive=sync_data['onedrive'], disks=sync_data['partitions'], physical_disks=sync_data['physical_disks'], disk_io=sync_data['disk_io'], network=sync_data['net_metrics'], listening_ports=sync_data['listening_ports'], network_activity=sync_data['net_activity'], battery=sync_data['battery'], alerts=sync_data['alerts'], sensors=sync_data['sensors'], top_processes=sync_data['top_procs'])
+        # Выполняем аудит аппаратного обеспечения и сохраняем результат в snapshot
+        hardware_audit_report = self.auditor.audit_hardware()
+        hardware_audit_dict = hardware_audit_report.model_dump() if hasattr(hardware_audit_report, 'model_dump') else dict(hardware_audit_report)
+        return SystemSnapshot(hostname=ident.get('hostname') or socket.gethostname(), username=ident.get('username') or '', os_name=f'{platform.system()} {platform.release()}', os_build=ident.get('os_build') or platform.version(), system_language=ident.get('system_language') or '', user_locale=ident.get('user_locale') or '', system_locale=ident.get('system_locale') or '', timezone=ident.get('timezone') or '', codepage=ident.get('codepage') or '', input_languages=ident.get('input_languages') or [], os_install_date=ident.get('os_install_date') or '', uptime_seconds=sync_data['uptime'], cpu=cpu_metrics, memory=sync_data['memory'], ram_sticks=ram_sticks, gpus=sync_data['gpus'], monitors=sync_data['monitors'], updates=sync_data['updates'], office=sync_data['office'], onedrive=sync_data['onedrive'], disks=sync_data['partitions'], physical_disks=sync_data['physical_disks'], disk_io=sync_data['disk_io'], network=sync_data['net_metrics'], listening_ports=sync_data['listening_ports'], network_activity=sync_data['net_activity'], battery=sync_data['battery'], alerts=sync_data['alerts'], sensors=sync_data['sensors'], top_processes=sync_data['top_procs'], hardware_audit=hardware_audit_dict)
 
     def get_hardware_sensors(self) -> List[HardwareSensor]:
         """Collect real-time hardware sensors readings.
