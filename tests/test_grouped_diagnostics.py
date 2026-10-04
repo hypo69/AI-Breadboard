@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-04 02:31:40
 # =============================================================================
 
 """Фикстура снимка телеметрии с несколькими выраженными узкими местами."""
@@ -25,7 +25,7 @@ import pytest
 from unittest.mock import AsyncMock
 from apps.windows.telemetry.models import CpuMetrics, DiskPartitionMetrics, GpuMetrics, HardwareSensor, MemoryMetrics, ProcessMetrics, SystemSnapshot
 from apps.windows.telemetry.grouped_telemetry import GroupDiagnosticResult, GroupedTelemetryBuilder
-from apps.windows.telemetry.diagnostic_engine import SystemDiagnosticEngine
+from apps.windows.telemetry_research.diagnostic_engine import SystemDiagnosticEngine
 
 @pytest.fixture
 def sample_snapshot() -> SystemSnapshot:

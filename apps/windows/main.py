@@ -18,7 +18,7 @@
 # Package: apps.windows
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 01:10:00
+# Updated: 2026-10-04 08:39:00
 # =============================================================================
 
 from __future__ import annotations
@@ -141,6 +141,16 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
         if state.ws_hub:
             await state.ws_hub.start_heartbeat()
 
+        # Фоновый сервис сбора телеметрии
+        telemetry_svc = None
+        try:
+            from apps.windows.telemetry.service import TelemetryLoggerService
+            telemetry_svc = TelemetryLoggerService.get_instance()
+            telemetry_svc.start()
+            logger.info("[MainApp] Фоновый сервис телеметрии запущен.")
+        except Exception as tel_err:
+            logger.warning(f"[MainApp] Ошибка запуска фонового сервиса телеметрии: {tel_err}")
+
         # Проверка критических аудитов при запуске
         try:
             from apps.windows.telemetry.audit_startup_checker import run_startup_audit
@@ -164,25 +174,14 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
         except Exception as audit_err:
             logger.debug(f"Startup audit: {audit_err}")
 
-        apps_sec = app_config.get('apps', {})
-        enabled_list = apps_sec.get('enabled', []) if isinstance(apps_sec, dict) else []
-        disabled_list = apps_sec.get('disabled', []) if isinstance(apps_sec, dict) else []
-
-        if 'autolog_manager' in enabled_list and 'autolog_manager' not in disabled_list:
-            try:
-                from apps.common.autolog_engine import autolog_engine
-                await autolog_engine.start()
-                logger.info('AutoLogEngine запущен успешно в рамках Windows Diagnostic Center.')
-            except Exception as exc:
-                logger.warning(f'Не удалось запустить autolog_engine: {exc}')
-
         yield
 
-        try:
-            from apps.common.autolog_engine import autolog_engine
-            await autolog_engine.stop()
-        except Exception:
-            pass
+        if telemetry_svc:
+            try:
+                telemetry_svc.stop()
+                logger.info("[MainApp] Фоновый сервис телеметрии остановлен.")
+            except Exception:
+                pass
 
         if state.ws_hub:
             await state.ws_hub.stop()
@@ -285,7 +284,19 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
         file_path = _WEBGUI_DIR / full_path
         if not file_path.exists() or not file_path.is_file():
             raise HTTPException(status_code=404, detail=f'Файл не найден: /html/{full_path}')
-        media_type = 'application/json' if full_path.endswith('.json') else 'text/plain'
+        media_type = 'text/plain'
+        if full_path.endswith('.css'):
+            media_type = 'text/css'
+        elif full_path.endswith('.js'):
+            media_type = 'application/javascript'
+        elif full_path.endswith('.html'):
+            media_type = 'text/html'
+        elif full_path.endswith('.json'):
+            media_type = 'application/json'
+        elif full_path.endswith('.png'):
+            media_type = 'image/png'
+        elif full_path.endswith('.svg'):
+            media_type = 'image/svg+xml'
         return FileResponse(file_path, media_type=media_type)
 
     # -------------------------------------------------------------------------
@@ -319,12 +330,81 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
     except Exception as exc:
         logger.debug(f'Роутер system_control_center не зарегистрирован: {exc}')
 
-    # 5. Системный инспектор
+    # 5. Системный инспектор и панели оборудования (/api/v1/system, /api/v1/panel/*, /api/v1/about-system)
     try:
-        from apps.windows.system_inspector_router import router as sys_inspector_router
-        app.include_router(sys_inspector_router)
+        from apps.windows.api.routers.router_system import init_router as init_system_inspector_router
+        app.include_router(init_system_inspector_router(chat_model=state.chat_model))
     except Exception as exc:
-        logger.debug(f'Роутер system_inspector не зарегистрирован: {exc}')
+        logger.debug(f'Роутер router_system не зарегистрирован: {exc}')
+
+    try:
+        from apps.windows.api.routers.router_hardware_sensors import init_router as init_hardware_sensors_router
+        app.include_router(init_hardware_sensors_router())
+    except Exception as exc:
+        logger.debug(f'Роутер router_hardware_sensors не зарегистрирован: {exc}')
+
+    try:
+        from apps.windows.api.routers.router_cpu_load import init_router as init_cpu_load_router
+        app.include_router(init_cpu_load_router())
+    except Exception as exc:
+        logger.debug(f'Роутер router_cpu_load не зарегистрирован: {exc}')
+
+    try:
+        from apps.windows.api.routers.router_gpu_load import init_router as init_gpu_load_router
+        app.include_router(init_gpu_load_router())
+    except Exception as exc:
+        logger.debug(f'Роутер router_gpu_load не зарегистрирован: {exc}')
+
+    try:
+        from apps.windows.api.routers.router_storage_load import init_router as init_storage_load_router
+        app.include_router(init_storage_load_router())
+    except Exception as exc:
+        logger.debug(f'Роутер router_storage_load не зарегистрирован: {exc}')
+
+    try:
+        from apps.windows.api.routers.router_memory_io import init_router as init_memory_io_router
+        app.include_router(init_memory_io_router())
+    except Exception as exc:
+        logger.debug(f'Роутер router_memory_io не зарегистрирован: {exc}')
+
+    try:
+        from apps.windows.api.routers.router_network_load import init_router as init_network_load_router
+        app.include_router(init_network_load_router())
+    except Exception as exc:
+        logger.debug(f'Роутер router_network_load не зарегистрирован: {exc}')
+
+    try:
+        from apps.windows.api.routers.router_about_system import init_router as init_about_system_router
+        app.include_router(init_about_system_router())
+    except Exception as exc:
+        logger.debug(f'Роутер router_about_system не зарегистрирован: {exc}')
+
+    try:
+        from apps.windows.api.routers.router_windows_admin import init_router as init_win_admin_router
+        app.include_router(init_win_admin_router())
+    except Exception as exc:
+        logger.debug(f'Роутер router_windows_admin не зарегистрирован: {exc}')
+
+    try:
+        from apps.windows.api.routers.router_diagnostics import init_router as init_apps_diag_router
+        app.include_router(init_apps_diag_router())
+    except Exception as exc:
+        logger.debug(f'Роутер router_diagnostics не зарегистрирован: {exc}')
+
+    try:
+        from apps.windows.api.routers.router_chat import init_router as init_apps_chat_router
+        app.include_router(init_apps_chat_router(chat_model=state.chat_model, narrator_model=state.narrator_model))
+    except Exception as exc:
+        logger.debug(f'Роутер router_chat не зарегистрирован: {exc}')
+
+    try:
+        from apps.windows.api.routers.router_admin import init_router as init_apps_admin_router, init_skills_router, init_plugins_router, init_apps_router
+        app.include_router(init_apps_admin_router())
+        app.include_router(init_skills_router())
+        app.include_router(init_plugins_router())
+        app.include_router(init_apps_router())
+    except Exception as exc:
+        logger.debug(f'Роутер router_admin не зарегистрирован: {exc}')
 
     # 6. Аудитор автозагрузки
     try:
@@ -479,12 +559,6 @@ def create_windows_app(config: Optional[Dict[str, Any]] = None) -> FastAPI:
     try:
         from src.api.routers.core.router_scenarios import init_router as init_scenarios_router
         app.include_router(init_scenarios_router())
-    except Exception:
-        pass
-
-    try:
-        from src.api.routers.core.router_autolog import init_router as init_autolog_router
-        app.include_router(init_autolog_router())
     except Exception:
         pass
 

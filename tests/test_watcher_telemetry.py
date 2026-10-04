@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-04 06:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -61,7 +61,7 @@ def test_watcher_telemetry_burst_detection() -> None:
 
 def test_watcher_telemetry_drive_metrics() -> None:
     """Проверка определения дисков, чтения счетчиков и привязки температуры накопителей."""
-    from apps.windows.storage.windows_storage_sensor import StorageDiskHealthInfo
+    from apps.windows.modules.storage_manager.core.windows_storage_sensor import StorageDiskHealthInfo
     engine = FileWatcherTelemetryEngine(window_seconds=5.0)
     mock_disk = StorageDiskHealthInfo(
         device_id='\\\\.\\PhysicalDrive0',
@@ -75,7 +75,7 @@ def test_watcher_telemetry_drive_metrics() -> None:
         operational_status='OK',
         temperature_c=34.0,
     )
-    with patch('apps.windows.storage.windows_storage_sensor.WindowsStorageSensor.get_physical_disks', return_value=[mock_disk]):
+    with patch('apps.windows.modules.storage_manager.core.windows_storage_sensor.WindowsStorageSensor.get_physical_disks', return_value=[mock_disk]):
         hw = engine.get_drive_hardware_metrics(watch_dirs=['C:\\Projects\\AI-Breadboard', 'D:\\Data'])
         assert 'C:' in hw['drive_letters']
         assert 'D:' in hw['drive_letters']

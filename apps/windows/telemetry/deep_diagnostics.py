@@ -17,7 +17,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-03 23:10:45
+# Updated: 2026-10-04 06:25:00
 # =============================================================================
 
 """Модуль глубокой аппаратной и системной диагностики, поведенческой форензики и анализа утечек.
@@ -445,7 +445,7 @@ class DeepDiagnosticsEngine:
             'power_source': 'AC Mains (Стационарное питание)',
         }
         try:
-            from apps.windows.telemetry.windows_storage_sensor import WindowsStorageSensor
+            from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
             sensor = WindowsStorageSensor()
             snapshot = sensor.collect_snapshot()
             raw_partitions = snapshot.get('sources', {}).get('partitions', [])

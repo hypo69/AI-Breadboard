@@ -17,7 +17,7 @@
 # Package: src
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-04 03:35:00
 # =============================================================================
 
 """Модуль основной системы (`config`)."""
@@ -99,5 +99,3 @@ def is_app_enabled(app_name: str) -> bool:
     return True
 from src.utils.ports import load_ports_config, PORTS_FILE
 ports_cfg = load_ports_config(PORTS_FILE)
-from apps.common.autolog_engine import load_autolog_config
-autolog_cfg = load_autolog_config()

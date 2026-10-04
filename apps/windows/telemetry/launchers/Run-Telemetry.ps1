@@ -3,30 +3,35 @@
 Process Name: AI-Breadboard Automation - Run Telemetry
 =============================================================================
 Description:
-  Лончер для управления фоновой службой системной телеметрии AI-Breadboard (ai-telemetry
+  Лончер для запуска и управления службой системной телеметрии AI-Breadboard
 
 Usage Examples:
   PowerShell Execution:
-    .\Run-Telemetry.ps1
+    .\Run-Telemetry.ps1               # Запуск main.py в простой консоли (по умолчанию)
+    .\Run-Telemetry.ps1 -TUI          # Интерактивное TUI меню
+    .\Run-Telemetry.ps1 -Background   # Запуск в фоновом режиме (демон)
 
 File: Run-Telemetry.ps1
 Project: ai-breadboard
 Package: apps/windows/telemetry/launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-04 04:28:00
 =============================================================================
 .SYNOPSIS
-    Лончер для управления фоновой службой системной телеметрии AI-Breadboard (ai-telemetry
+    Лончер для запуска и управления службой системной телеметрии AI-Breadboard
 .DESCRIPTION
-    Запускает автономный процесс сбора телеметрии Windows под собственным системным
-    именем 'ai-telemetry
+    По умолчанию запускает main.py сбора телеметрии Windows в текущей консоли.
+    Поддерживает фоновый режим (-Background), однократный опрос (-Once) и интерактивное TUI меню (-TUI).
 #>
 
 [CmdletBinding()]
 param (
-    [ValidateSet('tui', 'start', 'stop', 'restart', 'status', 'init-db', 'start-log', 'show-log', 'install-task', 'uninstall-task', 'status-task', 'get-errors', 'get-stdout')]
-    [string]$Action = 'tui',
+    [ValidateSet('start', 'stop', 'restart', 'status', 'init-db', 'start-log', 'show-log', 'install-task', 'uninstall-task', 'status-task', 'get-errors', 'get-stdout', 'tui', 'once')]
+    [string]$Action = 'start',
+
+    [Alias('OneShot', 'SingleRun', 'OnceOnly')]
+    [switch]$Once,
 
     [Alias('Gui', 'InteractiveTUI')]
     [switch]$TUI,
@@ -48,6 +53,9 @@ param (
 
     [Alias('f', 'Interactive', 'Console')]
     [switch]$Foreground,
+
+    [Alias('Daemon', 'Detach', 'bg', 'Silent', 'Service')]
+    [switch]$Background,
 
     [Alias('Window', 'SeparateWindow')]
     [switch]$NewWindow,
@@ -88,6 +96,9 @@ if ($GetErrors) {
 }
 if ($GetStdOut) {
     $Action = 'get-stdout'
+}
+if ($Once) {
+    $Action = 'once'
 }
 
 $ErrorActionPreference = 'Continue'
@@ -146,21 +157,23 @@ if ($Help) {
     Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "НАЗНАЧЕНИЕ:" -ForegroundColor Yellow
-    Write-Host "  Управление автономным процессом 'ai-telemetry.exe' (CPU, RAM, GPU, диски, сеть)."
+    Write-Host "  Запуск и управление процессом системной телеметрии (CPU, RAM, GPU, диски, сеть)."
     Write-Host "  Режимы: minimal (ультралегкий), hybrid (базовый 5с + тяжелый 60с), full (полный)."
     Write-Host ""
     Write-Host "СИНТАКСИС:" -ForegroundColor Yellow
-    Write-Host "  .\tlm.ps1"
-    Write-Host "  .\apps\windows\telemetry\Run-Telemetry.ps1 [-Action start|stop|restart|status|install-task|uninstall-task]"
-    Write-Host "                                             [-Mode hybrid|minimal|full] [-Interval 5.0] [-HeavyInterval 60.0]"
+    Write-Host "  .\Run-Telemetry.ps1 [-Mode hybrid|minimal|full] [-Interval 5.0] [-HeavyInterval 60.0]"
+    Write-Host "  .\Run-Telemetry.ps1 -TUI                   # Интерактивное TUI меню управления"
+    Write-Host "  .\Run-Telemetry.ps1 -Background            # Запуск в фоновом режиме (демон ai-telemetry.exe)"
+    Write-Host "  .\Run-Telemetry.ps1 -Action start|stop|restart|status|install-task|uninstall-task"
     Write-Host ""
     Write-Host "ПРИМЕРЫ:" -ForegroundColor Yellow
-    Write-Host "  .\tlm.ps1                                   # ТУИ Меню по умолчанию"
-    Write-Host "  .\apps\windows\telemetry\Run-Telemetry.ps1 # Запуск в фоне (hybrid)"
-    Write-Host "  .\tlm.ps1 -Action status                   # Статус процесса ai-telemetry.exe"
-    Write-Host "  .\tlm.ps1 -Action stop                     # Остановка сервиса"
-    Write-Host "  .\tlm.ps1 -Action install-task              # Регистрация в Task Scheduler (WakeToRun)"
-    Write-Host "  .\tlm.ps1 -Foreground                    # Интерактивный запуск в консоли"
+    Write-Host "  .\Run-Telemetry.ps1                        # Запуск main.py в простой консоли по умолчанию"
+    Write-Host "  .\tlm.ps1                                  # Корневой лончер (запуск main.py в консоли)"
+    Write-Host "  .\Run-Telemetry.ps1 -TUI                   # Запуск TUI меню управления"
+    Write-Host "  .\Run-Telemetry.ps1 -Background            # Запуск службы в фоне"
+    Write-Host "  .\Run-Telemetry.ps1 -Action status         # Статус процесса телеметрии"
+    Write-Host "  .\Run-Telemetry.ps1 -Action stop           # Остановка службы"
+    Write-Host "  .\Run-Telemetry.ps1 -Action install-task   # Регистрация в Task Scheduler (WakeToRun)"
     Write-Host ""
     exit 0
 }
@@ -373,11 +386,12 @@ function Invoke-TelemetryTUI {
             Write-Host "   [8] 🖥️  Запуск в консоли (foreground) [Ctrl+C возвращает в TUI]" -ForegroundColor Magenta
             Write-Host "   [9] 🗄️  Инициализировать / проверить базу данных (init-db)" -ForegroundColor Green
             Write-Host "   [10] 📅 Статус планировщика задач (Task Scheduler)" -ForegroundColor DarkCyan
+            Write-Host "   [11] ⚡ Однократный опрос системной телеметрии (once)" -ForegroundColor Green
             Write-Host "   [q] ❌ Выход из TUI (служба продолжит работать в фоне)" -ForegroundColor DarkGray
             Write-Host ""
             Write-Host " Подсказка: Ctrl+C в любой момент НЕ останавливает фоновую службу, а возвращает в TUI!" -ForegroundColor DarkGray
             Write-Host ""
-            Write-Host "Выберите опцию [0-10, q]: " -NoNewline -ForegroundColor Yellow
+            Write-Host "Выберите опцию [0-11, q]: " -NoNewline -ForegroundColor Yellow
 
             $key = $null
             try {
@@ -402,8 +416,8 @@ function Invoke-TelemetryTUI {
                     }
                 }
                 '1' {
-                    Write-Host "`n🚀 Запуск службы телеметрии..." -ForegroundColor Green
-                    & $selfScript -Action start -Mode $Mode -Interval $Interval -HeavyInterval $HeavyInterval -TopProcesses $TopProcesses
+                    Write-Host "`n🚀 Запуск службы телеметрии в фоне..." -ForegroundColor Green
+                    & $selfScript -Action start -Background -Mode $Mode -Interval $Interval -HeavyInterval $HeavyInterval -TopProcesses $TopProcesses
                     Write-Host "`nНажмите любую клавишу для возврата в TUI..." -ForegroundColor DarkGray
                     try { [Console]::ReadKey($true) | Out-Null } catch {}
                 }
@@ -415,7 +429,7 @@ function Invoke-TelemetryTUI {
                 }
                 '3' {
                     Write-Host "`n🔄 Перезапуск службы..." -ForegroundColor Yellow
-                    & $selfScript -Action restart -Mode $Mode -Interval $Interval -HeavyInterval $HeavyInterval -TopProcesses $TopProcesses
+                    & $selfScript -Action restart -Background -Mode $Mode -Interval $Interval -HeavyInterval $HeavyInterval -TopProcesses $TopProcesses
                     Write-Host "`nНажмите любую клавишу для возврата в TUI..." -ForegroundColor DarkGray
                     try { [Console]::ReadKey($true) | Out-Null } catch {}
                 }
@@ -432,7 +446,7 @@ function Invoke-TelemetryTUI {
                         '3' { $script:Mode = 'full' }
                     }
                     Write-Host "Режим изменен на: $script:Mode. Перезапуск службы..." -ForegroundColor Green
-                    & $selfScript -Action restart -Mode $script:Mode -Interval $Interval -HeavyInterval $HeavyInterval -TopProcesses $TopProcesses
+                    & $selfScript -Action restart -Background -Mode $script:Mode -Interval $Interval -HeavyInterval $HeavyInterval -TopProcesses $TopProcesses
                     Write-Host "`nНажмите любую клавишу для возврата в TUI..." -ForegroundColor DarkGray
                     try { [Console]::ReadKey($true) | Out-Null } catch {}
                 }
@@ -480,6 +494,14 @@ function Invoke-TelemetryTUI {
                     Write-Host "`n📅 Статус планировщика задач..." -ForegroundColor DarkCyan
                     try {
                         & $selfScript -Action status-task
+                    } catch {}
+                    Write-Host "`nНажмите любую клавишу для возврата в TUI..." -ForegroundColor DarkGray
+                    try { [Console]::ReadKey($true) | Out-Null } catch {}
+                }
+                '11' {
+                    Write-Host "`n⚡ Запуск однократного опроса системной телеметрии..." -ForegroundColor Green
+                    try {
+                        & $selfScript -Action once -Mode $Mode -Interval $Interval -HeavyInterval $HeavyInterval -TopProcesses $TopProcesses
                     } catch {}
                     Write-Host "`nНажмите любую клавишу для возврата в TUI..." -ForegroundColor DarkGray
                     try { [Console]::ReadKey($true) | Out-Null } catch {}
@@ -533,7 +555,8 @@ if ($Action -eq 'status') {
         Write-Host "   • Лог файл:  $serviceLogFile" -ForegroundColor DarkGray
     } else {
         Write-Host "❌ Процесс телеметрии не запущен." -ForegroundColor Yellow
-        Write-Host "   Для запуска: .\tlm.ps1" -ForegroundColor DarkGray
+        Write-Host "   Для запуска в консоли: .\Run-Telemetry.ps1" -ForegroundColor DarkGray
+        Write-Host "   Для запуска в фоне:    .\Run-Telemetry.ps1 -Background" -ForegroundColor DarkGray
     }
 
     # Проверка планировщика
@@ -644,15 +667,14 @@ if ($Action -in @('stop', 'restart')) {
 }
 
 # -------------------------------------------------------------
-# ДЕЙСТВИЕ: START / RESTART (Изолированный запуск без FastAPI/HTTP)
+# ДЕЙСТВИЕ: START / RESTART / ONCE (Запуск в консоли по умолчанию, в фоне с -Background или однократно с -Once)
 # -------------------------------------------------------------
-if ($Action -in @('start', 'restart')) {
+if ($Action -in @('start', 'restart', 'once')) {
     $existing = Get-TelemetryProcesses
-    if ($existing -and $Action -ne 'restart') {
+    if ($Background -and $existing -and $Action -ne 'restart' -and $Action -ne 'once') {
         $pids = ($existing | ForEach-Object { "$($_.ProcessName):$($_.Id)" }) -join ', '
-        Write-Host "✅ Телеметрия уже запущена ($pids)" -ForegroundColor Green
-        Write-Host "   Для перезапуска используйте: .\tlm.ps1 -Restart" -ForegroundColor DarkGray
-        Write-Host "   Или с логированием:          .\tlm.ps1 -Foreground -v -Force" -ForegroundColor DarkGray
+        Write-Host "✅ Телеметрия уже запущена в фоне ($pids)" -ForegroundColor Green
+        Write-Host "   Для перезапуска используйте: .\Run-Telemetry.ps1 -Restart -Background" -ForegroundColor DarkGray
         exit 0
     }
 
@@ -686,21 +708,87 @@ if ($Action -in @('start', 'restart')) {
         $appArgs += " --verbose"
     }
 
-    if ($Foreground) {
+    # Однократный опрос (-Once / Action once)
+    if ($Action -eq 'once') {
+        $startTime = Get-Date
+        $sw = [System.Diagnostics.Stopwatch]::StartNew()
         Write-Host ""
         Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Green
-        Write-Host "  📊 ТЕЛЕМЕТРИЯ (ИНТЕРАКТИВНЫЙ РЕЖИМ ЛОГИРОВАНИЯ)                " -ForegroundColor Green
-        Write-Host "  Режим:      $Mode                                             " -ForegroundColor Cyan
-        Write-Host "  Интервал:   быстрый ${Interval}с | тяжелый ${HeavyInterval}с " -ForegroundColor Cyan
-        Write-Host "  БД:         $dbFile                                           " -ForegroundColor DarkGray
+        Write-Host "  ⚡ ТЕЛЕМЕТРИЯ (ОДНОКРАТНЫЙ ОПРОС)                               " -ForegroundColor Green
+        Write-Host "  Время старта:     $($startTime.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor White
+        Write-Host "  Режим:            $Mode                                       " -ForegroundColor Cyan
+        Write-Host "  БД:               $dbFile                                     " -ForegroundColor DarkGray
+        Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Green
+        Write-Host ""
+        Push-Location $projectRoot
+        $pyCmdArgs = @("-u", $telemetryScript, "--mode", $Mode, "--interval", $Interval.ToString(), "--heavy-interval", $HeavyInterval.ToString(), "--top-processes", $TopProcesses.ToString(), "--once")
+        if ($isVerbose) { $pyCmdArgs += "--verbose" }
+        & $pythonExe @pyCmdArgs
+        $exitCode = $LASTEXITCODE
+        Pop-Location
+        $sw.Stop()
+        $endTime = Get-Date
+        $durationSec = [math]::Round($sw.Elapsed.TotalSeconds, 2)
+
+        Write-Host ""
+        if ($exitCode -eq 0) {
+            Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Green
+            Write-Host "  ✅ СЦЕНАРИЙ УСПЕШНО ЗАВЕРШЕН                                  " -ForegroundColor Green
+            Write-Host "  Время завершения: $($endTime.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor White
+            Write-Host "  Длительность:     ${durationSec} сек                          " -ForegroundColor Cyan
+            Write-Host "  Результат:        Код возврата 0 (Успех)                      " -ForegroundColor Green
+            Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Green
+        } else {
+            Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Red
+            Write-Host "  ❌ СЦЕНАРИЙ ЗАВЕРШИЛСЯ С ОШИБКОЙ                              " -ForegroundColor Red
+            Write-Host "  Время завершения: $($endTime.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor White
+            Write-Host "  Длительность:     ${durationSec} сек                          " -ForegroundColor Cyan
+            Write-Host "  Результат:        Код возврата $exitCode                      " -ForegroundColor Red
+            Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Red
+        }
+        Write-Host ""
+        exit $exitCode
+    }
+
+    # Запуск в текущей консоли (поведение по умолчанию при отсутствии -Background)
+    if (-not $Background -and -not $NewWindow) {
+        $startTime = Get-Date
+        $sw = [System.Diagnostics.Stopwatch]::StartNew()
+        Write-Host ""
+        Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Green
+        Write-Host "  📊 ТЕЛЕМЕТРИЯ (КОНСОЛЬНЫЙ РЕЖИМ)                              " -ForegroundColor Green
+        Write-Host "  Время старта:     $($startTime.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor White
+        Write-Host "  Режим:            $Mode                                       " -ForegroundColor Cyan
+        Write-Host "  Интервал:         быстрый ${Interval}с | тяжелый ${HeavyInterval}с " -ForegroundColor Cyan
+        Write-Host "  БД:               $dbFile                                     " -ForegroundColor DarkGray
         Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Green
         Write-Host ""
         Push-Location $projectRoot
         $pyCmdArgs = @("-u", $telemetryScript, "--mode", $Mode, "--interval", $Interval.ToString(), "--heavy-interval", $HeavyInterval.ToString(), "--top-processes", $TopProcesses.ToString())
         if ($isVerbose) { $pyCmdArgs += "--verbose" }
         & $pythonExe @pyCmdArgs
+        $exitCode = $LASTEXITCODE
         Pop-Location
-        exit $LASTEXITCODE
+        $sw.Stop()
+        $endTime = Get-Date
+        $durationSec = [math]::Round($sw.Elapsed.TotalSeconds, 2)
+
+        Write-Host ""
+        if ($exitCode -eq 0) {
+            Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Green
+            Write-Host "  ✅ СЕАНС ТЕЛЕМЕТРИИ ОСТАНОВЛЕН                                " -ForegroundColor Green
+            Write-Host "  Время завершения: $($endTime.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor White
+            Write-Host "  Длительность:     ${durationSec} сек                          " -ForegroundColor Cyan
+            Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Green
+        } else {
+            Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Yellow
+            Write-Host "  ℹ️ СЕАНС ТЕЛЕМЕТРИИ ЗАВЕРШЕН (Код: $exitCode)                  " -ForegroundColor Yellow
+            Write-Host "  Время завершения: $($endTime.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor White
+            Write-Host "  Длительность:     ${durationSec} сек                          " -ForegroundColor Cyan
+            Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Yellow
+        }
+        Write-Host ""
+        exit $exitCode
     }
 
     $launchPid = $null
@@ -712,7 +800,7 @@ if ($Action -in @('start', 'restart')) {
         }
         $shellExe = if (Get-Command pwsh.exe -ErrorAction SilentlyContinue) { "pwsh.exe" } else { "powershell.exe" }
         $vFlag = if ($isVerbose) { " -VerboseLog" } else { "" }
-        $proc = Start-Process $shellExe -ArgumentList "-NoExit -ExecutionPolicy Bypass -File `"$thisScript`" -Foreground -Interval $Interval -HeavyInterval $HeavyInterval -TopProcesses $TopProcesses -Mode $Mode$vFlag" -WorkingDirectory $projectRoot -PassThru
+        $proc = Start-Process $shellExe -ArgumentList "-NoExit -ExecutionPolicy Bypass -File `"$thisScript`" -Interval $Interval -HeavyInterval $HeavyInterval -TopProcesses $TopProcesses -Mode $Mode$vFlag" -WorkingDirectory $projectRoot -PassThru
         if ($proc) { $launchPid = $proc.Id }
     } else {
         Write-Host "🚀 Фоновый запуск процесса 'ai-telemetry.exe'..." -ForegroundColor Cyan

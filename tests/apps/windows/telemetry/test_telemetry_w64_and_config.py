@@ -16,12 +16,12 @@
 # Package: tests.apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-03 22:12:00
+# Updated: 2026-10-04 07:28:00
 # =============================================================================
 
 """Тесты W64 Collector, ETW Collector, ConfigManager, JsonLogger, init_db и Win32 FFI функций на 100% реальных вызовах.
 
-Updated: 2026-10-03 22:12:00"""
+Updated: 2026-10-04 07:28:00"""
 
 import os
 import time
@@ -203,6 +203,14 @@ class TestTelemetryConfigManagerReal:
         all_intervals = cm.get_all_intervals()
         assert all_intervals["default_interval_seconds"] == 2.0
         assert all_intervals["heavy_interval_seconds"] == 15.0
+
+    def test_get_default_telemetry_config_path_appdata(self):
+        from apps.windows.telemetry.telemetry_config import get_default_telemetry_config_path
+        default_path = get_default_telemetry_config_path()
+        assert default_path.name == "config.json"
+        assert "telemetry" in str(default_path)
+        assert default_path.is_file()
+
 
 
 class TestTelemetryJsonLoggerReal:

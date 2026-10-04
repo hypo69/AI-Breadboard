@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/css
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 04:05:00
  * =============================================================================
  */
 
@@ -42,10 +42,12 @@
   --nav-hover-bg:    #eff2f6;
 
   /* Линии и границы */
-  --border-color:    #e4e6eb;
-  --border-subtle:   #eef0f3;
-  --divider-color:   #dde1e7;
-  --modal-border:    #e4e6eb;
+  --border-color:    #cbd5e1;
+  --border-strong:   #94a3b8;
+  --border-subtle:   #e2e8f0;
+  --border-contrast: #64748b;
+  --divider-color:   #cbd5e1;
+  --modal-border:    #cbd5e1;
 
   /* Тени (лёгкие) */
   --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.05);
@@ -146,10 +148,12 @@
   --nav-hover-bg:    #21262d;
 
   /* Линии и границы */
-  --border-color:    #30363d;
-  --border-subtle:   #21262d;
-  --divider-color:   #30363d;
-  --modal-border:    #30363d;
+  --border-color:    #3b434e;
+  --border-strong:   #546274;
+  --border-subtle:   #272d36;
+  --border-contrast: #4c5664;
+  --divider-color:   #3b434e;
+  --modal-border:    #3b434e;
 
   /* Тени (глубже) */
   --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.3);

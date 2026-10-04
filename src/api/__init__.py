@@ -13,7 +13,7 @@
 # Package: src.api
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 16:33:00
+# Updated: 2026-10-04 03:35:00
 # =============================================================================
 
 """Модуль инициализации API‑роутеров.
@@ -53,8 +53,6 @@ from .routers.core.router_system_logs import init_router as init_system_logs_rou
 from .routers.core.router_registry_viewer import init_router as init_registry_viewer_router
 from .routers.core.router_diagnostics import init_router as init_diagnostics_router
 from apps.windows.api.routers.router_scenarios import init_router as init_scenarios_router
-from .routers.core.router_autolog import init_router as init_autolog_router
-from .routers.core.router_sysautologging import init_router as init_sysautolog_router
 from .routers.core.router_user_directories import init_router as init_user_directories_router
 from .routers.core.router_menu import init_router as init_menu_router
 from .pixel_rag_router import get_pixel_rag_router
@@ -68,8 +66,6 @@ __all__ = [
     "init_diagnostics_router",
     "init_scenarios_router",
     "init_tc_router",
-    "init_autolog_router",
-    "init_sysautolog_router",
     "init_auth_router",
     "is_local_request",
     "get_current_user_data",

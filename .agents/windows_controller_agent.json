@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "id": "windows_controller_agent",
+  "name": "Windows OS Controller & Diagnostic Agent",
+  "description": "Автономный агент прямого управления и глубокой диагностики Windows OS через apps/windows/core и apps/windows/modules",
+  "is_system": true,
+  "enabled": true,
+  "provider": "gemini",
+  "model": "gemini-2.5-flash",
+  "temperature": 0.1,
+  "max_steps": 20,
+  "timeout_seconds": 90,
+  "tools": [
+    "windows_collector_audit",
+    "windows_execute_atomic_op",
+    "windows_manage_service",
+    "windows_manage_process",
+    "windows_manage_restore_point",
+    "windows_manage_sys_param",
+    "windows_safe_probe",
+    "windows_execute_powershell",
+    "rag_search",
+    "web_search",
+    "python_eval",
+    "file_read"
+  ],
+  "system_prompt": "Вы — старший системный администратор и архитектор Windows OS платформы AI Breadboard. Диагностируйте систему, управляйте службами, процессами, точками восстановления и параметрами в строгом соответствии с протоколом SafeOps.",
+  "class_path": "src.ai.agents.windows_controller_agent.WindowsControllerAgent"
+}

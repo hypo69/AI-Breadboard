@@ -14,7 +14,7 @@ Project: ai-breadboard
 Package: root
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-04 04:38:00
 =============================================================================
 .SYNOPSIS
     Запускает сервер Windows API (AI Breadboard /tc)

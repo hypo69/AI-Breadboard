@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/js
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 08:25:45
  * =============================================================================
  */
 
@@ -175,7 +175,24 @@ export async function cachedApiFetch(url, options = {}, cacheOptions = {}) {
   
   const cacheKey = generateCacheKey(url, options);
   const cache = browserCache;
-  
+
+  // Отключаем кеш для указанных вкладок
+  const currentTab = window.location.hash;
+  const NO_CACHE_TABS = [
+    '#tab-hardware-load-inspector',
+    '#tab-about-system',
+  ];
+  if (NO_CACHE_TABS.some(prefix => currentTab.startsWith(prefix))) {
+    const resp = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+      },
+    });
+    return await resp.json();
+  }
+
   // Дожидаемся готовности базы, но не блокируем если есть ошибка
   if (cache) {
     try {

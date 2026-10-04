@@ -18,7 +18,7 @@
 # Package: root
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:20:26
+# Updated: 2026-10-04 03:35:00
 # =============================================================================
 
 """Скрипт/модуль системы AI-Breadboard (`main`)."""
@@ -132,14 +132,6 @@ async def startup_event():
             logger.info('Telegram Bot plugin started successfully inside FastAPI lifecycle.')
         except Exception as exc:
             logger.error(f'Failed to start Telegram Bot plugin: {exc}')
-    if not is_app_disabled('autolog_manager'):
-        try:
-            from apps.common.autolog_engine import autolog_engine
-            await autolog_engine.start()
-        except Exception as exc:
-            logger.warning(f'Не удалось запустить движок автологгирования приложений: {exc}')
-    else:
-        logger.warning('AutoLogEngine пропущен: autolog_manager отключен в apps.disabled')
     try:
         result = check_updates()
         if result.get('is_update_available'):
@@ -152,11 +144,6 @@ async def startup_event():
 @app.on_event('shutdown')
 async def shutdown_event():
     """Application shutdown tasks."""
-    try:
-        from apps.common.autolog_engine import autolog_engine
-        await autolog_engine.stop()
-    except Exception as exc:
-        logger.error(f'Ошибка при остановке автологгера приложений: {exc}')
     tg_plugin = getattr(state, 'plugins', {}).get('telegram_bot')
     if tg_plugin:
         try:

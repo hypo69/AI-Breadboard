@@ -17,7 +17,7 @@
 # Package: src.ai.agents
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:13:56
+# Updated: 2026-10-04 01:58:00
 # =============================================================================
 
 from __future__ import annotations
@@ -657,3 +657,19 @@ def whatsapp_send_message(to: str, message: str) -> str:
     except Exception as e:
         logger.error(f'[whatsapp_tools] Ошибка отправки сообщения в WhatsApp: {e}')
         return json.dumps({'success': False, 'error': str(e)}, ensure_ascii=False)
+
+
+# =============================================================================
+# Инструменты управления операционной системой Windows (apps.windows)
+# =============================================================================
+from src.ai.agents.windows_tools import (
+    windows_collector_audit,
+    windows_execute_atomic_op,
+    windows_manage_service,
+    windows_manage_process,
+    windows_manage_restore_point,
+    windows_manage_sys_param,
+    windows_safe_probe,
+    windows_execute_powershell,
+    WINDOWS_NATIVE_TOOLS,
+)

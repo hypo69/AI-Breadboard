@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 00:16:00
+# Updated: 2026-10-04 07:47:30
 # =============================================================================
 
 from __future__ import annotations
@@ -33,12 +33,22 @@ from pydantic import BaseModel, Field
 
 from header import __root__
 from logger import logger
-from apps.windows.telemetry.diagnostic_engine import SystemDiagnosticEngine as SystemAIDiagnostician
+from apps.windows.telemetry_research.diagnostic_engine import SystemDiagnosticEngine as SystemAIDiagnostician
 from apps.windows.telemetry import SystemCollector
+from apps.windows.telemetry.sqlite import TelemetryStorage
 from src.api.routers.core.router_auth import require_admin_user
 
 _collector: Optional[SystemCollector] = None
 _diagnostician: Optional[SystemAIDiagnostician] = None
+_storage: Optional[TelemetryStorage] = None
+
+
+def get_storage() -> TelemetryStorage:
+    """Получить или создать синглтон хранилища телеметрии SQLite."""
+    global _storage
+    if _storage is None:
+        _storage = TelemetryStorage.get_instance()
+    return _storage
 
 
 def get_collector() -> SystemCollector:
@@ -317,7 +327,7 @@ async def _extract_tc_user_auth(fastapi_req: Request) -> Tuple[str, str, str, di
     settings: Dict[str, Any] = {}
 
     try:
-        from src.api.router_auth import get_current_user_optional
+        from src.api.routers.core.router_auth import get_current_user_optional
         user_data = get_current_user_optional(fastapi_req) if fastapi_req is not None else None
 
         from src.user_manager import user_manager
@@ -566,7 +576,33 @@ def init_router() -> APIRouter:
 
     @router.get("/status")
     async def get_status(request: Request) -> Dict[str, Any]:
-        """Получение текущего состояния системы и загрузки ресурсов."""
+        """Получение текущего состояния системы и загрузки ресурсов из базы данных telemetry.db."""
+        storage = get_storage()
+        snaps = storage.get_snapshots(limit=1)
+        if snaps:
+            snap = snaps[0]
+            raw_cpu = snap.get("cpu_percent") or 0.0
+            raw_freq = snap.get("cpu_freq_mhz") or 0.0
+            raw_mem_pct = snap.get("memory_percent") or 0.0
+            raw_mem_used = snap.get("memory_used_gb") or 0.0
+            raw_mem_total = snap.get("memory_total_gb") or 0.0
+            procs = storage.get_snapshot_processes(snap.get("id") or 0)
+            return {
+                "hostname": snap.get("hostname") or os.getenv("COMPUTERNAME", "PC"),
+                "os_name": snap.get("os_name") or "Windows",
+                "uptime_seconds": snap.get("uptime_seconds") or 0.0,
+                "cpu": {
+                    "total_percent": raw_cpu,
+                    "frequency_mhz": raw_freq,
+                },
+                "memory": {
+                    "percent_used": raw_mem_pct,
+                    "used_gb": raw_mem_used,
+                    "total_gb": raw_mem_total,
+                },
+                "process_count": len(procs) if procs else int(snap.get("process_count") or 0),
+            }
+
         collector = get_collector()
         snapshot = await collector.get_snapshot(process_limit=15)
         return {
@@ -580,7 +616,12 @@ def init_router() -> APIRouter:
 
     @router.get("/processes")
     async def get_processes(request: Request, limit: int = 20, sort_by: str = "cpu") -> Dict[str, Any]:
-        """Получение списка активных процессов с деталями по ресурсам."""
+        """Получение списка активных процессов из базы данных SQLite (telemetry.db)."""
+        storage = get_storage()
+        procs = storage.get_latest_processes(limit=limit, sort_by=sort_by)
+        if procs:
+            return {"processes": procs, "sort_by": sort_by}
+
         collector = get_collector()
         snapshot = await collector.get_snapshot(process_limit=limit)
         processes = []
@@ -599,16 +640,17 @@ def init_router() -> APIRouter:
 
     @router.get("/hardware")
     async def get_hardware(request: Request) -> Dict[str, Any]:
-        """Получение полного дерева спецификации оборудования и активных датчиков."""
-        collector = get_collector()
-        nodes = await collector.get_hardware_tree_async()
-        sensors = collector.get_hardware_sensors()
+        """Получение данных спецификации оборудования и активных датчиков из базы данных telemetry.db."""
+        storage = get_storage()
+        sensors = storage.get_latest_sensors()
+        sensors_list = [{"name": s.get("name") or s.get("sensor_id"), "value": s.get("value"), "unit": s.get("unit")} for s in sensors]
+
+        latest_audit = storage.get_latest_extended_audit() or {}
+        devices = latest_audit.get("devices") or []
         hardware = []
-        for node in nodes:
-            hardware.append({"category": node.category, "name": node.name, "properties": node.properties})
-        sensors_list = []
-        for s in sensors:
-            sensors_list.append({"name": s.name, "value": s.value, "unit": s.unit})
+        for d in devices:
+            hardware.append({"category": d.get("device_class") or "Device", "name": d.get("name") or "Hardware", "properties": d})
+
         return {"hardware": hardware, "sensors": sensors_list}
 
     @router.get("/diagnostic")
@@ -628,20 +670,21 @@ def init_router() -> APIRouter:
 
     @router.get("/hardware/tree")
     async def get_hardware_tree(request: Request) -> Dict[str, Any]:
-        """Получение иерархического дерева оборудования в стиле AIDA64."""
-        collector = get_collector()
-        nodes = await collector.get_hardware_tree_async()
+        """Получение иерархического дерева оборудования в стиле AIDA64 из базы данных telemetry.db."""
+        storage = get_storage()
+        latest_audit = storage.get_latest_extended_audit() or {}
+        devices = latest_audit.get("devices") or []
         tree = []
-        for node in nodes:
-            tree.append({"category": node.category, "name": node.name, "properties": node.properties})
+        for d in devices:
+            tree.append({"category": d.get("device_class") or "Device", "name": d.get("name") or "Hardware", "properties": d})
         return {"tree": tree}
 
     @router.get("/hardware/sensors")
     async def get_hardware_sensors(request: Request) -> Dict[str, Any]:
-        """Получение мгновенных показаний системных датчиков."""
-        collector = get_collector()
-        sensors = collector.get_hardware_sensors()
-        return {"sensors": [{"name": s.name, "value": s.value, "unit": s.unit} for s in sensors]}
+        """Получение показаний системных датчиков из базы данных SQLite (telemetry.db)."""
+        storage = get_storage()
+        sensors = storage.get_latest_sensors()
+        return {"sensors": [{"name": s.get("name") or s.get("sensor_id"), "value": s.get("value"), "unit": s.get("unit")} for s in sensors]}
 
     @router.get("/cpu", response_model=TcCpuResponse)
     @router.get("/cpu/load", response_model=TcCpuResponse)

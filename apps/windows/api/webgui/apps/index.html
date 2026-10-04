@@ -17,7 +17,7 @@ Project: ai-breadboard
 Package: windows/api/webgui/apps
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-04 00:16:00
+Updated: 2026-10-04 08:16:00
 =============================================================================
 -->
 
@@ -29,9 +29,9 @@ Updated: 2026-10-04 00:16:00
   <title>AI Breadboard — Приложения (/apps)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/html/css/main.css?v=20260924_v1" rel="stylesheet">
+  <link href="/html/css/main.css?v=20261004_v16" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="/html/js/toast.js?v=20260924_v1"></script>
+  <script src="/html/js/toast.js?v=20261004_v16"></script>
   <script src="https://cdn.jsdelivr.net/npm/i18next@23.11.5/i18next.min.js"></script>
 </head>
 <body>
@@ -60,15 +60,12 @@ Updated: 2026-10-04 00:16:00
         <i class="bi bi-cpu-fill fs-5"></i>
         <span class="d-none d-sm-inline">Test Computer</span>
       </span>
-      <span id="active-tab-title-badge" class="badge bg-body-secondary text-secondary-emphasis border rounded-pill px-2 py-1 small fw-normal d-flex align-items-center gap-1" title="Текущий активный раздел">
-        ℹ️ О Системе
-      </span>
     </div>
 
     <!-- Top Menu Buttons — генерируются из tc_menu_config.json -->
     <div class="d-flex align-items-center gap-1 flex-wrap"></div>
 
-    <!-- Controls (Model Badge, Language, Theme, Switcher) -->
+    <!-- Controls (Model Badge, Settings Gear) -->
     <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-auto">
       <!-- Active AI Model Badge -->
       <span id="apps-model-badge" class="badge rounded-pill align-items-center gap-1.5 px-3 py-1.5 shadow-sm border" style="font-size: 0.8rem; background: rgba(255, 255, 255, 0.05); cursor: default;" title="Инициализация модели ИИ...">
@@ -76,31 +73,10 @@ Updated: 2026-10-04 00:16:00
         <span class="text-white fw-semibold" id="apps-model-text">AI: Загрузка...</span>
       </span>
 
-      <!-- Language Selector -->
-      <select class="form-select form-select-sm bg-dark text-white border-secondary lang-selector" id="apps-lang-selector" style="width: 100px;">
-        <option value="ru">Русский</option>
-        <option value="en">English</option>
-        <option value="he">עברית</option>
-      </select>
-
-      <!-- Theme Selector -->
-      <select class="form-select form-select-sm bg-dark text-white border-secondary theme-selector" id="apps-theme-selector" style="width: 105px;">
-        <option value="dark">🌙 Тёмная</option>
-        <option value="light">☀️ Светлая</option>
-        <option value="system">🌓 Система</option>
-      </select>
-
-      <!-- Mode Switcher (Test Computer / Admin Panel) -->
-      <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="Режим работы">
-        <a href="/tc" class="btn btn-primary active d-flex align-items-center gap-1 py-1 px-2.5" title="Режим Test Computer (/tc)">
-          <i class="bi bi-display"></i>
-          <span class="small fw-semibold">Test Computer</span>
-        </a>
-        <a href="/admin" class="btn btn-outline-secondary d-flex align-items-center gap-1 py-1 px-2.5" title="Открыть полную панель управления">
-          <i class="bi bi-shield-lock-fill"></i>
-          <span class="small d-none d-md-inline">Админка</span>
-        </a>
-      </div>
+      <!-- Quick Settings Gear Button -->
+      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center p-0 rounded-circle" id="user-settings-gear-btn" data-bs-toggle="modal" data-bs-target="#userSettingsModal" title="Настройки" style="width: 30px; height: 30px;" data-i18n-title="userSettings.title">
+        <i class="bi bi-gear-fill"></i>
+      </button>
     </div>
   </div>
 
@@ -141,6 +117,48 @@ Updated: 2026-10-04 00:16:00
           <i class="bi bi-gear-fill"></i>
           <span class="fw-medium">Редактор меню</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- User / Quick Settings Modal -->
+  <div class="modal fade" id="userSettingsModal" tabindex="-1" aria-labelledby="userSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content shadow border-secondary-subtle">
+        <div class="modal-header border-secondary-subtle">
+          <h5 class="modal-title d-flex align-items-center gap-2" id="userSettingsModalLabel">
+            <i class="bi bi-gear-fill text-primary"></i>
+            <span data-i18n="userSettings.title">Настройки интерфейса</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body p-3">
+          <!-- Language Selection -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold small d-flex align-items-center gap-2" for="apps-lang-selector">
+              <i class="bi bi-translate text-info"></i>
+              <span data-i18n="userSettings.language">Язык интерфейса</span>
+            </label>
+            <select class="form-select lang-selector" id="apps-lang-selector">
+              <option value="ru">Русский</option>
+              <option value="en">English</option>
+              <option value="he">עברית</option>
+            </select>
+          </div>
+
+          <!-- Theme Selection -->
+          <div class="mb-2">
+            <label class="form-label fw-semibold small d-flex align-items-center gap-2" for="apps-theme-selector">
+              <i class="bi bi-palette text-warning"></i>
+              <span data-i18n="userSettings.theme">Тема оформления</span>
+            </label>
+            <select class="form-select theme-selector" id="apps-theme-selector">
+              <option value="dark">🌙 Тёмная</option>
+              <option value="light">☀️ Светлая</option>
+              <option value="system">🌓 Системная</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -193,8 +211,8 @@ Updated: 2026-10-04 00:16:00
     <!-- Network Terminal Tab -->
     <div id="tab-network" class="tab-pane fade"></div>
 
-    <!-- System Load Inspector Tab -->
-    <div id="tab-system-load-inspector" class="tab-pane fade"></div>
+    <!-- Hardware Load Inspector Tab -->
+    <div id="tab-hardware-load-inspector" class="tab-pane fade"></div>
 
     <!-- Windows System Administrator Tab -->
     <div id="tab-windows-admin" class="tab-pane fade"></div>
@@ -243,9 +261,6 @@ Updated: 2026-10-04 00:16:00
 
     <!-- Wikipedia Research Lab Tab -->
     <div id="tab-wikipedia-research" class="tab-pane fade"></div>
-
-    <!-- Auto-Logging & CSV Management Tab -->
-    <div id="tab-autolog" class="tab-pane fade"></div>
 
     <!-- AI Software Transparency Scanner Tab -->
     <div id="tab-software-transparency" class="tab-pane fade"></div>
@@ -309,6 +324,7 @@ Updated: 2026-10-04 00:16:00
 
     <!-- Windows CLI Modular Applications Tabs -->
     <div id="tab-storage-manager" class="tab-pane fade"></div>
+    <div id="tab-disk-speed" class="tab-pane fade"></div>
     <div id="tab-boot-recovery" class="tab-pane fade"></div>
     <div id="tab-servicing-integrity" class="tab-pane fade"></div>
     <div id="tab-services-manager" class="tab-pane fade"></div>
@@ -323,9 +339,9 @@ Updated: 2026-10-04 00:16:00
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/html/js/chatService.js?v=20260925_v1"></script>
-<script src="/html/js/appConfigEditor.js"></script>
-<script type="module" src="/html/apps/main.js?v=20260925_v1"></script>
+<script src="/html/js/chatService.js?v=20261004_v16"></script>
+<script src="/html/js/appConfigEditor.js?v=20261004_v16"></script>
+<script type="module" src="/html/apps/main.js?v=20261004_v16"></script>
 
 </body>
 </html>

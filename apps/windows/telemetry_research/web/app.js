@@ -14,16 +14,17 @@
  * Package: windows/telemetry_research/web
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 07:49:00
  * =============================================================================
  */
 
 /**
  * Клиентский контроллер Web GUI Исследования и Мониторинга Телеметрии Windows.
- * Поддерживает живой мониторинг telemetry.db, глубокий анализ и AI-ассистента с визуализацией.
+ * Поддерживает живой мониторинг telemetry.db, ресурсы программ клиента, глубокий анализ и AI-ассистента с Gemini.
  */
 
 let currentReport = null;
+let currentClientSummary = null;
 let researchCharts = {};
 let liveCharts = {};
 let aiDynamicChart = null;
@@ -63,6 +64,8 @@ function initTabs() {
 
       if (targetId === "tab-current") {
         loadCurrentState();
+      } else if (targetId === "tab-client-resources") {
+        loadClientResources(false);
       } else if (targetId === "tab-records") {
         loadRecords();
       }
@@ -84,6 +87,7 @@ function bindEvents() {
     selectSource.onchange = () => {
       runResearch();
       loadCurrentState();
+      loadClientResources(false);
     };
   }
 
@@ -98,6 +102,24 @@ function bindEvents() {
   }
 
   const btnRefreshCurrent = document.getElementById("btn-refresh-current");
+  if (btnRefreshCurrent) {
+    btnRefreshCurrent.onclick = () => loadCurrentState();
+  }
+
+  const btnRefreshClient = document.getElementById("btn-refresh-client-procs");
+  if (btnRefreshClient) {
+    btnRefreshClient.onclick = () => loadClientResources(false);
+  }
+
+  const btnAskGeminiAll = document.getElementById("btn-ask-gemini-all-unknown");
+  if (btnAskGeminiAll) {
+    btnAskGeminiAll.onclick = () => loadClientResources(true);
+  }
+
+  const inputSearchClient = document.getElementById("input-search-client-procs");
+  if (inputSearchClient) {
+    inputSearchClient.oninput = (e) => filterClientProcsTable(e.target.value);
+  }
   if (btnRefreshCurrent) {
     btnRefreshCurrent.onclick = () => loadCurrentState();
   }
@@ -1179,3 +1201,227 @@ function downloadJsonReport() {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+/**
+ * Загрузка и рендеринг ресурсов клиентских программ.
+ */
+async function loadClientResources(askGemini = false) {
+  const tbody = document.getElementById("client-procs-table-body");
+  const statusText = document.getElementById("client-status-text");
+  const statusSub = document.getElementById("client-status-sub");
+
+  if (statusText) statusText.textContent = askGemini ? "Запрос к Gemini AI..." : "Сканирование программ клиента...";
+  if (statusSub) statusSub.textContent = askGemini ? "Анализируем неизвестные ресурсоемкие программы через LLM..." : "Сбор метрик памяти, ЦП и диска...";
+
+  if (tbody) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--accent-blue); padding: 20px;">⏳ ${askGemini ? "Оценка неизвестных процессов через Gemini AI..." : "Загрузка данных о клиентских программах..."}</td></tr>`;
+  }
+
+  const selectSource = document.getElementById("select-source");
+  const sourcePath = selectSource ? selectSource.value : "";
+  const queryUrl = `/api/client-resources?ask_gemini=${askGemini}&limit=50${sourcePath ? `&db_path=${encodeURIComponent(sourcePath)}` : ""}`;
+
+  try {
+    const res = await fetch(queryUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    currentClientSummary = data;
+
+    // Обновление KPI
+    const kpiTotal = document.getElementById("client-kpi-total");
+    const kpiRam = document.getElementById("client-kpi-ram");
+    const kpiCpu = document.getElementById("client-kpi-cpu");
+    const kpiUnknown = document.getElementById("client-kpi-unknown");
+
+    if (kpiTotal) kpiTotal.textContent = data.total_client_programs || 0;
+    if (kpiRam) kpiRam.textContent = `${data.total_ram_mb || 0} MB`;
+    if (kpiCpu) kpiCpu.textContent = `${data.total_cpu_percent || 0}%`;
+    if (kpiUnknown) kpiUnknown.textContent = data.unknown_heavy_programs_count || 0;
+
+    renderClientProcsTable(data.programs || []);
+    renderGeminiEvaluations(data.evaluations || []);
+
+    if (statusText) statusText.textContent = "Аудит программ клиента завершен";
+    if (statusSub) statusSub.textContent = `Обнаружено ${data.total_client_programs} программ (${data.unknown_heavy_programs_count} неизвестных ресурсоемких)`;
+  } catch (err) {
+    if (statusText) statusText.textContent = "Ошибка аудита";
+    if (statusSub) statusSub.textContent = err.message;
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="8" style="color: var(--accent-red); text-align: center;">Не удалось загрузить данные: ${err.message}</td></tr>`;
+    }
+  }
+}
+
+/**
+ * Отрисовка строк таблицы клиентских программ.
+ */
+function renderClientProcsTable(programs) {
+  const tbody = document.getElementById("client-procs-table-body");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+  if (!programs || programs.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">Активных клиентских программ не обнаружено.</td></tr>`;
+    return;
+  }
+
+  programs.forEach((p, idx) => {
+    const tr = document.createElement("tr");
+    const isHeavy = p.is_resource_heavy;
+    const isKnown = p.is_known_software;
+
+    let statusBadge = `<span class="badge badge-normal">✅ Доверенная</span>`;
+    if (!isKnown && isHeavy) {
+      statusBadge = `<span class="badge badge-critical">🚨 Неизвестная (Heavy)</span>`;
+    } else if (!isKnown) {
+      statusBadge = `<span class="badge badge-warning">ℹ️ Неизвестная</span>`;
+    } else if (isHeavy) {
+      statusBadge = `<span class="badge badge-warning">⚡ Нагрузка</span>`;
+    }
+
+    const diskMb = p.disk_size_mb ? `${p.disk_size_mb} MB` : "—";
+    const diskIo = roundVal(((p.disk_read_bytes_sec || 0) + (p.disk_write_bytes_sec || 0)) / (1024 * 1024), 2);
+    const diskIoStr = diskIo > 0 ? ` (${diskIo} MB/s)` : "";
+
+    const pathOrCmd = p.executable_path || p.command_line || "—";
+
+    let actionBtn = "";
+    if (!isKnown || isHeavy) {
+      actionBtn = `<button class="btn btn-sm btn-primary" onclick="evaluateSingleProgramInGemini(${p.pid}, '${encodeURIComponent(p.name)}')">🤖 Gemini</button>`;
+    } else {
+      actionBtn = `<span style="font-size: 11px; color: var(--text-secondary);">Штатно</span>`;
+    }
+
+    tr.innerHTML = `
+      <td>
+        <div style="font-weight: 700; color: var(--text-primary);">${escapeHtml(p.display_name || p.name)}</div>
+        <div style="font-size: 11px; color: var(--text-secondary);"><code>${escapeHtml(p.name)}</code> • ${escapeHtml(p.category || "ПО")}</div>
+      </td>
+      <td><code>${p.pid}</code></td>
+      <td><span style="font-weight: 600; color: ${p.cpu_percent > 20 ? 'var(--accent-red)' : 'var(--text-primary)'};">${p.cpu_percent}%</span></td>
+      <td>
+        <div style="font-weight: 600;">${p.memory_mb} MB</div>
+        <div style="font-size: 11px; color: var(--text-secondary);">${p.memory_percent}% RAM</div>
+      </td>
+      <td>
+        <div>${diskMb}</div>
+        <div style="font-size: 11px; color: var(--text-secondary);">${diskIoStr}</div>
+      </td>
+      <td style="max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(pathOrCmd)}">
+        <span style="font-size: 11px; color: var(--text-secondary);">${escapeHtml(pathOrCmd)}</span>
+      </td>
+      <td>${statusBadge}</td>
+      <td>${actionBtn}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/**
+ * Фильтрация таблицы клиентских программ.
+ */
+function filterClientProcsTable(query) {
+  if (!currentClientSummary || !currentClientSummary.programs) return;
+  const q = (query || "").trim().toLowerCase();
+  if (!q) {
+    renderClientProcsTable(currentClientSummary.programs);
+    return;
+  }
+  const filtered = currentClientSummary.programs.filter((p) => {
+    return (
+      (p.name || "").toLowerCase().includes(q) ||
+      (p.display_name || "").toLowerCase().includes(q) ||
+      (p.executable_path || "").toLowerCase().includes(q) ||
+      (p.category || "").toLowerCase().includes(q)
+    );
+  });
+  renderClientProcsTable(filtered);
+}
+
+/**
+ * Отрисовка карточек с экспертным мнением Gemini.
+ */
+function renderGeminiEvaluations(evaluations) {
+  const container = document.getElementById("gemini-evaluations-container");
+  const listEl = document.getElementById("gemini-evals-list");
+  const badgeEl = document.getElementById("gemini-evals-count-badge");
+  if (!container || !listEl) return;
+
+  if (!evaluations || evaluations.length === 0) {
+    container.style.display = "none";
+    listEl.innerHTML = "";
+    return;
+  }
+
+  container.style.display = "block";
+  if (badgeEl) badgeEl.textContent = `${evaluations.length} отчетов`;
+  listEl.innerHTML = "";
+
+  evaluations.forEach((ev) => {
+    const card = document.createElement("div");
+    card.className = "gemini-card";
+
+    const isNorm = ev.is_normal;
+    const badgeClass = isNorm ? "gemini-verdict-normal" : "gemini-verdict-risk";
+    const badgeText = isNorm ? `✅ ${ev.verdict}` : `🚨 ${ev.verdict}`;
+
+    const recsHtml = (ev.recommendations || []).map((r) => `<li>${escapeHtml(r)}</li>`).join("");
+
+    card.innerHTML = `
+      <div class="gemini-card-header">
+        <div>
+          <div class="gemini-card-title">${escapeHtml(ev.program_name)} (PID ${ev.pid || 'N/A'})</div>
+          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">${escapeHtml(ev.executable_path || 'Запуск из памяти/скрипта')}</div>
+        </div>
+        <span class="gemini-verdict-badge ${badgeClass}">${badgeText}</span>
+      </div>
+      <div class="gemini-card-metrics">
+        <span class="gemini-metric-tag">CPU: <b>${ev.cpu_percent}%</b></span>
+        <span class="gemini-metric-tag">RAM: <b>${ev.memory_mb} MB</b></span>
+        <span class="gemini-metric-tag">Диск IO: <b>${ev.disk_io_mb_s} MB/s</b></span>
+        <span class="gemini-metric-tag">Риск: <b>${escapeHtml(ev.risk_level.toUpperCase())}</b></span>
+      </div>
+      <div class="gemini-card-analysis">
+        ${escapeHtml(ev.analysis)}
+      </div>
+      ${recsHtml ? `<ul class="gemini-card-recs">${recsHtml}</ul>` : ""}
+    `;
+    listEl.appendChild(card);
+  });
+}
+
+/**
+ * Оценка конкретной программы в Gemini по клику кнопки в таблице.
+ */
+window.evaluateSingleProgramInGemini = async function (pid, encodedName) {
+  const name = decodeURIComponent(encodedName);
+  if (!currentClientSummary || !currentClientSummary.programs) return;
+
+  const prog = currentClientSummary.programs.find((p) => p.pid === pid || p.name === name);
+  if (!prog) {
+    alert("Программа не найдена в текущем снимке");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/client-resources/evaluate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(prog),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const evaluation = await res.json();
+
+    prog.gemini_evaluation = evaluation;
+    const existing = currentClientSummary.evaluations || [];
+    const withoutSame = existing.filter((e) => e.program_name !== evaluation.program_name || e.pid !== evaluation.pid);
+    withoutSame.unshift(evaluation);
+    currentClientSummary.evaluations = withoutSame;
+
+    renderGeminiEvaluations(currentClientSummary.evaluations);
+    document.getElementById("gemini-evaluations-container")?.scrollIntoView({ behavior: "smooth" });
+  } catch (err) {
+    alert(`Ошибка оценки Gemini: ${err.message}`);
+  }
+};
+

@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 04:46:00
 # =============================================================================
 
 from __future__ import annotations
@@ -31,8 +31,36 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 from logger import logger
-from .models import ETWTraceEvent, W64CollectorStatus
+from .models import ETWTraceEvent, ProcessLifecycleEvent, W64CollectorStatus
 from .sqlite import TelemetryStorage
+
+_file_write_lock = threading.Lock()
+
+def _append_jsonl_safely(file_path: Path, data: Dict[str, Any], retries: int = 4, retry_delay: float = 0.05) -> bool:
+    """Безопасная запись JSONL строки с повторными попытками при блокировке файла.
+
+    Args:
+        file_path: Путь к целевому файлу JSONL.
+        data: Словарь с данными для сериализации в JSON.
+        retries: Количество попыток записи при ошибке доступа.
+        retry_delay: Задержка между попытками (сек).
+
+    Returns:
+        bool: True если запись успешна, иначе исключение.
+    """
+    line = json.dumps(data, ensure_ascii=False) + '\n'
+    for attempt in range(retries):
+        try:
+            with _file_write_lock:
+                with open(file_path, 'a', encoding='utf-8') as f:
+                    f.write(line)
+            return True
+        except (PermissionError, OSError) as ex:
+            if attempt < retries - 1:
+                time.sleep(retry_delay * (attempt + 1))
+            else:
+                raise ex
+    return False
 
 class AIW64ETWCollector:
     """Сборщик низкоуровневых событий через ETW и журналы аудита Windows."""
@@ -80,7 +108,7 @@ class AIW64ETWCollector:
         self._stop_event = threading.Event()
         self._event_counter = 0
         self._last_event_time: Optional[str] = None
-        logger.info(f'AIW64ETWCollector инициализирован. Директория логов: {self.log_dir}')
+        logger.debug(f'AIW64ETWCollector инициализирован. Директория логов: {self.log_dir}')
 
     def start(self) -> bool:
         """Запустить фоновый поток сбора ETW событий.
@@ -313,10 +341,9 @@ class AIW64ETWCollector:
 
         # 1. Запись в JSONL
         try:
-            with open(log_file, 'a', encoding='utf-8') as f:
-                f.write(json.dumps(payload, ensure_ascii=False) + '\n')
+            _append_jsonl_safely(log_file, payload)
         except Exception as ex:
-            logger.warning(f'Не удалось записать JSONL лог ETW {event_type}: {ex}')
+            logger.debug(f'Не удалось записать JSONL лог ETW {event_type}: {ex}')
 
         # 2. Сохранение в SQLite TelemetryStorage
         if self.storage:
@@ -331,6 +358,54 @@ class AIW64ETWCollector:
                     'details': event_data,
                 }
                 self.storage.save_w64_event(db_record, provider='w64_etw_collector')
+
+                # Специфическая фиксация создания процессов для Process Provenance
+                if event_type == 'etw_process_create':
+                    def _safe_pid(val: Any) -> int:
+                        if val is None:
+                            return 0
+                        if isinstance(val, int):
+                            return val
+                        s = str(val).strip()
+                        if s.startswith(('0x', '0X')):
+                            try:
+                                return int(s, 16)
+                            except ValueError:
+                                return 0
+                        try:
+                            return int(s)
+                        except ValueError:
+                            return 0
+
+                    new_pid = _safe_pid(event_data.get('NewProcessId') or event_data.get('ProcessId'))
+                    parent_pid = _safe_pid(event_data.get('ProcessId') or event_data.get('ParentProcessId'))
+                    exe_path = event_data.get('NewProcessName') or event_data.get('ProcessName') or ''
+                    proc_name = os.path.basename(exe_path) if exe_path else 'unknown'
+                    parent_exe = event_data.get('ParentProcessName') or ''
+                    parent_name = os.path.basename(parent_exe) if parent_exe else None
+                    u_name = event_data.get('SubjectUserName')
+                    d_name = event_data.get('SubjectDomainName')
+                    full_user = f'{d_name}\\{u_name}' if d_name and u_name and d_name != '-' else u_name
+                    u_sid = event_data.get('SubjectUserSid')
+                    cmdline = event_data.get('CommandLine')
+                    integrity = event_data.get('MandatoryLabel')
+
+                    prov_event = ProcessLifecycleEvent(
+                        event_type='ProcessCreated',
+                        process_guid=f'proc_{new_pid}_{int(time.time())}',
+                        pid=new_pid,
+                        name=proc_name,
+                        executable_path=exe_path,
+                        command_line=cmdline,
+                        user=full_user,
+                        sid=u_sid,
+                        integrity_level=integrity,
+                        parent_pid=parent_pid,
+                        parent_name=parent_name,
+                        created_at=now_iso,
+                        details=event_data,
+                    )
+                    self.storage.save_process_provenance_event(prov_event)
             except Exception as ex:
                 logger.debug(f'Ошибка сохранения ETW события в БД: {ex}')
 

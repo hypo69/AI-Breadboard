@@ -16,11 +16,11 @@
 # Package: apps.windows.telemetry_research
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 07:47:00
 # =============================================================================
 
 from __future__ import annotations
-"""Модели данных для исследования телеметрии и построения графиков."""
+"""Модели данных для исследования телеметрии, ресурсов клиентских программ и построения графиков."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -140,3 +140,62 @@ class DeepResearchReport(BaseModel):
     hypotheses: List[HypothesisResult] = Field(default_factory=list, description="Результаты автоматической проверки гипотез производительности")
     investigation_summary: str = Field(..., description="Сводное экспертное заключение исследования")
     actionable_recommendations: List[str] = Field(default_factory=list, description="Список практических рекомендаций по оптимизации и обслуживанию системы")
+
+
+class UnknownProgramEvaluation(BaseModel):
+    """Оценка неизвестной или ресурсоемкой программы языковой моделью Gemini."""
+    program_name: str = Field(..., description="Имя исполняемого файла или процесса")
+    pid: Optional[int] = Field(default=None, description="Идентификатор процесса (PID)")
+    executable_path: Optional[str] = Field(default=None, description="Полный путь к исполняемому файлу")
+    command_line: Optional[str] = Field(default=None, description="Командная строка запуска")
+    cpu_percent: float = Field(default=0.0, description="Потребление ЦП (%)")
+    memory_mb: float = Field(default=0.0, description="Использование оперативной памяти (МБ)")
+    disk_io_mb_s: float = Field(default=0.0, description="Интенсивность дискового ввода-вывода (МБ/с)")
+    disk_size_mb: Optional[float] = Field(default=None, description="Размер файла на диске (МБ)")
+    is_normal: bool = Field(default=True, description="Является ли такое поведение штатным и нормальным")
+    confidence: float = Field(default=0.85, description="Уверенность модели в оценке (0.0 - 1.0)")
+    risk_level: str = Field(default="low", description="Уровень риска: low, medium, high, critical")
+    verdict: str = Field(..., description="Краткий вердикт модели (например: 'Штатная нагрузка', 'Подозрительный процесс')")
+    analysis: str = Field(..., description="Развернутое экспертное заключение модели о потреблении ресурсов")
+    recommendations: List[str] = Field(default_factory=list, description="Список практических рекомендаций для пользователя")
+    evaluated_at: str = Field(default_factory=lambda: datetime.now().isoformat(), description="Временная метка проведения оценки")
+    model_used: str = Field(default="gemini-2.5-flash", description="Использованная модель ИИ")
+
+
+class ClientProgramResource(BaseModel):
+    """Снимок ресурсоемкости отдельной клиентской/пользовательской программы."""
+    pid: int = Field(..., description="PID процесса")
+    name: str = Field(..., description="Имя процесса (например, chrome.exe, code.exe)")
+    display_name: Optional[str] = Field(default=None, description="Понятное отображаемое имя программы")
+    executable_path: Optional[str] = Field(default=None, description="Путь к исполняемому файлу")
+    command_line: Optional[str] = Field(default=None, description="Командная строка запуска")
+    username: Optional[str] = Field(default=None, description="Учетная запись пользователя, запустившего программу")
+    cpu_percent: float = Field(default=0.0, description="Текущая / средняя загрузка ЦП (%)")
+    memory_mb: float = Field(default=0.0, description="Использование оперативной памяти RAM (МБ)")
+    memory_percent: float = Field(default=0.0, description="Доля от общей оперативной памяти (%)")
+    disk_read_bytes_sec: float = Field(default=0.0, description="Скорость чтения с диска (байт/с)")
+    disk_write_bytes_sec: float = Field(default=0.0, description="Скорость записи на диск (байт/с)")
+    disk_size_mb: Optional[float] = Field(default=None, description="Размер исполняемого файла на диске (МБ)")
+    num_threads: int = Field(default=0, description="Количество потоков процесса")
+    num_handles: int = Field(default=0, description="Количество дескрипторов процесса")
+    is_known_software: bool = Field(default=True, description="Флаг: известное доверенное приложение")
+    is_client_program: bool = Field(default=True, description="Флаг: программа запущена клиентом/пользователем")
+    is_resource_heavy: bool = Field(default=False, description="Флаг: повышенное потребление ресурсов (CPU/RAM/Disk)")
+    resource_score: float = Field(default=0.0, description="Интегральный скор ресурсоемкости")
+    category: str = Field(default="Пользовательское приложение", description="Категория ПО")
+    publisher: Optional[str] = Field(default=None, description="Издатель / разработчик программы")
+    gemini_evaluation: Optional[UnknownProgramEvaluation] = Field(default=None, description="Оценка от Gemini при аномалиях")
+
+
+class ClientResourceSummary(BaseModel):
+    """Сводный отчет по ресурсам программ, запущенных клиентом."""
+    total_client_programs: int = Field(default=0, description="Общее число клиентских процессов")
+    total_ram_mb: float = Field(default=0.0, description="Суммарно занятая память RAM клиентскими программами (МБ)")
+    total_cpu_percent: float = Field(default=0.0, description="Суммарная загрузка ЦП клиентскими программами (%)")
+    total_disk_size_mb: float = Field(default=0.0, description="Суммарный объем файлов на диске (МБ)")
+    heavy_programs_count: int = Field(default=0, description="Число ресурсоемких программ")
+    unknown_heavy_programs_count: int = Field(default=0, description="Число неизвестных ресурсоемких программ")
+    programs: List[ClientProgramResource] = Field(default_factory=list, description="Список программ с детальными метриками")
+    evaluations: List[UnknownProgramEvaluation] = Field(default_factory=list, description="Список полученных оценок от Gemini")
+    scanned_at: str = Field(default_factory=lambda: datetime.now().isoformat(), description="Время проведения аудита")
+

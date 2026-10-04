@@ -16,7 +16,7 @@
 # Package: tests.apps.windows
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-04 07:28:00
 # =============================================================================
 
 from __future__ import annotations
@@ -126,8 +126,10 @@ def test_telemetry_aggregator_lifecycle(tmp_path: Path) -> None:
     assert aggregator.get_status()['is_running'] is False
 
 def test_telemetry_config_default_apps_windows_path() -> None:
-    """Проверка загрузки конфигурации сенсоров по умолчанию из apps/windows/config.json."""
+    """Проверка загрузки конфигурации сенсоров по умолчанию из %APPDATA%/AI-Breadboard/apps/windows/telemetry/config.json."""
     mgr = TelemetryConfigManager()
+    assert Path(mgr.config_path).name == 'config.json'
+    assert 'telemetry' in mgr.config_path
     all_sensors = mgr.get_all_sensor_names()
     assert 'cpu' in all_sensors
     assert 'gpu' in all_sensors
@@ -143,7 +145,7 @@ def test_telemetry_config_default_apps_windows_path() -> None:
     assert mgr.get_sensor_interval('disk') == 30.0
     assert mgr.get_sensor_interval('network') == 10.0
     assert mgr.get_sensor_interval('sensors') == 10.0
-    assert mgr.get_sensor_interval('internet') == 120.0
+    assert mgr.get_sensor_interval('internet') == 3600.0
 
 def test_all_sensors_polling_metrics() -> None:
     """Тестирование доступности метрик для каждого сенсора."""

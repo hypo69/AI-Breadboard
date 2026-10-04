@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-04 07:05:00
 # =============================================================================
 
 """Unit tests for /apps tabs in Admin Panel."""
@@ -40,11 +40,11 @@ class TestAdminAppsTabs:
         assert 'id="appsTabsDropdown"' in content
         assert 'data-tab="tab-trading"' in content
         assert 'data-tab="tab-network"' in content
-        assert 'data-tab="tab-system-load-inspector"' in content
+        assert 'data-tab="tab-hardware-load-inspector"' in content
         assert 'data-tab="tab-about-system"' in content
         assert 'id="tab-trading"' in content
         assert 'id="tab-network"' in content
-        assert 'id="tab-system-load-inspector"' in content
+        assert 'id="tab-hardware-load-inspector"' in content
         assert 'id="tab-about-system"' in content
 
     def test_admin_main_js_loads_apps_tabs(self):

@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.hardware.providers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 06:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -69,7 +69,7 @@ class NativeWinProvider(BaseHardwareProvider):
         try:
             storage = StorageInventory(source_provider=self.name)
             try:
-                from apps.windows.telemetry.windows_storage_sensor import WindowsStorageSensor
+                from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
                 sensor = WindowsStorageSensor(timeout_sec=30)
                 phys_disks = sensor.get_physical_disks()
                 for d in phys_disks:
@@ -107,7 +107,7 @@ class NativeWinProvider(BaseHardwareProvider):
         except Exception:
             pass
         try:
-            from apps.windows.telemetry.windows_storage_sensor import WindowsStorageSensor
+            from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
             sensor = WindowsStorageSensor(timeout_sec=30)
             for disk in sensor.get_physical_disks():
                 if disk.temperature_c is not None:

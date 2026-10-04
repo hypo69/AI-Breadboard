@@ -14,7 +14,7 @@
 # Package: root
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:20:26
+# Updated: 2026-10-04 03:35:00
 # =============================================================================
 
 """Script to generate minimal FastAPI router implementations for core router placeholders.
@@ -29,7 +29,7 @@ import os
 from pathlib import Path
 ROOT = Path('C:/Users/onela/AppData/Local/AI-Breadboard')
 CORE_ROUTER_DIR = ROOT / 'src' / 'api' / 'routers' / 'core'
-router_definitions = {'router_chat.py': {}, 'router_agents.py': {}, 'router_audio.py': {}, 'router_autolog.py': {}, 'router_diagnostics.py': {}, 'router_ifttt.py': {}, 'router_keys.py': {}, 'router_logs.py': {}, 'router_mcp.py': {}, 'router_menu.py': {}, 'router_news.py': {}, 'router_ninite.py': {}, 'router_openai.py': {}, 'router_rag.py': {}, 'router_recovery.py': {}, 'router_registry_viewer.py': {}, 'router_scenarios.py': {}, 'router_sysautologging.py': {}, 'router_system.py': {}, 'router_system_logs.py': {}, 'router_telegram_rag.py': {}, 'router_tts.py': {}, 'router_user_directories.py': {}, 'router_version.py': {}, 'router_admin.py': {'extra_init': ['init_skills_router', 'init_plugins_router', 'init_apps_router']}}
+router_definitions = {'router_chat.py': {}, 'router_agents.py': {}, 'router_audio.py': {}, 'router_diagnostics.py': {}, 'router_ifttt.py': {}, 'router_keys.py': {}, 'router_logs.py': {}, 'router_mcp.py': {}, 'router_menu.py': {}, 'router_news.py': {}, 'router_ninite.py': {}, 'router_openai.py': {}, 'router_rag.py': {}, 'router_recovery.py': {}, 'router_registry_viewer.py': {}, 'router_scenarios.py': {}, 'router_system.py': {}, 'router_system_logs.py': {}, 'router_telegram_rag.py': {}, 'router_tts.py': {}, 'router_user_directories.py': {}, 'router_version.py': {}, 'router_admin.py': {'extra_init': ['init_skills_router', 'init_plugins_router', 'init_apps_router']}}
 for filename, opts in router_definitions.items():
     path = CORE_ROUTER_DIR / filename
     module_name = filename.replace('.py', '')

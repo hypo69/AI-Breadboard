@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 01:50:00
+# Updated: 2026-10-04 06:26:00
 # =============================================================================
 
 from __future__ import annotations
@@ -97,9 +97,9 @@ class SystemCollector:
         self._ram_sticks_cache_time: float = 0.0
         self._physical_disks_cached: Optional[List[PhysicalDiskHealth]] = None
         self._physical_disks_cache_time: float = 0.0
-        self.auditor = auditor or HardwareAuditor()
-        self.history_manager = history_manager or HardwareHistoryManager()
         self.storage = storage or TelemetryStorage.get_instance()
+        self.auditor = auditor or HardwareAuditor(storage=self.storage)
+        self.history_manager = history_manager or HardwareHistoryManager()
 
     def get_system_identity(self) -> Dict[str, Any]:
         """Collect host identity, current user, system language, and locale parameters.
@@ -418,20 +418,56 @@ class SystemCollector:
         Returns:
             DiskUsagePeriodReport: Полная сводка дискового I/O и SMART-показателей за период.
         """
-        from apps.windows.storage.storage_usage import WindowsStorageUsageCollector
+        from apps.windows.telemetry.storage_usage import WindowsStorageUsageCollector
         collector = WindowsStorageUsageCollector()
         return collector.get_disk_usage_period_report(period_minutes=period_minutes, force_refresh_smart=force_refresh_smart)
 
 
 
+    @staticmethod
+    def _classify_launch_reason(
+        parent_name: Optional[str],
+        process_name: Optional[str] = None,
+        session_id: Optional[int] = None,
+        cmdline: Optional[str] = None,
+    ) -> str:
+        """Классификация причины/контекста запуска процесса по его родителю и окружению.
+
+        Args:
+            parent_name: Имя родительского процесса.
+            process_name: Имя текущего процесса.
+            session_id: Номер сессии Windows (0 = системные службы, 1+ = интерактивная сессия).
+            cmdline: Командная строка процесса (опционально).
+
+        Returns:
+            str: Категория запуска ('service', 'scheduled_task', 'shell_interactive', 'terminal_cli', 'ide_developer', 'system_boot', 'spawned_by_parent', 'unknown').
+        """
+        p_name = (parent_name or '').lower()
+        if p_name in ('services.exe',) or (p_name in ('svchost.exe',) and session_id == 0):
+            return 'service'
+        if p_name in ('taskeng.exe', 'taskhostw.exe', 'taskhost.exe') or (cmdline and '-task' in cmdline.lower()):
+            return 'scheduled_task'
+        if p_name in ('explorer.exe',):
+            return 'shell_interactive'
+        if p_name in ('cmd.exe', 'powershell.exe', 'pwsh.exe', 'wt.exe', 'windowsterminal.exe', 'bash.exe', 'zsh.exe', 'conhost.exe'):
+            return 'terminal_cli'
+        if p_name in ('code.exe', 'devenv.exe', 'pycharm64.exe', 'idea64.exe', 'rider64.exe', 'cursor.exe', 'windsurf.exe'):
+            return 'ide_developer'
+        if p_name in ('winlogon.exe', 'userinit.exe', 'smss.exe', 'csrss.exe', 'wininit.exe', 'lsass.exe'):
+            return 'system_boot'
+        if p_name:
+            clean_parent = p_name.replace('.exe', '')
+            return f'spawned_by_{clean_parent}'
+        return 'unknown'
+
     def get_top_processes(self, limit: int = 25, sort_by: str = 'cpu') -> List[ProcessMetrics]:
-        """Retrieve active processes sorted by resource consumption, with token info.
+        """Retrieve active processes sorted by resource consumption, with token and provenance info.
 
         Args:
             limit: Maximum processes to return (0 for all).
             sort_by: Attribute to sort by ('cpu', 'memory'/'ram', 'handles'/'descriptors').
         Returns:
-            List[ProcessMetrics]: Ranked process metrics, now including integrity_level and elevation.
+            List[ProcessMetrics]: Ranked process metrics, including provenance, integrity_level and elevation.
         """
         # Collect token information for all processes
         token_collector = ProcessTokenCollector()
@@ -440,19 +476,51 @@ class SystemCollector:
         procs: List[ProcessMetrics] = []
         if PSUTIL_AVAILABLE:
             handle_attr = 'num_handles' if os.name == 'nt' else 'num_fds'
-            proc_attrs = ['pid', 'name', 'status', 'cpu_percent', 'memory_info', 'memory_percent', 'num_threads', 'username', handle_attr]
-            for p in psutil.process_iter(attrs=proc_attrs):
+            proc_dict: Dict[int, Dict[str, Any]] = {}
+            for p in psutil.process_iter(attrs=['pid', 'ppid', 'name', 'status', 'cpu_percent', 'memory_info', 'memory_percent', 'num_threads', 'username', 'create_time', 'exe', 'cmdline', handle_attr]):
                 try:
-                    info = p.info
+                    proc_dict[p.info['pid']] = p.info
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue
+
+            for pid, info in proc_dict.items():
+                try:
                     mem_info = info.get('memory_info')
                     rss_mb = round(mem_info.rss / (1024 * 1024), 1) if mem_info else 0.0
                     cpu_p = round(info.get('cpu_percent') or 0.0, 1)
                     num_h = info.get(handle_attr) or 0
-                    token = token_info_map.get(info['pid'])
+                    token = token_info_map.get(pid)
                     integrity = token.integrity_level if token else None
                     elevation = token.elevation if token else None
+                    sid = token.sid if token else None
+                    session_id = token.session_id if token else None
+
+                    ppid = info.get('ppid')
+                    parent_info = proc_dict.get(ppid) if ppid else None
+                    parent_name = parent_info.get('name') if parent_info else None
+
+                    # Построение цепочки предков
+                    ancestors = [info.get('name') or str(pid)]
+                    curr_pid = ppid
+                    visited = {pid}
+                    while curr_pid and curr_pid in proc_dict and curr_pid not in visited:
+                        visited.add(curr_pid)
+                        curr_p = proc_dict[curr_pid]
+                        ancestors.append(curr_p.get('name') or f'PID:{curr_pid}')
+                        curr_pid = curr_p.get('ppid')
+                    ancestors.reverse()
+                    ancestor_chain = ' → '.join(ancestors)
+
+                    create_time_val = info.get('create_time') or 0.0
+                    creation_time_str = datetime.fromtimestamp(create_time_val, tz=timezone.utc).isoformat() if create_time_val > 0 else None
+                    process_guid = f'proc_{pid}_{int(create_time_val)}'
+
+                    raw_cmdline = info.get('cmdline')
+                    cmdline_str = ' '.join(raw_cmdline) if isinstance(raw_cmdline, list) else (str(raw_cmdline) if raw_cmdline else None)
+                    launch_reason = self._classify_launch_reason(parent_name, info.get('name'), session_id, cmdline_str)
+
                     procs.append(ProcessMetrics(
-                        pid=info['pid'],
+                        pid=pid,
                         name=info.get('name') or 'unknown',
                         status=info.get('status') or 'running',
                         cpu_percent=cpu_p,
@@ -463,11 +531,21 @@ class SystemCollector:
                         username=info.get('username'),
                         integrity_level=integrity,
                         elevation=elevation,
+                        ppid=ppid,
+                        parent_name=parent_name,
+                        executable_path=info.get('exe'),
+                        sid=sid,
+                        session_id=session_id,
+                        creation_time=creation_time_str,
+                        process_guid=process_guid,
+                        ancestor_chain=ancestor_chain,
+                        launch_reason=launch_reason,
                     ))
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
         else:
             # Fallback for non‑psutil environments
+            now_iso = datetime.now(timezone.utc).isoformat()
             p = ProcessMetrics(
                 pid=os.getpid(),
                 name='python.exe',
@@ -478,11 +556,22 @@ class SystemCollector:
                 num_threads=8,
                 num_handles=42,
                 username=os.getenv('USERNAME', 'SYSTEM'),
+                ppid=os.getppid() if hasattr(os, 'getppid') else None,
+                parent_name='cmd.exe',
+                executable_path=os.path.abspath(__file__),
+                sid='S-1-5-21-mock-sid',
+                session_id=1,
+                creation_time=now_iso,
+                process_guid=f'proc_{os.getpid()}_{int(time.time())}',
+                ancestor_chain='cmd.exe → python.exe',
+                launch_reason='terminal_cli',
             )
             token = token_info_map.get(p.pid)
             if token:
                 p.integrity_level = token.integrity_level
                 p.elevation = token.elevation
+                p.sid = token.sid
+                p.session_id = token.session_id
             procs.append(p)
 
         # Sorting according to requested key
@@ -514,12 +603,14 @@ class SystemCollector:
         return BatteryMetrics(has_battery=False, percent=None, power_plugged=True, secs_left=None, power_profile='AC Mains / Desktop')
 
     def get_physical_disks_health(self, force: bool = False) -> List[PhysicalDiskHealth]:
-        """Собрать данные о физических дисках, SMART, типах носителей и здоровье через единый сенсор.
+        """Собрать данные о физических дисках, SMART, типах носителей и здоровье.
 
-        Тяжелый опрос выполняется 2 раза в день (каждые 12 часов) или при force=True / старте.
+        В сценариях API (tc.ps1) данные читаются строго из SQLite базы данных telemetry.db
+        без вызова тяжелого опроса WMI/CIM.
+        Прямой опрос оборудования через WindowsStorageSensor выполняется только при force=True (в демоне tlm.ps1).
 
         Args:
-            force: Принудительное обновление данных накопителей без использования кэша.
+            force: Принудительное обновление данных накопителей через WindowsStorageSensor (только для tlm.ps1).
 
         Returns:
             List[PhysicalDiskHealth]: Список обнаруженных физических накопителей.
@@ -527,12 +618,44 @@ class SystemCollector:
         now = time.time()
         if not force and self._physical_disks_cached is not None and now - self._physical_disks_cache_time < 43200.0:
             return self._physical_disks_cached
-        disks: List[PhysicalDiskHealth] = []
-        if os.name == 'nt':
+
+        # 1. Попытка прочитать физические диски из базы данных SQLite
+        if not force and self.storage:
             try:
-                from apps.windows.storage.windows_storage_sensor import WindowsStorageSensor
+                storage_data = self.storage.get_latest_storage_data()
+                if storage_data and storage_data.get("physical_disks"):
+                    disks: List[PhysicalDiskHealth] = []
+                    for d in storage_data["physical_disks"]:
+                        disks.append(PhysicalDiskHealth(
+                            device_id=str(d.get("device_id") or f"Disk {len(disks)}"),
+                            model=str(d.get("model") or d.get("friendly_name") or d.get("name") or "Physical Drive"),
+                            media_type=str(d.get("media_type") or "SSD"),
+                            size_gb=round(float(d.get("size_gb") or 0.0), 1),
+                            health_status=str(d.get("health_status") or "Healthy"),
+                            operational_status=str(d.get("operational_status") or "OK"),
+                            temperature_celsius=float(d.get("temperature_celsius") or d.get("temperature_c") or 0.0) if (d.get("temperature_celsius") is not None or d.get("temperature_c") is not None) else None,
+                            interface_type=str(d.get("interface_type") or d.get("bus_type") or "NVMe"),
+                            lifetime_read_bytes=d.get("lifetime_read_bytes"),
+                            lifetime_write_bytes=d.get("lifetime_write_bytes"),
+                            lifetime_read_tb=d.get("lifetime_read_tb"),
+                            lifetime_write_tb=d.get("lifetime_write_tb"),
+                            power_on_hours=d.get("power_on_hours"),
+                            wear_percentage=d.get("wear_percentage"),
+                        ))
+                    if disks:
+                        self._physical_disks_cached = disks
+                        self._physical_disks_cache_time = now
+                        return disks
+            except Exception as ex:
+                logger.debug(f"Не удалось прочитать physical_disks из БД: {ex}")
+
+        # 2. Прямой опрос через WindowsStorageSensor выполняется ТОЛЬКО при явном force=True (в демоне tlm.ps1)
+        disks: List[PhysicalDiskHealth] = []
+        if os.name == 'nt' and force:
+            try:
+                from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
                 sensor = WindowsStorageSensor(ttl_sec=43200.0)
-                phys_disks = sensor.get_physical_disks(force_refresh=force)
+                phys_disks = sensor.get_physical_disks(force_refresh=True)
                 for d in phys_disks:
                     disks.append(PhysicalDiskHealth(
                         device_id=d.device_id,
@@ -552,6 +675,7 @@ class SystemCollector:
                     ))
             except Exception as ex:
                 logger.debug(f'Ошибка сбора физических дисков через WindowsStorageSensor: {ex}')
+
         if not disks:
             disks.append(PhysicalDiskHealth(
                 device_id='Disk 0',
@@ -582,16 +706,22 @@ class SystemCollector:
             async def _probe():
 
                 def _do_probe():
-                    import wmi
+                    try:
+                        import wmi
+                    except ImportError:
+                        return []
                     _sticks: List[RamStickInfo] = []
-                    w = wmi.WMI()
-                    mems = w.Win32_PhysicalMemory()
-                    type_map = {20: 'DDR', 21: 'DDR2', 24: 'DDR3', 26: 'DDR4', 34: 'DDR5'}
-                    for m in mems:
-                        cap_gb = round(int(m.Capacity or 0) / 1024 ** 3, 1)
-                        speed = int(m.Speed or m.ConfiguredClockSpeed or 3200)
-                        m_type = type_map.get(m.SMBIOSMemoryType, 'DDR4/DDR5')
-                        _sticks.append(RamStickInfo(bank_label=str(m.BankLabel or m.DeviceLocator or 'DIMM').strip(), capacity_gb=cap_gb, speed_mhz=speed, manufacturer=str(m.Manufacturer or 'Generic').strip(), part_number=str(m.PartNumber or '').strip(), memory_type=m_type))
+                    try:
+                        w = wmi.WMI()
+                        mems = w.Win32_PhysicalMemory()
+                        type_map = {20: 'DDR', 21: 'DDR2', 24: 'DDR3', 26: 'DDR4', 34: 'DDR5'}
+                        for m in mems:
+                            cap_gb = round(int(m.Capacity or 0) / 1024 ** 3, 1)
+                            speed = int(m.Speed or m.ConfiguredClockSpeed or 3200)
+                            m_type = type_map.get(m.SMBIOSMemoryType, 'DDR4/DDR5')
+                            _sticks.append(RamStickInfo(bank_label=str(m.BankLabel or m.DeviceLocator or 'DIMM').strip(), capacity_gb=cap_gb, speed_mhz=speed, manufacturer=str(m.Manufacturer or 'Generic').strip(), part_number=str(m.PartNumber or '').strip(), memory_type=m_type))
+                    except Exception as err:
+                        logger.debug(f'WMI Win32_PhysicalMemory query failed: {err}')
                     return _sticks
                 return await com_worker.run(_do_probe)
             try:
@@ -1058,7 +1188,22 @@ class SystemCollector:
             uptime = round(now - (psutil.boot_time() if PSUTIL_AVAILABLE else now - 3600), 1)
             partitions, disk_io = self.get_disk_metrics()
             net_metrics = self.get_network_metrics()
-            sensors = get_hardware_sensors()
+            sensors: List[HardwareSensor] = []
+            if self.storage:
+                try:
+                    db_sensors = self.storage.get_latest_sensors()
+                    for item in db_sensors:
+                        sensors.append(
+                            HardwareSensor(
+                                sensor_id=str(item.get('sensor_id') or item.get('name') or 'unknown'),
+                                name=str(item.get('name') or item.get('sensor_id') or 'sensor'),
+                                sensor_type=str(item.get('sensor_type') or 'temperature'),
+                                value=float(item.get('value') or 0.0),
+                                unit=str(item.get('unit') or '°C'),
+                            )
+                        )
+                except Exception:
+                    sensors = []
             top_procs = self.get_top_processes(limit=process_limit)
             ident = self.get_system_identity()
             mems = self.get_memory_metrics()
@@ -1079,9 +1224,15 @@ class SystemCollector:
         sync_task = asyncio.create_task(asyncio.to_thread(_collect_sync_telemetry))
         cpu_metrics, ram_sticks, sync_data = await asyncio.gather(cpu_task, ram_task, sync_task)
         ident = sync_data['ident']
-        # Выполняем аудит аппаратного обеспечения и сохраняем результат в snapshot
-        hardware_audit_report = self.auditor.audit_hardware()
-        hardware_audit_dict = hardware_audit_report.model_dump() if hasattr(hardware_audit_report, 'model_dump') else dict(hardware_audit_report)
+        # Читаем последний зафиксированный аудит оборудования из базы данных (без живого опроса PnP/реестра/WMI)
+        hardware_audit_dict: Dict[str, Any] = {}
+        if self.storage:
+            try:
+                latest_audit = self.storage.get_latest_extended_audit()
+                if latest_audit:
+                    hardware_audit_dict = latest_audit
+            except Exception:
+                pass
         return SystemSnapshot(hostname=ident.get('hostname') or socket.gethostname(), username=ident.get('username') or '', os_name=f'{platform.system()} {platform.release()}', os_build=ident.get('os_build') or platform.version(), system_language=ident.get('system_language') or '', user_locale=ident.get('user_locale') or '', system_locale=ident.get('system_locale') or '', timezone=ident.get('timezone') or '', codepage=ident.get('codepage') or '', input_languages=ident.get('input_languages') or [], os_install_date=ident.get('os_install_date') or '', uptime_seconds=sync_data['uptime'], cpu=cpu_metrics, memory=sync_data['memory'], ram_sticks=ram_sticks, gpus=sync_data['gpus'], monitors=sync_data['monitors'], updates=sync_data['updates'], office=sync_data['office'], onedrive=sync_data['onedrive'], disks=sync_data['partitions'], physical_disks=sync_data['physical_disks'], disk_io=sync_data['disk_io'], network=sync_data['net_metrics'], listening_ports=sync_data['listening_ports'], network_activity=sync_data['net_activity'], battery=sync_data['battery'], alerts=sync_data['alerts'], sensors=sync_data['sensors'], top_processes=sync_data['top_procs'], hardware_audit=hardware_audit_dict)
 
     def get_hardware_sensors(self) -> List[HardwareSensor]:
@@ -1662,4 +1813,147 @@ class SystemCollector:
             Optional[Dict[str, Any]]: Словарь аудита или None.
         """
         return self.storage.get_latest_extended_audit()
+
+    def get_process_provenance_report(
+        self,
+        pid: Optional[int] = None,
+        name_filter: Optional[str] = None,
+        user_filter: Optional[str] = None,
+        limit: int = 100,
+    ) -> ProcessProvenanceReport:
+        """Сформировать сводный отчет о происхождении и цепочках запуска активных процессов.
+
+        Args:
+            pid: Опциональный фильтр по PID.
+            name_filter: Опциональный фильтр по имени процесса.
+            user_filter: Опциональный фильтр по пользователю/SID.
+            limit: Максимальное количество процессов в отчете.
+
+        Returns:
+            ProcessProvenanceReport: Полный отчет с детальным анализом происхождения процессов.
+        """
+        all_procs = self.get_top_processes(limit=0, sort_by='cpu')
+        filtered_items: List[ProcessProvenanceInfo] = []
+
+        for p in all_procs:
+            if pid is not None and p.pid != pid:
+                continue
+            if name_filter and name_filter.lower() not in (p.name or '').lower():
+                continue
+            if user_filter and user_filter.lower() not in (p.username or '').lower() and user_filter.lower() not in (p.sid or '').lower():
+                continue
+
+            chain_list = [node.strip() for node in (p.ancestor_chain or "").split(" → ") if node.strip()]
+            user_display = p.username or "Unknown"
+            sid_display = p.sid or "N/A"
+            session_display = f"Session {p.session_id}" if p.session_id is not None else "Session N/A"
+            who_runs = f"{user_display} ({sid_display}, {session_display})"
+            who_created = f"{p.parent_name or 'Unknown'} (PPID: {p.ppid})"
+            why_created = p.launch_reason or "unknown"
+
+            item = ProcessProvenanceInfo(
+                pid=p.pid,
+                ppid=p.ppid,
+                name=p.name,
+                executable_path=p.executable_path,
+                command_line=p.cmdline,
+                user=p.username,
+                sid=p.sid,
+                session_id=p.session_id,
+                integrity_level=p.integrity_level,
+                elevation=bool(p.elevation) if p.elevation is not None else None,
+                creation_time=p.creation_time,
+                process_guid=p.process_guid or f"proc_{p.pid}",
+                parent_name=p.parent_name,
+                ancestor_chain=chain_list,
+                ancestor_chain_str=p.ancestor_chain or "",
+                who_runs_it=who_runs,
+                who_created_it=who_created,
+                why_was_it_created=why_created,
+            )
+            filtered_items.append(item)
+            if limit and len(filtered_items) >= limit:
+                break
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        recent_evs: List[ProcessLifecycleEvent] = []
+        try:
+            for ev in self.storage.get_process_provenance_history(limit=20):
+                if isinstance(ev, dict):
+                    recent_evs.append(ProcessLifecycleEvent(
+                        event_id=str(ev.get("event_id") or ""),
+                        timestamp=str(ev.get("timestamp") or now_iso),
+                        event_type=str(ev.get("event_type") or "ProcessCreated"),
+                        pid=int(ev.get("pid") or 0),
+                        ppid=int(ev["parent_pid"]) if ev.get("parent_pid") is not None else None,
+                        process_guid=str(ev.get("process_guid") or ""),
+                        parent_guid=ev.get("parent_guid"),
+                        name=str(ev.get("name") or "unknown"),
+                        executable_path=ev.get("executable_path"),
+                        command_line=ev.get("command_line"),
+                        user=ev.get("user"),
+                        sid=ev.get("sid"),
+                        session_id=int(ev["session_id"]) if ev.get("session_id") is not None else None,
+                        integrity_level=ev.get("integrity_level"),
+                        elevation=bool(ev.get("elevation")) if ev.get("elevation") is not None else None,
+                        parent_name=ev.get("parent_name"),
+                        ancestor_chain=ev.get("ancestor_chain"),
+                        launch_reason=ev.get("launch_reason"),
+                        source=str(ev.get("source") or "system"),
+                        raw_json=str(ev.get("details_json")) if ev.get("details_json") else None,
+                    ))
+        except Exception as ex:
+            logger.debug(f"Не удалось извлечь недавние события provenance для отчета: {ex}")
+
+        summary = f"Всего активных процессов: {len(all_procs)}. Проанализировано происхождение для {len(filtered_items)} процессов."
+        return ProcessProvenanceReport(
+            timestamp=now_iso,
+            total_processes=len(all_procs),
+            active_provenance=filtered_items,
+            recent_events=recent_evs,
+            summary=summary,
+        )
+
+    def get_process_provenance_history(
+        self,
+        guid: Optional[str] = None,
+        pid: Optional[int] = None,
+        name: Optional[str] = None,
+        user: Optional[str] = None,
+        event_type: Optional[str] = None,
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """Получить исторические события жизненного цикла и происхождения процессов из БД.
+
+        Args:
+            guid: Фильтр по уникальному идентификатору процесса.
+            pid: Фильтр по PID.
+            name: Фильтр по имени процесса.
+            user: Фильтр по имени пользователя или SID.
+            event_type: Фильтр по типу события ('ProcessCreated', 'ProcessTerminated').
+            limit: Максимальное количество записей.
+
+        Returns:
+            List[Dict[str, Any]]: Список исторических событий происхождения процессов.
+        """
+        return self.storage.get_process_provenance_history(
+            guid=guid,
+            pid=pid,
+            name=name,
+            user=user,
+            event_type=event_type,
+            limit=limit,
+        )
+
+    def get_process_lineage(self, guid_or_pid: str) -> List[Dict[str, Any]]:
+        """Построить полную восходящую цепочку предков процесса (дерево запуска).
+
+        Args:
+            guid_or_pid: Идентификатор process_guid или числовой PID.
+
+        Returns:
+            List[Dict[str, Any]]: Упорядоченный список предков от корневого процесса к целевому.
+        """
+        return self.storage.get_process_lineage(guid_or_pid=guid_or_pid)
+
 

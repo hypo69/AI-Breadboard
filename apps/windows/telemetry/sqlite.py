@@ -16,10 +16,11 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 01:45:00
+# Updated: 2026-10-04 07:10:00
 # =============================================================================
 
 from __future__ import annotations
+
 """Модуль персистентного хранения системной телеметрии в SQLite с поддержкой буферизации."""
 
 import atexit
@@ -213,6 +214,7 @@ class TelemetryStorage:
                     os_build TEXT,
                     os_install_date TEXT,
                     disks_json TEXT,
+                    physical_disks_json TEXT,
                     cpu_total_percent REAL,
                     cpu_frequency_mhz REAL,
                     memory_total_gb REAL,
@@ -606,6 +608,48 @@ class TelemetryStorage:
                     raw_json TEXT
                 );
             ''')
+
+            # 20. Жизненный цикл и происхождение процессов (Process Provenance Events)
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS process_provenance_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    event_id TEXT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    created_at REAL NOT NULL,
+                    event_type TEXT NOT NULL,
+                    pid INTEGER NOT NULL,
+                    ppid INTEGER,
+                    process_guid TEXT NOT NULL,
+                    parent_guid TEXT,
+                    name TEXT NOT NULL,
+                    executable_path TEXT,
+                    command_line TEXT,
+                    user TEXT,
+                    sid TEXT,
+                    session_id INTEGER,
+                    integrity_level TEXT,
+                    elevation INTEGER,
+                    parent_name TEXT,
+                    parent_cmdline TEXT,
+                    ancestor_chain TEXT,
+                    launch_reason TEXT,
+                    source TEXT DEFAULT 'system',
+                    details_json TEXT
+                );
+            ''')
+            
+            # 20. Инвентарь устройств и даты установки (Device Inventory)
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS device_inventory (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    device_instance_id TEXT UNIQUE NOT NULL,
+                    friendly_name TEXT,
+                    device_class TEXT,
+                    install_date TEXT NOT NULL,
+                    created_at REAL NOT NULL,
+                    updated_at REAL NOT NULL
+                );
+            ''')
             
             # =========================================================================
             # ИНДЕКСЫ ДЛЯ БЫСТРОГО ПОИСКА
@@ -642,6 +686,7 @@ class TelemetryStorage:
 
             # Устройства, W64, Аномалии и Аудит
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_device_events_created_at ON device_events(created_at);')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_device_inventory_dev_id ON device_inventory(device_instance_id);')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_w64_events_created_at ON w64_events(created_at);')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_process_outliers_created_at ON process_outliers(created_at);')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_extended_audits_created_at ON system_extended_audits(created_at);')
@@ -649,61 +694,6 @@ class TelemetryStorage:
             # =========================================================================
             # МИГРАЦИИ ДЛЯ СУЩЕСТВУЮЩИХ ТАБЛИЦ
             # =========================================================================
-            
-            # Миграция: добавляем provider_priority и UNIQUE constraint для sensor_polls
-            try:
-                # Проверяем наличие колонки provider_priority
-                cursor.execute("PRAGMA table_info(sensor_polls)")
-                columns = [row[1] for row in cursor.fetchall()]
-                
-                if 'provider_priority' not in columns:
-                    logger.info('Миграция: добавление provider_priority в sensor_polls')
-                    cursor.execute('ALTER TABLE sensor_polls ADD COLUMN provider_priority INTEGER DEFAULT 30')
-                
-                # Проверяем наличие UNIQUE constraint на (sensor_id, timestamp)
-                cursor.execute("PRAGMA index_list(sensor_polls)")
-                indexes = cursor.fetchall()
-                has_unique = any(
-                    'sensor_id' in str(idx) and 'timestamp' in str(idx) 
-                    for idx in indexes
-                )
-                
-                if not has_unique:
-                    # SQLite не позволяет добавить UNIQUE к существующей таблице напрямую
-                    # Создаём новую таблицу и копируем данные
-                    logger.info('Миграция: добавление UNIQUE(sensor_id, timestamp) в sensor_polls')
-                    cursor.execute('''
-                        CREATE TABLE IF NOT EXISTS sensor_polls_new (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            sensor_id TEXT NOT NULL,
-                            timestamp TEXT NOT NULL,
-                            created_at REAL NOT NULL,
-                            hardware_name TEXT,
-                            hardware_type TEXT,
-                            sensor_category TEXT,
-                            sensor_name TEXT,
-                            unit TEXT,
-                            value REAL,
-                            provider TEXT,
-                            provider_priority INTEGER DEFAULT 30,
-                            UNIQUE(sensor_id, timestamp)
-                        )
-                    ''')
-                    cursor.execute('''
-                        INSERT OR IGNORE INTO sensor_polls_new 
-                        SELECT id, sensor_id, timestamp, created_at, hardware_name, hardware_type,
-                               sensor_category, sensor_name, unit, value, provider, 
-                               COALESCE(provider_priority, 30)
-                        FROM sensor_polls
-                    ''')
-                    cursor.execute('DROP TABLE sensor_polls')
-                    cursor.execute('ALTER TABLE sensor_polls_new RENAME TO sensor_polls')
-                    # Восстанавливаем индексы
-                    cursor.execute('CREATE INDEX IF NOT EXISTS idx_sensor_polls_sensor_time ON sensor_polls(sensor_id, created_at)')
-                    cursor.execute('CREATE INDEX IF NOT EXISTS idx_sensor_polls_category ON sensor_polls(sensor_category, created_at)')
-                    
-            except Exception as migration_err:
-                logger.warning(f'Миграция sensor_polls: {migration_err} (возможно, таблица уже обновлена)')
 
             # Миграция: добавляем severity, event_details, raw_json в telemetry_events
             try:
@@ -730,6 +720,7 @@ class TelemetryStorage:
                         'os_build': 'TEXT',
                         'os_install_date': 'TEXT',
                         'disks_json': 'TEXT',
+                        'physical_disks_json': 'TEXT',
                         'cpu_total_percent': 'REAL',
                         'cpu_frequency_mhz': 'REAL',
                         'memory_total_gb': 'REAL',
@@ -782,15 +773,41 @@ class TelemetryStorage:
             except Exception as migration_err:
                 logger.warning(f'Миграция process_snapshots: {migration_err}')
 
-            # Миграция: добавляем raw_json в sensor_polls
+            # Миграция: добавляем недостающие колонки в process_provenance_events
             try:
-                cursor.execute("PRAGMA table_info(sensor_polls)")
-                sensor_cols = {row[1] for row in cursor.fetchall()}
-                if sensor_cols and 'raw_json' not in sensor_cols:
-                    logger.info('Миграция: добавление raw_json в sensor_polls')
-                    cursor.execute("ALTER TABLE sensor_polls ADD COLUMN raw_json TEXT")
+                cursor.execute("PRAGMA table_info(process_provenance_events)")
+                prov_cols = {row[1] for row in cursor.fetchall()}
+                if prov_cols:
+                    expected_prov_cols = {
+                        'event_id': 'TEXT',
+                        'timestamp': 'TEXT',
+                        'created_at': 'REAL',
+                        'event_type': 'TEXT',
+                        'pid': 'INTEGER',
+                        'ppid': 'INTEGER',
+                        'process_guid': 'TEXT',
+                        'parent_guid': 'TEXT',
+                        'name': 'TEXT',
+                        'executable_path': 'TEXT',
+                        'command_line': 'TEXT',
+                        'user': 'TEXT',
+                        'sid': 'TEXT',
+                        'session_id': 'INTEGER',
+                        'integrity_level': 'TEXT',
+                        'elevation': 'INTEGER',
+                        'parent_name': 'TEXT',
+                        'parent_cmdline': 'TEXT',
+                        'ancestor_chain': 'TEXT',
+                        'launch_reason': 'TEXT',
+                        'source': "TEXT DEFAULT 'system'",
+                        'details_json': 'TEXT',
+                    }
+                    for col_name, col_def in expected_prov_cols.items():
+                        if col_name not in prov_cols:
+                            logger.info(f'Миграция: добавление {col_name} в process_provenance_events')
+                            cursor.execute(f"ALTER TABLE process_provenance_events ADD COLUMN {col_name} {col_def}")
             except Exception as migration_err:
-                logger.warning(f'Миграция sensor_polls (raw_json): {migration_err}')
+                logger.warning(f'Миграция process_provenance_events: {migration_err}')
             
             conn.commit()
 
@@ -1126,33 +1143,24 @@ class TelemetryStorage:
                         ''', rows)
                         saved_total += len(rows)
 
-            # Выполнение групповых вставок с UPSERT для защиты от дублей
+            # Выполнение групповых вставок
             if sensor_poll_rows:
-                # UPSERT: при конфликте (sensor_id, timestamp) обновляем только если новый провайдер имеет выше приоритет
                 cursor.executemany('''
                     INSERT INTO sensor_polls (
                         sensor_id, timestamp, created_at, hardware_name, hardware_type,
-                        sensor_category, sensor_name, unit, value, provider, provider_priority
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        sensor_category, sensor_name, unit, value, provider, provider_priority, raw_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(sensor_id, timestamp) DO UPDATE SET
-                        created_at = CASE WHEN excluded.provider_priority > provider_priority 
-                                      THEN excluded.created_at ELSE created_at END,
-                        hardware_name = CASE WHEN excluded.provider_priority > provider_priority 
-                                       THEN excluded.hardware_name ELSE hardware_name END,
-                        hardware_type = CASE WHEN excluded.provider_priority > provider_priority 
-                                       THEN excluded.hardware_type ELSE hardware_type END,
-                        sensor_category = CASE WHEN excluded.provider_priority > provider_priority 
-                                          THEN excluded.sensor_category ELSE sensor_category END,
-                        sensor_name = CASE WHEN excluded.provider_priority > provider_priority 
-                                       THEN excluded.sensor_name ELSE sensor_name END,
-                        unit = CASE WHEN excluded.provider_priority > provider_priority 
-                                THEN excluded.unit ELSE unit END,
-                        value = CASE WHEN excluded.provider_priority > provider_priority 
-                              THEN excluded.value ELSE value END,
-                        provider = CASE WHEN excluded.provider_priority > provider_priority 
-                                  THEN excluded.provider ELSE provider END,
-                        provider_priority = CASE WHEN excluded.provider_priority > provider_priority 
-                                           THEN excluded.provider_priority ELSE provider_priority END
+                        created_at = excluded.created_at,
+                        hardware_name = excluded.hardware_name,
+                        hardware_type = excluded.hardware_type,
+                        sensor_category = excluded.sensor_category,
+                        sensor_name = excluded.sensor_name,
+                        unit = excluded.unit,
+                        value = excluded.value,
+                        provider = excluded.provider,
+                        provider_priority = excluded.provider_priority,
+                        raw_json = excluded.raw_json
                 ''', sensor_poll_rows)
                 saved_total += len(sensor_poll_rows)
 
@@ -1169,11 +1177,11 @@ class TelemetryStorage:
         return saved_total
 
     def _prepare_sensor_poll_row(self, s: Dict[str, Any], timestamp: Optional[str] = None) -> tuple:
-        """Подготавливает кортеж для вставки в sensor_polls с приоритетом провайдера.
+        """Подготавливает кортеж для вставки в sensor_polls.
         
         Returns:
             tuple: (sensor_id, timestamp, created_at, hardware_name, hardware_type,
-                    sensor_category, sensor_name, unit, value, provider, provider_priority)
+                    sensor_category, sensor_name, unit, value, provider, provider_priority, raw_json)
         """
         now_dt = datetime.now(timezone.utc)
         ts_str = timestamp or s.get('timestamp') or now_dt.isoformat()
@@ -1193,24 +1201,30 @@ class TelemetryStorage:
         except (ValueError, TypeError):
             val_float = 0.0
         
-        # Extract provider and priority for UPSERT deduplication
-        provider_raw = s.get('_provider', 'sensor_collector')
+        # Определение провайдера и его приоритета
+        provider_raw = s.get('_provider') or s.get('provider') or 'CIM_SYSTEM'
         if hasattr(provider_raw, 'name'):
             provider_str = provider_raw.name
             provider_priority = provider_raw.value
         elif isinstance(provider_raw, str):
             provider_str = provider_raw.upper()
-            # Get priority from SensorProvider enum
             try:
                 from .sensor_registry import SensorProvider
                 provider_priority = SensorProvider[provider_raw.upper()].value
             except (KeyError, ImportError):
-                provider_priority = 30  # Default SENSOR_COLLECTOR priority
+                provider_priority = 30
         else:
-            provider_str = 'SENSOR_COLLECTOR'
+            provider_str = 'CIM_SYSTEM'
             provider_priority = 30
+
+        raw_json_str = s.get('raw_json')
+        if not raw_json_str:
+            try:
+                raw_json_str = json.dumps(s, ensure_ascii=False, default=str)
+            except Exception:
+                raw_json_str = None
         
-        return (sid, ts_str, now_epoch, hw_name, hw_type, cat, s_name, unit, val_float, provider_str, provider_priority)
+        return (sid, ts_str, now_epoch, hw_name, hw_type, cat, s_name, unit, val_float, provider_str, provider_priority, raw_json_str)
 
     def _prepare_app_poll_row(self, p: Dict[str, Any]) -> tuple:
         now_dt = datetime.now(timezone.utc)
@@ -1390,6 +1404,8 @@ class TelemetryStorage:
             os_install_date = str(snapshot.os_install_date or '')
             disks_list = [d.model_dump() if hasattr(d, 'model_dump') else (vars(d) if not isinstance(d, dict) else d) for d in (snapshot.disks or [])]
             disks_json = json.dumps(disks_list, ensure_ascii=False, default=str) if disks_list else None
+            phys_disks_list = [d.model_dump() if hasattr(d, 'model_dump') else (vars(d) if not isinstance(d, dict) else d) for d in (snapshot.physical_disks or [])]
+            physical_disks_json = json.dumps(phys_disks_list, ensure_ascii=False, default=str) if phys_disks_list else None
             ts_str = snapshot.timestamp
         else:
             hostname = snap_data.get('hostname')
@@ -1400,6 +1416,9 @@ class TelemetryStorage:
             disks_val = snap_data.get('disks', [])
             disks_list = [d.model_dump() if hasattr(d, 'model_dump') else (vars(d) if not isinstance(d, dict) else d) for d in disks_val] if isinstance(disks_val, list) else []
             disks_json = json.dumps(disks_list, ensure_ascii=False, default=str) if disks_list else None
+            phys_disks_val = snap_data.get('physical_disks', [])
+            phys_disks_list = [d.model_dump() if hasattr(d, 'model_dump') else (vars(d) if not isinstance(d, dict) else d) for d in phys_disks_val] if isinstance(phys_disks_val, list) else []
+            physical_disks_json = json.dumps(phys_disks_list, ensure_ascii=False, default=str) if phys_disks_list else None
             cpu_obj = snap_data.get('cpu', {})
             cpu_pct = cpu_obj.get('total_percent', 0.0) if isinstance(cpu_obj, dict) else getattr(cpu_obj, 'total_percent', 0.0)
             cpu_freq = cpu_obj.get('frequency_mhz', 0.0) if isinstance(cpu_obj, dict) else getattr(cpu_obj, 'frequency_mhz', 0.0)
@@ -1439,14 +1458,14 @@ class TelemetryStorage:
 
         cursor.execute('''
             INSERT INTO system_snapshots (
-                timestamp, created_at, hostname, uptime_seconds, os_name, os_build, os_install_date, disks_json,
+                timestamp, created_at, hostname, uptime_seconds, os_name, os_build, os_install_date, disks_json, physical_disks_json,
                 cpu_total_percent, cpu_frequency_mhz, memory_total_gb, memory_used_gb,
                 memory_percent, swap_percent, gpu_load_percent, gpu_temp_c,
                 disk_read_bytes_sec, disk_write_bytes_sec, disk_read_count_sec,
                 disk_write_count_sec, network_sent_bytes_sec, network_recv_bytes_sec, hardware_audit
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
-            ts_str, now_epoch, hostname, uptime, os_name, os_build, os_install_date, disks_json,
+            ts_str, now_epoch, hostname, uptime, os_name, os_build, os_install_date, disks_json, physical_disks_json,
             cpu_pct, cpu_freq, mem_tot, mem_used,
             mem_pct, swap_pct, gpu_load, gpu_temp,
             disk_rb, disk_wb, disk_rc,
@@ -1575,8 +1594,19 @@ class TelemetryStorage:
                 cursor.execute('''
                     INSERT INTO sensor_polls (
                         sensor_id, timestamp, created_at, hardware_name, hardware_type,
-                        sensor_category, sensor_name, unit, value, provider, raw_json
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        sensor_category, sensor_name, unit, value, provider, provider_priority, raw_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(sensor_id, timestamp) DO UPDATE SET
+                        created_at = excluded.created_at,
+                        hardware_name = excluded.hardware_name,
+                        hardware_type = excluded.hardware_type,
+                        sensor_category = excluded.sensor_category,
+                        sensor_name = excluded.sensor_name,
+                        unit = excluded.unit,
+                        value = excluded.value,
+                        provider = excluded.provider,
+                        provider_priority = excluded.provider_priority,
+                        raw_json = excluded.raw_json
                 ''', row)
                 conn.commit()
                 return cursor.lastrowid or 0
@@ -1641,8 +1671,19 @@ class TelemetryStorage:
                 cursor.executemany('''
                     INSERT INTO sensor_polls (
                         sensor_id, timestamp, created_at, hardware_name, hardware_type,
-                        sensor_category, sensor_name, unit, value, provider, raw_json
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        sensor_category, sensor_name, unit, value, provider, provider_priority, raw_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(sensor_id, timestamp) DO UPDATE SET
+                        created_at = excluded.created_at,
+                        hardware_name = excluded.hardware_name,
+                        hardware_type = excluded.hardware_type,
+                        sensor_category = excluded.sensor_category,
+                        sensor_name = excluded.sensor_name,
+                        unit = excluded.unit,
+                        value = excluded.value,
+                        provider = excluded.provider,
+                        provider_priority = excluded.provider_priority,
+                        raw_json = excluded.raw_json
                 ''', rows)
                 conn.commit()
                 return len(rows)
@@ -2153,6 +2194,47 @@ class TelemetryStorage:
                     LIMIT ?;
                 ''', (limit,))
             return [dict(row) for row in cursor.fetchall()]
+
+    def get_latest_storage_data(self) -> Dict[str, Any]:
+        """Извлекает последние данные о физических накопителях и логических разделах из SQLite.
+
+        Returns:
+            Dict[str, Any]: Словарь с ключами 'partitions' (List[Dict]) и 'physical_disks' (List[Dict]).
+        """
+        self.flush()
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT id, timestamp, created_at, disks_json, physical_disks_json
+                FROM system_snapshots
+                ORDER BY id DESC
+                LIMIT 1;
+            ''')
+            row = cursor.fetchone()
+            if not row:
+                return {'partitions': [], 'physical_disks': []}
+
+            partitions: List[Dict[str, Any]] = []
+            if row['disks_json']:
+                try:
+                    partitions = json.loads(row['disks_json'])
+                except Exception:
+                    partitions = []
+
+            physical_disks: List[Dict[str, Any]] = []
+            if row['physical_disks_json']:
+                try:
+                    physical_disks = json.loads(row['physical_disks_json'])
+                except Exception:
+                    physical_disks = []
+
+            return {
+                'id': row['id'],
+                'timestamp': row['timestamp'],
+                'created_at': row['created_at'],
+                'partitions': partitions,
+                'physical_disks': physical_disks,
+            }
 
     def get_snapshot_processes(self, snapshot_id: int) -> List[Dict[str, Any]]:
         """Извлекает список процессов, зафиксированных в конкретном снимке."""
@@ -2857,6 +2939,97 @@ class TelemetryStorage:
                 cursor.execute('SELECT * FROM device_events ORDER BY id DESC LIMIT ?', (limit,))
             return [dict(row) for row in cursor.fetchall()]
 
+    def get_device_install_date(self, device_instance_id: str) -> Optional[str]:
+        """Возвращает дату установки устройства из таблицы device_inventory.
+
+        Args:
+            device_instance_id: Идентификатор PnP устройства.
+
+        Returns:
+            Optional[str]: Дата установки устройства или None, если запись отсутствует.
+        """
+        norm_id = str(device_instance_id).strip().upper()
+        if not norm_id:
+            return None
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT install_date FROM device_inventory WHERE UPPER(device_instance_id) = ?',
+                (norm_id,)
+            )
+            row = cursor.fetchone()
+            return str(row[0]) if (row and row[0]) else None
+
+    def get_or_create_device_install_date(
+        self,
+        device_instance_id: str,
+        friendly_name: Optional[str] = None,
+        device_class: Optional[str] = None,
+        default_date: Optional[str] = None,
+    ) -> str:
+        """Получает существующую дату установки устройства из БД или сохраняет новую.
+
+        Логика:
+        а) Такое устройство уже есть в базе и у него есть дата -> пропускаем запись, возвращаем дату из БД.
+        б) Такое устройство есть в базе, но у него нет даты -> ставим текущую дату (или default_date) в записи в БД.
+        в) Такого устройства нет в БД -> записываем с текущей датой (или default_date).
+
+        Args:
+            device_instance_id: Идентификатор PnP устройства.
+            friendly_name: Человекочитаемое имя устройства.
+            device_class: Класс устройства.
+            default_date: Опциональная дата по умолчанию (если в БД запись отсутствует).
+
+        Returns:
+            str: Дата установки устройства.
+        """
+        norm_id = str(device_instance_id).strip().upper()
+        if not norm_id:
+            return default_date or datetime.now(timezone.utc).strftime('%d.%m.%Y %H:%M')
+
+        now_dt = datetime.now(timezone.utc)
+        now_epoch = now_dt.timestamp()
+        assigned_date = default_date or now_dt.strftime('%d.%m.%Y %H:%M')
+
+        with self._lock, self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT id, install_date FROM device_inventory WHERE UPPER(device_instance_id) = ?',
+                (norm_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                existing_date = row['install_date'] if isinstance(row, sqlite3.Row) else row[1]
+                if existing_date and str(existing_date).strip() and str(existing_date).lower() != 'none':
+                    # а) устройство уже есть в базе и у него есть дата - пропускаем запись
+                    return str(existing_date).strip()
+                # б) устройство есть в базе, но у него нет даты - ставим текущую дату в записи в БД
+                cursor.execute(
+                    '''
+                    UPDATE device_inventory
+                    SET install_date = ?,
+                        friendly_name = CASE WHEN ? != '' THEN ? ELSE friendly_name END,
+                        device_class = CASE WHEN ? != '' THEN ? ELSE device_class END,
+                        updated_at = ?
+                    WHERE UPPER(device_instance_id) = ?
+                    ''',
+                    (assigned_date, friendly_name or '', friendly_name or '', device_class or '', device_class or '', now_epoch, norm_id)
+                )
+                conn.commit()
+                return assigned_date
+            else:
+                # в) такого устройства нет в БД - записываем с текущей датой
+                cursor.execute(
+                    '''
+                    INSERT INTO device_inventory (
+                        device_instance_id, friendly_name, device_class, install_date, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                    ''',
+                    (norm_id, friendly_name or '', device_class or '', assigned_date, now_epoch, now_epoch)
+                )
+                conn.commit()
+                return assigned_date
+
     def get_w64_events(
         self,
         event_type: Optional[str] = None,
@@ -2978,6 +3151,8 @@ class TelemetryStorage:
             custom_count = cursor.fetchone()[0]
             cursor.execute('SELECT COUNT(*) FROM device_events;')
             device_events_count = cursor.fetchone()[0]
+            cursor.execute('SELECT COUNT(*) FROM device_inventory;')
+            device_inventory_count = cursor.fetchone()[0]
             cursor.execute('SELECT COUNT(*) FROM w64_events;')
             w64_events_count = cursor.fetchone()[0]
             cursor.execute('SELECT COUNT(*) FROM process_outliers;')
@@ -3014,6 +3189,7 @@ class TelemetryStorage:
                 'app_param_changes_count': app_params_count,
                 'custom_records_count': custom_count,
                 'device_events_count': device_events_count,
+                'device_inventory_count': device_inventory_count,
                 'w64_events_count': w64_events_count,
                 'file_size_mb': size_mb,
                 'wal_size_mb': wal_size_mb,
@@ -3590,3 +3766,232 @@ class TelemetryStorage:
         """
         audits = self.get_extended_audits(limit=1)
         return audits[0] if audits else None
+
+    # -------------------------------------------------------------------------
+    # Происхождение и жизненный цикл процессов (Process Provenance)
+    # -------------------------------------------------------------------------
+
+    def _prepare_process_provenance_row(self, event: Any) -> Tuple[Any, ...]:
+        """Подготовка кортежа значений для вставки события в таблицу process_provenance_events."""
+        now = datetime.now(timezone.utc)
+        created_at = now.timestamp()
+
+        if hasattr(event, "model_dump"):
+            d = event.model_dump()
+        elif isinstance(event, dict):
+            d = dict(event)
+        else:
+            d = getattr(event, "__dict__", {})
+
+        pid = int(d.get("pid") or 0)
+        ts = str(d.get("timestamp") or d.get("created_at") or now.isoformat())
+        event_id = str(d.get("event_id") or f"prov_{pid}_{int(created_at)}")
+        event_type = str(d.get("event_type") or "ProcessCreated")
+        ppid = int(d["ppid"]) if d.get("ppid") is not None else (int(d["parent_pid"]) if d.get("parent_pid") is not None else None)
+        process_guid = str(d.get("process_guid") or f"proc_{pid}_{int(created_at)}")
+        parent_guid = d.get("parent_guid")
+        name = str(d.get("name") or "unknown")
+        executable_path = d.get("executable_path")
+        command_line = d.get("command_line") or d.get("cmdline")
+        user = d.get("user") or d.get("username")
+        sid = d.get("sid")
+        session_id = int(d["session_id"]) if d.get("session_id") is not None else None
+        integrity_level = d.get("integrity_level")
+        elevation = 1 if d.get("elevation") in (True, 1, "Elevated") else (0 if d.get("elevation") in (False, 0, "Non-Elevated") else None)
+        parent_name = d.get("parent_name")
+        parent_cmdline = d.get("parent_cmdline")
+        ancestor_chain = d.get("ancestor_chain") or d.get("ancestor_chain_str")
+        if isinstance(ancestor_chain, list):
+            ancestor_chain = " → ".join(ancestor_chain)
+        launch_reason = d.get("launch_reason") or d.get("why_was_it_created")
+        source = str(d.get("source") or "system")
+        details = d.get("details") or d.get("raw_json")
+        details_json = json.dumps(details, ensure_ascii=False) if isinstance(details, (dict, list)) else (str(details) if details else None)
+
+        return (
+            event_id, ts, created_at, event_type,
+            pid, ppid, process_guid, parent_guid,
+            name, executable_path, command_line,
+            user, sid, session_id, integrity_level, elevation,
+            parent_name, parent_cmdline, ancestor_chain, launch_reason,
+            source, details_json
+        )
+
+    def save_process_provenance_event(self, event: Any) -> bool:
+        """Сохранение отдельного события жизненного цикла процесса в SQLite.
+
+        Args:
+            event: Экземпляр ProcessLifecycleEvent или словарь.
+
+        Returns:
+            bool: True при успешном сохранении.
+        """
+        row = self._prepare_process_provenance_row(event)
+        try:
+            with self._lock, self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    INSERT INTO process_provenance_events (
+                        event_id, timestamp, created_at, event_type,
+                        pid, ppid, process_guid, parent_guid,
+                        name, executable_path, command_line,
+                        user, sid, session_id, integrity_level, elevation,
+                        parent_name, parent_cmdline, ancestor_chain, launch_reason,
+                        source, details_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', row)
+                conn.commit()
+                return True
+        except Exception as ex:
+            logger.error(f'Ошибка сохранения события provenance в SQLite: {ex}')
+            return False
+
+    def save_process_provenance_batch(self, events: List[Any]) -> int:
+        """Пакетное сохранение событий жизненного цикла процессов в SQLite.
+
+        Args:
+            events: Список объектов ProcessLifecycleEvent или словарей.
+
+        Returns:
+            int: Количество успешно сохраненных записей.
+        """
+        if not events:
+            return 0
+        rows = [self._prepare_process_provenance_row(ev) for ev in events]
+        try:
+            with self._lock, self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.executemany('''
+                    INSERT INTO process_provenance_events (
+                        event_id, timestamp, created_at, event_type,
+                        pid, ppid, process_guid, parent_guid,
+                        name, executable_path, command_line,
+                        user, sid, session_id, integrity_level, elevation,
+                        parent_name, parent_cmdline, ancestor_chain, launch_reason,
+                        source, details_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', rows)
+                conn.commit()
+                return len(rows)
+        except Exception as ex:
+            logger.error(f'Ошибка пакетного сохранения событий provenance в SQLite: {ex}')
+            return 0
+
+    def get_process_provenance_history(
+        self,
+        guid: Optional[str] = None,
+        pid: Optional[int] = None,
+        name: Optional[str] = None,
+        user: Optional[str] = None,
+        event_type: Optional[str] = None,
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """Извлечение исторических событий жизненного цикла и происхождения процессов с фильтрацией.
+
+        Args:
+            guid: Фильтр по process_guid.
+            pid: Фильтр по PID.
+            name: Фильтр по имени процесса.
+            user: Фильтр по имени пользователя или SID.
+            event_type: Фильтр по типу события.
+            limit: Максимальное количество записей.
+
+        Returns:
+            List[Dict[str, Any]]: Список словарей с событиями provenance.
+        """
+        results: List[Dict[str, Any]] = []
+        query = 'SELECT * FROM process_provenance_events WHERE 1=1'
+        params: List[Any] = []
+
+        if guid:
+            query += ' AND process_guid = ?'
+            params.append(guid)
+        if pid is not None:
+            query += ' AND pid = ?'
+            params.append(pid)
+        if name:
+            query += ' AND name LIKE ?'
+            params.append(f'%{name}%')
+        if user:
+            query += ' AND (user LIKE ? OR sid LIKE ?)'
+            params.extend([f'%{user}%', f'%{user}%'])
+        if event_type:
+            query += ' AND event_type = ?'
+            params.append(event_type)
+
+        query += ' ORDER BY created_at DESC LIMIT ?'
+        params.append(limit)
+
+        try:
+            with self._lock, self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, tuple(params))
+                for row in cursor.fetchall():
+                    item = dict(row)
+                    if item.get('details_json'):
+                        try:
+                            item['details'] = json.loads(item['details_json'])
+                        except Exception:
+                            item['details'] = item['details_json']
+                    results.append(item)
+        except Exception as ex:
+            logger.error(f'Ошибка извлечения истории provenance процессов из БД: {ex}')
+        return results
+
+    def get_process_lineage(self, guid_or_pid: str) -> List[Dict[str, Any]]:
+        """Построение полной восходящей цепочки предков (lineage) процесса от корня к целевому.
+
+        Args:
+            guid_or_pid: Идентификатор process_guid или строка с PID.
+
+        Returns:
+            List[Dict[str, Any]]: Упорядоченный список предков от корневого процесса к целевому.
+        """
+        chain: List[Dict[str, Any]] = []
+        visited_guids: set = set()
+        visited_pids: set = set()
+
+        # 1. Поиск начального узла
+        current_node: Optional[Dict[str, Any]] = None
+        history = self.get_process_provenance_history(guid=guid_or_pid, limit=1)
+        if not history and guid_or_pid.isdigit():
+            history = self.get_process_provenance_history(pid=int(guid_or_pid), limit=1)
+
+        if history:
+            current_node = history[0]
+
+        # 2. Восхождение по родителям
+        while current_node:
+            node_guid = current_node.get('process_guid')
+            node_pid = current_node.get('pid')
+
+            if node_guid and node_guid in visited_guids:
+                break
+            if node_pid and node_pid in visited_pids:
+                break
+
+            if node_guid:
+                visited_guids.add(node_guid)
+            if node_pid:
+                visited_pids.add(node_pid)
+
+            chain.append(current_node)
+
+            parent_guid = current_node.get('parent_guid')
+            parent_pid = current_node.get('ppid') or current_node.get('parent_pid')
+
+            parent_node: Optional[Dict[str, Any]] = None
+            if parent_guid:
+                parent_hist = self.get_process_provenance_history(guid=parent_guid, limit=1)
+                if parent_hist:
+                    parent_node = parent_hist[0]
+
+            if not parent_node and parent_pid:
+                parent_hist = self.get_process_provenance_history(pid=int(parent_pid), limit=1)
+                if parent_hist:
+                    parent_node = parent_hist[0]
+
+            current_node = parent_node
+
+        chain.reverse()
+        return chain

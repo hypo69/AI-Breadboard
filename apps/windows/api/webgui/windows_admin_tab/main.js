@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/windows_admin_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 07:09:00
  * =============================================================================
  */
 
@@ -95,7 +95,7 @@
           if (u.is_logged_in) {
             statusBadge = '<span class="badge bg-success-subtle text-success border border-success">● В сети</span>';
           } else if (!u.enabled) {
-            statusBadge = '<span class="badge bg-dark text-muted">Отключен</span>';
+            statusBadge = '<span class="badge badge-disabled me-1">Отключен</span>';
           }
 
           // Ресурсы

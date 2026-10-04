@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 04:48:00
 # =============================================================================
 
 from __future__ import annotations
@@ -34,6 +34,34 @@ from typing import Any, Callable, Dict, List, Optional
 from logger import logger
 from .models import W64CollectorStatus, W64SystemEvent
 from .sqlite import TelemetryStorage
+
+_file_write_lock = threading.Lock()
+
+def _append_jsonl_safely(file_path: Path, data: Dict[str, Any], retries: int = 4, retry_delay: float = 0.05) -> bool:
+    """Безопасная запись JSONL строки с повторными попытками при блокировке файла.
+
+    Args:
+        file_path: Путь к целевому файлу JSONL.
+        data: Словарь с данными для сериализации в JSON.
+        retries: Количество попыток записи при ошибке доступа.
+        retry_delay: Задержка между попытками (сек).
+
+    Returns:
+        bool: True если запись успешна, иначе исключение.
+    """
+    line = json.dumps(data, ensure_ascii=False) + '\n'
+    for attempt in range(retries):
+        try:
+            with _file_write_lock:
+                with open(file_path, 'a', encoding='utf-8') as f:
+                    f.write(line)
+            return True
+        except (PermissionError, OSError) as ex:
+            if attempt < retries - 1:
+                time.sleep(retry_delay * (attempt + 1))
+            else:
+                raise ex
+    return False
 
 class AIW64Collector:
     """Максимально детальный сборщик событий Windows 64-bit для подсистемы телеметрии.
@@ -104,7 +132,7 @@ class AIW64Collector:
         self._event_counter = 0
         self._last_event_time: Optional[str] = None
         self._last_baseline: Dict[str, Any] = {}
-        logger.info(f'AIW64Collector инициализирован. Директория логов: {self.log_dir}')
+        logger.debug(f'AIW64Collector инициализирован. Директория логов: {self.log_dir}')
 
     def _get_log_file(self, event_type: str) -> Path:
         """Получить путь к файлу ротации лога для типа события.
@@ -135,10 +163,9 @@ class AIW64Collector:
         # 1. Запись в JSONL
         try:
             log_file = self._get_log_file(event_type)
-            with open(log_file, 'a', encoding='utf-8') as f:
-                f.write(json.dumps(event_data, ensure_ascii=False) + '\n')
+            _append_jsonl_safely(log_file, event_data)
         except Exception as ex:
-            logger.warning(f'Не удалось записать JSONL лог события {event_type}: {ex}')
+            logger.debug(f'Не удалось записать JSONL лог события {event_type}: {ex}')
 
         # 2. Сохранение в SQLite TelemetryStorage
         if self.storage:
@@ -153,8 +180,6 @@ class AIW64Collector:
                 self.on_event_callback(event_data)
             except Exception as ex:
                 logger.debug(f'Ошибка в on_event_callback: {ex}')
-
-        logger.debug(f"AIW64: {event_type} - {event_data.get('event_id')}")
 
     def start(self) -> bool:
         """Запустить фоновый поток мониторинга событий.

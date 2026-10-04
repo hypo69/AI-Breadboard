@@ -6,7 +6,7 @@
         "id": "system_inspector",
         "label": "Потребление ресурсов",
         "icon": "bi-graph-up-arrow",
-        "tab": "tab-system-load-inspector",
+        "tab": "tab-hardware-load-inspector",
         "order": 1,
         "visible": true
       },

@@ -13,8 +13,7 @@
  * Project: ai-breadboard
  * Package: src/api/webgui/css
  * Author: hypo69
- * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 00:43:00
+ * Updated: 2026-10-04 04:05:00
  * =============================================================================
  */
 
@@ -28,15 +27,16 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 .card {
   background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   color: var(--card-text);
-  transition: border-color 0.2s, background-color 0.2s;
-  border-radius: 6px;
+  transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
 }
 
 .card-header {
   background-color: var(--surface-2);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1.5px solid var(--border-color);
   color: var(--text-color);
   padding: 0.375rem 0.75rem;
   font-size: 0.85rem;
@@ -823,7 +823,7 @@
 /* ── 1. KPI & Метрические карточки ───────────────────────────────────────── */
 .ui-kpi-card {
   background: var(--kpi-bg, var(--surface-1)) !important;
-  border: 1px solid var(--kpi-border, var(--border-color)) !important;
+  border: 1.5px solid var(--kpi-border, var(--border-color)) !important;
   border-radius: var(--radius-md, 8px);
   padding: var(--kpi-padding, 0.65rem 0.9rem);
   min-height: var(--kpi-min-height, 72px);
@@ -832,12 +832,13 @@
   justify-content: space-between;
   height: 100%;
   box-sizing: border-box;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .ui-kpi-card:hover {
   border-color: var(--kpi-accent, var(--nav-active)) !important;
-  box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.15));
+  box-shadow: var(--shadow-sm, 0 3px 10px rgba(0, 0, 0, 0.25));
 }
 
 .ui-kpi-label {
@@ -1274,7 +1275,7 @@
 .sys-card {
   composes: ui-kpi-card;
   background: var(--kpi-bg, var(--surface-1)) !important;
-  border: 1px solid var(--kpi-border, var(--border-color)) !important;
+  border: 1.5px solid var(--kpi-border, var(--border-color)) !important;
   border-radius: var(--radius-md, 8px);
   padding: var(--kpi-padding, 0.65rem 0.9rem);
   min-height: var(--kpi-min-height, 72px);
@@ -1283,6 +1284,7 @@
   justify-content: space-between;
   height: 100%;
   box-sizing: border-box;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -1293,6 +1295,7 @@
 .winadmin-card:hover,
 .sys-card:hover {
   border-color: var(--kpi-accent, var(--nav-active)) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .about-sys-label,

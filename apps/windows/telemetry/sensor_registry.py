@@ -16,19 +16,12 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 07:00:00
 # =============================================================================
 
 from __future__ import annotations
 """Реестр сенсоров и политика дедупликации."""
 
-# -*- coding: utf-8 -*-
-# Updated: 2026-10-01 10:00:00
-"""Реестр сенсоров и политика дедупликации.
-
-Централизованный модуль для управления уникальностью sensor_id,
-приоритетами провайдеров и дедупликацией показаний сенсоров.
-"""
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional, Set, Tuple
@@ -36,21 +29,32 @@ from datetime import datetime, timezone
 
 
 class SensorProvider(Enum):
-    """Приоритеты провайдеров сенсоров (выше значение = выше приоритет).
+    """Приоритеты и категории провайдеров сенсоров.
     
     Приоритеты распределены так:
-    - Специализированные провайдеры (GPU_PROBER, WINDOWS_STORAGE) имеют высший приоритет для своих доменов
-    - Универсальные коллекторы (SENSOR_COLLECTOR) имеют средний приоритет
-    - Прямые вызовы утилит (NVIDIA_SMI_DIRECT) имеют низший приоритет (есть риск дублирования)
+    - INTERNET_SPEED (55): Выделенный speedtest
+    - CIM_SYSTEM (50): Основной современный нативный интерфейс Windows (CIM/MSFT)
+    - WINDOWS_STORAGE (45): WindowsStorageSensor (диски, SMART, температуры NVMe)
+    - GPU_PROBER (40): Прямой зонд GPU (NVIDIA/AMD/Intel)
+    - ACPI_THERMAL (35): Системные ACPI ThermalZones
+    - HARDWARE_MONITOR (35): Агрегатор аппаратных метрик
+    - SENSOR_COLLECTOR (30): Базовый коллектор системных метрик
+    - WMI_FALLBACK (30): WMI слой совместимости / fallback при недоступности CIM
+    - NETWORK_SENSOR (25): Сетевые интерфейсы psutil
+    - LHM_ENRICHED (20): Обогащение отсутствующими в CIM/WMI сенсорами из LibreHardwareMonitor
+    - NVIDIA_SMI_DIRECT (10): Прямой вызов утилит
     """
-    NVIDIA_SMI_DIRECT = 10      # Прямой вызов nvidia-smi в sensors.py (устарело, используется GPU_PROBER)
-    GPU_PROBER = 40             # GpuProber - приоритет для GPU метрик
-    ACPI_THERMAL = 20           # ACPI thermal zones через WMI
-    HARDWARE_MONITOR = 35       # HardwareMonitor (агрегатор, использует GpuProber)
-    SENSOR_COLLECTOR = 30       # SensorCollector.extract_sensor_readings() - агрегирует hardware_data
-    WINDOWS_STORAGE = 45        # WindowsStorageSensor (SMART, temps) - приоритет для storage
-    NETWORK_SENSOR = 25         # Network sensors через psutil
     INTERNET_SPEED = 55         # InternetSpeedSensor - приоритет для speedtest метрик
+    CIM_SYSTEM = 50             # Основной интерфейс CIM (PowerShell / CimSession)
+    WINDOWS_STORAGE = 45        # WindowsStorageSensor (SMART, temps) - приоритет для storage
+    GPU_PROBER = 40             # GpuProber - приоритет для GPU метрик
+    ACPI_THERMAL = 35           # ACPI thermal zones
+    HARDWARE_MONITOR = 35       # HardwareMonitor (агрегатор)
+    SENSOR_COLLECTOR = 30       # SensorCollector.extract_sensor_readings()
+    WMI_FALLBACK = 30           # WMI слой совместимости
+    NETWORK_SENSOR = 25         # Network sensors через psutil
+    LHM_ENRICHED = 20           # Обогащение детальными датчиками из LibreHardwareMonitor
+    NVIDIA_SMI_DIRECT = 10      # Прямой вызов nvidia-smi (legacy)
 
 
 @dataclass

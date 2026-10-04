@@ -911,3 +911,94 @@ tr:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* Gemini Evaluations Grid & Cards */
+.gemini-evals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.gemini-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.gemini-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-purple);
+}
+
+.gemini-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.gemini-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.gemini-verdict-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.gemini-verdict-normal {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.gemini-verdict-risk {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--accent-red);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.gemini-card-metrics {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.gemini-metric-tag {
+  background: var(--bg-base);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.gemini-card-analysis {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  background: rgba(15, 23, 42, 0.4);
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--accent-blue);
+}
+
+.gemini-card-recs {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding-left: 16px;
+  margin: 0;
+}
+

@@ -16,7 +16,7 @@
 # Package: tests.apps.windows
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-04 06:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -26,8 +26,8 @@ import time
 from unittest.mock import MagicMock, patch
 import pytest
 
-from apps.windows.storage.storage_usage import WindowsStorageUsageCollector, _format_bytes
-from apps.windows.storage.windows_storage_sensor import StorageDiskHealthInfo, WindowsStorageSensor
+from apps.windows.telemetry.storage_usage import WindowsStorageUsageCollector, _format_bytes
+from apps.windows.modules.storage_manager.core.windows_storage_sensor import StorageDiskHealthInfo, WindowsStorageSensor
 from apps.windows.telemetry.collector import SystemCollector
 from apps.windows.telemetry.models import AppDiskUsageItem, DiskUsagePeriodReport, PhysicalDiskHealth
 

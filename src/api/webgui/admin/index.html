@@ -14,7 +14,7 @@ Project: ai-breadboard
 Package: src/api/webgui/admin
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-01 13:13:56
+Updated: 2026-10-04 07:05:00
 =============================================================================
 -->
 
@@ -165,7 +165,7 @@ Updated: 2026-10-01 13:13:56
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-network" data-bs-target="#tab-network" type="button" data-i18n="tabs.network">
             🌐 Network Terminal
           </button>
-          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-system-load-inspector" data-bs-target="#tab-system-load-inspector" type="button" data-i18n="tabs.systemInspector">
+          <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-hardware-load-inspector" data-bs-target="#tab-hardware-load-inspector" type="button" data-i18n="tabs.systemInspector">
             🔍 System Inspector
           </button>
           <button class="dropdown-item d-flex align-items-center gap-2" data-tab="tab-chat" data-bs-target="#tab-chat" type="button" data-i18n="tabs.chat">
@@ -324,13 +324,6 @@ Updated: 2026-10-01 13:13:56
         </ul>
       </div>
 
-
-      <!-- Mode Switcher: Test Computer (/tc) -->
-      <a href="/tc" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1.5 px-2.5 py-1 rounded-pill shadow-sm" title="Перейти в режим Test Computer (/tc)">
-        <i class="bi bi-display"></i>
-        <span class="small fw-semibold">Test Computer</span>
-      </a>
-
       <!-- Quick Settings Gear Button -->
       <button class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center p-0 rounded-circle" id="user-settings-gear-btn" data-bs-toggle="modal" data-bs-target="#userSettingsModal" title="Настройки" style="width: 32px; height: 32px;" data-i18n-title="userSettings.title">
         <i class="bi bi-gear-fill"></i>
@@ -409,8 +402,8 @@ Updated: 2026-10-01 13:13:56
     <!-- Network Terminal Tab -->
     <div id="tab-network" class="tab-pane fade"></div>
 
-    <!-- System Load Inspector Tab -->
-    <div id="tab-system-load-inspector" class="tab-pane fade"></div>
+    <!-- Hardware Load Inspector Tab -->
+    <div id="tab-hardware-load-inspector" class="tab-pane fade"></div>
 
     <!-- About System Tab -->
     <div id="tab-about-system" class="tab-pane fade"></div>

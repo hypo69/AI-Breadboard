@@ -20,7 +20,7 @@
 ## Использование в коде
 
 ```python
-from apps.windows.storage_sensors.windows_storage_sensor import WindowsStorageSensor
+from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
 
 sensor = WindowsStorageSensor()
 disks = sensor.get_physical_disks()
@@ -33,5 +33,5 @@ for disk in disks:
 
 ## CLI
 ```powershell
-python apps/windows/storage_sensors/windows_storage_sensor.py --output storage_snapshot.json
+python -m apps.windows.modules.storage_manager.core.windows_storage_sensor --output storage_snapshot.json
 ```

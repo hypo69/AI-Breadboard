@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 06:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ except ImportError:
     PSUTIL_AVAILABLE = False
 
 from logger import logger
-from apps.windows.telemetry.windows_storage_sensor import WindowsStorageSensor
+from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
 from apps.windows.telemetry.models import (
     AppDiskUsageItem,
     DiskUsagePeriodReport,

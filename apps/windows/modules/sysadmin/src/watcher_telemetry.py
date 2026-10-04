@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.sysadmin.src
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 06:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -182,7 +182,7 @@ class FileWatcherTelemetryEngine:
         drive_models_list: List[str] = []
         drives_info: List[Dict[str, Any]] = []
         try:
-            from apps.windows.storage.windows_storage_sensor import WindowsStorageSensor
+            from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
             storage_sensor = WindowsStorageSensor(timeout_sec=5)
             disks = storage_sensor.get_physical_disks()
             for disk in disks:

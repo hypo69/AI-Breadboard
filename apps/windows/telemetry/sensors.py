@@ -16,12 +16,13 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 07:00:00
 # =============================================================================
 
 from __future__ import annotations
-"""Движок считывания показаний температурных датчиков, напряжений и вентиляторов."""
+"""Движок считывания показаний аппаратных сенсоров, сетевых метрик и скорости FAST.com."""
 
+import json
 import os
 import subprocess
 from typing import List, Optional
@@ -35,25 +36,54 @@ from .models import HardwareSensor
 from .internet_speed import InternetSpeedSensor
 from .sensor_registry import SensorProvider
 
-# NOTE: _probe_nvidia_gpu_sensors() removed - GPU metrics are collected via GpuProber
-# in hardware_monitor.py to avoid duplicate nvidia-smi calls.
-# GPU temperature, power, and fan sensors are now sourced from:
+# NOTE: GPU temperature, power, and fan sensors are sourced from:
 #   1. GpuProber._probe_nvidia() -> HardwareMonitor.get_gpu_metrics()
 #   2. sensor_collector.extract_sensor_readings() normalizes GpuMetrics to sensor_id format
 
-def _probe_wmi_thermal_zones() -> List[HardwareSensor]:
-    """Probe Windows ACPI thermal zones via WMI MSAcpi_ThermalZoneTemperature.
+def _probe_acpi_thermal_zones() -> List[HardwareSensor]:
+    """Сбор данных температурных зон Windows ACPI через CIM с fallback на WMI.
 
     Returns:
-        List[HardwareSensor]: Extracted ACPI thermal sensor readings with provider marker.
+        List[HardwareSensor]: Список показаний термальных зон ACPI.
     """
     sensors: List[HardwareSensor] = []
     if os.name != 'nt':
         return sensors
-    if not _WMI_AVAILABLE:
-        logger.debug('WMI module not available, skipping thermal zone probe')
-        return sensors
+
+    # 1. Первичный сбор через CIM (Get-CimInstance)
     try:
+        cmd = [
+            'powershell.exe', '-NoProfile', '-NonInteractive', '-Command',
+            'Get-CimInstance -Namespace root/wmi -ClassName MSAcpi_ThermalZoneTemperature -ErrorAction SilentlyContinue | '
+            'Select-Object InstanceName, CurrentTemperature | ConvertTo-Json -Compress'
+        ]
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+        if res.returncode == 0 and res.stdout.strip():
+            raw_data = json.loads(res.stdout.strip())
+            items = [raw_data] if isinstance(raw_data, dict) else (raw_data if isinstance(raw_data, list) else [])
+            for idx, zone in enumerate(items):
+                raw_temp = zone.get('CurrentTemperature')
+                if raw_temp and raw_temp > 0:
+                    celsius = round(float(raw_temp) / 10.0 - 273.15, 1)
+                    if -20.0 <= celsius <= 125.0:
+                        zone_name = zone.get('InstanceName') or f'Thermal Zone {idx}'
+                        sensor = HardwareSensor(
+                            sensor_id=f'acpi_thermal_{idx}',
+                            name=f'ACPI {zone_name}',
+                            category='temperature',
+                            value=celsius,
+                            unit='°C'
+                        )
+                        sensor.provider = SensorProvider.CIM_SYSTEM
+                        sensors.append(sensor)
+            if sensors:
+                return sensors
+    except Exception as ex:
+        logger.debug(f'CIM ACPI thermal probe skipped or error: {ex}')
+
+    # 2. Fallback / слой совместимости через WMI
+    try:
+        import wmi
         import pythoncom
         pythoncom.CoInitialize()
         w = wmi.WMI(namespace='root\\wmi')
@@ -70,11 +100,11 @@ def _probe_wmi_thermal_zones() -> List[HardwareSensor]:
                         value=celsius,
                         unit='°C'
                     )
-                    # Mark provider for deduplication
-                    sensor.provider = SensorProvider.ACPI_THERMAL
+                    sensor.provider = SensorProvider.WMI_FALLBACK
                     sensors.append(sensor)
     except Exception as ex:
-        logger.debug(f'WMI ACPI thermal probe skipped or unavailable: {ex}')
+        logger.debug(f'WMI ACPI thermal fallback probe skipped: {ex}')
+
     return sensors
 
 def _probe_network_sensors() -> List[HardwareSensor]:
@@ -126,33 +156,67 @@ def _probe_network_sensors() -> List[HardwareSensor]:
     return sensors
 
 def _probe_internet_speed_sensors() -> List[HardwareSensor]:
-    """Probe internet speed metrics.
+    """Собрать показания скорости интернета и характеристик сети FAST.com.
 
     Returns:
-        List[HardwareSensor]: Internet speed metrics as sensors with provider marker.
+        List[HardwareSensor]: Метрики скорости интернета и задержки с маркером провайдера.
     """
     sensors: List[HardwareSensor] = []
     try:
         sensor = InternetSpeedSensor()
         metrics = sensor.measure_internet_speed()
-        
-        s1 = HardwareSensor(sensor_id='internet_ping', name='Internet Ping', category='network', value=round(metrics.get('ping_ms', 0.0), 2), unit='ms')
+
+        s1 = HardwareSensor(
+            sensor_id='internet_ping',
+            name='Internet Ping',
+            category='network',
+            value=round(metrics.get('ping_ms', 0.0), 2),
+            unit='ms'
+        )
         s1.provider = SensorProvider.INTERNET_SPEED
         sensors.append(s1)
-        
-        s2 = HardwareSensor(sensor_id='internet_download', name='Internet Download Speed', category='network', value=round(metrics.get('download_mbps', 0.0), 2), unit='Mbps')
+
+        s2 = HardwareSensor(
+            sensor_id='internet_download',
+            name='Internet Download Speed',
+            category='network',
+            value=round(metrics.get('download_mbps', 0.0), 2),
+            unit='Mbps'
+        )
         s2.provider = SensorProvider.INTERNET_SPEED
         sensors.append(s2)
-        
-        s3 = HardwareSensor(sensor_id='internet_upload', name='Internet Upload Speed', category='network', value=round(metrics.get('upload_mbps', 0.0), 2), unit='Mbps')
+
+        s3 = HardwareSensor(
+            sensor_id='internet_upload',
+            name='Internet Upload Speed',
+            category='network',
+            value=round(metrics.get('upload_mbps', 0.0), 2),
+            unit='Mbps'
+        )
         s3.provider = SensorProvider.INTERNET_SPEED
         sensors.append(s3)
-        
-        s4 = HardwareSensor(sensor_id='internet_dns', name='DNS Resolution Time', category='network', value=round(metrics.get('dns_ms', 0.0), 2), unit='ms')
+
+        s4 = HardwareSensor(
+            sensor_id='internet_bufferbloat',
+            name='Internet Bufferbloat',
+            category='network',
+            value=round(metrics.get('bufferbloat_ms', 0.0), 2),
+            unit='ms'
+        )
         s4.provider = SensorProvider.INTERNET_SPEED
         sensors.append(s4)
+
+        s5 = HardwareSensor(
+            sensor_id='internet_latency_loaded',
+            name='Internet Loaded Latency',
+            category='network',
+            value=round(metrics.get('latency_loaded_ms', 0.0), 2),
+            unit='ms'
+        )
+        s5.provider = SensorProvider.INTERNET_SPEED
+        sensors.append(s5)
     except Exception as ex:
-        logger.debug(f'Internet speed sensor probe failed: {ex}')
+        logger.debug(f'Ошибка опроса сенсора скорости интернета: {ex}')
     return sensors
 
 def _probe_storage_sensors() -> List[HardwareSensor]:
@@ -164,7 +228,7 @@ def _probe_storage_sensors() -> List[HardwareSensor]:
     if os.name != 'nt':
         return sensors
     try:
-        from apps.windows.storage.windows_storage_sensor import WindowsStorageSensor
+        from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
         sensor = WindowsStorageSensor(timeout_sec=30)
         disks = sensor.get_physical_disks()
         for disk in disks:
@@ -248,7 +312,7 @@ def get_hardware_sensors() -> List[HardwareSensor]:
     """
     all_sensors: List[HardwareSensor] = []
     # GPU sensors excluded - collected via GpuProber to avoid duplicate nvidia-smi calls
-    all_sensors.extend(_probe_wmi_thermal_zones())
+    all_sensors.extend(_probe_acpi_thermal_zones())
     all_sensors.extend(_probe_storage_sensors())
     all_sensors.extend(_probe_cloud_storage_sensors())
     all_sensors.extend(_probe_network_sensors())

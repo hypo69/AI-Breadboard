@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 16:21:00
+# Updated: 2026-10-04 08:35:00
 # =============================================================================
 
 from __future__ import annotations
@@ -270,7 +270,17 @@ AVAILABLE_SCENARIOS: List[Dict[str, Any]] = [
         "recommended": False,
         "estimated_duration_sec": 5,
     },
+    {
+        "id": "disk_benchmark_audit",
+        "title": "Экспресс-тест скорости всех накопителей (DiskSpd)",
+        "description": "Быстрое измерение скорости последовательного и случайного чтения/записи на всех дисках с фиксацией в телеметрии.",
+        "category": "diagnostics",
+        "icon": "⚡",
+        "recommended": True,
+        "estimated_duration_sec": 3,
+    },
 ]
+
 
 
 # -----------------------------------------------------------------------------
@@ -402,7 +412,7 @@ async def _run_quick_check_scenario() -> ScenarioRunResult:
     # Шаг 5: Проверка активных микроприложений (/apps)
     step5_start = time.perf_counter()
     try:
-        from src.api.router_admin import get_apps_status
+        from src.api.routers.core.router_admin import get_apps_status
         apps_status = get_apps_status()
         enabled_apps = [app_id for app_id, app in apps_status.get("apps", {}).items() if app.get("enabled")]
         step5_dur = (time.perf_counter() - step5_start) * 1000
@@ -1277,6 +1287,57 @@ async def _handle_scenario_chat(req: ScenarioChatRequest) -> ScenarioChatRespons
     )
 
 
+async def _execute_disk_benchmark_telemetry_step() -> ScenarioStepResult:
+    """Выполняет экспресс-бенчмарк всех накопителей через StorageBenchmarkSensor и фиксирует телеметрию."""
+    t0 = time.perf_counter()
+    try:
+        from apps.windows.modules.storage_manager.core.benchmark_sensor import get_storage_benchmark_sensor
+        sensor = get_storage_benchmark_sensor()
+        report = await asyncio.to_thread(sensor.run_quick_benchmark, None, 16, 1)
+        dur_ms = (time.perf_counter() - t0) * 1000
+        summary = report.get("summary", "Бенчмарк дисков завершен")
+        drives_count = report.get("drives_count", 0)
+        return ScenarioStepResult(
+            name="Телеметрия дисков: Экспресс-бенчмарк (DiskSpd)",
+            status="ok" if drives_count > 0 else "warn",
+            duration_ms=round(dur_ms, 2),
+            details=f"Протестировано накопителей ({drives_count}): {summary}",
+            data=report,
+        )
+    except Exception as exc:
+        dur_ms = (time.perf_counter() - t0) * 1000
+        logger.warning(f"[router_scenarios] Ошибка телеметрии бенчмарка дисков: {exc}")
+        return ScenarioStepResult(
+            name="Телеметрия дисков: Экспресс-бенчмарк (DiskSpd)",
+            status="warn",
+            duration_ms=round(dur_ms, 2),
+            details=f"Предупреждение при бенчмарке дисков: {exc}",
+            recommendation="Проверьте доступность diskspd.exe и свободное место на дисках.",
+        )
+
+
+async def _run_disk_benchmark_scenario() -> ScenarioRunResult:
+    """Сценарий автономного экспресс-тестирования всех накопителей."""
+    t0 = time.perf_counter()
+    s_at = datetime.now(timezone.utc).isoformat()
+    step = await _execute_disk_benchmark_telemetry_step()
+    dur_ms = (time.perf_counter() - t0) * 1000
+
+    return ScenarioRunResult(
+        scenario_id="disk_benchmark_audit",
+        title="Экспресс-тест скорости всех накопителей (DiskSpd)",
+        status=step.status,
+        started_at=s_at,
+        duration_ms=round(dur_ms, 2),
+        total_steps=1,
+        passed_steps=1 if step.status == "ok" else 0,
+        warn_steps=1 if step.status == "warn" else 0,
+        failed_steps=1 if step.status == "error" else 0,
+        steps=[step],
+        summary=f"Экспресс-бенчмарк накопителей завершен: {step.details}",
+    )
+
+
 # -----------------------------------------------------------------------------
 # Router Initialization
 # -----------------------------------------------------------------------------
@@ -1300,19 +1361,21 @@ def init_router() -> APIRouter:
         scenario_id = req.scenario_id.lower().strip()
 
         if scenario_id in ("safe_update_guard", "update_guard", "update", "pre_update"):
-            return await _run_safe_update_guard_scenario()
+            res = await _run_safe_update_guard_scenario()
         elif scenario_id == "quick_check":
-            return await _run_quick_check_scenario()
+            res = await _run_quick_check_scenario()
         elif scenario_id in ("log_audit", "logs_audit", "logs"):
-            return await _run_log_audit_scenario()
+            res = await _run_log_audit_scenario()
         elif scenario_id in ("system_inspector", "system", "hardware"):
-            return await _run_system_inspector_scenario()
+            res = await _run_system_inspector_scenario()
         elif scenario_id in ("windows_admin", "windows", "security"):
-            return await _run_windows_admin_scenario()
+            res = await _run_windows_admin_scenario()
         elif scenario_id in ("network_test", "network"):
-            return await _run_network_test_scenario()
+            res = await _run_network_test_scenario()
         elif scenario_id in ("ai_providers_check", "ai"):
-            return await _run_ai_providers_scenario()
+            res = await _run_ai_providers_scenario()
+        elif scenario_id in ("disk_benchmark_audit", "disk_benchmark", "disk_speed", "disks"):
+            return await _run_disk_benchmark_scenario()
         elif scenario_id == "all":
             # Выполняем объединенный прогон всех сценариев
             t0 = time.perf_counter()
@@ -1326,10 +1389,11 @@ def init_router() -> APIRouter:
                 _run_windows_admin_scenario,
                 _run_network_test_scenario,
                 _run_ai_providers_scenario,
+                _run_disk_benchmark_scenario,
             ]:
                 try:
-                    res = await runner()
-                    all_steps.extend(res.steps)
+                    res_inner = await runner()
+                    all_steps.extend(res_inner.steps)
                 except Exception as ex:
                     all_steps.append(ScenarioStepResult(
                         name=f"Сценарий {runner.__name__}",
@@ -1358,6 +1422,21 @@ def init_router() -> APIRouter:
             )
         else:
             raise HTTPException(status_code=400, detail=f"Неизвестный идентификатор сценария: '{req.scenario_id}'")
+
+        # При каждом запуске любого сценария выполняем экспресс-бенчмарк всех дисков и сохраняем телеметрию
+        disk_step = await _execute_disk_benchmark_telemetry_step()
+        res.steps.append(disk_step)
+        res.total_steps = len(res.steps)
+        if disk_step.status == "ok":
+            res.passed_steps += 1
+        elif disk_step.status == "warn":
+            res.warn_steps += 1
+        elif disk_step.status == "error":
+            res.failed_steps += 1
+            res.status = "error"
+        res.duration_ms = round(res.duration_ms + disk_step.duration_ms, 2)
+        return res
+
 
     @router.post("/chat", response_model=ScenarioChatResponse)
     async def chat_scenario_assistant(req: ScenarioChatRequest) -> ScenarioChatResponse:

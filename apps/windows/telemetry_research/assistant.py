@@ -16,11 +16,11 @@
 # Package: apps.windows.telemetry_research
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 07:48:00
 # =============================================================================
 
 from __future__ import annotations
-"""Интеллектуальный AI-ассистент анализа системной телеметрии и построения графиков."""
+"""Интеллектуальный AI-ассистент анализа системной телеметрии, ресурсов программ клиента и построения графиков."""
 
 import asyncio
 import json
@@ -33,6 +33,7 @@ except ImportError:
     logger = logging.getLogger(__name__)
 
 from .query_engine import TelemetryQueryEngine
+from .client_resource_analyzer import ClientResourceAnalyzer
 
 try:
     from src.ai.orchestration.unified_chat import UnifiedChatModel
@@ -53,15 +54,20 @@ class TelemetryAssistant:
         self,
         query_engine: Optional[TelemetryQueryEngine] = None,
         chat_model: Optional[Any] = None,
+        client_analyzer: Optional[ClientResourceAnalyzer] = None,
     ) -> None:
         """Инициализация ассистента.
 
         Args:
             query_engine: Экземпляр движка запросов telemetry.db.
             chat_model: Модель чата (по умолчанию UnifiedChatModel).
+            client_analyzer: Анализатор ресурсов программ клиента.
         """
         self.query_engine = query_engine or TelemetryQueryEngine()
         self._chat_model = chat_model
+        self.client_analyzer = client_analyzer or ClientResourceAnalyzer(
+            query_engine=self.query_engine, chat_model=self._chat_model
+        )
 
     @property
     def chat_model(self) -> Any:
@@ -69,6 +75,8 @@ class TelemetryAssistant:
         if self._chat_model is None and UnifiedChatModel is not None:
             try:
                 self._chat_model = UnifiedChatModel(system_instruction=self.SYSTEM_INSTRUCTION)
+                if self.client_analyzer and self.client_analyzer._chat_model is None:
+                    self.client_analyzer._chat_model = self._chat_model
             except Exception as ex:
                 logger.warning(f"Не удалось инициализировать UnifiedChatModel: {ex}")
                 self._chat_model = None
@@ -92,24 +100,34 @@ class TelemetryAssistant:
         """
         msg_lower = user_message.strip().lower()
 
-        # 1. Распознавание интента: График загрузки ЦПУ по времени
+        # 1. Распознавание интента: Ресурсы клиентских программ и оценка Gemini
+        if self._is_client_resources_query(msg_lower):
+            return await self._handle_client_resources_query(user_message, source_path)
+
+        # 2. Распознавание интента: График загрузки ЦПУ по времени
         if self._is_cpu_timeline_query(msg_lower):
             return await self._handle_cpu_timeline_query(user_message, source_path)
 
-        # 2. Распознавание интента: Потребление энергии и суточная круговая диаграмма
+        # 3. Распознавание интента: Потребление энергии и суточная круговая диаграмма
         if self._is_power_query(msg_lower):
             return await self._handle_power_consumption_query(user_message, source_path)
 
-        # 3. Распознавание интента: Топ процессов
+        # 4. Распознавание интента: Топ процессов
         if self._is_top_processes_query(msg_lower):
             return await self._handle_top_processes_query(user_message, source_path)
 
-        # 4. Произвольный SELECT SQL запрос от пользователя
+        # 5. Произвольный SELECT SQL запрос от пользователя
         if msg_lower.startswith("select ") or msg_lower.startswith("with "):
             return self._handle_direct_sql_query(user_message, source_path)
 
-        # 5. Общий аналитический запрос с обращением к LLM
+        # 6. Общий аналитический запрос с обращением к LLM
         return await self._handle_general_ai_query(user_message, source_path, history)
+
+    def _is_client_resources_query(self, msg: str) -> bool:
+        """Проверить, относится ли запрос к ресурсам программ клиента или оценке Gemini."""
+        has_prog = any(w in msg for w in ["программ", "приложен", "софт", "клиент", "пользовател", "запущенн"])
+        has_res = any(w in msg for w in ["мест", "ресурс", "занимает", "жрет", "памят", "диск", "объем", "тяжел", "неизвестн", "gemini", "нормальн"])
+        return (has_prog and has_res) or ("сколько места" in msg) or ("неизвестная программа" in msg)
 
     def _is_cpu_timeline_query(self, msg: str) -> bool:
         """Проверить, относится ли запрос к графику ЦП по времени."""
@@ -332,6 +350,103 @@ class TelemetryAssistant:
             "quick_followups": [
                 "Покажи график загрузки ЦПУ по времени",
                 "Посчитай суточное потребление энергии (круговая диаграмма)",
+            ],
+        }
+
+    async def _handle_client_resources_query(
+        self, user_message: str, source_path: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Сформировать подробный отчет по ресурсам программ клиента и оценке неизвестных процессов в Gemini."""
+        summary = await self.client_analyzer.analyze_client_resources(
+            db_path=source_path, ask_gemini_for_unknown=True, limit=20
+        )
+        progs = summary.programs
+
+        if not progs:
+            return {
+                "status": "ok",
+                "reply": "🔍 В текущей телеметрии не обнаружено активных программ, запущенных клиентом.",
+                "chart": None,
+                "sql_queries": [],
+                "metrics_summary": {"total_programs": 0},
+                "quick_followups": ["Покажи график загрузки ЦПУ по времени"],
+            }
+
+        # Таблица распределения ресурсов
+        rows_md = []
+        for idx, p in enumerate(progs[:12], 1):
+            disk_str = f"{p.disk_size_mb} MB" if p.disk_size_mb else "N/A"
+            status_badge = "✅ Известная" if p.is_known_software else ("⚠️ Неизвестная (Heavy)" if p.is_resource_heavy else "ℹ️ Неизвестная")
+            rows_md.append(
+                f"| {idx} | **{p.display_name or p.name}** | `{p.name}` | {p.cpu_percent}% | {p.memory_mb} MB | {disk_str} | {status_badge} |"
+            )
+        table_md = "\n".join(rows_md)
+
+        explanation = (
+            f"### 💻 Ресурсы программ, запущенных клиентом\n\n"
+            f"Проведен детальный аудит запущенного клиентского ПО и занимаемых ресурсов (память RAM, нагрузка CPU, файлы на диске):\n\n"
+            f"- 📊 **Всего клиентских программ:** `{summary.total_client_programs}`\n"
+            f"- 🧠 **Суммарно занято памяти RAM:** **`{summary.total_ram_mb} MB`** (~`{round(summary.total_ram_mb / 1024, 2)} GB`)\n"
+            f"- ⚡ **Суммарная нагрузка на ЦП:** **`{summary.total_cpu_percent}%`**\n"
+            f"- 📁 **Общий объем файлов на диске:** `{summary.total_disk_size_mb} MB`\n"
+            f"- 🚨 **Неизвестных ресурсоемких программ:** **`{summary.unknown_heavy_programs_count}`**\n\n"
+            f"#### 📋 Детализация по программам:\n\n"
+            f"| № | Программа | Процесс | CPU (%) | RAM (MB) | Диск (файл) | Статус |\n"
+            f"| :- | :--- | :--- | :--- | :--- | :--- | :--- |\n"
+            f"{table_md}\n\n"
+        )
+
+        # Вывод оценок от Gemini для неизвестных тяжелых программ
+        if summary.evaluations:
+            explanation += "### 🤖 Экспертное заключение модели Gemini по неизвестным ресурсоемким программам:\n\n"
+            for ev in summary.evaluations:
+                norm_icon = "✅ Штатно" if ev.is_normal else "🚨 Аномалия / Риск"
+                explanation += (
+                    f"#### 🔎 Программа: `{ev.program_name}` (PID: {ev.pid})\n"
+                    f"- **Вердикт Gemini:** **{ev.verdict}** ({norm_icon}, Риск: `{ev.risk_level.upper()}`)\n"
+                    f"- **Потребление ресурсов:** CPU `{ev.cpu_percent}%`, RAM `{ev.memory_mb} MB`, Диск `{ev.disk_io_mb_s} MB/s`\n"
+                    f"- **Путь запуска:** `{ev.executable_path or 'N/A'}`\n"
+                    f"- **Анализ:** {ev.analysis}\n"
+                )
+                if ev.recommendations:
+                    recs_str = "\n".join([f"  * {r}" for r in ev.recommendations])
+                    explanation += f"- **Рекомендации:**\n{recs_str}\n\n"
+        else:
+            explanation += "✅ **Все ресурсоемкие программы классифицированы как известные и доверенные.** Аномальных неизвестных процессов не обнаружено.\n"
+
+        # Chart configuration for top client programs RAM & CPU
+        chart_labels = [p.display_name or p.name for p in progs[:8]]
+        chart_ram = [p.memory_mb for p in progs[:8]]
+        chart = {
+            "type": "bar",
+            "title": "Потребление оперативной памяти RAM клиентскими программами (МБ)",
+            "labels": chart_labels,
+            "datasets": [
+                {
+                    "label": "Память RAM (МБ)",
+                    "data": chart_ram,
+                    "backgroundColor": "rgba(99, 102, 241, 0.7)",
+                    "borderColor": "#6366f1",
+                    "borderWidth": 1,
+                }
+            ],
+        }
+
+        return {
+            "status": "ok",
+            "reply": explanation,
+            "chart": chart,
+            "sql_queries": [],
+            "metrics_summary": {
+                "total_client_programs": summary.total_client_programs,
+                "total_ram_mb": f"{summary.total_ram_mb} MB",
+                "total_cpu_percent": f"{summary.total_cpu_percent}%",
+                "unknown_heavy_count": summary.unknown_heavy_programs_count,
+            },
+            "quick_followups": [
+                "Покажи график загрузки ЦПУ по времени",
+                "Посчитай суточное потребление энергии (круговая диаграмма)",
+                "Топ процессов по нагрузке на ЦП",
             ],
         }
 

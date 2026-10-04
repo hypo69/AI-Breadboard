@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-04 02:31:35
 # =============================================================================
 
 """Скрипт/модуль системы AI-Breadboard (`test_ai_diagnostics`)."""
@@ -26,7 +26,7 @@ import asyncio
 from unittest.mock import AsyncMock
 from apps.windows.telemetry.models import SystemSnapshot, CpuMetrics, MemoryMetrics, PhysicalDiskHealth
 from apps.trading_terminal.engine import TradingDeskEngine
-from apps.windows.telemetry.diagnostic_engine import SystemDiagnosticEngine
+from apps.windows.telemetry_research.diagnostic_engine import SystemDiagnosticEngine
 from apps.windows.telemetry.grouped_telemetry import GroupedTelemetryBuilder
 
 

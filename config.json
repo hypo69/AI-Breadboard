@@ -49,14 +49,12 @@
             "windows_startup_auditor",
             "windows_backup_manager",
             "windows_defender",
-            "autolog_manager",
             "software_transparency_scanner",
             "telemetry_research",
             "windows_system_checkpoints"
         ],
         "disabled": [
             "trading_terminal",
-            "autolog_manager",
             "helpdesk"
         ]
     },

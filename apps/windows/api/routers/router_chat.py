@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 01:10:00
+# Updated: 2026-10-04 07:47:30
 # =============================================================================
 
 """Handles AI conversational endpoints, streaming responses across multiple providers,"""
@@ -256,7 +256,7 @@ async def _extract_user_auth(fastapi_req: Request) -> tuple[str, str, str, dict]
     settings = {}
 
     try:
-        from src.api.router_auth import get_current_user_optional
+        from src.api.routers.core.router_auth import get_current_user_optional
         user_data = get_current_user_optional(fastapi_req) if fastapi_req is not None else None
 
         from src.user_manager import user_manager
@@ -1156,7 +1156,7 @@ def init_router(chat_model, narrator_model, plugins: dict = {}) -> APIRouter:
                     return
 
                 token = request.cookies.get('auth_token') if request else None
-                from src.api.router_control import get_room_id
+                from src.api.routers.core.router_control import get_room_id
                 room_id = get_room_id(token, None)
 
                 if chat_req.generation_config.get('model'):

@@ -6,7 +6,7 @@
         "id": "system_inspector",
         "label": "Потребление ресурсов",
         "icon": "bi-graph-up-arrow",
-        "tab": "tab-system-load-inspector",
+        "tab": "tab-hardware-load-inspector",
         "order": 1,
         "visible": true
       },
@@ -204,14 +204,6 @@
         "visible": true
       },
       {
-        "id": "autolog_manager",
-        "label": "Управление логами",
-        "icon": "📝",
-        "tab": "tab-autolog",
-        "order": 14,
-        "visible": true
-      },
-      {
         "id": "telemetry_history",
         "label": "Визуализация истории",
         "icon": "📈",
@@ -313,10 +305,19 @@
         "tab": "tab-mcp",
         "order": 23,
         "visible": true
+      },
+      {
+        "id": "disk_speed",
+        "label": "Скорость дисков (DiskSpd)",
+        "icon": "⚡",
+        "tab": "tab-disk-speed",
+        "order": 24,
+        "visible": true
       }
     ]
   },
   "settings": {
+
     "showTopButtons": true,
     "showSidebar": true,
     "defaultTab": "tab-about-system",

@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry_research
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 07:47:00
 # =============================================================================
 
 from __future__ import annotations
@@ -529,3 +529,43 @@ class TelemetryQueryEngine:
             return {"status": "ok", "tables": schema}
         except Exception as ex:
             return {"status": "error", "message": str(ex)}
+
+    def get_client_processes_data(
+        self, db_path: Optional[Union[str, Path]] = None, limit: int = 50
+    ) -> Dict[str, Any]:
+        """Получить данные о ресурсах клиентских процессов из SQLite.
+
+        Args:
+            db_path: Путь к файлу базы данных telemetry.db.
+            limit: Максимальное число процессов.
+
+        Returns:
+            Dict[str, Any]: Словарь с процессами, SQL-запросом и статусом.
+        """
+        target_db = self.get_db_path(db_path)
+        if not target_db:
+            return {"status": "error", "message": "telemetry.db не найдена", "processes": []}
+
+        sql = """
+            SELECT pid, name, cpu_percent, memory_mb, memory_percent,
+                   num_threads, num_handles, username, read_bytes_sec, write_bytes_sec,
+                   executable as executable_path, cmdline as command_line
+            FROM process_snapshots
+            WHERE id IN (
+                SELECT MAX(id) FROM process_snapshots GROUP BY pid
+            )
+            ORDER BY cpu_percent DESC, memory_mb DESC
+            LIMIT ?
+        """
+        try:
+            conn = sqlite3.connect(str(target_db), timeout=5.0)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute(sql, (limit,))
+            rows = [dict(r) for r in cursor.fetchall()]
+            conn.close()
+            return {"status": "ok", "processes": rows, "count": len(rows), "sql": sql.strip()}
+        except Exception as ex:
+            logger.error(f"Ошибка выборки клиентских процессов: {ex}")
+            return {"status": "error", "message": str(ex), "processes": [], "sql": sql.strip()}
+

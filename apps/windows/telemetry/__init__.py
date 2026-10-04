@@ -13,7 +13,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 01:45:00
+# Updated: 2026-10-04 07:28:00
 # =============================================================================
 
 """Exports core system metrics models, sensor probers, and telemetry collectors."""
@@ -60,12 +60,12 @@ from .sensors import get_hardware_sensors
 from .sqlite import TelemetryStorage
 from .collector import SystemCollector
 from .service import TelemetryLoggerService
-from .telemetry_config import TelemetryConfigManager
+from .telemetry_config import TelemetryConfigManager, get_default_telemetry_config_path
 from .json_logger import TelemetryJsonLogger
 from .file_collector import FileCollector
 from .sensor_collector import SensorCollector
 from .device_flapping_sensor import DeviceFlappingSensor, DeviceTransitionEvent
-from .windows_storage_sensor import (
+from apps.windows.modules.storage_manager.core.windows_storage_sensor import (
     StorageDiskHealthInfo,
     WindowsStorageSensor,
     collect_storage_snapshot,
@@ -156,6 +156,7 @@ __all__ = [
     "ETWTraceEvent",
     "init_telemetry_database",
     "get_default_telemetry_db_path",
+    "get_default_telemetry_config_path",
 ]
 
 

@@ -81,12 +81,6 @@
       "description": "Сценарии автоматизации (/api/scenarios/*)"
     },
     {
-      "module": "apps.windows.api.routers.router_autolog",
-      "factory": "init_router",
-      "enabled": true,
-      "description": "Автологирование (/api/autolog/*)"
-    },
-    {
       "module": "apps.windows.api.routers.router_diagnostics",
       "factory": "init_router",
       "enabled": true,
@@ -105,11 +99,48 @@
       "description": "Загрузка и температура ядер CPU (/api/v1/panel/cpu-load)"
     },
     {
+      "module": "apps.windows.api.routers.router_gpu_load",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Загрузка и температура GPU (/api/v1/panel/gpu-load)"
+    },
+    {
+      "module": "apps.windows.api.routers.router_memory_io",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Память и дисковый ввод-вывод (/api/v1/panel/memory-io)"
+    },
+    {
+      "module": "apps.windows.api.routers.router_storage_load",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Параметры накопителей и дисков (/api/v1/panel/storage-load)"
+    },
+    {
+      "module": "apps.windows.api.routers.router_hardware_sensors",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Табло сенсоров оборудования (/api/v1/panel/hardware-sensors)"
+    },
+    {
+      "module": "apps.windows.api.routers.router_network_load",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Нагрузка сети, Wi-Fi и Bluetooth (/api/v1/panel/network-load)"
+    },
+    {
       "module": "apps.windows.api.routers.router_system",
       "factory": "init_router",
       "enabled": true,
       "inject_models": true,
       "description": "Системный инспектор и телеметрия (/api/v1/system/*)"
+    },
+    {
+      "module": "apps.windows.modules.storage_manager.router",
+      "factory": "init_router",
+      "enabled": true,
+      "description": "Менеджер хранилища и бенчмарк DiskSpd (/api/v1/storage/*, /api/storage-manager/*)"
     }
   ]
 }
+

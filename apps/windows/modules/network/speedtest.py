@@ -4,7 +4,7 @@
 # =============================================================================
 # Description:
 #   Движок измерения скорости и качества интернет-соединения для Network Terminal.
-#   Основной провайдер - FAST.com (Netflix CDN), резервный - Cloudflare.
+#   Провайдер - FAST.com (Netflix CDN).
 #   Измеряет download/upload Mbps, unloaded/loaded latency и bufferbloat.
 #
 # Usage Examples:
@@ -20,7 +20,7 @@
 # Package: apps.windows.modules.network
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 00:55:00
+# Updated: 2026-10-04 04:55:00
 # =============================================================================
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ _GRADES = [
 
 
 class NetworkSpeedTester:
-    """Измеритель скорости, latency под нагрузкой и bufferbloat.
+    """Измеритель скорости, latency под нагрузкой и bufferbloat через FAST.com (Netflix CDN).
 
     Args:
         duration_s (float): Длительность фазы download и upload (сек).
@@ -59,8 +59,12 @@ class NetworkSpeedTester:
         connections (int): Число параллельных соединений нагрузки.
         probe_interval_s (float): Интервал между latency-пробами (сек).
     """
-    PING_TARGETS = [{'name': 'Cloudflare DNS', 'host': '1.1.1.1', 'url': 'https://1.1.1.1/cdn-cgi/trace'}, {'name': 'Google Public DNS', 'host': '8.8.8.8', 'url': 'https://dns.google/resolve?name=example.com'}, {'name': 'Quad9 DNS', 'host': '9.9.9.9', 'url': 'https://dns.quad9.net/dns-query?name=example.com'}, {'name': 'OpenDNS', 'host': '208.67.222.222', 'url': 'https://doh.opendns.com/dns-query?name=example.com'}]
-    CLOUDFLARE_TARGET = {'name': 'Cloudflare', 'location': '', 'down_url': 'https://speed.cloudflare.com/__down?bytes=25000000', 'up_url': 'https://speed.cloudflare.com/__up', 'latency_url': 'https://speed.cloudflare.com/__down?bytes=0'}
+    PING_TARGETS = [
+        {'name': 'Cloudflare DNS', 'host': '1.1.1.1', 'url': 'https://1.1.1.1/cdn-cgi/trace'},
+        {'name': 'Google Public DNS', 'host': '8.8.8.8', 'url': 'https://dns.google/resolve?name=example.com'},
+        {'name': 'Quad9 DNS', 'host': '9.9.9.9', 'url': 'https://dns.quad9.net/dns-query?name=example.com'},
+        {'name': 'OpenDNS', 'host': '208.67.222.222', 'url': 'https://doh.opendns.com/dns-query?name=example.com'}
+    ]
 
     def __init__(self, duration_s: float = 8.0, warmup_s: float = 1.5, connections: int = 4, probe_interval_s: float = 0.2) -> None:
         """Инициализация тестера с CSV-логгером."""
@@ -72,7 +76,7 @@ class NetworkSpeedTester:
 
     # ------------------------------------------------------------------ meta
     async def get_meta_info(self, client: httpx.AsyncClient) -> Dict[str, Any]:
-        """Получить информацию о внешнем IP, провайдере и локации (Cloudflare).
+        """Получить информацию о внешнем IP, провайдере и локации клиента из FAST.com API.
 
         Args:
             client (httpx.AsyncClient): HTTP клиент.
@@ -80,13 +84,17 @@ class NetworkSpeedTester:
         Returns:
             Dict[str, Any]: Метаданные соединения.
         """
-        try:
-            resp = await client.get('https://speed.cloudflare.com/meta', timeout=5.0)
-            if resp.status_code == 200:
-                data = resp.json()
-                return {'ip': data.get('clientIp', 'N/A'), 'isp': data.get('asOrganization', data.get('isp', 'Unknown ISP')), 'asn': data.get('asn', 'N/A'), 'city': data.get('city', ''), 'country': data.get('country', ''), 'colo': data.get('colo', '')}
-        except Exception as ex:
-            logger.debug(f'Не удалось получить метаданные Cloudflare: {ex}')
+        fast = await self.resolve_fast_target(client)
+        if fast and fast.get('client'):
+            loc = fast['client'].get('location') or {}
+            return {
+                'ip': fast['client'].get('ip', 'Local/Private'),
+                'isp': fast['client'].get('isp', 'Unknown ISP'),
+                'asn': fast['client'].get('asn', 'N/A'),
+                'city': loc.get('city', ''),
+                'country': loc.get('country', ''),
+                'colo': '',
+            }
         return {'ip': 'Local/Private', 'isp': 'Unknown', 'asn': 'N/A', 'city': '', 'country': '', 'colo': ''}
 
     async def measure_ping_servers(self, client: httpx.AsyncClient) -> List[Dict[str, Any]]:
@@ -113,9 +121,9 @@ class NetworkSpeedTester:
             client (httpx.AsyncClient): HTTP клиент.
 
         Returns:
-            Optional[Dict[str, Any]]: Описание цели (ключи ``down_url``, ``up_url``,
-            ``latency_url``, ``name``, ``location``, ``client``, ``servers``)
-            или ``None``, если FAST.com недоступен (вызывающий код использует fallback).
+            Optional[Dict[str, Any]]: Описание цели FAST.com (ключи ``down_url``,
+            ``up_url``, ``latency_url``, ``name``, ``location``, ``client``, ``servers``)
+            или ``None``, если FAST.com недоступен.
         """
         try:
             home = await client.get(_FAST_HOME, headers=_UA, timeout=8.0)
@@ -131,15 +139,16 @@ class NetworkSpeedTester:
             data = api.json()
             targets = data.get('targets') or []
             if not targets:
-                raise ValueError('пустой список серверов')
+                raise ValueError('пустой список серверов FAST.com')
         except Exception as ex:
-            logger.warning(f'FAST.com недоступен, используется Cloudflare: {ex}')
+            logger.warning(f'FAST.com API недоступен: {ex}')
             return None
         servers = [self._fast_server_name(t) for t in targets]
         base = targets[0]['url']
         head, _, query = base.partition('?')
         return {
-            'name': servers[0], 'location': servers[0],
+            'name': servers[0],
+            'location': servers[0],
             'down_url': f'{head}/range/0-25000000?{query}',
             'up_url': base,
             'latency_url': f'{head}/range/0-0?{query}',
@@ -204,7 +213,7 @@ class NetworkSpeedTester:
         """Выполнить фазу нагрузки (download/upload) с параллельным замером latency.
 
         Args:
-            target (Dict[str, Any]): Цель измерения (URL провайдера).
+            target (Dict[str, Any]): Цель измерения (URL провайдера FAST.com).
             direction (str): ``'download'`` или ``'upload'``.
 
         Returns:
@@ -252,7 +261,7 @@ class NetworkSpeedTester:
             except asyncio.CancelledError:
                 raise
             except Exception as ex:
-                logger.debug(f'Ошибка download-воркера: {ex}')
+                logger.debug(f'Ошибка download-воркера FAST.com: {ex}')
                 await asyncio.sleep(0.5)
 
     @staticmethod
@@ -271,7 +280,7 @@ class NetworkSpeedTester:
             except asyncio.CancelledError:
                 raise
             except Exception as ex:
-                logger.debug(f'Ошибка upload-воркера: {ex}')
+                logger.debug(f'Ошибка upload-воркера FAST.com: {ex}')
                 await asyncio.sleep(0.5)
 
     # -------------------------------------------------------------- quality
@@ -299,21 +308,71 @@ class NetworkSpeedTester:
 
     # ----------------------------------------------------------------- main
     async def run_full_speedtest(self) -> Dict[str, Any]:
-        """Запустить полный цикл: meta, ping, unloaded latency, download, upload.
+        """Запустить полный цикл тестирования через FAST.com: meta, ping, latency, download, upload.
 
         Returns:
-            Dict[str, Any]: Сводный отчёт. Ключ ``record`` - плоская запись
-            (timestamp, provider, server, client_ip, download_mbps, upload_mbps,
-            latency_unloaded_ms, latency_loaded_ms, bufferbloat_ms) для time-series.
+            Dict[str, Any]: Сводный отчёт о замере скорости и сетевых задержках.
         """
         async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
             fast = await self.resolve_fast_target(client)
-            target = fast or dict(self.CLOUDFLARE_TARGET)
-            provider = 'fast.com' if fast else 'cloudflare'
-            meta = await self.get_meta_info(client)
-            if fast and fast['client']:
-                loc = fast['client'].get('location') or {}
-                meta.update({'ip': fast['client'].get('ip', meta['ip']), 'isp': fast['client'].get('isp', meta['isp']), 'asn': fast['client'].get('asn', meta['asn']), 'city': loc.get('city', meta['city']), 'country': loc.get('country', meta['country'])})
+            if not fast:
+                logger.warning('Не удалось подключиться к серверам FAST.com (Netflix CDN).')
+                report = {
+                    'timestamp': time.time(),
+                    'provider': 'fast.com',
+                    'server': 'N/A',
+                    'cdn_servers': [],
+                    'meta': {'ip': 'N/A', 'isp': 'Unknown', 'asn': 'N/A', 'city': '', 'country': '', 'colo': ''},
+                    'ping_ms': 0.0,
+                    'jitter_ms': 0.0,
+                    'latency_unloaded_ms': 0.0,
+                    'latency_loaded_ms': 0.0,
+                    'bufferbloat_ms': 0.0,
+                    'latency': {
+                        'unloaded': {'count': 0, 'avg_ms': 0.0, 'median_ms': 0.0, 'min_ms': 0.0, 'max_ms': 0.0, 'jitter_ms': 0.0},
+                        'loaded_download': {'count': 0, 'avg_ms': 0.0, 'median_ms': 0.0, 'min_ms': 0.0, 'max_ms': 0.0, 'jitter_ms': 0.0},
+                        'loaded_upload': {'count': 0, 'avg_ms': 0.0, 'median_ms': 0.0, 'min_ms': 0.0, 'max_ms': 0.0, 'jitter_ms': 0.0},
+                        'bufferbloat_download_ms': 0.0,
+                        'bufferbloat_upload_ms': 0.0
+                    },
+                    'download': {'speed_mbps': 0.0, 'speed_mb_s': 0.0, 'duration_s': 0.0, 'bytes_downloaded': 0, 'status': 'ERROR'},
+                    'upload': {'speed_mbps': 0.0, 'speed_mb_s': 0.0, 'duration_s': 0.0, 'bytes_uploaded': 0, 'status': 'ERROR'},
+                    'servers': [],
+                    'quality': {'grade': 'Ошибка тестирования', 'rating': 'F', 'color': '#ef4444', 'summary': 'FAST.com недоступен или отсутствует сетевое подключение.'},
+                    'record': {
+                        'timestamp': datetime.now().astimezone().isoformat(timespec='seconds'),
+                        'provider': 'fast.com',
+                        'server': 'N/A',
+                        'client_ip': 'N/A',
+                        'download_mbps': 0.0,
+                        'upload_mbps': 0.0,
+                        'latency_unloaded_ms': 0.0,
+                        'latency_loaded_ms': 0.0,
+                        'bufferbloat_ms': 0.0
+                    }
+                }
+                self._csv_logger.log_poll(
+                    poll_type='speedtest',
+                    metric_name='download_mbps',
+                    value=0.0,
+                    unit='Mbps',
+                    status='ERROR',
+                    details={'provider': 'fast.com', 'error': 'FAST.com unavailable'},
+                    filename='network_terminal_speedtests.csv'
+                )
+                return report
+
+            target = fast
+            provider = 'fast.com'
+            loc = fast['client'].get('location') or {} if fast.get('client') else {}
+            meta = {
+                'ip': fast['client'].get('ip', 'N/A') if fast.get('client') else 'N/A',
+                'isp': fast['client'].get('isp', 'Unknown ISP') if fast.get('client') else 'Unknown ISP',
+                'asn': fast['client'].get('asn', 'N/A') if fast.get('client') else 'N/A',
+                'city': loc.get('city', ''),
+                'country': loc.get('country', ''),
+                'colo': '',
+            }
             servers = await self.measure_ping_servers(client)
 
         async with httpx.AsyncClient(timeout=10.0, follow_redirects=True, limits=httpx.Limits(max_connections=1), headers=_UA) as probe_client:
@@ -334,16 +393,58 @@ class NetworkSpeedTester:
         jitter_ms = unloaded['jitter_ms'] if unloaded['count'] else (round(statistics.mean(s['jitter_ms'] for s in valid), 1) if valid else 0.0)
         quality = self._evaluate_quality(download['speed_mbps'], upload['speed_mbps'], ping_ms, bufferbloat_ms)
 
-        latency = {'unloaded': unloaded, 'loaded_download': loaded_down, 'loaded_upload': loaded_up,
-                   'bufferbloat_download_ms': round(max(loaded_down['median_ms'] - unloaded_ms, 0.0), 1) if loaded_down['count'] and unloaded['count'] else 0.0,
-                   'bufferbloat_upload_ms': round(max(loaded_up['median_ms'] - unloaded_ms, 0.0), 1) if loaded_up['count'] and unloaded['count'] else 0.0}
-        record = {'timestamp': datetime.now().astimezone().isoformat(timespec='seconds'), 'provider': provider, 'server': target['name'], 'client_ip': meta.get('ip'),
-                  'download_mbps': download['speed_mbps'], 'upload_mbps': upload['speed_mbps'], 'latency_unloaded_ms': unloaded_ms, 'latency_loaded_ms': loaded_ms, 'bufferbloat_ms': bufferbloat_ms}
-        report = {'timestamp': time.time(), 'provider': provider, 'server': target['name'], 'cdn_servers': target.get('servers', []), 'meta': meta,
-                  'ping_ms': ping_ms, 'jitter_ms': jitter_ms, 'latency_unloaded_ms': unloaded_ms, 'latency_loaded_ms': loaded_ms, 'bufferbloat_ms': bufferbloat_ms,
-                  'latency': latency, 'download': download, 'upload': upload, 'servers': servers, 'quality': quality, 'record': record}
-        self._csv_logger.log_poll(poll_type='speedtest', metric_name='download_mbps', value=download['speed_mbps'], unit='Mbps', status=download['status'],
-                                  details={'provider': provider, 'server': target['name'], 'upload_mbps': upload['speed_mbps'], 'latency_unloaded_ms': unloaded_ms,
-                                           'latency_loaded_ms': loaded_ms, 'bufferbloat_ms': bufferbloat_ms, 'isp': meta.get('isp'), 'ip': meta.get('ip')},
-                                  filename='network_terminal_speedtests.csv')
+        latency = {
+            'unloaded': unloaded,
+            'loaded_download': loaded_down,
+            'loaded_upload': loaded_up,
+            'bufferbloat_download_ms': round(max(loaded_down['median_ms'] - unloaded_ms, 0.0), 1) if loaded_down['count'] and unloaded['count'] else 0.0,
+            'bufferbloat_upload_ms': round(max(loaded_up['median_ms'] - unloaded_ms, 0.0), 1) if loaded_up['count'] and unloaded['count'] else 0.0
+        }
+        record = {
+            'timestamp': datetime.now().astimezone().isoformat(timespec='seconds'),
+            'provider': provider,
+            'server': target['name'],
+            'client_ip': meta.get('ip'),
+            'download_mbps': download['speed_mbps'],
+            'upload_mbps': upload['speed_mbps'],
+            'latency_unloaded_ms': unloaded_ms,
+            'latency_loaded_ms': loaded_ms,
+            'bufferbloat_ms': bufferbloat_ms
+        }
+        report = {
+            'timestamp': time.time(),
+            'provider': provider,
+            'server': target['name'],
+            'cdn_servers': target.get('servers', []),
+            'meta': meta,
+            'ping_ms': ping_ms,
+            'jitter_ms': jitter_ms,
+            'latency_unloaded_ms': unloaded_ms,
+            'latency_loaded_ms': loaded_ms,
+            'bufferbloat_ms': bufferbloat_ms,
+            'latency': latency,
+            'download': download,
+            'upload': upload,
+            'servers': servers,
+            'quality': quality,
+            'record': record
+        }
+        self._csv_logger.log_poll(
+            poll_type='speedtest',
+            metric_name='download_mbps',
+            value=download['speed_mbps'],
+            unit='Mbps',
+            status=download['status'],
+            details={
+                'provider': provider,
+                'server': target['name'],
+                'upload_mbps': upload['speed_mbps'],
+                'latency_unloaded_ms': unloaded_ms,
+                'latency_loaded_ms': loaded_ms,
+                'bufferbloat_ms': bufferbloat_ms,
+                'isp': meta.get('isp'),
+                'ip': meta.get('ip')
+            },
+            filename='network_terminal_speedtests.csv'
+        )
         return report

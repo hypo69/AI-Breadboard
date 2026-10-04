@@ -16,12 +16,10 @@
 # Package: tests.apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-04 06:25:00
 # =============================================================================
 
-"""Тесты для режимов опроса, темпов, параллельного опроса сенсоров и оборудования без использования моков.
-
-Updated: 2026-10-01 11:10:00"""
+"""Тесты для режимов опроса, темпов, параллельного опроса сенсоров и оборудования без использования моков."""
 
 import time
 import concurrent.futures
@@ -32,8 +30,7 @@ from apps.windows.telemetry.sampling_controller import SamplingController
 from apps.windows.telemetry.sensor_collector import SensorCollector
 from apps.windows.telemetry.device_flapping_sensor import DeviceFlappingSensor
 from apps.windows.telemetry.storage_usage import WindowsStorageUsageCollector
-from apps.windows.telemetry.windows_storage_sensor import WindowsStorageSensor
-# Updated: 2026-10-01 11:30:00
+from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
 from apps.windows.telemetry_research.hardware_auditor import HardwareAuditor
 from apps.windows.telemetry_research.hardware_history_manager import HardwareHistoryManager
 from apps.windows.telemetry.telemetry_config import TelemetryConfigManager

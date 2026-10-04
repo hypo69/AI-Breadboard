@@ -20,7 +20,7 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-03 22:12:00
+# Updated: 2026-10-04 07:28:00
 # =============================================================================
 
 from __future__ import annotations
@@ -29,8 +29,36 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+
+def get_default_telemetry_config_path() -> Path:
+    """Возвращает путь по умолчанию к файлу конфигурации телеметрии в %APPDATA%.
+
+    Если целевой файл в %APPDATA%/AI-Breadboard/apps/windows/telemetry/config.json отсутствует,
+    выполняется попытка скопировать шаблон из пакета модуля.
+
+    Returns:
+        Path: Путь к файлу конфигурации.
+    """
+    appdata = os.environ.get('APPDATA') or os.environ.get('LOCALAPPDATA')
+    if appdata and os.path.exists(appdata):
+        base_dir = Path(appdata)
+    else:
+        base_dir = Path.home() / '.config'
+    target_path = base_dir / 'AI-Breadboard' / 'apps' / 'windows' / 'telemetry' / 'config.json'
+
+    if not target_path.exists():
+        bundled_template = Path(__file__).parent / 'config.json'
+        if bundled_template.is_file():
+            try:
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(bundled_template, target_path)
+            except Exception:
+                return bundled_template
+    return target_path
 
 
 def parse_interval_to_seconds(val: Any, default: float = 5.0) -> float:
@@ -89,13 +117,12 @@ class TelemetryConfigManager:
         """Инициализирует менеджер конфигурации.
 
         Args:
-            config_path: Путь к файлу конфигурации (по умолчанию: apps/windows/telemetry/config.json).
+            config_path: Путь к файлу конфигурации (по умолчанию: %APPDATA%/AI-Breadboard/apps/windows/telemetry/config.json).
         """
         if config_path:
-            self._config_path = config_path
+            self._config_path = str(config_path)
         else:
-            telemetry_cfg = Path(__file__).parent / 'config.json'
-            self._config_path = str(telemetry_cfg)
+            self._config_path = str(get_default_telemetry_config_path())
         self._config: Dict[str, Any] = {}
         self._sensors_config: Dict[str, Dict[str, Any]] = {}
         self._loggers_config: Dict[str, Dict[str, Any]] = {}

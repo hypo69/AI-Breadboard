@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry_research
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 07:48:00
 # =============================================================================
 
 from __future__ import annotations
@@ -41,8 +41,16 @@ except ImportError:
 from .analyzer import TelemetryResearcher
 from .assistant import TelemetryAssistant
 from .charts import TelemetryChartGenerator
+from .client_resource_analyzer import ClientResourceAnalyzer
 from .extractor import TelemetryDataExtractor
-from .models import DeepResearchReport, ResearchScenarioRequest, TelemetryResearchReport
+from .models import (
+    ClientProgramResource,
+    ClientResourceSummary,
+    DeepResearchReport,
+    ResearchScenarioRequest,
+    TelemetryResearchReport,
+    UnknownProgramEvaluation,
+)
 from .query_engine import TelemetryQueryEngine
 
 
@@ -79,7 +87,8 @@ app.add_middleware(
 
 _extractor = TelemetryDataExtractor()
 _query_engine = TelemetryQueryEngine(extractor=_extractor)
-_assistant = TelemetryAssistant(query_engine=_query_engine)
+_client_analyzer = ClientResourceAnalyzer(query_engine=_query_engine)
+_assistant = TelemetryAssistant(query_engine=_query_engine, client_analyzer=_client_analyzer)
 _researcher = TelemetryResearcher(extractor=_extractor)
 _chart_gen = TelemetryChartGenerator()
 _web_dir = Path(__file__).parent / "web"
@@ -265,3 +274,34 @@ async def get_dashboard_html(source_path: Optional[str] = Query(None)) -> HTMLRe
     except Exception as ex:
         logger.error(f"Ошибка генерации HTML дашборда: {ex}")
         raise HTTPException(status_code=500, detail=str(ex))
+
+
+@app.get("/api/client-resources", response_model=ClientResourceSummary)
+@app.get("/apps/telemetry_research/client-resources", response_model=ClientResourceSummary)
+async def get_client_resources_endpoint(
+    db_path: Optional[str] = Query(None),
+    ask_gemini: bool = Query(True),
+    limit: int = Query(50, ge=1, le=200),
+) -> ClientResourceSummary:
+    """Возвращает сводный аудит ресурсов клиентских программ с оценками от Gemini."""
+    try:
+        summary = await _client_analyzer.analyze_client_resources(
+            db_path=db_path, ask_gemini_for_unknown=ask_gemini, limit=limit
+        )
+        return summary
+    except Exception as ex:
+        logger.error(f"Ошибка аудита ресурсов клиентских программ: {ex}")
+        raise HTTPException(status_code=500, detail=str(ex))
+
+
+@app.post("/api/client-resources/evaluate", response_model=UnknownProgramEvaluation)
+@app.post("/apps/telemetry_research/client-resources/evaluate", response_model=UnknownProgramEvaluation)
+async def evaluate_program_endpoint(program: ClientProgramResource) -> UnknownProgramEvaluation:
+    """Запрашивает экспертную оценку неизвестной ресурсоемкой программы у модели Gemini."""
+    try:
+        evaluation = await _client_analyzer.evaluate_program_with_gemini(program)
+        return evaluation
+    except Exception as ex:
+        logger.error(f"Ошибка запроса оценки к Gemini для {program.name}: {ex}")
+        raise HTTPException(status_code=500, detail=str(ex))
+

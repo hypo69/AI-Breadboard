@@ -75,16 +75,26 @@ port = 8000
 
 **КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО** использовать и ссылаться на `None` в исходном коде.
 
-#### 2.6.1 Сигнатуры функций
+#### 2.6.1 Сигнатуры функций и поля dataclass / моделей
 
 ```python
 # ❌ ЗАПРЕЩЕНО
 def execute(timeout: Optional[int] = None, text: Optional[str] = None) -> None:
     pass
 
+@dataclass
+class DiskInfo:
+    size_bytes: Optional[int] = None
+    temperature: Optional[float] = None
+
 # ✅ ОБЯЗАТЕЛЬНО
 def execute(timeout: Optional[int] = 0, text: Optional[str] = '') -> Self:
     pass
+
+@dataclass
+class DiskInfo:
+    size_bytes: Optional[int] = 0
+    temperature: Optional[float] = 0.0
 ```
 
 #### 2.6.2 Инициализация переменных

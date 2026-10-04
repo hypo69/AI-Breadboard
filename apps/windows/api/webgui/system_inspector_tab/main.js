@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/system_inspector_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 00:16:00
+ * Updated: 2026-10-04 08:46:00
  * =============================================================================
  */
 
@@ -30,97 +30,147 @@
   let cachedSensors = [];
   let currentSensorCategory = 'all';
   let isLhmRunning = false;
+  let cachedHardwareSensorsData = null;
 
   async function fetchLhmSensors() {
-    const container = document.getElementById('sys-lhm-sensors-container');
-    const badgeStatus = document.getElementById('sys-lhm-status-badge');
     const badgeCount = document.getElementById('sys-lhm-sensors-count');
-    const btnLaunch = document.getElementById('btn-sys-launch-lhm');
-    if (!container) return;
+    const badgeStatus = document.getElementById('sys-lhm-status-badge');
+    const container = document.getElementById('sys-lhm-sensors-container');
+    const maxTempLabel = document.getElementById('sys-sensors-max-temp');
+    const warningsBadge = document.getElementById('sys-sensors-warnings-badge');
+    const dbTsBadge = document.getElementById('sys-sensors-db-ts');
 
     try {
-      // 1. Проверяем статус LHM
-      let lhmStatus = null;
-      try {
-        const sRes = await fetch('/api/v1/lhm/status');
-        if (sRes.ok) lhmStatus = await sRes.json();
-      } catch {}
+      const res = await fetch('/api/v1/panel/hardware-sensors');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      cachedHardwareSensorsData = data;
+      cachedSensors = data.all_sensors || [];
 
-      isLhmRunning = lhmStatus && lhmStatus.is_running;
+      const summary = data.summary || {};
 
-      if (btnLaunch) {
-        if (!isLhmRunning && lhmStatus && lhmStatus.is_binary_available) {
-          btnLaunch.classList.remove('d-none');
-        } else {
-          btnLaunch.classList.add('d-none');
-        }
-      }
-
-      let sensorsList = [];
-
-      if (isLhmRunning) {
-        if (badgeStatus) {
-          badgeStatus.textContent = '● LHM Active';
-          badgeStatus.className = 'badge bg-success';
-        }
-        const mRes = await fetch('/api/v1/lhm/metrics');
-        if (mRes.ok) {
-          const mData = await mRes.json();
-          sensorsList = mData.sensors || [];
-        }
-      } else {
-        // Fallback: Опрос аппаратных сенсоров хоста (WMI + NVIDIA-SMI)
-        if (badgeStatus) {
-          badgeStatus.textContent = 'WMI/GPU';
-          badgeStatus.className = 'badge bg-secondary';
-        }
-        try {
-          const hwRes = await fetch('/api/windows/hardware/sensors');
-          if (hwRes.ok) {
-            const hwData = await hwRes.json();
-            const rawSensors = hwData.sensors || [];
-            sensorsList = rawSensors.map(s => ({
-              id: s.id || s.sensor_id || s.name,
-              hardware_name: s.hardware_name || s.component || (s.sensor_type === 'Temperature' ? 'Thermal Sensors' : 'System Hardware'),
-              hardware_type: s.hardware_type || 'system',
-              sensor_category: s.category || s.sensor_type || s.type || 'Temperatures',
-              sensor_name: s.name || s.label || 'Sensor',
-              value_raw: s.unit ? `${s.value} ${s.unit}` : `${s.value}`,
-              value_numeric: typeof s.value === 'number' ? s.value : parseFloat(s.value),
-              unit: s.unit || ''
-            }));
-          }
-        } catch {
-          // Второй fallback
-          const sysRes = await fetch('/api/v1/system/sensors');
-          if (sysRes.ok) {
-            const raw = await sysRes.json();
-            sensorsList = (raw || []).map(s => ({
-              id: s.sensor_id || s.name,
-              hardware_name: s.category ? s.category.toUpperCase() : 'System Hardware',
-              hardware_type: 'system',
-              sensor_category: s.category || 'Temperatures',
-              sensor_name: s.name,
-              value_raw: s.unit ? `${s.value} ${s.unit}` : `${s.value}`,
-              value_numeric: s.value,
-              unit: s.unit
-            }));
-          }
-        }
-      }
-
-      cachedSensors = sensorsList;
       if (badgeCount) {
-        badgeCount.textContent = `${sensorsList.length} шт.`;
+        badgeCount.textContent = `${summary.total_sensors || cachedSensors.length} шт. (БД)`;
+      }
+      if (badgeStatus) {
+        badgeStatus.textContent = '● telemetry.db';
+        badgeStatus.className = 'badge bg-success';
+        if (summary.timestamp) {
+          const tsStr = new Date(summary.timestamp).toLocaleTimeString();
+          badgeStatus.title = `Данные из базы telemetry.db: ${tsStr}`;
+          if (dbTsBadge) dbTsBadge.textContent = tsStr;
+        }
+      }
+      if (maxTempLabel) {
+        maxTempLabel.textContent = summary.max_temperature_c != null ? `${summary.max_temperature_c.toFixed(0)} °C` : '-- °C';
+        if (summary.max_temperature_c && summary.max_temperature_c >= 75) {
+          maxTempLabel.className = 'fw-bold text-danger font-monospace';
+        } else if (summary.max_temperature_c && summary.max_temperature_c >= 60) {
+          maxTempLabel.className = 'fw-bold text-warning font-monospace';
+        } else {
+          maxTempLabel.className = 'fw-bold text-info font-monospace';
+        }
+      }
+      if (warningsBadge) {
+        warningsBadge.textContent = summary.warnings_count || '0';
+        warningsBadge.className = summary.warnings_count > 0 ? 'badge bg-danger text-white' : 'badge bg-dark border border-secondary text-success';
       }
 
       renderSensors();
     } catch (e) {
-      console.warn('[SystemInspectorTab] Failed to fetch LHM sensors:', e);
+      console.warn('[SystemInspectorTab] Failed to fetch hardware sensors from DB:', e);
       if (container) {
-        container.innerHTML = `<div class="text-center py-4 text-muted small">Датчики опрашиваются... (${e.message})</div>`;
+        container.innerHTML = `<div class="text-center py-4 text-muted small">Датчики опрашиваются из БД... (${e.message})</div>`;
       }
     }
+  }
+
+  function createSensorWidgetHtml(s) {
+    const cat = (s.sensor_category || '').toLowerCase();
+    const val = Number(s.value || 0);
+    const valRaw = s.value_raw || `${val.toFixed(1)} ${s.unit || ''}`.trim();
+    const name = escapeHtml(s.sensor_name);
+
+    if (cat.includes('temp')) {
+      const tempSlider = createTempSliderHtml(val, 25, 95, false);
+      const gaugeSvg = createGaugeSvg(Math.min(100, Math.max(0, ((val - 25) / 70) * 100)), 64, 38);
+      return `
+        <div class="sys-sensor-widget-item p-1.5 rounded-2 mb-1" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle, rgba(255,255,255,0.06));">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="sys-sensor-name text-truncate" title="${name}" style="font-size: 0.74rem; font-weight: 600;">${name}</span>
+            <span class="badge ${val >= 80 ? 'bg-danger' : val >= 65 ? 'bg-warning text-dark' : 'bg-info-subtle text-info'}" style="font-size: 0.65rem;">${val.toFixed(0)}°C</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <div style="width: 64px; height: 38px; flex-shrink: 0;">${gaugeSvg}</div>
+            <div class="flex-grow-1">${tempSlider}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (cat.includes('load')) {
+      const pctSlider = createPercentSliderHtml(val, false, `${val.toFixed(0)}%`);
+      const gaugeSvg = createGaugeSvg(val, 64, 38);
+      return `
+        <div class="sys-sensor-widget-item p-1.5 rounded-2 mb-1" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle, rgba(255,255,255,0.06));">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="sys-sensor-name text-truncate" title="${name}" style="font-size: 0.74rem; font-weight: 600;">${name}</span>
+            <span class="badge ${val >= 85 ? 'bg-danger' : val >= 60 ? 'bg-warning text-dark' : 'bg-success-subtle text-success'}" style="font-size: 0.65rem;">${val.toFixed(0)}%</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <div style="width: 64px; height: 38px; flex-shrink: 0;">${gaugeSvg}</div>
+            <div class="flex-grow-1">${pctSlider}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (cat.includes('fan')) {
+      const pct = Math.min(100, Math.max(0, (val / 2800) * 100));
+      return `
+        <div class="sys-sensor-widget-item p-1.5 rounded-2 mb-1" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle, rgba(255,255,255,0.06));">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="sys-sensor-name text-truncate" title="${name}" style="font-size: 0.74rem; font-weight: 600;"><i class="bi bi-fan text-info me-1"></i>${name}</span>
+            <span class="font-monospace text-info fw-bold" style="font-size: 0.76rem;">${val.toFixed(0)} RPM</span>
+          </div>
+          <div class="progress" style="height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+            <div class="progress-bar bg-info" style="width: ${pct}%;"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (cat.includes('volt') || cat.includes('power')) {
+      const isPower = cat.includes('power') || (s.unit || '').toLowerCase() === 'w';
+      return `
+        <div class="sys-sensor-widget-item p-1.5 rounded-2 mb-1" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle, rgba(255,255,255,0.06));">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="sys-sensor-name text-truncate" title="${name}" style="font-size: 0.74rem; font-weight: 600;"><i class="bi bi-lightning-charge text-warning me-1"></i>${name}</span>
+            <span class="badge ${isPower ? 'bg-warning-subtle text-warning' : 'bg-primary-subtle text-primary'} font-monospace" style="font-size: 0.72rem;">${valRaw}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    if (cat.includes('clock')) {
+      return `
+        <div class="sys-sensor-widget-item p-1.5 rounded-2 mb-1" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle, rgba(255,255,255,0.06));">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="sys-sensor-name text-truncate" title="${name}" style="font-size: 0.74rem; font-weight: 600;"><i class="bi bi-speedometer2 text-primary me-1"></i>${name}</span>
+            <span class="font-monospace text-primary fw-bold" style="font-size: 0.74rem;">${valRaw}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="sys-sensor-widget-item p-1.5 rounded-2 mb-1" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle, rgba(255,255,255,0.06));">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="sys-sensor-name text-truncate" title="${name}" style="font-size: 0.74rem; font-weight: 600;">${name}</span>
+          <span class="font-monospace text-light fw-bold" style="font-size: 0.74rem;">${valRaw}</span>
+        </div>
+      </div>
+    `;
   }
 
   function renderSensors() {
@@ -133,8 +183,8 @@
     if (!Array.isArray(cachedSensors) || cachedSensors.length === 0) {
       container.innerHTML = `
         <div class="text-center py-4 text-muted small">
-          <div>Аппаратные сенсоры не обнаружены</div>
-          <div class="mt-2 text-muted" style="font-size: 0.72rem;">Датчики WMI/ACPI или фоновые службы оборудования не вернули показаний</div>
+          <div>В базе данных telemetry.db сенсоры не обнаружены</div>
+          <div class="mt-2 text-muted" style="font-size: 0.72rem;">Ожидание сбора и сохранения телеметрии сенсоров...</div>
         </div>
       `;
       return;
@@ -144,12 +194,12 @@
       // Category filter
       if (currentSensorCategory !== 'all') {
         const catLower = (s.sensor_category || '').toLowerCase();
-        const typeLower = (s.hardware_type || '').toLowerCase();
         if (currentSensorCategory === 'temperature' && !catLower.includes('temp')) return false;
         if (currentSensorCategory === 'load' && !catLower.includes('load')) return false;
         if (currentSensorCategory === 'fan' && !catLower.includes('fan') && !catLower.includes('control')) return false;
         if (currentSensorCategory === 'voltage' && !catLower.includes('volt') && !catLower.includes('power')) return false;
         if (currentSensorCategory === 'clock' && !catLower.includes('clock')) return false;
+        if (currentSensorCategory === 'storage' && !catLower.includes('data') && !catLower.includes('throughput')) return false;
       }
 
       // Text search
@@ -157,7 +207,7 @@
         const hName = (s.hardware_name || '').toLowerCase();
         const sName = (s.sensor_name || '').toLowerCase();
         const sCat = (s.sensor_category || '').toLowerCase();
-        const valStr = String(s.value_raw || '').toLowerCase();
+        const valStr = String(s.value_raw || s.value || '').toLowerCase();
         return hName.includes(filterText) || sName.includes(filterText) || sCat.includes(filterText) || valStr.includes(filterText);
       }
       return true;
@@ -168,66 +218,197 @@
       return;
     }
 
-    // Group sensors by Hardware Name or Category
+    // Group sensors by Hardware Name
     const groups = {};
     filtered.forEach(s => {
-      const grpKey = s.hardware_name || s.sensor_category || 'Оборудование';
+      const grpKey = s.hardware_name || 'Оборудование';
       if (!groups[grpKey]) groups[grpKey] = [];
       groups[grpKey].push(s);
     });
 
     container.innerHTML = Object.entries(groups).map(([grpName, items]) => {
-      const itemsHtml = items.map(s => {
-        const cat = (s.sensor_category || '').toLowerCase();
-        const num = s.value_numeric;
-        const valRaw = s.value_raw || `${num || 0} ${s.unit || ''}`;
+      const type = (items[0].hardware_type || '').toLowerCase();
+      let icon = 'bi bi-cpu';
+      let iconColor = 'text-info';
+      if (type.includes('gpu')) { icon = 'bi bi-gpu-card'; iconColor = 'text-warning'; }
+      else if (type.includes('storage') || type.includes('disk')) { icon = 'bi bi-hdd'; iconColor = 'text-success'; }
+      else if (type.includes('memory') || type.includes('ram')) { icon = 'bi bi-memory'; iconColor = 'text-primary'; }
+      else if (type.includes('network') || type.includes('net')) { icon = 'bi bi-globe'; iconColor = 'text-info'; }
+      else if (type.includes('motherboard') || type.includes('mainboard')) { icon = 'bi bi-motherboard'; iconColor = 'text-secondary'; }
 
-        let valClass = 'text-white';
-        let badgeHtml = '';
+      const temps = items.filter(i => (i.sensor_category || '').toLowerCase().includes('temp')).map(i => Number(i.value || 0));
+      const maxT = temps.length ? Math.max(...temps) : null;
+      const tempBadge = maxT != null ? `<span class="badge ${maxT >= 80 ? 'bg-danger' : maxT >= 65 ? 'bg-warning text-dark' : 'bg-info-subtle text-info'}" style="font-size: 0.65rem;">🔥 ${maxT.toFixed(0)}°C</span>` : '';
 
-        if (cat.includes('temp')) {
-          if (num > 75) valClass = 'text-danger fw-bold';
-          else if (num > 60) valClass = 'text-warning fw-bold';
-          else valClass = 'text-info';
-          badgeHtml = `<span class="badge ${num > 75 ? 'bg-danger' : num > 60 ? 'bg-warning text-dark' : 'bg-info text-dark'}" style="font-size: 0.65rem;">t°</span>`;
-        } else if (cat.includes('load')) {
-          const pct = Math.min(100, Math.max(0, num || 0));
-          badgeHtml = `
-            <div class="progress" style="width: 45px; height: 4px; background: rgba(255,255,255,0.1);">
-              <div class="progress-bar ${pct > 80 ? 'bg-danger' : pct > 50 ? 'bg-warning' : 'bg-primary'}" style="width: ${pct}%"></div>
-            </div>
-          `;
-        } else if (cat.includes('fan')) {
-          valClass = 'text-success';
-        } else if (cat.includes('clock')) {
-          valClass = 'text-primary';
-        }
-
-        return `
-          <div class="sys-sensor-row">
-            <span class="sys-sensor-name" title="${escapeHtml(s.sensor_name)} (${escapeHtml(s.sensor_category)})">
-              ${escapeHtml(s.sensor_name)}
-            </span>
-            <div class="d-flex align-items-center gap-1.5 ms-auto">
-              ${badgeHtml}
-              <span class="sys-sensor-value ${valClass}">${escapeHtml(valRaw)}</span>
-            </div>
-          </div>
-        `;
-      }).join('');
+      const widgetsHtml = items.map(s => createSensorWidgetHtml(s)).join('');
 
       return `
-        <div class="sys-sensor-group">
-          <div class="sys-sensor-group-title">
-            <span><i class="bi bi-cpu me-1 text-info"></i> ${escapeHtml(grpName)}</span>
-            <span class="badge bg-dark border border-secondary text-muted" style="font-size: 0.65rem;">${items.length}</span>
+        <div class="sys-core-card mb-2 p-2" style="min-height: auto; background: var(--surface-2, rgba(255,255,255,0.02)); border: 1px solid var(--border-color, rgba(255,255,255,0.08));">
+          <div class="d-flex justify-content-between align-items-center mb-1.5 pb-1 border-bottom" style="border-color: var(--border-subtle, rgba(255,255,255,0.06)) !important;">
+            <div class="d-flex align-items-center gap-1.5 text-truncate" style="max-width: 70%;">
+              <i class="${icon} ${iconColor}"></i>
+              <span class="sys-core-title text-truncate" style="font-size: 0.82rem;" title="${escapeHtml(grpName)}">${escapeHtml(grpName)}</span>
+            </div>
+            <div class="d-flex align-items-center gap-1">
+              ${tempBadge}
+              <span class="badge bg-dark border border-secondary text-muted" style="font-size: 0.65rem;">${items.length} шт.</span>
+            </div>
           </div>
           <div>
-            ${itemsHtml}
+            ${widgetsHtml}
           </div>
         </div>
       `;
     }).join('');
+
+    // Также обновляем блоки сенсоров в целевых панелях CPU, GPU и RAM
+    updateAllComponentSensors();
+  }
+
+  function getSensorSortPriority(s) {
+    const cat = (s.sensor_category || '').toLowerCase();
+    const unit = (s.unit || '').toLowerCase();
+    if (cat.includes('power') || unit === 'w') return 1;
+    if (cat.includes('volt') || unit === 'v') return 2;
+    if (cat.includes('clock') || unit.includes('hz')) return 3;
+    if (cat.includes('fan') || unit.includes('rpm')) return 4;
+    if (cat.includes('timing') || cat.includes('factor')) return 5;
+    if (cat.includes('temp') || unit.includes('°c')) return 6;
+    return 7;
+  }
+
+  function renderComponentSensors(containerId, countBadgeId, sensors) {
+    const container = document.getElementById(containerId);
+    const countBadge = document.getElementById(countBadgeId);
+    if (!container) return;
+    if (countBadge) {
+      countBadge.textContent = sensors && sensors.length ? `${sensors.length} параметров` : '0 параметров';
+    }
+    if (!sensors || sensors.length === 0) {
+      container.innerHTML = `<div class="text-muted small text-center py-2 col-12" style="font-size: 0.74rem;">Нет дополнительных данных сенсоров</div>`;
+      return;
+    }
+
+    const sorted = [...sensors].sort((a, b) => {
+      const pA = getSensorSortPriority(a);
+      const pB = getSensorSortPriority(b);
+      if (pA !== pB) return pA - pB;
+      return (a.sensor_name || '').localeCompare(b.sensor_name || '');
+    });
+
+    container.innerHTML = sorted.map(s => {
+      const name = escapeHtml(s.sensor_name);
+      const cat = (s.sensor_category || '').toLowerCase();
+      const val = Number(s.value || 0);
+      const unit = (s.unit || '').trim();
+      const valRaw = s.value_raw || `${val.toFixed(1)} ${unit}`.trim();
+
+      let icon = 'bi bi-lightning-charge';
+      let iconColor = 'text-warning';
+      let badgeClass = 'bg-warning-subtle text-warning border border-warning';
+
+      if (cat.includes('volt') || unit.toLowerCase() === 'v') {
+        icon = 'bi bi-lightning-charge';
+        iconColor = 'text-primary';
+        badgeClass = 'bg-primary-subtle text-primary border border-primary';
+      } else if (cat.includes('power') || unit.toLowerCase() === 'w') {
+        icon = 'bi bi-lightning-charge';
+        iconColor = 'text-warning';
+        badgeClass = 'bg-warning-subtle text-warning border border-warning';
+      } else if (cat.includes('clock') || unit.toLowerCase().includes('hz')) {
+        icon = 'bi bi-speedometer2';
+        iconColor = 'text-info';
+        badgeClass = 'bg-info-subtle text-info border border-info';
+      } else if (cat.includes('fan') || unit.toLowerCase().includes('rpm')) {
+        icon = 'bi bi-fan';
+        iconColor = 'text-info';
+        badgeClass = 'bg-dark border border-secondary text-info';
+      } else if (cat.includes('timing') || cat.includes('factor')) {
+        icon = 'bi bi-clock-history';
+        iconColor = 'text-secondary';
+        badgeClass = 'bg-dark border border-secondary text-light';
+      } else if (cat.includes('data') || unit.toLowerCase().includes('mb') || unit.toLowerCase().includes('gb')) {
+        icon = 'bi bi-hdd-fill';
+        iconColor = 'text-success';
+        badgeClass = 'bg-success-subtle text-success border border-success';
+      } else if (cat.includes('temp') || unit.toLowerCase().includes('°c')) {
+        icon = 'bi bi-thermometer-half';
+        iconColor = val >= 75 ? 'text-danger' : val >= 60 ? 'text-warning' : 'text-info';
+        badgeClass = val >= 75 ? 'bg-danger text-white' : val >= 60 ? 'bg-warning text-dark' : 'bg-info-subtle text-info';
+      }
+
+      return `
+        <div class="sys-sensor-widget-item p-1.5 rounded-2" style="background: var(--surface-2, rgba(255,255,255,0.03)); border: 1px solid var(--border-color, rgba(255,255,255,0.08));">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="sys-sensor-name text-truncate" title="${name}" style="font-size: 0.74rem; font-weight: 600;">
+              <i class="${icon} ${iconColor} me-1"></i>${name}
+            </span>
+            <span class="badge ${badgeClass} font-monospace" style="font-size: 0.72rem;">${valRaw}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function updateAllComponentSensors() {
+    if (!Array.isArray(cachedSensors) || cachedSensors.length === 0) return;
+
+    // 1. CPU Sensors (электрические параметры, мощности, вольтажи, шины, TjMax)
+    const cpuSensors = cachedSensors.filter(s => {
+      const hwType = (s.hardware_type || '').toLowerCase();
+      const hwName = (s.hardware_name || '').toLowerCase();
+      const sName = (s.sensor_name || '').toLowerCase();
+      const cat = (s.sensor_category || '').toLowerCase();
+
+      const isCpu = hwType === 'cpu' || hwName.includes('cpu') || hwName.includes('intel') || hwName.includes('amd');
+      if (!isCpu) return false;
+
+      // Исключаем по-ядерную загрузку и температуру отдельных ядер (они уже в карточках ядер)
+      if (cat.includes('load') && (sName.includes('core #') || sName === 'cpu total')) return false;
+      if (cat.includes('temp') && sName.includes('core #') && !sName.includes('tjmax')) return false;
+      if (cat.includes('temp') && sName === 'cpu package') return false; // показана в главном слайдере Package
+
+      return true;
+    });
+    renderComponentSensors('sys-metric-cpu-sensors', 'sys-cpu-sensors-count-badge', cpuSensors);
+
+    // 2. GPU Sensors (мощности, вольтажи, частоты, вентиляторы, память GPU)
+    const gpuSensors = cachedSensors.filter(s => {
+      const hwType = (s.hardware_type || '').toLowerCase();
+      const hwName = (s.hardware_name || '').toLowerCase();
+      const sName = (s.sensor_name || '').toLowerCase();
+      const cat = (s.sensor_category || '').toLowerCase();
+
+      const isGpu = hwType === 'gpu' || hwName.includes('gpu') || hwName.includes('nvidia') || hwName.includes('geforce') || hwName.includes('radeon') || hwName.includes('intel arc');
+      if (!isGpu) return false;
+
+      // Исключаем общую загрузку/температуру GPU Core (они в главном Gauge/Slider)
+      if (cat.includes('load') && sName === 'gpu core') return false;
+      if (cat.includes('temp') && sName === 'gpu core') return false;
+
+      return true;
+    });
+    renderComponentSensors('sys-metric-gpu-sensors', 'sys-gpu-sensors-count-badge', gpuSensors);
+
+    // 3. RAM Sensors (мощности, вольтажи, тайминги, доступный объем)
+    const ramSensors = cachedSensors.filter(s => {
+      const hwType = (s.hardware_type || '').toLowerCase();
+      const hwName = (s.hardware_name || '').toLowerCase();
+      const sName = (s.sensor_name || '').toLowerCase();
+
+      const isRam = hwType === 'memory' || hwType === 'ram' || hwName.includes('memory') || hwName.includes('ram') || sName.includes('cpu memory');
+      return isRam;
+    });
+    renderComponentSensors('sys-metric-ram-sensors', 'sys-ram-sensors-count-badge', ramSensors);
+
+    // 4. Network Sensors (трафик, сетевые интерфейсы, Wi-Fi, Bluetooth)
+    const netSensors = cachedSensors.filter(s => {
+      const hwType = (s.hardware_type || '').toLowerCase();
+      const hwName = (s.hardware_name || '').toLowerCase();
+      const isNet = hwType === 'network' || hwType === 'net' || hwName.includes('net') || hwName.includes('ethernet') || hwName.includes('wi-fi') || hwName.includes('wifi') || hwName.includes('bluetooth');
+      return isNet;
+    });
+    renderComponentSensors('sys-metric-net-sensors', 'sys-net-sensors-count-badge', netSensors);
   }
 
   let lastAnalysisReportText = '';
@@ -522,24 +703,617 @@
       `\n======================================================`;
   }
 
+  /**
+   * Генерация полукруглого спидометра (Gauge) со стрелкой.
+   * @param {number|null} percent - Значение нагрузки (0-100)
+   * @param {number} width - Ширина SVG контейнера
+   * @param {number} height - Высота SVG контейнера
+   * @returns {string} SVG разметка
+   */
+  function createGaugeSvg(percent, width = 100, height = 56) {
+    const val = percent == null ? 0 : Math.min(100, Math.max(0, Number(percent)));
+    // Угол поворота стрелки: 0% -> -90deg (влево), 50% -> 0deg (вверх), 100% -> +90deg (вправо)
+    const angle = -90 + (val / 100) * 180;
+    const needleColor = val > 80 ? '#ef4444' : val > 50 ? '#f59e0b' : '#38bdf8';
+
+    return `
+      <svg width="${width}" height="${height}" viewBox="0 0 100 56" preserveAspectRatio="xMidYMid meet" style="display:block;margin:0 auto;overflow:visible;">
+        <defs>
+          <linearGradient id="sysGaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#10b981"/>
+            <stop offset="50%" stop-color="#f59e0b"/>
+            <stop offset="100%" stop-color="#ef4444"/>
+          </linearGradient>
+        </defs>
+        <!-- Фоновая дуга -->
+        <path d="M 12 50 A 38 38 0 0 1 88 50" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="9" stroke-linecap="round"/>
+        <!-- Градиентная активная шкала -->
+        <path d="M 12 50 A 38 38 0 0 1 88 50" fill="none" stroke="url(#sysGaugeGrad)" stroke-width="9" stroke-linecap="round" opacity="0.9"/>
+        <!-- Стрелка прибора -->
+        <g transform="rotate(${angle.toFixed(1)}, 50, 50)" style="transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);">
+          <polygon points="48,50 50,14 52,50" fill="${needleColor}" filter="drop-shadow(0 2px 3px rgba(0,0,0,0.6))"/>
+          <line x1="50" y1="50" x2="50" y2="14" stroke="#ffffff" stroke-width="1.2" opacity="0.9"/>
+        </g>
+        <!-- Центральный шарнир -->
+        <circle cx="50" cy="50" r="6" fill="#38bdf8"/>
+        <circle cx="50" cy="50" r="2.5" fill="#0f172a"/>
+      </svg>
+    `;
+  }
+
+  /**
+   * Генерация цветного термо-слайдера с бегунком.
+   * @param {number|null} tempC - Температура в градусах Цельсия
+   * @param {number} minTemp - Мин. шкала (по умолчанию 30°C)
+   * @param {number} maxTemp - Макс. шкала (по умолчанию 95°C)
+   * @param {boolean} isLarge - Флаг увеличенного отображения для шапки
+   * @returns {string} HTML разметка
+   */
+  function createTempSliderHtml(tempC, minTemp = 30, maxTemp = 95, isLarge = false) {
+    if (tempC == null) {
+      return `<div class="sys-temp-slider-empty">-- °C</div>`;
+    }
+    const val = Number(tempC);
+    const pct = Math.min(100, Math.max(0, ((val - minTemp) / (maxTemp - minTemp)) * 100));
+
+    let barColor = '#10b981'; // Зеленый (<50°C)
+    let badgeClass = 'text-success';
+    if (val >= 80) {
+      barColor = '#ef4444'; // Красный (>=80°C)
+      badgeClass = 'text-danger fw-bold';
+    } else if (val >= 68) {
+      barColor = '#f97316'; // Оранжевый (68-80°C)
+      badgeClass = 'text-warning fw-bold';
+    } else if (val >= 50) {
+      barColor = '#eab308'; // Желтый (50-68°C)
+      badgeClass = 'text-warning';
+    }
+
+    const wrapClass = isLarge ? 'sys-temp-slider-wrap sys-temp-slider-lg' : 'sys-temp-slider-wrap';
+    const fontSize = isLarge ? 'font-size: 0.85rem;' : 'font-size: 0.78rem;';
+
+    return `
+      <div class="${wrapClass}">
+        <div class="d-flex justify-content-between align-items-center mb-1" style="${fontSize}">
+          <span class="text-muted"><i class="bi bi-thermometer-half me-1"></i>t°</span>
+          <span class="font-monospace ${badgeClass}" style="font-weight: 700;">${val.toFixed(0)}°C</span>
+        </div>
+        <div class="sys-temp-slider-track">
+          <div class="sys-temp-slider-bar" style="width: ${pct.toFixed(1)}%; background: ${barColor};"></div>
+          <div class="sys-temp-slider-thumb" style="left: ${pct.toFixed(1)}%; background: ${barColor};"></div>
+        </div>
+      </div>
+    `;
+  }
+
   function renderCpuCores(cores) {
     const box = document.getElementById('sys-metric-cpu-cores');
+    const badgeCount = document.getElementById('sys-cores-count-badge');
     if (!box) return;
-    box.replaceChildren();
-    cores.forEach((c) => {
+
+    if (badgeCount) {
+      badgeCount.textContent = cores && cores.length ? `${cores.length} ядер` : '0 ядер';
+    }
+
+    if (!Array.isArray(cores) || cores.length === 0) {
+      box.innerHTML = `<div class="text-muted small text-center py-3 col-12">Опрос ядер CPU выполняется...</div>`;
+      return;
+    }
+
+    box.innerHTML = cores.map(c => {
       const load = c.load_percent == null ? null : Number(c.load_percent);
       const temp = c.temperature_c == null ? null : Number(c.temperature_c);
-      const cell = document.createElement('div');
-      cell.title = `Ядро #${c.index}`;
-      cell.style.cssText = 'background: var(--border-color); border-radius: 3px; padding: 2px 4px; position: relative; overflow: hidden;';
-      const bar = document.createElement('div');
-      bar.style.cssText = `position:absolute;left:0;top:0;bottom:0;width:${Math.min(100, load || 0)}%;background:rgba(13,202,240,.28);`;
-      const txt = document.createElement('span');
-      txt.style.cssText = 'position:relative;white-space:nowrap;';
-      txt.textContent = `#${c.index} ${load == null ? '--' : load.toFixed(0) + '%'} · ${temp == null ? '-- °C' : temp.toFixed(0) + ' °C'}`;
-      cell.append(bar, txt);
-      box.appendChild(cell);
-    });
+      const loadStr = load == null ? '--' : `${load.toFixed(0)}%`;
+      const gaugeSvg = createGaugeSvg(load, 100, 56);
+      const tempHtml = createTempSliderHtml(temp, 30, 95, false);
+
+      return `
+        <div class="sys-core-card" title="Ядро #${c.index}: Нагрузка ${loadStr}, Температура ${temp != null ? temp.toFixed(0) + '°C' : 'N/A'}">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="sys-core-title">Core #${c.index}</span>
+            <span class="sys-core-load-badge">${loadStr}</span>
+          </div>
+          <div class="py-1">
+            ${gaugeSvg}
+          </div>
+          <div>
+            ${tempHtml}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function formatBytes(v) {
+    const n = Number(v) || 0;
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let i = 0;
+    let x = n;
+    while (x >= 1024 && i < units.length - 1) { x /= 1024; i++; }
+    return `${x.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+  }
+
+  function formatBytesPerSec(v) {
+    const n = Number(v) || 0;
+    const units = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
+    let i = 0;
+    let x = n;
+    while (x >= 1024 && i < units.length - 1) { x /= 1024; i++; }
+    return `${x.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+  }
+
+  const _cpuSparkHistory = [];
+  const _gpuSparkHistory = [];
+
+  function renderCpuSpark(history) {
+    const box = document.getElementById('sys-cpu-spark');
+    if (!box) return;
+    box.replaceChildren();
+    if (!Array.isArray(history) || history.length < 2) return;
+    const ns = 'http://www.w3.org/2000/svg';
+    const W = 200, H = 56;
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.style.cssText = 'width:100%;height:100%;';
+    const line = (getY, color) => {
+      const pts = history.map((h, i) => `${(i / (history.length - 1) * W).toFixed(1)},${(H - getY(h) * (H - 4) - 2).toFixed(1)}`);
+      const pl = document.createElementNS(ns, 'polyline');
+      pl.setAttribute('points', pts.join(' '));
+      pl.setAttribute('fill', 'none');
+      pl.setAttribute('stroke', color);
+      pl.setAttribute('stroke-width', '1.4');
+      svg.appendChild(pl);
+    };
+    line(h => Math.min(100, Math.max(0, Number(h.load || 0))) / 100, '#0dcaf0');
+    line(h => {
+      const t = h.temp != null ? Number(h.temp) : 0;
+      return Math.min(1, Math.max(0, (t - 20) / 80));
+    }, '#ef4444');
+    box.appendChild(svg);
+  }
+
+  function renderGpuSpark(history) {
+    const box = document.getElementById('sys-gpu-spark');
+    if (!box) return;
+    box.replaceChildren();
+    if (!Array.isArray(history) || history.length < 2) return;
+    const ns = 'http://www.w3.org/2000/svg';
+    const W = 200, H = 56;
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.style.cssText = 'width:100%;height:100%;';
+    const line = (getY, color) => {
+      const pts = history.map((h, i) => `${(i / (history.length - 1) * W).toFixed(1)},${(H - getY(h) * (H - 4) - 2).toFixed(1)}`);
+      const pl = document.createElementNS(ns, 'polyline');
+      pl.setAttribute('points', pts.join(' '));
+      pl.setAttribute('fill', 'none');
+      pl.setAttribute('stroke', color);
+      pl.setAttribute('stroke-width', '1.4');
+      svg.appendChild(pl);
+    };
+    line(h => Math.min(100, Math.max(0, Number(h.load || 0))) / 100, '#f59e0b');
+    line(h => {
+      const t = h.temp != null ? Number(h.temp) : 0;
+      return Math.min(1, Math.max(0, (t - 20) / 80));
+    }, '#ef4444');
+    box.appendChild(svg);
+  }
+
+  function renderMemIoSpark(history) {
+    const box = document.getElementById('sys-memio-spark');
+    if (!box) return;
+    box.replaceChildren();
+    if (!Array.isArray(history) || history.length < 2) return;
+    const ns = 'http://www.w3.org/2000/svg';
+    const W = 200, H = 56;
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.style.cssText = 'width:100%;height:100%;';
+    const maxIo = Math.max(1, ...history.map(h => Math.max(h.read_bytes_sec, h.write_bytes_sec)));
+    const line = (getY, color) => {
+      const pts = history.map((h, i) => `${(i / (history.length - 1) * W).toFixed(1)},${(H - getY(h) * (H - 2) - 1).toFixed(1)}`);
+      const pl = document.createElementNS(ns, 'polyline');
+      pl.setAttribute('points', pts.join(' '));
+      pl.setAttribute('fill', 'none');
+      pl.setAttribute('stroke', color);
+      pl.setAttribute('stroke-width', '1.2');
+      svg.appendChild(pl);
+    };
+    line(h => Math.min(100, h.memory_percent) / 100, '#198754');
+    line(h => h.read_bytes_sec / maxIo, '#0dcaf0');
+    line(h => h.write_bytes_sec / maxIo, '#ffc107');
+    box.appendChild(svg);
+  }
+
+  /**
+   * Генерация цветного процентного слайдера (для памяти, RAM, Swap).
+   * @param {number|null} percent - Значение в % (0-100)
+   * @param {boolean} isLarge - Флаг увеличенного отображения для шапки
+   * @param {string} labelText - Подпись бейджа справа
+   * @returns {string} HTML разметка
+   */
+  function createPercentSliderHtml(percent, isLarge = false, labelText = '') {
+    const val = percent == null ? 0 : Math.min(100, Math.max(0, Number(percent)));
+    let barColor = '#10b981'; // Зеленый (<60%)
+    let badgeClass = 'text-success';
+    if (val >= 85) {
+      barColor = '#ef4444'; // Красный
+      badgeClass = 'text-danger fw-bold';
+    } else if (val >= 70) {
+      barColor = '#f97316'; // Оранжевый
+      badgeClass = 'text-warning fw-bold';
+    } else if (val >= 50) {
+      barColor = '#eab308'; // Желтый
+      badgeClass = 'text-warning';
+    }
+
+    const wrapClass = isLarge ? 'sys-temp-slider-wrap sys-temp-slider-lg' : 'sys-temp-slider-wrap';
+    const fontSize = isLarge ? 'font-size: 0.85rem;' : 'font-size: 0.78rem;';
+    const displayLabel = labelText || `${val.toFixed(0)}%`;
+
+    return `
+      <div class="${wrapClass}">
+        <div class="d-flex justify-content-between align-items-center mb-1" style="${fontSize}">
+          <span class="text-muted"><i class="bi bi-memory me-1"></i>Занято</span>
+          <span class="font-monospace ${badgeClass}" style="font-weight: 700;">${displayLabel}</span>
+        </div>
+        <div class="sys-temp-slider-track">
+          <div class="sys-temp-slider-bar" style="width: ${val.toFixed(1)}%; background: ${barColor};"></div>
+          <div class="sys-temp-slider-thumb" style="left: ${val.toFixed(1)}%; background: ${barColor};"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function fetchMemoryIoFromApi() {
+    try {
+      const res = await fetch('/api/v1/panel/memory-io?limit=60');
+      if (!res.ok) return;
+      const data = await res.json();
+      const set = (id, text) => { const el = document.getElementById(id); if (el) el.innerText = text; };
+      const m = data.memory || {};
+      const io = data.disk_io || {};
+      const pct = Number(m.percent || 0);
+      const swapPct = Number(m.swap_percent || 0);
+      const usedGb = Number(m.used_gb || 0);
+      const totalGb = Number(m.total_gb || 0);
+      const freeGb = Number(m.free_gb || 0);
+
+      // 1. Главный баннер RAM
+      const ramModel = document.getElementById('sys-metric-ram-model');
+      if (ramModel) {
+        ramModel.innerText = data.name || (m.name || (m.total_gb ? `${Math.round(m.total_gb)} GB RAM` : 'RAM'));
+      }
+      set('sys-memio-pct', `${pct.toFixed(1)}%`);
+      set('sys-memio-used', `${usedGb.toFixed(1)} / ${totalGb.toFixed(1)} GB (свободно ${freeGb.toFixed(1)} GB)`);
+      set('sys-memio-swap', `Файл подкачки: ${swapPct.toFixed(1)}%`);
+      set('sys-memio-ts', data.timestamp ? new Date(data.timestamp).toLocaleTimeString() : '--');
+
+      const ramGauge = document.getElementById('sys-metric-ram-gauge');
+      if (ramGauge) {
+        ramGauge.innerHTML = createGaugeSvg(pct, 130, 74);
+      }
+
+      const ramSlider = document.getElementById('sys-metric-ram-slider');
+      if (ramSlider) {
+        ramSlider.innerHTML = createPercentSliderHtml(pct, true, `${usedGb.toFixed(1)} / ${totalGb.toFixed(1)} GB`);
+      }
+
+      // 2. Блок 1: Физическая RAM
+      set('sys-ram-sub-badge', `${pct.toFixed(0)}%`);
+      const ramSubGauge = document.getElementById('sys-ram-sub-gauge');
+      if (ramSubGauge) {
+        ramSubGauge.innerHTML = createGaugeSvg(pct, 100, 56);
+      }
+      const ramSubSlider = document.getElementById('sys-ram-sub-slider');
+      if (ramSubSlider) {
+        ramSubSlider.innerHTML = createPercentSliderHtml(pct, false, `${usedGb.toFixed(1)} / ${totalGb.toFixed(1)} GB`);
+      }
+
+      // 3. Блок 2: Файл подкачки (Swap)
+      set('sys-swap-sub-badge', `${swapPct.toFixed(1)}%`);
+      const swapSubGauge = document.getElementById('sys-swap-sub-gauge');
+      if (swapSubGauge) {
+        swapSubGauge.innerHTML = createGaugeSvg(swapPct, 100, 56);
+      }
+      const swapSubSlider = document.getElementById('sys-swap-sub-slider');
+      if (swapSubSlider) {
+        swapSubSlider.innerHTML = createPercentSliderHtml(swapPct, false, `Подкачка ${swapPct.toFixed(1)}%`);
+      }
+
+      // 4. Блок 3 & 4: Чтение и запись на диск (IO)
+      const rBps = Number(io.read_bytes_sec || 0);
+      const wBps = Number(io.write_bytes_sec || 0);
+      const readFormatted = formatBytesPerSec(rBps);
+      const writeFormatted = formatBytesPerSec(wBps);
+
+      set('sys-memio-read', readFormatted);
+      set('sys-read-sub-badge', readFormatted);
+      set('sys-memio-write', writeFormatted);
+      set('sys-write-sub-badge', writeFormatted);
+
+      // Вычисление процента скорости относительно шкалы 50 MB/s
+      const maxIoScale = 50 * 1024 * 1024; // 50 MB/s
+      const readPct = Math.min(100, (rBps / maxIoScale) * 100);
+      const writePct = Math.min(100, (wBps / maxIoScale) * 100);
+
+      const readSubGauge = document.getElementById('sys-read-sub-gauge');
+      if (readSubGauge) {
+        readSubGauge.innerHTML = createGaugeSvg(readPct, 100, 56);
+      }
+      const readSubBar = document.getElementById('sys-read-sub-bar');
+      const readSubThumb = document.getElementById('sys-read-sub-thumb');
+      if (readSubBar) readSubBar.style.width = `${readPct.toFixed(1)}%`;
+      if (readSubThumb) readSubThumb.style.left = `${readPct.toFixed(1)}%`;
+
+      const writeSubGauge = document.getElementById('sys-write-sub-gauge');
+      if (writeSubGauge) {
+        writeSubGauge.innerHTML = createGaugeSvg(writePct, 100, 56);
+      }
+      const writeSubBar = document.getElementById('sys-write-sub-bar');
+      const writeSubThumb = document.getElementById('sys-write-sub-thumb');
+      if (writeSubBar) writeSubBar.style.width = `${writePct.toFixed(1)}%`;
+      if (writeSubThumb) writeSubThumb.style.left = `${writePct.toFixed(1)}%`;
+
+      // 5. График спарклайна
+      renderMemIoSpark(data.history);
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Ошибка получения памяти/IO из API:', e);
+    }
+  }
+
+  const _netSparkHistory = [];
+
+  function renderNetSpark(history) {
+    const box = document.getElementById('sys-net-spark');
+    if (!box) return;
+    box.replaceChildren();
+    if (!Array.isArray(history) || history.length < 2) return;
+    const ns = 'http://www.w3.org/2000/svg';
+    const W = 200, H = 56;
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.style.cssText = 'width:100%;height:100%;';
+    const maxSpeed = Math.max(1024, ...history.map(h => Math.max(h.download_bytes_sec || 0, h.upload_bytes_sec || 0)));
+    const line = (getY, color) => {
+      const pts = history.map((h, i) => `${(i / (history.length - 1) * W).toFixed(1)},${(H - getY(h) * (H - 4) - 2).toFixed(1)}`);
+      const pl = document.createElementNS(ns, 'polyline');
+      pl.setAttribute('points', pts.join(' '));
+      pl.setAttribute('fill', 'none');
+      pl.setAttribute('stroke', color);
+      pl.setAttribute('stroke-width', '1.4');
+      svg.appendChild(pl);
+    };
+    line(h => Math.min(1, Math.max(0, Number(h.download_bytes_sec || 0) / maxSpeed)), '#0dcaf0');
+    line(h => Math.min(1, Math.max(0, Number(h.upload_bytes_sec || 0) / maxSpeed)), '#f59e0b');
+    box.appendChild(svg);
+  }
+
+  async function fetchNetworkLoadFromApi() {
+    try {
+      const res = await fetch('/api/v1/panel/network-load');
+      if (!res.ok) return;
+      const data = await res.json();
+      const set = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = text;
+      };
+
+      const rxBps = Number(data.download_bytes_sec || 0);
+      const txBps = Number(data.upload_bytes_sec || 0);
+      const totalBps = rxBps + txBps;
+      const utilPct = Number(data.utilization_percent || 0);
+
+      const rxFormatted = formatBytesPerSec(rxBps);
+      const txFormatted = formatBytesPerSec(txBps);
+      const totalFormatted = formatBytesPerSec(totalBps);
+
+      const rxTotalFormatted = formatBytes(data.download_total_bytes || 0);
+      const txTotalFormatted = formatBytes(data.upload_total_bytes || 0);
+      const sumTotalFormatted = formatBytes((data.download_total_bytes || 0) + (data.upload_total_bytes || 0));
+
+      // 1. Главный баннер Сети
+      const netModel = document.getElementById('sys-metric-net-model');
+      if (netModel) {
+        netModel.innerText = data.name || 'Сетевые адаптеры (Ethernet / Wi-Fi / BT)';
+      }
+      set('sys-net-ts', data.timestamp || 'Live');
+      set('sys-net-speed-val', totalFormatted);
+      set('sys-net-sub-details', `⬇ ${rxFormatted} · ⬆ ${txFormatted} (Всего: ${sumTotalFormatted})`);
+      set('sys-net-util-label', `Загрузка канала: ${utilPct.toFixed(1)}% (Линк: ${data.link_speed_mbps || 1000} Mbps)`);
+
+      const netGauge = document.getElementById('sys-metric-net-gauge');
+      if (netGauge) {
+        netGauge.innerHTML = createGaugeSvg(utilPct, 130, 74);
+      }
+
+      const netSlider = document.getElementById('sys-metric-net-slider');
+      if (netSlider) {
+        netSlider.innerHTML = createPercentSliderHtml(utilPct, true, `Канал ${utilPct.toFixed(1)}%`);
+      }
+
+      // 2. Блок 1: Входящий (Rx)
+      set('sys-rx-sub-badge', rxFormatted);
+      set('sys-rx-total-text', `${rxTotalFormatted} всего`);
+      const maxSpeedScale = 12.5 * 1024 * 1024; // 100 Mbps = 12.5 MB/s
+      const rxPct = Math.min(100, (rxBps / maxSpeedScale) * 100);
+      const rxSubGauge = document.getElementById('sys-rx-sub-gauge');
+      if (rxSubGauge) rxSubGauge.innerHTML = createGaugeSvg(rxPct, 100, 56);
+      const rxSubBar = document.getElementById('sys-rx-sub-bar');
+      const rxSubThumb = document.getElementById('sys-rx-sub-thumb');
+      if (rxSubBar) rxSubBar.style.width = `${rxPct.toFixed(1)}%`;
+      if (rxSubThumb) rxSubThumb.style.left = `${rxPct.toFixed(1)}%`;
+
+      // 3. Блок 2: Исходящий (Tx)
+      set('sys-tx-sub-badge', txFormatted);
+      set('sys-tx-total-text', `${txTotalFormatted} всего`);
+      const txPct = Math.min(100, (txBps / maxSpeedScale) * 100);
+      const txSubGauge = document.getElementById('sys-tx-sub-gauge');
+      if (txSubGauge) txSubGauge.innerHTML = createGaugeSvg(txPct, 100, 56);
+      const txSubBar = document.getElementById('sys-tx-sub-bar');
+      const txSubThumb = document.getElementById('sys-tx-sub-thumb');
+      if (txSubBar) txSubBar.style.width = `${txPct.toFixed(1)}%`;
+      if (txSubThumb) txSubThumb.style.left = `${txPct.toFixed(1)}%`;
+
+      // 4. Блок 3: Wi-Fi
+      const wifi = data.wifi || {};
+      const wifiState = wifi.state || 'Disconnected';
+      const wifiSignal = wifi.signal_percent != null ? Number(wifi.signal_percent) : (wifi.radio_status && wifi.radio_status.includes('On') ? 100 : 0);
+      set('sys-wifi-sub-badge', wifi.ssid ? `SSID: ${wifi.ssid}` : (wifi.radio_status || 'On'));
+      set('sys-wifi-status-text', wifi.ssid ? `${wifi.ssid} (${wifiSignal}%)` : wifiState);
+      const wifiSubGauge = document.getElementById('sys-wifi-sub-gauge');
+      if (wifiSubGauge) wifiSubGauge.innerHTML = createGaugeSvg(wifiSignal, 100, 56);
+      const wifiSubBar = document.getElementById('sys-wifi-sub-bar');
+      const wifiSubThumb = document.getElementById('sys-wifi-sub-thumb');
+      if (wifiSubBar) wifiSubBar.style.width = `${wifiSignal}%`;
+      if (wifiSubThumb) wifiSubThumb.style.left = `${wifiSignal}%`;
+
+      // 5. Блок 4: Bluetooth
+      const bt = data.bluetooth || {};
+      const btDevCount = bt.devices_count || 0;
+      set('sys-bt-sub-badge', bt.status || 'Active');
+      set('sys-bt-devices-text', btDevCount > 0 ? `${btDevCount} устр. (${bt.devices ? bt.devices[0] : ''})` : 'Активен (0 устр.)');
+      const btPct = Math.min(100, btDevCount * 25);
+      const btSubGauge = document.getElementById('sys-bt-sub-gauge');
+      if (btSubGauge) btSubGauge.innerHTML = createGaugeSvg(btPct > 0 ? btPct : 10, 100, 56);
+      const btSubBar = document.getElementById('sys-bt-sub-bar');
+      const btSubThumb = document.getElementById('sys-bt-sub-thumb');
+      if (btSubBar) btSubBar.style.width = `${btPct > 0 ? btPct : 10}%`;
+      if (btSubThumb) btSubThumb.style.left = `${btPct > 0 ? btPct : 10}%`;
+
+      // 6. График истории
+      if (Array.isArray(data.history) && data.history.length > 0) {
+        renderNetSpark(data.history);
+      }
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Ошибка получения сетевой нагрузки из API:', e);
+    }
+  }
+
+  function renderStorageCards(data) {
+    const box = document.getElementById('sys-metric-storage-cards');
+    const badgeDrives = document.getElementById('sys-storage-drives-badge');
+    const badgeParts = document.getElementById('sys-storage-parts-badge');
+    const badgeSummary = document.getElementById('sys-storage-summary-badge');
+    if (!box) return;
+
+    const drives = Array.isArray(data.drives) ? data.drives : [];
+    const partitions = Array.isArray(data.partitions) ? data.partitions : [];
+
+    if (badgeDrives) badgeDrives.textContent = `${drives.length} дисков`;
+    if (badgeParts) badgeParts.textContent = `${partitions.length} разделов`;
+    if (badgeSummary) {
+      const summary = data.summary || {};
+      badgeSummary.textContent = `${summary.used_gb || 0} / ${summary.total_gb || 0} GB (${summary.used_percent || 0}%)`;
+    }
+
+    if (drives.length === 0 && partitions.length === 0) {
+      box.innerHTML = `<div class="text-muted small text-center py-3 col-12">Опрос накопителей выполняется...</div>`;
+      return;
+    }
+
+    if (drives.length > 0) {
+      box.innerHTML = drives.map(d => {
+        const pct = d.used_percent != null ? Number(d.used_percent) : 0;
+        const temp = d.temperature_c != null ? Number(d.temperature_c) : null;
+        const totGb = d.total_gb != null ? Number(d.total_gb) : 0;
+        const usedGb = d.used_gb != null ? Number(d.used_gb) : 0;
+        const gaugeSvg = createGaugeSvg(pct, 100, 56);
+        const percentSlider = createPercentSliderHtml(pct, false, `${usedGb.toFixed(0)} / ${totGb.toFixed(0)} GB`);
+        const tempHtml = temp != null ? createTempSliderHtml(temp, 25, 75, false) : '';
+        const mediaBadgeClass = d.media_type === 'SSD' || d.media_type === 'NVMe' ? 'bg-primary-subtle text-primary border-primary' : 'bg-warning-subtle text-warning border-warning';
+
+        let subInfo = '';
+        if (d.read_rate_raw || d.write_rate_raw) {
+          subInfo = `
+            <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 0.72rem;">
+              <span><i class="bi bi-arrow-down text-info"></i> ${escapeHtml(d.read_rate_raw || '0 B/s')}</span>
+              <span><i class="bi bi-arrow-up text-warning"></i> ${escapeHtml(d.write_rate_raw || '0 B/s')}</span>
+            </div>
+          `;
+        } else if (d.activity_percent != null) {
+          subInfo = `<div class="text-muted mt-1" style="font-size: 0.72rem;">Активность: <span class="text-light fw-bold">${d.activity_percent}%</span></div>`;
+        }
+
+        return `
+          <div class="sys-core-card" title="${escapeHtml(d.name)}: Занято ${pct.toFixed(1)}% (${usedGb.toFixed(1)} GB / ${totGb.toFixed(1)} GB)${temp != null ? ', Температура ' + temp.toFixed(0) + '°C' : ''}">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="sys-core-title text-truncate" style="max-width: 140px;" title="${escapeHtml(d.name)}">${escapeHtml(d.name)}</span>
+              <span class="badge ${mediaBadgeClass} border" style="font-size: 0.65rem;">${escapeHtml(d.media_type)}</span>
+            </div>
+            <div class="py-1">
+              ${gaugeSvg}
+            </div>
+            <div class="mb-1">
+              ${percentSlider}
+            </div>
+            ${tempHtml ? `<div class="mb-1">${tempHtml}</div>` : ''}
+            ${subInfo}
+          </div>
+        `;
+      }).join('');
+    } else {
+      box.innerHTML = partitions.map(p => {
+        const pct = Number(p.used_percent || 0);
+        const gaugeSvg = createGaugeSvg(pct, 100, 56);
+        const percentSlider = createPercentSliderHtml(pct, false, `${p.used_gb.toFixed(0)} / ${p.total_gb.toFixed(0)} GB`);
+
+        return `
+          <div class="sys-core-card" title="Раздел ${escapeHtml(p.device)} (${escapeHtml(p.fstype)}): Занято ${pct.toFixed(1)}%">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="sys-core-title">${escapeHtml(p.device)} (${escapeHtml(p.fstype)})</span>
+              <span class="badge bg-secondary border" style="font-size: 0.65rem;">${p.free_gb.toFixed(0)} GB free</span>
+            </div>
+            <div class="py-1">
+              ${gaugeSvg}
+            </div>
+            <div>
+              ${percentSlider}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  async function fetchStorageLoadFromApi() {
+    try {
+      const res = await fetch('/api/v1/panel/storage-load');
+      if (!res.ok) return;
+      const data = await res.json();
+      const set = (id, text) => { const el = document.getElementById(id); if (el) el.innerText = text; };
+      const s = data.summary || {};
+      const pct = Number(s.used_percent || 0);
+      const usedGb = Number(s.used_gb || 0);
+      const totalGb = Number(s.total_gb || 0);
+      const freeGb = Number(s.free_gb || 0);
+      const maxTemp = s.max_temperature_c != null ? Number(s.max_temperature_c) : null;
+
+      // 1. Главный баннер хранилища
+      set('sys-storage-pct', `${pct.toFixed(1)}%`);
+      set('sys-storage-used', `${usedGb.toFixed(1)} / ${totalGb.toFixed(1)} GB (свободно ${freeGb.toFixed(1)} GB)`);
+      set('sys-storage-temp-label', maxTemp != null ? `Макс. температура: ${maxTemp.toFixed(0)} °C` : 'Макс. температура: -- °C');
+      set('sys-storage-ts', new Date().toLocaleTimeString());
+
+      const stGauge = document.getElementById('sys-metric-storage-gauge');
+      if (stGauge) {
+        stGauge.innerHTML = createGaugeSvg(pct, 130, 74);
+      }
+
+      const stSlider = document.getElementById('sys-metric-storage-temp-slider');
+      if (stSlider) {
+        stSlider.innerHTML = createTempSliderHtml(maxTemp, 25, 75, true);
+      }
+
+      // 2. Карточки дисков
+      renderStorageCards(data);
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Ошибка получения параметров дисков из API:', e);
+    }
   }
 
   async function fetchCpuLoadFromApi() {
@@ -550,18 +1324,164 @@
       const cpuVal = document.getElementById('sys-metric-cpu-val');
       const cpuFill = document.getElementById('sys-metric-cpu-fill');
       const cpuSub = document.getElementById('sys-metric-cpu-sub');
+      const cpuModel = document.getElementById('sys-metric-cpu-model');
+      const cpuGauge = document.getElementById('sys-metric-cpu-gauge');
+      const cpuPkgSlider = document.getElementById('sys-metric-cpu-package-slider');
+      const cpuPkgTemp = document.getElementById('sys-metric-cpu-package-temp');
 
       const pct = Number(data.total_percent || 0);
       const cores = Array.isArray(data.cores) ? data.cores : [];
       if (cpuVal) cpuVal.innerText = `${pct.toFixed(1)}%`;
       if (cpuFill) cpuFill.style.width = `${Math.min(100, pct)}%`;
+
+      if (cpuModel && data.name) {
+        cpuModel.innerText = data.name;
+        cpuModel.title = data.name;
+      }
+
+      const pkgTemp = data.package_temperature_c != null ? Number(data.package_temperature_c) : null;
       if (cpuSub) {
-        const t = data.package_temperature_c == null ? '' : ` · ${Number(data.package_temperature_c).toFixed(0)} °C`;
+        const t = pkgTemp == null ? '' : ` · ${pkgTemp.toFixed(0)} °C`;
         cpuSub.innerText = cores.length ? `${cores.length} Ядер${t}` : '-- Ядер';
       }
+      if (cpuPkgTemp) {
+        cpuPkgTemp.innerText = pkgTemp != null ? `Пакет: ${pkgTemp.toFixed(0)} °C` : 'Пакет: -- °C';
+      }
+
+      // Gauge полукруг со стрелкой для общего CPU (крупный 130x74)
+      if (cpuGauge) {
+        cpuGauge.innerHTML = createGaugeSvg(pct, 130, 74);
+      }
+
+      // Слайдер температуры Package (крупный)
+      if (cpuPkgSlider) {
+        cpuPkgSlider.innerHTML = createTempSliderHtml(pkgTemp, 30, 95, true);
+      }
+
       renderCpuCores(cores);
+
+      // Добавление точки в историю линейного графика CPU
+      _cpuSparkHistory.push({ load: pct, temp: pkgTemp, time: new Date() });
+      if (_cpuSparkHistory.length > 60) _cpuSparkHistory.shift();
+      renderCpuSpark(_cpuSparkHistory);
     } catch (e) {
       console.warn('[SystemInspectorTab] Ошибка получения загрузки CPU из API:', e);
+    }
+  }
+
+  function renderGpuEngines(engines) {
+    const box = document.getElementById('sys-metric-gpu-engines');
+    const badgeCount = document.getElementById('sys-gpu-engines-count-badge');
+    if (!box) return;
+
+    if (badgeCount) {
+      badgeCount.textContent = engines && engines.length ? `${engines.length} блоков` : '0 блоков';
+    }
+
+    if (!Array.isArray(engines) || engines.length === 0) {
+      box.innerHTML = `<div class="text-muted small text-center py-3 col-12">Опрос подсистем GPU выполняется...</div>`;
+      return;
+    }
+
+    box.innerHTML = engines.map(e => {
+      const load = e.load_percent == null ? null : Number(e.load_percent);
+      const temp = e.temperature_c == null ? null : Number(e.temperature_c);
+      const loadStr = load == null ? '--' : `${load.toFixed(0)}%`;
+      const gaugeSvg = createGaugeSvg(load, 100, 56);
+      const tempHtml = createTempSliderHtml(temp, 30, 95, false);
+
+      return `
+        <div class="sys-core-card" title="${escapeHtml(e.name)}: Нагрузка ${loadStr}${temp != null ? ', Температура ' + temp.toFixed(0) + '°C' : ''}">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="sys-core-title text-truncate" style="max-width: 85px;" title="${escapeHtml(e.name)}">${escapeHtml(e.name)}</span>
+            <span class="sys-core-load-badge">${loadStr}</span>
+          </div>
+          <div class="py-1">
+            ${gaugeSvg}
+          </div>
+          <div>
+            ${tempHtml}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function fetchGpuLoadFromApi() {
+    try {
+      const res = await fetch('/api/v1/panel/gpu-load');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      const gpuVal = document.getElementById('sys-metric-gpu-val');
+      const gpuModel = document.getElementById('sys-metric-gpu-model');
+      const gpuSub = document.getElementById('sys-metric-gpu-sub');
+      const gpuGauge = document.getElementById('sys-metric-gpu-gauge');
+      const gpuTempSlider = document.getElementById('sys-metric-gpu-temp-slider');
+      const gpuCoreTemp = document.getElementById('sys-metric-gpu-core-temp');
+      const gpuVramLabel = document.getElementById('sys-metric-gpu-vram-label');
+
+      const pct = Number(data.core_load_percent || 0);
+      const engines = Array.isArray(data.engines) ? data.engines : [];
+
+      if (gpuVal) gpuVal.innerText = `${pct.toFixed(1)}%`;
+
+      if (gpuModel) {
+        gpuModel.innerText = data.name || 'GPU';
+        gpuModel.title = data.name || 'GPU';
+      }
+
+      const coreTemp = data.core_temperature_c != null ? Number(data.core_temperature_c) : null;
+      if (gpuCoreTemp) {
+        let tempText = coreTemp != null ? `GPU: ${coreTemp.toFixed(0)} °C` : 'GPU: -- °C';
+        if (data.hotspot_temperature_c != null) {
+          tempText += ` (HotSpot: ${Number(data.hotspot_temperature_c).toFixed(0)}°C)`;
+        }
+        gpuCoreTemp.innerText = tempText;
+      }
+
+      if (gpuSub) {
+        let subText = '';
+        if (data.clocks && data.clocks.core_mhz) {
+          subText += `${Math.round(data.clocks.core_mhz)} MHz`;
+        }
+        if (data.memory && data.memory.total_mb) {
+          const totalGb = (data.memory.total_mb / 1024).toFixed(1);
+          subText += (subText ? ' · ' : '') + `${totalGb} GB VRAM`;
+        }
+        gpuSub.innerText = subText || (data.name || 'GPU');
+        gpuSub.title = subText || (data.name || 'GPU');
+      }
+
+      if (gpuVramLabel) {
+        if (data.memory && data.memory.total_mb) {
+          const usedMb = Math.round(data.memory.used_mb || 0);
+          const totalMb = Math.round(data.memory.total_mb || 0);
+          const memPct = data.memory.used_percent != null ? ` (${Math.round(data.memory.used_percent)}%)` : '';
+          gpuVramLabel.innerText = `VRAM: ${usedMb} / ${totalMb} MB${memPct}`;
+        } else {
+          gpuVramLabel.innerText = 'Температура GPU (LHM)';
+        }
+      }
+
+      // Gauge полукруг со стрелкой для GPU Core (крупный 130x74)
+      if (gpuGauge) {
+        gpuGauge.innerHTML = createGaugeSvg(pct, 130, 74);
+      }
+
+      // Слайдер температуры GPU Core (крупный)
+      if (gpuTempSlider) {
+        gpuTempSlider.innerHTML = createTempSliderHtml(coreTemp, 30, 95, true);
+      }
+
+      renderGpuEngines(engines);
+
+      // Добавление точки в историю линейного графика GPU
+      _gpuSparkHistory.push({ load: pct, temp: coreTemp, time: new Date() });
+      if (_gpuSparkHistory.length > 60) _gpuSparkHistory.shift();
+      renderGpuSpark(_gpuSparkHistory);
+    } catch (e) {
+      console.warn('[SystemInspectorTab] Ошибка получения загрузки GPU из API:', e);
     }
   }
 
@@ -571,13 +1491,17 @@
     // CPU
     if (snap.cpu) {
       const cpuVal = document.getElementById('sys-metric-cpu-val');
+      const cpuModel = document.getElementById('sys-metric-cpu-model');
       const cpuFill = document.getElementById('sys-metric-cpu-fill');
       const cpuSub = document.getElementById('sys-metric-cpu-sub');
+      const cpuGauge = document.getElementById('sys-metric-cpu-gauge');
 
       const pct = Number(snap.cpu.total_percent || 0);
       if (cpuVal) cpuVal.innerText = `${pct.toFixed(1)}%`;
+      if (cpuModel && snap.cpu.model) cpuModel.innerText = snap.cpu.model;
       if (cpuFill) cpuFill.style.width = `${Math.min(100, pct)}%`;
       if (cpuSub) cpuSub.innerText = `${snap.cpu.physical_cores || '--'} Физических / ${snap.cpu.logical_cores || '--'} Потоков`;
+      if (cpuGauge) cpuGauge.innerHTML = createGaugeSvg(pct, 130, 74);
     }
 
     // RAM
@@ -585,24 +1509,66 @@
       const ramVal = document.getElementById('sys-metric-ram-val');
       const ramFill = document.getElementById('sys-metric-ram-fill');
       const ramSub = document.getElementById('sys-metric-ram-sub');
+      const ramModel = document.getElementById('sys-metric-ram-model');
 
       const usedGb = Number(snap.memory.used_gb || 0);
       const totalGb = Number(snap.memory.total_gb || 0);
       const pct = Number(snap.memory.percent || 0);
+      const swapPct = Number(snap.memory.swap_percent || 0);
 
+      if (ramModel && totalGb > 0) ramModel.innerText = `${Math.round(totalGb)} GB RAM`;
       if (ramVal) ramVal.innerText = `${usedGb.toFixed(1)} / ${totalGb.toFixed(1)} GB`;
       if (ramFill) ramFill.style.width = `${pct}%`;
       if (ramSub) ramSub.innerText = `${pct}% занято (${Number(snap.memory.available_gb || 0).toFixed(1)} GB свободно)`;
+
+      const memioPct = document.getElementById('sys-memio-pct');
+      if (memioPct) memioPct.innerText = `${pct.toFixed(1)}%`;
+      const memioUsed = document.getElementById('sys-memio-used');
+      if (memioUsed) memioUsed.innerText = `${usedGb.toFixed(1)} / ${totalGb.toFixed(1)} GB (свободно ${Number(snap.memory.available_gb || (totalGb - usedGb)).toFixed(1)} GB)`;
+      const memioSwap = document.getElementById('sys-memio-swap');
+      if (memioSwap) memioSwap.innerText = `Файл подкачки: ${swapPct.toFixed(1)}%`;
+      const memioTs = document.getElementById('sys-memio-ts');
+      if (memioTs) memioTs.innerText = new Date().toLocaleTimeString();
+
+      const ramGauge = document.getElementById('sys-metric-ram-gauge');
+      if (ramGauge) ramGauge.innerHTML = createGaugeSvg(pct, 130, 74);
+      const ramSlider = document.getElementById('sys-metric-ram-slider');
+      if (ramSlider) ramSlider.innerHTML = createPercentSliderHtml(pct, true, `${usedGb.toFixed(1)} / ${totalGb.toFixed(1)} GB`);
+      const ramSubGauge = document.getElementById('sys-ram-sub-gauge');
+      if (ramSubGauge) ramSubGauge.innerHTML = createGaugeSvg(pct, 100, 56);
+      const ramSubSlider = document.getElementById('sys-ram-sub-slider');
+      if (ramSubSlider) ramSubSlider.innerHTML = createPercentSliderHtml(pct, false, `${usedGb.toFixed(1)} / ${totalGb.toFixed(1)} GB`);
+      const ramSubBadge = document.getElementById('sys-ram-sub-badge');
+      if (ramSubBadge) ramSubBadge.textContent = `${pct.toFixed(0)}%`;
+
+      // Swap
+      const swapSubBadge = document.getElementById('sys-swap-sub-badge');
+      if (swapSubBadge) swapSubBadge.textContent = `${swapPct.toFixed(1)}%`;
+      const swapSubGauge = document.getElementById('sys-swap-sub-gauge');
+      if (swapSubGauge) swapSubGauge.innerHTML = createGaugeSvg(swapPct, 100, 56);
+      const swapSubSlider = document.getElementById('sys-swap-sub-slider');
+      if (swapSubSlider) swapSubSlider.innerHTML = createPercentSliderHtml(swapPct, false, `Подкачка ${swapPct.toFixed(1)}%`);
     }
 
     // GPU
     if (Array.isArray(snap.gpus) && snap.gpus.length > 0) {
       const g = snap.gpus[0];
       const gpuVal = document.getElementById('sys-metric-gpu-val');
+      const gpuModel = document.getElementById('sys-metric-gpu-model');
       const gpuSub = document.getElementById('sys-metric-gpu-sub');
+      const gpuGauge = document.getElementById('sys-metric-gpu-gauge');
 
-      if (gpuVal) gpuVal.innerText = g.name || 'GPU';
-      if (gpuSub) gpuSub.innerText = `VRAM: ${Number(g.memory_total_gb || 0).toFixed(1)} GB | CUDA: ${g.has_cuda ? 'Да' : 'Нет'}`;
+      if (gpuModel) {
+        gpuModel.innerText = g.name || 'GPU';
+        gpuModel.title = g.name || 'GPU';
+      }
+      if (g.load_percent != null && gpuVal) {
+        gpuVal.innerText = `${Number(g.load_percent).toFixed(1)}%`;
+      }
+      if (gpuSub) {
+        gpuSub.innerText = `VRAM: ${Number(g.memory_total_gb || 0).toFixed(1)} GB | CUDA: ${g.has_cuda ? 'Да' : 'Нет'}`;
+      }
+      if (gpuGauge && g.load_percent != null) gpuGauge.innerHTML = createGaugeSvg(g.load_percent, 130, 74);
     }
 
     // Disk I/O
@@ -610,12 +1576,45 @@
       const diskVal = document.getElementById('sys-metric-disk-val');
       const diskSub = document.getElementById('sys-metric-disk-sub');
 
-      const totalMb = ((snap.disk_io.read_bytes_per_sec + snap.disk_io.write_bytes_per_sec) / (1024 * 1024)).toFixed(2);
-      const rKb = (snap.disk_io.read_bytes_per_sec / 1024).toFixed(0);
-      const wKb = (snap.disk_io.write_bytes_per_sec / 1024).toFixed(0);
+      const rBps = Number(snap.disk_io.read_bytes_per_sec || 0);
+      const wBps = Number(snap.disk_io.write_bytes_per_sec || 0);
+      const totalMb = ((rBps + wBps) / (1024 * 1024)).toFixed(2);
+      const rKb = (rBps / 1024).toFixed(0);
+      const wKb = (wBps / 1024).toFixed(0);
 
       if (diskVal) diskVal.innerText = `${totalMb} MB/s`;
       if (diskSub) diskSub.innerText = `Чтение: ${rKb} KB/s | Запись: ${wKb} KB/s`;
+
+      const readFormatted = formatBytesPerSec(rBps);
+      const writeFormatted = formatBytesPerSec(wBps);
+
+      const memioRead = document.getElementById('sys-memio-read');
+      if (memioRead) memioRead.innerText = readFormatted;
+      const readSubBadge = document.getElementById('sys-read-sub-badge');
+      if (readSubBadge) readSubBadge.innerText = readFormatted;
+
+      const memioWrite = document.getElementById('sys-memio-write');
+      if (memioWrite) memioWrite.innerText = writeFormatted;
+      const writeSubBadge = document.getElementById('sys-write-sub-badge');
+      if (writeSubBadge) writeSubBadge.innerText = writeFormatted;
+
+      const maxIoScale = 50 * 1024 * 1024;
+      const readPct = Math.min(100, (rBps / maxIoScale) * 100);
+      const writePct = Math.min(100, (wBps / maxIoScale) * 100);
+
+      const readSubGauge = document.getElementById('sys-read-sub-gauge');
+      if (readSubGauge) readSubGauge.innerHTML = createGaugeSvg(readPct, 100, 56);
+      const readSubBar = document.getElementById('sys-read-sub-bar');
+      const readSubThumb = document.getElementById('sys-read-sub-thumb');
+      if (readSubBar) readSubBar.style.width = `${readPct.toFixed(1)}%`;
+      if (readSubThumb) readSubThumb.style.left = `${readPct.toFixed(1)}%`;
+
+      const writeSubGauge = document.getElementById('sys-write-sub-gauge');
+      if (writeSubGauge) writeSubGauge.innerHTML = createGaugeSvg(writePct, 100, 56);
+      const writeSubBar = document.getElementById('sys-write-sub-bar');
+      const writeSubThumb = document.getElementById('sys-write-sub-thumb');
+      if (writeSubBar) writeSubBar.style.width = `${writePct.toFixed(1)}%`;
+      if (writeSubThumb) writeSubThumb.style.left = `${writePct.toFixed(1)}%`;
     }
 
     // Physical Disks SMART Health
@@ -1050,7 +2049,7 @@
       sysWs = null;
     }
 
-    if (window.isTabActive && !window.isTabActive('tab-system-load-inspector') && !window.isTabActive('tab-system-inspector')) {
+    if (window.isTabActive && !window.isTabActive('tab-hardware-load-inspector') && !window.isTabActive('tab-system-load-inspector') && !window.isTabActive('tab-system-inspector')) {
       const statusBadge = document.getElementById('sys-conn-status');
       if (statusBadge) {
         statusBadge.className = 'badge rounded-pill bg-secondary text-light px-3 py-2';
@@ -1086,7 +2085,7 @@
 
       const scheduleReconnect = (reason) => {
         if (sysWsReconnectTimer) return;
-        if (window.isTabActive && !window.isTabActive('tab-system-load-inspector') && !window.isTabActive('tab-system-inspector')) return;
+        if (window.isTabActive && !window.isTabActive('tab-hardware-load-inspector') && !window.isTabActive('tab-system-load-inspector') && !window.isTabActive('tab-system-inspector')) return;
         console.warn(`[SystemInspectorTab] WebSocket отключен (${reason}). Автопереподключение через 3 сек...`);
         if (statusBadge) {
           statusBadge.className = 'badge rounded-pill bg-warning-subtle text-warning border border-warning px-3 py-2';
@@ -1094,7 +2093,7 @@
         }
         sysWsReconnectTimer = setTimeout(() => {
           sysWsReconnectTimer = null;
-          if (!window.isTabActive || window.isTabActive('tab-system-load-inspector') || window.isTabActive('tab-system-inspector')) {
+          if (!window.isTabActive || window.isTabActive('tab-hardware-load-inspector') || window.isTabActive('tab-system-load-inspector') || window.isTabActive('tab-system-inspector')) {
             connectSystemWebSocket();
           }
         }, 3000);
@@ -1112,7 +2111,7 @@
       console.error('[SystemInspectorTab] Ошибка инициализации WebSocket:', err);
       sysWsReconnectTimer = setTimeout(() => {
         sysWsReconnectTimer = null;
-        if (!window.isTabActive || window.isTabActive('tab-system-load-inspector') || window.isTabActive('tab-system-inspector')) {
+        if (!window.isTabActive || window.isTabActive('tab-hardware-load-inspector') || window.isTabActive('tab-system-load-inspector') || window.isTabActive('tab-system-inspector')) {
           connectSystemWebSocket();
         }
       }, 5000);
@@ -1682,7 +2681,7 @@
         engineStatusBadge.className = 'badge bg-success';
       } else {
         engineStatusBadge.textContent = 'AutoLog Paused';
-        engineStatusBadge.className = 'badge bg-secondary';
+        engineStatusBadge.className = 'badge bg-danger-subtle text-danger border border-danger fw-bold';
       }
     }
 
@@ -1860,7 +2859,7 @@
           engineStatusBadge.className = 'badge bg-success';
         } else {
           engineStatusBadge.textContent = 'AutoLog Paused';
-          engineStatusBadge.className = 'badge bg-secondary';
+          engineStatusBadge.className = 'badge bg-danger-subtle text-danger border border-danger fw-bold';
         }
       }
     } catch (e) {
@@ -2285,7 +3284,7 @@
         statusBadge.className = 'badge bg-success';
         statusBadge.textContent = 'ВКЛ';
       } else {
-        statusBadge.className = 'badge bg-secondary';
+        statusBadge.className = 'badge bg-danger-subtle text-danger border border-danger fw-bold';
         statusBadge.textContent = 'ВЫКЛ';
       }
     }
@@ -2695,18 +3694,22 @@
     _currentUiRefreshSeconds = seconds;
     const pollHandler = async () => {
       await fetchCpuLoadFromApi();
+      await fetchGpuLoadFromApi();
+      await fetchMemoryIoFromApi();
+      await fetchNetworkLoadFromApi();
+      await fetchStorageLoadFromApi();
       await fetchLhmSensors();
       await fetchLiveFileEvents();
     };
     if (window.registerTabPoller) {
-      window.registerTabPoller('tab-system-load-inspector', pollHandler, seconds * 1000, { immediate: false });
+      window.registerTabPoller('tab-hardware-load-inspector', pollHandler, seconds * 1000, { immediate: false });
     } else {
       if (window._sysSensorInterval) {
         clearInterval(window._sysSensorInterval);
         window._sysSensorInterval = null;
       }
       window._sysSensorInterval = setInterval(() => {
-        if (window.isTabActive ? (window.isTabActive('tab-system-load-inspector') || window.isTabActive('tab-system-inspector')) : true) {
+        if (window.isTabActive ? (window.isTabActive('tab-hardware-load-inspector') || window.isTabActive('tab-system-load-inspector') || window.isTabActive('tab-system-inspector')) : true) {
           pollHandler();
         }
       }, seconds * 1000);
@@ -2756,6 +3759,10 @@
     console.log('[SystemInspectorTab] Initializing...');
     bindTabEvents();
     await fetchCpuLoadFromApi();
+    await fetchGpuLoadFromApi();
+    await fetchMemoryIoFromApi();
+    await fetchNetworkLoadFromApi();
+    await fetchStorageLoadFromApi();
     await fetchLhmSensors();
     await fetchLiveFileEvents();
     await fetchNetworkActivity();
@@ -2770,28 +3777,51 @@
       console.warn('[SystemInspectorTab] Initial snapshot fetch failed:', e);
     }
 
-    connectSystemWebSocket();
+    if (typeof connectSystemWebSocket === 'function') {
+      try { connectSystemWebSocket(); } catch (err) { console.debug(err); }
+    }
 
     // Periodic sensor refresh
     if (!window._sysSensorInterval) {
-      setupSysSensorInterval(_currentUiRefreshSeconds);
+      setupSysSensorInterval(_currentUiRefreshSeconds || 5);
     }
   }
 
   function activateSystemInspectorTab() {
-    if (window.isTabActive && !window.isTabActive('tab-system-load-inspector') && !window.isTabActive('tab-system-inspector')) return;
-    console.log('[SystemInspectorTab] Tab activated, resuming telemetry stream...');
-    connectSystemWebSocket();
+    if (window.isTabActive && !window.isTabActive('tab-hardware-load-inspector') && !window.isTabActive('tab-system-load-inspector') && !window.isTabActive('tab-system-inspector')) return;
+    console.log('[SystemInspectorTab] Tab activated, refreshing metrics...');
+    fetchCpuLoadFromApi();
+    fetchGpuLoadFromApi();
+    fetchMemoryIoFromApi();
+    fetchNetworkLoadFromApi();
+    fetchStorageLoadFromApi();
+    fetchLhmSensors();
+    if (typeof connectSystemWebSocket === 'function') {
+      try { connectSystemWebSocket(); } catch (err) { console.debug(err); }
+    }
   }
 
   function deactivateSystemInspectorTab() {
     console.log('[SystemInspectorTab] Tab deactivated, pausing telemetry stream...');
-    disconnectSystemWebSocket();
+    if (typeof disconnectSystemWebSocket === 'function') {
+      try { disconnectSystemWebSocket(); } catch (err) { console.debug(err); }
+    }
   }
 
   window.initSystemInspectorTab = initSystemInspectorTab;
+  window.initSystemLoadInspectorTab = initSystemInspectorTab;
+  window.initHardwareLoadInspectorTab = initSystemInspectorTab;
   window.activateSystemInspectorTab = activateSystemInspectorTab;
+  window.activateSystemLoadInspectorTab = activateSystemInspectorTab;
+  window.activateHardwareLoadInspectorTab = activateSystemInspectorTab;
   window.deactivateSystemInspectorTab = deactivateSystemInspectorTab;
+  window.deactivateSystemLoadInspectorTab = deactivateSystemInspectorTab;
+  window.deactivateHardwareLoadInspectorTab = deactivateSystemInspectorTab;
   window.openSysIntervalsModal = openSysIntervalsModal;
+
+  // Auto-init if tab is already in DOM and active or open
+  if (document.getElementById('tab-hardware-load-inspector')) {
+    initSystemInspectorTab();
+  }
 })();
 

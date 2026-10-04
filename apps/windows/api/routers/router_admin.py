@@ -18,7 +18,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 01:10:00
+# Updated: 2026-10-04 07:47:30
 # =============================================================================
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ from pydantic import BaseModel, Field
 from header import __root__
 from src.config import ai_cfg
 from logger import logger
-from src.api.router_auth import require_admin_user
+from src.api.routers.core.router_auth import require_admin_user
 
 router = APIRouter(prefix='/api/admin', tags=['admin'])
 
@@ -360,7 +360,7 @@ def _get_app_plugins(request: Request) -> Dict[str, Any]:
 def _get_request_user(request: Request) -> Optional[Dict[str, Any]]:
     """Retrieve user dictionary if authenticated."""
     try:
-        from src.api.router_auth import verify_jwt_token
+        from src.api.routers.core.router_auth import verify_jwt_token
         from src.user_manager import user_manager
         token: str = request.cookies.get('auth_token', '')
         if not token:
@@ -553,9 +553,9 @@ APPS_REGISTRY: List[Dict[str, Any]] = [
     {
         "id": "system_inspector",
         "key": "system_inspector",
-        "tab": "tab-system-load-inspector",
+        "tab": "tab-hardware-load-inspector",
         "folder": "system_inspector",
-        "aliases": ["system_inspector", "inspector", "tab-system-load-inspector", "tab-system-inspector", "system_load_inspector"],
+        "aliases": ["system_inspector", "inspector", "tab-hardware-load-inspector", "tab-system-load-inspector", "tab-system-inspector", "system_load_inspector", "hardware_load_inspector"],
         "name": "System Inspector",
         "ru_name": "Потребление ресурсов",
         "icon": "🖥️",

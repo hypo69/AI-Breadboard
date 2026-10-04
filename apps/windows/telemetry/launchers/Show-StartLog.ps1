@@ -14,7 +14,7 @@ Project: ai-breadboard
 Package: apps/windows/telemetry/launchers
 Author: hypo69
 Copyright: © 2026 hypo69
-Updated: 2026-10-02 21:57:05
+Updated: 2026-10-04 07:28:00
 =============================================================================
 .SYNOPSIS
     Отображение подробного стартового лога, конфигурации, статуса базы данных и ошибок телеметрии AI-Breadboard
@@ -95,9 +95,12 @@ $jsonLogFile = Join-Path $telemetryLogDir "ai_sensors_polls.json"
 $serviceLogFile = Join-Path $telemetryLogDir "telemetry_service.log"
 $outLogFile = Join-Path $telemetryLogDir "telemetry_stdout.log"
 $errLogFile = Join-Path $telemetryLogDir "telemetry_stderr.log"
-$configFile = Join-Path $scriptDir "config.json"
+$configFile = Join-Path $appDataDir "AI-Breadboard\apps\windows\telemetry\config.json"
 if (-not (Test-Path $configFile)) {
-    $configFile = Join-Path (Split-Path -Parent $scriptDir) "config.json"
+    $configFile = Join-Path $scriptDir "config.json"
+    if (-not (Test-Path $configFile)) {
+        $configFile = Join-Path (Split-Path -Parent $scriptDir) "config.json"
+    }
 }
 
 if ($ClearLogs) {

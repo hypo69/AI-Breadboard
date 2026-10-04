@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.hardware
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 06:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -256,7 +256,7 @@ class HardwareMonitor:
         smart_drives: List[Dict[str, Any]] = []
         if include_smart:
             try:
-                from apps.windows.storage.windows_storage_sensor import WindowsStorageSensor
+                from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
                 disks = WindowsStorageSensor().get_physical_disks()
                 smart_drives = [d.to_dict() for d in disks]
             except Exception as e:

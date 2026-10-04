@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:30:43
+# Updated: 2026-10-04 05:32:00
 # =============================================================================
 
 from __future__ import annotations
@@ -101,6 +101,65 @@ class TestHardwareAuditor:
             assert report.devices[1].status == 'Problem'
             assert report.devices[1].problem_code == 10
 
+    def test_device_install_date_fallback_to_database(self, tmp_path: Path):
+        """Проверка логики: если дата не найдена в реестре, сверяем с БД (пишем сегодняшнюю дату или возвращаем существующую)."""
+        from apps.windows.telemetry.sqlite import TelemetryStorage
+        db_file = tmp_path / 'test_telemetry.db'
+        storage = TelemetryStorage(db_path=db_file, auto_flush=False)
+        try:
+            auditor = HardwareAuditor(storage=storage)
+
+            dev_id = r'HID\VID_046D&PID_C52B&MI_01&COL04\8&33FCB7EE&0&0003'
+            dev_name = 'HID-compliant vendor-defined device'
+
+            # в) Такого устройства нет в БД -> записываем с текущей датой
+            with patch('os.name', 'posix'):
+                date1 = auditor._get_device_install_date_registry(dev_id, dev_name, 'HIDClass')
+                assert date1 is not None
+                today_prefix = datetime.now(timezone.utc).strftime('%d.%m.%Y')
+                assert date1.startswith(today_prefix)
+
+                # Проверяем, что дата действительно записана в БД
+                db_date = storage.get_device_install_date(dev_id)
+                assert db_date == date1
+
+                # а) Такое устройство уже есть в базе и у него есть дата -> пропускаем запись, возвращаем сохраненную
+                date2 = auditor._get_device_install_date_registry(dev_id, dev_name, 'HIDClass')
+                assert date2 == date1
+
+            # а) Проверка с предварительно установленной архивной датой
+            preset_dev_id = r'USB\VID_1234&PID_5678\0001'
+            preset_date = '01.01.2023 12:00'
+            storage.get_or_create_device_install_date(
+                device_instance_id=preset_dev_id,
+                friendly_name='Preset Device',
+                device_class='USB',
+                default_date=preset_date
+            )
+            resolved_date = auditor._get_device_install_date_registry(preset_dev_id, 'Preset Device', 'USB')
+            assert resolved_date == preset_date
+
+            # б) Такое устройство есть в базе, но у него нет даты (пустая) -> ставим текущую дату в записи в БД
+            empty_dev_id = r'USB\VID_9999&PID_0000\0002'
+            # Вставляем устройство с пустой датой
+            with storage._get_connection() as conn:
+                conn.execute(
+                    "INSERT INTO device_inventory (device_instance_id, friendly_name, device_class, install_date, created_at, updated_at) VALUES (?, ?, ?, '', 1000.0, 1000.0)",
+                    (empty_dev_id, 'Empty Date Device', 'USB')
+                )
+                conn.commit()
+
+            with patch('os.name', 'posix'):
+                filled_date = auditor._get_device_install_date_registry(empty_dev_id, 'Empty Date Device', 'USB')
+                assert filled_date is not None
+                assert filled_date.startswith(today_prefix)
+                # Проверяем, что в БД теперь проставлена дата
+                db_filled_date = storage.get_device_install_date(empty_dev_id)
+                assert db_filled_date == filled_date
+        finally:
+            storage.close()
+
+
 class TestHardwareHistoryAndDiff:
     """Набор тестов для менеджера истории и детектора изменений (Diff Engine)."""
 
@@ -148,6 +207,16 @@ class TestHardwareHistoryAndDiff:
 
 class TestSystemCollectorAuditIntegration:
     """Тестирование интеграции аудита оборудования с SystemCollector."""
+
+    @pytest.mark.asyncio
+    async def test_get_snapshot_does_not_trigger_live_hardware_audit(self):
+        """Проверка того, что при вызове get_snapshot не происходит живого сканирования оборудования через auditor.audit_hardware."""
+        mock_auditor = MagicMock()
+        mock_auditor.audit_hardware.side_effect = RuntimeError("Живой аудит оборудования не должен вызываться при запросе снимка!")
+        collector = SystemCollector(auditor=mock_auditor)
+        snapshot = await collector.get_snapshot(process_limit=5)
+        assert snapshot is not None
+        mock_auditor.audit_hardware.assert_not_called()
 
     def test_collector_hardware_audit_methods(self):
         """Проверка вызовов методов аудита и архивации в SystemCollector."""

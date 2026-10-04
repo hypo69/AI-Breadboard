@@ -16,11 +16,11 @@
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-03 22:12:00
+# Updated: 2026-10-04 04:46:00
 # =============================================================================
 
 from __future__ import annotations
-"""Фоновый сервис посекундного сбора системных метрик с сохранением в SQLite."""
+"""Фоновый сервис периодического сбора системных метрик с сохранением в SQLite."""
 
 import asyncio
 import threading
@@ -43,12 +43,12 @@ class TelemetryLoggerService:
 
     def __init__(
         self,
-        interval_sec: float = 5.0,
-        top_processes: int = 20,
+        interval_sec: Optional[float] = None,
+        top_processes: Optional[int] = None,
         collector: Optional[SystemCollector] = None,
         storage: Optional[TelemetryStorage] = None,
-        hardware_audit_interval_sec: float = 60.0,
-        rollup_interval_sec: float = 30.0,
+        hardware_audit_interval_sec: Optional[float] = None,
+        rollup_interval_sec: Optional[float] = None,
         enable_w64: Optional[bool] = None,
         config_manager: Optional[TelemetryConfigManager] = None,
         db_cleanup_interval_sec: Optional[float] = None,
@@ -56,22 +56,34 @@ class TelemetryLoggerService:
         """Инициализирует сервис сбора системных метрик.
 
         Args:
-            interval_sec: Интервал между замерами телеметрии в секундах (по умолчанию 5.0).
-            top_processes: Лимит сохраняемых активных процессов (по умолчанию 20).
+            interval_sec: Интервал между замерами телеметрии в секундах (по умолчанию из config.json).
+            top_processes: Лимит сохраняемых активных процессов (по умолчанию из config.json).
             collector: Экземпляр сборщика SystemCollector (опционально).
             storage: Экземпляр хранилища TelemetryStorage (опционально).
-            hardware_audit_interval_sec: Интервал периодического аудита железа (по умолчанию 60.0).
-            rollup_interval_sec: Интервал запуска обобщения старых данных (по умолчанию 30.0 с).
+            hardware_audit_interval_sec: Интервал периодического аудита железа (по умолчанию из config.json).
+            rollup_interval_sec: Интервал запуска обобщения старых данных (по умолчанию из config.json).
             enable_w64: Включение подсистемы сбора событий W64/ETW (по умолчанию из config.json).
             config_manager: Менеджер конфигурации.
             db_cleanup_interval_sec: Интервал фонового контроля размера базы данных (сек).
         """
         self.config_manager = config_manager or TelemetryConfigManager()
-        self._custom_interval_set = (interval_sec != 5.0)
-        self.interval_sec = max(0.1, interval_sec if self._custom_interval_set else self.config_manager.get_interval_seconds())
-        self.top_processes = max(1, top_processes if top_processes != 20 else self.config_manager.get_effective_process_limit())
-        self.hardware_audit_interval_sec = max(1.0, hardware_audit_interval_sec if hardware_audit_interval_sec != 60.0 else self.config_manager.get_heavy_interval_seconds())
-        self.rollup_interval_sec = max(1.0, rollup_interval_sec if rollup_interval_sec != 30.0 else self.config_manager.get_aggregation_interval())
+        self._custom_interval_set = (interval_sec is not None)
+        self.interval_sec = max(
+            0.1,
+            interval_sec if interval_sec is not None else self.config_manager.get_interval_seconds()
+        )
+        self.top_processes = max(
+            1,
+            top_processes if top_processes is not None else self.config_manager.get_effective_process_limit()
+        )
+        self.hardware_audit_interval_sec = max(
+            1.0,
+            hardware_audit_interval_sec if hardware_audit_interval_sec is not None else self.config_manager.get_heavy_interval_seconds()
+        )
+        self.rollup_interval_sec = max(
+            1.0,
+            rollup_interval_sec if rollup_interval_sec is not None else self.config_manager.get_aggregation_interval()
+        )
         self.collector = collector or SystemCollector()
         self.storage = storage or TelemetryStorage.get_instance()
         self.db_cleanup_interval_sec = max(
@@ -83,24 +95,8 @@ class TelemetryLoggerService:
         w64_cfg = cfg.get('w64_collector', {})
         self.enable_w64 = enable_w64 if enable_w64 is not None else w64_cfg.get('enabled', True)
 
-        self.w64_collector: Optional[AIW64Collector] = None
-        self.w64_etw_collector: Optional[AIW64ETWCollector] = None
-        if self.enable_w64:
-            self.w64_collector = AIW64Collector(
-                storage=self.storage,
-                enable_file_monitoring=w64_cfg.get('enable_file_monitoring', True),
-                enable_process_monitoring=w64_cfg.get('enable_process_monitoring', True),
-                enable_registry_monitoring=w64_cfg.get('enable_registry_monitoring', True),
-                enable_network_monitoring=w64_cfg.get('enable_network_monitoring', True),
-                enable_event_log_monitoring=w64_cfg.get('enable_event_log_monitoring', True),
-            )
-            self.w64_etw_collector = AIW64ETWCollector(
-                storage=self.storage,
-                enable_process_trace=w64_cfg.get('enable_process_trace', True),
-                enable_disk_trace=w64_cfg.get('enable_disk_trace', True),
-                enable_network_trace=w64_cfg.get('enable_network_trace', True),
-                enable_registry_trace=w64_cfg.get('enable_registry_trace', True),
-            )
+        self._w64_collector: Optional[AIW64Collector] = None
+        self._w64_etw_collector: Optional[AIW64ETWCollector] = None
 
         self._running = False
         self._thread: Optional[threading.Thread] = None
@@ -139,6 +135,52 @@ class TelemetryLoggerService:
         """Возвращает менеджер истории оборудования."""
         return self.collector.history_manager
 
+    @property
+    def w64_collector(self) -> Optional[AIW64Collector]:
+        """Возвращает сборщик W64 событий (создается лениво при enable_w64)."""
+        if self._w64_collector is None and self.enable_w64:
+            self._init_w64_collectors()
+        return self._w64_collector
+
+    @w64_collector.setter
+    def w64_collector(self, val: Optional[AIW64Collector]) -> None:
+        self._w64_collector = val
+
+    @property
+    def w64_etw_collector(self) -> Optional[AIW64ETWCollector]:
+        """Возвращает сборщик ETW событий (создается лениво при enable_w64)."""
+        if self._w64_etw_collector is None and self.enable_w64:
+            self._init_w64_collectors()
+        return self._w64_etw_collector
+
+    @w64_etw_collector.setter
+    def w64_etw_collector(self, val: Optional[AIW64ETWCollector]) -> None:
+        self._w64_etw_collector = val
+
+    def _init_w64_collectors(self) -> None:
+        """Инициализирует W64 и ETW сборщики при необходимости."""
+        if not self.enable_w64:
+            return
+        cfg = self.config_manager.get_config()
+        w64_cfg = cfg.get('w64_collector', {})
+        if self._w64_collector is None:
+            self._w64_collector = AIW64Collector(
+                storage=self.storage,
+                enable_file_monitoring=w64_cfg.get('enable_file_monitoring', True),
+                enable_process_monitoring=w64_cfg.get('enable_process_monitoring', True),
+                enable_registry_monitoring=w64_cfg.get('enable_registry_monitoring', True),
+                enable_network_monitoring=w64_cfg.get('enable_network_monitoring', True),
+                enable_event_log_monitoring=w64_cfg.get('enable_event_log_monitoring', True),
+            )
+        if self._w64_etw_collector is None:
+            self._w64_etw_collector = AIW64ETWCollector(
+                storage=self.storage,
+                enable_process_trace=w64_cfg.get('enable_process_trace', True),
+                enable_disk_trace=w64_cfg.get('enable_disk_trace', True),
+                enable_network_trace=w64_cfg.get('enable_network_trace', True),
+                enable_registry_trace=w64_cfg.get('enable_registry_trace', True),
+            )
+
     def start(self) -> bool:
         """Запускает фоновый поток сбора телеметрии, аудита оборудования и W64/ETW сборщиков.
 
@@ -156,10 +198,12 @@ class TelemetryLoggerService:
         self._last_hw_audit_time = None
         self._last_db_cleanup_time = None
 
-        if self.w64_collector:
-            self.w64_collector.start()
-        if self.w64_etw_collector:
-            self.w64_etw_collector.start()
+        if self.enable_w64:
+            self._init_w64_collectors()
+            if self.w64_collector:
+                self.w64_collector.start()
+            if self.w64_etw_collector:
+                self.w64_etw_collector.start()
 
         self._thread = threading.Thread(target=self._worker_loop, name='TelemetryLoggerWorker', daemon=True)
         self._thread.start()

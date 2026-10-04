@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/system_control_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 07:09:00
  * =============================================================================
  */
 
@@ -135,17 +135,25 @@
       setTxt('scc-spec-update', `${upd.status} (${upd.recent_hotfixes_count} KBs installed)`);
 
       // Security Table
-      setTxt('scc-sec-def', sec.defender_enabled ? 'Enabled' : 'Disabled');
-      setTxt('scc-sec-rt', sec.realtime_protection_enabled ? 'Enabled' : 'Disabled');
-      setTxt('scc-sec-fw-dom', sec.firewall_domain_enabled ? 'Active' : 'Disabled');
-      setTxt('scc-sec-fw-priv', sec.firewall_private_enabled ? 'Active' : 'Disabled');
-      setTxt('scc-sec-fw-pub', sec.firewall_public_enabled ? 'Active' : 'Disabled');
-      setTxt('scc-sec-uac', sec.uac_enabled ? 'Enabled' : 'Disabled');
+      const setSecBadge = (id, active, activeText = 'Active', inactiveText = 'Disabled') => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const isOk = Boolean(active);
+        el.textContent = isOk ? activeText : inactiveText;
+        el.className = isOk ? 'text-success fw-bold' : 'text-danger fw-bold';
+      };
+
+      setSecBadge('scc-sec-def', sec.defender_enabled, 'Enabled', 'Disabled');
+      setSecBadge('scc-sec-rt', sec.realtime_protection_enabled, 'Enabled', 'Disabled');
+      setSecBadge('scc-sec-fw-dom', sec.firewall_domain_enabled, 'Active', 'Disabled');
+      setSecBadge('scc-sec-fw-priv', sec.firewall_private_enabled, 'Active', 'Disabled');
+      setSecBadge('scc-sec-fw-pub', sec.firewall_public_enabled, 'Active', 'Disabled');
+      setSecBadge('scc-sec-uac', sec.uac_enabled, 'Enabled', 'Disabled');
 
       const secBadge = document.getElementById('scc-sec-badge');
       if (secBadge) {
         secBadge.innerText = sec.overall_status;
-        secBadge.className = sec.overall_status === 'SECURE' ? 'badge bg-success-subtle text-success' : 'badge bg-warning-subtle text-warning';
+        secBadge.className = sec.overall_status === 'SECURE' ? 'badge bg-success-subtle text-success' : 'badge bg-danger-subtle text-danger fw-bold';
       }
 
       // Restore points table

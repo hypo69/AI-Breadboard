@@ -21,13 +21,14 @@ Updated: 2026-10-01 13:04:40
 =============================================================================
 -->
 
+<!-- Updated: 2026-10-04 07:49:00 -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Исследование телеметрии Windows | Web GUI</title>
-  <link rel="stylesheet" href="/static/style.css?v=20261001_v2">
+  <link rel="stylesheet" href="/static/style.css?v=20261004_v1">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -36,7 +37,7 @@ Updated: 2026-10-01 13:04:40
       <div class="logo-icon">🔬</div>
       <div class="logo-text">
         <h1>Исследование телеметрии Windows</h1>
-        <p>Анализ долговременной телеметрии, EDA, проверка гипотез, энергопотребление и AI-ассистент</p>
+        <p>Анализ долговременной телеметрии, EDA, ресурсы клиентских программ и оценка Gemini</p>
       </div>
     </div>
     <div class="header-controls">
@@ -77,6 +78,7 @@ Updated: 2026-10-01 13:04:40
     <!-- Navigation Tabs -->
     <nav class="tabs-nav">
       <button class="tab-btn active" data-tab="tab-current">⚡ Текущее состояние (telemetry.db)</button>
+      <button class="tab-btn" data-tab="tab-client-resources">💻 Ресурсы программ клиента</button>
       <button class="tab-btn" data-tab="tab-charts">📈 Графики исследования</button>
       <button class="tab-btn" data-tab="tab-hypotheses">🧪 Системные гипотезы</button>
       <button class="tab-btn" data-tab="tab-anomalies">🚨 Аномалии и выводы</button>
@@ -239,6 +241,84 @@ Updated: 2026-10-01 13:04:40
             <ul class="activity-feed-list" id="live-activity-list"></ul>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Tab: Client Program Resources & Gemini AI -->
+    <div id="tab-client-resources" class="tab-content">
+      <!-- Client KPI Strip -->
+      <div class="kpi-grid" style="margin-bottom: 20px;">
+        <div class="kpi-card">
+          <div class="kpi-title">Программ клиента</div>
+          <div class="kpi-value" id="client-kpi-total">0</div>
+          <div class="kpi-sub">Активных пользовательских процессов</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Занято памяти RAM</div>
+          <div class="kpi-value" id="client-kpi-ram">0 MB</div>
+          <div class="kpi-sub">Суммарный объем ОЗУ клиентов</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Загрузка ЦП (CPU)</div>
+          <div class="kpi-value" id="client-kpi-cpu">0%</div>
+          <div class="kpi-sub">Суммарная нагрузка на ядра</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Неизвестных (Heavy)</div>
+          <div class="kpi-value" id="client-kpi-unknown" style="color: var(--accent-red);">0</div>
+          <div class="kpi-sub">Требуют анализа в Gemini</div>
+        </div>
+      </div>
+
+      <!-- Controls & Actions Bar -->
+      <div class="live-status-bar" style="margin-bottom: 16px;">
+        <div class="status-badge-container">
+          <div class="pulse-dot"></div>
+          <div>
+            <div class="status-badge-text" id="client-status-text">Аудит программ клиента</div>
+            <div class="status-badge-sub" id="client-status-sub">Отслеживание потребления ресурсов и проверка в Gemini AI</div>
+          </div>
+        </div>
+        <div class="live-controls">
+          <button id="btn-refresh-client-procs" class="btn btn-secondary">🔄 Обновить список</button>
+          <button id="btn-ask-gemini-all-unknown" class="btn btn-primary">🤖 Проверить неизвестные в Gemini</button>
+        </div>
+      </div>
+
+      <!-- Gemini AI Evaluations Container -->
+      <div id="gemini-evaluations-container" style="margin-bottom: 20px; display: none;">
+        <div class="kpi-card" style="border-left: 4px solid var(--accent-purple);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="font-size: 16px; color: var(--accent-purple);">🤖 Экспертные заключения Gemini AI по неизвестным ресурсоемким программам</h3>
+            <span class="badge badge-warning" id="gemini-evals-count-badge">0 отчетов</span>
+          </div>
+          <div id="gemini-evals-list" class="gemini-evals-grid"></div>
+        </div>
+      </div>
+
+      <!-- Client Programs Table -->
+      <div class="table-wrapper">
+        <div class="table-header-bar">
+          <h3 style="font-size: 15px;">Программы, запущенные клиентом (память, процессор, диск)</h3>
+          <input type="text" id="input-search-client-procs" class="search-input" placeholder="Фильтр по названию программы...">
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 220px;">Программа / Процесс</th>
+              <th style="width: 80px;">PID</th>
+              <th style="width: 110px;">CPU (%)</th>
+              <th style="width: 140px;">RAM (МБ / %)</th>
+              <th style="width: 130px;">Диск (файл / IO)</th>
+              <th>Каталог запуска / Командная строка</th>
+              <th style="width: 150px;">Статус / Доверие</th>
+              <th style="width: 140px;">Действие</th>
+            </tr>
+          </thead>
+          <tbody id="client-procs-table-body">
+            <tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">Загрузка данных о программах клиента...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 

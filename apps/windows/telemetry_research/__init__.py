@@ -13,7 +13,7 @@
 # Package: apps.windows.telemetry_research
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 07:47:00
 # =============================================================================
 
 from __future__ import annotations
@@ -25,6 +25,8 @@ from .extractor import TelemetryDataExtractor
 from .models import (
     AnomalyEvent,
     ChartConfig,
+    ClientProgramResource,
+    ClientResourceSummary,
     CorrelationMatrixItem,
     DeepResearchReport,
     DeviceEventSummary,
@@ -34,7 +36,9 @@ from .models import (
     ResearchScenarioRequest,
     TelemetryResearchReport,
     TimeSeriesDataset,
+    UnknownProgramEvaluation,
 )
+from .client_resource_analyzer import ClientResourceAnalyzer
 from .diagnostic_engine import DiagnosticEngine, SystemDiagnosticEngine
 from .deep_diagnostics import DeepDiagnosticsEngine
 from .incident_detector import IncidentDetector
@@ -85,4 +89,8 @@ __all__ = [
     "AuditStartupChecker",
     "StartupAuditResult",
     "run_startup_audit",
+    "ClientResourceAnalyzer",
+    "ClientProgramResource",
+    "ClientResourceSummary",
+    "UnknownProgramEvaluation",
 ]

@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/task_scheduler_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 07:09:00
  * =============================================================================
  */
 
@@ -93,7 +93,7 @@ function applyTaskFilters() {
     let badgeClass = 'bg-secondary';
     if (isRunning) badgeClass = 'bg-info text-dark';
     else if (isReady) badgeClass = 'bg-success';
-    else if (isDisabled) badgeClass = 'bg-dark border border-secondary text-muted';
+    else if (isDisabled) badgeClass = 'bg-danger-subtle text-danger border border-danger fw-bold';
 
     return `
       <tr>

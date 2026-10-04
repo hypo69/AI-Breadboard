@@ -16,7 +16,7 @@
 # Package: apps.windows
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 06:25:00
 # =============================================================================
 
 """# Description:"""
@@ -293,7 +293,7 @@ async def get_hardware_sensors_list() -> Dict[str, Any]:
 async def get_storage_smart() -> Dict[str, Any]:
     """Получение детальных S.M.A.R.T. данных и здоровья накопителей через нативный Windows Storage API."""
     try:
-        from apps.windows.storage.windows_storage_sensor import WindowsStorageSensor
+        from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
         sensor = WindowsStorageSensor()
         drives = sensor.get_physical_disks()
         return {'drives': drives}

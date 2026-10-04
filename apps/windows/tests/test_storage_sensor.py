@@ -18,7 +18,7 @@
 # Package: apps.windows.tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 06:25:00
 # =============================================================================
 
 """Модульные тесты сенсора накопителей Windows."""
@@ -27,7 +27,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from apps.windows.core.audits.storage_collector import StorageCollector
 from apps.windows.hardware.providers.native_win_provider import NativeWinProvider
-from apps.windows.telemetry.windows_storage_sensor import StorageDiskHealthInfo, WindowsStorageSensor, collect_storage_snapshot
+from apps.windows.modules.storage_manager.core.windows_storage_sensor import StorageDiskHealthInfo, WindowsStorageSensor, collect_storage_snapshot
 
 class TestWindowsStorageSensor(unittest.TestCase):
     """Набор тестов для сенсора накопителей Windows."""
@@ -78,7 +78,7 @@ class TestWindowsStorageSensor(unittest.TestCase):
     def test_native_win_provider_storage_integration(self) -> None:
         """Проверка интеграции StorageDeviceInventory и сенсоров в NativeWinProvider."""
         provider = NativeWinProvider()
-        with patch('apps.windows.telemetry.windows_storage_sensor.WindowsStorageSensor.get_physical_disks') as mock_disks:
+        with patch('apps.windows.modules.storage_manager.core.windows_storage_sensor.WindowsStorageSensor.get_physical_disks') as mock_disks:
             mock_disks.return_value = [StorageDiskHealthInfo(device_id='Disk0', friendly_name='Kingston KC3000 2TB', model='Kingston KC3000 2TB', serial_number='50026B76854321', bus_type='NVMe', media_type='SSD', size_gb=1907.73, health_status='Healthy', operational_status='OK', temperature_c=45.0, wear_percentage=2.0, power_on_hours=3200)]
             inv = provider.probe_inventory()
             self.assertIsNotNone(inv)
@@ -97,7 +97,7 @@ class TestWindowsStorageSensor(unittest.TestCase):
     def test_storage_collector_audit_findings(self) -> None:
         """Проверка формирования находок аудита StorageCollector при сбое диска."""
         collector = StorageCollector()
-        with patch('apps.windows.telemetry.windows_storage_sensor.WindowsStorageSensor.get_physical_disks') as mock_disks:
+        with patch('apps.windows.modules.storage_manager.core.windows_storage_sensor.WindowsStorageSensor.get_physical_disks') as mock_disks:
             mock_disks.return_value = [StorageDiskHealthInfo(device_id='Disk1', friendly_name='Failing HDD Seagate 2TB', model='Seagate ST2000DM008', serial_number='W9A12345', bus_type='SATA', media_type='HDD', size_gb=1863.0, health_status='Unhealthy', operational_status='Error', temperature_c=55.0, wear_percentage=98.0, power_on_hours=55000)]
             audit = collector.collect()
             self.assertIn(audit.status, ('critical', 'warning'))

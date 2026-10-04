@@ -16,7 +16,7 @@
 # Package: apps.windows.modules.storage_manager.core
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 06:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -95,20 +95,22 @@ class StorageManager:
         """Получение списка физических дисков через Storage API / WMI."""
         disks: List[DiskInfo] = []
         try:
-            from apps.windows.telemetry.windows_storage_sensor import WindowsStorageSensor
+            from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
             sensor = WindowsStorageSensor(timeout_sec=5)
             p_disks = sensor.get_physical_disks()
             for d in p_disks:
+                is_first_disk = str(d.device_id) in ('Disk0', '0', r'\\.\PHYSICALDRIVE0', r'\\.\PhysicalDrive0')
+                size_val = d.size_gb or (round(d.size_bytes / (1024 ** 3), 2) if d.size_bytes else 0.0)
                 disks.append(
                     DiskInfo(
                         disk_id=d.device_id,
-                        name=d.friendly_name,
+                        name=d.friendly_name or d.model,
                         bus_type=d.bus_type,
                         media_type=d.media_type,
-                        size_gb=round(d.size_bytes / (1024 ** 3), 2) if d.size_bytes else 0.0,
+                        size_gb=size_val,
                         status=d.health_status,
-                        is_boot=d.device_id == 0,
-                        is_system=d.device_id == 0,
+                        is_boot=is_first_disk,
+                        is_system=is_first_disk,
                     )
                 )
         except Exception as exc:

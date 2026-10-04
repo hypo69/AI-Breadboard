@@ -16,7 +16,7 @@
 # Package: tests
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 01:12:00
+# Updated: 2026-10-04 07:05:00
 # =============================================================================
 
 """Тесты редактора меню (/tc) и эндпоинтов управления конфигурацией меню."""
@@ -171,7 +171,7 @@ class TestMenuAPI:
         fake_config_file.write_text(json.dumps({'version': 'test', 'menu': {'topButtons': [], 'sidebarItems': []}}), encoding='utf-8')
         import src.api.routers.core.router_menu as router_menu_module
         monkeypatch.setattr(router_menu_module, 'TC_MENU_CONFIG_PATH', fake_config_file)
-        payload = {'version': 'test_v2', 'menu': {'topButtons': [{'id': 'system_inspector', 'label': 'Потребление', 'tab': 'tab-system-load-inspector', 'order': 1, 'visible': True}], 'sidebarItems': [{'id': 'about_system', 'label': 'О Системе', 'tab': 'tab-about-system', 'order': 1, 'visible': True}]}}
+        payload = {'version': 'test_v2', 'menu': {'topButtons': [{'id': 'system_inspector', 'label': 'Потребление', 'tab': 'tab-hardware-load-inspector', 'order': 1, 'visible': True}], 'sidebarItems': [{'id': 'about_system', 'label': 'О Системе', 'tab': 'tab-about-system', 'order': 1, 'visible': True}]}}
         response = client.post('/api/v1/menu/config', json=payload)
         assert response.status_code == 200
         assert response.json().get('status') == 'ok'

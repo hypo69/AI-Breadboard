@@ -17,7 +17,7 @@
  * Package: windows/api/webgui/firewall_manager_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-01 13:04:40
+ * Updated: 2026-10-04 07:09:00
  * =============================================================================
  */
 
@@ -99,7 +99,7 @@ function applyFirewallFilters() {
         <td><span class="badge ${isAllow ? 'bg-success' : 'bg-danger'}">${action}</span></td>
         <td class="font-monospace small text-muted">${proto}:${port}</td>
         <td class="small text-muted">${profile}</td>
-        <td><span class="badge ${enabled ? 'bg-success' : 'bg-secondary'}">${enabled ? 'Включено' : 'Выключено'}</span></td>
+        <td><span class="badge ${enabled ? 'bg-success' : 'bg-danger-subtle text-danger border border-danger fw-bold'}">${enabled ? 'Включено' : 'Выключено'}</span></td>
         <td class="text-end">
           <button class="btn btn-xs ${enabled ? 'btn-outline-warning' : 'btn-outline-success'} py-0 px-2 fw-toggle-btn" 
                   data-name="${name}" data-action="${enabled ? 'disable_rule' : 'enable_rule'}">

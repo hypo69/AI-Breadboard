@@ -16,12 +16,12 @@
 # Package: tests.apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-03 22:12:00
+# Updated: 2026-10-04 04:50:00
 # =============================================================================
 
 """Тесты для фонового сервиса TelemetryLoggerService и командного интерфейса main.py на реальных вызовах.
 
-Updated: 2026-10-03 22:12:00"""
+Updated: 2026-10-04 04:50:00"""
 
 import sys
 import time
@@ -81,7 +81,7 @@ class TestTelemetryLoggerService:
         collector = SystemCollector()
 
         service = TelemetryLoggerService(
-            interval_sec=5.0,  # default, will use cm
+            interval_sec=None,  # default, will use cm
             collector=collector,
             storage=storage,
             enable_w64=False,

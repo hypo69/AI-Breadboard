@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry_research
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 06:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -362,7 +362,7 @@ class DeepDiagnosticsEngine:
         disks: List[Dict[str, Any]] = []
         battery_data: Dict[str, Any] = {'has_battery': False, 'design_capacity_mwh': 0.0, 'full_charge_capacity_mwh': 0.0, 'wear_level_pct': 0.0, 'cycle_count': 0, 'charge_rate_mw': 0.0, 'is_charging': False, 'percent': 0.0, 'power_source': 'AC Mains (Стационарное питание)'}
         try:
-            from apps.windows.telemetry.windows_storage_sensor import WindowsStorageSensor
+            from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
             sensor = WindowsStorageSensor()
             snapshot = sensor.collect_snapshot()
             raw_partitions = snapshot.get('sources', {}).get('partitions', [])

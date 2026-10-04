@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-04 00:16:00
+# Updated: 2026-10-04 04:46:00
 # =============================================================================
 
 from __future__ import annotations
@@ -41,8 +41,11 @@ from apps.windows.telemetry import (
     KernelThrottlingReport,
     PeripheralsNetworkReport,
     ProcessLeakDiagnosticsReport,
+    ProcessLifecycleEvent,
     ProcessMetrics,
     ProcessNetworkActivity,
+    ProcessProvenanceInfo,
+    ProcessProvenanceReport,
     StorageBatteryWearReport,
     SystemDiagnosticEngine,
     SystemCollector,
@@ -72,7 +75,6 @@ def init_router(chat_model: Optional[Any] = None, **kwargs: Any) -> APIRouter:
     router = APIRouter(prefix="/api/v1/system", tags=["System & Hardware Inspector"])
     collector = SystemCollector()
     diagnostician = SystemDiagnosticEngine(chat_model=chat_model)
-    telemetry_service = TelemetryLoggerService.get_instance()
 
     @router.get("/summary", response_model=SystemSnapshot)
     async def get_system_summary(
@@ -151,6 +153,61 @@ def init_router(chat_model: Optional[Any] = None, **kwargs: Any) -> APIRouter:
     ) -> List[ProcessMetrics]:
         """Retrieve active process stream sorted by CPU or memory consumption."""
         return await asyncio.to_thread(collector.get_top_processes, limit=limit, sort_by=sort_by)
+
+    @router.get("/processes/provenance", response_model=ProcessProvenanceReport)
+    async def get_process_provenance_report(
+        pid: Optional[int] = Query(default=None, description="Optional PID filter"),
+        name: Optional[str] = Query(default=None, description="Optional process name substring filter"),
+        user: Optional[str] = Query(default=None, description="Optional user/SID filter"),
+        limit: int = Query(default=100, ge=1, le=500, description="Max processes count in report"),
+    ) -> ProcessProvenanceReport:
+        """Сводный отчет о происхождении, цепочках предков (lineage) и правах активных процессов."""
+        return await asyncio.to_thread(
+            collector.get_process_provenance_report,
+            pid=pid,
+            name_filter=name,
+            user_filter=user,
+            limit=limit,
+        )
+
+    @router.get("/processes/provenance/history")
+    async def get_process_provenance_history(
+        guid: Optional[str] = Query(default=None, description="Filter by process GUID"),
+        pid: Optional[int] = Query(default=None, description="Filter by PID"),
+        name: Optional[str] = Query(default=None, description="Filter by process name"),
+        user: Optional[str] = Query(default=None, description="Filter by username or SID"),
+        event_type: Optional[str] = Query(default=None, description="Event type (ProcessCreated/ProcessTerminated)"),
+        limit: int = Query(default=100, ge=1, le=500, description="Max history records"),
+    ) -> Dict[str, Any]:
+        """История жизненного цикла и происхождения процессов из базы данных SQLite."""
+        history = await asyncio.to_thread(
+            collector.get_process_provenance_history,
+            guid=guid,
+            pid=pid,
+            name=name,
+            user=user,
+            event_type=event_type,
+            limit=limit,
+        )
+        return {
+            "status": "ok",
+            "count": len(history),
+            "events": history,
+            "source": "telemetry.db (process_provenance_events)",
+        }
+
+    @router.get("/processes/{pid}/lineage")
+    async def get_process_lineage(
+        pid: str,
+    ) -> Dict[str, Any]:
+        """Восходящее дерево предков процесса (от корня Winlogon/Explorer до текущего PID)."""
+        lineage = await asyncio.to_thread(collector.get_process_lineage, guid_or_pid=pid)
+        return {
+            "status": "ok",
+            "target": pid,
+            "depth": len(lineage),
+            "lineage": lineage,
+        }
 
     @router.get("/network-activity", response_model=List[ProcessNetworkActivity])
     async def get_process_network_activity(
@@ -319,6 +376,7 @@ def init_router(chat_model: Optional[Any] = None, **kwargs: Any) -> APIRouter:
         top_processes: int = Query(default=20, ge=1, le=100, description="Количество Top-процессов"),
     ) -> Dict[str, Any]:
         """Запуск фонового сбора телеметрии в CSV-файлы."""
+        telemetry_service = TelemetryLoggerService.get_instance()
         telemetry_service.interval_sec = interval_sec
         telemetry_service.top_processes = top_processes
         started = telemetry_service.start()
@@ -331,6 +389,7 @@ def init_router(chat_model: Optional[Any] = None, **kwargs: Any) -> APIRouter:
     @router.post("/logger/stop")
     async def stop_telemetry_logger() -> Dict[str, Any]:
         """Остановка фонового сбора телеметрии."""
+        telemetry_service = TelemetryLoggerService.get_instance()
         stopped = telemetry_service.stop()
         return {
             "success": True,
@@ -341,6 +400,7 @@ def init_router(chat_model: Optional[Any] = None, **kwargs: Any) -> APIRouter:
     @router.get("/logger/status")
     async def get_telemetry_logger_status() -> Dict[str, Any]:
         """Получение текущего статуса фонового логгера."""
+        telemetry_service = TelemetryLoggerService.get_instance()
         return telemetry_service.get_status()
 
     @router.websocket("/stream")
@@ -348,7 +408,7 @@ def init_router(chat_model: Optional[Any] = None, **kwargs: Any) -> APIRouter:
         """Stream real-time system snapshots over WebSocket (Wireshark-style stream)."""
         await websocket.accept()
         interval_sec = 1.0
-        logger.info("Системная телеметрия: WebSocket клиент успешно подключен к потоку.")
+        logger.info("панель компьютерного техника: WebSocket клиент успешно подключен к потоку.")
 
         try:
             while True:
@@ -365,17 +425,17 @@ def init_router(chat_model: Optional[Any] = None, **kwargs: Any) -> APIRouter:
                 await asyncio.sleep(interval_sec)
 
         except (WebSocketDisconnect, asyncio.CancelledError):
-            logger.info("Системная телеметрия: WebSocket клиент отключился.")
+            logger.info("панель компьютерного техника: WebSocket клиент отключился.")
         except RuntimeError as ex:
             if "websocket.close" in str(ex) or "websocket.send" in str(ex):
                 logger.warning(
-                    f"Системная телеметрия: WebSocket соединение закрыто со стороны сервера/таймаута ({ex}). Ожидание переподключения клиента..."
+                    f"панель компьютерного техника: WebSocket соединение закрыто со стороны сервера/таймаута ({ex}). Ожидание переподключения клиента..."
                 )
             else:
                 logger.warning(f"Системная телеметрия: ошибка цикла WebSocket: {ex}")
         except Exception as ex:
             logger.warning(
-                f"Системная телеметрия: разрыв WebSocket соединения ({ex}). Ожидание повторного подключения клиента..."
+                f"панель компьютерного техника: разрыв WebSocket соединения ({ex}). Ожидание повторного подключения клиента..."
             )
 
     return router

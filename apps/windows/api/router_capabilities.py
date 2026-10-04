@@ -16,7 +16,7 @@
 # Package: apps.windows.api
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 06:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -138,7 +138,7 @@ async def execute_operation(payload: AtomicOperationExecutionRequest) -> AtomicO
 async def list_storage_disks() -> Dict[str, Any]:
     """Перечисление физических дисков хоста."""
     try:
-        from apps.windows.telemetry.windows_storage_sensor import WindowsStorageSensor
+        from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
         sensor = WindowsStorageSensor(timeout_sec=15)
         disks = await asyncio.to_thread(sensor.get_physical_disks)
         return {'disks': [d.to_dict() for d in disks], 'total': len(disks)}

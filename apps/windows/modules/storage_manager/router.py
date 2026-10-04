@@ -3,31 +3,37 @@
 # Process Name: AI-Breadboard Apps Windows Modules Storage_Manager - Router
 # =============================================================================
 # Description:
-#   # Description:
+#   FastAPI роутер управления физическими дисками, томами, клонированием и бенчмарком DiskSpd.
 #
 # Usage Examples:
 #   Python API:
 #     from apps.windows.modules.storage_manager.router import init_router
 #
-#     res = init_router()
+#     router = init_router()
 #
 # File: router.py
 # Project: ai-breadboard
 # Package: apps.windows.modules.storage_manager
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 08:16:00
 # =============================================================================
 
 from __future__ import annotations
-"""# Description:"""
+"""FastAPI роутер управления физическими дисками, томами, клонированием и бенчмарком DiskSpd."""
 
 import asyncio
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from logger import logger
+from apps.windows.modules.storage_manager.core.benchmark import StorageBenchmarkService
 from apps.windows.modules.storage_manager.core.manager import StorageManager
 from apps.windows.modules.storage_manager.core.models import (
+    BenchmarkHistoryItem,
+    BenchmarkProfileResult,
+    BenchmarkRequest,
+    BenchmarkSuiteResult,
+    BenchmarkTargetInfo,
     DiskCloneRequest,
     DiskDetailedInfo,
     DiskHashRequest,
@@ -47,8 +53,9 @@ from apps.windows.modules.storage_manager.core.models import (
     VolumeInfo,
 )
 
-router = APIRouter(tags=['Storage Manager & Raw Cloner'])
+router = APIRouter(tags=['Storage Manager, Raw Cloner & DiskSpd Benchmark'])
 _manager = StorageManager()
+_benchmark = StorageBenchmarkService()
 
 
 # -----------------------------------------------------------------------------
@@ -200,9 +207,98 @@ async def execute_operation(payload: DiskOperationRequest) -> Dict[str, Any]:
     return await _manager.execute_disk_operation(payload)
 
 
+# -----------------------------------------------------------------------------
+# DiskSpd Benchmark REST API
+# -----------------------------------------------------------------------------
+
+@router.get('/api/v1/storage/benchmark/engine')
+@router.get('/api/storage-manager/benchmark/engine')
+async def get_benchmark_engine_status() -> Dict[str, Any]:
+    """Проверка доступности и статуса исполняемого файла Microsoft DiskSpd."""
+    binary_path = _benchmark.find_diskspd_binary()
+    return {
+        'available': binary_path is not None and binary_path.is_file(),
+        'binary_path': str(binary_path) if binary_path else None,
+        'engine': 'Microsoft DiskSpd (CLI)',
+        'download_available': True,
+    }
+
+
+@router.post('/api/v1/storage/benchmark/engine/download')
+@router.post('/api/storage-manager/benchmark/engine/download')
+async def download_benchmark_engine() -> Dict[str, Any]:
+    """Принудительная загрузка или обновление официального бинарника DiskSpd."""
+    try:
+        path = await asyncio.to_thread(_benchmark.ensure_diskspd_binary)
+        return {'status': 'ok', 'binary_path': str(path), 'message': 'DiskSpd готов к использованию'}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f'Ошибка загрузки DiskSpd: {exc}')
+
+
+@router.get('/api/v1/storage/benchmark/targets', response_model=List[BenchmarkTargetInfo])
+@router.get('/api/storage-manager/benchmark/targets', response_model=List[BenchmarkTargetInfo])
+async def list_benchmark_targets() -> List[BenchmarkTargetInfo]:
+    """Список дисков и разделов, доступных для тестирования скорости."""
+    return await asyncio.to_thread(_benchmark.get_available_targets)
+
+
+@router.post('/api/v1/storage/benchmark/run', response_model=BenchmarkSuiteResult)
+@router.post('/api/storage-manager/benchmark/run', response_model=BenchmarkSuiteResult)
+async def run_benchmark_sync(payload: BenchmarkRequest) -> BenchmarkSuiteResult:
+    """Синхронный запуск теста производительности диска (CrystalDiskMark стиль)."""
+    try:
+        return await asyncio.to_thread(_benchmark.run_suite, payload)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post('/api/v1/storage/benchmark/start', response_model=StorageTaskStatus)
+@router.post('/api/storage-manager/benchmark/start', response_model=StorageTaskStatus)
+async def start_benchmark_async(payload: BenchmarkRequest) -> StorageTaskStatus:
+    """Асинхронный запуск тестирования диска в фоновом режиме с отслеживанием прогресса."""
+    try:
+        return await _benchmark.start_async_benchmark(payload)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.get('/api/v1/storage/benchmark/status/{task_id}', response_model=StorageTaskStatus)
+@router.get('/api/storage-manager/benchmark/status/{task_id}', response_model=StorageTaskStatus)
+async def get_benchmark_task_status(task_id: str) -> StorageTaskStatus:
+    """Получение текущего статуса и прогресса запущенного бенчмарка."""
+    task = _benchmark.get_task_status(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Задача бенчмарка '{task_id}' не найдена")
+    return task
+
+
+@router.post('/api/v1/storage/benchmark/cancel/{task_id}')
+@router.post('/api/storage-manager/benchmark/cancel/{task_id}')
+async def cancel_benchmark_task(task_id: str) -> Dict[str, Any]:
+    """Отмена выполняющегося тестирования производительности."""
+    cancelled = _benchmark.cancel_task(task_id)
+    return {'task_id': task_id, 'cancelled': cancelled}
+
+
+@router.get('/api/v1/storage/benchmark/history', response_model=List[BenchmarkHistoryItem])
+@router.get('/api/storage-manager/benchmark/history', response_model=List[BenchmarkHistoryItem])
+async def get_benchmark_history(limit: int = Query(50, ge=1, le=200)) -> List[BenchmarkHistoryItem]:
+    """История ранее проведенных тестов производительности."""
+    return await asyncio.to_thread(_benchmark.get_history, limit)
+
+
+@router.delete('/api/v1/storage/benchmark/history/{bench_id}')
+@router.delete('/api/storage-manager/benchmark/history/{bench_id}')
+async def delete_benchmark_history(bench_id: str) -> Dict[str, Any]:
+    """Удаление записи бенчмарка из базы данных."""
+    success = await asyncio.to_thread(_benchmark.delete_history_item, bench_id)
+    return {'id': bench_id, 'deleted': success}
+
+
 def init_router() -> APIRouter:
     """Возвращает инициализированный FastAPI роутер."""
     return router
 
 
 __all__ = ['router', 'init_router']
+

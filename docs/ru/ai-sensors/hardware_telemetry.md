@@ -11,7 +11,7 @@
 Сбор метрик осуществляется через многоуровневую систему аппаратных провайдеров:
 1. **LibreHardwareMonitor (LHM)** — опрос веб-сервиса (порт 8085) и WMI-пространства `root\LibreHardwareMonitor`.
 2. **HWiNFO / CPU-Z / GPU-Z / AIDA64** — аппаратные сенсоры, Shared Memory XML и CLI-отчеты.
-3. **Дисковая подсистема и надежность** — нативный сенсор Windows [`WindowsStorageSensor`](../../apps/windows/storage_sensors/windows_storage_sensor.py) (`MSFT_PhysicalDisk` + `StorageReliabilityCounter`).
+3. **Дисковая подсистема и надежность** — нативный сенсор Windows [`WindowsStorageSensor`](../../apps/windows/modules/storage_manager/core/windows_storage_sensor.py) (`MSFT_PhysicalDisk` + `StorageReliabilityCounter`).
 4. **Прямые системные провайдеры** — утилита `nvidia-smi`, WMI-зоны `root\wmi\MSAcpi_ThermalZoneTemperature` и библиотека `psutil`.
 
 ---

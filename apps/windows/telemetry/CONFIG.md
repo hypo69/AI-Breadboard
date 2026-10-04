@@ -1,6 +1,6 @@
 # Конфигурация подсистемы телеметрии Windows (`config.json`)
 
-Файл [`config.json`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/windows/telemetry/config.json) является центральным конфигурационным файлом для системы сбора, буферизации, аудита и мониторинга телеметрии Windows в проекте AI-Breadboard.
+Файл `config.json` (по умолчанию располагающийся в `%APPDATA%/AI-Breadboard/apps/windows/telemetry/config.json`) является центральным конфигурационным файлом для системы сбора, буферизации, аудита и мониторинга телеметрии Windows в проекте AI-Breadboard.
 
 Управление загрузкой, валидацией и модификацией параметров осуществляется модулем [`telemetry_config.py`](file:///c:/Users/onela/AppData/Local/AI-Breadboard/apps/windows/telemetry/telemetry_config.py) (класс `TelemetryConfigManager`).
 

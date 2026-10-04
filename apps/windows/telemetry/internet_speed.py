@@ -3,190 +3,237 @@
 # Process Name: AI-Breadboard Apps Windows Telemetry - Internet Speed
 # =============================================================================
 # Description:
-#   Internet speed measurement using Windows native tools.
+#   Сенсор телеметрии скорости интернета и задержки сети на базе FAST.com (Netflix CDN).
+#   Выполняет периодический замер (1 раз в час / 3600 сек) и кеширует результаты.
 #
 # Usage Examples:
 #   Python API:
 #     from apps.windows.telemetry.internet_speed import InternetSpeedSensor
 #
-#     service = InternetSpeedSensor()
+#     sensor = InternetSpeedSensor()
+#     metrics = sensor.measure_internet_speed()
+#     print(metrics['download_mbps'], metrics['bufferbloat_ms'])
 #
 # File: internet_speed.py
 # Project: ai-breadboard
 # Package: apps.windows.telemetry
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 07:35:00
 # =============================================================================
 
 from __future__ import annotations
-"""Internet speed measurement using Windows native tools."""
+"""Сенсор телеметрии скорости интернета и задержки сети на базе FAST.com."""
 
+import asyncio
 import threading
 import time
-from typing import Dict, List, Optional
-import requests
-try:
-    from logger import logger
-except ImportError:
-    from logger import logger
-_speed_cache: tuple[float, Dict[str, float]] | None = None
-_CACHE_TTL = 300
+from typing import Any, Dict, List, Optional
+
+from logger import logger
+from apps.windows.modules.network.speedtest import NetworkSpeedTester
+
+_speed_cache: Optional[tuple[float, Dict[str, Any]]] = None
+_CACHE_TTL = 3600  # 1 час между замерами скорости для снижения нагрузки на сеть
 _cache_lock = threading.Lock()
+_bg_test_running = False
+_bg_lock = threading.Lock()
+
 
 class InternetSpeedSensor:
-    """Сенсор измерения скорости интернета с поддержкой fallback-серверов."""
-    DOWNLOAD_ENDPOINTS: List[str] = ['https://speed.cloudflare.com/__down?bytes=10000000', 'https://cachefly.cachefly.net/10mb.test', 'https://proof.ovh.net/files/10Mb.dat', 'https://speed.cloudflare.com/__down?bytes=5000000']
-    UPLOAD_ENDPOINTS: List[str] = ['https://speed.cloudflare.com/__up', 'https://httpbin.org/post', 'https://postman-echo.com/post']
+    """Сенсор измерения скорости интернета и характеристик задержки (FAST.com)."""
 
-    def __init__(self, test_url: Optional[str]=None) -> None:
+    def __init__(self, cache_ttl: int = _CACHE_TTL) -> None:
         """Инициализация сенсора скорости интернета.
 
         Args:
-            test_url: URL для теста скорости загрузки (опционально).
+            cache_ttl: Время жизни кеша замера в секундах (по умолчанию 3600 сек = 1 час).
         """
-        self.test_url = test_url
-        self.timeout = 20
+        self.cache_ttl = cache_ttl
+        self._speedtester = NetworkSpeedTester()
 
-    def measure_ping(self, host: str='8.8.8.8') -> Optional[float]:
-        """Измеряет ping до хоста через системную утилиту ping.
+    @classmethod
+    def clear_cache(cls) -> None:
+        """Очистить глобальный кеш замеров скорости интернета."""
+        global _speed_cache
+        with _cache_lock:
+            _speed_cache = None
 
-        Args:
-            host: IP-адрес или домен хоста.
-
-        Returns:
-            Ping в миллисекундах или None при ошибке.
-        """
+    def _run_speedtest_sync(self) -> Dict[str, Any]:
+        """Синхронно выполнить полный цикл теста скорости FAST.com."""
         try:
-            import subprocess
-            start_time = time.perf_counter()
-            process = subprocess.run(['ping', '-n', '1', '-w', '3000', host], capture_output=True, text=True, check=False, creationflags=subprocess.CREATE_NO_WINDOW if __import__('os').name == 'nt' else 0)
-            elapsed_ms = (time.perf_counter() - start_time) * 1000
-            if process.returncode != 0:
-                logger.warning(f'InternetSpeed: Сбой проверки ICMP ping к хосту {host} (узел недоступен или отсутствует подключение к сети).')
-                return None
-            output = process.stdout
-            if 'time' in output.lower():
-                for part in output.split():
-                    if 'time' in part.lower():
-                        try:
-                            time_str = part.replace('time=', '').replace('ms', '')
-                            return float(time_str)
-                        except (ValueError, IndexError):
-                            pass
-            return round(elapsed_ms, 2)
+            loop = None
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = None
+
+            if loop and loop.is_running():
+                # Если вызывается внутри уже работающего цикла событий (например, в async worker)
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(lambda: asyncio.run(self._speedtester.run_full_speedtest()))
+                    return future.result(timeout=60.0)
+            else:
+                return asyncio.run(self._speedtester.run_full_speedtest())
         except Exception as ex:
-            logger.warning(f'InternetSpeed: Ошибка при выполнении ping к {host}: {ex}')
-            return None
+            logger.error(f'Ошибка выполнения теста скорости FAST.com в сенсоре телеметрии: {ex}')
+            return {
+                'download': {'speed_mbps': 0.0, 'status': 'ERROR'},
+                'upload': {'speed_mbps': 0.0, 'status': 'ERROR'},
+                'ping_ms': 0.0,
+                'latency_unloaded_ms': 0.0,
+                'latency_loaded_ms': 0.0,
+                'bufferbloat_ms': 0.0,
+                'meta': {'ip': 'N/A', 'isp': 'Unknown'},
+                'provider': 'fast.com',
+                'server': 'N/A'
+            }
 
-    def measure_download_speed(self, url: Optional[str]=None) -> float:
-        """Измеряет скорость скачивания через HTTP с поддержкой fallback-серверов.
-
-        Args:
-            url: Целевой URL файла для теста. При None перебираются эндпоинты из DOWNLOAD_ENDPOINTS.
-
-        Returns:
-            Скорость загрузки в Мбит/с (Mbps).
-        """
-        endpoints = [url] if url else [self.test_url] if self.test_url else self.DOWNLOAD_ENDPOINTS
-        last_exception = None
-        for endpoint in endpoints:
-            start_time = time.perf_counter()
-            try:
-                response = requests.get(endpoint, stream=True, timeout=self.timeout)
-                response.raise_for_status()
-                total_bytes = 0
-                for chunk in response.iter_content(chunk_size=1024 * 1024):
-                    total_bytes += len(chunk)
-                elapsed_time = time.perf_counter() - start_time
-                if elapsed_time > 0 and total_bytes > 0:
-                    speed_mbps = total_bytes * 8 / elapsed_time / 1000000
-                    return round(speed_mbps, 2)
-            except Exception as ex:
-                last_exception = ex
-                logger.debug(f'InternetSpeed: Тест скорости через {endpoint} не удался: {ex}. Пробуем следующий узел...')
-                continue
-        if last_exception:
-            logger.warning(f'InternetSpeed: Сбой всех узлов теста скорости загрузки ({endpoints}): {last_exception}')
-        return 0.0
-
-    def measure_upload_speed(self, url: Optional[str]=None) -> float:
-        """Измеряет скорость отдачи через HTTP POST с fallback-серверами.
-
-        Args:
-            url: URL эндпоинта для выгрузки.
-
-        Returns:
-            Скорость отдачи в Мбит/с (Mbps).
-        """
-        endpoints = [url] if url else self.UPLOAD_ENDPOINTS
-        test_data = b'x' * (1024 * 1024)
-        last_exception = None
-        for endpoint in endpoints:
-            start_time = time.perf_counter()
-            try:
-                response = requests.post(endpoint, data=test_data, timeout=self.timeout)
-                if response.status_code in (200, 201, 204):
-                    elapsed_time = time.perf_counter() - start_time
-                    if elapsed_time > 0:
-                        speed_mbps = len(test_data) * 8 / elapsed_time / 1000000
-                        return round(speed_mbps, 2)
-            except Exception as ex:
-                last_exception = ex
-                logger.debug(f'InternetSpeed: Тест отдачи через {endpoint} не удался: {ex}. Пробуем резервный узел...')
-                continue
-        if last_exception:
-            logger.warning(f'InternetSpeed: Сбой всех узлов теста отдачи ({endpoints}): {last_exception}')
-        return 0.0
-
-    def measure_dns_resolution(self, hostname: str='google.com') -> Optional[float]:
-        """Измеряет время разрешения DNS.
-
-        Args:
-            hostname: Доменное имя для проверки.
-
-        Returns:
-            Время разрешения DNS в миллисекундах.
-        """
+    def _perform_measurement_and_cache(self) -> Dict[str, Any]:
+        """Выполняет замер скорости и сохраняет его в кэш."""
+        global _speed_cache, _bg_test_running
         try:
-            import socket
-            start_time = time.perf_counter()
-            socket.gethostbyname(hostname)
-            elapsed_ms = (time.perf_counter() - start_time) * 1000
-            return round(elapsed_ms, 2)
-        except Exception as ex:
-            logger.warning(f"InternetSpeed: Сбой разрешения DNS для '{hostname}': {ex} (отсутствует интернет или сбой DNS-сервера)")
-            return None
+            report = self._run_speedtest_sync()
+            download_mbps = float(report.get('download', {}).get('speed_mbps', 0.0))
+            upload_mbps = float(report.get('upload', {}).get('speed_mbps', 0.0))
+            ping_ms = float(report.get('ping_ms', report.get('latency_unloaded_ms', 0.0)))
+            latency_loaded_ms = float(report.get('latency_loaded_ms', 0.0))
+            bufferbloat_ms = float(report.get('bufferbloat_ms', 0.0))
+            meta = report.get('meta', {})
 
-    def measure_internet_speed(self) -> Dict[str, float]:
-        """Измеряет полный профиль сетевого соединения с защитой от частых запросов.
+            result: Dict[str, Any] = {
+                'available': report.get('download', {}).get('status') == 'SUCCESS' or download_mbps > 0.0,
+                'download_mbps': download_mbps,
+                'upload_mbps': upload_mbps,
+                'ping_ms': ping_ms,
+                'latency_unloaded_ms': float(report.get('latency_unloaded_ms', ping_ms)),
+                'latency_loaded_ms': latency_loaded_ms,
+                'bufferbloat_ms': bufferbloat_ms,
+                'provider': 'fast.com',
+                'server': report.get('server', 'FAST.com CDN'),
+                'ip': meta.get('ip', 'N/A'),
+                'isp': meta.get('isp', 'Unknown ISP'),
+                'measured_at': time.time(),
+            }
+
+            with _cache_lock:
+                _speed_cache = (time.monotonic(), result)
+
+            logger.info(
+                f'🌐 [Телеметрия FAST.com] Скорость: ↓{download_mbps:.1f} Mbps, '
+                f'↑{upload_mbps:.1f} Mbps, пинг: {ping_ms:.1f} мс, bufferbloat: {bufferbloat_ms:.1f} мс'
+            )
+            return dict(result)
+        finally:
+            with _bg_lock:
+                _bg_test_running = False
+
+    def trigger_async_measure(self) -> None:
+        """Запускает измерение скорости в фоновом потоке, если оно еще не выполняется."""
+        global _bg_test_running
+        with _bg_lock:
+            if _bg_test_running:
+                return
+            _bg_test_running = True
+
+        thread = threading.Thread(
+            target=self._perform_measurement_and_cache,
+            name="InternetSpeedTestWorker",
+            daemon=True
+        )
+        thread.start()
+
+    def measure_internet_speed(self, force_refresh: bool = False, sync: bool = False) -> Dict[str, Any]:
+        """Измеряет профиль интернет-соединения через FAST.com с кешированием на 1 час.
+
+        По умолчанию выполняется асинхронно в фоне и не блокирует вызывающий поток.
+
+        Args:
+            force_refresh: Принудительно инициировать новый замер.
+            sync: Выполнить замер синхронно с блокировкой текущего потока.
 
         Returns:
-            Словарь с метриками ping, download, upload и DNS.
+            Dict[str, Any]: Словарь метрик (download_mbps, upload_mbps, ping_ms, bufferbloat_ms, etc.).
         """
         global _speed_cache
         with _cache_lock:
-            if _speed_cache is not None:
+            if not force_refresh and _speed_cache is not None:
                 cached_at, cached_result = _speed_cache
-                if time.monotonic() - cached_at < _CACHE_TTL:
-                    return cached_result
-            result: Dict[str, float] = {}
-            ping = self.measure_ping('8.8.8.8')
-            result['ping_ms'] = ping if ping is not None else 0.0
-            result['download_mbps'] = self.measure_download_speed()
-            result['upload_mbps'] = self.measure_upload_speed()
-            dns_time = self.measure_dns_resolution()
-            result['dns_ms'] = dns_time if dns_time is not None else 0.0
-            _speed_cache = (time.monotonic(), result)
-            return result
+                if time.monotonic() - cached_at < self.cache_ttl:
+                    return dict(cached_result)
 
-def get_internet_speed_sensors() -> list:
-    """Get internet speed metrics as sensor-like data.
+        if sync:
+            return self._perform_measurement_and_cache()
+
+        # Асинхронный запуск замера в фоне
+        self.trigger_async_measure()
+
+        with _cache_lock:
+            if _speed_cache is not None:
+                _, cached_result = _speed_cache
+                return dict(cached_result)
+
+        # Возвращаем заглушку по умолчанию без блокировки потока
+        return {
+            'available': True,
+            'download_mbps': 0.0,
+            'upload_mbps': 0.0,
+            'ping_ms': 0.0,
+            'latency_unloaded_ms': 0.0,
+            'latency_loaded_ms': 0.0,
+            'bufferbloat_ms': 0.0,
+            'provider': 'fast.com',
+            'server': 'FAST.com CDN (замер в фоне...)',
+            'ip': 'N/A',
+            'isp': 'Unknown ISP',
+            'measured_at': 0.0,
+        }
+
+
+def get_internet_speed_sensors() -> List[Dict[str, Any]]:
+    """Получить показания сетевых метрик скорости в формате списка сенсоров.
 
     Returns:
-        List of internet speed metrics.
+        List[Dict[str, Any]]: Список метрик сенсоров интернета.
     """
     sensor = InternetSpeedSensor()
     metrics = sensor.measure_internet_speed()
-    sensors = [{'sensor_id': 'internet_ping', 'name': 'Internet Ping', 'category': 'network', 'value': metrics.get('ping_ms', 0.0), 'unit': 'ms'}, {'sensor_id': 'internet_download', 'name': 'Internet Download Speed', 'category': 'network', 'value': metrics.get('download_mbps', 0.0), 'unit': 'Mbps'}, {'sensor_id': 'internet_upload', 'name': 'Internet Upload Speed', 'category': 'network', 'value': metrics.get('upload_mbps', 0.0), 'unit': 'Mbps'}, {'sensor_id': 'internet_dns', 'name': 'DNS Resolution Time', 'category': 'network', 'value': metrics.get('dns_ms', 0.0), 'unit': 'ms'}]
+    sensors = [
+        {
+            'sensor_id': 'internet_ping',
+            'name': 'Internet Ping Latency',
+            'category': 'network',
+            'value': metrics.get('ping_ms', 0.0),
+            'unit': 'ms'
+        },
+        {
+            'sensor_id': 'internet_download',
+            'name': 'Internet Download Speed',
+            'category': 'network',
+            'value': metrics.get('download_mbps', 0.0),
+            'unit': 'Mbps'
+        },
+        {
+            'sensor_id': 'internet_upload',
+            'name': 'Internet Upload Speed',
+            'category': 'network',
+            'value': metrics.get('upload_mbps', 0.0),
+            'unit': 'Mbps'
+        },
+        {
+            'sensor_id': 'internet_bufferbloat',
+            'name': 'Internet Bufferbloat',
+            'category': 'network',
+            'value': metrics.get('bufferbloat_ms', 0.0),
+            'unit': 'ms'
+        },
+        {
+            'sensor_id': 'internet_latency_loaded',
+            'name': 'Internet Loaded Latency',
+            'category': 'network',
+            'value': metrics.get('latency_loaded_ms', 0.0),
+            'unit': 'ms'
+        },
+    ]
     return sensors

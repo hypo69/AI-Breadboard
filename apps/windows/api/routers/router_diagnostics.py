@@ -16,7 +16,7 @@
 # Package: apps.windows.api.routers
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 07:47:30
 # =============================================================================
 
 from __future__ import annotations
@@ -111,7 +111,7 @@ def init_router() -> APIRouter:
 
         # Попытка вызова языковой модели через чат-роутер
         try:
-            from src.api.router_chat import get_chat_model
+            from src.api.routers.core.router_chat import get_chat_model
             model_key = req.model or "gemini_cli:gemini-2.5-flash"
             llm = get_chat_model(
                 model_key,

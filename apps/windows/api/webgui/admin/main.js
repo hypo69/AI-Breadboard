@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/admin
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 00:05:00
+ * Updated: 2026-10-04 07:09:00
  * =============================================================================
  */
 
@@ -361,8 +361,8 @@ function onTabSwitched(targetId) {
   } else if (cleanId === 'tab-network' && typeof window.initNetworkTab === 'function') {
     console.log('[AdminInterface] Switching to network tab...');
     window.initNetworkTab();
-  } else if ((cleanId === 'tab-system-load-inspector' || cleanId === 'tab-system-inspector') && typeof window.initSystemInspectorTab === 'function') {
-    console.log('[AdminInterface] Switching to system load inspector tab...');
+  } else if ((cleanId === 'tab-hardware-load-inspector' || cleanId === 'tab-system-load-inspector' || cleanId === 'tab-system-inspector') && typeof window.initSystemInspectorTab === 'function') {
+    console.log('[AdminInterface] Switching to hardware load inspector tab...');
     window.initSystemInspectorTab();
   } else if (cleanId === 'tab-about-system' && typeof window.initAboutSystemTab === 'function') {
     console.log('[AdminInterface] Switching to about system tab...');
@@ -612,10 +612,10 @@ async function initInterface() {
 
   // Определение и фильтрация вкладок микроприложений (/apps)
   const appTabDefs = [
-    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20261004_v5', js: '/html/about_system_tab/main.js?v=20261004_v5' },
+    { id: 'about_system', tab: 'about-system', html: '/html/about_system_tab/index.html?v=20261004_v6', js: '/html/about_system_tab/main.js?v=20261004_v6' },
     { id: 'trading_terminal', tab: 'trading', html: '/html/trading_tab/index.html', js: '/html/trading_tab/main.js' },
     { id: 'network_terminal', tab: 'network', html: '/html/network_tab/index.html', js: '/html/network_tab/main.js' },
-    { id: 'system_inspector', tab: 'system-load-inspector', html: '/html/system_inspector_tab/index.html', js: '/html/system_inspector_tab/main.js' },
+    { id: 'system_inspector', tab: 'hardware-load-inspector', html: '/html/system_inspector_tab/index.html', js: '/html/system_inspector_tab/main.js' },
     { id: 'chat', tab: 'chat', html: '/html/chat/index.html', js: '/html/chat/main.js' },
     { id: 'scenarios', tab: 'scenarios', html: '/html/scenarios_tab/index.html', js: '/html/scenarios_tab/main.js' },
     { id: 'user_assistant', tab: 'user-assistant', html: '/html/user_assistant_tab/index.html', js: '/html/user_assistant_tab/main.js' },

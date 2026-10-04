@@ -14,7 +14,7 @@
  * Package: windows/api/webgui/about_system_tab
  * Author: hypo69
  * Copyright: © 2026 hypo69
- * Updated: 2026-10-04 00:54:00
+ * Updated: 2026-10-04 07:09:00
  * =============================================================================
  */
 
@@ -155,6 +155,23 @@
   function setText(id, text) {
     const el = document.getElementById(id);
     if (el) el.textContent = text !== null && text !== undefined ? String(text) : '--';
+  }
+
+  function setStatusText(id, isPositive, activeText = 'Active', inactiveText = 'Disabled') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const active = Boolean(isPositive);
+    el.textContent = active ? activeText : inactiveText;
+    el.className = active ? 'text-success fw-bold' : 'text-danger fw-bold';
+  }
+
+  function setFormattedStatusHtml(id, text) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (!text) { el.innerHTML = '--'; return; }
+    el.innerHTML = String(text)
+      .replace(/\b(OFF|Disabled|Выключено|Отключен|Отключено|Inactive)\b/gi, '<strong class="text-danger fw-bold">$1</strong>')
+      .replace(/\b(ON|Active|Enabled|Включен|Включено)\b/gi, '<strong class="text-success fw-bold">$1</strong>');
   }
 
   function setHtml(id, html) {
@@ -652,8 +669,14 @@
       const opts = { ttl: config.ttl, strategy: config.strategy, forceNetwork };
       const data = await cachedFetch('/api/v1/dashboard/security', 'dash_sec', opts);
       if (data) {
-        if (data.display_title) setText('about-kpi-sec-title', data.display_title);
-        if (data.display_subtitle) setText('about-kpi-sec-sub', data.display_subtitle);
+        if (data.display_title) {
+          const el = document.getElementById('about-kpi-sec-title');
+          if (el) {
+            el.textContent = data.display_title;
+            el.className = `about-sys-value ${data.status === 'Active & Protected' ? 'text-success' : 'text-danger fw-bold'} text-truncate mt-1`;
+          }
+        }
+        if (data.display_subtitle) setFormattedStatusHtml('about-kpi-sec-sub', data.display_subtitle);
       }
     } catch (e) {
       console.warn('[AboutSystemTab] fetchKpiSecurity error:', e);
@@ -667,7 +690,7 @@
       const data = await cachedFetch('/api/v1/dashboard/checkpoints', 'dash_chk', opts);
       if (data) {
         if (data.display_title) setText('about-kpi-prot-title', data.display_title);
-        if (data.display_subtitle) setText('about-kpi-prot-sub', data.display_subtitle);
+        if (data.display_subtitle) setFormattedStatusHtml('about-kpi-prot-sub', data.display_subtitle);
       }
     } catch (e) {
       console.warn('[AboutSystemTab] fetchKpiCheckpoints error:', e);
@@ -1038,15 +1061,20 @@
 
       // KPI 2: Security & Defender
       const defActive = sec.defender_enabled !== false;
-      setText('about-kpi-sec-title', defActive ? 'Active & Protected' : 'Attention Required');
+      const kpiSecTitle = document.getElementById('about-kpi-sec-title');
+      if (kpiSecTitle) {
+        kpiSecTitle.textContent = defActive ? 'Active & Protected' : 'Attention Required';
+        kpiSecTitle.className = `about-sys-value ${defActive ? 'text-success' : 'text-danger fw-bold'} text-truncate mt-1`;
+      }
       const fwOk = sec.firewall_overall_enabled !== false;
       const uacOk = sec.uac_enabled !== false;
-      setText('about-kpi-sec-sub', `Firewall: ${fwOk ? 'ON' : 'OFF'} | UAC: ${uacOk ? 'ON' : 'OFF'}`);
+      setFormattedStatusHtml('about-kpi-sec-sub', `Firewall: ${fwOk ? 'ON' : 'OFF'} | UAC: ${uacOk ? 'ON' : 'OFF'}`);
 
       // KPI 3: System Protection
       const countPoints = rest.restore_points_count || 0;
       setText('about-kpi-prot-title', `${countPoints} Checkpoints`);
-      setText('about-kpi-prot-sub', `Protection: ${rest.system_protection_enabled ? 'Active' : 'Disabled'}`);
+      const protActive = Boolean(rest.system_protection_enabled);
+      setFormattedStatusHtml('about-kpi-prot-sub', `Protection: ${protActive ? 'Active' : 'Disabled'}`);
 
       // KPI 4: Cleanable estimate & Total Disk Size
       const cleanMb = disk.cleanup_estimate?.total_cleanable_mb || 150;
@@ -1055,12 +1083,17 @@
       setText('about-kpi-stor-clean', `Cleanable: ~${cleanMb} MB${totalGbTxt}`);
 
       // Security table rows
-      setText('about-sec-defender', defActive ? 'Enabled' : 'Disabled');
-      setText('about-sec-realtime', sec.realtime_protection_enabled !== false ? 'Enabled' : 'Disabled');
-      setText('about-sec-fw-domain', sec.firewall_profiles?.Domain ? 'Active' : 'Disabled');
-      setText('about-sec-fw-private', sec.firewall_profiles?.Private ? 'Active' : 'Disabled');
-      setText('about-sec-fw-public', sec.firewall_profiles?.Public ? 'Active' : 'Disabled');
-      setText('about-sec-uac', uacOk ? 'Enabled' : 'Disabled');
+      setStatusText('about-sec-defender', defActive, 'Enabled', 'Disabled');
+      setStatusText('about-sec-realtime', sec.realtime_protection_enabled !== false && sec.realtime_protection_enabled !== 0 && sec.realtime_protection_enabled !== 'Disabled', 'Enabled', 'Disabled');
+      
+      const fwDom = sec.firewall_profiles?.Domain ?? sec.firewall_domain_enabled;
+      const fwPriv = sec.firewall_profiles?.Private ?? sec.firewall_private_enabled;
+      const fwPub = sec.firewall_profiles?.Public ?? sec.firewall_public_enabled;
+
+      setStatusText('about-sec-fw-domain', fwDom === true || fwDom === 'Active' || fwDom === 1 || fwDom === 'ON', 'Active', 'Disabled');
+      setStatusText('about-sec-fw-private', fwPriv === true || fwPriv === 'Active' || fwPriv === 1 || fwPriv === 'ON', 'Active', 'Disabled');
+      setStatusText('about-sec-fw-public', fwPub === true || fwPub === 'Active' || fwPub === 1 || fwPub === 'ON', 'Active', 'Disabled');
+      setStatusText('about-sec-uac', uacOk, 'Enabled', 'Disabled');
 
       // Power Scheme & Updates
       if (pwr.active_plan_name) setText('about-spec-power', pwr.active_plan_name);

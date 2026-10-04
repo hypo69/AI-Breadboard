@@ -2,8 +2,7 @@
 
 Пакет `apps/common` предоставляет базовые службы для всех приложений и подсистем AI-Breadboard:
 1. **Унифицированная телеметрия и логирование (`csv_logger.py`)**: высокопроизводительная запись событий, замеров и параметров в единую базу данных SQLite с возможностью выгрузки CSV по требованию (On-Demand).
-2. **Движок фонового автологирования (`autolog_engine.py`)**: периодический опрос метрик приложений с адаптивными интервалами и поддержкой REST API.
-3. **Автообнаружение приложений и сервисов (`discovery.py`)**: сканирование структуры проекта и манифестов `manifest.json`.
+2. **Автообнаружение приложений и сервисов (`discovery.py`)**: сканирование структуры проекта и манифестов `manifest.json`.
 
 ---
 
@@ -49,15 +48,6 @@ files = logger.export_csv(target_type="all")
 - Управление: `set_memory_batching(True / False)`
 - Сброс буфера: `flush_batch_buffer()`
 - Переменная окружения: `AI_BREADBOARD_ENABLE_MEMORY_BATCHING=true`
-
----
-
-## ⚙️ Движок автологирования (`autolog_engine.py`)
-
-Управляет периодическим опросом зарегистрированных логгеров приложений:
-- `AutoLogEngine`: синглтон-движок с поддержкой асинхронного фонового цикла опроса.
-- Поддерживаемые модули: `system_inspector`, `network_analyzer`, `cloudflared_monitor`, `nginx_monitor`, `storage_tool`, `trading_terminal` и др.
-- REST API маршруты доступны через `src/api/router_autolog.py` (`/api/autolog/*`).
 
 ---
 

@@ -16,7 +16,7 @@
 # Package: apps.windows.core.audits
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 06:25:00
 # =============================================================================
 
 from __future__ import annotations
@@ -70,7 +70,7 @@ class StorageCollector(TelemetryProvider):
             findings.append(AuditFinding(domain='storage', category='vss_storage_pressure', title='Переполнение хранилища теневых копий VSS', description=f"Хранилище теневых копий VSS заполнено на {vss_storage.get('usage_percent')}%, что создает риск вытеснения точек восстановления.", severity=RiskLevel.CAUTION, evidence=vss_storage))
         physical_disks_data: List[Dict[str, Any]] = []
         try:
-            from apps.windows.telemetry.windows_storage_sensor import WindowsStorageSensor
+            from apps.windows.modules.storage_manager.core.windows_storage_sensor import WindowsStorageSensor
             sensor = WindowsStorageSensor(timeout_sec=30)
             disks = sensor.get_physical_disks()
             for d in disks:

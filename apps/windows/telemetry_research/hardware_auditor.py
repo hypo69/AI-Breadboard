@@ -16,7 +16,7 @@
 # Package: apps.windows.telemetry_research
 # Author: hypo69
 # Copyright: © 2026 hypo69
-# Updated: 2026-10-01 13:28:28
+# Updated: 2026-10-04 03:10:00
 # =============================================================================
 
 from __future__ import annotations
@@ -36,19 +36,22 @@ from apps.windows.telemetry.sensors import get_hardware_sensors
 class HardwareAuditor:
     """Аудитор аппаратного обеспечения, драйверов и параметров устройств."""
 
-    def __init__(self, setupapi_client: Optional[SetupAPI]=None) -> None:
+    def __init__(self, setupapi_client: Optional[SetupAPI] = None, storage: Optional[Any] = None) -> None:
         """Инициализация аудитора оборудования.
 
         Args:
             setupapi_client: Опциональный экземпляр нативного клиента SetupAPI.
+            storage: Опциональный экземпляр хранилища TelemetryStorage.
         """
         self._setupapi = setupapi_client or (SetupAPI() if os.name == 'nt' else None)
+        self._storage = storage
 
-    def _parse_wmi_date(self, date_str: Optional[str]) -> Optional[datetime]:
+    def _parse_wmi_date(self, date_str: Optional[str], context: Optional[str] = None) -> Optional[datetime]:
         """Парсинг даты из формата WMI (YYYYMMDDHHMMSS.mmmmmm+UUU) или ISO.
 
         Args:
             date_str: Строка с датой.
+            context: Опциональное описание контекста (имя устройства/драйвера).
 
         Returns:
             Optional[datetime]: Объект datetime или None.
@@ -78,7 +81,8 @@ class HardwareAuditor:
                 return datetime(int(ru_match.group(3)), int(ru_match.group(2)), int(ru_match.group(1)), tzinfo=timezone.utc)
             except Exception:
                 pass
-        logger.error('Функция _parse_wmi_date вернула пустой результат')
+        target_info = f' для {context}' if context else ''
+        logger.debug(f'Не удалось распарсить дату WMI{target_info}: \'{date_str}\'')
         return None
 
     def _evaluate_driver_currency(self, driver_date_dt: Optional[datetime], provider: str, device_class: str) -> tuple[str, Optional[int]]:
@@ -136,31 +140,82 @@ class HardwareAuditor:
             pass
         return drivers_map
 
-    def _get_device_install_date_registry(self, device_instance_id: str) -> Optional[str]:
-        """Чтение даты установки устройства из системного реестра.
+    def _get_device_install_date_registry(
+        self,
+        device_instance_id: str,
+        device_name: Optional[str] = None,
+        device_class: Optional[str] = None
+    ) -> Optional[str]:
+        """Чтение даты установки устройства из системного реестра или базы данных.
+
+        Если дата в системном реестре не найдена, выполняется поиск в базе данных.
+        Если устройство уже есть в базе данных с датой — возвращается существующая дата (без перезаписи).
+        Если устройства в базе данных нет — записывается текущая дата.
 
         Args:
             device_instance_id: Идентификатор PnP устройства.
+            device_name: Человекочитаемое имя устройства.
+            device_class: Класс оборудования.
 
         Returns:
             Optional[str]: Строка даты установки в формате DD.MM.YYYY HH:MM или None.
         """
-        if os.name != 'nt' or not device_instance_id:
+        if not device_instance_id:
             return None
-        try:
-            import winreg
-            key_path = f'SYSTEM\\CurrentControlSet\\Enum\\{device_instance_id}'
-            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key_path) as key:
-                for val_name in ['InstallDate', 'FirstInstallDate']:
-                    try:
-                        val, reg_type = winreg.QueryValueEx(key, val_name)
-                        if isinstance(val, int) and val > 0:
-                            return datetime.fromtimestamp(val, tz=timezone.utc).strftime('%d.%m.%Y %H:%M')
-                    except OSError:
-                        pass
-        except Exception:
-            pass
-        logger.error('Функция _get_device_install_date_registry вернула пустой результат')
+
+        reg_date: Optional[str] = None
+        if os.name == 'nt':
+            try:
+                import winreg
+                key_path = f'SYSTEM\\CurrentControlSet\\Enum\\{device_instance_id}'
+                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key_path) as key:
+                    for val_name in ['InstallDate', 'FirstInstallDate']:
+                        try:
+                            val, reg_type = winreg.QueryValueEx(key, val_name)
+                            if isinstance(val, int) and val > 0:
+                                reg_date = datetime.fromtimestamp(val, tz=timezone.utc).strftime('%d.%m.%Y %H:%M')
+                                break
+                        except OSError:
+                            pass
+            except Exception:
+                pass
+
+        storage = self._storage
+        if storage is None:
+            try:
+                from apps.windows.telemetry.sqlite import TelemetryStorage
+                storage = TelemetryStorage.get_instance()
+            except Exception:
+                storage = None
+
+        if reg_date:
+            if storage:
+                try:
+                    storage.get_or_create_device_install_date(
+                        device_instance_id=device_instance_id,
+                        friendly_name=device_name,
+                        device_class=device_class,
+                        default_date=reg_date
+                    )
+                except Exception as ex:
+                    logger.debug(f'Ошибка сохранения даты устройства в БД: {ex}')
+            return reg_date
+
+        dev_label = f"'{device_name}' [{device_instance_id}]" if device_name else f"[{device_instance_id}]"
+        logger.debug(f'Дата установки для устройства {dev_label} не найдена в реестре')
+
+        if storage:
+            try:
+                now_str = datetime.now(timezone.utc).strftime('%d.%m.%Y %H:%M')
+                return storage.get_or_create_device_install_date(
+                    device_instance_id=device_instance_id,
+                    friendly_name=device_name,
+                    device_class=device_class,
+                    default_date=now_str
+                )
+            except Exception as ex:
+                logger.debug(f'Ошибка работы с БД для даты устройства: {ex}')
+
         return None
 
     def _bind_sensors_to_device(self, device: HardwareDeviceAudit, all_sensors: List[HardwareSensor]) -> List[HardwareSensor]:
@@ -219,14 +274,17 @@ class HardwareAuditor:
                     driver_data = wmi_drivers.get(norm_id)
                     driver_info: Optional[DriverInfo] = None
                     if driver_data:
-                        date_dt = self._parse_wmi_date(driver_data.get('driver_date_raw'))
+                        date_dt = self._parse_wmi_date(
+                            driver_data.get('driver_date_raw'),
+                            context=f"'{dev.friendly_name}' [{norm_id}]"
+                        )
                         date_str = date_dt.strftime('%Y-%m-%d') if date_dt else None
                         provider = driver_data.get('provider', 'Unknown')
                         currency_status, age_days = self._evaluate_driver_currency(driver_date_dt=date_dt, provider=provider, device_class=dev.device_class or 'Device')
                         if 'устарел' in currency_status.lower():
                             outdated_count += 1
                         driver_info = DriverInfo(name=driver_data.get('name') or dev.friendly_name, driver_version=driver_data.get('driver_version', ''), driver_date=date_str, provider=provider, inf_name=driver_data.get('inf_name'), is_signed=driver_data.get('is_signed', True), is_inbox='microsoft' in provider.lower(), age_days=age_days, currency_status=currency_status)
-                    install_date = self._get_device_install_date_registry(dev.device_instance_id)
+                    install_date = self._get_device_install_date_registry(dev.device_instance_id, dev.friendly_name, dev.device_class)
                     if not install_date and driver_info and driver_info.driver_date:
                         install_date = driver_info.driver_date
                     status_str = 'Problem' if dev.has_problem else 'OK'
